@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const TIMELINE_CTA = 'View booking timeline';
+const TIMELINE_CTA = 'View booking online';
 
 async function assertNoHorizontalOverflow(page: Page) {
   const metrics = await page.evaluate(() => ({

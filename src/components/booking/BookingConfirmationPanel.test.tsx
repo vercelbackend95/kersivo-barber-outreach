@@ -88,8 +88,9 @@ describe('BookingConfirmationPanel', () => {
       />,
     );
 
-    const pass = container.querySelector('dl.booking-confirmation__pass');
+    const pass = container.querySelector('.booking-confirmation__pass');
     expect(pass).toBeTruthy();
+    expect(pass?.querySelector('dl.booking-confirmation__pass-fields')).toBeTruthy();
     expect(pass?.querySelector('.booking-confirmation__pass-field--service dd')?.textContent).toBe(
       'Classic Cut & Finish',
     );

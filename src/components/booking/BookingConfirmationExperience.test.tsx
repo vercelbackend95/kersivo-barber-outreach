@@ -15,7 +15,7 @@ describe('BookingConfirmationExperience', () => {
     const { container } = render(
       <BookingConfirmationExperience
         secondaryActions={[
-          { label: 'View booking timeline', href: '/demo/admin?bookingId=1', variant: 'primary' },
+          { label: 'View booking online', href: '/demo/admin?bookingId=1', variant: 'primary' },
           { label: 'Back to Blackline', href: '/demo', variant: 'secondary' },
         ]}
         recommendations={<section data-testid="rail" className="booking-recommendations">Rail</section>}
@@ -47,7 +47,7 @@ describe('BookingConfirmationExperience', () => {
       <BookingConfirmationExperience
         secondaryActions={[
           {
-            label: 'View booking timeline',
+            label: 'View booking online',
             href: '/demo/admin?section=bookings_dashboard&bookingId=abc&bookingDate=2026-09-07&demoJourney=booking',
             variant: 'primary',
           },
@@ -58,7 +58,7 @@ describe('BookingConfirmationExperience', () => {
       </BookingConfirmationExperience>,
     );
 
-    const primary = screen.getByRole('link', { name: 'View booking timeline' });
+    const primary = screen.getByRole('link', { name: 'View booking online' });
     expect(primary.getAttribute('href')).toContain('/demo/admin?');
     expect(primary.getAttribute('href')).toContain('bookingId=abc');
     expect(primary.className).toMatch(/cta--primary/);
@@ -71,7 +71,7 @@ describe('BookingConfirmationExperience', () => {
     const EmptyRail = () => null;
     const { container } = render(
       <BookingConfirmationExperience
-        secondaryActions={[{ label: 'View booking timeline', href: '/demo/admin', variant: 'primary' }]}
+        secondaryActions={[{ label: 'View booking online', href: '/demo/admin', variant: 'primary' }]}
         recommendations={<EmptyRail />}
       >
         <div>Panel</div>
@@ -80,6 +80,6 @@ describe('BookingConfirmationExperience', () => {
 
     expect(container.querySelector('.booking-confirmation-experience__recommendations')).toBeTruthy();
     expect(container.querySelector('.booking-recommendations')).toBeNull();
-    expect(screen.getByRole('link', { name: 'View booking timeline' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'View booking online' })).toBeTruthy();
   });
 });

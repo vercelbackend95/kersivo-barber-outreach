@@ -168,6 +168,7 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
           }))}
           shopDetails={{
             timezone: shop.timezone,
+            name: shop.name,
             cancellationWindowHours: shop.cancellationWindowHours,
             rescheduleWindowHours: shop.rescheduleWindowHours,
           }}

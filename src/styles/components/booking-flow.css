@@ -925,14 +925,15 @@
   line-height: 1.4;
 }
 
-/* Appointment note â€” ticket hierarchy, not admin field grid */
+/* Appointment note — ticket hierarchy, not admin field grid */
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass,
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary {
   position: relative;
   margin: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.35rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
   text-align: left;
   padding: 0.85rem 0.95rem;
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
@@ -940,6 +941,15 @@
   border-radius: var(--radius-12, 12px);
   background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  overflow: visible;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  min-width: 0;
 }
 
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field,
@@ -1047,6 +1057,96 @@
   color: var(--muted);
 }
 
+/* Add to calendar — mobile: below note fields; desktop: top-right */
+.booking-flow--wizard .booking-add-to-calendar {
+  position: relative;
+  width: 100%;
+  z-index: 5;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.55rem 0.85rem;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  border-radius: var(--radius-12, 12px);
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__trigger:hover,
+.booking-flow--wizard .booking-add-to-calendar__trigger:focus-visible {
+  border-color: color-mix(in srgb, var(--accent, var(--fg)) 55%, var(--border));
+}
+
+.booking-flow--wizard .booking-add-to-calendar__trigger:focus-visible {
+  outline: 2px solid var(--focus, var(--accent));
+  outline-offset: 2px;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__glyph {
+  flex: 0 0 auto;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius-12, 12px);
+  background: var(--surface, var(--bg));
+  box-shadow: 0 12px 28px color-mix(in srgb, #000 28%, transparent);
+  z-index: 20;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__option {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__option:hover,
+.booking-flow--wizard .booking-add-to-calendar__option:focus-visible {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.booking-flow--wizard .booking-add-to-calendar__option:focus-visible {
+  outline: 2px solid var(--focus, var(--accent));
+  outline-offset: 1px;
+}
+
+.booking-flow--wizard .booking-add-to-calendar__error {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--danger, #c44);
+}
+
 .booking-flow--wizard .booking-confirmation__cta {
   margin-top: 0.75rem;
   display: flex;
@@ -1101,10 +1201,13 @@
 }
 
 @media (min-width: 64rem) {
+  /* Desktop: stacked confirm → CTAs → full-row carousel (never side-by-side). */
   .booking-flow--wizard .booking-confirmation-experience:has(.booking-recommendations) {
-    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
-    grid-template-areas: 'primary recommendations';
-    gap: 1rem 1.75rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'primary'
+      'recommendations';
+    gap: 1.35rem 0;
     max-width: min(75rem, 100%);
     padding: 0.65rem 0 1.25rem;
     padding-inline: 0.25rem;
@@ -1138,12 +1241,14 @@
     padding-inline: 0.85rem;
   }
 
+  /* No outer recommendation panel — sit on page background. */
   .booking-flow--wizard .booking-confirmation-experience__recommendations:has(.booking-recommendations) {
     align-self: stretch;
-    padding: 0.85rem 1rem 1rem;
-    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-    border-radius: var(--radius-12, 12px);
-    background: color-mix(in srgb, var(--surface-2, var(--surface)) 70%, var(--bg));
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .booking-page-wrap:has(.booking-flow--confirmation) {
@@ -1345,6 +1450,14 @@
   gap: 0.25rem;
   padding-top: 0.25rem;
   border-top: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__recommendations:has(.booking-recommendations) {
+  background: transparent;
+  box-shadow: none;
+  border: none;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__header {
@@ -1384,7 +1497,9 @@
 .booking-flow--wizard .booking-recommendations--confirm .product-rail__viewport,
 .booking-flow--wizard .booking-recommendations--confirm .product-rail__track {
   margin-top: 0;
-  padding-top: 0;
+  /* Room for shop-card translateY(-3px) hover inside overflow-y: hidden track */
+  padding-top: 8px;
+  padding-bottom: 4px;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-category {
@@ -1434,7 +1549,7 @@
   }
 
   .booking-flow--wizard .booking-recommendations--confirm .product-rail {
-    --product-rail-visible-cards: 1.22; /* ~80vw card + peek */
+    --product-rail-visible-cards: 2.5; /* ProductRail mobile contract */
     --product-rail-padding: 0px;
   }
 
@@ -1489,6 +1604,203 @@
   .booking-flow--wizard .booking-recommendations--confirm .product-rail__media .sf-media,
   .booking-flow--wizard .booking-recommendations--confirm .sf-media {
     aspect-ratio: 4 / 3 !important;
+  }
+
+  /* Non-layout-breaking card hover/focus — no upward translate inside clipped track. */
+  .booking-flow--wizard .booking-recommendations--confirm.sf-shop .sf-card:hover,
+  .booking-flow--wizard .booking-recommendations--confirm.sf-shop .sf-card:focus-visible,
+  .booking-flow--wizard .booking-recommendations--confirm.sf-shop .sf-card:focus-within {
+    transform: none;
+    border-color: color-mix(in srgb, var(--accent, var(--fg)) 55%, var(--border));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent, var(--fg)) 28%, transparent),
+      0 10px 24px color-mix(in srgb, #000 32%, transparent);
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm.sf-shop .sf-card:hover .sf-card-media,
+  .booking-flow--wizard .booking-recommendations--confirm.sf-shop .sf-card:focus-within .sf-card-media {
+    filter: brightness(1.04);
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__viewport,
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__track {
+    padding-top: 8px;
+    padding-bottom: 4px;
+  }
+}
+
+/* Desktop polish: compact confirmation module + commercial card density */
+@media (min-width: 901px) {
+  .booking-flow--wizard .booking-confirmation-experience:has(.booking-recommendations) {
+    gap: 1.75rem 0; /* ~28px CTA → carousel */
+    padding: 0.2rem 0 0.85rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__primary {
+    width: 100%;
+    max-width: 41.875rem; /* ~670px */
+    margin-inline: auto;
+    gap: 1rem; /* ~16px note → CTA */
+    text-align: left;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__primary .booking-confirmation {
+    gap: 0.55rem;
+    text-align: left;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__announce {
+    gap: 0.45rem 0.65rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__icon {
+    width: 3rem; /* 48px */
+    height: 3rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__icon svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__heading {
+    font-size: clamp(1.35rem, 2.2vw, 1.65rem);
+  }
+
+  .booking-flow--wizard .booking-confirmation__body {
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass,
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.55rem 0.75rem;
+    padding: 0.55rem 0.85rem;
+    overflow: visible;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-fields {
+    grid-column: 1;
+    gap: 0.25rem 0.65rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__calendar {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    justify-self: end;
+    align-self: start;
+  }
+
+  .booking-flow--wizard .booking-add-to-calendar__trigger {
+    width: auto;
+    padding-inline: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .booking-flow--wizard .booking-add-to-calendar__menu {
+    left: auto;
+    right: 0;
+    min-width: 13.5rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--service dd {
+    font-size: clamp(1rem, 2vw, 1.18rem);
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.7rem; /* ~11px */
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--primary {
+    flex: 0 0 auto;
+    width: 18rem; /* 288px */
+    min-width: 17.5rem;
+    max-width: 18.75rem;
+    min-height: 44px;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--secondary {
+    flex: 0 0 auto;
+    width: 11.25rem; /* 180px */
+    min-width: 10.625rem;
+    max-width: 11.875rem;
+    min-height: 44px;
+    padding-inline: 0.85rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__recommendations {
+    width: 100%;
+    max-width: none;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail {
+    --product-rail-visible-cards: 3.55;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__header {
+    margin-bottom: 0.2rem;
+    gap: 0.25rem;
+    padding-bottom: 0;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__header {
+    margin-bottom: 0.05rem;
+    gap: 0.05rem;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__heading {
+    font-size: clamp(1.05rem, 2vw, 1.28rem);
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__lede {
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+
+  /* Keep deep image look; constrain height so Add fits in 1440×900 */
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-media,
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-media.shop-media,
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-media.shop-media.sf-card-media--cover,
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__sf-media,
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__media .sf-media,
+  .booking-flow--wizard .booking-recommendations--confirm .sf-media {
+    aspect-ratio: 4 / 3 !important;
+    max-height: 13.125rem; /* 210px */
+    height: auto;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-body {
+    gap: 0.1rem;
+    padding: 0.35rem 0.45rem 0.35rem;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-name {
+    font-size: 0.88rem;
+    line-height: 1.2;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .sf-card-footer {
+    gap: 0.3rem;
+    margin-top: 0.1rem;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__viewport,
+  .booking-flow--wizard .booking-recommendations--confirm .product-rail__track {
+    padding-top: 8px;
+    padding-bottom: 4px;
   }
 }
 

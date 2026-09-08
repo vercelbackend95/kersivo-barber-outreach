@@ -1740,6 +1740,13 @@ html[data-theme='blackline']::view-transition-new(root) {
 [data-theme='blackline'] .bl-booking .booking-recommendations.sf-shop {
   border-top-color: var(--bl-line-dark);
   color: var(--bl-ivory);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme='blackline'] .bl-booking .booking-recommendations--confirm {
+  background: transparent;
+  box-shadow: none;
 }
 
 /* Compact confirmation: reclaim section/header space so commerce fits above the fold */
@@ -1783,6 +1790,14 @@ html[data-theme='blackline']::view-transition-new(root) {
 
 [data-theme='blackline']:has(.booking-flow--confirmation) .sf-header-actions {
   margin-left: auto;
+}
+
+/* Desktop shop header is 3-col (brand | nav | actions). Confirmation hides nav/BOOK,
+   so restore the established 2-col brand | actions alignment — no Bag-only offset. */
+@media (min-width: 70rem) {
+  [data-theme='blackline']:has(.booking-flow--confirmation) .sf-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 }
 
 @media (max-width: 22.5rem) {
@@ -1850,8 +1865,9 @@ html[data-theme='blackline']::view-transition-new(root) {
 }
 
 [data-theme='blackline'] .bl-booking .booking-confirmation-experience__recommendations:has(.booking-recommendations) {
-  border-color: var(--bl-line-dark, var(--border));
-  background: color-mix(in srgb, var(--bl-graphite, var(--surface-2)) 70%, transparent);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 [data-theme='blackline'] .bl-booking .booking-recommendations__lede {

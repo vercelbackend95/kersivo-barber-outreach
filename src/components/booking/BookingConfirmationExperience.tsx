@@ -17,7 +17,7 @@ type Props = {
 /**
  * Shared post-booking commerce surface.
  * DOM order: confirmation → actions → recommendations (no CSS order tricks).
- * Primary wrapper groups confirm+actions so desktop is one column beside the rail.
+ * Primary wrapper groups confirm+actions; desktop stacks the rail in a full row below.
  * Hosts supply the rail so demo vs live product sources stay out of this wrapper.
  */
 export default function BookingConfirmationExperience({

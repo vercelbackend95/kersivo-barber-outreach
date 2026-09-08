@@ -16,12 +16,14 @@ import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import EmptyState from '../EmptyState';
 import { Clock } from '../lucide-react';
-import { addBlacklineSessionBooking } from '@/lib/demo/blacklineSessionBookings';
+import { addBlacklineSessionBooking, getBlacklineSessionBooking } from '@/lib/demo/blacklineSessionBookings';
 import {
   listBlacklineAvailableSlots,
   resolveBlacklineBarberForSlot,
 } from '@/lib/demo/blacklineAvailability';
 import { getDemoRecommendationProducts } from '@/lib/demo/recommendations';
+import { DEMO_LOCATION, DEMO_SHOP_NAME } from '@/lib/demo/site';
+import type { BookingCalendarInput } from '@/lib/booking/calendarEvent';
 
 type Service = {
   id: string;
@@ -43,6 +45,8 @@ type Barber = {
 
 type ShopReviewDetails = {
   timezone: string;
+  name?: string | null;
+  location?: string | null;
   cancellationWindowHours?: number | null;
   rescheduleWindowHours?: number | null;
 };
@@ -372,7 +376,10 @@ export default function BookingFlow({
     bookingId?: string;
     serviceId?: string;
     startAt?: string;
+    endAt?: string;
     date?: string;
+    durationMinutes?: number;
+    calendar?: BookingCalendarInput | null;
   } | null>(null);
 
   const isCreateMode = mode === 'create';
@@ -772,6 +779,11 @@ export default function BookingFlow({
           sessionReference = record.reference;
         }
 
+        const sessionRecord =
+          sessionBookingId && persistDemoSessionBooking
+            ? getBlacklineSessionBooking(sessionBookingId)
+            : null;
+
         setConfirmation({
           type: 'demo',
           summary: {
@@ -784,6 +796,24 @@ export default function BookingFlow({
           bookingId: sessionBookingId,
           serviceId: selectedService?.id,
           date: normalizedDate,
+          durationMinutes: selectedService?.durationMinutes,
+          startAt: sessionRecord?.startAt,
+          endAt: sessionRecord?.endAt,
+          calendar: {
+            shopName: presentation?.eyebrow?.trim() || DEMO_SHOP_NAME,
+            location: DEMO_LOCATION,
+            timezone: bookingTimezone,
+            dateIso: normalizedDate,
+            timeHHmm: time,
+            durationMinutes: sessionRecord?.durationMinutes ?? selectedService?.durationMinutes,
+            startAtIso: sessionRecord?.startAt,
+            endAtIso: sessionRecord?.endAt,
+            service: selectedService?.name,
+            barber: assignedBarberName,
+            reference: sessionReference,
+            bookingId: sessionBookingId,
+            isDemo: true,
+          },
         });
         if (!presentation?.skipCompletionAnalytics && !hasTrackedPublicDemoRef.current) {
           hasTrackedPublicDemoRef.current = true;
@@ -836,6 +866,20 @@ export default function BookingFlow({
           serviceId,
           startAt: data.booking?.startAt,
           date: normalizedDate,
+          durationMinutes: selectedService?.durationMinutes,
+          calendar: {
+            shopName: shopDetails?.name?.trim() || presentation?.eyebrow?.trim() || 'Kersivo',
+            location: shopDetails?.location?.trim() || null,
+            timezone: bookingTimezone,
+            dateIso: normalizedDate,
+            timeHHmm: time,
+            durationMinutes: selectedService?.durationMinutes,
+            startAtIso: data.booking?.startAt,
+            service: data.booking?.serviceName ?? selectedService?.name,
+            barber: data.booking?.barberName ?? selectedBarberLabel,
+            bookingId: data.booking?.id,
+            isDemo: false,
+          },
         });
 
         return;
@@ -896,6 +940,20 @@ export default function BookingFlow({
         serviceId,
         startAt: data.booking?.startAt,
         date: normalizedDate,
+        durationMinutes: selectedService?.durationMinutes,
+        calendar: {
+          shopName: shopDetails?.name?.trim() || presentation?.eyebrow?.trim() || 'Kersivo',
+          location: shopDetails?.location?.trim() || null,
+          timezone: bookingTimezone,
+          dateIso: normalizedDate,
+          timeHHmm: time,
+          durationMinutes: selectedService?.durationMinutes,
+          startAtIso: data.booking?.startAt,
+          service: data.booking?.serviceName ?? selectedService?.name,
+          barber: data.booking?.barberName ?? selectedBarberLabel,
+          bookingId: data.booking?.id,
+          isDemo: false,
+        },
       });
     } finally {
       setIsSubmitting(false);
@@ -1011,6 +1069,7 @@ export default function BookingFlow({
               ref={confirmationRef}
               variant={confirmation.type}
               summary={confirmation.summary}
+              calendar={confirmation.calendar ?? null}
               demoCopy={
                 publicDemoMode
                   ? {

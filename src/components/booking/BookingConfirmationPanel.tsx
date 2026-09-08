@@ -1,5 +1,7 @@
 import React, { forwardRef } from 'react';
 import { ConfirmationStatusIcon } from '@/components/ConfirmationStatusIcon';
+import AddToCalendarControl from '@/components/booking/AddToCalendarControl';
+import type { BookingCalendarInput } from '@/lib/booking/calendarEvent';
 
 export type BookingSummary = {
   service?: string;
@@ -15,10 +17,13 @@ export type BookingDemoCopy = {
   body?: string;
 };
 
+export type { BookingCalendarInput };
+
 type Props = {
   variant: 'booked' | 'rescheduled' | 'demo';
   summary?: BookingSummary;
   demoCopy?: BookingDemoCopy | null;
+  calendar?: BookingCalendarInput | null;
 };
 
 const contentByVariant = {
@@ -40,7 +45,7 @@ const contentByVariant = {
 } as const;
 
 const BookingConfirmationPanel = forwardRef<HTMLDivElement, Props>(function BookingConfirmationPanel(
-  { variant, summary, demoCopy = null },
+  { variant, summary, demoCopy = null, calendar = null },
   ref,
 ) {
   const defaults = contentByVariant[variant];
@@ -60,6 +65,7 @@ const BookingConfirmationPanel = forwardRef<HTMLDivElement, Props>(function Book
   const reference = summary?.reference?.trim() || '';
   const hasPass = Boolean(service || barber || date || time || reference);
   const whenValue = [date, time].filter(Boolean).join(' · ');
+  const showCalendar = Boolean(calendar?.shopName?.trim() && calendar?.timezone?.trim());
 
   return (
     <section className="booking-confirmation booking-confirmation--success booking-confirmation--pass">
@@ -79,51 +85,57 @@ const BookingConfirmationPanel = forwardRef<HTMLDivElement, Props>(function Book
       </div>
 
       {hasPass ? (
-        <dl className="booking-confirmation__pass" aria-label="Booking summary">
-          {service ? (
-            <div className="booking-confirmation__pass-field booking-confirmation__pass-field--service">
-              <dt>Appointment</dt>
-              <dd>{service}</dd>
-            </div>
-          ) : null}
+        <div className="booking-confirmation__pass" aria-label="Booking summary">
+          <dl className="booking-confirmation__pass-fields">
+            {service ? (
+              <div className="booking-confirmation__pass-field booking-confirmation__pass-field--service">
+                <dt>Appointment</dt>
+                <dd>{service}</dd>
+              </div>
+            ) : null}
 
-          {date ? (
-            <div className="booking-confirmation__pass-field booking-confirmation__pass-field--date">
-              <dt>Date</dt>
-              <dd>{date}</dd>
-            </div>
-          ) : null}
+            {date ? (
+              <div className="booking-confirmation__pass-field booking-confirmation__pass-field--date">
+                <dt>Date</dt>
+                <dd>{date}</dd>
+              </div>
+            ) : null}
 
-          {time ? (
-            <div className="booking-confirmation__pass-field booking-confirmation__pass-field--time">
-              <dt>Time</dt>
-              <dd>{time}</dd>
-            </div>
-          ) : null}
+            {time ? (
+              <div className="booking-confirmation__pass-field booking-confirmation__pass-field--time">
+                <dt>Time</dt>
+                <dd>{time}</dd>
+              </div>
+            ) : null}
 
-          {whenValue ? (
-            <div className="booking-confirmation__pass-when" aria-hidden="true">
-              {whenValue}
-            </div>
-          ) : null}
+            {whenValue ? (
+              <div className="booking-confirmation__pass-when" aria-hidden="true">
+                {whenValue}
+              </div>
+            ) : null}
 
-          {barber ? (
-            <div className="booking-confirmation__pass-field booking-confirmation__pass-field--barber">
-              <dt>Barber</dt>
-              <dd>
-                <span className="booking-confirmation__pass-with">with </span>
-                {barber}
-              </dd>
-            </div>
-          ) : null}
+            {barber ? (
+              <div className="booking-confirmation__pass-field booking-confirmation__pass-field--barber">
+                <dt>Barber</dt>
+                <dd>
+                  <span className="booking-confirmation__pass-with">with </span>
+                  {barber}
+                </dd>
+              </div>
+            ) : null}
 
-          {reference ? (
-            <div className="booking-confirmation__pass-field booking-confirmation__pass-field--ref">
-              <dt>Reference</dt>
-              <dd>{reference}</dd>
-            </div>
+            {reference ? (
+              <div className="booking-confirmation__pass-field booking-confirmation__pass-field--ref">
+                <dt>Reference</dt>
+                <dd>{reference}</dd>
+              </div>
+            ) : null}
+          </dl>
+
+          {showCalendar && calendar ? (
+            <AddToCalendarControl calendar={calendar} className="booking-confirmation__calendar" />
           ) : null}
-        </dl>
+        </div>
       ) : null}
     </section>
   );

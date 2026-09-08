@@ -1,6 +1,6 @@
 import type { BookingFlowPresentation } from '@/components/booking/bookingPresentation';
 
-export const BLACKLINE_TIMELINE_CTA_LABEL = 'View booking timeline';
+export const BLACKLINE_TIMELINE_CTA_LABEL = 'View booking online';
 
 export const BLACKLINE_BOOKING_PRESENTATION: BookingFlowPresentation = {
   eyebrow: 'Blackline Barbers',
