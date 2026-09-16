@@ -1,21 +1,29 @@
-import { STATIC_SITEMAP_LASTMOD } from './defaults';
+import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import { buildAbsoluteUrl } from './meta';
 
 /**
  * Marketing-domain sitemap for kersivo.co.uk only.
  * Do not query the product table here — owner/tenant product URLs belong on
  * future per-shop sitemaps (shopId + customer domain), not the marketing domain.
+ *
+ * lastmod is optional and must be a reliable significant-modification date
+ * (editorial "Last updated" / terms version). Omit when no such date exists.
+ * Never derive lastmod from deploy/build/current/file times.
  */
 export type MarketingSitemapEntry = {
   path: string;
-  lastmod: string;
+  /** ISO date (YYYY-MM-DD). Omit when no reliable significant-modification date exists. */
+  lastmod?: string;
 };
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
-  { path: '/', lastmod: STATIC_SITEMAP_LASTMOD },
-  { path: '/privacy', lastmod: STATIC_SITEMAP_LASTMOD },
-  { path: '/cookies', lastmod: STATIC_SITEMAP_LASTMOD },
-  { path: '/terms', lastmod: STATIC_SITEMAP_LASTMOD },
+  { path: '/' },
+  /** Matches "Last updated" on src/pages/privacy.astro. */
+  { path: '/privacy', lastmod: '2026-07-31' },
+  /** Matches "Last updated" on src/pages/cookies.astro. */
+  { path: '/cookies', lastmod: '2026-07-31' },
+  /** Canonical Terms version = "Last updated" on /terms. */
+  { path: '/terms', lastmod: CURRENT_TERMS_VERSION },
 ] as const;
 
 export const SITEMAP_CONTENT_TYPE = 'application/xml; charset=utf-8';
@@ -29,21 +37,25 @@ function escapeXml(value: string): string {
     .replace(/'/g, '&apos;');
 }
 
-export function buildMarketingSitemapEntries(): Array<{ loc: string; lastmod: string }> {
+export function buildMarketingSitemapEntries(): Array<{ loc: string; lastmod?: string }> {
   return MARKETING_SITEMAP_ENTRIES.map((entry) => ({
     loc: buildAbsoluteUrl(entry.path),
-    lastmod: entry.lastmod,
+    ...(entry.lastmod ? { lastmod: entry.lastmod } : {}),
   }));
 }
 
-export function toSitemapXml(entries: Array<{ loc: string; lastmod: string }> = buildMarketingSitemapEntries()): string {
+export function toSitemapXml(
+  entries: Array<{ loc: string; lastmod?: string }> = buildMarketingSitemapEntries(),
+): string {
   const urlNodes = entries
-    .map(
-      (entry) => `  <url>
-    <loc>${escapeXml(entry.loc)}</loc>
-    <lastmod>${escapeXml(entry.lastmod)}</lastmod>
-  </url>`
-    )
+    .map((entry) => {
+      const lastmodLine = entry.lastmod
+        ? `\n    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`
+        : '';
+      return `  <url>
+    <loc>${escapeXml(entry.loc)}</loc>${lastmodLine}
+  </url>`;
+    })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>

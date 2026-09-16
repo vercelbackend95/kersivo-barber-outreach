@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { STATIC_SITEMAP_LASTMOD } from './defaults';
+import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import {
   buildMarketingSitemapEntries,
   buildMarketingSitemapXml,
@@ -18,19 +18,19 @@ const EXPECTED_LOCS = [
 ] as const;
 
 describe('marketing sitemap', () => {
-  it('builds exactly four canonical marketing URLs with expected lastmod values', () => {
+  it('builds exactly four canonical marketing URLs with accurate or omitted lastmod', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
     expect(entries).toHaveLength(4);
     expect(locs).toEqual([...EXPECTED_LOCS]);
     expect(new Set(locs).size).toBe(4);
-    expect(STATIC_SITEMAP_LASTMOD).toBe('2026-07-18');
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
-    for (const loc of EXPECTED_LOCS) {
-      expect(byLoc[loc]).toBe('2026-07-18');
-    }
+    expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-07-31');
+    expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-07-31');
+    expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
 
     expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
     for (const loc of EXPECTED_LOCS.slice(1)) {
@@ -38,7 +38,7 @@ describe('marketing sitemap', () => {
     }
   });
 
-  it('emits valid urlset XML without product, admin, or API paths', () => {
+  it('emits valid urlset XML without product, admin, or API paths and without stale global lastmod', () => {
     const xml = buildMarketingSitemapXml();
     const urlMatches = xml.match(/<url>/g) ?? [];
     const locMatches = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -47,7 +47,11 @@ describe('marketing sitemap', () => {
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     expect(urlMatches).toHaveLength(4);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
-    expect(xml.match(/<lastmod>2026-07-18<\/lastmod>/g)).toHaveLength(4);
+    expect(xml).not.toContain('2026-07-18');
+    expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
+    expect(xml).toContain('<lastmod>2026-07-31</lastmod>');
+    expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(3);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');

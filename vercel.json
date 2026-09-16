@@ -7,9 +7,15 @@
       "permanent": true
     },
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "barberdemo.kersivo.co.uk" }],
+      "destination": "https://kersivo.co.uk/demo",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "barberdemo.kersivo.co.uk" }],
-      "destination": "https://kersivo.co.uk/:path*",
+      "destination": "https://kersivo.co.uk/demo",
       "permanent": true
     },
     {
