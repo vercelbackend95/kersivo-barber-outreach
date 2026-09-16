@@ -1098,9 +1098,16 @@ export default function BookingFlow({
             <p className="booking-flow__eyebrow">
               {presentation?.eyebrow ?? (publicDemoMode ? 'Interactive demo' : 'Instant booking')}
             </p>
-            <h1>
-              {presentation?.title ?? (publicDemoMode ? 'Try the booking flow' : isCreateMode ? 'Book now' : 'Reschedule')}
-            </h1>
+            {previewMode ? (
+              <h2 className="booking-flow__title">
+                {presentation?.title ?? (isCreateMode ? 'Book now' : 'Reschedule')}
+              </h2>
+            ) : (
+              <h1 className="booking-flow__title">
+                {presentation?.title ??
+                  (publicDemoMode ? 'Try the booking flow' : isCreateMode ? 'Book now' : 'Reschedule')}
+              </h1>
+            )}
             {publicDemoMode ? (
               <p className="booking-flow__sandbox-note muted">
                 {presentation?.sandboxNote ?? PUBLIC_DEMO_SANDBOX_NOTE}

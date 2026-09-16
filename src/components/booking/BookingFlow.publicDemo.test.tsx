@@ -197,11 +197,12 @@ describe('BookingFlow publicDemoMode', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Demo complete')).toBeTruthy();
-      expect(screen.getByText('That’s the KERSIVO booking experience')).toBeTruthy();
+      expect(screen.getByText("You're all set")).toBeTruthy();
+      expect(screen.getByText(/Demo only — no appointment or email was created/i)).toBeTruthy();
     });
 
-    expect(screen.getByRole('link', { name: 'See pricing' }).getAttribute('href')).toBe('/#pricing');
-    expect(screen.getByRole('link', { name: 'Ask about my setup' }).getAttribute('href')).toBe('/#contact');
+    expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Ask about my setup' })).toBeNull();
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(trackSpy).toHaveBeenCalledTimes(1);
@@ -227,5 +228,15 @@ describe('BookingFlow publicDemoMode', () => {
       screen.getByText(/No appointment will be created, no email will be sent/i),
     ).toBeTruthy();
     expect(screen.queryByText('Instant confirmation by email')).toBeNull();
+  });
+
+  it('uses h1 for public demo page title and h2 for landing previewMode Book now', () => {
+    const { unmount } = render(<BookingFlow publicDemoMode services={services} barbers={barbers} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Try the booking flow' })).toBeTruthy();
+    unmount();
+
+    render(<BookingFlow previewMode services={services} barbers={barbers} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Book now' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 1, name: 'Book now' })).toBeNull();
   });
 });

@@ -12,6 +12,7 @@ import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astr
 import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
 import LandingDifference from '@/components/landingDifference.astro';
 import Footer50 from '@/components/footer50.astro';
+import { buildBarberDemoJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import {
   BARBERSHOP_BOOKING_FAQ_ITEMS,
   buildBarbershopBookingFaqJsonLd,
@@ -44,7 +45,7 @@ const currentYear = new Date().getFullYear();
   title={DEFAULT_TITLE}
   description={DEFAULT_DESCRIPTION}
   canonicalPath="/"
-  jsonLd={buildBarbershopBookingFaqJsonLd()}
+  jsonLd={[buildBarberDemoJsonLd(), buildBarbershopBookingFaqJsonLd()]}
 >
   <link
     slot="head"

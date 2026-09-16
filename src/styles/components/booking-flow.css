@@ -85,7 +85,7 @@
   color: var(--accent);
 }
 
-.booking-flow--wizard .booking-flow__hero-copy h1 {
+.booking-flow--wizard .booking-flow__hero-copy .booking-flow__title {
   margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(2.4rem, 10vw, 3.4rem);
@@ -1269,7 +1269,7 @@
   max-width: none;
 }
 
-.booking-flow--wizard.booking-flow--preview .booking-flow__hero-copy h1 {
+.booking-flow--wizard.booking-flow--preview .booking-flow__hero-copy .booking-flow__title {
   font-size: clamp(1.6rem, 5vw, 2rem);
 }
 
