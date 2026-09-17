@@ -53,7 +53,8 @@ export default function LandingBookingsReportsWidget() {
     if (prefs.chartMetric) {
       setChartMetric(prefs.chartMetric);
     }
-    if (prefs.selectedBarberIds) {
+    // Empty array is not an intentional selection — still seed the winner barber.
+    if (Array.isArray(prefs.selectedBarberIds) && prefs.selectedBarberIds.length > 0) {
       hasSeededDefaultBarberRef.current = true;
       setSelectedBarberIds(prefs.selectedBarberIds);
     }

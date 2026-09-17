@@ -5,9 +5,11 @@ import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { LandingBarber } from '@/lib/landing/liveTimelineData';
-import type { LandingBookingData } from '@/lib/landing/landingBookingData';
-import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
-import { Feature261MonetizationRow } from '@/components/feature261/Feature261MonetizationRow';
+import {
+  BLACKLINE_LANDING_BOOKING_DATA,
+  type BlacklineLandingBookingData,
+} from '@/lib/landing/blacklineLandingBookingData';
+import Feature261MonetizationRow from '@/components/feature261/Feature261MonetizationRow.astro';
 import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIncluded';
 import '../styles/components/feature261.css';
 import '../styles/components/landingDemoPreview.css';
@@ -36,7 +38,7 @@ interface Props {
   className?: string;
   retailProducts?: CarouselProduct[];
   barbers?: LandingBarber[];
-  bookingData?: LandingBookingData;
+  bookingData?: BlacklineLandingBookingData;
   intro?: PreviewIntro;
   rows?: LandingDemoPreviewRow[];
   showReports?: boolean;
@@ -71,7 +73,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
     description:
       'Clients choose a service, barber and available time through your own branded website — with no app download.',
     ctaLabel: 'Try the booking experience',
-    ctaHref: '/book',
+    ctaHref: '/demo/book',
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'booking',
@@ -93,7 +95,7 @@ const {
   className = '',
   retailProducts = [],
   barbers = [],
-  bookingData,
+  bookingData = BLACKLINE_LANDING_BOOKING_DATA,
   intro = DEFAULT_INTRO,
   rows = DEFAULT_ROWS,
   showReports = true,
@@ -102,8 +104,6 @@ const {
   sectionId = 'live-demo',
   headingId = 'landing-demo-preview-title',
 } = Astro.props as Props;
-
-const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 ---
 
 <section
@@ -164,9 +164,11 @@ const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
           ) : (
             <div class="feature261__media feature261__media--widget">
               <LandingBookingWidget
-                services={resolvedBookingData.services}
-                barbers={resolvedBookingData.barbers}
-                shopDetails={resolvedBookingData.shopDetails}
+                services={bookingData.services}
+                barbers={bookingData.barbers}
+                shopDetails={bookingData.shopDetails}
+                categoryOrder={bookingData.categoryOrder}
+                presentation={bookingData.presentation}
                 client:visible={{ rootMargin: '200px' }}
               />
             </div>
@@ -189,9 +191,7 @@ const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
           </a>
         </li>
       ))}
-      {showReports ? (
-        <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
-      ) : null}
+      {showReports ? <Feature261MonetizationRow /> : null}
     </ul>
     {showMoreIncluded ? (
       <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />

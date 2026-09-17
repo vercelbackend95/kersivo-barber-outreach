@@ -475,12 +475,18 @@ export default function BookingFlow({
     if (!keepBarber) {
       setBarberId('');
     }
-  }, [barberId, barbers]);
+    if (previewMode) {
+      advanceFromContinue();
+    }
+  }, [advanceFromContinue, barberId, barbers, previewMode]);
 
   const selectBarber = useCallback((id: string) => {
     setBarberId(id);
     setTime('');
-  }, []);
+    if (previewMode) {
+      advanceFromContinue();
+    }
+  }, [advanceFromContinue, previewMode]);
 
   const selectTime = useCallback((slot: string) => {
     setTime(slot);
@@ -1355,36 +1361,38 @@ export default function BookingFlow({
                 ) : null}
               </div>
 
-              <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
-                {compactBookingSummary ? (
-                  <div className="booking-action-bar__summary">
-                    <strong>{compactBookingSummary}</strong>
-                  </div>
-                ) : null}
-                <div className="booking-action-bar__nav">
-                  {wizardStep > 1 ? (
+              {!previewMode ? (
+                <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
+                  {compactBookingSummary ? (
+                    <div className="booking-action-bar__summary">
+                      <strong>{compactBookingSummary}</strong>
+                    </div>
+                  ) : null}
+                  <div className="booking-action-bar__nav">
+                    {wizardStep > 1 ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary booking-action-bar__back"
+                        onClick={() => goToStep(wizardStep - 1)}
+                        disabled={isSubmitting || isAdvancing}
+                      >
+                        Back
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      className="btn btn--secondary booking-action-bar__back"
-                      onClick={() => goToStep(wizardStep - 1)}
-                      disabled={isSubmitting || isAdvancing}
+                      className="btn btn--primary booking-action-bar__button"
+                      disabled={primaryDisabled}
+                      aria-disabled={primaryDisabled}
+                      aria-busy={isSubmitting}
+                      onClick={handlePrimaryAction}
                     >
-                      Back
+                      {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
+                      <span>{primaryLabel}</span>
                     </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="btn btn--primary booking-action-bar__button"
-                    disabled={primaryDisabled}
-                    aria-disabled={primaryDisabled}
-                    aria-busy={isSubmitting}
-                    onClick={handlePrimaryAction}
-                  >
-                    {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
-                    <span>{primaryLabel}</span>
-                  </button>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
           </div>
 

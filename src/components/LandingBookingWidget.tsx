@@ -2,16 +2,16 @@
  * LandingBookingWidget — live client-booking preview for the landing page.
  *
  * Embeds the real `BookingFlow` in preview mode (no Details step, no action bar,
- * no review/confirm panel, never submits) and feeds it the shop's real services,
- * barbers and settings so availability is genuine. Once the visitor picks a
- * service, barber, date and time, a short “booking sent” confirmation shows,
- * then crossfades into the live-preview lock CTA.
+ * no review/confirm panel, never submits) and feeds it static BLACKLINE catalogue
+ * data. Once the visitor picks a service, barber, date and time, a short
+ * “booking sent” confirmation shows, then crossfades into the live-preview lock CTA.
  *
  * Rendered as a client-only island (time/availability dependent), mirroring
  * `InsideSystemLiveWidget`.
  */
 import { useEffect, useState } from 'react';
 import BookingFlow from '@/components/booking/BookingFlow';
+import type { BookingFlowPresentation } from '@/components/booking/bookingPresentation';
 import '@/styles/components/booking.css';
 import '@/styles/components/booking-flow.css';
 import '@/styles/components/booking-mobile.css';
@@ -27,6 +27,8 @@ type WidgetService = {
   pricePence: number;
   category?: string | null;
   displayOrder?: number;
+  description?: string | null;
+  featured?: boolean;
 };
 
 type WidgetBarber = {
@@ -44,7 +46,7 @@ type WidgetShopDetails = {
 
 type OverlayPhase = 'idle' | 'success' | 'lock';
 
-const BOOK_HREF = '/book';
+const BOOK_HREF = '/demo/book';
 const SUCCESS_HOLD_MS = 1400;
 const SUCCESS_HOLD_REDUCED_MS = 200;
 
@@ -57,10 +59,14 @@ export function LandingBookingWidget({
   services,
   barbers,
   shopDetails,
+  categoryOrder,
+  presentation,
 }: {
   services: WidgetService[];
   barbers: WidgetBarber[];
   shopDetails?: WidgetShopDetails;
+  categoryOrder?: readonly string[];
+  presentation?: BookingFlowPresentation;
 }) {
   const [phase, setPhase] = useState<OverlayPhase>('idle');
   const isDimmed = phase !== 'idle';
@@ -92,6 +98,8 @@ export function LandingBookingWidget({
             services={services}
             barbers={barbers}
             shopDetails={shopDetails}
+            categoryOrder={categoryOrder}
+            presentation={presentation}
             onComplete={() => setPhase('success')}
           />
         </div>

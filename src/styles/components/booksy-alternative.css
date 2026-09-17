@@ -110,8 +110,7 @@
 
 .booksy-alt-hero__ctas .btn,
 .booksy-alt-final__actions .btn,
-.booksy-alt-pricing__offer .btn,
-.booksy-alt-proof-live .feature261__row-cta {
+.booksy-alt-pricing__offer .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -551,15 +550,14 @@
   min-width: 0;
 }
 
-.booksy-alt .booksy-alt-proof-live .feature261__row-cta {
-  padding: 0.95rem 1.25rem;
-}
-
-@media (max-width: 40rem) {
-  .booksy-alt .booksy-alt-proof-live .feature261__row-cta {
-    width: 100%;
-    flex: 0 0 auto;
-  }
+/* Match landing/feature261 ghost CTAs — flush with copy, not primary-button chrome */
+.booksy-alt .booksy-alt-proof-live .feature261__row-cta--ghost {
+  justify-content: flex-start;
+  justify-self: start;
+  text-align: start;
+  min-height: auto;
+  padding: 0.4rem 0 0.15rem 0.25rem;
+  width: auto;
 }
 
 /* ── Pricing ──────────────────────────────────────────────── */

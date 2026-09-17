@@ -1,0 +1,37 @@
+---
+import LandingBookingsReportsWidget from '@/components/LandingBookingsReportsWidget';
+import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
+
+interface Props {
+  reverse?: boolean;
+}
+
+const { reverse = false } = Astro.props as Props;
+const { kicker, heading, description, ctaLabel, ctaHref, ctaTrack, ctaSameTab } =
+  FEATURE261_MONETIZATION_ROW;
+---
+
+<li
+  data-feature261-card
+  class:list={['feature261__row', reverse && 'feature261__row--reverse']}
+>
+  <div class="feature261__media feature261__media--widget">
+    <LandingBookingsReportsWidget client:visible={{ rootMargin: '200px' }} />
+  </div>
+
+  <div class="feature261__copy">
+    <p class="feature261__row-kicker">{kicker}</p>
+    <h3 class="feature261__row-heading">{heading}</h3>
+    <p class="feature261__row-body">{description}</p>
+  </div>
+
+  <a
+    href={ctaHref}
+    class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
+    target={ctaSameTab ? undefined : '_blank'}
+    rel={ctaSameTab ? undefined : 'noopener noreferrer'}
+    data-track={ctaTrack}
+  >
+    {ctaLabel}
+  </a>
+</li>

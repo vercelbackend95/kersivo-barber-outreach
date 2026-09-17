@@ -1,0 +1,100 @@
+---
+const HERO_H1_LINES = [
+  'Barbershop Booking System ',
+  'Built On Your Own Domain',
+] as const;
+
+const HERO_H1_ACCESSIBLE_LABEL = 'Barbershop Booking System Built On Your Own Domain';
+
+const PHONE_FRAME_WIDTH = 543;
+const PHONE_FRAME_HEIGHT = 1106;
+const MOCK_SCREEN_WIDTH = 1179;
+const MOCK_SCREEN_HEIGHT = 2556;
+
+const SCISSORS_PATH_D =
+  'M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0m7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0';
+---
+
+<section
+  data-facebook-cover
+  data-hero227=""
+  class="hero227-root hero227-root--landing hero227-root--facebook-cover"
+  style="--font-antonio: Antonio;"
+>
+  <div class="hero227-inner hero227-stack hero227-landing-grid">
+    <div class="hero227-landing-copy">
+      <div class="hero227-copy-layer">
+        <p class="hero227-kicker">Built for independent UK barbershops</p>
+        <div class="hero227-heading-wrap">
+          <h1
+            aria-label={HERO_H1_ACCESSIBLE_LABEL}
+            class="hero227-heading--landing font-antonio"
+          >
+            <span class="hero227-heading-reveal hero227-heading-reveal--landing">
+              {HERO_H1_LINES.map((line) => (
+                <span class="hero227-heading-line">{line}</span>
+              ))}
+            </span>
+          </h1>
+          <svg
+            class="hero227-scissors-accent"
+            viewBox="0 0 16 16"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="#dc2626"
+            aria-hidden="true"
+          >
+            <path d={SCISSORS_PATH_D} />
+          </svg>
+        </div>
+        <p class="hero227-cover-body">
+          Your branded website, online bookings, deposits, client management and
+          retail pickup &mdash; all in one simple &pound;39 monthly plan.
+        </p>
+      </div>
+
+      <div class="hero227-mid-band">
+        <p class="hero227-price-line">&pound;39/month. No setup fee. Cancel anytime.</p>
+        <div class="hero227-cta-pill">
+          <span class="hero227-cta-system">Get started — £39/month</span>
+          <span class="hero227-cta-demo">See KERSIVO in action</span>
+        </div>
+        <p class="hero227-trust-line hero227-trust-line--landing" role="list">
+          <span class="hero227-trust-line__item" role="listitem">Your domain</span>
+          <span class="hero227-trust-line__sep" aria-hidden="true">·</span>
+          <span class="hero227-trust-line__item" role="listitem">Your clients</span>
+          <span class="hero227-trust-line__sep" aria-hidden="true">·</span>
+          <span class="hero227-trust-line__item" role="listitem">Booking + retail</span>
+          <span class="hero227-trust-line__sep" aria-hidden="true">·</span>
+          <span class="hero227-trust-line__item" role="listitem">0% KERSIVO commission</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="hero227-mock-stack">
+      <div class="hero227-mock-clip">
+        <div class="hero227-mock">
+          <div class="hero227-mock-screen-wrap">
+            <img
+              class="hero227-mock-screen"
+              src="/images/hero/iphonemockup.jpg"
+              alt=""
+              width={MOCK_SCREEN_WIDTH}
+              height={MOCK_SCREEN_HEIGHT}
+              decoding="sync"
+              fetchpriority="high"
+            />
+          </div>
+          <img
+            class="hero227-mock-frame"
+            alt=""
+            src="/images/hero/phone-5.png"
+            width={PHONE_FRAME_WIDTH}
+            height={PHONE_FRAME_HEIGHT}
+            decoding="sync"
+            fetchpriority="high"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

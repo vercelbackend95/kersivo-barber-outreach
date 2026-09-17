@@ -1,14 +1,12 @@
 ---
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 import LandingDemoPreview from '@/components/landingDemoPreview.astro';
-import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
 import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 
-const [retailProducts, barbers, bookingData] = await Promise.all([
+const [retailProducts, barbers] = await Promise.all([
   resolveLandingDemoCarouselProducts(),
   resolveLandingDemoBarbers(),
-  resolveLandingBookingData(),
 ]);
 
 const booksyProofRows = [
@@ -29,7 +27,7 @@ const booksyProofRows = [
     description:
       'Clients choose a service, barber and available time through your own branded booking experience — with no app download required.',
     ctaLabel: 'Try the booking experience',
-    ctaHref: '/book',
+    ctaHref: '/demo/book',
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'booking',
@@ -64,5 +62,4 @@ const booksyProofRows = [
   rows={booksyProofRows}
   retailProducts={retailProducts}
   barbers={barbers}
-  bookingData={bookingData}
 />

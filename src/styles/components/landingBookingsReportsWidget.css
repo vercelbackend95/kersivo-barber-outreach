@@ -77,6 +77,23 @@
   border-color: color-mix(in srgb, var(--pill-series-color, var(--border)) 35%, var(--border));
 }
 
+/* Keep toolbar a real flex box — avoid admin compact `display: contents` killing clicks */
+.lbrw .admin-analytics-studio--bookings-reports .admin-analytics-studio__toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.lbrw .admin-analytics-studio--bookings-reports .admin-analytics-studio__toolbar-primary,
+.lbrw .admin-analytics-studio--bookings-reports .admin-analytics-studio__toolbar-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  margin-left: 0;
+}
+
 .feature261 .lbrw .admin-sales-chart-canvas {
   height: clamp(280px, 42vh, 400px);
   min-height: 280px;

@@ -239,4 +239,31 @@ describe('BookingFlow publicDemoMode', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Book now' })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 1, name: 'Book now' })).toBeNull();
   });
+
+  it('hides the action bar in previewMode and auto-advances on selection', async () => {
+    const onComplete = vi.fn();
+    const { container } = render(
+      <BookingFlow previewMode services={services} barbers={barbers} onComplete={onComplete} />,
+    );
+
+    expect(container.querySelector('.booking-action-bar')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
+    });
+    expect(container.querySelector('.booking-action-bar')).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: '09:00' }));
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+  });
 });

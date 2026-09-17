@@ -118,21 +118,23 @@
 .feature261 .feature261__media--carousel {
   display: flex;
   flex-direction: column;
-  aspect-ratio: 16 / 10;
-  min-height: clamp(14rem, 26vh, 22rem);
+  /* Height follows content-sized storefront cards (no empty card band) */
+  aspect-ratio: unset;
+  min-height: 0;
+  height: auto;
   background: var(--feature261-bg);
 }
 
 .feature261 .feature261__media--carousel .shop6__carousel,
 .feature261 .feature261__media--carousel .feature261-retail-carousel {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
   display: grid;
-  grid-template-rows: 1fr;
+  grid-template-rows: auto;
   gap: 0;
-  height: 100%;
+  height: auto;
 }
 
 .feature261 .feature261__media--carousel .shop6__controls {
@@ -141,7 +143,7 @@
 
 .feature261 .feature261__media--carousel .shop6__grid {
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 0;
   aspect-ratio: unset;
   align-items: stretch;
@@ -150,28 +152,29 @@
 
 .feature261 .feature261__media--carousel .shop6__item {
   align-items: stretch;
-  max-height: 100%;
+  max-height: none;
+  height: auto;
 }
 
 .feature261 .feature261__media--carousel .shop-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  max-height: 100%;
+  height: auto;
+  max-height: none;
   min-height: 0;
 }
 
 .feature261 .feature261__media--carousel .shop-media-link {
   display: flex;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   flex-direction: column;
   min-height: 0;
 }
 
 .feature261 .feature261__media--carousel .shop6__grid .shop-media {
-  flex: 1 1 0;
-  min-height: 52%;
-  aspect-ratio: unset;
+  flex: 0 0 auto;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
   padding: 0;
 }
 
@@ -241,14 +244,16 @@
 
 @media (max-width: 899px) {
   .feature261 .feature261__media--carousel {
-    min-height: clamp(16rem, 42vw, 20rem);
+    aspect-ratio: unset;
+    min-height: 0;
+    height: auto;
   }
 
   .feature261 .feature261__media--carousel .shop6__grid {
     margin-inline: 0;
     padding-inline: 0;
     scroll-snap-type: x mandatory;
-    --shop6-desktop-visible-cards: 2.1;
+    --shop6-desktop-visible-cards: 2.5;
   }
 
   .feature261 .feature261__media--carousel .shop6__item {
@@ -259,7 +264,8 @@
 
 @media (min-width: 48rem) and (max-width: 899.98px) {
   .feature261 .feature261__media--carousel .shop6__grid .shop-media {
-    min-height: 62%;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
     padding: 0;
   }
 
@@ -284,12 +290,13 @@
 
 @media (min-width: 900px) {
   .feature261 .feature261__media--carousel .shop-media-link {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-height: 0;
   }
 
   .feature261 .feature261__media--carousel .shop6__grid .shop-media {
-    min-height: 68%;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
     padding: 0;
   }
 

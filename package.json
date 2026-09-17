@@ -45,6 +45,7 @@
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
     "screenshots:feature261": "node scripts/capture-feature261-screens.mjs",
+    "social:facebook-cover": "node scripts/export-facebook-cover.mjs",
     "enhance:timeline": "node scripts/enhance-timeline-screenshot.mjs",
     "assets:brand-values": "node scripts/generate-brand-values-assets.mjs --variant=all",
     "generate:favicons": "node scripts/generate-favicons.mjs",
