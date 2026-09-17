@@ -30,6 +30,8 @@ interface Props extends PageSeo {
   navbarVariant?: Navbar17Variant;
   /** When set, overrides middleware-resolved navbar CTA. */
   previewCta?: LandingNavbarPreviewCta | null;
+  /** Override navbar cart visibility (defaults from variant). */
+  showCart?: boolean;
 }
 
 const {
@@ -46,6 +48,7 @@ const {
   jsonLd,
   navbarVariant = 'landing',
   previewCta = null,
+  showCart,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -93,7 +96,7 @@ const jsonLdBlocks = jsonLd
     <slot name="head" />
   </head>
   <body>
-    <Navbar17 variant={navbarVariant} previewCta={previewCta} />
+    <Navbar17 variant={navbarVariant} previewCta={previewCta} showCart={showCart} />
     <RouteTransitionRoot variant="marketing">
       <slot />
     </RouteTransitionRoot>

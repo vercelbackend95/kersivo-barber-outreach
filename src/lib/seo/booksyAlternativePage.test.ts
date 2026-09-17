@@ -66,6 +66,7 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain('navbarVariant="shop"');
+    expect(pageSource).toContain('showCart={false}');
     expect(pageSource).not.toContain('noindex');
     expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbers | KERSIVO');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(

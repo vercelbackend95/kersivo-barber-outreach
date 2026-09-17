@@ -29,6 +29,8 @@ interface Props {
    * Must be computed outside this component so client scripts never see auth/Prisma.
    */
   previewCta?: Navbar17PreviewCtaProp | null;
+  /** Override default cart visibility for the variant (e.g. hide on marketing pages that reuse shop nav). */
+  showCart?: boolean;
 }
 
 const {
@@ -36,10 +38,11 @@ const {
   brandLogoUrl = null,
   brandAriaLabel: brandAriaLabelProp,
   previewCta: previewCtaProp = null,
+  showCart: showCartProp,
 } = Astro.props as Props;
 
 const navItems = getNavbar17Items(variant);
-const showCart = navbar17ShowsCart(variant);
+const showCart = typeof showCartProp === 'boolean' ? showCartProp : navbar17ShowsCart(variant);
 const isLanding = variant === 'landing';
 const isTestShop = variant === 'testShop';
 const usesLandingCta = variant === 'landing' || variant === 'shop' || variant === 'testShop';
@@ -76,7 +79,7 @@ const brandLeavesFamily = hrefLeavesFamily(brandHref);
   class="navbar17"
   data-navbar17
   data-navbar-variant={variant}
-  transition:persist={`ks-nav-${variant}`}
+  transition:persist={`ks-nav-${variant}-${showCart ? 'cart' : 'nocart'}`}
 >
   <div class="navbar17__stack" data-navbar17-stack>
     <div class="navbar17__bar">
