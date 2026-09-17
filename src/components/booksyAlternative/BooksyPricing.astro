@@ -1,11 +1,12 @@
 ---
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { RateCard1Offer } from '@/components/rateCard1';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
   BOOKSY_BOOST_COMMISSION_PERCENT,
   BOOKSY_BOOST_MINIMUM_GBP,
 } from '@/lib/seo/booksyFacts';
+import '@/styles/rateCard1.css';
 ---
 
 <section
@@ -30,21 +31,8 @@ import {
       </p>
     </header>
 
-    <div class="booksy-alt-pricing__offer">
-      <p class="booksy-alt-pricing__price">
-        £{SAAS_MONTHLY_GBP} <span>/ month</span>
-      </p>
-      <p class="booksy-alt-pricing__value">No setup fee. Cancel anytime. One physical location.</p>
-      <a
-        href="/admin/launch"
-        class="btn btn--primary btn--lg"
-        data-track="saas_subscribe_click"
-      >
-        View the Plan
-      </a>
-      <p class="booksy-alt-pricing__note">
-        Standard Stripe processing fees apply where payments are processed. Fair-use terms apply.
-      </p>
+    <div class="rate-card1--landing booksy-alt-pricing__offer-host">
+      <RateCard1Offer />
     </div>
 
     <div class="booksy-alt-pricing__compare">

@@ -421,6 +421,18 @@
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 899px) {
+  .isw--passive .admin-vtl-scroll {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: pan-y;
+  }
+
+  .isw--passive .admin-vtl-swipe-root {
+    touch-action: pan-y;
+  }
+}
+
 @media (max-width: 560px) {
   .isw .admin-vtl-scroll {
     max-height: clamp(16.5rem, 46vh, 22.5rem);

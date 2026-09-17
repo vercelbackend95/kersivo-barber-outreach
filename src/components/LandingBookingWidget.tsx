@@ -6,12 +6,16 @@
  * data. Once the visitor picks a service, barber, date and time, a short
  * “booking sent” confirmation shows, then crossfades into the live-preview lock CTA.
  *
+ * At max-width 899px the embed is a passive visual preview (inert + no user scroll);
+ * interaction lives in the full booking demo CTA below the row.
+ *
  * Rendered as a client-only island (time/availability dependent), mirroring
  * `InsideSystemLiveWidget`.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type HTMLAttributes } from 'react';
 import BookingFlow from '@/components/booking/BookingFlow';
 import type { BookingFlowPresentation } from '@/components/booking/bookingPresentation';
+import { useMaxWidthPassive } from '@/lib/landing/useMaxWidthPassive';
 import '@/styles/components/booking.css';
 import '@/styles/components/booking-flow.css';
 import '@/styles/components/booking-mobile.css';
@@ -69,7 +73,14 @@ export function LandingBookingWidget({
   presentation?: BookingFlowPresentation;
 }) {
   const [phase, setPhase] = useState<OverlayPhase>('idle');
-  const isDimmed = phase !== 'idle';
+  const isPassive = useMaxWidthPassive();
+  const isPassiveRef = useRef(isPassive);
+  isPassiveRef.current = isPassive;
+  const isDimmed = !isPassive && phase !== 'idle';
+
+  useEffect(() => {
+    if (isPassive) setPhase('idle');
+  }, [isPassive]);
 
   useEffect(() => {
     if (!isDimmed) return;
@@ -90,9 +101,16 @@ export function LandingBookingWidget({
   const dismiss = () => setPhase('idle');
 
   return (
-    <div className={`lbw${isDimmed ? ' is-dimmed' : ''}`}>
+    <div
+      className={`lbw${isDimmed ? ' is-dimmed' : ''}${isPassive ? ' lbw--passive' : ''}`}
+      data-landing-preview-passive={isPassive ? 'true' : undefined}
+    >
       <div className="lbw__stage">
-        <div className="lbw__scroll" aria-hidden={isDimmed ? 'true' : undefined}>
+        <div
+          className="lbw__scroll"
+          aria-hidden={isDimmed || isPassive ? 'true' : undefined}
+          {...(isPassive ? ({ inert: true } as HTMLAttributes<HTMLDivElement>) : {})}
+        >
           <BookingFlow
             previewMode
             services={services}
@@ -100,11 +118,14 @@ export function LandingBookingWidget({
             shopDetails={shopDetails}
             categoryOrder={categoryOrder}
             presentation={presentation}
-            onComplete={() => setPhase('success')}
+            onComplete={() => {
+              if (isPassiveRef.current) return;
+              setPhase('success');
+            }}
           />
         </div>
 
-        {phase !== 'idle' && (
+        {phase !== 'idle' && !isPassive && (
           <div
             className="lbw-lock"
             role="dialog"

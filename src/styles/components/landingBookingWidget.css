@@ -127,6 +127,30 @@
   min-height: 2.75rem;
 }
 
+@media (max-width: 899px) {
+  .lbw--passive .lbw__scroll {
+    position: relative;
+    overflow-y: hidden;
+    overscroll-behavior: auto;
+    touch-action: pan-y;
+  }
+
+  .lbw--passive .lbw__scroll::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2.75rem;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--feature261-bg, #030303) 72%, transparent) 100%
+    );
+  }
+}
+
 @media (max-width: 560px) {
   .lbw__scroll {
     max-height: clamp(18rem, 52vh, 26rem);

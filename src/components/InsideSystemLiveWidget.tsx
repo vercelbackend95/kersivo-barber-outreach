@@ -6,10 +6,13 @@
  * Deep actions (client profile, status/service edits) are gated: they open a
  * preview lock with Build My Preview + View Admin Demo instead of mutating anything.
  *
+ * At max-width 899px the embed is a passive visual preview (inert + no user scroll);
+ * interaction lives in the full admin demo CTA below the row.
+ *
  * Rendered as a client-only island (time/timezone dependent), so it ships as an
  * interactive React component with no SSR hydration mismatch.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react';
 
 import TodayTimeline from '@/components/admin/TodayTimeline';
 import '@/styles/components/admin-demo.css';
@@ -28,6 +31,7 @@ import {
   pickClosestTimeLabel,
   prefersReducedMotion,
 } from '@/lib/landing/liveTimelineScroll';
+import { useMaxWidthPassive } from '@/lib/landing/useMaxWidthPassive';
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 
 const ADMIN_DEMO_HREF = adminDemoHref('timeline');
@@ -48,6 +52,9 @@ export function InsideSystemLiveWidget({
   const [lockOpen, setLockOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const isPassive = useMaxWidthPassive();
+  const isPassiveRef = useRef(isPassive);
+  isPassiveRef.current = isPassive;
 
   const data = useMemo(() => getLandingTimelineData(barbers), [barbers]);
 
@@ -57,10 +64,17 @@ export function InsideSystemLiveWidget({
     setPublicAdminDemoMode(true);
     installAdminFetchInterceptor();
 
-    const openLock = () => setLockOpen(true);
+    const openLock = () => {
+      if (isPassiveRef.current) return;
+      setLockOpen(true);
+    };
     window.addEventListener(ADMIN_DEMO_BLOCKED_EVENT, openLock);
     return () => window.removeEventListener(ADMIN_DEMO_BLOCKED_EVENT, openLock);
   }, []);
+
+  useEffect(() => {
+    if (isPassive) setLockOpen(false);
+  }, [isPassive]);
 
   useEffect(() => {
     // Animate to mid-afternoon only when the widget enters the viewport —
@@ -143,10 +157,22 @@ export function InsideSystemLiveWidget({
     return () => window.removeEventListener('keydown', onKey);
   }, [lockOpen]);
 
+  const openLock = () => {
+    if (isPassiveRef.current) return;
+    setLockOpen(true);
+  };
+
   return (
-    <div ref={rootRef} className={`isw${lockOpen ? ' is-dimmed' : ''}`}>
+    <div
+      ref={rootRef}
+      className={`isw${lockOpen ? ' is-dimmed' : ''}${isPassive ? ' isw--passive' : ''}`}
+      data-landing-preview-passive={isPassive ? 'true' : undefined}
+    >
       <div className="isw__stage">
-        <div aria-hidden={lockOpen ? 'true' : undefined}>
+        <div
+          aria-hidden={lockOpen || isPassive ? 'true' : undefined}
+          {...(isPassive ? ({ inert: true } as HTMLAttributes<HTMLDivElement>) : {})}
+        >
           <TodayTimeline
             barbers={data.barbers}
             bookings={data.bookings}
@@ -154,13 +180,13 @@ export function InsideSystemLiveWidget({
             selectedDate={data.selectedDate}
             allowInitialNowScroll={false}
             scrollContainerRef={scrollRef}
-            previewSwipe
-            onBookingClick={() => setLockOpen(true)}
-            onClientProfileIntercept={() => setLockOpen(true)}
+            previewSwipe={!isPassive}
+            onBookingClick={openLock}
+            onClientProfileIntercept={openLock}
           />
         </div>
 
-        {lockOpen && (
+        {lockOpen && !isPassive && (
           <div
             className="isw-lock"
             role="dialog"

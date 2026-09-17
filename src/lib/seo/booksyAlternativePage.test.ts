@@ -23,6 +23,14 @@ import {
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
 import { resolveCanonicalUrl } from './meta';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
+import {
+  getNavbar17CtaHref,
+  getNavbar17CtaLabel,
+  getNavbar17Items,
+  navbar17ShowsCart,
+  NAVBAR_SUBSCRIBE_CTA_LABEL,
+} from '@/lib/nav/navbar17Items';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +44,8 @@ const switcherSource = readRepoFile('../../components/landingSwitcherReassurance
 const heroSource = readRepoFile('../../components/booksyAlternative/BooksyHero.astro');
 const compareSource = readRepoFile('../../components/booksyAlternative/BooksyCompare.astro');
 const pricingSource = readRepoFile('../../components/booksyAlternative/BooksyPricing.astro');
+const rateCard1Source = readRepoFile('../../components/rateCard1.tsx');
+const navbarItemsSource = readRepoFile('../nav/navbar17Items.ts');
 const finalCtaSource = readRepoFile('../../components/booksyAlternative/BooksyFinalCta.astro');
 const approachesSource = readRepoFile('../../components/booksyAlternative/BooksyApproaches.astro');
 const fitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
@@ -60,19 +70,36 @@ const bannedPhrases = [
 ] as const;
 
 describe('booksy-alternative page SEO and claim safety', () => {
-  it('wires LandingLayout with exact title, description, canonical and shop navbar', () => {
+  it('wires LandingLayout with exact title, description, canonical and booksyAlternative navbar', () => {
     expect(pageSource).toContain('LandingLayout');
     expect(pageSource).toContain('title={BOOKSY_ALTERNATIVE_TITLE}');
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
-    expect(pageSource).toContain('navbarVariant="shop"');
-    expect(pageSource).toContain('showCart={false}');
+    expect(pageSource).toContain('navbarVariant="booksyAlternative"');
+    expect(pageSource).not.toContain('navbarVariant="shop"');
+    expect(pageSource).not.toContain('showCart={false}');
     expect(pageSource).not.toContain('noindex');
     expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbers | KERSIVO');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(
       'Looking for a Booksy alternative for your barbershop? Compare KERSIVO and Booksy across branding, pricing, bookings, marketplace discovery and client experience.',
     );
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
+
+    const booksyNav = getNavbar17Items('booksyAlternative');
+    expect(booksyNav.map((item) => item.link)).toEqual(['#pricing', '#faq']);
+    expect(booksyNav.some((item) => item.link === '/#pricing')).toBe(false);
+    expect(booksyNav.some((item) => item.link === '/#faq')).toBe(false);
+    expect(booksyNav.some((item) => item.name === 'Contact')).toBe(false);
+    expect(navbar17ShowsCart('booksyAlternative')).toBe(false);
+    expect(getNavbar17CtaHref('booksyAlternative')).toBe('/admin/launch');
+    expect(getNavbar17CtaLabel('booksyAlternative')).toBe(NAVBAR_SUBSCRIBE_CTA_LABEL);
+    expect(navbar17ShowsCart('shop')).toBe(true);
+    expect(getNavbar17Items('shop').map((item) => item.link)).toEqual([
+      '/#pricing',
+      '/#faq',
+      '/#contact',
+    ]);
+    expect(navbarItemsSource).toContain("'booksyAlternative'");
   });
 
   it('has exactly one H1 with the approved text', () => {
@@ -87,19 +114,30 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(heroSource).toContain('href="/demo"');
     expect(finalCtaSource).toContain('href="/demo"');
     expect(finalCtaSource).toContain('href="/admin/launch"');
-    expect(pricingSource).toContain('href="/admin/launch"');
+    expect(rateCard1Source).toContain('href="/admin/launch"');
   });
 
-  it('pricing section centres hierarchy with a single £39 card price moment', () => {
+  it('pricing section reuses the shared landing offer card', () => {
     expect(pricingSource).toContain('SIMPLE PRICING');
     expect(pricingSource).toContain('One plan. One barbershop location.');
-    expect(pricingSource).toContain('View the Plan');
+    expect(pricingSource).toContain('id="pricing"');
+    expect(pricingSource).toContain('RateCard1Offer');
+    expect(pricingSource).toContain('rate-card1--landing');
+    expect(pricingSource).toContain('booksy-alt-pricing__offer-host');
+    expect(pricingSource).not.toContain('View the Plan');
+    expect(pricingSource).not.toContain('booksy-alt-pricing__price');
     expect(pricingSource).not.toContain('View the £');
     expect(pricingSource).not.toContain(`£{SAAS_MONTHLY_GBP}/month. One barbershop location.`);
-    expect(pricingSource).toContain('£{SAAS_MONTHLY_GBP}');
-    expect(pricingSource).toContain('/ month');
     expect(pricingSource).toContain('How that compares with Booksy');
-    expect(pricingSource).toContain('href="/admin/launch"');
+    expect(pricingSource.match(/id="pricing"/g)?.length).toBe(1);
+    expect(rateCard1Source).toContain('function RateCard1Offer');
+    expect(rateCard1Source).toContain('export { RateCard1, RateCard1Offer }');
+    expect(rateCard1Source).toContain('<RateCard1Offer />');
+    expect(rateCard1Source).toContain('getRateCard1LandingLayout');
+    expect(rateCard1Source).toContain('£{SAAS_MONTHLY_GBP}');
+    expect(rateCard1Source).toContain('/ month');
+    expect(getRateCard1LandingLayout().ctaLabel).toBeTruthy();
+    expect(homepageSource).toContain('<RateCard1 variant="landing" />');
   });
 
   it('comparison includes factual values and official Booksy source links', () => {
@@ -165,6 +203,8 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(proofSource).toContain('Explore the admin system');
     expect(proofSource).toContain('Try the booking experience');
     expect(proofSource).toContain('Explore the retail shop');
+    expect(proofSource).toContain("ctaHref: '/demo/shop'");
+    expect(proofSource).not.toContain("ctaHref: '/shop'");
     expect(proofSource).toContain('showReports={false}');
     expect(proofSource).toContain('showMoreIncluded={false}');
     expect(proofSource).toContain("media: 'widget'");

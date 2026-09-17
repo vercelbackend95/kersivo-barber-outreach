@@ -109,8 +109,7 @@
 /* ── Page-scoped CTA standard ─────────────────────────────── */
 
 .booksy-alt-hero__ctas .btn,
-.booksy-alt-final__actions .btn,
-.booksy-alt-pricing__offer .btn {
+.booksy-alt-final__actions .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -562,59 +561,10 @@
 
 /* ── Pricing ──────────────────────────────────────────────── */
 
-.booksy-alt-pricing__offer {
-  display: grid;
-  gap: clamp(1.15rem, 2.5vw, 1.5rem);
-  justify-items: center;
-  max-width: 40rem;
-  margin-inline: auto;
-  padding: clamp(1.15rem, 3vw, 2rem);
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
-  border-radius: var(--radius-16);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
-    var(--surface-1) 100%
-  );
-  text-align: center;
-}
-
-.booksy-alt-pricing__offer .btn {
-  width: auto;
-  min-width: min(100%, 16rem);
-  flex: 0 0 auto;
-  padding: 0.95rem 1.25rem;
-}
-
-.booksy-alt-pricing__price {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: clamp(2.25rem, 6vw, 3.5rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  color: var(--fg);
-}
-
-.booksy-alt-pricing__price span {
-  font-size: 0.45em;
-  color: var(--muted);
-}
-
-.booksy-alt-pricing__value {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.booksy-alt-pricing__note {
-  margin: 0 auto;
-  max-width: 52ch;
+.booksy-alt-pricing__offer-host {
   width: 100%;
-  text-align: center;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: color-mix(in srgb, var(--muted) 90%, var(--fg));
+  max-width: 72.5rem;
+  margin-inline: auto;
 }
 
 .booksy-alt-pricing__compare {
@@ -649,13 +599,6 @@
   color: var(--muted);
   text-align: center;
   text-wrap: pretty;
-}
-
-@media (max-width: 40rem) {
-  .booksy-alt-pricing__offer .btn {
-    width: 100%;
-    min-width: 0;
-  }
 }
 
 /* ── Switching ────────────────────────────────────────────── */

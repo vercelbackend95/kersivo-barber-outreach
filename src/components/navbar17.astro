@@ -45,7 +45,11 @@ const navItems = getNavbar17Items(variant);
 const showCart = typeof showCartProp === 'boolean' ? showCartProp : navbar17ShowsCart(variant);
 const isLanding = variant === 'landing';
 const isTestShop = variant === 'testShop';
-const usesLandingCta = variant === 'landing' || variant === 'shop' || variant === 'testShop';
+const usesLandingCta =
+  variant === 'landing' ||
+  variant === 'shop' ||
+  variant === 'testShop' ||
+  variant === 'booksyAlternative';
 
 const previewCta =
   previewCtaProp ?? (usesLandingCta ? (Astro.locals.navbarPreviewCta ?? null) : null);
