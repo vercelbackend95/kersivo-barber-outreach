@@ -12,22 +12,24 @@ import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/',
+  'https://kersivo.co.uk/booksy-alternative',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/terms',
 ] as const;
 
 describe('marketing sitemap', () => {
-  it('builds exactly four canonical marketing URLs with accurate or omitted lastmod', () => {
+  it('builds exactly five canonical marketing URLs with accurate or omitted lastmod', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(4);
+    expect(entries).toHaveLength(5);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(4);
+    expect(new Set(locs).size).toBe(5);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-07-31');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-07-31');
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
@@ -45,7 +47,7 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(4);
+    expect(urlMatches).toHaveLength(5);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
@@ -58,7 +60,7 @@ describe('marketing sitemap', () => {
     expect(xml).not.toContain('cmmj3fcis0005l1kt8ii5itvd');
     expect(xml).not.toMatch(/\/shop\//);
     expect(xml).not.toContain('/admin');
-    expect(xml).not.toContain('/book');
+    expect(xml).not.toMatch(/\/book(?:\/|"|<|\s|$)/);
     expect(xml).not.toContain('/api');
     expect(xml).not.toContain('/setup');
     expect(xml).not.toContain('/shop/success');

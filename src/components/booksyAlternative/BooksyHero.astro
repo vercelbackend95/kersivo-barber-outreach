@@ -1,0 +1,35 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BOOKSY_ALTERNATIVE_H1 } from '@/lib/seo/booksyAlternativeFaq';
+---
+
+<section class="booksy-alt__section booksy-alt-hero" aria-labelledby="booksy-alt-hero-title">
+  <div class="booksy-alt__glow" aria-hidden="true"></div>
+  <div class="container">
+    <div class="booksy-alt-hero__inner">
+      <p class="booksy-alt__eyebrow">BOOKSY ALTERNATIVE FOR UK BARBERS</p>
+      <h1 id="booksy-alt-hero-title" class="booksy-alt-hero__h1">
+        {BOOKSY_ALTERNATIVE_H1}
+      </h1>
+      <div class="booksy-alt-hero__body">
+        <p>
+          Booksy combines booking software with a marketplace. KERSIVO takes a different approach —
+          your own branded website, your own domain and a booking experience centred on your
+          barbershop.
+        </p>
+        <p class="booksy-alt-hero__price">
+          Online bookings, deposits, client management, appointment reminders and retail pickup —
+          £{SAAS_MONTHLY_GBP}/month.
+        </p>
+      </div>
+      <div class="booksy-alt-hero__ctas">
+        <a href="/demo" class="btn btn--primary btn--lg" data-track="view_live_demo_click">
+          See KERSIVO in Action
+        </a>
+        <a href="#comparison" class="btn btn--secondary btn--lg">
+          Compare KERSIVO and Booksy
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

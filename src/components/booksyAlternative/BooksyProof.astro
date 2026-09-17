@@ -1,0 +1,78 @@
+---
+const proofs = [
+  {
+    label: 'YOUR WEBSITE',
+    title: 'Branded barbershop site',
+    body: 'A professional barbershop website designed around your existing identity.',
+    src: '/images/screenshots/booking-overview-desktop.png',
+    alt: 'KERSIVO branded barbershop website booking overview on desktop',
+    width: 1600,
+    height: 1000,
+  },
+  {
+    label: 'YOUR BOOKINGS',
+    title: 'Service, barber, time',
+    body: 'Clients choose their service, barber and available time directly through your booking flow.',
+    src: '/images/screenshots/booking.png',
+    alt: 'KERSIVO client booking flow showing service and time selection',
+    width: 1200,
+    height: 900,
+  },
+  {
+    label: 'YOUR DASHBOARD',
+    title: 'One admin view',
+    body: 'Manage bookings, clients, barbers, services and working hours from one place.',
+    src: '/images/screenshots/timeline.png',
+    alt: 'KERSIVO admin dashboard timeline for daily barbershop bookings',
+    width: 1600,
+    height: 1000,
+  },
+  {
+    label: 'YOUR RETAIL',
+    title: 'Pickup shop',
+    body: 'Sell products online for collection from your barbershop.',
+    src: '/images/hero/shop-products.svg',
+    alt: 'KERSIVO retail products shop preview for in-barbershop pickup',
+    width: 800,
+    height: 600,
+  },
+] as const;
+---
+
+<section class="booksy-alt__section" aria-labelledby="booksy-alt-proof-title">
+  <div class="booksy-alt__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="booksy-alt__intro">
+      <p class="booksy-alt__eyebrow">BUILT AROUND YOUR BRAND</p>
+      <h2 id="booksy-alt-proof-title" class="booksy-alt__h2">
+        What the KERSIVO experience looks like
+      </h2>
+    </header>
+
+    <ul class="booksy-alt-proof__grid" role="list">
+      {proofs.map((item) => (
+        <li class="booksy-alt-proof__card">
+          <div class="booksy-alt-proof__media">
+            <img
+              src={item.src}
+              alt={item.alt}
+              width={item.width}
+              height={item.height}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <p class="booksy-alt-proof__label">{item.label}</p>
+          <h3 class="booksy-alt-proof__title">{item.title}</h3>
+          <p class="booksy-alt-proof__body">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+
+    <div class="booksy-alt-proof__cta">
+      <a href="/demo" class="btn btn--primary btn--lg" data-track="view_live_demo_click">
+        Explore the Live Demo
+      </a>
+    </div>
+  </div>
+</section>

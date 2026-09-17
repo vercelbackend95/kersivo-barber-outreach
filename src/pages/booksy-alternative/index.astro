@@ -1,0 +1,96 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import BooksyHero from '@/components/booksyAlternative/BooksyHero.astro';
+import BooksyApproaches from '@/components/booksyAlternative/BooksyApproaches.astro';
+import BooksyCompare from '@/components/booksyAlternative/BooksyCompare.astro';
+import BooksyFit from '@/components/booksyAlternative/BooksyFit.astro';
+import BooksyJourney from '@/components/booksyAlternative/BooksyJourney.astro';
+import BooksyProof from '@/components/booksyAlternative/BooksyProof.astro';
+import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
+import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
+import BooksyDecision from '@/components/booksyAlternative/BooksyDecision.astro';
+import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
+import {
+  BOOKSY_ALTERNATIVE_DESCRIPTION,
+  BOOKSY_ALTERNATIVE_FAQ_ITEMS,
+  BOOKSY_ALTERNATIVE_PAGE_PATH,
+  BOOKSY_ALTERNATIVE_TITLE,
+  buildBooksyAlternativeFaqJsonLd,
+} from '@/lib/seo/booksyAlternativeFaq';
+import { buildBooksyAlternativeWebPageJsonLd } from '@/lib/seo/booksyAlternativeJsonLd';
+import { BOOKSY_TRADEMARK_DISCLAIMER } from '@/lib/seo/booksyFacts';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/booksy-alternative.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BOOKSY_ALTERNATIVE_TITLE}
+  description={BOOKSY_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}
+  navbarVariant="shop"
+  jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
+>
+  <main class="booksy-alt landing-overflow-guard">
+    <BooksyHero />
+    <BooksyApproaches />
+    <BooksyCompare />
+    <BooksyFit />
+    <BooksyJourney />
+    <BooksyProof />
+    <BooksyPricing />
+    <BooksySwitching />
+    <BooksyDecision />
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about switching from Booksy?"
+      subHeading="Clear answers on pricing, marketplace discovery, migration, deposits and domains."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="Back to KERSIVO homepage"
+      supportLinkHref="/"
+      faqs={BOOKSY_ALTERNATIVE_FAQ_ITEMS}
+    />
+    <BooksyFinalCta />
+    <aside class="booksy-alt-disclaimer" aria-label="Trademark and comparison disclaimer">
+      <div class="container">
+        <p>{BOOKSY_TRADEMARK_DISCLAIMER}</p>
+      </div>
+    </aside>
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'Start subscription', href: '/admin/launch' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  /* Safeguard only — layout verified with no clip at 320–1440px */
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

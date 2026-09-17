@@ -18,6 +18,8 @@ export type MarketingSitemapEntry = {
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/' },
+  /** National SEO comparison landing page — no reliable editorial lastmod yet. */
+  { path: '/booksy-alternative' },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: '2026-07-31' },
   /** Matches "Last updated" on src/pages/cookies.astro. */

@@ -3,9 +3,11 @@ import '../styles/components/landingSwitcherReassurance.css';
 
 interface Props {
   className?: string;
+  /** Homepage-only link to the Booksy comparison landing page. */
+  showBooksyCompareLink?: boolean;
 }
 
-const { className = '' } = Astro.props as Props;
+const { className = '', showBooksyCompareLink = false } = Astro.props as Props;
 
 const trustPoints = [
   'Migration help for usable exported data',
@@ -110,6 +112,16 @@ const trustPoints = [
       >
         Start my KERSIVO subscription
       </a>
+      {
+        showBooksyCompareLink ? (
+          <a
+            href="/booksy-alternative"
+            class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare"
+          >
+            Compare KERSIVO and Booksy
+          </a>
+        ) : null
+      }
     </div>
   </div>
 </section>

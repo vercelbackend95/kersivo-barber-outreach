@@ -1,0 +1,63 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  BOOKSY_ADDITIONAL_USER_LABEL,
+  BOOKSY_BASE_PRICE_LABEL,
+  BOOKSY_BOOST_COMMISSION_PERCENT,
+  BOOKSY_BOOST_MINIMUM_GBP,
+} from '@/lib/seo/booksyFacts';
+---
+
+<section
+  id="pricing"
+  class="booksy-alt__section scroll-mt-24"
+  aria-labelledby="booksy-alt-pricing-title"
+>
+  <div class="booksy-alt__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="booksy-alt__intro">
+      <p class="booksy-alt__eyebrow">SIMPLE PRICING</p>
+      <h2 id="booksy-alt-pricing-title" class="booksy-alt__h2">
+        £{SAAS_MONTHLY_GBP}/month. One barbershop location.
+      </h2>
+      <p class="booksy-alt__lead">
+        Your branded barbershop website, standard domain, online bookings, deposits, client
+        management, appointment reminders, retail pickup, hosting, SSL and platform updates are
+        included.
+      </p>
+      <p class="booksy-alt__lead">
+        KERSIVO takes 0% commission on bookings and retail sales.
+      </p>
+    </header>
+
+    <div class="booksy-alt-pricing__offer">
+      <p class="booksy-alt-pricing__price">
+        £{SAAS_MONTHLY_GBP} <span>/ month</span>
+      </p>
+      <p class="booksy-alt-pricing__value">No setup fee. Cancel anytime. One physical location.</p>
+      <a
+        href="/admin/launch"
+        class="btn btn--primary btn--lg"
+        data-track="saas_subscribe_click"
+      >
+        View the £{SAAS_MONTHLY_GBP} Plan
+      </a>
+      <p class="booksy-alt-pricing__note">
+        Standard Stripe processing fees apply where payments are processed. Fair-use terms apply.
+      </p>
+    </div>
+
+    <div class="booksy-alt-pricing__compare">
+      <h3>How that compares with Booksy</h3>
+      <p>
+        Booksy currently lists its UK subscription at {BOOKSY_BASE_PRICE_LABEL}, with additional
+        users at {BOOKSY_ADDITIONAL_USER_LABEL}.
+      </p>
+      <p>
+        Its standard Marketplace bookings are free. If optional Boost is enabled and Booksy brings a
+        new client, Booksy currently states a one-time {BOOKSY_BOOST_COMMISSION_PERCENT}% fee on that
+        client’s first visit, with a £{BOOKSY_BOOST_MINIMUM_GBP} minimum.
+      </p>
+    </div>
+  </div>
+</section>

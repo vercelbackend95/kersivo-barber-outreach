@@ -1,0 +1,109 @@
+---
+import {
+  BOOKSY_COMPARE_ROWS,
+  BOOKSY_FACTS_CHECKED_DATE,
+  BOOKSY_SOURCE_BOOST,
+  BOOKSY_SOURCE_PRICING,
+} from '@/lib/seo/booksyFacts';
+import '@/styles/components/compare3.css';
+---
+
+<section
+  id="comparison"
+  class="compare3-block booksy-alt-compare scroll-mt-24"
+  aria-labelledby="booksy-alt-compare-title"
+>
+  <div class="container">
+    <div class="compare3-block__header">
+      <span class="compare3-block__badge">COMPARISON</span>
+      <h2 id="booksy-alt-compare-title">KERSIVO vs Booksy</h2>
+      <p>
+        Both platforms can handle online bookings, deposits and client management. Here’s where the
+        models differ.
+      </p>
+    </div>
+
+    <div class="compare3-block__table-wrap">
+      <div
+        class="compare3-block__grid compare3-block__grid--dual"
+        role="table"
+        aria-label="KERSIVO versus Booksy comparison"
+      >
+        <div
+          class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
+          role="columnheader"
+        >
+          <img
+            class="compare3-block__logo compare3-block__logo--kersivo"
+            src="/images/logo_nobg.png"
+            alt="KERSIVO"
+            width="160"
+            height="40"
+            loading="lazy"
+            decoding="async"
+          />
+          <p class="compare3-block__brand-copy">Your domain, your brand, zero KERSIVO commission</p>
+        </div>
+        <div
+          class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace"
+          role="columnheader"
+        >
+          <p class="compare3-block__brand-title">Booksy</p>
+          <p class="compare3-block__brand-sub">Marketplace model</p>
+          <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
+            Booking platform with Marketplace discovery and a customer app ecosystem.
+          </p>
+        </div>
+
+        {BOOKSY_COMPARE_ROWS.map((row) => (
+          <>
+            <div
+              class="compare3-block__item compare3-block__value compare3-block__value--featured"
+              role="cell"
+            >
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span class="compare3-block__status compare3-block__status--ok" aria-hidden="true"
+                >&middot;</span
+              >
+              <span>{row.kersivo}</span>
+            </div>
+            <div
+              class="compare3-block__item compare3-block__value compare3-block__value--marketplace"
+              role="cell"
+            >
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span
+                class="compare3-block__status compare3-block__status--neutral"
+                aria-hidden="true">&middot;</span
+              >
+              <span>{row.booksy}</span>
+            </div>
+          </>
+        ))}
+      </div>
+    </div>
+
+    <p class="compare3-block__footnote booksy-alt-compare__footnote">
+      Booksy UK pricing and Boost information checked {BOOKSY_FACTS_CHECKED_DATE}. Sources:{' '}
+      <a
+        href={BOOKSY_SOURCE_PRICING}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="booksy-alt-compare__source-link"
+      >
+        Booksy Pricing
+      </a>
+      {' '}·{' '}
+      <a
+        href={BOOKSY_SOURCE_BOOST}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="booksy-alt-compare__source-link"
+      >
+        Booksy Boost
+      </a>
+      . Booksy may change its pricing, fees or features. Always check Booksy’s current terms before
+      making a decision.
+    </p>
+  </div>
+</section>

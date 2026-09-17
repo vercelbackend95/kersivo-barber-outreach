@@ -51,4 +51,6 @@ export const PAGE_DESCRIPTIONS = {
     'Your Kersivo shop checkout was cancelled. No payment was taken.',
   barbershopBookingSystem:
     'Booking, retail pickup and admin for independent UK barbershops. Built on your own domain with 0% KERSIVO commission on bookings and retail.',
+  booksyAlternative:
+    'Looking for a Booksy alternative for your barbershop? Compare KERSIVO and Booksy across branding, pricing, bookings, marketplace discovery and client experience.',
 } as const;
