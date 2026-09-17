@@ -88,6 +88,32 @@ const currentYear = new Date().getFullYear();
   </main>
 </LandingLayout>
 
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initFeature261StaggerReveal());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
 <style is:global>
   /* Safeguard only — layout verified with no clip at 320–1440px */
   .landing-overflow-guard {

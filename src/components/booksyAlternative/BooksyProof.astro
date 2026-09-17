@@ -1,78 +1,68 @@
 ---
-const proofs = [
+import { adminDemoHref } from '@/lib/admin/demoConfig';
+import LandingDemoPreview from '@/components/landingDemoPreview.astro';
+import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
+import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
+import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+
+const [retailProducts, barbers, bookingData] = await Promise.all([
+  resolveLandingDemoCarouselProducts(),
+  resolveLandingDemoBarbers(),
+  resolveLandingBookingData(),
+]);
+
+const booksyProofRows = [
   {
-    label: 'YOUR WEBSITE',
-    title: 'Branded barbershop site',
-    body: 'A professional barbershop website designed around your existing identity.',
-    src: '/images/screenshots/booking-overview-desktop.png',
-    alt: 'KERSIVO branded barbershop website booking overview on desktop',
-    width: 1600,
-    height: 1000,
+    kicker: 'ADMIN SYSTEM',
+    heading: 'Run your day from one clear admin view',
+    description:
+      'Manage bookings, clients, barbers, services and daily activity from one central dashboard.',
+    ctaLabel: 'Explore the admin system',
+    ctaHref: adminDemoHref('timeline'),
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'widget',
   },
   {
-    label: 'YOUR BOOKINGS',
-    title: 'Service, barber, time',
-    body: 'Clients choose their service, barber and available time directly through your booking flow.',
-    src: '/images/screenshots/booking.png',
-    alt: 'KERSIVO client booking flow showing service and time selection',
-    width: 1200,
-    height: 900,
+    kicker: 'CLIENT BOOKING EXPERIENCE',
+    heading: 'Your website. Your booking flow. Your brand.',
+    description:
+      'Clients choose a service, barber and available time through your own branded booking experience — with no app download required.',
+    ctaLabel: 'Try the booking experience',
+    ctaHref: '/book',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'booking',
   },
   {
-    label: 'YOUR DASHBOARD',
-    title: 'One admin view',
-    body: 'Manage bookings, clients, barbers, services and working hours from one place.',
-    src: '/images/screenshots/timeline.png',
-    alt: 'KERSIVO admin dashboard timeline for daily barbershop bookings',
-    width: 1600,
-    height: 1000,
+    kicker: 'RETAIL PICKUP SHOP',
+    heading: 'Sell retail products through your own website',
+    description:
+      'Let clients browse products online, place pickup orders and collect them from your barbershop.',
+    ctaLabel: 'Explore the retail shop',
+    ctaHref: '/shop',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'carousel',
   },
-  {
-    label: 'YOUR RETAIL',
-    title: 'Pickup shop',
-    body: 'Sell products online for collection from your barbershop.',
-    src: '/images/hero/shop-products.svg',
-    alt: 'KERSIVO retail products shop preview for in-barbershop pickup',
-    width: 800,
-    height: 600,
-  },
-] as const;
+];
 ---
 
-<section class="booksy-alt__section" aria-labelledby="booksy-alt-proof-title">
-  <div class="booksy-alt__glow" aria-hidden="true"></div>
-  <div class="container">
-    <header class="booksy-alt__intro">
-      <p class="booksy-alt__eyebrow">BUILT AROUND YOUR BRAND</p>
-      <h2 id="booksy-alt-proof-title" class="booksy-alt__h2">
-        What the KERSIVO experience looks like
-      </h2>
-    </header>
-
-    <ul class="booksy-alt-proof__grid" role="list">
-      {proofs.map((item) => (
-        <li class="booksy-alt-proof__card">
-          <div class="booksy-alt-proof__media">
-            <img
-              src={item.src}
-              alt={item.alt}
-              width={item.width}
-              height={item.height}
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <p class="booksy-alt-proof__label">{item.label}</p>
-          <h3 class="booksy-alt-proof__title">{item.title}</h3>
-          <p class="booksy-alt-proof__body">{item.body}</p>
-        </li>
-      ))}
-    </ul>
-
-    <div class="booksy-alt-proof__cta">
-      <a href="/demo" class="btn btn--primary btn--lg" data-track="view_live_demo_click">
-        Explore the Live Demo
-      </a>
-    </div>
-  </div>
-</section>
+<LandingDemoPreview
+  className="booksy-alt-proof-live"
+  sectionId="booksy-alt-proof"
+  headingId="booksy-alt-proof-title"
+  showReports={false}
+  showMoreIncluded={false}
+  showFooterNote={true}
+  intro={{
+    kicker: 'BUILT AROUND YOUR BRAND',
+    heading: 'See the KERSIVO experience in action',
+    description:
+      'Explore the booking journey, admin system and retail experience your barbershop can use — all centred on your own brand.',
+  }}
+  rows={booksyProofRows}
+  retailProducts={retailProducts}
+  barbers={barbers}
+  bookingData={bookingData}
+/>

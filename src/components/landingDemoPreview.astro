@@ -1,6 +1,6 @@
 ---
 import { adminDemoHref } from '@/lib/admin/demoConfig';
-import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import { ProductRail } from '@/components/shop/ProductRail';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
@@ -12,8 +12,10 @@ import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIn
 import '../styles/components/feature261.css';
 import '../styles/components/landingDemoPreview.css';
 import '../styles/components/shopProductCards6.css';
+import '../styles/components/storefront.css';
+import '../styles/components/productRail.css';
 
-type PreviewRow = {
+type LandingDemoPreviewRow = {
   kicker: string;
   heading: string;
   description: string;
@@ -24,18 +26,34 @@ type PreviewRow = {
   media: 'carousel' | 'widget' | 'booking';
 };
 
+type PreviewIntro = {
+  kicker: string;
+  heading: string;
+  description: string;
+};
+
 interface Props {
   className?: string;
   retailProducts?: CarouselProduct[];
   barbers?: LandingBarber[];
   bookingData?: LandingBookingData;
+  intro?: PreviewIntro;
+  rows?: LandingDemoPreviewRow[];
+  showReports?: boolean;
+  showMoreIncluded?: boolean;
+  showFooterNote?: boolean;
+  sectionId?: string;
+  headingId?: string;
 }
 
-const { className = '', retailProducts = [], barbers = [], bookingData } = Astro.props as Props;
+const DEFAULT_INTRO: PreviewIntro = {
+  kicker: 'INSIDE THE SYSTEM',
+  heading: 'See the system your barbershop will actually use',
+  description:
+    'Explore the admin, client booking experience, retail pickup shop and reports before you subscribe.',
+};
 
-const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
-
-const rows: PreviewRow[] = [
+const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
   {
     kicker: 'ADMIN SYSTEM',
     heading: 'Run your day from one clear admin view',
@@ -70,23 +88,38 @@ const rows: PreviewRow[] = [
     media: 'carousel',
   },
 ];
+
+const {
+  className = '',
+  retailProducts = [],
+  barbers = [],
+  bookingData,
+  intro = DEFAULT_INTRO,
+  rows = DEFAULT_ROWS,
+  showReports = true,
+  showMoreIncluded = true,
+  showFooterNote = true,
+  sectionId = 'live-demo',
+  headingId = 'landing-demo-preview-title',
+} = Astro.props as Props;
+
+const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 ---
 
 <section
-  id="live-demo"
+  id={sectionId}
   class={`feature261 landing-demo-preview landing-demo-preview--compact ${className}`.trim()}
-  aria-labelledby="landing-demo-preview-title"
+  aria-labelledby={headingId}
 >
   <div class="feature261__glow" aria-hidden="true"></div>
   <div class="container">
     <header class="feature261__intro">
-      <p class="feature261__kicker">INSIDE THE SYSTEM</p>
-      <h2 id="landing-demo-preview-title" class="feature261__heading">
-        See the system your barbershop will actually use
+      <p class="feature261__kicker">{intro.kicker}</p>
+      <h2 id={headingId} class="feature261__heading">
+        {intro.heading}
       </h2>
       <p class="feature261__description">
-        Explore the admin, client booking experience, retail pickup shop and reports before you
-        subscribe.
+        {intro.description}
       </p>
     </header>
 
@@ -98,12 +131,31 @@ const rows: PreviewRow[] = [
         >
           {row.media === 'carousel' ? (
             <div class="feature261__media feature261__media--carousel">
-              <ShopProductCarousel
-                products={retailProducts}
-                className="feature261-retail-carousel"
-                showControls={false}
-                previewMode={true}
-              />
+              <div class="sf-shop sf-shop--blackline" data-sf-theme="blackline">
+                <ProductRail
+                  client:visible={{ rootMargin: '200px' }}
+                  products={retailProducts}
+                  className="feature261-retail-carousel"
+                  productHrefBase="/demo/shop"
+                  variant="storefront"
+                  imageFallback="wordmark"
+                  priceFormat="demo"
+                  density="compact"
+                  showAction="add-to-cart"
+                  showControls={false}
+                  showProgress={false}
+                  showCategory={true}
+                  showPrice={true}
+                  fallbackBrandMark="BL"
+                  shopName="BLACKLINE"
+                  addToBagLabel="Add to bag"
+                  addToBagShortLabel="Add"
+                  addedLabel="Added"
+                  chooseOptionsLabel="Choose options"
+                  soldOutLabel="Sold out"
+                  ariaLabel="Blackline products"
+                />
+              </div>
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
@@ -137,14 +189,20 @@ const rows: PreviewRow[] = [
           </a>
         </li>
       ))}
-      <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
+      {showReports ? (
+        <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
+      ) : null}
     </ul>
-    <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+    {showMoreIncluded ? (
+      <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+    ) : null}
 
-    <div class="landing-demo-preview__footer">
-      <p class="landing-demo-preview__footer-note">
-        Previews use example barbershop data. No signup required.
-      </p>
-    </div>
+    {showFooterNote ? (
+      <div class="landing-demo-preview__footer">
+        <p class="landing-demo-preview__footer-note">
+          Previews use example barbershop data. No signup required.
+        </p>
+      </div>
+    ) : null}
   </div>
 </section>

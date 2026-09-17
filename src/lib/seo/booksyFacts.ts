@@ -25,7 +25,7 @@ export const BOOKSY_BOOST_COMMISSION_PERCENT = 30;
 export const BOOKSY_BOOST_MINIMUM_GBP = 5;
 
 export const BOOKSY_BOOST_SUMMARY =
-  'Optional Boost currently charges a one-time 30% fee on a new Boost client\'s first visit, minimum £5';
+  'Optional Boost can charge a one-time acquisition fee when it brings a qualifying new client — currently 30% of the first visit, minimum £5';
 
 export const BOOKSY_TRADEMARK_DISCLAIMER = `Booksy is a trademark of its respective owner. KERSIVO is not affiliated with, endorsed by or sponsored by Booksy. Booksy pricing and feature information was checked against publicly available UK Booksy sources on ${BOOKSY_FACTS_CHECKED_DATE} and may change.`;
 
@@ -48,7 +48,7 @@ export const BOOKSY_COMPARE_ROWS: readonly BooksyCompareRow[] = [
   },
   {
     title: 'Additional users',
-    kersivo: 'Included within one location, subject to fair use',
+    kersivo: 'Included within one barbershop location',
     booksy: BOOKSY_ADDITIONAL_USER_LABEL,
   },
   {
@@ -64,8 +64,8 @@ export const BOOKSY_COMPARE_ROWS: readonly BooksyCompareRow[] = [
   },
   {
     title: 'Marketplace discovery',
-    kersivo: 'No consumer marketplace',
-    booksy: 'Yes — Booksy Marketplace and customer app discovery',
+    kersivo: 'Direct branded booking journey — no marketplace required',
+    booksy: 'Booksy Marketplace and customer app discovery',
   },
   {
     title: 'Booking / marketplace commission',
@@ -74,13 +74,13 @@ export const BOOKSY_COMPARE_ROWS: readonly BooksyCompareRow[] = [
   },
   {
     title: 'Optional marketplace acquisition',
-    kersivo: 'Not applicable',
+    kersivo: 'Direct bookings with 0% KERSIVO commission',
     booksy: BOOKSY_BOOST_SUMMARY,
   },
   {
     title: 'Deposits',
-    kersivo: 'Yes — optional £5 booking deposit',
-    booksy: 'Yes — deposits / no-show protection tools available',
+    kersivo: 'Optional £5 booking deposits with no-show protection',
+    booksy: 'Deposits and no-show protection tools available',
   },
   {
     title: 'Client management',
@@ -89,8 +89,8 @@ export const BOOKSY_COMPARE_ROWS: readonly BooksyCompareRow[] = [
   },
   {
     title: 'Appointment reminders',
-    kersivo: 'Email and SMS appointment reminders included',
-    booksy: 'Automatic appointment confirmations and reminders included',
+    kersivo: 'Automated email and SMS appointment reminders included',
+    booksy: 'Automatic appointment reminders included',
   },
   {
     title: 'Booking experience',

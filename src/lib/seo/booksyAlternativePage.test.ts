@@ -37,7 +37,12 @@ const heroSource = readRepoFile('../../components/booksyAlternative/BooksyHero.a
 const compareSource = readRepoFile('../../components/booksyAlternative/BooksyCompare.astro');
 const pricingSource = readRepoFile('../../components/booksyAlternative/BooksyPricing.astro');
 const finalCtaSource = readRepoFile('../../components/booksyAlternative/BooksyFinalCta.astro');
+const approachesSource = readRepoFile('../../components/booksyAlternative/BooksyApproaches.astro');
+const fitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
+const decisionSource = readRepoFile('../../components/booksyAlternative/BooksyDecision.astro');
 const journeySource = readRepoFile('../../components/booksyAlternative/BooksyJourney.astro');
+const proofSource = readRepoFile('../../components/booksyAlternative/BooksyProof.astro');
+const landingDemoPreviewSource = readRepoFile('../../components/landingDemoPreview.astro');
 const factsSource = readRepoFile('booksyFacts.ts');
 
 const bannedPhrases = [
@@ -48,6 +53,10 @@ const bannedPhrases = [
   'Unlimited SMS',
   'complete migration guaranteed',
   'guaranteed more bookings',
+  'guaranteed no-show reduction',
+  'powerful booking and management platform',
+  'You prefer a mature platform',
+  'KERSIVO is objectively better',
 ] as const;
 
 describe('booksy-alternative page SEO and claim safety', () => {
@@ -77,6 +86,18 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(heroSource).toContain('href="/demo"');
     expect(finalCtaSource).toContain('href="/demo"');
     expect(finalCtaSource).toContain('href="/admin/launch"');
+    expect(pricingSource).toContain('href="/admin/launch"');
+  });
+
+  it('pricing section centres hierarchy with a single £39 card price moment', () => {
+    expect(pricingSource).toContain('SIMPLE PRICING');
+    expect(pricingSource).toContain('One plan. One barbershop location.');
+    expect(pricingSource).toContain('View the Plan');
+    expect(pricingSource).not.toContain('View the £');
+    expect(pricingSource).not.toContain(`£{SAAS_MONTHLY_GBP}/month. One barbershop location.`);
+    expect(pricingSource).toContain('£{SAAS_MONTHLY_GBP}');
+    expect(pricingSource).toContain('/ month');
+    expect(pricingSource).toContain('How that compares with Booksy');
     expect(pricingSource).toContain('href="/admin/launch"');
   });
 
@@ -115,6 +136,9 @@ describe('booksy-alternative page SEO and claim safety', () => {
       compareSource,
       pricingSource,
       journeySource,
+      approachesSource,
+      fitSource,
+      decisionSource,
       finalCtaSource,
       factsSource,
       ...BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => `${item.question} ${item.answer}`),
@@ -125,6 +149,89 @@ describe('booksy-alternative page SEO and claim safety', () => {
     }
     expect(corpus.toLowerCase()).not.toContain('no fees whatsoever');
     expect(corpus.toLowerCase()).not.toMatch(/(?<![a-z])no fees(?![a-z-])/i);
+  });
+
+  it('product proof reuses live widgets without reports or the old screenshot grid', () => {
+    expect(pageSource).toContain('<BooksyProof />');
+    expect(pageSource).toContain('initFeature261StaggerReveal');
+    expect(pageSource).toContain('initProductRails');
+    expect(proofSource).toContain('LandingDemoPreview');
+    expect(proofSource).toContain('BUILT AROUND YOUR BRAND');
+    expect(proofSource).toContain('See the KERSIVO experience in action');
+    expect(proofSource).toContain('ADMIN SYSTEM');
+    expect(proofSource).toContain('CLIENT BOOKING EXPERIENCE');
+    expect(proofSource).toContain('RETAIL PICKUP SHOP');
+    expect(proofSource).toContain('Explore the admin system');
+    expect(proofSource).toContain('Try the booking experience');
+    expect(proofSource).toContain('Explore the retail shop');
+    expect(proofSource).toContain('showReports={false}');
+    expect(proofSource).toContain('showMoreIncluded={false}');
+    expect(proofSource).toContain("media: 'widget'");
+    expect(proofSource).toContain("media: 'booking'");
+    expect(proofSource).toContain("media: 'carousel'");
+    expect(proofSource).not.toContain('YOUR WEBSITE');
+    expect(proofSource).not.toContain('YOUR BOOKINGS');
+    expect(proofSource).not.toContain('YOUR DASHBOARD');
+    expect(proofSource).not.toContain('YOUR RETAIL');
+    expect(proofSource).not.toContain('/images/screenshots/');
+    expect(proofSource).not.toContain('Explore the Live Demo');
+    expect(proofSource).not.toContain('Feature261MonetizationRow');
+    expect(proofSource).not.toContain('REPORTS');
+    expect(landingDemoPreviewSource).toContain("kicker: 'INSIDE THE SYSTEM'");
+    expect(landingDemoPreviewSource).toContain('showReports = true');
+    expect(landingDemoPreviewSource).toContain('Feature261MonetizationRow');
+    expect(homepageSource).toContain('<LandingDemoPreview');
+  });
+
+  it('rebalances approaches, comparison and decision copy toward KERSIVO value', () => {
+    expect(approachesSource).toContain('Your brand. Your website. Your bookings.');
+    expect(approachesSource).toContain('Bookings inside the Booksy ecosystem');
+    expect(approachesSource).not.toContain('powerful');
+    expect(fitSource).toContain('MARKETPLACE OR YOUR OWN BRAND?');
+    expect(fitSource).toContain('Where do you want the booking journey to live?');
+    expect(fitSource).toContain(
+      'Two booking models. One key difference: where your customer experience lives.',
+    );
+    expect(fitSource).toContain('booksy-alt-brand-journey__panel');
+    expect(fitSource).toContain('booksy-alt-brand-journey__label');
+    expect(fitSource).toMatch(/>\s*BOOKSY\s*</);
+    expect(fitSource).toMatch(/>\s*KERSIVO\s*</);
+    expect(fitSource).toContain('Booksy includes marketplace discovery as part of its ecosystem.');
+    expect(fitSource).toContain(
+      'Your clients find your barbershop. KERSIVO helps keep the booking journey there too.',
+    );
+    expect(fitSource).not.toContain('booksy-alt-brand-journey__body');
+    expect(fitSource).not.toContain('WHEN BOOKSY MAKES SENSE');
+    expect(decisionSource).toContain('So, which approach fits your barbershop?');
+    expect(decisionSource).not.toContain('mature platform');
+    expect(decisionSource).toContain('0% KERSIVO commission on bookings and retail sales');
+
+    const additionalUsers = BOOKSY_COMPARE_ROWS.find((row) => row.title === 'Additional users');
+    expect(additionalUsers?.kersivo).toBe('Included within one barbershop location');
+    expect(additionalUsers?.kersivo).not.toContain('subject to fair use');
+
+    const marketplace = BOOKSY_COMPARE_ROWS.find((row) => row.title === 'Marketplace discovery');
+    expect(marketplace?.kersivo).toContain('Direct branded booking journey');
+    expect(marketplace?.kersivo).not.toBe('No consumer marketplace');
+
+    const acquisition = BOOKSY_COMPARE_ROWS.find(
+      (row) => row.title === 'Optional marketplace acquisition',
+    );
+    expect(acquisition?.kersivo).toBe('Direct bookings with 0% KERSIVO commission');
+    expect(acquisition?.kersivo).not.toBe('Not applicable');
+
+    const reminders = BOOKSY_COMPARE_ROWS.find((row) => row.title === 'Appointment reminders');
+    expect(reminders?.kersivo).toBe('Automated email and SMS appointment reminders included');
+
+    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS).toHaveLength(8);
+    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS.some((item) => item.question === 'Does KERSIVO charge commission?')).toBe(
+      true,
+    );
+    expect(
+      BOOKSY_ALTERNATIVE_FAQ_ITEMS.some(
+        (item) => item.question === 'Does KERSIVO charge more for additional barbers?',
+      ),
+    ).toBe(true);
   });
 
   it('FAQPage JSON-LD matches visible FAQ items and uses slash-free page-scoped @id', () => {
