@@ -724,12 +724,14 @@
   }
 
   .sf-shop.sf-pdp-page .sf-pdp-related .sf-card .sf-atc .sf-atc-label-full,
-  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-full {
+  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-full,
+  .feature261 .feature261-retail-carousel .sf-card .sf-atc .sf-atc-label-full {
     display: none;
   }
 
   .sf-shop.sf-pdp-page .sf-pdp-related .sf-card .sf-atc .sf-atc-label-short,
-  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-short {
+  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-short,
+  .feature261 .feature261-retail-carousel .sf-card .sf-atc .sf-atc-label-short {
     display: inline;
   }
 }
@@ -2185,6 +2187,15 @@
 
   .sf-shop .sf-card .sf-atc .sf-atc-label-short {
     display: none;
+  }
+
+  /* Landing / Booksy feature261 retail carousels: short ATC on mobile */
+  .feature261 .feature261-retail-carousel .sf-card .sf-atc .sf-atc-label-full {
+    display: none;
+  }
+
+  .feature261 .feature261-retail-carousel .sf-card .sf-atc .sf-atc-label-short {
+    display: inline;
   }
 
   .sf-shop .sf-card .sf-atc svg {

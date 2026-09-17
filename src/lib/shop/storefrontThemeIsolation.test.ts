@@ -88,7 +88,13 @@ describe('storefront theme isolation', () => {
       /@media\s*\(\s*max-width:\s*39\.99rem\s*\)[\s\S]*?--product-rail-padding:\s*0px/s,
     );
     expect(storefrontCss).toMatch(
-      /\.bl-shop-rail\.sf-shop\s+\.sf-card\s+\.sf-atc\s+\.sf-atc-label-short\s*\{[^}]*display:\s*inline/s,
+      /\.bl-shop-rail\.sf-shop\s+\.sf-card\s+\.sf-atc\s+\.sf-atc-label-short(?:\s*,[\s\S]*?)?\s*\{[^}]*display:\s*inline/s,
+    );
+    expect(storefrontCss).toMatch(
+      /\.feature261\s+\.feature261-retail-carousel\s+\.sf-card\s+\.sf-atc\s+\.sf-atc-label-short\s*\{[^}]*display:\s*inline/s,
+    );
+    expect(storefrontCss).toMatch(
+      /@media\s*\(\s*max-width:\s*767px\s*\)[\s\S]*?\.feature261\s+\.feature261-retail-carousel\s+\.sf-card\s+\.sf-atc\s+\.sf-atc-label-full\s*\{[^}]*display:\s*none/s,
     );
     expect(storefrontCss).not.toMatch(
       /\.sf-shop\.sf-pdp-page\s+\.sf-pdp-related\s*\{[^}]*margin-inline:\s*calc\(4px/s,
@@ -100,6 +106,12 @@ describe('storefront theme isolation', () => {
     );
     expect(demoShop).toMatch(/class="bl-shop-rail sf-shop sf-shop--blackline"/);
     expect(demoShop).toMatch(/addToBagShortLabel="Add"/);
+
+    const landingDemo = fs.readFileSync(
+      path.join(ROOT, 'src/components/landingDemoPreview.astro'),
+      'utf8',
+    );
+    expect(landingDemo).toMatch(/addToBagShortLabel="Add"/);
 
     expect(productRailCss).toMatch(/--product-rail-visible-cards:\s*1\.22/);
     expect(productRailCss).toMatch(/--product-rail-visible-cards:\s*1\.15/);
