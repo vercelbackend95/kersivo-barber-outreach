@@ -1,5 +1,6 @@
 ---
 import { RateCard1Offer } from '@/components/rateCard1';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -7,6 +8,8 @@ import {
   BOOKSY_BOOST_MINIMUM_GBP,
 } from '@/lib/seo/booksyFacts';
 import '@/styles/rateCard1.css';
+
+const layout = getRateCard1LandingLayout();
 ---
 
 <section
@@ -33,6 +36,10 @@ import '@/styles/rateCard1.css';
 
     <div class="rate-card1--landing booksy-alt-pricing__offer-host">
       <RateCard1Offer />
+      <div class="rate-card1__landing-conditions">
+        <p>{layout.conditionsLine1}</p>
+        <p>{layout.conditionsLine2}</p>
+      </div>
     </div>
 
     <div class="booksy-alt-pricing__compare">

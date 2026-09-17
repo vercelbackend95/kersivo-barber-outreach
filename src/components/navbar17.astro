@@ -45,6 +45,7 @@ const navItems = getNavbar17Items(variant);
 const showCart = typeof showCartProp === 'boolean' ? showCartProp : navbar17ShowsCart(variant);
 const isLanding = variant === 'landing';
 const isTestShop = variant === 'testShop';
+const isBooksyAlternative = variant === 'booksyAlternative';
 const usesLandingCta =
   variant === 'landing' ||
   variant === 'shop' ||
@@ -63,7 +64,13 @@ const hasCustomBrandLogo = Boolean(brandLogoUrl);
 const brandAriaLabel =
   brandAriaLabelProp ??
   (isLanding ? 'KERSIVO – back to top' : isTestShop ? 'Back to shop' : 'Kersivo – back to homepage');
-const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#home';
+const brandHref = isLanding
+  ? '#hero'
+  : isTestShop
+    ? '/admin/test-shop'
+    : isBooksyAlternative
+      ? '/'
+      : '/#home';
 const currentFamily = getRouteFamily(Astro.url.pathname);
 
 function hrefLeavesFamily(href: string | null | undefined): boolean {

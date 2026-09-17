@@ -12,6 +12,7 @@ import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
 import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
 import BooksyDecision from '@/components/booksyAlternative/BooksyDecision.astro';
 import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
+import Contact16 from '@/components/contact16.astro';
 import {
   BOOKSY_ALTERNATIVE_DESCRIPTION,
   BOOKSY_ALTERNATIVE_FAQ_ITEMS,
@@ -54,11 +55,18 @@ const currentYear = new Date().getFullYear();
       subHeading="Clear answers on pricing, marketplace discovery, migration, deposits and domains."
       supportHeading="Still comparing options?"
       supportText="Tell us what you use today and what you want your booking journey to look like."
-      supportLinkLabel="Back to KERSIVO homepage"
-      supportLinkHref="/"
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
       faqs={BOOKSY_ALTERNATIVE_FAQ_ITEMS}
     />
     <BooksyFinalCta />
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still comparing KERSIVO and Booksy?"
+      description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+    />
     <aside class="booksy-alt-disclaimer" aria-label="Trademark and comparison disclaimer">
       <div class="container">
         <p>{BOOKSY_TRADEMARK_DISCLAIMER}</p>
@@ -75,6 +83,7 @@ const currentYear = new Date().getFullYear();
         { name: 'Live demo', href: '/demo' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
+        { name: 'Contact', href: '#contact' },
         { name: 'Start subscription', href: '/admin/launch' },
       ]}
       social={getFooterSocialLinks()}

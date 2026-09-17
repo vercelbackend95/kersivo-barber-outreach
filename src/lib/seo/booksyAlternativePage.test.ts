@@ -46,6 +46,7 @@ const compareSource = readRepoFile('../../components/booksyAlternative/BooksyCom
 const pricingSource = readRepoFile('../../components/booksyAlternative/BooksyPricing.astro');
 const rateCard1Source = readRepoFile('../../components/rateCard1.tsx');
 const navbarItemsSource = readRepoFile('../nav/navbar17Items.ts');
+const navbar17Source = readRepoFile('../../components/navbar17.astro');
 const finalCtaSource = readRepoFile('../../components/booksyAlternative/BooksyFinalCta.astro');
 const approachesSource = readRepoFile('../../components/booksyAlternative/BooksyApproaches.astro');
 const fitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
@@ -86,10 +87,11 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
 
     const booksyNav = getNavbar17Items('booksyAlternative');
-    expect(booksyNav.map((item) => item.link)).toEqual(['#pricing', '#faq']);
+    expect(booksyNav.map((item) => item.link)).toEqual(['#pricing', '#faq', '#contact']);
     expect(booksyNav.some((item) => item.link === '/#pricing')).toBe(false);
     expect(booksyNav.some((item) => item.link === '/#faq')).toBe(false);
-    expect(booksyNav.some((item) => item.name === 'Contact')).toBe(false);
+    expect(booksyNav.some((item) => item.link === '/#contact')).toBe(false);
+    expect(booksyNav.find((item) => item.name === 'Contact')?.link).toBe('#contact');
     expect(navbar17ShowsCart('booksyAlternative')).toBe(false);
     expect(getNavbar17CtaHref('booksyAlternative')).toBe('/admin/launch');
     expect(getNavbar17CtaLabel('booksyAlternative')).toBe(NAVBAR_SUBSCRIBE_CTA_LABEL);
@@ -109,12 +111,70 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(pageSource).not.toMatch(/<h1\b/);
   });
 
+  it('reuses Contact16 after Final CTA with local contact anchors', () => {
+    expect(pageSource.match(/<Contact16\b/g)?.length).toBe(1);
+    expect(pageSource).toContain('import Contact16 from');
+    expect(pageSource.indexOf('<BooksyFinalCta')).toBeLessThan(pageSource.indexOf('<Contact16'));
+    expect(pageSource.indexOf('<Contact16')).toBeLessThan(
+      pageSource.indexOf('booksy-alt-disclaimer'),
+    );
+    expect(pageSource.indexOf('<Contact16')).toBeLessThan(pageSource.indexOf('<Footer50'));
+    expect(pageSource).toContain('title="Still comparing KERSIVO and Booksy?"');
+    expect(pageSource).toContain(
+      'description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."',
+    );
+    expect(pageSource).toContain('note="We’ll reply by email — no sales call required."');
+    expect(pageSource).toContain('submitLabel="Send my question"');
+    expect(pageSource).toContain('eyebrow="CONTACT KERSIVO"');
+    expect(pageSource).toContain('supportLinkLabel="Ask KERSIVO a question"');
+    expect(pageSource).toContain('supportLinkHref="#contact"');
+    expect(pageSource).toContain("{ name: 'Contact', href: '#contact' }");
+    expect(pageSource).not.toMatch(/id=["']contact["']/);
+    for (const moduleSource of [
+      heroSource,
+      compareSource,
+      pricingSource,
+      finalCtaSource,
+      approachesSource,
+      fitSource,
+      decisionSource,
+      journeySource,
+      proofSource,
+    ]) {
+      expect(moduleSource).not.toContain('data-contact-form');
+      expect(moduleSource).not.toContain('/api/contact');
+    }
+    expect(homepageSource).toContain('<Contact16');
+    expect(homepageSource).toContain('title="Have a question before you subscribe?"');
+    expect(homepageSource).toContain(
+      'description="Tell us what you use today and what you want to improve. We’ll reply with a clear, practical answer for your barbershop."',
+    );
+  });
+
   it('links to homepage, demo and real pricing destination', () => {
     expect(pageSource).toContain('href: \'/\'');
+    expect(pageSource).toContain('supportLinkHref="#contact"');
+    expect(pageSource).toContain("{ name: 'Start subscription', href: '/admin/launch' }");
     expect(heroSource).toContain('href="/demo"');
+    expect(heroSource).toContain('href="#comparison"');
     expect(finalCtaSource).toContain('href="/demo"');
-    expect(finalCtaSource).toContain('href="/admin/launch"');
+    expect(finalCtaSource).toMatch(
+      /href="#pricing"\s+class="btn btn--secondary[^"]*"\s+data-track="view_pricing_click"/,
+    );
+    expect(finalCtaSource).toContain('View the £{SAAS_MONTHLY_GBP} Plan');
+    expect(finalCtaSource).not.toContain('href="/admin/launch"');
+    expect(finalCtaSource).not.toContain('saas_subscribe_click');
     expect(rateCard1Source).toContain('href="/admin/launch"');
+    expect(rateCard1Source).toContain('data-track="saas_subscribe_click"');
+    expect(getNavbar17CtaHref('booksyAlternative')).toBe('/admin/launch');
+    expect(navbar17Source).toContain("const isBooksyAlternative = variant === 'booksyAlternative'");
+    expect(navbar17Source).toMatch(
+      /isBooksyAlternative\s*\n\s*\? '\/'\s*\n\s*: '\/#home'/,
+    );
+    expect(navbar17Source).toContain("? '/'");
+    expect(compareSource).toContain('id="comparison"');
+    expect(pageSource).toContain('<Faq4');
+    expect(pricingSource.match(/id="pricing"/g)?.length).toBe(1);
   });
 
   it('pricing section reuses the shared landing offer card', () => {
@@ -124,6 +184,10 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(pricingSource).toContain('RateCard1Offer');
     expect(pricingSource).toContain('rate-card1--landing');
     expect(pricingSource).toContain('booksy-alt-pricing__offer-host');
+    expect(pricingSource).toContain('getRateCard1LandingLayout');
+    expect(pricingSource).toContain('rate-card1__landing-conditions');
+    expect(pricingSource).toContain('{layout.conditionsLine1}');
+    expect(pricingSource).toContain('{layout.conditionsLine2}');
     expect(pricingSource).not.toContain('View the Plan');
     expect(pricingSource).not.toContain('booksy-alt-pricing__price');
     expect(pricingSource).not.toContain('View the £');
@@ -136,7 +200,10 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(rateCard1Source).toContain('getRateCard1LandingLayout');
     expect(rateCard1Source).toContain('£{SAAS_MONTHLY_GBP}');
     expect(rateCard1Source).toContain('/ month');
-    expect(getRateCard1LandingLayout().ctaLabel).toBeTruthy();
+    const landingLayout = getRateCard1LandingLayout();
+    expect(landingLayout.ctaLabel).toBeTruthy();
+    expect(landingLayout.conditionsLine1).toBe('Standard Stripe payment-processing fees apply.');
+    expect(landingLayout.conditionsLine2).toContain('Billed today, then monthly');
     expect(homepageSource).toContain('<RateCard1 variant="landing" />');
   });
 
