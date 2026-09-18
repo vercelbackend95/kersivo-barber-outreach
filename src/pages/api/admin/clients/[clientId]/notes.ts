@@ -149,7 +149,9 @@ export const POST: APIRoute = async (ctx) => {
   let imageUrls: string[] = [];
   try {
     imageUrls = await Promise.all(
-      imageFiles.map((file, index) => storeNoteImage(file, clientId, note.id, index)),
+      imageFiles.map((file, index) =>
+        storeNoteImage(file, access.shopId, clientId, note.id, index),
+      ),
     );
 
     if (imageUrls.length > 0) {

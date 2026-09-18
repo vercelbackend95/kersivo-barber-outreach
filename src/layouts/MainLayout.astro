@@ -46,6 +46,12 @@ interface Props extends PageSeo {
   brandLogoUrl?: string | null;
   /** Empty-bag explore link. */
   exploreHref?: string;
+  /**
+   * When false, omit KERSIVO marketing Google Analytics / Ads tags.
+   * Live tenant storefronts and authenticated product surfaces should pass false.
+   * Defaults true for marketing/demo pages.
+   */
+  enableAnalytics?: boolean;
 }
 
 const {
@@ -67,6 +73,7 @@ const {
   shopName,
   brandLogoUrl = null,
   exploreHref,
+  enableAnalytics = true,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -85,7 +92,7 @@ const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' &&
 
 <html lang="en-GB" data-app="marketing" transition:animate="none">
   <head>
-    <GoogleAnalytics />
+    {enableAnalytics ? <GoogleAnalytics /> : null}
     <meta charset="utf-8" />
     <FaviconLinks />
     <meta name="viewport" content="width=device-width" />

@@ -2,6 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { createPortal } from 'react-dom';
 import { Ban, Check, Clock, Crown, ImagePlus, Mail, MessageCircle, Phone, Pin, Plus, Shield, StickyNote, Tag, X } from '../lucide-react';
 import { openClientMessageChannel } from '../../lib/admin/clientMessaging';
+import { resolveClientNoteImageSrc } from '../../lib/storage/storeNoteImage';
 import { adminFetchJson } from './adminAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -376,12 +377,14 @@ function NoteImageLightbox({
 
 function NotePost({
   note,
+  clientId,
   onLike,
   liking,
   isFeedPinned,
   onImageOpen,
 }: {
   note: ClientNotePost;
+  clientId: string;
   onLike: (noteId: string) => void;
   liking: boolean;
   isFeedPinned: boolean;
@@ -457,10 +460,15 @@ function NotePost({
               key={image.id}
               type="button"
               className="admin-cp-note-post-image-btn"
-              onClick={() => onImageOpen(image.url)}
+              onClick={() => onImageOpen(resolveClientNoteImageSrc(clientId, image))}
               aria-label="View note image"
             >
-              <img src={image.url} alt="" className="admin-cp-note-post-image" loading="lazy" />
+              <img
+                src={resolveClientNoteImageSrc(clientId, image)}
+                alt=""
+                className="admin-cp-note-post-image"
+                loading="lazy"
+              />
             </button>
           ))}
         </div>
@@ -693,6 +701,7 @@ function NotesEditor({ clientId }: { clientId: string }) {
               <NotePost
                 key={note.id}
                 note={note}
+                clientId={clientId}
                 onLike={(noteId) => { void handleLike(noteId); }}
                 liking={likingNoteId === note.id}
                 isFeedPinned={note.id === feedPinnedNoteId}

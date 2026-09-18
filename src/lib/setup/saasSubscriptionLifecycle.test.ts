@@ -8,6 +8,8 @@ const transaction = vi.fn();
 const markShopPaid = vi.fn();
 const markShopUnpaid = vi.fn();
 const purgeShopData = vi.fn();
+const listPrivateBlobPathsForShopPurge = vi.fn();
+const deletePrivateBlobPathsBestEffort = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
@@ -31,6 +33,10 @@ vi.mock('@/lib/shop/markShopPaid', () => ({
 
 vi.mock('@/lib/setup/purgeShopData', () => ({
   purgeShopData: (...args: unknown[]) => purgeShopData(...args),
+  listPrivateBlobPathsForShopPurge: (...args: unknown[]) =>
+    listPrivateBlobPathsForShopPurge(...args),
+  deletePrivateBlobPathsBestEffort: (...args: unknown[]) =>
+    deletePrivateBlobPathsBestEffort(...args),
 }));
 
 vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
@@ -92,7 +98,11 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     markShopPaid.mockReset();
     markShopUnpaid.mockReset();
     purgeShopData.mockReset();
+    listPrivateBlobPathsForShopPurge.mockReset();
+    deletePrivateBlobPathsBestEffort.mockReset();
     recordAccountLifecycleEvent.mockReset();
+    listPrivateBlobPathsForShopPurge.mockResolvedValue([]);
+    deletePrivateBlobPathsBestEffort.mockResolvedValue(undefined);
   });
 
   it('sets pastDueSince once on payment_failed and keeps paid in grace', async () => {
@@ -218,7 +228,9 @@ describe('saasSubscriptionLifecycle WP-I', () => {
 
     const result = await purgeShopsAfterRetentionEnds(now);
     expect(result.purged).toBe(1);
+    expect(listPrivateBlobPathsForShopPurge).toHaveBeenCalledWith('shop-1');
     expect(purgeShopData).toHaveBeenCalled();
+    expect(deletePrivateBlobPathsBestEffort).toHaveBeenCalled();
     expect(recordAccountLifecycleEvent).toHaveBeenCalled();
   });
 

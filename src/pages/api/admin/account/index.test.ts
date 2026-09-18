@@ -52,6 +52,12 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
+vi.mock('@/lib/setup/purgeShopData', () => ({
+  purgeShopData: vi.fn(async () => undefined),
+  listPrivateBlobPathsForShopPurge: vi.fn(async () => []),
+  deletePrivateBlobPathsBestEffort: vi.fn(async () => undefined),
+}));
+
 import { DELETE, GET } from './index';
 
 function makeDeleteContext(body: unknown): APIContext {

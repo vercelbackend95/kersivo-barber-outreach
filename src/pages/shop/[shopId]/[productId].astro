@@ -137,6 +137,7 @@ const jsonLd = buildTenantProductPageJsonLd({
   jsonLd={jsonLd}
   ogImagePath={product.image.src.startsWith('/') ? product.image.src : undefined}
   ogImageAlt={`${product.name} at ${shopName}`}
+  enableAnalytics={false}
 >
   <main class="container shop-page">
     <StorefrontProductDetail

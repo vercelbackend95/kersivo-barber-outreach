@@ -19,7 +19,11 @@ import {
   userHasPasswordCredential,
   verifyAccountDeletionReauth,
 } from '@/lib/setup/accountReauth';
-import { purgeShopData } from '@/lib/setup/purgeShopData';
+import {
+  deletePrivateBlobPathsBestEffort,
+  listPrivateBlobPathsForShopPurge,
+  purgeShopData,
+} from '@/lib/setup/purgeShopData';
 
 async function loadSoleOwnerShopIds(userId: string): Promise<string[]> {
   const ownerMemberships = await prisma.shopMember.findMany({
@@ -169,6 +173,11 @@ export const DELETE: APIRoute = async (context) => {
   });
 
   try {
+    const privateBlobPaths: string[] = [];
+    for (const shopId of soleOwnerShopIds) {
+      privateBlobPaths.push(...(await listPrivateBlobPathsForShopPurge(shopId)));
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.barber.updateMany({
         where: { userId },
@@ -186,6 +195,8 @@ export const DELETE: APIRoute = async (context) => {
 
       await tx.user.delete({ where: { id: userId } });
     });
+
+    await deletePrivateBlobPathsBestEffort(privateBlobPaths);
   } catch (error) {
     console.error('Failed to delete account', error);
     return new Response(JSON.stringify({ error: 'Unable to delete account.' }), { status: 500 });

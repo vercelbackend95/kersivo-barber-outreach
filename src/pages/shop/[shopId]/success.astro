@@ -89,6 +89,7 @@ if (shopId && sessionId) {
   description={ok ? `Your pickup order at ${shopName} is confirmed.` : 'Confirm your retail pickup order.'}
   canonicalPath={`/shop/${shopId}/success`}
   noindex
+  enableAnalytics={false}
 >
   <main class="container shop-page">
     <section class="shop-card shop-success-card">

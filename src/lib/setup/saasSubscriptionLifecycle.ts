@@ -6,7 +6,11 @@ import {
   ACCOUNT_LIFECYCLE_ACTIONS,
   recordAccountLifecycleEvent,
 } from '@/lib/setup/accountLifecycleAudit';
-import { purgeShopData } from '@/lib/setup/purgeShopData';
+import {
+  deletePrivateBlobPathsBestEffort,
+  listPrivateBlobPathsForShopPurge,
+  purgeShopData,
+} from '@/lib/setup/purgeShopData';
 import {
   mapStripeSubscriptionStatus,
   periodEndFromUnixSeconds,
@@ -312,6 +316,7 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
     }
 
     try {
+      const privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
       await prisma.$transaction(async (tx) => {
         await purgeShopData(tx, shopId);
         await tx.saasSubscription.update({
@@ -319,6 +324,7 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
           data: { shopId: null },
         });
       });
+      await deletePrivateBlobPathsBestEffort(privateBlobPaths);
       await recordAccountLifecycleEvent({
         action: ACCOUNT_LIFECYCLE_ACTIONS.SHOP_PURGED_AFTER_RETENTION,
         email: row.customerEmail,
