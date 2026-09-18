@@ -2,7 +2,7 @@
  * Canonical Terms of Service version (ISO date = "Last updated" on /terms).
  * Bump this when Terms content changes in a material way.
  */
-export const CURRENT_TERMS_VERSION = '2026-08-05';
+export const CURRENT_TERMS_VERSION = '2026-09-18';
 
 export const TERMS_ACCEPTANCE_PURPOSES = {
   SAAS_CHECKOUT: 'SAAS_CHECKOUT',

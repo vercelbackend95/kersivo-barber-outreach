@@ -56,6 +56,8 @@ describe('buildBarberDemoJsonLd', () => {
     expect(JSON.stringify(organization.logo)).not.toContain('logo_nobg');
     expect(organization.sameAs).toEqual(getFooterSocialLinks().map((link) => link.href));
     expect(organization).not.toHaveProperty('contactPoint');
+    expect(organization).not.toHaveProperty('legalName');
+    expect(organization).not.toHaveProperty('founder');
 
     expect(website['@id']).toBe(getKersivoWebsiteId(siteUrl));
     expect(website.name).toBe('KERSIVO');
@@ -80,6 +82,12 @@ describe('buildBarberDemoJsonLd', () => {
       url: `${siteUrl}/`,
     });
     expect(software.offers).toMatchObject({ price: '39', priceCurrency: 'GBP' });
+
+    const serialized = JSON.stringify(jsonLd);
+    expect(serialized).not.toContain('legalName');
+    expect(serialized).not.toContain('founder');
+    expect(serialized).not.toContain('"@type":"Person"');
+    expect(serialized).not.toContain('Bartosz');
   });
 });
 

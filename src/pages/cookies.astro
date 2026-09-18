@@ -1,6 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
+import { LEGAL_OPERATOR_NAME, TRADING_NAME } from '@/lib/legal/businessIdentity';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { CONSENT_COOKIE_NAME, CONSENT_MAX_AGE_SECONDS, CONSENT_VERSION } from '@/lib/consent/config';
 import '@/styles/legal-pages.css';
@@ -16,7 +17,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Cookie Policy</h1>
-      <p class="legal-page__updated">Last updated: 31 July 2026</p>
+      <p class="legal-page__updated">Last updated: 18 September 2026</p>
 
       <p>
         This Cookie Policy explains how KERSIVO uses cookies and similar technologies on
@@ -195,7 +196,8 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
 
       <h2>Contact</h2>
       <p>
-        Questions: <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>. Complaints may be made to the
+        {TRADING_NAME} is a trading name of {LEGAL_OPERATOR_NAME}. Questions:
+        <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>. Complaints may be made to the
         <a href="https://ico.org.uk/">ICO</a>.
       </p>
     </article>

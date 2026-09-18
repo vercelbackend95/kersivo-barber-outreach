@@ -1,6 +1,11 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
+import {
+  LEGAL_OPERATOR_LOCATION,
+  LEGAL_OPERATOR_NAME,
+  TRADING_NAME,
+} from '@/lib/legal/businessIdentity';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
@@ -13,7 +18,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 31 July 2026</p>
+      <p class="legal-page__updated">Last updated: 18 September 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
@@ -29,12 +34,13 @@ import '@/styles/legal-pages.css';
 
       <h2>Who is responsible for your data?</h2>
       <p>
-        The data controller for this service is <strong>Bartosz Jasinski</strong>, operating as a freelancer in
-        Bournemouth, United Kingdom.
+        The data controller for this service is <strong>{LEGAL_OPERATOR_NAME}</strong>, trading as {TRADING_NAME}, based
+        in {LEGAL_OPERATOR_LOCATION}.
       </p>
       <p>
-        References below to &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; mean that organisation. For data
-        protection enquiries or to exercise your rights, contact:
+        References in this policy to &ldquo;{TRADING_NAME}&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo;
+        mean {LEGAL_OPERATOR_NAME} trading as {TRADING_NAME}. For data protection enquiries or to exercise your rights,
+        contact:
         <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.
       </p>
 

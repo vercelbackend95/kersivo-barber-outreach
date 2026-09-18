@@ -39,6 +39,11 @@ import {
   SUPPORT_RESPONSE_CLAIM,
   WEBSITE_UPDATE_SUPPORT_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
+import {
+  LEGAL_OPERATOR_LOCATION,
+  LEGAL_OPERATOR_NAME,
+  TRADING_NAME,
+} from '@/lib/legal/businessIdentity';
 import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from '@/lib/legal/termsVersion';
 import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
@@ -61,9 +66,10 @@ import '@/styles/legal-pages.css';
 
       <h2>Parties</h2>
       <p>
-        The <strong>Service provider</strong> is <strong>Bartosz Jasinski</strong>, operating as a freelancer in
-        Bournemouth, United Kingdom. References to &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; mean the
-        Service provider. For enquiries, contact
+        The <strong>Service provider</strong> is <strong>{LEGAL_OPERATOR_NAME}</strong>, trading as {TRADING_NAME}, based
+        in {LEGAL_OPERATOR_LOCATION}. References in these Terms to &ldquo;{TRADING_NAME}&rdquo;, &ldquo;we&rdquo;,
+        &ldquo;us&rdquo; and &ldquo;our&rdquo; mean {LEGAL_OPERATOR_NAME} trading as {TRADING_NAME}, unless the context
+        refers specifically to the {TRADING_NAME} software or brand. For enquiries, contact
         <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.
       </p>
       <p>
