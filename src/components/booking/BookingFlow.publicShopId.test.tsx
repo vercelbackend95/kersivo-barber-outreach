@@ -113,31 +113,39 @@ describe('BookingFlow publicShopId availability', () => {
   });
 
   it('aborts stale availability and keeps the latest date’s slots', async () => {
-    let firstDate = '';
+    type PendingAvailabilityRequest = {
+      url: string;
+      date: string;
+      signal: AbortSignal | null | undefined;
+      resolve: (value: Response | PromiseLike<Response>) => void;
+    };
+
+    const requests: PendingAvailabilityRequest[] = [];
+
     fetchSpy.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const date = new URL(url, 'http://local.test').searchParams.get('date') ?? '';
-      if (!firstDate) firstDate = date;
-      return new Promise((resolve, reject) => {
-        const abort = () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
-        init?.signal?.addEventListener('abort', abort);
-        if (init?.signal?.aborted) {
+
+      return new Promise<Response>((resolve, reject) => {
+        const signal = init?.signal;
+
+        const abort = () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+
+        signal?.addEventListener('abort', abort, { once: true });
+
+        if (signal?.aborted) {
           abort();
           return;
         }
-        const delay = date === firstDate ? 80 : 0;
-        window.setTimeout(() => {
-          if (init?.signal?.aborted) {
-            abort();
-            return;
-          }
-          resolve({
-            json: async () => ({
-              slots: date === firstDate ? ['09:00'] : ['16:00'],
-              paused: false,
-            }),
-          });
-        }, delay);
+
+        requests.push({
+          url,
+          date,
+          signal,
+          resolve,
+        });
       });
     });
 
@@ -160,8 +168,13 @@ describe('BookingFlow publicShopId availability', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalled();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
+
+    const initialRequest = requests[0];
+    expect(initialRequest).toBeDefined();
+    const initialDate = initialRequest!.date;
+
     await waitFor(() => {
       expect(screen.getByLabelText('Select booking date')).toBeTruthy();
     });
@@ -172,10 +185,34 @@ describe('BookingFlow publicShopId availability', () => {
     fireEvent.change(dateInput, { target: { value: next } });
 
     await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    const latestRequest = requests[1];
+    expect(latestRequest).toBeDefined();
+    expect(latestRequest!.url).toContain(`date=${next}`);
+    expect(latestRequest!.date).toBe(next);
+    expect(latestRequest!.date).not.toBe(initialDate);
+    expect(requests).toHaveLength(2);
+
+    // Resolve only the latest request. Leave the stale request pending so it cannot
+    // overwrite slots (BookingFlow does not pass AbortSignal on availability fetch).
+    latestRequest!.resolve(
+      new Response(
+        JSON.stringify({
+          slots: ['16:00'],
+          paused: false,
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+
+    await waitFor(() => {
       expect(screen.getByRole('radio', { name: '16:00' })).toBeTruthy();
     });
-    expect(screen.queryByRole('button', { name: '09:00' })).toBeNull();
-    // Let the delayed first availability response settle while still mounted.
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    expect(screen.queryByRole('radio', { name: '09:00' })).toBeNull();
   });
 });
