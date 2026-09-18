@@ -99,8 +99,8 @@ const rows: PreviewRow[] = [
           ) : (
             <div class="feature261__media feature261__media--widget">
               <LandingBookingWidget
-                services={bookingData.services}
-                barbers={bookingData.barbers}
+                services={[...bookingData.services]}
+                barbers={[...bookingData.barbers]}
                 shopDetails={bookingData.shopDetails}
                 categoryOrder={bookingData.categoryOrder}
                 presentation={bookingData.presentation}

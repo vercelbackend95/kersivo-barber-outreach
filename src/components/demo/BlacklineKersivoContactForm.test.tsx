@@ -128,12 +128,12 @@ describe('BlacklineKersivoContactForm', () => {
   });
 
   it('blocks double submit while sending', async () => {
-    let resolveFetch: (value: unknown) => void = () => {};
+    let resolveFetch!: (value: Response | PromiseLike<Response>) => void;
     vi.mocked(fetch).mockImplementation(
       () =>
-        new Promise((resolve) => {
+        new Promise<Response>((resolve) => {
           resolveFetch = resolve;
-        }) as Promise<Response>,
+        }),
     );
 
     render(<BlacklineKersivoContactForm />);
@@ -149,10 +149,12 @@ describe('BlacklineKersivoContactForm', () => {
     });
     expect(fetch).toHaveBeenCalledOnce();
 
-    resolveFetch({
-      ok: true,
-      json: async () => ({ ok: true, delivered: true }),
-    });
+    resolveFetch(
+      new Response(JSON.stringify({ ok: true, delivered: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/your message has been sent to KERSIVO/i)).toBeTruthy();

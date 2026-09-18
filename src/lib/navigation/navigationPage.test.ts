@@ -24,7 +24,9 @@ describe('KERSIVO route transition families', () => {
   });
 
   it('persists chrome per family and forces reloads on family exits', () => {
-    expect(navbar).toContain('transition:persist={`ks-nav-${variant}`}');
+    expect(navbar).toContain(
+      "transition:persist={`ks-nav-${variant}-${showCart ? 'cart' : 'nocart'}`}",
+    );
     expect(navbar).toContain('data-astro-reload');
     expect(mainLayout).toContain('transition:persist="ks-cookie"');
     expect(mainLayout).toContain('transition:persist="ks-cart"');

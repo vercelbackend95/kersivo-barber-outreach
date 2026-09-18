@@ -151,8 +151,6 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
           publicShopId={shop.id}
           publicCreateUrl={createUrl}
           depositRequired={depositRequired}
-          themePreset="kersivo"
-          theme={{ shopName: shop.name, logoUrl: shop.logoUrl }}
           services={services.map((s) => ({
             id: s.id,
             name: s.name,

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { formatInTimeZone } from 'date-fns-tz';
 import {
   BLACKLINE_SESSION_ORDERS_KEY,
@@ -90,11 +90,14 @@ const emptySales = (from = '2026-08-12', to = '2026-08-18'): BlacklineAdminSales
 
 describe('blacklineSessionOrders', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     clearStore();
   });
 
   afterEach(() => {
     clearStore();
+    vi.useRealTimers();
   });
 
   it('serializes a paid session order with a stable id and visible reference', () => {

@@ -83,7 +83,23 @@ const pageData = await withPrismaQuotaFallback(
       shopUnavailable: false,
     };
   },
-  { notFound: false as const, shop: { name: 'Barbershop', logoUrl: null as string | null }, product: null, catalog: [] as StorefrontProduct[], shopUnavailable: true },
+  {
+    notFound: false as const,
+    shop: {
+      id: shopId,
+      name: 'Barbershop',
+      logoUrl: null as string | null,
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      retailEnabled: false,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      publicActivityPaused: true,
+    },
+    product: null,
+    catalog: [] as StorefrontProduct[],
+    shopUnavailable: true,
+  },
 );
 
 if (pageData.notFound) {
