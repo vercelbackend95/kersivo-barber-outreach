@@ -12,6 +12,7 @@ const updateManyBooking = vi.fn();
 const refundPaymentIntent = vi.fn();
 const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
+const captureOpsMessage = vi.fn();
 
 vi.mock('../db/client', () => ({
   prisma: {
@@ -41,6 +42,7 @@ vi.mock('../ops/stripeWebhookLedger', () => ({
 
 vi.mock('../ops/sentry', () => ({
   captureOpsException: (...args: unknown[]) => captureOpsException(...args),
+  captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
 
 import {
@@ -327,6 +329,17 @@ describe('confirmDepositRefundFromWebhook', () => {
 
     expect(result.matched).toBe(true);
     expect(notifyOpsDurable).toHaveBeenCalled();
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Deposit refund failed via Stripe webhook',
+      expect.objectContaining({
+        level: 'error',
+        tags: expect.objectContaining({
+          bookingId: 'book_1',
+          stripeStatus: 'failed',
+        }),
+      }),
+    );
+    expect(captureOpsException).not.toHaveBeenCalled();
   });
 });
 

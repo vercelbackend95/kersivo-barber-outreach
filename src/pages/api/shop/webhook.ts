@@ -46,7 +46,7 @@ import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate'
 import { confirmPaidDeposit } from '../../../lib/booking/confirmPaidDeposit';
 import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
-import { captureOpsException } from '../../../lib/ops/sentry';
+import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
 import {
   alertLifecycleNotFound,
   alertStripeWebhookFailure,
@@ -1172,6 +1172,11 @@ export const POST: APIRoute = async ({ request }) => {
           dedupeKey: 'webhook:replay-rejected',
           cooldownMs: 15 * 60 * 1000,
           fields: { reason: verifyResult.reason },
+        });
+        captureOpsMessage('Stripe webhook replay rejected', {
+          level: 'warning',
+          route: '/api/shop/webhook',
+          tags: { reason: verifyResult.reason },
         });
       }
       return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db/client';
 import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { formatGbp } from '@/lib/shop/money';
+import { captureOpsMessage } from '@/lib/ops/sentry';
 import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 
@@ -73,6 +74,15 @@ export async function finalizeRetailOrderFromCheckout(
         sessionId: input.sessionId,
         expected: order.totalPence,
         actual: input.amountTotal,
+      },
+    });
+    captureOpsMessage('Retail order amount mismatch', {
+      level: 'error',
+      route: 'finalizeRetailOrderFromCheckout',
+      shopId,
+      tags: {
+        orderId,
+        sessionId: input.sessionId,
       },
     });
     return { outcome: 'amount_mismatch' };

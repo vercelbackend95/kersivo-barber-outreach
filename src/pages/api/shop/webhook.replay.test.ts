@@ -6,6 +6,7 @@ const recordStripeWebhookReceived = vi.fn();
 const notifyOpsDurable = vi.fn();
 const markStripeWebhookStatus = vi.fn();
 const alertStripeWebhookFailure = vi.fn();
+const captureOpsMessage = vi.fn();
 const updateMany = vi.fn();
 const countShops = vi.fn();
 const applyInvoicePaymentFailed = vi.fn();
@@ -37,6 +38,7 @@ vi.mock('../../../lib/ops/opsLog', () => ({
 
 vi.mock('../../../lib/ops/sentry', () => ({
   captureOpsException: vi.fn(),
+  captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
 
 vi.mock('../../../lib/db/client', () => ({
@@ -184,6 +186,13 @@ describe('POST /api/shop/webhook replay hardening', () => {
     expect(body).not.toHaveProperty('reason');
     expect(notifyOpsDurable).toHaveBeenCalledWith(
       expect.objectContaining({ dedupeKey: 'webhook:replay-rejected' }),
+    );
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Stripe webhook replay rejected',
+      expect.objectContaining({
+        level: 'warning',
+        tags: { reason: 'timestamp_out_of_tolerance' },
+      }),
     );
     expect(recordStripeWebhookReceived).not.toHaveBeenCalled();
   });

@@ -60,8 +60,12 @@ vi.mock('@/lib/storage/privateOnboardingBlob', async () => {
 });
 
 const notifyOpsDurable = vi.fn();
+const captureOpsMessage = vi.fn();
 vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
   notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
+}));
+vi.mock('@/lib/ops/sentry', () => ({
+  captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
 
 import { POST, DELETE } from './assets';
@@ -236,6 +240,21 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
         }),
       }),
     );
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Client onboarding private blob cleanup failed',
+      expect.objectContaining({
+        level: 'error',
+        shopId: 'shop_1',
+        tags: expect.objectContaining({
+          kind: ClientOnboardingAssetKind.MIGRATION_CSV,
+          reason: 'db_finalize_failed',
+        }),
+      }),
+    );
+    const sentryPayload = JSON.stringify(captureOpsMessage.mock.calls);
+    expect(sentryPayload).not.toContain('orphan.csv');
+    expect(sentryPayload).not.toContain('clients.csv');
+    expect(sentryPayload).not.toContain('client-onboarding/shop_1/migration_csv');
   });
 
   it('cleans up blob and returns 409 when locked after upload', async () => {

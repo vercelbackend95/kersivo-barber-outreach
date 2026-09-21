@@ -4,6 +4,7 @@ const findFirst = vi.fn();
 const updateMany = vi.fn();
 const transaction = vi.fn();
 const notifyOpsDurable = vi.fn();
+const captureOpsMessage = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
 
@@ -16,6 +17,10 @@ vi.mock('@/lib/db/client', () => ({
 
 vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
   notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
+}));
+
+vi.mock('@/lib/ops/sentry', () => ({
+  captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
 
 vi.mock('@/lib/email/outbox', () => ({
@@ -124,6 +129,15 @@ describe('finalizeRetailOrderFromCheckout', () => {
         dedupeKey: 'retail_amount_mismatch:ord_1',
       }),
     );
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Retail order amount mismatch',
+      expect.objectContaining({
+        level: 'error',
+        shopId: 'shop_1',
+        tags: expect.objectContaining({ orderId: 'ord_1', sessionId: 'cs_1' }),
+      }),
+    );
+    expect(JSON.stringify(captureOpsMessage.mock.calls)).not.toMatch(/@|client@example/);
     expect(transaction).not.toHaveBeenCalled();
   });
 });

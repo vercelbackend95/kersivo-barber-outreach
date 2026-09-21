@@ -5,6 +5,7 @@ import {
 } from '@prisma/client';
 
 import { prisma } from '@/lib/db/client';
+import { captureOpsMessage } from '@/lib/ops/sentry';
 import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '@/lib/ops/opsLog';
 
@@ -531,6 +532,15 @@ async function processShop(shopId: string, targetVersion: number): Promise<boole
         body: code.slice(0, 500),
         dedupeKey: `recommendations:failed:${shopId}`,
         fields: { shopId, attempts: failure.attempts },
+      });
+      captureOpsMessage('Recommendation rebuild exhausted retries', {
+        level: 'error',
+        route: 'recommendations.processor',
+        shopId,
+        tags: {
+          attempts: String(failure.attempts),
+          ...(currentSetId ? { recommendationSetId: currentSetId } : {}),
+        },
       });
     }
 

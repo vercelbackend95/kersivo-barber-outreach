@@ -55,6 +55,15 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
+const notifyOpsDurable = vi.fn();
+const captureOpsMessage = vi.fn();
+vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
+  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
+}));
+vi.mock('@/lib/ops/sentry', () => ({
+  captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
+}));
+
 import { buildLockOwnerOnlyWhere } from './workerOwnership';
 import { StaleBuildError } from './workerOwnership';
 import { processShop } from './processor';
@@ -164,6 +173,28 @@ describe('processShop', () => {
       'STALE_BUILD',
     );
     expect(releaseOwnedLock).toHaveBeenCalled();
+  });
+
+  it('alerts Slack and Sentry when rebuild retries are exhausted', async () => {
+    serviceFindMany.mockRejectedValue(new Error('db unavailable'));
+    claimOwnedFailure.mockResolvedValue({ outcome: 'claimed', exhausted: true, attempts: 5 });
+
+    const ok = await processShop('shop-1', 2);
+    expect(ok).toBe(false);
+    expect(notifyOpsDurable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'critical',
+        dedupeKey: 'recommendations:failed:shop-1',
+      }),
+    );
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Recommendation rebuild exhausted retries',
+      expect.objectContaining({
+        level: 'error',
+        shopId: 'shop-1',
+        tags: expect.objectContaining({ attempts: '5' }),
+      }),
+    );
   });
 
   it('treats zero-row publish claim as stale build error type', () => {

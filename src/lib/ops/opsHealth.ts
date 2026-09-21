@@ -1,5 +1,6 @@
 import { DepositRefundStatus, EmailOutboundStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { captureOpsMessage } from '@/lib/ops/sentry';
 import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog } from '@/lib/ops/opsLog';
 
@@ -211,6 +212,15 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
     if (result.sent) alertsFired.push(key);
+    captureOpsMessage('Email outbound failure rate high', {
+      level: 'warning',
+      route: 'opsHealth.messaging.email',
+      tags: {
+        sent: String(messaging.email.sent),
+        failed: String(messaging.email.failed),
+        consecutiveFailed: String(messaging.email.consecutiveFailed),
+      },
+    });
   }
 
   if (messaging.sms.shouldAlert) {
@@ -227,6 +237,15 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
     if (result.sent) alertsFired.push(key);
+    captureOpsMessage('SMS outbound failure rate high', {
+      level: 'warning',
+      route: 'opsHealth.messaging.sms',
+      tags: {
+        sent: String(messaging.sms.sent),
+        failed: String(messaging.sms.failed),
+        consecutiveFailed: String(messaging.sms.consecutiveFailed),
+      },
+    });
   }
 
   for (const row of stuck) {
@@ -243,6 +262,14 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
     if (result.sent) alertsFired.push(key);
+    captureOpsMessage('Stripe webhook stuck FAILED', {
+      level: 'error',
+      route: 'opsHealth.webhook.stuck',
+      tags: {
+        eventId: row.id,
+        eventType: row.type,
+      },
+    });
   }
 
   for (const row of stuckRefunds) {
@@ -264,6 +291,17 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
     if (result.sent) alertsFired.push(key);
+    captureOpsMessage('Deposit refund stuck', {
+      level: 'error',
+      route: 'opsHealth.refund.stuck',
+      shopId: row.shopId,
+      tags: {
+        bookingId: row.bookingId,
+        refundLedgerId: row.id,
+        status: row.status,
+        attempts: String(row.attempts),
+      },
+    });
   }
 
   for (const row of stuckEmails) {
@@ -286,6 +324,18 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
     if (result.sent) alertsFired.push(key);
+    captureOpsMessage('Transactional email stuck', {
+      level: 'error',
+      route: 'opsHealth.email.stuck',
+      shopId: row.shopId,
+      tags: {
+        emailOutboundId: row.id,
+        purpose: row.purpose,
+        status: row.status,
+        attempts: String(row.attempts),
+        ...(row.bookingId ? { bookingId: row.bookingId } : {}),
+      },
+    });
   }
 
   opsLog('ops.health', 'check_complete', {

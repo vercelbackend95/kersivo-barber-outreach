@@ -5,7 +5,7 @@ import {
   type BookingDepositRefund,
 } from '@prisma/client';
 import { prisma } from '../db/client';
-import { captureOpsException } from '../ops/sentry';
+import { captureOpsException, captureOpsMessage } from '../ops/sentry';
 import { notifyOpsDurable } from '../ops/stripeWebhookLedger';
 import { refundPaymentIntent } from '../shop/stripeConnect';
 
@@ -394,6 +394,16 @@ export async function confirmDepositRefundFromWebhook(input: {
       },
     });
     await alertRefundFailed(updated, `Webhook: refund ${input.status}`);
+    captureOpsMessage('Deposit refund failed via Stripe webhook', {
+      level: 'error',
+      route: 'depositMoney.applyStripeRefundWebhook',
+      shopId: updated.shopId,
+      tags: {
+        bookingId: updated.bookingId,
+        refundLedgerId: updated.id,
+        stripeStatus: input.status,
+      },
+    });
     return { matched: true, refund: updated };
   }
 
