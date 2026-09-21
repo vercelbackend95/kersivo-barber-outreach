@@ -10,7 +10,7 @@ Security / Trust: [https://security.vercel.com](https://security.vercel.com)
 | Production baseline (repo) | `5c0e6bac84a247652bfc97631187490f7ecaad00` |
 | Evidence pass | Vendor verification + Blob public/private store split (code); Functions region migration to `lhr1` production-validated |
 | Last reviewed | 2026-09-21 |
-| Status | INTERNAL — fact gathering + classification (TRA **NOT YET COMPLETED**) |
+| Status | INTERNAL — fact gathering + classification (Vercel UK Extension adequacy **ACTIVE**; TRA **NOT REQUIRED** where UK Extension applies) |
 
 ---
 
@@ -122,30 +122,50 @@ Public `/dpa` wording “Application hosting/runtime and Vercel Blob storage” 
 | **B. Provider corporate / access / support** | Public DPA: **primary processing facilities in the United States**; may process globally. |
 | **C. Onward Sub-processors** | Listed at security.vercel.com; may be outside UK. |
 
-### Restricted transfer (UK GDPR)?
+### Restricted / international transfer (UK GDPR)?
 
-**YES**
+**YES — international transfer may occur** (including Vercel Inc. US primary facilities / corporate/support processing and onward subprocessors). London Functions/Blob do **not** by themselves eliminate that possibility.
 
-Application runtime and Blob storage are configured in London (`lhr1` / LHR1). UK-local hosting does **not** by itself remove potential restricted transfers arising from:
+### Primary transfer mechanism (to Vercel Inc.)
 
-1. Vercel Inc. corporate / support processing and the public DPA statement that primary processing facilities are in the United States; and
-2. Onward subprocessors that may process outside the UK.
+**UK adequacy regulations — UK Extension to the EU-U.S. Data Privacy Framework**
 
-Do **not** treat London Functions + London Blob alone as “no international transfer.”
+Verified against the official U.S. Department of Commerce Data Privacy Framework List (2026-09-21):
 
 | Item | Status |
 | --- | --- |
-| Restricted transfer | **YES** |
-| Article 46 safeguard (public DPA) | **2021 EU SCCs** + **UK IDTA/Addendum** |
-| Data protection test / TRA | **NOT YET COMPLETED** |
+| Entity | **Vercel Inc.** |
+| Participant status | **Active Participant** |
+| EU-U.S. DPF | **Active** |
+| UK Extension to the EU-U.S. DPF | **Active** |
+| UK Extension original certification | **2024-05-06** |
+| UK Extension next certification due | **2027-04-29** |
+| Data collected / covered | **HR and Non-HR Data** |
+| Verification method | **Self-Assessment** |
+| Vercel Privacy Notice | Confirms participation in / certification under the UK Extension |
+
+ICO conditions for reliance on the UK Extension (ACTIVE status; self-certified to UK Extension; certification covers relevant data type) are **met** for Vercel Inc. for **HR and Non-HR Data**.
+
+### TRA / data protection test
+
+| Item | Status |
+| --- | --- |
+| Restricted / international transfer | **YES** (may occur) |
+| Primary mechanism | **UK adequacy / UK Extension to EU-U.S. DPF** (ACTIVE for Vercel Inc.) |
+| TRA / data protection test | **NOT REQUIRED where the active UK Extension applies** to the transfer |
+| Contractual fallback (retain; do not delete) | Vercel DPA **UK IDTA + 2021 SCCs** — use if adequacy cannot be relied upon (e.g. certification inactive/lapsed/narrowed); then perform any required data protection test |
+
+### Special-category / criminal-offence caveat (separate from TRA)
+
+ICO guidance requires additional handling for certain special-category and criminal-offence data transferred under the UK Extension. KERSIVO client notes / note images are free-form and could theoretically contain such data. **No completed operational control is claimed here.**
+
+**P1 action:** define product/operational handling for special-category and criminal-offence data in free-text notes/uploads. This caveat does **not** reopen a Vercel TRA requirement while the UK Extension applies.
 
 ---
 
-## Data protection test status
+## Transfer mechanism evidence (Vercel Inc.)
 
-**TRA / data protection test: NOT YET COMPLETED**
-
-### Inputs for a later Vercel data protection test (evidence only)
+Retained for TRA-fallback readiness only — **not** the primary mechanism while UK Extension remains ACTIVE:
 
 | Input | Value |
 | --- | --- |
@@ -155,7 +175,9 @@ Do **not** treat London Functions + London Blob alone as “no international tra
 | Roles | KERSIVO **Processor** → Vercel **Sub-processor** |
 | Known destinations | Functions **`lhr1` London CONFIRMED**; Blob LHR1 London (public + private); Vercel Inc. / US primary facilities / global subprocessors per DPA |
 | Technical safeguards | HTTPS; private Blob fail-closed credential; authenticated note-image streaming; tenant analytics off |
-| TRA status | **NOT YET COMPLETED** |
+| Primary mechanism | UK Extension adequacy (ACTIVE) |
+| Fallback contractual safeguards | Vercel DPA (Pro/Enterprise): **2021 EU SCCs** + **UK IDTA/Addendum** |
+| TRA status | **NOT REQUIRED where UK Extension applies** |
 
 ---
 
@@ -173,6 +195,8 @@ Do **not** treat London Functions + London Blob alone as “no international tra
 
 | Source | Date |
 | --- | --- |
+| Official U.S. Department of Commerce DPF List: Vercel Inc. Active Participant; EU-U.S. DPF Active; UK Extension Active; HR and Non-HR Data; UK Extension original certification 2024-05-06; next due 2027-04-29; Self-Assessment | 2026-09-21 |
+| Vercel Privacy Notice confirms UK Extension participation / certification | 2026-09-21 |
 | Operator confirmation: Pro plan; Blob stores LHR1 | 2026-09-21 |
 | Functions region manually changed `iad1` → `lhr1`; production redeploy; production smoke passed | 2026-09-21 |
 | GitHub Actions CI run `35606649723` for SHA `5c0e6bac84a247652bfc97631187490f7ecaad00` completed successfully | 2026-09-21 |
@@ -180,7 +204,7 @@ Do **not** treat London Functions + London Blob alone as “no international tra
 | BLACKLINE hydration regression fixed in `5c0e6ba` (client `sharp` isolation — not a Function Region issue) | 2026-09-21 |
 | Repo Blob credential split + tests | 2026-09-21 |
 | Aggregate DB audit (ClientNoteImage / ClientOnboardingAsset counts only) | 2026-09-21 |
-| Public Vercel DPA | 2026-09-21 |
+| Public Vercel DPA (SCCs + UK IDTA retained as fallback) | 2026-09-21 |
 
 ---
 
@@ -188,7 +212,7 @@ Do **not** treat London Functions + London Blob alone as “no international tra
 
 1. Project-level Web Analytics / Speed Insights toggle (if any)
 2. Runtime log CPD content / retention
-3. Current Vercel subprocessor list snapshot at TRA time
+3. Current Vercel onward-subprocessor list snapshot for hygiene (not a TRA gate while UK Extension applies to Vercel Inc.)
 4. Whether preview/non-production environments intentionally lack `PRIVATE_BLOB_READ_WRITE_TOKEN` (expected: private ops fail-closed there)
 
 ---
@@ -197,19 +221,20 @@ Do **not** treat London Functions + London Blob alone as “no international tra
 
 ### P0 BEFORE FIRST LIVE CLIENT
 
-1. Complete **TRA / data protection test** for Vercel (Functions `lhr1` + Blob LHR1 + Vercel Inc. US primary facilities / subprocessors). Do not treat SCCs/IDTA or London Functions/Blob alone as completion.
-2. Confirm production `PRIVATE_BLOB_READ_WRITE_TOKEN` is present on Production before any live Client private uploads.
-3. Keep dual-store credential separation in any future Blob refactors.
+1. Confirm production `PRIVATE_BLOB_READ_WRITE_TOKEN` is present on Production before any live Client private uploads.
+2. Keep dual-store credential separation in any future Blob refactors.
+3. Periodically verify **Vercel Inc.** remains an **ACTIVE** UK Extension participant and continues to cover **HR and Non-HR Data** (next certification due **2027-04-29**). If certification lapses, becomes inactive, or stops covering relevant data: fall back to Vercel DPA **UK IDTA + 2021 SCCs** and perform any required data protection test.
 
 ### P1 BEFORE MATERIAL SCALE
 
-1. Document log hygiene / retention.
-2. Subscribe to Vercel subprocessor notices if not already.
+1. Define product/operational handling for special-category and criminal-offence data in free-text notes/uploads (UK Extension additional-handling caveat).
+2. Document log hygiene / retention.
+3. Subscribe to Vercel subprocessor notices if not already.
 
 ### P2 ONGOING HYGIENE
 
 1. Re-read DPA on material update.
-2. Refresh this evidence after region/plan/Blob changes.
+2. Refresh this evidence after region/plan/Blob changes or DPF status changes.
 
 ---
 
