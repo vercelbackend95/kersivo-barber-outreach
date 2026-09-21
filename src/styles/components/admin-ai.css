@@ -184,6 +184,13 @@
   color: color-mix(in srgb, var(--muted) 88%, transparent);
 }
 
+.admin-assistant-data-notice {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+}
+
 .admin-assistant-composer-actions {
   display: flex;
   justify-content: flex-end;

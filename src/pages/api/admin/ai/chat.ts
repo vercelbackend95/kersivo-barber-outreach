@@ -141,8 +141,9 @@ export const POST: APIRoute = async (ctx) => {
       },
     });
   } catch (error) {
-    console.error('[admin/ai/chat] OpenAI request failed', error);
+    // Log a safe summary only — avoid dumping SDK error objects that may retain request context.
     const message = error instanceof Error ? error.message : 'Assistant request failed.';
+    console.error('[admin/ai/chat] OpenAI request failed', { name: error instanceof Error ? error.name : 'Error', message });
     return jsonError(message, 502);
   }
 };

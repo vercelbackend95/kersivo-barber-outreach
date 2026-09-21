@@ -466,6 +466,18 @@ import '@/styles/legal-pages.css';
               <td>Only where OPS_SLACK_WEBHOOK_URL is configured and Slack operational alerting is enabled</td>
               <td>Current Slack data-processing terms and applicable lawful UK transfer safeguards</td>
             </tr>
+
+            <tr>
+              <td>OpenAI</td>
+              <td>Admin AI assistant / language-model processing</td>
+              <td>
+                Free-text prompts and conversation context submitted by authorised Client users. This may include
+                Customer Personal Data if a Client user enters it. Responses and technical request metadata may also be
+                processed.
+              </td>
+              <td>Only where the {TRADING_NAME} admin AI assistant is enabled and OPENAI_API_KEY is configured</td>
+              <td>Current OpenAI Data Processing Addendum and applicable UK transfer safeguards</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -473,8 +485,15 @@ import '@/styles/legal-pages.css';
       <p>
         The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:
         Google Analytics / Google Ads (tenant analytics disabled; {TRADING_NAME} own marketing-controller processing);
-        OpenAI (catalogue semantics only by current design, not Customer Personal Data); Stripe platform billing
-        ({TRADING_NAME} controller billing); and Google OAuth ({TRADING_NAME} account/auth context).
+        Stripe platform billing ({TRADING_NAME} controller billing); and Google OAuth ({TRADING_NAME} account/auth
+        context).
+      </p>
+
+      <p>
+        <strong>OpenAI note.</strong> Catalogue and recommendation AI processing remains designed around
+        product/catalogue semantics and is not intended to send Customer Personal Data. Separately, the admin free-text
+        AI assistant is a conditional Customer Personal Data path listed above where that feature is enabled.
+        {TRADING_NAME} does not claim that OpenAI always receives tenant data for every Client.
       </p>
 
       <p>

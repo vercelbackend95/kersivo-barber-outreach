@@ -3,8 +3,6 @@ import AdminSectionHeader from './AdminSectionHeader';
 import { ASSISTANT_STARTERS, buildDemoAssistantReply } from '@/lib/admin/ai/prompts';
 import type { ChatMessage } from '@/lib/admin/ai/types';
 
-const STORAGE_KEY = 'kersivo-admin-assistant-thread-v1';
-
 type UiMessage = ChatMessage & { id: string };
 
 type AiAssistantPanelProps = {
@@ -16,40 +14,6 @@ function createId(): string {
     return crypto.randomUUID();
   }
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function loadStoredMessages(): UiMessage[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((item): item is UiMessage => {
-        if (!item || typeof item !== 'object') return false;
-        const role = (item as UiMessage).role;
-        const content = (item as UiMessage).content;
-        const id = (item as UiMessage).id;
-        return (
-          (role === 'user' || role === 'assistant')
-          && typeof content === 'string'
-          && typeof id === 'string'
-        );
-      })
-      .slice(-40);
-  } catch {
-    return [];
-  }
-}
-
-function persistMessages(messages: UiMessage[]) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
-  } catch {
-    // ignore quota errors
-  }
 }
 
 function renderMessageContent(content: string): React.ReactNode {
@@ -75,19 +39,8 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
   const [draft, setDraft] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
-  const [hydrated, setHydrated] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setMessages(loadStoredMessages());
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    persistMessages(messages);
-  }, [messages, hydrated]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -214,11 +167,6 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
     setMessages([]);
     setError('');
     setDraft('');
-    try {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
   }, [stopStreaming]);
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -233,7 +181,7 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
     }
   };
 
-  const showEmpty = hydrated && messages.length === 0;
+  const showEmpty = messages.length === 0;
 
   return (
     <section className="surface booking-shell admin-assistant-shell" aria-label="Assistant">
@@ -318,6 +266,10 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
               placeholder="Ask how to use an admin feature for better utilisation, AOV, or no-shows…"
               disabled={isStreaming && isPublicDemo}
             />
+            <p className="admin-assistant-data-notice">
+              Do not enter client personal data, sensitive information or confidential booking notes unless it is
+              necessary for your request.
+            </p>
             <div className="admin-assistant-composer-actions">
               {isStreaming ? (
                 <button type="button" className="btn btn--ghost btn--sm" onClick={stopStreaming}>

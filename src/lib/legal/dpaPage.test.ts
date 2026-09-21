@@ -76,10 +76,39 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Twilio');
     expect(dpaSource).toContain('Sentry');
     expect(dpaSource).toContain('Slack');
+    expect(dpaSource).toContain('OpenAI');
     expect(dpaSource).toContain('Only where SMS functionality is enabled');
     expect(dpaSource).toContain('Only where SENTRY_DSN');
     expect(dpaSource).toContain('OPS_SLACK_WEBHOOK_URL');
+    expect(dpaSource).toContain('OPENAI_API_KEY');
+    expect(dpaSource).toContain('Admin AI assistant / language-model processing');
     expect(dpaSource).toContain('tenant-linked or record-linked operational');
+  });
+
+  it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
+    expect(dpaSource).toContain('Only where the {TRADING_NAME} admin AI assistant is enabled and OPENAI_API_KEY is configured');
+    expect(dpaSource).toContain('Current OpenAI Data Processing Addendum');
+    expect(dpaSource).toContain('OpenAI note');
+    expect(dpaSource).toContain('catalogue');
+    expect(dpaSource).not.toContain(
+      'OpenAI (catalogue semantics only by current design, not Customer Personal Data)',
+    );
+    const notListedStart = dpaSource.indexOf(
+      'The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:',
+    );
+    expect(notListedStart).toBeGreaterThan(-1);
+    const notListedEnd = dpaSource.indexOf('</p>', notListedStart);
+    expect(notListedEnd).toBeGreaterThan(notListedStart);
+    const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
+    expect(notListedBlock).not.toMatch(/OpenAI/);
+  });
+
+  it('keeps Twilio conditional and does not list AWS as an active Sub-processor', () => {
+    expect(dpaSource).toContain('Twilio');
+    expect(dpaSource).toContain('Only where SMS functionality is enabled');
+    expect(dpaSource).not.toMatch(/End User Messaging/i);
+    expect(dpaSource).not.toMatch(/\bAWS\b/);
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-21');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
