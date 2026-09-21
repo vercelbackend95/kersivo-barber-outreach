@@ -10,6 +10,9 @@ permissions:
 
 env:
   ASTRO_TELEMETRY_DISABLED: "1"
+  # Ephemeral CI-only value so Astro production build can import auth routes.
+  # Not a production credential; do not reuse on Vercel or in .env files.
+  BETTER_AUTH_SECRET: "ci-only-kersivo-better-auth-secret-2026-do-not-use-in-production"
 
 jobs:
   build:
