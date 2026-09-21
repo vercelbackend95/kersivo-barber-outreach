@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type ConsoleMessage, type Page } from '@playwright/test';
 
 const TIMELINE_CTA = 'View booking online';
 
@@ -30,13 +30,42 @@ async function pickFirstAvailableSlot(page: Page): Promise<string> {
   throw new Error('No available BLACKLINE demo slot');
 }
 
+function isHydrationConsoleError(text: string): boolean {
+  return /astro-island|Error hydrating|process is not defined|hydrat/i.test(text);
+}
+
+async function dismissBookingProofIfPresent(page: Page) {
+  const overlay = page.locator('[data-blackline-booking-proof-layer]');
+  if (!(await overlay.isVisible().catch(() => false))) return;
+  const explore = page.getByRole('button', { name: /Explore the dashboard/i });
+  if (await explore.isVisible().catch(() => false)) {
+    await explore.click();
+  } else {
+    await page.getByRole('button', { name: 'Dismiss booking proof overlay' }).click();
+  }
+  await expect(overlay).toBeHidden({ timeout: 10000 });
+}
+
 test.describe('BLACKLINE booking confirmation to owner timeline', () => {
   test('creates a session booking and focuses it on the owner timeline', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const hydrationConsoleErrors: string[] = [];
+
+    page.on('pageerror', (err) => {
+      pageErrors.push(err.message);
+    });
+    page.on('console', (msg: ConsoleMessage) => {
+      if (msg.type() !== 'error') return;
+      const text = msg.text();
+      if (isHydrationConsoleError(text)) hydrationConsoleErrors.push(text);
+    });
+
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/book', { waitUntil: 'domcontentloaded' });
     const accept = page.getByRole('button', { name: 'Accept all' });
     if (await accept.isVisible().catch(() => false)) {
       await accept.click();
+      await expect(accept).toBeHidden({ timeout: 5000 }).catch(() => undefined);
     }
     const bookingSection = page.locator('.bl-booking');
     await expect(bookingSection).toHaveCSS('background-color', 'rgb(11, 12, 14)');
@@ -47,12 +76,22 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
     await expect(page.locator('.booking-choice-card--service')).toHaveCount(18);
 
-    await page.getByRole('radio', { name: /Skin Fade A seamless fade/i }).click();
+    const skinFade = page.getByRole('radio', { name: /Skin Fade A seamless fade/i });
+    await expect(async () => {
+      await skinFade.click();
+      await expect(skinFade).toBeChecked({ timeout: 1500 });
+    }).toPass({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeEnabled();
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
-    await page.getByRole('radio', { name: /^Ellis Ward$/i }).click();
+    const ellis = page.getByRole('radio', { name: /^Ellis Ward$/i });
+    await expect(async () => {
+      await ellis.click();
+      await expect(ellis).toBeChecked({ timeout: 1500 });
+    }).toPass({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeEnabled();
     await page.getByRole('button', { name: 'Continue' }).click();
     const time = await pickFirstAvailableSlot(page);
     await page.getByRole('button', { name: 'Continue' }).click();
@@ -81,6 +120,15 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     await expect(page).toHaveURL(/\/demo\/admin/);
     await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
 
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const admin = document.querySelector('astro-island[component-url*="AdminPanel"]');
+          return Boolean(admin && admin.getAttribute('client-render-time'));
+        }),
+      )
+      .toBe(true);
+
     const card = page.locator(`[data-booking-id="${bookingId}"]`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await expect(card).toContainText('Skin Fade');
@@ -105,8 +153,36 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     expect(reference).toMatch(/^BL-\d{4}$/);
     await assertNoHorizontalOverflow(page);
 
+    expect(pageErrors, `pageerror events: ${pageErrors.join(' | ')}`).toEqual([]);
+    expect(
+      hydrationConsoleErrors,
+      `hydration console errors: ${hydrationConsoleErrors.join(' | ')}`,
+    ).toEqual([]);
+
+    await dismissBookingProofIfPresent(page);
+
+    const nav = page.getByRole('navigation', { name: /Admin navigation/i });
+    await nav.getByRole('button', { name: /^Team$/i }).click();
+    await expect(page.getByRole('heading', { name: /^Team$/i }).first()).toBeVisible({ timeout: 10000 });
+
+    await nav.getByRole('button', { name: /^Reports$/i }).click();
+    await expect(page.getByRole('heading', { name: /^Reports$/i }).first()).toBeVisible({ timeout: 10000 });
+
+    await nav.getByRole('button', { name: /^Services$/i }).click();
+    await expect(page.getByRole('heading', { name: /^Services$/i }).first()).toBeVisible({ timeout: 10000 });
+
+    await nav.getByRole('button', { name: /^Bookings$/i }).click();
+    await expect(page.getByRole('heading', { name: /^Bookings$/i }).first()).toBeVisible({ timeout: 10000 });
+    // After leaving and returning, the focused swipe card unmounts; the session booking
+    // remains as a timeline avatar until re-focused.
+    await expect(
+      page.getByRole('button', { name: 'Ellis Ward — Skin Fade — Alex Demo', exact: true }),
+    ).toBeVisible({ timeout: 15000 });
+
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(card).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Ellis Ward — Skin Fade — Alex Demo', exact: true }),
+    ).toBeVisible();
     await assertNoHorizontalOverflow(page);
   });
 });

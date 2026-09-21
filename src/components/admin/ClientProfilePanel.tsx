@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { createPortal } from 'react-dom';
 import { Ban, Check, Clock, Crown, ImagePlus, Mail, MessageCircle, Phone, Pin, Plus, Shield, StickyNote, Tag, X } from '../lucide-react';
 import { openClientMessageChannel } from '../../lib/admin/clientMessaging';
-import { resolveClientNoteImageSrc } from '../../lib/storage/storeNoteImage';
+import { resolveClientNoteImageSrc } from '@/lib/storage/clientNoteImageUrl';
 import { adminFetchJson } from './adminAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
