@@ -21,6 +21,23 @@ const DEFAULT_COOLDOWN_MS = 15 * 60 * 1000;
 /** In-process cooldown (best-effort on serverless — DB dedupe is preferred when available). */
 const memoryCooldown = new Map<string, number>();
 
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+const PHONE_RE = /\+?[0-9][0-9\s()-]{7,}[0-9]/g;
+
+/** Redact emails and phone-like values from Slack text surfaces. */
+export function sanitizeOpsText(value: string): string {
+  return value
+    .replace(EMAIL_RE, '[redacted-email]')
+    .replace(PHONE_RE, '[redacted-phone]');
+}
+
+function sanitizeOpsFieldValue(
+  value: string | number | boolean,
+): string | number | boolean {
+  if (typeof value === 'string') return sanitizeOpsText(value);
+  return value;
+}
+
 function slackWebhookUrl(): string {
   return (
     (typeof import.meta !== 'undefined' && import.meta.env?.OPS_SLACK_WEBHOOK_URL) ||
@@ -31,19 +48,28 @@ function slackWebhookUrl(): string {
     .trim();
 }
 
-function formatSlackPayload(input: OpsAlertInput): Record<string, unknown> {
-  const emoji = input.severity === 'critical' ? ':rotating_light:' : input.severity === 'warning' ? ':warning:' : ':information_source:';
+/** Build Slack Incoming Webhook JSON; all string surfaces are PII-sanitised. */
+export function formatSlackPayload(input: OpsAlertInput): Record<string, unknown> {
+  const emoji =
+    input.severity === 'critical'
+      ? ':rotating_light:'
+      : input.severity === 'warning'
+        ? ':warning:'
+        : ':information_source:';
+
+  const title = sanitizeOpsText(input.title);
+  const body = sanitizeOpsText(input.body);
+  const dedupeKey = sanitizeOpsText(input.dedupeKey);
+
   const fieldLines = Object.entries(input.fields ?? {})
     .filter(([, value]) => value !== undefined && value !== null && value !== '')
-    .map(([key, value]) => `• *${key}:* ${String(value)}`)
+    .map(([key, value]) => {
+      const safe = sanitizeOpsFieldValue(value as string | number | boolean);
+      return `• *${sanitizeOpsText(key)}:* ${String(safe)}`;
+    })
     .join('\n');
 
-  const text = [
-    `${emoji} *${input.title}*`,
-    input.body,
-    fieldLines,
-    `_dedupe: ${input.dedupeKey}_`,
-  ]
+  const text = [`${emoji} *${title}*`, body, fieldLines, `_dedupe: ${dedupeKey}_`]
     .filter(Boolean)
     .join('\n');
 

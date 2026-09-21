@@ -51,7 +51,7 @@ async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promi
       bookingId: row.bookingId ?? '',
       purpose: row.purpose,
       attempts: row.attempts,
-      toEmail: row.toEmail,
+      status: row.status,
     },
   });
 }

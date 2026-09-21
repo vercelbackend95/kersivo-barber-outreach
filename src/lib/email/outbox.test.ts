@@ -284,6 +284,18 @@ describe('deliverOutboxEmail', () => {
         dedupeKey: 'email:failed:out_1',
       }),
     );
+    const alertPayload = notifyOpsDurable.mock.calls[0]?.[0] as {
+      fields?: Record<string, unknown>;
+    };
+    expect(alertPayload.fields).toMatchObject({
+      emailOutboundId: 'out_1',
+      shopId: 'shop_1',
+      bookingId: 'book_1',
+      purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
+      attempts: 6,
+      status: EmailOutboundStatus.FAILED,
+    });
+    expect(alertPayload.fields).not.toHaveProperty('toEmail');
     expect(captureOpsException).toHaveBeenCalled();
     expect(updateOutbound).toHaveBeenCalledWith(
       expect.objectContaining({
