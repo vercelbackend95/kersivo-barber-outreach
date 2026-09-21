@@ -1,3 +1,4 @@
+import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import { buildAbsoluteUrl } from './meta';
 
@@ -21,9 +22,11 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** National SEO comparison landing page — no reliable editorial lastmod yet. */
   { path: '/booksy-alternative' },
   /** Matches "Last updated" on src/pages/privacy.astro. */
-  { path: '/privacy', lastmod: '2026-09-18' },
+  { path: '/privacy', lastmod: '2026-09-21' },
   /** Matches "Last updated" on src/pages/cookies.astro. */
   { path: '/cookies', lastmod: '2026-09-18' },
+  /** Canonical DPA version = "Last updated" on /dpa. */
+  { path: '/dpa', lastmod: CURRENT_DPA_VERSION },
   /** Canonical Terms version = "Last updated" on /terms. */
   { path: '/terms', lastmod: CURRENT_TERMS_VERSION },
 ] as const;

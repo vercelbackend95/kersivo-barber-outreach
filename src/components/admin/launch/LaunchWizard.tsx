@@ -1080,11 +1080,16 @@ export default function LaunchWizard() {
               <span>
                 I agree to the{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer">
-                  Terms
+                  Terms of Service
+                </a>
+                , including the{' '}
+                <a href="/dpa" target="_blank" rel="noopener noreferrer">
+                  Data Processing Agreement
                 </a>{' '}
+                where applicable
                 {ENABLE_SETUP_FEES
-                  ? 'and understand the deposit starts my setup.'
-                  : `and understand I am starting a £${SAAS_MONTHLY_GBP}/month subscription for one physical location.`}
+                  ? ', and understand the deposit starts my setup.'
+                  : `, and understand I am starting a £${SAAS_MONTHLY_GBP}/month subscription for one physical location.`}
               </span>
             </label>
           </section>

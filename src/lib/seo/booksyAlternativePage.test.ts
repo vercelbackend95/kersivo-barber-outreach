@@ -381,10 +381,11 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(serialized).not.toContain('"@type":"Review"');
   });
 
-  it('sitemap includes /booksy-alternative among five marketing URLs', () => {
+  it('sitemap includes /booksy-alternative among six marketing URLs', () => {
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).toHaveLength(5);
+    expect(locs).toHaveLength(6);
     expect(locs).toContain('https://kersivo.co.uk/booksy-alternative');
+    expect(locs).toContain('https://kersivo.co.uk/dpa');
   });
 
   it('homepage keeps default SEO/H1 and links to booksy-alternative via switcher prop', () => {

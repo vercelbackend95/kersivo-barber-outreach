@@ -21,6 +21,7 @@ export const FOOTER_LEGAL_LINKS = {
   privacy: { name: 'Privacy Policy', href: '/privacy' },
   cookies: { name: 'Cookie Policy', href: '/cookies' },
   cookieSettings: { name: 'Cookie settings', href: '#cookie-settings' },
+  dpa: { name: 'Data Processing Agreement', href: '/dpa' },
   terms: { name: 'Terms', href: '/terms' },
   termsAndCancellation: { name: 'Terms & Cancellation', href: '/terms#subscription' },
 } as const;

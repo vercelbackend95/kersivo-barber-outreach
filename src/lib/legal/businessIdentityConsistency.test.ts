@@ -20,6 +20,7 @@ function readRepoFile(...segments: string[]): string {
 const privacySource = readRepoFile('../../pages/privacy.astro');
 const termsSource = readRepoFile('../../pages/terms.astro');
 const cookiesSource = readRepoFile('../../pages/cookies.astro');
+const dpaSource = readRepoFile('../../pages/dpa.astro');
 const homepageSource = readRepoFile('../../pages/index.astro');
 const booksyAlternativeSource = readRepoFile('../../pages/booksy-alternative/index.astro');
 const footer50Source = readRepoFile('../../components/footer50.astro');
@@ -31,7 +32,7 @@ const FALSE_CORPORATE = [
   'Kersivo Limited',
 ] as const;
 
-const SURFACES_WITH_IDENTITY = [privacySource, termsSource, cookiesSource] as const;
+const SURFACES_WITH_IDENTITY = [privacySource, termsSource, cookiesSource, dpaSource] as const;
 const MARKETING_SURFACES = [homepageSource, booksyAlternativeSource, footer50Source] as const;
 
 describe('businessIdentity constants', () => {
@@ -48,7 +49,8 @@ describe('legal page identity wording', () => {
     expect(privacySource).not.toContain('operating as a freelancer');
     expect(privacySource).toContain('{LEGAL_OPERATOR_NAME}');
     expect(privacySource).toContain('trading as {TRADING_NAME}');
-    expect(privacySource).toContain('Last updated: 18 September 2026');
+    expect(privacySource).toContain('Last updated: 21 September 2026');
+    expect(privacySource).toContain('href="/dpa"');
     expect(privacySource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
     expect(TRADING_NAME).toBe('KERSIVO');
@@ -73,9 +75,9 @@ describe('legal page identity wording', () => {
 });
 
 describe('terms version and acceptance metadata', () => {
-  it('CURRENT_TERMS_VERSION is 2026-09-18 and formats the human-readable date', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-18');
-    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('18 September 2026');
+  it('CURRENT_TERMS_VERSION is 2026-09-21 and formats the human-readable date', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-21');
+    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('21 September 2026');
   });
 
   it('Stripe terms acceptance metadata derives from CURRENT_TERMS_VERSION', () => {
@@ -83,7 +85,7 @@ describe('terms version and acceptance metadata', () => {
       terms_accepted: '1',
       terms_version: CURRENT_TERMS_VERSION,
     });
-    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-09-18');
+    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-09-21');
   });
 });
 

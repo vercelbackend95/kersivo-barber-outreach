@@ -1,0 +1,573 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import LegalFooter from '@/components/LegalFooter.astro';
+import {
+  LEGAL_OPERATOR_LOCATION,
+  LEGAL_OPERATOR_NAME,
+  TRADING_NAME,
+} from '@/lib/legal/businessIdentity';
+import { CURRENT_DPA_VERSION, formatDpaLastUpdated } from '@/lib/legal/dpaVersion';
+import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import '@/styles/legal-pages.css';
+---
+
+<MainLayout
+  title="Data Processing Agreement | KERSIVO"
+  description={PAGE_DESCRIPTIONS.dpa}
+  canonicalPath="/dpa"
+>
+  <main class="legal-page">
+    <article class="container legal-page__inner">
+      <h1 class="legal-page__title">Data Processing Agreement</h1>
+      <p class="legal-page__updated">Last updated: {formatDpaLastUpdated(CURRENT_DPA_VERSION)}</p>
+
+      <p>
+        This Data Processing Agreement (&ldquo;DPA&rdquo;) forms part of the
+        <a href="/terms">{TRADING_NAME} Terms of Service</a> (the &ldquo;Terms&rdquo;) between
+        <strong>{LEGAL_OPERATOR_NAME}</strong>, trading as {TRADING_NAME}, based in {LEGAL_OPERATOR_LOCATION}
+        (&ldquo;{TRADING_NAME}&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;our&rdquo;), and the Client.
+      </p>
+
+      <p>
+        This DPA applies <strong>only</strong> where {TRADING_NAME} processes Customer Personal Data on behalf of the
+        Client in the course of providing the Services. For that processing, the <strong>Client is the Controller</strong>
+        and {LEGAL_OPERATOR_NAME}, trading as {TRADING_NAME}, is the <strong>Processor</strong>.
+      </p>
+
+      <p>
+        {TRADING_NAME} separately acts as an <strong>independent Controller</strong> for its own account, billing,
+        security, support, legal, tax, marketing and operational data, as explained in the
+        <a href="/privacy">Privacy Policy</a>. That independent-controller processing is
+        <strong>outside</strong> the scope of this DPA. {TRADING_NAME} is not the Processor for every category of
+        personal data processed in connection with the platform.
+      </p>
+
+      <h2>1. Definitions</h2>
+      <p>In this DPA:</p>
+
+      <ul>
+        <li>
+          <strong>Applicable Data Protection Law</strong> means, to the extent applicable, the UK GDPR, the Data
+          Protection Act 2018, and other applicable UK data-protection law.
+        </li>
+
+        <li>
+          <strong>Client</strong> means the barbershop or business customer that uses the Services under the Terms.
+        </li>
+
+        <li>
+          <strong>Controller</strong> and <strong>Processor</strong> have the meanings given in Applicable Data
+          Protection Law.
+        </li>
+
+        <li>
+          <strong>Customer Personal Data</strong> means personal data relating to the Client&rsquo;s customers,
+          clients, staff or other individuals that the Client submits to, collects through, or manages using the
+          Services, and that {TRADING_NAME} processes on the Client&rsquo;s behalf as Processor.
+        </li>
+
+        <li>
+          <strong>Data Subject</strong> means an identified or identifiable natural person to whom Customer Personal
+          Data relates.
+        </li>
+
+        <li>
+          <strong>Processing</strong> / <strong>Process</strong> have the meanings given in Applicable Data Protection
+          Law.
+        </li>
+
+        <li>
+          <strong>Personal Data Breach</strong> means a breach of security leading to the accidental or unlawful
+          destruction, loss, alteration, unauthorised disclosure of, or access to, Customer Personal Data.
+        </li>
+
+        <li>
+          <strong>Sub-processor</strong> means a third party engaged by {TRADING_NAME} to Process Customer Personal Data
+          on {TRADING_NAME}&rsquo;s behalf in connection with the Services.
+        </li>
+
+        <li>
+          <strong>Services</strong> means the {TRADING_NAME} software and related services described in the Terms
+          (including barbershop website, booking, CRM/admin, retail pickup and related operational features).
+        </li>
+      </ul>
+
+      <h2>2. Roles and scope</h2>
+
+      <p>
+        The Client is Controller for Customer Personal Data it submits to, collects through, or manages using
+        {TRADING_NAME}. {TRADING_NAME} acts as Processor only for the Processing required to provide the Services on
+        the Client&rsquo;s behalf.
+      </p>
+
+      <p>
+        {TRADING_NAME} remains an independent Controller where it determines its own purposes, including account
+        administration, authentication and security, SaaS billing, legal acceptance records, direct support and
+        customer communications with the Client, accounting, tax and legal compliance, abuse and fraud prevention,
+        {TRADING_NAME} marketing analytics, and {TRADING_NAME} operational audit records. Those activities are
+        described further in the <a href="/privacy">Privacy Policy</a> and are outside this DPA.
+      </p>
+
+      <h2>3. Documented instructions</h2>
+
+      <p>
+        {TRADING_NAME} will Process Customer Personal Data only: (a) to provide the Services; (b) according to this DPA,
+        the Terms, the Client&rsquo;s product configuration and other documented instructions; or (c) where required by
+        applicable law.
+      </p>
+
+      <p>
+        Written instructions may include configuration made through the product, authenticated actions in the admin,
+        support requests, and written email instructions consistent with the Services. {TRADING_NAME} does not provide
+        legal advice.
+      </p>
+
+      <p>
+        If applicable law requires Processing outside the Client&rsquo;s instructions, {TRADING_NAME} will inform the
+        Client beforehand unless prohibited by law. {TRADING_NAME} will also inform the Client if, in {TRADING_NAME}&rsquo;s
+        opinion, an instruction appears to infringe Applicable Data Protection Law.
+      </p>
+
+      <p>
+        The Client instructs and authorises {TRADING_NAME} to transfer Customer Personal Data to the approved
+        Sub-processors listed in Schedule 2, including where this involves a restricted transfer outside the United
+        Kingdom, solely where necessary to provide the Services and subject to section 7 of this DPA.
+      </p>
+
+      <h2>4. Confidentiality</h2>
+
+      <p>
+        Any person authorised by {TRADING_NAME} to Process Customer Personal Data must be subject to an appropriate
+        contractual or statutory duty of confidentiality.
+      </p>
+
+      <h2>5. Security</h2>
+
+      <p>
+        Taking account of the nature of Processing, the state of the art, the costs of implementation, and the
+        likelihood and severity of risk to Data Subjects, {TRADING_NAME} will maintain appropriate technical and
+        organisational measures to protect Customer Personal Data. Current measures are described in Schedule 3.
+        No online service can guarantee absolute or perfect security.
+      </p>
+
+      <h2>6. Sub-processors</h2>
+
+      <p>
+        The Client grants {TRADING_NAME} general written authorisation to engage: (a) the Sub-processors listed in
+        Schedule 2; and (b) replacement or additional Sub-processors, subject to the notification procedure below.
+      </p>
+
+      <p>
+        {TRADING_NAME} will enter into a written agreement with each Sub-processor that imposes data-protection
+        obligations providing an equivalent level of protection for Customer Personal Data to the obligations
+        applicable to {TRADING_NAME} under Article 28 and this DPA. {TRADING_NAME} remains responsible to the Client for
+        the performance of the Sub-processor&rsquo;s applicable data-protection obligations and will only permit
+        Processing needed for the relevant service. {TRADING_NAME} does not promise a bespoke vendor stack for every
+        Client.
+      </p>
+
+      <p>
+        For planned new or replacement Sub-processors, where reasonably practicable {TRADING_NAME} will notify active
+        Clients at least <strong>14 days</strong> before the change, by email and/or service notice. Emergency,
+        security or legal changes may occur sooner where necessary. During the notice period the Client may object on
+        reasonable data-protection grounds. The parties will attempt to resolve the objection in good faith. If no
+        reasonable solution exists, {TRADING_NAME} may discontinue the affected feature, or either party may terminate
+        the affected service in accordance with the Terms.
+      </p>
+
+      <h2>7. International transfers</h2>
+
+      <p>
+        Customer Personal Data may be processed outside the United Kingdom where a Sub-processor does so. {TRADING_NAME}
+        does not claim that all data remains in the UK.
+      </p>
+
+      <p>
+        Where a restricted transfer requires safeguards, {TRADING_NAME} will rely on an appropriate lawful mechanism,
+        which may include UK adequacy regulations where applicable, the UK International Data Transfer Agreement, the
+        UK Addendum to the EU Standard Contractual Clauses, or another lawful safeguard recognised under UK
+        data-protection law. Provider-specific transfer mechanisms are governed by the current agreements between
+        {TRADING_NAME} and those providers.
+      </p>
+
+      <p>
+        Where {TRADING_NAME} relies on an Article 46 safeguard for a restricted transfer, {TRADING_NAME} will complete
+        any data protection test, also referred to by the ICO as a transfer risk assessment, required by Applicable
+        Data Protection Law and implement any additional safeguards reasonably identified as necessary.
+      </p>
+
+      <h2>8. Data subject rights</h2>
+
+      <p>
+        The Client remains responsible for responding to requests from its Data Subjects. Taking account of the nature
+        of Processing, {TRADING_NAME} will provide reasonable assistance using available technical and organisational
+        measures for access, correction, erasure, restriction, portability and objection where applicable. Not every
+        right has a self-service interface; assistance is also available via
+        <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.
+      </p>
+
+      <p>
+        If {TRADING_NAME} receives a request relating to Customer Personal Data, it will normally direct the requester
+        to the relevant Client unless law requires otherwise.
+      </p>
+
+      <h2>9. Security, breach and DPIA assistance</h2>
+
+      <p>
+        Taking account of the nature of Processing and information available to {TRADING_NAME}, {TRADING_NAME} will
+        provide reasonable assistance with the Client&rsquo;s obligations relating to Article 32 security, personal data
+        breach assessment, regulator notification, data-subject notification where required, data protection impact
+        assessments, and prior consultation with the ICO where required.
+      </p>
+
+      <p>
+        After becoming aware of a Personal Data Breach affecting a Client&rsquo;s Customer Personal Data,
+        {TRADING_NAME} will notify that Client <strong>without undue delay</strong>. Available information may be
+        provided progressively where not all facts are known at first notification. {TRADING_NAME} does not promise a
+        fixed one-, twelve- or twenty-four-hour notification SLA.
+      </p>
+
+      <h2>10. Return and deletion</h2>
+
+      <p>
+        While the Services are active, the Client may use the available self-service export tools. The standard CSV
+        export currently contains client contact details and booking history and is not a full database export.
+      </p>
+
+      <p>
+        At the end of the Services, at the Client&rsquo;s choice, {TRADING_NAME} will delete or return the Customer
+        Personal Data processed on the Client&rsquo;s behalf and will delete existing copies, unless Applicable Data
+        Protection Law requires continued storage. Where the Client chooses return, {TRADING_NAME} will provide the
+        Customer Personal Data in a reasonably practicable format and may provide reasonable assistance for data not
+        included in the standard self-service CSV.
+      </p>
+
+      <p>
+        Unless the Client gives a different lawful instruction before the end of the retention period, {TRADING_NAME}
+        applies its standard <strong>{SAAS_EXPORT_RETENTION_DAYS}-day</strong> post-termination export and retention
+        window, after which Customer Personal Data in the live tenant production environment is deleted through the
+        standard purge process, including tenant EmailOutbound and SmsOutbound records and the associated private Blob
+        cleanup lifecycle.
+      </p>
+
+      <p>
+        This obligation does not require deletion of separate records that {TRADING_NAME} lawfully retains in its
+        independent-controller capacity, such as billing, tax, legal acceptance or security records. Residual copies
+        may remain temporarily in provider-managed backups where immediate deletion is not technically practicable.
+        Those copies remain protected and beyond normal active use until they are deleted or expire through the
+        applicable backup lifecycle.
+      </p>
+
+      <h2>11. Audit and compliance information</h2>
+
+      <p>
+        {TRADING_NAME} will make available to the Client all information reasonably necessary to demonstrate compliance
+        with the obligations applicable to {TRADING_NAME} under Article 28 and this DPA, and will allow for and
+        contribute to audits, including inspections, conducted by the Client or an independent auditor mandated by the
+        Client.
+      </p>
+
+      <p>
+        Where reasonable, documentation and written evidence will be used first. Audits must be carried out on
+        reasonable advance notice and during normal business hours, must not provide access to another customer&rsquo;s
+        data, and must not compromise the security, confidentiality or intellectual property of {TRADING_NAME} or
+        another person.
+      </p>
+
+      <p>
+        Customer-initiated audits are normally limited to one per twelve-month period, unless required by a regulator
+        or law, following a material Personal Data Breach, or where there is a reasonable evidence-based compliance
+        concern.
+      </p>
+
+      <p>
+        The Client bears its own audit costs. {TRADING_NAME} may charge reasonable costs for extraordinary assistance
+        beyond the information and cooperation {TRADING_NAME} is required to provide under Applicable Data Protection
+        Law, to the extent permitted by law.
+      </p>
+
+      <h2>12. Client responsibilities</h2>
+
+      <p>The Client is responsible for:</p>
+
+      <ul>
+        <li>having a lawful basis for Customer Personal Data;</li>
+        <li>providing required privacy information to its customers and staff;</li>
+        <li>issuing lawful instructions;</li>
+        <li>keeping account and access permissions appropriate;</li>
+        <li>ensuring submitted data is relevant and appropriate; and</li>
+        <li>complying with its Controller obligations under Applicable Data Protection Law.</li>
+      </ul>
+
+      <p>
+        <strong>Special category data.</strong> {TRADING_NAME} does not design the normal Services to require special
+        category personal data. The Client must not intentionally submit special category personal data unless
+        {TRADING_NAME} has expressly agreed to such Processing in writing and the Client has a lawful basis.
+        Free-text notes and uploads could technically contain sensitive information; {TRADING_NAME} is not marketed as
+        a health or special-category data system.
+      </p>
+
+      <h2>13. Liability, Terms and hierarchy</h2>
+
+      <p>
+        This DPA forms part of the Terms. Liability under this DPA is subject to the Terms to the extent permitted by
+        applicable law. Nothing in this DPA creates a separate liability cap that conflicts with the Terms.
+      </p>
+
+      <p>
+        Where a mandatory international-transfer mechanism directly applies between the parties to this DPA and
+        conflicts with this DPA, that mechanism prevails only to the extent of the conflict. For all other
+        data-protection matters, this DPA prevails over the Terms to the extent of any conflict.
+      </p>
+
+      <p>
+        Nothing in this DPA limits rights or obligations that cannot lawfully be limited.
+      </p>
+
+      <h2>14. Governing law</h2>
+
+      <p>
+        This DPA is governed by the law of England and Wales. Disputes are subject to the same jurisdiction framework
+        as the Terms (exclusive jurisdiction of the courts of England and Wales).
+      </p>
+
+      <h2>Schedule 1 — Details of Processing</h2>
+
+      <h3>Subject matter</h3>
+
+      <p>
+        Provision of {TRADING_NAME} barbershop website, booking, CRM/admin, retail pickup, communications and related
+        operational services.
+      </p>
+
+      <h3>Duration</h3>
+
+      <p>
+        For the active service duration, plus the applicable post-termination export/deletion period, and limited
+        residual provider backup lifecycle.
+      </p>
+
+      <h3>Nature / operations</h3>
+
+      <p>
+        Collection, recording, organisation, storage, retrieval, display to authorised Client users, booking creation,
+        rescheduling and cancellation, client CRM, notes, image and file storage, retail order processing,
+        transactional email, optional SMS reminders, deposit and payment-status recording, migration/import, export,
+        deletion, and security/operational Processing necessary to provide the service.
+      </p>
+
+      <h3>Purpose</h3>
+
+      <p>
+        Provide and operate the Client&rsquo;s {TRADING_NAME} service according to the Client&rsquo;s instructions.
+      </p>
+
+      <h3>Data subjects</h3>
+
+      <p>
+        Booking clients; retail customers; barbers; managers and team members; invited staff; individuals represented
+        in legitimate migration or imported business records; and persons legitimately referenced in client records
+        or notes.
+      </p>
+
+      <h3>Personal data</h3>
+
+      <p>
+        Name; email; phone; booking and appointment data; service, barber, date, time and status;
+        cancellation/reschedule information; booking management tokens; deposit/payment status and Stripe identifiers
+        (but not full card numbers); CRM tags and notes; client-note images; retail customer email and order contents;
+        staff/barber names, contact and profile data; team invitations and roles; availability/working information where
+        linked to staff; transactional email/SMS delivery data; and uploaded migration/setup material where it contains
+        personal data.
+      </p>
+
+      <h3>Special category data</h3>
+
+      <p>
+        Not required or intentionally requested by the standard Services. The Client must not intentionally submit it
+        unless expressly agreed in writing.
+      </p>
+
+      <h3>Frequency</h3>
+
+      <p>
+        Continuous or as initiated by the Client or Data Subjects during the service term.
+      </p>
+
+      <h2>Schedule 2 — Approved Sub-processors</h2>
+
+      <div class="legal-page__table-wrap">
+        <table class="legal-page__table">
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Service</th>
+              <th>Data</th>
+              <th>Condition</th>
+              <th>Transfer note</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>Vercel</td>
+              <td>Application hosting/runtime and Vercel Blob storage</td>
+              <td>Customer Personal Data necessary to host/run the application and files</td>
+              <td>Always used for hosted production service</td>
+              <td>Current Vercel DPA / applicable UK transfer safeguards</td>
+            </tr>
+
+            <tr>
+              <td>Neon (Databricks)</td>
+              <td>Managed PostgreSQL database infrastructure</td>
+              <td>Customer Personal Data stored in the application database</td>
+              <td>Always used for hosted production service</td>
+              <td>Current Neon/Databricks contractual safeguards applicable to the {TRADING_NAME} account</td>
+            </tr>
+
+            <tr>
+              <td>Resend / Plus Five Five, Inc.</td>
+              <td>Transactional email delivery</td>
+              <td>
+                Recipient email, name where included, booking/order transactional content, manage links and delivery
+                metadata
+              </td>
+              <td>Used where transactional email is sent</td>
+              <td>Current Resend DPA, including applicable UK transfer safeguards</td>
+            </tr>
+
+            <tr>
+              <td>Twilio</td>
+              <td>SMS delivery</td>
+              <td>Phone number, reminder message content, delivery metadata</td>
+              <td>Only where SMS functionality is enabled</td>
+              <td>Current Twilio DPA / applicable UK transfer safeguards</td>
+            </tr>
+
+            <tr>
+              <td>Sentry</td>
+              <td>Server/application error monitoring where configured</td>
+              <td>
+                Minimised/scrubbed operational telemetry; direct customer PII is not intentionally sent
+              </td>
+              <td>Only where SENTRY_DSN / monitoring is configured</td>
+              <td>Current Sentry DPA / applicable UK transfer safeguards</td>
+            </tr>
+
+            <tr>
+              <td>Slack</td>
+              <td>Operational alert delivery / incident notification</td>
+              <td>
+                Minimised operational telemetry. Direct customer email addresses and phone numbers are intentionally
+                sanitised before transmission, but alerts may contain tenant-linked or record-linked operational
+                identifiers and technical error context.
+              </td>
+              <td>Only where OPS_SLACK_WEBHOOK_URL is configured and Slack operational alerting is enabled</td>
+              <td>Current Slack data-processing terms and applicable lawful UK transfer safeguards</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:
+        Google Analytics / Google Ads (tenant analytics disabled; {TRADING_NAME} own marketing-controller processing);
+        OpenAI (catalogue semantics only by current design, not Customer Personal Data); Stripe platform billing
+        ({TRADING_NAME} controller billing); and Google OAuth ({TRADING_NAME} account/auth context).
+      </p>
+
+      <p>
+        <strong>Stripe Connect note.</strong> Live booking deposits and retail card payments are processed through the
+        Client&rsquo;s connected Stripe account. The Client has its own Stripe relationship. Stripe may act as
+        controller and/or processor depending on the payment activity under Stripe&rsquo;s terms. {TRADING_NAME} stores
+        limited identifiers and statuses and does not store full card numbers. Stripe Connect is not listed above as a
+        normal {TRADING_NAME} Sub-processor for Customer Personal Data.
+      </p>
+
+      <h2>Schedule 3 — Technical and organisational measures</h2>
+
+      <h3>A. Access control</h3>
+
+      <ul>
+        <li>Authenticated admin access</li>
+        <li>Role-based permissions</li>
+        <li>Tenant/shop scoping</li>
+        <li>Session controls</li>
+        <li>Authorised access only</li>
+      </ul>
+
+      <h3>B. Data protection in transit / storage</h3>
+
+      <ul>
+        <li>HTTPS/TLS for web traffic</li>
+        <li>Managed database and storage provider safeguards</li>
+        <li>Private Blob storage for client-note and onboarding private assets</li>
+        <li>No full payment card storage by {TRADING_NAME}</li>
+      </ul>
+
+      <h3>C. Application security</h3>
+
+      <ul>
+        <li>Environment-managed secrets</li>
+        <li>Webhook signature validation</li>
+        <li>Selected-route rate limiting / abuse controls</li>
+        <li>Input validation</li>
+        <li>Upload type/size allowlists</li>
+        <li>Private authenticated streaming for new client-note images</li>
+      </ul>
+
+      <h3>D. Tenant isolation</h3>
+
+      <ul>
+        <li>Shop-scoped database and API access controls</li>
+        <li>RBAC checks</li>
+        <li>Authenticated private media access</li>
+      </ul>
+
+      <h3>E. Availability / recovery</h3>
+
+      <ul>
+        <li>Provider-managed database backup / point-in-time recovery capabilities</li>
+        <li>Documented recovery procedures</li>
+      </ul>
+
+      <p>
+        This DPA does not create a public SLA, RPO or RTO unless separately offered in a written commercial agreement.
+      </p>
+
+      <h3>F. Data minimisation / logging</h3>
+
+      <ul>
+        <li>Customer PII removed or sanitised from Slack operational alerts</li>
+        <li>Sentry configured with default PII off and additional event scrubbing</li>
+        <li>No {TRADING_NAME} Google Analytics / Ads tags on live tenant customer surfaces</li>
+      </ul>
+
+      <h3>G. Lifecycle</h3>
+
+      <ul>
+        <li>Tenant outbox deletion during shop purge</li>
+        <li>Production tenant data purge after applicable retention</li>
+        <li>Private Blob cleanup lifecycle</li>
+        <li>Controller records kept separately where legally required</li>
+      </ul>
+
+      <h3>H. Incident management</h3>
+
+      <ul>
+        <li>Documented incident-response process</li>
+        <li>Operational alerting and error monitoring when configured</li>
+        <li>Breach escalation under this DPA</li>
+      </ul>
+
+      <p>
+        {TRADING_NAME} does not claim ISO or SOC 2 certification for {TRADING_NAME}, independent penetration tests for
+        {TRADING_NAME}, 24/7 staffed monitoring, or antivirus scanning of uploads, unless separately implemented and
+        stated in writing.
+      </p>
+    </article>
+  </main>
+
+  <LegalFooter />
+</MainLayout>

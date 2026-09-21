@@ -27,6 +27,8 @@ export const PAGE_DESCRIPTIONS = {
     'Cookie policy for Kersivo. How we use necessary cookies, analytics and advertising measurement, and how to change your choices.',
   terms:
     'Terms of service for Kersivo barbershop website, booking, and retail pickup software for UK business customers.',
+  dpa:
+    'Data Processing Agreement for Kersivo. How KERSIVO processes Customer Personal Data as a processor for UK barbershop clients.',
   shop:
     'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
