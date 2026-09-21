@@ -7,8 +7,8 @@ Security / Trust: [https://security.vercel.com](https://security.vercel.com)
 
 | Field | Value |
 | --- | --- |
-| Production baseline (repo) | `15ab15b68a4796656d9648fd94b8cccc50b2cfcd` |
-| Evidence pass | Vendor verification + Blob public/private store split (code) |
+| Production baseline (repo) | `5c0e6bac84a247652bfc97631187490f7ecaad00` |
+| Evidence pass | Vendor verification + Blob public/private store split (code); Functions region migration to `lhr1` production-validated |
 | Last reviewed | 2026-09-21 |
 | Status | INTERNAL — fact gathering + classification (TRA **NOT YET COMPLETED**) |
 
@@ -72,7 +72,8 @@ Private store: `PRIVATE_BLOB_READ_WRITE_TOKEN` (custom prefix `PRIVATE_BLOB`; Pr
 | Fact | Status |
 | --- | --- |
 | Plan | **CONFIRMED: Pro** |
-| Function region | **CONFIRMED: `iad1` / United States** (Washington, D.C.). **No region migration in this task.** |
+| Function region (CURRENT) | **CONFIRMED: `lhr1` / London, United Kingdom** (eu-west-2). `iad1` deselected in project settings. |
+| Function region (HISTORICAL) | Previous production region: **`iad1` / Washington, D.C., United States**. Migrated to `lhr1` on **2026-09-21**; production redeployed; production smoke test passed. Region migration did **not** cause the BLACKLINE admin hydration regression (that was client `sharp` dependency contamination, fixed in `5c0e6ba`). |
 | Function region pin in `vercel.json` | None |
 | Public Blob store | **CONFIRMED:** name `barberdemo-uploads`; access **Public**; region **LHR1 / London, United Kingdom**; credential `BLOB_READ_WRITE_TOKEN` |
 | Private Blob store | **CONFIRMED:** name `kersivo-private`; access **Private**; region **LHR1 / London, United Kingdom**; Production-connected; env prefix `PRIVATE_BLOB`; credential `PRIVATE_BLOB_READ_WRITE_TOKEN` |
@@ -117,7 +118,7 @@ Public `/dpa` wording “Application hosting/runtime and Vercel Blob storage” 
 
 | Layer | Finding |
 | --- | --- |
-| **A. Hosting / storage location** | Functions: **`iad1` United States CONFIRMED**. Blob (public + private): **LHR1 London CONFIRMED**. |
+| **A. Hosting / storage location** | Functions: **`lhr1` London CONFIRMED**. Blob (public + private): **LHR1 London CONFIRMED**. |
 | **B. Provider corporate / access / support** | Public DPA: **primary processing facilities in the United States**; may process globally. |
 | **C. Onward Sub-processors** | Listed at security.vercel.com; may be outside UK. |
 
@@ -125,10 +126,12 @@ Public `/dpa` wording “Application hosting/runtime and Vercel Blob storage” 
 
 **YES**
 
-London Blob storage (**LHR1**) does **not** by itself eliminate the wider Vercel international-transfer assessment, because:
+Application runtime and Blob storage are configured in London (`lhr1` / LHR1). UK-local hosting does **not** by itself remove potential restricted transfers arising from:
 
-1. Production Functions currently run in **`iad1` (United States)**; and
-2. Vercel’s DPA states primary processing facilities are in the United States and contemplates corporate/support/sub-processor processing beyond the Blob region.
+1. Vercel Inc. corporate / support processing and the public DPA statement that primary processing facilities are in the United States; and
+2. Onward subprocessors that may process outside the UK.
+
+Do **not** treat London Functions + London Blob alone as “no international transfer.”
 
 | Item | Status |
 | --- | --- |
@@ -150,7 +153,7 @@ London Blob storage (**LHR1**) does **not** by itself eliminate the wider Vercel
 | Exporter location | United Kingdom |
 | Data importer | Vercel Inc. |
 | Roles | KERSIVO **Processor** → Vercel **Sub-processor** |
-| Known destinations | Functions `iad1` US; Blob LHR1 London (public + private); US primary facilities / global subprocessors per DPA |
+| Known destinations | Functions **`lhr1` London CONFIRMED**; Blob LHR1 London (public + private); Vercel Inc. / US primary facilities / global subprocessors per DPA |
 | Technical safeguards | HTTPS; private Blob fail-closed credential; authenticated note-image streaming; tenant analytics off |
 | TRA status | **NOT YET COMPLETED** |
 
@@ -170,7 +173,11 @@ London Blob storage (**LHR1**) does **not** by itself eliminate the wider Vercel
 
 | Source | Date |
 | --- | --- |
-| Operator confirmation: Pro plan; Functions `iad1`; Blob stores LHR1 | 2026-09-21 |
+| Operator confirmation: Pro plan; Blob stores LHR1 | 2026-09-21 |
+| Functions region manually changed `iad1` → `lhr1`; production redeploy; production smoke passed | 2026-09-21 |
+| GitHub Actions CI run `35606649723` for SHA `5c0e6bac84a247652bfc97631187490f7ecaad00` completed successfully | 2026-09-21 |
+| Vercel production deployment for SHA `5c0e6ba` completed successfully | 2026-09-21 |
+| BLACKLINE hydration regression fixed in `5c0e6ba` (client `sharp` isolation — not a Function Region issue) | 2026-09-21 |
 | Repo Blob credential split + tests | 2026-09-21 |
 | Aggregate DB audit (ClientNoteImage / ClientOnboardingAsset counts only) | 2026-09-21 |
 | Public Vercel DPA | 2026-09-21 |
@@ -190,15 +197,14 @@ London Blob storage (**LHR1**) does **not** by itself eliminate the wider Vercel
 
 ### P0 BEFORE FIRST LIVE CLIENT
 
-1. Complete **TRA / data protection test** for Vercel (Functions `iad1` + Blob LHR1 + US primary facilities / subprocessors). Do not treat SCCs/IDTA or London Blob alone as completion.
+1. Complete **TRA / data protection test** for Vercel (Functions `lhr1` + Blob LHR1 + Vercel Inc. US primary facilities / subprocessors). Do not treat SCCs/IDTA or London Functions/Blob alone as completion.
 2. Confirm production `PRIVATE_BLOB_READ_WRITE_TOKEN` is present on Production before any live Client private uploads.
 3. Keep dual-store credential separation in any future Blob refactors.
 
 ### P1 BEFORE MATERIAL SCALE
 
-1. **Evaluate** moving production Functions from `iad1` to **LHR1** (UK market; Neon `eu-west-2`; both Blob stores LHR1) to reduce cross-region latency/data movement. **Not legally mandatory** as a sole conclusion; separate controlled infrastructure change — **not performed in this task**.
-2. Document log hygiene / retention.
-3. Subscribe to Vercel subprocessor notices if not already.
+1. Document log hygiene / retention.
+2. Subscribe to Vercel subprocessor notices if not already.
 
 ### P2 ONGOING HYGIENE
 
