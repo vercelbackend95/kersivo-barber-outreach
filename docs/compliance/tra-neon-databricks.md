@@ -68,7 +68,7 @@ These facts justify **not** running an Article 46 TRA for Non-HR transfers while
 | --- | --- |
 | Data exporter | Bartosz Jasinski, trading as KERSIVO |
 | Exporter location | United Kingdom |
-| Data importer (public baseline) | **Databricks, Inc.**; covered entity **Neon, LLC** — live account contracting entity still **VERIFY** |
+| Data importer | **Databricks, Inc.** — contracting entity **CONFIRMED** for the live KERSIVO Neon Self-Service account; **Neon, LLC** is the covered entity and confirmed billing entity. Databricks DPA applicability **CONFIRMED via MCSA incorporation by reference** (not a separately signed DPA) |
 | Roles (CPD / Client staff HR path) | KERSIVO **Processor** → Databricks/Neon **Sub-processor** (**Module Three** where KERSIVO is processor) |
 | Destination country for assessed risk | **United States** (potential corporate / support / onward processing) |
 | Normal primary Neon database data plane | **AWS London `eu-west-2`** (**CONFIRMED** — not the selected primary storage location for US processing) |

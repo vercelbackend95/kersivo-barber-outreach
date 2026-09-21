@@ -1,19 +1,20 @@
 # Provider
 
 **Operational product:** Neon (managed PostgreSQL / Lakebase Postgres)  
-**Public contracting baseline (Neon Product Specific Schedule, Last Updated 5 August 2026):** **Databricks, Inc.**, parent company of **Neon, LLC**  
-**Account contracting entity for KERSIVO:** **VERIFY CONTRACTING ENTITY** in Neon/Databricks console / invoice / accepted terms (do not invent)
+**Contracting entity (KERSIVO account):** **Databricks, Inc.** — **CONFIRMED** (Neon Product Specific Schedule Last Updated **2026-08-05** is entered into between Databricks, Inc. and Customer; Launch Self-Service Plan)
+**Billing entity (KERSIVO account):** **Neon, LLC** — **CONFIRMED** from live account invoice (Neon, LLC, Wilmington, DE; Launch Plan). Invoice PDF **not** stored in git. Do **not** treat Neon, LLC as the contracting entity merely because it issued the invoice.
+**Parent / affiliate context:** Neon, LLC is the affiliate that may bill fees on Databricks’ behalf per the Schedule.
 
 | Field | Value |
 | --- | --- |
-| Production baseline (repo) | `8f3e428f4bc7c6d28cc5ab14776f089f2d0ed9c4` |
-| Evidence pass | Vendor verification + Databricks UK Extension / Non-HR adequacy + targeted HR TRA |
+| Production baseline (repo) | `fe330922e0f3b153abf9738538115f21d8f34ad3` |
+| Evidence pass | Account-specific Neon Console + invoice verification; Databricks UK Extension / Non-HR adequacy; targeted HR TRA |
 | Last reviewed | 2026-09-21 |
-| Status | INTERNAL — Non-HR: UK Extension adequacy **ACTIVE**; HR: UK Addendum + SCCs with targeted TRA **COMPLETED — PASS** (2026-09-21) |
+| Status | INTERNAL — Contracting entity **Databricks, Inc. CONFIRMED**; billing **Neon, LLC CONFIRMED**; DPA applicability **CONFIRMED** via MCSA incorporation; Non-HR UK Extension **ACTIVE**; HR TRA **COMPLETED — PASS** |
 
 Official sources checked:
 
-- Neon Product Specific Schedule: https://neon.com/msa / https://neon.com/platform-terms
+- Neon Product Specific Schedule: https://neon.com/platform-terms (Last Updated **2026-08-05**)
 - Databricks DPA: https://www.databricks.com/legal/dpa (and published PDF variants)
 - Databricks MCSA: https://www.databricks.com/legal/mcsa
 - Databricks subprocessors: https://www.databricks.com/legal/databricks-subprocessors
@@ -22,6 +23,7 @@ Official sources checked:
 - ICO — UK Extension: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/adequacy-regulations/how-does-the-uk-extension-to-the-eu-us-data-privacy-framework-work/
 - ICO — TRA using UK government analysis (US): https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/completing-a-transfer-risk-assessment/completing-a-tra-using-the-uk-government-s-analysis-us/
 - Official U.S. Department of Commerce DPF List: Databricks, Inc. (verified 2026-09-21)
+- Account evidence: Neon Console reviewed **2026-09-21**; Neon account invoice reviewed **2026-09-21** (invoice not stored in git)
 - Internal ops: `docs/ops/backup-restore-neon.md`
 - Internal TRA: [tra-neon-databricks.md](../tra-neon-databricks.md)
 
@@ -34,9 +36,12 @@ Official sources checked:
 | Managed PostgreSQL as KERSIVO production database | **CONFIRMED** |
 | Prisma ORM / migrations against Neon | **CONFIRMED** |
 | Neon PITR / branching as backup mechanism (no custom dump cron) | **CONFIRMED** in ops docs |
-| Neon plan (Free / Launch / Scale / etc.) | **VERIFY IN NEON CONSOLE** |
-| Read replicas | **VERIFY IN NEON CONSOLE** |
-| Branch structure / production branch name | **VERIFY IN NEON CONSOLE** (ops drill uses restore branches) |
+| Neon plan | **Launch — CONFIRMED** (Neon Console + invoice) |
+| Default / production branch | **production — CONFIRMED** (Never expires — **CONFIRMED**) |
+| History retention (visible PITR/history window) | **6 hours — CONFIRMED** current account/project setting |
+| Postgres version | **17 — CONFIRMED** |
+| Compute range | **0.25 ↔ 8 CU — CONFIRMED** |
+| Read replicas | **VERIFY** if any beyond default compute (not separately confirmed) |
 
 ---
 
@@ -46,7 +51,7 @@ Official sources checked:
 | --- | --- |
 | Barbershop Client | Controller |
 | Bartosz Jasinski trading as KERSIVO | Processor |
-| Neon / Databricks (account entity) | Sub-processor |
+| Databricks, Inc. (contracting) / Neon product family | Sub-processor |
 
 Same database also stores KERSIVO independent-controller records (accounts, billing, legal acceptance). Controller vs processor rows must stay separated in ROPA.
 
@@ -83,29 +88,32 @@ Not required by product design. Free-text notes / migration materials may includ
 
 ### Production region — CONFIRMED
 
-Derived **safely** from production connection hostname metadata only (password / full `DATABASE_URL` **not** recorded):
-
 | Field | Value |
 | --- | --- |
-| Hostname pattern | `ep-….eu-west-2.aws.neon.tech` |
-| Endpoint id (non-secret) | `ep-dark-flower-abnkv6he` |
-| Region | **`eu-west-2`** — AWS Europe (**London**) / Neon `aws-eu-west-2` |
+| Neon Console project region | **AWS Europe West 2 (London) — CONFIRMED** (Neon Console, 2026-09-21) |
+| Hostname pattern (supporting) | `ep-….eu-west-2.aws.neon.tech` |
+| Endpoint id (non-secret, supporting) | `ep-dark-flower-abnkv6he` |
+| Region code | **`eu-west-2`** — AWS Europe (**London**) / Neon `aws-eu-west-2` |
 | Cloud provider | **AWS** |
 | Database name | `neondb` |
 | TLS | `sslmode=require` present on connection query |
-| Evidence source | Local `.env` / `.env.production.local` hostname metadata matching Neon docs (“region is the segment before `.aws.neon.tech`”) |
+| Evidence sources | Neon Console region display **CONFIRMED**; hostname metadata matching Neon docs (“region is the segment before `.aws.neon.tech`”) |
 
-**CONFIRMED:** AWS Europe (London) `eu-west-2`. Primary database data plane remains London. This does **not** by itself eliminate restricted-transfer risk for US corporate/support/onward layers.
+**CONFIRMED:** AWS Europe West 2 (London) `eu-west-2`. Primary database data plane remains London. This does **not** by itself eliminate restricted-transfer risk for US corporate/support/onward layers.
 
-Still **VERIFY IN NEON CONSOLE**: project Settings widget region display, plan, branches, PITR window, compute endpoints, and that production Vercel env points at the same project (hostname match expected).
-
-### Other config
+### Plan / branch / compute — CONFIRMED (Neon Console 2026-09-21)
 
 | Fact | Status |
 | --- | --- |
+| Plan | **Launch — CONFIRMED** |
+| Default branch | **production — CONFIRMED** |
+| Production branch expiry | **Never expires — CONFIRMED** |
+| History retention | **6 hours — CONFIRMED** (current visible PITR/history window only) |
+| Postgres | **17 — CONFIRMED** |
+| Compute range | **0.25 ↔ 8 CU — CONFIRMED** |
 | Region changeability | Fixed at project creation (Neon docs) |
-| PITR / branch restore | Ops target RPO ≤ 5 minutes; quarterly drill log still pending |
-| Backup residual after purge | Residual copies may remain for provider retention window — **VERIFY** exact clock |
+| Quarterly restore drill | Still pending in `docs/ops/backup-restore-neon.md` |
+| Backup / residual deletion beyond visible 6-hour history window | **VERIFY** — do **not** treat “history retention = 6 hours” as proof that all provider residual copies expire after 6 hours |
 
 ---
 
@@ -114,19 +122,18 @@ Still **VERIFY IN NEON CONSOLE**: project Settings widget region display, plan, 
 | Item | Recorded fact |
 | --- | --- |
 | Operational provider name | Neon (Databricks Neon product family) |
-| Public schedule contracting party | **Databricks, Inc.** (parent of Neon, LLC) — Product Specific Schedule Last Updated **5 August 2026** |
-| Fees billed by | Databricks (or affiliate Neon, LLC on Databricks’ behalf) per Schedule |
+| Contracting entity (KERSIVO) | **Databricks, Inc. — CONFIRMED** (Schedule between Databricks, Inc. and Customer; Launch Self-Service Plan) |
+| Billing entity (KERSIVO) | **Neon, LLC — CONFIRMED** from account invoice (affiliate may bill on Databricks’ behalf per Schedule) |
+| Public schedule | Neon Product Specific Schedule Last Updated **2026-08-05** — https://neon.com/platform-terms |
 | DPA source (public) | Databricks DPA at https://www.databricks.com/legal/dpa |
-| MCSA | https://www.databricks.com/legal/mcsa — incorporates the DPA by reference for processing Personal Data |
-| Product-specific schedule | https://neon.com/msa / https://neon.com/platform-terms |
+| MCSA | https://www.databricks.com/legal/mcsa — “The terms of the DPA are incorporated by reference and shall apply to the processing of Personal Data as described in the DPA.” Neon Product Specific Schedule is subject to the MCSA |
+| DPA applicability (KERSIVO account) | **CONFIRMED** — Databricks DPA applicability **CONFIRMED through MCSA incorporation by reference** for the standard Neon Self-Service Plan. Do **not** claim a separately signed DPA |
 | Security measures | Exhibit A to Neon Product Specific Schedule; Databricks Security Addendum references |
 | Subprocessors (Neon schedule) | Grafana Labs (**United States**) **plus** Databricks list at https://www.databricks.com/legal/databricks-subprocessors — do **not** claim Grafana necessarily receives database row content unless official evidence establishes this |
 | Infrastructure subprocessor (region-selected) | **Amazon Web Services, Inc.** (customer-selected region = London for this project) |
 | UK transfer clauses (public DPA) | **2021 EU SCCs** + **UK International Data Transfer Addendum** (UK Addendum); Module **Three** where Customer is processor |
-| KERSIVO account contracting entity proof | **VERIFY CONTRACTING ENTITY** |
-| Signed/accepted DPA on account | **VERIFY** |
 
-Do **not** preserve stale “Neon, LLC only” as the sole contracting story without checking the live account terms.
+Do **not** describe Neon, LLC as the contracting entity merely because it issued the invoice.
 
 ---
 
@@ -136,7 +143,7 @@ Do **not** preserve stale “Neon, LLC only” as the sole contracting story wit
 
 | Layer | Finding |
 | --- | --- |
-| **A. Hosting / storage location** | **CONFIRMED** database region **AWS London `eu-west-2`**. Storage of Customer Personal Data at rest is in the UK region selected for the Neon project. |
+| **A. Hosting / storage location** | **CONFIRMED** database region **AWS London `eu-west-2`** (Neon Console + hostname). Storage of Customer Personal Data at rest is in the UK region selected for the Neon project. |
 | **B. Provider corporate / access / support** | Databricks, Inc. is a US company. Product Specific Schedule / Security Measures describe employee access for support, security, development via controlled/JITA interfaces. This is a separate processing layer from the London data plane. |
 | **C. Onward Sub-processors** | AWS (customer-selected region); **Grafana Labs (US)** explicitly added for Neon Platform Services; other Databricks subprocessors may process outside UK depending on feature/support path. |
 
@@ -187,13 +194,13 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 | --- | --- |
 | Data exporter | Bartosz Jasinski, trading as KERSIVO |
 | Exporter location | United Kingdom |
-| Data importer | **VERIFY CONTRACTING ENTITY** (public baseline: Databricks, Inc.; covered entity Neon, LLC) |
+| Data importer | **Databricks, Inc. — CONFIRMED** contracting entity; covered entity **Neon, LLC**; billing entity **Neon, LLC — CONFIRMED** |
 | Roles | KERSIVO **Processor** → Neon/Databricks **Sub-processor** |
 | Data subjects | Booking clients, shop customers, staff/barbers, invitees, persons referenced in CRM/notes |
 | Data categories | DATABASE DATA listed above (exclude Blob file bytes); HR subset only where employment-context applies |
 | Purpose | Store and query application database to provide Client Services |
 | Frequency | Continuous while Services are live |
-| Duration | Active service + export window + Neon PITR/backup residual |
+| Duration | Active service + export window + Neon history/PITR residual (visible window **6 hours CONFIRMED**; residual beyond that **VERIFY**) |
 | Special-category position | Not required; free-text risk possible; special-category HR not required by design |
 | Technical safeguards | TLS (`sslmode=require`); tenant scoping; authz; purgeShopData; secrets outside git |
 | Known destination (data plane) | AWS London `eu-west-2` |
@@ -202,6 +209,7 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 | HR mechanism | UK Addendum + 2021 SCCs, Module Three where KERSIVO is processor |
 | Non-HR TRA status | **NOT REQUIRED** where certification conditions apply |
 | HR TRA status | **COMPLETED — PASS** (2026-09-21) |
+| DPA applicability | **CONFIRMED** via MCSA incorporation by reference |
 
 ---
 
@@ -209,7 +217,7 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 
 - TLS required on DB connections (`sslmode=require`)
 - Application tenant scoping / RBAC
-- Shop purge deletes live tenant rows; residual PITR/backups documented as temporary residual risk
+- Shop purge deletes live tenant rows; residual provider copies beyond the visible 6-hour history window remain a **VERIFY** risk
 - No full PAN stored by KERSIVO
 - File bytes separated to private Vercel Blob
 
@@ -219,13 +227,15 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 
 | Source | Date |
 | --- | --- |
+| Neon Console: Launch plan; AWS Europe West 2 (London); default branch `production` (Never expires); history retention 6 hours; Postgres 17; compute 0.25 ↔ 8 CU | 2026-09-21 |
+| Neon account invoice: billing entity Neon, LLC (Wilmington, DE); Launch Plan — invoice not stored in git | 2026-09-21 |
+| Neon Product Specific Schedule Last Updated 2026-08-05 (Databricks, Inc. ↔ Customer; fees may be billed by Databricks or Neon, LLC on Databricks’ behalf) | 2026-09-21 |
+| Databricks MCSA (DPA incorporated by reference) + Databricks DPA | 2026-09-21 |
 | Official U.S. Department of Commerce DPF List: Databricks, Inc. Active Participant; UK Extension Active; Non-HR Data only; Neon, LLC covered entity; original certification 2023-08-15; next due 2027-08-10 | 2026-09-21 |
-| Databricks DPA (SCCs + UK Addendum, Module 3); MCSA incorporates DPA | 2026-09-21 |
 | Databricks International Data Transfers FAQ (no government request for customer data to date; subprocessor contractual controls) | 2026-09-21 |
 | Targeted HR TRA completed — PASS ([tra-neon-databricks.md](../tra-neon-databricks.md)) | 2026-09-21 |
 | Production hostname metadata (`*.eu-west-2.aws.neon.tech`) | 2026-09-21 |
 | Neon regions documentation | 2026-09-21 |
-| Neon Product Specific Schedule (Databricks, Inc.) | 2026-09-21 |
 | Databricks subprocessors list / Grafana Labs US listing | 2026-09-21 |
 | `docs/ops/backup-restore-neon.md` | 2026-09-21 |
 | `prisma/schema.prisma` category mapping | 2026-09-21 |
@@ -234,12 +244,11 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 
 ## Unknowns / VERIFY
 
-1. **VERIFY CONTRACTING ENTITY** on the live KERSIVO Neon/Databricks account (invoice/legal entity).
-2. **VERIFY IN NEON CONSOLE** — plan, project id display, branches, PITR retention window, compute endpoints, replicas.
-3. **VERIFY** — production Vercel `DATABASE_URL` host matches the same `eu-west-2` endpoint (expected; confirm in dashboard without exporting secrets).
-4. **VERIFY** — which Databricks/Neon subprocessors are actually engaged for this project’s features.
-5. **VERIFY** — backup residual retention clock after `purgeShopData`.
-6. **VERIFY** — whether any Neon console integrations (auth, schema sync tools, AI Gateway, etc.) are enabled beyond Postgres.
+1. **VERIFY** — provider backup / residual deletion beyond the visible **6-hour** history window after `purgeShopData` (do not equate history retention with complete residual expiry).
+2. **VERIFY** — which Databricks/Neon subprocessors are actually engaged for this project’s features.
+3. **VERIFY** — whether any Neon console integrations (auth, schema sync tools, AI Gateway, etc.) are enabled beyond Postgres.
+4. **VERIFY** — read replicas if any beyond the confirmed compute range.
+5. **VERIFY** — production Vercel `DATABASE_URL` host continues to match the same `eu-west-2` endpoint (expected; confirm in dashboard without exporting secrets).
 
 ---
 
@@ -247,20 +256,18 @@ Do **not** state that all Neon transfers require SCCs — Non-HR transfers rely 
 
 ### P0 BEFORE FIRST LIVE CLIENT
 
-1. Confirm **contracting entity** and that the **Databricks DPA + Neon Product Specific Schedule** apply to the live account.
-2. Confirm console region display matches **AWS London `eu-west-2`** (already evidenced by hostname).
-3. Periodically verify **Databricks, Inc.** remains an **ACTIVE** UK Extension participant; **Neon, LLC** remains a covered entity; and certification continues to cover **Non-HR Data** (next due **2027-08-10**). If adequacy can no longer be relied upon for Non-HR: fall back to Databricks DPA UK Addendum/SCCs and perform any required data protection test.
-4. Refresh the **HR TRA** if the DSIT analysis materially changes or is withdrawn, or if the Neon/Databricks processing chain materially changes.
+1. Periodically verify **Databricks, Inc.** remains an **ACTIVE** UK Extension participant; **Neon, LLC** remains a covered entity; and certification continues to cover **Non-HR Data** (next due **2027-08-10**). If adequacy can no longer be relied upon for Non-HR: fall back to Databricks DPA UK Addendum/SCCs and perform any required data protection test.
+2. Refresh the **HR TRA** if the DSIT analysis materially changes or is withdrawn, or if the Neon/Databricks processing chain materially changes.
 
 ### P1 BEFORE MATERIAL SCALE
 
-1. Document PITR / backup residual retention clock for deletion completeness.
+1. Document provider backup / residual deletion beyond the visible **6-hour** history window for deletion-completeness claims.
 2. Complete first quarterly restore drill log entry in `docs/ops/backup-restore-neon.md`.
-3. Confirm branch strategy (production vs preview databases).
+3. Confirm whether any preview/non-production branches exist beyond default `production`.
 
 ### P2 ONGOING HYGIENE
 
-1. Re-read Neon Product Specific Schedule / Databricks DPA on material update.
+1. Re-read Neon Product Specific Schedule / Databricks DPA / MCSA on material update.
 2. Refresh subprocessor list before TRA refresh.
 3. Re-check region after any project migration (region is immutable per project).
 4. Re-check DPF / UK Extension status on certification renewal cycle.
