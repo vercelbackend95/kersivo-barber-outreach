@@ -7,7 +7,7 @@
 | Related contract | `/dpa` version `2026-09-21` |
 | Production baseline (repo) | `5c0e6bac84a247652bfc97631187490f7ecaad00` |
 | Companion record | [ropa.md](./ropa.md) |
-| Vendor evidence | [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); [vendor-evidence/neon.md](./vendor-evidence/neon.md) |
+| Vendor evidence | [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); [vendor-evidence/neon.md](./vendor-evidence/neon.md); [vendor-evidence/resend.md](./vendor-evidence/resend.md); [vendor-evidence/openai.md](./vendor-evidence/openai.md) |
 | Review trigger | Provider, processing-location, DPA, transfer mechanism, or product-use change |
 
 This register is **internal**. It is **not** published on the public website. It must **not** contradict `/dpa`.
@@ -22,7 +22,7 @@ This register supports UK GDPR documentation of recipients and international tra
 - Records whether a transfer is **restricted**, what **safeguard** is relied on (if known), and whether a **data protection test / TRA** has been completed
 - Does **not** treat “vendor DPA exists” as automatic compliance completion
 
-**ICO terminology (2026):** a transfer risk assessment (TRA) is also referred to as the **data protection test**. Where an Article 46 safeguard is used for a restricted transfer, KERSIVO’s DPA commits to completing any required test. Completed internal TRA artefacts: [tra-neon-databricks.md](./tra-neon-databricks.md) (Neon/Databricks HR — **COMPLETED — PASS**, 2026-09-21); [tra-resend.md](./tra-resend.md) (Resend HR — **COMPLETED — PASS**, 2026-09-21). Other vendor TRAs remain incomplete unless noted.
+**ICO terminology (2026):** a transfer risk assessment (TRA) is also referred to as the **data protection test**. Where an Article 46 safeguard is used for a restricted transfer, KERSIVO’s DPA commits to completing any required test. Completed internal TRA artefacts: [tra-neon-databricks.md](./tra-neon-databricks.md) (Neon/Databricks HR — **COMPLETED — PASS**, 2026-09-21); [tra-resend.md](./tra-resend.md) (Resend HR — **COMPLETED — PASS**, 2026-09-21); [tra-openai.md](./tra-openai.md) (OpenAI Admin AI CPD — **COMPLETED — PASS**, 2026-09-21). Other vendor TRAs remain incomplete unless noted.
 
 ---
 
@@ -52,7 +52,7 @@ This register supports UK GDPR documentation of recipients and international tra
 | 9 | **Google Analytics 4** | Marketing-site analytics | Pseudonymous usage analytics as described in Privacy | **Independent controller** | Analytics provider | Conditional on `PUBLIC_GA4_MEASUREMENT_ID` + analytics consent + layout `enableAnalytics` (**off** on live tenant book/shop) | **VERIFY** (Google; CSP includes `region1.google-analytics.com` etc.) | **VERIFY** | Google terms / UK transfer safeguards — **VERIFY** | Privacy; DPA Schedule 2 exclusions (marketing-controller) | **TRA STATUS: NOT YET COMPLETED** | Consent Mode; tenant analytics disabled | 2026-09-21 | P1: TRA if restricted; keep tenant-off tests green |
 | 10 | **Google Ads** | Advertising measurement / optional remarketing on marketing site | Ads measurement / audience tags; **no** Enhanced Conversions (no hashed email/phone) | **Independent controller** | Ads provider | Conditional on Ads IDs + advertising / personalised-ads consent | **VERIFY** | **VERIFY** | Google terms — **VERIFY** | Privacy; DPA exclusions | **TRA STATUS: NOT YET COMPLETED** | Separate consent for personalised advertising | 2026-09-21 | P1: TRA if restricted |
 | 11 | **Google OAuth** | Admin “Continue with Google” sign-in | Account identifiers/tokens in `Account` model | **Independent controller** (account/auth) | Identity provider | Conditional on `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | **VERIFY** | **VERIFY** | Google OAuth / data terms — **VERIFY** | DPA Schedule 2 exclusions; `src/lib/auth.ts` | **TRA STATUS: NOT YET COMPLETED** | Better Auth integration | 2026-09-21 | P0: confirm if enabled in prod; TRA |
-| 12 | **OpenAI** | **A — CONDITIONAL SUB-PROCESSOR** for Admin AI assistant / language-model processing. Separately: catalogue/recommendation AI designed around product/catalogue semantics (not CPD by design) | Free-text prompts, conversation context, generated responses and necessary technical metadata; Customer Personal Data only if included in the Client user's prompt/context. KERSIVO does not auto-inject Client CRM/booking rows | Processor when the prompt contains Customer Personal Data controlled by the barbershop Client | Sub-processor in that context | **Yes — conditional** — admin AI assistant enabled and `OPENAI_API_KEY` configured | **VERIFY** actual KERSIVO OpenAI account/project configuration (do not claim regional hosting) | **VERIFY** based on actual processing location and applicable mechanism | Current OpenAI DPA / applicable UK transfer mechanism (public baseline includes SCCs as amended by the UK Addendum) — **VERIFY** exact current account applicability | `/dpa` Schedule 2 OpenAI row; Privacy OpenAI bullet | **TRA / data protection test: NOT YET COMPLETED** | Client-facing minimisation notice; no claim that CPD is required in prompts; investigate available OpenAI project retention/privacy configuration; **no Zero Data Retention claim until verified**. Public baseline: API business data not used for training by default; abuse-monitoring logs may retain content up to ~30 days by default — account settings = **VERIFY**. Narrow admin-AI error logging (message only). KERSIVO does not persist AI conversation content in the application database; does not persist AI conversation content in localStorage/sessionStorage; conversation history is page-memory only; user-facing minimisation notice is shown | 2026-09-21 | **P0 before first live Client using admin AI assistant** |
+| 12 | **OpenAI / OpenAI OpCo, LLC** — Production **ACTIVE** (Default project) | **A. Admin AI (Client CPD path):** free-text prompts/conversation context/responses; CPD only if OWNER/MANAGER voluntarily types it; no automatic CRM/booking injection. **B. Catalogue/recommendation:** product/service semantic fields (id/name/description/category); designed **not** CPD — do not classify as personal data merely because OpenAI is used | Processor when Admin AI prompt contains Client-controlled CPD; may be controller for KERSIVO-own non-CPD AI use | Sub-processor (Client CPD Admin AI) / processor (KERSIVO-controller data) | **Yes — ACTIVE** where OPENAI_API_KEY configured and Admin AI / recommendation paths run | **Global** project residency CONFIRMED (do not claim UK/EU residency); OpenAI OpCo, LLC UK importer; subprocessors may process in multiple countries | **YES** for Admin AI CPD (Global / US importer path) | **A Admin AI CPD:** OpenAI DPA **2021 SCCs + UK Addendum**, **Module Three** (KERSIVO processor → OpenAI sub-processor). **Module Two** only where KERSIVO is independent controller. **B Catalogue:** designed non-CPD product/service semantics. Do **not** rely on UK Extension/DPF for OpenAI without separate evidence | /dpa Schedule 2; Privacy; [vendor-evidence/openai.md](./vendor-evidence/openai.md); [tra-openai.md](./tra-openai.md); https://openai.com/policies/data-processing-addendum/ | **Admin AI CPD TRA: COMPLETED — PASS** 2026-09-21. Catalogue path not the primary TRA scope | DPA applicability **CONFIRMED** via Services Agreement / live API use (no separately signed DPA). Sharing/training opt-ins **all DISABLED**. Project retention **None** → ZDR/MAM **not enabled**. /v1/chat/completions abuse-monitoring retention up to **30 days**; store **omitted**. Default model **gpt-4o-mini**. KERSIVO does not durably store raw Admin AI prompts/responses. UI minimisation notice present | 2026-09-21 | **P1:** stronger UX/technical restriction before CRM-aware AI expansion; periodically re-check Data Controls |
 
 ---
 
@@ -82,7 +82,7 @@ Per `/dpa` Schedule 2:
 
 ## Catalogue vs admin AI (OpenAI)
 
-OpenAI is classified **A** for the **admin AI assistant** free-text path. Catalogue/recommendation classification remains **designed not to send Customer Personal Data** (product/catalogue semantics). That design path is not a Schedule 2 exclusion that overrides the admin chat listing.
+OpenAI is classified **A** for the **admin AI assistant** free-text path (Production **ACTIVE**; Default project; **Global** residency). Catalogue/recommendation classification remains **designed not to send Customer Personal Data** (product/catalogue semantics). That design path is not a Schedule 2 exclusion that overrides the admin chat listing. Admin AI CPD transfer mechanism: **2021 SCCs + UK Addendum**, **Module Three**; TRA **COMPLETED — PASS** 2026-09-21 ([tra-openai.md](./tra-openai.md)). ZDR/MAM are **not** enabled; sharing/training opt-ins are **disabled**; provider abuse-monitoring retention for chat completions is up to **30 days**.
 
 ## Privacy vs DPA list note
 
@@ -176,6 +176,32 @@ Full write-up: [vendor-evidence/resend.md](./vendor-evidence/resend.md)
 
 ---
 
+## OpenAI / OpenAI OpCo, LLC — transfer mechanism inputs (Admin AI CPD)
+
+Evidence sheet for OpenAI Admin AI Customer Personal Data transfers. Project residency is **Global** — do not claim UK/EU residency. Do not claim ZDR.
+
+| Input | Value |
+| --- | --- |
+| Data exporter | Bartosz Jasinski, trading as KERSIVO |
+| Exporter location | United Kingdom |
+| Data importer | **OpenAI OpCo, LLC** |
+| Roles (Client CPD) | KERSIVO Processor → OpenAI Sub-processor |
+| Data subjects | Individuals whose Personal Data an OWNER/MANAGER voluntarily includes in Admin AI free text |
+| Data categories | Free-text prompts/conversation context/responses; fixed system prompt; technical metadata. No automatic CRM injection |
+| Purpose | Admin Assistant language-model responses |
+| Frequency | Continuous while Admin AI is used |
+| Duration | Request processing + OpenAI endpoint retention (chat completions abuse-monitoring up to **30 days** while project retention = None) |
+| Special-category position | Not required/intended; residual unexpected free-text risk only; UI minimisation notice present |
+| Destination | **Global** project residency; US importer; multi-country subprocessors possible |
+| Mechanism | OpenAI DPA **UK Addendum + 2021 SCCs**, **Module Three** for Client CPD |
+| TRA status | **COMPLETED — PASS** 2026-09-21 — [tra-openai.md](./tra-openai.md) |
+| Account applicability | Services Agreement / DPA applicability **CONFIRMED** via live API use (no separately signed DPA). Sharing/training opt-ins **DISABLED**. ZDR/MAM **not enabled** |
+| Catalogue path | Designed non-CPD product/service semantics — not the primary TRA scope |
+
+Full write-up: [vendor-evidence/openai.md](./vendor-evidence/openai.md)
+
+---
+
 ## Planned provider — AWS End User Messaging SMS (NOT ACTIVE)
 
 | Field | Value |
@@ -217,13 +243,13 @@ Full write-up: [vendor-evidence/resend.md](./vendor-evidence/resend.md)
 
 ### P0 — before first live Client
 
-1. Complete **TRA / data protection test** for each restricted transfer actually used **except** (a) transfers to **Vercel Inc.** covered by its **ACTIVE UK Extension**, (b) **Non-HR** transfers to **Databricks, Inc. / Neon, LLC** covered by its **ACTIVE UK Extension** (Non-HR only), and (c) **Non-HR** transfers to **Plus Five Five, Inc. / Resend** covered by its **ACTIVE UK Extension** (Non-HR only; currently Re-certification under Review). Remaining: any enabled Twilio/Sentry/Slack/Google/Stripe/OpenAI path. Vendor SCCs/IDTA alone do **not** complete a required test where adequacy does not apply. **Neon HR** and **Resend HR** paths: TRA **COMPLETED — PASS** 2026-09-21 ([tra-neon-databricks.md](./tra-neon-databricks.md); [tra-resend.md](./tra-resend.md)).
+1. Complete **TRA / data protection test** for each restricted transfer actually used **except** (a) transfers to **Vercel Inc.** covered by its **ACTIVE UK Extension**, (b) **Non-HR** transfers to **Databricks, Inc. / Neon, LLC** covered by its **ACTIVE UK Extension** (Non-HR only), and (c) **Non-HR** transfers to **Plus Five Five, Inc. / Resend** covered by its **ACTIVE UK Extension** (Non-HR only; currently Re-certification under Review). Remaining: any enabled Twilio/Sentry/Slack/Google/Stripe path. Vendor SCCs/IDTA alone do **not** complete a required test where adequacy does not apply. **Neon HR**, **Resend HR**, and **OpenAI Admin AI CPD** paths: TRA **COMPLETED — PASS** 2026-09-21 ([tra-neon-databricks.md](./tra-neon-databricks.md); [tra-resend.md](./tra-resend.md); [tra-openai.md](./tra-openai.md)).
 2. **Vercel:** plan **Pro CONFIRMED**; Functions **`lhr1` CONFIRMED** (migrated from HISTORICAL `iad1` 2026-09-21; production validated); Blob public+private **LHR1 CONFIRMED** with dual-store credential split; UK Extension **ACTIVE** (HR and Non-HR Data; next due 2027-04-29) — **periodically verify** DPF/UK Extension ACTIVE status; confirm Production `PRIVATE_BLOB_READ_WRITE_TOKEN` before live private uploads — see [vendor-evidence/vercel.md](./vendor-evidence/vercel.md). If adequacy can no longer be relied upon: fall back to Vercel DPA UK IDTA/SCCs and perform any required data protection test.
 3. **Neon:** contracting entity **Databricks, Inc. CONFIRMED**; billing entity **Neon, LLC CONFIRMED**; DPA applicability **CONFIRMED via MCSA incorporation by reference**; plan **Launch CONFIRMED**; region **AWS Europe West 2 (London) `eu-west-2` CONFIRMED** (Neon Console + hostname); default branch **production** (Never expires); history retention **6 hours CONFIRMED** (visible window — residual deletion beyond that **VERIFY**) — see [vendor-evidence/neon.md](./vendor-evidence/neon.md). **Periodically verify** Databricks UK Extension remains **ACTIVE**, Neon, LLC remains a covered entity, and certification continues to cover **Non-HR Data** (next due 2027-08-10). Refresh the HR TRA if the DSIT analysis materially changes or is withdrawn, or if the Neon/Databricks processing chain materially changes.
 4. **Resend:** legal entity **Plus Five Five, Inc.**; US storage **CONFIRMED**; DPA applicability **CONFIRMED** via standard Agreement/DPA incorporation; Non-HR primary UK Extension (**ACTIVE — Re-certification under Review**; Non-HR only; next due 2027-03-03); HR uses UK Addendum + SCCs with TRA **COMPLETED — PASS** 2026-09-21 — see [vendor-evidence/resend.md](./vendor-evidence/resend.md). **Periodically re-check** DPF status. If INACTIVE: stop Non-HR adequacy reliance; use UK Addendum/SCCs and perform any required data protection test.
-5. Obtain/confirm **signed current vendor DPAs** and record the **exact** UK safeguard for remaining providers (enabled Twilio/Sentry/Slack/Google/Stripe/OpenAI).
-6. Confirm production enablement of **Twilio**, **Sentry**, **Slack**, **Google OAuth**, **OpenAI** admin AI.
-7. Confirm OpenAI **project data-residency**, **retention**, and whether **Zero Data Retention** applies (**VERIFY** — do not claim ZDR without account proof). Admin AI is listed on Schedule 2; catalogue path remains designed non-CPD.
+5. **OpenAI:** UK entity **OpenAI OpCo, LLC**; Production **ACTIVE** (Default project; **Global** residency; project retention **None** → ZDR/MAM **not enabled**; sharing/training opt-ins **DISABLED**); DPA applicability **CONFIRMED** via Services Agreement / live API use; Admin AI CPD uses UK Addendum + SCCs Module Three with TRA **COMPLETED — PASS** 2026-09-21 — see [vendor-evidence/openai.md](./vendor-evidence/openai.md); [tra-openai.md](./tra-openai.md). Periodically re-check Data Controls; refresh TRA if AI scope expands to CRM auto-injection.
+6. Obtain/confirm **signed current vendor DPAs** and record the **exact** UK safeguard for remaining providers (enabled Twilio/Sentry/Slack/Google/Stripe).
+7. Confirm production enablement of **Twilio**, **Sentry**, **Slack**, **Google OAuth** (OpenAI Admin AI Production enablement **CONFIRMED**).
 8. Confirm **Slack** workspace/account contracting entity from actual terms (do not invent).
 
 ### P1 — before material scale
@@ -233,6 +259,7 @@ Full write-up: [vendor-evidence/resend.md](./vendor-evidence/resend.md)
 3. Clarify **Stripe Connect** transfer-risk ownership between Client and KERSIVO in onboarding pack.
 4. Controller-side TRA coverage for **Stripe**, **GA4**, **Google Ads**, **Google OAuth**.
 5. Vercel log hygiene / Analytics project-toggle confirmation.
+6. **OpenAI:** consider stronger UX warning and/or technical restriction before expanding Admin AI into CRM-aware auto-injection workflows; periodically re-check Data Controls (residency / retention / sharing).
 
 ### P2 — ongoing hygiene
 
