@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { del, get, put } from '@vercel/blob';
 import { ClientOnboardingAssetKind } from '@prisma/client';
-import { getBlobReadWriteToken } from '@/lib/storage/vercelBlob';
+import { getPrivateBlobReadWriteToken } from '@/lib/storage/vercelBlob';
 
 export const MIGRATION_CSV_MAX_BYTES = 10 * 1024 * 1024;
 export const IMAGE_ASSET_MAX_BYTES = 5 * 1024 * 1024;
@@ -50,11 +50,15 @@ function fileExt(name: string): string {
   return lower.slice(i + 1);
 }
 
-function requireBlobToken(): string {
-  const token = getBlobReadWriteToken();
+/**
+ * Fail-closed: private ops require PRIVATE_BLOB_READ_WRITE_TOKEN only.
+ * Never falls back to BLOB_READ_WRITE_TOKEN / VERCEL_BLOB_READ_WRITE_TOKEN.
+ */
+function requirePrivateBlobToken(): string {
+  const token = getPrivateBlobReadWriteToken();
   if (!token) {
     throw new Error(
-      'Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN).',
+      'Private Blob storage is not configured. Set PRIVATE_BLOB_READ_WRITE_TOKEN for the kersivo-private store.',
     );
   }
   return token;
@@ -223,7 +227,7 @@ export async function uploadPrivateOnboardingFile(
   pathname: string,
   contentType?: string,
 ): Promise<PrivateBlobUploadResult> {
-  const token = requireBlobToken();
+  const token = requirePrivateBlobToken();
   const type =
     contentType ||
     (file instanceof File ? file.type : '') ||
@@ -244,7 +248,7 @@ export async function uploadPrivateOnboardingFile(
 }
 
 export async function deletePrivateOnboardingFile(pathname: string): Promise<void> {
-  const token = requireBlobToken();
+  const token = requirePrivateBlobToken();
   const path = pathname.trim();
   if (!path) return;
   await del(path, { token });
@@ -259,7 +263,7 @@ export async function retrievePrivateOnboardingFile(pathname: string): Promise<{
   contentType: string | null;
   statusCode: number;
 }> {
-  const token = requireBlobToken();
+  const token = requirePrivateBlobToken();
   const path = pathname.trim();
   if (!path) {
     return { stream: null, contentType: null, statusCode: 404 };

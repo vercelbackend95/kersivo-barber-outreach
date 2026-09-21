@@ -5,8 +5,9 @@
 | Status | Internal compliance record |
 | Last reviewed | 2026-09-21 |
 | Related contract | `/dpa` version `2026-09-21` |
-| Production baseline (repo) | `185745d8eaf7a9b84e97260207a8eb925ecb0c08` |
+| Production baseline (repo) | `15ab15b68a4796656d9648fd94b8cccc50b2cfcd` |
 | Companion record | [ropa.md](./ropa.md) |
+| Vendor evidence | [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); [vendor-evidence/neon.md](./vendor-evidence/neon.md) |
 | Review trigger | Provider, processing-location, DPA, transfer mechanism, or product-use change |
 
 This register is **internal**. It is **not** published on the public website. It must **not** contradict `/dpa`.
@@ -40,8 +41,8 @@ This register supports UK GDPR documentation of recipients and international tra
 
 | # | Provider / service | KERSIVO use | Data involved | KERSIVO role | Provider role | Conditional or always used | Destination / processing location | Restricted transfer? | Transfer mechanism | DPA / contractual source | TRA / data protection test status | Additional safeguards / notes | Last verified | Action required |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **Vercel** | Application hosting/runtime; Vercel Blob storage (incl. private note/onboarding assets) | Customer Personal Data necessary to host/run the application and files; also KERSIVO controller data in same runtime | Processor (for CPD); also hosts controller processing | Sub-processor (CPD) / processor or service provider (controller data) — **VERIFY** contracting entity labels on account | **Always** for hosted production service | **VERIFY** (Vercel project / Blob region; hostnames include `kersivo.co.uk`, `*.vercel.app`; Blob API `blob.vercel-storage.com`) | **VERIFY** (may leave UK) | Current Vercel DPA / applicable UK transfer safeguards — **exact mechanism VERIFY** | `/dpa` Schedule 2; Privacy recipients | **TRA STATUS: NOT YET COMPLETED** | HTTPS; private Blob for note/onboarding assets; env secrets | 2026-09-21 (repo audit) | P0: pin region; confirm signed DPA + mechanism; complete TRA if restricted |
-| 2 | **Neon (Databricks)** | Managed PostgreSQL | Customer Personal Data in application DB; also KERSIVO controller records in same DB | Processor (CPD) / controller (own records) | Sub-processor (CPD) | **Always** for hosted production service | **VERIFY** from Neon console / production `DATABASE_URL` host (not asserted in committed repo config) | **VERIFY** | Current Neon/Databricks contractual safeguards applicable to the KERSIVO account — **exact mechanism VERIFY** | `/dpa` Schedule 2; Privacy; `docs/ops/backup-restore-neon.md` (PITR) | **TRA STATUS: NOT YET COMPLETED** | TLS to DB (`sslmode=require` expected); PITR backups (residual copies after purge) | 2026-09-21 | P0: confirm region; signed terms; TRA; document backup retention clock |
+| 1 | **Vercel** — legal entity **Vercel Inc.** (public DPA). Plan: **CONFIRMED Pro** | Application hosting/runtime (Astro SSR + Serverless Functions `iad1`); Vercel Cron; **dual Blob stores** — public `barberdemo-uploads` + private `kersivo-private`. Project `kersivo-barber-outreach` / org `team_GdO6pCXk8YyVs4tlwuRltvbJ` | **DATABASE/runtime CPD** via server routes; **BLOB/FILE DATA** in **private** store (client-note images, migration CSV, private onboarding assets). Public store holds intentionally public website images only (products/services/avatars/logos) | Processor (CPD) | Sub-processor (CPD). Public contracting entity: **Vercel Inc.** | **Always** for hosted production | Functions: **CONFIRMED `iad1` / United States**. Public Blob: **LHR1 London** (`barberdemo-uploads`, Public, `BLOB_READ_WRITE_TOKEN`). Private Blob: **LHR1 London** (`kersivo-private`, Private, Production-connected, `PRIVATE_BLOB_READ_WRITE_TOKEN`). Public DPA: primary processing facilities in the **United States**; additional global processing possible | **YES** (restricted transfer) — Functions `iad1` US + US primary facilities / corporate/support / onward sub-processors. London Blob **does not** alone eliminate the transfer assessment | Art. 46: Vercel DPA **SCCs + UK IDTA/Addendum** (Module Three). Public DPA Last Updated 17 Mar 2026 / Effective 31 Mar 2026 | `/dpa` Schedule 2; Privacy; [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); https://vercel.com/legal/dpa | **TRA / data protection test: NOT YET COMPLETED** | HTTPS; dual-store credential split (private fail-closed, no public-token fallback); private Blob + authenticated stream; tenant analytics off; env secrets. P1: evaluate Functions move to LHR1 (not done in this task) | 2026-09-21 | **P0:** complete TRA; ensure Production has `PRIVATE_BLOB_READ_WRITE_TOKEN` before live private uploads |
+| 2 | **Neon** (operational) / public schedule: **Databricks, Inc.** (parent of Neon, LLC) — **VERIFY CONTRACTING ENTITY** on live account | Managed PostgreSQL (production DB) | **DATABASE DATA** only (CRM, bookings, staff, retail, outbox metadata, onboarding metadata, etc.). File bytes are **Vercel Blob**, not Neon. Also stores KERSIVO controller records in same DB | Processor (CPD) / controller (own records) | Sub-processor (CPD) | **Always** for hosted production | **CONFIRMED** data plane: **AWS Europe (London) `eu-west-2`** / `*.eu-west-2.aws.neon.tech` (hostname metadata). Plan/branches/replicas: **VERIFY IN NEON CONSOLE**. Onward: AWS (selected region); Grafana Labs **US** (Neon schedule); other Databricks subprocessors **VERIFY** | **YES** (restricted transfer) for provider corporate/support/telemetry/US subprocessors **despite** London DB region. Do **not** treat UK region as “no international transfer” | Art. 46 public baseline: Databricks DPA **SCCs + UK Addendum** (Module Three where KERSIVO is processor). Account applicability **VERIFY** | `/dpa` Schedule 2; Privacy; `docs/ops/backup-restore-neon.md`; [vendor-evidence/neon.md](./vendor-evidence/neon.md); https://neon.com/msa; https://www.databricks.com/legal/dpa | **TRA / data protection test: NOT YET COMPLETED** | TLS `sslmode=require`; PITR/branch backups (residual after purge — retention clock **VERIFY**); tenant scoping | 2026-09-21 | **P0:** verify contracting entity + DPA on account; console-confirm London region/plan; complete TRA covering data plane + US support/subprocessors |
 | 3 | **Resend / Plus Five Five, Inc.** | Transactional email delivery | Recipient email, name where included, booking/order/account transactional content, manage links, delivery metadata | Processor for live-shop CPD email; **controller** for KERSIVO account/marketing/contact mail | Sub-processor (CPD paths) / processor for controller mail | Used where transactional email is sent (`RESEND_API_KEY` required in prod paths) | **VERIFY** | **VERIFY** | Current Resend DPA, including applicable UK transfer safeguards — **exact mechanism VERIFY** | `/dpa` Schedule 2; Privacy email delivery | **TRA STATUS: NOT YET COMPLETED** | Outbox tracking; payload clearing on SENT where implemented | 2026-09-21 | P0: confirm signed DPA + destination; TRA |
 | 4 | **Twilio** | SMS delivery — **ACTIVE CURRENT PROVIDER** | Phone number, reminder message content, delivery metadata | Processor (CPD) when SMS reminders enabled | Sub-processor | **Conditional / ACTIVE** — only where SMS functionality is enabled (`TWILIO_*` creds + `SMS_REMINDERS_ENABLED` + shop `smsRemindersEnabled`). **Not deprecated.** | **VERIFY** (`api.twilio.com`) | **VERIFY** | Current Twilio DPA / applicable UK transfer safeguards — **exact mechanism VERIFY** | `/dpa` Schedule 2 | **TRA STATUS: NOT YET COMPLETED** | Feature-gated; outbox purge with shop | 2026-09-21 | P0: confirm whether enabled in prod; if yes, DPA + TRA |
 | 5 | **Sentry** | Server/application error monitoring | Minimised/scrubbed operational telemetry; direct customer PII not intentionally sent; residual tenant/record IDs / error context possible | Processor (residual CPD risk) when enabled | Sub-processor (as listed in DPA) | **Conditional** — only where `SENTRY_DSN` / monitoring configured | **VERIFY** | **VERIFY** | Current Sentry DPA / applicable UK transfer safeguards — **exact mechanism VERIFY** | `/dpa` Schedule 2; Schedule 3 F | **TRA STATUS: NOT YET COMPLETED** | `sendDefaultPii: false`; `scrubSentryEvent` / `beforeSend` | 2026-09-21 | P0: confirm prod DSN; TRA; residual ID risk accepted |
@@ -89,6 +90,57 @@ Public Privacy and DPA Schedule 2 were aligned in the same-day OpenAI correction
 
 ---
 
+## Vercel — data protection test inputs (NOT YET COMPLETED)
+
+Evidence-only sheet for a later TRA / data protection test. **Do not treat this section as a completed assessment.**
+
+| Input | Value |
+| --- | --- |
+| Data exporter | Bartosz Jasinski, trading as KERSIVO |
+| Exporter location | United Kingdom |
+| Data importer | Vercel Inc. |
+| Roles | KERSIVO Processor → Vercel Sub-processor (Customer Personal Data) |
+| Data subjects | Booking clients; shop customers; Client staff/barbers; invitees; persons in notes/uploads |
+| Data categories | Runtime CPD handled by server routes; private/public Blob file bytes; residual log risk **VERIFY** |
+| Purpose | Host/run Services; store Blob assets under Client instructions |
+| Frequency | Continuous while live |
+| Duration | Active service + export/retention + provider residual per Vercel DPA |
+| Special-category position | Not required by design; free-text/images may contain sensitive content (Client responsibility) |
+| Technical safeguards | HTTPS; RBAC/tenant scoping; private Blob + authenticated streaming; env secrets; tenant analytics off |
+| Encryption in transit | TLS/HTTPS |
+| Storage separation | Neon = DATABASE DATA; Vercel Blob = BLOB/FILE DATA |
+| Contractual safeguards | Vercel DPA (Pro/Enterprise), SCCs + UK IDTA, subprocessors at security.vercel.com |
+| Known destinations | Functions **`iad1` US CONFIRMED**; Blob public+private **LHR1 London CONFIRMED**; United States primary facilities per DPA; additional global locations possible |
+| Unknown / VERIFY | Log CPD; project Analytics toggle; TRA completion |
+| TRA status | **NOT YET COMPLETED** |
+
+Full write-up: [vendor-evidence/vercel.md](./vendor-evidence/vercel.md)
+
+---
+
+## Neon / Databricks — data protection test inputs (NOT YET COMPLETED)
+
+| Input | Value |
+| --- | --- |
+| Data exporter | Bartosz Jasinski, trading as KERSIVO |
+| Exporter location | United Kingdom |
+| Data importer | **VERIFY CONTRACTING ENTITY** (public baseline: Databricks, Inc.) |
+| Roles | KERSIVO Processor → Neon/Databricks Sub-processor |
+| Data subjects | Booking clients; shop customers; staff/barbers; invitees; persons in CRM/notes |
+| Data categories | DATABASE DATA only (see ROPA Part B / Prisma). Exclude Blob file bytes |
+| Purpose | Store/query application database for Client Services |
+| Frequency | Continuous while live |
+| Duration | Active service + export window + PITR/backup residual |
+| Special-category position | Not required; free-text risk possible |
+| Technical safeguards | TLS `sslmode=require`; tenant scoping; purgeShopData; secrets outside git |
+| Known data-plane destination | **CONFIRMED** AWS London `eu-west-2` |
+| Additional destinations | US corporate/support; Grafana Labs US; other Databricks subprocessors **VERIFY** |
+| Contractual safeguards | Databricks DPA (SCCs + UK Addendum, Module 3) + Neon Product Specific Schedule — account applicability **VERIFY** |
+| TRA status | **NOT YET COMPLETED** |
+
+Full write-up: [vendor-evidence/neon.md](./vendor-evidence/neon.md)
+
+---
 
 ## Planned provider — AWS End User Messaging SMS (NOT ACTIVE)
 
@@ -131,12 +183,13 @@ Public Privacy and DPA Schedule 2 were aligned in the same-day OpenAI correction
 
 ### P0 — before first live Client
 
-1. Complete **TRA / data protection test** for each restricted transfer actually used (Vercel, Neon, Resend, and any enabled Twilio/Sentry/Slack/Google/Stripe/OpenAI path).
-2. Obtain/confirm **signed current vendor DPAs** and record the **exact** UK safeguard (adequacy / IDTA / Addendum / SCCs), including OpenAI DPA + UK Addendum terms for the live account.
-3. Pin **Neon** and **Vercel/Blob** processing locations from vendor consoles.
-4. Confirm production enablement of **Twilio**, **Sentry**, **Slack**, **Google OAuth**, **OpenAI** admin AI.
-5. Confirm OpenAI **project data-residency**, **retention**, and whether **Zero Data Retention** applies (**VERIFY** — do not claim ZDR without account proof). Admin AI is listed on Schedule 2; catalogue path remains designed non-CPD.
-6. Confirm **Slack** workspace/account contracting entity from actual terms (do not invent).
+1. Complete **TRA / data protection test** for each restricted transfer actually used (Vercel, Neon, Resend, and any enabled Twilio/Sentry/Slack/Google/Stripe/OpenAI path). Vendor SCCs/IDTA alone do **not** complete the test.
+2. **Vercel:** plan **Pro CONFIRMED**; Functions **`iad1` CONFIRMED**; Blob public+private **LHR1 CONFIRMED** with dual-store credential split — complete TRA; confirm Production `PRIVATE_BLOB_READ_WRITE_TOKEN` before live private uploads — see [vendor-evidence/vercel.md](./vendor-evidence/vercel.md). **P1:** evaluate Functions move to LHR1 (separate change; not done here).
+3. **Neon:** **VERIFY CONTRACTING ENTITY** + Databricks DPA/Neon Schedule on live account; console-confirm London `eu-west-2` / plan / branches — hostname already **CONFIRMED** London — see [vendor-evidence/neon.md](./vendor-evidence/neon.md).
+4. Obtain/confirm **signed current vendor DPAs** and record the **exact** UK safeguard for remaining providers (Resend, and enabled Twilio/Sentry/Slack/Google/Stripe/OpenAI).
+5. Confirm production enablement of **Twilio**, **Sentry**, **Slack**, **Google OAuth**, **OpenAI** admin AI.
+6. Confirm OpenAI **project data-residency**, **retention**, and whether **Zero Data Retention** applies (**VERIFY** — do not claim ZDR without account proof). Admin AI is listed on Schedule 2; catalogue path remains designed non-CPD.
+7. Confirm **Slack** workspace/account contracting entity from actual terms (do not invent).
 
 ### P1 — before material scale
 
@@ -144,12 +197,11 @@ Public Privacy and DPA Schedule 2 were aligned in the same-day OpenAI correction
 2. Document **Neon backup residual** retention for transfer/deletion completeness.
 3. Clarify **Stripe Connect** transfer-risk ownership between Client and KERSIVO in onboarding pack.
 4. Controller-side TRA coverage for **Stripe**, **GA4**, **Google Ads**, **Google OAuth**.
+5. Vercel log hygiene / Analytics project-toggle confirmation.
 
 ### P2 — ongoing hygiene
 
 - Keep AWS planned migration checklist current; do not treat AWS as active until all P0 migration steps complete.
-
-
-1. Refresh **Last verified** after each material vendor or product change.
-2. Re-read vendor DPAs on renewal / material update.
-3. Keep conditional env flags mirrored in ops docs (`docs/ops/alerts.md`, messaging, etc.).
+- Refresh **Last verified** after each material vendor or product change.
+- Re-read vendor DPAs on renewal / material update.
+- Keep conditional env flags mirrored in ops docs (`docs/ops/alerts.md`, messaging, etc.).

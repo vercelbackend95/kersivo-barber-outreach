@@ -9,11 +9,26 @@ type BlobPutFn = (pathname: string, body: Blob | File, options?: {
   addRandomSuffix?: boolean;
 }) => Promise<{ url: string }>;
 
+/**
+ * Public Blob store credential (`barberdemo-uploads`).
+ * Use ONLY for intentionally public website assets (products, services, avatars, logos).
+ */
 export function getBlobReadWriteToken() {
   return process.env.BLOB_READ_WRITE_TOKEN
     ?? process.env.VERCEL_BLOB_READ_WRITE_TOKEN
     ?? import.meta.env.BLOB_READ_WRITE_TOKEN
     ?? import.meta.env.VERCEL_BLOB_READ_WRITE_TOKEN
+    ?? null;
+}
+
+/**
+ * Private Blob store credential (`kersivo-private`, env prefix PRIVATE_BLOB).
+ * Use ONLY for Customer Personal Data / private tenant assets.
+ * Never falls back to the public-store token.
+ */
+export function getPrivateBlobReadWriteToken(): string | null {
+  return process.env.PRIVATE_BLOB_READ_WRITE_TOKEN
+    ?? import.meta.env.PRIVATE_BLOB_READ_WRITE_TOKEN
     ?? null;
 }
 
