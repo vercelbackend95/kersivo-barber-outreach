@@ -40,6 +40,49 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('Last updated: 22 September 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
+
+    const subProcessorsHeading = privacySource.indexOf('may process Customer\n        Personal Data as <strong>sub-processors</strong>');
+    const otherProvidersHeading = privacySource.indexOf(
+      'Other providers are used in specific functional contexts and are not listed above as general sub-processors',
+    );
+    expect(subProcessorsHeading).toBeGreaterThan(-1);
+    expect(otherProvidersHeading).toBeGreaterThan(subProcessorsHeading);
+    const subProcessorsBlock = privacySource.slice(subProcessorsHeading, otherProvidersHeading);
+    expect(subProcessorsBlock).toContain('Vercel');
+    expect(subProcessorsBlock).toContain('Neon');
+    expect(subProcessorsBlock).toContain('Resend');
+    expect(subProcessorsBlock).toContain('Twilio');
+    expect(subProcessorsBlock).toContain('Sentry');
+    expect(subProcessorsBlock).toContain('OpenAI');
+    expect(subProcessorsBlock).not.toMatch(/Google Sign-In/i);
+    expect(subProcessorsBlock).not.toMatch(/Google OAuth/i);
+    expect(subProcessorsBlock).not.toMatch(/Sign in with Google/i);
+  });
+
+  it('discloses optional Google Sign-In for KERSIVO account authentication', () => {
+    const normalized = privacySource.replace(/\s+/g, ' ');
+    expect(privacySource).toContain('Optional Sign in with Google');
+    expect(privacySource).toContain('Continue with Google');
+    expect(normalized).toContain('business/admin account');
+    expect(normalized).toContain('authenticating you');
+    expect(normalized).toContain('Google account identifier');
+    expect(normalized).toContain('email address');
+    expect(normalized).toContain('email verification status');
+    expect(normalized).toContain('profile picture URL');
+    expect(normalized).toContain('account linking');
+    expect(privacySource).toContain('https://policies.google.com/privacy');
+    expect(privacySource).toContain('Google Sign-In');
+    expect(normalized).toContain('separate from Google Analytics');
+  });
+
+  it('states Google Sign-In does not access Gmail/Drive/Calendar and does not durably retain OAuth tokens', () => {
+    const normalized = privacySource.replace(/\s+/g, ' ');
+    expect(normalized).toContain('does <strong>not</strong> request access to Gmail, Google Drive, Calendar, Contacts');
+    expect(normalized).toContain(
+      'does <strong>not</strong> durably retain Google OAuth access tokens, refresh tokens or ID tokens',
+    );
+    expect(privacySource).not.toMatch(/request access to Gmail[\s\S]*on your behalf/i);
+    expect(privacySource).not.toMatch(/reads your (Gmail|Google Drive|Calendar)/i);
   });
 
   it('aligns retention with export window and avoids blanket 6-year / instant-delete claims', () => {

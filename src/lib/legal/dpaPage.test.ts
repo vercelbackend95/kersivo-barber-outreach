@@ -85,6 +85,30 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Minimised/scrubbed operational telemetry');
   });
 
+  it('does not add Google OAuth as a Schedule 2 Sub-processor', () => {
+    const schedule2Start = dpaSource.indexOf('Schedule 2 — Approved Sub-processors');
+    const notListedStart = dpaSource.indexOf(
+      'The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:',
+    );
+    expect(schedule2Start).toBeGreaterThan(-1);
+    expect(notListedStart).toBeGreaterThan(schedule2Start);
+    const schedule2Table = dpaSource.slice(schedule2Start, notListedStart);
+    expect(schedule2Table).toContain('Vercel');
+    expect(schedule2Table).toContain('Neon');
+    expect(schedule2Table).toContain('Resend');
+    expect(schedule2Table).toContain('Twilio');
+    expect(schedule2Table).toContain('Sentry');
+    expect(schedule2Table).toContain('OpenAI');
+    expect(schedule2Table).not.toMatch(/Google OAuth/i);
+    expect(schedule2Table).not.toMatch(/Google Sign-In/i);
+    const notListedEnd = dpaSource.indexOf('</p>', notListedStart);
+    const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
+    expect(notListedBlock).toMatch(/Google OAuth/);
+    expect(notListedBlock).toMatch(/account\/auth/);
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+  });
+
   it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
     expect(dpaSource).toContain('Only where the {TRADING_NAME} admin AI assistant is enabled and OPENAI_API_KEY is configured');
     expect(dpaSource).toContain('Current OpenAI Data Processing Addendum');
