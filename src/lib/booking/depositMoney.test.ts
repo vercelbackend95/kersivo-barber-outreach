@@ -223,7 +223,13 @@ describe('attemptDepositRefund', () => {
         dedupeKey: 'refund:failed:book_1',
       }),
     );
-    expect(captureOpsException).toHaveBeenCalled();
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        opsAlert: true,
+        route: 'depositMoney.attemptDepositRefund',
+      }),
+    );
   });
 
   it('does not call Stripe again when already REFUNDED', async () => {

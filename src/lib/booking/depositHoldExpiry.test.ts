@@ -167,5 +167,12 @@ describe('processExpiredDepositHolds', () => {
         title: 'Deposit hold stuck — session expire failed',
       }),
     );
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        opsAlert: true,
+        route: 'depositHoldExpiry.processExpiredDepositHolds',
+      }),
+    );
   });
 });

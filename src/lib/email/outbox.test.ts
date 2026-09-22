@@ -296,7 +296,13 @@ describe('deliverOutboxEmail', () => {
       status: EmailOutboundStatus.FAILED,
     });
     expect(alertPayload.fields).not.toHaveProperty('toEmail');
-    expect(captureOpsException).toHaveBeenCalled();
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        opsAlert: true,
+        route: 'email.outbox.deliverOutboxEmail',
+      }),
+    );
     expect(updateOutbound).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

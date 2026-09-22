@@ -263,7 +263,14 @@ describe('confirmPaidDeposit', () => {
         dedupeKey: 'deposit:double-charge:book_1',
       }),
     );
-    expect(captureOpsException).toHaveBeenCalled();
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        opsAlert: true,
+        route: 'confirmPaidDeposit',
+        shopId: 'shop_1',
+      }),
+    );
   });
 
   it('delivery failure after commit still returns confirmed', async () => {
@@ -410,6 +417,13 @@ describe('confirmPaidDeposit', () => {
       expect.objectContaining({
         dedupeKey: 'deposit:late-paid:book_1',
         title: 'Late deposit payment — slot lost, refund queued',
+      }),
+    );
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        opsAlert: true,
+        route: 'confirmPaidDeposit.latePaid',
       }),
     );
   });

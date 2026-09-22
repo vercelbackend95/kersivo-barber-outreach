@@ -53,6 +53,7 @@ async function alertHoldStuck(input: {
   captureOpsException(new Error(input.errorMessage), {
     route: 'depositHoldExpiry.processExpiredDepositHolds',
     shopId: input.shopId,
+    opsAlert: true,
     tags: { bookingId: input.bookingId, sessionId: input.sessionId },
   });
 }

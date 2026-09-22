@@ -170,6 +170,7 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
     captureOpsException(new Error('Missing or invalid outbox payload'), {
       route: 'email.outbox.deliverOutboxEmail',
       shopId: row.shopId,
+      opsAlert: true,
       tags: { emailOutboundId: row.id, purpose: row.purpose },
     });
     return { status: 'failed', row: updated };
@@ -228,6 +229,7 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
       captureOpsException(error, {
         route: 'email.outbox.deliverOutboxEmail',
         shopId: row.shopId,
+        opsAlert: true,
         tags: { emailOutboundId: row.id, purpose: row.purpose },
       });
       return { status: 'failed', row: updated };

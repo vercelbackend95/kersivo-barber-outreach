@@ -1296,7 +1296,11 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     console.error('Stripe webhook failed', error);
-    captureOpsException(error, { route: '/api/shop/webhook', tags: { eventType } });
+    captureOpsException(error, {
+      route: '/api/shop/webhook',
+      opsAlert: true,
+      tags: { eventType },
+    });
     if (eventId) {
       const message = error instanceof Error ? error.message : 'Webhook handling failed';
       await markStripeWebhookStatus(eventId, 'FAILED', {

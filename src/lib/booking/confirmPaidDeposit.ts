@@ -65,6 +65,7 @@ async function alertConflictingPayment(input: {
   captureOpsException(new Error(message), {
     route: 'confirmPaidDeposit',
     shopId,
+    opsAlert: true,
     tags: {
       bookingId: booking.id,
       sessionId,
@@ -97,6 +98,7 @@ async function alertLatePaidSlotLost(input: {
   captureOpsException(new Error(message), {
     route: 'confirmPaidDeposit.latePaid',
     shopId,
+    opsAlert: true,
     tags: { bookingId: booking.id, sessionId },
   });
 }

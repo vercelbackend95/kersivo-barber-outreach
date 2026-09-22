@@ -234,6 +234,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
       captureOpsException(new Error(`Stripe refund status: ${result.status}`), {
         route: 'depositMoney.attemptDepositRefund',
         shopId: row.shopId,
+        opsAlert: true,
         tags: { bookingId: row.bookingId, refundId: row.id },
       });
       return { outcome: 'failed', refund: updated };
@@ -304,6 +305,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
       captureOpsException(error, {
         route: 'depositMoney.attemptDepositRefund',
         shopId: row.shopId,
+        opsAlert: true,
         tags: { bookingId: row.bookingId, refundId: row.id },
       });
       return { outcome: 'failed', refund: updated };
