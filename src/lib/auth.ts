@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@/lib/db/client';
 import { provisionShopForUser } from '@/lib/auth/provisionShop';
+import { stripOAuthCredentialsForHook } from '@/lib/auth/stripOAuthCredentialsForPersistence';
 import {
   resolveBetterAuthBaseUrl,
   resolveVercelPreviewTrustedOrigins,
@@ -201,6 +202,16 @@ export const auth = betterAuth({
             email: user.email,
           });
         },
+      },
+    },
+    account: {
+      create: {
+        // Never persist OAuth credential material on Account rows (any provider/path).
+        before: async (account) => stripOAuthCredentialsForHook(account),
+      },
+      update: {
+        // Covers callback, sign-in/social idToken, get-access-token, account-info, refresh-token.
+        before: async (account) => stripOAuthCredentialsForHook(account),
       },
     },
   },
