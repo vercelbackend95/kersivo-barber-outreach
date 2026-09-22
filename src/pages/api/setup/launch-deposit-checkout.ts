@@ -16,6 +16,7 @@ import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '..
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
 
 type LaunchDepositCheckoutInput = {
   plan: string;
@@ -36,6 +37,16 @@ const ATTRIBUTION_KEYS = [
 
 function badRequest(message: string) {
   return new Response(JSON.stringify({ error: message }), { status: 400 });
+}
+
+function setupFeesDisabledResponse() {
+  return new Response(
+    JSON.stringify({
+      error: 'Setup fees are not currently offered.',
+      code: 'SETUP_FEES_DISABLED',
+    }),
+    { status: 410 },
+  );
 }
 
 function pickAttribution(raw: unknown): Record<string, string> {
@@ -73,6 +84,11 @@ export const POST: APIRoute = async (context) => {
     }
     const denied = requirePermission(access, 'billing.manage');
     if (denied) return denied;
+
+    // After auth/RBAC, before body PII, Stripe, or SetupDeposit writes.
+    if (!ENABLE_SETUP_FEES) {
+      return setupFeesDisabledResponse();
+    }
 
     let body: LaunchDepositCheckoutInput;
     try {
@@ -138,17 +154,7 @@ export const POST: APIRoute = async (context) => {
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
     const metadata = {
-      ...buildSetupDepositStripeMetadata(
-        planId,
-        {
-          customerName: name,
-          email,
-          shopName,
-          shopSize,
-          currentStack,
-        },
-        attribution,
-      ),
+      ...buildSetupDepositStripeMetadata(planId, attribution),
       ...termsAcceptanceStripeMetadata(),
     };
     metadata.shopId = access.shopId;

@@ -32,40 +32,18 @@ export function getSetupPlan(planId: SetupPlanId): SetupPlan {
   return SETUP_PLANS[planId];
 }
 
+/**
+ * Minimised Stripe Checkout metadata for legacy setup deposits.
+ * Direct customer/shop PII lives on the Neon PENDING SetupDeposit row, not in Stripe metadata.
+ */
 export function buildSetupDepositStripeMetadata(
   planId: SetupPlanId,
-  fields: {
-    customerName: string;
-    email: string;
-    shopName: string;
-    shopSize: string;
-    currentStack: string;
-    townCity?: string | null;
-    barbers?: string | null;
-  },
   attribution: Record<string, string> = {},
 ): Record<string, string> {
-  const plan = getSetupPlan(planId);
   const metadata: Record<string, string> = {
     type: 'setup_deposit',
     plan: planId,
-    package: plan.packageSlug,
-    package_name: plan.name,
-    total_setup_amount: String(plan.setupTotalPence),
-    deposit_amount: String(plan.depositPence),
-    remaining_amount: String(plan.remainingPence),
-    customerName: fields.customerName,
-    email: fields.email,
-    shopName: fields.shopName,
-    shopSize: fields.shopSize,
-    currentStack: fields.currentStack,
   };
-
-  const townCity = fields.townCity?.trim();
-  if (townCity) metadata.townCity = townCity.slice(0, 200);
-
-  const barbers = fields.barbers?.trim();
-  if (barbers) metadata.barbers = barbers.slice(0, 500);
 
   // Stripe metadata values max 500 chars; keep attribution short.
   for (const [key, raw] of Object.entries(attribution)) {

@@ -297,8 +297,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
-    const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
-    const barbers = typeof body.barbers === 'string' ? body.barbers.trim().slice(0, 500) : '';
 
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
@@ -311,14 +309,7 @@ export const POST: APIRoute = async ({ request }) => {
       metadata: {
         ...buildSaasSubscriptionStripeMetadata(
           {
-            customerName: name,
-            email,
-            shopName,
-            shopSize,
-            currentStack,
             checkoutAttemptId,
-            townCity: townCity || null,
-            barbers: barbers || null,
             shopId: previewShopId,
           },
           attribution,

@@ -136,13 +136,28 @@ describe('POST /api/setup/subscription-checkout', () => {
     });
     expect(createSubscriptionCheckoutSession).toHaveBeenCalledOnce();
     expect(createSubscriptionCheckoutSession.mock.calls[0][0]).toMatchObject({
+      customerEmail: 'alex@example.com',
       idempotencyKey: `kersivo_saas_subscription_checkout_${ATTEMPT}`,
       metadata: expect.objectContaining({
+        type: 'saas_subscription',
         checkoutAttemptId: ATTEMPT,
         terms_accepted: '1',
         terms_version: CURRENT_TERMS_VERSION,
       }),
     });
+    const meta = createSubscriptionCheckoutSession.mock.calls[0][0].metadata as Record<string, string>;
+    for (const key of [
+      'customerName',
+      'email',
+      'shopName',
+      'shopSize',
+      'currentStack',
+      'townCity',
+      'barbers',
+      'monthly_amount',
+    ]) {
+      expect(meta).not.toHaveProperty(key);
+    }
     expect(createSaas).toHaveBeenCalledWith({
       data: expect.objectContaining({
         stripeSessionId: 'cs_test_1',

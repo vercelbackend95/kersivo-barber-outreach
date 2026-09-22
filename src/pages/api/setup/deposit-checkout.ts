@@ -14,6 +14,7 @@ import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '..
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
 
 type DepositCheckoutInput = {
   plan: string;
@@ -45,6 +46,16 @@ function badRequest(message: string) {
   return new Response(JSON.stringify({ error: message }), { status: 400 });
 }
 
+function setupFeesDisabledResponse() {
+  return new Response(
+    JSON.stringify({
+      error: 'Setup fees are not currently offered.',
+      code: 'SETUP_FEES_DISABLED',
+    }),
+    { status: 410 },
+  );
+}
+
 function pickAttribution(raw: unknown): Record<string, string> {
   if (!raw || typeof raw !== 'object') return {};
   const record = raw as Record<string, unknown>;
@@ -62,6 +73,10 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const limited = await enforceIpRateLimit(request, 'setup_checkout', 10, 15 * 60 * 1000);
     if (limited) return limited;
+
+    if (!ENABLE_SETUP_FEES) {
+      return setupFeesDisabledResponse();
+    }
 
     let body: DepositCheckoutInput;
     try {
@@ -108,8 +123,6 @@ export const POST: APIRoute = async ({ request }) => {
     const planConfig = getSetupPlan(planId);
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
-    const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
-    const barbers = typeof body.barbers === 'string' ? body.barbers.trim().slice(0, 500) : '';
 
     const session = await createCheckoutSession({
       customerEmail: email,
@@ -124,19 +137,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       ],
       metadata: {
-        ...buildSetupDepositStripeMetadata(
-          planId,
-          {
-            customerName: name,
-            email,
-            shopName,
-            shopSize,
-            currentStack,
-            townCity: townCity || null,
-            barbers: barbers || null,
-          },
-          attribution,
-        ),
+        ...buildSetupDepositStripeMetadata(planId, attribution),
         ...termsAcceptanceStripeMetadata(),
       },
     });

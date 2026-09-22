@@ -43,6 +43,7 @@ vi.mock('../../../lib/ops/opsLog', () => ({
 
 vi.mock('../../../lib/ops/sentry', () => ({
   captureOpsException: vi.fn(),
+  captureOpsMessage: vi.fn(),
 }));
 
 vi.mock('../../../lib/db/client', () => ({
@@ -185,6 +186,30 @@ const baseMeta = {
   checkoutAttemptId: ATTEMPT,
 };
 
+const minimisedMeta = {
+  type: 'saas_subscription',
+  checkoutAttemptId: ATTEMPT,
+};
+
+const pendingRow = {
+  id: 'saas_1',
+  status: 'PENDING' as const,
+  checkoutAttemptId: ATTEMPT,
+  stripeSessionId: 'cs_saas_1',
+  stripeSubscriptionId: null as string | null,
+  stripeCustomerId: null as string | null,
+  shopId: null as string | null,
+  activatedAt: null as Date | null,
+  currentPeriodEnd: null as Date | null,
+  customerEmailSentAt: null as Date | null,
+  internalEmailSentAt: null as Date | null,
+  customerName: 'Alex Owner',
+  customerEmail: 'alex@example.com',
+  shopName: 'Fade Studio',
+  shopSize: '1-2',
+  currentStack: 'landing',
+};
+
 describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -241,19 +266,7 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
   });
 
   it('preserves existing checkoutAttemptId when activating PENDING', async () => {
-    findUniqueSaas.mockResolvedValue({
-      id: 'saas_1',
-      status: 'PENDING',
-      checkoutAttemptId: ATTEMPT,
-      stripeSessionId: 'cs_saas_1',
-      stripeSubscriptionId: null,
-      stripeCustomerId: null,
-      shopId: null,
-      activatedAt: null,
-      currentPeriodEnd: null,
-      customerEmailSentAt: null,
-      internalEmailSentAt: null,
-    });
+    findUniqueSaas.mockResolvedValue({ ...pendingRow });
     updateSaas.mockResolvedValue({
       id: 'saas_1',
       status: 'ACTIVE',
@@ -275,19 +288,7 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
   });
 
   it('fills missing checkoutAttemptId from metadata', async () => {
-    findUniqueSaas.mockResolvedValue({
-      id: 'saas_1',
-      status: 'PENDING',
-      checkoutAttemptId: null,
-      stripeSessionId: 'cs_saas_1',
-      stripeSubscriptionId: null,
-      stripeCustomerId: null,
-      shopId: null,
-      activatedAt: null,
-      currentPeriodEnd: null,
-      customerEmailSentAt: null,
-      internalEmailSentAt: null,
-    });
+    findUniqueSaas.mockResolvedValue({ ...pendingRow, checkoutAttemptId: null });
     updateSaas.mockResolvedValue({
       id: 'saas_1',
       status: 'ACTIVE',
@@ -318,19 +319,7 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
         checkoutAttemptId: OTHER_ATTEMPT,
       },
     });
-    findUniqueSaas.mockResolvedValue({
-      id: 'saas_1',
-      status: 'PENDING',
-      checkoutAttemptId: ATTEMPT,
-      stripeSessionId: 'cs_saas_1',
-      stripeSubscriptionId: null,
-      stripeCustomerId: null,
-      shopId: null,
-      activatedAt: null,
-      currentPeriodEnd: null,
-      customerEmailSentAt: null,
-      internalEmailSentAt: null,
-    });
+    findUniqueSaas.mockResolvedValue({ ...pendingRow });
     updateSaas.mockResolvedValue({
       id: 'saas_1',
       status: 'ACTIVE',
@@ -367,19 +356,8 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
     );
     findUniqueSaas
       .mockResolvedValueOnce(null) // initial by session
-      .mockResolvedValueOnce({
-        id: 'saas_winner',
-        status: 'PENDING',
-        checkoutAttemptId: ATTEMPT,
-        stripeSessionId: 'cs_saas_1',
-        stripeSubscriptionId: null,
-        stripeCustomerId: null,
-        shopId: null,
-        activatedAt: null,
-        currentPeriodEnd: null,
-        customerEmailSentAt: null,
-        internalEmailSentAt: null,
-      });
+      .mockResolvedValueOnce(null) // by checkoutAttemptId before create
+      .mockResolvedValueOnce({ ...pendingRow, id: 'saas_winner' });
     updateSaas.mockResolvedValue({
       id: 'saas_winner',
       status: 'ACTIVE',
@@ -395,19 +373,7 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
   });
 
   it('preserves existing shopId when metadata has no shopId', async () => {
-    findUniqueSaas.mockResolvedValue({
-      id: 'saas_1',
-      status: 'PENDING',
-      checkoutAttemptId: ATTEMPT,
-      stripeSessionId: 'cs_saas_1',
-      stripeSubscriptionId: null,
-      stripeCustomerId: null,
-      shopId: 'shop-linked',
-      activatedAt: null,
-      currentPeriodEnd: null,
-      customerEmailSentAt: null,
-      internalEmailSentAt: null,
-    });
+    findUniqueSaas.mockResolvedValue({ ...pendingRow, shopId: 'shop-linked' });
     updateSaas.mockResolvedValue({
       id: 'saas_1',
       status: 'ACTIVE',
@@ -417,7 +383,6 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
       internalEmailSentAt: new Date(),
     });
 
-    // baseMeta has no shopId — guest Stripe metadata style
     await POST(signedRequest(saasCheckoutEvent(baseMeta)) as never);
 
     expect(updateSaas).toHaveBeenCalledWith({
@@ -427,5 +392,90 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
         status: 'ACTIVE',
       }),
     });
+  });
+
+  it('fulfils minimised metadata using PENDING DB fields', async () => {
+    findUniqueSaas.mockResolvedValue({ ...pendingRow });
+    updateSaas.mockResolvedValue({
+      id: 'saas_1',
+      status: 'ACTIVE',
+      checkoutAttemptId: ATTEMPT,
+      customerEmailSentAt: new Date(),
+      internalEmailSentAt: new Date(),
+    });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_saas_1',
+      payment_status: 'paid',
+      amount_total: 3900,
+      currency: 'gbp',
+      customer_email: 'alex@example.com',
+      metadata: minimisedMeta,
+    });
+
+    const res = await POST(signedRequest(saasCheckoutEvent(minimisedMeta)) as never);
+    expect(res.status).toBe(200);
+    expect(createSaas).not.toHaveBeenCalled();
+    expect(markStripeWebhookStatus).toHaveBeenCalledWith(
+      expect.any(String),
+      'PROCESSED',
+      expect.anything(),
+    );
+  });
+
+  it('returns 503 PENDING_NOT_READY for minimised metadata without PENDING row', async () => {
+    findUniqueSaas.mockResolvedValue(null);
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_saas_1',
+      payment_status: 'paid',
+      amount_total: 3900,
+      currency: 'gbp',
+      customer_email: 'alex@example.com',
+      metadata: minimisedMeta,
+    });
+
+    const res = await POST(signedRequest(saasCheckoutEvent(minimisedMeta)) as never);
+    const body = await res.json();
+    expect(res.status).toBe(503);
+    expect(body.code).toBe('PENDING_NOT_READY');
+    expect(createSaas).not.toHaveBeenCalled();
+    expect(markStripeWebhookStatus).toHaveBeenCalledWith(
+      expect.any(String),
+      'FAILED',
+      expect.objectContaining({ httpStatus: 503 }),
+    );
+  });
+
+  it('retries successfully after PENDING appears (FAILED is not finalized)', async () => {
+    findUniqueSaas
+      .mockResolvedValueOnce(null) // first request: by session
+      .mockResolvedValueOnce(null) // first request: by attempt
+      .mockResolvedValueOnce({ ...pendingRow, stripeSessionId: 'cs_retry' }); // second request
+    updateSaas.mockResolvedValue({
+      id: 'saas_1',
+      status: 'ACTIVE',
+      checkoutAttemptId: ATTEMPT,
+      customerEmailSentAt: new Date(),
+      internalEmailSentAt: new Date(),
+    });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_retry',
+      payment_status: 'paid',
+      amount_total: 3900,
+      currency: 'gbp',
+      customer_email: 'alex@example.com',
+      metadata: minimisedMeta,
+    });
+
+    const first = await POST(signedRequest(saasCheckoutEvent(minimisedMeta, 'cs_retry')) as never);
+    expect(first.status).toBe(503);
+
+    recordStripeWebhookReceived.mockResolvedValue({
+      alreadyFinalized: false,
+      previousStatus: 'FAILED',
+    });
+
+    const second = await POST(signedRequest(saasCheckoutEvent(minimisedMeta, 'cs_retry')) as never);
+    expect(second.status).toBe(200);
+    expect(createSaas).not.toHaveBeenCalled();
   });
 });

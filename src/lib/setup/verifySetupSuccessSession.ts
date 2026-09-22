@@ -70,7 +70,14 @@ export async function resolveSetupSuccessView(
       return { status: 'unpaid' };
     }
 
-    const customerEmail = (metadata.email ?? session.customer_email ?? '').trim().toLowerCase();
+    const customerEmail = (
+      session.customer_details?.email ??
+      session.customer_email ??
+      metadata.email ??
+      ''
+    )
+      .trim()
+      .toLowerCase();
     if (!customerEmail) {
       return { status: 'invalid' };
     }
@@ -103,7 +110,14 @@ export async function resolveSetupSuccessView(
     }
 
     const plan = getSetupPlan(planRaw);
-    const customerEmail = (metadata.email ?? session.customer_email ?? '').trim().toLowerCase();
+    const customerEmail = (
+      session.customer_details?.email ??
+      session.customer_email ??
+      metadata.email ??
+      ''
+    )
+      .trim()
+      .toLowerCase();
     if (!customerEmail) {
       return { status: 'invalid' };
     }

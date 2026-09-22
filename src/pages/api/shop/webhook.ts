@@ -169,6 +169,50 @@ function attributionSummary(metadata: Record<string, string>): string {
   return parts.join('; ');
 }
 
+/** Prefer Stripe Checkout native email fields; metadata.email is historical fallback only. */
+function stripeNativeCustomerEmail(session: StripeSession): string {
+  const fromDetails = session.customer_details?.email?.trim() || '';
+  const fromCustomer = session.customer_email?.trim() || '';
+  return (fromDetails || fromCustomer).toLowerCase();
+}
+
+function resolveFulfilmentEmail(
+  session: StripeSession,
+  metadata: Record<string, string>,
+  recordEmail?: string | null,
+): string {
+  const fromRecord = recordEmail?.trim().toLowerCase() || '';
+  if (fromRecord) return fromRecord;
+  const native = stripeNativeCustomerEmail(session);
+  if (native) return native;
+  return (metadata.email ?? '').trim().toLowerCase();
+}
+
+function pendingNotReadyResponse(kind: 'saas_subscription' | 'setup_deposit'): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Pending checkout record not ready',
+      code: 'PENDING_NOT_READY',
+      kind,
+    }),
+    { status: 503 },
+  );
+}
+
+function legacySetupPiiFromMetadata(metadata: Record<string, string>): {
+  customerName: string;
+  shopName: string;
+  shopSize: string;
+  currentStack: string;
+} | null {
+  const customerName = (metadata.customerName ?? '').trim();
+  const shopName = (metadata.shopName ?? '').trim();
+  const shopSize = (metadata.shopSize ?? '').trim();
+  const currentStack = (metadata.currentStack ?? '').trim();
+  if (!customerName || !shopName || !shopSize || !currentStack) return null;
+  return { customerName, shopName, shopSize, currentStack };
+}
+
 function logSetupDepositStage(
   stage: string,
   details: Record<string, string | number | boolean | null | undefined> = {},
@@ -203,22 +247,82 @@ async function handleSetupDepositCheckout(
     return new Response(JSON.stringify({ error: 'Missing setup deposit metadata' }), { status: 400 });
   }
 
-  const customerName = (metadata.customerName ?? '').trim();
-  const customerEmail = (metadata.email ?? session.customer_email ?? '').trim().toLowerCase();
-  const shopName = (metadata.shopName ?? '').trim();
-  const shopSize = (metadata.shopSize ?? '').trim();
-  const currentStack = (metadata.currentStack ?? '').trim();
+  logSetupDepositStage('database_lookup_started', { sessionId });
+  let deposit = await prisma.setupDeposit.findUnique({
+    where: { stripeSessionId: sessionId },
+  });
+  logSetupDepositStage('database_lookup_completed', {
+    sessionId,
+    found: Boolean(deposit),
+  });
 
-  if (!customerName || !customerEmail || !shopName || !shopSize || !currentStack) {
-    console.error('[webhook] Setup deposit missing required metadata', {
+  const legacyPii = legacySetupPiiFromMetadata(metadata);
+  const customerEmail = resolveFulfilmentEmail(session, metadata, deposit?.customerEmail);
+
+  if (!deposit) {
+    if (!legacyPii || !customerEmail) {
+      logSetupDepositStage('pending_not_ready', { sessionId, hasLegacyPii: Boolean(legacyPii) });
+      return pendingNotReadyResponse('setup_deposit');
+    }
+
+    const depositPenceEarly = session.amount_total;
+    if (typeof depositPenceEarly !== 'number') {
+      console.error('[webhook] Setup deposit missing amount_total', { sessionId });
+      return new Response(JSON.stringify({ error: 'Missing setup deposit amount' }), { status: 400 });
+    }
+
+    const paidAtEarly = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+    const paymentIntentIdEarly = getCheckoutPaymentIntentId(session);
+    const currencyEarly = (session.currency ?? 'gbp').toLowerCase();
+
+    try {
+      deposit = await prisma.setupDeposit.create({
+        data: {
+          stripeSessionId: sessionId,
+          paymentIntentId: paymentIntentIdEarly,
+          plan: planRaw === 'priority' ? SetupPlan.PRIORITY : SetupPlan.LAUNCH,
+          status: SetupDepositStatus.PAID,
+          customerName: legacyPii.customerName,
+          customerEmail,
+          shopName: legacyPii.shopName,
+          shopSize: legacyPii.shopSize,
+          currentStack: legacyPii.currentStack,
+          depositPence: depositPenceEarly,
+          currency: currencyEarly,
+          paidAt: paidAtEarly,
+        },
+      });
+      logSetupDepositStage('deposit_record_created_from_legacy_metadata', {
+        sessionId,
+        depositId: deposit.id,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        deposit = await prisma.setupDeposit.findUnique({
+          where: { stripeSessionId: sessionId },
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  if (!deposit) {
+    return pendingNotReadyResponse('setup_deposit');
+  }
+
+  const customerName = deposit.customerName.trim() || legacyPii?.customerName || '';
+  const shopName = deposit.shopName.trim() || legacyPii?.shopName || '';
+  const shopSize = deposit.shopSize.trim() || legacyPii?.shopSize || '';
+  const currentStack = deposit.currentStack.trim() || legacyPii?.currentStack || '';
+  const resolvedEmail = resolveFulfilmentEmail(session, metadata, deposit.customerEmail);
+
+  if (!customerName || !resolvedEmail || !shopName || !shopSize || !currentStack) {
+    console.error('[webhook] Setup deposit missing fulfilment fields after DB lookup', {
       sessionId,
-      customerName: Boolean(customerName),
-      customerEmail: Boolean(customerEmail),
-      shopName: Boolean(shopName),
-      shopSize: Boolean(shopSize),
-      currentStack: Boolean(currentStack),
+      depositId: deposit.id,
     });
-    return new Response(JSON.stringify({ error: 'Missing setup deposit metadata' }), { status: 400 });
+    return pendingNotReadyResponse('setup_deposit');
   }
 
   const depositPence = session.amount_total;
@@ -232,66 +336,13 @@ async function handleSetupDepositCheckout(
   const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
   const paymentIntentId = getCheckoutPaymentIntentId(session);
   const currency = (session.currency ?? 'gbp').toLowerCase();
-  const hasPaymentIntent = Boolean(paymentIntentId);
 
   logSetupDepositStage('deposit_validated', {
     sessionId,
     plan: planId,
     depositPence,
-    hasPaymentIntent,
+    hasPaymentIntent: Boolean(paymentIntentId),
   });
-
-  logSetupDepositStage('database_lookup_started', { sessionId });
-  let deposit = await prisma.setupDeposit.findUnique({
-    where: { stripeSessionId: sessionId },
-  });
-  logSetupDepositStage('database_lookup_completed', {
-    sessionId,
-    found: Boolean(deposit),
-  });
-
-  if (!deposit) {
-    try {
-      deposit = await prisma.setupDeposit.create({
-        data: {
-          stripeSessionId: sessionId,
-          paymentIntentId,
-          plan: planId === 'priority' ? SetupPlan.PRIORITY : SetupPlan.LAUNCH,
-          status: SetupDepositStatus.PAID,
-          customerName,
-          customerEmail,
-          shopName,
-          shopSize,
-          currentStack,
-          depositPence,
-          currency,
-          paidAt,
-        },
-      });
-      logSetupDepositStage('deposit_record_created', {
-        sessionId,
-        depositId: deposit.id,
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        deposit = await prisma.setupDeposit.findUnique({
-          where: { stripeSessionId: sessionId },
-        });
-        logSetupDepositStage('database_lookup_completed', {
-          sessionId,
-          found: Boolean(deposit),
-          afterUniqueConflict: true,
-        });
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  if (!deposit) {
-    console.error('[webhook] Setup deposit row missing after create', { sessionId });
-    return new Response(JSON.stringify({ error: 'Setup deposit persist failed' }), { status: 500 });
-  }
 
   if (deposit.status !== SetupDepositStatus.PAID || !deposit.paidAt || (paymentIntentId && !deposit.paymentIntentId)) {
     deposit = await prisma.setupDeposit.update({
@@ -303,7 +354,7 @@ async function handleSetupDepositCheckout(
         depositPence,
         currency,
         customerName,
-        customerEmail,
+        customerEmail: resolvedEmail,
         shopName,
         shopSize,
         currentStack,
@@ -319,7 +370,7 @@ async function handleSetupDepositCheckout(
     const metadataShopId = metadata.shopId?.trim();
     const updated = metadataShopId
       ? await setShopAnalyticsLive(metadataShopId).then(() => true)
-      : await setShopAnalyticsLiveForOwnerEmail(customerEmail);
+      : await setShopAnalyticsLiveForOwnerEmail(resolvedEmail);
     logSetupDepositStage('analytics_live_mode_updated', {
       sessionId,
       updated,
@@ -347,7 +398,7 @@ async function handleSetupDepositCheckout(
         hasOnboardingFormUrl: Boolean(onboardingFormUrl),
       });
       await sendSetupDepositConfirmationEmail({
-        to: customerEmail,
+        to: resolvedEmail,
         customerName,
         shopName,
         planName: planConfig.name,
@@ -375,7 +426,7 @@ async function handleSetupDepositCheckout(
       logSetupDepositStage('internal_email_started', { sessionId });
       await sendSetupDepositInternalNotificationEmail({
         customerName,
-        customerEmail,
+        customerEmail: resolvedEmail,
         shopName,
         shopSize,
         currentStack,
@@ -407,7 +458,6 @@ async function handleSetupDepositCheckout(
   }
 
   if (emailFailure || !customerEmailOk || !internalEmailOk) {
-    // Non-2xx so Stripe retries; idempotent flags prevent duplicate sends.
     return new Response(JSON.stringify({ error: 'Setup deposit email fulfilment incomplete' }), {
       status: 500,
     });
@@ -454,62 +504,57 @@ async function handleSaasSubscriptionCheckout(
     return new Response(JSON.stringify({ error: 'Invalid subscription type' }), { status: 400 });
   }
 
-  const customerName = (metadata.customerName ?? '').trim();
-  const customerEmail = (metadata.email ?? session.customer_email ?? '').trim().toLowerCase();
-  const shopName = (metadata.shopName ?? '').trim();
-  const shopSize = (metadata.shopSize ?? '').trim();
-  const currentStack = (metadata.currentStack ?? '').trim();
-
-  if (!customerName || !customerEmail || !shopName || !shopSize || !currentStack) {
-    console.error('[webhook] SaaS subscription missing required metadata', {
-      sessionId,
-      customerName: Boolean(customerName),
-      customerEmail: Boolean(customerEmail),
-      shopName: Boolean(shopName),
-      shopSize: Boolean(shopSize),
-      currentStack: Boolean(currentStack),
-    });
-    return new Response(JSON.stringify({ error: 'Missing subscription metadata' }), { status: 400 });
-  }
-
-  const monthlyPence =
-    typeof session.amount_total === 'number' ? session.amount_total : SAAS_MONTHLY_PENCE;
-  const activatedAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
-  const stripeSubscriptionId = getCheckoutSubscriptionId(session);
-  const stripeCustomerId = getCheckoutCustomerId(session);
   const metadataShopId = metadata.shopId?.trim() || null;
   const checkoutAttemptId = metadata.checkoutAttemptId?.trim() || null;
-  const currency = (session.currency ?? 'gbp').toLowerCase();
-
-  let currentPeriodEnd: Date | null = null;
-  let cancelAtPeriodEnd = false;
-  if (stripeSubscriptionId) {
-    try {
-      const stripeSub = await retrieveSubscription(stripeSubscriptionId);
-      currentPeriodEnd = periodEndFromUnixSeconds(getSubscriptionCurrentPeriodEnd(stripeSub));
-      cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
-    } catch (error) {
-      console.warn('[webhook] SaaS subscription period lookup failed', {
-        sessionId,
-        stripeSubscriptionId,
-        error: error instanceof Error ? error.message : error,
-      });
-    }
-  }
-
-  logSaasSubscriptionStage('subscription_validated', {
-    sessionId,
-    monthlyPence,
-    hasSubscriptionId: Boolean(stripeSubscriptionId),
-    hasCustomerId: Boolean(stripeCustomerId),
-    hasShopId: Boolean(metadataShopId),
-  });
+  const legacyPii = legacySetupPiiFromMetadata(metadata);
 
   let record = await prisma.saasSubscription.findUnique({
     where: { stripeSessionId: sessionId },
   });
 
+  if (!record && checkoutAttemptId) {
+    record = await prisma.saasSubscription.findUnique({
+      where: { checkoutAttemptId },
+    });
+  }
+
   if (!record) {
+    if (!legacyPii) {
+      logSaasSubscriptionStage('pending_not_ready', {
+        sessionId,
+        hasCheckoutAttemptId: Boolean(checkoutAttemptId),
+      });
+      return pendingNotReadyResponse('saas_subscription');
+    }
+
+    const customerEmail = resolveFulfilmentEmail(session, metadata, null);
+    if (!customerEmail) {
+      return pendingNotReadyResponse('saas_subscription');
+    }
+
+    const monthlyPence =
+      typeof session.amount_total === 'number' ? session.amount_total : SAAS_MONTHLY_PENCE;
+    const activatedAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+    const stripeSubscriptionId = getCheckoutSubscriptionId(session);
+    const stripeCustomerId = getCheckoutCustomerId(session);
+    const currency = (session.currency ?? 'gbp').toLowerCase();
+
+    let currentPeriodEnd: Date | null = null;
+    let cancelAtPeriodEnd = false;
+    if (stripeSubscriptionId) {
+      try {
+        const stripeSub = await retrieveSubscription(stripeSubscriptionId);
+        currentPeriodEnd = periodEndFromUnixSeconds(getSubscriptionCurrentPeriodEnd(stripeSub));
+        cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
+      } catch (error) {
+        console.warn('[webhook] SaaS subscription period lookup failed', {
+          sessionId,
+          stripeSubscriptionId,
+          error: error instanceof Error ? error.message : error,
+        });
+      }
+    }
+
     try {
       record = await prisma.saasSubscription.create({
         data: {
@@ -521,17 +566,20 @@ async function handleSaasSubscriptionCheckout(
           status: 'ACTIVE',
           cancelAtPeriodEnd,
           currentPeriodEnd,
-          customerName,
+          customerName: legacyPii.customerName,
           customerEmail,
-          shopName,
-          shopSize,
-          currentStack,
+          shopName: legacyPii.shopName,
+          shopSize: legacyPii.shopSize,
+          currentStack: legacyPii.currentStack,
           monthlyPence,
           currency,
           activatedAt,
         },
       });
-      logSaasSubscriptionStage('record_created', { sessionId, id: record.id });
+      logSaasSubscriptionStage('record_created_from_legacy_metadata', {
+        sessionId,
+        id: record.id,
+      });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         record =
@@ -555,9 +603,53 @@ async function handleSaasSubscriptionCheckout(
   }
 
   if (!record) {
-    console.error('[webhook] SaaS subscription row missing after create', { sessionId });
-    return new Response(JSON.stringify({ error: 'Subscription persist failed' }), { status: 500 });
+    return pendingNotReadyResponse('saas_subscription');
   }
+
+  const customerName = record.customerName.trim() || legacyPii?.customerName || '';
+  const customerEmail = resolveFulfilmentEmail(session, metadata, record.customerEmail);
+  const shopName = record.shopName.trim() || legacyPii?.shopName || '';
+  const shopSize = record.shopSize.trim() || legacyPii?.shopSize || '';
+  const currentStack = record.currentStack.trim() || legacyPii?.currentStack || '';
+
+  if (!customerName || !customerEmail || !shopName || !shopSize || !currentStack) {
+    logSaasSubscriptionStage('pending_incomplete', {
+      sessionId,
+      id: record.id,
+    });
+    return pendingNotReadyResponse('saas_subscription');
+  }
+
+  const monthlyPence =
+    typeof session.amount_total === 'number' ? session.amount_total : SAAS_MONTHLY_PENCE;
+  const activatedAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+  const stripeSubscriptionId = getCheckoutSubscriptionId(session);
+  const stripeCustomerId = getCheckoutCustomerId(session);
+  const currency = (session.currency ?? 'gbp').toLowerCase();
+
+  let currentPeriodEnd: Date | null = null;
+  let cancelAtPeriodEnd = false;
+  if (stripeSubscriptionId) {
+    try {
+      const stripeSub = await retrieveSubscription(stripeSubscriptionId);
+      currentPeriodEnd = periodEndFromUnixSeconds(getSubscriptionCurrentPeriodEnd(stripeSub));
+      cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
+    } catch (error) {
+      console.warn('[webhook] SaaS subscription period lookup failed', {
+        sessionId,
+        stripeSubscriptionId,
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+
+  logSaasSubscriptionStage('subscription_validated', {
+    sessionId,
+    monthlyPence,
+    hasSubscriptionId: Boolean(stripeSubscriptionId),
+    hasCustomerId: Boolean(stripeCustomerId),
+    hasShopId: Boolean(metadataShopId || record.shopId),
+  });
 
   if (
     record.checkoutAttemptId &&
@@ -578,13 +670,15 @@ async function handleSaasSubscriptionCheckout(
     (stripeCustomerId && !record.stripeCustomerId) ||
     (metadataShopId && !record.shopId) ||
     (checkoutAttemptId && !record.checkoutAttemptId) ||
-    (currentPeriodEnd && !record.currentPeriodEnd)
+    (currentPeriodEnd && !record.currentPeriodEnd) ||
+    record.stripeSessionId !== sessionId
   ) {
     record = await prisma.saasSubscription.update({
       where: { id: record.id },
       data: {
         status: 'ACTIVE',
         activatedAt: record.activatedAt ?? activatedAt,
+        stripeSessionId: sessionId,
         stripeSubscriptionId: stripeSubscriptionId || record.stripeSubscriptionId,
         stripeCustomerId: stripeCustomerId || record.stripeCustomerId,
         shopId: record.shopId || metadataShopId,
@@ -604,13 +698,13 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const updated = metadataShopId
-      ? await setShopAnalyticsLive(metadataShopId).then(() => true)
+    const updated = metadataShopId || record.shopId
+      ? await setShopAnalyticsLive((metadataShopId || record.shopId)!).then(() => true)
       : await setShopAnalyticsLiveForOwnerEmail(customerEmail);
     logSaasSubscriptionStage('analytics_live_mode_updated', {
       sessionId,
       updated,
-      viaShopId: Boolean(metadataShopId),
+      viaShopId: Boolean(metadataShopId || record.shopId),
     });
   } catch (error) {
     console.error('[webhook] Failed to mark shop analytics as live', {
@@ -620,13 +714,13 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const updated = metadataShopId
-      ? await markShopPaid(metadataShopId).then(() => true)
+    const updated = metadataShopId || record.shopId
+      ? await markShopPaid((metadataShopId || record.shopId)!).then(() => true)
       : await markShopPaidForOwnerEmail(customerEmail);
     logSaasSubscriptionStage('shop_marked_paid', {
       sessionId,
       updated,
-      viaShopId: Boolean(metadataShopId),
+      viaShopId: Boolean(metadataShopId || record.shopId),
     });
   } catch (error) {
     console.error('[webhook] Failed to mark shop paid', {
@@ -636,13 +730,13 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const updated = metadataShopId
-      ? await enableShopSmsReminders(metadataShopId).then(() => true)
+    const updated = metadataShopId || record.shopId
+      ? await enableShopSmsReminders((metadataShopId || record.shopId)!).then(() => true)
       : await enableShopSmsRemindersForOwnerEmail(customerEmail);
     logSaasSubscriptionStage('sms_reminders_enabled', {
       sessionId,
       updated,
-      viaShopId: Boolean(metadataShopId),
+      viaShopId: Boolean(metadataShopId || record.shopId),
     });
   } catch (error) {
     console.error('[webhook] Failed to enable shop SMS reminders', {

@@ -32,7 +32,7 @@ function checkoutEmailFromSession(session: {
   const fromDetails = session.customer_details?.email?.trim() || '';
   const fromCustomer = session.customer_email?.trim() || '';
   const fromMeta = session.metadata?.email?.trim() || '';
-  return fromDetails || fromCustomer || fromMeta;
+  return (fromDetails || fromCustomer || fromMeta).toLowerCase();
 }
 
 async function ensurePaidMarker(shopId: string): Promise<Response | null> {

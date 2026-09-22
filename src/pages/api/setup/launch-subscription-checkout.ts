@@ -502,11 +502,6 @@ export const POST: APIRoute = async (context) => {
       const metadata = {
         ...buildSaasSubscriptionStripeMetadata(
           {
-            customerName: name,
-            email,
-            shopName,
-            shopSize,
-            currentStack,
             checkoutAttemptId,
             shopId: access.shopId,
           },
