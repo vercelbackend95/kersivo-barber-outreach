@@ -3,7 +3,6 @@ import crypto from 'node:crypto';
 
 const verifyStripeWebhookSignature = vi.fn();
 const recordStripeWebhookReceived = vi.fn();
-const notifyOpsDurable = vi.fn();
 const markStripeWebhookStatus = vi.fn();
 const alertStripeWebhookFailure = vi.fn();
 const captureOpsMessage = vi.fn();
@@ -26,7 +25,6 @@ vi.mock('../../../lib/shop/stripe', () => ({
 vi.mock('../../../lib/ops/stripeWebhookLedger', () => ({
   recordStripeWebhookReceived: (...args: unknown[]) => recordStripeWebhookReceived(...args),
   markStripeWebhookStatus: (...args: unknown[]) => markStripeWebhookStatus(...args),
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
   alertStripeWebhookFailure: (...args: unknown[]) => alertStripeWebhookFailure(...args),
   alertLifecycleNotFound: vi.fn(),
 }));
@@ -163,7 +161,6 @@ function signedRequest(body: object, opts?: { signatureOk?: boolean; reason?: st
 describe('POST /api/shop/webhook replay hardening', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     markStripeWebhookStatus.mockResolvedValue(undefined);
     recordStripeWebhookReceived.mockResolvedValue({
       alreadyFinalized: false,
@@ -184,9 +181,6 @@ describe('POST /api/shop/webhook replay hardening', () => {
     const body = await res.json();
     expect(body.error).toBe('Invalid signature');
     expect(body).not.toHaveProperty('reason');
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({ dedupeKey: 'webhook:replay-rejected' }),
-    );
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'Stripe webhook replay rejected',
       expect.objectContaining({

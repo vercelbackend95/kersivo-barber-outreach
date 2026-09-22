@@ -10,7 +10,6 @@ const retrieveSubscription = vi.fn();
 const getSubscriptionCurrentPeriodEnd = vi.fn();
 const recordStripeWebhookReceived = vi.fn();
 const markStripeWebhookStatus = vi.fn();
-const notifyOpsDurable = vi.fn();
 const alertStripeWebhookFailure = vi.fn();
 
 const findUniqueSaas = vi.fn();
@@ -33,7 +32,6 @@ vi.mock('../../../lib/shop/stripe', () => ({
 vi.mock('../../../lib/ops/stripeWebhookLedger', () => ({
   recordStripeWebhookReceived: (...args: unknown[]) => recordStripeWebhookReceived(...args),
   markStripeWebhookStatus: (...args: unknown[]) => markStripeWebhookStatus(...args),
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
   alertStripeWebhookFailure: (...args: unknown[]) => alertStripeWebhookFailure(...args),
   alertLifecycleNotFound: vi.fn(),
 }));
@@ -190,7 +188,6 @@ const baseMeta = {
 describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     markStripeWebhookStatus.mockResolvedValue(undefined);
     recordStripeWebhookReceived.mockResolvedValue({
       alreadyFinalized: false,

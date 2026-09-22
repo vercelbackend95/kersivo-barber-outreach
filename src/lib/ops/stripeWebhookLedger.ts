@@ -1,6 +1,5 @@
 import type { StripeWebhookEventStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
-import { notifyOps, type OpsAlertInput, type OpsAlertResult } from '@/lib/ops/alertSink';
 import { opsLog, opsLogError } from '@/lib/ops/opsLog';
 
 export type WebhookIngestResult = {
@@ -78,24 +77,6 @@ export async function markStripeWebhookStatus(
   });
 }
 
-/** AlertSink with durable OpsAlertDedupe cooldown in Postgres. */
-export async function notifyOpsDurable(input: OpsAlertInput): Promise<OpsAlertResult> {
-  return notifyOps(input, {
-    isDeduped: async (dedupeKey, cooldownMs) => {
-      const row = await prisma.opsAlertDedupe.findUnique({ where: { dedupeKey } });
-      if (!row) return false;
-      return Date.now() - row.lastSentAt.getTime() < cooldownMs;
-    },
-    markSent: async (dedupeKey) => {
-      await prisma.opsAlertDedupe.upsert({
-        where: { dedupeKey },
-        create: { dedupeKey, lastSentAt: new Date() },
-        update: { lastSentAt: new Date() },
-      });
-    },
-  });
-}
-
 export async function alertStripeWebhookFailure(input: {
   eventId: string;
   type: string;
@@ -107,19 +88,9 @@ export async function alertStripeWebhookFailure(input: {
     type: input.type,
     httpStatus: input.httpStatus,
   });
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Stripe webhook FAILED',
-    body: input.error.slice(0, 500),
-    dedupeKey: `webhook:failed:${input.eventId}`,
-    fields: {
-      eventId: input.eventId,
-      type: input.type,
-      httpStatus: input.httpStatus,
-    },
-  });
 }
 
+/** Non-material race/orphan path — ordinary ops log only (no Sentry alert). */
 export async function alertLifecycleNotFound(input: {
   eventType: string;
   eventId?: string;
@@ -127,13 +98,5 @@ export async function alertLifecycleNotFound(input: {
   opsLog('stripe.webhook', 'lifecycle_not_found', {
     eventType: input.eventType,
     eventId: input.eventId,
-  });
-  await notifyOpsDurable({
-    severity: 'warning',
-    title: 'SaaS lifecycle webhook: record not found',
-    body: `Event ${input.eventType} had no matching SaasSubscription (race or orphan).`,
-    dedupeKey: `webhook:lifecycle-miss:${input.eventType}:${input.eventId ?? 'unknown'}`,
-    fields: { eventType: input.eventType, eventId: input.eventId ?? null },
-    cooldownMs: 60 * 60 * 1000,
   });
 }

@@ -21,7 +21,6 @@ import {
   validateOnboardingAssetFile,
 } from '@/lib/storage/privateOnboardingBlob';
 import { captureOpsMessage } from '@/lib/ops/sentry';
-import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 
 const KIND_VALUES = new Set(Object.values(ClientOnboardingAssetKind));
 
@@ -49,19 +48,6 @@ async function alertPrivateBlobCleanupFailed(input: {
     error: errorMessage,
   });
   try {
-    await notifyOpsDurable({
-      severity: 'critical',
-      title: 'Client onboarding private blob cleanup failed',
-      body: errorMessage.slice(0, 500),
-      dedupeKey: `client-onboarding:blob-cleanup:${input.pathname}`,
-      fields: {
-        shopId: input.shopId,
-        pathname: input.pathname,
-        kind: input.kind,
-        filename: input.filename,
-        reason: input.reason,
-      },
-    });
     // Sentry: omit pathname/filename (may contain user-entered path segments).
     captureOpsMessage('Client onboarding private blob cleanup failed', {
       level: 'error',

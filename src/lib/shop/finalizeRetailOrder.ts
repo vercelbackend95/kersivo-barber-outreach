@@ -4,7 +4,6 @@ import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { formatGbp } from '@/lib/shop/money';
 import { captureOpsMessage } from '@/lib/ops/sentry';
-import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 
 export type FinalizeRetailOrderInput = {
@@ -62,20 +61,6 @@ export async function finalizeRetailOrderFromCheckout(
   }
 
   if (input.amountTotal !== null && input.amountTotal !== order.totalPence) {
-    await notifyOpsDurable({
-      severity: 'critical',
-      title: 'Retail order amount mismatch',
-      body: `Order ${orderId} totalPence=${order.totalPence} but session.amount_total=${input.amountTotal}`,
-      dedupeKey: `retail_amount_mismatch:${orderId}`,
-      cooldownMs: 60 * 60 * 1000,
-      fields: {
-        orderId,
-        shopId,
-        sessionId: input.sessionId,
-        expected: order.totalPence,
-        actual: input.amountTotal,
-      },
-    });
     captureOpsMessage('Retail order amount mismatch', {
       level: 'error',
       route: 'finalizeRetailOrderFromCheckout',

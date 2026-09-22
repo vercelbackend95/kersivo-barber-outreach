@@ -6,7 +6,6 @@ import {
 } from '@prisma/client';
 import { prisma } from '../db/client';
 import { captureOpsException } from '../ops/sentry';
-import { notifyOpsDurable } from '../ops/stripeWebhookLedger';
 import { isEmailDeliveryConfigured, sendRenderedEmail } from './sender';
 
 const DEFAULT_MAX_ATTEMPTS = 6;
@@ -40,19 +39,11 @@ function parsePayload(raw: unknown): EmailOutboxPayload | null {
 }
 
 async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promise<void> {
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Transactional email delivery failed',
-    body: errorMessage.slice(0, 500),
-    dedupeKey: `email:failed:${row.id}`,
-    fields: {
-      emailOutboundId: row.id,
-      shopId: row.shopId,
-      bookingId: row.bookingId ?? '',
-      purpose: row.purpose,
-      attempts: row.attempts,
-      status: row.status,
-    },
+  captureOpsException(new Error(errorMessage), {
+    route: 'email.outbox.deliverOutboxEmail',
+    shopId: row.shopId,
+    opsAlert: true,
+    tags: { emailOutboundId: row.id, purpose: row.purpose },
   });
 }
 
@@ -167,12 +158,6 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
       },
     });
     await alertEmailFailed(updated, 'Missing or invalid outbox payload; cannot replay.');
-    captureOpsException(new Error('Missing or invalid outbox payload'), {
-      route: 'email.outbox.deliverOutboxEmail',
-      shopId: row.shopId,
-      opsAlert: true,
-      tags: { emailOutboundId: row.id, purpose: row.purpose },
-    });
     return { status: 'failed', row: updated };
   }
 
@@ -226,12 +211,6 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
 
     if (exhausted) {
       await alertEmailFailed(updated, message);
-      captureOpsException(error, {
-        route: 'email.outbox.deliverOutboxEmail',
-        shopId: row.shopId,
-        opsAlert: true,
-        tags: { emailOutboundId: row.id, purpose: row.purpose },
-      });
       return { status: 'failed', row: updated };
     }
 

@@ -6,7 +6,6 @@ const updateManyBooking = vi.fn();
 const retrieveBookingDepositSession = vi.fn();
 const expireBookingDepositSession = vi.fn();
 const confirmPaidDeposit = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
 const getCheckoutPaymentIntentId = vi.fn((_session?: unknown) => 'pi_1');
 
@@ -30,10 +29,6 @@ vi.mock('../shop/stripe', () => ({
 
 vi.mock('./confirmPaidDeposit', () => ({
   confirmPaidDeposit: (...args: unknown[]) => confirmPaidDeposit(...args),
-}));
-
-vi.mock('../ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -60,7 +55,6 @@ describe('processExpiredDepositHolds', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     updateManyBooking.mockResolvedValue({ count: 1 });
   });
 
@@ -128,7 +122,6 @@ describe('processExpiredDepositHolds', () => {
 
     expect(updateManyBooking).not.toHaveBeenCalled();
     expect(result).toEqual({ scanned: 1, released: 0, recovered: 0, deferred: 1 });
-    expect(notifyOpsDurable).not.toHaveBeenCalled();
   });
 
   it('releases immediately when there is no session id', async () => {
@@ -161,12 +154,6 @@ describe('processExpiredDepositHolds', () => {
     const result = await processExpiredDepositHolds(stuckNow);
 
     expect(result.deferred).toBe(1);
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dedupeKey: 'deposit:hold-stuck:book_1',
-        title: 'Deposit hold stuck — session expire failed',
-      }),
-    );
     expect(captureOpsException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({

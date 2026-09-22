@@ -11,7 +11,6 @@ import { prisma } from '../db/client';
 import { buildInstantBookingConfirmationEmail, buildLateDepositRefundEmail } from '../email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '../email/outbox';
 import { captureOpsException } from '../ops/sentry';
-import { notifyOpsDurable } from '../ops/stripeWebhookLedger';
 import { getPublicSiteUrl } from '../setup/siteUrl';
 import { attemptDepositRefund, requestDepositRefund } from './depositMoney';
 import { generateToken, hashToken } from './tokens';
@@ -47,21 +46,6 @@ async function alertConflictingPayment(input: {
 }): Promise<void> {
   const { booking, shopId, sessionId, paymentIntentId } = input;
   const message = `Booking ${booking.id} already paid via session ${booking.stripeCheckoutSessionId ?? 'unknown'}; rejecting session ${sessionId}.`;
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Deposit double-charge suspected',
-    body: message.slice(0, 500),
-    dedupeKey: `deposit:double-charge:${booking.id}`,
-    fields: {
-      bookingId: booking.id,
-      shopId,
-      existingSessionId: booking.stripeCheckoutSessionId ?? '',
-      newSessionId: sessionId,
-      paymentIntentId: paymentIntentId ?? '',
-      status: booking.status,
-      paymentStatus: booking.paymentStatus ?? '',
-    },
-  });
   captureOpsException(new Error(message), {
     route: 'confirmPaidDeposit',
     shopId,
@@ -81,20 +65,6 @@ async function alertLatePaidSlotLost(input: {
 }): Promise<void> {
   const { booking, shopId, sessionId, paymentIntentId } = input;
   const message = `Late deposit payment for expired booking ${booking.id}; slot unavailable — refund queued.`;
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Late deposit payment — slot lost, refund queued',
-    body: message.slice(0, 500),
-    dedupeKey: `deposit:late-paid:${booking.id}`,
-    fields: {
-      bookingId: booking.id,
-      shopId,
-      sessionId,
-      paymentIntentId: paymentIntentId ?? '',
-      status: booking.status,
-      paymentStatus: booking.paymentStatus ?? '',
-    },
-  });
   captureOpsException(new Error(message), {
     route: 'confirmPaidDeposit.latePaid',
     shopId,

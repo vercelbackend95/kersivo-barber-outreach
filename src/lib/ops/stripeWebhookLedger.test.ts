@@ -13,15 +13,7 @@ vi.mock('@/lib/db/client', () => ({
       create: (...args: unknown[]) => create(...args),
       update: (...args: unknown[]) => update(...args),
     },
-    opsAlertDedupe: {
-      findUnique: vi.fn(),
-      upsert: vi.fn(),
-    },
   },
-}));
-
-vi.mock('@/lib/ops/alertSink', () => ({
-  notifyOps: vi.fn(async () => ({ sent: false })),
 }));
 
 import { markStripeWebhookStatus, recordStripeWebhookReceived } from './stripeWebhookLedger';

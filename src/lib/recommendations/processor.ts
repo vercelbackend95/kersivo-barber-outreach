@@ -6,7 +6,6 @@ import {
 
 import { prisma } from '@/lib/db/client';
 import { captureOpsMessage } from '@/lib/ops/sentry';
-import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '@/lib/ops/opsLog';
 
 import {
@@ -526,13 +525,6 @@ async function processShop(shopId: string, targetVersion: number): Promise<boole
         await releaseOwnedLock(ctx);
       }
     } else if (failure.exhausted) {
-      await notifyOpsDurable({
-        severity: 'critical',
-        title: 'Recommendation rebuild exhausted retries',
-        body: code.slice(0, 500),
-        dedupeKey: `recommendations:failed:${shopId}`,
-        fields: { shopId, attempts: failure.attempts },
-      });
       captureOpsMessage('Recommendation rebuild exhausted retries', {
         level: 'error',
         route: 'recommendations.processor',

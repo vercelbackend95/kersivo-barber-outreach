@@ -59,11 +59,7 @@ vi.mock('@/lib/storage/privateOnboardingBlob', async () => {
   };
 });
 
-const notifyOpsDurable = vi.fn();
 const captureOpsMessage = vi.fn();
-vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
-}));
 vi.mock('@/lib/ops/sentry', () => ({
   captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
@@ -128,7 +124,6 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       pastDueSince: null,
     });
     ensureUpsert.mockResolvedValue(draftOnboarding());
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
         $executeRaw: vi.fn(async () => undefined),
@@ -227,19 +222,6 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
     );
     expect(res.status).toBe(500);
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'critical',
-        dedupeKey: 'client-onboarding:blob-cleanup:client-onboarding/shop_1/migration_csv/orphan.csv',
-        fields: expect.objectContaining({
-          shopId: 'shop_1',
-          pathname: 'client-onboarding/shop_1/migration_csv/orphan.csv',
-          kind: ClientOnboardingAssetKind.MIGRATION_CSV,
-          filename: 'clients.csv',
-          reason: 'db_finalize_failed',
-        }),
-      }),
-    );
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'Client onboarding private blob cleanup failed',
       expect.objectContaining({
@@ -296,10 +278,12 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
     );
     expect(res.status).toBe(409);
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Client onboarding private blob cleanup failed',
       expect.objectContaining({
-        dedupeKey: 'client-onboarding:blob-cleanup:client-onboarding/shop_1/migration_csv/late.csv',
-        fields: expect.objectContaining({ reason: 'locked_before_finalize' }),
+        level: 'error',
+        shopId: 'shop_1',
+        tags: expect.objectContaining({ reason: 'locked_before_finalize' }),
       }),
     );
   });

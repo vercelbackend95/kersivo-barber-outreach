@@ -6,7 +6,6 @@ import {
 } from '@prisma/client';
 import { prisma } from '../db/client';
 import { captureOpsException, captureOpsMessage } from '../ops/sentry';
-import { notifyOpsDurable } from '../ops/stripeWebhookLedger';
 import { refundPaymentIntent } from '../shop/stripeConnect';
 
 export type DepositRefundReason =
@@ -51,18 +50,11 @@ async function markBookingRefunded(bookingId: string, now = new Date()): Promise
 }
 
 async function alertRefundFailed(row: BookingDepositRefund, errorMessage: string): Promise<void> {
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Deposit refund failed',
-    body: errorMessage.slice(0, 500),
-    dedupeKey: `refund:failed:${row.bookingId}`,
-    fields: {
-      bookingId: row.bookingId,
-      shopId: row.shopId,
-      refundLedgerId: row.id,
-      attempts: row.attempts,
-      stripePaymentIntentId: row.stripePaymentIntentId,
-    },
+  captureOpsException(new Error(errorMessage), {
+    route: 'depositMoney.attemptDepositRefund',
+    shopId: row.shopId,
+    opsAlert: true,
+    tags: { bookingId: row.bookingId, refundId: row.id },
   });
 }
 
@@ -231,12 +223,6 @@ export async function attemptDepositRefund(refundId: string): Promise<{
         },
       });
       await alertRefundFailed(updated, `Stripe refund status: ${result.status}`);
-      captureOpsException(new Error(`Stripe refund status: ${result.status}`), {
-        route: 'depositMoney.attemptDepositRefund',
-        shopId: row.shopId,
-        opsAlert: true,
-        tags: { bookingId: row.bookingId, refundId: row.id },
-      });
       return { outcome: 'failed', refund: updated };
     }
 
@@ -302,12 +288,6 @@ export async function attemptDepositRefund(refundId: string): Promise<{
 
     if (exhausted) {
       await alertRefundFailed(updated, message);
-      captureOpsException(error, {
-        route: 'depositMoney.attemptDepositRefund',
-        shopId: row.shopId,
-        opsAlert: true,
-        tags: { bookingId: row.bookingId, refundId: row.id },
-      });
       return { outcome: 'failed', refund: updated };
     }
 
@@ -395,7 +375,6 @@ export async function confirmDepositRefundFromWebhook(input: {
         nextAttemptAt: null,
       },
     });
-    await alertRefundFailed(updated, `Webhook: refund ${input.status}`);
     captureOpsMessage('Deposit refund failed via Stripe webhook', {
       level: 'error',
       route: 'depositMoney.applyStripeRefundWebhook',

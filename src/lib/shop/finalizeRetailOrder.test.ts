@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const findFirst = vi.fn();
 const updateMany = vi.fn();
 const transaction = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsMessage = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
@@ -13,10 +12,6 @@ vi.mock('@/lib/db/client', () => ({
     order: { findFirst: (...args: unknown[]) => findFirst(...args) },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
-}));
-
-vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('@/lib/ops/sentry', () => ({
@@ -123,12 +118,6 @@ describe('finalizeRetailOrderFromCheckout', () => {
     });
 
     expect(result).toEqual({ outcome: 'amount_mismatch' });
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'critical',
-        dedupeKey: 'retail_amount_mismatch:ord_1',
-      }),
-    );
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'Retail order amount mismatch',
       expect.objectContaining({

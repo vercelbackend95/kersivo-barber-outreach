@@ -51,7 +51,6 @@ import {
   alertLifecycleNotFound,
   alertStripeWebhookFailure,
   markStripeWebhookStatus,
-  notifyOpsDurable,
   recordStripeWebhookReceived,
 } from '../../../lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '../../../lib/ops/opsLog';
@@ -112,6 +111,15 @@ async function finalizeWebhookResponse(
       await markStripeWebhookStatus(eventId, 'FAILED', {
         httpStatus: response.status,
         error,
+      });
+      captureOpsException(new Error(error), {
+        route: '/api/shop/webhook',
+        opsAlert: true,
+        tags: {
+          eventType: options.eventType ?? 'unknown',
+          eventId,
+          status: String(response.status),
+        },
       });
       await alertStripeWebhookFailure({
         eventId,
@@ -1165,14 +1173,6 @@ export const POST: APIRoute = async ({ request }) => {
         reason: verifyResult.reason,
       });
       if (verifyResult.reason === 'timestamp_out_of_tolerance') {
-        await notifyOpsDurable({
-          severity: 'warning',
-          title: 'Stripe webhook replay rejected',
-          body: 'Webhook signature timestamp outside ±300s tolerance.',
-          dedupeKey: 'webhook:replay-rejected',
-          cooldownMs: 15 * 60 * 1000,
-          fields: { reason: verifyResult.reason },
-        });
         captureOpsMessage('Stripe webhook replay rejected', {
           level: 'warning',
           route: '/api/shop/webhook',

@@ -7,7 +7,6 @@ const findManyOutbound = vi.fn();
 const updateOutbound = vi.fn();
 const updateManyOutbound = vi.fn();
 const sendRenderedEmail = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
 const isEmailDeliveryConfigured = vi.fn(() => true);
 
@@ -26,10 +25,6 @@ vi.mock('../db/client', () => ({
 vi.mock('./sender', () => ({
   sendRenderedEmail: (...args: unknown[]) => sendRenderedEmail(...args),
   isEmailDeliveryConfigured: () => isEmailDeliveryConfigured(),
-}));
-
-vi.mock('../ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -192,7 +187,6 @@ describe('enqueueEmail', () => {
 describe('deliverOutboxEmail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     isEmailDeliveryConfigured.mockReturnValue(true);
   });
 
@@ -249,7 +243,7 @@ describe('deliverOutboxEmail', () => {
     const result = await deliverOutboxEmail('out_1');
 
     expect(result.status).toBe('queued');
-    expect(notifyOpsDurable).not.toHaveBeenCalled();
+    expect(captureOpsException).not.toHaveBeenCalled();
     expect(updateOutbound).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -278,29 +272,16 @@ describe('deliverOutboxEmail', () => {
     const result = await deliverOutboxEmail('out_1');
 
     expect(result.status).toBe('failed');
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'critical',
-        dedupeKey: 'email:failed:out_1',
-      }),
-    );
-    const alertPayload = notifyOpsDurable.mock.calls[0]?.[0] as {
-      fields?: Record<string, unknown>;
-    };
-    expect(alertPayload.fields).toMatchObject({
-      emailOutboundId: 'out_1',
-      shopId: 'shop_1',
-      bookingId: 'book_1',
-      purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
-      attempts: 6,
-      status: EmailOutboundStatus.FAILED,
-    });
-    expect(alertPayload.fields).not.toHaveProperty('toEmail');
     expect(captureOpsException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
         opsAlert: true,
         route: 'email.outbox.deliverOutboxEmail',
+        shopId: 'shop_1',
+        tags: expect.objectContaining({
+          emailOutboundId: 'out_1',
+          purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
+        }),
       }),
     );
     expect(updateOutbound).toHaveBeenCalledWith(
@@ -336,7 +317,6 @@ describe('deliverOutboxEmail', () => {
 describe('processDueEmailOutbox', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('drains due rows and aggregates statuses', async () => {

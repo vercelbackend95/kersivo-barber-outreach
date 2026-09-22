@@ -10,7 +10,6 @@ const updateManyRefund = vi.fn();
 const updateBooking = vi.fn();
 const updateManyBooking = vi.fn();
 const refundPaymentIntent = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
 const captureOpsMessage = vi.fn();
 
@@ -34,10 +33,6 @@ vi.mock('../db/client', () => ({
 
 vi.mock('../shop/stripeConnect', () => ({
   refundPaymentIntent: (...args: unknown[]) => refundPaymentIntent(...args),
-}));
-
-vi.mock('../ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -95,7 +90,6 @@ function pendingRow(overrides: Record<string, unknown> = {}) {
 describe('requestDepositRefund', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('creates write-ahead ledger row without calling Stripe', async () => {
@@ -134,7 +128,6 @@ describe('requestDepositRefund', () => {
 describe('attemptDepositRefund', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('marks REFUNDED on Stripe succeeded and stamps booking', async () => {
@@ -204,7 +197,6 @@ describe('attemptDepositRefund', () => {
         }),
       }),
     );
-    expect(notifyOpsDurable).not.toHaveBeenCalled();
   });
 
   it('marks REFUND_FAILED and alerts when attempts are exhausted', async () => {
@@ -217,12 +209,6 @@ describe('attemptDepositRefund', () => {
 
     const result = await attemptDepositRefund('ref_1');
     expect(result.outcome).toBe('failed');
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'critical',
-        dedupeKey: 'refund:failed:book_1',
-      }),
-    );
     expect(captureOpsException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
@@ -263,7 +249,6 @@ describe('attemptDepositRefund', () => {
 describe('confirmDepositRefundFromWebhook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('confirms by stripeRefundId', async () => {
@@ -334,7 +319,6 @@ describe('confirmDepositRefundFromWebhook', () => {
     });
 
     expect(result.matched).toBe(true);
-    expect(notifyOpsDurable).toHaveBeenCalled();
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'Deposit refund failed via Stripe webhook',
       expect.objectContaining({
@@ -352,7 +336,6 @@ describe('confirmDepositRefundFromWebhook', () => {
 describe('retryDepositRefundForOperator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('rotates idempotency key after REFUND_FAILED', async () => {
@@ -391,7 +374,6 @@ describe('retryDepositRefundForOperator', () => {
 describe('refundBookingDepositIfEligible wrapper', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: false });
   });
 
   it('passes connect account id and returns refunded', async () => {

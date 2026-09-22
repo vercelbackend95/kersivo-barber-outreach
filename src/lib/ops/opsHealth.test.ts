@@ -6,7 +6,6 @@ const smsFindMany = vi.fn();
 const webhookFindMany = vi.fn();
 const refundFindMany = vi.fn();
 const emailFindMany = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsMessage = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
@@ -26,10 +25,6 @@ vi.mock('@/lib/db/client', () => ({
       findMany: (...args: unknown[]) => refundFindMany(...args),
     },
   },
-}));
-
-vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('@/lib/ops/sentry', () => ({
@@ -75,10 +70,9 @@ describe('evaluateMessagingFailRate', () => {
   });
 });
 
-describe('runOpsHealthChecks Sentry dual-delivery', () => {
+describe('runOpsHealthChecks Sentry alerts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     // collectMessagingFailRates currently hard-codes email zeros; SMS uses counts + findMany.
     smsCount.mockResolvedValue(0);
     smsFindMany.mockResolvedValue([
@@ -119,10 +113,10 @@ describe('runOpsHealthChecks Sentry dual-delivery', () => {
     ]);
   });
 
-  it('fires Slack and Sentry for stuck webhook/refund/email and SMS fail rate', async () => {
+  it('fires Sentry and records alertsFired for stuck webhook/refund/email and SMS fail rate', async () => {
     const summary = await runOpsHealthChecks(new Date('2026-01-01T01:00:00Z'));
 
-    expect(notifyOpsDurable).toHaveBeenCalled();
+    expect(summary.alertsFired.length).toBeGreaterThan(0);
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'SMS outbound failure rate high',
       expect.objectContaining({ level: 'warning' }),

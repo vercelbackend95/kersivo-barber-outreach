@@ -10,7 +10,6 @@ const findUniqueShop = vi.fn();
 const transaction = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
-const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
 const requestDepositRefund = vi.fn();
 const attemptDepositRefund = vi.fn();
@@ -49,10 +48,6 @@ vi.mock('../email/sender', () => ({
   buildInstantBookingConfirmationEmail: (...args: unknown[]) =>
     buildInstantBookingConfirmationEmail(...args),
   buildLateDepositRefundEmail: (...args: unknown[]) => buildLateDepositRefundEmail(...args),
-}));
-
-vi.mock('../ops/stripeWebhookLedger', () => ({
-  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -112,7 +107,6 @@ function paidBooking(overrides: Record<string, unknown> = {}) {
 describe('confirmPaidDeposit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    notifyOpsDurable.mockResolvedValue({ sent: true });
     tryDeliverOutboxEmail.mockResolvedValue(undefined);
     findUniqueShop.mockResolvedValue({ name: 'Test Shop' });
     enqueueEmail.mockResolvedValue({ id: 'out_1' });
@@ -224,7 +218,6 @@ describe('confirmPaidDeposit', () => {
     expect(tryDeliverOutboxEmail).toHaveBeenCalledTimes(1);
     // One successful CAS (count:1); losers get count:0 and must not enqueue.
     expect(casCalls).toBeGreaterThanOrEqual(1);
-    expect(notifyOpsDurable).not.toHaveBeenCalled();
   });
 
   it('duplicate same session does not rotate token or enqueue email', async () => {
@@ -257,12 +250,6 @@ describe('confirmPaidDeposit', () => {
     expect(result.outcome).toBe('conflicting_payment');
     expect(transaction).not.toHaveBeenCalled();
     expect(enqueueEmail).not.toHaveBeenCalled();
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'critical',
-        dedupeKey: 'deposit:double-charge:book_1',
-      }),
-    );
     expect(captureOpsException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
@@ -344,7 +331,6 @@ describe('confirmPaidDeposit', () => {
     );
     expect(tryDeliverOutboxEmail).toHaveBeenCalledWith('out_1');
     expect(requestDepositRefund).not.toHaveBeenCalled();
-    expect(notifyOpsDurable).not.toHaveBeenCalled();
   });
 
   it('late payment with taken slot stamps PI, refunds, and alerts under late-paid title', async () => {
@@ -413,12 +399,6 @@ describe('confirmPaidDeposit', () => {
       reason: 'late_payment_slot_lost',
     });
     expect(attemptDepositRefund).toHaveBeenCalledWith('refund_1');
-    expect(notifyOpsDurable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dedupeKey: 'deposit:late-paid:book_1',
-        title: 'Late deposit payment — slot lost, refund queued',
-      }),
-    );
     expect(captureOpsException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({

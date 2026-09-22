@@ -1,6 +1,5 @@
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '../db/client';
-import { notifyOpsDurable } from '../ops/stripeWebhookLedger';
 import { captureOpsException } from '../ops/sentry';
 import {
   expireBookingDepositSession,
@@ -38,18 +37,6 @@ async function alertHoldStuck(input: {
   paymentExpiresAt: Date | null;
   errorMessage: string;
 }): Promise<void> {
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Deposit hold stuck — session expire failed',
-    body: input.errorMessage.slice(0, 500),
-    dedupeKey: `deposit:hold-stuck:${input.bookingId}`,
-    fields: {
-      bookingId: input.bookingId,
-      shopId: input.shopId,
-      sessionId: input.sessionId,
-      paymentExpiresAt: input.paymentExpiresAt?.toISOString() ?? '',
-    },
-  });
   captureOpsException(new Error(input.errorMessage), {
     route: 'depositHoldExpiry.processExpiredDepositHolds',
     shopId: input.shopId,

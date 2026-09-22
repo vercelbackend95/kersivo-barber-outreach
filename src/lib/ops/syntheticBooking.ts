@@ -1,5 +1,4 @@
 import { captureOpsMessage } from '@/lib/ops/sentry';
-import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '@/lib/ops/opsLog';
 import { addMilliseconds } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -129,16 +128,6 @@ export async function runSyntheticBookingCheck(now = new Date()): Promise<Synthe
 async function fail(error: string, steps: SyntheticBookingResult['steps']): Promise<SyntheticBookingResult> {
   opsLogError('ops.synthetic', 'failed', error, { stepCount: steps.length });
   const failedStep = steps.find((s) => !s.ok)?.name ?? 'unknown';
-  await notifyOpsDurable({
-    severity: 'critical',
-    title: 'Synthetic booking check failed',
-    body: error,
-    dedupeKey: 'synthetic:booking',
-    fields: {
-      failedStep,
-      detail: steps.find((s) => !s.ok)?.detail ?? null,
-    },
-  });
   captureOpsMessage('Synthetic booking check failed', {
     level: 'error',
     route: 'ops.syntheticBooking',
