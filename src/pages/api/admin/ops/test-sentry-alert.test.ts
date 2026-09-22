@@ -5,6 +5,7 @@ const requireAdminContext = vi.fn();
 const captureOpsMessage = vi.fn();
 const notifyOps = vi.fn();
 const notifyOpsDurable = vi.fn();
+const flush = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   requireAdminContext: (...args: unknown[]) => requireAdminContext(...args),
@@ -12,6 +13,10 @@ vi.mock('@/lib/admin/auth', () => ({
 
 vi.mock('@/lib/ops/sentry', () => ({
   captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
+}));
+
+vi.mock('@sentry/astro', () => ({
+  flush: (...args: unknown[]) => flush(...args),
 }));
 
 vi.mock('@/lib/ops/alertSink', () => ({
@@ -48,6 +53,7 @@ function accessFor(role: 'OWNER' | 'MANAGER' | 'BARBER') {
 describe('POST /api/admin/ops/test-sentry-alert', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    flush.mockResolvedValue(true);
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -58,6 +64,7 @@ describe('POST /api/admin/ops/test-sentry-alert', () => {
     const res = await POST(makeContext());
     expect(res.status).toBe(401);
     expect(captureOpsMessage).not.toHaveBeenCalled();
+    expect(flush).not.toHaveBeenCalled();
     expect(notifyOps).not.toHaveBeenCalled();
     expect(notifyOpsDurable).not.toHaveBeenCalled();
   });
@@ -70,6 +77,7 @@ describe('POST /api/admin/ops/test-sentry-alert', () => {
     const body = await res.json();
     expect(body.code).toBe('FORBIDDEN');
     expect(captureOpsMessage).not.toHaveBeenCalled();
+    expect(flush).not.toHaveBeenCalled();
     expect(notifyOps).not.toHaveBeenCalled();
   });
 
@@ -79,15 +87,16 @@ describe('POST /api/admin/ops/test-sentry-alert', () => {
     const res = await POST(makeContext());
     expect(res.status).toBe(403);
     expect(captureOpsMessage).not.toHaveBeenCalled();
+    expect(flush).not.toHaveBeenCalled();
     expect(notifyOps).not.toHaveBeenCalled();
   });
 
-  it('OWNER calls captureOpsMessage once with fixed safe payload only', async () => {
+  it('OWNER calls captureOpsMessage once and flushes with 3000', async () => {
     requireAdminContext.mockResolvedValue(accessFor('OWNER'));
 
     const res = await POST(makeContext());
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ ok: true, flushed: true });
 
     expect(captureOpsMessage).toHaveBeenCalledTimes(1);
     expect(captureOpsMessage).toHaveBeenCalledWith('KERSIVO ops alert routing test', {
@@ -97,6 +106,8 @@ describe('POST /api/admin/ops/test-sentry-alert', () => {
         testEvent: 'true',
       },
     });
+    expect(flush).toHaveBeenCalledTimes(1);
+    expect(flush).toHaveBeenCalledWith(3000);
 
     const [, context] = captureOpsMessage.mock.calls[0] as [
       string,
@@ -106,5 +117,28 @@ describe('POST /api/admin/ops/test-sentry-alert', () => {
     expect(JSON.stringify(context)).not.toMatch(/shop-1|user-1|actor@example|Actor|member-1/i);
     expect(notifyOps).not.toHaveBeenCalled();
     expect(notifyOpsDurable).not.toHaveBeenCalled();
+  });
+
+  it('returns flushed false when transport does not flush in time', async () => {
+    requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+    flush.mockResolvedValue(false);
+
+    const res = await POST(makeContext());
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, flushed: false });
+    expect(captureOpsMessage).toHaveBeenCalledTimes(1);
+    expect(flush).toHaveBeenCalledWith(3000);
+  });
+
+  it('returns 500 without error details when flush throws', async () => {
+    requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+    flush.mockRejectedValue(new Error('transport boom secret'));
+
+    const res = await POST(makeContext());
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toEqual({ ok: false, flushed: false });
+    expect(JSON.stringify(body)).not.toMatch(/transport boom|secret/i);
+    expect(captureOpsMessage).toHaveBeenCalledTimes(1);
   });
 });
