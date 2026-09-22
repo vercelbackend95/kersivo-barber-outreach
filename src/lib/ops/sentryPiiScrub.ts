@@ -1,6 +1,5 @@
 /**
  * Shared PII scrubbing for Sentry events (server).
- * Keep in sync with Slack text sanitisation patterns in alertSink where practical.
  */
 
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;

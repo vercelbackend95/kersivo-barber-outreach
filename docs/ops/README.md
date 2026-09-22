@@ -6,18 +6,17 @@ Payment-critical observability for Kersivo (Stripe, public booking, email/SMS).
 
 | Signal | Source | Alert channel |
 |--------|--------|---------------|
-| Unhandled 5xx / exceptions | Sentry (`SENTRY_DSN`) | Sentry → Slack (configure in Sentry UI) |
-| Stripe webhook `FAILED` ledger | App + `ops-health` cron | `OPS_SLACK_WEBHOOK_URL` via AlertSink |
-| Stripe Dashboard delivery failures | Stripe Dashboard (both endpoints) | Stripe email / Slack (Dashboard) |
-| Email/SMS fail rate | `ops-health` cron over `EmailOutbound` / `SmsOutbound` | AlertSink |
-| Synthetic public booking | `/api/ops/synthetic-booking` cron | AlertSink |
+| Unhandled 5xx / exceptions | Sentry (`SENTRY_DSN`) | Material events tagged `opsAlert=true` are matched by the Production ops alert rule (Sentry → KERSIVO Production Ops Alerts → email). Not every Sentry event guarantees email delivery. |
+| Stripe webhook `FAILED` ledger | App + `ops-health` cron | Sentry (`opsAlert=true` / Production ops alert rule) |
+| Stripe Dashboard delivery failures | Stripe Dashboard (both endpoints) | Stripe Dashboard email / Dashboard-configured notifications |
+| Email/SMS fail rate | `ops-health` cron over `EmailOutbound` / `SmsOutbound` | Sentry (`opsAlert=true` / Production ops alert rule) |
+| Synthetic public booking | `/api/ops/synthetic-booking` cron | Sentry (`opsAlert=true` / Production ops alert rule) |
 
 ## Environment
 
 | Var | Required | Purpose |
 |-----|----------|---------|
-| `OPS_SLACK_WEBHOOK_URL` | Prod recommended | Incoming Slack webhook for AlertSink |
-| `SENTRY_DSN` | Prod recommended | Error tracking |
+| `SENTRY_DSN` | Prod recommended | Error tracking / operational alerts |
 | `SENTRY_ENVIRONMENT` | Optional | e.g. `production` / `preview` |
 | `CRON_SECRET` | Prod | Auth for `/api/cron/*` and `/api/ops/*` |
 | `OPS_CANARY_SHOP_ID` | Prod synthetic | Paid canary shop for availability probe (not a real client) |
@@ -26,7 +25,7 @@ Payment-critical observability for Kersivo (Stripe, public booking, email/SMS).
 
 ## Owner
 
-Founder / on-call: triage via Slack `#ops` (or configured channel), then runbooks under this folder.
+Founder / on-call: triage via Sentry (Production ops alerts / issues), then runbooks under this folder.
 
 ## Docs in this folder
 

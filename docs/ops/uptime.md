@@ -12,7 +12,7 @@ Configure **Better Stack**, **Checkly**, or **Vercel Monitoring** with:
 | Canary book page | `https://kersivo.co.uk/book/{OPS_CANARY_SHOP_ID}` | 200 |
 | Do **not** probe | `POST /api/shop/webhook` | N/A (signature required) |
 
-Route alerts to the same Slack channel as `OPS_SLACK_WEBHOOK_URL`.
+Route uptime-provider alerts to the same destination used for Production ops review (Sentry / founder on-call email), not a separate obsolete webhook.
 
 ## Ownership
 

@@ -31,13 +31,13 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('Resend');
     expect(privacySource).toContain('Twilio');
     expect(privacySource).toContain('Sentry');
-    expect(privacySource).toContain('Slack');
+    expect(privacySource).not.toContain('Slack');
     expect(privacySource).toContain('OpenAI');
     expect(normalized).toContain('optional admin AI assistant');
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 21 September 2026');
+    expect(privacySource).toContain('Last updated: 22 September 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
   });

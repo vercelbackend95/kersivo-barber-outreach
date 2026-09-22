@@ -22,7 +22,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** National SEO comparison landing page — no reliable editorial lastmod yet. */
   { path: '/booksy-alternative' },
   /** Matches "Last updated" on src/pages/privacy.astro. */
-  { path: '/privacy', lastmod: '2026-09-21' },
+  { path: '/privacy', lastmod: '2026-09-22' },
   /** Matches "Last updated" on src/pages/cookies.astro. */
   { path: '/cookies', lastmod: '2026-09-18' },
   /** Canonical DPA version = "Last updated" on /dpa. */

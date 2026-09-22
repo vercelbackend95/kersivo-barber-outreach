@@ -49,7 +49,7 @@ describe('legal page identity wording', () => {
     expect(privacySource).not.toContain('operating as a freelancer');
     expect(privacySource).toContain('{LEGAL_OPERATOR_NAME}');
     expect(privacySource).toContain('trading as {TRADING_NAME}');
-    expect(privacySource).toContain('Last updated: 21 September 2026');
+    expect(privacySource).toContain('Last updated: 22 September 2026');
     expect(privacySource).toContain('href="/dpa"');
     expect(privacySource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
@@ -75,9 +75,9 @@ describe('legal page identity wording', () => {
 });
 
 describe('terms version and acceptance metadata', () => {
-  it('CURRENT_TERMS_VERSION is 2026-09-21 and formats the human-readable date', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-21');
-    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('21 September 2026');
+  it('CURRENT_TERMS_VERSION is 2026-09-22 and formats the human-readable date', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('22 September 2026');
   });
 
   it('Stripe terms acceptance metadata derives from CURRENT_TERMS_VERSION', () => {
@@ -85,7 +85,7 @@ describe('terms version and acceptance metadata', () => {
       terms_accepted: '1',
       terms_version: CURRENT_TERMS_VERSION,
     });
-    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-09-21');
+    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-09-22');
   });
 });
 

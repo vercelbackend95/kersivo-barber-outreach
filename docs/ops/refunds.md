@@ -27,7 +27,7 @@ Flow:
 | Client cancel inside policy window | Automatic refund (ledger + Stripe) |
 | Late cancel / no-show | Forfeit (no Stripe refund) |
 | Shop-forced cancel | Automatic refund (ledger + Stripe); email mentions refund only when confirmed/pending/failed honestly |
-| Stripe API / network failure | Auto-retry with backoff; critical Slack alert when exhausted |
+| Stripe API / network failure | Auto-retry with backoff; Sentry ops alert (`opsAlert=true`) when exhausted |
 | Operator repair | Admin History / day list → **Retry refund** (requires `bookings.manage`) → `POST /api/admin/bookings/:id/refund-retry` |
 
 UI never claims “refunded” until ledger status is `REFUNDED`.

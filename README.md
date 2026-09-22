@@ -52,7 +52,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
      - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off). Per-shop gate also required: `ShopSettings.smsRemindersEnabled` (flipped on by paid SaaS subscription webhook).
      - `EMAIL_REMINDERS_ENABLED`: appointment email reminder cron is **on by default**. Set `false` for emergency off. Requires `RESEND_API_KEY` in production; per-shop gate is `ShopSettings.shopPaidAt` (paid SaaS).
      - `CRON_SECRET`: shared secret for `/api/cron/*` and `/api/ops/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
-     - Ops monitoring (M02): `OPS_SLACK_WEBHOOK_URL` (AlertSink), `SENTRY_DSN` / optional `SENTRY_ENVIRONMENT`, `OPS_CANARY_SHOP_ID` (paid canary shop for synthetic booking). See [`docs/ops/README.md`](docs/ops/README.md).
+     - Ops monitoring (M02): `SENTRY_DSN` / optional `SENTRY_ENVIRONMENT`, `OPS_CANARY_SHOP_ID` (paid canary shop for synthetic booking). Material operational events use Sentry `opsAlert=true` matched by the Production ops alert rule. See [`docs/ops/README.md`](docs/ops/README.md).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
      - Optional `TWILIO_TRIAL_TEMPLATE`: e.g. `sms_appointment_reminders` — trial accounts only allow Twilio template keys as `Body` (remove after upgrading to Pay as you go).
    - `PUBLIC_GA4_MEASUREMENT_ID`: GA4 measurement id (`G-…`) for analytics (Consent Mode; loads after analytics consent).

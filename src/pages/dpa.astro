@@ -456,18 +456,6 @@ import '@/styles/legal-pages.css';
             </tr>
 
             <tr>
-              <td>Slack</td>
-              <td>Operational alert delivery / incident notification</td>
-              <td>
-                Minimised operational telemetry. Direct customer email addresses and phone numbers are intentionally
-                sanitised before transmission, but alerts may contain tenant-linked or record-linked operational
-                identifiers and technical error context.
-              </td>
-              <td>Only where OPS_SLACK_WEBHOOK_URL is configured and Slack operational alerting is enabled</td>
-              <td>Current Slack data-processing terms and applicable lawful UK transfer safeguards</td>
-            </tr>
-
-            <tr>
               <td>OpenAI</td>
               <td>Admin AI assistant / language-model processing</td>
               <td>
@@ -558,7 +546,6 @@ import '@/styles/legal-pages.css';
       <h3>F. Data minimisation / logging</h3>
 
       <ul>
-        <li>Customer PII removed or sanitised from Slack operational alerts</li>
         <li>Sentry configured with default PII off and additional event scrubbing</li>
         <li>No {TRADING_NAME} Google Analytics / Ads tags on live tenant customer surfaces</li>
       </ul>

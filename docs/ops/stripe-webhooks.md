@@ -11,7 +11,7 @@ Two Stripe Dashboard endpoints hit the same app URL `POST /api/shop/webhook`:
 
 **OPS checklist (do once per environment):**
 1. Both endpoints point at production URL.
-2. Enable **failed delivery** notifications (email / Slack) in Stripe Dashboard.
+2. Enable **failed delivery** notifications (email / Dashboard-configured channels) in Stripe Dashboard.
 3. Confirm platform events include: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.*`, `invoice.paid`, `invoice.payment_failed`.
 4. Confirm Connect events include: `checkout.session.completed`, `account.updated`, **`charge.refunded`**, **`refund.updated`**, **`refund.failed`**.
 

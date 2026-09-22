@@ -50,9 +50,9 @@ describe('Admin AI assistant compliance surfaces', () => {
     expect(panel).not.toMatch(/I consent to AI/i);
   });
 
-  it('keeps Terms and DPA versions on the same-day pre-client correction date', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-21');
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-21');
+  it('keeps Terms and DPA versions aligned after the Slack-removal disclosure update', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
   });
 
   it('keeps a single LaunchWizard Terms acceptance checkbox', () => {

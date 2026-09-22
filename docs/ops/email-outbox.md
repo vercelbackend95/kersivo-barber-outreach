@@ -59,4 +59,4 @@ WHERE id = '<emailOutboundId>';
 
 - While `QUEUED` / `FAILED`: payload keeps `{ to, subject, html, replyTo? }` so the manage-token cancel/reschedule links can still be delivered.
 - On `SENT`: payload is set to SQL `NULL`.
-- Do not log full HTML in Slack/Sentry — alerts carry ids and purpose only.
+- Do not log full HTML in Sentry — alerts carry ids and purpose only.

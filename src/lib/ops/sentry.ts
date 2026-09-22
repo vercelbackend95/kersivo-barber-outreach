@@ -13,8 +13,8 @@ type OpsScopeContext = {
   shopId?: string;
   tags?: Record<string, string>;
   /**
-   * When true, sets deterministic opsAlert=true for Sentry email alert rules.
-   * Used for material Slack-equivalent operational exception captures only.
+   * When true, sets deterministic opsAlert=true for Sentry Production ops alert rules.
+   * Used for material operational exception captures only.
    */
   opsAlert?: boolean;
 };
