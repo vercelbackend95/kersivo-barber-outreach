@@ -473,8 +473,8 @@ import '@/styles/legal-pages.css';
       <p>
         The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:
         Google Analytics / Google Ads (tenant analytics disabled; {TRADING_NAME} own marketing-controller processing);
-        Stripe platform billing ({TRADING_NAME} controller billing); and Google OAuth ({TRADING_NAME} account/auth
-        context).
+        Stripe platform SaaS billing ({TRADING_NAME} independent-controller billing on {TRADING_NAME}&rsquo;s own Stripe
+        account); and Google OAuth ({TRADING_NAME} account/auth context).
       </p>
 
       <p>
@@ -485,12 +485,32 @@ import '@/styles/legal-pages.css';
       </p>
 
       <p>
-        <strong>Stripe Connect note.</strong> Live booking deposits and retail card payments are processed through the
-        Client&rsquo;s connected Stripe account. The Client has its own Stripe relationship. Stripe may act as
-        controller and/or processor depending on the payment activity under Stripe&rsquo;s terms. {TRADING_NAME} stores
-        limited identifiers and statuses and does not store full card numbers. Stripe Connect is not listed above as a
-        normal {TRADING_NAME} Sub-processor for Customer Personal Data.
+        <strong>Stripe roles (summary).</strong> Three distinct relationships must not be collapsed into a single
+        Article 28 Sub-processor listing:
       </p>
+      <ul>
+        <li>
+          <strong>A. {TRADING_NAME} SaaS billing.</strong> The £39/month subscription is charged on
+          {TRADING_NAME}&rsquo;s platform Stripe account. {TRADING_NAME} is an independent Controller for that
+          business-customer billing data. Stripe provides payment services under Stripe&rsquo;s Services Agreement /
+          Data Processing Agreement (for a UK Stripe account: contracting DPA entity Stripe Payments Europe, Limited
+          (SPEL); regulated UK payment/e-money services may involve Stripe Payments UK Limited). Stripe may also process
+          as an independent controller for fraud, regulatory and compliance purposes under Stripe&rsquo;s terms.
+        </li>
+        <li>
+          <strong>B. Client connected-account payments.</strong> Live booking deposits and retail card payments use
+          Stripe Connect Express with direct charges on the Client&rsquo;s connected Stripe account (merchants collect
+          payments directly; {TRADING_NAME} <code>application_fee_amount</code> is 0). The Client remains seller /
+          Controller for the End Customer payment. {TRADING_NAME} facilitates the technical flow and stores limited
+          identifiers/statuses; it does not store full card numbers or CVC.
+        </li>
+        <li>
+          <strong>C. Stripe&rsquo;s independent functions.</strong> Stripe may process personal data as processor for
+          User-directed Services and as controller for its own fraud, regulatory, AML/KYC and platform purposes. Stripe
+          Connect is therefore <strong>not</strong> listed above as a normal {TRADING_NAME} Sub-processor for Customer
+          Personal Data merely because {TRADING_NAME} facilitates Connect Checkout.
+        </li>
+      </ul>
 
       <h2>Schedule 3 — Technical and organisational measures</h2>
 

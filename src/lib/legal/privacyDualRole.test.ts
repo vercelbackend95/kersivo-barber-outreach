@@ -57,6 +57,21 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(subProcessorsBlock).not.toMatch(/Google Sign-In/i);
     expect(subProcessorsBlock).not.toMatch(/Google OAuth/i);
     expect(subProcessorsBlock).not.toMatch(/Sign in with Google/i);
+    expect(subProcessorsBlock).not.toMatch(/\bStripe\b/);
+  });
+
+  it('describes current Stripe SaaS vs Connect roles without treating Stripe as a general CPD sub-processor', () => {
+    const normalized = privacySource.replace(/\s+/g, ' ');
+    expect(normalized).toContain('£39/month');
+    expect(normalized).toContain('SaaS subscription billing');
+    expect(normalized).toContain('does <strong>not</strong> receive or store full card numbers or CVC');
+    expect(normalized).toContain('barbershop&rsquo;s connected Stripe account');
+    expect(normalized).toContain('does <strong>not</strong> charge an application/platform commission');
+    expect(normalized).toContain('processor for User-directed payment services');
+    expect(normalized).toContain('independent controller for fraud prevention');
+    expect(normalized).toContain('not</strong> listed above as a general {TRADING_NAME} Customer Personal Data sub-processor');
+    expect(normalized).toContain('Historical setup deposits (not currently offered)');
+    expect(normalized).toContain('requires confirmation with our legal adviser');
   });
 
   it('discloses optional Google Sign-In for KERSIVO account authentication', () => {

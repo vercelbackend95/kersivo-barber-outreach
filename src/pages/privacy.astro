@@ -28,9 +28,10 @@ import '@/styles/legal-pages.css';
         language and does not replace legal advice.
       </p>
       <p>
-        <strong>Note:</strong> The live public offer is a £39/month subscription with no setup fee. References below to
-        a &ldquo;setup deposit&rdquo; describe a gated legacy checkout path that is not currently offered publicly; if
-        that path is re-enabled, the same payment-related processing rules apply.
+        <strong>Note:</strong> The live public offer is a <strong>£39/month</strong> {TRADING_NAME} SaaS subscription
+        paid via Stripe Checkout on {TRADING_NAME}&rsquo;s own Stripe account. There is no current public setup-fee
+        offer. Legacy setup-deposit checkout creation is disabled; any historical setup-deposit records may still be
+        supported for fulfilment and customer support.
       </p>
 
       <h2>Who is responsible for your data?</h2>
@@ -93,18 +94,27 @@ import '@/styles/legal-pages.css';
           legitimate interests. ({TRADING_NAME} as independent controller.)
         </li>
         <li>
-          <strong>Setup deposits</strong> — name, email, shop details and payment status when you pay a KERSIVO setup
-          deposit via Stripe Checkout on our account. <strong>Purpose:</strong> taking payment, confirming the deposit,
-          sending onboarding information and internal fulfilment notices.
-          <strong>Legal basis (UK):</strong> performance of a contract / steps prior to a contract.
-          ({TRADING_NAME} as independent controller.)
+          <strong>SaaS subscription billing (£39/month)</strong> — when you subscribe via Stripe Checkout on
+          {TRADING_NAME}&rsquo;s platform Stripe account, we process business-customer billing details such as name,
+          email, shop/business details needed for fulfilment, payment status, amount/currency, and Stripe-generated
+          customer, subscription, Checkout session and related payment identifiers. Stripe hosts card entry;
+          {TRADING_NAME} does <strong>not</strong> receive or store full card numbers or CVC.
+          <strong>Purpose:</strong> taking and administering the subscription, confirming payment, onboarding and
+          related fulfilment notices. <strong>Legal basis (UK):</strong> performance of a contract / steps prior to a
+          contract. ({TRADING_NAME} as independent controller for this billing relationship.)
+        </li>
+        <li>
+          <strong>Historical setup deposits (not currently offered)</strong> — where a legacy setup-deposit Checkout
+          session was created historically, name, email, shop details and payment status may still be held for
+          fulfilment and support. New setup-deposit Checkout creation is disabled. ({TRADING_NAME} as independent
+          controller for those historical billing records.)
         </li>
         <li>
           <strong>Campaign attribution on checkout</strong> — if present in the page URL when you start checkout, we may
           pass advertising or campaign identifiers (for example gclid, gbraid, wbraid or UTM parameters) into Stripe
           session metadata and include a summary in internal fulfilment email. We do not store these identifiers in
           browser cookies or local storage before you choose optional advertising measurement in our cookie banner.
-          <strong>Purpose:</strong> understanding which campaigns relate to setup purchases.
+          <strong>Purpose:</strong> understanding which campaigns relate to subscription checkouts.
           <strong>Legal basis (UK):</strong> requires confirmation with our legal adviser (typically legitimate interests
           and/or consent for related storage technologies — see the Cookie Policy).
         </li>
@@ -134,11 +144,20 @@ import '@/styles/legal-pages.css';
           <strong>Shop orders (buy-and-collect)</strong> — for a <strong>live</strong> barbershop shop: email address
           used at checkout, order contents, payment status as recorded after payment, and related confirmation emails to
           fulfil your purchase. Card payments are handled securely by <strong>Stripe</strong> on the
-          <strong>barbershop&rsquo;s own Stripe account</strong>; we do not store full card numbers on our servers. The
-          barbershop is typically the controller of retail customer data; {TRADING_NAME} processes it as processor to
-          run the shop software. The public retail demo on this marketing site is a simulation only and does not collect
-          checkout personal data, take payment, or create an order. Private owner test orders in admin may create marked
-          test records without payment.
+          <strong>barbershop&rsquo;s connected Stripe account</strong> (Stripe Connect Express / direct charges). The
+          barbershop remains the seller and controller for that customer payment; {TRADING_NAME} facilitates the
+          technical checkout flow and does <strong>not</strong> charge an application/platform commission (Stripe&rsquo;s
+          own processing fees are separate). {TRADING_NAME} does not store full card numbers or CVC. The barbershop is
+          typically the controller of retail customer data; {TRADING_NAME} processes related shop records as processor
+          to run the shop software. The public retail demo on this marketing site is a simulation only and does not
+          collect checkout personal data, take payment, or create an order. Private owner test orders in admin may
+          create marked test records without payment.
+        </li>
+        <li>
+          <strong>Booking deposits (live barbershop)</strong> — where enabled, booking deposits are taken through the
+          barbershop&rsquo;s connected Stripe account under the same Connect model (barbershop seller/controller;
+          {TRADING_NAME} facilitator; no {TRADING_NAME} application fee). {TRADING_NAME} may store limited payment
+          status and Stripe identifiers needed to operate the booking software, not full card details.
         </li>
         <li>
           <strong>Post-purchase setup</strong> — after a KERSIVO subscription purchase, information you submit in the
@@ -159,7 +178,7 @@ import '@/styles/legal-pages.css';
         </li>
         <li>
           <strong>Email delivery</strong> — we use <strong>Resend</strong> to send transactional emails (for example
-          booking confirmations, order confirmations, setup deposit confirmations, and contact form delivery to our
+          booking confirmations, order confirmations, subscription fulfilment notices, and contact form delivery to our
           inbox), using the addresses involved in each message. Booking and retail customer emails for a live shop are
           sent as processor on the barbershop&rsquo;s behalf; {TRADING_NAME} account and marketing emails are
           {TRADING_NAME}&rsquo;s own controller processing.
@@ -217,10 +236,15 @@ import '@/styles/legal-pages.css';
       <p>Other providers are used in specific functional contexts and are not listed above as general sub-processors:</p>
       <ul>
         <li>
-          <strong>Stripe</strong> — payment processing for {TRADING_NAME} subscriptions on our platform account, and for
-          live barbershop deposits/retail through the barbershop&rsquo;s own Stripe Connect account at go-live (the
-          barbershop remains seller of record for those shop payments). The public retail demo does not use Stripe
-          Checkout. Card numbers are not stored on {TRADING_NAME} servers.
+          <strong>Stripe</strong> — payment services for (a) {TRADING_NAME}&rsquo;s own £39/month SaaS subscription
+          billing on {TRADING_NAME}&rsquo;s platform Stripe account, and (b) live barbershop booking deposits and retail
+          payments through the barbershop&rsquo;s connected Stripe account (Stripe Connect Express; merchants collect
+          payments directly; {TRADING_NAME} application fee is 0%). Stripe processes card payments; {TRADING_NAME} does
+          not store full card numbers or CVC. Under Stripe&rsquo;s terms, Stripe may process personal data both as a
+          processor for User-directed payment services and as an independent controller for fraud prevention,
+          regulatory, compliance and other Stripe purposes. Stripe is therefore <strong>not</strong> listed above as a
+          general {TRADING_NAME} Customer Personal Data sub-processor merely because Connect payments are facilitated.
+          The public retail demo does not use Stripe Checkout.
         </li>
         <li>
           <strong>Google Sign-In</strong> — optional identity / authentication for {TRADING_NAME} business/admin
@@ -264,7 +288,10 @@ import '@/styles/legal-pages.css';
           <strong>{TRADING_NAME} independent-controller records.</strong> Account, billing, tax, legal acceptance,
           security and operational audit records may be retained for as long as needed for those purposes, including
           where UK law requires longer retention of financial or legal records. That does <strong>not</strong> mean all
-          personal data of every type is kept for six years.
+          personal data of every type is kept for six years. Cancelling a subscription does
+          <strong>not</strong> necessarily delete Stripe-held financial/payment records immediately; Stripe&rsquo;s own
+          retention of payment data is controlled by Stripe. {TRADING_NAME} account-deletion workflows also do not
+          currently delete every provider-side Stripe Customer or Subscription record.
         </li>
         <li>
           <strong>Analytics and advertising cookies</strong> follow the durations in our

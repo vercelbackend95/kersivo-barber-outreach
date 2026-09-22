@@ -136,9 +136,11 @@ describe('Data Processing Agreement page', () => {
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
-    expect(dpaSource).toContain('Stripe Connect note');
-    expect(dpaSource).toContain('not listed above as a');
-    expect(dpaSource).toContain('normal {TRADING_NAME} Sub-processor');
+    expect(dpaSource).toContain('Stripe roles (summary)');
+    expect(dpaSource).toContain('not</strong> listed above as a normal {TRADING_NAME} Sub-processor');
+    expect(dpaSource).toContain('Stripe Payments Europe, Limited');
+    expect(dpaSource).toContain('application_fee_amount');
+    expect(dpaSource).toContain('independent Controller for that');
   });
 
   it('avoids false corporate and invented registration claims', () => {
