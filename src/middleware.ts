@@ -1,4 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
+// Ensure server Sentry is initialized for API routes (page-ssr alone does not load for /api/*).
+import '../sentry.server.config';
 import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
 import { applySecurityHeaders } from '@/lib/security/headers';
 import {
