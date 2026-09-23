@@ -38,10 +38,10 @@ Do **not** treat a documented period as closed merely because it appears here. W
 
 | Category | Approved policy | Currently implemented | Status |
 | --- | --- | --- | --- |
-| Active-shop CPD (Client, Booking, notes, retail orders, tenant outbox, etc.) | While the Client subscription/shop is active, retention follows the **Client/controller’s instructions** and legitimate operational need for the Services. KERSIVO must **not** independently impose a blanket deletion period on active Client booking/customer records. | Live tenant rows remain until cancel/account/shop purge paths below. Booking **cancel** is a status change, not erasure. **No** individual Client DELETE API. | **IMPLEMENTED** (active retention = service use); individual erasure **not** implemented |
+| Active-shop CPD (Client, Booking, notes, retail orders, tenant outbox, etc.) | While the Client subscription/shop is active, retention follows the **Client/controller’s instructions** and legitimate operational need for the Services. KERSIVO must **not** independently impose a blanket deletion period on active Client booking/customer records. | Live tenant rows remain until cancel/account/shop purge paths below, or until an authorised Client-admin **individual Client erasure** instruction (below). Booking **cancel** is a status change, not erasure. | **IMPLEMENTED** (active retention = service use; individual erasure available — see next row) |
 | Post-termination tenant graph | After SaaS termination: **30-day** CSV export window (`SAAS_EXPORT_RETENTION_DAYS`), then purge live shop/tenant production graph (bookings, orders, clients, outbox, shop settings cascade, etc.). | Cron `purgeShopsAfterRetentionEnds` + `purgeShopData`. Cancellation does **not** instant-delete. | **IMPLEMENTED** |
-| Earlier purge via account deletion / documented instruction | An explicit account deletion (or other lawful Client instruction before the end of the 30-day window) may end live tenant retention earlier than the default window. | Sole-OWNER account DELETE runs `purgeShopData` when billing gate allows. Not a full “delete now” CPD instruction console. | **IMPLEMENTED** for account-delete path; broader instruction tooling limited |
-| Individual data-subject erasure (shop admin instruction) | Provide a Client-admin mechanism to erase or anonymise personal data where appropriate, while allowing necessary transactional/payment/legal records to be preserved in **minimised** form where retention is lawfully required. | **Not built.** Clients removed only with shop purge. | **POLICY APPROVED — FEATURE PENDING (P0)** — do **not** claim live |
+| Earlier purge via account deletion / documented instruction | An explicit account deletion (or other lawful Client instruction before the end of the 30-day window) may end live tenant retention earlier than the default window. | Sole-OWNER account DELETE runs `purgeShopData` when billing gate allows. Not a full “delete now” CPD instruction console beyond individual Client erasure and account-delete. | **IMPLEMENTED** for account-delete path; broader instruction tooling limited |
+| Individual data-subject erasure (shop admin instruction) | Provide a Client-admin mechanism to erase or anonymise personal data where appropriate, while allowing necessary transactional/payment/legal records to be preserved in **minimised** form where retention is lawfully required. Active/unresolved operational records (e.g. future/active booking, pending payment, unresolved deposit refund) or genuinely in-flight customer messaging may temporarily prevent erasure until resolved. | **IMPLEMENTED.** OWNER/MANAGER (not BARBER) can instruct erasure in admin. Client profile and notes are hard-deleted; Client avatar (validated `clients/` public Blob) and private note images are cleaned best-effort. Historical Bookings may remain with contact/profile PII anonymised; payment/Stripe/refund identifiers needed for transaction integrity remain. Matched Orders remain with `customerEmail` anonymised. Local outbound messaging rows for affected bookings are removed. Stale abandoned reminder claims do not block indefinitely. Future booking after erasure creates a clean Client profile. Does **not** hard-delete every historical transactional row, and does **not** prove immediate deletion of provider-held residual copies (Stripe/Twilio/Resend/etc.). | **IMPLEMENTED** — do **not** claim every trace is physically destroyed instantly, or that shop-wide public Blob cleanup is complete |
 
 ---
 
@@ -95,8 +95,9 @@ Personal-data-containing blobs follow the lifecycle of the record or tenant they
 
 | Category | Approved policy | Currently implemented | Status |
 | --- | --- | --- | --- |
-| Private Blob (`kersivo-private`) | Delete when corresponding data is erased/purged. | Best-effort `del` after shop purge / onboarding asset DELETE. Failures logged. | **IMPLEMENTED (best-effort only)** |
-| Public Blob (`barberdemo-uploads`) | Same policy — must **not** survive indefinitely as orphaned objects. | **No** public blob delete on purge. | **POLICY APPROVED — ENFORCEMENT PENDING (P0)** |
+| Private Blob (`kersivo-private`) | Delete when corresponding data is erased/purged. | Best-effort `del` after shop purge / onboarding asset DELETE / **individual Client erasure** (client-note images). Failures logged. | **IMPLEMENTED (best-effort only)** |
+| Public Blob (`barberdemo-uploads`) — Client avatar on individual erasure | Validated `clients/` avatar objects for the erased Client should be deleted with that erasure. | Best-effort delete of validated Client avatar URLs under the `clients/` public namespace during individual Client erasure. | **IMPLEMENTED (best-effort; Client-avatar scope only)** |
+| Public Blob (`barberdemo-uploads`) — shop-wide / tenant orphan cleanup | Same policy — must **not** survive indefinitely as orphaned objects after shop purge or other tenant erasure. | **No** shop-wide public blob delete on tenant purge. | **POLICY APPROVED — ENFORCEMENT PENDING (P0)** |
 
 ---
 
@@ -128,10 +129,8 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 
 ## Implementation backlog (docs → runtime later)
 
-Do **not** implement in this documentation phase:
-
-1. **P0** — Individual Client erasure/anonymisation instruction feature
-2. **P0** — Public Blob cleanup on tenant/record erasure
+1. ~~**P0** — Individual Client erasure/anonymisation instruction feature~~ — **IMPLEMENTED** (see Section A; provider residuals and shop-wide public Blob cleanup remain separate)
+2. **P0** — Shop-wide / tenant public Blob cleanup on purge (Client-avatar cleanup on individual erasure is separate and implemented)
 3. TTL/cleanup jobs for RateLimitEvent, StripeWebhookEvent, AccountLifecycleEvent, RecommendationOpsAction, SiteLaunchEvent, Verification
 4. Billing/LegalAcceptance minimisation and timed deletion after approved windows
 5. Hardened private Blob delete retries
@@ -143,3 +142,4 @@ Do **not** implement in this documentation phase:
 | Date | Change |
 | --- | --- |
 | 2026-09-23 | Initial approved retention schedule (policy documentation only; no runtime enforcement changes). |
+| 2026-09-23 | Individual Client erasure marked **IMPLEMENTED** (accurate anonymisation / blocker / Client-avatar + note Blob caveats). Shop-wide public Blob cleanup remains **ENFORCEMENT PENDING (P0)**. Attribution remains OPEN. |

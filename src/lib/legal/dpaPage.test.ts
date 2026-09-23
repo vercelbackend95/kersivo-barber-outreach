@@ -163,11 +163,12 @@ describe('Terms / checkout / footer DPA integration', () => {
     expect(termsSource).toContain('Processor');
   });
 
-  it('Return and deletion preserves 30-day purge without false self-service erasure claims', () => {
+  it('Return and deletion describes implemented Client-admin erasure without overclaiming', () => {
     expect(dpaSource).toContain('{SAAS_EXPORT_RETENTION_DAYS}');
-    expect(dpaSource).toContain('does not currently provide a self-service control that permanently erases');
-    expect(dpaSource).toContain('documented Client instructions');
-    expect(dpaSource).toContain('not claimed as live functionality');
+    expect(dpaSource).toMatch(/Authorised Client administrators[\s\S]*erase an individual/i);
+    expect(dpaSource).not.toMatch(/does not currently provide a self-service control that permanently erases/i);
+    expect(dpaSource).not.toMatch(/not claimed as live functionality/i);
+    expect(dpaSource).toContain('does not necessarily hard-delete every historical transactional or payment');
     expect(dpaSource).toContain('Not every return or deletion instruction is');
     expect(dpaSource).toContain('available as a single button');
     expect(dpaSource).toContain('best-effort provider object deletion');
@@ -175,7 +176,8 @@ describe('Terms / checkout / footer DPA integration', () => {
     expect(dpaSource).toContain('not claimed as fully implemented');
     expect(dpaSource).toContain('Local deletion does not mean instantaneous erasure');
     expect(dpaSource).not.toMatch(/UK GDPR requires six years/i);
-    expect(dpaSource).not.toMatch(/individual Client erasure is currently implemented/i);
+    expect(dpaSource).not.toMatch(/all historic Bookings are deleted/i);
+    expect(dpaSource).not.toMatch(/payment identifiers are deleted/i);
   });
 
   it('LaunchWizard keeps a single Terms checkbox and references the DPA', () => {

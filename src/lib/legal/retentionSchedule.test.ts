@@ -21,7 +21,6 @@ describe('Retention schedule Phase 1 (docs)', () => {
     expect(schedule).toContain('POLICY APPROVED — FEATURE PENDING (P0)');
     expect(schedule).toContain('Currently implemented');
     expect(schedule).toContain('**IMPLEMENTED**');
-    expect(schedule).toContain('do **not** claim live');
   });
 
   it('preserves 30-day termination purge and avoids blanket six-year wording', () => {
@@ -35,12 +34,28 @@ describe('Retention schedule Phase 1 (docs)', () => {
     expect(dpa).toContain('{SAAS_EXPORT_RETENTION_DAYS}');
   });
 
-  it('keeps individual Client erasure and public Blob cleanup as pending', () => {
-    expect(schedule).toContain('FEATURE PENDING (P0)');
-    expect(schedule).toMatch(/Public Blob[\s\S]*ENFORCEMENT PENDING \(P0\)/);
+  it('marks individual Client erasure IMPLEMENTED while keeping shop-wide public Blob open', () => {
+    expect(schedule).toMatch(/Individual data-subject erasure[\s\S]*?\|\s*\*\*IMPLEMENTED\*\*/);
+    expect(schedule).not.toMatch(
+      /Individual data-subject erasure[\s\S]*?FEATURE PENDING \(P0\)/,
+    );
+    expect(schedule).toMatch(/shop-wide \/ tenant orphan cleanup[\s\S]*ENFORCEMENT PENDING \(P0\)/);
     expect(schedule).toContain('best-effort only');
-    expect(dpa).toContain('does not currently provide a self-service control that permanently erases');
-    expect(privacy).not.toMatch(/shop admin can already erase individual customers/i);
+    expect(schedule).toContain('Client-avatar scope only');
+    expect(dpa).toMatch(/Authorised Client administrators[\s\S]*erase an individual/i);
+    expect(dpa).not.toMatch(/not currently provide a self-service control that permanently erases/i);
+    expect(dpa).not.toMatch(/not claimed as live functionality/i);
+    expect(privacy).toMatch(/authorised barbershop admins can also instruct[\s\S]*erase an\s+individual/i);
+  });
+
+  it('does not overstate deletion of historical payments, provider residuals, or full public Blob cleanup', () => {
+    expect(schedule).not.toMatch(/every historical transactional row is hard-deleted/i);
+    expect(schedule).toContain('payment/Stripe/refund identifiers needed for transaction integrity remain');
+    expect(schedule).toContain('PROVIDER VERIFICATION REQUIRED');
+    expect(schedule).not.toMatch(/all public Blob data is automatically deleted/i);
+    expect(dpa).toContain('does not necessarily hard-delete every historical transactional or payment');
+    expect(dpa).toContain('Local deletion does not mean instantaneous erasure');
+    expect(privacy).toContain('anonymised or minimised form');
   });
 
   it('keeps attribution lawful basis open and documents provider residual caveats', () => {
@@ -64,6 +79,10 @@ describe('Retention schedule Phase 1 (docs)', () => {
     expect(schedule).toContain('LegalAcceptance');
     expect(schedule).toContain('SaasSubscription');
     expect(ropa).toContain('POLICY APPROVED — ENFORCEMENT PENDING');
+    expect(ropa).toMatch(/Individual Client erasure[\s\S]*\*\*IMPLEMENTED\*\*/);
+    expect(ropa).toMatch(/shop-wide public Blob[\s\S]*ENFORCEMENT PENDING \(P0\)|Shop-wide public Blob orphan cleanup: \*\*POLICY APPROVED — ENFORCEMENT PENDING \(P0\)\*\*/);
     expect(ropa).not.toContain('RETENTION POLICY TO DEFINE');
+    expect(ropa).not.toMatch(/No individual Client DELETE API today/);
+    expect(ropa).not.toMatch(/individual erasure feature pending/);
   });
 });
