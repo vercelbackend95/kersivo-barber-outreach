@@ -52,6 +52,7 @@ export default function ClientsAdminPanel() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [openClientId, setOpenClientId] = useState<string | null>(null);
+  const [listVersion, setListVersion] = useState(0);
 
   const debounceRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +135,7 @@ export default function ClientsAdminPanel() {
       });
 
     return () => { cancelled = true; };
-  }, [debouncedSearch]);
+  }, [debouncedSearch, listVersion]);
 
   return (
     <section className="surface booking-shell admin-clients-section" aria-label="Clients">
@@ -285,6 +286,10 @@ export default function ClientsAdminPanel() {
         <ClientProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
+          onErased={() => {
+            setOpenClientId(null);
+            setListVersion((version) => version + 1);
+          }}
         />
       )}
     </section>

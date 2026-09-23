@@ -2041,6 +2041,7 @@ function TodayTimeline({
         <ClientProfilePanel
           clientId={clientPanelId}
           onClose={() => setClientPanelId(null)}
+          onErased={() => setClientPanelId(null)}
         />
       )}
     </section>

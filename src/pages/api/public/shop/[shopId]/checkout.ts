@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { prisma } from '@/lib/db/client';
+import { lockShopCustomerIdentity } from '@/lib/db/customerIdentityLock';
 import {
   assertShopAcceptingPublicActivity,
   ShopPublicActivityPausedError,
@@ -131,6 +132,7 @@ export const POST: APIRoute = async (ctx) => {
     const customerEmail = rawEmail && rawEmail.includes('@') ? rawEmail : 'pending@checkout.kersivo.local';
 
     let order = await prisma.$transaction(async (tx) => {
+      await lockShopCustomerIdentity(tx, shopId, customerEmail);
       const created = await tx.order.create({
         data: {
           shopId,

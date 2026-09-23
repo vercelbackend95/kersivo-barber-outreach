@@ -6,14 +6,20 @@ const MAX_TRANSACTION_RETRIES = 3;
 const TRANSACTION_MAX_WAIT_MS = 10_000;
 const TRANSACTION_TIMEOUT_MS = 15_000;
 
-function isRetriableTransactionError(error: unknown): boolean {
+/**
+ * Only Prisma write-conflict / serialization failures (P2034) are retried.
+ * P2002 (unique) and P2028 (transaction API) are not treated as serialization signals.
+ */
+export function isRetriableTransactionError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
     return false;
   }
 
   const code = String((error as { code?: string }).code ?? '');
-  return code === 'P2002' || code === 'P2034' || code === 'P2028';
+  return code === 'P2034';
 }
+
+export const SERIALIZABLE_TRANSACTION_MAX_RETRIES = MAX_TRANSACTION_RETRIES;
 
 export async function runSerializableTransaction<T>(
   operation: (tx: Prisma.TransactionClient) => Promise<T>

@@ -9,6 +9,7 @@ const shopAcceptsPublicBookings = vi.fn();
 const assertShopAcceptingPublicActivity = vi.fn();
 const createRetailCheckoutSession = vi.fn();
 const enforceIpRateLimit = vi.fn();
+const lockShopCustomerIdentity = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
@@ -47,6 +48,10 @@ vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
   enforceIpRateLimit: (...args: unknown[]) => enforceIpRateLimit(...args),
 }));
 
+vi.mock('@/lib/db/customerIdentityLock', () => ({
+  lockShopCustomerIdentity: (...args: unknown[]) => lockShopCustomerIdentity(...args),
+}));
+
 vi.mock('@/lib/db/shopScope', () => ({
   DEMO_SHOP_ID: 'demo',
 }));
@@ -79,6 +84,7 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     enforceIpRateLimit.mockResolvedValue(null);
+    lockShopCustomerIdentity.mockResolvedValue(undefined);
     findUniqueShop.mockResolvedValue(readyShop);
     shopAcceptsPublicBookings.mockResolvedValue(true);
     assertShopAcceptingPublicActivity.mockResolvedValue(undefined);
@@ -149,6 +155,12 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.url).toContain('checkout.stripe.test');
+
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(
+      expect.anything(),
+      'shop_1',
+      'pending@checkout.kersivo.local',
+    );
 
     expect(orderCreate).toHaveBeenCalledWith(
       expect.objectContaining({

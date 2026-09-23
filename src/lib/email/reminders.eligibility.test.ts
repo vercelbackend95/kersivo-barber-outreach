@@ -123,6 +123,21 @@ describe('evaluateEmailReminderEligibility', () => {
     );
     expect(result.ok).toBe(true);
   });
+
+  it('post-erasure: past startAt is outside reminder window (cleared claim cannot send)', () => {
+    const pastStart = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const result = evaluateEmailReminderEligibility(
+      baseCandidate(now, {
+        startAt: pastStart,
+        createdAt: new Date(pastStart.getTime() - 48 * 60 * 60 * 1000),
+        email: 'erased+bk-1@example.invalid',
+        emailReminderSentAt: null,
+      }),
+      now,
+      { enabled: true },
+    );
+    expect(result).toEqual({ ok: false, reason: 'outside_window' });
+  });
 });
 
 describe('reminderWindowBounds', () => {

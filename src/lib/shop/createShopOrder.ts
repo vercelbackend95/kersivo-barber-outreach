@@ -1,5 +1,6 @@
 import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { lockShopCustomerIdentity } from '@/lib/db/customerIdentityLock';
 import { formatGbp } from '@/lib/shop/money';
 import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
@@ -60,6 +61,8 @@ export async function createShopOrder(input: CreateShopOrderInput): Promise<Crea
   let outboxId: string | null = null;
 
   const order = await prisma.$transaction(async (tx) => {
+    await lockShopCustomerIdentity(tx, input.shopId, customerEmail);
+
     const created = await tx.order.create({
       data: {
         shopId: input.shopId,

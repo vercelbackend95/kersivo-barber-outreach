@@ -2,6 +2,11 @@ import { BookingStatus, SmsOutboundPurpose, SmsOutboundStatus, type Prisma } fro
 import { prisma } from '../db/client';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../booking/sandboxBookings';
+import {
+  isReminderClaimSentinel,
+  REMINDER_CLAIM_SENTINEL,
+  reminderClaimStaleBefore,
+} from '../booking/reminderClaim';
 import { getSmsProvider, isSmsRemindersEnabled } from './client';
 import { normalizePhoneToE164 } from './phone';
 import { buildAppointmentReminderBody } from './templates';
@@ -13,8 +18,8 @@ export const REMINDER_WINDOW_MAX_MS = 25 * 60 * 60 * 1000;
 
 export const DEFAULT_REMINDER_BATCH_LIMIT = 75;
 
-/** Sentinel used while a send is in flight (cleared on failure). */
-export const REMINDER_CLAIM_SENTINEL = new Date(0);
+/** @deprecated Prefer REMINDER_CLAIM_SENTINEL from reminderClaim — kept for existing imports. */
+export { REMINDER_CLAIM_SENTINEL };
 
 export type ReminderCandidate = {
   id: string;
@@ -85,7 +90,8 @@ export function evaluateReminderEligibility(
   const toE164 = normalizePhoneToE164(candidate.phone);
   if (!toE164) return { ok: false, reason: 'invalid_phone' };
 
-  if (candidate.smsReminderSentAt != null) {
+  // Real sent timestamp blocks; Date(0) in-flight/stale is handled by claim CAS.
+  if (candidate.smsReminderSentAt != null && !isReminderClaimSentinel(candidate.smsReminderSentAt)) {
     return { ok: false, reason: 'already_sent' };
   }
 
@@ -108,24 +114,39 @@ export async function findDueReminders(
   limit: number = DEFAULT_REMINDER_BATCH_LIMIT,
 ): Promise<ReminderCandidate[]> {
   const { windowStart, windowEnd } = reminderWindowBounds(now);
+  const staleBefore = reminderClaimStaleBefore(now.getTime());
 
   const rows = await prisma.booking.findMany({
     where: {
       status: BookingStatus.BOOKED,
       startAt: { gte: windowStart, lte: windowEnd },
-      smsReminderSentAt: null,
       phone: { not: null },
       barber: {
         shopId: { not: DEMO_SHOP_ID },
         shop: { smsRemindersEnabled: true },
       },
-      // Allow null/empty notes; Prisma `NOT notes = '[TEST]'` would drop NULLs.
-      OR: [
-        { notes: null },
+      AND: [
         {
-          AND: [
-            { NOT: { notes: OWNER_TEST_BOOKING_NOTES_PREFIX } },
-            { NOT: { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } } },
+          OR: [
+            { smsReminderSentAt: null },
+            {
+              AND: [
+                { smsReminderSentAt: REMINDER_CLAIM_SENTINEL },
+                { updatedAt: { lte: staleBefore } },
+              ],
+            },
+          ],
+        },
+        {
+          // Allow null/empty notes; Prisma `NOT notes = '[TEST]'` would drop NULLs.
+          OR: [
+            { notes: null },
+            {
+              AND: [
+                { NOT: { notes: OWNER_TEST_BOOKING_NOTES_PREFIX } },
+                { NOT: { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } } },
+              ],
+            },
           ],
         },
       ],
@@ -177,13 +198,22 @@ export type ProcessRemindersResult = {
   skipReasons: Partial<Record<ReminderEligibilityReason, number>>;
 };
 
-async function claimReminderSend(bookingId: string, startAt: Date): Promise<boolean> {
+async function claimReminderSend(bookingId: string, startAt: Date, now: Date = new Date()): Promise<boolean> {
+  const staleBefore = reminderClaimStaleBefore(now.getTime());
   const result = await prisma.booking.updateMany({
     where: {
       id: bookingId,
       status: BookingStatus.BOOKED,
       startAt,
-      smsReminderSentAt: null,
+      OR: [
+        { smsReminderSentAt: null },
+        {
+          AND: [
+            { smsReminderSentAt: REMINDER_CLAIM_SENTINEL },
+            { updatedAt: { lte: staleBefore } },
+          ],
+        },
+      ],
     },
     data: {
       smsReminderSentAt: REMINDER_CLAIM_SENTINEL,
@@ -216,7 +246,7 @@ export async function sendAppointmentReminder(
     return { status: 'skipped', reason: eligibility.reason };
   }
 
-  const claimed = await claimReminderSend(candidate.id, candidate.startAt);
+  const claimed = await claimReminderSend(candidate.id, candidate.startAt, now);
   if (!claimed) {
     return { status: 'skipped', reason: 'already_sent' };
   }

@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
+import { lockShopCustomerIdentity } from '../../../../../lib/db/customerIdentityLock';
 
 const LEGACY_DEMO_EMAIL_PREFIX = 'demo+shop-sales-';
 const DEMO_EMAIL_TAG = '+demo-';
@@ -76,8 +77,8 @@ export const POST: APIRoute = async (ctx) => {
       );
     }
 
-    await prisma.$transaction(
-      Array.from({ length: toCreate }).map((_, index) => {
+    await prisma.$transaction(async (tx) => {
+      for (let index = 0; index < toCreate; index += 1) {
         const paidAt = new Date(now);
         paidAt.setUTCDate(paidAt.getUTCDate() - randomInt(0, WINDOW_DAYS - 1));
         paidAt.setUTCHours(randomInt(9, 19), randomInt(0, 5) * 10, 0, 0);
@@ -102,7 +103,8 @@ export const POST: APIRoute = async (ctx) => {
         const totalPence = items.reduce((sum, item) => sum + item.lineTotalPence, 0);
         const customerEmail = DEMO_CUSTOMER_EMAILS[index % DEMO_CUSTOMER_EMAILS.length];
 
-        return prisma.order.create({
+        await lockShopCustomerIdentity(tx, shopId, customerEmail);
+        await tx.order.create({
           data: {
             shopId,
             customerEmail,
@@ -116,8 +118,8 @@ export const POST: APIRoute = async (ctx) => {
             }
           }
         });
-      })
-    );
+      }
+    });
 
     return new Response(
       JSON.stringify({

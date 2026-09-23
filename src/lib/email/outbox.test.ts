@@ -34,6 +34,7 @@ vi.mock('../ops/sentry', () => ({
 import {
   deliverOutboxEmail,
   enqueueEmail,
+  EMAIL_OUTBOX_IN_FLIGHT_ERROR,
   processDueEmailOutbox,
   tryDeliverOutboxEmail,
 } from './outbox';
@@ -192,7 +193,8 @@ describe('deliverOutboxEmail', () => {
 
   it('marks SENT and clears payload on successful Resend send', async () => {
     const row = queuedRow();
-    findUniqueOutbound.mockResolvedValue(row);
+    const claimed = queuedRow({ error: EMAIL_OUTBOX_IN_FLIGHT_ERROR });
+    findUniqueOutbound.mockResolvedValueOnce(row).mockResolvedValueOnce(claimed);
     updateManyOutbound.mockResolvedValue({ count: 1 });
     sendRenderedEmail.mockResolvedValue({ messageId: 'msg_1' });
     updateOutbound.mockResolvedValue({
@@ -203,11 +205,20 @@ describe('deliverOutboxEmail', () => {
       payload: null,
       sentAt: new Date(),
       nextAttemptAt: null,
+      error: null,
     });
 
     const result = await deliverOutboxEmail('out_1');
 
     expect(result.status).toBe('sent');
+    expect(updateManyOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          error: EMAIL_OUTBOX_IN_FLIGHT_ERROR,
+          status: EmailOutboundStatus.QUEUED,
+        }),
+      }),
+    );
     expect(sendRenderedEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'client@example.com',
@@ -223,6 +234,7 @@ describe('deliverOutboxEmail', () => {
           providerMessageId: 'msg_1',
           payload: Prisma.DbNull,
           nextAttemptAt: null,
+          error: null,
         }),
       }),
     );
@@ -230,7 +242,8 @@ describe('deliverOutboxEmail', () => {
 
   it('keeps QUEUED with backoff when Resend throws', async () => {
     const row = queuedRow();
-    findUniqueOutbound.mockResolvedValue(row);
+    const claimed = queuedRow({ error: EMAIL_OUTBOX_IN_FLIGHT_ERROR });
+    findUniqueOutbound.mockResolvedValueOnce(row).mockResolvedValueOnce(claimed);
     updateManyOutbound.mockResolvedValue({ count: 1 });
     sendRenderedEmail.mockRejectedValue(new Error('Resend returned an error response.'));
     updateOutbound.mockResolvedValue({
@@ -258,7 +271,8 @@ describe('deliverOutboxEmail', () => {
 
   it('marks FAILED and alerts when attempts are exhausted', async () => {
     const row = queuedRow({ attempts: 5, maxAttempts: 6 });
-    findUniqueOutbound.mockResolvedValue(row);
+    const claimed = queuedRow({ attempts: 5, maxAttempts: 6, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR });
+    findUniqueOutbound.mockResolvedValueOnce(row).mockResolvedValueOnce(claimed);
     updateManyOutbound.mockResolvedValue({ count: 1 });
     sendRenderedEmail.mockRejectedValue(new Error('timeout'));
     updateOutbound.mockResolvedValue({
@@ -295,7 +309,7 @@ describe('deliverOutboxEmail', () => {
     );
   });
 
-  it('skips double-claim when another worker already claimed the row', async () => {
+  it('skips double-claim when another worker already claimed the row — NO PROVIDER CALL', async () => {
     const row = queuedRow();
     findUniqueOutbound
       .mockResolvedValueOnce(row)
@@ -305,6 +319,17 @@ describe('deliverOutboxEmail', () => {
     const result = await deliverOutboxEmail('out_1');
 
     expect(result.status).toBe('queued');
+    expect(sendRenderedEmail).not.toHaveBeenCalled();
+  });
+
+  it('does not send when claimed row disappears before provider call', async () => {
+    const row = queuedRow();
+    findUniqueOutbound.mockResolvedValueOnce(row).mockResolvedValueOnce(null);
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('skipped');
     expect(sendRenderedEmail).not.toHaveBeenCalled();
   });
 
@@ -326,8 +351,10 @@ describe('processDueEmailOutbox', () => {
     const failRow = queuedRow({ id: 'out_2', attempts: 5 });
 
     findUniqueOutbound.mockImplementation(async ({ where }: { where: { id: string } }) => {
-      if (where.id === 'out_1') return sentRow;
-      return failRow;
+      if (where.id === 'out_1') {
+        return { ...sentRow, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR };
+      }
+      return { ...failRow, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR };
     });
     updateManyOutbound.mockResolvedValue({ count: 1 });
     sendRenderedEmail

@@ -12,6 +12,9 @@ const DEFAULT_MAX_ATTEMPTS = 6;
 const BASE_BACKOFF_MS = 60_000;
 const MAX_BACKOFF_MS = 60 * 60 * 1000;
 
+/** Written on successful CAS claim; cleared when send finishes. Erasure treats this as in-flight. */
+export const EMAIL_OUTBOX_IN_FLIGHT_ERROR = '__IN_FLIGHT__';
+
 export type EmailOutboxPayload = {
   to: string;
   subject: string;
@@ -135,6 +138,8 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
       // Push nextAttemptAt forward to reduce double-claim races until we finish.
       nextAttemptAt: nextAttemptAt(row.attempts + 1, now),
       status: EmailOutboundStatus.QUEUED,
+      // Distinguish claimed/sending from idle QUEUED so Client erasure can FOR UPDATE + block.
+      error: EMAIL_OUTBOX_IN_FLIGHT_ERROR,
     },
   });
 
@@ -146,7 +151,13 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
     return { status: 'queued', row: fresh };
   }
 
-  const payload = parsePayload(row.payload);
+  // Re-read after claim: erasure may have deleted the row while we waited on the row lock.
+  const claimedRow = await prisma.emailOutbound.findUnique({ where: { id: row.id } });
+  if (!claimedRow || claimedRow.error !== EMAIL_OUTBOX_IN_FLIGHT_ERROR) {
+    return { status: 'skipped', row: claimedRow };
+  }
+
+  const payload = parsePayload(claimedRow.payload);
   if (!payload) {
     const updated = await prisma.emailOutbound.update({
       where: { id: row.id },
@@ -167,7 +178,7 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
       subject: payload.subject,
       html: payload.html,
       replyTo: payload.replyTo,
-      devLogLabel: `[DEV EMAIL] Outbox ${row.purpose}`,
+      devLogLabel: `[DEV EMAIL] Outbox ${claimedRow.purpose}`,
     });
 
     const sentAt = new Date();
@@ -192,8 +203,8 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
 
     console.error('[EMAIL] Outbox delivery failed', {
       emailOutboundId: row.id,
-      purpose: row.purpose,
-      bookingId: row.bookingId,
+      purpose: claimedRow.purpose,
+      bookingId: claimedRow.bookingId,
       attempts,
       error: message,
     });

@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { isTenantAdminAccess, requireAdminPermission } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
+import { lockShopCustomerIdentity } from '../../../../lib/db/customerIdentityLock';
 import { formatGbp } from '../../../../lib/shop/money';
 
 type TestOrderInput = {
@@ -180,6 +181,8 @@ export const POST: APIRoute = async (ctx) => {
 
   // Serialize create + shop flag update to reduce double-submit races.
   const created = await prisma.$transaction(async (tx) => {
+    await lockShopCustomerIdentity(tx, shopId, customerEmail);
+
     const fresh = await tx.shopSettings.findUnique({
       where: { id: shopId },
       select: { retailTestOrderId: true },

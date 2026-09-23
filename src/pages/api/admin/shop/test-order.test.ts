@@ -16,6 +16,7 @@ const findUniqueShop = vi.fn();
 const findFirstOrder = vi.fn();
 const findManyProducts = vi.fn();
 const transaction = vi.fn();
+const lockShopCustomerIdentity = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
@@ -30,6 +31,10 @@ vi.mock('@/lib/db/client', () => ({
     },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
+}));
+
+vi.mock('@/lib/db/customerIdentityLock', () => ({
+  lockShopCustomerIdentity: (...args: unknown[]) => lockShopCustomerIdentity(...args),
 }));
 
 import { POST, previewTestOrderCustomerEmail } from './test-order';
@@ -68,6 +73,8 @@ describe('POST /api/admin/shop/test-order', () => {
     findFirstOrder.mockReset();
     findManyProducts.mockReset();
     transaction.mockReset();
+    lockShopCustomerIdentity.mockReset();
+    lockShopCustomerIdentity.mockResolvedValue(undefined);
   });
 
   it('rejects secret via', async () => {
@@ -135,6 +142,11 @@ describe('POST /api/admin/shop/test-order', () => {
           isTestOrder: true,
         }),
       }),
+    );
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(
+      expect.anything(),
+      shopId,
+      previewTestOrderCustomerEmail(shopId),
     );
     expect(json.order.customerEmail).toBe(previewTestOrderCustomerEmail(shopId));
   });

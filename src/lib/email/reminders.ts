@@ -8,6 +8,11 @@ import { prisma } from '../db/client';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../booking/sandboxBookings';
 import {
+  isReminderClaimSentinel,
+  REMINDER_CLAIM_SENTINEL,
+  reminderClaimStaleBefore,
+} from '../booking/reminderClaim';
+import {
   buildAppointmentReminderEmail,
   EmailDeliveryError,
   isEmailDeliveryConfigured,
@@ -20,8 +25,8 @@ export const REMINDER_WINDOW_MAX_MS = 25 * 60 * 60 * 1000;
 
 export const DEFAULT_EMAIL_REMINDER_BATCH_LIMIT = 75;
 
-/** Sentinel used while a send is in flight (cleared on failure). */
-export const EMAIL_REMINDER_CLAIM_SENTINEL = new Date(0);
+/** @deprecated Prefer REMINDER_CLAIM_SENTINEL from reminderClaim — kept for existing imports. */
+export const EMAIL_REMINDER_CLAIM_SENTINEL = REMINDER_CLAIM_SENTINEL;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -112,7 +117,10 @@ export function evaluateEmailReminderEligibility(
   if (!toEmail) return { ok: false, reason: 'no_email' };
   if (!EMAIL_REGEX.test(toEmail)) return { ok: false, reason: 'invalid_email' };
 
-  if (candidate.emailReminderSentAt != null) {
+  if (
+    candidate.emailReminderSentAt != null &&
+    !isReminderClaimSentinel(candidate.emailReminderSentAt)
+  ) {
     return { ok: false, reason: 'already_sent' };
   }
 
@@ -135,22 +143,37 @@ export async function findDueEmailReminders(
   limit: number = DEFAULT_EMAIL_REMINDER_BATCH_LIMIT,
 ): Promise<EmailReminderCandidate[]> {
   const { windowStart, windowEnd } = reminderWindowBounds(now);
+  const staleBefore = reminderClaimStaleBefore(now.getTime());
 
   const rows = await prisma.booking.findMany({
     where: {
       status: BookingStatus.BOOKED,
       startAt: { gte: windowStart, lte: windowEnd },
-      emailReminderSentAt: null,
       barber: {
         shopId: { not: DEMO_SHOP_ID },
         shop: { shopPaidAt: { not: null } },
       },
-      OR: [
-        { notes: null },
+      AND: [
         {
-          AND: [
-            { NOT: { notes: OWNER_TEST_BOOKING_NOTES_PREFIX } },
-            { NOT: { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } } },
+          OR: [
+            { emailReminderSentAt: null },
+            {
+              AND: [
+                { emailReminderSentAt: REMINDER_CLAIM_SENTINEL },
+                { updatedAt: { lte: staleBefore } },
+              ],
+            },
+          ],
+        },
+        {
+          OR: [
+            { notes: null },
+            {
+              AND: [
+                { NOT: { notes: OWNER_TEST_BOOKING_NOTES_PREFIX } },
+                { NOT: { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } } },
+              ],
+            },
           ],
         },
       ],
@@ -204,16 +227,29 @@ export type ProcessEmailRemindersResult = {
   skipReasons: Partial<Record<EmailReminderEligibilityReason, number>>;
 };
 
-async function claimEmailReminderSend(bookingId: string, startAt: Date): Promise<boolean> {
+async function claimEmailReminderSend(
+  bookingId: string,
+  startAt: Date,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const staleBefore = reminderClaimStaleBefore(now.getTime());
   const result = await prisma.booking.updateMany({
     where: {
       id: bookingId,
       status: BookingStatus.BOOKED,
       startAt,
-      emailReminderSentAt: null,
+      OR: [
+        { emailReminderSentAt: null },
+        {
+          AND: [
+            { emailReminderSentAt: REMINDER_CLAIM_SENTINEL },
+            { updatedAt: { lte: staleBefore } },
+          ],
+        },
+      ],
     },
     data: {
-      emailReminderSentAt: EMAIL_REMINDER_CLAIM_SENTINEL,
+      emailReminderSentAt: REMINDER_CLAIM_SENTINEL,
       emailReminderForStartAt: startAt,
     },
   });
@@ -224,7 +260,7 @@ async function releaseEmailReminderClaim(bookingId: string): Promise<void> {
   await prisma.booking.updateMany({
     where: {
       id: bookingId,
-      emailReminderSentAt: EMAIL_REMINDER_CLAIM_SENTINEL,
+      emailReminderSentAt: REMINDER_CLAIM_SENTINEL,
     },
     data: {
       emailReminderSentAt: null,
@@ -246,7 +282,7 @@ export async function sendAppointmentEmailReminder(
     return { status: 'skipped', reason: eligibility.reason };
   }
 
-  const claimed = await claimEmailReminderSend(candidate.id, candidate.startAt);
+  const claimed = await claimEmailReminderSend(candidate.id, candidate.startAt, now);
   if (!claimed) {
     return { status: 'skipped', reason: 'already_sent' };
   }

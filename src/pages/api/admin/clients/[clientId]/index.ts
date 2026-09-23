@@ -3,6 +3,10 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminPermission } from '@/lib/admin/auth';
 import { assertClientAccessible, canViewClientEmail } from '@/lib/admin/rbac/scope';
+import {
+  eraseClientPersonalData,
+  isClientErasureBlockedError,
+} from '@/lib/admin/clientErasure';
 import { shouldIncludeTestActivityInAnalytics } from '@/lib/admin/analyticsMode';
 import { orderAnalyticsWhere } from '@/lib/booking/sandboxBookings';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
@@ -385,4 +389,72 @@ export const PATCH: APIRoute = async (ctx) => {
   });
 
   return new Response(JSON.stringify({ client }));
+};
+
+/**
+ * Erase customer personal data for this Client (OWNER/MANAGER via clients.erase).
+ * Historical bookings/orders are anonymised, not hard-deleted.
+ */
+export const DELETE: APIRoute = async (ctx) => {
+  const access = await requireAdminPermission(ctx, 'clients.erase');
+  if (access instanceof Response) return access;
+
+  const clientId = ctx.params.clientId?.trim();
+  if (!clientId) {
+    return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
+  }
+
+  let body: { confirm?: string } = {};
+  try {
+    const text = await ctx.request.text();
+    if (text.trim()) {
+      body = JSON.parse(text) as { confirm?: string };
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body.' }), { status: 400 });
+  }
+
+  if (body.confirm !== 'DELETE') {
+    return new Response(
+      JSON.stringify({ error: 'Type DELETE to confirm erasing this customer’s data.' }),
+      { status: 400 },
+    );
+  }
+
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
+
+  try {
+    const result = await eraseClientPersonalData({
+      shopId: access.shopId,
+      clientId,
+      actorUserId: access.userId,
+    });
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        operationId: result.operationId,
+        bookingCount: result.bookingCount,
+        orderCount: result.orderCount,
+        blobCleanupWarning: result.blobCleanupWarning,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message === 'CLIENT_NOT_FOUND') {
+      return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+    }
+    if (isClientErasureBlockedError(error)) {
+      return new Response(
+        JSON.stringify({ error: error.message, code: error.code }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    console.error('Failed to erase client personal data', {
+      shopId: access.shopId,
+      error,
+    });
+    return new Response(JSON.stringify({ error: 'Unable to erase customer data.' }), { status: 500 });
+  }
 };

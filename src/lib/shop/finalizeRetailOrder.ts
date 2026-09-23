@@ -1,5 +1,6 @@
 import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { lockShopCustomerIdentity } from '@/lib/db/customerIdentityLock';
 import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { formatGbp } from '@/lib/shop/money';
@@ -75,7 +76,7 @@ export async function finalizeRetailOrderFromCheckout(
 
   const sessionEmail = input.customerEmail.trim().toLowerCase();
   const orderEmail = order.customerEmail.trim().toLowerCase();
-  const customerEmail =
+  let customerEmail =
     sessionEmail && !sessionEmail.endsWith('@checkout.kersivo.local')
       ? sessionEmail
       : orderEmail && !orderEmail.endsWith('@checkout.kersivo.local')
@@ -87,12 +88,29 @@ export async function finalizeRetailOrderFromCheckout(
 
   let outboxId: string | null = null;
   const cas = await prisma.$transaction(async (tx) => {
+    // Same identity lock as Order create / Client erasure — serialize finalize vs erase.
+    await lockShopCustomerIdentity(tx, shopId, customerEmail);
+
+    const fresh = await tx.order.findFirst({
+      where: { id: orderId, shopId },
+      select: { customerEmail: true, status: true },
+    });
+    if (!fresh || fresh.status !== 'PENDING_PAYMENT') {
+      return { won: false as const };
+    }
+
+    // Do not re-attach a real mailbox after Client erasure anonymised this Order.
+    const preservedEmail = fresh.customerEmail.trim();
+    const alreadyErased = preservedEmail.toLowerCase().endsWith('@example.invalid');
+    const emailToStore = alreadyErased ? preservedEmail : customerEmail;
+    customerEmail = emailToStore;
+
     const updated = await tx.order.updateMany({
       where: { id: orderId, shopId, status: 'PENDING_PAYMENT' },
       data: {
         status: 'PAID',
         paidAt: input.paidAt,
-        customerEmail,
+        customerEmail: emailToStore,
         stripeSessionId: input.sessionId,
         stripePaymentIntentId: input.paymentIntentId,
       },
@@ -100,6 +118,10 @@ export async function finalizeRetailOrderFromCheckout(
 
     if (updated.count === 0) {
       return { won: false as const };
+    }
+
+    if (alreadyErased) {
+      return { won: true as const };
     }
 
     const rendered = buildShopOrderConfirmationEmail({

@@ -26,6 +26,7 @@ const BOOKING_UPDATE_ALLOWED = new Set([
   'lib/booking/depositMoney.ts',
   'lib/sms/reminders.ts',
   'lib/email/reminders.ts',
+  'lib/admin/clientErasure.ts',
   'pages/api/admin/bookings/[id]/service.ts',
   'pages/api/admin/bookings/[id]/force-reschedule.ts',
   'pages/api/admin/bookings/[id]/status.ts',

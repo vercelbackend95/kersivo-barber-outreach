@@ -121,6 +121,30 @@ describe('evaluateReminderEligibility', () => {
     );
     expect(result.ok).toBe(true);
   });
+
+  it('post-erasure: null phone is permanently ineligible (no send)', () => {
+    const result = evaluateReminderEligibility(
+      baseCandidate(now, { phone: null, smsReminderSentAt: null }),
+      now,
+      { enabled: true },
+    );
+    expect(result).toEqual({ ok: false, reason: 'no_phone' });
+  });
+
+  it('post-erasure: past startAt is outside reminder window', () => {
+    const pastStart = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const result = evaluateReminderEligibility(
+      baseCandidate(now, {
+        startAt: pastStart,
+        createdAt: new Date(pastStart.getTime() - 48 * 60 * 60 * 1000),
+        phone: '07123456789',
+        smsReminderSentAt: null,
+      }),
+      now,
+      { enabled: true },
+    );
+    expect(result).toEqual({ ok: false, reason: 'outside_window' });
+  });
 });
 
 describe('reminderWindowBounds', () => {

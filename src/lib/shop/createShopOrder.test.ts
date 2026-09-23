@@ -5,11 +5,16 @@ const transaction = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
 const buildShopOrderConfirmationEmail = vi.fn();
+const lockShopCustomerIdentity = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     $transaction: (...args: unknown[]) => transaction(...args),
   },
+}));
+
+vi.mock('@/lib/db/customerIdentityLock', () => ({
+  lockShopCustomerIdentity: (...args: unknown[]) => lockShopCustomerIdentity(...args),
 }));
 
 vi.mock('@/lib/email/sender', () => ({
@@ -32,6 +37,7 @@ describe('createShopOrder email outbox', () => {
     });
     enqueueEmail.mockResolvedValue({ id: 'out_order_1' });
     tryDeliverOutboxEmail.mockResolvedValue(undefined);
+    lockShopCustomerIdentity.mockResolvedValue(undefined);
   });
 
   it('enqueues confirmation in the same transaction and does not throw when deliver fails', async () => {
@@ -77,6 +83,12 @@ describe('createShopOrder email outbox', () => {
         },
       ],
     });
+
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(
+      expect.anything(),
+      'shop_1',
+      'buyer@example.com',
+    );
 
     expect(result.id).toBe('ord_1');
     expect(enqueueEmail).toHaveBeenCalledWith(

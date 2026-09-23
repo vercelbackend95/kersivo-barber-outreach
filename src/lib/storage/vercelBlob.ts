@@ -111,3 +111,36 @@ export async function uploadPublicImageToBlob(file: File, pathname: string) {
 
   return uploadViaBlobApi(file, pathname, token);
 }
+
+type BlobDelFn = (urlOrPathname: string | string[], options?: { token?: string }) => Promise<void>;
+
+async function tryLoadVercelBlobDel(): Promise<BlobDelFn | null> {
+  try {
+    const loadModule = new Function('return import("@vercel/blob")') as () => Promise<{ del?: BlobDelFn }>;
+    const blobModule = await loadModule();
+    if (typeof blobModule.del === 'function') {
+      return blobModule.del as BlobDelFn;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Best-effort delete from the public Blob store (`barberdemo-uploads`).
+ * Accepts a full public URL or a pathname. Idempotent where the provider allows.
+ */
+export async function deletePublicBlobObject(urlOrPathname: string): Promise<void> {
+  const path = urlOrPathname.trim();
+  if (!path) return;
+  const token = getBlobReadWriteToken();
+  if (!token) {
+    throw new Error('Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN).');
+  }
+  const del = await tryLoadVercelBlobDel();
+  if (!del) {
+    throw new Error('Vercel Blob delete helper is unavailable.');
+  }
+  await del(path, { token });
+}

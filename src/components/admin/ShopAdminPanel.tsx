@@ -2115,7 +2115,11 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
       )}
 
       {openClientId ? (
-        <ClientProfilePanel clientId={openClientId} onClose={() => setOpenClientId(null)} />
+        <ClientProfilePanel
+          clientId={openClientId}
+          onClose={() => setOpenClientId(null)}
+          onErased={() => setOpenClientId(null)}
+        />
       ) : null}
 
       </section>

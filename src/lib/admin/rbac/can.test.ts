@@ -11,6 +11,7 @@ const MANAGER_OPERATIONAL: Permission[] = [
   'bookings.self',
   'clients.read',
   'clients.write',
+  'clients.erase',
   'retail.manage',
   'reports.view',
   'ai.use',
@@ -49,6 +50,8 @@ describe('RBAC matrix', () => {
     expect(can('BARBER', 'billing.manage')).toBe(false);
     expect(can('BARBER', 'catalog.manage')).toBe(false);
     expect(can('BARBER', 'bookings.manage')).toBe(false);
+    expect(can('BARBER', 'clients.erase')).toBe(false);
+    expect(can('BARBER', 'clients.write')).toBe(true);
     expect(can('BARBER', 'team.read')).toBe(true);
     expect(can('BARBER', 'bookings.self')).toBe(true);
     expect(can('BARBER', 'reports.view')).toBe(false);
@@ -56,5 +59,12 @@ describe('RBAC matrix', () => {
     expect(can('BARBER', 'members.manage')).toBe(false);
     expect(can('BARBER', 'members.invite_barber')).toBe(false);
     expect(can('BARBER', 'onboarding.manage')).toBe(false);
+  });
+
+  it('clients.erase is OWNER/MANAGER only and not implied by clients.write', () => {
+    expect(can('OWNER', 'clients.erase')).toBe(true);
+    expect(can('MANAGER', 'clients.erase')).toBe(true);
+    expect(can('BARBER', 'clients.erase')).toBe(false);
+    expect(permissionsForRole('BARBER')).not.toContain('clients.erase');
   });
 });
