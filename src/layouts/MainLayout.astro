@@ -47,8 +47,9 @@ interface Props extends PageSeo {
   /** Empty-bag explore link. */
   exploreHref?: string;
   /**
-   * When false, omit KERSIVO marketing Google Analytics / Ads tags.
-   * Live tenant storefronts and authenticated product surfaces should pass false.
+   * When false, omit the entire KERSIVO marketing analytics bootstrap:
+   * GoogleAnalytics / Ads tags, CookieConsent (which can load gtag on accept),
+   * and InitDataTrack. Live tenant storefronts must pass false.
    * Defaults true for marketing/demo pages.
    */
   enableAnalytics?: boolean;
@@ -183,9 +184,13 @@ const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' &&
         </div>
       ) : null
     }
-    <div transition:persist="ks-cookie">
-      <CookieConsentMount />
-    </div>
-    <InitDataTrackScript />
+    {
+      enableAnalytics ? (
+        <div transition:persist="ks-cookie">
+          <CookieConsentMount />
+        </div>
+      ) : null
+    }
+    {enableAnalytics ? <InitDataTrackScript /> : null}
   </body>
 </html>

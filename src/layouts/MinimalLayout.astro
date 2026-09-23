@@ -16,9 +16,15 @@ interface Props extends PageSeo {
   htmlClass?: string;
   noindex?: boolean;
   viewportContent?: string;
-  /** When false, skip cookie banner/launcher (e.g. /book* sticky CTA). Default true. */
+  /**
+   * When false, skip cookie banner/launcher (e.g. /book* sticky CTA). Default true.
+   * Mounted only when enableAnalytics is also true — consent must not load gtag alone.
+   */
   showCookieConsent?: boolean;
-  /** When false, omit Google Analytics. Default true. */
+  /**
+   * When false, omit Google Analytics / Ads and CookieConsent (marketing tracking hard-off).
+   * Default true.
+   */
   enableAnalytics?: boolean;
   /** When false, omit Astro ClientRouter. Default true. */
   enableClientRouter?: boolean;
@@ -52,6 +58,9 @@ const {
   shopId,
   shopName,
 } = Astro.props;
+
+/** Consent can load gtag — never mount without the analytics bootstrap. */
+const mountCookieConsent = showCookieConsent && enableAnalytics;
 
 const path = Astro.url.pathname;
 const isAdminSurface =
@@ -127,7 +136,7 @@ const cartExploreHref = productionCartEnabled ? `/shop/${productionCartShopId}` 
         </div>
       ) : null
     }
-    {showCookieConsent ? (
+    {mountCookieConsent ? (
       <div transition:persist="ks-cookie">
         <CookieConsentMount />
       </div>

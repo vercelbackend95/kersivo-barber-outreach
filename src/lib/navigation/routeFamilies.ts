@@ -1,4 +1,4 @@
-export type RouteFamily = 'marketing' | 'minimal' | 'demo' | 'other';
+export type RouteFamily = 'marketing' | 'tenant' | 'minimal' | 'demo' | 'other';
 
 export type RouteTransitionVariant = 'marketing' | 'dashboard' | 'flow' | 'themed-demo' | 'none';
 
@@ -8,12 +8,25 @@ export function normalizePathname(pathname: string): string {
   return path || '/';
 }
 
+/**
+ * Live tenant storefront under `/shop/<shopId>/…`.
+ * Excludes corporate `/shop`, `/shop/demo/…`, and legacy `/shop/success|/cancelled`.
+ */
+export function isLiveTenantShopPath(pathname: string): boolean {
+  const path = normalizePathname(pathname);
+  if (path === '/shop' || path === '/shop/success' || path === '/shop/cancelled') return false;
+  if (path === '/shop/demo' || path.startsWith('/shop/demo/')) return false;
+  return /^\/shop\/[^/]+(\/.*)?$/.test(path);
+}
+
 export function getRouteFamily(pathname: string): RouteFamily {
   const path = normalizePathname(pathname);
 
   if (path === '/demo/admin' || path.startsWith('/demo/admin/')) return 'minimal';
 
   if (path === '/demo' || path.startsWith('/demo/')) return 'demo';
+
+  if (isLiveTenantShopPath(path)) return 'tenant';
 
   if (
     path === '/admin' ||
@@ -26,8 +39,7 @@ export function getRouteFamily(pathname: string): RouteFamily {
     path === '/setup' ||
     path.startsWith('/setup/') ||
     path === '/shop/success' ||
-    path === '/shop/cancelled' ||
-    /\/shop\/[^/]+\/(success|cancelled)$/.test(path)
+    path === '/shop/cancelled'
   ) {
     return 'minimal';
   }
@@ -38,8 +50,7 @@ export function getRouteFamily(pathname: string): RouteFamily {
     path.startsWith('/shop/demo/') ||
     path === '/privacy' ||
     path === '/cookies' ||
-    path === '/terms' ||
-    /^\/shop\/[^/]+$/.test(path)
+    path === '/terms'
   ) {
     return 'marketing';
   }
