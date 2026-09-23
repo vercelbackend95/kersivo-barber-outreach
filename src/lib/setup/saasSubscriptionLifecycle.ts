@@ -7,9 +7,12 @@ import {
   recordAccountLifecycleEvent,
 } from '@/lib/setup/accountLifecycleAudit';
 import {
+  beginShopPurgeGate,
   deletePrivateBlobPathsBestEffort,
   listPrivateBlobPathsForShopPurge,
+  listPublicBlobUrlsForShopPurge,
   purgeShopData,
+  runPostCommitPublicBlobCleanup,
 } from '@/lib/setup/purgeShopData';
 import {
   mapStripeSubscriptionStatus,
@@ -315,8 +318,12 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
       continue;
     }
 
+    let privateBlobPaths: string[] = [];
+    let publicBlobUrls: string[] = [];
     try {
-      const privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
+      await beginShopPurgeGate(shopId);
+      privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
+      publicBlobUrls = await listPublicBlobUrlsForShopPurge(shopId);
       await prisma.$transaction(async (tx) => {
         await purgeShopData(tx, shopId);
         await tx.saasSubscription.update({
@@ -324,20 +331,33 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
           data: { shopId: null },
         });
       });
-      await deletePrivateBlobPathsBestEffort(privateBlobPaths);
-      await recordAccountLifecycleEvent({
-        action: ACCOUNT_LIFECYCLE_ACTIONS.SHOP_PURGED_AFTER_RETENTION,
-        email: row.customerEmail,
-        shopId,
-        meta: {
-          saasSubscriptionId: row.id,
-          retentionEndsAt: row.retentionEndsAt?.toISOString() ?? null,
-        },
-      });
-      purged += 1;
     } catch (error) {
       console.error(`[saas-lifecycle] purge failed for shop ${shopId}`, error);
+      continue;
     }
+
+    // Post-commit provider cleanup is best-effort; DB purge already committed.
+    try {
+      await deletePrivateBlobPathsBestEffort(privateBlobPaths);
+      await runPostCommitPublicBlobCleanup(shopId, publicBlobUrls);
+    } catch (error) {
+      console.error('[saas-lifecycle] post-commit blob cleanup failed', {
+        shopId,
+        phase: 'post_commit_cleanup',
+        error: error instanceof Error ? error.message : 'unknown',
+      });
+    }
+
+    await recordAccountLifecycleEvent({
+      action: ACCOUNT_LIFECYCLE_ACTIONS.SHOP_PURGED_AFTER_RETENTION,
+      email: row.customerEmail,
+      shopId,
+      meta: {
+        saasSubscriptionId: row.id,
+        retentionEndsAt: row.retentionEndsAt?.toISOString() ?? null,
+      },
+    });
+    purged += 1;
   }
 
   return { purged };

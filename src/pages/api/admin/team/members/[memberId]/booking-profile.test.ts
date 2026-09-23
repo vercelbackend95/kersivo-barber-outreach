@@ -62,6 +62,7 @@ vi.mock('@/lib/email/sender', () => ({
 vi.mock('@/lib/db/serializableTransaction', () => ({
   runSerializableTransaction: async (fn: (tx: unknown) => Promise<unknown>) =>
     fn({
+      $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
       shopMember: {
         findFirst: (...a: unknown[]) => shopMemberFindFirst(...a),
         findMany: (...a: unknown[]) => shopMemberFindMany(...a),
@@ -92,7 +93,15 @@ vi.mock('@/lib/db/client', () => ({
   prisma: {
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
     shopOpeningHours: { findMany: vi.fn().mockResolvedValue([]) },
+    shopSettings: {
+      findUnique: vi.fn().mockResolvedValue({ id: 'shop-1', purgeStartedAt: null }),
+    },
   },
+}));
+
+const compensateFreshPublicBlobUpload = vi.fn();
+vi.mock('@/lib/storage/publicBlobSafety', () => ({
+  compensateFreshPublicBlobUpload: (...args: unknown[]) => compensateFreshPublicBlobUpload(...args),
 }));
 
 import { POST } from './booking-profile';

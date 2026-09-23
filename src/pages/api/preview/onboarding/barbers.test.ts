@@ -82,6 +82,7 @@ describe('PUT /api/preview/onboarding/barbers', () => {
     barberFindMany.mockResolvedValue([]);
     prismaTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop_cookie' }]),
         barber: {
           create: barberCreate,
           update: barberUpdate,

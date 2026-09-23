@@ -9,6 +9,16 @@ import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storag
 import { prisma } from '../../../../../lib/db/client';
 import { PRODUCT_CATEGORY_VALUES } from '../../../../../lib/shop/productPresentation';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
@@ -40,8 +50,25 @@ const multipartCreateSchema = z.object({
 });
 type CreatePayload = z.infer<typeof createSchema>;
 
+function resolveCreateImageUrl(
+  shopId: string,
+  payload: CreatePayload,
+  imageUrlOverride?: string | null,
+): string | null {
+  if (typeof imageUrlOverride === 'string' && imageUrlOverride.trim()) {
+    return imageUrlOverride.trim();
+  }
+  const proposed = payload.imageUrl?.trim() || null;
+  if (proposed) {
+    assertUserSuppliedPublicMediaUrlAllowed({ shopId, proposedUrl: proposed });
+  }
+  return proposed;
+}
+
 async function createProductWithReorder(shopId: string, payload: CreatePayload, imageUrlOverride?: string | null) {
+  const imageUrl = resolveCreateImageUrl(shopId, payload, imageUrlOverride);
   return runSerializableTransaction(async (tx) => {
+    await lockShopForPublicMediaAssociation(tx, shopId);
     const requestedSortOrder = normalizeRequestedProductSortOrder(payload.sortOrder);
     const productCount = await tx.product.count({ where: { shopId } });
 
@@ -51,7 +78,7 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
         name: payload.name,
         description: payload.description || null,
         pricePence: payload.pricePence,
-        imageUrl: (imageUrlOverride ?? payload.imageUrl) || null,
+        imageUrl,
         active: payload.active,
         featured: payload.featured,
         category: payload.category,
@@ -118,15 +145,25 @@ export const POST: APIRoute = async (ctx) => {
         return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
       }
 
+      await assertShopAllowsPublicMediaMutation(shopId);
       const file = formData.get('image');
       let uploadedImageUrl: string | null | undefined;
-      if (file instanceof File && file.size > 0) {
-        uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file));
+      try {
+        if (file instanceof File && file.size > 0) {
+          uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file));
+        }
+        const product = await createProductWithReorder(shopId, parsed.data, uploadedImageUrl);
+        await markRetailOnboardingCompleted(shopId, product.id);
+        return new Response(JSON.stringify({ product }), { status: 200 });
+      } catch (error) {
+        if (uploadedImageUrl) {
+          await compensateFreshPublicBlobUpload(uploadedImageUrl, {
+            shopId,
+            expectedPathPrefix: 'products/',
+          });
+        }
+        throw error;
       }
-      const product = await createProductWithReorder(shopId, parsed.data, uploadedImageUrl);
-      await markRetailOnboardingCompleted(shopId, product.id);
-
-      return new Response(JSON.stringify({ product }), { status: 200 });
     }
 
     const parsed = createSchema.safeParse(await ctx.request.json());
@@ -139,6 +176,14 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ product }), { status: 200 });
   } catch (error) {
     console.error('Failed to create product', error);
+
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+    }
     
     if (typeof error === 'object' && error && 'code' in error && (error as { code?: string }).code === 'P2002') {
       return new Response(JSON.stringify({ error: 'Unable to create product because list positions must stay unique per shop.' }), { status: 409 });

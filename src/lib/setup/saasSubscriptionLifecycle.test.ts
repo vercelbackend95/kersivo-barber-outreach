@@ -8,8 +8,11 @@ const transaction = vi.fn();
 const markShopPaid = vi.fn();
 const markShopUnpaid = vi.fn();
 const purgeShopData = vi.fn();
+const beginShopPurgeGate = vi.fn();
 const listPrivateBlobPathsForShopPurge = vi.fn();
+const listPublicBlobUrlsForShopPurge = vi.fn();
 const deletePrivateBlobPathsBestEffort = vi.fn();
+const runPostCommitPublicBlobCleanup = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
@@ -33,10 +36,13 @@ vi.mock('@/lib/shop/markShopPaid', () => ({
 
 vi.mock('@/lib/setup/purgeShopData', () => ({
   purgeShopData: (...args: unknown[]) => purgeShopData(...args),
+  beginShopPurgeGate: (...args: unknown[]) => beginShopPurgeGate(...args),
   listPrivateBlobPathsForShopPurge: (...args: unknown[]) =>
     listPrivateBlobPathsForShopPurge(...args),
+  listPublicBlobUrlsForShopPurge: (...args: unknown[]) => listPublicBlobUrlsForShopPurge(...args),
   deletePrivateBlobPathsBestEffort: (...args: unknown[]) =>
     deletePrivateBlobPathsBestEffort(...args),
+  runPostCommitPublicBlobCleanup: (...args: unknown[]) => runPostCommitPublicBlobCleanup(...args),
 }));
 
 vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
@@ -98,11 +104,28 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     markShopPaid.mockReset();
     markShopUnpaid.mockReset();
     purgeShopData.mockReset();
+    beginShopPurgeGate.mockReset();
     listPrivateBlobPathsForShopPurge.mockReset();
+    listPublicBlobUrlsForShopPurge.mockReset();
     deletePrivateBlobPathsBestEffort.mockReset();
+    runPostCommitPublicBlobCleanup.mockReset();
     recordAccountLifecycleEvent.mockReset();
+    beginShopPurgeGate.mockResolvedValue({ alreadyStarted: false });
     listPrivateBlobPathsForShopPurge.mockResolvedValue([]);
+    listPublicBlobUrlsForShopPurge.mockResolvedValue([]);
     deletePrivateBlobPathsBestEffort.mockResolvedValue(undefined);
+    runPostCommitPublicBlobCleanup.mockResolvedValue({
+      collected: { attempted: 0, deleted: 0, failed: 0, skippedCrossShop: 0, skippedInvalid: 0 },
+      sweep: {
+        attempted: 0,
+        deleted: 0,
+        failed: 0,
+        skippedCrossShop: 0,
+        skippedInvalid: 0,
+        pages: 0,
+        listFailed: false,
+      },
+    });
   });
 
   it('sets pastDueSince once on payment_failed and keeps paid in grace', async () => {
@@ -228,9 +251,37 @@ describe('saasSubscriptionLifecycle WP-I', () => {
 
     const result = await purgeShopsAfterRetentionEnds(now);
     expect(result.purged).toBe(1);
+    expect(beginShopPurgeGate).toHaveBeenCalledWith('shop-1');
     expect(listPrivateBlobPathsForShopPurge).toHaveBeenCalledWith('shop-1');
+    expect(listPublicBlobUrlsForShopPurge).toHaveBeenCalledWith('shop-1');
     expect(purgeShopData).toHaveBeenCalled();
     expect(deletePrivateBlobPathsBestEffort).toHaveBeenCalled();
+    expect(runPostCommitPublicBlobCleanup).toHaveBeenCalledWith('shop-1', []);
+    expect(recordAccountLifecycleEvent).toHaveBeenCalled();
+  });
+
+  it('records retention purge lifecycle even when post-commit cleanup throws', async () => {
+    const now = new Date('2026-08-15T00:00:00.000Z');
+    findMany.mockResolvedValue([
+      {
+        id: 'saas-1',
+        shopId: 'shop-1',
+        customerEmail: 'owner@example.com',
+        retentionEndsAt: new Date('2026-08-01T00:00:00.000Z'),
+      },
+    ]);
+    findUniqueShop.mockResolvedValue({ id: 'shop-1' });
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        saasSubscription: { update },
+      };
+      await fn(tx);
+    });
+    update.mockResolvedValue({ ...baseRecord, shopId: null });
+    runPostCommitPublicBlobCleanup.mockRejectedValueOnce(new Error('cleanup boom'));
+
+    const result = await purgeShopsAfterRetentionEnds(now);
+    expect(result.purged).toBe(1);
     expect(recordAccountLifecycleEvent).toHaveBeenCalled();
   });
 

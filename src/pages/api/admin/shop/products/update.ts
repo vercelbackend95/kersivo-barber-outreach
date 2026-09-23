@@ -9,6 +9,16 @@ import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storag
 import { PRODUCT_CATEGORY_VALUES } from '../../../../../lib/shop/productPresentation';
 import { productSemanticFieldsChanged } from '@/lib/recommendations/hash';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
@@ -31,13 +41,28 @@ type UpdatePayload = z.infer<typeof updateSchema>;
 
 async function updateProductWithReorder(shopId: string, payload: UpdatePayload, imageUrlOverride?: string | null) {
   return runSerializableTransaction(async (tx) => {
+    await lockShopForPublicMediaAssociation(tx, shopId);
     const existing = await tx.product.findFirst({
       where: { id: payload.id, shopId },
-      select: { id: true, name: true, description: true, category: true, active: true },
+      select: { id: true, name: true, description: true, category: true, active: true, imageUrl: true },
     });
 
     if (!existing) {
       throw new Error('Product not found.');
+    }
+
+    let nextImageUrl: string | null;
+    if (typeof imageUrlOverride === 'string' && imageUrlOverride.trim()) {
+      nextImageUrl = imageUrlOverride.trim();
+    } else {
+      nextImageUrl = payload.imageUrl?.trim() || null;
+      if (nextImageUrl) {
+        assertUserSuppliedPublicMediaUrlAllowed({
+          shopId,
+          proposedUrl: nextImageUrl,
+          existingUrl: existing.imageUrl,
+        });
+      }
     }
 
     const beforeSemantic = {
@@ -54,7 +79,7 @@ async function updateProductWithReorder(shopId: string, payload: UpdatePayload, 
         name: payload.name,
         description: payload.description || null,
         pricePence: payload.pricePence,
-        imageUrl: (imageUrlOverride ?? payload.imageUrl) || null,
+        imageUrl: nextImageUrl,
         active: payload.active,
         featured: payload.featured,
         category: payload.category
@@ -104,14 +129,27 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
         return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
       }
 
+      await assertShopAllowsPublicMediaMutation(shopId);
       const file = formData.get('image');
       let uploadedImageUrl: string | null | undefined;
-      if (file instanceof File && file.size > 0) {
-        uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file, parsed.data.id));
+      try {
+        if (file instanceof File && file.size > 0) {
+          uploadedImageUrl = await uploadPublicImageToBlob(
+            file,
+            makeBlobPath('products', file, parsed.data.id),
+          );
+        }
+        const product = await updateProductWithReorder(shopId, parsed.data, uploadedImageUrl);
+        return new Response(JSON.stringify({ product }), { status: 200 });
+      } catch (error) {
+        if (uploadedImageUrl) {
+          await compensateFreshPublicBlobUpload(uploadedImageUrl, {
+            shopId,
+            expectedPathPrefix: 'products/',
+          });
+        }
+        throw error;
       }
-
-      const product = await updateProductWithReorder(shopId, parsed.data, uploadedImageUrl);
-      return new Response(JSON.stringify({ product }), { status: 200 });
     }
 
     const parsed = updateSchema.safeParse(await ctx.request.json());
@@ -123,6 +161,13 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
   } catch (error) {
     console.error('Failed to update product', error);
 
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+    }
 
     if (error instanceof Error && error.message === 'Product not found.') {
       return new Response(JSON.stringify({ error: error.message }), { status: 404 });

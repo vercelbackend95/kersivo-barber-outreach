@@ -16,6 +16,7 @@ const storeAdminAvatar = vi.fn();
 
 function txClient() {
   return {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
     shopMember: { findFirst: (...a: unknown[]) => shopMemberFindFirst(...a) },
     shopInvite: {
       findFirst: (...a: unknown[]) => shopInviteFindFirst(...a),
@@ -62,6 +63,11 @@ vi.mock('@/lib/email/sender', () => ({
 
 vi.mock('@/lib/storage/storeAdminAvatar', () => ({
   storeAdminAvatar: (...args: unknown[]) => storeAdminAvatar(...args),
+}));
+
+const compensateFreshPublicBlobUpload = vi.fn();
+vi.mock('@/lib/storage/publicBlobSafety', () => ({
+  compensateFreshPublicBlobUpload: (...args: unknown[]) => compensateFreshPublicBlobUpload(...args),
 }));
 
 vi.mock('@/lib/db/serializableTransaction', () => ({
@@ -112,7 +118,7 @@ describe('POST /api/admin/team/invite', () => {
     shopMemberFindFirst.mockResolvedValue(null);
     shopInviteFindFirst.mockResolvedValue(null);
     barberFindFirst.mockResolvedValue(null);
-    shopSettingsFindUnique.mockResolvedValue({ name: 'Shop' });
+    shopSettingsFindUnique.mockResolvedValue({ id: 'shop-1', name: 'Shop', purgeStartedAt: null });
     sendShopTeamInviteEmail.mockResolvedValue(undefined);
     shopInviteCreate.mockResolvedValue({
       id: 'inv-1',
@@ -627,8 +633,7 @@ describe('POST /api/admin/team/invite', () => {
     expect(sendShopTeamInviteEmail).not.toHaveBeenCalled();
   });
 
-  it('logs orphan avatar risk on transactional 422 after upload', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('compensates fresh avatar Blob on transactional 422 after upload', async () => {
     storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
     serviceFindMany.mockResolvedValueOnce([{ id: 'svc-1' }]).mockResolvedValueOnce([]);
 
@@ -649,18 +654,13 @@ describe('POST /api/admin/team/invite', () => {
     } as unknown as APIContext);
 
     expect(res.status).toBe(422);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[team] DB transaction failed after avatar upload; orphan blob may remain',
-      expect.objectContaining({
-        route: 'POST /api/admin/team/invite',
-        avatarUrl: 'https://blob.example/alex.jpg',
-      }),
+    expect(compensateFreshPublicBlobUpload).toHaveBeenCalledWith(
+      'https://blob.example/alex.jpg',
+      expect.objectContaining({ shopId: 'shop-1', expectedPathPrefix: 'barbers/' }),
     );
-    consoleSpy.mockRestore();
   });
 
-  it('logs orphan avatar risk on in-tx 409 after upload', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('compensates fresh avatar Blob on in-tx 409 after upload', async () => {
     storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
     serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     shopInviteFindFirst
@@ -687,17 +687,13 @@ describe('POST /api/admin/team/invite', () => {
     } as unknown as APIContext);
 
     expect(res.status).toBe(409);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[team] DB transaction failed after avatar upload; orphan blob may remain',
-      expect.objectContaining({
-        avatarUrl: 'https://blob.example/alex.jpg',
-        error: expect.objectContaining({ code: 'INVITATION_ALREADY_PENDING', status: 409 }),
-      }),
+    expect(compensateFreshPublicBlobUpload).toHaveBeenCalledWith(
+      'https://blob.example/alex.jpg',
+      expect.objectContaining({ shopId: 'shop-1', expectedPathPrefix: 'barbers/' }),
     );
-    consoleSpy.mockRestore();
   });
 
-  it('does not log orphan avatar risk when only email delivery fails after commit', async () => {
+  it('does not compensate avatar when only email delivery fails after commit', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
     serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
@@ -733,10 +729,7 @@ describe('POST /api/admin/team/invite', () => {
     expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.emailSent).toBe(false);
-    expect(consoleSpy).not.toHaveBeenCalledWith(
-      '[team] DB transaction failed after avatar upload; orphan blob may remain',
-      expect.anything(),
-    );
+    expect(compensateFreshPublicBlobUpload).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 

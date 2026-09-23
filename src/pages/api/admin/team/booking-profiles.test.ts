@@ -26,6 +26,11 @@ vi.mock('@/lib/storage/storeAdminAvatar', () => ({
   storeAdminAvatar: vi.fn(),
 }));
 
+const compensateFreshPublicBlobUpload = vi.fn();
+vi.mock('@/lib/storage/publicBlobSafety', () => ({
+  compensateFreshPublicBlobUpload: (...args: unknown[]) => compensateFreshPublicBlobUpload(...args),
+}));
+
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     barber: {
@@ -37,6 +42,9 @@ vi.mock('@/lib/db/client', () => ({
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
     shopInvite: { create: (...a: unknown[]) => shopInviteCreate(...a) },
     shopMember: { create: (...a: unknown[]) => shopMemberCreate(...a) },
+    shopSettings: {
+      findUnique: vi.fn().mockResolvedValue({ id: 'shop-1', purgeStartedAt: null }),
+    },
     shopOpeningHours: { findMany: vi.fn().mockResolvedValue([]) },
     $transaction: (...a: unknown[]) => transaction(...a),
   },
@@ -85,6 +93,7 @@ describe('POST /api/admin/team/booking-profiles', () => {
     availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
         barber: {
           create: (...a: unknown[]) => barberCreate(...a),
           aggregate: (...a: unknown[]) => barberAggregate(...a),
@@ -253,8 +262,7 @@ describe('POST /api/admin/team/booking-profiles', () => {
     expect(barberCreate).not.toHaveBeenCalled();
   });
 
-  it('logs orphan avatar risk on transactional 422 after upload', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('compensates fresh avatar Blob on transactional 422 after upload', async () => {
     vi.mocked(storeAdminAvatar).mockResolvedValue('https://blob.example/alex.jpg');
     serviceFindMany.mockResolvedValueOnce([{ id: 'svc-1' }]).mockResolvedValueOnce([]);
 
@@ -272,21 +280,16 @@ describe('POST /api/admin/team/booking-profiles', () => {
     } as unknown as APIContext);
 
     expect(res.status).toBe(422);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[team] DB transaction failed after avatar upload; orphan blob may remain',
-      expect.objectContaining({
-        route: 'POST /api/admin/team/booking-profiles',
-        avatarUrl: 'https://blob.example/alex.jpg',
-      }),
+    expect(compensateFreshPublicBlobUpload).toHaveBeenCalledWith(
+      'https://blob.example/alex.jpg',
+      expect.objectContaining({ shopId: 'shop-1', expectedPathPrefix: 'barbers/' }),
     );
-    consoleSpy.mockRestore();
   });
 
-  it('logs orphan avatar risk on unexpected transaction failure after upload', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('compensates fresh avatar Blob on unexpected transaction failure after upload', async () => {
     vi.mocked(storeAdminAvatar).mockResolvedValue('https://blob.example/alex.jpg');
     serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
-    barberServiceCreateMany.mockRejectedValue(new Error('service boom'));
+    transaction.mockRejectedValueOnce(new Error('db down'));
 
     const form = new FormData();
     form.set('displayName', 'Alex');
@@ -302,12 +305,9 @@ describe('POST /api/admin/team/booking-profiles', () => {
     } as unknown as APIContext);
 
     expect(res.status).toBe(500);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[team] DB transaction failed after avatar upload; orphan blob may remain',
-      expect.objectContaining({
-        avatarUrl: 'https://blob.example/alex.jpg',
-      }),
+    expect(compensateFreshPublicBlobUpload).toHaveBeenCalledWith(
+      'https://blob.example/alex.jpg',
+      expect.objectContaining({ shopId: 'shop-1', expectedPathPrefix: 'barbers/' }),
     );
-    consoleSpy.mockRestore();
   });
 });

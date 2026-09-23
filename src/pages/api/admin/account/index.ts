@@ -19,10 +19,14 @@ import {
   userHasPasswordCredential,
   verifyAccountDeletionReauth,
 } from '@/lib/setup/accountReauth';
+import { captureOpsMessage } from '@/lib/ops/sentry';
 import {
+  beginShopPurgeGate,
   deletePrivateBlobPathsBestEffort,
   listPrivateBlobPathsForShopPurge,
+  listPublicBlobUrlsForShopPurge,
   purgeShopData,
+  runPostCommitPublicBlobCleanup,
 } from '@/lib/setup/purgeShopData';
 
 async function loadSoleOwnerShopIds(userId: string): Promise<string[]> {
@@ -172,10 +176,15 @@ export const DELETE: APIRoute = async (context) => {
     meta: { soleOwnerShopIds },
   });
 
+  const privateBlobPaths: string[] = [];
+  const publicBlobUrlsByShop = new Map<string, string[]>();
+
+  // PHASE 1 — authoritative DB deletion. Failures here are hard failures.
   try {
-    const privateBlobPaths: string[] = [];
     for (const shopId of soleOwnerShopIds) {
+      await beginShopPurgeGate(shopId);
       privateBlobPaths.push(...(await listPrivateBlobPathsForShopPurge(shopId)));
+      publicBlobUrlsByShop.set(shopId, await listPublicBlobUrlsForShopPurge(shopId));
     }
 
     await prisma.$transaction(async (tx) => {
@@ -195,11 +204,30 @@ export const DELETE: APIRoute = async (context) => {
 
       await tx.user.delete({ where: { id: userId } });
     });
-
-    await deletePrivateBlobPathsBestEffort(privateBlobPaths);
   } catch (error) {
     console.error('Failed to delete account', error);
     return new Response(JSON.stringify({ error: 'Unable to delete account.' }), { status: 500 });
+  }
+
+  // PHASE 2 — post-commit provider cleanup is best-effort and must not flip deletion to HTTP 500.
+  let cleanupWarning = false;
+  try {
+    await deletePrivateBlobPathsBestEffort(privateBlobPaths);
+    for (const shopId of soleOwnerShopIds) {
+      await runPostCommitPublicBlobCleanup(shopId, publicBlobUrlsByShop.get(shopId) ?? []);
+    }
+  } catch (error) {
+    cleanupWarning = true;
+    console.error('[account-delete] post-commit blob cleanup failed', {
+      phase: 'post_commit_cleanup',
+      error: error instanceof Error ? error.message : 'unknown',
+    });
+    captureOpsMessage('Account delete post-commit Blob cleanup incomplete', {
+      route: 'admin.account.delete',
+      level: 'warning',
+      opsAlert: true,
+      tags: { phase: 'post_commit_cleanup' },
+    });
   }
 
   context.cookies.set(getAdminSessionCookieName(), '', {
@@ -207,7 +235,10 @@ export const DELETE: APIRoute = async (context) => {
     maxAge: 0,
   });
 
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return new Response(
+    JSON.stringify(cleanupWarning ? { ok: true, cleanupWarning: true } : { ok: true }),
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
 };

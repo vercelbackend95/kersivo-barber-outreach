@@ -4,8 +4,18 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { prisma } from '@/lib/db/client';
 import { storeShopLogo } from '@/lib/storage/storeShopLogo';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  runWithShopMediaAssociationLock,
+} from '@/lib/storage/shopPublicMediaGate';
+import { prisma } from '@/lib/db/client';
 
 const jsonSchema = z.object({
   name: z.string().trim().min(1, 'Barbershop name is required.').max(120),
@@ -36,6 +46,7 @@ export const PUT: APIRoute = async (ctx) => {
     let townCity: string | null;
     let logoUrl: string | null | undefined;
     let clearLogo = false;
+    let uploadedLogoUrl: string | undefined;
 
     if (contentType.includes('multipart/form-data')) {
       const form = await ctx.request.formData();
@@ -49,7 +60,9 @@ export const PUT: APIRoute = async (ctx) => {
       }
 
       if (logo instanceof File && logo.size > 0) {
-        logoUrl = await storeShopLogo(logo, shopId);
+        await assertShopAllowsPublicMediaMutation(shopId);
+        uploadedLogoUrl = await storeShopLogo(logo, shopId);
+        logoUrl = uploadedLogoUrl;
       } else if (clearLogo) {
         logoUrl = null;
       }
@@ -70,24 +83,61 @@ export const PUT: APIRoute = async (ctx) => {
       }
     }
 
-    const updated = await prisma.shopSettings.update({
-      where: { id: shopId },
-      data: {
-        name,
-        townCity,
-        ...(logoUrl !== undefined ? { logoUrl } : {}),
-      },
-      select: { name: true, townCity: true, logoUrl: true },
-    });
+    const touchesLogo = logoUrl !== undefined;
+    if (touchesLogo && !uploadedLogoUrl && logoUrl) {
+      const existing = await prisma.shopSettings.findUnique({
+        where: { id: shopId },
+        select: { logoUrl: true },
+      });
+      assertUserSuppliedPublicMediaUrlAllowed({
+        shopId,
+        proposedUrl: logoUrl,
+        existingUrl: existing?.logoUrl,
+      });
+    }
 
-    return json({
-      identity: {
-        name: updated.name,
-        townCity: updated.townCity,
-        logoUrl: updated.logoUrl,
-      },
-    });
+    try {
+      const updated = touchesLogo
+        ? await runWithShopMediaAssociationLock(shopId, async (tx) =>
+            tx.shopSettings.update({
+              where: { id: shopId },
+              data: {
+                name,
+                townCity,
+                logoUrl,
+              },
+              select: { name: true, townCity: true, logoUrl: true },
+            }),
+          )
+        : await prisma.shopSettings.update({
+            where: { id: shopId },
+            data: { name, townCity },
+            select: { name: true, townCity: true, logoUrl: true },
+          });
+
+      return json({
+        identity: {
+          name: updated.name,
+          townCity: updated.townCity,
+          logoUrl: updated.logoUrl,
+        },
+      });
+    } catch (error) {
+      if (uploadedLogoUrl) {
+        await compensateFreshPublicBlobUpload(uploadedLogoUrl, {
+          shopId,
+          expectedPathPrefix: `shops/${shopId}/`,
+        });
+      }
+      throw error;
+    }
   } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return json({ error: error.message, code: error.code }, 409);
+    }
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return json({ error: error.message, code: error.code }, 400);
+    }
     const message = error instanceof Error ? error.message : 'Unable to save barbershop details.';
     return json({ error: message }, 500);
   }

@@ -12,6 +12,14 @@ import { unfeatureOtherServicesInCategory } from '../../../../lib/admin/serviceF
 import { prisma } from '../../../../lib/db/client';
 import { serviceSemanticFieldsChanged } from '@/lib/recommendations/hash';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 
 const updateSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -56,9 +64,25 @@ export const PATCH: APIRoute = async (ctx) => {
       name: true,
       description: true,
       isActive: true,
+      imageUrl: true,
     },
   });
   if (!owned) return new Response(JSON.stringify({ error: 'Service not found.' }), { status: 404 });
+
+  if (data.imageUrl !== undefined && data.imageUrl?.trim()) {
+    try {
+      assertUserSuppliedPublicMediaUrlAllowed({
+        shopId,
+        proposedUrl: data.imageUrl.trim(),
+        existingUrl: owned.imageUrl,
+      });
+    } catch (error) {
+      if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+        return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+      }
+      throw error;
+    }
+  }
 
   const beforeSemantic = {
     name: owned.name,
@@ -69,79 +93,92 @@ export const PATCH: APIRoute = async (ctx) => {
   const nextFeatured = data.featured ?? owned.featured;
   const effectiveCategory = normalizedCategory ?? owned.category;
 
-  const { service, categories } = await prisma.$transaction(async (tx) => {
-    const validBarberIds =
-      uniqueBarberIds && uniqueBarberIds.length > 0
-        ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds }, shopId }, select: { id: true } })).map(
-            (barber) => barber.id
-          )
-        : [];
-
-    if (uniqueBarberIds !== null) {
-      await tx.barberService.deleteMany({ where: { serviceId: id } });
-      if (validBarberIds.length > 0) {
-        await tx.barberService.createMany({
-          data: validBarberIds.map((barberId) => ({ barberId, serviceId: id })),
-          skipDuplicates: true
-        });
+  try {
+    const { service, categories } = await prisma.$transaction(async (tx) => {
+      if (data.imageUrl !== undefined) {
+        await lockShopForPublicMediaAssociation(tx, shopId);
       }
-    }
+      const validBarberIds =
+        uniqueBarberIds && uniqueBarberIds.length > 0
+          ? (
+              await tx.barber.findMany({
+                where: { id: { in: uniqueBarberIds }, shopId },
+                select: { id: true },
+              })
+            ).map((barber) => barber.id)
+          : [];
 
-    if (nextFeatured) {
-      await unfeatureOtherServicesInCategory(tx, shopId, effectiveCategory, id);
-    }
-
-    const updated = await tx.service.update({
-      where: { id },
-      data: {
-        ...(data.name !== undefined ? { name: data.name } : {}),
-        ...(data.description !== undefined ? { description: data.description?.trim() || null } : {}),
-        ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl?.trim() || null } : {}),
-        ...(data.pricePence !== undefined ? { pricePence: data.pricePence } : {}),
-        ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes } : {}),
-        ...(data.bufferMinutes !== undefined ? { bufferMinutes: data.bufferMinutes } : {}),
-        ...(data.displayOrder !== undefined ? { displayOrder: data.displayOrder } : {}),
-        ...(normalizedCategory !== undefined ? { category: normalizedCategory } : {}),
-        ...(data.featured !== undefined ? { featured: data.featured } : {}),
-        ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
-      },
-      include: {
-        barberServices: {
-          orderBy: {
-            barber: {
-              sortOrder: 'asc'
-            }
-          },
-          select: {
-            barber: {
-              select: {
-                id: true,
-                name: true,
-                active: true
-              }
-            }
-          }
+      if (uniqueBarberIds !== null) {
+        await tx.barberService.deleteMany({ where: { serviceId: id } });
+        if (validBarberIds.length > 0) {
+          await tx.barberService.createMany({
+            data: validBarberIds.map((barberId) => ({ barberId, serviceId: id })),
+            skipDuplicates: true,
+          });
         }
       }
+
+      if (nextFeatured) {
+        await unfeatureOtherServicesInCategory(tx, shopId, effectiveCategory, id);
+      }
+
+      const updated = await tx.service.update({
+        where: { id },
+        data: {
+          ...(data.name !== undefined ? { name: data.name } : {}),
+          ...(data.description !== undefined ? { description: data.description?.trim() || null } : {}),
+          ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl?.trim() || null } : {}),
+          ...(data.pricePence !== undefined ? { pricePence: data.pricePence } : {}),
+          ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes } : {}),
+          ...(data.bufferMinutes !== undefined ? { bufferMinutes: data.bufferMinutes } : {}),
+          ...(data.displayOrder !== undefined ? { displayOrder: data.displayOrder } : {}),
+          ...(normalizedCategory !== undefined ? { category: normalizedCategory } : {}),
+          ...(data.featured !== undefined ? { featured: data.featured } : {}),
+          ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        },
+        include: {
+          barberServices: {
+            orderBy: {
+              barber: {
+                sortOrder: 'asc',
+              },
+            },
+            select: {
+              barber: {
+                select: {
+                  id: true,
+                  name: true,
+                  active: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const nextCategories =
+        normalizedCategory !== undefined
+          ? await ensureCustomServiceCategory(shopId, normalizedCategory, tx)
+          : await loadMergedServiceCategories(shopId, tx);
+
+      const afterSemantic = {
+        name: updated.name,
+        description: updated.description,
+        category: updated.category,
+      };
+      const availabilityChanged = owned.isActive !== updated.isActive;
+      if (serviceSemanticFieldsChanged(beforeSemantic, afterSemantic) || availabilityChanged) {
+        await scheduleCatalogueRebuild(shopId, tx);
+      }
+
+      return { service: updated, categories: nextCategories };
     });
 
-    const nextCategories =
-      normalizedCategory !== undefined
-        ? await ensureCustomServiceCategory(shopId, normalizedCategory, tx)
-        : await loadMergedServiceCategories(shopId, tx);
-
-    const afterSemantic = {
-      name: updated.name,
-      description: updated.description,
-      category: updated.category,
-    };
-    const availabilityChanged = owned.isActive !== updated.isActive;
-    if (serviceSemanticFieldsChanged(beforeSemantic, afterSemantic) || availabilityChanged) {
-      await scheduleCatalogueRebuild(shopId, tx);
+    return new Response(JSON.stringify({ service, categories }));
+  } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
     }
-
-    return { service: updated, categories: nextCategories };
-  });
-
-  return new Response(JSON.stringify({ service, categories }));
+    throw error;
+  }
 };

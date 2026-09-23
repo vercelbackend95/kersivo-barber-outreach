@@ -3,6 +3,13 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminPermission } from '../../../../lib/admin/auth';
 import {
+  compensateFreshPublicBlobUpload,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+} from '@/lib/storage/shopPublicMediaGate';
+import {
   getBlobReadWriteToken,
   makeBlobPath,
   uploadPublicImageToBlob,
@@ -34,6 +41,8 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   try {
+    await assertShopAllowsPublicMediaMutation(access.shopId);
+
     const contentType = ctx.request.headers.get('content-type') ?? '';
     if (!contentType.includes('multipart/form-data')) {
       return jsonResponse({ error: 'Expected multipart/form-data.' }, 400);
@@ -57,8 +66,24 @@ export const POST: APIRoute = async (ctx) => {
     const pathname = makeBlobPath(`shops/${access.shopId}/products`, filePart);
     const url = await uploadPublicImageToBlob(filePart, pathname);
 
+    try {
+      await assertShopAllowsPublicMediaMutation(access.shopId);
+    } catch (error) {
+      await compensateFreshPublicBlobUpload(url, {
+        shopId: access.shopId,
+        expectedPathPrefix: `shops/${access.shopId}/products/`,
+      });
+      if (isShopMediaMutationBlockedError(error)) {
+        return jsonResponse({ error: error.message, code: error.code }, 409);
+      }
+      throw error;
+    }
+
     return jsonResponse({ url }, 200);
   } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return jsonResponse({ error: error.message, code: error.code }, 409);
+    }
     const message = error instanceof Error ? error.message : 'Could not upload image.';
     return jsonResponse({ error: message }, 500);
   }

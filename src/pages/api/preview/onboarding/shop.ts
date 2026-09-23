@@ -15,6 +15,16 @@ import {
   requirePreviewOnboardingAccess,
 } from '@/lib/preview/shopPreviewSession';
 import { storeShopLogo } from '@/lib/storage/storeShopLogo';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  runWithShopMediaAssociationLock,
+} from '@/lib/storage/shopPublicMediaGate';
 
 const jsonSchema = z.object({
   name: z.string().trim().min(1, 'Barbershop name is required.').max(120),
@@ -42,6 +52,7 @@ export const PUT: APIRoute = async (ctx) => {
     let townCity: string | null;
     let logoUrl: string | null | undefined;
     let clearLogo = false;
+    let uploadedLogoUrl: string | undefined;
 
     if (contentType.includes('multipart/form-data')) {
       const form = await ctx.request.formData();
@@ -55,7 +66,9 @@ export const PUT: APIRoute = async (ctx) => {
       }
 
       if (logo instanceof File && logo.size > 0) {
-        logoUrl = await storeShopLogo(logo, shopId);
+        await assertShopAllowsPublicMediaMutation(shopId);
+        uploadedLogoUrl = await storeShopLogo(logo, shopId);
+        logoUrl = uploadedLogoUrl;
       } else if (clearLogo) {
         logoUrl = null;
       }
@@ -76,19 +89,52 @@ export const PUT: APIRoute = async (ctx) => {
       }
     }
 
-    await prisma.shopSettings.update({
-      where: { id: shopId },
-      data: {
-        name,
-        townCity,
-        ...(logoUrl !== undefined ? { logoUrl } : {}),
-      },
-    });
+    const touchesLogo = logoUrl !== undefined;
+    if (touchesLogo && !uploadedLogoUrl && logoUrl) {
+      const existing = await prisma.shopSettings.findUnique({
+        where: { id: shopId },
+        select: { logoUrl: true },
+      });
+      assertUserSuppliedPublicMediaUrlAllowed({
+        shopId,
+        proposedUrl: logoUrl,
+        existingUrl: existing?.logoUrl,
+      });
+    }
+    try {
+      if (touchesLogo) {
+        await runWithShopMediaAssociationLock(shopId, async (tx) => {
+          await tx.shopSettings.update({
+            where: { id: shopId },
+            data: { name, townCity, logoUrl },
+          });
+        });
+      } else {
+        await prisma.shopSettings.update({
+          where: { id: shopId },
+          data: { name, townCity },
+        });
+      }
+    } catch (error) {
+      if (uploadedLogoUrl) {
+        await compensateFreshPublicBlobUpload(uploadedLogoUrl, {
+          shopId,
+          expectedPathPrefix: `shops/${shopId}/`,
+        });
+      }
+      throw error;
+    }
 
     await advanceOnboardingStep(shopId, ONBOARDING_STEP_SHOP_HOURS);
     const state = await loadOnboardingState(shopId, GUEST_ONBOARDING_VIEWER);
     return new Response(JSON.stringify(state));
   } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+    }
     const message = error instanceof Error ? error.message : 'Unable to save shop details.';
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }

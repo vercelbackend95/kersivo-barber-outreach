@@ -130,6 +130,7 @@ async function tryLoadVercelBlobDel(): Promise<BlobDelFn | null> {
 /**
  * Best-effort delete from the public Blob store (`barberdemo-uploads`).
  * Accepts a full public URL or a pathname. Idempotent where the provider allows.
+ * Callers that perform shop-wide cleanup must validate URL/store identity first.
  */
 export async function deletePublicBlobObject(urlOrPathname: string): Promise<void> {
   const path = urlOrPathname.trim();
@@ -143,4 +144,72 @@ export async function deletePublicBlobObject(urlOrPathname: string): Promise<voi
     throw new Error('Vercel Blob delete helper is unavailable.');
   }
   await del(path, { token });
+}
+
+type BlobListFn = (
+  options?: {
+    token?: string;
+    prefix?: string;
+    cursor?: string;
+    limit?: number;
+  },
+) => Promise<{
+  blobs: Array<{ url: string; pathname: string }>;
+  cursor?: string;
+  hasMore: boolean;
+}>;
+
+async function tryLoadVercelBlobList(): Promise<BlobListFn | null> {
+  try {
+    const loadModule = new Function('return import("@vercel/blob")') as () => Promise<{ list?: BlobListFn }>;
+    const blobModule = await loadModule();
+    if (typeof blobModule.list === 'function') {
+      return blobModule.list as BlobListFn;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export type PublicBlobListPage = {
+  blobs: Array<{ url: string; pathname: string }>;
+  cursor?: string;
+  hasMore: boolean;
+};
+
+/**
+ * List public-store blobs by pathname prefix using BLOB_READ_WRITE_TOKEN only.
+ * Never uses PRIVATE_BLOB_READ_WRITE_TOKEN.
+ */
+export async function listPublicBlobsByPrefix(
+  prefix: string,
+  options: { cursor?: string; limit?: number } = {},
+): Promise<PublicBlobListPage> {
+  const safePrefix = prefix.trim();
+  if (!safePrefix) {
+    throw new Error('Public Blob list prefix is required.');
+  }
+  const token = getBlobReadWriteToken();
+  if (!token) {
+    throw new Error('Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN).');
+  }
+  const list = await tryLoadVercelBlobList();
+  if (!list) {
+    throw new Error('Vercel Blob list helper is unavailable.');
+  }
+  const result = await list({
+    token,
+    prefix: safePrefix,
+    cursor: options.cursor,
+    limit: options.limit ?? 1000,
+  });
+  return {
+    blobs: (result.blobs ?? []).map((blob) => ({
+      url: String(blob.url ?? ''),
+      pathname: String(blob.pathname ?? ''),
+    })),
+    cursor: result.cursor,
+    hasMore: Boolean(result.hasMore),
+  };
 }

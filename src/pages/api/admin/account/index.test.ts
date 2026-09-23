@@ -52,12 +52,36 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
-vi.mock('@/lib/setup/purgeShopData', () => ({
-  purgeShopData: vi.fn(async () => undefined),
-  listPrivateBlobPathsForShopPurge: vi.fn(async () => []),
-  deletePrivateBlobPathsBestEffort: vi.fn(async () => undefined),
+vi.mock('@/lib/ops/sentry', () => ({
+  captureOpsMessage: vi.fn(),
 }));
 
+vi.mock('@/lib/setup/purgeShopData', () => ({
+  purgeShopData: vi.fn(async () => undefined),
+  beginShopPurgeGate: vi.fn(async () => ({ alreadyStarted: false })),
+  listPrivateBlobPathsForShopPurge: vi.fn(async () => []),
+  listPublicBlobUrlsForShopPurge: vi.fn(async () => []),
+  deletePrivateBlobPathsBestEffort: vi.fn(async () => undefined),
+  runPostCommitPublicBlobCleanup: vi.fn(async () => ({
+    collected: { attempted: 0, deleted: 0, failed: 0, skippedCrossShop: 0, skippedInvalid: 0 },
+    sweep: {
+      attempted: 0,
+      deleted: 0,
+      failed: 0,
+      skippedCrossShop: 0,
+      skippedInvalid: 0,
+      pages: 0,
+      listFailed: false,
+    },
+  })),
+}));
+
+import {
+  beginShopPurgeGate,
+  deletePrivateBlobPathsBestEffort,
+  listPublicBlobUrlsForShopPurge,
+  runPostCommitPublicBlobCleanup,
+} from '@/lib/setup/purgeShopData';
 import { DELETE, GET } from './index';
 
 function makeDeleteContext(body: unknown): APIContext {
@@ -88,6 +112,25 @@ describe('/api/admin/account', () => {
     recordAccountLifecycleEvent.mockReset();
     transaction.mockReset();
     cookieSet.mockReset();
+    vi.mocked(beginShopPurgeGate).mockReset();
+    vi.mocked(beginShopPurgeGate).mockResolvedValue({ alreadyStarted: false });
+    vi.mocked(listPublicBlobUrlsForShopPurge).mockReset();
+    vi.mocked(listPublicBlobUrlsForShopPurge).mockResolvedValue([]);
+    vi.mocked(deletePrivateBlobPathsBestEffort).mockReset();
+    vi.mocked(deletePrivateBlobPathsBestEffort).mockResolvedValue(undefined);
+    vi.mocked(runPostCommitPublicBlobCleanup).mockReset();
+    vi.mocked(runPostCommitPublicBlobCleanup).mockResolvedValue({
+      collected: { attempted: 0, deleted: 0, failed: 0, skippedCrossShop: 0, skippedInvalid: 0 },
+      sweep: {
+        attempted: 0,
+        deleted: 0,
+        failed: 0,
+        skippedCrossShop: 0,
+        skippedInvalid: 0,
+        pages: 0,
+        listFailed: false,
+      },
+    });
   });
 
   it('GET returns deletionBlocked for ACTIVE sole-owner shop', async () => {
@@ -179,5 +222,88 @@ describe('/api/admin/account', () => {
     );
     expect(res.status).toBe(200);
     expect(transaction).toHaveBeenCalled();
+    expect(beginShopPurgeGate).toHaveBeenCalledWith('shop-1');
+    expect(runPostCommitPublicBlobCleanup).toHaveBeenCalled();
+  });
+
+  it('DELETE remains success when post-commit public cleanup throws after DB commit', async () => {
+    getSession.mockResolvedValue({ user: { id: 'u1', email: 'o@example.com' } });
+    findFirstAccount.mockResolvedValue({ password: 'hashed' });
+    verifyPassword.mockResolvedValue(true);
+    findManyMembers.mockResolvedValue([{ shopId: 'shop-1' }]);
+    countOwners.mockResolvedValue(0);
+    findManySubs.mockResolvedValue([
+      {
+        shopId: 'shop-1',
+        status: 'CANCELED',
+        stripeSubscriptionId: 'sub_1',
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+      },
+    ]);
+    transaction.mockResolvedValue(undefined);
+    vi.mocked(runPostCommitPublicBlobCleanup).mockRejectedValueOnce(new Error('provider boom'));
+
+    const res = await DELETE(
+      makeDeleteContext({ confirm: 'DELETE', password: 'secret' }) as never,
+    );
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.cleanupWarning).toBe(true);
+    expect(cookieSet).toHaveBeenCalled();
+  });
+
+  it('DELETE remains success when post-commit private cleanup throws after DB commit', async () => {
+    getSession.mockResolvedValue({ user: { id: 'u1', email: 'o@example.com' } });
+    findFirstAccount.mockResolvedValue({ password: 'hashed' });
+    verifyPassword.mockResolvedValue(true);
+    findManyMembers.mockResolvedValue([{ shopId: 'shop-1' }]);
+    countOwners.mockResolvedValue(0);
+    findManySubs.mockResolvedValue([
+      {
+        shopId: 'shop-1',
+        status: 'CANCELED',
+        stripeSubscriptionId: 'sub_1',
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+      },
+    ]);
+    transaction.mockResolvedValue(undefined);
+    vi.mocked(deletePrivateBlobPathsBestEffort).mockRejectedValueOnce(new Error('private boom'));
+
+    const res = await DELETE(
+      makeDeleteContext({ confirm: 'DELETE', password: 'secret' }) as never,
+    );
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.cleanupWarning).toBe(true);
+    expect(runPostCommitPublicBlobCleanup).not.toHaveBeenCalled();
+  });
+
+  it('DELETE returns failure and skips post-commit cleanup when DB transaction fails', async () => {
+    getSession.mockResolvedValue({ user: { id: 'u1', email: 'o@example.com' } });
+    findFirstAccount.mockResolvedValue({ password: 'hashed' });
+    verifyPassword.mockResolvedValue(true);
+    findManyMembers.mockResolvedValue([{ shopId: 'shop-1' }]);
+    countOwners.mockResolvedValue(0);
+    findManySubs.mockResolvedValue([
+      {
+        shopId: 'shop-1',
+        status: 'CANCELED',
+        stripeSubscriptionId: 'sub_1',
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+      },
+    ]);
+    transaction.mockRejectedValue(new Error('db fail'));
+
+    const res = await DELETE(
+      makeDeleteContext({ confirm: 'DELETE', password: 'secret' }) as never,
+    );
+    expect(res.status).toBe(500);
+    expect(runPostCommitPublicBlobCleanup).not.toHaveBeenCalled();
+    expect(deletePrivateBlobPathsBestEffort).not.toHaveBeenCalled();
   });
 });

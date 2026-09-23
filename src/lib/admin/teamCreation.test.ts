@@ -161,6 +161,7 @@ describe('createStandaloneBookingProfile', () => {
     vi.clearAllMocks();
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
         barber: {
           create: (...a: unknown[]) => barberCreate(...a),
           aggregate: (...a: unknown[]) => barberAggregate(...a),

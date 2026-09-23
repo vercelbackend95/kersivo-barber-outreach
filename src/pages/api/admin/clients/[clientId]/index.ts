@@ -310,21 +310,51 @@ export const PATCH: APIRoute = async (ctx) => {
     let avatarUrl: string;
     try {
       const { storeAdminAvatar } = await import('../../../../../lib/storage/storeAdminAvatar');
+      const { assertShopAllowsPublicMediaMutation } = await import('@/lib/storage/shopPublicMediaGate');
+      const { runWithShopMediaAssociationLock } = await import('@/lib/storage/shopPublicMediaGate');
+      const { compensateFreshPublicBlobUpload } = await import('@/lib/storage/publicBlobSafety');
+      const { isShopMediaMutationBlockedError } = await import('@/lib/storage/shopPublicMediaGate');
+
+      await assertShopAllowsPublicMediaMutation(shopId);
       avatarUrl = await storeAdminAvatar(avatar, 'clients', clientId);
+      try {
+        const updated = await runWithShopMediaAssociationLock(shopId, async (tx) =>
+          tx.client.updateMany({
+            where: { id: clientId, shopId },
+            data: { avatarUrl },
+          }),
+        );
+
+        if (updated.count === 0) {
+          await compensateFreshPublicBlobUpload(avatarUrl, {
+            shopId,
+            expectedPathPrefix: 'clients/',
+          });
+          return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+        }
+      } catch (error) {
+        await compensateFreshPublicBlobUpload(avatarUrl, {
+          shopId,
+          expectedPathPrefix: 'clients/',
+        });
+        if (isShopMediaMutationBlockedError(error)) {
+          return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+            status: 409,
+          });
+        }
+        throw error;
+      }
     } catch (error) {
+      const { isShopMediaMutationBlockedError } = await import('@/lib/storage/shopPublicMediaGate');
+      if (isShopMediaMutationBlockedError(error)) {
+        return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+          status: 409,
+        });
+      }
       return new Response(
         JSON.stringify({ error: error instanceof Error ? error.message : 'Could not upload avatar.' }),
         { status: 400 },
       );
-    }
-
-    const updated = await prisma.client.updateMany({
-      where: { id: clientId, shopId },
-      data: { avatarUrl },
-    });
-
-    if (updated.count === 0) {
-      return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
     }
 
     const client = await prisma.client.findUnique({
@@ -374,13 +404,64 @@ export const PATCH: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Nothing to update.' }), { status: 400 });
   }
 
-  const updated = await prisma.client.updateMany({
-    where: { id: clientId, shopId },
-    data,
-  });
+  try {
+    if (data.avatarUrl) {
+      const existing = await prisma.client.findFirst({
+        where: { id: clientId, shopId },
+        select: { avatarUrl: true },
+      });
+      const {
+        assertUserSuppliedPublicMediaUrlAllowed,
+        isUserSuppliedPublicMediaUrlRejectedError,
+      } = await import('@/lib/storage/publicBlobSafety');
+      try {
+        assertUserSuppliedPublicMediaUrlAllowed({
+          shopId,
+          proposedUrl: data.avatarUrl,
+          existingUrl: existing?.avatarUrl,
+        });
+      } catch (error) {
+        if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+          return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+            status: 400,
+          });
+        }
+        throw error;
+      }
+    }
 
-  if (updated.count === 0) {
-    return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+    const updated =
+      data.avatarUrl !== undefined
+        ? await (async () => {
+            const { runWithShopMediaAssociationLock, isShopMediaMutationBlockedError } = await import(
+              '@/lib/storage/shopPublicMediaGate'
+            );
+            try {
+              return await runWithShopMediaAssociationLock(shopId, async (tx) =>
+                tx.client.updateMany({
+                  where: { id: clientId, shopId },
+                  data,
+                }),
+              );
+            } catch (error) {
+              if (isShopMediaMutationBlockedError(error)) throw error;
+              throw error;
+            }
+          })()
+        : await prisma.client.updateMany({
+            where: { id: clientId, shopId },
+            data,
+          });
+
+    if (updated.count === 0) {
+      return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+    }
+  } catch (error) {
+    const { isShopMediaMutationBlockedError } = await import('@/lib/storage/shopPublicMediaGate');
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+    throw error;
   }
 
   const client = await prisma.client.findUnique({

@@ -101,6 +101,7 @@ describe('PUT /api/admin/onboarding/barbers', () => {
     loadOnboardingState.mockResolvedValue({ ok: true });
     prismaTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
         barber: {
           create: (...a: unknown[]) => barberCreate(...a),
           update: (...a: unknown[]) => barberUpdate(...a),

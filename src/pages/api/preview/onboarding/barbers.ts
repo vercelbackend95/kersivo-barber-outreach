@@ -15,6 +15,16 @@ import {
   requirePreviewOnboardingAccess,
 } from '@/lib/preview/shopPreviewSession';
 import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '@/lib/storage/vercelBlob';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -105,6 +115,7 @@ export const PUT: APIRoute = async (ctx) => {
   try {
     const contentType = ctx.request.headers.get('content-type') ?? '';
     let items: BarberItem[] = [];
+    const uploadedAvatarUrls: string[] = [];
 
     if (contentType.includes('multipart/form-data')) {
       const form = await ctx.request.formData();
@@ -121,11 +132,21 @@ export const PUT: APIRoute = async (ctx) => {
       }
       items = normalizeItems(parsed.data.barbers);
 
-      for (let index = 0; index < items.length; index += 1) {
-        const file = form.get(`avatar_${index}`);
-        if (file instanceof File && file.size > 0) {
-          items[index]!.avatarUrl = await storeAvatar(file, items[index]!.id);
+      try {
+        await assertShopAllowsPublicMediaMutation(shopId);
+        for (let index = 0; index < items.length; index += 1) {
+          const file = form.get(`avatar_${index}`);
+          if (file instanceof File && file.size > 0) {
+            const url = await storeAvatar(file, items[index]!.id);
+            uploadedAvatarUrls.push(url);
+            items[index]!.avatarUrl = url;
+          }
         }
+      } catch (error) {
+        for (const url of uploadedAvatarUrls) {
+          await compensateFreshPublicBlobUpload(url, { shopId, expectedPathPrefix: 'barbers/' });
+        }
+        throw error;
       }
     } else {
       const parsed = payloadSchema.safeParse(await ctx.request.json());
@@ -137,66 +158,90 @@ export const PUT: APIRoute = async (ctx) => {
 
     const existing = await prisma.barber.findMany({
       where: { shopId },
-      select: { id: true },
+      select: { id: true, avatarUrl: true },
     });
     const existingIds = new Set(existing.map((barber) => barber.id));
+    const existingById = new Map(existing.map((barber) => [barber.id, barber]));
 
     if (!items[0]!.id && existing.length === 1) {
       items[0]!.id = existing[0]!.id;
     }
 
+    const uploadedSet = new Set(uploadedAvatarUrls);
+    for (const item of items) {
+      if (!item.avatarUrl || uploadedSet.has(item.avatarUrl)) continue;
+      assertUserSuppliedPublicMediaUrlAllowed({
+        shopId,
+        proposedUrl: item.avatarUrl,
+        existingUrl: item.id ? existingById.get(item.id)?.avatarUrl : null,
+      });
+    }
+
     const keptIds = new Set<string>();
 
-    await prisma.$transaction(async (tx) => {
-      for (let index = 0; index < items.length; index += 1) {
-        const item = items[index]!;
-        const active = item.onlineBookings;
-        let barberId: string;
+    try {
+      await prisma.$transaction(async (tx) => {
+        await lockShopForPublicMediaAssociation(tx, shopId);
+        for (let index = 0; index < items.length; index += 1) {
+          const item = items[index]!;
+          const active = item.onlineBookings;
+          let barberId: string;
 
-        if (item.id && existingIds.has(item.id)) {
-          await tx.barber.update({
-            where: { id: item.id },
-            data: {
-              name: item.name,
-              ...(item.avatarUrl !== undefined ? { avatarUrl: item.avatarUrl } : {}),
-              active,
-              sortOrder: index,
-              intendedRole: index === 0 ? 'BARBER' : item.intendedRole,
-              userId: null,
-            },
-          });
-          barberId = item.id;
-        } else {
-          const created = await tx.barber.create({
-            data: {
-              shopId,
-              name: item.name,
-              avatarUrl: item.avatarUrl || null,
-              active,
-              sortOrder: index,
-              intendedRole: index === 0 ? 'BARBER' : item.intendedRole,
-            },
-            select: { id: true },
-          });
-          barberId = created.id;
+          if (item.id && existingIds.has(item.id)) {
+            await tx.barber.update({
+              where: { id: item.id },
+              data: {
+                name: item.name,
+                ...(item.avatarUrl !== undefined ? { avatarUrl: item.avatarUrl } : {}),
+                active,
+                sortOrder: index,
+                intendedRole: index === 0 ? 'BARBER' : item.intendedRole,
+                userId: null,
+              },
+            });
+            barberId = item.id;
+          } else {
+            const created = await tx.barber.create({
+              data: {
+                shopId,
+                name: item.name,
+                avatarUrl: item.avatarUrl || null,
+                active,
+                sortOrder: index,
+                intendedRole: index === 0 ? 'BARBER' : item.intendedRole,
+              },
+              select: { id: true },
+            });
+            barberId = created.id;
+          }
+
+          keptIds.add(barberId);
         }
 
-        keptIds.add(barberId);
+        const toDeactivate = existing.filter((barber) => !keptIds.has(barber.id)).map((b) => b.id);
+        if (toDeactivate.length > 0) {
+          await tx.barber.updateMany({
+            where: { id: { in: toDeactivate }, shopId },
+            data: { active: false, userId: null },
+          });
+        }
+      });
+    } catch (error) {
+      for (const url of uploadedAvatarUrls) {
+        await compensateFreshPublicBlobUpload(url, { shopId, expectedPathPrefix: 'barbers/' });
       }
-
-      const toDeactivate = existing.filter((barber) => !keptIds.has(barber.id)).map((b) => b.id);
-      if (toDeactivate.length > 0) {
-        await tx.barber.updateMany({
-          where: { id: { in: toDeactivate }, shopId },
-          data: { active: false, userId: null },
-        });
-      }
-    });
-
+      throw error;
+    }
     await advanceOnboardingStep(shopId, ONBOARDING_STEP_SERVICES);
     const state = await loadOnboardingState(shopId, GUEST_ONBOARDING_VIEWER);
     return new Response(JSON.stringify(state));
   } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+    }
     const message = error instanceof Error ? error.message : 'Unable to save barbers.';
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }

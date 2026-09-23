@@ -9,6 +9,16 @@ import { getTodayInLondon, getTodayScheduleForBarber, getTodayShiftWindowForBarb
 import { prisma } from '../../../lib/db/client';
 import { getTimeBlockDelegate } from '../../../lib/db/timeBlocks';
 import { storeAdminAvatar } from '../../../lib/storage/storeAdminAvatar';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  compensateFreshPublicBlobUpload,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 import { toUtcFromLondon, addMinutes } from '../../../lib/booking/time';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Prisma } from '@prisma/client';
@@ -216,8 +226,14 @@ export const POST: APIRoute = async (ctx) => {
     let avatarUrl: string | undefined;
     if (avatar instanceof File && avatar.size > 0) {
       try {
+        await assertShopAllowsPublicMediaMutation(shopId);
         avatarUrl = await storeAdminAvatar(avatar, 'barbers', id);
       } catch (error) {
+        if (isShopMediaMutationBlockedError(error)) {
+          return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+            status: 409,
+          });
+        }
         return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Could not upload avatar.' }), { status: 400 });
       }
     }
@@ -228,8 +244,11 @@ export const POST: APIRoute = async (ctx) => {
       ...(avatarUrl ? { avatarUrl } : {})
     };
 
-    const barber = id
+    let barber;
+    try {
+      barber = id
       ? await prisma.$transaction(async (tx) => {
+          await lockShopForPublicMediaAssociation(tx, shopId);
           const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
           if (!existing) throw new Error('Barber not found.');
           const updatedBarber = await tx.barber.update({ where: { id }, data: payload });
@@ -245,6 +264,7 @@ export const POST: APIRoute = async (ctx) => {
         })
 
       : await prisma.$transaction(async (tx) => {
+          await lockShopForPublicMediaAssociation(tx, shopId);
           const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
           const createdBarber = await tx.barber.create({
             data: { ...payload, shopId, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 }
@@ -261,6 +281,17 @@ export const POST: APIRoute = async (ctx) => {
           return createdBarber;
 
         });
+    } catch (error) {
+      if (avatarUrl) {
+        await compensateFreshPublicBlobUpload(avatarUrl, { shopId, expectedPathPrefix: 'barbers/' });
+      }
+      if (isShopMediaMutationBlockedError(error)) {
+        return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+          status: 409,
+        });
+      }
+      throw error;
+    }
 
     if (barber.active) {
       await ensureBarberHasAvailabilityRules(barber.id);
@@ -284,8 +315,28 @@ export const POST: APIRoute = async (ctx) => {
     ...(email !== undefined ? { email: email || null } : {}),
   };
 
+  try {
+    if (typeof avatarUrl === 'string' && avatarUrl.trim()) {
+      let existingAvatarUrl: string | null | undefined;
+      if (id) {
+        const existing = await prisma.barber.findFirst({
+          where: { id, shopId },
+          select: { avatarUrl: true },
+        });
+        existingAvatarUrl = existing?.avatarUrl;
+      }
+      assertUserSuppliedPublicMediaUrlAllowed({
+        shopId,
+        proposedUrl: avatarUrl.trim(),
+        existingUrl: existingAvatarUrl,
+      });
+    }
+
   const barber = id
     ? await prisma.$transaction(async (tx) => {
+        if (typeof avatarUrl === 'string') {
+          await lockShopForPublicMediaAssociation(tx, shopId);
+        }
         const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
         if (!existing) throw new Error('Barber not found.');
         const updatedBarber = await tx.barber.update({ where: { id }, data });
@@ -301,6 +352,7 @@ export const POST: APIRoute = async (ctx) => {
       })
 
     : await prisma.$transaction(async (tx) => {
+        await lockShopForPublicMediaAssociation(tx, shopId);
         const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
         const createdBarber = await tx.barber.create({
           data: {
@@ -332,5 +384,14 @@ export const POST: APIRoute = async (ctx) => {
 
 
   return new Response(JSON.stringify({ barber: { ...barber, isActive: barber.active } }));
+  } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
+    }
+    if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+    }
+    throw error;
+  }
 
 };

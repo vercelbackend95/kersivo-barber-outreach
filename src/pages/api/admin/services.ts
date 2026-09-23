@@ -12,6 +12,14 @@ import {
 import { unfeatureOtherServicesInCategory } from '../../../lib/admin/serviceFeatured';
 import { prisma } from '../../../lib/db/client';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import {
+  assertUserSuppliedPublicMediaUrlAllowed,
+  isUserSuppliedPublicMediaUrlRejectedError,
+} from '@/lib/storage/publicBlobSafety';
+import {
+  isShopMediaMutationBlockedError,
+  lockShopForPublicMediaAssociation,
+} from '@/lib/storage/shopPublicMediaGate';
 
 const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
@@ -85,64 +93,85 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const uniqueBarberIds = Array.from(new Set(payload.barberIds));
-  const { service, categories } = await prisma.$transaction(async (tx) => {
-    const validBarbers =
-      uniqueBarberIds.length > 0
-        ? await tx.barber.findMany({ where: { id: { in: uniqueBarberIds }, shopId }, select: { id: true } })
-        : [];
-    const validBarberIds = validBarbers.map((barber) => barber.id);
-
-    const created = await tx.service.create({
-      data: {
+  if (payload.imageUrl?.trim()) {
+    try {
+      assertUserSuppliedPublicMediaUrlAllowed({
         shopId,
-        name: payload.name,
-        description: payload.description?.trim() || null,
-        imageUrl: payload.imageUrl?.trim() || null,
-        pricePence: payload.pricePence,
-        durationMinutes: payload.durationMinutes,
-        bufferMinutes: payload.bufferMinutes,
-        displayOrder: payload.displayOrder,
-        category,
-        featured: payload.featured,
-        isActive: payload.isActive,
-        barberServices:
-          validBarberIds.length > 0
-            ? {
-                createMany: {
-                  data: validBarberIds.map((barberId) => ({ barberId })),
-                  skipDuplicates: true
+        proposedUrl: payload.imageUrl.trim(),
+      });
+    } catch (error) {
+      if (isUserSuppliedPublicMediaUrlRejectedError(error)) {
+        return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 400 });
+      }
+      throw error;
+    }
+  }
+  try {
+    const { service, categories } = await prisma.$transaction(async (tx) => {
+      await lockShopForPublicMediaAssociation(tx, shopId);
+      const validBarbers =
+        uniqueBarberIds.length > 0
+          ? await tx.barber.findMany({ where: { id: { in: uniqueBarberIds }, shopId }, select: { id: true } })
+          : [];
+      const validBarberIds = validBarbers.map((barber) => barber.id);
+
+      const created = await tx.service.create({
+        data: {
+          shopId,
+          name: payload.name,
+          description: payload.description?.trim() || null,
+          imageUrl: payload.imageUrl?.trim() || null,
+          pricePence: payload.pricePence,
+          durationMinutes: payload.durationMinutes,
+          bufferMinutes: payload.bufferMinutes,
+          displayOrder: payload.displayOrder,
+          category,
+          featured: payload.featured,
+          isActive: payload.isActive,
+          barberServices:
+            validBarberIds.length > 0
+              ? {
+                  createMany: {
+                    data: validBarberIds.map((barberId) => ({ barberId })),
+                    skipDuplicates: true
+                  }
                 }
+              : undefined
+        },
+        include: {
+          barberServices: {
+            orderBy: {
+              barber: {
+                sortOrder: 'asc'
               }
-            : undefined
-      },
-      include: {
-        barberServices: {
-          orderBy: {
-            barber: {
-              sortOrder: 'asc'
-            }
-          },
-          select: {
-            barber: {
-              select: {
-                id: true,
-                name: true,
-                active: true
+            },
+            select: {
+              barber: {
+                select: {
+                  id: true,
+                  name: true,
+                  active: true
+                }
               }
             }
           }
         }
+      });
+
+      if (payload.featured) {
+        await unfeatureOtherServicesInCategory(tx, shopId, category, created.id);
       }
+
+      const nextCategories = await ensureCustomServiceCategory(shopId, category, tx);
+      await scheduleCatalogueRebuild(shopId, tx);
+      return { service: created, categories: nextCategories };
     });
 
-    if (payload.featured) {
-      await unfeatureOtherServicesInCategory(tx, shopId, category, created.id);
+    return new Response(JSON.stringify({ service, categories }), { status: 201 });
+  } catch (error) {
+    if (isShopMediaMutationBlockedError(error)) {
+      return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
     }
-
-    const nextCategories = await ensureCustomServiceCategory(shopId, category, tx);
-    await scheduleCatalogueRebuild(shopId, tx);
-    return { service: created, categories: nextCategories };
-  });
-
-  return new Response(JSON.stringify({ service, categories }), { status: 201 });
+    throw error;
+  }
 };

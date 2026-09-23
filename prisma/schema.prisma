@@ -185,6 +185,8 @@ model ShopSettings {
   customServiceCategories            String[]                        @default([])
   townCity                           String?
   logoUrl                            String?
+  /// Set when shop-wide purge begins. Blocks new public media association; idempotent for purge retries.
+  purgeStartedAt                     DateTime?
   publicActivityPaused               Boolean                         @default(false)
   publicActivityPausedAt             DateTime?
   publicActivityPauseFrom            DateTime?

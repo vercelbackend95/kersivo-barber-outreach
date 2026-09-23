@@ -8,10 +8,14 @@ import {
   assertValidWorkingHours,
   createStandaloneBookingProfile,
   isTeamCreationDomainError,
-  logOrphanedTeamAvatarRisk,
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
+import { compensateFreshPublicBlobUpload } from '@/lib/storage/publicBlobSafety';
+import {
+  assertShopAllowsPublicMediaMutation,
+  isShopMediaMutationBlockedError,
+} from '@/lib/storage/shopPublicMediaGate';
 import { assertWorkingHoursWithinShopHours } from '@/lib/admin/shopOpeningHours';
 
 function json(body: unknown, status = 200) {
@@ -133,8 +137,12 @@ export const POST: APIRoute = async (context) => {
   let avatarUrl: string | undefined;
   if (avatar) {
     try {
+      await assertShopAllowsPublicMediaMutation(access.shopId);
       avatarUrl = await storeAdminAvatar(avatar, 'barbers');
     } catch (error) {
+      if (isShopMediaMutationBlockedError(error)) {
+        return json({ error: error.message, code: error.code }, 409);
+      }
       return json(
         { error: error instanceof Error ? error.message : 'Could not upload avatar.' },
         400,
@@ -167,10 +175,9 @@ export const POST: APIRoute = async (context) => {
     );
   } catch (error) {
     if (avatarUrl) {
-      logOrphanedTeamAvatarRisk({
-        route: 'POST /api/admin/team/booking-profiles',
-        avatarUrl,
-        error,
+      await compensateFreshPublicBlobUpload(avatarUrl, {
+        shopId: access.shopId,
+        expectedPathPrefix: 'barbers/',
       });
     }
     if (isTeamCreationDomainError(error)) {

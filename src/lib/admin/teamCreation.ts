@@ -1,6 +1,7 @@
 import type { Prisma, ShopRole } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
+import { lockShopForPublicMediaAssociation } from '@/lib/storage/shopPublicMediaGate';
 import { inviteExpiresAt } from '@/lib/admin/rbac/members';
 import { canActorSetUpOnlineBookings } from '@/lib/admin/teamCards';
 import {
@@ -287,15 +288,16 @@ export async function createStandaloneBookingProfile(params: {
   hours: ValidatedWorkingHourRow[];
   avatarUrl?: string | null;
 }) {
-  return prisma.$transaction(async (tx) =>
-    createBarberWithSetup(tx, {
+  return prisma.$transaction(async (tx) => {
+    await lockShopForPublicMediaAssociation(tx, params.shopId);
+    return createBarberWithSetup(tx, {
       shopId: params.shopId,
       name: params.name,
       serviceIds: params.serviceIds,
       hours: params.hours,
       avatarUrl: params.avatarUrl,
-    }),
-  );
+    });
+  });
 }
 
 /**
@@ -313,6 +315,7 @@ export async function createBookingProfileForMember(params: {
   uploadedAvatarUrl?: string | null;
 }) {
   return runSerializableTransaction(async (tx) => {
+    await lockShopForPublicMediaAssociation(tx, params.shopId);
     const member = await tx.shopMember.findFirst({
       where: { id: params.memberId, shopId: params.shopId },
       select: {
@@ -589,6 +592,7 @@ export async function createTeamInviteWithOptionalProfile(params: {
   existingBarberId?: string | null;
 }): Promise<{ invite: CreatedTeamInvite; barberId: string | null }> {
   return runSerializableTransaction(async (tx) => {
+    await lockShopForPublicMediaAssociation(tx, params.shopId);
     const conflict = await findInviteCreationConflict(
       {
         shopId: params.shopId,
