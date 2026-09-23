@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { DepositRefundStatus, EmailOutboundStatus, Prisma } from '@prisma/client';
+import {
+  DepositRefundStatus,
+  EmailOutboundPurpose,
+  EmailOutboundStatus,
+  Prisma,
+} from '@prisma/client';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 import {
   isReminderClaimFresh,
@@ -29,6 +34,14 @@ export const ERASED_CUSTOMER_DISPLAY_NAME = 'Erased customer';
 
 /** Reserved invalid domain — never routes to a real mailbox. */
 export const ERASURE_PLACEHOLDER_DOMAIN = 'example.invalid';
+
+/**
+ * Retail writers (Order / SHOP_ORDER_CONFIRMATION) store customer email as trim+lower.
+ * Client.email may still preserve case — derive this only inside erasure, do not rewrite Client rows.
+ */
+export function canonicalRetailCustomerEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 export function erasedBookingEmailPlaceholder(bookingId: string): string {
   return `erased+${bookingId.trim()}@${ERASURE_PLACEHOLDER_DOMAIN}`;
@@ -234,6 +247,50 @@ async function lockAndDeleteOutboundForBookings(
   await tx.smsOutbound.deleteMany({ where: { bookingId: { in: bookingIds } } });
 }
 
+/**
+ * Lock matching retail confirmation outbox rows, block if claimed/in-flight, then hard-delete.
+ * Scoped to SHOP_ORDER_CONFIRMATION + canonical toEmail (not other outbox purposes).
+ */
+async function lockAndDeleteShopOrderConfirmationOutbound(
+  tx: Prisma.TransactionClient,
+  shopId: string,
+  canonicalRetailEmail: string,
+): Promise<void> {
+  const toEmail = canonicalRetailEmail.trim().toLowerCase();
+  if (!shopId.trim() || !toEmail) return;
+
+  const emailRows = await tx.$queryRaw<Array<{ id: string; status: string; error: string | null }>>(
+    Prisma.sql`
+      SELECT id, status::text AS status, error
+      FROM "EmailOutbound"
+      WHERE "shopId" = ${shopId}
+        AND purpose = ${EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION}::"EmailOutboundPurpose"
+        AND "toEmail" = ${toEmail}
+      FOR UPDATE
+    `,
+  );
+
+  for (const row of emailRows) {
+    if (
+      row.status === EmailOutboundStatus.QUEUED &&
+      row.error === EMAIL_OUTBOX_IN_FLIGHT_ERROR
+    ) {
+      throwBlocked(
+        CLIENT_ERASURE_BLOCKED_MESSAGE_IN_FLIGHT,
+        'A message for this customer is currently being processed. Try again shortly.',
+      );
+    }
+  }
+
+  await tx.emailOutbound.deleteMany({
+    where: {
+      shopId,
+      purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+      toEmail,
+    },
+  });
+}
+
 export async function eraseClientPersonalDataInTransaction(
   tx: Prisma.TransactionClient,
   input: {
@@ -372,13 +429,20 @@ export async function eraseClientPersonalDataInTransaction(
     await lockAndDeleteOutboundForBookings(tx, bookingIds);
   }
 
-  // Shared identity lock with Order create paths — linearization point for Order-vs-erasure.
-  await lockShopCustomerIdentity(tx, client.shopId, client.email);
+  // Retail writers lock the trim+lower mailbox; Client.email may differ only by case.
+  const canonicalRetailEmail = canonicalRetailCustomerEmail(client.email);
 
-  // Orders have no clientId — match only by exact stored Client.email within this shop
-  // (same string as upsert key; no new case-normalisation in this change).
+  // Shared identity lock with Order create / finalize — linearization for retail identity.
+  await lockShopCustomerIdentity(tx, client.shopId, client.email);
+  if (canonicalRetailEmail !== client.email.trim()) {
+    await lockShopCustomerIdentity(tx, client.shopId, canonicalRetailEmail);
+  }
+
+  await lockAndDeleteShopOrderConfirmationOutbound(tx, client.shopId, canonicalRetailEmail);
+
+  // Orders have no clientId — match the retail-canonical mailbox within this shop.
   const matchedOrders = await tx.order.findMany({
-    where: { shopId: client.shopId, customerEmail: client.email },
+    where: { shopId: client.shopId, customerEmail: canonicalRetailEmail },
     select: { id: true },
   });
 

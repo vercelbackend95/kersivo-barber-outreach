@@ -37,6 +37,7 @@ vi.mock('@/lib/storage/privateOnboardingBlob', () => ({
 
 import {
   bookingBlocksClientErasure,
+  canonicalRetailCustomerEmail,
   CLIENT_ERASURE_BLOCKED_CODE,
   CLIENT_ERASURE_BLOCKED_MESSAGE_IN_FLIGHT,
   eraseClientPersonalData,
@@ -48,6 +49,7 @@ import {
   isSafePublicClientErasureBlobTarget,
 } from './clientErasure';
 import { EMAIL_OUTBOX_IN_FLIGHT_ERROR } from '@/lib/email/outbox';
+import { EmailOutboundPurpose } from '@prisma/client';
 import {
   REMINDER_CLAIM_SENTINEL,
   REMINDER_CLAIM_STALE_MS,
@@ -66,6 +68,81 @@ function futureWindow(nowMs: number) {
     endAt: new Date(nowMs + 90 * 60 * 1000),
   };
 }
+
+function emailOutboundSqlKind(sql: { strings?: string[]; values?: unknown[] } | string): 'booking' | 'retail' | 'other' {
+  const text = String((sql as { strings?: string[] })?.strings?.join?.(' ') ?? sql);
+  if (!text.includes('"EmailOutbound"')) return 'other';
+  if (text.includes('"bookingId"')) return 'booking';
+  if (text.includes('"toEmail"')) return 'retail';
+  return 'other';
+}
+
+type SimulatedEmailOutboundRow = {
+  id: string;
+  shopId: string;
+  purpose: string;
+  toEmail: string;
+  bookingId: string | null;
+  status: string;
+  error: string | null;
+};
+
+/** Interprets the retail FOR UPDATE Prisma.sql placeholders: shopId, purpose, toEmail. */
+function retailOutboxLockParams(sql: { strings?: string[]; values?: unknown[] }) {
+  const values = sql.values ?? [];
+  return {
+    shopId: String(values[0] ?? ''),
+    purpose: values[1] as string,
+    toEmail: String(values[2] ?? ''),
+  };
+}
+
+/**
+ * Mutates `rows` like Prisma deleteMany AND-matching.
+ * Supports bookingId:{in} and retail {shopId,purpose,toEmail}.
+ */
+function applySimulatedEmailOutboundDeleteMany(
+  rows: SimulatedEmailOutboundRow[],
+  where: Record<string, unknown>,
+): number {
+  const bookingIn =
+    where.bookingId &&
+    typeof where.bookingId === 'object' &&
+    where.bookingId !== null &&
+    'in' in (where.bookingId as object)
+      ? new Set((where.bookingId as { in: string[] }).in)
+      : null;
+
+  let removed = 0;
+  for (let i = rows.length - 1; i >= 0; i -= 1) {
+    const row = rows[i]!;
+    let match = true;
+    if (bookingIn) {
+      match = row.bookingId != null && bookingIn.has(row.bookingId);
+    } else {
+      if ('shopId' in where && row.shopId !== where.shopId) match = false;
+      if ('purpose' in where && row.purpose !== where.purpose) match = false;
+      if ('toEmail' in where && row.toEmail !== where.toEmail) match = false;
+      if ('bookingId' in where) {
+        match = match && row.bookingId === where.bookingId;
+      }
+    }
+    if (match) {
+      rows.splice(i, 1);
+      removed += 1;
+    }
+  }
+  return removed;
+}
+
+describe('canonicalRetailCustomerEmail', () => {
+  it('matches retail writer trim+lower semantics', () => {
+    expect(canonicalRetailCustomerEmail('  Alex.Customer@Example.com ')).toBe(
+      'alex.customer@example.com',
+    );
+    expect(canonicalRetailCustomerEmail('alex@customer.example')).toBe('alex@customer.example');
+  });
+});
 
 describe('erasure placeholders', () => {
   it('uses reserved example.invalid domain and never kersivo.co.uk', () => {
@@ -180,7 +257,13 @@ describe('eraseClientPersonalDataInTransaction', () => {
     queryRaw = vi.fn(async (sql: { strings?: string[] }) => {
       const text = String(sql?.strings?.join?.(' ') ?? sql);
       if (text.includes('"Client"')) return [{ id: 'client-1' }];
-      if (text.includes('"EmailOutbound"')) return [{ id: 'em-1', status: 'SENT', error: null }];
+      const outboundKind = emailOutboundSqlKind(sql);
+      if (outboundKind === 'booking') {
+        return [{ id: 'em-booking-1', status: 'SENT', error: null }];
+      }
+      if (outboundKind === 'retail') {
+        return [{ id: 'em-retail-1', status: 'SENT', error: null }];
+      }
       if (text.includes('"SmsOutbound"')) return [{ id: 'sm-1', status: 'SENT' }];
       return [];
     });
@@ -274,17 +357,27 @@ describe('eraseClientPersonalDataInTransaction', () => {
     expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
       where: { bookingId: { in: ['bk-1'] } },
     });
+    expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
+      where: {
+        shopId: 'shop-1',
+        purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+        toEmail: 'alex@customer.example',
+      },
+    });
     expect(smsOutboundDeleteMany).toHaveBeenCalledWith({
       where: { bookingId: { in: ['bk-1'] } },
     });
   });
 
-  it('blocks when EmailOutbound is claimed in-flight', async () => {
+  it('blocks when booking-linked EmailOutbound is claimed in-flight', async () => {
     queryRaw.mockImplementation(async (sql: { strings?: string[] }) => {
       const text = String(sql?.strings?.join?.(' ') ?? sql);
       if (text.includes('"Client"')) return [{ id: 'client-1' }];
-      if (text.includes('"EmailOutbound"')) {
+      if (emailOutboundSqlKind(sql) === 'booking') {
         return [{ id: 'em-1', status: 'QUEUED', error: EMAIL_OUTBOX_IN_FLIGHT_ERROR }];
+      }
+      if (emailOutboundSqlKind(sql) === 'retail') {
+        return [{ id: 'em-retail-1', status: 'SENT', error: null }];
       }
       if (text.includes('"SmsOutbound"')) return [];
       return [];
@@ -529,8 +622,172 @@ describe('eraseClientPersonalDataInTransaction', () => {
     expect(clientDelete).toHaveBeenCalledWith({ where: { id: 'client-1' } });
     expect(result.bookingCount).toBe(1);
     expect(result.orderCount).toBe(1);
-    expect(result.blobRefs.some((r) => r.kind === 'public')).toBe(true);
-    expect(result.blobRefs.some((r) => r.kind === 'private')).toBe(true);
+    expect(result.blobCleanupAttempted).toBe(3);
+    expect(result.blobRefs).toEqual([
+      {
+        kind: 'public',
+        target: 'https://abc.public.blob.vercel-storage.com/clients/client-1-avatar.webp',
+      },
+      { kind: 'private', target: 'client-notes/shop-1/client-1/note-1-0.webp' },
+      { kind: 'public', target: 'https://blob.example/legacy-note.webp' },
+    ]);
+  });
+
+  it('deletes matching retail SHOP_ORDER_CONFIRMATION for QUEUED / FAILED / SENT', async () => {
+    for (const status of ['QUEUED', 'FAILED', 'SENT'] as const) {
+      emailOutboundDeleteMany.mockClear();
+      queryRaw.mockImplementation(async (sql: { strings?: string[] }) => {
+        const text = String(sql?.strings?.join?.(' ') ?? sql);
+        if (text.includes('"Client"')) return [{ id: 'client-1' }];
+        if (emailOutboundSqlKind(sql) === 'booking') return [];
+        if (emailOutboundSqlKind(sql) === 'retail') {
+          return [{ id: `em-${status}`, status, error: null }];
+        }
+        if (text.includes('"SmsOutbound"')) return [];
+        if (text.includes('"Booking"')) return [{ id: 'bk-1' }];
+        return [];
+      });
+
+      await eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      });
+
+      expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
+        where: {
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'alex@customer.example',
+        },
+      });
+    }
+  });
+
+  it('blocks when matching retail SHOP_ORDER_CONFIRMATION is in-flight', async () => {
+    queryRaw.mockImplementation(async (sql: { strings?: string[] }) => {
+      const text = String(sql?.strings?.join?.(' ') ?? sql);
+      if (text.includes('"Client"')) return [{ id: 'client-1' }];
+      if (emailOutboundSqlKind(sql) === 'booking') {
+        return [{ id: 'em-booking', status: 'SENT', error: null }];
+      }
+      if (emailOutboundSqlKind(sql) === 'retail') {
+        return [{ id: 'em-retail', status: 'QUEUED', error: EMAIL_OUTBOX_IN_FLIGHT_ERROR }];
+      }
+      if (text.includes('"SmsOutbound"')) return [];
+      if (text.includes('"Booking"')) return [{ id: 'bk-1' }];
+      return [];
+    });
+
+    await expect(
+      eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      }),
+    ).rejects.toSatisfy((error: unknown) => {
+      expect(isClientErasureBlockedError(error)).toBe(true);
+      if (isClientErasureBlockedError(error)) {
+        expect(error.code).toBe(CLIENT_ERASURE_BLOCKED_MESSAGE_IN_FLIGHT);
+      }
+      return true;
+    });
+
+    expect(clientDelete).not.toHaveBeenCalled();
+    // Booking outbound may have been deleted before retail lock; retail delete must not run.
+    const retailDeletes = emailOutboundDeleteMany.mock.calls.filter(
+      (c) => c[0]?.where?.purpose === EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+    );
+    expect(retailDeletes).toHaveLength(0);
+  });
+
+  it('scopes retail outbox FOR UPDATE by shopId, SHOP_ORDER_CONFIRMATION, and canonical toEmail', async () => {
+    await eraseClientPersonalDataInTransaction(tx as never, {
+      shopId: 'shop-1',
+      clientId: 'client-1',
+      nowMs,
+    });
+
+    const retailCall = queryRaw.mock.calls.find((c) => emailOutboundSqlKind(c[0]) === 'retail');
+    expect(retailCall).toBeTruthy();
+    const sql = retailCall![0] as { strings: string[]; values: unknown[] };
+    const text = sql.strings.join(' ');
+    expect(text).toMatch(/"shopId"/);
+    expect(text).toMatch(/"toEmail"/);
+    expect(text).toMatch(/FOR UPDATE/i);
+    expect(text).not.toMatch(/bookingId IS NULL/i);
+    expect(sql.values).toContain('shop-1');
+    expect(sql.values).toContain('alex@customer.example');
+    expect(sql.values).toContain(EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION);
+  });
+
+  it('case-variant Client.email matches lowercased retail Order + outbox; locks both identities', async () => {
+    clientFindFirst.mockResolvedValue({
+      id: 'client-1',
+      shopId: 'shop-1',
+      email: 'Alex.Customer@Example.com',
+      avatarUrl: null,
+      clientNotes: [],
+    });
+    bookingFindMany.mockResolvedValue([]);
+    orderFindMany.mockResolvedValue([{ id: 'ord-cased' }]);
+
+    await eraseClientPersonalDataInTransaction(tx as never, {
+      shopId: 'shop-1',
+      clientId: 'client-1',
+      nowMs,
+    });
+
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(tx, 'shop-1', 'Alex.Customer@Example.com');
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(tx, 'shop-1', 'alex.customer@example.com');
+    expect(lockShopCustomerIdentity).toHaveBeenCalledTimes(2);
+
+    expect(orderFindMany).toHaveBeenCalledWith({
+      where: { shopId: 'shop-1', customerEmail: 'alex.customer@example.com' },
+      select: { id: true },
+    });
+    expect(orderUpdate).toHaveBeenCalledWith({
+      where: { id: 'ord-cased' },
+      data: { customerEmail: erasedOrderEmailPlaceholder('ord-cased') },
+    });
+    expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
+      where: {
+        shopId: 'shop-1',
+        purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+        toEmail: 'alex.customer@example.com',
+      },
+    });
+  });
+
+  it('does not acquire the retail identity lock twice when Client.email is already canonical', async () => {
+    await eraseClientPersonalDataInTransaction(tx as never, {
+      shopId: 'shop-1',
+      clientId: 'client-1',
+      nowMs,
+    });
+
+    expect(lockShopCustomerIdentity).toHaveBeenCalledTimes(1);
+    expect(lockShopCustomerIdentity).toHaveBeenCalledWith(tx, 'shop-1', 'alex@customer.example');
+  });
+
+  it('retail outbox delete predicate does not use bare bookingId IS NULL', async () => {
+    await eraseClientPersonalDataInTransaction(tx as never, {
+      shopId: 'shop-1',
+      clientId: 'client-1',
+      nowMs,
+    });
+
+    for (const call of emailOutboundDeleteMany.mock.calls) {
+      const where = call[0]?.where ?? {};
+      expect(where).not.toEqual(expect.objectContaining({ bookingId: null }));
+      if (where.purpose === EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION) {
+        expect(where).toEqual({
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'alex@customer.example',
+        });
+      }
+    }
   });
 
   it('throws CLIENT_NOT_FOUND when lock misses (cross-tenant / missing)', async () => {
@@ -636,6 +893,215 @@ describe('eraseClientPersonalDataInTransaction', () => {
     ).rejects.toSatisfy((error: unknown) => {
       expect(isClientErasureBlockedError(error)).toBe(true);
       return true;
+    });
+  });
+
+  describe('retail outbox isolation (in-memory fixture)', () => {
+    function wireSimulatedRetailOutbox(rows: SimulatedEmailOutboundRow[]) {
+      queryRaw.mockImplementation(async (sql: { strings?: string[]; values?: unknown[] }) => {
+        const text = String(sql?.strings?.join?.(' ') ?? sql);
+        if (text.includes('"Client"')) return [{ id: 'client-1' }];
+        if (emailOutboundSqlKind(sql) === 'booking') {
+          return [];
+        }
+        if (emailOutboundSqlKind(sql) === 'retail') {
+          expect(text).not.toMatch(/bookingId/i);
+          const { shopId, purpose, toEmail } = retailOutboxLockParams(sql);
+          expect(shopId).toBeTruthy();
+          expect(purpose).toBe(EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION);
+          expect(toEmail).toBeTruthy();
+          return rows
+            .filter(
+              (r) =>
+                r.shopId === shopId &&
+                r.purpose === purpose &&
+                r.toEmail === toEmail,
+            )
+            .map((r) => ({ id: r.id, status: r.status, error: r.error }));
+        }
+        return [];
+      });
+
+      emailOutboundDeleteMany.mockImplementation(async (args: { where?: Record<string, unknown> }) => {
+        const where = args?.where ?? {};
+        // Production retail deletes must never use bare bookingId:null.
+        expect(where).not.toEqual(expect.objectContaining({ bookingId: null }));
+        if ('purpose' in where) {
+          expect(where).toEqual({
+            shopId: expect.any(String),
+            purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+            toEmail: expect.any(String),
+          });
+        }
+        const count = applySimulatedEmailOutboundDeleteMany(rows, where);
+        return { count };
+      });
+    }
+
+    function setupTargetClient(email = 'target@example.com') {
+      clientFindFirst.mockResolvedValue({
+        id: 'client-1',
+        shopId: 'shop-1',
+        email,
+        avatarUrl: null,
+        clientNotes: [],
+      });
+      bookingFindMany.mockResolvedValue([]);
+      orderFindMany.mockResolvedValue([]);
+    }
+
+    it('does not delete same-shop SHOP_ORDER_CONFIRMATION for a different toEmail', async () => {
+      const rows: SimulatedEmailOutboundRow[] = [
+        {
+          id: 'em-other-customer',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'other@example.com',
+          bookingId: null,
+          status: 'SENT',
+          error: null,
+        },
+        {
+          id: 'em-target',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'QUEUED',
+          error: null,
+        },
+      ];
+      setupTargetClient('target@example.com');
+      wireSimulatedRetailOutbox(rows);
+
+      await eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      });
+
+      expect(rows.map((r) => r.id)).toEqual(['em-other-customer']);
+      expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
+        where: {
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+        },
+      });
+    });
+
+    it('does not delete SHOP_ORDER_CONFIRMATION for the same email in another shop', async () => {
+      const rows: SimulatedEmailOutboundRow[] = [
+        {
+          id: 'em-shop-2',
+          shopId: 'shop-2',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'SENT',
+          error: null,
+        },
+        {
+          id: 'em-shop-1',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'FAILED',
+          error: null,
+        },
+      ];
+      setupTargetClient('target@example.com');
+      wireSimulatedRetailOutbox(rows);
+
+      await eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      });
+
+      expect(rows.map((r) => r.id)).toEqual(['em-shop-2']);
+      expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
+        where: {
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+        },
+      });
+    });
+
+    it('does not delete same-shop CLIENT_ONBOARDING_INTERNAL even when toEmail matches and bookingId is null', async () => {
+      const rows: SimulatedEmailOutboundRow[] = [
+        {
+          id: 'em-onboarding-internal',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'SENT',
+          error: null,
+        },
+        {
+          id: 'em-retail',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'SENT',
+          error: null,
+        },
+      ];
+      setupTargetClient('target@example.com');
+      wireSimulatedRetailOutbox(rows);
+
+      await eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      });
+
+      expect(rows.map((r) => r.id)).toEqual(['em-onboarding-internal']);
+      expect(
+        rows.some((r) => r.purpose === EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL),
+      ).toBe(true);
+    });
+
+    it('does not delete same-shop CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION even when toEmail matches and bookingId is null', async () => {
+      const rows: SimulatedEmailOutboundRow[] = [
+        {
+          id: 'em-onboarding-customer',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'QUEUED',
+          error: null,
+        },
+        {
+          id: 'em-retail',
+          shopId: 'shop-1',
+          purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+          toEmail: 'target@example.com',
+          bookingId: null,
+          status: 'QUEUED',
+          error: null,
+        },
+      ];
+      setupTargetClient('target@example.com');
+      wireSimulatedRetailOutbox(rows);
+
+      await eraseClientPersonalDataInTransaction(tx as never, {
+        shopId: 'shop-1',
+        clientId: 'client-1',
+        nowMs,
+      });
+
+      expect(rows.map((r) => r.id)).toEqual(['em-onboarding-customer']);
+      expect(
+        rows.some(
+          (r) => r.purpose === EmailOutboundPurpose.CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION,
+        ),
+      ).toBe(true);
     });
   });
 });
