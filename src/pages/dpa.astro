@@ -233,14 +233,20 @@ import '@/styles/legal-pages.css';
       <p>
         While the Services are active, the Client may use the available self-service export tools. The standard CSV
         export currently contains client contact details and booking history and is not a full database export.
+        {TRADING_NAME} does not currently provide a self-service control that permanently erases an individual shop
+        customer record on demand; such instructions, where lawful, are handled through documented Client instructions
+        and {TRADING_NAME} assistance (product improvement for Client-admin erasure/anonymisation is planned separately
+        and is not claimed as live functionality under this DPA).
       </p>
 
       <p>
-        At the end of the Services, at the Client&rsquo;s choice, {TRADING_NAME} will delete or return the Customer
-        Personal Data processed on the Client&rsquo;s behalf and will delete existing copies, unless Applicable Data
-        Protection Law requires continued storage. Where the Client chooses return, {TRADING_NAME} will provide the
-        Customer Personal Data in a reasonably practicable format and may provide reasonable assistance for data not
-        included in the standard self-service CSV.
+        At the end of the Services, the Client may instruct {TRADING_NAME} to return and/or delete the Customer Personal
+        Data processed on the Client&rsquo;s behalf, unless Applicable Data Protection Law requires continued storage.
+        Return is available through the self-service CSV where that format suffices, and through reasonable assistance
+        for other categories on documented request. Deletion of the live tenant production graph follows the standard
+        purge process described below (or an earlier lawful instruction, including where the Client&rsquo;s account
+        deletion ends sole-owner shop retention before the default window). Not every return or deletion instruction is
+        available as a single button in the admin UI.
       </p>
 
       <p>
@@ -248,15 +254,18 @@ import '@/styles/legal-pages.css';
         applies its standard <strong>{SAAS_EXPORT_RETENTION_DAYS}-day</strong> post-termination export and retention
         window, after which Customer Personal Data in the live tenant production environment is deleted through the
         standard purge process, including tenant EmailOutbound and SmsOutbound records and the associated private Blob
-        cleanup lifecycle.
+        cleanup lifecycle (best-effort provider object deletion). Public media objects tied to the tenant are intended
+        to follow the same tenant lifecycle; automated public-blob cleanup is a documented enforcement target and is
+        not claimed as fully implemented solely by this clause.
       </p>
 
       <p>
         This obligation does not require deletion of separate records that {TRADING_NAME} lawfully retains in its
         independent-controller capacity, such as billing, tax, legal acceptance or security records. Residual copies
-        may remain temporarily in provider-managed backups where immediate deletion is not technically practicable.
+        may remain temporarily in provider-managed backups or other provider systems (including email, SMS, monitoring,
+        hosting or payment providers where used) where immediate physical deletion is not technically practicable.
         Those copies remain protected and beyond normal active use until they are deleted or expire through the
-        applicable backup lifecycle.
+        applicable provider lifecycle. Local deletion does not mean instantaneous erasure from every provider replica.
       </p>
 
       <h2>11. Audit and compliance information</h2>
@@ -575,8 +584,9 @@ import '@/styles/legal-pages.css';
       <ul>
         <li>Tenant outbox deletion during shop purge</li>
         <li>Production tenant data purge after applicable retention</li>
-        <li>Private Blob cleanup lifecycle</li>
-        <li>Controller records kept separately where legally required</li>
+        <li>Private Blob cleanup lifecycle (best-effort provider object deletion)</li>
+        <li>Public Blob cleanup aligned to tenant/record lifecycle (enforcement target; not claimed as fully automated)</li>
+        <li>Controller records kept separately where lawfully retained for KERSIVO&rsquo;s own purposes</li>
       </ul>
 
       <h3>H. Incident management</h3>

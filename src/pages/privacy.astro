@@ -19,7 +19,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 22 September 2026</p>
+      <p class="legal-page__updated">Last updated: 23 September 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
@@ -272,26 +272,35 @@ import '@/styles/legal-pages.css';
 
       <h2>How long we keep data</h2>
       <p>
-        Retention depends on whose data it is and why it is held.
+        Retention depends on whose data it is and why it is held. Personal data should not be kept longer than needed
+        for its purpose. Different categories can have different, purpose-specific periods.
       </p>
       <ul>
         <li>
-          <strong>Live barbershop (Customer Personal Data).</strong> While a subscription is active, shop data is kept
-          to run the service. After a subscription ends, the barbershop may export a free CSV of client contact details
-          and booking history for up to <strong>{SAAS_EXPORT_RETENTION_DAYS} days</strong>. After that window, the live
-          shop data graph is eligible to be permanently deleted from the production database. Cancellation does
-          <strong>not</strong> delete shop data instantly. Residual copies may remain briefly in encrypted backups
-          until those backups expire under our hosting provider&rsquo;s normal backup cycle; we do not promise
-          immediate erasure from every backup replica.
+          <strong>Live barbershop (Customer Personal Data).</strong> While a subscription is active, shop customer and
+          booking data is kept to run the service under the barbershop&rsquo;s instructions.
+          {TRADING_NAME} does <strong>not</strong> independently apply a blanket deletion period to active shop
+          customer/booking records. After a subscription ends, the barbershop may export a free CSV of client contact
+          details and booking history for up to <strong>{SAAS_EXPORT_RETENTION_DAYS} days</strong>. After that window,
+          the live shop data graph is eligible to be permanently deleted from the production database. Cancellation does
+          <strong>not</strong> delete shop data instantly. An explicit account deletion (or another documented lawful
+          instruction from the barbershop) may end live shop retention earlier than that default window. Residual copies
+          may remain temporarily in encrypted backups or other provider systems until those copies expire or are deleted
+          under the provider&rsquo;s normal lifecycle; we do not promise immediate physical erasure from every
+          backup or provider replica.
         </li>
         <li>
           <strong>{TRADING_NAME} independent-controller records.</strong> Account, billing, tax, legal acceptance,
-          security and operational audit records may be retained for as long as needed for those purposes, including
-          where UK law requires longer retention of financial or legal records. That does <strong>not</strong> mean all
-          personal data of every type is kept for six years. Cancelling a subscription does
-          <strong>not</strong> necessarily delete Stripe-held financial/payment records immediately; Stripe&rsquo;s own
-          retention of payment data is controlled by Stripe. {TRADING_NAME} account-deletion workflows also do not
-          currently delete every provider-side Stripe Customer or Subscription record.
+          security and operational audit records may be retained for separate, purpose-specific periods needed for those
+          purposes (for example limited billing and legal-acceptance evidence may be kept for up to six years after the
+          end of the relevant commercial relationship, unless a live dispute or legal obligation requires longer). That
+          does <strong>not</strong> mean all personal data of every type is kept for six years, and it is
+          <strong>not</strong> a claim that UK GDPR itself imposes a single six-year retention rule for everything.
+          Cancelling a subscription does <strong>not</strong> necessarily delete Stripe-held financial/payment records
+          immediately; Stripe&rsquo;s own retention of payment data is controlled by Stripe. {TRADING_NAME}
+          account-deletion workflows also do not currently delete every provider-side Stripe Customer or Subscription
+          record. Local deletion likewise does not guarantee immediate erasure of every residual copy held by other
+          providers (for example email, SMS, monitoring, hosting or AI providers where used).
         </li>
         <li>
           <strong>Analytics and advertising cookies</strong> follow the durations in our
@@ -304,7 +313,8 @@ import '@/styles/legal-pages.css';
       <ul>
         <li>request access to your personal data;</li>
         <li>ask for inaccurate data to be corrected;</li>
-        <li>ask for data to be erased in certain circumstances;</li>
+        <li>ask for data to be erased in certain circumstances (this right is not absolute and may be limited where
+          retention is still needed for a legal obligation or to establish, exercise or defend legal claims);</li>
         <li>restrict or object to processing in certain circumstances;</li>
         <li>data portability where applicable;</li>
         <li>withdraw consent where processing is based on consent.</li>

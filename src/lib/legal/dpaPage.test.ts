@@ -24,9 +24,9 @@ const FALSE_CORPORATE = [
 ] as const;
 
 describe('dpaVersion', () => {
-  it('exports CURRENT_DPA_VERSION 2026-09-22 and formats Last updated', () => {
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
-    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('22 September 2026');
+  it('exports CURRENT_DPA_VERSION 2026-09-23 and formats Last updated', () => {
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
+    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('23 September 2026');
   });
 
   it('documents that material DPA updates require a Terms bump', () => {
@@ -105,8 +105,8 @@ describe('Data Processing Agreement page', () => {
     const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
     expect(notListedBlock).toMatch(/Google OAuth/);
     expect(notListedBlock).toMatch(/account\/auth/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
   });
 
   it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
@@ -132,7 +132,7 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Only where SMS functionality is enabled');
     expect(dpaSource).not.toMatch(/End User Messaging/i);
     expect(dpaSource).not.toMatch(/\bAWS\b/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
@@ -156,11 +156,26 @@ describe('Data Processing Agreement page', () => {
 
 describe('Terms / checkout / footer DPA integration', () => {
   it('Terms incorporate /dpa and share the bumped Terms version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
     expect(termsSource).toContain('href="/dpa"');
     expect(termsSource).toContain('forms part of these Terms');
     expect(termsSource).toContain('Client is the Controller');
     expect(termsSource).toContain('Processor');
+  });
+
+  it('Return and deletion preserves 30-day purge without false self-service erasure claims', () => {
+    expect(dpaSource).toContain('{SAAS_EXPORT_RETENTION_DAYS}');
+    expect(dpaSource).toContain('does not currently provide a self-service control that permanently erases');
+    expect(dpaSource).toContain('documented Client instructions');
+    expect(dpaSource).toContain('not claimed as live functionality');
+    expect(dpaSource).toContain('Not every return or deletion instruction is');
+    expect(dpaSource).toContain('available as a single button');
+    expect(dpaSource).toContain('best-effort provider object deletion');
+    expect(dpaSource).toContain('Public media objects');
+    expect(dpaSource).toContain('not claimed as fully implemented');
+    expect(dpaSource).toContain('Local deletion does not mean instantaneous erasure');
+    expect(dpaSource).not.toMatch(/UK GDPR requires six years/i);
+    expect(dpaSource).not.toMatch(/individual Client erasure is currently implemented/i);
   });
 
   it('LaunchWizard keeps a single Terms checkbox and references the DPA', () => {

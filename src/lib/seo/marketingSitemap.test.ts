@@ -32,12 +32,12 @@ describe('marketing sitemap', () => {
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBeUndefined();
-    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-22');
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-23');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-18');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-22');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-22');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
 
     expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
     for (const loc of EXPECTED_LOCS.slice(1)) {

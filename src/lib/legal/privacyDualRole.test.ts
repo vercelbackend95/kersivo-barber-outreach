@@ -37,7 +37,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 22 September 2026');
+    expect(privacySource).toContain('Last updated: 23 September 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
@@ -108,5 +108,15 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('does <strong>not</strong> mean all');
     expect(privacySource).toContain('six years');
     expect(privacySource).not.toMatch(/typically kept for up to <strong>6 years<\/strong>/);
+    expect(privacySource).not.toMatch(/UK GDPR requires six years/i);
+    expect(privacySource).toContain('not</strong> a claim that UK GDPR itself imposes a single six-year');
+    expect(privacySource).toContain('does <strong>not</strong> independently apply a blanket deletion period');
+    expect(privacySource).toContain('explicit account deletion');
+    expect(privacySource).toContain('this right is not absolute');
+    expect(privacySource).toContain('provider systems');
+    expect(privacySource).toContain('Last updated: 23 September 2026');
+    expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
+    expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
+    expect(privacySource).toContain('requires confirmation with our legal adviser');
   });
 });

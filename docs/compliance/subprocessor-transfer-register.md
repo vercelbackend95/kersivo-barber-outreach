@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | Status | Internal compliance record |
-| Last reviewed | 2026-09-22 |
-| Related contract | `/dpa` version `2026-09-22` |
+| Last reviewed | 2026-09-23 |
+| Related contract | `/dpa` version `2026-09-23` |
 | Production baseline (repo) | `288a0aefce74bc02e2c4ecf381e074cce798158d` |
 | Companion record | [ropa.md](./ropa.md) |
 | Vendor evidence | [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); [vendor-evidence/neon.md](./vendor-evidence/neon.md); [vendor-evidence/resend.md](./vendor-evidence/resend.md); [vendor-evidence/openai.md](./vendor-evidence/openai.md); [vendor-evidence/sentry.md](./vendor-evidence/sentry.md) |

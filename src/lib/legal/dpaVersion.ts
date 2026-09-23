@@ -8,7 +8,7 @@
  * contractual change / notice process; this version constant does not itself
  * force re-acceptance.
  */
-export const CURRENT_DPA_VERSION = '2026-09-22';
+export const CURRENT_DPA_VERSION = '2026-09-23';
 
 /** Human-readable "Last updated" line for /dpa. */
 export function formatDpaLastUpdated(version: string = CURRENT_DPA_VERSION): string {
