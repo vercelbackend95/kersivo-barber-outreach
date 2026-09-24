@@ -24,9 +24,13 @@ const FALSE_CORPORATE = [
 ] as const;
 
 describe('dpaVersion', () => {
-  it('exports CURRENT_DPA_VERSION 2026-09-23 and formats Last updated', () => {
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
-    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('23 September 2026');
+  it('exports CURRENT_DPA_VERSION 2026-09-24 and formats Last updated', () => {
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
+    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('24 September 2026');
+  });
+
+  it('keeps Terms at 2026-09-23 for this non-material DPA factual revision', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
   });
 
   it('documents that material DPA updates require a Terms bump', () => {
@@ -105,7 +109,7 @@ describe('Data Processing Agreement page', () => {
     const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
     expect(notListedBlock).toMatch(/Google OAuth/);
     expect(notListedBlock).toMatch(/account\/auth/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
     expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
   });
 
@@ -132,7 +136,8 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Only where SMS functionality is enabled');
     expect(dpaSource).not.toMatch(/End User Messaging/i);
     expect(dpaSource).not.toMatch(/\bAWS\b/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
@@ -163,17 +168,24 @@ describe('Terms / checkout / footer DPA integration', () => {
     expect(termsSource).toContain('Processor');
   });
 
-  it('Return and deletion describes implemented Client-admin erasure without overclaiming', () => {
+  it('Return and deletion describes implemented Client-admin erasure and best-effort public media cleanup', () => {
     expect(dpaSource).toContain('{SAAS_EXPORT_RETENTION_DAYS}');
     expect(dpaSource).toMatch(/Authorised Client administrators[\s\S]*erase an individual/i);
     expect(dpaSource).not.toMatch(/does not currently provide a self-service control that permanently erases/i);
     expect(dpaSource).not.toMatch(/not claimed as live functionality/i);
     expect(dpaSource).toContain('does not necessarily hard-delete every historical transactional or payment');
+    expect(dpaSource).toContain('booking and order contact fields');
+    expect(dpaSource).toContain('matching local transactional confirmation records');
+    expect(dpaSource).toContain('genuinely in-flight messaging may temporarily prevent');
     expect(dpaSource).toContain('Not every return or deletion instruction is');
     expect(dpaSource).toContain('available as a single button');
     expect(dpaSource).toContain('best-effort provider object deletion');
-    expect(dpaSource).toContain('Public media objects');
-    expect(dpaSource).toContain('not claimed as fully implemented');
+    expect(dpaSource).toMatch(/best-effort\s+deletion of public media objects/);
+    expect(dpaSource).toContain('tenant-owned public media namespace');
+    expect(dpaSource).toContain('Provider/CDN residual copies may persist temporarily');
+    expect(dpaSource).toContain('does not claim that every historical legacy object');
+    expect(dpaSource).not.toContain('not claimed as fully implemented');
+    expect(dpaSource).not.toContain('documented enforcement target');
     expect(dpaSource).toContain('Local deletion does not mean instantaneous erasure');
     expect(dpaSource).not.toMatch(/UK GDPR requires six years/i);
     expect(dpaSource).not.toMatch(/all historic Bookings are deleted/i);

@@ -236,7 +236,8 @@ import '@/styles/legal-pages.css';
         Authorised Client administrators (Owner and Manager roles) may instruct {TRADING_NAME} to erase an individual
         shop customer&rsquo;s profile and related customer-controlled data through the admin tools. Where appropriate,
         that instruction deletes the customer profile and notes and anonymises or minimises retained historical
-        booking/order contact fields; it does not necessarily hard-delete every historical transactional or payment
+        booking and order contact fields; matching local transactional confirmation records for that customer are
+        removed where applicable. It does not necessarily hard-delete every historical transactional or payment
         record, and active/unresolved operational records or genuinely in-flight messaging may temporarily prevent
         erasure until resolved. Local erasure does not prove immediate deletion of residual copies held independently
         by payment, email, SMS, hosting, monitoring or other providers.
@@ -257,9 +258,11 @@ import '@/styles/legal-pages.css';
         applies its standard <strong>{SAAS_EXPORT_RETENTION_DAYS}-day</strong> post-termination export and retention
         window, after which Customer Personal Data in the live tenant production environment is deleted through the
         standard purge process, including tenant EmailOutbound and SmsOutbound records and the associated private Blob
-        cleanup lifecycle (best-effort provider object deletion). Public media objects tied to the tenant are intended
-        to follow the same tenant lifecycle; automated public-blob cleanup is a documented enforcement target and is
-        not claimed as fully implemented solely by this clause.
+        cleanup lifecycle (best-effort provider object deletion). Current tenant purge also performs best-effort
+        deletion of public media objects that {TRADING_NAME} can safely attribute to that tenant, including the
+        tenant-owned public media namespace. Provider/CDN residual copies may persist temporarily, and {TRADING_NAME}
+        does not claim that every historical legacy object created outside the current ownership model is guaranteed
+        to be removed by that process.
       </p>
 
       <p>
@@ -588,7 +591,11 @@ import '@/styles/legal-pages.css';
         <li>Tenant outbox deletion during shop purge</li>
         <li>Production tenant data purge after applicable retention</li>
         <li>Private Blob cleanup lifecycle (best-effort provider object deletion)</li>
-        <li>Public Blob cleanup aligned to tenant/record lifecycle (enforcement target; not claimed as fully automated)</li>
+        <li>
+          Public Blob cleanup aligned to tenant/record lifecycle (best-effort deletion of publicly attributable
+          tenant media, including the tenant-owned public media namespace; provider/CDN residuals may persist; not a
+          guarantee for every historical legacy object outside the current ownership model)
+        </li>
         <li>Controller records kept separately where lawfully retained for KERSIVO&rsquo;s own purposes</li>
       </ul>
 
