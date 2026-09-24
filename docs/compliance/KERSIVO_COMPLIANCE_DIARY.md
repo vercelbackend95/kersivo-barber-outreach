@@ -1,0 +1,721 @@
+# KERSIVO Compliance & Data-Protection Diary
+
+**Purpose:** Single source of truth for KERSIVO compliance/privacy/data-protection hardening.
+**Rule:** Before starting any new compliance task, check this file first. Do **not** reopen a CLOSED item unless new code, provider evidence, or a regression proves the old conclusion is no longer true.
+
+**Last updated:** 24 September 2026
+**Verified production/main baseline:** `bf9ae379994ad60a4df032800256530c0f4f7b74`
+
+---
+
+## Status legend
+
+- **CLOSED** — implemented/reviewed and verified. Do not repeat.
+- **DOCS CATCH-UP** — runtime is already fixed; documentation still needs to catch up. *(Not currently active — documentation catch-up CLOSED 24 September 2026.)*
+- **OPEN — PRE-LAUNCH** — real remaining work worth doing before/around first live customers.
+- **OPEN — MAINTENANCE** — valid backlog, but not the same class of urgent risk as the closed P0/P1 runtime items.
+- **PERIODIC RECHECK** — not an unfinished project; re-verify periodically or after a material provider/product change.
+- **LEGAL REVIEW** — do not invent an answer in code/docs.
+
+**Golden rule:** A stale document is not proof that runtime work is still open.
+
+**Before reopening any CLOSED item:**
+1. check this Diary
+2. check current git history
+3. check current runtime/code
+4. require new evidence of regression or changed processing
+
+---
+
+# 1. CURRENT VERIFIED BASELINE
+
+Current `main`:
+
+`bf9ae379994ad60a4df032800256530c0f4f7b74`
+
+Latest phase:
+
+**Documentation Catch-up — CLOSED**
+
+Commit:
+
+`bf9ae379994ad60a4df032800256530c0f4f7b74`
+
+Subject:
+
+`docs: align compliance records with deployed controls`
+
+Parent:
+
+`49bde6aa8b81074c52ecec88b49922adc3805b93`
+
+Latest independent verification:
+
+- GitHub `main` = exact SHA above
+- GitHub Actions CI #221 (Run ID `35994296081`) = **SUCCESS**
+- Generate Prisma client = **SUCCESS**
+- Typecheck app = **SUCCESS**
+- Run tests = **SUCCESS**
+- Build Astro = **SUCCESS**
+- Vercel = **SUCCESS** (deployment `ExTweL61X7Cus3eBLhZVL1uxQ7qh`)
+- No migration was required for this phase
+- No manual Vercel redeploy was used
+
+Prior runtime baseline (Client Erasure / Retail Identity P1 — still CLOSED, do not reopen):
+
+`49bde6aa8b81074c52ecec88b49922adc3805b93` — `fix: cover retail identity in client erasure` (CI #220 attempt 2 SUCCESS; Vercel SUCCESS)
+
+---
+
+# 2. CLOSED — DO NOT REOPEN WITHOUT NEW EVIDENCE
+
+## 2.1 DPA / processor-contract foundation — CLOSED
+
+Commit: `185745d8eaf7a9b84e97260207a8eb925ecb0c08`
+Subject: `legal: add DPA and integrate processor terms`
+
+Completed:
+- KERSIVO DPA exists
+- DPA integrated with Terms
+- Client/controller vs KERSIVO/processor framing added
+- Schedules / subprocessor model added
+- Return/deletion and processor obligations documented
+
+**Do not start another “create a DPA from scratch” project.**
+
+## 2.2 Internal GDPR / ROPA foundation — CLOSED
+
+Commit: `15ab15b68a4796656d9648fd94b8cccc50b2cfcd`
+Subject: `compliance: align AI processing and add internal GDPR records`
+
+Completed:
+- internal compliance records
+- ROPA structure
+- AI processing alignment
+- baseline processor/controller documentation
+
+## 2.3 Operational telemetry PII minimisation — CLOSED
+
+Commit: `740382eb672b8f649e0e325b14f049a8f8ca85a5`
+Subject: `security: minimise customer PII in ops telemetry`
+
+Completed:
+- direct customer PII minimisation in operational telemetry
+- later Sentry-specific privacy controls built on top
+
+## 2.4 Public/private Vercel Blob separation — CLOSED
+
+Commit: `424a74533849e6a4b51324785eccbc31c006bef3`
+Subject: `security: separate public and private Blob storage`
+
+Completed:
+- public Blob and private Blob separated
+- private assets moved to private storage model
+- credential separation introduced
+- private store used for sensitive/private assets
+
+Current known stores:
+- Public Blob: `barberdemo-uploads` — LHR1
+- Private Blob: `kersivo-private` — LHR1
+
+## 2.5 Vercel region / transfer assessment — CLOSED
+
+Relevant commits:
+- `2e9946c835ac3abfba5ffbdf89e0f39bd0ae72d9` — `docs: align compliance records with lhr1 runtime`
+- `8f3e428f4bc7c6d28cc5ab14776f089f2d0ed9c4` — `docs: record Vercel UK Extension adequacy`
+
+Completed:
+- Functions runtime moved/verified in `lhr1`
+- Blob storage region documented
+- Vercel transfer position documented
+- UK Extension adequacy path documented
+
+Remaining Vercel work is **PERIODIC RECHECK**, not a fresh compliance project.
+
+## 2.6 Neon / Databricks transfer assessment — CLOSED
+
+Relevant commits:
+- `fe330922e0f3b153abf9738538115f21d8f34ad3` — `docs: complete Neon transfer assessment`
+- `5e47b3369ce3c6f10a4c4ad61ca29b0c45e94dc2` — `docs: confirm Neon account contract details`
+
+Completed:
+- production data plane confirmed London / `eu-west-2`
+- contracting/billing entity work recorded
+- DPA applicability reviewed
+- Non-HR adequacy route documented
+- targeted HR TRA completed and passed
+
+Remaining Neon residual/back-up-detail questions are not a reason to redo the whole Neon assessment.
+
+## 2.7 Resend transfer assessment — CLOSED
+
+Commit: `99ee23b7352d580b1a529ba8e8c2470cdbd3768a`
+Subject: `docs: complete Resend transfer assessment`
+
+Completed:
+- provider/legal entity reviewed
+- US storage documented
+- DPA applicability documented
+- Non-HR transfer route documented
+- targeted HR TRA completed and passed
+
+Provider-held message residuals remain a caveat; they are not proof that the Resend assessment is unfinished.
+
+## 2.8 OpenAI transfer assessment — CLOSED
+
+Commit: `e19f4953fa3b2ca429e7eadc3e8a99f6e1daf2c0`
+Subject: `docs: complete OpenAI transfer assessment`
+
+Completed:
+- Admin AI CPD path assessed
+- UK Addendum / SCC approach documented
+- targeted TRA completed and passed
+- production project/data-controls facts recorded
+- training/sharing opt-ins documented disabled
+- application does not durably store raw admin AI prompts/responses
+
+Future CRM-aware AI expansion would need re-review, but current scope is closed.
+
+## 2.9 Sentry privacy + transfer assessment — CLOSED
+
+Key commits:
+- `c19e9aa3f577df354bf716c45c0462b6efe26078` — `docs: complete Sentry transfer assessment`
+- `f156f927edcd6364faa78ac74df89fbcacb85498` — `ops: add Sentry coverage for critical alerts`
+- `250658c0e841ea0d490f021d90d940d2c645f4f0` — `ops: tag Sentry operational alerts`
+- `1fdf72553b7f432ad05f9d0ff43df7c832e1b18b` — `fix: initialize Sentry for API routes`
+
+Completed:
+- Sentry provider/transfer review
+- privacy scrubbing
+- no intentional direct customer email/phone/name tagging
+- server-side operational monitoring
+- production alert routing
+
+Periodic DPF/UK Extension rechecks are maintenance, not unfinished implementation.
+
+## 2.10 Slack runtime / compliance removal — CLOSED
+
+Relevant commits:
+- `288a0aefce74bc02e2c4ecf381e074cce798158d` — `ops: remove Slack runtime alerts`
+- `b20164271c61ce019a57f0e8ff818d86625dd3e7` — `docs: remove Slack from current disclosures`
+
+Completed:
+- Slack operational alert path removed
+- production Slack env removed
+- disclosures aligned
+- no need to complete a Slack TRA because Slack was removed instead
+
+Dormant schema remnants can be cleaned later as maintenance.
+
+## 2.11 Google Sign-In / OAuth credential minimisation — CLOSED
+
+Relevant commits:
+- `d0c6bd16e70c47a19aea015790a15015ae5f072e` — `security: minimise OAuth credential storage`
+- `845771346803fb894b9885a91703345c350e6385` — `docs: document Google sign-in privacy handling`
+
+Completed:
+- identity scopes only
+- no Gmail/Drive/Calendar access
+- durable OAuth access/refresh/ID token persistence guarded off
+- legacy credential scrub performed
+- Privacy/ROPA/register updated
+- not treated as a Schedule-2 Customer Personal Data subprocessor path
+
+Do not reopen as a generic “Google OAuth compliance” project unless scopes/runtime change.
+
+## 2.12 Stripe checkout security hardening — CLOSED
+
+Commit: `1d492ce8fed235d6b3c9693f6534187f7161fadd`
+Subject: `security: harden Stripe checkout flows`
+
+Completed:
+- checkout metadata minimisation
+- relevant payment-flow security hardening
+- no need to repeat the checkout metadata audit unless flow changes
+
+## 2.13 Stripe compliance review — CLOSED
+
+Commit: `778b579a984fce5b5fde77853adf859bc71253cf`
+Subject: `docs: complete Stripe compliance review`
+
+Completed:
+- SaaS Stripe account role reviewed
+- Stripe Connect role differentiated
+- transfer/legal-role documentation updated
+- DPF/UK Extension position documented
+- current 0% Connect application fee framing aligned
+- historical setup deposit path documented
+
+**Important:** campaign attribution lawful basis was deliberately left open. That does not mean the whole Stripe compliance review is open.
+
+## 2.14 Retention policy definition — CLOSED AS POLICY
+
+Commit: `707fa9911070ceb7912b7cf68f25522fd0f6ed05`
+Subject: `docs: define data retention policy`
+
+Completed:
+- purpose-specific retention schedule created
+- 30-day SaaS export / purge window documented
+- controller vs processor retention distinguished
+- blanket “everything for six years” avoided
+- provider residual caveats documented
+- right-to-erasure exceptions documented
+
+Some retention **enforcement jobs** remain open; the policy-definition project itself is closed.
+
+## 2.15 Individual Client erasure runtime — CLOSED
+
+Runtime commit: `01e167e32b2e5ddfc85b60333de82bb74491e823`
+Subject: `feat: add client data erasure`
+
+Docs commit: `aabf1782e1f74146be5f8053548d9ef31d7d1f14`
+Subject: `docs: document client erasure controls`
+
+Implemented:
+- OWNER/MANAGER erasure instruction path
+- Client profile hard-delete
+- notes hard-delete
+- historical Booking contact/profile PII anonymisation
+- future/active/unresolved operational blockers
+- stale reminder claim handling
+- booking-linked local outbound email/SMS cleanup
+- client avatar cleanup where validated
+- private client-note Blob cleanup best-effort
+- payment/Stripe/refund identifiers retained where needed for transaction integrity
+- provider residual copies not overclaimed as instantly erased
+
+## 2.16 Shop-wide public Blob cleanup P0 — CLOSED
+
+Commit: `906abc11ef72f6b5da3933b51d2cf5d2737f9f4e`
+Subject: `feat: add guarded shop blob cleanup`
+
+Implemented:
+- `ShopSettings.purgeStartedAt`
+- writer/purge serialization
+- coupled upload compensation where a writer loses the purge race
+- write-time same-shop public-media ownership policy
+- configured public Blob store host ownership check
+- cross-shop protection
+- collected public Blob cleanup
+- mandatory paginated `shops/{shopId}/` prefix sweep after DB purge
+- detached product/service upload orphan cleanup inside shop prefix
+- account-delete provider cleanup isolated from Phase-1 DB success
+- retention purge provider cleanup isolated post-commit
+- additive migration deployed through normal production build path
+
+Important caveat:
+
+This closes the **current-runtime shop purge coverage**. It does **not** prove that every historical legacy namespace orphan (`clients/`, `barbers/`, `products/`) created before the current model has been reconciled.
+
+That legacy reconciliation is a separate maintenance task.
+
+## 2.17 Tenant marketing analytics hard-off P0 — CLOSED
+
+Commit: `a82b6553f03b8a28a5d43ba2c5efc1047d89d7c2`
+Subject: `fix: hard-off marketing analytics on tenant surfaces`
+
+Implemented:
+- live tenant storefront/booking routes do not load KERSIVO corporate GA4/Google Ads tags
+- `CookieConsentMount` omitted when analytics disabled
+- `InitDataTrackScript` omitted when analytics disabled
+- booking confirm/cancel/reschedule explicitly analytics-off
+- explicit `tenant` route family
+- marketing ↔ tenant crossing forces full document reload
+- prevents previously loaded marketing `window.gtag` / analytics JS realm from surviving into live tenant flows
+
+Corporate marketing analytics remains separate and consent-based.
+
+Do not reopen “tenant GA leakage” unless route/layout behaviour changes or a browser/network regression proves it.
+
+## 2.18 Client Erasure / Retail Identity P1 — CLOSED
+
+Commit: `49bde6aa8b81074c52ecec88b49922adc3805b93`
+Subject: `fix: cover retail identity in client erasure`
+
+Implemented:
+- canonical retail mailbox identity via `trim().toLowerCase()`
+- existing stored Client identity lock retained
+- canonical retail identity lock added when needed
+- matching `SHOP_ORDER_CONFIRMATION` local `EmailOutbound` rows selected by shop + purpose + canonical email
+- no dangerous generic `bookingId: null` deletion
+- idle QUEUED / FAILED / SENT matching retail confirmation rows hard-deleted locally
+- genuine `__IN_FLIGHT__` retail confirmation temporarily blocks erasure
+- matching `Order.customerEmail` anonymised
+- same-shop different customer protected
+- different-shop same email protected
+- onboarding email purposes protected
+- provider-held Resend copies not claimed erased
+
+Validation:
+- targeted tests: 52/52
+- full suite locally: 402 files / 2626 tests
+- typecheck: pass
+- GitHub CI #220 attempt 2: success
+- Vercel: success
+
+## 2.19 Documentation Catch-up — CLOSED
+
+Commit: `bf9ae379994ad60a4df032800256530c0f4f7b74`
+Subject: `docs: align compliance records with deployed controls`
+Parent: `49bde6aa8b81074c52ecec88b49922adc3805b93`
+
+**Status:** CLOSED
+**Runtime was already fixed.** This phase was documentation/tests only — not a new runtime redesign.
+
+Completed changes:
+- retention schedule aligned to deployed shop-wide public Blob cleanup
+- ROPA aligned to deployed public Blob cleanup and retail identity erasure
+- DPA Section 10 aligned to deployed deletion controls
+- DPA Schedule 3 G aligned to deployed public media cleanup
+- Cookie Policy explicitly documents tenant GA/Ads hard-off
+- DPA version updated to `2026-09-24`
+- Terms version intentionally remains `2026-09-23` (non-material factual DPA correction; no Terms bump / no re-acceptance behaviour)
+- sitemap Cookie lastmod updated to `2026-09-24`
+- legal regression tests updated to protect the new factual state
+- scope-expansion test/sitemap date files aligned (`marketingSitemap`, business-identity cookie date, AiAssistantPanel version independence)
+
+Explicit caveats preserved:
+- public Blob cleanup is **best-effort** provider object deletion
+- provider/CDN residuals may persist
+- historical legacy namespace orphan reconciliation is **separate** (OPEN — MAINTENANCE)
+- Resend/provider-held message copies are **not** claimed erased
+- genuinely in-flight messaging can temporarily block Client erasure
+
+Local validation before commit:
+- targeted legal tests: **6 files / 46 tests PASS**
+- typecheck: **PASS**
+- full test suite: **402 files / 2627 tests PASS**
+- `git diff --check`: clean
+
+Post-push independent verification:
+- GitHub `main`: `bf9ae379994ad60a4df032800256530c0f4f7b74`
+- GitHub Actions CI #221 (Run ID `35994296081`): **SUCCESS**
+  - Generate Prisma client: **SUCCESS**
+  - Typecheck: **SUCCESS**
+  - Tests: **SUCCESS**
+  - Astro build: **SUCCESS**
+- Vercel: **SUCCESS**
+
+**Do not reopen “docs still claim Blob purge is pending” or “docs catch-up still active” unless new evidence shows documents have regressed or new runtime behaviour is undocumented.**
+
+---
+
+# 3. REAL REMAINING PRE-LAUNCH / NEAR-LAUNCH WORK
+
+This section intentionally excludes things already closed above.
+
+## 3.1 Twilio SMS compliance — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
+
+**Next compliance task: TWILIO SMS COMPLIANCE — READ-ONLY FACTUAL AUDIT**
+
+Current evidence says:
+- Twilio is the current SMS provider when SMS reminders are enabled
+- exact UK transfer mechanism is still `VERIFY`
+- TRA/data-protection-test status is not completed in the current records
+- production enablement/configuration needs a final factual check
+
+Need (read-only first):
+1. confirm whether Twilio SMS reminders are actually enabled in Production
+2. confirm current Twilio contractual/DPA position
+3. confirm exact UK international-transfer mechanism
+4. determine whether a TRA / data protection test is actually required
+5. update register/ROPA/DPA only if the verified facts require changes
+
+**Do not mark Twilio resolved.**
+**Do not assume AWS End User Messaging is active.** AWS SMS remains future/planned only unless new runtime evidence proves otherwise.
+
+## 3.2 GA4 / Google Ads marketing-site transfer evidence — OPEN — PRE-LAUNCH / LOW SCOPE
+
+Tenant leakage is CLOSED.
+
+Remaining scope is only KERSIVO's own marketing site:
+- GA4 under analytics consent
+- Google Ads measurement / optional remarketing under consent
+- no Enhanced Conversions
+- live tenant booking/storefront surfaces are hard-off
+
+Remaining work:
+- verify current provider transfer mechanism where required
+- decide whether a TRA/data protection test is required
+- verify cookie durations in the browser/provider evidence
+
+This is **not** a tenant CPD leakage project.
+
+## 3.3 Campaign attribution lawful basis — OPEN — LEGAL REVIEW
+
+Current known fields/path:
+- `gclid`
+- `gbraid`
+- `wbraid`
+- UTM parameters
+- may be included in Stripe metadata/internal fulfilment context
+
+Status deliberately remains:
+
+`ATTRIBUTION LAWFUL BASIS = OPEN / LEGAL REVIEW`
+
+Need one of:
+- confirm lawful basis + appropriate disclosure/retention treatment, or
+- reduce/disable persistence where justification is not worth the complexity
+
+Do not silently mark this resolved.
+
+## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH
+
+After the Twilio / GA-Ads / attribution work:
+
+Perform one final pass across:
+- Terms
+- DPA
+- Privacy
+- Cookies
+- ROPA
+- retention schedule
+- subprocessor/transfer register
+
+Goal:
+- no stale “pending” claims for already-implemented runtime controls
+- no overclaim of provider deletion
+- no false provider roles
+- no reopened items that were previously completed
+- version/date consistency
+
+This is a **final consistency pass**, not another rediscovery exercise.
+
+---
+
+# 4. VALID BACKLOG — NOT THE SAME AS AN URGENT P0
+
+## 4.1 Automated retention enforcement — OPEN — MAINTENANCE
+
+Documented policy exists, but some automated cleanup/minimisation remains pending for:
+- `Verification`
+- `RateLimitEvent`
+- `StripeWebhookEvent`
+- `AccountLifecycleEvent`
+- `RecommendationOpsAction`
+- `SiteLaunchEvent`
+- `SaasSubscription`
+- `SetupDeposit`
+- `LegalAcceptance`
+
+This should be planned as lifecycle maintenance / retention enforcement.
+
+Do not restart the retention-policy-definition work; that is already closed.
+
+## 4.2 Historical legacy public Blob orphan reconciliation — OPEN — MAINTENANCE
+
+Current shop purge is closed and guarded.
+
+Separate possible historical issue:
+- `clients/...`
+- `barbers/...`
+- `products/...`
+
+may contain old orphaned objects created before current safeguards.
+
+Any cleanup must be conservative because tenant ownership of legacy paths can be ambiguous.
+
+Do not perform unsafe prefix-wide deletion in legacy namespaces.
+
+## 4.3 Private Blob cleanup retry/reconciliation — OPEN — MAINTENANCE
+
+Current private Blob deletion is best-effort.
+
+Potential future hardening:
+- durable retry
+- reconciliation job
+- operational visibility for failed deletes
+
+Not equivalent to “private Blob cleanup is missing.”
+
+## 4.4 First live Client-specific register row — FUTURE OPERATIONAL STEP
+
+When the first real barbershop is onboarded, record the actual Client/controller relationship and enabled optional processors/features as needed.
+
+This is not missing runtime functionality today.
+
+---
+
+# 5. PERIODIC RECHECKS — NOT UNFINISHED PROJECTS
+
+Do not treat these as work that must be redone now.
+
+Periodic checks include:
+- Vercel UK Extension/DPF status
+- Neon/Databricks UK Extension status
+- Resend UK Extension status
+- Sentry UK Extension status
+- Stripe DPF/UK Extension status
+- OpenAI Data Controls / material contract changes
+- provider retention terms if materially changed
+
+A periodic recheck becomes an active project only when:
+- certification changes
+- provider terms materially change
+- KERSIVO changes provider
+- data categories change
+- processing region changes
+- new feature materially expands processing
+
+---
+
+# 6. ITEMS THAT MUST NOT BE ACCIDENTALLY REOPENED
+
+Unless new evidence exists, do not propose redoing:
+- DPA from scratch
+- ROPA from scratch
+- Vercel TRA/transfer assessment
+- Neon transfer assessment
+- Resend transfer assessment
+- OpenAI transfer assessment
+- Sentry transfer assessment
+- Slack TRA
+- Google OAuth token-storage audit
+- Stripe compliance review
+- retention policy definition
+- individual Client erasure
+- shop-wide public Blob purge coverage
+- tenant GA/Ads hard-off
+- retail `SHOP_ORDER_CONFIRMATION` erasure coverage
+- documentation catch-up for the three closed runtime phases above
+
+---
+
+# 7. OPERATIONAL SAFETY RULES FOR FUTURE COMPLIANCE WORK
+
+Preferred workflow:
+1. Understand the claimed gap.
+2. Check this diary.
+3. Check git history/current runtime.
+4. Read-only audit.
+5. Decide whether the issue is CLOSED, docs stale, or genuinely OPEN.
+6. Only then implement.
+7. Run targeted tests.
+8. Run full tests/typecheck.
+9. Audit diff.
+10. Stage explicit approved paths only.
+11. Commit only after staged-diff approval.
+12. Push only after pre-push remote verification.
+13. Independently verify GitHub CI + Vercel.
+14. Update this diary after the phase closes.
+
+Never use:
+- `git add .`
+- `git add -A`
+- `git add -u`
+- force push
+- manual production DB destructive changes
+- manual migrations unless explicitly planned and verified
+- speculative provider/legal claims
+
+---
+
+# 8. KNOWN UNRELATED UNTRACKED FILES — DO NOT TOUCH DURING COMPLIANCE PATCHES
+
+Known unrelated artifacts from prior work include:
+- `.merge_file_ijLHdV`
+- `PHASE_4C2A3_REVIEW.md`
+- `PHASE_4C2A4_REVIEW.md`
+- `PHASE_4C2B_LIVE_REVIEW.md`
+- `PHASE_6A1_2_REVIEW.md`
+- `PHASE_6A2A_REVIEW.md`
+- `PHASE_6A2B_REVIEW.md`
+- `PHASE_6B1_1_REVIEW.md`
+- `PHASE_6B1_2_REVIEW.md`
+- `public/demo/script/`
+- `public/images/Ilustracje/kkk.png`
+- `scripts/recommendations/offlineV8AuditedReplay.ts`
+
+If the worktree differs, inspect before acting. Do not invent additional filenames.
+
+---
+
+# 9. NEXT ACTION
+
+Current next action:
+
+**TWILIO SMS COMPLIANCE — READ-ONLY FACTUAL AUDIT**
+
+Scope:
+1. confirm whether Twilio SMS reminders are actually enabled in Production
+2. confirm current Twilio contractual/DPA position
+3. confirm exact UK international-transfer mechanism
+4. determine whether a TRA / data protection test is actually required
+5. do **not** assume AWS End User Messaging is active; AWS SMS remains future/planned only unless new runtime evidence proves otherwise
+
+Do **not** mark Twilio resolved.
+
+After that:
+1. GA4/Ads narrow marketing-site transfer/cookie verification
+2. attribution lawful-basis decision
+3. final consistency audit
+
+Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN — MAINTENANCE** unless a concrete launch blocker is discovered.
+
+---
+
+# 10. CHANGE LOG
+
+## 24 September 2026 — Documentation Catch-up CLOSED
+
+- **Documentation Catch-up CLOSED**
+- Commit `bf9ae379994ad60a4df032800256530c0f4f7b74` — `docs: align compliance records with deployed controls`
+- Parent `49bde6aa8b81074c52ecec88b49922adc3805b93`
+- GitHub Actions CI #221 SUCCESS (Run ID `35994296081`)
+- Vercel SUCCESS
+- New verified production/main baseline = `bf9ae379994ad60a4df032800256530c0f4f7b74`
+- Next active compliance task = **Twilio SMS factual audit**
+- DPA version `2026-09-24`; Terms remain `2026-09-23`
+- Public Blob / retail erasure / tenant GA hard-off docs aligned without reopening closed runtime work
+- Attribution, Twilio/GA transfer VERIFY, TTL/minimisation, and legacy orphan maintenance items remain OPEN
+
+## 24 September 2026 — Diary created / Retail Identity baseline
+
+- Verified production/main baseline `49bde6aa...` (Client Erasure / Retail Identity P1)
+- GitHub CI #220 attempt 2 SUCCESS
+- Vercel SUCCESS
+- Marked **Client Erasure / Retail Identity P1 CLOSED**
+- Reconstructed compliance history from repository commits
+- Corrected prior over-broad backlog assessment:
+  - Vercel, Neon, Resend, OpenAI, Sentry, Stripe, Google OAuth are not generic unfinished compliance projects
+  - their completed assessments are explicitly recorded above
+- Cursor read-only docs catch-up audit reviewed
+- Active task then set to documentation catch-up (now CLOSED — see entry above)
+- Real remaining pre-launch scope narrowed to Twilio, narrow GA/Ads verification, attribution legal-basis decision, and final consistency audit
+- TTL/minimisation, legacy Blob reconciliation and private Blob retry retained as maintenance backlog
+
+## 23 September 2026
+
+- Retention policy documentation completed
+- Individual Client erasure runtime implemented
+- Individual Client erasure documentation completed
+- Shop-wide public Blob cleanup P0 implemented
+- Tenant analytics hard-off P0 implemented
+- Retail identity/outbox erasure P1 implemented
+
+## 21–22 September 2026
+
+- Vercel/Neon/Resend/OpenAI/Sentry transfer/compliance reviews completed
+- Blob storage separation and region alignment completed
+- Slack runtime path removed
+- Google OAuth credential persistence hardened
+- Stripe checkout and compliance review completed
+
+---
+
+# 11. GOLDEN RULE
+
+**A stale document is not proof that runtime work is still open.**
+
+Before spending time on any compliance item:
+
+> verify current code + current git history + this diary.
+
+Before reopening any CLOSED item:
+1. check this Diary
+2. check current git history
+3. check current runtime/code
+4. require new evidence of regression or changed processing
+
+If the diary says CLOSED and a document says PENDING, first assume **documentation drift** and prove otherwise before reopening implementation.
