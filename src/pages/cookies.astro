@@ -30,8 +30,8 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
       <h2>What are cookies and similar technologies?</h2>
       <p>
         Cookies are small text files stored on your device. Similar technologies include localStorage, sessionStorage
-        and tags/scripts that set identifiers. Some are necessary for the site to work. Others help us understand usage
-        or measure advertising, and are used only with your permission.
+        and tags/scripts that set identifiers. Some are necessary for the site to work. Others help us understand site
+        performance and are used only with your permission.
       </p>
 
       <h2>How we ask for consent</h2>
@@ -42,13 +42,13 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
         {consentDays} days). You can reopen preferences at any time via <strong>Cookie settings</strong> in the footer.
       </p>
       <p>
-        We use Google Consent Mode v2 with a privacy-first approach: analytics and advertising tags are not loaded until
-        you grant the relevant permission. <code>ad_personalization</code> is granted only if you switch on personalised
-        advertising, and remains denied for every other combination of choices. The marketing-site cookie consent
-        controls described in this policy govern {TRADING_NAME} marketing surfaces. They do not govern live tenant
-        barbershop shop journeys. {TRADING_NAME} marketing analytics and advertising tags are not loaded on live
-        barbershop booking or storefront pages. That does not mean every third-party operational processor used to run
-        the service (for example hosting, payments, email or monitoring) is absent from those pages.
+        We use Google Consent Mode v2 with a privacy-first approach: analytics tags are not loaded until you grant
+        Analytics permission. Advertising-related Consent Mode signals remain denied while Google Ads is inactive on
+        Production (see below). The marketing-site cookie consent controls described in this policy govern
+        {TRADING_NAME} marketing surfaces. They do not govern live tenant barbershop shop journeys. {TRADING_NAME}
+        marketing analytics tags are not loaded on live barbershop booking or storefront pages. That does not mean every
+        third-party operational processor used to run the service (for example hosting, payments, email or monitoring) is
+        absent from those pages.
       </p>
 
       <h2>Categories we use</h2>
@@ -63,20 +63,14 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
       <h3>Analytics</h3>
       <p>
         Off by default. When accepted, Google Analytics 4 helps us understand how visitors use the site. Provider:
-        Google.
+        Google. This is currently the only optional category offered in Cookie settings on Production.
       </p>
-      <h3>Advertising measurement</h3>
+      <h3>Google Ads (currently inactive)</h3>
       <p>
-        Off by default. When accepted and a Google Ads measurement ID is configured, Google Ads tags help us understand
-        whether ads lead to enquiries or subscriptions. This category measures results only; on its own it does not add
-        you to advertising audiences. We do not use Google Ads Enhanced Conversions.
-      </p>
-      <h3>Personalised advertising</h3>
-      <p>
-        Off by default and asked for separately from measurement. When accepted, Google may add you to our remarketing
-        audiences so that we can show KERSIVO ads to people who have already visited this site. Provider: Google Ads.
-        Switching this off stops future audience collection; audiences you were already added to are managed by Google
-        and expire according to their membership duration.
+        Google Ads measurement and personalised advertising / remarketing are <strong>not currently configured</strong>
+        on Production. Cookie settings do not offer Advertising measurement or Personalised advertising choices while
+        Ads remains dormant. Historical Google-held Ads records (if any) are not claimed erased from Google&rsquo;s
+        systems merely because Ads is inactive on this website.
       </p>
 
       <h2>Technology inventory</h2>
@@ -159,28 +153,33 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
               <td>First-party sessionStorage</td>
             </tr>
             <tr>
-              <td><code>_ga</code>, <code>_ga_*</code>, <code>_gid</code></td>
+              <td><code>_ga</code>, <code>_ga_*</code></td>
               <td>Google Analytics</td>
               <td>Analytics (when consented)</td>
               <td>Distinguish visitors / sessions for GA4</td>
-              <td>Unresolved — verify in browser after consent</td>
+              <td>Up to 2 years by provider default, subject to browser limits</td>
               <td>First-party cookies set via Google</td>
             </tr>
             <tr>
-              <td><code>_gcl_*</code> / Ads cookies (if Ads ID configured)</td>
+              <td><code>_gcl_*</code> / <code>_gac*</code> / <code>_gcl_ls</code> (historical / dormant)</td>
               <td>Google Ads</td>
-              <td>Advertising measurement and/or personalised advertising (when consented)</td>
-              <td>Measure ad-driven conversions and, with personalised advertising, build remarketing audiences</td>
-              <td>Unresolved — verify in browser after consent</td>
-              <td>First-party cookies set via Google</td>
+              <td>Inactive — not currently set by Production</td>
+              <td>
+                Previously associated with Google Ads measurement / remarketing when Ads was configured. Production
+                currently has no Google Ads ID and does not create these identifiers. Any residual first-party keys from
+                older visits are cleared automatically when consent is invalid or Ads capability is absent.
+              </td>
+              <td>N/A while Ads dormant</td>
+              <td>First-party (historical)</td>
             </tr>
             <tr>
               <td>URL parameters (<code>gclid</code>, <code>gbraid</code>, <code>wbraid</code>, UTMs)</td>
               <td>KERSIVO / advertising platforms</td>
               <td>See Privacy Policy</td>
               <td>
-                May remain in the URL. Passed to Stripe metadata only when you voluntarily start setup checkout — not
-                stored in cookies/localStorage before advertising-measurement consent
+                May remain in the URL. Passed to Stripe metadata only when you voluntarily start setup / subscription
+                checkout — not stored in cookies or localStorage as a Cookie settings choice. Lawful basis for this
+                attribution path remains under legal review (see Privacy Policy).
               </td>
               <td>URL lifetime / Stripe metadata retention</td>
               <td>Not a browser cookie</td>
@@ -191,11 +190,10 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
 
       <h2>Changing or withdrawing consent</h2>
       <p>
-        Use <strong>Cookie settings</strong> in the footer. If you withdraw analytics or advertising measurement, we
-        update Google Consent Mode immediately, stop loading optional tags on later visits, and delete removable
-        first-party optional cookies and related sessionStorage keys where technically possible. Cookies set on other
-        domains by third parties cannot always be deleted from our site; those tags will not be loaded again after
-        withdrawal.
+        Use <strong>Cookie settings</strong> in the footer. If you withdraw Analytics, we update Google Consent Mode
+        immediately, stop loading the GA4 tag on later visits, and delete removable first-party Analytics cookies and
+        related sessionStorage keys where technically possible. Cookies set on other domains by third parties cannot
+        always be deleted from our site; those tags will not be loaded again after withdrawal.
       </p>
 
       <h2>Contact</h2>

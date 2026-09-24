@@ -4,7 +4,7 @@
 **Rule:** Before starting any new compliance task, check this file first. Do **not** reopen a CLOSED item unless new code, provider evidence, or a regression proves the old conclusion is no longer true.
 
 **Last updated:** 24 September 2026
-**Latest verified substantive compliance/runtime baseline:** `bf9ae379994ad60a4df032800256530c0f4f7b74`
+**Latest verified substantive compliance/runtime baseline:** `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 
 ---
 
@@ -33,37 +33,38 @@
 
 Latest verified substantive compliance/runtime baseline:
 
-`bf9ae379994ad60a4df032800256530c0f4f7b74`
+`1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 
 **Baseline rule:** Repository `main` HEAD may be newer than this SHA. This baseline is **not** required to equal the latest git `main` HEAD. Diary-only, changelog-only, or other metadata/documentation commits do not advance the substantive compliance/runtime baseline unless they change the factual compliance state, legal disclosure state, runtime processing, or deployed controls. A new baseline is recorded only after a substantive compliance/legal/runtime change has been independently verified. Diary maintenance commits themselves do not trigger baseline churn.
 
 Latest phase:
 
-**Documentation Catch-up — CLOSED**
+**Phase 2B — Google Ads dormant-mode — CLOSED (runtime)**
 
-Catch-up commit (also the current substantive baseline):
+Substantive runtime commit (also the current substantive baseline):
 
-`bf9ae379994ad60a4df032800256530c0f4f7b74`
+`1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 
 Subject:
 
-`docs: align compliance records with deployed controls`
+`fix: retire inactive Google Ads tracking`
 
 Parent:
 
-`49bde6aa8b81074c52ecec88b49922adc3805b93`
+`73cdda6326aebfd38167569ed7e77b0030a0f233`
 
-Independent verification of this substantive baseline (at catch-up close):
+Independent verification of this substantive baseline:
 
-- GitHub `main` matched the substantive baseline SHA above when the phase closed
-- GitHub Actions CI #221 (Run ID `35994296081`) = **SUCCESS**
-- Generate Prisma client = **SUCCESS**
-- Typecheck app = **SUCCESS**
-- Run tests = **SUCCESS**
-- Build Astro = **SUCCESS**
-- Vercel = **SUCCESS** (deployment `ExTweL61X7Cus3eBLhZVL1uxQ7qh`)
-- No migration was required for this phase
-- No manual Vercel redeploy was used
+- GitHub Actions CI #225 (Run ID `36012438008`) = **SUCCESS**
+- Vercel = **SUCCESS** (deployment `BprqVenGdErd3hPX4NzSuCG43dGF`)
+- Production runtime verdict: **PRODUCTION VERIFIED — GOOGLE ADS DORMANT / GA4 CONSENT-BASED**
+- Production env: `PUBLIC_GOOGLE_ADS_ID` and `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` **ABSENT** (removed before this deploy)
+- No migration required
+- No manual Vercel redeploy used for verification
+
+Prior substantive documentation baseline (Documentation Catch-up — still CLOSED, do not reopen):
+
+`bf9ae379994ad60a4df032800256530c0f4f7b74` — `docs: align compliance records with deployed controls`
 
 Prior substantive runtime baseline (Client Erasure / Retail Identity P1 — still CLOSED, do not reopen):
 
@@ -402,6 +403,42 @@ Post-push independent verification:
 
 **Do not reopen “docs still claim Blob purge is pending” or “docs catch-up still active” unless new evidence shows documents have regressed or new runtime behaviour is undocumented.**
 
+## 2.20 Phase 2B — Google Ads dormant-mode — CLOSED (runtime)
+
+Commit: `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+Subject: `fix: retire inactive Google Ads tracking`
+Parent: `73cdda6326aebfd38167569ed7e77b0030a0f233`
+
+**Status:** CLOSED for **Google Ads runtime / current Production processing** (dormant).
+
+Independent verification:
+- GitHub Actions CI #225 (Run ID `36012438008`) = **SUCCESS**
+- Vercel deployment `BprqVenGdErd3hPX4NzSuCG43dGF` = **SUCCESS**
+- Production browser verification: **PRODUCTION VERIFIED — GOOGLE ADS DORMANT / GA4 CONSENT-BASED**
+
+Verified Production facts (24 September 2026):
+- `CONSENT_VERSION = 3`
+- Production consent UI categories: **Necessary** + **Analytics** only (no Advertising measurement / Personalised advertising)
+- Production `PUBLIC_GOOGLE_ADS_ID` **ABSENT**
+- Production `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` **ABSENT**
+- GA4 ↔ Google Ads active links = **0**
+- no Production AW-* runtime ID / AW config / Ads conversion target
+- no Google Ads / DoubleClick network observed after Accept all
+- no `_gcl_*` / `_gac*` / `_gcl_ls` created
+- stale optional storage automatically retired on CookieConsent mount (invalid/old consent; Ads-absent effective clamp)
+- GA4 remains consent-based (`G-6QEN5JL0L1`); analytics_storage denied before consent; GA4 loads after Analytics consent; withdrawal clears removable GA storage
+- Google Analytics account “Google products & services” data sharing = **OFF**
+- tenant marketing analytics hard-off remains **CLOSED** (`a82b655…`)
+
+Programme status (do **not** mark entire GA4/Ads programme CLOSED):
+- **GOOGLE ADS RUNTIME / CURRENT PROCESSING:** CLOSED — DORMANT
+- **GA4 RUNTIME CONSENT IMPLEMENTATION:** VERIFIED
+- **GA4 CONTRACTUAL / INTERNATIONAL TRANSFER POSITION:** OPEN — FINAL VERIFICATION REQUIRED
+
+Reactivation of Google Ads requires: re-audit role/transfer; reintroduce Ads consent purposes; bump `CONSENT_VERSION`; verify Ads account links/settings; update public policies. Do **not** claim historical Google-held Ads data was erased.
+
+**Do not reopen Ads dormant-mode runtime** unless Production Ads IDs are reintroduced or a browser/network regression proves Ads tags load again.
+
 ---
 
 # 3. REAL REMAINING PRE-LAUNCH / NEAR-LAUNCH WORK
@@ -429,29 +466,36 @@ Amazon / AWS SMS status: **PLANNED / FUTURE PROVIDER**
 - Do **not** perform an AWS compliance assessment in this Diary priority update.
 - When the provider migration actually begins, the final SMS compliance phase should audit the provider that is genuinely selected and deployed.
 
-## 3.2 GA4 / Google Ads marketing-site privacy & transfer audit — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
+## 3.2 GA4 contractual / international transfer finalisation — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
 
-**Next compliance task: GA4 / GOOGLE ADS — MARKETING-SITE PRIVACY & TRANSFER AUDIT**
+**Next compliance task: GA4 ONLY — CONTRACT / TRANSFER / ACCOUNT DATA-CONTROL FINALISATION**
+
+Google Ads runtime / current Production processing is **CLOSED — DORMANT** (Phase 2B / `1843c0f…`). Do **not** continue carrying Google Ads TRA as a current active provider task while Ads remains dormant. Reopen Ads work only if Ads is re-enabled.
 
 Tenant leakage is CLOSED. Do **not** reopen already-closed tenant analytics hard-off work.
 
-Remaining scope is only KERSIVO's own marketing site (read-only audit first; no implementation in this Diary update):
-1. identify actual GA4 / Google Ads code paths used on KERSIVO marketing pages
-2. verify tenant booking/storefront hard-off remains intact
-3. identify cookies/storage actually created in browser
-4. verify real cookie durations rather than relying only on documentation
-5. inspect consent behaviour / Consent Mode
-6. identify current Google contractual / international-transfer mechanism
-7. determine whether additional transfer assessment is required
-8. compare runtime facts against Cookie Policy / Privacy Policy / ROPA
+GA4 runtime consent implementation is **VERIFIED** on Production (Basic Consent Mode; Analytics-only UI; consent v3; load only after Analytics consent).
 
-Known framing (do not expand beyond marketing-site scope):
-- GA4 under analytics consent
-- Google Ads measurement / optional remarketing under consent
+Remaining GA4-only scope:
+1. confirm current Google Analytics contractual / DPA applicability for the processor path
+2. identify exact UK international-transfer / restricted-transfer mechanism (or adequacy reliance) with evidence
+3. complete any required data-protection test / TRA conclusion for GA4
+4. record account data-control facts that remain material (products & services sharing already verified OFF)
+5. align final register/ROPA wording only after transfer evidence is complete
+
+Do **not** invent:
+- a completed GA4 TRA
+- an exact importer / adequacy conclusion
+- closure of campaign attribution lawful basis
+
+Known framing:
+- GA4 under Analytics consent — ACTIVE
+- Google = processor for Analytics-service data while products & services sharing is OFF
+- Google Ads = INACTIVE / DORMANT
 - no Enhanced Conversions
-- live tenant booking/storefront surfaces are hard-off
+- live tenant booking/storefront surfaces remain hard-off
 
-This is **not** a tenant CPD leakage project.
+This is **not** a tenant CPD leakage project and **not** an Ads reactivation project.
 
 ## 3.3 Campaign attribution lawful basis — OPEN — LEGAL REVIEW
 
@@ -474,7 +518,7 @@ Do not silently mark this resolved.
 
 ## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH
 
-After the GA-Ads / attribution work (and any reactivated Twilio/SMS-provider work if required):
+After the remaining GA4-only contract/transfer/account-control work and the attribution review (and any reactivated Twilio/SMS-provider work if required):
 
 Perform one final pass across:
 - Terms
@@ -591,6 +635,7 @@ Unless new evidence exists, do not propose redoing:
 - tenant GA/Ads hard-off
 - retail `SHOP_ORDER_CONFIRMATION` erasure coverage
 - documentation catch-up for the three closed runtime phases above
+- Google Ads dormant-mode runtime (Phase 2B) while Ads remains inactive
 
 ---
 
@@ -647,22 +692,19 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 Current next action:
 
-**GA4 / GOOGLE ADS — MARKETING-SITE PRIVACY & TRANSFER AUDIT**
+**GA4 ONLY — CONTRACT / TRANSFER / ACCOUNT DATA-CONTROL FINALISATION**
 
-Scope (read-only first):
-1. identify actual GA4 / Google Ads code paths used on KERSIVO marketing pages
-2. verify tenant booking/storefront hard-off remains intact
-3. identify cookies/storage actually created in browser
-4. verify real cookie durations rather than relying only on documentation
-5. inspect consent behaviour / Consent Mode
-6. identify current Google contractual / international-transfer mechanism
-7. determine whether additional transfer assessment is required
-8. compare runtime facts against Cookie Policy / Privacy Policy / ROPA
-9. do **not** reopen already-closed tenant analytics hard-off work
+Scope:
+1. confirm Google Analytics contractual / DPA applicability for the current processor path
+2. identify exact UK international-transfer / restricted-transfer mechanism with evidence
+3. complete any required GA4 TRA / data-protection test conclusion
+4. do **not** reopen Google Ads while Ads remains dormant
+5. do **not** reopen already-closed tenant analytics hard-off work
+6. do **not** invent attribution lawful basis closure
 
 After that:
-1. campaign attribution lawful-basis decision (`gclid` / `gbraid` / `wbraid` / UTMs)
-2. final legal/document consistency audit
+1. campaign attribution lawful-basis decision (`gclid` / `gbraid` / `wbraid` / UTMs) — remains **OPEN / LEGAL REVIEW**
+2. final legal/document consistency audit — remains **OPEN**
 
 Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
 
@@ -681,6 +723,22 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 ---
 
 # 10. CHANGE LOG
+
+## 24 September 2026 — Phase 2B Google Ads dormant-mode CLOSED (runtime) + docs alignment
+
+- Runtime commit `1843c0fbc42328f57a3fdd74bf08acae33bfc513` — `fix: retire inactive Google Ads tracking`
+- Parent `73cdda6326aebfd38167569ed7e77b0030a0f233`
+- GitHub Actions CI #225 SUCCESS (Run ID `36012438008`)
+- Vercel SUCCESS (`BprqVenGdErd3hPX4NzSuCG43dGF`)
+- Production verified: Google Ads dormant / GA4 consent-based
+- New latest verified substantive compliance/runtime baseline = `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+- Google Ads runtime / current processing = **CLOSED — DORMANT**
+- GA4 runtime consent implementation = **VERIFIED**
+- GA4 contractual / international transfer = **OPEN — FINAL VERIFICATION REQUIRED** (next active Google task)
+- Campaign attribution lawful basis remains **OPEN / LEGAL REVIEW**
+- Twilio remains **DEFERRED**; AWS SMS remains **PLANNED / FUTURE PROVIDER**
+- Cookie / Privacy / ROPA / transfer-register docs aligned in the Phase 2C documentation pass (this Diary update)
+- Do **not** treat a later docs-only HEAD as replacing this substantive baseline
 
 ## 24 September 2026 — Next-task priority update (Twilio deferred)
 

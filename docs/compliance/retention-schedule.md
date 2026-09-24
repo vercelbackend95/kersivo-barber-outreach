@@ -122,7 +122,7 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | Sentry | Events/backups may remain | Baseline documented; backups **VERIFY** |
 | Vercel | Request logs / platform residual | **PROVIDER VERIFICATION REQUIRED** |
 | OpenAI | Abuse-monitoring / provider retention where Admin AI used | Documented in vendor evidence; **VERIFY** Data Controls periodically |
-| Google | OAuth/IdP processing under Google; GA4/Ads under consent | **PROVIDER VERIFICATION REQUIRED** / separate TRA gaps where applicable |
+| Google | OAuth/IdP processing under Google; GA4 active under analytics consent; Google Ads inactive / dormant | **PROVIDER VERIFICATION REQUIRED** / separate TRA gaps where applicable (GA4 transfer OPEN / VERIFY; Ads transfer reopen only if Ads reactivated) |
 | Vercel Blob CDN/cache | After `del`, residual may persist briefly | **PROVIDER VERIFICATION REQUIRED** |
 
 ---

@@ -19,7 +19,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 23 September 2026</p>
+      <p class="legal-page__updated">Last updated: 24 September 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
@@ -113,10 +113,12 @@ import '@/styles/legal-pages.css';
           <strong>Campaign attribution on checkout</strong> — if present in the page URL when you start checkout, we may
           pass advertising or campaign identifiers (for example gclid, gbraid, wbraid or UTM parameters) into Stripe
           session metadata and include a summary in internal fulfilment email. We do not store these identifiers in
-          browser cookies or local storage before you choose optional advertising measurement in our cookie banner.
+          browser cookies or local storage via Cookie settings. This path is separate from Google Ads website tags
+          (currently inactive on Production).
           <strong>Purpose:</strong> understanding which campaigns relate to subscription checkouts.
           <strong>Legal basis (UK):</strong> requires confirmation with our legal adviser (typically legitimate interests
           and/or consent for related storage technologies — see the Cookie Policy).
+          <strong>Status:</strong> OPEN / LEGAL REVIEW — not resolved merely because Google Ads website tags are dormant.
         </li>
         <li>
           <strong>Optional Sign in with Google</strong> — where offered (for example &ldquo;Continue with Google&rdquo;),
@@ -184,23 +186,22 @@ import '@/styles/legal-pages.css';
           {TRADING_NAME}&rsquo;s own controller processing.
         </li>
         <li>
-          <strong>Website analytics (optional)</strong> — if you accept analytics cookies on {TRADING_NAME} marketing
+          <strong>Website analytics (optional)</strong> — if you accept Analytics cookies on {TRADING_NAME} marketing
           pages, Google Analytics 4 may process pseudonymous usage data (for example pages viewed and approximate
           location derived by Google) to help us understand site performance. Live barbershop booking and storefront
           pages do not load {TRADING_NAME} marketing analytics tags.
-          <strong>Legal basis (UK):</strong> consent. ({TRADING_NAME} as independent controller.)
+          <strong>Legal basis (UK):</strong> consent. For the current configuration (Google &ldquo;Google products &amp;
+          services&rdquo; data sharing off), Google acts as a <strong>processor</strong> for Analytics-service data
+          processed to provide the Analytics service; {TRADING_NAME} remains the controller for deciding to use GA4 on
+          the marketing site. Exact UK international-transfer / restricted-transfer assessment for GA4 remains under
+          verification and is not claimed complete here.
         </li>
         <li>
-          <strong>Advertising measurement (optional)</strong> — if you accept advertising measurement on
-          {TRADING_NAME} marketing pages, Google Ads measurement tags may process data needed to measure whether ads
-          lead to enquiries or subscriptions. We do <strong>not</strong> use Google Ads Enhanced Conversions (we do not
-          send hashed customer emails or phone numbers to Google). <strong>Legal basis (UK):</strong> consent.
-        </li>
-        <li>
-          <strong>Personalised advertising (optional)</strong> — asked for separately from measurement and off unless you
-          switch it on. If you accept it, Google may add you to our remarketing audiences so we can show KERSIVO ads to
-          people who have already visited the site. Withdrawing it stops future audience collection.
-          <strong>Legal basis (UK):</strong> consent.
+          <strong>Google Ads (currently inactive)</strong> — Production does not currently configure Google Ads
+          measurement IDs, conversion labels, or remarketing tags. Cookie settings do not currently offer Advertising
+          measurement or Personalised advertising choices. We do <strong>not</strong> use Google Ads Enhanced
+          Conversions. This does not claim that any historical Google-held Ads records were erased from Google&rsquo;s
+          systems.
         </li>
         <li>
           <strong>SMS (optional)</strong> — if you subscribe to a plan that includes SMS and we enable it for your shop,
@@ -252,9 +253,15 @@ import '@/styles/legal-pages.css';
           Ads.
         </li>
         <li>
-          <strong>Google Analytics 4 / Google Ads</strong> — optional measurement on {TRADING_NAME} marketing pages
-          only when you consent (see the Cookie Policy). These tags are not used on live barbershop booking or
-          storefront pages. This is separate from Google Sign-In.
+          <strong>Google Analytics 4</strong> — optional Analytics measurement on {TRADING_NAME} marketing pages only
+          when you consent (see the Cookie Policy). ACTIVE / consent-based. These tags are not used on live barbershop
+          booking or storefront pages. Separate from Google Sign-In. Google products &amp; services data sharing is off
+          for the current Analytics account configuration.
+        </li>
+        <li>
+          <strong>Google Ads</strong> — INACTIVE / DORMANT on Production (no Ads measurement ID / purchase conversion
+          label configured; no active Ads consent choice in Cookie settings). Historical use may exist in older Google
+          account records; those are not claimed erased here. Separate from Google Sign-In and from GA4.
         </li>
       </ul>
       <p>

@@ -37,7 +37,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 23 September 2026');
+    expect(privacySource).toContain('Last updated: 24 September 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
@@ -100,6 +100,40 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).not.toMatch(/reads your (Gmail|Google Drive|Calendar)/i);
   });
 
+  it('keeps Google Ads dormant and does not present active Ads measurement or remarketing purposes', () => {
+    const normalized = privacySource.replace(/\s+/g, ' ');
+    expect(privacySource).toContain('Google Ads (currently inactive)');
+    expect(privacySource).toContain('INACTIVE / DORMANT');
+    expect(normalized).toContain(
+      'does not currently configure Google Ads measurement IDs, conversion labels, or remarketing tags',
+    );
+    expect(normalized).toContain(
+      'Cookie settings do not currently offer Advertising measurement or Personalised advertising choices',
+    );
+    expect(privacySource).not.toMatch(
+      /optional[\s\S]{0,80}Advertising measurement/i,
+    );
+    expect(privacySource).not.toMatch(
+      /we (currently )?(use|run|perform)[\s\S]{0,60}(remarketing|personalised advertising)/i,
+    );
+  });
+
+  it('states GA4 processor path with Google products & services data sharing off', () => {
+    const normalized = privacySource.replace(/\s+/g, ' ');
+    expect(normalized).toContain(
+      'Google products &amp; services&rdquo; data sharing off',
+    );
+    expect(normalized).toContain(
+      'Google acts as a <strong>processor</strong> for Analytics-service data',
+    );
+    expect(normalized).toContain(
+      'Google products &amp; services data sharing is off',
+    );
+    expect(normalized).toContain(
+      'Exact UK international-transfer / restricted-transfer assessment for GA4 remains under verification',
+    );
+  });
+
   it('aligns retention with export window and avoids blanket 6-year / instant-delete claims', () => {
     expect(privacySource).toContain('{SAAS_EXPORT_RETENTION_DAYS}');
     expect(SAAS_EXPORT_RETENTION_DAYS).toBe(30);
@@ -114,7 +148,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('explicit account deletion');
     expect(privacySource).toContain('this right is not absolute');
     expect(privacySource).toContain('provider systems');
-    expect(privacySource).toContain('Last updated: 23 September 2026');
+    expect(privacySource).toContain('Last updated: 24 September 2026');
     expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
     expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
     expect(privacySource).toContain('requires confirmation with our legal adviser');
