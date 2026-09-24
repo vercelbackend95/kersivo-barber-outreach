@@ -14,6 +14,8 @@
 - **DOCS CATCH-UP** — runtime is already fixed; documentation still needs to catch up. *(Not currently active — documentation catch-up CLOSED 24 September 2026.)*
 - **OPEN — PRE-LAUNCH** — real remaining work worth doing before/around first live customers.
 - **OPEN — MAINTENANCE** — valid backlog, but not the same class of urgent risk as the closed P0/P1 runtime items.
+- **DEFERRED** — intentionally postponed; unresolved facts remain; do **not** treat as CLOSED.
+- **PLANNED / FUTURE PROVIDER** — not currently active in production processing unless proven by runtime evidence.
 - **PERIODIC RECHECK** — not an unfinished project; re-verify periodically or after a material provider/product change.
 - **LEGAL REVIEW** — do not invent an answer in code/docs.
 
@@ -406,40 +408,48 @@ Post-push independent verification:
 
 This section intentionally excludes things already closed above.
 
-## 3.1 Twilio SMS compliance — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
+## 3.1 Twilio SMS compliance — DEFERRED — PENDING SMS PROVIDER MIGRATION
 
-**Next compliance task: TWILIO SMS COMPLIANCE — READ-ONLY FACTUAL AUDIT**
+**Previously next-active; deliberately deferred. Not CLOSED.**
 
-Current evidence says:
-- Twilio is the current SMS provider when SMS reminders are enabled
-- exact UK transfer mechanism is still `VERIFY`
-- TRA/data-protection-test status is not completed in the current records
-- production enablement/configuration needs a final factual check
+Reason:
+KERSIVO intends to replace Twilio with Amazon-based SMS delivery, so a full Twilio compliance/transfer audit is deliberately deferred until the SMS-provider migration work is finalised.
 
-Need (read-only first):
-1. confirm whether Twilio SMS reminders are actually enabled in Production
-2. confirm current Twilio contractual/DPA position
-3. confirm exact UK international-transfer mechanism
-4. determine whether a TRA / data protection test is actually required
-5. update register/ROPA/DPA only if the verified facts require changes
+Current evidence / unresolved factual questions (still unresolved — do not treat as resolved):
+- whether Twilio SMS reminders are actually enabled in Production
+- current contractual / DPA position
+- exact UK international-transfer mechanism (still recorded as `VERIFY`)
+- whether a TRA / data-protection test would be required
+- production enablement/configuration still needs a final factual check when Twilio work is reactivated
 
-**Do not mark Twilio resolved.**
-**Do not assume AWS End User Messaging is active.** AWS SMS remains future/planned only unless new runtime evidence proves otherwise.
+**Operational note:** If Twilio is still processing real production personal data at the point KERSIVO begins serving live customers at meaningful scale, its compliance position must be resolved even if migration has not yet completed.
 
-## 3.2 GA4 / Google Ads marketing-site transfer evidence — OPEN — PRE-LAUNCH / LOW SCOPE
+Amazon / AWS SMS status: **PLANNED / FUTURE PROVIDER**
+- Do **not** describe AWS End User Messaging, SNS, Pinpoint, or any other AWS SMS service as currently active unless future runtime evidence proves it.
+- Do **not** perform an AWS compliance assessment in this Diary priority update.
+- When the provider migration actually begins, the final SMS compliance phase should audit the provider that is genuinely selected and deployed.
 
-Tenant leakage is CLOSED.
+## 3.2 GA4 / Google Ads marketing-site privacy & transfer audit — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
 
-Remaining scope is only KERSIVO's own marketing site:
+**Next compliance task: GA4 / GOOGLE ADS — MARKETING-SITE PRIVACY & TRANSFER AUDIT**
+
+Tenant leakage is CLOSED. Do **not** reopen already-closed tenant analytics hard-off work.
+
+Remaining scope is only KERSIVO's own marketing site (read-only audit first; no implementation in this Diary update):
+1. identify actual GA4 / Google Ads code paths used on KERSIVO marketing pages
+2. verify tenant booking/storefront hard-off remains intact
+3. identify cookies/storage actually created in browser
+4. verify real cookie durations rather than relying only on documentation
+5. inspect consent behaviour / Consent Mode
+6. identify current Google contractual / international-transfer mechanism
+7. determine whether additional transfer assessment is required
+8. compare runtime facts against Cookie Policy / Privacy Policy / ROPA
+
+Known framing (do not expand beyond marketing-site scope):
 - GA4 under analytics consent
 - Google Ads measurement / optional remarketing under consent
 - no Enhanced Conversions
 - live tenant booking/storefront surfaces are hard-off
-
-Remaining work:
-- verify current provider transfer mechanism where required
-- decide whether a TRA/data protection test is required
-- verify cookie durations in the browser/provider evidence
 
 This is **not** a tenant CPD leakage project.
 
@@ -464,7 +474,7 @@ Do not silently mark this resolved.
 
 ## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH
 
-After the Twilio / GA-Ads / attribution work:
+After the GA-Ads / attribution work (and any reactivated Twilio/SMS-provider work if required):
 
 Perform one final pass across:
 - Terms
@@ -637,27 +647,50 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 Current next action:
 
-**TWILIO SMS COMPLIANCE — READ-ONLY FACTUAL AUDIT**
+**GA4 / GOOGLE ADS — MARKETING-SITE PRIVACY & TRANSFER AUDIT**
 
-Scope:
-1. confirm whether Twilio SMS reminders are actually enabled in Production
-2. confirm current Twilio contractual/DPA position
-3. confirm exact UK international-transfer mechanism
-4. determine whether a TRA / data protection test is actually required
-5. do **not** assume AWS End User Messaging is active; AWS SMS remains future/planned only unless new runtime evidence proves otherwise
-
-Do **not** mark Twilio resolved.
+Scope (read-only first):
+1. identify actual GA4 / Google Ads code paths used on KERSIVO marketing pages
+2. verify tenant booking/storefront hard-off remains intact
+3. identify cookies/storage actually created in browser
+4. verify real cookie durations rather than relying only on documentation
+5. inspect consent behaviour / Consent Mode
+6. identify current Google contractual / international-transfer mechanism
+7. determine whether additional transfer assessment is required
+8. compare runtime facts against Cookie Policy / Privacy Policy / ROPA
+9. do **not** reopen already-closed tenant analytics hard-off work
 
 After that:
-1. GA4/Ads narrow marketing-site transfer/cookie verification
-2. attribution lawful-basis decision
-3. final consistency audit
+1. campaign attribution lawful-basis decision (`gclid` / `gbraid` / `wbraid` / UTMs)
+2. final legal/document consistency audit
 
-Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN — MAINTENANCE** unless a concrete launch blocker is discovered.
+Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
+
+Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN — MAINTENANCE** unless a concrete launch blocker is discovered:
+- Verification cleanup
+- RateLimitEvent TTL
+- StripeWebhookEvent TTL
+- AccountLifecycleEvent TTL
+- RecommendationOpsAction TTL
+- SiteLaunchEvent retention enforcement
+- SaasSubscription / SetupDeposit minimisation
+- LegalAcceptance timed cleanup
+- historical legacy public Blob orphan reconciliation
+- private Blob retry/reconciliation
 
 ---
 
 # 10. CHANGE LOG
+
+## 24 September 2026 — Next-task priority update (Twilio deferred)
+
+- Twilio SMS compliance audit deliberately deferred because KERSIVO intends to migrate SMS delivery to Amazon
+- Twilio status = **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**)
+- Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active; no AWS SMS compliance assessment in this step)
+- Next active compliance task changed to **GA4 / Google Ads — Marketing-Site Privacy & Transfer Audit**
+- Substantive compliance/runtime baseline unchanged: `bf9ae379994ad60a4df032800256530c0f4f7b74`
+- Campaign attribution lawful-basis review, final consistency audit, and maintenance backlog remain OPEN
+- No CLOSED provider/runtime phases reopened
 
 ## 24 September 2026 — Documentation Catch-up CLOSED
 
