@@ -4,7 +4,7 @@
 **Rule:** Before starting any new compliance task, check this file first. Do **not** reopen a CLOSED item unless new code, provider evidence, or a regression proves the old conclusion is no longer true.
 
 **Last updated:** 24 September 2026
-**Verified production/main baseline:** `bf9ae379994ad60a4df032800256530c0f4f7b74`
+**Latest verified substantive compliance/runtime baseline:** `bf9ae379994ad60a4df032800256530c0f4f7b74`
 
 ---
 
@@ -27,17 +27,19 @@
 
 ---
 
-# 1. CURRENT VERIFIED BASELINE
+# 1. CURRENT VERIFIED SUBSTANTIVE COMPLIANCE / RUNTIME BASELINE
 
-Current `main`:
+Latest verified substantive compliance/runtime baseline:
 
 `bf9ae379994ad60a4df032800256530c0f4f7b74`
+
+**Baseline rule:** Repository `main` HEAD may be newer than this SHA. This baseline is **not** required to equal the latest git `main` HEAD. Diary-only, changelog-only, or other metadata/documentation commits do not advance the substantive compliance/runtime baseline unless they change the factual compliance state, legal disclosure state, runtime processing, or deployed controls. A new baseline is recorded only after a substantive compliance/legal/runtime change has been independently verified. Diary maintenance commits themselves do not trigger baseline churn.
 
 Latest phase:
 
 **Documentation Catch-up — CLOSED**
 
-Commit:
+Catch-up commit (also the current substantive baseline):
 
 `bf9ae379994ad60a4df032800256530c0f4f7b74`
 
@@ -49,9 +51,9 @@ Parent:
 
 `49bde6aa8b81074c52ecec88b49922adc3805b93`
 
-Latest independent verification:
+Independent verification of this substantive baseline (at catch-up close):
 
-- GitHub `main` = exact SHA above
+- GitHub `main` matched the substantive baseline SHA above when the phase closed
 - GitHub Actions CI #221 (Run ID `35994296081`) = **SUCCESS**
 - Generate Prisma client = **SUCCESS**
 - Typecheck app = **SUCCESS**
@@ -61,7 +63,7 @@ Latest independent verification:
 - No migration was required for this phase
 - No manual Vercel redeploy was used
 
-Prior runtime baseline (Client Erasure / Retail Identity P1 — still CLOSED, do not reopen):
+Prior substantive runtime baseline (Client Erasure / Retail Identity P1 — still CLOSED, do not reopen):
 
 `49bde6aa8b81074c52ecec88b49922adc3805b93` — `fix: cover retail identity in client erasure` (CI #220 attempt 2 SUCCESS; Vercel SUCCESS)
 
@@ -664,7 +666,7 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 - Parent `49bde6aa8b81074c52ecec88b49922adc3805b93`
 - GitHub Actions CI #221 SUCCESS (Run ID `35994296081`)
 - Vercel SUCCESS
-- New verified production/main baseline = `bf9ae379994ad60a4df032800256530c0f4f7b74`
+- New latest verified substantive compliance/runtime baseline = `bf9ae379994ad60a4df032800256530c0f4f7b74`
 - Next active compliance task = **Twilio SMS factual audit**
 - DPA version `2026-09-24`; Terms remain `2026-09-23`
 - Public Blob / retail erasure / tenant GA hard-off docs aligned without reopening closed runtime work
