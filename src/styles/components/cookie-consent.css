@@ -69,7 +69,14 @@
   font-size: 0.875rem;
 }
 
-.cookie-consent__actions .cookie-consent__btn:first-child {
+/* Accept + Reject share the first row with equal width/prominence. */
+.cookie-consent__btn--accept,
+.cookie-consent__btn--reject {
+  grid-column: auto;
+}
+
+/* Manage stays available on a full-width secondary row — not competing with Reject. */
+.cookie-consent__btn--manage {
   grid-column: 1 / -1;
 }
 
@@ -236,21 +243,25 @@
   }
 
   .cookie-consent__actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.6rem;
   }
 
   .cookie-consent__btn {
-    flex: 1 1 9rem;
-    width: auto;
+    width: 100%;
     min-height: 2.75rem;
     padding-inline: 1.1rem;
     font-size: inherit;
   }
 
-  .cookie-consent__actions .cookie-consent__btn:first-child {
+  .cookie-consent__btn--accept,
+  .cookie-consent__btn--reject {
     grid-column: auto;
+  }
+
+  .cookie-consent__btn--manage {
+    grid-column: 1 / -1;
   }
 }
 

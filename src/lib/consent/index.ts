@@ -1,7 +1,5 @@
 import { CONSENT_CHANGED_EVENT, CONSENT_OPEN_EVENT } from './config';
-import {
-  clearOptionalStorageOnWithdraw,
-} from './cleanup';
+import { clearOptionalStorageForConsentTransition } from './cleanup';
 import { applyConsentDefaultDenied, updateGoogleConsent } from './googleConsent';
 import { trackConsentedEvent } from './events';
 import {
@@ -26,8 +24,15 @@ export { preferencesToGoogleConsent, updateGoogleConsent } from './googleConsent
 export { trackConsentedEvent, analyticsAllowed, advertisingAllowed } from './events';
 export {
   clearOptionalStorageOnWithdraw,
+  clearOptionalStorageForConsentTransition,
   clearOptionalTrackingCookies,
+  clearOptionalLocalStorage,
+  clearOptionalSessionStorage,
   OPTIONAL_COOKIE_PREFIXES,
+  OPTIONAL_LOCAL_STORAGE_KEYS,
+  OPTIONAL_WEB_STORAGE_PREFIXES,
+  ANALYTICS_COOKIE_PREFIXES,
+  ADS_COOKIE_PREFIXES,
 } from './cleanup';
 export { syncTagsForConsent } from './tagLoader';
 
@@ -57,18 +62,13 @@ export async function applyConsentChoice(
   input: ConsentChoiceInput,
   ids?: TagLoaderIds,
 ): Promise<ConsentPreferences> {
-  const prefs = createPreferences(input);
+  // Capture prior valid decision before overwrite. Invalid/old/missing => null.
   const previous = readConsentPreferences();
+  const prefs = createPreferences(input);
   writeConsentPreferences(prefs);
   updateGoogleConsent(prefs);
 
-  const withdrawingAnalytics = previous?.analytics && !prefs.analytics;
-  const withdrawingAds = previous?.advertisingMeasurement && !prefs.advertisingMeasurement;
-  const withdrawingPersonalised =
-    previous?.personalisedAdvertising && !prefs.personalisedAdvertising;
-  if (withdrawingAnalytics || withdrawingAds || withdrawingPersonalised) {
-    clearOptionalStorageOnWithdraw();
-  }
+  clearOptionalStorageForConsentTransition(previous, prefs);
 
   await syncTagsForConsent(prefs, ids ?? resolvePublicTagIds());
 

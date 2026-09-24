@@ -134,7 +134,7 @@ export default function CookieConsent() {
             <div className="cookie-consent__actions">
               <button
                 type="button"
-                className="btn btn--primary cookie-consent__btn"
+                className="btn btn--secondary cookie-consent__btn cookie-consent__btn--accept"
                 disabled={busy}
                 onClick={() =>
                   void saveChoice(ALL_OPTIONAL_GRANTED)
@@ -144,7 +144,7 @@ export default function CookieConsent() {
               </button>
               <button
                 type="button"
-                className="btn btn--secondary cookie-consent__btn"
+                className="btn btn--secondary cookie-consent__btn cookie-consent__btn--reject"
                 disabled={busy}
                 onClick={() =>
                   void saveChoice(ALL_OPTIONAL_DENIED)
@@ -154,7 +154,7 @@ export default function CookieConsent() {
               </button>
               <button
                 type="button"
-                className="btn btn--ghost cookie-consent__btn"
+                className="btn btn--ghost cookie-consent__btn cookie-consent__btn--manage"
                 disabled={busy}
                 onClick={(event) => openPreferences(event.currentTarget)}
               >
