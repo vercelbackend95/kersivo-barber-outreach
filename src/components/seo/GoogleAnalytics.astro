@@ -107,7 +107,15 @@ const gaSiteSection = siteSection.trim();
     }
 
     function syncTags(prefs) {
-      var adsGranted = prefs.advertisingMeasurement || prefs.personalisedAdvertising;
+      // Capability-aware effective Ads consent: empty googleAdsId => Ads denied
+      // even if the stored cookie still has advertisingMeasurement /
+      // personalisedAdvertising true (dormant-mode fail-closed).
+      var adsCapabilityEnabled = Boolean(googleAdsId);
+      var effectiveAdsMeasurement =
+        adsCapabilityEnabled && prefs.advertisingMeasurement;
+      var effectivePersonalisedAdvertising =
+        adsCapabilityEnabled && prefs.personalisedAdvertising;
+      var adsGranted = effectiveAdsMeasurement || effectivePersonalisedAdvertising;
       var wantAnalytics = prefs.analytics && gaMeasurementId;
       var wantAds = adsGranted && googleAdsId;
       if (!wantAnalytics && !wantAds) return;
@@ -116,7 +124,7 @@ const gaSiteSection = siteSection.trim();
         analytics_storage: prefs.analytics ? 'granted' : 'denied',
         ad_storage: adsGranted ? 'granted' : 'denied',
         ad_user_data: adsGranted ? 'granted' : 'denied',
-        ad_personalization: prefs.personalisedAdvertising ? 'granted' : 'denied',
+        ad_personalization: effectivePersonalisedAdvertising ? 'granted' : 'denied',
       });
 
       var primaryId = wantAnalytics ? gaMeasurementId : googleAdsId;

@@ -1,10 +1,14 @@
-import { CONSENT_CHANGED_EVENT, CONSENT_OPEN_EVENT } from './config';
+import {
+  CONSENT_CHANGED_EVENT,
+  CONSENT_OPEN_EVENT,
+  isGoogleAdsCapabilityEnabled,
+  normalizeConsentChoiceForAdsCapability,
+  toEffectiveConsentPreferences,
+} from './config';
 import { clearOptionalStorageForConsentTransition } from './cleanup';
 import { applyConsentDefaultDenied, updateGoogleConsent } from './googleConsent';
-import { trackConsentedEvent } from './events';
 import {
   createPreferences,
-  hasValidConsentDecision,
   readConsentPreferences,
   writeConsentPreferences,
 } from './storage';
@@ -64,13 +68,16 @@ export async function applyConsentChoice(
 ): Promise<ConsentPreferences> {
   // Capture prior valid decision before overwrite. Invalid/old/missing => null.
   const previous = readConsentPreferences();
-  const prefs = createPreferences(input);
+  const resolvedIds = ids ?? resolvePublicTagIds();
+  const adsEnabled = isGoogleAdsCapabilityEnabled(resolvedIds.googleAdsId);
+  const prefs = createPreferences(normalizeConsentChoiceForAdsCapability(input, adsEnabled));
   writeConsentPreferences(prefs);
-  updateGoogleConsent(prefs);
+  // Prefs already clamped at write time; pass through effective for clarity.
+  updateGoogleConsent(toEffectiveConsentPreferences(prefs, resolvedIds.googleAdsId));
 
   clearOptionalStorageForConsentTransition(previous, prefs);
 
-  await syncTagsForConsent(prefs, ids ?? resolvePublicTagIds());
+  await syncTagsForConsent(prefs, resolvedIds);
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(CONSENT_CHANGED_EVENT, { detail: prefs }));
@@ -88,8 +95,10 @@ export function bootConsentRuntime(ids: TagLoaderIds): ConsentPreferences | null
   applyConsentDefaultDenied();
   const prefs = readConsentPreferences();
   if (prefs) {
-    updateGoogleConsent(prefs);
-    void syncTagsForConsent(prefs, ids);
+    // Do not rewrite the cookie on boot — clamp Ads for Consent Mode / tags only.
+    const effective = toEffectiveConsentPreferences(prefs, ids.googleAdsId);
+    updateGoogleConsent(effective);
+    void syncTagsForConsent(effective, ids);
   }
   return prefs;
 }

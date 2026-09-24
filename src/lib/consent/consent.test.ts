@@ -2,7 +2,16 @@
  * @vitest-environment jsdom
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from './config';
+import {
+  acceptAllChoiceForAdsCapability,
+  BANNER_COPY,
+  CONSENT_COOKIE_NAME,
+  CONSENT_VERSION,
+  isGoogleAdsCapabilityEnabled,
+  normalizeConsentChoiceForAdsCapability,
+  resolveBannerBody,
+  toEffectiveConsentPreferences,
+} from './config';
 import {
   clearOptionalStorageOnWithdraw,
   OPTIONAL_COOKIE_PREFIXES,
@@ -10,8 +19,9 @@ import {
   OPTIONAL_WEB_STORAGE_PREFIXES,
 } from './cleanup';
 import { preferencesToGoogleConsent } from './googleConsent';
-import { applyConsentChoice } from './index';
-import { createPreferences, parseConsentCookieValue, writeConsentPreferences } from './storage';
+import { applyConsentChoice, bootConsentRuntime } from './index';
+import { resolveTagTargets, syncTagsForConsent } from './tagLoader';
+import { createPreferences, parseConsentCookieValue, readConsentPreferences, writeConsentPreferences } from './storage';
 
 vi.mock('./tagLoader', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./tagLoader')>();
@@ -267,7 +277,7 @@ describe('category-aware applyConsentChoice cleanup', () => {
 
     await applyConsentChoice(
       { ...NONE, advertisingMeasurement: true },
-      { gaMeasurementId: '', googleAdsId: '' },
+      { gaMeasurementId: 'G-TEST', googleAdsId: 'AW-TEST' },
     );
 
     const cookies = documentCookieNames();
@@ -291,7 +301,7 @@ describe('category-aware applyConsentChoice cleanup', () => {
 
     await applyConsentChoice(
       { ...NONE, personalisedAdvertising: true },
-      { gaMeasurementId: '', googleAdsId: '' },
+      { gaMeasurementId: 'G-TEST', googleAdsId: 'AW-TEST' },
     );
 
     const cookies = documentCookieNames();
@@ -332,7 +342,7 @@ describe('category-aware applyConsentChoice cleanup', () => {
 
     await applyConsentChoice(
       { ...NONE, advertisingMeasurement: true },
-      { gaMeasurementId: '', googleAdsId: '' },
+      { gaMeasurementId: 'G-TEST', googleAdsId: 'AW-TEST' },
     );
 
     expect(documentCookieNames()).toContain('_gcl_au');
@@ -412,5 +422,255 @@ describe('category-aware applyConsentChoice cleanup', () => {
     expect(localStorage.getItem('cart:items')).toBe('keep-cart');
     expect(localStorage.getItem('kersivo_shop_cart_v2')).toBe('keep-shop-cart');
     expect(sessionStorage.getItem('feature261-reports-widget-v2')).toBe('keep-session');
+  });
+});
+
+describe('Ads capability / dormant helpers', () => {
+  it('detects Ads capability from a non-empty Google Ads ID', () => {
+    expect(isGoogleAdsCapabilityEnabled('AW-1')).toBe(true);
+    expect(isGoogleAdsCapabilityEnabled('  ')).toBe(false);
+    expect(isGoogleAdsCapabilityEnabled('')).toBe(false);
+    expect(isGoogleAdsCapabilityEnabled(null)).toBe(false);
+  });
+
+  it('uses analytics-only banner copy without Ads / advertising / remarketing wording', () => {
+    const body = resolveBannerBody(false);
+    expect(body).toBe(BANNER_COPY.bodyAnalyticsOnly);
+    expect(body.toLowerCase()).not.toContain('google ads');
+    expect(body.toLowerCase()).not.toContain('advertising cookies');
+    expect(body.toLowerCase()).not.toContain('remarketing');
+    expect(resolveBannerBody(true)).toBe(BANNER_COPY.bodyAdsConfigured);
+    expect(resolveBannerBody(true).toLowerCase()).toContain('google ads');
+  });
+
+  it('Accept all with Ads absent grants analytics only', () => {
+    expect(acceptAllChoiceForAdsCapability(false)).toEqual({
+      analytics: true,
+      advertisingMeasurement: false,
+      personalisedAdvertising: false,
+    });
+    expect(acceptAllChoiceForAdsCapability(true)).toEqual(ACCEPT_ALL);
+  });
+
+  it('normalizer cannot persist Ads grants when Ads capability is absent', () => {
+    expect(
+      normalizeConsentChoiceForAdsCapability(
+        {
+          analytics: true,
+          advertisingMeasurement: true,
+          personalisedAdvertising: true,
+        },
+        false,
+      ),
+    ).toEqual({
+      analytics: true,
+      advertisingMeasurement: false,
+      personalisedAdvertising: false,
+    });
+  });
+});
+
+describe('Ads-absent applyConsentChoice clamping', () => {
+  beforeEach(() => {
+    clearAllCookies();
+    localStorage.clear();
+    sessionStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('Accept all with empty Ads ID forces Ads purposes false', async () => {
+    const prefs = await applyConsentChoice(ACCEPT_ALL, {
+      gaMeasurementId: 'G-TEST',
+      googleAdsId: '',
+    });
+    expect(prefs.version).toBe(CONSENT_VERSION);
+    expect(prefs.analytics).toBe(true);
+    expect(prefs.advertisingMeasurement).toBe(false);
+    expect(prefs.personalisedAdvertising).toBe(false);
+    expect(preferencesToGoogleConsent(prefs)).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+    expect(
+      resolveTagTargets(prefs, { gaMeasurementId: 'G-TEST', googleAdsId: '' }),
+    ).toEqual({ wantAnalytics: true, wantAds: false });
+  });
+
+  it('Reject optional with Ads absent keeps all optional false', async () => {
+    const prefs = await applyConsentChoice(NONE, {
+      gaMeasurementId: 'G-TEST',
+      googleAdsId: '',
+    });
+    expect(prefs).toMatchObject(NONE);
+  });
+
+  it('v2 consent with Ads=true is invalid under CONSENT_VERSION 3', () => {
+    expect(CONSENT_VERSION).toBe(3);
+    const v2 = {
+      version: 2,
+      necessary: true as const,
+      analytics: true,
+      advertisingMeasurement: true,
+      personalisedAdvertising: true,
+      timestamp: new Date().toISOString(),
+    };
+    expect(parseConsentCookieValue(JSON.stringify(v2))).toBeNull();
+  });
+
+  it('invalidated v2 Ads grant + Accept all Ads-absent clears stale Ads storage', async () => {
+    seedFullOptionalResidue();
+    seedDocumentCookie(
+      CONSENT_COOKIE_NAME,
+      JSON.stringify({
+        version: 2,
+        necessary: true,
+        analytics: true,
+        advertisingMeasurement: true,
+        personalisedAdvertising: true,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    const prefs = await applyConsentChoice(ACCEPT_ALL, {
+      gaMeasurementId: 'G-TEST',
+      googleAdsId: '',
+    });
+
+    expect(prefs.advertisingMeasurement).toBe(false);
+    expect(localStorage.getItem('_gcl_ls')).toBeNull();
+    expect(localStorage.getItem('saas_subscription_paid:ads:tx1')).toBeNull();
+    expect(documentCookieNames()).not.toContain('_gcl_au');
+  });
+
+  it('Ads configured Accept all still grants all three optional purposes', async () => {
+    const prefs = await applyConsentChoice(ACCEPT_ALL, {
+      gaMeasurementId: 'G-TEST',
+      googleAdsId: 'AW-TEST',
+    });
+    expect(prefs).toMatchObject(ACCEPT_ALL);
+    expect(
+      resolveTagTargets(prefs, { gaMeasurementId: 'G-TEST', googleAdsId: 'AW-TEST' }),
+    ).toEqual({ wantAnalytics: true, wantAds: true });
+  });
+});
+
+describe('stored vs effective Ads consent (bootstrap / bootConsentRuntime)', () => {
+  beforeEach(() => {
+    clearAllCookies();
+    localStorage.clear();
+    sessionStorage.clear();
+    vi.clearAllMocks();
+    window.__kersivoConsentDefaultsApplied = false;
+    window.dataLayer = [];
+    window.gtag = vi.fn((...args: unknown[]) => {
+      window.dataLayer!.push(args);
+    }) as typeof window.gtag;
+  });
+
+  it('CASE A: stored Ads=true + Ads ID absent => GA granted, Ads Consent Mode denied, no Ads target', () => {
+    const stored = createPreferences(ACCEPT_ALL);
+    const effective = toEffectiveConsentPreferences(stored, '');
+    expect(stored.advertisingMeasurement).toBe(true);
+    expect(effective.advertisingMeasurement).toBe(false);
+    expect(effective.personalisedAdvertising).toBe(false);
+    expect(effective.analytics).toBe(true);
+    expect(preferencesToGoogleConsent(effective)).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+    expect(
+      resolveTagTargets(effective, { gaMeasurementId: 'G-TEST', googleAdsId: '' }),
+    ).toEqual({ wantAnalytics: true, wantAds: false });
+  });
+
+  it('CASE B: analytics=false + stored Ads=true + Ads ID absent => all denied, no tag targets', () => {
+    const stored = createPreferences({
+      analytics: false,
+      advertisingMeasurement: true,
+      personalisedAdvertising: true,
+    });
+    const effective = toEffectiveConsentPreferences(stored, '');
+    expect(preferencesToGoogleConsent(effective)).toEqual({
+      analytics_storage: 'denied',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+    expect(
+      resolveTagTargets(effective, { gaMeasurementId: 'G-TEST', googleAdsId: '' }),
+    ).toEqual({ wantAnalytics: false, wantAds: false });
+  });
+
+  it('CASE C: analytics-only cookie + Ads ID absent => normal GA4 analytics-only', () => {
+    const stored = createPreferences({
+      analytics: true,
+      advertisingMeasurement: false,
+      personalisedAdvertising: false,
+    });
+    const effective = toEffectiveConsentPreferences(stored, '');
+    expect(effective).toEqual(stored);
+    expect(preferencesToGoogleConsent(effective)).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+    expect(
+      resolveTagTargets(effective, { gaMeasurementId: 'G-TEST', googleAdsId: '' }),
+    ).toEqual({ wantAnalytics: true, wantAds: false });
+  });
+
+  it('CASE D: Ads ID present preserves stored Ads grants (Ads-capable regression)', () => {
+    const stored = createPreferences(ACCEPT_ALL);
+    const effective = toEffectiveConsentPreferences(stored, 'AW-TEST');
+    expect(effective).toEqual(stored);
+    expect(preferencesToGoogleConsent(effective)).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+    });
+    expect(
+      resolveTagTargets(effective, { gaMeasurementId: 'G-TEST', googleAdsId: 'AW-TEST' }),
+    ).toEqual({ wantAnalytics: true, wantAds: true });
+  });
+
+  it('CASE E: bootConsentRuntime with Ads absent + stored Ads=true updates Google with effective Ads=false', () => {
+    const stored = createPreferences(ACCEPT_ALL);
+    writeConsentPreferences(stored);
+    expect(readConsentPreferences()).toMatchObject(ACCEPT_ALL);
+
+    const returned = bootConsentRuntime({
+      gaMeasurementId: 'G-TEST',
+      googleAdsId: '',
+    });
+
+    expect(returned).toMatchObject(ACCEPT_ALL);
+    expect(syncTagsForConsent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        analytics: true,
+        advertisingMeasurement: false,
+        personalisedAdvertising: false,
+      }),
+      { gaMeasurementId: 'G-TEST', googleAdsId: '' },
+    );
+
+    const updateCalls = (window.gtag as ReturnType<typeof vi.fn>).mock.calls.filter(
+      (call) => call[0] === 'consent' && call[1] === 'update',
+    );
+    expect(updateCalls.length).toBeGreaterThanOrEqual(1);
+    expect(updateCalls[updateCalls.length - 1][2]).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+
+    // Stored cookie must remain unchanged (no needless rewrite on boot).
+    expect(readConsentPreferences()).toMatchObject(ACCEPT_ALL);
   });
 });

@@ -1,5 +1,16 @@
-/** Increment when purposes or policy materially change — forces re-consent. */
-export const CONSENT_VERSION = 2;
+import type { ConsentChoiceInput, ConsentPreferences } from './types';
+
+/**
+ * Increment when purposes or policy materially change — forces re-consent.
+ * v3: Google Ads optional purposes are capability-gated (hidden / forced false
+ * when PUBLIC_GOOGLE_ADS_ID is absent). Invalidates v2 records so Ads grants
+ * cannot silently survive Ads-dormant Production.
+ *
+ * Future Ads reactivation: reintroducing Ads optional purposes is a material
+ * consent-purpose expansion and MUST bump CONSENT_VERSION again before Ads
+ * purposes become choosable in Production.
+ */
+export const CONSENT_VERSION = 3;
 
 export const CONSENT_COOKIE_NAME = 'kersivo_consent';
 
@@ -12,7 +23,12 @@ export const CONSENT_CHANGED_EVENT = 'kersivo:consent-changed';
 
 export const BANNER_COPY = {
   title: 'Your privacy choices',
-  body: 'We use necessary cookies to run KERSIVO. With your permission we also use analytics and advertising cookies for site performance and Google Ads. Accept all, reject optional, or manage preferences.',
+  /** Ads-capable first-layer body (Google Ads ID configured). */
+  bodyAdsConfigured:
+    'We use necessary cookies to run KERSIVO. With your permission we also use analytics and advertising cookies for site performance and Google Ads. Accept all, reject optional, or manage preferences.',
+  /** Analytics-only first-layer body (Google Ads ID absent / dormant). */
+  bodyAnalyticsOnly:
+    'We use necessary cookies to run KERSIVO. With your permission we also use analytics cookies to understand site performance. Accept all, reject optional, or manage preferences.',
   acceptAll: 'Accept all',
   rejectOptional: 'Reject optional',
   managePreferences: 'Manage preferences',
@@ -39,3 +55,75 @@ export const PREFS_COPY = {
   rejectOptional: 'Reject optional',
   close: 'Close',
 } as const;
+
+/** True when a non-empty public Google Ads ID is available at runtime. */
+export function isGoogleAdsCapabilityEnabled(
+  googleAdsId: string | null | undefined,
+): boolean {
+  return Boolean(googleAdsId?.toString().trim());
+}
+
+export function resolveBannerBody(adsEnabled: boolean): string {
+  return adsEnabled ? BANNER_COPY.bodyAdsConfigured : BANNER_COPY.bodyAnalyticsOnly;
+}
+
+/**
+ * When Ads capability is absent, force Ads purposes false so Accept all /
+ * Manage preferences cannot persist misleading Ads grants.
+ */
+export function normalizeConsentChoiceForAdsCapability(
+  input: ConsentChoiceInput,
+  adsEnabled: boolean,
+): ConsentChoiceInput {
+  if (adsEnabled) {
+    return {
+      analytics: Boolean(input.analytics),
+      advertisingMeasurement: Boolean(input.advertisingMeasurement),
+      personalisedAdvertising: Boolean(input.personalisedAdvertising),
+    };
+  }
+  return {
+    analytics: Boolean(input.analytics),
+    advertisingMeasurement: false,
+    personalisedAdvertising: false,
+  };
+}
+
+export function acceptAllChoiceForAdsCapability(adsEnabled: boolean): ConsentChoiceInput {
+  return normalizeConsentChoiceForAdsCapability(
+    {
+      analytics: true,
+      advertisingMeasurement: true,
+      personalisedAdvertising: true,
+    },
+    adsEnabled,
+  );
+}
+
+export function rejectOptionalChoice(): ConsentChoiceInput {
+  return {
+    analytics: false,
+    advertisingMeasurement: false,
+    personalisedAdvertising: false,
+  };
+}
+
+/**
+ * Stored consent vs effective consent:
+ * - Stored = what the cookie records (do not rewrite on every boot).
+ * - Effective = what current tag capability may activate.
+ * When Ads ID is absent, effective Ads purposes are forced false even if the
+ * cookie still contains Ads=true (fail closed for Consent Mode / tags).
+ */
+export function toEffectiveConsentPreferences(
+  prefs: ConsentPreferences,
+  googleAdsId: string | null | undefined,
+): ConsentPreferences {
+  if (isGoogleAdsCapabilityEnabled(googleAdsId)) return prefs;
+  if (!prefs.advertisingMeasurement && !prefs.personalisedAdvertising) return prefs;
+  return {
+    ...prefs,
+    advertisingMeasurement: false,
+    personalisedAdvertising: false,
+  };
+}

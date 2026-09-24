@@ -1,36 +1,49 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
+  acceptAllChoiceForAdsCapability,
   applyConsentChoice,
   BANNER_COPY,
+  clearOptionalStorageForConsentTransition,
+  clearOptionalStorageOnWithdraw,
   CONSENT_OPEN_EVENT,
   hasValidConsentDecision,
+  isGoogleAdsCapabilityEnabled,
   PREFS_COPY,
   readConsentPreferences,
+  rejectOptionalChoice,
+  resolveBannerBody,
   resolvePublicTagIds,
+  toEffectiveConsentPreferences,
   type ConsentChoiceInput,
   type ConsentPreferences,
 } from '@/lib/consent';
 
 type Panel = 'banner' | 'preferences' | 'hidden';
 
-const ALL_OPTIONAL_GRANTED = {
-  analytics: true,
-  advertisingMeasurement: true,
-  personalisedAdvertising: true,
-} as const;
-
-const ALL_OPTIONAL_DENIED = {
-  analytics: false,
-  advertisingMeasurement: false,
-  personalisedAdvertising: false,
-} as const;
-
-function prefsToDraft(prefs: ConsentPreferences | null) {
+function prefsToDraft(prefs: ConsentPreferences | null, adsEnabled: boolean) {
   return {
     analytics: prefs?.analytics === true,
-    advertisingMeasurement: prefs?.advertisingMeasurement === true,
-    personalisedAdvertising: prefs?.personalisedAdvertising === true,
+    advertisingMeasurement: adsEnabled && prefs?.advertisingMeasurement === true,
+    personalisedAdvertising: adsEnabled && prefs?.personalisedAdvertising === true,
   };
+}
+
+/**
+ * Mount-time first-party cleanup (no network / no gtag):
+ * - invalid / missing consent → wipe all allowlisted optional residue
+ * - valid consent + Ads ID absent → category-aware clear vs effective prefs
+ * - valid consent + Ads ID present → no retirement cleanup
+ */
+function retireStaleOptionalStorageOnMount(googleAdsId: string): void {
+  const prefs = readConsentPreferences();
+  if (!prefs) {
+    clearOptionalStorageOnWithdraw();
+    return;
+  }
+  if (!isGoogleAdsCapabilityEnabled(googleAdsId)) {
+    const effective = toEffectiveConsentPreferences(prefs, googleAdsId);
+    clearOptionalStorageForConsentTransition(prefs, effective);
+  }
 }
 
 export default function CookieConsent() {
@@ -44,16 +57,27 @@ export default function CookieConsent() {
   const triggerRef = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const ids = resolvePublicTagIds();
+  const adsEnabled = isGoogleAdsCapabilityEnabled(ids.googleAdsId);
+  const bannerBody = resolveBannerBody(adsEnabled);
+  const acceptAllChoice = acceptAllChoiceForAdsCapability(adsEnabled);
+  const rejectChoice = rejectOptionalChoice();
 
-  const openPreferences = useCallback((fromElement?: HTMLElement | null) => {
-    triggerRef.current = fromElement ?? (document.activeElement as HTMLElement | null);
-    const current = readConsentPreferences();
-    const draft = prefsToDraft(current);
-    setAnalytics(draft.analytics);
-    setAdvertisingMeasurement(draft.advertisingMeasurement);
-    setPersonalisedAdvertising(draft.personalisedAdvertising);
-    setPanel('preferences');
-  }, []);
+  const openPreferences = useCallback(
+    (fromElement?: HTMLElement | null) => {
+      triggerRef.current = fromElement ?? (document.activeElement as HTMLElement | null);
+      const current = readConsentPreferences();
+      const draft = prefsToDraft(current, adsEnabled);
+      setAnalytics(draft.analytics);
+      setAdvertisingMeasurement(draft.advertisingMeasurement);
+      setPersonalisedAdvertising(draft.personalisedAdvertising);
+      setPanel('preferences');
+    },
+    [adsEnabled],
+  );
+
+  useEffect(() => {
+    retireStaleOptionalStorageOnMount(ids.googleAdsId);
+  }, [ids.googleAdsId]);
 
   useEffect(() => {
     if (!hasValidConsentDecision()) {
@@ -115,7 +139,7 @@ export default function CookieConsent() {
   }
 
   return (
-    <div className="cookie-consent" data-panel={panel}>
+    <div className="cookie-consent" data-panel={panel} data-ads-enabled={adsEnabled ? '1' : '0'}>
       {panel === 'banner' ? (
         <section
           className="cookie-consent__banner"
@@ -127,7 +151,7 @@ export default function CookieConsent() {
             <h2 id={titleId} className="cookie-consent__title">
               {BANNER_COPY.title}
             </h2>
-            <p className="cookie-consent__body">{BANNER_COPY.body}</p>
+            <p className="cookie-consent__body">{bannerBody}</p>
             <p className="cookie-consent__policy">
               <a href="/cookies">{BANNER_COPY.cookiePolicy}</a>
             </p>
@@ -136,9 +160,7 @@ export default function CookieConsent() {
                 type="button"
                 className="btn btn--secondary cookie-consent__btn cookie-consent__btn--accept"
                 disabled={busy}
-                onClick={() =>
-                  void saveChoice(ALL_OPTIONAL_GRANTED)
-                }
+                onClick={() => void saveChoice(acceptAllChoice)}
               >
                 {BANNER_COPY.acceptAll}
               </button>
@@ -146,9 +168,7 @@ export default function CookieConsent() {
                 type="button"
                 className="btn btn--secondary cookie-consent__btn cookie-consent__btn--reject"
                 disabled={busy}
-                onClick={() =>
-                  void saveChoice(ALL_OPTIONAL_DENIED)
-                }
+                onClick={() => void saveChoice(rejectChoice)}
               >
                 {BANNER_COPY.rejectOptional}
               </button>
@@ -217,45 +237,49 @@ export default function CookieConsent() {
               <p>{PREFS_COPY.analyticsBody}</p>
             </div>
 
-            <div className="cookie-consent__category">
-              <div className="cookie-consent__category-head">
-                <h3 id="cookie-ads-label">{PREFS_COPY.adsTitle}</h3>
-                <label className="cookie-consent__switch">
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    aria-labelledby="cookie-ads-label"
-                    checked={advertisingMeasurement}
-                    onChange={(event) => setAdvertisingMeasurement(event.target.checked)}
-                  />
-                  <span className="cookie-consent__switch-ui" aria-hidden="true" />
-                  <span className="visually-hidden">
-                    {advertisingMeasurement ? 'On' : 'Off'}
-                  </span>
-                </label>
-              </div>
-              <p>{PREFS_COPY.adsBody}</p>
-            </div>
+            {adsEnabled ? (
+              <>
+                <div className="cookie-consent__category">
+                  <div className="cookie-consent__category-head">
+                    <h3 id="cookie-ads-label">{PREFS_COPY.adsTitle}</h3>
+                    <label className="cookie-consent__switch">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        aria-labelledby="cookie-ads-label"
+                        checked={advertisingMeasurement}
+                        onChange={(event) => setAdvertisingMeasurement(event.target.checked)}
+                      />
+                      <span className="cookie-consent__switch-ui" aria-hidden="true" />
+                      <span className="visually-hidden">
+                        {advertisingMeasurement ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                  </div>
+                  <p>{PREFS_COPY.adsBody}</p>
+                </div>
 
-            <div className="cookie-consent__category">
-              <div className="cookie-consent__category-head">
-                <h3 id="cookie-personalised-label">{PREFS_COPY.personalisedTitle}</h3>
-                <label className="cookie-consent__switch">
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    aria-labelledby="cookie-personalised-label"
-                    checked={personalisedAdvertising}
-                    onChange={(event) => setPersonalisedAdvertising(event.target.checked)}
-                  />
-                  <span className="cookie-consent__switch-ui" aria-hidden="true" />
-                  <span className="visually-hidden">
-                    {personalisedAdvertising ? 'On' : 'Off'}
-                  </span>
-                </label>
-              </div>
-              <p>{PREFS_COPY.personalisedBody}</p>
-            </div>
+                <div className="cookie-consent__category">
+                  <div className="cookie-consent__category-head">
+                    <h3 id="cookie-personalised-label">{PREFS_COPY.personalisedTitle}</h3>
+                    <label className="cookie-consent__switch">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        aria-labelledby="cookie-personalised-label"
+                        checked={personalisedAdvertising}
+                        onChange={(event) => setPersonalisedAdvertising(event.target.checked)}
+                      />
+                      <span className="cookie-consent__switch-ui" aria-hidden="true" />
+                      <span className="visually-hidden">
+                        {personalisedAdvertising ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                  </div>
+                  <p>{PREFS_COPY.personalisedBody}</p>
+                </div>
+              </>
+            ) : null}
 
             <p className="cookie-consent__policy">
               <a href="/cookies">{BANNER_COPY.cookiePolicy}</a>
@@ -267,7 +291,11 @@ export default function CookieConsent() {
                 className="btn btn--primary cookie-consent__btn"
                 disabled={busy}
                 onClick={() =>
-                  void saveChoice({ analytics, advertisingMeasurement, personalisedAdvertising })
+                  void saveChoice({
+                    analytics,
+                    advertisingMeasurement: adsEnabled ? advertisingMeasurement : false,
+                    personalisedAdvertising: adsEnabled ? personalisedAdvertising : false,
+                  })
                 }
               >
                 {PREFS_COPY.save}
@@ -276,9 +304,7 @@ export default function CookieConsent() {
                 type="button"
                 className="btn btn--secondary cookie-consent__btn"
                 disabled={busy}
-                onClick={() =>
-                  void saveChoice(ALL_OPTIONAL_GRANTED)
-                }
+                onClick={() => void saveChoice(acceptAllChoice)}
               >
                 {PREFS_COPY.acceptAll}
               </button>
@@ -286,9 +312,7 @@ export default function CookieConsent() {
                 type="button"
                 className="btn btn--ghost cookie-consent__btn"
                 disabled={busy}
-                onClick={() =>
-                  void saveChoice(ALL_OPTIONAL_DENIED)
-                }
+                onClick={() => void saveChoice(rejectChoice)}
               >
                 {PREFS_COPY.rejectOptional}
               </button>
