@@ -718,7 +718,11 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 Final compliance consistency sweep (Phase 4A/4B) completed **25 September 2026**. No current material compliance blocker was identified for normal SEO / marketing work on the existing marketing-site consent / GA4 stack.
 
+**Phase 5B (25 Sep 2026):** targeted lawful-basis + A15 outreach documentation/controls implemented. SEO remains **NOT BLOCKED**. Cold electronic outreach is governed by the PECR corporate/individual/unknown screen, first-contact Privacy pointer, suppression/DNC, A15 retention, and LIAs before continuing to leads whose subscriber status is not safely established.
+
 **NEXT FOLLOW-UP (narrow — NON-BLOCKING):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings). Do **not** reopen GA4 contract/transfer.
+
+**OUTREACH TOOLING (narrow):** Notion / Gmail / Meta contracting-entity and transfer facts remain **FACTUAL VERIFICATION REQUIRED** — do not invent DPAs/SCCs; does not block SEO.
 
 **DEFERRED BY DESIGN:** Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active). If Twilio remains in use when meaningful live customer usage begins, provider compliance must be resolved or migration completed.
 
@@ -756,6 +760,22 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 ---
 
 # 10. CHANGE LOG
+
+## 25 September 2026 — Phase 5B targeted outreach + lawful-basis remediation (docs)
+
+- Phase 5A identified residual A15 / cold-outreach compliance gap; **SEO remained NOT BLOCKED**
+- Phase 5B: lawful-basis clarification for A1–A3, A5, A7–A10, A14; A15 rebuilt as real controller processing
+- Created [lia-b2b-outreach.md](./lia-b2b-outreach.md) and [lia-operational-controller-processing.md](./lia-operational-controller-processing.md)
+- Corporate-vs-individual PECR PRE-SEND screen, first-contact Privacy pointer, and suppression/DNC documented in `docs/gtm/channel-playbook-uk.md`
+- A15 retention + historical Lead Master remediation in retention-schedule § I
+- Public Privacy: dedicated B2B prospecting transparency (Last updated remains 25 September 2026)
+- Transfer register: controller-side Notion / Gmail / Meta outreach tooling noted with **FACTUAL VERIFICATION REQUIRED** (core product providers not reopened)
+- ROPA / retention / transfer-register current baseline metadata aligned to `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f`
+- **Twilio** remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**
+- **GA4** retention propagation remains **NON-BLOCKING FOLLOW-UP**
+- TTL / Blob / periodic recheck backlog remains **OPEN — MAINTENANCE**
+- Substantive compliance/runtime baseline **unchanged**: `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` (docs/legal/process patch does **not** replace it)
+- Cold electronic outreach must pass the new PECR / transparency / suppression controls before contacting leads whose corporate/individual status is not safely established
 
 ## 25 September 2026 — Phase 4B final compliance closeout (docs)
 

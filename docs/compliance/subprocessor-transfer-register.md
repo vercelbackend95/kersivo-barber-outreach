@@ -5,7 +5,7 @@
 | Status | Internal compliance record |
 | Last reviewed | 2026-09-25 |
 | Related contract | `/dpa` version `2026-09-24` |
-| Production baseline (repo) | `288a0aefce74bc02e2c4ecf381e074cce798158d` |
+| Production baseline (repo) | `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` |
 | Companion record | [ropa.md](./ropa.md) |
 | Vendor evidence | [vendor-evidence/vercel.md](./vendor-evidence/vercel.md); [vendor-evidence/neon.md](./vendor-evidence/neon.md); [vendor-evidence/resend.md](./vendor-evidence/resend.md); [vendor-evidence/openai.md](./vendor-evidence/openai.md); [vendor-evidence/sentry.md](./vendor-evidence/sentry.md) |
 | Review trigger | Provider, processing-location, DPA, transfer mechanism, or product-use change |
@@ -94,6 +94,19 @@ Public Privacy and DPA Schedule 2 list Vercel, Neon, Resend, Twilio, Sentry, and
 ### Google Sign-In / OAuth — excluded (non–Schedule-2)
 
 Moved out of the active numbered transfer table on **2026-09-22**. Audited Production facts: identity scopes only; no Gmail/Drive/Calendar/Contacts content access; no durable OAuth credential persistence; Production login/logout/re-login confirmed. **No Client CPD** is sent to Google for processing on KERSIVO’s behalf via this flow, so **no Schedule-2 Article 46 TRA** is required on those facts. Do not conflate with GA4 (direct transfer **CLOSED — adequacy-based**; [vendor-evidence/google-analytics.md](./vendor-evidence/google-analytics.md)) or dormant Google Ads (not an active TRA while inactive).
+
+### Controller-side B2B outreach tooling (A15 — not Schedule 2 CPD subprocessors)
+
+These tools support **KERSIVO independent-controller** prospecting (ROPA A15). They are **not** added as DPA Schedule 2 Customer Personal Data subprocessors by this note. Exact contracting entity, processor/controller classification and international transfer mechanism are **FACTUAL VERIFICATION REQUIRED** — do **not** invent a signed DPA, SCC module, UK Extension reliance, processing region or contracting entity.
+
+| Tool | KERSIVO use | Personal data? | Notes / action |
+| --- | --- | --- | --- |
+| **Notion** | Lead Master / outreach administration / suppression screening | Yes (controller-side prospect & DNC records) | Documented in ROPA A15 + Privacy; contract/transfer **FACTUAL VERIFICATION REQUIRED** |
+| **Google / Gmail** | Outbound cold email and replies (`bartosz@kersivo.co.uk`) | Yes | Distinct from Google Sign-In (A14) and GA4 (A11). Contract/transfer **FACTUAL VERIFICATION REQUIRED** |
+| **Meta / Instagram** | Direct messages where used for prospecting | Yes | Contract/transfer **FACTUAL VERIFICATION REQUIRED** |
+| Public business sources | Lead discovery | Public business / contact data as published | Sources, not processors |
+
+This is a **narrow outreach-tool verification** item. It does **not** reopen the closed core-product provider programme (Vercel, Neon, Resend, Stripe, Sentry, OpenAI, GA4 contract/transfer, etc.). Twilio remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**.
 
 ---
 

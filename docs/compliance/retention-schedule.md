@@ -6,7 +6,7 @@
 | Status | Internal compliance record — **policy approved 2026-09-23** |
 | Linked public docs | `/privacy`; `/dpa` |
 | Linked ROPA | [ropa.md](./ropa.md) |
-| Production baseline (docs commit parent) | `49bde6aa8b81074c52ecec88b49922adc3805b93` |
+| Production baseline (substantive runtime) | `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` |
 
 This schedule records **approved retention policy** and distinguishes it from **currently implemented enforcement**.
 
@@ -124,8 +124,31 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | Sentry | Events/backups may remain | Baseline documented; backups **VERIFY** |
 | Vercel | Request logs / platform residual | **PROVIDER VERIFICATION REQUIRED** |
 | OpenAI | Abuse-monitoring / provider retention where Admin AI used | Documented in vendor evidence; **VERIFY** Data Controls periodically |
-| Google | OAuth/IdP processing under Google; GA4 active under analytics consent (Admin event/user retention **2 months** / **2 months**, reset **OFF** — configured/verified in GA4 Admin **25 Sep 2026**; provider propagation follow-up pending after stated ~24h application window; distinct from browser `_ga` cookie TTL); Google Ads inactive / dormant | **PROVIDER VERIFICATION REQUIRED** for residuals. GA4 direct transfer: **UK adequacy — TRA NOT REQUIRED** ([vendor-evidence/google-analytics.md](./vendor-evidence/google-analytics.md)). Ads transfer reopen only if Ads reactivated |
+| Google | OAuth/IdP processing under Google; GA4 active under analytics consent (Admin event/user retention **2 months** / **2 months**, reset **OFF** — configured/verified in GA4 Admin **25 Sep 2026**; provider propagation follow-up pending after stated ~24h application window; distinct from browser `_ga` cookie TTL); Google Ads inactive / dormant; controller-side Gmail outreach mailbox (A15) residual **FACTUAL VERIFICATION REQUIRED** | **PROVIDER VERIFICATION REQUIRED** for residuals. GA4 direct transfer: **UK adequacy — TRA NOT REQUIRED** ([vendor-evidence/google-analytics.md](./vendor-evidence/google-analytics.md)). Ads transfer reopen only if Ads reactivated |
+| Notion | Controller-side Lead Master / suppression residual (A15) | **FACTUAL VERIFICATION REQUIRED** |
+| Meta / Instagram | Controller-side DM residual where used (A15) | **FACTUAL VERIFICATION REQUIRED** |
 | Vercel Blob CDN/cache | After `del`, residual may persist briefly | **PROVIDER VERIFICATION REQUIRED** |
+
+---
+
+## I. A15 — B2B prospect / outreach records (independent controller)
+
+These periods are **KERSIVO storage-limitation policy choices**, not claims that UK law mandates these exact durations. Canonical storage is external (Notion Lead Master / mailbox / social DMs) — not Postgres.
+
+| Category | Approved policy | Currently implemented | Status |
+| --- | --- | --- | --- |
+| Researched personal contact data **not yet contacted** | Provide privacy information within **30 days** of collecting the personal contact data, **or** delete/anonymise the personal contact fields. Non-personal business/entity research may be retained separately. | Manual operator process | **POLICY APPROVED — OPERATOR ENFORCED** |
+| Active prospect / live conversation | Retain while genuinely active; review after inactivity. | Manual | **POLICY APPROVED — OPERATOR ENFORCED** |
+| Fully cycled / unsuccessful prospect with **no** objection | Personal outreach/contact history: target **delete/anonymise after 6 months** from final outreach unless a genuine continuing purpose exists. Non-personal business research may remain where useful. | Manual | **POLICY APPROVED — OPERATOR ENFORCED** |
+| Genuine sales negotiation / requested follow-up | Retain while active; if it converts, follow resulting pre-contract / customer activity retention (A3/A5/A7 as applicable). | Manual | **POLICY APPROVED — OPERATOR ENFORCED** |
+| Opt-out / objection / suppression | Retain **only** minimal suppression data (contact identifier, channel, status, date, minimal business reference for dedupe) for as long as reasonably necessary to prevent future direct-marketing re-contact. Review periodically. Must **not** reuse suppression data for marketing. Do **not** keep the full marketing/research profile merely because the contact opted out. Do **not** erase the minimal suppression record if that would create a foreseeable re-contact risk. | Manual Notion DNC | **POLICY APPROVED — OPERATOR ENFORCED** |
+
+**Historical Lead Master remediation (conservative):**
+
+- Future outreach planned → classify subscriber type before next electronic message; include Privacy pointer + opt-out; do not contact INDIVIDUAL/UNKNOWN without a valid PECR route.
+- Fully cycled / no future outreach → do **not** send a standalone sales message merely to cure transparency; apply retention/minimisation; remove personal contact/research fields when retention expires.
+- Previously objected → preserve only minimum suppression data; no further marketing.
+- Do **not** mass-message old leads as part of remediation.
 
 ---
 
@@ -149,3 +172,4 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | 2026-09-24 | Docs catch-up to deployed runtime (`49bde6aa…`): shop-wide public Blob purge marked **IMPLEMENTED — BEST-EFFORT** (validated collected deletes + `shops/{shopId}/` sweep; residual/legacy-orphan caveats). Individual erasure docs aligned for retail identity (Order email anonymisation + local retail confirmation outbox removal; Resend residual not claimed erased). Tenant analytics Cookie Policy clarification is separate public-page work. Attribution, provider residual VERIFY, and TTL/minimisation backlog remain OPEN. |
 | 2026-09-25 | GA4 Admin retention configured/verified: event **2 months**, user **2 months**, reset on new activity **OFF** (25 Sep 2026). Provider-side propagation follow-up pending after Google’s stated application window. Google Ads remains dormant. |
 | 2026-09-25 | **Phase 3B — server-side checkout attribution removed:** Section G updated — future Stripe metadata / fulfilment-email attribution persistence **REMOVED**; no OPEN retention requirement for the removed path. GA4 retention remains under existing GA4 rules. Historical provider residual copies not claimed erased. |
+| 2026-09-25 | **Phase 5B:** Production baseline metadata aligned to `6ef76ab…`. Section I A15 prospect/outreach retention + historical Lead Master remediation rules added. Notion / Gmail / Meta residual rows marked **FACTUAL VERIFICATION REQUIRED**. |
