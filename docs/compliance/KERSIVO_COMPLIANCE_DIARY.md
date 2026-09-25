@@ -433,7 +433,9 @@ Verified Production facts (24 September 2026):
 Programme status (do **not** mark entire GA4/Ads programme CLOSED):
 - **GOOGLE ADS RUNTIME / CURRENT PROCESSING:** CLOSED — DORMANT
 - **GA4 RUNTIME CONSENT IMPLEMENTATION:** VERIFIED
-- **GA4 CONTRACTUAL / INTERNATIONAL TRANSFER POSITION:** OPEN — FINAL VERIFICATION REQUIRED
+- **GA4 CONTRACT / PROCESSOR / DIRECT TRANSFER:** CLOSED — ADEQUACY-BASED (Phase 2D — 25 Sep 2026; see §3.2)
+- **GA4 ACCOUNT CONTROLS:** CONFIGURED / VERIFIED — 25 SEP 2026 (retention provider propagation follow-up pending)
+- **CAMPAIGN ATTRIBUTION LAWFUL BASIS:** OPEN / LEGAL REVIEW
 
 Reactivation of Google Ads requires: re-audit role/transfer; reintroduce Ads consent purposes; bump `CONSENT_VERSION`; verify Ads account links/settings; update public policies. Do **not** claim historical Google-held Ads data was erased.
 
@@ -466,38 +468,52 @@ Amazon / AWS SMS status: **PLANNED / FUTURE PROVIDER**
 - Do **not** perform an AWS compliance assessment in this Diary priority update.
 - When the provider migration actually begins, the final SMS compliance phase should audit the provider that is genuinely selected and deployed.
 
-## 3.2 GA4 contractual / international transfer finalisation — OPEN — PRE-LAUNCH — **NEXT ACTIVE**
+## 3.2 GA4 contractual / processor / direct transfer — CLOSED — ADEQUACY-BASED (25 Sep 2026)
 
-**Next compliance task: GA4 ONLY — CONTRACT / TRANSFER / ACCOUNT DATA-CONTROL FINALISATION**
+**Status:** **CLOSED** for GA4 contract / processor / **direct** KERSIVO → Google Ireland transfer on current verified facts.
 
-Google Ads runtime / current Production processing is **CLOSED — DORMANT** (Phase 2B / `1843c0f…`). Do **not** continue carrying Google Ads TRA as a current active provider task while Ads remains dormant. Reopen Ads work only if Ads is re-enabled.
+Do **not** reopen as “OPEN / VERIFY” merely because a narrow retention-propagation follow-up remains.
 
-Tenant leakage is CLOSED. Do **not** reopen already-closed tenant analytics hard-off work.
+### Verified conclusions (25 September 2026)
 
-GA4 runtime consent implementation is **VERIFIED** on Production (Basic Consent Mode; Analytics-only UI; consent v3; load only after Analytics consent).
+| Topic | Status |
+| --- | --- |
+| GA4 consent runtime | **VERIFIED** (Production; marketing site only; tenant hard-off CLOSED) |
+| GA4 processor role | **VERIFIED** — Google = processor for Analytics-service data while products & services sharing **OFF**; KERSIVO = controller |
+| GA4 contractual provider | **Google Ireland Limited** — **VERIFIED** (standard UK Analytics terms; Ads Data Processing Terms incorporated for Processor Services) |
+| Direct KERSIVO → Google Ireland transfer | **UK adequacy** (Ireland / EEA) |
+| TRA / data protection test | **NOT REQUIRED** for the adequacy-covered direct transfer — do **not** invent a completed TRA or create `tra-google-analytics.md` |
+| Google LLC DPF / UK Extension | **ACTIVE**; **HR + Non-HR**; verified **25 Sep 2026**; next certification due **13 Sep 2027**; periodic recheck required. Treat as **onward-path** evidence — do **not** claim KERSIVO directly transfers to Google LLC under UK Extension, or that all Google processing is UK Extension-only |
+| Other onward paths | Governed by Google processor terms / applicable SCCs where frameworks do not apply |
 
-Remaining GA4-only scope:
-1. confirm current Google Analytics contractual / DPA applicability for the processor path
-2. identify exact UK international-transfer / restricted-transfer mechanism (or adequacy reliance) with evidence
-3. complete any required data-protection test / TRA conclusion for GA4
-4. record account data-control facts that remain material (products & services sharing already verified OFF)
-5. align final register/ROPA wording only after transfer evidence is complete
+### Account controls — CONFIGURED / VERIFIED 25 Sep 2026
 
-Do **not** invent:
-- a completed GA4 TRA
-- an exact importer / adequacy conclusion
-- closure of campaign attribution lawful basis
+- Google products & services sharing = **OFF**
+- GA4 ↔ Google Ads active links = **0**
+- Google Signals = **OFF**
+- Granular location / device data = **OFF**
+- User-provided data collection = **OFF**
+- Event data retention = **2 months**
+- User data retention = **2 months**
+- Reset user data retention on new activity = **OFF**
 
-Known framing:
-- GA4 under Analytics consent — ACTIVE
-- Google = processor for Analytics-service data while products & services sharing is OFF
-- Google Ads = INACTIVE / DORMANT
-- no Enhanced Conversions
-- live tenant booking/storefront surfaces remain hard-off
+Configured and verified in GA4 Admin on **25 Sep 2026**. Provider-side retention propagation follow-up remains due after Google’s stated application window (~24 hours). Do **not** claim independent backend propagation verification yet. This is a **narrow follow-up**, not an unresolved contract/transfer assessment.
 
-This is **not** a tenant CPD leakage project and **not** an Ads reactivation project.
+Evidence sheet: [vendor-evidence/google-analytics.md](./vendor-evidence/google-analytics.md).
 
-## 3.3 Campaign attribution lawful basis — OPEN — LEGAL REVIEW
+Google Ads runtime / current Production processing remains **CLOSED — DORMANT** (Phase 2B / `1843c0f…`). Do **not** reopen Ads transfer work while Ads remains dormant.
+
+Tenant leakage remains CLOSED. Do **not** reopen tenant analytics hard-off.
+
+Campaign attribution remains **OPEN / LEGAL REVIEW** (separate).
+
+## 3.2a GA4 retention provider propagation — FOLLOW-UP PENDING
+
+**Narrow follow-up only** (not a contract/transfer reopen):
+
+Confirm after Google’s stated application window that Admin retention settings (**2 months** / **2 months**, reset **OFF**) have applied as expected. Record confirmation in Diary / vendor-evidence when done.
+
+## 3.3 Campaign attribution lawful basis — OPEN — LEGAL REVIEW — **NEXT SUBSTANTIVE**
 
 Current known fields/path:
 - `gclid`
@@ -518,7 +534,7 @@ Do not silently mark this resolved.
 
 ## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH
 
-After the remaining GA4-only contract/transfer/account-control work and the attribution review (and any reactivated Twilio/SMS-provider work if required):
+After the campaign attribution review (and any reactivated Twilio/SMS-provider work if required), and after the narrow GA4 retention-propagation follow-up if still outstanding:
 
 Perform one final pass across:
 - Terms
@@ -690,21 +706,19 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 # 9. NEXT ACTION
 
-Current next action:
+**NEXT FOLLOW-UP (narrow):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings).
 
-**GA4 ONLY — CONTRACT / TRANSFER / ACCOUNT DATA-CONTROL FINALISATION**
+**NEXT SUBSTANTIVE COMPLIANCE TASK: CAMPAIGN ATTRIBUTION LAWFUL BASIS** (`gclid` / `gbraid` / `wbraid` / UTMs) — remains **OPEN / LEGAL REVIEW**.
 
-Scope:
-1. confirm Google Analytics contractual / DPA applicability for the current processor path
-2. identify exact UK international-transfer / restricted-transfer mechanism with evidence
-3. complete any required GA4 TRA / data-protection test conclusion
-4. do **not** reopen Google Ads while Ads remains dormant
-5. do **not** reopen already-closed tenant analytics hard-off work
-6. do **not** invent attribution lawful basis closure
+Do **not**:
+1. reopen Google Ads while Ads remains dormant
+2. reopen already-closed tenant analytics hard-off work
+3. reopen GA4 direct contract/transfer as OPEN/VERIFY (CLOSED — adequacy-based; Phase 2D)
+4. invent attribution lawful basis closure
+5. change the substantive compliance/runtime baseline merely because a docs-only HEAD is newer — baseline remains `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 
-After that:
-1. campaign attribution lawful-basis decision (`gclid` / `gbraid` / `wbraid` / UTMs) — remains **OPEN / LEGAL REVIEW**
-2. final legal/document consistency audit — remains **OPEN**
+After attribution:
+1. final legal/document consistency audit — remains **OPEN**
 
 Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
 
@@ -724,6 +738,21 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 
 # 10. CHANGE LOG
 
+## 25 September 2026 — Phase 2D GA4 contract / transfer / account-control finalisation (docs)
+
+- GA4 contractual provider recorded as **Google Ireland Limited**
+- Direct KERSIVO → Google Ireland transfer = **UK adequacy**; TRA **NOT REQUIRED** for that covered transfer (no `tra-google-analytics.md` created)
+- Google LLC UK Extension **ACTIVE** (HR + Non-HR), verified 25 Sep 2026; next certification due **13 Sep 2027**; periodic recheck required (onward-path framing)
+- Account controls verified: products/services OFF; Ads links 0; Signals OFF; granular location/device OFF; user-provided data OFF; retention 2m/2m; reset OFF
+- Retention provider propagation = **FOLLOW-UP PENDING** after Google’s application window
+- Evidence sheet: `docs/compliance/vendor-evidence/google-analytics.md`
+- ROPA A11 / transfer register row 8 / Privacy aligned
+- Google Ads remains **CLOSED — DORMANT**
+- Campaign attribution remains **OPEN / LEGAL REVIEW**
+- Twilio remains **DEFERRED**
+- **Substantive compliance/runtime baseline unchanged:** `1843c0fbc42328f57a3fdd74bf08acae33bfc513` (docs-only alignment must not replace it)
+- Next substantive task: **Campaign attribution lawful basis**
+
 ## 24 September 2026 — Phase 2B Google Ads dormant-mode CLOSED (runtime) + docs alignment
 
 - Runtime commit `1843c0fbc42328f57a3fdd74bf08acae33bfc513` — `fix: retire inactive Google Ads tracking`
@@ -734,7 +763,7 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 - New latest verified substantive compliance/runtime baseline = `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 - Google Ads runtime / current processing = **CLOSED — DORMANT**
 - GA4 runtime consent implementation = **VERIFIED**
-- GA4 contractual / international transfer = **OPEN — FINAL VERIFICATION REQUIRED** (next active Google task)
+- GA4 contractual / international transfer = **OPEN — FINAL VERIFICATION REQUIRED** at Phase 2B close (later closed as adequacy-based in Phase 2D, 25 Sep 2026)
 - Campaign attribution lawful basis remains **OPEN / LEGAL REVIEW**
 - Twilio remains **DEFERRED**; AWS SMS remains **PLANNED / FUTURE PROVIDER**
 - Cookie / Privacy / ROPA / transfer-register docs aligned in the Phase 2C documentation pass (this Diary update)

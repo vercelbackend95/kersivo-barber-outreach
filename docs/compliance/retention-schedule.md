@@ -122,7 +122,7 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | Sentry | Events/backups may remain | Baseline documented; backups **VERIFY** |
 | Vercel | Request logs / platform residual | **PROVIDER VERIFICATION REQUIRED** |
 | OpenAI | Abuse-monitoring / provider retention where Admin AI used | Documented in vendor evidence; **VERIFY** Data Controls periodically |
-| Google | OAuth/IdP processing under Google; GA4 active under analytics consent; Google Ads inactive / dormant | **PROVIDER VERIFICATION REQUIRED** / separate TRA gaps where applicable (GA4 transfer OPEN / VERIFY; Ads transfer reopen only if Ads reactivated) |
+| Google | OAuth/IdP processing under Google; GA4 active under analytics consent (Admin event/user retention **2 months** / **2 months**, reset **OFF** — configured/verified in GA4 Admin **25 Sep 2026**; provider propagation follow-up pending after stated ~24h application window; distinct from browser `_ga` cookie TTL); Google Ads inactive / dormant | **PROVIDER VERIFICATION REQUIRED** for residuals. GA4 direct transfer: **UK adequacy — TRA NOT REQUIRED** ([vendor-evidence/google-analytics.md](./vendor-evidence/google-analytics.md)). Ads transfer reopen only if Ads reactivated |
 | Vercel Blob CDN/cache | After `del`, residual may persist briefly | **PROVIDER VERIFICATION REQUIRED** |
 
 ---
@@ -145,3 +145,4 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | 2026-09-23 | Initial approved retention schedule (policy documentation only; no runtime enforcement changes). |
 | 2026-09-23 | Individual Client erasure marked **IMPLEMENTED** (accurate anonymisation / blocker / Client-avatar + note Blob caveats). Shop-wide public Blob cleanup remains **ENFORCEMENT PENDING (P0)**. Attribution remains OPEN. |
 | 2026-09-24 | Docs catch-up to deployed runtime (`49bde6aa…`): shop-wide public Blob purge marked **IMPLEMENTED — BEST-EFFORT** (validated collected deletes + `shops/{shopId}/` sweep; residual/legacy-orphan caveats). Individual erasure docs aligned for retail identity (Order email anonymisation + local retail confirmation outbox removal; Resend residual not claimed erased). Tenant analytics Cookie Policy clarification is separate public-page work. Attribution, provider residual VERIFY, and TTL/minimisation backlog remain OPEN. |
+| 2026-09-25 | GA4 Admin retention configured/verified: event **2 months**, user **2 months**, reset on new activity **OFF** (25 Sep 2026). Provider-side propagation follow-up pending after Google’s stated application window. Google Ads remains dormant. Attribution remains OPEN / LEGAL REVIEW. |

@@ -37,7 +37,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 24 September 2026');
+    expect(privacySource).toContain('Last updated: 25 September 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
@@ -129,8 +129,11 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain(
       'Google products &amp; services data sharing is off',
     );
-    expect(normalized).toContain(
-      'Exact UK international-transfer / restricted-transfer assessment for GA4 remains under verification',
+    expect(normalized).toContain('Google Ireland Limited');
+    expect(normalized).toContain('Transfers to Ireland are covered by UK adequacy');
+    expect(normalized).toContain('UK Extension');
+    expect(privacySource).not.toMatch(
+      /Exact UK international-transfer[\s\S]{0,80}under verification/i,
     );
   });
 
@@ -148,7 +151,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('explicit account deletion');
     expect(privacySource).toContain('this right is not absolute');
     expect(privacySource).toContain('provider systems');
-    expect(privacySource).toContain('Last updated: 24 September 2026');
+    expect(privacySource).toContain('Last updated: 25 September 2026');
     expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
     expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
     expect(privacySource).toContain('requires confirmation with our legal adviser');

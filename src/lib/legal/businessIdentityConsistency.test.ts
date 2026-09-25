@@ -49,7 +49,7 @@ describe('legal page identity wording', () => {
     expect(privacySource).not.toContain('operating as a freelancer');
     expect(privacySource).toContain('{LEGAL_OPERATOR_NAME}');
     expect(privacySource).toContain('trading as {TRADING_NAME}');
-    expect(privacySource).toContain('Last updated: 24 September 2026');
+    expect(privacySource).toContain('Last updated: 25 September 2026');
     expect(privacySource).toContain('href="/dpa"');
     expect(privacySource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
