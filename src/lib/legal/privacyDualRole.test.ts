@@ -71,7 +71,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('independent controller for fraud prevention');
     expect(normalized).toContain('not</strong> listed above as a general {TRADING_NAME} Customer Personal Data sub-processor');
     expect(normalized).toContain('Historical setup deposits (not currently offered)');
-    expect(normalized).toContain('requires confirmation with our legal adviser');
+    expect(normalized).toMatch(/does <strong>not<\/strong> separately persist those checkout campaign identifiers into Stripe Checkout metadata/);
   });
 
   it('discloses optional Google Sign-In for KERSIVO account authentication', () => {
@@ -154,6 +154,6 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('Last updated: 25 September 2026');
     expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
     expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
-    expect(privacySource).toContain('requires confirmation with our legal adviser');
+    expect(privacySource).toMatch(/does <strong>not<\/strong> separately persist those checkout\s+campaign identifiers into Stripe Checkout metadata/);
   });
 });

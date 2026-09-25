@@ -33,7 +33,6 @@ import {
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type LaunchSubscriptionCheckoutInput = {
-  attribution?: Record<string, string>;
   termsAccepted?: boolean;
   checkoutAttemptId?: string;
 };
@@ -62,36 +61,12 @@ const ATTEMPT_RECORD_SELECT = {
   currentStack: true,
 } as const;
 
-const ATTRIBUTION_KEYS = [
-  'gclid',
-  'gbraid',
-  'wbraid',
-  'utm_source',
-  'utm_medium',
-  'utm_campaign',
-  'utm_term',
-  'ga_client_id',
-] as const;
-
 function badRequest(message: string) {
   return new Response(JSON.stringify({ error: message }), { status: 400 });
 }
 
 function jsonResponse(body: unknown, status: number) {
   return new Response(JSON.stringify(body), { status });
-}
-
-function pickAttribution(raw: unknown): Record<string, string> {
-  if (!raw || typeof raw !== 'object') return {};
-  const record = raw as Record<string, unknown>;
-  const out: Record<string, string> = {};
-  for (const key of ATTRIBUTION_KEYS) {
-    const value = record[key];
-    if (typeof value !== 'string') continue;
-    const trimmed = value.trim().slice(0, 200);
-    if (trimmed) out[key] = trimmed;
-  }
-  return out;
 }
 
 function shopSizeFromBarberCount(count: number): string {
@@ -314,7 +289,6 @@ export const POST: APIRoute = async (context) => {
     }
 
     const baseUrl = getPublicSiteUrl();
-    const attribution = pickAttribution(body.attribution);
 
     return await withSaasShopCheckoutLock(access.shopId, async (tx) => {
       const paidMarker = await tx.shopSettings.findUnique({
@@ -500,13 +474,10 @@ export const POST: APIRoute = async (context) => {
       const currentStack = openSub?.currentStack?.trim() || 'kersivo-preview';
 
       const metadata = {
-        ...buildSaasSubscriptionStripeMetadata(
-          {
-            checkoutAttemptId,
-            shopId: access.shopId,
-          },
-          attribution,
-        ),
+        ...buildSaasSubscriptionStripeMetadata({
+          checkoutAttemptId,
+          shopId: access.shopId,
+        }),
         ...termsAcceptanceStripeMetadata(),
       };
 

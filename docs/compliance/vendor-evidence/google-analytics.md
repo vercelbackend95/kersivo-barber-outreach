@@ -173,7 +173,7 @@ Treat DPF / UK Extension as **applicable Google onward-transfer safeguard eviden
 
 | Matter | Status |
 | --- | --- |
-| Campaign attribution (`gclid` / `gbraid` / `wbraid` / UTMs) | **OPEN / LEGAL REVIEW** — separate from GA4 contract / transfer |
+| Campaign attribution (`gclid` / `gbraid` / `wbraid` / UTMs) — server-side checkout path | **INACTIVE / REMOVED** (Phase 3B) — no longer written to Stripe metadata / fulfilment email; GA4 consent-based campaign/source remains under this sheet’s GA4 processing |
 | Google Ads website measurement / remarketing | **CLOSED — DORMANT** — reopen only if Ads re-enabled |
 | Twilio SMS | **DEFERRED — PENDING SMS PROVIDER MIGRATION** |
 | Historical Google-held Ads records erasure | **Not claimed** |
@@ -185,3 +185,4 @@ Treat DPF / UK Extension as **applicable Google onward-transfer safeguard eviden
 | Date | Change |
 | --- | --- |
 | 2026-09-25 | Initial GA4 vendor-evidence sheet: Google Ireland processor path; Ireland adequacy (TRA not required); Google LLC UK Extension ACTIVE (HR + Non-HR); account controls verified; retention 2m/2m with propagation follow-up. |
+| 2026-09-25 | Server-side checkout attribution marked **INACTIVE / REMOVED** (Phase 3B); GA4 consent-based campaign/source measurement unchanged. |

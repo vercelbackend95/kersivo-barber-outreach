@@ -123,28 +123,6 @@ function prefillGuestDraftFromShop(shop?: {
   return next;
 }
 
-function collectAttribution(): Record<string, string> {
-  const attribution: Record<string, string> = {};
-  try {
-    const params = new URLSearchParams(window.location.search);
-    for (const key of [
-      'gclid',
-      'gbraid',
-      'wbraid',
-      'utm_source',
-      'utm_medium',
-      'utm_campaign',
-      'utm_term',
-    ] as const) {
-      const value = params.get(key)?.trim();
-      if (value) attribution[key] = value.slice(0, 200);
-    }
-  } catch {
-    // ignore
-  }
-  return attribution;
-}
-
 function shopSizeFromBarberCount(count: number): string {
   if (count <= 2) return '1-2';
   if (count <= 4) return '3-4';
@@ -488,7 +466,6 @@ export default function LaunchWizard() {
                 currentStack: 'landing',
                 townCity: workspace.townCity,
                 barbers: barberNames.join(', '),
-                attribution: collectAttribution(),
                 termsAccepted: true,
                 checkoutAttemptId,
               }),
@@ -500,7 +477,6 @@ export default function LaunchWizard() {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              attribution: collectAttribution(),
               termsAccepted: true,
               checkoutAttemptId,
             }),
@@ -540,7 +516,6 @@ export default function LaunchWizard() {
             currentStack: 'landing',
             townCity: workspace.townCity,
             barbers: barberNames.join(', '),
-            attribution: collectAttribution(),
             termsAccepted: true,
           }),
         });
@@ -559,7 +534,6 @@ export default function LaunchWizard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: planId,
-          attribution: collectAttribution(),
           termsAccepted: true,
         }),
       });

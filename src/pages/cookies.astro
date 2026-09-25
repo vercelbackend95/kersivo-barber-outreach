@@ -17,7 +17,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Cookie Policy</h1>
-      <p class="legal-page__updated">Last updated: 24 September 2026</p>
+      <p class="legal-page__updated">Last updated: 25 September 2026</p>
 
       <p>
         This Cookie Policy explains how KERSIVO uses cookies and similar technologies on
@@ -174,14 +174,15 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
             </tr>
             <tr>
               <td>URL parameters (<code>gclid</code>, <code>gbraid</code>, <code>wbraid</code>, UTMs)</td>
-              <td>KERSIVO / advertising platforms</td>
-              <td>See Privacy Policy</td>
+              <td>Page URL / GA4 (when Analytics consent is active)</td>
+              <td>Analytics consent (GA4 only)</td>
               <td>
-                May remain in the URL. Passed to Stripe metadata only when you voluntarily start setup / subscription
-                checkout — not stored in cookies or localStorage as a Cookie settings choice. Lawful basis for this
-                attribution path remains under legal review (see Privacy Policy).
+                May remain in the page URL. GA4 may process relevant campaign/source information only when Analytics
+                consent is active. KERSIVO does not pass these identifiers into setup/subscription checkout, Stripe
+                metadata, or internal fulfilment email, and does not store them in a dedicated attribution cookie or
+                localStorage. Google Ads remains inactive / dormant on Production.
               </td>
-              <td>URL lifetime / Stripe metadata retention</td>
+              <td>URL lifetime; GA4 per Analytics settings</td>
               <td>Not a browser cookie</td>
             </tr>
           </tbody>

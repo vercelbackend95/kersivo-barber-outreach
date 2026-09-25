@@ -25,22 +25,11 @@ type DepositCheckoutInput = {
   currentStack: string;
   townCity?: string | null;
   barbers?: string | null;
-  attribution?: Record<string, string>;
   termsAccepted?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_META = 120;
-const ATTRIBUTION_KEYS = [
-  'gclid',
-  'gbraid',
-  'wbraid',
-  'utm_source',
-  'utm_medium',
-  'utm_campaign',
-  'utm_term',
-  'ga_client_id',
-] as const;
 
 function badRequest(message: string) {
   return new Response(JSON.stringify({ error: message }), { status: 400 });
@@ -54,19 +43,6 @@ function setupFeesDisabledResponse() {
     }),
     { status: 410 },
   );
-}
-
-function pickAttribution(raw: unknown): Record<string, string> {
-  if (!raw || typeof raw !== 'object') return {};
-  const record = raw as Record<string, unknown>;
-  const out: Record<string, string> = {};
-  for (const key of ATTRIBUTION_KEYS) {
-    const value = record[key];
-    if (typeof value !== 'string') continue;
-    const trimmed = value.trim().slice(0, 200);
-    if (trimmed) out[key] = trimmed;
-  }
-  return out;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -122,7 +98,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     const planConfig = getSetupPlan(planId);
     const baseUrl = getPublicSiteUrl();
-    const attribution = pickAttribution(body.attribution);
 
     const session = await createCheckoutSession({
       customerEmail: email,
@@ -137,7 +112,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       ],
       metadata: {
-        ...buildSetupDepositStripeMetadata(planId, attribution),
+        ...buildSetupDepositStripeMetadata(planId),
         ...termsAcceptanceStripeMetadata(),
       },
     });

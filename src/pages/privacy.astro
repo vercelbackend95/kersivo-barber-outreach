@@ -110,15 +110,12 @@ import '@/styles/legal-pages.css';
           controller for those historical billing records.)
         </li>
         <li>
-          <strong>Campaign attribution on checkout</strong> — if present in the page URL when you start checkout, we may
-          pass advertising or campaign identifiers (for example gclid, gbraid, wbraid or UTM parameters) into Stripe
-          session metadata and include a summary in internal fulfilment email. We do not store these identifiers in
-          browser cookies or local storage via Cookie settings. This path is separate from Google Ads website tags
-          (currently inactive on Production).
-          <strong>Purpose:</strong> understanding which campaigns relate to subscription checkouts.
-          <strong>Legal basis (UK):</strong> requires confirmation with our legal adviser (typically legitimate interests
-          and/or consent for related storage technologies — see the Cookie Policy).
-          <strong>Status:</strong> OPEN / LEGAL REVIEW — not resolved merely because Google Ads website tags are dormant.
+          <strong>Campaign / source information</strong> — campaign or source parameters (for example gclid, gbraid,
+          wbraid or UTM values) may appear in the page URL. Where you grant Analytics consent, consent-based website
+          analytics (GA4) may process relevant campaign/source information as part of ordinary analytics measurement
+          (see Website analytics below). {TRADING_NAME} does <strong>not</strong> separately persist those checkout
+          campaign identifiers into Stripe Checkout metadata or internal fulfilment email. There is no dedicated
+          {TRADING_NAME} attribution cookie or localStorage. Google Ads website tags remain inactive on Production.
         </li>
         <li>
           <strong>Optional Sign in with Google</strong> — where offered (for example &ldquo;Continue with Google&rdquo;),

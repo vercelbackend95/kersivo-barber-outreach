@@ -35,23 +35,11 @@ export function getSetupPlan(planId: SetupPlanId): SetupPlan {
 /**
  * Minimised Stripe Checkout metadata for legacy setup deposits.
  * Direct customer/shop PII lives on the Neon PENDING SetupDeposit row, not in Stripe metadata.
+ * Campaign attribution is intentionally not persisted (setup fees currently disabled / 410).
  */
-export function buildSetupDepositStripeMetadata(
-  planId: SetupPlanId,
-  attribution: Record<string, string> = {},
-): Record<string, string> {
-  const metadata: Record<string, string> = {
+export function buildSetupDepositStripeMetadata(planId: SetupPlanId): Record<string, string> {
+  return {
     type: 'setup_deposit',
     plan: planId,
   };
-
-  // Stripe metadata values max 500 chars; keep attribution short.
-  for (const [key, raw] of Object.entries(attribution)) {
-    const value = raw.trim().slice(0, 200);
-    if (!value) continue;
-    if (metadata[key]) continue;
-    metadata[key] = value;
-  }
-
-  return metadata;
 }

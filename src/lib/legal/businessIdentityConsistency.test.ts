@@ -67,7 +67,7 @@ describe('legal page identity wording', () => {
 
   it('Cookie Policy includes a concise trading-name disclosure', () => {
     expect(cookiesSource).toContain('{TRADING_NAME} is a trading name of {LEGAL_OPERATOR_NAME}');
-    expect(cookiesSource).toContain('Last updated: 24 September 2026');
+    expect(cookiesSource).toContain('Last updated: 25 September 2026');
     expect(cookiesSource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
     expect(TRADING_NAME).toBe('KERSIVO');

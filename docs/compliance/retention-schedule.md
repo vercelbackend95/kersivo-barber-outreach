@@ -105,7 +105,9 @@ Personal-data-containing blobs follow the lifecycle of the record or tenant they
 
 | Category | Policy | Status |
 | --- | --- | --- |
-| gclid / gbraid / wbraid / UTM (Checkout metadata; fulfilment email summary) | **Do not** set a KERSIVO retention period until lawful-basis review completes. | **ATTRIBUTION LAWFUL BASIS = OPEN / LEGAL REVIEW** — retention period **not** approved |
+| Server-side checkout attribution (`gclid` / `gbraid` / `wbraid` / UTM / `ga_client_id` → Stripe metadata / fulfilment email) | Future checkout attribution persistence: **REMOVED**. Current runtime no longer writes these fields to Stripe Checkout metadata or internal fulfilment email. No KERSIVO retention period is required for the removed write path. | **REMOVED / INACTIVE** — no longer written by current runtime |
+| GA4 campaign/source measurement | Remains under existing GA4 Admin retention rules/settings (consent-based analytics; see Section H / vendor-evidence). | Covered by GA4 retention (A11) — not a separate checkout-attribution retention row |
+| Historical provider-side copies (earlier test/legacy Stripe metadata or fulfilment emails) | Do **not** claim erased unless proven. Historical provider-side copies from earlier test/legacy flows may remain subject to provider/account retention; current runtime no longer creates new copies. | **PROVIDER CONTROLLED** / **VERIFY** — residuals not falsely claimed erased |
 
 ---
 
@@ -145,4 +147,5 @@ Local Neon/shop purge or account deletion does **not** mean immediate physical d
 | 2026-09-23 | Initial approved retention schedule (policy documentation only; no runtime enforcement changes). |
 | 2026-09-23 | Individual Client erasure marked **IMPLEMENTED** (accurate anonymisation / blocker / Client-avatar + note Blob caveats). Shop-wide public Blob cleanup remains **ENFORCEMENT PENDING (P0)**. Attribution remains OPEN. |
 | 2026-09-24 | Docs catch-up to deployed runtime (`49bde6aa…`): shop-wide public Blob purge marked **IMPLEMENTED — BEST-EFFORT** (validated collected deletes + `shops/{shopId}/` sweep; residual/legacy-orphan caveats). Individual erasure docs aligned for retail identity (Order email anonymisation + local retail confirmation outbox removal; Resend residual not claimed erased). Tenant analytics Cookie Policy clarification is separate public-page work. Attribution, provider residual VERIFY, and TTL/minimisation backlog remain OPEN. |
-| 2026-09-25 | GA4 Admin retention configured/verified: event **2 months**, user **2 months**, reset on new activity **OFF** (25 Sep 2026). Provider-side propagation follow-up pending after Google’s stated application window. Google Ads remains dormant. Attribution remains OPEN / LEGAL REVIEW. |
+| 2026-09-25 | GA4 Admin retention configured/verified: event **2 months**, user **2 months**, reset on new activity **OFF** (25 Sep 2026). Provider-side propagation follow-up pending after Google’s stated application window. Google Ads remains dormant. |
+| 2026-09-25 | **Phase 3B — server-side checkout attribution removed:** Section G updated — future Stripe metadata / fulfilment-email attribution persistence **REMOVED**; no OPEN retention requirement for the removed path. GA4 retention remains under existing GA4 rules. Historical provider residual copies not claimed erased. |

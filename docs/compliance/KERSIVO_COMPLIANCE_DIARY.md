@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for KERSIVO compliance/privacy/data-protection hardening.
 **Rule:** Before starting any new compliance task, check this file first. Do **not** reopen a CLOSED item unless new code, provider evidence, or a regression proves the old conclusion is no longer true.
 
-**Last updated:** 24 September 2026
+**Last updated:** 25 September 2026
 **Latest verified substantive compliance/runtime baseline:** `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
 
 ---
@@ -435,7 +435,7 @@ Programme status (do **not** mark entire GA4/Ads programme CLOSED):
 - **GA4 RUNTIME CONSENT IMPLEMENTATION:** VERIFIED
 - **GA4 CONTRACT / PROCESSOR / DIRECT TRANSFER:** CLOSED — ADEQUACY-BASED (Phase 2D — 25 Sep 2026; see §3.2)
 - **GA4 ACCOUNT CONTROLS:** CONFIGURED / VERIFIED — 25 SEP 2026 (retention provider propagation follow-up pending)
-- **CAMPAIGN ATTRIBUTION LAWFUL BASIS:** OPEN / LEGAL REVIEW
+- **CAMPAIGN ATTRIBUTION (SERVER-SIDE CHECKOUT):** REMOVED / INACTIVE (Phase 3B — minimisation)
 
 Reactivation of Google Ads requires: re-audit role/transfer; reintroduce Ads consent purposes; bump `CONSENT_VERSION`; verify Ads account links/settings; update public policies. Do **not** claim historical Google-held Ads data was erased.
 
@@ -505,7 +505,7 @@ Google Ads runtime / current Production processing remains **CLOSED — DORMANT*
 
 Tenant leakage remains CLOSED. Do **not** reopen tenant analytics hard-off.
 
-Campaign attribution remains **OPEN / LEGAL REVIEW** (separate).
+Campaign attribution server-side checkout path is **REMOVED / INACTIVE** (Phase 3B). GA4 consent-based campaign/source measurement remains under A11.
 
 ## 3.2a GA4 retention provider propagation — FOLLOW-UP PENDING
 
@@ -513,28 +513,30 @@ Campaign attribution remains **OPEN / LEGAL REVIEW** (separate).
 
 Confirm after Google’s stated application window that Admin retention settings (**2 months** / **2 months**, reset **OFF**) have applied as expected. Record confirmation in Diary / vendor-evidence when done.
 
-## 3.3 Campaign attribution lawful basis — OPEN — LEGAL REVIEW — **NEXT SUBSTANTIVE**
+## 3.3 Campaign attribution — SERVER-SIDE CHECKOUT ATTRIBUTION: REMOVED / INACTIVE
 
-Current known fields/path:
-- `gclid`
-- `gbraid`
-- `wbraid`
-- UTM parameters
-- may be included in Stripe metadata/internal fulfilment context
+**CLOSED as active processing (Phase 3B).**
 
-Status deliberately remains:
+Decision: KERSIVO chose **minimisation** rather than maintaining separate individual checkout attribution processing while Google Ads is dormant. No separate lawful-basis conclusion is required for the removed path.
 
-`ATTRIBUTION LAWFUL BASIS = OPEN / LEGAL REVIEW`
+Removed from future active processing:
+- `gclid` / `gbraid` / `wbraid` / UTM (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`) / `ga_client_id` checkout persistence
+- Stripe Checkout metadata attribution fields
+- Resend internal fulfilment-email attribution summary
+- LaunchWizard → subscription checkout API attribution capture
 
-Need one of:
-- confirm lawful basis + appropriate disclosure/retention treatment, or
-- reduce/disable persistence where justification is not worth the complexity
+Remains:
+- GA4 consent-based campaign/source analytics under **A11** (unchanged; do **not** reopen GA4 contract/transfer)
+- Google Ads **CLOSED — DORMANT**
+- No dedicated browser attribution storage (cookie / localStorage / sessionStorage / IndexedDB)
+- URL parameters may remain in the page URL — **URL hygiene = P2 / non-blocking** (no `history.replaceState` strip in this phase)
+- Historical provider-side copies from earlier test/legacy flows may remain subject to provider/account retention; current runtime no longer creates new copies — **not** falsely claimed erased
 
-Do not silently mark this resolved.
+Do **not** reopen as active checkout attribution without a new compliance decision.
 
-## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH
+## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH — **NEXT SUBSTANTIVE**
 
-After the campaign attribution review (and any reactivated Twilio/SMS-provider work if required), and after the narrow GA4 retention-propagation follow-up if still outstanding:
+After any reactivated Twilio/SMS-provider work if required, and after the narrow GA4 retention-propagation follow-up if still outstanding:
 
 Perform one final pass across:
 - Terms
@@ -708,17 +710,14 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 **NEXT FOLLOW-UP (narrow):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings).
 
-**NEXT SUBSTANTIVE COMPLIANCE TASK: CAMPAIGN ATTRIBUTION LAWFUL BASIS** (`gclid` / `gbraid` / `wbraid` / UTMs) — remains **OPEN / LEGAL REVIEW**.
+**NEXT SUBSTANTIVE COMPLIANCE TASK: FINAL COMPLIANCE CONSISTENCY SWEEP**
 
 Do **not**:
 1. reopen Google Ads while Ads remains dormant
 2. reopen already-closed tenant analytics hard-off work
 3. reopen GA4 direct contract/transfer as OPEN/VERIFY (CLOSED — adequacy-based; Phase 2D)
-4. invent attribution lawful basis closure
+4. reopen server-side checkout attribution as active processing (REMOVED / INACTIVE — Phase 3B)
 5. change the substantive compliance/runtime baseline merely because a docs-only HEAD is newer — baseline remains `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
-
-After attribution:
-1. final legal/document consistency audit — remains **OPEN**
 
 Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
 
@@ -738,6 +737,21 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 
 # 10. CHANGE LOG
 
+## 25 September 2026 — Phase 3B server-side checkout attribution REMOVED
+
+- **SERVER-SIDE CHECKOUT ATTRIBUTION: REMOVED / INACTIVE**
+- Reason: minimisation rather than maintaining separate individual checkout attribution while Google Ads is dormant
+- Removed future active processing: LaunchWizard attribution capture → subscription/deposit checkout APIs → Stripe metadata → webhook attributionSummary → Resend internal fulfilment attribution
+- Fields out of checkout path: `gclid`, `gbraid`, `wbraid`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `ga_client_id`
+- No dedicated browser attribution storage
+- GA4 consent-based campaign analytics remains under A11 (contract/transfer **not** reopened)
+- Google Ads remains **CLOSED — DORMANT**
+- URL hygiene remains **P2 / non-blocking**
+- Historical provider residual copies **not** falsely claimed erased
+- Privacy / Cookie Policy / ROPA A13 / retention §G / Diary updated
+- Next substantive task: **FINAL COMPLIANCE CONSISTENCY SWEEP**
+- Substantive compliance/runtime baseline unchanged: `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+
 ## 25 September 2026 — Phase 2D GA4 contract / transfer / account-control finalisation (docs)
 
 - GA4 contractual provider recorded as **Google Ireland Limited**
@@ -748,10 +762,10 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 - Evidence sheet: `docs/compliance/vendor-evidence/google-analytics.md`
 - ROPA A11 / transfer register row 8 / Privacy aligned
 - Google Ads remains **CLOSED — DORMANT**
-- Campaign attribution remains **OPEN / LEGAL REVIEW**
+- Campaign attribution was then still **OPEN / LEGAL REVIEW** (later closed as REMOVED / INACTIVE in Phase 3B same day)
 - Twilio remains **DEFERRED**
 - **Substantive compliance/runtime baseline unchanged:** `1843c0fbc42328f57a3fdd74bf08acae33bfc513` (docs-only alignment must not replace it)
-- Next substantive task: **Campaign attribution lawful basis**
+- Next substantive task at Phase 2D close: **Campaign attribution lawful basis** (superseded by Phase 3B)
 
 ## 24 September 2026 — Phase 2B Google Ads dormant-mode CLOSED (runtime) + docs alignment
 

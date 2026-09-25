@@ -444,7 +444,6 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
   stripeSessionId: string;
   paymentIntentId?: string | null;
   paymentStatus: string;
-  attributionSummary?: string;
   onboardingEmailStatus: string;
   paidAtIso: string;
 }) {
@@ -465,8 +464,7 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
   <strong>Stripe Checkout Session ID:</strong> ${escapeHtml(input.stripeSessionId)}<br/>
   <strong>PaymentIntent ID:</strong> ${escapeHtml(input.paymentIntentId || 'n/a')}<br/>
   <strong>Paid at:</strong> ${escapeHtml(input.paidAtIso)}</p>
-  <p><strong>Attribution:</strong> ${escapeHtml(input.attributionSummary || 'n/a')}<br/>
-  <strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
+  <p><strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
 
   return sendEmail({
     to: inbox,
@@ -554,7 +552,6 @@ export async function sendSaasSubscriptionInternalNotificationEmail(input: {
   stripeSessionId: string;
   stripeSubscriptionId?: string | null;
   paymentStatus: string;
-  attributionSummary?: string;
   onboardingEmailStatus: string;
   activatedAtIso: string;
 }) {
@@ -572,8 +569,7 @@ export async function sendSaasSubscriptionInternalNotificationEmail(input: {
   <strong>Stripe Checkout Session ID:</strong> ${escapeHtml(input.stripeSessionId)}<br/>
   <strong>Subscription ID:</strong> ${escapeHtml(input.stripeSubscriptionId || 'n/a')}<br/>
   <strong>Activated at:</strong> ${escapeHtml(input.activatedAtIso)}</p>
-  <p><strong>Attribution:</strong> ${escapeHtml(input.attributionSummary || 'n/a')}<br/>
-  <strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
+  <p><strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
 
   return sendEmail({
     to: inbox,

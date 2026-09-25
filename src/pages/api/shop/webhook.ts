@@ -144,30 +144,10 @@ async function finalizeWebhookResponse(
   return response;
 }
 
-const ATTRIBUTION_META_KEYS = [
-  'gclid',
-  'gbraid',
-  'wbraid',
-  'utm_source',
-  'utm_medium',
-  'utm_campaign',
-  'utm_term',
-  'ga_client_id',
-] as const;
-
 const SETUP_FULFILMENT_EVENTS = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
 ]);
-
-function attributionSummary(metadata: Record<string, string>): string {
-  const parts: string[] = [];
-  for (const key of ATTRIBUTION_META_KEYS) {
-    const value = metadata[key]?.trim();
-    if (value) parts.push(`${key}=${value}`);
-  }
-  return parts.join('; ');
-}
 
 /** Prefer Stripe Checkout native email fields; metadata.email is historical fallback only. */
 function stripeNativeCustomerEmail(session: StripeSession): string {
@@ -438,7 +418,6 @@ async function handleSetupDepositCheckout(
         stripeSessionId: sessionId,
         paymentIntentId,
         paymentStatus: session.payment_status ?? 'paid',
-        attributionSummary: attributionSummary(metadata),
         onboardingEmailStatus: customerEmailOk ? 'sent' : 'failed_or_pending',
         paidAtIso: paidAt.toISOString(),
       });
@@ -788,7 +767,6 @@ async function handleSaasSubscriptionCheckout(
         stripeSessionId: sessionId,
         stripeSubscriptionId,
         paymentStatus: session.payment_status ?? 'paid',
-        attributionSummary: attributionSummary(metadata),
         onboardingEmailStatus: customerEmailOk ? 'sent' : 'failed_or_pending',
         activatedAtIso: activatedAt.toISOString(),
       });

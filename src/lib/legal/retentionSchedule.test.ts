@@ -72,13 +72,15 @@ describe('Retention schedule Phase 1 (docs)', () => {
     expect(privacy).toContain('anonymised or minimised form');
   });
 
-  it('keeps attribution lawful basis open and documents provider residual caveats', () => {
-    expect(schedule).toContain('ATTRIBUTION LAWFUL BASIS = OPEN / LEGAL REVIEW');
+  it('records removed server-side checkout attribution and documents provider residual caveats', () => {
+    expect(schedule).toContain('Future checkout attribution persistence: **REMOVED**');
+    expect(schedule).toContain('current runtime no longer creates new copies');
+    expect(schedule).not.toContain('ATTRIBUTION LAWFUL BASIS = OPEN / LEGAL REVIEW');
     expect(schedule).toContain('PROVIDER VERIFICATION REQUIRED');
     expect(schedule).toContain('PROVIDER CONTROLLED');
-    expect(ropa).toContain('OPEN / LEGAL REVIEW');
+    expect(ropa).toMatch(/INACTIVE \/ REMOVED — SERVER-SIDE CHECKOUT ATTRIBUTION/);
     expect(ropa).toContain('retention-schedule.md');
-    expect(privacy).toContain('requires confirmation with our legal adviser');
+    expect(privacy).toMatch(/does <strong>not<\/strong> separately persist those checkout\s+campaign identifiers into Stripe Checkout metadata/);
     expect(privacy).toContain('provider systems');
     expect(dpa).toContain('Local deletion does not mean instantaneous erasure');
   });
@@ -103,6 +105,6 @@ describe('Retention schedule Phase 1 (docs)', () => {
     expect(ropa).not.toMatch(/No individual Client DELETE API today/);
     expect(ropa).not.toMatch(/individual erasure feature pending/);
     expect(ropa).toMatch(/matching local retail order-confirmation outbound records/i);
-    expect(ropa).toMatch(/Attribution lawful basis \*\*OPEN \/ LEGAL REVIEW\*\*/);
+    expect(ropa).toMatch(/INACTIVE \/ REMOVED — SERVER-SIDE CHECKOUT ATTRIBUTION/);
   });
 });
