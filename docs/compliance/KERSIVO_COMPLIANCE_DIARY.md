@@ -4,7 +4,7 @@
 **Rule:** Before starting any new compliance task, check this file first. Do **not** reopen a CLOSED item unless new code, provider evidence, or a regression proves the old conclusion is no longer true.
 
 **Last updated:** 25 September 2026
-**Latest verified substantive compliance/runtime baseline:** `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+**Latest verified substantive compliance/runtime baseline:** `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f`
 
 ---
 
@@ -33,34 +33,40 @@
 
 Latest verified substantive compliance/runtime baseline:
 
-`1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+`6ef76ab56134151b12fa4865d2f5da6ce1aaa16f`
 
 **Baseline rule:** Repository `main` HEAD may be newer than this SHA. This baseline is **not** required to equal the latest git `main` HEAD. Diary-only, changelog-only, or other metadata/documentation commits do not advance the substantive compliance/runtime baseline unless they change the factual compliance state, legal disclosure state, runtime processing, or deployed controls. A new baseline is recorded only after a substantive compliance/legal/runtime change has been independently verified. Diary maintenance commits themselves do not trigger baseline churn.
 
 Latest phase:
 
-**Phase 2B — Google Ads dormant-mode — CLOSED (runtime)**
+**Phase 3B — Server-side checkout campaign attribution removal — PRODUCTION VERIFIED / CLOSED (runtime)**
 
 Substantive runtime commit (also the current substantive baseline):
 
-`1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+`6ef76ab56134151b12fa4865d2f5da6ce1aaa16f`
 
 Subject:
 
-`fix: retire inactive Google Ads tracking`
+`fix: remove checkout campaign attribution`
 
 Parent:
 
-`73cdda6326aebfd38167569ed7e77b0030a0f233`
+`d0e2760183c3f967970d752a5a5694eb1065bca1`
 
 Independent verification of this substantive baseline:
 
-- GitHub Actions CI #225 (Run ID `36012438008`) = **SUCCESS**
-- Vercel = **SUCCESS** (deployment `BprqVenGdErd3hPX4NzSuCG43dGF`)
-- Production runtime verdict: **PRODUCTION VERIFIED — GOOGLE ADS DORMANT / GA4 CONSENT-BASED**
-- Production env: `PUBLIC_GOOGLE_ADS_ID` and `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` **ABSENT** (removed before this deploy)
+- Local targeted attribution/legal tests = **SUCCESS** (64 / 64)
+- Typecheck = **SUCCESS**
+- Full test suite = **SUCCESS** (405 files / 2676 tests)
+- Production build = **SUCCESS**
+- GitHub Actions CI = **SUCCESS** (Run ID `36130527392`)
+- Vercel = **SUCCESS**
+- Production verification (25 September 2026): **ATTRIBUTION REMOVAL PRODUCTION VERIFIED**
 - No migration required
-- No manual Vercel redeploy used for verification
+
+Prior substantive runtime baseline (Phase 2B Google Ads dormant-mode — still CLOSED, do not reopen):
+
+`1843c0fbc42328f57a3fdd74bf08acae33bfc513` — `fix: retire inactive Google Ads tracking`
 
 Prior substantive documentation baseline (Documentation Catch-up — still CLOSED, do not reopen):
 
@@ -435,7 +441,7 @@ Programme status (do **not** mark entire GA4/Ads programme CLOSED):
 - **GA4 RUNTIME CONSENT IMPLEMENTATION:** VERIFIED
 - **GA4 CONTRACT / PROCESSOR / DIRECT TRANSFER:** CLOSED — ADEQUACY-BASED (Phase 2D — 25 Sep 2026; see §3.2)
 - **GA4 ACCOUNT CONTROLS:** CONFIGURED / VERIFIED — 25 SEP 2026 (retention provider propagation follow-up pending)
-- **CAMPAIGN ATTRIBUTION (SERVER-SIDE CHECKOUT):** REMOVED / INACTIVE (Phase 3B — minimisation)
+- **CAMPAIGN ATTRIBUTION (SERVER-SIDE CHECKOUT):** PRODUCTION VERIFIED / CLOSED — REMOVED / INACTIVE (Phase 3B — `6ef76ab…`)
 
 Reactivation of Google Ads requires: re-audit role/transfer; reintroduce Ads consent purposes; bump `CONSENT_VERSION`; verify Ads account links/settings; update public policies. Do **not** claim historical Google-held Ads data was erased.
 
@@ -505,7 +511,7 @@ Google Ads runtime / current Production processing remains **CLOSED — DORMANT*
 
 Tenant leakage remains CLOSED. Do **not** reopen tenant analytics hard-off.
 
-Campaign attribution server-side checkout path is **REMOVED / INACTIVE** (Phase 3B). GA4 consent-based campaign/source measurement remains under A11.
+Campaign attribution server-side checkout path is **PRODUCTION VERIFIED / CLOSED — REMOVED / INACTIVE** (Phase 3B / `6ef76ab…`). GA4 consent-based campaign/source measurement remains under A11.
 
 ## 3.2a GA4 retention provider propagation — FOLLOW-UP PENDING
 
@@ -513,23 +519,35 @@ Campaign attribution server-side checkout path is **REMOVED / INACTIVE** (Phase 
 
 Confirm after Google’s stated application window that Admin retention settings (**2 months** / **2 months**, reset **OFF**) have applied as expected. Record confirmation in Diary / vendor-evidence when done.
 
-## 3.3 Campaign attribution — SERVER-SIDE CHECKOUT ATTRIBUTION: REMOVED / INACTIVE
+## 3.3 Campaign attribution — SERVER-SIDE CHECKOUT ATTRIBUTION: PRODUCTION VERIFIED / CLOSED — REMOVED / INACTIVE
 
-**CLOSED as active processing (Phase 3B).**
+**Date:** 25 September 2026
+**Commit:** `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` — `fix: remove checkout campaign attribution`
+**Status:** **PRODUCTION VERIFIED / CLOSED**
 
 Decision: KERSIVO chose **minimisation** rather than maintaining separate individual checkout attribution processing while Google Ads is dormant. No separate lawful-basis conclusion is required for the removed path.
 
-Removed from future active processing:
-- `gclid` / `gbraid` / `wbraid` / UTM (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`) / `ga_client_id` checkout persistence
-- Stripe Checkout metadata attribution fields
-- Resend internal fulfilment-email attribution summary
-- LaunchWizard → subscription checkout API attribution capture
+Verified current Production runtime (25 September 2026):
+- LaunchWizard no longer sends campaign attribution
+- active subscription checkout request contains no `gclid` / `gbraid` / `wbraid` / UTM / `ga_client_id` attribution payload
+- Stripe metadata builders no longer add campaign identifiers
+- webhook `attributionSummary` removed
+- internal Resend fulfilment attribution removed
+- dormant deposit attribution handling removed
+- setup fees remain disabled
+- no dedicated attribution cookie / localStorage / sessionStorage
+- GA4 remains consent-based
+- Google Ads remains **CLOSED — DORMANT**
+- URL hygiene remains **P2 / NON-BLOCKING**
 
-Remains:
+Evidence caveat:
+- Production checkout request and deployed metadata builders verified; provider-side metadata was not directly inspected.
+
+Remains (non-reopen):
 - GA4 consent-based campaign/source analytics under **A11** (unchanged; do **not** reopen GA4 contract/transfer)
 - Google Ads **CLOSED — DORMANT**
 - No dedicated browser attribution storage (cookie / localStorage / sessionStorage / IndexedDB)
-- URL parameters may remain in the page URL — **URL hygiene = P2 / non-blocking** (no `history.replaceState` strip in this phase)
+- URL parameters may remain in the page URL — **URL hygiene = P2 / non-blocking**
 - Historical provider-side copies from earlier test/legacy flows may remain subject to provider/account retention; current runtime no longer creates new copies — **not** falsely claimed erased
 
 Do **not** reopen as active checkout attribution without a new compliance decision.
@@ -716,8 +734,8 @@ Do **not**:
 1. reopen Google Ads while Ads remains dormant
 2. reopen already-closed tenant analytics hard-off work
 3. reopen GA4 direct contract/transfer as OPEN/VERIFY (CLOSED — adequacy-based; Phase 2D)
-4. reopen server-side checkout attribution as active processing (REMOVED / INACTIVE — Phase 3B)
-5. change the substantive compliance/runtime baseline merely because a docs-only HEAD is newer — baseline remains `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+4. reopen server-side checkout attribution as active processing (PRODUCTION VERIFIED / CLOSED — REMOVED / INACTIVE — Phase 3B / `6ef76ab…`)
+5. change the substantive compliance/runtime baseline merely because a docs-only HEAD is newer — runtime substantive baseline remains `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` until a later independently verified substantive runtime/legal change; future Diary/docs commits do **not** replace that runtime baseline
 
 Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
 
@@ -737,9 +755,23 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 
 # 10. CHANGE LOG
 
+## 25 September 2026 — Phase 3D advance verified substantive baseline (docs)
+
+- New latest verified substantive compliance/runtime baseline = `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f`
+- Runtime commit: `fix: remove checkout campaign attribution` (parent `d0e2760…`)
+- Phase 3B attribution removal recorded as **PRODUCTION VERIFIED / CLOSED** (25 Sep 2026)
+- Verification path: targeted tests + typecheck + full suite + build + GitHub Actions Run `36130527392` SUCCESS + Vercel SUCCESS + Production verification
+- Evidence caveat preserved: Production checkout request and deployed metadata builders verified; provider-side metadata was **not** directly inspected
+- Historical Stripe / email attribution copies may remain; not claimed erased
+- GA4 remains consent-based (contract/transfer not reopened); retention propagation remains narrow follow-up only
+- Google Ads remains **CLOSED — DORMANT**
+- Twilio remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**
+- Next substantive task: **FINAL COMPLIANCE CONSISTENCY SWEEP**
+- This Diary/docs update does **not** itself become the substantive runtime baseline
+
 ## 25 September 2026 — Phase 3B server-side checkout attribution REMOVED
 
-- **SERVER-SIDE CHECKOUT ATTRIBUTION: REMOVED / INACTIVE**
+- **SERVER-SIDE CHECKOUT ATTRIBUTION: REMOVED / INACTIVE** (later **PRODUCTION VERIFIED / CLOSED** same day — see Phase 3D)
 - Reason: minimisation rather than maintaining separate individual checkout attribution while Google Ads is dormant
 - Removed future active processing: LaunchWizard attribution capture → subscription/deposit checkout APIs → Stripe metadata → webhook attributionSummary → Resend internal fulfilment attribution
 - Fields out of checkout path: `gclid`, `gbraid`, `wbraid`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `ga_client_id`
@@ -750,7 +782,7 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 - Historical provider residual copies **not** falsely claimed erased
 - Privacy / Cookie Policy / ROPA A13 / retention §G / Diary updated
 - Next substantive task: **FINAL COMPLIANCE CONSISTENCY SWEEP**
-- Substantive compliance/runtime baseline unchanged: `1843c0fbc42328f57a3fdd74bf08acae33bfc513`
+- At commit time, verified substantive baseline was still `1843c0f…` pending deploy/production verification (advanced to `6ef76ab…` in Phase 3D)
 
 ## 25 September 2026 — Phase 2D GA4 contract / transfer / account-control finalisation (docs)
 
