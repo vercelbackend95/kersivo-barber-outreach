@@ -24,7 +24,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: '2026-09-25' },
   /** Matches "Last updated" on src/pages/cookies.astro. */
-  { path: '/cookies', lastmod: '2026-09-24' },
+  { path: '/cookies', lastmod: '2026-09-25' },
   /** Canonical DPA version = "Last updated" on /dpa. */
   { path: '/dpa', lastmod: CURRENT_DPA_VERSION },
   /** Canonical Terms version = "Last updated" on /terms. */

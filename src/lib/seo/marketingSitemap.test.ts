@@ -33,7 +33,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-25');
-    expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-24');
+    expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
     expect(CURRENT_DPA_VERSION).toBe('2026-09-24');

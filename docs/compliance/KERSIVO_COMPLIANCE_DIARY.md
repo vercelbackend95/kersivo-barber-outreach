@@ -552,27 +552,13 @@ Remains (non-reopen):
 
 Do **not** reopen as active checkout attribution without a new compliance decision.
 
-## 3.4 Final legal/document consistency audit — OPEN — PRE-LAUNCH — **NEXT SUBSTANTIVE**
+## 3.4 Final legal/document consistency audit — COMPLETED — 25 SEP 2026
 
-After any reactivated Twilio/SMS-provider work if required, and after the narrow GA4 retention-propagation follow-up if still outstanding:
+**Status:** **COMPLETED** (Phase 4A read-only sweep + Phase 4B docs-only consistency patch).
 
-Perform one final pass across:
-- Terms
-- DPA
-- Privacy
-- Cookies
-- ROPA
-- retention schedule
-- subprocessor/transfer register
+Final pass covered Terms / DPA / Privacy / Cookies / ROPA / retention schedule / subprocessor-transfer register for stale pending claims, overclaim of provider deletion, false provider roles, reopened closed items, and version/date consistency.
 
-Goal:
-- no stale “pending” claims for already-implemented runtime controls
-- no overclaim of provider deletion
-- no false provider roles
-- no reopened items that were previously completed
-- version/date consistency
-
-This is a **final consistency pass**, not another rediscovery exercise.
+**Outcome:** no current material compliance blocker identified; **SEO / normal marketing work NOT BLOCKED**. Narrow non-blocking GA4 retention-propagation follow-up and deferred Twilio / maintenance backlog remain as recorded in §9 — do **not** reopen closed areas.
 
 ---
 
@@ -726,9 +712,17 @@ If the worktree differs, inspect before acting. Do not invent additional filenam
 
 # 9. NEXT ACTION
 
-**NEXT FOLLOW-UP (narrow):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings).
+**CURRENT COMPLIANCE PROGRAM STATUS: CORE PRE-SEO REVIEW COMPLETE**
 
-**NEXT SUBSTANTIVE COMPLIANCE TASK: FINAL COMPLIANCE CONSISTENCY SWEEP**
+**PRIMARY PRODUCT / GROWTH WORK MAY PROCEED: SEO / MARKETING**
+
+Final compliance consistency sweep (Phase 4A/4B) completed **25 September 2026**. No current material compliance blocker was identified for normal SEO / marketing work on the existing marketing-site consent / GA4 stack.
+
+**NEXT FOLLOW-UP (narrow — NON-BLOCKING):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings). Do **not** reopen GA4 contract/transfer.
+
+**DEFERRED BY DESIGN:** Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active). If Twilio remains in use when meaningful live customer usage begins, provider compliance must be resolved or migration completed.
+
+**MAINTENANCE:** keep remaining TTL / minimisation / legacy Blob / private Blob retry / periodic provider-recheck items as **OPEN — MAINTENANCE** (see list below) unless a concrete launch blocker is discovered.
 
 Do **not**:
 1. reopen Google Ads while Ads remains dormant
@@ -737,7 +731,15 @@ Do **not**:
 4. reopen server-side checkout attribution as active processing (PRODUCTION VERIFIED / CLOSED — REMOVED / INACTIVE — Phase 3B / `6ef76ab…`)
 5. change the substantive compliance/runtime baseline merely because a docs-only HEAD is newer — runtime substantive baseline remains `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` until a later independently verified substantive runtime/legal change; future Diary/docs commits do **not** replace that runtime baseline
 
-Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active).
+**Compliance re-review triggers** (material processing changes — not ordinary informational SEO pages on the existing stack):
+- new tracking vendor
+- new lead form / new personal-data collection
+- new ad pixel
+- new cookies or browser storage
+- new processor/provider
+- new automated profiling
+- new international transfer
+- materially changed processing purpose
 
 Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN — MAINTENANCE** unless a concrete launch blocker is discovered:
 - Verification cleanup
@@ -754,6 +756,19 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 ---
 
 # 10. CHANGE LOG
+
+## 25 September 2026 — Phase 4B final compliance closeout (docs)
+
+- **FINAL COMPLIANCE CONSISTENCY SWEEP: COMPLETED — 25 SEP 2026**
+- Conclusion: **SEO / normal marketing work NOT BLOCKED** by current compliance state
+- Stale transfer-register Stripe “(A13 open)” wording corrected to A13 **REMOVED / INACTIVE** (historical provider-side copies may remain; not claimed erased)
+- Transfer-register metadata: Related contract `/dpa` → `2026-09-24`; Last reviewed → `2026-09-25`
+- Cookie Policy sitemap `lastmod` aligned to `2026-09-25`
+- Non-blocking follow-up retained: GA4 retention provider-propagation confirmation
+- Maintenance backlog retained (TTL / minimisation / legacy Blob / periodic rechecks)
+- Twilio remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**; AWS SMS remains future / not active
+- Primary growth work may proceed: **SEO / MARKETING**
+- Substantive compliance/runtime baseline unchanged: `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` (this docs-only closeout does **not** replace it)
 
 ## 25 September 2026 — Phase 3D advance verified substantive baseline (docs)
 
