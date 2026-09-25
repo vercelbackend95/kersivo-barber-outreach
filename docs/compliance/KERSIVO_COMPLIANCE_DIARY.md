@@ -722,11 +722,11 @@ Final compliance consistency sweep (Phase 4A/4B) completed **25 September 2026**
 
 **NEXT FOLLOW-UP (narrow — NON-BLOCKING):** GA4 retention provider-propagation confirmation (after Google’s ~24h application window for the 25 Sep 2026 Admin retention settings). Do **not** reopen GA4 contract/transfer.
 
-**OUTREACH TOOLING (narrow):** Notion / Gmail / Meta contracting-entity and transfer facts remain **FACTUAL VERIFICATION REQUIRED** — do not invent DPAs/SCCs; does not block SEO.
+**OUTREACH PROVIDERS:** Notion / Google Workspace-Gmail / Meta-Instagram ordinary DM — **CLOSED — CURRENT USE VERIFIED** (Phase 6A factual verification + Phase 6B docs closeout; Google Workspace CDPA **ACCEPTED 25 Sep 2026** by `hello@kersivo.co.uk`). No current outreach-provider legal blocker. Compliant corporate B2B outreach **NOT BLOCKED** under documented PECR / LIA / suppression controls. Periodic provider-term / transfer-mechanism rechecks = **MAINTENANCE**.
 
 **DEFERRED BY DESIGN:** Twilio SMS compliance remains **DEFERRED — PENDING SMS PROVIDER MIGRATION** (unresolved factual questions remain; **not CLOSED**). Amazon / AWS SMS remains **PLANNED / FUTURE PROVIDER** (not currently active). If Twilio remains in use when meaningful live customer usage begins, provider compliance must be resolved or migration completed.
 
-**MAINTENANCE:** keep remaining TTL / minimisation / legacy Blob / private Blob retry / periodic provider-recheck items as **OPEN — MAINTENANCE** (see list below) unless a concrete launch blocker is discovered.
+**MAINTENANCE:** keep remaining TTL / minimisation / legacy Blob / private Blob retry / periodic provider-recheck items as **OPEN — PERIODIC / TECHNICAL MAINTENANCE** (see list below) unless a concrete launch blocker is discovered.
 
 Do **not**:
 1. reopen Google Ads while Ads remains dormant
@@ -760,6 +760,21 @@ Then keep remaining TTL / legacy orphan / private Blob retry items as **OPEN —
 ---
 
 # 10. CHANGE LOG
+
+## 25 September 2026 — Phase 6A / 6B outreach provider factual closeout (docs)
+
+- Phase 6A (read-only): Notion, Google Workspace/Gmail, and Meta/Instagram ordinary-DM tooling factually verified from current official provider sources
+- Phase 6B (docs-only): residual **FACTUAL VERIFICATION REQUIRED** entries for those outreach tools closed
+- **Notion** outreach tooling: **CLOSED — CURRENT USE VERIFIED** (controller / processor under MSA + incorporated DPA; Art 28 satisfied; SCC route under DPA; no DPF invented)
+- **Google Workspace / Gmail** outreach: **CLOSED — CURRENT USE VERIFIED**; **CDPA ACCEPTED — 25 Sep 2026** (Admin Console; `hello@kersivo.co.uk`); Art 28 satisfied; distinct from GA4 / Ads / Sign-In
+- **Meta / Instagram ordinary DM:** **CLOSED — CURRENT USE VERIFIED** (Meta independent platform controller; no Art 28 DPA for ordinary DMs only)
+- External **accountant tooling:** **NOT ACTIVE / NO VERIFIED CURRENT PROCESSING**
+- No current outreach-provider legal blocker; **SEO NOT BLOCKED**; **product development NOT BLOCKED**; compliant corporate B2B outreach **NOT BLOCKED** under documented controls
+- **Twilio** remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**
+- **GA4** retention propagation remains **NON-BLOCKING FOLLOW-UP**
+- **MAINTENANCE** remains **OPEN — PERIODIC / TECHNICAL MAINTENANCE** (TTL / Blob / periodic provider-term rechecks)
+- Privacy public page: **no change** (category disclosure already sufficient)
+- Substantive compliance/runtime baseline **unchanged**: `6ef76ab56134151b12fa4865d2f5da6ce1aaa16f` (docs-only closeout does **not** replace it)
 
 ## 25 September 2026 — Phase 5B targeted outreach + lawful-basis remediation (docs)
 

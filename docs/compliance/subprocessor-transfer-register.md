@@ -97,16 +97,16 @@ Moved out of the active numbered transfer table on **2026-09-22**. Audited Produ
 
 ### Controller-side B2B outreach tooling (A15 — not Schedule 2 CPD subprocessors)
 
-These tools support **KERSIVO independent-controller** prospecting (ROPA A15). They are **not** added as DPA Schedule 2 Customer Personal Data subprocessors by this note. Exact contracting entity, processor/controller classification and international transfer mechanism are **FACTUAL VERIFICATION REQUIRED** — do **not** invent a signed DPA, SCC module, UK Extension reliance, processing region or contracting entity.
+These tools support **KERSIVO independent-controller** prospecting (ROPA A15). They are **not** added as DPA Schedule 2 Customer Personal Data subprocessors by this note. Phase 6A/6B (25 Sep 2026): factual verification **CLOSED — CURRENT USE VERIFIED** for the current documented outreach uses below. Periodic provider-term / transfer-mechanism rechecks remain **MAINTENANCE**.
 
-| Tool | KERSIVO use | Personal data? | Notes / action |
+| Tool | KERSIVO use | Personal data? | Notes / status |
 | --- | --- | --- | --- |
-| **Notion** | Lead Master / outreach administration / suppression screening | Yes (controller-side prospect & DNC records) | Documented in ROPA A15 + Privacy; contract/transfer **FACTUAL VERIFICATION REQUIRED** |
-| **Google / Gmail** | Outbound cold email and replies (`bartosz@kersivo.co.uk`) | Yes | Distinct from Google Sign-In (A14) and GA4 (A11). Contract/transfer **FACTUAL VERIFICATION REQUIRED** |
-| **Meta / Instagram** | Direct messages where used for prospecting | Yes | Contract/transfer **FACTUAL VERIFICATION REQUIRED** |
+| **Notion** | Lead Master / outreach administration / suppression screening | Yes (controller-side prospect & DNC records) | **CLOSED — CURRENT USE VERIFIED.** KERSIVO = controller; Notion Labs, Inc. = processor for Customer Data under MSA + incorporated DPA. Art 28 satisfied by incorporated DPA. Restricted UK→US may occur; documented safeguard = contractual **SCC route under Notion DPA**. No account-specific action. Do **not** invent DPF/UK Extension reliance. |
+| **Google Workspace / Gmail** | Outbound cold email, replies and follow-ups (`bartosz@kersivo.co.uk`) | Yes | **CLOSED — CURRENT USE VERIFIED.** Distinct from Google Sign-In (A14) and GA4 (A11). KERSIVO = controller; Google = processor for Customer Personal Data in Workspace Core Services under **Cloud Data Processing Addendum (CDPA)**. CDPA **ACCEPTED — 25 Sep 2026** (Admin Console; accepted by `hello@kersivo.co.uk`). Art 28 satisfied. Current documented Google CDPA transfer framework applies (including Google’s UK Extension Alternative Transfer Solution for covered UK→US paths where adopted). No further operator action for current Gmail outreach use. |
+| **Meta / Instagram** | Ordinary direct messages where used for prospecting | Yes | **CLOSED — CURRENT USE VERIFIED.** Scope = **manual ordinary Instagram DMs only** (not Ads, Custom Audiences, Pixel, CAPI, or CRM audience syncing). KERSIVO = independent controller of outreach decisions/content; Meta = independent controller / platform provider for ordinary Instagram service processing. Art 28 processor DPA **not** required merely for ordinary DMs. PECR / LIA / suppression controls remain applicable. |
 | Public business sources | Lead discovery | Public business / contact data as published | Sources, not processors |
 
-This is a **narrow outreach-tool verification** item. It does **not** reopen the closed core-product provider programme (Vercel, Neon, Resend, Stripe, Sentry, OpenAI, GA4 contract/transfer, etc.). Twilio remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**.
+This does **not** reopen the closed core-product provider programme (Vercel, Neon, Resend, Stripe, Sentry, OpenAI, GA4 contract/transfer, etc.). Twilio remains **DEFERRED — PENDING SMS PROVIDER MIGRATION**. External accountant tooling: **NOT ACTIVE / NO VERIFIED CURRENT PROCESSING**.
 
 ---
 
