@@ -80,7 +80,15 @@ export function dayKeyDaysAgo(daysAgo: number, now = new Date()): string {
 }
 
 export function londonDayBounds(dayKey: string): { gteMs: number; ltMs: number } {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  const nextDayKey = [
+    next.getUTCFullYear(),
+    String(next.getUTCMonth() + 1).padStart(2, '0'),
+    String(next.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+
   const gteMs = fromZonedTime(`${dayKey}T00:00:00.000`, BLACKLINE_TZ).getTime();
-  const ltMs = addMilliseconds(new Date(gteMs), 24 * 60 * 60 * 1000).getTime();
+  const ltMs = fromZonedTime(`${nextDayKey}T00:00:00.000`, BLACKLINE_TZ).getTime();
   return { gteMs, ltMs };
 }
