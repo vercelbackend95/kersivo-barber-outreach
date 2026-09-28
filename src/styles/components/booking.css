@@ -4698,10 +4698,6 @@ button.admin-sidebar-brand--button:focus-visible {
   .admin-main-content.admin-mobile-edge .admin-next-block--dash-hero-slot,
   .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
   .admin-main-content.admin-mobile-edge .admin-bookings-schedule.admin-bookings-schedule--history,
-  .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
-  .admin-main-content.admin-mobile-edge .admin-clients-table-wrap,
-  .admin-main-content.admin-mobile-edge .admin-reports.admin-services-panel,
-  .admin-main-content.admin-mobile-edge .admin-reports.admin-products-panel,
   .admin-main-content.admin-mobile-edge .admin-orders-panel,
   .admin-main-content.admin-mobile-edge .admin-reports.admin-sales-panel {
     box-sizing: border-box;
@@ -19959,5 +19955,21 @@ button.admin-leaderboard-avatar--action:focus-visible {
   .admin-native-date-range-panel--history-range .admin-native-date-range-panel__apply {
     width: 100%;
     min-width: 0;
+  }
+}
+
+
+/* Desktop/tablet: visible 8px outer gutter for full-width admin surfaces. */
+@media (min-width: 48.0625rem) {
+  .admin-main-content.admin-mobile-edge .admin-quick-blocks,
+  .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
+  .admin-main-content.admin-mobile-edge .admin-clients-table-wrap,
+  .admin-main-content.admin-mobile-edge .admin-reports.admin-services-panel,
+  .admin-main-content.admin-mobile-edge .admin-reports.admin-products-panel {
+    box-sizing: border-box;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin-left: 8px;
+    margin-right: 8px;
   }
 }
