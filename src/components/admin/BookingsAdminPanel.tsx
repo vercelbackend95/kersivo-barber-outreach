@@ -2575,7 +2575,10 @@ export default function BookingsAdminPanel({
       animate={bookingsSubviewMotion}
       aria-busy={bookingsSubviewTransitioning || undefined}
       data-bookings-subview-transitioning={bookingsSubviewTransitioning ? 'true' : undefined}
-      style={{ willChange: bookingsSubviewTransitioning ? 'opacity' : 'auto' }}
+      style={{
+        willChange: bookingsSubviewTransitioning ? 'opacity' : 'auto',
+        pointerEvents: bookingsSubviewTransitioning ? 'none' : 'auto',
+      }}
     >
       {isBlacklineDemo && bookingProofVisible && bookingProofBookingId ? (
         <BlacklineBookingProofCard
