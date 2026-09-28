@@ -39,10 +39,10 @@
   position: relative;
   z-index: 2;
   display: grid;
-  justify-items: center;
-  width: min(100% - 2rem, 72rem);
+  justify-items: start;
+  width: min(94vw, 91.1rem);
   margin-inline: auto;
-  text-align: center;
+  text-align: left;
 }
 
 .fresha-alt-hero__eyebrow {
@@ -75,35 +75,41 @@
 
 .fresha-alt-hero__title {
   margin: 0;
-  max-width: 12.4ch;
+  max-width: none;
   font-family: var(--font-body);
-  font-size: clamp(3.35rem, 7.2vw, 7rem);
+  font-size: clamp(3.35rem, 6.35vw, 6.75rem);
   font-weight: 650;
-  line-height: 0.97;
+  line-height: 0.96;
   letter-spacing: -0.062em;
   color: var(--fg);
-  text-wrap: balance;
 }
 
-.fresha-alt-hero__title span {
+.fresha-alt-hero__title-line {
   display: block;
-  margin-top: 0.12em;
   color: color-mix(in srgb, var(--fg) 70%, var(--muted));
 }
 
+.fresha-alt-hero__title-line + .fresha-alt-hero__title-line {
+  margin-top: 0.06em;
+}
+
+.fresha-alt-hero__title-line--primary {
+  color: var(--fg);
+}
+
 .fresha-alt-hero__lead {
-  margin: clamp(1.45rem, 2.8vw, 2rem) 0 0;
-  max-width: 62ch;
+  margin: clamp(1.35rem, 2.4vw, 1.8rem) 0 0;
+  max-width: 46ch;
   color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
-  line-height: 1.72;
+  font-size: clamp(1rem, 1.35vw, 1.12rem);
+  line-height: 1.62;
   text-wrap: pretty;
 }
 
 .fresha-alt-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.75rem;
   margin-top: 1.7rem;
 }
@@ -129,7 +135,7 @@
 .fresha-alt-hero__meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.4rem 0.62rem;
   margin-top: 1.05rem;
   color: color-mix(in srgb, var(--muted) 72%, transparent);
@@ -238,17 +244,21 @@
   }
 
   .fresha-alt-hero__content {
-    width: min(100% - 1.35rem, 72rem);
+    width: calc(100% - 1.35rem);
   }
 
   .fresha-alt-hero__title {
-    max-width: 11ch;
-    font-size: clamp(2.85rem, 12vw, 4.8rem);
+    max-width: 100%;
+    font-size: clamp(2.55rem, 11vw, 4.8rem);
     letter-spacing: -0.055em;
   }
 
+  .fresha-alt-hero__title-line {
+    white-space: normal;
+  }
+
   .fresha-alt-hero__lead {
-    max-width: 34rem;
+    max-width: 31rem;
   }
 
   .fresha-alt-hero__product-shell {
