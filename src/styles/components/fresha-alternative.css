@@ -149,6 +149,43 @@
   z-index: 1;
   width: min(94vw, 92rem);
   margin: clamp(3.25rem, 7vw, 6rem) auto 0;
+  --fresha-demo-admin-bg: #030303;
+  --fresha-demo-admin-surface-1: #030303;
+  --fresha-demo-admin-surface-3: #141414;
+}
+
+/*
+ * Extend the BLACKLINE admin shell behind the constrained iframe.
+ * The dashboard itself intentionally stays capped at 92rem; this full-bleed
+ * backdrop removes the visible black side strips on wide screens without
+ * stretching the product UI.
+ */
+.fresha-alt-hero__product-shell::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--fresha-demo-admin-surface-3) 34%, transparent),
+      transparent 32rem
+    ),
+    linear-gradient(
+      135deg,
+      var(--fresha-demo-admin-bg) 0%,
+      color-mix(
+        in srgb,
+        var(--fresha-demo-admin-surface-1) 42%,
+        var(--fresha-demo-admin-bg)
+      ) 52%,
+      var(--fresha-demo-admin-bg) 100%
+    );
 }
 
 .fresha-alt-hero__product-glow {
