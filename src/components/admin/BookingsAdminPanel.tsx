@@ -645,6 +645,8 @@ type BookingsAdminPanelProps = {
   isActive: boolean;
   mode: BookingsAdminMode;
   onBackToDashboard?: () => void;
+  onOpenHistoryWithinBookings?: () => void;
+  historyWithinBookings?: boolean;
   isPublicDemo?: boolean;
   isBlacklineDemo?: boolean;
   /**
@@ -658,6 +660,8 @@ export default function BookingsAdminPanel({
   isActive,
   mode,
   onBackToDashboard,
+  onOpenHistoryWithinBookings,
+  historyWithinBookings = false,
   isPublicDemo = false,
   isBlacklineDemo = false,
   initialBookings,
@@ -750,6 +754,7 @@ export default function BookingsAdminPanel({
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [historySearchLoading, setHistorySearchLoading] = useState(false);
+  const [includeTodayInHistory, setIncludeTodayInHistory] = useState(false);
 
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
@@ -899,18 +904,14 @@ export default function BookingsAdminPanel({
     }
 
     if (isHistoryAppend) {
-      if (historyAppendInFlightRef.current) {
-        setHistoryLoadingMore(false);
-        return;
-      }
-      if (inFlightRef.current) {
+      if (historyAppendInFlightRef.current || inFlightRef.current) {
         setHistoryLoadingMore(false);
         return;
       }
       historyAppendInFlightRef.current = true;
     } else {
-      if (inFlightRef.current) return;
-      if (historyAppendInFlightRef.current) return;
+      // Non-append refreshes are latest-request-wins. Do not block a newer
+      // filter/view request behind an older request; requestId discards stale responses.
       inFlightRef.current = true;
     }
 
@@ -921,7 +922,15 @@ export default function BookingsAdminPanel({
 
     const requestId = ++bookingsRequestIdRef.current;
     const requestQueryKey = mode === 'history'
-      ? ['history', historyBarberId, historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', normalizeSearchValue(debouncedSearchQuery)].join(':')
+      ? [
+          'history',
+          historyWithinBookings ? 'bookings-tab' : 'standalone',
+          historyWithinBookings && includeTodayInHistory ? 'include-today' : 'past-only',
+          historyBarberId,
+          historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '',
+          historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '',
+          normalizeSearchValue(debouncedSearchQuery),
+        ].join(':')
       : ['dashboard', selectedDate].join(':');
 
 
@@ -932,6 +941,10 @@ export default function BookingsAdminPanel({
             view: 'history',
             limit: String(ADMIN_BOOKING_HISTORY_PAGE_SIZE),
           });
+          if (historyWithinBookings) {
+            params.set('scope', 'past');
+            if (includeTodayInHistory) params.set('includeToday', '1');
+          }
           params.set('barberId', historyBarberId ?? 'all');
           if (historyDateRange?.from && historyDateRange?.to) {
             params.set('from', formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
@@ -997,23 +1010,29 @@ export default function BookingsAdminPanel({
       }
 
     } catch {
-      setError('Could not refresh bookings right now.');
-    } finally {
       if (requestId === bookingsRequestIdRef.current) {
-        if (isHistoryAppend) {
-          historyAppendInFlightRef.current = false;
-        } else {
+        setError('Could not refresh bookings right now.');
+      }
+    } finally {
+      // An append can be superseded by a newer filter/view refresh. Its lock must
+      // still be released even when its response is intentionally discarded.
+      if (isHistoryAppend) {
+        historyAppendInFlightRef.current = false;
+        setHistoryLoadingMore(false);
+      }
+
+      if (requestId === bookingsRequestIdRef.current) {
+        if (!isHistoryAppend) {
           inFlightRef.current = false;
+          setHistoryLoadingMore(false);
         }
         setBookingsInitialLoading(false);
         if (mode === 'history' && !isHistoryAppend) {
           setHistorySearchLoading(false);
         }
       }
-
-      setHistoryLoadingMore(false);
     }
-  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, historyWithinBookings, includeTodayInHistory, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
@@ -1084,22 +1103,12 @@ export default function BookingsAdminPanel({
 
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'history') return;
-    const q = normalizeSearchValue(debouncedSearchQuery);
-    if (q) {
-      setHistorySearchLoading(true);
-    } else {
-      setHistorySearchLoading(false);
+    if (mode === 'history') {
+      setHistorySearchLoading(Boolean(normalizeSearchValue(debouncedSearchQuery)));
+      return;
     }
-    const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
-    return () => window.clearTimeout(timeoutId);
-  }, [fetchBookings, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
-
-  useEffect(() => {
-    if (mode !== 'history') {
-      setHistorySearchLoading(false);
-    }
-  }, [mode]);
+    setHistorySearchLoading(false);
+  }, [debouncedSearchQuery, mode]);
 
   useEffect(() => {
     if (!isHistoryMoreOpen) return;
@@ -1530,6 +1539,31 @@ export default function BookingsAdminPanel({
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
+  const historyDateRangeLabel = useMemo(() => {
+    if (historyDateRange?.from && historyDateRange?.to) {
+      const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      const fromLabel = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM yyyy');
+      if (fromYmd === toYmd) return fromLabel;
+      const toLabel = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM yyyy');
+      return `${fromLabel} – ${toLabel}`;
+    }
+    return 'Choose dates';
+  }, [historyDateRange]);
+  const handleHistoryDateRangeChange = useCallback((range: HistoryDateRange | null) => {
+    setHistoryDateRange(range);
+    if (!range?.from || !range?.to) return;
+
+    const fromYmd = formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    const toYmd = formatInTimeZone(range.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    const todayYmd = getTodayLondonDate();
+    if (fromYmd <= todayYmd && todayYmd <= toYmd) {
+      setIncludeTodayInHistory(true);
+    }
+  }, []);
+  const clearHistoryDateRange = useCallback(() => {
+    setHistoryDateRange(null);
+  }, []);
   const timelineNextDayLabel = useMemo(
     () => formatTimelineDateLabel(addOneLondonCalendarDay(selectedDate)),
     [selectedDate],
@@ -2141,30 +2175,28 @@ export default function BookingsAdminPanel({
                       onKeyDown={(event) => {
                         if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
                         event.preventDefault();
-                        setActiveView((current) => (current === 'timeline' ? 'list' : 'timeline'));
+                        onOpenHistoryWithinBookings?.();
                       }}
                     >
-                      {(['timeline', 'list'] as const).map((view) => {
-                        const isActiveTab = activeView === view;
-                        const label = view === 'timeline' ? 'Timeline' : 'List';
-                        return (
-                          <button
-                            key={view}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActiveTab}
-                            className={isActiveTab ? 'active' : ''}
-                            onClick={() => setActiveView(view)}
-                          >
-                            {view === 'timeline' ? (
-                              <Clock className="admin-view-toggle-icon" aria-hidden />
-                            ) : (
-                              <ListOrdered className="admin-view-toggle-icon" aria-hidden />
-                            )}
-                            <span className="admin-view-toggle-label">{label}</span>
-                          </button>
-                        );
-                      })}
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected="true"
+                        className="active"
+                        onClick={() => setActiveView('timeline')}
+                      >
+                        <Clock className="admin-view-toggle-icon" aria-hidden />
+                        <span className="admin-view-toggle-label">Timeline</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected="false"
+                        onClick={() => onOpenHistoryWithinBookings?.()}
+                      >
+                        <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                        <span className="admin-view-toggle-label">History</span>
+                      </button>
                     </div>
                     <AdminBookingDatePicker
                       value={selectedDate}
@@ -2470,8 +2502,7 @@ export default function BookingsAdminPanel({
           {dashboardOpsDashCluster}
           <div className="admin-view-transition-container">
             <AnimatePresence initial={false} mode="wait">
-              {activeView === 'timeline' ? (
-                <motion.div
+              <motion.div
                   key="timeline"
                   className="admin-view-motion-wrap admin-view-motion-wrap--timeline"
                   variants={tabMotionVariants}
@@ -2512,56 +2543,6 @@ export default function BookingsAdminPanel({
                     />
                   </AdminErrorBoundary>
                 </motion.div>
-              ) : (
-                <motion.div
-                  key="list"
-                  className="admin-view-motion-wrap admin-view-motion-wrap--list"
-                  variants={tabMotionVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  style={{ width: '100%' }}
-                >
-                  <div className="admin-bookings-list-search">
-                    <AdminBookingsOpsSearch
-                      variant="standard"
-                      searchInputRef={searchInputRef}
-                      searchResultsRef={searchResultsRef}
-                      clientSearchQuery={clientSearchQuery}
-                      onClientSearchQueryChange={setClientSearchQuery}
-                      searchDropdownBookings={searchDropdownBookings}
-                      searchResultsLabel={searchResultsLabel}
-                      searchResultsLoading={historySearchResultsLoading}
-                      activeSearchResultIndex={activeSearchResultIndex}
-                      onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-                      highlightMatch={highlightMatch}
-                      formatStartTime={formatStartTime}
-                      onSelectBooking={jumpToTimelineBooking}
-                      onClearSearch={clearSearchField}
-                      showKbdHint={showSearchKbdHint}
-                      searchShortcutHint={searchShortcutHint}
-                    />
-                  </div>
-                  <AdminBookingsScheduleList
-                    bookings={visibleBookings}
-                    nowMs={nowMs}
-                    selectedDate={selectedDate}
-                    todayLondonDate={todayLondonDate}
-                    selectedDateLabel={selectedDateLabel}
-                    bookingsInitialLoading={bookingsInitialLoading}
-                    updatedBookingIds={updatedBookingIds}
-                    highlightMatch={highlightMatch}
-                    formatStartTime={formatStartTime}
-                    onOpenClient={openClientProfileForBooking}
-                    onCancelBooking={cancelBookingByShop}
-                    cancelLoadingBookingId={cancelLoadingBookingId}
-                    canCancelBooking={canCancelBookingAsShop}
-                    onRetryDepositRefund={retryDepositRefund}
-                    refundRetryLoadingBookingId={refundRetryLoadingBookingId}
-                    canRetryDepositRefund={canRetryDepositRefund}
-                  />
-                </motion.div>
-              )}
             </AnimatePresence>
           </div>
         </div>
@@ -2659,6 +2640,40 @@ export default function BookingsAdminPanel({
           }}
           historyFilters={(
             <section className="admin-history-filters">
+              {historyWithinBookings ? (
+                <div className="admin-bookings-ops-dash-control-deck admin-bookings-history-view-controls">
+                  <div className="admin-bookings-ops-toolbar">
+                    <div className="admin-bookings-ops-controls">
+                      <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                        <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            onClick={() => onBackToDashboard?.()}
+                          >
+                            <Clock className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">Timeline</span>
+                          </button>
+                          <button type="button" role="tab" aria-selected="true" className="active">
+                            <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">History</span>
+                          </button>
+                        </div>
+                        <HistoryDateRangePicker
+                          dateRange={historyDateRange}
+                          isMobileViewport={isMobileViewport}
+                          timezone={ADMIN_TIMEZONE}
+                          onChangeRange={handleHistoryDateRangeChange}
+                          onClear={clearHistoryDateRange}
+                          variant="date-label"
+                          label={historyDateRangeLabel}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               <div className="admin-history-row">
                 <label>Recent barbers</label>
                 <div className="admin-history-barber-controls">
@@ -2693,6 +2708,16 @@ export default function BookingsAdminPanel({
                   </div>
 
                   <div className="admin-history-control-actions">
+                    {historyWithinBookings ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary"
+                        aria-pressed={includeTodayInHistory}
+                        onClick={() => setIncludeTodayInHistory((current) => !current)}
+                      >
+                        {includeTodayInHistory ? 'Today included' : 'Include today'}
+                      </button>
+                    ) : null}
                     <div className="admin-history-more" ref={historyMoreRef}>
                       <button
                         type="button"
@@ -2739,13 +2764,15 @@ export default function BookingsAdminPanel({
                         </div>
                       ) : null}
                     </div>
-                    <HistoryDateRangePicker
-                      dateRange={historyDateRange}
-                      isMobileViewport={isMobileViewport}
-                      timezone={ADMIN_TIMEZONE}
-                      onChangeRange={setHistoryDateRange}
-                      onClear={() => setHistoryDateRange(null)}
-                    />
+                    {!historyWithinBookings ? (
+                      <HistoryDateRangePicker
+                        dateRange={historyDateRange}
+                        isMobileViewport={isMobileViewport}
+                        timezone={ADMIN_TIMEZONE}
+                        onChangeRange={setHistoryDateRange}
+                        onClear={() => setHistoryDateRange(null)}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>

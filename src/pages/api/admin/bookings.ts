@@ -24,12 +24,22 @@ function parseBookingStatusFilter(
   return { ok: false };
 }
 
+function nextIsoCalendarDay(date: string): string {
+  const [year, month, day] = date.split('-').map(Number);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  return [
+    next.getUTCFullYear(),
+    String(next.getUTCMonth() + 1).padStart(2, '0'),
+    String(next.getUTCDate()).padStart(2, '0'),
+  ].join('-');
+}
+
 function getLondonDayRange(date: string) {
-    const startAt = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
+  const startAt = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
+  const nextDate = nextIsoCalendarDay(date);
   return {
     gte: startAt,
-    lt: new Date(startAt.getTime() + 24 * 60 * 60 * 1000)
-
+    lt: fromZonedTime(`${nextDate}T00:00:00.000`, ADMIN_TIMEZONE),
   };
 }
 function getTodayRangeInLondon() {
@@ -234,6 +244,8 @@ export const GET: APIRoute = async (ctx) => {
     const from = ctx.url.searchParams.get('from');
     const to = ctx.url.searchParams.get('to');
     const searchQ = ctx.url.searchParams.get('q')?.trim();
+    const scope = ctx.url.searchParams.get('scope');
+    const includeToday = scope === 'past' && ctx.url.searchParams.get('includeToday') === '1';
     const limit = Math.min(
       Math.max(
         Number(ctx.url.searchParams.get('limit') || ADMIN_BOOKING_HISTORY_PAGE_SIZE),
@@ -252,6 +264,14 @@ export const GET: APIRoute = async (ctx) => {
     // Shop-wide for Barber (and Owner/Manager). Optional colleague filter via ?barberId=.
     if (barberId && barberId !== 'all') andConditions.push({ barberId });
     if (startAtFilter) andConditions.push({ startAt: startAtFilter });
+    if (scope === 'past') {
+      const todayRange = getTodayRangeInLondon();
+      // Bookings → History defaults to completed calendar days only.
+      // "Include today" expands the same table through the end of today, never into future days.
+      andConditions.push({
+        startAt: { lt: includeToday ? todayRange.lt : todayRange.gte },
+      });
+    }
     if (cursorStartAt && cursorId) {
       andConditions.push({
         OR: [

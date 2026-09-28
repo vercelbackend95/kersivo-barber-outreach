@@ -294,6 +294,12 @@ export function getBlacklineBookingsResponse(searchParams?: URLSearchParams, now
   };
 }
 
+function compareHistoryBookingsDesc(a: BlacklineBooking, b: BlacklineBooking): number {
+  const startDelta = new Date(b.startAt).getTime() - new Date(a.startAt).getTime();
+  if (startDelta !== 0) return startDelta;
+  return b.id.localeCompare(a.id);
+}
+
 export function getBlacklineHistoryBookings(days = 30, now = new Date()): BlacklineBooking[] {
   const clock = coarseLondonNow(now);
   const rows: BlacklineBooking[] = [];
@@ -301,7 +307,7 @@ export function getBlacklineHistoryBookings(days = 30, now = new Date()): Blackl
     const dayKey = dayKeyDaysAgo(ago, clock);
     rows.push(...getBlacklineBookingsForDayKey(dayKey, { now: clock, forHistory: true }));
   }
-  return rows.sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  return rows.sort(compareHistoryBookingsDesc);
 }
 
 export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchParams, now = new Date()) {
@@ -310,6 +316,8 @@ export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchPara
   const from = params.get('from')?.trim();
   const to = params.get('to')?.trim();
   const q = (params.get('q')?.trim() || '').toLowerCase();
+  const scope = params.get('scope');
+  const includeToday = scope === 'past' && params.get('includeToday') === '1';
   const cursor = params.get('cursor')?.trim() || '';
   const limitRaw = Number(params.get('limit') || ADMIN_BOOKING_HISTORY_PAGE_SIZE);
   const limit = Math.max(
@@ -318,6 +326,14 @@ export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchPara
   );
 
   let bookings = getBlacklineHistoryBookings(30, now);
+  if (includeToday) {
+    const clock = coarseLondonNow(now);
+    const todayKey = blacklineDayKey(clock);
+    bookings = [
+      ...getBlacklineBookingsForDayKey(todayKey, { now: clock, forHistory: false }),
+      ...bookings,
+    ].sort(compareHistoryBookingsDesc);
+  }
 
   if (barberId && barberId !== 'all') {
     bookings = bookings.filter((row) => row.barberId === barberId);
