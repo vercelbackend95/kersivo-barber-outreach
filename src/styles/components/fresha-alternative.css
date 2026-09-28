@@ -22,24 +22,59 @@
 
 .fresha-alt-hero__beam {
   position: absolute;
-  top: -10rem;
-  width: min(58rem, 68vw);
-  height: 48rem;
-  filter: blur(30px);
-  opacity: 0.82;
+  pointer-events: none;
 }
 
 .fresha-alt-hero__beam--right {
-  right: -13rem;
-  background: radial-gradient(
-    ellipse at 68% 20%,
-    color-mix(in srgb, #ffffff 9%, transparent) 0%,
-    color-mix(in srgb, #ffffff 4.5%, transparent) 30%,
-    color-mix(in srgb, #ffffff 1.5%, transparent) 52%,
-    transparent 72%
+  /*
+   * Product spotlight: originates high on the right and travels down-left
+   * toward the top of the live dashboard. A layered beam keeps the light
+   * directional and detailed instead of reading as a blurred grey cloud.
+   */
+  top: 0.5rem;
+  right: -8rem;
+  width: min(76rem, 78vw);
+  height: 28rem;
+  opacity: 0.92;
+  transform: rotate(-28deg);
+  transform-origin: 88% 12%;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      ellipse 72% 64% at 88% 14%,
+      rgb(255 255 255 / 0.105) 0%,
+      rgb(255 255 255 / 0.062) 18%,
+      rgb(255 255 255 / 0.032) 38%,
+      rgb(255 255 255 / 0.012) 56%,
+      transparent 72%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(255 255 255 / 0.006) 18%,
+      rgb(255 255 255 / 0.024) 38%,
+      rgb(255 255 255 / 0.055) 66%,
+      rgb(255 255 255 / 0.085) 84%,
+      transparent 100%
+    );
+  filter: blur(8px);
+}
+
+.fresha-alt-hero__beam--right::after {
+  content: '';
+  position: absolute;
+  inset: 26% 5% 26% 18%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.012) 20%,
+    rgb(255 255 255 / 0.048) 52%,
+    rgb(255 255 255 / 0.095) 78%,
+    transparent 100%
   );
-  transform: rotate(-18deg);
-  transform-origin: 72% 18%;
+  filter: blur(5px);
+  opacity: 0.72;
 }
 
 .fresha-alt-hero__content {
@@ -293,6 +328,15 @@
   .fresha-alt-hero {
     padding-top: 3.25rem;
     padding-bottom: 3.7rem;
+  }
+
+  .fresha-alt-hero__beam--right {
+    top: 1rem;
+    right: -18rem;
+    width: 54rem;
+    height: 24rem;
+    opacity: 0.62;
+    transform: rotate(-32deg);
   }
 
   .fresha-alt-hero__content {
