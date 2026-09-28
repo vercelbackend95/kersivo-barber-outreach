@@ -887,6 +887,30 @@
   padding: 0;
 }
 
+.admin-bookings-history-view-controls {
+  margin-bottom: 0.7rem;
+}
+
+.admin-bookings-history-view-controls .admin-bookings-ops-toolbar {
+  padding: 0;
+}
+
+.admin-bookings-history-view-controls .admin-bookings-ops-controls {
+  width: 100%;
+}
+
+.admin-bookings-history-view-controls .admin-dashboard-controls--ops-dash {
+  width: 100%;
+  justify-content: space-between;
+}
+
+@media (max-width: 47.99rem) {
+  .admin-bookings-history-view-controls .admin-dashboard-controls--ops-dash {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+}
+
 .admin-bookings-schedule__history-service-duration {
   color: inherit;
 }

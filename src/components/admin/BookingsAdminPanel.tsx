@@ -1547,6 +1547,31 @@ export default function BookingsAdminPanel({
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
+  const historyQuickDateValue = useMemo(() => {
+    if (historyDateRange?.from && historyDateRange?.to) {
+      const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      if (fromYmd === toYmd) return fromYmd;
+    }
+    return selectedDate;
+  }, [historyDateRange, selectedDate]);
+  const historyQuickDateLabel = useMemo(() => {
+    if (historyDateRange?.from && historyDateRange?.to) {
+      const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      if (fromYmd === toYmd) return formatTimelineDateLabel(fromYmd);
+      return 'Custom range';
+    }
+    return 'Choose date';
+  }, [historyDateRange]);
+  const handleHistoryQuickDateChange = useCallback((value: string) => {
+    setSelectedDate(value);
+    const date = fromZonedTime(`${value}T00:00:00.000`, ADMIN_TIMEZONE);
+    setHistoryDateRange({ from: date, to: date });
+    if (value === getTodayLondonDate()) {
+      setIncludeTodayInHistory(true);
+    }
+  }, []);
   const timelineNextDayLabel = useMemo(
     () => formatTimelineDateLabel(addOneLondonCalendarDay(selectedDate)),
     [selectedDate],
@@ -2531,35 +2556,6 @@ export default function BookingsAdminPanel({
         </div>
       ) : (
         <>
-          {mode === 'history' && historyWithinBookings ? (
-            <div className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Booking history view controls">
-              <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Booking view controls">
-                <div className="admin-bookings-ops-dash-control-deck">
-                  <div className="admin-bookings-ops-toolbar">
-                    <div className="admin-bookings-ops-controls">
-                      <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
-                        <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
-                          <button
-                            type="button"
-                            role="tab"
-                            aria-selected="false"
-                            onClick={() => onBackToDashboard?.()}
-                          >
-                            <Clock className="admin-view-toggle-icon" aria-hidden />
-                            <span className="admin-view-toggle-label">Timeline</span>
-                          </button>
-                          <button type="button" role="tab" aria-selected="true" className="active">
-                            <ListOrdered className="admin-view-toggle-icon" aria-hidden />
-                            <span className="admin-view-toggle-label">History</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
           <AdminSectionHeader
             title={BOOKINGS_SECTION_HEADER[mode].title}
             description={BOOKINGS_SECTION_HEADER[mode].description}
@@ -2652,6 +2648,36 @@ export default function BookingsAdminPanel({
           }}
           historyFilters={(
             <section className="admin-history-filters">
+              {historyWithinBookings ? (
+                <div className="admin-bookings-ops-dash-control-deck admin-bookings-history-view-controls">
+                  <div className="admin-bookings-ops-toolbar">
+                    <div className="admin-bookings-ops-controls">
+                      <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                        <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            onClick={() => onBackToDashboard?.()}
+                          >
+                            <Clock className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">Timeline</span>
+                          </button>
+                          <button type="button" role="tab" aria-selected="true" className="active">
+                            <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">History</span>
+                          </button>
+                        </div>
+                        <AdminBookingDatePicker
+                          value={historyQuickDateValue}
+                          label={historyQuickDateLabel}
+                          onChange={handleHistoryQuickDateChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               <div className="admin-history-row">
                 <label>Recent barbers</label>
                 <div className="admin-history-barber-controls">
