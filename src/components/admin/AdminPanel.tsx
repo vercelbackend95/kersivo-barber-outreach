@@ -32,6 +32,7 @@ export type AdminSection =
   | 'bookings_blocks'
   | 'bookings_reports'
   | 'bookings_history'
+  | 'bookings_history_tab'
   | 'bookings_clients'
   | 'services'
   | 'shop_products'
@@ -347,7 +348,8 @@ export default function AdminPanel({
     activeSection === 'bookings_dashboard'
     || activeSection === 'bookings_blocks'
     || activeSection === 'bookings_reports'
-    || activeSection === 'bookings_history';
+    || activeSection === 'bookings_history'
+    || activeSection === 'bookings_history_tab';
 
   useEffect(() => {
     clearTransientAdminViewportState();
@@ -397,7 +399,7 @@ export default function AdminPanel({
       initialBookings={initialBookings}
     >
       <AdminLayout
-        activeSection={activeSection}
+        activeSection={activeSection === 'bookings_history_tab' ? 'bookings_dashboard' : activeSection}
         onChangeSection={handleSectionChange}
         isTransitioning={showPending || sessionPending}
         isEntering={isEntering}
@@ -428,10 +430,12 @@ export default function AdminPanel({
               ? 'blocks'
               : activeSection === 'bookings_reports'
                 ? 'reports'
-                : activeSection === 'bookings_history'
+                : activeSection === 'bookings_history' || activeSection === 'bookings_history_tab'
                   ? 'history'
                   : 'dashboard'
           }
+          historyWithinBookings={activeSection === 'bookings_history_tab'}
+          onOpenHistoryWithinBookings={() => handleSectionChange('bookings_history_tab')}
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
 

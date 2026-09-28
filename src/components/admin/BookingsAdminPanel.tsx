@@ -645,6 +645,8 @@ type BookingsAdminPanelProps = {
   isActive: boolean;
   mode: BookingsAdminMode;
   onBackToDashboard?: () => void;
+  onOpenHistoryWithinBookings?: () => void;
+  historyWithinBookings?: boolean;
   isPublicDemo?: boolean;
   isBlacklineDemo?: boolean;
   /**
@@ -658,6 +660,8 @@ export default function BookingsAdminPanel({
   isActive,
   mode,
   onBackToDashboard,
+  onOpenHistoryWithinBookings,
+  historyWithinBookings = false,
   isPublicDemo = false,
   isBlacklineDemo = false,
   initialBookings,
@@ -2141,30 +2145,28 @@ export default function BookingsAdminPanel({
                       onKeyDown={(event) => {
                         if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
                         event.preventDefault();
-                        setActiveView((current) => (current === 'timeline' ? 'list' : 'timeline'));
+                        onOpenHistoryWithinBookings?.();
                       }}
                     >
-                      {(['timeline', 'list'] as const).map((view) => {
-                        const isActiveTab = activeView === view;
-                        const label = view === 'timeline' ? 'Timeline' : 'List';
-                        return (
-                          <button
-                            key={view}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActiveTab}
-                            className={isActiveTab ? 'active' : ''}
-                            onClick={() => setActiveView(view)}
-                          >
-                            {view === 'timeline' ? (
-                              <Clock className="admin-view-toggle-icon" aria-hidden />
-                            ) : (
-                              <ListOrdered className="admin-view-toggle-icon" aria-hidden />
-                            )}
-                            <span className="admin-view-toggle-label">{label}</span>
-                          </button>
-                        );
-                      })}
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected="true"
+                        className="active"
+                        onClick={() => setActiveView('timeline')}
+                      >
+                        <Clock className="admin-view-toggle-icon" aria-hidden />
+                        <span className="admin-view-toggle-label">Timeline</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected="false"
+                        onClick={() => onOpenHistoryWithinBookings?.()}
+                      >
+                        <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                        <span className="admin-view-toggle-label">History</span>
+                      </button>
                     </div>
                     <AdminBookingDatePicker
                       value={selectedDate}
@@ -2470,8 +2472,7 @@ export default function BookingsAdminPanel({
           {dashboardOpsDashCluster}
           <div className="admin-view-transition-container">
             <AnimatePresence initial={false} mode="wait">
-              {activeView === 'timeline' ? (
-                <motion.div
+              <motion.div
                   key="timeline"
                   className="admin-view-motion-wrap admin-view-motion-wrap--timeline"
                   variants={tabMotionVariants}
@@ -2512,61 +2513,40 @@ export default function BookingsAdminPanel({
                     />
                   </AdminErrorBoundary>
                 </motion.div>
-              ) : (
-                <motion.div
-                  key="list"
-                  className="admin-view-motion-wrap admin-view-motion-wrap--list"
-                  variants={tabMotionVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  style={{ width: '100%' }}
-                >
-                  <div className="admin-bookings-list-search">
-                    <AdminBookingsOpsSearch
-                      variant="standard"
-                      searchInputRef={searchInputRef}
-                      searchResultsRef={searchResultsRef}
-                      clientSearchQuery={clientSearchQuery}
-                      onClientSearchQueryChange={setClientSearchQuery}
-                      searchDropdownBookings={searchDropdownBookings}
-                      searchResultsLabel={searchResultsLabel}
-                      searchResultsLoading={historySearchResultsLoading}
-                      activeSearchResultIndex={activeSearchResultIndex}
-                      onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-                      highlightMatch={highlightMatch}
-                      formatStartTime={formatStartTime}
-                      onSelectBooking={jumpToTimelineBooking}
-                      onClearSearch={clearSearchField}
-                      showKbdHint={showSearchKbdHint}
-                      searchShortcutHint={searchShortcutHint}
-                    />
-                  </div>
-                  <AdminBookingsScheduleList
-                    bookings={visibleBookings}
-                    nowMs={nowMs}
-                    selectedDate={selectedDate}
-                    todayLondonDate={todayLondonDate}
-                    selectedDateLabel={selectedDateLabel}
-                    bookingsInitialLoading={bookingsInitialLoading}
-                    updatedBookingIds={updatedBookingIds}
-                    highlightMatch={highlightMatch}
-                    formatStartTime={formatStartTime}
-                    onOpenClient={openClientProfileForBooking}
-                    onCancelBooking={cancelBookingByShop}
-                    cancelLoadingBookingId={cancelLoadingBookingId}
-                    canCancelBooking={canCancelBookingAsShop}
-                    onRetryDepositRefund={retryDepositRefund}
-                    refundRetryLoadingBookingId={refundRetryLoadingBookingId}
-                    canRetryDepositRefund={canRetryDepositRefund}
-                  />
-                </motion.div>
-              )}
             </AnimatePresence>
           </div>
         </div>
       ) : (
         <>
+          {mode === 'history' && historyWithinBookings ? (
+            <div className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Booking history view controls">
+              <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Booking view controls">
+                <div className="admin-bookings-ops-dash-control-deck">
+                  <div className="admin-bookings-ops-toolbar">
+                    <div className="admin-bookings-ops-controls">
+                      <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                        <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            onClick={() => onBackToDashboard?.()}
+                          >
+                            <Clock className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">Timeline</span>
+                          </button>
+                          <button type="button" role="tab" aria-selected="true" className="active">
+                            <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                            <span className="admin-view-toggle-label">History</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <AdminSectionHeader
             title={BOOKINGS_SECTION_HEADER[mode].title}
             description={BOOKINGS_SECTION_HEADER[mode].description}

@@ -5,6 +5,7 @@ export const ADMIN_SPA_SECTIONS = [
   'bookings_blocks',
   'bookings_reports',
   'bookings_history',
+  'bookings_history_tab',
   'bookings_clients',
   'services',
   'shop_products',
@@ -26,6 +27,7 @@ export function resolveAdminSpaSection(raw: string | null | undefined): AdminSpa
   if (section === 'bookings_blocks') return 'bookings_blocks';
   if (section === 'bookings_reports') return 'bookings_reports';
   if (section === 'bookings_history') return 'bookings_history';
+  if (section === 'bookings_history_tab') return 'bookings_history_tab';
   if (section === 'bookings_clients') return 'bookings_clients';
   if (section === 'services') return 'services';
   if (section === 'shop_orders') return 'shop_orders';
