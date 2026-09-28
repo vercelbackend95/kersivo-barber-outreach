@@ -1010,7 +1010,9 @@ export default function BookingsAdminPanel({
       }
 
     } catch {
-      setError('Could not refresh bookings right now.');
+      if (requestId === bookingsRequestIdRef.current) {
+        setError('Could not refresh bookings right now.');
+      }
     } finally {
       // An append can be superseded by a newer filter/view refresh. Its lock must
       // still be released even when its response is intentionally discarded.
