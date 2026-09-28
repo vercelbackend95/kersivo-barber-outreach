@@ -19754,3 +19754,109 @@ button.admin-leaderboard-avatar--action:focus-visible {
   }
 }
 
+
+
+/* Bookings History date picker — explicit final-state controls.
+   Kept at the end of the sheet so shared button rules cannot flatten the UI. */
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__close.admin-cp-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  margin: -0.15rem -0.15rem 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__close.admin-cp-close-btn:hover {
+  background: var(--surface-3);
+  color: var(--fg);
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__close.admin-cp-close-btn:focus-visible {
+  outline: 2px solid var(--focus, var(--accent));
+  outline-offset: 2px;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__close .admin-cp-close-icon {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__mode .admin-native-date-range-panel__mode-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 2.65rem;
+  padding: 0.58rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--border) 92%, var(--fg) 8%);
+  border-radius: 0.68rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fg) 3%, transparent), transparent),
+    var(--surface-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__mode .admin-native-date-range-panel__mode-btn:hover {
+  border-color: color-mix(in srgb, var(--fg) 26%, var(--border));
+  color: var(--fg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fg) 5%, transparent), transparent),
+    var(--surface-3);
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__mode .admin-native-date-range-panel__mode-btn.is-active {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+  color: var(--fg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.admin-native-date-range-panel--history-range .admin-native-date-range-panel__mode .admin-native-date-range-panel__mode-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
