@@ -363,7 +363,6 @@
     background: var(--admin-premium-surface-bg);
     border: var(--admin-premium-surface-border);
     border-radius: var(--admin-premium-surface-r);
-    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
     padding: clamp(0.55rem, 1.45vw, 0.78rem) clamp(0.65rem, 1.7vw, 1rem);
   }
 
@@ -3611,7 +3610,7 @@
 body.admin-theme-premium-black {
   --bg: #030303;
   --fg: #fff8ee;
-  --surface-1: #070707;
+  --surface-1: #030303;
   --surface-2: #0d0d0d;
   --surface-3: #141414;
   --surface: var(--surface-1);
@@ -4667,7 +4666,6 @@ button.admin-sidebar-brand--button:focus-visible {
       color-mix(in srgb, var(--surface-2) 70%, var(--surface)) 52%,
       color-mix(in srgb, var(--surface-2) 42%, color-mix(in srgb, var(--bg) 90%, #000)) 100%
     );
-    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-rail-out);
   }
 
   .admin-main-content {
