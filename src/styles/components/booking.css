@@ -363,7 +363,6 @@
     background: var(--admin-premium-surface-bg);
     border: var(--admin-premium-surface-border);
     border-radius: var(--admin-premium-surface-r);
-    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
     padding: clamp(0.55rem, 1.45vw, 0.78rem) clamp(0.65rem, 1.7vw, 1rem);
   }
 
