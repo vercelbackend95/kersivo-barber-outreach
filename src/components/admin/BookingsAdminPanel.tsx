@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
+import { AnimatePresence, motion, useAnimationControls, useReducedMotion, type Variants } from 'framer-motion';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch, { type AdminBookingsOpsSearchBooking } from './AdminBookingsOpsSearch';
@@ -122,6 +122,11 @@ const viewSlideVariantsReduced: Variants = {
   center: { y: 0, opacity: 1, transition: { duration: 0 } },
   exit: { y: 0, opacity: 1, transition: { duration: 0 } },
 };
+
+const BOOKINGS_SUBVIEW_FADE_OUT_SECONDS = 0.12;
+const BOOKINGS_SUBVIEW_FADE_IN_SECONDS = 0.18;
+const BOOKINGS_SUBVIEW_FADE_OUT_EASE = [0.4, 0, 1, 1] as const;
+const BOOKINGS_SUBVIEW_FADE_IN_EASE = [0.16, 1, 0.3, 1] as const;
 
 type WorkingHoursResponse = {
   rules?: WorkingHourRow[];
@@ -788,6 +793,10 @@ export default function BookingsAdminPanel({
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const reduceMotion = useReducedMotion();
   const tabMotionVariants = reduceMotion ? viewSlideVariantsReduced : viewSlideVariants;
+  const bookingsSubviewMotion = useAnimationControls();
+  const bookingsSubviewTransitionTargetRef = useRef<'dashboard' | 'history' | null>(null);
+  const bookingsSubviewTransitionRunRef = useRef(0);
+  const [bookingsSubviewTransitioning, setBookingsSubviewTransitioning] = useState(false);
 
   const inFlightRef = useRef(false);
   /** History "Load more" uses its own lock so it is not blocked by the main bookings fetch / polling. */
@@ -2154,6 +2163,85 @@ export default function BookingsAdminPanel({
   }, [isPublicDemo]);
 
 
+  const switchBookingsSubview = useCallback(
+    async (target: 'dashboard' | 'history') => {
+      if (mode === target || bookingsSubviewTransitionTargetRef.current) return;
+
+      const navigate = target === 'history' ? onOpenHistoryWithinBookings : onBackToDashboard;
+      if (!navigate) return;
+
+      if (reduceMotion) {
+        navigate();
+        return;
+      }
+
+      const runId = bookingsSubviewTransitionRunRef.current + 1;
+      bookingsSubviewTransitionRunRef.current = runId;
+      bookingsSubviewTransitionTargetRef.current = target;
+      setBookingsSubviewTransitioning(true);
+
+      await bookingsSubviewMotion.start({
+        opacity: 0,
+        transition: {
+          duration: BOOKINGS_SUBVIEW_FADE_OUT_SECONDS,
+          ease: BOOKINGS_SUBVIEW_FADE_OUT_EASE,
+        },
+      });
+
+      if (bookingsSubviewTransitionRunRef.current !== runId) return;
+      navigate();
+    },
+    [bookingsSubviewMotion, mode, onBackToDashboard, onOpenHistoryWithinBookings, reduceMotion],
+  );
+
+  useEffect(() => {
+    const target = bookingsSubviewTransitionTargetRef.current;
+    if (!target || mode !== target) return;
+
+    const runId = bookingsSubviewTransitionRunRef.current;
+    if (reduceMotion) {
+      bookingsSubviewMotion.set({ opacity: 1 });
+      bookingsSubviewTransitionTargetRef.current = null;
+      setBookingsSubviewTransitioning(false);
+      return;
+    }
+
+    // The outgoing view has already reached opacity 0. Keep the newly rendered
+    // view invisible for one paint, then fade it in. Two RAFs avoid a one-frame
+    // flash on Safari/iOS when the DOM subtree is substantially different.
+    bookingsSubviewMotion.set({ opacity: 0 });
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        if (bookingsSubviewTransitionRunRef.current !== runId) return;
+        void bookingsSubviewMotion
+          .start({
+            opacity: 1,
+            transition: {
+              duration: BOOKINGS_SUBVIEW_FADE_IN_SECONDS,
+              ease: BOOKINGS_SUBVIEW_FADE_IN_EASE,
+            },
+          })
+          .then(() => {
+            if (bookingsSubviewTransitionRunRef.current !== runId) return;
+            bookingsSubviewTransitionTargetRef.current = null;
+            setBookingsSubviewTransitioning(false);
+          });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [bookingsSubviewMotion, mode, reduceMotion]);
+
+  useEffect(() => () => {
+    bookingsSubviewTransitionRunRef.current += 1;
+    bookingsSubviewTransitionTargetRef.current = null;
+    bookingsSubviewMotion.stop();
+  }, [bookingsSubviewMotion]);
+
   const dashboardOpsDashCluster =
     mode === 'dashboard' ? (
       <div className="admin-bookings-ops-dash-cluster">
@@ -2175,7 +2263,7 @@ export default function BookingsAdminPanel({
                       onKeyDown={(event) => {
                         if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
                         event.preventDefault();
-                        onOpenHistoryWithinBookings?.();
+                        void switchBookingsSubview('history');
                       }}
                     >
                       <button
@@ -2192,7 +2280,7 @@ export default function BookingsAdminPanel({
                         type="button"
                         role="tab"
                         aria-selected="false"
-                        onClick={() => onOpenHistoryWithinBookings?.()}
+                        onClick={() => void switchBookingsSubview('history')}
                       >
                         <ListOrdered className="admin-view-toggle-icon" aria-hidden />
                         <span className="admin-view-toggle-label">History</span>
@@ -2480,9 +2568,14 @@ export default function BookingsAdminPanel({
   if (!isPublicDemo && !loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
-    <section
+    <motion.section
       ref={bookingShellRef}
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
+      initial={false}
+      animate={bookingsSubviewMotion}
+      aria-busy={bookingsSubviewTransitioning || undefined}
+      data-bookings-subview-transitioning={bookingsSubviewTransitioning ? 'true' : undefined}
+      style={{ willChange: bookingsSubviewTransitioning ? 'opacity' : 'auto' }}
     >
       {isBlacklineDemo && bookingProofVisible && bookingProofBookingId ? (
         <BlacklineBookingProofCard
@@ -2650,7 +2743,7 @@ export default function BookingsAdminPanel({
                             type="button"
                             role="tab"
                             aria-selected="false"
-                            onClick={() => onBackToDashboard?.()}
+                            onClick={() => void switchBookingsSubview('dashboard')}
                           >
                             <Clock className="admin-view-toggle-icon" aria-hidden />
                             <span className="admin-view-toggle-label">Timeline</span>
@@ -2890,6 +2983,6 @@ export default function BookingsAdminPanel({
           await fetchBookings();
         }}
       />
-    </section>
+    </motion.section>
   );
 }
