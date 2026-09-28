@@ -300,6 +300,10 @@ export default function AdminPanel({
   const handleSectionChange = useCallback((section: AdminSection) => {
     if (section === activeSection) return;
 
+    const isBookingsSubviewSwitch =
+      (activeSection === 'bookings_dashboard' && section === 'bookings_history_tab') ||
+      (activeSection === 'bookings_history_tab' && section === 'bookings_dashboard');
+
     if (transitionTimeoutRef.current !== null) {
       window.clearTimeout(transitionTimeoutRef.current);
       transitionTimeoutRef.current = null;
@@ -310,7 +314,9 @@ export default function AdminPanel({
     }
 
     setActiveSection(section);
-    setIsEntering(true);
+    // Timeline ↔ History owns its compositor fade inside BookingsAdminPanel.
+    // Avoid stacking the route-level entrance animation on top of that fade.
+    setIsEntering(!isBookingsSubviewSwitch);
     setShowPending(false);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
@@ -320,6 +326,8 @@ export default function AdminPanel({
     if (nextUrl !== currentUrl) {
       window.history.pushState({ adminSection: section }, '', nextUrl);
     }
+
+    if (isBookingsSubviewSwitch) return;
 
     pendingTimeoutRef.current = window.setTimeout(() => {
       setShowPending(true);
