@@ -9,9 +9,7 @@
   overflow: hidden;
   padding: clamp(5.5rem, 9vw, 8.5rem) 0 clamp(4.5rem, 8vw, 7rem);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  background:
-    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--fg) 5%, transparent), transparent 34rem),
-    linear-gradient(180deg, #050505 0%, var(--bg) 48%, #020202 100%);
+  background: #030303;
 }
 
 .fresha-alt-hero__backdrop {
