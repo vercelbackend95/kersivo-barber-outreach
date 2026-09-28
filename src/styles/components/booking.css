@@ -4696,8 +4696,14 @@ button.admin-sidebar-brand--button:focus-visible {
    * timeline itself remains full-bleed.
    */
   .admin-main-content.admin-mobile-edge .admin-next-block--dash-hero-slot,
-  .admin-main-content.admin-mobile-edge .admin-bookings-ops--dashboard,
-  .admin-main-content.admin-mobile-edge .admin-analytics-studio--bookings-reports {
+  .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
+  .admin-main-content.admin-mobile-edge .admin-bookings-schedule.admin-bookings-schedule--history,
+  .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
+  .admin-main-content.admin-mobile-edge .admin-clients-table-wrap,
+  .admin-main-content.admin-mobile-edge .admin-reports.admin-services-panel,
+  .admin-main-content.admin-mobile-edge .admin-reports.admin-products-panel,
+  .admin-main-content.admin-mobile-edge .admin-orders-panel,
+  .admin-main-content.admin-mobile-edge .admin-reports.admin-sales-panel {
     box-sizing: border-box;
     padding-left: 8px;
     padding-right: 8px;
