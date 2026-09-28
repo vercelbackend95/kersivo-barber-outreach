@@ -49,10 +49,16 @@ export default function HistoryDateRangePicker({
   const [selectionMode, setSelectionMode] = useState<'single' | 'range'>('range');
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const [panelStyle, setPanelStyle] = useState<{ top: number; left: number; width: number }>({
+  const [panelStyle, setPanelStyle] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  }>({
     top: 64,
     left: 16,
     width: 240,
+    maxHeight: 520,
   });
 
   const isSegmentVariant = variant === 'segment';
@@ -79,14 +85,40 @@ export default function HistoryDateRangePicker({
     const trigger = triggerRef.current;
     if (!trigger) return;
 
+    const viewportPadding = 12;
     const rect = trigger.getBoundingClientRect();
-    const panelWidth = Math.min(isDateLabelVariant ? 360 : 280, window.innerWidth - 24);
+    const mainContent = trigger.closest('.admin-main-content') as HTMLElement | null;
+    const mainRect = isDateLabelVariant ? mainContent?.getBoundingClientRect() : null;
+
+    const boundaryLeft = mainRect
+      ? Math.max(viewportPadding, mainRect.left + viewportPadding)
+      : viewportPadding;
+    const boundaryRight = mainRect
+      ? Math.min(window.innerWidth - viewportPadding, mainRect.right - viewportPadding)
+      : window.innerWidth - viewportPadding;
+    const availableWidth = Math.max(0, boundaryRight - boundaryLeft);
+    const desiredWidth = isDateLabelVariant ? 420 : 280;
+    const panelWidth = Math.min(desiredWidth, availableWidth);
+
+    const preferredLeft = rect.right - panelWidth;
     const left = Math.min(
-      Math.max(12, rect.right - panelWidth),
-      window.innerWidth - panelWidth - 12,
+      Math.max(boundaryLeft, preferredLeft),
+      Math.max(boundaryLeft, boundaryRight - panelWidth),
     );
-    const top = rect.bottom + 8;
-    setPanelStyle({ top, left, width: panelWidth });
+
+    const maxHeight = Math.max(180, window.innerHeight - viewportPadding * 2);
+    const measuredHeight = panelRef.current?.getBoundingClientRect().height ?? (isDateLabelVariant ? 360 : 280);
+    const panelHeight = Math.min(measuredHeight, maxHeight);
+    const belowTop = rect.bottom + 8;
+    const aboveTop = rect.top - panelHeight - 8;
+    const top =
+      belowTop + panelHeight <= window.innerHeight - viewportPadding
+        ? belowTop
+        : aboveTop >= viewportPadding
+          ? aboveTop
+          : viewportPadding;
+
+    setPanelStyle({ top, left, width: panelWidth, maxHeight });
   }, [isDateLabelVariant]);
 
   useEffect(() => {
@@ -346,6 +378,7 @@ export default function HistoryDateRangePicker({
         top: `${panelStyle.top}px`,
         left: `${panelStyle.left}px`,
         width: `${panelStyle.width}px`,
+        maxHeight: `${panelStyle.maxHeight}px`,
       }}
     >
       {isDateLabelVariant ? dateLabelPanel : legacyPanel}
