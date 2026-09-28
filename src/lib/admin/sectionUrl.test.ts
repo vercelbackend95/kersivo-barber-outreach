@@ -7,6 +7,7 @@ describe('admin SPA section URLs', () => {
     expect(resolveAdminSpaSection('team')).toBe('bookings_blocks');
     expect(resolveAdminSpaSection('timeline')).toBe('bookings_dashboard');
     expect(resolveAdminSpaSection('bookings_history_tab')).toBe('bookings_history_tab');
+    expect(resolveAdminSpaSection('bookings_history')).toBe('bookings_history_tab');
     expect(resolveAdminSpaSection(null)).toBe('bookings_dashboard');
   });
 
@@ -14,6 +15,7 @@ describe('admin SPA section URLs', () => {
     expect(parseAdminSpaHref('/admin?section=services')).toBe('services');
     expect(parseAdminSpaHref('/admin-demo?section=shop_orders')).toBe('shop_orders');
     expect(parseAdminSpaHref('/admin?section=bookings_history_tab')).toBe('bookings_history_tab');
+    expect(parseAdminSpaHref('/admin?section=bookings_history')).toBe('bookings_history_tab');
     expect(parseAdminSpaHref('/admin')).toBe('bookings_dashboard');
     expect(parseAdminSpaHref('/admin/onboarding')).toBeNull();
     expect(parseAdminSpaHref('/admin/launch')).toBeNull();
