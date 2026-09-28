@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 
 const TIMEZONE = 'Europe/London';
+
+afterEach(() => {
+  cleanup();
+});
 
 function ymd(date: Date): string {
   return formatInTimeZone(date, TIMEZONE, 'yyyy-MM-dd');
