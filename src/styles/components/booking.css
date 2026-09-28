@@ -5007,7 +5007,6 @@ button.admin-sidebar-brand--button:focus-visible {
 .admin-products-toolbar-sticky {
   margin-bottom: 0;
   padding-bottom: var(--space-xs);
-  background: color-mix(in srgb, var(--surface) 60%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
 }
@@ -19969,6 +19968,10 @@ button.admin-leaderboard-avatar--action:focus-visible {
 
 /* Desktop/tablet: visible 8px outer gutter for full-width admin surfaces. */
 @media (min-width: 48.0625rem) {
+  .admin-main-content.admin-mobile-edge .admin-reports-body {
+    padding-top: 8px;
+  }
+
   .admin-main-content.admin-mobile-edge .admin-quick-blocks,
   .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
   .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
