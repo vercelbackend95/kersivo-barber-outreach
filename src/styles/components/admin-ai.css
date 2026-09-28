@@ -15,6 +15,14 @@
   min-width: 0;
 }
 
+@media (min-width: 48.0625rem) {
+  .admin-main-content.admin-mobile-edge .admin-assistant-layout {
+    box-sizing: border-box;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
 .admin-assistant-chat {
   display: flex;
   flex-direction: column;
