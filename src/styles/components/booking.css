@@ -3610,7 +3610,7 @@
 body.admin-theme-premium-black {
   --bg: #030303;
   --fg: #fff8ee;
-  --surface-1: #070707;
+  --surface-1: #030303;
   --surface-2: #0d0d0d;
   --surface-3: #141414;
   --surface: var(--surface-1);
