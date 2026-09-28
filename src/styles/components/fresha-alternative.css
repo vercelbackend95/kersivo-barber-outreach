@@ -22,17 +22,6 @@
   pointer-events: none;
 }
 
-.fresha-alt-hero__grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.26;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--border) 38%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 38%, transparent) 1px, transparent 1px);
-  background-size: 4.5rem 4.5rem;
-  mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 92%);
-}
-
 .fresha-alt-hero__beam {
   position: absolute;
   top: -12rem;
@@ -40,12 +29,6 @@
   height: 54rem;
   filter: blur(18px);
   opacity: 0.72;
-}
-
-.fresha-alt-hero__beam--left {
-  left: -24rem;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 12%, transparent), transparent 68%);
-  transform: rotate(17deg);
 }
 
 .fresha-alt-hero__beam--right {
@@ -246,11 +229,6 @@
   .fresha-alt-hero {
     padding-top: 4.35rem;
     padding-bottom: 3.7rem;
-  }
-
-  .fresha-alt-hero__grid {
-    background-size: 3.4rem 3.4rem;
-    opacity: 0.2;
   }
 
   .fresha-alt-hero__content {
