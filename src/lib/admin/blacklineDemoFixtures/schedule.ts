@@ -294,6 +294,12 @@ export function getBlacklineBookingsResponse(searchParams?: URLSearchParams, now
   };
 }
 
+function compareHistoryBookingsDesc(a: BlacklineBooking, b: BlacklineBooking): number {
+  const startDelta = new Date(b.startAt).getTime() - new Date(a.startAt).getTime();
+  if (startDelta !== 0) return startDelta;
+  return b.id.localeCompare(a.id);
+}
+
 export function getBlacklineHistoryBookings(days = 30, now = new Date()): BlacklineBooking[] {
   const clock = coarseLondonNow(now);
   const rows: BlacklineBooking[] = [];
@@ -301,7 +307,7 @@ export function getBlacklineHistoryBookings(days = 30, now = new Date()): Blackl
     const dayKey = dayKeyDaysAgo(ago, clock);
     rows.push(...getBlacklineBookingsForDayKey(dayKey, { now: clock, forHistory: true }));
   }
-  return rows.sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  return rows.sort(compareHistoryBookingsDesc);
 }
 
 export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchParams, now = new Date()) {
@@ -326,7 +332,7 @@ export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchPara
     bookings = [
       ...getBlacklineBookingsForDayKey(todayKey, { now: clock, forHistory: false }),
       ...bookings,
-    ].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+    ].sort(compareHistoryBookingsDesc);
   }
 
   if (barberId && barberId !== 'all') {
