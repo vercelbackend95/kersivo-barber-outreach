@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseAdminSpaHref, resolveAdminSpaSection } from './sectionUrl';
+import { ADMIN_SPA_SECTIONS, parseAdminSpaHref, resolveAdminSpaSection } from './sectionUrl';
 
 describe('admin SPA section URLs', () => {
   it('resolves aliases and missing values to canonical sections', () => {
@@ -9,6 +9,11 @@ describe('admin SPA section URLs', () => {
     expect(resolveAdminSpaSection('bookings_history_tab')).toBe('bookings_history_tab');
     expect(resolveAdminSpaSection('bookings_history')).toBe('bookings_history_tab');
     expect(resolveAdminSpaSection(null)).toBe('bookings_dashboard');
+  });
+
+  it('does not expose legacy standalone History as a canonical admin section', () => {
+    expect(ADMIN_SPA_SECTIONS).not.toContain('bookings_history');
+    expect(ADMIN_SPA_SECTIONS).toContain('bookings_history_tab');
   });
 
   it('parses in-SPA hrefs and rejects wizard/full-page exits', () => {
