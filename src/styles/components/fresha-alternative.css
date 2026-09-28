@@ -1,61 +1,121 @@
-
 /* ============================================================
-   Fresha Alternative hero — page-local, no shared-page changes.
+   Fresha Alternative hero — editorial / brand-led direction.
+   No fake product UI. Page-local only.
    ============================================================ */
 
 .fresha-alt-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding-block: clamp(3rem, 7vw, 6.5rem);
+  min-height: min(56rem, calc(100svh - 4rem));
+  padding-block: clamp(2rem, 4.5vw, 4.25rem) clamp(2.25rem, 5vw, 4.75rem);
   border-bottom: 1px solid var(--border);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 42%, var(--bg)) 0%, var(--bg) 74%);
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 35%, var(--bg)) 0%, var(--bg) 66%);
 }
 
-.fresha-alt-hero__ambient {
+.fresha-alt-hero__atmosphere {
   position: absolute;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 80% 28%, color-mix(in srgb, var(--accent) 15%, transparent) 0, transparent 34%),
-    radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--fg) 4%, transparent) 0, transparent 28%);
 }
 
-.fresha-alt-hero__ambient::after {
+.fresha-alt-hero__atmosphere::before {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.22;
+  opacity: 0.3;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--border) 58%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 58%, transparent) 1px, transparent 1px);
-  background-size: 4rem 4rem;
-  mask-image: linear-gradient(to bottom, black, transparent 82%);
+    linear-gradient(color-mix(in srgb, var(--border) 48%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 48%, transparent) 1px, transparent 1px);
+  background-size: clamp(3rem, 5vw, 5.5rem) clamp(3rem, 5vw, 5.5rem);
+  mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 88%);
 }
 
-.fresha-alt-hero__grid {
+.fresha-alt-hero__halo {
+  position: absolute;
+  top: -32%;
+  right: -10%;
+  width: min(58vw, 58rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent) 0%, color-mix(in srgb, var(--accent) 7%, transparent) 30%, transparent 67%);
+  filter: blur(8px);
+}
+
+.fresha-alt-hero__monogram {
+  position: absolute;
+  top: 7%;
+  right: -0.045em;
+  font-family: 'Antonio', var(--font-heading), sans-serif;
+  font-size: clamp(24rem, 47vw, 47rem);
+  font-weight: 800;
+  line-height: 0.75;
+  letter-spacing: -0.08em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--fg) 6%, transparent);
+  opacity: 0.75;
+  user-select: none;
+}
+
+.fresha-alt-hero__axis {
+  position: absolute;
+  top: 0;
+  right: clamp(4%, 8vw, 11%);
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 34%, transparent) 25%,
+    color-mix(in srgb, var(--accent) 20%, transparent) 68%,
+    transparent 100%
+  );
+}
+
+.fresha-alt-hero__axis::before {
+  content: '';
+  position: absolute;
+  top: 32%;
+  left: 50%;
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 0.35rem color-mix(in srgb, var(--accent) 9%, transparent),
+    0 0 2rem color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.fresha-alt-hero__inner {
   display: grid;
-  gap: clamp(2.2rem, 5vw, 5.5rem);
+  min-width: 0;
+}
+
+.fresha-alt-hero__masthead {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  min-width: 0;
+  gap: 1rem;
+  min-height: 2.25rem;
 }
 
-.fresha-alt-hero__copy {
-  display: grid;
-  gap: 1.25rem;
-  min-width: 0;
+.fresha-alt-hero__eyebrow,
+.fresha-alt-hero__edition,
+.fresha-alt-hero__chapter,
+.fresha-alt-hero__index-label,
+.fresha-alt-hero__footer p {
+  margin: 0;
 }
 
 .fresha-alt-hero__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0;
-  font-size: 0.72rem;
+  gap: 0.62rem;
+  font-size: 0.67rem;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -63,504 +123,277 @@
   color: color-mix(in srgb, var(--fg) 78%, var(--muted));
 }
 
-.fresha-alt-hero__eyebrow-mark {
-  width: 0.58rem;
-  height: 0.58rem;
+.fresha-alt-hero__signal {
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 0.12rem;
-  background: var(--accent);
-  box-shadow: 0 0 1.4rem color-mix(in srgb, var(--accent) 52%, transparent);
   flex: 0 0 auto;
+  background: var(--accent);
+  box-shadow: 0 0 1.3rem color-mix(in srgb, var(--accent) 48%, transparent);
 }
 
-.fresha-alt-hero__title {
-  margin: 0;
-  max-width: 13ch;
-  font-family: 'Antonio', var(--font-heading), sans-serif;
-  font-size: clamp(2.7rem, 8.5vw, 5.8rem);
-  font-weight: 800;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
+.fresha-alt-hero__edition {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+.fresha-alt-hero__edition span:first-child {
   color: var(--fg);
 }
 
-.fresha-alt-hero__title span {
+.fresha-alt-hero__headline-wrap {
+  position: relative;
+  padding-top: clamp(3rem, 7vw, 6.75rem);
+}
+
+.fresha-alt-hero__chapter {
+  position: absolute;
+  top: clamp(1.1rem, 2.8vw, 2.3rem);
+  right: 0;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--muted) 62%, transparent);
+}
+
+.fresha-alt-hero__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 12.5ch;
+  font-family: 'Antonio', var(--font-heading), sans-serif;
+  font-size: clamp(3.25rem, 8.8vw, 8.35rem);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.fresha-alt-hero__title-line {
   display: block;
-  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+}
+
+.fresha-alt-hero__title-line--muted {
+  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+}
+
+.fresha-alt-hero__title-line--accent {
+  position: relative;
+  width: fit-content;
+  color: var(--accent);
+  text-shadow: 0 0 2.8rem color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.fresha-alt-hero__title-line--accent::after {
+  content: '';
+  position: absolute;
+  left: 0.03em;
+  right: 0;
+  bottom: -0.055em;
+  height: 0.035em;
+  background: var(--accent);
+  transform-origin: left center;
+}
+
+.fresha-alt-hero__rule {
+  position: relative;
+  height: 1px;
+  margin-top: clamp(2rem, 4vw, 3.75rem);
+  background: color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+.fresha-alt-hero__rule span {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: clamp(4rem, 10vw, 8rem);
+  height: 2px;
+  background: var(--accent);
+}
+
+.fresha-alt-hero__lower {
+  display: grid;
+  gap: clamp(2rem, 4vw, 4rem);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.fresha-alt-hero__copy {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+  min-width: 0;
 }
 
 .fresha-alt-hero__intro {
   margin: 0;
   max-width: 59ch;
-  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  font-size: clamp(0.98rem, 1.3vw, 1.08rem);
   line-height: 1.7;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--muted) 94%, var(--fg));
   text-wrap: pretty;
 }
 
 .fresha-alt-hero__commercial {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.75rem;
+  gap: 0.35rem 0.7rem;
   align-items: baseline;
   margin: 0;
-  font-size: 0.95rem;
-  color: color-mix(in srgb, var(--fg) 76%, var(--muted));
+  font-size: 0.92rem;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
 }
 
 .fresha-alt-hero__commercial strong {
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   color: var(--fg);
 }
 
 .fresha-alt-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  align-items: stretch;
-  padding-top: 0.2rem;
-}
-
-.fresha-alt-hero__action {
-  min-height: 3.35rem;
-  padding-inline: 1.35rem;
-}
-
-.fresha-alt-hero__action--secondary {
-  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
-  backdrop-filter: blur(10px);
-}
-
-.fresha-alt-hero__proof {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.75rem;
   padding-top: 0.25rem;
 }
 
-.fresha-alt-hero__proof span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.42rem 0.68rem;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
-  font-size: 0.64rem;
-  line-height: 1;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
-  white-space: nowrap;
+.fresha-alt-hero__action {
+  min-height: 3.25rem;
+  padding-inline: 1.25rem;
 }
 
-.fresha-alt-hero__visual {
-  position: relative;
-  min-width: 0;
-  padding: clamp(1rem, 2vw, 1.4rem);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--accent));
-  border-radius: clamp(1.25rem, 3vw, 2rem);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--surface-2) 90%, var(--bg)) 0%, var(--surface-1) 70%);
-  box-shadow:
-    0 2.5rem 5rem rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent);
-}
-
-.fresha-alt-hero__visual::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 36%, transparent), transparent 38%);
-  filter: blur(1.4rem);
-  opacity: 0.5;
-}
-
-.fresha-alt-hero__visual-grid {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.26;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--border) 70%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 70%, transparent) 1px, transparent 1px);
-  background-size: 2rem 2rem;
-  mask-image: radial-gradient(circle at 55% 45%, black 0%, transparent 72%);
-}
-
-.fresha-alt-hero__visual-label {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.85rem;
-  padding-inline: 0.15rem;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  color: color-mix(in srgb, var(--fg) 52%, var(--muted));
-}
-
-.fresha-alt-hero__visual-label-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
-.fresha-alt-hero__browser {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg));
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--bg) 94%, var(--surface-1));
-  box-shadow: 0 1.6rem 3.5rem rgba(0, 0, 0, 0.28);
-}
-
-.fresha-alt-hero__browser-top {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  align-items: center;
-  min-height: 2.6rem;
-  padding: 0.55rem 0.72rem;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-2) 92%, var(--bg));
-}
-
-.fresha-alt-hero__browser-dots {
-  display: flex;
-  gap: 0.28rem;
-}
-
-.fresha-alt-hero__browser-dots span {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--muted) 34%, transparent);
-}
-
-.fresha-alt-hero__browser-dots span:first-child {
-  background: var(--accent);
-}
-
-.fresha-alt-hero__domain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.38rem;
-  min-width: 0;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 86%, var(--surface-1));
-  font-size: 0.68rem;
-  color: color-mix(in srgb, var(--fg) 66%, var(--muted));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.fresha-alt-hero__lock {
-  width: 0.45rem;
-  height: 0.38rem;
-  border: 1px solid color-mix(in srgb, var(--muted) 78%, transparent);
-  border-radius: 0.08rem;
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.fresha-alt-hero__lock::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 0.28rem;
-  height: 0.22rem;
-  border: 1px solid color-mix(in srgb, var(--muted) 78%, transparent);
-  border-bottom: 0;
-  border-radius: 0.3rem 0.3rem 0 0;
-  transform: translateX(-50%);
-}
-
-.fresha-alt-hero__browser-kersivo {
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--fg) 48%, var(--muted));
-}
-
-.fresha-alt-hero__site {
-  min-height: 24rem;
-  padding: clamp(1.05rem, 2vw, 1.5rem);
-  background:
-    radial-gradient(circle at 76% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 36%),
-    linear-gradient(160deg, var(--bg), color-mix(in srgb, var(--surface-1) 82%, var(--bg)));
-}
-
-.fresha-alt-hero__site-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding-bottom: 1.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-}
-
-.fresha-alt-hero__site-kicker,
-.fresha-alt-hero__site-name {
-  margin: 0;
-}
-
-.fresha-alt-hero__site-kicker {
-  margin-bottom: 0.2rem;
-  font-size: 0.54rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: color-mix(in srgb, var(--muted) 75%, transparent);
-}
-
-.fresha-alt-hero__site-name {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  letter-spacing: 0.06em;
-  color: var(--fg);
-}
-
-.fresha-alt-hero__book-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 0.4rem;
-  background: var(--accent);
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: white;
-}
-
-.fresha-alt-hero__site-main {
-  display: grid;
-  gap: 1.35rem;
-  padding-top: clamp(1.5rem, 4vw, 2.25rem);
-}
-
-.fresha-alt-hero__site-copy {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.fresha-alt-hero__site-label {
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  color: var(--accent);
-}
-
-.fresha-alt-hero__site-heading {
-  margin: 0;
-  max-width: 13ch;
-  font-family: var(--font-heading);
-  font-size: clamp(1.65rem, 4vw, 2.6rem);
-  line-height: 1.04;
-  text-transform: uppercase;
-  color: var(--fg);
-}
-
-.fresha-alt-hero__site-body {
-  margin: 0;
-  max-width: 35ch;
-  font-size: 0.78rem;
-  line-height: 1.55;
-  color: var(--muted);
-}
-
-.fresha-alt-hero__booking-card {
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 85%, var(--fg));
-  border-radius: 0.85rem;
-  background: color-mix(in srgb, var(--surface-1) 92%, var(--bg));
-}
-
-.fresha-alt-hero__booking-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.52rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--muted) 82%, transparent);
-}
-
-.fresha-alt-hero__booking-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: center;
-  min-height: 3rem;
-  padding: 0.7rem 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  font-size: 0.72rem;
-  color: color-mix(in srgb, var(--fg) 68%, var(--muted));
-}
-
-.fresha-alt-hero__booking-row:last-child {
-  border-bottom: 0;
-}
-
-.fresha-alt-hero__booking-row > div {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.fresha-alt-hero__booking-row--active {
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface-1));
-  color: var(--fg);
-}
-
-.fresha-alt-hero__booking-step {
-  display: inline-grid;
-  place-items: center;
-  width: 1.45rem;
-  height: 1.45rem;
-  border: 1px solid color-mix(in srgb, var(--border) 84%, var(--fg));
-  border-radius: 0.35rem;
-  font-size: 0.52rem;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.fresha-alt-hero__booking-row--active .fresha-alt-hero__booking-step {
-  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
-  color: var(--accent);
-}
-
-.fresha-alt-hero__ownership-stack {
-  position: relative;
-  display: grid;
-  gap: 0.55rem;
-  margin-top: 0.8rem;
-}
-
-.fresha-alt-hero__ownership-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.7rem;
-  align-items: center;
-  min-width: 0;
-  padding: 0.72rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--surface-1) 76%, transparent);
+.fresha-alt-hero__action--secondary {
+  border-color: color-mix(in srgb, var(--border) 78%, var(--fg));
+  background: color-mix(in srgb, var(--surface-1) 52%, transparent);
   backdrop-filter: blur(12px);
 }
 
-.fresha-alt-hero__ownership-index {
+.fresha-alt-hero__index {
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+}
+
+.fresha-alt-hero__index-label {
+  padding-block: 0.72rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--muted) 66%, transparent);
+}
+
+.fresha-alt-hero__index-row {
   display: grid;
-  place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 0.42rem;
-  background: color-mix(in srgb, var(--accent) 11%, transparent);
-  font-size: 0.55rem;
-  font-weight: 900;
+  grid-template-columns: 2.35rem minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 3.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+}
+
+.fresha-alt-hero__index-number {
+  font-size: 0.58rem;
+  font-weight: 800;
   color: var(--accent);
 }
 
-.fresha-alt-hero__ownership-item > div {
-  min-width: 0;
-}
-
-.fresha-alt-hero__ownership-label {
-  display: block;
-  margin-bottom: 0.08rem;
-  font-size: 0.5rem;
+.fresha-alt-hero__index-name {
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--muted) 70%, transparent);
-}
-
-.fresha-alt-hero__ownership-item strong {
-  display: block;
-  overflow: hidden;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: color-mix(in srgb, var(--fg) 84%, var(--muted));
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fresha-alt-hero__signature {
-  position: absolute;
-  right: clamp(0.7rem, 2vw, 1.1rem);
-  bottom: clamp(0.65rem, 2vw, 1rem);
-  display: none;
-  align-items: baseline;
-  gap: 0.42rem;
-  padding: 0.4rem 0.58rem;
-  border-radius: 0.45rem;
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(10px);
-  font-size: 0.48rem;
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--muted) 76%, transparent);
-}
-
-.fresha-alt-hero__signature strong {
+  letter-spacing: 0.08em;
   color: var(--fg);
 }
 
-@media (min-width: 46rem) {
-  .fresha-alt-hero__ownership-stack {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.fresha-alt-hero__index-note {
+  justify-self: end;
+  text-align: right;
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+}
+
+.fresha-alt-hero__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+
+.fresha-alt-hero__footer-mark {
+  color: color-mix(in srgb, var(--fg) 74%, var(--muted));
 }
 
 @media (min-width: 64rem) {
-  .fresha-alt-hero {
-    padding-block: clamp(4.2rem, 6vw, 6.8rem);
+  .fresha-alt-hero__lower {
+    grid-template-columns: minmax(0, 1.15fr) minmax(24rem, 0.85fr);
+    align-items: start;
   }
 
-  .fresha-alt-hero__grid {
-    grid-template-columns: minmax(0, 0.92fr) minmax(31rem, 1.08fr);
-  }
-
-  .fresha-alt-hero__title {
-    font-size: clamp(3.5rem, 5.4vw, 5.8rem);
-  }
-
-  .fresha-alt-hero__visual {
-    transform: perspective(1200px) rotateY(-1.5deg) rotateX(0.5deg);
-    transform-origin: center;
-  }
-
-  .fresha-alt-hero__site-main {
-    grid-template-columns: minmax(0, 0.82fr) minmax(13rem, 1.18fr);
-    align-items: center;
-  }
-
-  .fresha-alt-hero__signature {
-    display: inline-flex;
+  .fresha-alt-hero__index {
+    margin-top: 0.15rem;
   }
 }
 
-@media (max-width: 39.99rem) {
+@media (max-width: 48rem) {
   .fresha-alt-hero {
-    padding-top: 2.5rem;
+    min-height: 0;
+  }
+
+  .fresha-alt-hero__edition {
+    display: none;
+  }
+
+  .fresha-alt-hero__chapter {
+    display: none;
+  }
+
+  .fresha-alt-hero__monogram {
+    top: 16%;
+    right: -0.12em;
+    font-size: clamp(20rem, 95vw, 29rem);
+    opacity: 0.46;
+  }
+
+  .fresha-alt-hero__axis {
+    right: 8%;
+    opacity: 0.6;
   }
 
   .fresha-alt-hero__title {
-    font-size: clamp(2.65rem, 14vw, 4rem);
+    max-width: 10.5ch;
+    font-size: clamp(3.15rem, 16vw, 5.3rem);
+    line-height: 0.91;
+  }
+
+  .fresha-alt-hero__lower {
+    gap: 2.25rem;
+  }
+
+  .fresha-alt-hero__index-row {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+
+  .fresha-alt-hero__index-note {
+    grid-column: 2;
+    justify-self: start;
+    padding-bottom: 0.75rem;
+    text-align: left;
+  }
+}
+
+@media (max-width: 38rem) {
+  .fresha-alt-hero__eyebrow {
+    max-width: 28ch;
   }
 
   .fresha-alt-hero__actions {
@@ -571,44 +404,53 @@
     width: 100%;
   }
 
-  .fresha-alt-hero__proof {
-    display: grid;
-    grid-template-columns: 1fr;
+  .fresha-alt-hero__footer {
+    align-items: flex-end;
   }
 
-  .fresha-alt-hero__proof span {
-    justify-content: center;
-  }
-
-  .fresha-alt-hero__browser-kersivo {
-    display: none;
-  }
-
-  .fresha-alt-hero__browser-top {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .fresha-alt-hero__site {
-    min-height: 0;
+  .fresha-alt-hero__footer p:first-child {
+    max-width: 20ch;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .fresha-alt-hero__visual {
-    animation: freshaHeroSettle 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  .fresha-alt-hero__title-line {
+    animation: freshaHeadlineIn 620ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
   }
 
-  @keyframes freshaHeroSettle {
+  .fresha-alt-hero__title-line:nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .fresha-alt-hero__title-line:nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  .fresha-alt-hero__rule span {
+    animation: freshaRuleIn 720ms 180ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  }
+
+  @keyframes freshaHeadlineIn {
     from {
       opacity: 0;
-      transform: translateY(1rem) scale(0.985);
+      transform: translateY(0.22em);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes freshaRuleIn {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
     }
   }
 }
+
 
 
 /* Fresha Alternative — isolated draft page styles.
