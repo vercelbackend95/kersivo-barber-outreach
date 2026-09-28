@@ -7,6 +7,7 @@ import {
   getBlacklineBarbersResponse,
   getBlacklineBookingsForDayKey,
   getBlacklineBookingsResponse,
+  getBlacklineBookingsHistoryResponse,
   getBlacklineClientsResponse,
   getBlacklineHistoryBookings,
   getBlacklineReportsResponse,
@@ -15,7 +16,7 @@ import {
   blacklineServicesResponse,
   blacklineShopProductsResponse,
 } from './index';
-import { blacklineDayKey, tradingWindow } from './time';
+import { blacklineDayKey, londonDayBounds, tradingWindow } from './time';
 
 const LONDON_WEDNESDAY = new Date('2026-08-12T12:00:00.000Z'); // Wednesday in London (BST)
 
@@ -116,6 +117,77 @@ describe('BLACKLINE admin fixtures', () => {
       expect(endHour * 60 + endMinute).toBeLessThanOrEqual(17 * 60);
     }
     expect(blacklineDayKey(LONDON_WEDNESDAY)).toBe('2026-08-12');
+  });
+
+  it('keeps Bookings history past-only until today is explicitly included', () => {
+    const todayKey = blacklineDayKey(LONDON_WEDNESDAY);
+
+    const pastOnly = getBlacklineBookingsHistoryResponse(
+      new URLSearchParams({ scope: 'past', limit: '100' }),
+      LONDON_WEDNESDAY,
+    ).bookings;
+    expect(
+      pastOnly.every(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') < todayKey,
+      ),
+    ).toBe(true);
+
+    const withToday = getBlacklineBookingsHistoryResponse(
+      new URLSearchParams({ scope: 'past', includeToday: '1', limit: '100' }),
+      LONDON_WEDNESDAY,
+    ).bookings;
+    expect(
+      withToday.some(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') === todayKey,
+      ),
+    ).toBe(true);
+    expect(
+      withToday.every(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') <= todayKey,
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps BLACKLINE History date bounds DST-safe and single-day filtering exact', () => {
+    const spring = londonDayBounds('2026-03-29');
+    const autumn = londonDayBounds('2026-10-25');
+    expect(spring.ltMs - spring.gteMs).toBe(23 * 60 * 60 * 1000);
+    expect(autumn.ltMs - autumn.gteMs).toBe(25 * 60 * 60 * 1000);
+
+    const singleDay = getBlacklineBookingsHistoryResponse(
+      new URLSearchParams({
+        scope: 'past',
+        from: '2026-08-11',
+        to: '2026-08-11',
+        limit: '100',
+      }),
+      LONDON_WEDNESDAY,
+    ).bookings;
+
+    expect(singleDay.length).toBeGreaterThan(0);
+    expect(
+      singleDay.every(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') === '2026-08-11',
+      ),
+    ).toBe(true);
+  });
+
+  it('paginates BLACKLINE History without duplicates or gaps when start times tie', () => {
+    const expected = getBlacklineHistoryBookings(30, LONDON_WEDNESDAY).slice(0, 40).map((row) => row.id);
+    const seen: string[] = [];
+    let cursor = '';
+
+    for (let pageIndex = 0; pageIndex < expected.length; pageIndex += 1) {
+      const params = new URLSearchParams({ scope: 'past', limit: '1' });
+      if (cursor) params.set('cursor', cursor);
+      const page = getBlacklineBookingsHistoryResponse(params, LONDON_WEDNESDAY);
+      expect(page.bookings).toHaveLength(1);
+      seen.push(page.bookings[0]!.id);
+      cursor = page.cursor ?? '';
+    }
+
+    expect(new Set(seen).size).toBe(seen.length);
+    expect(seen).toEqual(expected);
   });
 
   it('derives reports, orders and sales from the same fixture records', () => {

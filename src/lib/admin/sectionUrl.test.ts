@@ -1,17 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { parseAdminSpaHref, resolveAdminSpaSection } from './sectionUrl';
+import { ADMIN_SPA_SECTIONS, parseAdminSpaHref, resolveAdminSpaSection } from './sectionUrl';
 
 describe('admin SPA section URLs', () => {
   it('resolves aliases and missing values to canonical sections', () => {
     expect(resolveAdminSpaSection('bookings_services')).toBe('services');
     expect(resolveAdminSpaSection('team')).toBe('bookings_blocks');
     expect(resolveAdminSpaSection('timeline')).toBe('bookings_dashboard');
+    expect(resolveAdminSpaSection('bookings_history_tab')).toBe('bookings_history_tab');
+    expect(resolveAdminSpaSection('bookings_history')).toBe('bookings_history_tab');
     expect(resolveAdminSpaSection(null)).toBe('bookings_dashboard');
+  });
+
+  it('does not expose legacy standalone History as a canonical admin section', () => {
+    expect(ADMIN_SPA_SECTIONS).not.toContain('bookings_history');
+    expect(ADMIN_SPA_SECTIONS).toContain('bookings_history_tab');
   });
 
   it('parses in-SPA hrefs and rejects wizard/full-page exits', () => {
     expect(parseAdminSpaHref('/admin?section=services')).toBe('services');
     expect(parseAdminSpaHref('/admin-demo?section=shop_orders')).toBe('shop_orders');
+    expect(parseAdminSpaHref('/admin?section=bookings_history_tab')).toBe('bookings_history_tab');
+    expect(parseAdminSpaHref('/admin?section=bookings_history')).toBe('bookings_history_tab');
     expect(parseAdminSpaHref('/admin')).toBe('bookings_dashboard');
     expect(parseAdminSpaHref('/admin/onboarding')).toBeNull();
     expect(parseAdminSpaHref('/admin/launch')).toBeNull();

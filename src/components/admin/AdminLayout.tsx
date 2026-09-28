@@ -5,7 +5,6 @@ import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
 import {
   BarChart2,
   Calendar,
-  Clock,
   LogOut,
   Menu,
   Package,
@@ -88,7 +87,6 @@ const menuGroups: SectionGroup[] = [
       { section: 'bookings_dashboard', label: 'Bookings', icon: <Calendar {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
       { section: 'bookings_blocks', label: 'Team', icon: <Users {...ICON} />, anyOf: ['catalog.manage', 'members.manage', 'members.invite_barber', 'team.read'] },
       { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} />, anyOf: ['reports.view'] },
-      { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
       { section: 'bookings_clients', label: 'Clients', icon: <User {...ICON} />, anyOf: ['clients.read'] },
       { section: 'services', label: 'Services', icon: <Scissors {...ICON} />, anyOf: ['catalog.manage'] },
     ],

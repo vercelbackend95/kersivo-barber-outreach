@@ -52,7 +52,11 @@ export default function AdminBookingDatePicker({
         type="date"
         className="admin-filter-tab-calendar-input"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          if (!nextValue) return;
+          onChange(nextValue);
+        }}
         aria-label="Select date"
       />
       {showIcon ? (
