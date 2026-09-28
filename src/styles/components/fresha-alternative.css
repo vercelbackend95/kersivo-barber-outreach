@@ -1,402 +1,404 @@
 /* ============================================================
-   Fresha Alternative hero — editorial / brand-led direction.
-   No fake product UI. Page-local only.
+   Fresha Alternative hero — product-first / Linear × Vercel direction.
+   The live BLACKLINE/KERSIVO dashboard is the proof, not decoration.
    ============================================================ */
 
 .fresha-alt-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: min(56rem, calc(100svh - 4rem));
-  padding-block: clamp(2rem, 4.5vw, 4.25rem) clamp(2.25rem, 5vw, 4.75rem);
-  border-bottom: 1px solid var(--border);
+  padding: clamp(5.5rem, 9vw, 8.5rem) 0 clamp(4.5rem, 8vw, 7rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 35%, var(--bg)) 0%, var(--bg) 66%);
+    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--fg) 5%, transparent), transparent 34rem),
+    linear-gradient(180deg, #050505 0%, var(--bg) 48%, #020202 100%);
 }
 
-.fresha-alt-hero__atmosphere {
+.fresha-alt-hero__backdrop {
   position: absolute;
   inset: 0;
   z-index: -2;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.fresha-alt-hero__atmosphere::before {
-  content: '';
+.fresha-alt-hero__grid {
   position: absolute;
   inset: 0;
-  opacity: 0.3;
+  opacity: 0.26;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--border) 48%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 48%, transparent) 1px, transparent 1px);
-  background-size: clamp(3rem, 5vw, 5.5rem) clamp(3rem, 5vw, 5.5rem);
-  mask-image: linear-gradient(to bottom, black 0%, black 48%, transparent 88%);
+    linear-gradient(color-mix(in srgb, var(--border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 38%, transparent) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 92%);
 }
 
-.fresha-alt-hero__halo {
+.fresha-alt-hero__beam {
   position: absolute;
-  top: -32%;
-  right: -10%;
-  width: min(58vw, 58rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent) 0%, color-mix(in srgb, var(--accent) 7%, transparent) 30%, transparent 67%);
-  filter: blur(8px);
+  top: -12rem;
+  width: min(46rem, 64vw);
+  height: 54rem;
+  filter: blur(18px);
+  opacity: 0.72;
 }
 
-.fresha-alt-hero__monogram {
-  position: absolute;
-  top: 7%;
-  right: -0.045em;
-  font-family: 'Antonio', var(--font-heading), sans-serif;
-  font-size: clamp(24rem, 47vw, 47rem);
-  font-weight: 800;
-  line-height: 0.75;
-  letter-spacing: -0.08em;
-  color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--fg) 6%, transparent);
-  opacity: 0.75;
-  user-select: none;
+.fresha-alt-hero__beam--left {
+  left: -24rem;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 12%, transparent), transparent 68%);
+  transform: rotate(17deg);
 }
 
-.fresha-alt-hero__axis {
-  position: absolute;
-  top: 0;
-  right: clamp(4%, 8vw, 11%);
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    color-mix(in srgb, var(--accent) 34%, transparent) 25%,
-    color-mix(in srgb, var(--accent) 20%, transparent) 68%,
-    transparent 100%
-  );
+.fresha-alt-hero__beam--right {
+  right: -26rem;
+  background: radial-gradient(ellipse, color-mix(in srgb, #ffffff 6%, transparent), transparent 68%);
+  transform: rotate(-14deg);
 }
 
-.fresha-alt-hero__axis::before {
-  content: '';
-  position: absolute;
-  top: 32%;
-  left: 50%;
-  width: 0.48rem;
-  height: 0.48rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow:
-    0 0 0 0.35rem color-mix(in srgb, var(--accent) 9%, transparent),
-    0 0 2rem color-mix(in srgb, var(--accent) 40%, transparent);
-  transform: translate(-50%, -50%);
-}
-
-.fresha-alt-hero__inner {
+.fresha-alt-hero__content {
+  position: relative;
+  z-index: 2;
   display: grid;
-  min-width: 0;
-}
-
-.fresha-alt-hero__masthead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  min-height: 2.25rem;
-}
-
-.fresha-alt-hero__eyebrow,
-.fresha-alt-hero__edition,
-.fresha-alt-hero__chapter,
-.fresha-alt-hero__index-label,
-.fresha-alt-hero__footer p {
-  margin: 0;
+  justify-items: center;
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+  text-align: center;
 }
 
 .fresha-alt-hero__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.62rem;
-  font-size: 0.67rem;
-  line-height: 1.2;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
-}
-
-.fresha-alt-hero__signal {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 0.12rem;
-  flex: 0 0 auto;
-  background: var(--accent);
-  box-shadow: 0 0 1.3rem color-mix(in srgb, var(--accent) 48%, transparent);
-}
-
-.fresha-alt-hero__edition {
-  display: flex;
   gap: 0.55rem;
-  align-items: center;
-  font-size: 0.58rem;
+  margin: 0 0 1.35rem;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+  font-family: var(--font-body);
+  font-size: 0.69rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  backdrop-filter: blur(12px);
 }
 
-.fresha-alt-hero__edition span:first-child {
-  color: var(--fg);
-}
-
-.fresha-alt-hero__headline-wrap {
-  position: relative;
-  padding-top: clamp(3rem, 7vw, 6.75rem);
-}
-
-.fresha-alt-hero__chapter {
-  position: absolute;
-  top: clamp(1.1rem, 2.8vw, 2.3rem);
-  right: 0;
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--muted) 62%, transparent);
+.fresha-alt-hero__eyebrow-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .fresha-alt-hero__title {
-  position: relative;
-  z-index: 1;
   margin: 0;
-  max-width: 12.5ch;
-  font-family: 'Antonio', var(--font-heading), sans-serif;
-  font-size: clamp(3.25rem, 8.8vw, 8.35rem);
-  font-weight: 800;
-  line-height: 0.88;
-  letter-spacing: -0.045em;
-  text-transform: uppercase;
+  max-width: 12.4ch;
+  font-family: var(--font-body);
+  font-size: clamp(3.35rem, 7.2vw, 7rem);
+  font-weight: 650;
+  line-height: 0.97;
+  letter-spacing: -0.062em;
   color: var(--fg);
+  text-wrap: balance;
 }
 
-.fresha-alt-hero__title-line {
+.fresha-alt-hero__title span {
   display: block;
-}
-
-.fresha-alt-hero__title-line--muted {
-  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
-}
-
-.fresha-alt-hero__title-line--accent {
-  position: relative;
-  width: fit-content;
-  color: var(--accent);
-  text-shadow: 0 0 2.8rem color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
-.fresha-alt-hero__title-line--accent::after {
-  content: '';
-  position: absolute;
-  left: 0.03em;
-  right: 0;
-  bottom: -0.055em;
-  height: 0.035em;
-  background: var(--accent);
-  transform-origin: left center;
-}
-
-.fresha-alt-hero__rule {
-  position: relative;
-  height: 1px;
-  margin-top: clamp(2rem, 4vw, 3.75rem);
-  background: color-mix(in srgb, var(--border) 90%, transparent);
-}
-
-.fresha-alt-hero__rule span {
-  position: absolute;
-  left: 0;
-  top: -1px;
-  width: clamp(4rem, 10vw, 8rem);
-  height: 2px;
-  background: var(--accent);
-}
-
-.fresha-alt-hero__lower {
-  display: grid;
-  gap: clamp(2rem, 4vw, 4rem);
-  padding-top: clamp(1.5rem, 3vw, 2.5rem);
-}
-
-.fresha-alt-hero__copy {
-  display: grid;
-  gap: 1rem;
-  max-width: 44rem;
-  min-width: 0;
-}
-
-.fresha-alt-hero__intro {
-  margin: 0;
-  max-width: 59ch;
-  font-size: clamp(0.98rem, 1.3vw, 1.08rem);
-  line-height: 1.7;
-  color: color-mix(in srgb, var(--muted) 94%, var(--fg));
-  text-wrap: pretty;
-}
-
-.fresha-alt-hero__commercial {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.7rem;
-  align-items: baseline;
-  margin: 0;
-  font-size: 0.92rem;
+  margin-top: 0.12em;
   color: color-mix(in srgb, var(--fg) 70%, var(--muted));
 }
 
-.fresha-alt-hero__commercial strong {
-  font-size: 1.05rem;
-  color: var(--fg);
+.fresha-alt-hero__lead {
+  margin: clamp(1.45rem, 2.8vw, 2rem) 0 0;
+  max-width: 62ch;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.72;
+  text-wrap: pretty;
 }
 
 .fresha-alt-hero__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
-  padding-top: 0.25rem;
+  margin-top: 1.7rem;
 }
 
 .fresha-alt-hero__action {
-  min-height: 3.25rem;
-  padding-inline: 1.25rem;
+  min-height: 3.2rem;
+  padding-inline: 1.2rem;
+  border-radius: 0.7rem;
+}
+
+.fresha-alt-hero__action--primary {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 68%, transparent),
+    0 14px 38px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .fresha-alt-hero__action--secondary {
-  border-color: color-mix(in srgb, var(--border) 78%, var(--fg));
-  background: color-mix(in srgb, var(--surface-1) 52%, transparent);
+  border-color: color-mix(in srgb, var(--border) 84%, var(--fg) 10%);
+  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
   backdrop-filter: blur(12px);
 }
 
-.fresha-alt-hero__index {
-  min-width: 0;
-  border-top: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+.fresha-alt-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 0.62rem;
+  margin-top: 1.05rem;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
-.fresha-alt-hero__index-label {
-  padding-block: 0.72rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--muted) 66%, transparent);
+.fresha-alt-hero__meta strong {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  font-weight: 700;
 }
 
-.fresha-alt-hero__index-row {
-  display: grid;
-  grid-template-columns: 2.35rem minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 0.75rem;
+.fresha-alt-hero__product-shell {
+  position: relative;
+  z-index: 1;
+  width: min(94vw, 92rem);
+  margin: clamp(3.25rem, 7vw, 6rem) auto 0;
+  perspective: 1600px;
+}
+
+.fresha-alt-hero__product-glow {
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: -5rem;
+  height: 17rem;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    color-mix(in srgb, var(--accent) 19%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 6%, transparent) 38%,
+    transparent 72%
+  );
+  filter: blur(24px);
+  opacity: 0.82;
+}
+
+.fresha-alt-hero__product-frame {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 74%, var(--fg) 8%);
+  border-radius: clamp(0.85rem, 1.4vw, 1.25rem);
+  background: #050505;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 7%, transparent) inset,
+    0 40px 100px rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(255, 255, 255, 0.015);
+  transform: rotateX(1.1deg);
+  transform-origin: center top;
+}
+
+.fresha-alt-hero__product-bar {
+  display: flex;
   align-items: center;
-  min-height: 3.15rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.2rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 3%, transparent), transparent),
+    #080808;
 }
 
-.fresha-alt-hero__index-number {
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: var(--accent);
+.fresha-alt-hero__product-id,
+.fresha-alt-hero__product-status,
+.fresha-alt-hero__live {
+  display: inline-flex;
+  align-items: center;
 }
 
-.fresha-alt-hero__index-name {
+.fresha-alt-hero__product-id {
+  min-width: 0;
+  gap: 0.5rem;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
   font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fresha-alt-hero__product-mark {
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 0.16rem;
+  background: var(--accent);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--accent) 48%, transparent);
+}
+
+.fresha-alt-hero__product-slash,
+.fresha-alt-hero__product-area {
+  color: color-mix(in srgb, var(--muted) 62%, transparent);
+}
+
+.fresha-alt-hero__product-status {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+}
+
+.fresha-alt-hero__live {
+  gap: 0.38rem;
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+}
+
+.fresha-alt-hero__live-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, #34d399 10%, transparent);
+}
+
+.fresha-alt-hero__product-status a {
+  color: color-mix(in srgb, var(--fg) 76%, var(--muted));
+  font-weight: 650;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.fresha-alt-hero__product-status a:hover,
+.fresha-alt-hero__product-status a:focus-visible {
   color: var(--fg);
 }
 
-.fresha-alt-hero__index-note {
-  justify-self: end;
-  text-align: right;
-  font-size: 0.68rem;
-  color: color-mix(in srgb, var(--muted) 82%, transparent);
+.fresha-alt-hero__product-viewport {
+  position: relative;
+  width: 100%;
+  height: clamp(38rem, 56vw, 51rem);
+  background: #030303;
 }
 
-.fresha-alt-hero__footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-  margin-top: clamp(2rem, 4vw, 3.5rem);
-  padding-top: 0.9rem;
-  border-top: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
-  font-size: 0.56rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--muted) 60%, transparent);
+.fresha-alt-hero__product-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    inset 0 -3rem 5rem rgba(0, 0, 0, 0.08);
 }
 
-.fresha-alt-hero__footer-mark {
-  color: color-mix(in srgb, var(--fg) 74%, var(--muted));
+.fresha-alt-hero__product-viewport iframe {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #030303;
 }
 
-@media (min-width: 64rem) {
-  .fresha-alt-hero__lower {
-    grid-template-columns: minmax(0, 1.15fr) minmax(24rem, 0.85fr);
-    align-items: start;
+.fresha-alt-hero__product-caption {
+  margin: 0.8rem auto 0;
+  max-width: 54rem;
+  color: color-mix(in srgb, var(--muted) 62%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fresha-alt-hero__product-frame {
+    transition:
+      transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 220ms ease,
+      box-shadow 420ms ease;
   }
 
-  .fresha-alt-hero__index {
-    margin-top: 0.15rem;
+  .fresha-alt-hero__product-frame:hover {
+    border-color: color-mix(in srgb, var(--border) 62%, var(--fg) 16%);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
+      0 46px 115px rgba(0, 0, 0, 0.64),
+      0 0 0 1px rgba(255, 255, 255, 0.025);
+    transform: rotateX(0deg) translateY(-2px);
+  }
+}
+
+@media (max-width: 64rem) {
+  .fresha-alt-hero {
+    padding-top: clamp(4.75rem, 10vw, 6.5rem);
+  }
+
+  .fresha-alt-hero__product-shell {
+    width: min(96vw, 92rem);
+  }
+
+  .fresha-alt-hero__product-viewport {
+    height: clamp(34rem, 67vw, 44rem);
   }
 }
 
 @media (max-width: 48rem) {
   .fresha-alt-hero {
-    min-height: 0;
+    padding-top: 4.35rem;
+    padding-bottom: 3.7rem;
   }
 
-  .fresha-alt-hero__edition {
-    display: none;
+  .fresha-alt-hero__grid {
+    background-size: 3.4rem 3.4rem;
+    opacity: 0.2;
   }
 
-  .fresha-alt-hero__chapter {
-    display: none;
-  }
-
-  .fresha-alt-hero__monogram {
-    top: 16%;
-    right: -0.12em;
-    font-size: clamp(20rem, 95vw, 29rem);
-    opacity: 0.46;
-  }
-
-  .fresha-alt-hero__axis {
-    right: 8%;
-    opacity: 0.6;
+  .fresha-alt-hero__content {
+    width: min(100% - 1.35rem, 72rem);
   }
 
   .fresha-alt-hero__title {
-    max-width: 10.5ch;
-    font-size: clamp(3.15rem, 16vw, 5.3rem);
-    line-height: 0.91;
+    max-width: 11ch;
+    font-size: clamp(2.85rem, 12vw, 4.8rem);
+    letter-spacing: -0.055em;
   }
 
-  .fresha-alt-hero__lower {
-    gap: 2.25rem;
+  .fresha-alt-hero__lead {
+    max-width: 34rem;
   }
 
-  .fresha-alt-hero__index-row {
-    grid-template-columns: 2rem minmax(0, 1fr);
+  .fresha-alt-hero__product-shell {
+    width: calc(100% - 0.75rem);
+    margin-top: 2.8rem;
+    perspective: none;
   }
 
-  .fresha-alt-hero__index-note {
-    grid-column: 2;
-    justify-self: start;
-    padding-bottom: 0.75rem;
-    text-align: left;
+  .fresha-alt-hero__product-frame {
+    border-radius: 0.85rem;
+    transform: none;
+  }
+
+  .fresha-alt-hero__product-bar {
+    min-height: 3rem;
+    padding-inline: 0.72rem;
+  }
+
+  .fresha-alt-hero__product-area,
+  .fresha-alt-hero__product-status a {
+    display: none;
+  }
+
+  .fresha-alt-hero__product-viewport {
+    height: min(44rem, 78svh);
+    min-height: 35rem;
   }
 }
 
 @media (max-width: 38rem) {
-  .fresha-alt-hero__eyebrow {
-    max-width: 28ch;
-  }
-
   .fresha-alt-hero__actions {
+    width: min(100%, 28rem);
     flex-direction: column;
   }
 
@@ -404,36 +406,57 @@
     width: 100%;
   }
 
-  .fresha-alt-hero__footer {
-    align-items: flex-end;
+  .fresha-alt-hero__meta {
+    max-width: 25rem;
   }
 
-  .fresha-alt-hero__footer p:first-child {
-    max-width: 20ch;
+  .fresha-alt-hero__product-id {
+    font-size: 0.62rem;
+  }
+
+  .fresha-alt-hero__product-status {
+    font-size: 0.62rem;
+  }
+
+  .fresha-alt-hero__product-viewport {
+    min-height: 32rem;
+    height: 72svh;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .fresha-alt-hero__title-line {
-    animation: freshaHeadlineIn 620ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  .fresha-alt-hero__eyebrow,
+  .fresha-alt-hero__title,
+  .fresha-alt-hero__lead,
+  .fresha-alt-hero__actions,
+  .fresha-alt-hero__meta {
+    animation: freshaAltHeroRise 720ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
   }
 
-  .fresha-alt-hero__title-line:nth-child(2) {
+  .fresha-alt-hero__title {
     animation-delay: 70ms;
   }
 
-  .fresha-alt-hero__title-line:nth-child(3) {
-    animation-delay: 140ms;
+  .fresha-alt-hero__lead {
+    animation-delay: 130ms;
   }
 
-  .fresha-alt-hero__rule span {
-    animation: freshaRuleIn 720ms 180ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  .fresha-alt-hero__actions {
+    animation-delay: 190ms;
   }
 
-  @keyframes freshaHeadlineIn {
+  .fresha-alt-hero__meta {
+    animation-delay: 240ms;
+  }
+
+  .fresha-alt-hero__product-shell {
+    animation: freshaAltProductIn 900ms 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes freshaAltHeroRise {
     from {
       opacity: 0;
-      transform: translateY(0.22em);
+      transform: translateY(14px);
     }
     to {
       opacity: 1;
@@ -441,17 +464,17 @@
     }
   }
 
-  @keyframes freshaRuleIn {
+  @keyframes freshaAltProductIn {
     from {
-      transform: scaleX(0);
+      opacity: 0;
+      transform: translateY(24px) scale(0.986);
     }
     to {
-      transform: scaleX(1);
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 }
-
-
 
 /* Fresha Alternative — isolated draft page styles.
    Existing KERSIVO pages are intentionally untouched. */
