@@ -7,6 +7,7 @@ import {
   getBlacklineBarbersResponse,
   getBlacklineBookingsForDayKey,
   getBlacklineBookingsResponse,
+  getBlacklineBookingsHistoryResponse,
   getBlacklineClientsResponse,
   getBlacklineHistoryBookings,
   getBlacklineReportsResponse,
@@ -116,6 +117,35 @@ describe('BLACKLINE admin fixtures', () => {
       expect(endHour * 60 + endMinute).toBeLessThanOrEqual(17 * 60);
     }
     expect(blacklineDayKey(LONDON_WEDNESDAY)).toBe('2026-08-12');
+  });
+
+  it('keeps Bookings history past-only until today is explicitly included', () => {
+    const todayKey = blacklineDayKey(LONDON_WEDNESDAY);
+
+    const pastOnly = getBlacklineBookingsHistoryResponse(
+      new URLSearchParams({ scope: 'past', limit: '100' }),
+      LONDON_WEDNESDAY,
+    ).bookings;
+    expect(
+      pastOnly.every(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') < todayKey,
+      ),
+    ).toBe(true);
+
+    const withToday = getBlacklineBookingsHistoryResponse(
+      new URLSearchParams({ scope: 'past', includeToday: '1', limit: '100' }),
+      LONDON_WEDNESDAY,
+    ).bookings;
+    expect(
+      withToday.some(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') === todayKey,
+      ),
+    ).toBe(true);
+    expect(
+      withToday.every(
+        (row) => formatInTimeZone(new Date(row.startAt), 'Europe/London', 'yyyy-MM-dd') <= todayKey,
+      ),
+    ).toBe(true);
   });
 
   it('derives reports, orders and sales from the same fixture records', () => {

@@ -754,6 +754,7 @@ export default function BookingsAdminPanel({
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [historySearchLoading, setHistorySearchLoading] = useState(false);
+  const [includeTodayInHistory, setIncludeTodayInHistory] = useState(false);
 
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
@@ -925,7 +926,15 @@ export default function BookingsAdminPanel({
 
     const requestId = ++bookingsRequestIdRef.current;
     const requestQueryKey = mode === 'history'
-      ? ['history', historyBarberId, historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', normalizeSearchValue(debouncedSearchQuery)].join(':')
+      ? [
+          'history',
+          historyWithinBookings ? 'bookings-tab' : 'standalone',
+          historyWithinBookings && includeTodayInHistory ? 'include-today' : 'past-only',
+          historyBarberId,
+          historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '',
+          historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '',
+          normalizeSearchValue(debouncedSearchQuery),
+        ].join(':')
       : ['dashboard', selectedDate].join(':');
 
 
@@ -936,6 +945,10 @@ export default function BookingsAdminPanel({
             view: 'history',
             limit: String(ADMIN_BOOKING_HISTORY_PAGE_SIZE),
           });
+          if (historyWithinBookings) {
+            params.set('scope', 'past');
+            if (includeTodayInHistory) params.set('includeToday', '1');
+          }
           params.set('barberId', historyBarberId ?? 'all');
           if (historyDateRange?.from && historyDateRange?.to) {
             params.set('from', formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
@@ -1017,7 +1030,7 @@ export default function BookingsAdminPanel({
 
       setHistoryLoadingMore(false);
     }
-  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, historyWithinBookings, includeTodayInHistory, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
@@ -2673,6 +2686,16 @@ export default function BookingsAdminPanel({
                   </div>
 
                   <div className="admin-history-control-actions">
+                    {historyWithinBookings ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary"
+                        aria-pressed={includeTodayInHistory}
+                        onClick={() => setIncludeTodayInHistory((current) => !current)}
+                      >
+                        {includeTodayInHistory ? 'Today included' : 'Include today'}
+                      </button>
+                    ) : null}
                     <div className="admin-history-more" ref={historyMoreRef}>
                       <button
                         type="button"

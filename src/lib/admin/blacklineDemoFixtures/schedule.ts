@@ -310,6 +310,8 @@ export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchPara
   const from = params.get('from')?.trim();
   const to = params.get('to')?.trim();
   const q = (params.get('q')?.trim() || '').toLowerCase();
+  const scope = params.get('scope');
+  const includeToday = scope === 'past' && params.get('includeToday') === '1';
   const cursor = params.get('cursor')?.trim() || '';
   const limitRaw = Number(params.get('limit') || ADMIN_BOOKING_HISTORY_PAGE_SIZE);
   const limit = Math.max(
@@ -318,6 +320,14 @@ export function getBlacklineBookingsHistoryResponse(searchParams?: URLSearchPara
   );
 
   let bookings = getBlacklineHistoryBookings(30, now);
+  if (includeToday) {
+    const clock = coarseLondonNow(now);
+    const todayKey = blacklineDayKey(clock);
+    bookings = [
+      ...getBlacklineBookingsForDayKey(todayKey, { now: clock, forHistory: false }),
+      ...bookings,
+    ].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  }
 
   if (barberId && barberId !== 'all') {
     bookings = bookings.filter((row) => row.barberId === barberId);

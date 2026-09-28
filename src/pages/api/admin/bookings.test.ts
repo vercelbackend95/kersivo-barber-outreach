@@ -122,6 +122,43 @@ describe('GET /api/admin/bookings', () => {
     expect(args.where.status).toBeUndefined();
   });
 
+  it('keeps standalone history unscoped while Bookings history can exclude or include today', async () => {
+    bookingFindMany.mockResolvedValue([]);
+
+    await GET(makeContext('http://localhost/api/admin/bookings?view=history&limit=20'));
+    const standaloneArgs = bookingFindMany.mock.calls[0]?.[0] as {
+      where: { AND?: Array<{ startAt?: { lt?: Date } }> };
+    };
+    expect(
+      (standaloneArgs.where.AND ?? []).some(
+        (condition) => condition.startAt?.lt instanceof Date,
+      ),
+    ).toBe(false);
+
+    await GET(makeContext('http://localhost/api/admin/bookings?view=history&scope=past&limit=20'));
+    const pastOnlyArgs = bookingFindMany.mock.calls[1]?.[0] as {
+      where: { AND?: Array<{ startAt?: { lt?: Date } }> };
+    };
+    const pastOnlyUpper = (pastOnlyArgs.where.AND ?? [])
+      .map((condition) => condition.startAt?.lt)
+      .find((value): value is Date => value instanceof Date);
+    expect(pastOnlyUpper).toBeInstanceOf(Date);
+
+    await GET(
+      makeContext(
+        'http://localhost/api/admin/bookings?view=history&scope=past&includeToday=1&limit=20',
+      ),
+    );
+    const includeTodayArgs = bookingFindMany.mock.calls[2]?.[0] as {
+      where: { AND?: Array<{ startAt?: { lt?: Date } }> };
+    };
+    const includeTodayUpper = (includeTodayArgs.where.AND ?? [])
+      .map((condition) => condition.startAt?.lt)
+      .find((value): value is Date => value instanceof Date);
+    expect(includeTodayUpper).toBeInstanceOf(Date);
+    expect(includeTodayUpper!.getTime()).toBeGreaterThan(pastOnlyUpper!.getTime());
+  });
+
   it('maps historical service name, effective COMPLETED status, and client tags', async () => {
     bookingFindMany.mockResolvedValue([sampleBooking()]);
 
