@@ -19864,9 +19864,11 @@ button.admin-leaderboard-avatar--action:focus-visible {
 
 /* Bookings History date picker — responsive layout + field breathing room. */
 .admin-native-date-range-panel--history-range {
+  z-index: 280;
   box-sizing: border-box;
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
