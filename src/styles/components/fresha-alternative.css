@@ -7,7 +7,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: clamp(5.5rem, 9vw, 8.5rem) 0 clamp(4.5rem, 8vw, 7rem);
+  padding: clamp(3.25rem, 5.2vw, 4.75rem) 0 clamp(4.5rem, 8vw, 7rem);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   background: #030303;
 }
@@ -22,17 +22,24 @@
 
 .fresha-alt-hero__beam {
   position: absolute;
-  top: -12rem;
-  width: min(46rem, 64vw);
-  height: 54rem;
-  filter: blur(18px);
-  opacity: 0.72;
+  top: -10rem;
+  width: min(58rem, 68vw);
+  height: 48rem;
+  filter: blur(30px);
+  opacity: 0.82;
 }
 
 .fresha-alt-hero__beam--right {
-  right: -26rem;
-  background: radial-gradient(ellipse, color-mix(in srgb, #ffffff 6%, transparent), transparent 68%);
-  transform: rotate(-14deg);
+  right: -13rem;
+  background: radial-gradient(
+    ellipse at 68% 20%,
+    color-mix(in srgb, #ffffff 9%, transparent) 0%,
+    color-mix(in srgb, #ffffff 4.5%, transparent) 30%,
+    color-mix(in srgb, #ffffff 1.5%, transparent) 52%,
+    transparent 72%
+  );
+  transform: rotate(-18deg);
+  transform-origin: 72% 18%;
 }
 
 .fresha-alt-hero__content {
@@ -205,7 +212,7 @@
    */
   --fresha-admin-demo-max-width: 91.1rem;
   width: min(94vw, var(--fresha-admin-demo-max-width));
-  margin: clamp(3.25rem, 7vw, 6rem) auto 0;
+  margin: clamp(2.25rem, 3.75vw, 4rem) auto 0;
 }
 
 .fresha-alt-hero__product-glow {
@@ -270,7 +277,7 @@
 
 @media (max-width: 64rem) {
   .fresha-alt-hero {
-    padding-top: clamp(4.75rem, 10vw, 6.5rem);
+    padding-top: clamp(3.25rem, 6vw, 4.25rem);
   }
 
   .fresha-alt-hero__product-shell {
@@ -284,7 +291,7 @@
 
 @media (max-width: 48rem) {
   .fresha-alt-hero {
-    padding-top: 4.35rem;
+    padding-top: 3.25rem;
     padding-bottom: 3.7rem;
   }
 
