@@ -19972,6 +19972,17 @@ button.admin-leaderboard-avatar--action:focus-visible {
     padding-top: 8px;
   }
 
+  .admin-main-content.admin-mobile-edge
+    [data-feature261-booking-overview-shot]
+    .admin-view-motion-wrap--timeline
+    > .admin-vtl {
+    box-sizing: border-box;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+
   .admin-main-content.admin-mobile-edge .admin-quick-blocks,
   .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
   .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
