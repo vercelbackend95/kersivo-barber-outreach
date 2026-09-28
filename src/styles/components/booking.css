@@ -9019,6 +9019,7 @@ button.admin-sidebar-brand--button:focus-visible {
 .admin-barbers-roster-search-toolbar .admin-search-row--in-ops {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .admin-barbers-roster-search-toolbar .admin-search-field--premium {
@@ -11974,13 +11975,6 @@ button.admin-sidebar-brand--button:focus-visible {
 
 .admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle-label {
   line-height: 1;
-}
-
-[data-feature261-booking-overview-shot] .admin-view-motion-wrap--timeline > .admin-vtl {
-  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent),
-    0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
 }
 
 [data-feature261-booking-overview-shot] .admin-view-motion-wrap--list {
