@@ -904,6 +904,17 @@
   justify-content: space-between;
 }
 
+.admin-bookings-history-view-controls .admin-date-picker-label--range {
+  appearance: none;
+  font: inherit;
+  line-height: 1;
+}
+
+.admin-bookings-history-view-controls .admin-date-picker-label--range.admin-date-picker-label--active {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--border) 55%, var(--accent));
+}
+
 @media (max-width: 47.99rem) {
   .admin-bookings-history-view-controls .admin-dashboard-controls--ops-dash {
     align-items: stretch;

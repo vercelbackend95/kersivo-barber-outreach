@@ -15,12 +15,13 @@ type HistoryDateRangePickerProps = {
   timezone: string;
   onChangeRange: (range: HistoryDateRange | null) => void;
   onClear: () => void;
-  variant?: 'standalone' | 'segment';
+  variant?: 'standalone' | 'segment' | 'date-label';
+  label?: string;
 };
 
 const CALENDAR_ICON = (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+    <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" fill="currentColor" />
   </svg>
 );
 
@@ -39,6 +40,7 @@ export default function HistoryDateRangePicker({
   onChangeRange,
   onClear,
   variant = 'standalone',
+  label,
 }: HistoryDateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -53,6 +55,7 @@ export default function HistoryDateRangePicker({
   });
 
   const isSegmentVariant = variant === 'segment';
+  const isDateLabelVariant = variant === 'date-label';
   const isCustomActive = Boolean(dateRange?.from && dateRange?.to);
 
   useEffect(() => {
@@ -111,10 +114,7 @@ export default function HistoryDateRangePicker({
   }, [isOpen]);
 
   const applyRange = useCallback((nextFrom: string, nextTo: string) => {
-    if (!nextFrom || !nextTo) {
-      onChangeRange({ from: nextFrom ? ymdToZonedDate(nextFrom, timezone) : undefined, to: undefined });
-      return;
-    }
+    if (!nextFrom || !nextTo) return;
 
     const fromDate = ymdToZonedDate(nextFrom, timezone);
     const toDate = ymdToZonedDate(nextTo, timezone);
@@ -194,16 +194,23 @@ export default function HistoryDateRangePicker({
         className={
           isSegmentVariant
             ? `admin-segmented-control__option admin-segmented-control__option--icon${isCustomActive ? ' is-active' : ''}`
-            : `admin-history-date-trigger${dateRange ? ' admin-history-date-trigger--active' : ''}`
+            : isDateLabelVariant
+              ? `admin-date-picker-label admin-date-picker-label--range${isCustomActive ? ' admin-date-picker-label--active' : ''}`
+              : `admin-history-date-trigger${dateRange ? ' admin-history-date-trigger--active' : ''}`
         }
-        aria-label="Choose custom date range"
+        aria-label={
+          isDateLabelVariant
+            ? `Choose date range, currently ${label ?? 'no range selected'}`
+            : 'Choose custom date range'
+        }
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
+        {isDateLabelVariant ? <span className="admin-date-picker-text">{label ?? 'Choose dates'}</span> : null}
         {CALENDAR_ICON}
       </button>
 
-      {!isSegmentVariant && dateRange ? (
+      {!isSegmentVariant && !isDateLabelVariant && dateRange ? (
         <button
           type="button"
           className="admin-history-date-clear"

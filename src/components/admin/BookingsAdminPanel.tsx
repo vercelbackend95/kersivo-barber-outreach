@@ -1547,30 +1547,30 @@ export default function BookingsAdminPanel({
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
-  const historyQuickDateValue = useMemo(() => {
-    if (historyDateRange?.from && historyDateRange?.to) {
-      const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
-      const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
-      if (fromYmd === toYmd) return fromYmd;
-    }
-    return selectedDate;
-  }, [historyDateRange, selectedDate]);
-  const historyQuickDateLabel = useMemo(() => {
+  const historyDateRangeLabel = useMemo(() => {
     if (historyDateRange?.from && historyDateRange?.to) {
       const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
       const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
       if (fromYmd === toYmd) return formatTimelineDateLabel(fromYmd);
-      return 'Custom range';
+      const fromLabel = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM');
+      const toLabel = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM');
+      return `${fromLabel} – ${toLabel}`;
     }
-    return 'Choose date';
+    return 'Choose dates';
   }, [historyDateRange]);
-  const handleHistoryQuickDateChange = useCallback((value: string) => {
-    setSelectedDate(value);
-    const date = fromZonedTime(`${value}T00:00:00.000`, ADMIN_TIMEZONE);
-    setHistoryDateRange({ from: date, to: date });
-    if (value === getTodayLondonDate()) {
+  const handleHistoryDateRangeChange = useCallback((range: HistoryDateRange | null) => {
+    setHistoryDateRange(range);
+    if (!range?.from || !range?.to) return;
+
+    const fromYmd = formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    const toYmd = formatInTimeZone(range.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    const todayYmd = getTodayLondonDate();
+    if (fromYmd <= todayYmd && todayYmd <= toYmd) {
       setIncludeTodayInHistory(true);
     }
+  }, []);
+  const clearHistoryDateRange = useCallback(() => {
+    setHistoryDateRange(null);
   }, []);
   const timelineNextDayLabel = useMemo(
     () => formatTimelineDateLabel(addOneLondonCalendarDay(selectedDate)),
@@ -2668,10 +2668,14 @@ export default function BookingsAdminPanel({
                             <span className="admin-view-toggle-label">History</span>
                           </button>
                         </div>
-                        <AdminBookingDatePicker
-                          value={historyQuickDateValue}
-                          label={historyQuickDateLabel}
-                          onChange={handleHistoryQuickDateChange}
+                        <HistoryDateRangePicker
+                          dateRange={historyDateRange}
+                          isMobileViewport={isMobileViewport}
+                          timezone={ADMIN_TIMEZONE}
+                          onChangeRange={handleHistoryDateRangeChange}
+                          onClear={clearHistoryDateRange}
+                          variant="date-label"
+                          label={historyDateRangeLabel}
                         />
                       </div>
                     </div>
@@ -2768,13 +2772,15 @@ export default function BookingsAdminPanel({
                         </div>
                       ) : null}
                     </div>
-                    <HistoryDateRangePicker
-                      dateRange={historyDateRange}
-                      isMobileViewport={isMobileViewport}
-                      timezone={ADMIN_TIMEZONE}
-                      onChangeRange={setHistoryDateRange}
-                      onClear={() => setHistoryDateRange(null)}
-                    />
+                    {!historyWithinBookings ? (
+                      <HistoryDateRangePicker
+                        dateRange={historyDateRange}
+                        isMobileViewport={isMobileViewport}
+                        timezone={ADMIN_TIMEZONE}
+                        onChangeRange={setHistoryDateRange}
+                        onClear={() => setHistoryDateRange(null)}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
