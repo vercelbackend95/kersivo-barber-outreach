@@ -58,6 +58,8 @@ export default function HistoryDateRangePicker({
   const isSegmentVariant = variant === 'segment';
   const isDateLabelVariant = variant === 'date-label';
   const isCustomActive = Boolean(dateRange?.from && dateRange?.to);
+  const todayYmd = dateToYmd(new Date(), timezone);
+  const fromMaxYmd = toYmd && toYmd < todayYmd ? toYmd : todayYmd;
 
   useEffect(() => {
     setIsMounted(true);
@@ -156,8 +158,14 @@ export default function HistoryDateRangePicker({
 
   const canApplyDateLabel =
     selectionMode === 'single'
-      ? Boolean(fromYmd)
-      : Boolean(fromYmd && toYmd && fromYmd <= toYmd);
+      ? Boolean(fromYmd && fromYmd <= todayYmd)
+      : Boolean(
+          fromYmd &&
+          toYmd &&
+          fromYmd <= toYmd &&
+          fromYmd <= todayYmd &&
+          toYmd <= todayYmd
+        );
 
   const handleDateLabelApply = () => {
     if (!canApplyDateLabel || !fromYmd) return;
@@ -240,11 +248,11 @@ export default function HistoryDateRangePicker({
         </div>
         <button
           type="button"
-          className="admin-native-date-range-panel__close"
+          className="admin-cp-close-btn admin-native-date-range-panel__close"
           onClick={() => setIsOpen(false)}
           aria-label="Close date picker"
         >
-          <X width={16} height={16} aria-hidden="true" />
+          <X className="admin-cp-close-icon" aria-hidden="true" />
         </button>
       </div>
 
@@ -253,7 +261,7 @@ export default function HistoryDateRangePicker({
           type="button"
           role="tab"
           aria-selected={selectionMode === 'single'}
-          className={selectionMode === 'single' ? 'is-active' : ''}
+          className={`admin-native-date-range-panel__mode-btn${selectionMode === 'single' ? ' is-active' : ''}`}
           onClick={() => handleSelectionModeChange('single')}
         >
           Single day
@@ -262,7 +270,7 @@ export default function HistoryDateRangePicker({
           type="button"
           role="tab"
           aria-selected={selectionMode === 'range'}
-          className={selectionMode === 'range' ? 'is-active' : ''}
+          className={`admin-native-date-range-panel__mode-btn${selectionMode === 'range' ? ' is-active' : ''}`}
           onClick={() => handleSelectionModeChange('range')}
         >
           Date range
@@ -277,6 +285,7 @@ export default function HistoryDateRangePicker({
               type="date"
               className="input"
               value={fromYmd}
+              max={todayYmd}
               onChange={(event) => handleFromChange(event.target.value)}
             />
           </label>
@@ -288,7 +297,7 @@ export default function HistoryDateRangePicker({
                 type="date"
                 className="input"
                 value={fromYmd}
-                max={toYmd || undefined}
+                max={fromMaxYmd}
                 onChange={(event) => handleFromChange(event.target.value)}
               />
             </label>
@@ -299,6 +308,7 @@ export default function HistoryDateRangePicker({
                 className="input"
                 value={toYmd}
                 min={fromYmd || undefined}
+                max={todayYmd}
                 onChange={(event) => handleToChange(event.target.value)}
               />
             </label>
