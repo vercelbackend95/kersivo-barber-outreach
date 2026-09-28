@@ -46,6 +46,7 @@ export default function HistoryDateRangePicker({
   const [isMounted, setIsMounted] = useState(false);
   const [fromYmd, setFromYmd] = useState('');
   const [toYmd, setToYmd] = useState('');
+  const [selectionMode, setSelectionMode] = useState<'single' | 'range'>('range');
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [panelStyle, setPanelStyle] = useState<{ top: number; left: number; width: number }>({
@@ -63,23 +64,28 @@ export default function HistoryDateRangePicker({
   }, []);
 
   useEffect(() => {
-    setFromYmd(dateRange?.from ? dateToYmd(dateRange.from, timezone) : '');
-    setToYmd(dateRange?.to ? dateToYmd(dateRange.to, timezone) : '');
-  }, [dateRange, timezone]);
+    const nextFrom = dateRange?.from ? dateToYmd(dateRange.from, timezone) : '';
+    const nextTo = dateRange?.to ? dateToYmd(dateRange.to, timezone) : '';
+    setFromYmd(nextFrom);
+    setToYmd(nextTo);
+    if (isDateLabelVariant) {
+      setSelectionMode(nextFrom && nextTo && nextFrom === nextTo ? 'single' : 'range');
+    }
+  }, [dateRange, isDateLabelVariant, timezone]);
 
   const updatePanelPosition = useCallback(() => {
     const trigger = triggerRef.current;
     if (!trigger) return;
 
     const rect = trigger.getBoundingClientRect();
-    const panelWidth = Math.min(280, window.innerWidth - 24);
+    const panelWidth = Math.min(isDateLabelVariant ? 360 : 280, window.innerWidth - 24);
     const left = Math.min(
       Math.max(12, rect.right - panelWidth),
       window.innerWidth - panelWidth - 12,
     );
     const top = rect.bottom + 8;
     setPanelStyle({ top, left, width: panelWidth });
-  }, []);
+  }, [isDateLabelVariant]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,12 +132,61 @@ export default function HistoryDateRangePicker({
 
   const handleFromChange = (value: string) => {
     setFromYmd(value);
+    if (isDateLabelVariant) {
+      if (selectionMode === 'range' && toYmd && value && value > toYmd) {
+        setToYmd('');
+      }
+      return;
+    }
     applyRange(value, toYmd);
   };
 
   const handleToChange = (value: string) => {
     setToYmd(value);
+    if (isDateLabelVariant) return;
     applyRange(fromYmd, value);
+  };
+
+  const handleSelectionModeChange = (nextMode: 'single' | 'range') => {
+    setSelectionMode(nextMode);
+    if (nextMode === 'single' && !fromYmd && toYmd) {
+      setFromYmd(toYmd);
+    }
+  };
+
+  const canApplyDateLabel =
+    selectionMode === 'single'
+      ? Boolean(fromYmd)
+      : Boolean(fromYmd && toYmd && fromYmd <= toYmd);
+
+  const handleDateLabelApply = () => {
+    if (!canApplyDateLabel || !fromYmd) return;
+
+    const fromDate = ymdToZonedDate(fromYmd, timezone);
+    const toDate =
+      selectionMode === 'single' || !toYmd
+        ? fromDate
+        : ymdToZonedDate(toYmd, timezone);
+
+    onChangeRange({ from: fromDate, to: toDate });
+    setIsOpen(false);
+  };
+
+  const handleTriggerClick = () => {
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+
+    if (isDateLabelVariant) {
+      const nextFrom = dateRange?.from ? dateToYmd(dateRange.from, timezone) : '';
+      const nextTo = dateRange?.to ? dateToYmd(dateRange.to, timezone) : '';
+      setFromYmd(nextFrom);
+      setToYmd(nextTo);
+      setSelectionMode(nextFrom && nextTo && nextFrom === nextTo ? 'single' : 'range');
+    }
+
+    setIsOpen(true);
   };
 
   const handleClear = () => {
@@ -141,18 +196,8 @@ export default function HistoryDateRangePicker({
     setIsOpen(false);
   };
 
-  const panel = isOpen ? (
-    <div
-      ref={panelRef}
-      className={`admin-native-date-range-panel${isMobileViewport ? ' admin-native-date-range-panel--mobile' : ''}`}
-      role="dialog"
-      aria-label="Choose custom date range"
-      style={{
-        top: `${panelStyle.top}px`,
-        left: `${panelStyle.left}px`,
-        width: `${panelStyle.width}px`,
-      }}
-    >
+  const legacyPanel = (
+    <>
       <div className="admin-native-date-range-panel__fields">
         <label className="field admin-native-date-range-panel__field">
           <span className="field__label">From</span>
@@ -183,6 +228,117 @@ export default function HistoryDateRangePicker({
           Close
         </button>
       </div>
+    </>
+  );
+
+  const dateLabelPanel = (
+    <>
+      <div className="admin-native-date-range-panel__header">
+        <div>
+          <strong className="admin-native-date-range-panel__title">Filter by date</strong>
+          <p className="admin-native-date-range-panel__subtitle">Choose one day or a date range.</p>
+        </div>
+        <button
+          type="button"
+          className="admin-native-date-range-panel__close"
+          onClick={() => setIsOpen(false)}
+          aria-label="Close date picker"
+        >
+          <X width={16} height={16} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="admin-native-date-range-panel__mode" role="tablist" aria-label="Date selection mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectionMode === 'single'}
+          className={selectionMode === 'single' ? 'is-active' : ''}
+          onClick={() => handleSelectionModeChange('single')}
+        >
+          Single day
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectionMode === 'range'}
+          className={selectionMode === 'range' ? 'is-active' : ''}
+          onClick={() => handleSelectionModeChange('range')}
+        >
+          Date range
+        </button>
+      </div>
+
+      <div className={`admin-native-date-range-panel__fields admin-native-date-range-panel__fields--${selectionMode}`}>
+        {selectionMode === 'single' ? (
+          <label className="field admin-native-date-range-panel__field">
+            <span className="field__label">Date</span>
+            <input
+              type="date"
+              className="input"
+              value={fromYmd}
+              onChange={(event) => handleFromChange(event.target.value)}
+            />
+          </label>
+        ) : (
+          <>
+            <label className="field admin-native-date-range-panel__field">
+              <span className="field__label">From</span>
+              <input
+                type="date"
+                className="input"
+                value={fromYmd}
+                max={toYmd || undefined}
+                onChange={(event) => handleFromChange(event.target.value)}
+              />
+            </label>
+            <label className="field admin-native-date-range-panel__field">
+              <span className="field__label">To</span>
+              <input
+                type="date"
+                className="input"
+                value={toYmd}
+                min={fromYmd || undefined}
+                onChange={(event) => handleToChange(event.target.value)}
+              />
+            </label>
+          </>
+        )}
+      </div>
+
+      <div className="admin-native-date-range-panel__actions">
+        <button
+          type="button"
+          className="btn btn--ghost admin-native-date-range-panel__clear"
+          onClick={handleClear}
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          className="btn admin-native-date-range-panel__apply"
+          onClick={handleDateLabelApply}
+          disabled={!canApplyDateLabel}
+        >
+          Apply
+        </button>
+      </div>
+    </>
+  );
+
+  const panel = isOpen ? (
+    <div
+      ref={panelRef}
+      className={`admin-native-date-range-panel${isDateLabelVariant ? ' admin-native-date-range-panel--history-range' : ''}${isMobileViewport ? ' admin-native-date-range-panel--mobile' : ''}`}
+      role="dialog"
+      aria-label={isDateLabelVariant ? 'Filter booking history by date' : 'Choose custom date range'}
+      style={{
+        top: `${panelStyle.top}px`,
+        left: `${panelStyle.left}px`,
+        width: `${panelStyle.width}px`,
+      }}
+    >
+      {isDateLabelVariant ? dateLabelPanel : legacyPanel}
     </div>
   ) : null;
 
@@ -204,7 +360,7 @@ export default function HistoryDateRangePicker({
             : 'Choose custom date range'
         }
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={handleTriggerClick}
       >
         {isDateLabelVariant ? <span className="admin-date-picker-text">{label ?? 'Choose dates'}</span> : null}
         {CALENDAR_ICON}
