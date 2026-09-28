@@ -4696,7 +4696,6 @@ button.admin-sidebar-brand--button:focus-visible {
    * timeline itself remains full-bleed.
    */
   .admin-main-content.admin-mobile-edge .admin-next-block--dash-hero-slot,
-  .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
   .admin-main-content.admin-mobile-edge .admin-bookings-schedule.admin-bookings-schedule--history,
   .admin-main-content.admin-mobile-edge .admin-orders-panel,
   .admin-main-content.admin-mobile-edge .admin-reports.admin-sales-panel {
@@ -19962,6 +19961,7 @@ button.admin-leaderboard-avatar--action:focus-visible {
 /* Desktop/tablet: visible 8px outer gutter for full-width admin surfaces. */
 @media (min-width: 48.0625rem) {
   .admin-main-content.admin-mobile-edge .admin-quick-blocks,
+  .admin-main-content.admin-mobile-edge .admin-bookings-ops.admin-bookings-ops--dashboard,
   .admin-main-content.admin-mobile-edge .admin-analytics-studio.admin-analytics-studio--bookings-reports,
   .admin-main-content.admin-mobile-edge .admin-clients-table-wrap,
   .admin-main-content.admin-mobile-edge .admin-reports.admin-services-panel,
