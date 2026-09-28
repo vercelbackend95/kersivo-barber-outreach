@@ -607,6 +607,12 @@
   margin-inline: auto;
 }
 
+.fresha-alt-pricing__offer-host .rate-card1__landing-conditions {
+  width: min(100%, 42rem);
+  margin: 0.15rem auto 0;
+  text-align: center;
+}
+
 .fresha-alt-pricing__compare {
   display: grid;
   gap: 0.85rem;
