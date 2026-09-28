@@ -904,18 +904,14 @@ export default function BookingsAdminPanel({
     }
 
     if (isHistoryAppend) {
-      if (historyAppendInFlightRef.current) {
-        setHistoryLoadingMore(false);
-        return;
-      }
-      if (inFlightRef.current) {
+      if (historyAppendInFlightRef.current || inFlightRef.current) {
         setHistoryLoadingMore(false);
         return;
       }
       historyAppendInFlightRef.current = true;
     } else {
-      if (inFlightRef.current) return;
-      if (historyAppendInFlightRef.current) return;
+      // Non-append refreshes are latest-request-wins. Do not block a newer
+      // filter/view request behind an older request; requestId discards stale responses.
       inFlightRef.current = true;
     }
 
@@ -1016,19 +1012,23 @@ export default function BookingsAdminPanel({
     } catch {
       setError('Could not refresh bookings right now.');
     } finally {
+      // An append can be superseded by a newer filter/view refresh. Its lock must
+      // still be released even when its response is intentionally discarded.
+      if (isHistoryAppend) {
+        historyAppendInFlightRef.current = false;
+        setHistoryLoadingMore(false);
+      }
+
       if (requestId === bookingsRequestIdRef.current) {
-        if (isHistoryAppend) {
-          historyAppendInFlightRef.current = false;
-        } else {
+        if (!isHistoryAppend) {
           inFlightRef.current = false;
+          setHistoryLoadingMore(false);
         }
         setBookingsInitialLoading(false);
         if (mode === 'history' && !isHistoryAppend) {
           setHistorySearchLoading(false);
         }
       }
-
-      setHistoryLoadingMore(false);
     }
   }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, historyWithinBookings, includeTodayInHistory, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
@@ -1101,22 +1101,12 @@ export default function BookingsAdminPanel({
 
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'history') return;
-    const q = normalizeSearchValue(debouncedSearchQuery);
-    if (q) {
-      setHistorySearchLoading(true);
-    } else {
-      setHistorySearchLoading(false);
+    if (mode === 'history') {
+      setHistorySearchLoading(Boolean(normalizeSearchValue(debouncedSearchQuery)));
+      return;
     }
-    const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
-    return () => window.clearTimeout(timeoutId);
-  }, [fetchBookings, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
-
-  useEffect(() => {
-    if (mode !== 'history') {
-      setHistorySearchLoading(false);
-    }
-  }, [mode]);
+    setHistorySearchLoading(false);
+  }, [debouncedSearchQuery, mode]);
 
   useEffect(() => {
     if (!isHistoryMoreOpen) return;
