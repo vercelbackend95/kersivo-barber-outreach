@@ -4667,7 +4667,6 @@ button.admin-sidebar-brand--button:focus-visible {
       color-mix(in srgb, var(--surface-2) 70%, var(--surface)) 52%,
       color-mix(in srgb, var(--surface-2) 42%, color-mix(in srgb, var(--bg) 90%, #000)) 100%
     );
-    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-rail-out);
   }
 
   .admin-main-content {
