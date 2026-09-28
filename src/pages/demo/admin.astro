@@ -28,6 +28,7 @@ import '@/styles/components/admin-retail-onboarding.css';
 import '@/styles/components/table.css';
 import '@/styles/components/admin-ai.css';
 
+const heroEmbed = Astro.url.searchParams.get('embed') === 'hero';
 const todayKey = blacklineDayKey();
 const { bookings: initialBookings } = getBlacklineBookingsResponse(
   new URLSearchParams({ date: todayKey, mode: 'day' }),
@@ -39,9 +40,12 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
   description="Fictional BLACKLINE owner dashboard using sample KERSIVO admin data. No real appointments, orders or payments are created."
   canonicalPath={BLACKLINE_ADMIN_DEMO_PATH}
   htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
+  bodyClass={heroEmbed ? 'admin-theme-premium-black admin-hero-embed-body' : 'admin-theme-premium-black'}
   viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
   noindex={true}
+  enableAnalytics={!heroEmbed}
+  showCookieConsent={!heroEmbed}
+  enableClientRouter={!heroEmbed}
 >
   <link
     slot="head"
@@ -67,8 +71,12 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
     type="font/woff2"
     crossorigin
   />
-  <DemoBanner view="admin" />
-  <main class="container page-wrap admin-page-wrap" data-demo-tenant="blackline">
+  {heroEmbed ? null : <DemoBanner view="admin" />}
+  <main
+    class={heroEmbed ? 'page-wrap admin-page-wrap admin-page-wrap--hero-embed' : 'container page-wrap admin-page-wrap'}
+    data-demo-tenant="blackline"
+    data-hero-embed={heroEmbed ? 'true' : undefined}
+  >
     <h1 class="sr-only">BLACKLINE owner dashboard</h1>
     <AdminPanel
       client:load
@@ -78,5 +86,43 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       initialSection={Astro.url.searchParams.get('section')}
     />
   </main>
-  <InitDataTrackScript />
+  {heroEmbed ? null : <InitDataTrackScript />}
+
+  {
+    heroEmbed ? (
+      <style is:global>
+        html.admin-app-scroll,
+        html.admin-app-scroll body.admin-hero-embed-body {
+          min-height: 100%;
+          background: #030303;
+        }
+
+        body.admin-hero-embed-body {
+          margin: 0;
+          overflow-x: hidden;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed {
+          width: 100%;
+          max-width: none;
+          min-height: 100vh;
+          margin: 0;
+          padding: 0;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-shell {
+          min-height: 100vh;
+          border-radius: 0;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-content {
+          border-radius: 0;
+        }
+
+        body.admin-hero-embed-body .admin-sidebar-launch-cta--conversion {
+          display: none;
+        }
+      </style>
+    ) : null
+  }
 </MinimalLayout>
