@@ -1,0 +1,111 @@
+---
+import '@/styles/components/compare3.css';
+
+const rows = [
+  {
+    title: 'Booking experience',
+    kersivo: 'Branded booking website on your own domain',
+    fresha: 'Fresha-specific comparison detail to verify',
+  },
+  {
+    title: 'Pricing model',
+    kersivo: 'Simple monthly plan with 0% KERSIVO commission',
+    fresha: 'Fresha pricing and fee structure to verify',
+  },
+  {
+    title: 'Client journey',
+    kersivo: 'Your website and your branded booking flow',
+    fresha: 'Fresha client journey detail to verify',
+  },
+  {
+    title: 'Retail',
+    kersivo: 'Retail pickup through your own website',
+    fresha: 'Fresha retail capability detail to verify',
+  },
+];
+---
+
+<section
+  id="comparison"
+  class="compare3-block fresha-alt-compare scroll-mt-24"
+  aria-labelledby="fresha-alt-compare-title"
+>
+  <div class="container">
+    <div class="compare3-block__header">
+      <span class="compare3-block__badge">COMPARISON</span>
+      <h2 id="fresha-alt-compare-title">KERSIVO vs Fresha</h2>
+      <p>
+        The comparison structure is in place. Fresha-specific pricing, fees and product facts will
+        be independently verified before launch.
+      </p>
+    </div>
+
+    <div class="compare3-block__table-wrap">
+      <div
+        class="compare3-block__grid compare3-block__grid--dual"
+        role="table"
+        aria-label="KERSIVO versus Fresha comparison"
+      >
+        <div
+          class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
+          role="columnheader"
+        >
+          <img
+            class="compare3-block__logo compare3-block__logo--kersivo"
+            src="/images/logo_nobg.png"
+            alt="KERSIVO"
+            width="160"
+            height="40"
+            loading="lazy"
+            decoding="async"
+          />
+          <p class="compare3-block__brand-copy">Your domain, your brand, zero KERSIVO commission</p>
+        </div>
+
+        <div
+          class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace"
+          role="columnheader"
+        >
+          <p class="compare3-block__brand-title">Fresha</p>
+          <p class="compare3-block__brand-sub">Comparison research pending</p>
+          <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
+            Fresha-specific positioning will be added only after current UK facts are verified.
+          </p>
+        </div>
+
+        {rows.map((row) => (
+          <>
+            <div
+              class="compare3-block__item compare3-block__value compare3-block__value--featured"
+              role="cell"
+            >
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span class="compare3-block__status compare3-block__status--ok" aria-hidden="true">
+                &middot;
+              </span>
+              <span>{row.kersivo}</span>
+            </div>
+            <div
+              class="compare3-block__item compare3-block__value compare3-block__value--marketplace"
+              role="cell"
+            >
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span
+                class="compare3-block__status compare3-block__status--neutral"
+                aria-hidden="true"
+              >
+                &middot;
+              </span>
+              <span>{row.fresha}</span>
+            </div>
+          </>
+        ))}
+      </div>
+    </div>
+
+    <p class="compare3-block__footnote fresha-alt-compare__footnote">
+      Draft shell only. No Fresha-specific pricing, fee or feature claim on this page should be
+      treated as final until the dedicated Fresha research pass is complete.
+    </p>
+  </div>
+</section>

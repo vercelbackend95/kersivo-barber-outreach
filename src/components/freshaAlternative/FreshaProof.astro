@@ -1,0 +1,65 @@
+---
+import { adminDemoHref } from '@/lib/admin/demoConfig';
+import LandingDemoPreview from '@/components/landingDemoPreview.astro';
+import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
+import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+
+const [retailProducts, barbers] = await Promise.all([
+  resolveLandingDemoCarouselProducts(),
+  resolveLandingDemoBarbers(),
+]);
+
+const rows = [
+  {
+    kicker: 'ADMIN SYSTEM',
+    heading: 'Run your day from one clear admin view',
+    description:
+      'Manage bookings, clients, barbers, services and daily activity from one central dashboard.',
+    ctaLabel: 'Explore the admin system',
+    ctaHref: adminDemoHref('timeline'),
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'widget' as const,
+  },
+  {
+    kicker: 'CLIENT BOOKING EXPERIENCE',
+    heading: 'Your website. Your booking flow. Your brand.',
+    description:
+      'Clients choose a service, barber and available time through your own branded booking experience — with no app download required.',
+    ctaLabel: 'Try the booking experience',
+    ctaHref: '/demo/book',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'booking' as const,
+  },
+  {
+    kicker: 'RETAIL PICKUP SHOP',
+    heading: 'Sell retail products through your own website',
+    description:
+      'Let clients browse products online, place pickup orders and collect them from your barbershop.',
+    ctaLabel: 'Explore the retail shop',
+    ctaHref: '/demo/shop',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
+    media: 'carousel' as const,
+  },
+];
+---
+
+<LandingDemoPreview
+  className="fresha-alt-proof-live"
+  sectionId="fresha-alt-proof"
+  headingId="fresha-alt-proof-title"
+  showReports={false}
+  showMoreIncluded={false}
+  showFooterNote={true}
+  intro={{
+    kicker: 'BUILT AROUND YOUR BRAND',
+    heading: 'See the KERSIVO experience in action',
+    description:
+      'Explore the booking journey, admin system and retail experience your barbershop can use — all centred on your own brand.',
+  }}
+  rows={rows}
+  retailProducts={retailProducts}
+  barbers={barbers}
+/>

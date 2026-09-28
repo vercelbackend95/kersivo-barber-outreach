@@ -1,0 +1,131 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import FreshaCompare from '@/components/freshaAlternative/FreshaCompare.astro';
+import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
+import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
+import FreshaFinalCta from '@/components/freshaAlternative/FreshaFinalCta.astro';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const currentYear = new Date().getFullYear();
+
+const freshaShellFaq = [
+  {
+    question: 'Can I move from Fresha to KERSIVO?',
+    answer:
+      'KERSIVO can review your current setup and map the cleanest switch before you change anything. The final migration plan depends on the data and setup you currently use.',
+  },
+  {
+    question: 'Does KERSIVO charge commission on bookings?',
+    answer:
+      'KERSIVO takes 0% commission on bookings and retail sales. The platform is built around a simple monthly subscription for one barbershop location.',
+  },
+  {
+    question: 'Do clients need to download an app?',
+    answer:
+      'No. Clients can book through your own branded website and booking journey without downloading a separate customer app.',
+  },
+  {
+    question: 'Can I see the booking experience before subscribing?',
+    answer:
+      'Yes. The live KERSIVO demo lets you explore the client booking journey, admin system and retail pickup experience before you make a decision.',
+  },
+];
+---
+
+<LandingLayout
+  title="Fresha Alternative for UK Barbers | KERSIVO"
+  description="Explore KERSIVO as a Fresha alternative for independent UK barbershops — built around your own brand, website, booking journey and client relationships."
+  canonicalPath="/fresha-alternative"
+  navbarVariant="booksyAlternative"
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <FreshaCompare />
+    <FreshaProof />
+    <FreshaPricing />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about comparing Fresha and KERSIVO?"
+      subHeading="A first look at the KERSIVO model. Fresha-specific comparison details will be verified before this page is launched."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
+      faqs={freshaShellFaq}
+    />
+
+    <FreshaFinalCta />
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still comparing KERSIVO and Fresha?"
+      description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+    />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start subscription', href: '/admin/launch' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initFeature261StaggerReveal());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

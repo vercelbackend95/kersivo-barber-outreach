@@ -1,0 +1,267 @@
+/* Fresha Alternative — isolated draft page styles.
+   Existing KERSIVO pages are intentionally untouched. */
+
+.fresha-alt {
+  background: var(--bg);
+  color: var(--fg);
+  min-width: 0;
+}
+
+.fresha-alt .container {
+  min-width: 0;
+}
+
+.fresha-alt__section {
+  position: relative;
+  padding-block: clamp(2.1rem, 5vw, 4.5rem);
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fresha-alt__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 55% at 50% 0%,
+    color-mix(in srgb, var(--accent) 7%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fresha-alt__section .container {
+  position: relative;
+  z-index: 1;
+}
+
+.fresha-alt__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-4);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-wrap: balance;
+}
+
+.fresha-alt__h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.65rem, 4.4vw, 3.1rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+  color: var(--fg);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.fresha-alt__lead {
+  margin: 0;
+  max-width: 58ch;
+  font-size: var(--text-md);
+  line-height: 1.65;
+  color: var(--muted);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.fresha-alt__intro {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 52rem;
+  margin-inline: auto;
+  margin-bottom: clamp(1.35rem, 3vw, 2.5rem);
+  text-align: center;
+  justify-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.fresha-alt__intro .fresha-alt__lead {
+  margin-inline: auto;
+}
+
+/* Comparison */
+.fresha-alt-compare.compare3-block {
+  padding-block: clamp(2.1rem, 5vw, 4.5rem);
+  border-top: 1px solid var(--border);
+}
+
+.fresha-alt-compare .compare3-block__header {
+  max-width: 52ch;
+  min-width: 0;
+}
+
+.fresha-alt-compare .compare3-block__table-wrap {
+  overflow-x: visible;
+  margin-inline: 0;
+  padding-inline: 0;
+  max-width: 100%;
+}
+
+.fresha-alt-compare .compare3-block__grid,
+.fresha-alt-compare .compare3-block__grid--dual,
+.fresha-alt-compare .compare3-block__item {
+  min-width: 0;
+}
+
+.fresha-alt-compare .compare3-block__value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.fresha-alt-compare .compare3-block__footnote {
+  margin-top: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+/* Built around your brand / live proof */
+.fresha-alt .fresha-alt-proof-live {
+  border-top: 1px solid var(--border);
+  scroll-margin-top: clamp(5rem, 10vw, 7rem);
+  min-width: 0;
+}
+
+.fresha-alt .fresha-alt-proof-live .feature261__intro {
+  max-width: 52rem;
+}
+
+.fresha-alt .fresha-alt-proof-live .feature261__media,
+.fresha-alt .fresha-alt-proof-live .feature261__copy,
+.fresha-alt .fresha-alt-proof-live .feature261__row {
+  min-width: 0;
+}
+
+.fresha-alt .fresha-alt-proof-live .feature261__row-cta--ghost {
+  justify-content: flex-start;
+  justify-self: start;
+  text-align: start;
+  min-height: auto;
+  padding: 0.4rem 0 0.15rem 0.25rem;
+  width: auto;
+}
+
+/* Pricing */
+.fresha-alt-pricing__offer-host {
+  width: 100%;
+  max-width: 72.5rem;
+  margin-inline: auto;
+}
+
+.fresha-alt-pricing__compare {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  max-width: 46rem;
+  width: 100%;
+  margin: clamp(1.75rem, 4vw, 2.75rem) auto 0;
+  padding-top: clamp(1.25rem, 3vw, 2rem);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.fresha-alt-pricing__compare h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.2rem, 3vw, 1.75rem);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.fresha-alt-pricing__compare p {
+  margin: 0 auto;
+  max-width: 62ch;
+  width: 100%;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* Final CTA */
+.fresha-alt-final .landing-final-cta__panel {
+  gap: clamp(1.15rem, 2.5vw, 1.85rem);
+  padding: clamp(1.2rem, 3vw, 2.35rem);
+}
+
+.fresha-alt-final .landing-final-cta__conversion {
+  gap: 0.75rem;
+  align-content: start;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.fresha-alt-final .landing-final-cta__heading {
+  font-size: clamp(1.55rem, 3.4vw, 2.75rem);
+  overflow-wrap: anywhere;
+}
+
+.fresha-alt-final__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.fresha-alt-final__actions .btn {
+  min-width: 0;
+  flex: 1 1 auto;
+  height: auto;
+  padding: 0.95rem 1.25rem;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .fresha-alt-compare .compare3-block__brand,
+  .fresha-alt-compare .compare3-block__brand--highlight,
+  .fresha-alt-compare .compare3-block__brand--marketplace {
+    min-height: 0;
+    height: auto;
+    padding-top: 1rem;
+    padding-bottom: 0.85rem;
+  }
+
+  .fresha-alt-compare .compare3-block__item {
+    padding: 0.85rem 0.65rem;
+  }
+
+  .fresha-alt-final__actions {
+    flex-direction: column;
+  }
+
+  .fresha-alt-final__actions .btn {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 56.25rem) {
+  .fresha-alt-final .landing-final-cta__conversion {
+    align-self: center;
+  }
+
+  .fresha-alt-final__actions {
+    flex-direction: column;
+  }
+
+  .fresha-alt-final__actions .btn {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+}
