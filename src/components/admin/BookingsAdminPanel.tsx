@@ -1551,9 +1551,9 @@ export default function BookingsAdminPanel({
     if (historyDateRange?.from && historyDateRange?.to) {
       const fromYmd = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
       const toYmd = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
-      if (fromYmd === toYmd) return formatTimelineDateLabel(fromYmd);
-      const fromLabel = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM');
-      const toLabel = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM');
+      const fromLabel = formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM yyyy');
+      if (fromYmd === toYmd) return fromLabel;
+      const toLabel = formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM yyyy');
       return `${fromLabel} – ${toLabel}`;
     }
     return 'Choose dates';
