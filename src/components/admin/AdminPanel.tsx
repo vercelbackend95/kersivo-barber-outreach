@@ -31,7 +31,6 @@ export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
   | 'bookings_reports'
-  | 'bookings_history'
   | 'bookings_history_tab'
   | 'bookings_clients'
   | 'services'
@@ -348,7 +347,6 @@ export default function AdminPanel({
     activeSection === 'bookings_dashboard'
     || activeSection === 'bookings_blocks'
     || activeSection === 'bookings_reports'
-    || activeSection === 'bookings_history'
     || activeSection === 'bookings_history_tab';
 
   useEffect(() => {
@@ -430,7 +428,7 @@ export default function AdminPanel({
               ? 'blocks'
               : activeSection === 'bookings_reports'
                 ? 'reports'
-                : activeSection === 'bookings_history' || activeSection === 'bookings_history_tab'
+                : activeSection === 'bookings_history_tab'
                   ? 'history'
                   : 'dashboard'
           }
