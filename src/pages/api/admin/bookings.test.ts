@@ -159,6 +159,40 @@ describe('GET /api/admin/bookings', () => {
     expect(includeTodayUpper!.getTime()).toBeGreaterThan(pastOnlyUpper!.getTime());
   });
 
+  it('uses exact London calendar-day bounds for History date filters across DST', async () => {
+    bookingFindMany.mockResolvedValue([]);
+
+    await GET(
+      makeContext(
+        'http://localhost/api/admin/bookings?view=history&from=2026-03-29&to=2026-03-29&limit=20',
+      ),
+    );
+    const springArgs = bookingFindMany.mock.calls[0]?.[0] as {
+      where: { AND?: Array<{ startAt?: { gte?: Date; lt?: Date } }> };
+    };
+    const springRange = (springArgs.where.AND ?? [])
+      .map((condition) => condition.startAt)
+      .find((range) => range?.gte instanceof Date && range?.lt instanceof Date);
+    expect(springRange?.gte).toBeInstanceOf(Date);
+    expect(springRange?.lt).toBeInstanceOf(Date);
+    expect(springRange!.lt!.getTime() - springRange!.gte!.getTime()).toBe(23 * 60 * 60 * 1000);
+
+    await GET(
+      makeContext(
+        'http://localhost/api/admin/bookings?view=history&from=2026-10-25&to=2026-10-25&limit=20',
+      ),
+    );
+    const autumnArgs = bookingFindMany.mock.calls[1]?.[0] as {
+      where: { AND?: Array<{ startAt?: { gte?: Date; lt?: Date } }> };
+    };
+    const autumnRange = (autumnArgs.where.AND ?? [])
+      .map((condition) => condition.startAt)
+      .find((range) => range?.gte instanceof Date && range?.lt instanceof Date);
+    expect(autumnRange?.gte).toBeInstanceOf(Date);
+    expect(autumnRange?.lt).toBeInstanceOf(Date);
+    expect(autumnRange!.lt!.getTime() - autumnRange!.gte!.getTime()).toBe(25 * 60 * 60 * 1000);
+  });
+
   it('maps historical service name, effective COMPLETED status, and client tags', async () => {
     bookingFindMany.mockResolvedValue([sampleBooking()]);
 
