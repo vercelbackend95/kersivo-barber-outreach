@@ -77,7 +77,7 @@
   margin: 0;
   max-width: none;
   font-family: var(--font-body);
-  font-size: clamp(3.25rem, 6vw, 6.4rem);
+  font-size: clamp(2.85rem, 5.25vw, 5.55rem);
   font-weight: 650;
   line-height: 0.84;
   letter-spacing: -0.062em;
@@ -101,8 +101,8 @@
   margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
   max-width: 46ch;
   color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  font-size: clamp(1rem, 1.35vw, 1.12rem);
-  line-height: 1.62;
+  font-size: clamp(0.9rem, 1.05vw, 1rem);
+  line-height: 1.55;
   text-wrap: pretty;
 }
 
@@ -115,21 +115,66 @@
 }
 
 .fresha-alt-hero__action {
-  min-height: 3.2rem;
-  padding-inline: 1.2rem;
-  border-radius: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .fresha-alt-hero__action--primary {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 68%, transparent),
-    0 14px 38px color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: var(--fg);
+  box-shadow: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fresha-alt-hero__action--primary:hover,
+.fresha-alt-hero__action--primary:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 90%, #fff 10%);
+}
+
+.fresha-alt-hero__action--primary:hover {
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+}
+
+.fresha-alt-hero__action--primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus);
 }
 
 .fresha-alt-hero__action--secondary {
-  border-color: color-mix(in srgb, var(--border) 84%, var(--fg) 10%);
-  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
-  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: none;
+  backdrop-filter: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fresha-alt-hero__action--secondary:hover,
+.fresha-alt-hero__action--secondary:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.fresha-alt-hero__action--secondary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .fresha-alt-hero__meta {
@@ -249,7 +294,7 @@
 
   .fresha-alt-hero__title {
     max-width: 100%;
-    font-size: clamp(2.55rem, 11vw, 4.8rem);
+    font-size: clamp(2.35rem, 10vw, 4.15rem);
     letter-spacing: -0.055em;
   }
 
