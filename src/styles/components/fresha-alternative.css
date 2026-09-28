@@ -147,7 +147,15 @@
 .fresha-alt-hero__product-shell {
   position: relative;
   z-index: 1;
-  width: min(94vw, 92rem);
+  /*
+   * Match the real desktop admin canvas:
+   * 16rem sidebar + 1.1rem max channel + 74rem main content = 91.1rem.
+   * Keeping the iframe viewport at this exact cap means the dashboard's
+   * rounded right edge is the end of the frame instead of exposing the
+   * black body area beyond the app shell.
+   */
+  --fresha-admin-demo-max-width: 91.1rem;
+  width: min(94vw, var(--fresha-admin-demo-max-width));
   margin: clamp(3.25rem, 7vw, 6rem) auto 0;
 }
 
@@ -217,7 +225,7 @@
   }
 
   .fresha-alt-hero__product-shell {
-    width: min(96vw, 92rem);
+    width: min(96vw, var(--fresha-admin-demo-max-width));
   }
 
   .fresha-alt-hero__product-viewport {
