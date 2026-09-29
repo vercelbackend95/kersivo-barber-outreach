@@ -118,6 +118,8 @@ type AdminPanelProps = {
   initialBookings?: DemoDayBooking[];
   /** URL `?section=` from the Astro host so the first paint matches the deep link. */
   initialSection?: string | null;
+  /** Fixed-height landing-page embed: render a finite, non-scrolling showcase of long lists. */
+  showcaseMode?: boolean;
 };
 
 export default function AdminPanel({
@@ -125,6 +127,7 @@ export default function AdminPanel({
   demoTenant = 'generic',
   initialBookings,
   initialSection = null,
+  showcaseMode = false,
 }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     resolveAdminSpaSection(
@@ -448,13 +451,24 @@ export default function AdminPanel({
         <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
             {activeSection === 'services' ? (
-              <ServicesAdminPanel key="services" isBlacklineDemo={demoTenant === 'blackline'} />
+              <ServicesAdminPanel
+                key="services"
+                isBlacklineDemo={demoTenant === 'blackline'}
+                showcaseMode={showcaseMode}
+              />
             ) : null}
 
-            {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
+            {activeSection === 'bookings_clients' ? (
+              <ClientsAdminPanel key="clients" showcaseMode={showcaseMode} />
+            ) : null}
 
             {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-              <ShopAdminPanel key="shop" initialTab={shopTab} isBlacklineDemo={demoTenant === 'blackline'} />
+              <ShopAdminPanel
+                key="shop"
+                initialTab={shopTab}
+                isBlacklineDemo={demoTenant === 'blackline'}
+                showcaseMode={showcaseMode}
+              />
             ) : null}
 
             {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}

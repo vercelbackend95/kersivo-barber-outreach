@@ -84,6 +84,7 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       demoTenant="blackline"
       initialBookings={initialBookings}
       initialSection={Astro.url.searchParams.get('section')}
+      showcaseMode={heroEmbed}
     />
   </main>
   {heroEmbed ? null : <InitDataTrackScript />}
@@ -93,30 +94,197 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       <style is:global>
         html.admin-app-scroll,
         html.admin-app-scroll body.admin-hero-embed-body {
-          min-height: 100%;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
           background: #030303;
+          overflow: hidden !important;
+          overscroll-behavior: none;
         }
 
         body.admin-hero-embed-body {
           margin: 0;
-          overflow-x: hidden;
         }
 
         body.admin-hero-embed-body .admin-page-wrap--hero-embed {
           width: 100%;
           max-width: none;
-          min-height: 100vh;
+          height: 100%;
+          min-height: 0;
           margin: 0;
           padding: 0;
+          overflow: hidden;
         }
 
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-shell {
-          min-height: 100vh;
+          height: 100%;
+          min-height: 0 !important;
           border-radius: 0;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar {
+          height: 100% !important;
+          min-height: 0;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar-nav {
+          overflow-x: hidden !important;
+          overflow-y: hidden !important;
+          overscroll-behavior: none;
         }
 
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-content {
+          height: 100%;
+          min-height: 0 !important;
           border-radius: 0;
+          overflow: hidden !important;
+          overscroll-behavior: none;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-panel {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .booking-shell {
+          box-sizing: border-box;
+          height: 100%;
+          min-height: 0;
+          max-height: 100%;
+          overflow: hidden !important;
+        }
+
+        /* Showcase lists are intentionally finite: never create a nested vertical scroller. */
+        body.admin-hero-embed-body .admin-timeline,
+        body.admin-hero-embed-body .admin-timeline-scroll,
+        body.admin-hero-embed-body .admin-products-scroll,
+        body.admin-hero-embed-body .admin-clients-table-wrap,
+        body.admin-hero-embed-body .admin-clients-list,
+        body.admin-hero-embed-body .admin-orders-panel,
+        body.admin-hero-embed-body .admin-orders-grid-wrap {
+          overflow-y: hidden !important;
+          overscroll-behavior-y: none;
+          scrollbar-width: none;
+        }
+
+        body.admin-hero-embed-body .admin-timeline-scroll::-webkit-scrollbar,
+        body.admin-hero-embed-body .admin-products-scroll::-webkit-scrollbar,
+        body.admin-hero-embed-body .admin-clients-table-wrap::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Bookings: keep the authentic timeline, simply crop the rest of the day. */
+        body.admin-hero-embed-body [data-feature261-booking-overview-shot] {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        /* Reports: the studio and its stats row are the complete showcase frame. */
+        body.admin-hero-embed-body .booking-shell--reports {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body .booking-shell--reports > .admin-section-header,
+        body.admin-hero-embed-body .booking-shell--reports > .admin-next-block--dash-hero-slot {
+          flex: 0 0 auto;
+        }
+
+        body.admin-hero-embed-body .booking-shell--reports > .admin-reports-body {
+          display: none !important;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          > .admin-analytics-studio--bookings-reports {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-analytics-studio__chart,
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-sales-chart-wrap,
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-sales-chart-inner {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-analytics-studio__chart
+          .admin-sales-chart-canvas {
+          height: 100% !important;
+          min-height: 220px;
+          max-height: none;
+        }
+
+        /* Sales: let the main analytics card own the remaining viewport. */
+        body.admin-hero-embed-body .admin-shop-shell--sales {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales > .admin-section-header {
+          flex: 0 0 auto;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales > .admin-sales-panel {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          > .admin-sales-panel
+          > .admin-analytics-studio {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-analytics-studio__chart,
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-sales-chart-wrap,
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-sales-chart-inner {
+          height: 100%;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-analytics-studio__chart
+          .admin-sales-chart-canvas {
+          height: 100% !important;
+          min-height: 300px;
+          max-height: none;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales .admin-leaderboard {
+          display: none !important;
         }
 
         body.admin-hero-embed-body .admin-sidebar-launch-cta--conversion {
@@ -125,4 +293,31 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       </style>
     ) : null
   }
+  <script is:inline>
+    (() => {
+      if (!document.body.classList.contains('admin-hero-embed-body')) return;
+      if (window.parent === window) return;
+
+      const forwardWheelToLanding = (event) => {
+        if (event.ctrlKey) return;
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+        let deltaY = event.deltaY;
+        if (event.deltaMode === 1) deltaY *= 16;
+        if (event.deltaMode === 2) deltaY *= window.innerHeight;
+
+        try {
+          window.parent.scrollBy(0, deltaY);
+          event.preventDefault();
+        } catch {
+          // Same-origin showcase is expected; fail closed if the host changes.
+        }
+      };
+
+      window.addEventListener('wheel', forwardWheelToLanding, {
+        passive: false,
+        capture: true,
+      });
+    })();
+  </script>
 </MinimalLayout>

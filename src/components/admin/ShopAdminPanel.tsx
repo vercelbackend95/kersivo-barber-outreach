@@ -515,6 +515,7 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
 type ShopAdminPanelProps = {
   initialTab?: ShopTab;
   isBlacklineDemo?: boolean;
+  showcaseMode?: boolean;
 };
 
 const RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY = 'kersivo:retail-walkthrough-complete-dismissed';
@@ -587,7 +588,11 @@ function scheduleScrollOrderRowBelowAdminChrome(orderId: string, behavior: Scrol
   });
 }
 
-export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDemo = false }: ShopAdminPanelProps) {
+export default function ShopAdminPanel({
+  initialTab = 'products',
+  isBlacklineDemo = false,
+  showcaseMode = false,
+}: ShopAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -778,6 +783,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
   }, [baseProducts, productFilter, productSearch]);
 
   const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
+  const showcasedProducts = showcaseMode ? filteredProducts.slice(0, 7) : filteredProducts;
   const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
   const productsInitiallyLoading = loading && products.length === 0;
 
@@ -995,6 +1001,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
     if (!normalizedQuery) return ordersSafe;
     return ordersSafe.filter((order) => matchesOrder(order, normalizedQuery));
   }, [debouncedOrdersSearchQuery, ordersSafe]);
+  const showcasedOrders = showcaseMode ? filteredOrders.slice(0, 8) : filteredOrders;
 
   const filteredExpandableProducts = useMemo(() => {
     const normalizedQuery = expandedProductSearch.trim().toLowerCase();
@@ -1519,7 +1526,10 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
 
   return (
     <ShopPanelErrorBoundary>
-      <section className="booking-shell" aria-live="polite">
+      <section
+        className={`booking-shell admin-shop-shell admin-shop-shell--${activeTab}`}
+        aria-live="polite"
+      >
 
       <AdminSectionHeader
         title={
@@ -1733,7 +1743,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
                     variant="filtered"
                   />
                 )
-              ) : filteredProducts.map((product) => {
+              ) : showcasedProducts.map((product) => {
                 const isSavingCard = Boolean(productSavingById[product.id]);
                 const isCardSelected = bulkIsSelected(product.id);
 
@@ -1921,7 +1931,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
           ) : null}
 
           <OrdersDataTable22
-            orders={filteredOrders}
+            orders={showcasedOrders}
                         isMobileView={isMobileOrdersView}
             expandedOrderId={expandedOrderId}
             onToggleExpand={toggleOrderExpand}
