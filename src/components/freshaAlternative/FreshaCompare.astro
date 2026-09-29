@@ -169,12 +169,19 @@ const sections: ComparisonSection[] = [
         const Icon = section.icon;
 
         return (
-          <details
+          <article
             class="fresha-alt-compare__item"
-            name="fresha-comparison"
-            open={index === 0}
+            data-comparison-item
+            data-open="false"
           >
-            <summary class="fresha-alt-compare__summary">
+            <button
+              id={`fresha-compare-trigger-${section.id}`}
+              type="button"
+              class="fresha-alt-compare__summary"
+              aria-expanded="false"
+              aria-controls={`fresha-compare-panel-${section.id}`}
+              data-comparison-trigger
+            >
               <span class="fresha-alt-compare__summary-icon" aria-hidden="true">
                 <Icon size={19} strokeWidth={1.8} />
               </span>
@@ -193,9 +200,22 @@ const sections: ComparisonSection[] = [
                 strokeWidth={1.8}
                 aria-hidden="true"
               />
-            </summary>
+            </button>
 
-            <div class="fresha-alt-compare__panel">
+            <div
+              class="fresha-alt-compare__reveal"
+              data-comparison-reveal
+              aria-hidden="true"
+            >
+              <div
+                id={`fresha-compare-panel-${section.id}`}
+                class="fresha-alt-compare__reveal-inner"
+                role="region"
+                aria-labelledby={`fresha-compare-trigger-${section.id}`}
+                data-comparison-reveal-inner
+                inert
+              >
+                <div class="fresha-alt-compare__panel">
               <article class="fresha-alt-compare__provider fresha-alt-compare__provider--fresha">
                 <div class="fresha-alt-compare__provider-label">FRESHA ECOSYSTEM</div>
                 <div class="fresha-alt-compare__provider-head">
@@ -253,8 +273,10 @@ const sections: ComparisonSection[] = [
                   ))}
                 </ul>
               </article>
+                </div>
+              </div>
             </div>
-          </details>
+          </article>
         );
       })}
     </div>
@@ -282,16 +304,56 @@ const sections: ComparisonSection[] = [
       if (root.dataset.accordionBound === 'true') return;
       root.dataset.accordionBound = 'true';
 
-      const items = Array.from(root.querySelectorAll<HTMLDetailsElement>('.fresha-alt-compare__item'));
+      const items = Array.from(root.querySelectorAll<HTMLElement>('[data-comparison-item]'));
+
+      const setItemOpen = (item: HTMLElement, open: boolean) => {
+        const trigger = item.querySelector<HTMLButtonElement>('[data-comparison-trigger]');
+        const reveal = item.querySelector<HTMLElement>('[data-comparison-reveal]');
+        const revealInner = item.querySelector<HTMLElement>('[data-comparison-reveal-inner]');
+
+        item.dataset.open = open ? 'true' : 'false';
+        trigger?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        reveal?.setAttribute('aria-hidden', open ? 'false' : 'true');
+
+        if (open) revealInner?.removeAttribute('inert');
+        else revealInner?.setAttribute('inert', '');
+      };
+
+      const openOnly = (target: HTMLElement) => {
+        items.forEach((item) => setItemOpen(item, item === target));
+      };
 
       items.forEach((item) => {
-        item.addEventListener('toggle', () => {
-          if (!item.open) return;
-          items.forEach((other) => {
-            if (other !== item) other.open = false;
-          });
+        item.querySelector<HTMLButtonElement>('[data-comparison-trigger]')?.addEventListener('click', () => {
+          root.dataset.userInteracted = 'true';
+          const shouldOpen = item.dataset.open !== 'true';
+          if (shouldOpen) openOnly(item);
+          else setItemOpen(item, false);
         });
       });
+
+      const firstItem = items[0];
+      if (!firstItem || !('IntersectionObserver' in window)) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry?.isIntersecting) return;
+          observer.disconnect();
+
+          if (root.dataset.autoOpened === 'true') return;
+          root.dataset.autoOpened = 'true';
+
+          if (root.dataset.userInteracted !== 'true') {
+            openOnly(firstItem);
+          }
+        },
+        {
+          threshold: 0.32,
+          rootMargin: '0px 0px -12% 0px',
+        },
+      );
+
+      observer.observe(firstItem);
     });
   };
 
