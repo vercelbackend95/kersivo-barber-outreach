@@ -206,6 +206,9 @@
   position: relative;
   width: 100%;
   height: clamp(38rem, 56vw, 51rem);
+  min-height: 0;
+  max-height: clamp(38rem, 56vw, 51rem);
+  contain: layout paint size;
   overflow: hidden;
   border-radius: clamp(0.8rem, 1.25vw, 1.05rem);
   background: #030303;
@@ -256,6 +259,7 @@
 
   .fresha-alt-hero__product-viewport {
     height: clamp(34rem, 67vw, 44rem);
+    max-height: clamp(34rem, 67vw, 44rem);
   }
 }
 
@@ -293,8 +297,9 @@
   }
 
   .fresha-alt-hero__product-viewport {
-    height: min(44rem, 78svh);
+    height: clamp(35rem, 78svh, 44rem);
     min-height: 35rem;
+    max-height: 44rem;
   }
 }
 
@@ -313,8 +318,9 @@
   }
 
   .fresha-alt-hero__product-viewport {
+    height: clamp(32rem, 72svh, 40rem);
     min-height: 32rem;
-    height: 72svh;
+    max-height: 40rem;
   }
 }
 

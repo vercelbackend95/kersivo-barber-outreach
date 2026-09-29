@@ -56,6 +56,8 @@ type AdminLayoutProps = {
   permissions?: string[] | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
   persistentAdminChrome?: React.ReactNode;
+  /** Fixed landing-page showcase: static app chrome with a replaceable content canvas. */
+  showcaseMode?: boolean;
   children: React.ReactNode;
 };
 
@@ -233,6 +235,7 @@ export default function AdminLayout({
   isPreviewAccess = false,
   permissions = null,
   persistentAdminChrome,
+  showcaseMode = false,
   children,
 }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -754,7 +757,10 @@ export default function AdminLayout({
 
   return (
     <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
-      <div className="admin-shell">
+      <div
+        className={`admin-shell${showcaseMode ? ' admin-shell--showcase' : ''}`}
+        data-showcase={showcaseMode ? 'true' : undefined}
+      >
       <aside className="admin-sidebar" aria-label="Admin sections">
         <SidebarBrand
           logoUrl={isPublicDemo ? null : shopLogoUrl}
@@ -779,7 +785,7 @@ export default function AdminLayout({
         ref={mainContentRef}
         className="admin-main-content admin-mobile-edge"
         aria-busy={isTransitioning || showPending || undefined}
-        data-transitioning={showPending || isEntering ? 'true' : undefined}
+        data-transitioning={!showcaseMode && (showPending || isEntering) ? 'true' : undefined}
       >
         <div
           className="admin-route-pending"
@@ -890,7 +896,10 @@ export default function AdminLayout({
             )}
           </div>
         ) : (
-          <div className="admin-main-panel" data-entering={isEntering ? 'true' : undefined}>
+          <div
+            className="admin-main-panel"
+            data-entering={!showcaseMode && isEntering ? 'true' : undefined}
+          >
             {children}
           </div>
         )}

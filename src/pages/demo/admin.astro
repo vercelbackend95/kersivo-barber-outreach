@@ -123,6 +123,71 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           overflow: hidden;
         }
 
+        /*
+         * Linear-style showcase contract:
+         * one immutable application frame. The sidebar and outer grid never
+         * participate in section transitions; only the content canvas changes.
+         */
+        body.admin-hero-embed-body .admin-shell--showcase {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: minmax(0, 1fr);
+          align-items: stretch;
+          contain: layout paint;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase > .admin-sidebar {
+          position: relative;
+          inset: auto;
+          top: auto;
+          align-self: stretch;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: 100%;
+          overflow: hidden !important;
+          contain: layout paint;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-brand {
+          flex: 0 0 auto;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-nav {
+          flex: 1 1 auto;
+          min-height: 0;
+          align-content: start;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-logout-wrap {
+          flex: 0 0 auto;
+          margin-top: auto;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase > .admin-main-content {
+          align-self: stretch;
+          width: 100%;
+          height: 100%;
+          min-height: 0 !important;
+          max-height: 100%;
+          overflow: hidden !important;
+          contain: layout paint;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-main-panel {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          max-height: 100%;
+          overflow: hidden !important;
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+          transition: none !important;
+        }
+
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar {
           height: 100% !important;
           min-height: 0;

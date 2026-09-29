@@ -317,9 +317,9 @@ export default function AdminPanel({
     }
 
     setActiveSection(section);
-    // Timeline ↔ History owns its compositor fade inside BookingsAdminPanel.
-    // Avoid stacking the route-level entrance animation on top of that fade.
-    setIsEntering(!isBookingsSubviewSwitch);
+    // Landing showcase keeps the application chrome completely static. Only the
+    // right-hand content canvas changes; no route-level entrance/pending state.
+    setIsEntering(showcaseMode ? false : !isBookingsSubviewSwitch);
     setShowPending(false);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
@@ -330,7 +330,7 @@ export default function AdminPanel({
       window.history.pushState({ adminSection: section }, '', nextUrl);
     }
 
-    if (isBookingsSubviewSwitch) return;
+    if (showcaseMode || isBookingsSubviewSwitch) return;
 
     pendingTimeoutRef.current = window.setTimeout(() => {
       setShowPending(true);
@@ -346,7 +346,7 @@ export default function AdminPanel({
       }
       transitionTimeoutRef.current = null;
     }, 180);
-  }, [activeSection]);
+  }, [activeSection, showcaseMode]);
 
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
@@ -361,8 +361,9 @@ export default function AdminPanel({
     || activeSection === 'bookings_history_tab';
 
   useEffect(() => {
+    if (showcaseMode) return;
     clearTransientAdminViewportState();
-  }, [activeSection]);
+  }, [activeSection, showcaseMode]);
 
   useEffect(() => {
     return () => {
@@ -425,6 +426,7 @@ export default function AdminPanel({
         isPreviewAccess={demoMode ? false : isPreviewAccess}
         permissions={demoMode ? null : permissions}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
+        showcaseMode={showcaseMode}
       >
         {sessionPending ? null : (
           <>
