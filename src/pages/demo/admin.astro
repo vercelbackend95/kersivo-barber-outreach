@@ -142,6 +142,9 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           inset: auto;
           top: auto;
           align-self: stretch;
+          display: grid !important;
+          grid-template-rows: auto minmax(0, 1fr) auto;
+          align-content: stretch;
           height: 100% !important;
           min-height: 0 !important;
           max-height: 100%;
@@ -150,19 +153,23 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
         }
 
         body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-brand {
-          flex: 0 0 auto;
+          min-height: 0;
         }
 
         body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-nav {
-          flex: 1 1 auto;
           min-height: 0;
+          align-self: start;
           align-content: start;
+          grid-auto-rows: max-content;
           overflow: hidden !important;
         }
 
         body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-logout-wrap {
-          flex: 0 0 auto;
-          margin-top: auto;
+          align-self: end;
+          min-height: 0;
+          margin-top: 0 !important;
+          visibility: visible !important;
+          opacity: 1 !important;
         }
 
         body.admin-hero-embed-body .admin-shell--showcase > .admin-main-content {
