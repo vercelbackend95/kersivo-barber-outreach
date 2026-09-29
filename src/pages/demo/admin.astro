@@ -118,6 +118,7 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           overflow: hidden;
         }
 
+        /* Showcase host chain: iframe → body → main → astro-island → admin shell. */
         /*
          * Astro wraps hydrated React components in <astro-island>. In showcase
          * mode this host must participate in the fixed-height chain; otherwise
