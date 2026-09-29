@@ -541,17 +541,28 @@
 }
 
 .fresha-alt-compare__title {
+  display: grid;
+  justify-items: center;
+  gap: 0.06em;
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(2rem, 7vw, 3.5rem);
   font-weight: 720;
   letter-spacing: -0.045em;
-  line-height: 0.98;
+  line-height: 0.88;
   color: var(--fg);
 }
 
-.fresha-alt-compare__title span {
+.fresha-alt-compare__title-line {
+  display: block;
+  color: var(--fg);
+}
+
+.fresha-alt-compare__title-line--vs {
   color: var(--accent);
+  font-size: 0.62em;
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 .fresha-alt-compare__lead {
