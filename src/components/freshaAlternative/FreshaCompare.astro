@@ -180,6 +180,9 @@ const sections: ComparisonSection[] = [
               </span>
 
               <span class="fresha-alt-compare__summary-copy">
+                <span class="fresha-alt-compare__summary-kicker">
+                  {String(index + 1).padStart(2, '0')} / 06
+                </span>
                 <strong>{section.title}</strong>
                 <span>{section.subtitle}</span>
               </span>
@@ -194,6 +197,7 @@ const sections: ComparisonSection[] = [
 
             <div class="fresha-alt-compare__panel">
               <article class="fresha-alt-compare__provider fresha-alt-compare__provider--fresha">
+                <div class="fresha-alt-compare__provider-label">FRESHA ECOSYSTEM</div>
                 <div class="fresha-alt-compare__provider-head">
                   <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--fresha" aria-hidden="true">
                     fresha
@@ -222,6 +226,9 @@ const sections: ComparisonSection[] = [
               <div class="fresha-alt-compare__vs" aria-hidden="true">VS</div>
 
               <article class="fresha-alt-compare__provider fresha-alt-compare__provider--kersivo">
+                <div class="fresha-alt-compare__provider-label fresha-alt-compare__provider-label--kersivo">
+                  YOUR OWN BRAND
+                </div>
                 <div class="fresha-alt-compare__provider-head">
                   <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--kersivo" aria-hidden="true">
                     <img src="/images/logo-kersivo.png" alt="" width="72" height="72" loading="lazy" decoding="async" />
