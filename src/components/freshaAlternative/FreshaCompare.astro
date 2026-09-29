@@ -1,111 +1,298 @@
 ---
-import '@/styles/components/compare3.css';
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronDown,
+  CircleCheck,
+  CircleDot,
+  CreditCard,
+  Globe2,
+  ShoppingBag,
+  UsersRound,
+} from 'lucide-react';
 
-const rows = [
+type ComparisonSection = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: typeof CalendarDays;
+  freshaLead: string;
+  freshaPoints: string[];
+  kersivoLead: string;
+  kersivoPoints: string[];
+};
+
+const sections: ComparisonSection[] = [
   {
-    title: 'Booking experience',
-    kersivo: 'Branded booking website on your own domain',
-    fresha: 'Fresha-specific comparison detail to verify',
+    id: 'bookings',
+    title: 'Bookings',
+    subtitle: 'Compare the client booking journey and day-to-day scheduling.',
+    icon: CalendarDays,
+    freshaLead: 'A powerful booking stack inside the Fresha ecosystem.',
+    freshaPoints: [
+      'Direct booking links, website bookings and Fresha Marketplace',
+      'Advanced calendar and scheduling tools',
+      'Deposits, upfront payments and no-show policies',
+      'Automated booking notifications and reminders',
+    ],
+    kersivoLead: 'A branded booking journey built around your own barbershop.',
+    kersivoPoints: [
+      'Branded booking website on your own domain',
+      'Services, barbers and availability inside your own flow',
+      'Deposits and payment steps built into the booking journey',
+      'Bookings managed from one owner dashboard',
+    ],
   },
   {
-    title: 'Pricing model',
-    kersivo: 'Simple monthly plan with 0% KERSIVO commission',
-    fresha: 'Fresha pricing and fee structure to verify',
+    id: 'payments',
+    title: 'Payments & Deposits',
+    subtitle: 'How each platform protects bookings and handles payment steps.',
+    icon: CreditCard,
+    freshaLead: 'Payments, deposits and no-show protection integrated with Fresha.',
+    freshaPoints: [
+      'Fresha Payments supports deposits and upfront payments',
+      'Card capture and no-show payment policies',
+      'Online and in-person payment options',
+      'Payment activity connected to Fresha reporting',
+    ],
+    kersivoLead: 'Payment protection inside your own branded booking journey.',
+    kersivoPoints: [
+      'Optional booking deposits for online appointments',
+      'Deposit status visible in the KERSIVO admin',
+      'Client payment steps stay connected to your booking flow',
+      '0% KERSIVO commission on bookings',
+    ],
   },
   {
-    title: 'Client journey',
-    kersivo: 'Your website and your branded booking flow',
-    fresha: 'Fresha client journey detail to verify',
+    id: 'brand',
+    title: 'Brand & Domain',
+    subtitle: 'Where the client journey lives and whose brand stays in front.',
+    icon: Globe2,
+    freshaLead: 'Fresha combines direct booking links with its own platform and marketplace.',
+    freshaPoints: [
+      'Booking links can be shared from your website, social and ads',
+      'Marketplace discovery can bring new clients into Fresha',
+      'The booking infrastructure remains part of the Fresha ecosystem',
+      'Your business operates alongside the Fresha brand',
+    ],
+    kersivoLead: 'Your website and booking journey stay under your own identity.',
+    kersivoPoints: [
+      'Your own branded website on your own domain',
+      'Your logo, services and shop identity throughout the journey',
+      'No marketplace dependency required to take bookings',
+      'A direct client relationship built around your business',
+    ],
   },
   {
-    title: 'Retail',
-    kersivo: 'Retail pickup through your own website',
-    fresha: 'Fresha retail capability detail to verify',
+    id: 'retail',
+    title: 'Retail & Upsells',
+    subtitle: 'How products and post-booking sales fit into the customer journey.',
+    icon: ShoppingBag,
+    freshaLead: 'Retail, inventory and online product sales inside Fresha.',
+    freshaPoints: [
+      'Online product store with pickup and shipping options',
+      'Inventory and order management in the Fresha workspace',
+      'POS tools for services, products and add-ons',
+      'Fresha Payments is required for the online product store',
+    ],
+    kersivoLead: 'Retail pickup built directly into your own barbershop website.',
+    kersivoPoints: [
+      'Products sold from your own branded website',
+      'Pickup orders managed from the KERSIVO admin',
+      'Product recommendations can appear after a booking',
+      '0% KERSIVO commission on retail sales',
+    ],
+  },
+  {
+    id: 'clients',
+    title: 'Clients & Communication',
+    subtitle: 'CRM, reminders and the relationship after the appointment.',
+    icon: UsersRound,
+    freshaLead: 'Deep client-management tools inside the Fresha platform.',
+    freshaPoints: [
+      'Client profiles, booking history, notes and forms',
+      'Automated reminders across supported channels',
+      'Two-way client communication inside Fresha',
+      'Loyalty and retention tools available in the platform',
+    ],
+    kersivoLead: 'Client records connected directly to your own booking operation.',
+    kersivoPoints: [
+      'Client profiles and booking history in your admin',
+      'Internal notes and operational client context',
+      'Email and SMS appointment reminder workflows',
+      'The relationship starts from your own website and brand',
+    ],
+  },
+  {
+    id: 'reports',
+    title: 'Reports & Admin',
+    subtitle: 'The owner view behind bookings, clients, team and performance.',
+    icon: BarChart3,
+    freshaLead: 'Broad operational reporting across the Fresha workspace.',
+    freshaPoints: [
+      'Reporting tied to bookings, payments and business activity',
+      'Team, client and sales management tools',
+      'Calendar and operational controls in one platform',
+      'Retail, POS and payment activity can feed into reporting',
+    ],
+    kersivoLead: 'A focused owner dashboard built specifically for independent barbershops.',
+    kersivoPoints: [
+      'Bookings, team, clients, services, products and orders',
+      'Sales, bookings and cancellation reporting',
+      'Daily operational view from one dashboard',
+      'Built around the workflow of an independent barbershop',
+    ],
   },
 ];
 ---
 
 <section
   id="comparison"
-  class="compare3-block fresha-alt-compare scroll-mt-24"
+  class="fresha-alt-compare scroll-mt-24"
   aria-labelledby="fresha-alt-compare-title"
+  data-fresha-comparison
 >
-  <div class="container">
-    <div class="compare3-block__header">
-      <span class="compare3-block__badge">COMPARISON</span>
-      <h2 id="fresha-alt-compare-title">KERSIVO vs Fresha</h2>
-      <p>
-        The comparison structure is in place. Fresha-specific pricing, fees and product facts will
-        be independently verified before launch.
+  <div class="fresha-alt-compare__container">
+    <header class="fresha-alt-compare__header">
+      <p class="fresha-alt-compare__eyebrow">COMPARISON</p>
+      <h2 id="fresha-alt-compare-title" class="fresha-alt-compare__title">
+        KERSIVO <span>vs</span> Fresha
+      </h2>
+      <p class="fresha-alt-compare__lead">
+        Two different ways to run a barbershop. Open each category and compare the parts that
+        matter to your brand, bookings and client journey.
       </p>
-    </div>
+    </header>
 
-    <div class="compare3-block__table-wrap">
-      <div
-        class="compare3-block__grid compare3-block__grid--dual"
-        role="table"
-        aria-label="KERSIVO versus Fresha comparison"
-      >
-        <div
-          class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
-          role="columnheader"
-        >
-          <img
-            class="compare3-block__logo compare3-block__logo--kersivo"
-            src="/images/logo_nobg.png"
-            alt="KERSIVO"
-            width="160"
-            height="40"
-            loading="lazy"
-            decoding="async"
-          />
-          <p class="compare3-block__brand-copy">Your domain, your brand, zero KERSIVO commission</p>
-        </div>
+    <div class="fresha-alt-compare__accordion">
+      {sections.map((section, index) => {
+        const Icon = section.icon;
 
-        <div
-          class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace"
-          role="columnheader"
-        >
-          <p class="compare3-block__brand-title">Fresha</p>
-          <p class="compare3-block__brand-sub">Comparison research pending</p>
-          <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
-            Fresha-specific positioning will be added only after current UK facts are verified.
-          </p>
-        </div>
-
-        {rows.map((row) => (
-          <>
-            <div
-              class="compare3-block__item compare3-block__value compare3-block__value--featured"
-              role="cell"
-            >
-              <span class="compare3-block__row-title">{row.title}</span>
-              <span class="compare3-block__status compare3-block__status--ok" aria-hidden="true">
-                &middot;
+        return (
+          <details
+            class="fresha-alt-compare__item"
+            name="fresha-comparison"
+            open={index === 0}
+          >
+            <summary class="fresha-alt-compare__summary">
+              <span class="fresha-alt-compare__summary-icon" aria-hidden="true">
+                <Icon size={19} strokeWidth={1.8} />
               </span>
-              <span>{row.kersivo}</span>
-            </div>
-            <div
-              class="compare3-block__item compare3-block__value compare3-block__value--marketplace"
-              role="cell"
-            >
-              <span class="compare3-block__row-title">{row.title}</span>
-              <span
-                class="compare3-block__status compare3-block__status--neutral"
+
+              <span class="fresha-alt-compare__summary-copy">
+                <strong>{section.title}</strong>
+                <span>{section.subtitle}</span>
+              </span>
+
+              <ChevronDown
+                className="fresha-alt-compare__chevron"
+                size={20}
+                strokeWidth={1.8}
                 aria-hidden="true"
-              >
-                &middot;
-              </span>
-              <span>{row.fresha}</span>
+              />
+            </summary>
+
+            <div class="fresha-alt-compare__panel">
+              <article class="fresha-alt-compare__provider fresha-alt-compare__provider--fresha">
+                <div class="fresha-alt-compare__provider-head">
+                  <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--fresha" aria-hidden="true">
+                    fresha
+                  </span>
+                  <div>
+                    <p class="fresha-alt-compare__provider-name">Fresha</p>
+                    <p class="fresha-alt-compare__provider-lead">{section.freshaLead}</p>
+                  </div>
+                </div>
+
+                <ul class="fresha-alt-compare__points">
+                  {section.freshaPoints.map((point) => (
+                    <li>
+                      <CircleDot
+                        className="fresha-alt-compare__point-icon fresha-alt-compare__point-icon--neutral"
+                        size={15}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <div class="fresha-alt-compare__vs" aria-hidden="true">VS</div>
+
+              <article class="fresha-alt-compare__provider fresha-alt-compare__provider--kersivo">
+                <div class="fresha-alt-compare__provider-head">
+                  <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--kersivo" aria-hidden="true">
+                    <img src="/images/logo-kersivo.png" alt="" width="72" height="72" loading="lazy" decoding="async" />
+                  </span>
+                  <div>
+                    <p class="fresha-alt-compare__provider-name">KERSIVO</p>
+                    <p class="fresha-alt-compare__provider-lead">{section.kersivoLead}</p>
+                  </div>
+                </div>
+
+                <ul class="fresha-alt-compare__points">
+                  {section.kersivoPoints.map((point) => (
+                    <li>
+                      <CircleCheck
+                        className="fresha-alt-compare__point-icon fresha-alt-compare__point-icon--yes"
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
             </div>
-          </>
-        ))}
-      </div>
+          </details>
+        );
+      })}
     </div>
 
-    <p class="compare3-block__footnote fresha-alt-compare__footnote">
-      Draft shell only. No Fresha-specific pricing, fee or feature claim on this page should be
-      treated as final until the dedicated Fresha research pass is complete.
+    <a
+      href="/demo"
+      class="fresha-alt-compare__demo-cta"
+      data-track="view_live_demo_click"
+    >
+      <span class="fresha-alt-compare__demo-play" aria-hidden="true">▶</span>
+      See KERSIVO demo
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <p class="fresha-alt-compare__footnote">
+      Fresha feature descriptions are based on Fresha’s current public product documentation.
+      Commercial terms and pricing can change, so check Fresha directly for the latest details.
     </p>
   </div>
 </section>
+
+<script>
+  const bindFreshaComparison = () => {
+    document.querySelectorAll<HTMLElement>('[data-fresha-comparison]').forEach((root) => {
+      if (root.dataset.accordionBound === 'true') return;
+      root.dataset.accordionBound = 'true';
+
+      const items = Array.from(root.querySelectorAll<HTMLDetailsElement>('.fresha-alt-compare__item'));
+
+      items.forEach((item) => {
+        item.addEventListener('toggle', () => {
+          if (!item.open) return;
+          items.forEach((other) => {
+            if (other !== item) other.open = false;
+          });
+        });
+      });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindFreshaComparison, { once: true });
+  } else {
+    bindFreshaComparison();
+  }
+
+  document.addEventListener('astro:page-load', bindFreshaComparison);
+</script>
