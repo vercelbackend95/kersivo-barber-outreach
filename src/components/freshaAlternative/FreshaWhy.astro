@@ -1,0 +1,29 @@
+---
+import { FRESHA_WHY_INTRO, FRESHA_WHY_THEMES } from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="why-switch" class="fresha-alt__section" aria-labelledby="fresha-alt-why-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">WHY BARBERS COMPARE</p>
+      <h2 id="fresha-alt-why-title" class="fresha-alt__h2">
+        Why UK barbers look for a Fresha alternative
+      </h2>
+      <p class="fresha-alt__lead">{FRESHA_WHY_INTRO}</p>
+    </header>
+
+    <ol class="fresha-alt-why__grid">
+      {
+        FRESHA_WHY_THEMES.map((theme, index) => (
+          <li class="fresha-alt-card fresha-alt-why__item">
+            <span class="fresha-alt-card__index" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <h3 class="fresha-alt-card__title">{theme.title}</h3>
+            <p class="fresha-alt-card__body">{theme.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

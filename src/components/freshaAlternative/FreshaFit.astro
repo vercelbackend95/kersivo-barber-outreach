@@ -1,0 +1,40 @@
+---
+import { FRESHA_FIT_CLOSING, FRESHA_FIT_PATHS } from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="which-model" class="fresha-alt__section" aria-labelledby="fresha-alt-fit-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">TWO MODELS</p>
+      <h2 id="fresha-alt-fit-title" class="fresha-alt__h2">Which model fits your barbershop?</h2>
+    </header>
+
+    <div class="fresha-alt-fit__grid">
+      {
+        FRESHA_FIT_PATHS.map((path) => (
+          <article
+            class:list={[
+              'fresha-alt-card',
+              'fresha-alt-fit__path',
+              { 'fresha-alt-fit__path--kersivo': path.label === 'KERSIVO' },
+            ]}
+          >
+            <p class="fresha-alt-costs__kicker">{path.label}</p>
+            <h3 class="fresha-alt-card__title">{path.heading}</h3>
+            <ul class="fresha-alt-list">
+              {path.points.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+
+    <p class="fresha-alt-fit__closing">{FRESHA_FIT_CLOSING}</p>
+
+    <p class="fresha-alt-crosslink">
+      Also comparing Booksy? <a href="/booksy-alternative">Compare KERSIVO and Booksy <span aria-hidden="true">→</span></a>
+    </p>
+  </div>
+</section>

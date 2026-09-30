@@ -8,6 +8,20 @@ import FreshaCompare from '@/components/freshaAlternative/FreshaCompare.astro';
 import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
 import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
 import FreshaFinalCta from '@/components/freshaAlternative/FreshaFinalCta.astro';
+import FreshaQuickAnswer from '@/components/freshaAlternative/FreshaQuickAnswer.astro';
+import FreshaWhy from '@/components/freshaAlternative/FreshaWhy.astro';
+import FreshaCosts from '@/components/freshaAlternative/FreshaCosts.astro';
+import FreshaFit from '@/components/freshaAlternative/FreshaFit.astro';
+import FreshaSwitching from '@/components/freshaAlternative/FreshaSwitching.astro';
+import FreshaSources from '@/components/freshaAlternative/FreshaSources.astro';
+import {
+  FRESHA_ALTERNATIVE_DESCRIPTION,
+  FRESHA_ALTERNATIVE_FAQ_ITEMS,
+  FRESHA_ALTERNATIVE_PAGE_PATH,
+  FRESHA_ALTERNATIVE_TITLE,
+  buildFreshaAlternativeFaqJsonLd,
+} from '@/lib/seo/freshaAlternativeFaq';
+import { buildFreshaAlternativeWebPageJsonLd } from '@/lib/seo/freshaAlternativeJsonLd';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
@@ -16,52 +30,35 @@ import {
 import '@/styles/components/fresha-alternative.css';
 
 const currentYear = new Date().getFullYear();
-
-const freshaShellFaq = [
-  {
-    question: 'Can I move from Fresha to KERSIVO?',
-    answer:
-      'KERSIVO can review your current setup and map the cleanest switch before you change anything. The final migration plan depends on the data and setup you currently use.',
-  },
-  {
-    question: 'Does KERSIVO charge commission on bookings?',
-    answer:
-      'KERSIVO takes 0% commission on bookings and retail sales. The platform is built around a simple monthly subscription for one barbershop location.',
-  },
-  {
-    question: 'Do clients need to download an app?',
-    answer:
-      'No. Clients can book through your own branded website and booking journey without downloading a separate customer app.',
-  },
-  {
-    question: 'Can I see the booking experience before subscribing?',
-    answer:
-      'Yes. The live KERSIVO demo lets you explore the client booking journey, admin system and retail pickup experience before you make a decision.',
-  },
-];
 ---
 
 <LandingLayout
-  title="Fresha Alternative for UK Barbers | KERSIVO"
-  description="Explore KERSIVO as a Fresha alternative for independent UK barbershops — built around your own brand, website, booking journey and client relationships."
-  canonicalPath="/fresha-alternative"
+  title={FRESHA_ALTERNATIVE_TITLE}
+  description={FRESHA_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={FRESHA_ALTERNATIVE_PAGE_PATH}
   navbarVariant="booksyAlternative"
+  jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <FreshaHero />
+    <FreshaQuickAnswer />
+    <FreshaWhy />
+    <FreshaCosts />
     <FreshaCompare />
     <FreshaProof />
+    <FreshaFit />
+    <FreshaSwitching />
     <FreshaPricing />
 
     <Faq4
       className="faq4--landing"
       heading="Questions about comparing Fresha and KERSIVO?"
-      subHeading="A first look at the KERSIVO model. Fresha-specific comparison details will be verified before this page is launched."
+      subHeading="Clear answers on pricing, commission, switching, client booking and the live demo."
       supportHeading="Still comparing options?"
       supportText="Tell us what you use today and what you want your booking journey to look like."
       supportLinkLabel="Ask KERSIVO a question"
       supportLinkHref="#contact"
-      faqs={freshaShellFaq}
+      faqs={FRESHA_ALTERNATIVE_FAQ_ITEMS}
     />
 
     <FreshaFinalCta />
@@ -72,7 +69,10 @@ const freshaShellFaq = [
       description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
       note="We’ll reply by email — no sales call required."
       submitLabel="Send my question"
+      messagePlaceholder="For example: switching from Fresha, setting up deposits, moving client data or launching a new booking website."
     />
+
+    <FreshaSources />
 
     <Footer50
       showIntro={false}

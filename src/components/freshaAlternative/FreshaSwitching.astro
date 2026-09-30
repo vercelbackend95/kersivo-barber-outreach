@@ -1,0 +1,43 @@
+---
+import {
+  FRESHA_SWITCHING_LIMITS,
+  FRESHA_SWITCHING_REASSURANCE,
+  FRESHA_SWITCHING_STEPS,
+} from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="switching" class="fresha-alt__section" aria-labelledby="fresha-alt-switching-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">MIGRATION</p>
+      <h2 id="fresha-alt-switching-title" class="fresha-alt__h2">Switching from Fresha to KERSIVO</h2>
+      <p class="fresha-alt-switching__reassurance">{FRESHA_SWITCHING_REASSURANCE}</p>
+    </header>
+
+    <ol class="fresha-alt-switching__steps">
+      {
+        FRESHA_SWITCHING_STEPS.map((step, index) => (
+          <li class="fresha-alt-card fresha-alt-switching__step">
+            <span class="fresha-alt-card__index" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <h3 class="fresha-alt-card__title">{step.title}</h3>
+            <p class="fresha-alt-card__body">{step.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="fresha-alt-switching__limits">
+      <h3 class="fresha-alt-costs__h3">Good to know</h3>
+      <ul class="fresha-alt-list">
+        {FRESHA_SWITCHING_LIMITS.map((limit) => (
+          <li>{limit}</li>
+        ))}
+      </ul>
+      <a href="#contact" class="fresha-alt-switching__cta">
+        Ask about moving your Fresha data <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>

@@ -47,12 +47,40 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
   <div class="fresha-alt-hero__product-shell">
     <div class="fresha-alt-hero__product-glow" aria-hidden="true"></div>
 
-    <div class="fresha-alt-hero__product-viewport">
+    <div class="fresha-alt-hero__product-viewport" data-deferred-demo-frame data-frame-state="poster">
+      <picture class="fresha-alt-hero__product-poster" aria-hidden="true">
+        <source
+          media="(max-width: 38rem)"
+          srcset="/images/fresha-alternative/dashboard-poster-mobile.webp"
+          width="788"
+          height="1168"
+        />
+        <source
+          media="(max-width: 49.99rem)"
+          srcset="/images/fresha-alternative/dashboard-poster-tablet.webp"
+          width="1118"
+          height="1041"
+        />
+        <img
+          src="/images/fresha-alternative/dashboard-poster-desktop.webp"
+          alt=""
+          width="1437"
+          height="805"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
       <iframe
-        src="/demo/admin?embed=hero&section=bookings_dashboard"
+        class="fresha-alt-hero__product-frame"
+        data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"
         title="Interactive KERSIVO owner dashboard demo"
-        loading="eager"
       ></iframe>
+      <noscript>
+        <iframe
+          src="/demo/admin?embed=hero&section=bookings_dashboard"
+          title="Interactive KERSIVO owner dashboard demo"
+        ></iframe>
+      </noscript>
     </div>
 
     <p class="fresha-alt-hero__product-caption">
@@ -60,3 +88,10 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
     </p>
   </div>
 </section>
+
+<script>
+  import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
+
+  const viewport = document.querySelector<HTMLElement>('[data-deferred-demo-frame]');
+  if (viewport) mountDeferredDemoFrame(viewport);
+</script>

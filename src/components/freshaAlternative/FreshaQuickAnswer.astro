@@ -1,0 +1,25 @@
+---
+import {
+  FRESHA_QUICK_ANSWER,
+  FRESHA_QUICK_ANSWER_FACTS,
+} from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="quick-answer" class="fresha-alt-quick" aria-labelledby="fresha-alt-quick-title">
+  <div class="container">
+    <div class="fresha-alt-quick__panel">
+      <h2 id="fresha-alt-quick-title" class="fresha-alt-quick__label">Quick answer</h2>
+      <p class="fresha-alt-quick__answer">{FRESHA_QUICK_ANSWER}</p>
+      <dl class="fresha-alt-quick__facts">
+        {
+          FRESHA_QUICK_ANSWER_FACTS.map((fact) => (
+            <div class="fresha-alt-quick__fact">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</section>
