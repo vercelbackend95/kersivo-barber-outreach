@@ -19,6 +19,12 @@ export function blacklineHeroShowcaseNow(): Date {
 /** Posted by the hero iframe to its parent once the first frame is final. */
 export const HERO_SHOWCASE_READY_MESSAGE_TYPE = 'kersivo:hero-showcase-ready';
 
+/**
+ * Posted by the hero iframe for each vertical wheel gesture so the landing page scrolls
+ * itself; the fixed showcase never scrolls internally.
+ */
+export const HERO_SHOWCASE_WHEEL_MESSAGE_TYPE = 'kersivo:hero-showcase-wheel';
+
 /** Set on `<html>` inside the iframe at the same moment the ready message is posted. */
 export const HERO_SHOWCASE_READY_ATTRIBUTE = 'data-hero-showcase-ready';
 

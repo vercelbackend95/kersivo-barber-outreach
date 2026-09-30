@@ -259,8 +259,10 @@
 }
 
 /*
- * Atomic poster → live swap. The poster and live dashboard hold different dynamic
- * states, so they must never be blended: no opacity transition here.
+ * Poster → live reveal. The poster is hidden in the same frame the loader marks the
+ * frame `ready` (the frame is still transparent, so only the dark viewport shows);
+ * two frames later FreshaHero sets data-live-visible and the already-settled live
+ * dashboard alone fades in. The two are never blended, and only opacity animates.
  */
 .fresha-alt-hero__product-viewport .fresha-alt-hero__product-frame {
   opacity: 0;
@@ -268,12 +270,28 @@
 }
 
 .fresha-alt-hero__product-viewport[data-frame-state='ready'] .fresha-alt-hero__product-frame {
-  opacity: 1;
   pointer-events: auto;
 }
 
 .fresha-alt-hero__product-viewport[data-frame-state='ready'] .fresha-alt-hero__product-poster {
   visibility: hidden;
+}
+
+.fresha-alt-hero__product-viewport[data-frame-state='ready'][data-live-visible='true']
+  .fresha-alt-hero__product-frame {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fresha-alt-hero__product-viewport[data-live-visible='true'] .fresha-alt-hero__product-frame {
+    transition: opacity 680ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fresha-alt-hero__product-viewport[data-frame-state='ready'] .fresha-alt-hero__product-frame {
+    opacity: 1;
+  }
 }
 
 .fresha-alt-hero__product-caption {
@@ -386,10 +404,6 @@
     animation-delay: 240ms;
   }
 
-  .fresha-alt-hero__product-shell {
-    animation: freshaAltProductIn 900ms 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
   @keyframes freshaAltHeroRise {
     from {
       opacity: 0;
@@ -398,17 +412,6 @@
     to {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  @keyframes freshaAltProductIn {
-    from {
-      opacity: 0;
-      transform: translateY(24px) scale(0.986);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
     }
   }
 }

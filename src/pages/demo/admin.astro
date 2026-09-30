@@ -102,7 +102,12 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           min-height: 0;
           background: #030303;
           overflow: hidden !important;
-          overscroll-behavior: none;
+        }
+
+        /* The fixed showcase never scrolls itself, so touch drags must chain to the landing page. */
+        body.admin-hero-embed-body,
+        body.admin-hero-embed-body * {
+          overscroll-behavior: auto !important;
         }
 
         body.admin-hero-embed-body {
@@ -192,6 +197,27 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           min-height: 0;
         }
 
+        /* The BLACKLINE lockup is pinned to the sidebar's left edge in every showcase frame. */
+        body.admin-hero-embed-body
+          .admin-shell--showcase
+          > .admin-sidebar
+          > .admin-sidebar-brand--blackline {
+          justify-self: stretch;
+          box-sizing: border-box;
+          width: 100%;
+          align-items: flex-start;
+          justify-content: flex-start;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shell--showcase
+          > .admin-sidebar
+          > .admin-sidebar-brand--blackline
+          .bl-lockup {
+          align-self: flex-start;
+          margin-inline: 0 auto;
+        }
+
         body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-nav {
           min-height: 0;
           align-self: start;
@@ -241,7 +267,6 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar-nav {
           overflow-x: hidden !important;
           overflow-y: hidden !important;
-          overscroll-behavior: none;
         }
 
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-content {
@@ -249,7 +274,6 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
           min-height: 0 !important;
           border-radius: 0;
           overflow: hidden !important;
-          overscroll-behavior: none;
         }
 
         body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-panel {
@@ -275,7 +299,6 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
         body.admin-hero-embed-body .admin-orders-panel,
         body.admin-hero-embed-body .admin-orders-grid-wrap {
           overflow-y: hidden !important;
-          overscroll-behavior-y: none;
           scrollbar-width: none;
         }
 
@@ -402,31 +425,9 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       </style>
     ) : null
   }
-  <script is:inline>
-    (() => {
-      if (!document.body.classList.contains('admin-hero-embed-body')) return;
-      if (window.parent === window) return;
+  <script>
+    import { forwardHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
 
-      const forwardWheelToLanding = (event) => {
-        if (event.ctrlKey) return;
-        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-
-        let deltaY = event.deltaY;
-        if (event.deltaMode === 1) deltaY *= 16;
-        if (event.deltaMode === 2) deltaY *= window.innerHeight;
-
-        try {
-          window.parent.scrollBy(0, deltaY);
-          event.preventDefault();
-        } catch {
-          // Same-origin showcase is expected; fail closed if the host changes.
-        }
-      };
-
-      window.addEventListener('wheel', forwardWheelToLanding, {
-        passive: false,
-        capture: true,
-      });
-    })();
+    if (document.body.classList.contains('admin-hero-embed-body')) forwardHeroShowcaseWheel(window);
   </script>
 </MinimalLayout>

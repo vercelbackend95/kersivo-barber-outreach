@@ -50,42 +50,68 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
     <div class="fresha-alt-hero__product-viewport" data-deferred-demo-frame data-frame-state="poster">
       <!--
         Each poster is the embed rendered at the measured iframe size for its page band
-        (scripts/capture-fresha-dashboard-posters.mjs). 50rem is where the embed leaves its
-        sidebar-only layout; 96.875rem is where the iframe reaches its capped size.
+        (scripts/capture-fresha-dashboard-posters.mjs). 48rem is where the viewport height
+        rule changes, 50rem is where the embed leaves its sidebar-only layout, and 96.875rem
+        is where the iframe reaches its capped size. Bump the -vN file prefix whenever the
+        posters are recaptured so browsers never reuse a stale cached poster.
       -->
       <picture class="fresha-alt-hero__product-poster" aria-hidden="true">
         <source
           media="(max-width: 25rem)"
-          srcset="/images/fresha-alternative/dashboard-poster-mobile.webp 2x"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-mobile.webp 2x"
           width="378"
           height="608"
         />
         <source
           media="(max-width: 38rem)"
-          srcset="/images/fresha-alternative/dashboard-poster-mobile-wide.webp 2x"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-mobile-wide.webp 2x"
           width="418"
           height="640"
         />
         <source
-          media="(max-width: 50rem)"
-          srcset="/images/fresha-alternative/dashboard-poster-tablet.webp 2x"
+          media="(max-width: 48rem)"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-tablet.webp 2x"
           width="756"
           height="704"
         />
         <source
+          media="(max-width: 50rem)"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-tablet-wide.webp 2x"
+          width="768"
+          height="544"
+        />
+        <source
+          media="(max-width: 53.5rem)"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-desktop-narrow.webp"
+          width="769"
+          height="544"
+        />
+        <source
+          media="(max-width: 60rem)"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-desktop-mid.webp"
+          width="864"
+          height="603"
+        />
+        <source
           media="(max-width: 64rem)"
-          srcset="/images/fresha-alternative/dashboard-poster-desktop-compact.webp"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-desktop-compact.webp"
           width="983"
           height="686"
         />
         <source
+          media="(max-width: 85rem)"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-desktop-laptop.webp"
+          width="1203"
+          height="717"
+        />
+        <source
           media="(max-width: 96.875rem)"
-          srcset="/images/fresha-alternative/dashboard-poster-desktop.webp"
+          srcset="/images/fresha-alternative/dashboard-showcase-v2-desktop.webp"
           width="1354"
           height="806"
         />
         <img
-          src="/images/fresha-alternative/dashboard-poster-desktop-wide.webp"
+          src="/images/fresha-alternative/dashboard-showcase-v2-desktop-wide.webp"
           alt=""
           width="1458"
           height="816"
@@ -114,10 +140,18 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 <script>
   import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
+  import { receiveHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
   import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
 
   const viewport = document.querySelector<HTMLElement>('[data-deferred-demo-frame]');
+  const productFrame = viewport?.querySelector<HTMLIFrameElement>('.fresha-alt-hero__product-frame');
+  if (productFrame) receiveHeroShowcaseWheel(productFrame, window);
   if (viewport) {
-    mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
+    mountDeferredDemoFrame(viewport, window, {
+      readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
+      onReady: () => {
+        viewport.dataset.liveVisible = 'true';
+      },
+    });
   }
 </script>

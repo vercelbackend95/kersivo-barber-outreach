@@ -11,6 +11,11 @@ export type DeferredDemoFrameOptions = {
    * from the same origin — not on `load`, which fires before the embedded app has settled.
    */
   readyMessageType?: string;
+  /**
+   * Called once, two animation frames after the atomic swap to `ready`, so that swapped state
+   * (poster hidden, frame not yet visually revealed) has been painted before a reveal starts.
+   */
+  onReady?: () => void;
 };
 
 const INTENT_EVENTS = ['pointerenter', 'pointerdown', 'touchstart', 'focusin'] as const;
@@ -34,6 +39,7 @@ export function mountDeferredDemoFrame(
     revealFallbackMs = 10000,
     rootMargin = '300px 0px',
     readyMessageType,
+    onReady,
   } = options;
   const doc = viewport.ownerDocument;
   let started = false;
@@ -43,6 +49,7 @@ export function mountDeferredDemoFrame(
   let revealTimer: number | undefined;
   let idleHandle: number | undefined;
   let settleFrame: number | undefined;
+  let readyFrame: number | undefined;
 
   const setState = (state: DeferredDemoFrameState) => {
     viewport.dataset.frameState = state;
@@ -58,7 +65,14 @@ export function mountDeferredDemoFrame(
     revealTimer = undefined;
     cancelSettle();
     win.removeEventListener('message', onFrameMessage);
+    if (viewport.dataset.frameState === 'ready') return;
     setState('ready');
+    readyFrame = win.requestAnimationFrame(() => {
+      readyFrame = win.requestAnimationFrame(() => {
+        readyFrame = undefined;
+        onReady?.();
+      });
+    });
   };
 
   /** Two frames give the loaded document a paint boundary before the atomic poster swap. */
@@ -161,6 +175,7 @@ export function mountDeferredDemoFrame(
     cleanup();
     if (revealTimer !== undefined) win.clearTimeout(revealTimer);
     cancelSettle();
+    if (readyFrame !== undefined) win.cancelAnimationFrame(readyFrame);
     frame.removeEventListener('load', onFrameLoad);
     win.removeEventListener('message', onFrameMessage);
   };

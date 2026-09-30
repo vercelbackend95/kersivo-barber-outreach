@@ -6,7 +6,8 @@
  * frame and rendered with `object-fit: none` (never scaled). It only lines up with
  * the live dashboard if it was rendered by the embed at the iframe's real CSS size,
  * in the same responsive mode (the embed switches from sidebar-only to sidebar + main
- * above 768px of iframe width, i.e. above an 800px page width). So for every poster
+ * above 768px of iframe width, i.e. above an 800px page width) and at the same height,
+ * because the sidebar footer is pinned to the iframe's bottom edge. So for every poster
  * this script first measures the real iframe on the landing page at a representative
  * page viewport, then renders the embed route at exactly that size.
  *
@@ -36,14 +37,25 @@ const EMBED_PATH = '/demo/admin?embed=hero&section=bookings_dashboard';
 const HERO_READY_ATTRIBUTE = 'data-hero-showcase-ready';
 
 /** One poster per page band; `page` is the representative page viewport inside the band. */
+/**
+ * Bump when recapturing so the page references new URLs and no browser reuses a stale
+ * cached poster (update FreshaHero.astro to the same prefix).
+ */
+const POSTER_PREFIX = 'dashboard-showcase-v2';
 const VARIANTS = [
-  { file: 'dashboard-poster-mobile.webp', band: '≤ 25rem', page: [390, 844], dpr: 2, quality: 62 },
-  { file: 'dashboard-poster-mobile-wide.webp', band: '25–38rem', page: [430, 932], dpr: 2, quality: 62 },
-  { file: 'dashboard-poster-tablet.webp', band: '38–50rem', page: [768, 1024], dpr: 2, quality: 58 },
-  { file: 'dashboard-poster-desktop-compact.webp', band: '50–64rem', page: [1024, 768], dpr: 1, quality: 68 },
-  { file: 'dashboard-poster-desktop.webp', band: '64–96.875rem', page: [1440, 900], dpr: 1, quality: 68 },
-  { file: 'dashboard-poster-desktop-wide.webp', band: '> 96.875rem (iframe capped)', page: [1916, 914], dpr: 1, quality: 68 },
-];
+  { name: 'mobile', band: '≤ 25rem', page: [390, 844], dpr: 2, quality: 62 },
+  { name: 'mobile-wide', band: '25–38rem', page: [430, 932], dpr: 2, quality: 62 },
+  { name: 'tablet', band: '38–48rem', page: [768, 1024], dpr: 2, quality: 58 },
+  // 48–50rem: fixed-height viewport rule, embed still sidebar-only (iframe ≤ 768px).
+  { name: 'tablet-wide', band: '48–50rem', page: [800, 900], dpr: 2, quality: 58 },
+  // Above 50rem the embed switches to sidebar + main; its height grows with 67vw.
+  { name: 'desktop-narrow', band: '50–53.5rem', page: [801, 900], dpr: 1, quality: 68 },
+  { name: 'desktop-mid', band: '53.5–60rem', page: [900, 900], dpr: 1, quality: 68 },
+  { name: 'desktop-compact', band: '60–64rem', page: [1024, 768], dpr: 1, quality: 68 },
+  { name: 'desktop-laptop', band: '64–85rem', page: [1280, 800], dpr: 1, quality: 68 },
+  { name: 'desktop', band: '85–96.875rem', page: [1440, 900], dpr: 1, quality: 68 },
+  { name: 'desktop-wide', band: '> 96.875rem (iframe capped)', page: [1916, 914], dpr: 1, quality: 68 },
+].map((variant) => ({ ...variant, file: `${POSTER_PREFIX}-${variant.name}.webp` }));
 
 async function measureIframe(browser, [width, height]) {
   const context = await browser.newContext({ viewport: { width, height } });
