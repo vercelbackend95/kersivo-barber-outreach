@@ -10,6 +10,14 @@ type IoCallback = (entries: Array<{ isIntersecting: boolean }>) => void;
 
 let ioCallback: IoCallback | undefined;
 let idleCallback: (() => void) | undefined;
+let rafQueue: Map<number, FrameRequestCallback>;
+let rafId: number;
+
+function flushFrame() {
+  const pending = [...rafQueue.entries()];
+  rafQueue.clear();
+  for (const [, cb] of pending) cb(performance.now());
+}
 
 function setup() {
   document.body.innerHTML = `
@@ -21,10 +29,19 @@ function setup() {
   return { viewport, frame };
 }
 
+function setFrameReadyState(frame: HTMLIFrameElement, readyState: DocumentReadyState) {
+  Object.defineProperty(frame, 'contentDocument', {
+    configurable: true,
+    get: () => ({ readyState }),
+  });
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   ioCallback = undefined;
   idleCallback = undefined;
+  rafQueue = new Map();
+  rafId = 0;
   vi.stubGlobal(
     'IntersectionObserver',
     class {
@@ -40,6 +57,14 @@ beforeEach(() => {
     return 1;
   });
   vi.stubGlobal('cancelIdleCallback', () => {});
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    rafId += 1;
+    rafQueue.set(rafId, cb);
+    return rafId;
+  });
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+    rafQueue.delete(id);
+  });
 });
 
 afterEach(() => {
@@ -90,24 +115,71 @@ describe('mountDeferredDemoFrame', () => {
     },
   );
 
-  it('reveals the frame on its load event and ignores the initial about:blank load', () => {
+  it('ignores the initial about:blank load before the frame has started', () => {
     const { viewport, frame } = setup();
     mountDeferredDemoFrame(viewport);
-
     frame.dispatchEvent(new Event('load'));
+    flushFrame();
+    flushFrame();
     expect(viewport.dataset.frameState).toBe('poster');
+  });
 
+  it('stays in the loading state on the load task and swaps only after two animation frames', () => {
+    const { viewport, frame } = setup();
+    mountDeferredDemoFrame(viewport);
     viewport.dispatchEvent(new Event('pointerdown'));
+
     frame.dispatchEvent(new Event('load'));
+    expect(viewport.dataset.frameState).toBe('loading');
+
+    flushFrame();
+    expect(viewport.dataset.frameState).toBe('loading');
+
+    flushFrame();
+    expect(viewport.dataset.frameState).toBe('ready');
+    expect(rafQueue.size).toBe(0);
+  });
+
+  it('falls back to the same settled swap when the frame document is parsed but load never fires', () => {
+    const { viewport, frame } = setup();
+    mountDeferredDemoFrame(viewport, window, { revealFallbackMs: 5000 });
+    viewport.dispatchEvent(new Event('pointerdown'));
+    setFrameReadyState(frame, 'interactive');
+
+    vi.advanceTimersByTime(5000);
+    expect(viewport.dataset.frameState).toBe('loading');
+    flushFrame();
+    flushFrame();
     expect(viewport.dataset.frameState).toBe('ready');
   });
 
-  it('falls back to revealing the frame if its load event never fires', () => {
-    const { viewport } = setup();
+  it('keeps the poster when the fallback fires before the frame document has been parsed', () => {
+    const { viewport, frame } = setup();
     mountDeferredDemoFrame(viewport, window, { revealFallbackMs: 5000 });
     viewport.dispatchEvent(new Event('pointerdown'));
+    setFrameReadyState(frame, 'loading');
+
     vi.advanceTimersByTime(5000);
+    flushFrame();
+    flushFrame();
+    expect(viewport.dataset.frameState).toBe('loading');
+
+    frame.dispatchEvent(new Event('load'));
+    flushFrame();
+    flushFrame();
     expect(viewport.dataset.frameState).toBe('ready');
+  });
+
+  it('cancels pending settle frames on cleanup', () => {
+    const { viewport, frame } = setup();
+    const cleanup = mountDeferredDemoFrame(viewport);
+    viewport.dispatchEvent(new Event('pointerdown'));
+    frame.dispatchEvent(new Event('load'));
+    expect(rafQueue.size).toBe(1);
+
+    cleanup();
+    expect(rafQueue.size).toBe(0);
+    expect(viewport.dataset.frameState).toBe('loading');
   });
 
   it('sets the iframe source only once', () => {
@@ -119,5 +191,73 @@ describe('mountDeferredDemoFrame', () => {
     ioCallback?.([{ isIntersecting: true }]);
     idleCallback?.();
     expect(setter).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('mountDeferredDemoFrame with a ready message', () => {
+  const READY = 'kersivo:hero-showcase-ready';
+
+  function postFromFrame(
+    frame: HTMLIFrameElement,
+    init: { data?: unknown; origin?: string; source?: MessageEventSource | null } = {},
+  ) {
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'data' in init ? init.data : { type: READY },
+        origin: init.origin ?? window.location.origin,
+        source: init.source === undefined ? frame.contentWindow : init.source,
+      }),
+    );
+  }
+
+  function startWithReadyMessage(options: { revealFallbackMs?: number } = {}) {
+    const { viewport, frame } = setup();
+    const cleanup = mountDeferredDemoFrame(viewport, window, { readyMessageType: READY, ...options });
+    viewport.dispatchEvent(new Event('pointerdown'));
+    return { viewport, frame, cleanup };
+  }
+
+  it('keeps the poster after the frame load event until the ready message arrives', () => {
+    const { viewport, frame } = startWithReadyMessage();
+    frame.dispatchEvent(new Event('load'));
+    flushFrame();
+    flushFrame();
+    expect(viewport.dataset.frameState).toBe('loading');
+
+    postFromFrame(frame);
+    expect(viewport.dataset.frameState).toBe('ready');
+  });
+
+  it('ignores messages from another origin, another window or with another type', () => {
+    const { viewport, frame } = startWithReadyMessage();
+    postFromFrame(frame, { origin: 'https://evil.example' });
+    postFromFrame(frame, { source: window });
+    postFromFrame(frame, { data: { type: 'something-else' } });
+    postFromFrame(frame, { data: READY });
+    postFromFrame(frame, { data: null });
+    expect(viewport.dataset.frameState).toBe('loading');
+  });
+
+  it('ignores a ready message before the frame has started', () => {
+    const { viewport, frame } = setup();
+    mountDeferredDemoFrame(viewport, window, { readyMessageType: READY });
+    postFromFrame(frame);
+    expect(viewport.dataset.frameState).toBe('poster');
+  });
+
+  it('still falls back to a settled swap when the message never arrives but the document is parsed', () => {
+    const { viewport, frame } = startWithReadyMessage({ revealFallbackMs: 5000 });
+    setFrameReadyState(frame, 'complete');
+    vi.advanceTimersByTime(5000);
+    flushFrame();
+    flushFrame();
+    expect(viewport.dataset.frameState).toBe('ready');
+  });
+
+  it('stops listening for the ready message on cleanup', () => {
+    const { viewport, frame, cleanup } = startWithReadyMessage();
+    cleanup();
+    postFromFrame(frame);
+    expect(viewport.dataset.frameState).toBe('loading');
   });
 });

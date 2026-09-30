@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { mergeBlacklineSessionBookings } from '@/lib/demo/blacklineSessionBookings';
+import { useAdminClock } from './adminClock';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 export const ADMIN_TODAY_BOOKINGS_POLL_MS = 120000;
@@ -17,8 +18,8 @@ export type AdminLiveBookingRow = {
   service: { name: string };
 };
 
-function getTodayLondonDate() {
-  return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+function getTodayLondonDate(nowMs: number) {
+  return formatInTimeZone(new Date(nowMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
 
 function isTodayInLondon(value: string, todayLondonDate: string) {
@@ -47,8 +48,7 @@ export function formatAdminLiveStartTime(startAt: string) {
   });
 }
 
-export function formatAdminLiveRelativeTime(startAt: string, endAt: string) {
-  const nowMs = Date.now();
+export function formatAdminLiveRelativeTime(startAt: string, endAt: string, nowMs = Date.now()) {
   const startMs = new Date(startAt).getTime();
   const endMs = new Date(endAt).getTime();
 
@@ -93,16 +93,20 @@ export function AdminTodayBookingsLiveProvider({
   /** SSR-seeded demo (or other) payload — avoids a cold empty flash after hydration. */
   initialBookings?: AdminLiveBookingRow[];
 }) {
+  const clock = useAdminClock();
   const seeded = initialBookings != null;
   const demoPills = showDemoModePills ?? isPublicDemo;
   const [loggedIn, setLoggedIn] = useState(isPublicDemo);
   const [sessionChecked, setSessionChecked] = useState(isPublicDemo);
   const [bookings, setBookings] = useState<AdminLiveBookingRow[]>(() => initialBookings ?? []);
-  // Start false even when seeded so SSR HTML stays a skeleton (relative times depend on Date.now()).
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const initialMountMsRef = useRef(Date.now());
+  // Seeded + real clock: start false so SSR HTML stays a skeleton (relative times depend on the client clock).
+  // Seeded + frozen clock: server and client agree, so the first paint is already final.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => seeded && clock.frozen);
+  const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(() =>
+    seeded && clock.frozen ? clock.nowMs() : null,
+  );
+  const [nowMs, setNowMs] = useState(() => clock.nowMs());
+  const initialMountMsRef = useRef(clock.nowMs());
   const inFlightRef = useRef(false);
   const skipInitialFetchRef = useRef(seeded);
 
@@ -121,7 +125,8 @@ export function AdminTodayBookingsLiveProvider({
   const fetchToday = useCallback(async () => {
     if (!loggedIn || inFlightRef.current) return;
     inFlightRef.current = true;
-    const today = getTodayLondonDate();
+    const fetchNowMs = clock.nowMs();
+    const today = getTodayLondonDate(fetchNowMs);
     try {
       const response = await fetch(
         `/api/admin/bookings?date=${encodeURIComponent(today)}&mode=day`,
@@ -136,7 +141,7 @@ export function AdminTodayBookingsLiveProvider({
       let rows = data.bookings ?? [];
 
       // Public demo: after the last slot ends, still show Next appointments from tomorrow.
-      if (isPublicDemo && getUpcomingBookings(rows).length === 0) {
+      if (isPublicDemo && getUpcomingBookings(rows, fetchNowMs).length === 0) {
         const tomorrow = addLondonDays(today, 1);
         const tomorrowResponse = await fetch(
           `/api/admin/bookings?date=${encodeURIComponent(tomorrow)}&mode=day`,
@@ -148,55 +153,56 @@ export function AdminTodayBookingsLiveProvider({
         }
       }
 
-      if (isBlacklineDemo) {
+      if (isBlacklineDemo && !clock.frozen) {
         rows = mergeBlacklineSessionBookings(rows, today) as AdminLiveBookingRow[];
         const tomorrow = addLondonDays(today, 1);
         rows = mergeBlacklineSessionBookings(rows, tomorrow) as AdminLiveBookingRow[];
       }
 
       setBookings(rows);
-      setLastSuccessAt(Date.now());
+      setLastSuccessAt(clock.nowMs());
       setHasLoadedOnce(true);
     } finally {
       inFlightRef.current = false;
     }
-  }, [isBlacklineDemo, isPublicDemo, loggedIn]);
+  }, [clock, isBlacklineDemo, isPublicDemo, loggedIn]);
 
   useEffect(() => {
-    if (!isBlacklineDemo) return;
-    const today = getTodayLondonDate();
+    if (!isBlacklineDemo || clock.frozen) return;
+    const today = getTodayLondonDate(clock.nowMs());
     const tomorrow = addLondonDays(today, 1);
     setBookings((previous) => {
       const withToday = mergeBlacklineSessionBookings(previous, today);
       return mergeBlacklineSessionBookings(withToday, tomorrow) as AdminLiveBookingRow[];
     });
-  }, [isBlacklineDemo]);
+  }, [clock, isBlacklineDemo]);
 
   useEffect(() => {
     if (!loggedIn) return undefined;
 
     if (skipInitialFetchRef.current) {
       skipInitialFetchRef.current = false;
-      // Promote seeded payload after mount — client Date.now() for relative labels.
+      // Promote seeded payload after mount — client clock for relative labels.
       setHasLoadedOnce(true);
-      setLastSuccessAt(Date.now());
+      setLastSuccessAt(clock.nowMs());
     } else {
       void fetchToday();
     }
 
+    if (clock.frozen) return undefined;
     const id = window.setInterval(() => {
       void fetchToday();
     }, ADMIN_TODAY_BOOKINGS_POLL_MS);
     return () => window.clearInterval(id);
-  }, [fetchToday, loggedIn]);
+  }, [clock, fetchToday, loggedIn]);
 
   useEffect(() => {
-    if (!loggedIn) return undefined;
-    const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS);
+    if (!loggedIn || clock.frozen) return undefined;
+    const id = window.setInterval(() => setNowMs(clock.nowMs()), LAST_UPDATED_REFRESH_MS);
     return () => window.clearInterval(id);
-  }, [loggedIn]);
+  }, [clock, loggedIn]);
 
-  const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
+  const todayLondonDate = useMemo(() => getTodayLondonDate(nowMs), [nowMs]);
   const upcomingBookings = useMemo(() => {
     const todayRows = bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate));
     const fromToday = getUpcomingBookings(todayRows, nowMs);
@@ -219,8 +225,8 @@ export function AdminTodayBookingsLiveProvider({
 
   const formatStartTime = useCallback((iso: string) => formatAdminLiveStartTime(iso), []);
   const formatRelativeTime = useCallback(
-    (startAt: string, endAt: string) => formatAdminLiveRelativeTime(startAt, endAt),
-    [],
+    (startAt: string, endAt: string) => formatAdminLiveRelativeTime(startAt, endAt, clock.nowMs()),
+    [clock],
   );
 
   const value = useMemo<AdminTodayBookingsLiveValue>(

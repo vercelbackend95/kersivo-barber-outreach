@@ -6,6 +6,7 @@ import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import { getBlacklineBookingsResponse } from '@/lib/admin/blacklineDemoFixtures/schedule';
 import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
 import { BLACKLINE_ADMIN_DEMO_PATH } from '@/lib/admin/demoConfig';
+import { BLACKLINE_HERO_SHOWCASE_DAY, blacklineHeroShowcaseNow } from '@/lib/admin/heroShowcase';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
@@ -29,9 +30,11 @@ import '@/styles/components/table.css';
 import '@/styles/components/admin-ai.css';
 
 const heroEmbed = Astro.url.searchParams.get('embed') === 'hero';
-const todayKey = blacklineDayKey();
+const bookingsNow = heroEmbed ? blacklineHeroShowcaseNow() : new Date();
+const todayKey = heroEmbed ? BLACKLINE_HERO_SHOWCASE_DAY : blacklineDayKey(bookingsNow);
 const { bookings: initialBookings } = getBlacklineBookingsResponse(
   new URLSearchParams({ date: todayKey, mode: 'day' }),
+  bookingsNow,
 );
 ---
 

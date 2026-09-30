@@ -10,6 +10,11 @@ import {
   parseBlacklineSessionOrderCollectPath,
   toAdminOrderDetail,
 } from '@/lib/demo/blacklineSessionOrders';
+import {
+  isHeroShowcaseDocument,
+  isSameOriginApiRequest,
+  resolveHeroShowcaseFetch,
+} from './heroShowcaseFetch';
 
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
@@ -191,8 +196,15 @@ export function installAdminFetchInterceptor(): void {
 
   const nativeFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const pathname = resolveRequestPath(input);
-    if (!pathname?.startsWith('/api/admin/')) return nativeFetch(input, init);
+    const requestUrl = resolveRequestUrl(input);
+    const pathname = requestUrl?.pathname ?? null;
+    const heroShowcase = isHeroShowcaseDocument() && isSameOriginApiRequest(requestUrl);
+    if (!pathname?.startsWith('/api/admin/')) {
+      if (heroShowcase) {
+        return resolveHeroShowcaseFetch(requestUrl, resolveRequestMethod(input, init), input, init);
+      }
+      return nativeFetch(input, init);
+    }
 
     const method = resolveRequestMethod(input, init);
     const sessionCollectId = parseBlacklineSessionOrderCollectPath(pathname, method);
@@ -215,6 +227,10 @@ export function installAdminFetchInterceptor(): void {
         status: 403,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    if (heroShowcase) {
+      return resolveHeroShowcaseFetch(requestUrl, method, input, init);
     }
 
     const demoUrl = rewriteAdminUrlForDemo(input, init);

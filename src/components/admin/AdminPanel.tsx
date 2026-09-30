@@ -4,6 +4,8 @@ import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
+import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
+import { signalHeroShowcaseReadyWhenSettled } from './heroShowcaseReady';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
 import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
@@ -289,7 +291,7 @@ export default function AdminPanel({
   }, [demoMode]);
 
   useEffect(() => {
-    if (!demoMode) return;
+    if (!demoMode || showcaseMode) return;
     void (async () => {
       try {
         const response = await fetch('/api/admin-demo/session');
@@ -298,7 +300,12 @@ export default function AdminPanel({
         setDemoLoadError(true);
       }
     })();
-  }, [demoMode]);
+  }, [demoMode, showcaseMode]);
+
+  useEffect(() => {
+    if (!showcaseMode) return undefined;
+    return signalHeroShowcaseReadyWhenSettled();
+  }, [showcaseMode]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {
     if (section === activeSection) return;
@@ -402,6 +409,7 @@ export default function AdminPanel({
   const sessionPending = !demoMode && !authReady;
 
   return (
+    <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
     <AdminTodayBookingsLiveProvider
       isPublicDemo={demoMode}
       isBlacklineDemo={demoTenant === 'blackline'}
@@ -493,5 +501,6 @@ export default function AdminPanel({
         )}
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
+    </AdminClockContext.Provider>
   );
 }

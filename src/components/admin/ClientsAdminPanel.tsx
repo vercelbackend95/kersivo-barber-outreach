@@ -30,6 +30,7 @@ function formatDate(iso: string | null): string {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Europe/London',
   });
 }
 

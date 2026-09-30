@@ -4,6 +4,7 @@ import { Ban, Check, Clock, Crown, ImagePlus, Mail, MessageCircle, Phone, Pin, P
 import { openClientMessageChannel } from '../../lib/admin/clientMessaging';
 import { resolveClientNoteImageSrc } from '@/lib/storage/clientNoteImageUrl';
 import { adminFetchJson } from './adminAuth';
+import { useAdminClock } from './adminClock';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ function formatPence(pence: number): string {
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' });
 }
 
 function formatOrderStatus(status: string): string {
@@ -289,10 +290,9 @@ function sortNotesForFeed(notes: ClientNotePost[]): ClientNotePost[] {
   return [top, ...chronological.filter((note) => note.id !== top.id)];
 }
 
-function formatNoteTime(iso: string): string {
+function formatNoteTime(iso: string, nowMs: number): string {
   const date = new Date(iso);
-  const now = Date.now();
-  const diffMs = now - date.getTime();
+  const diffMs = nowMs - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
 
   if (diffMin < 1) return 'Just now';
@@ -305,7 +305,7 @@ function formatNoteTime(iso: string): string {
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays}d ago`;
 
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' });
 }
 
 function NotePostAvatar({ barber }: { barber: BarberOption | null }) {
@@ -390,6 +390,7 @@ function NotePost({
   isFeedPinned: boolean;
   onImageOpen: (url: string) => void;
 }) {
+  const clock = useAdminClock();
   const authorName = note.barber?.name ?? 'Previous note';
   const [burstCount, setBurstCount] = useState<number | null>(null);
   const [pinStick, setPinStick] = useState(false);
@@ -446,7 +447,7 @@ function NotePost({
             ) : null}
           </div>
           <time className="admin-cp-note-post-time" dateTime={note.createdAt}>
-            {formatNoteTime(note.createdAt)}
+            {formatNoteTime(note.createdAt, clock.nowMs())}
           </time>
         </div>
       </header>

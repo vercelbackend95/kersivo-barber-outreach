@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import OrdersDataTable22 from './OrdersDataTable22';
+import { useAdminClock } from './adminClock';
 import ClientProfilePanel from './ClientProfilePanel';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminLineChart from './charts/AdminLineChart';
@@ -260,12 +261,12 @@ function getCurrentYmdInLondon(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
-function getRangeDates(preset: Exclude<SalesRangePreset, 'custom'>): { from: string; to: string } {
+function getRangeDates(preset: Exclude<SalesRangePreset, 'custom'>, nowMs: number): { from: string; to: string } {
   const days = Number(preset);
-  const today = new Date();
+  const today = new Date(nowMs);
   const to = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(today);
 
-  const fromBase = new Date();
+  const fromBase = new Date(nowMs);
   fromBase.setUTCDate(fromBase.getUTCDate() - (days - 1));
   const from = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(fromBase);
 
@@ -593,6 +594,7 @@ export default function ShopAdminPanel({
   isBlacklineDemo = false,
   showcaseMode = false,
 }: ShopAdminPanelProps) {
+  const clock = useAdminClock();
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -628,8 +630,8 @@ export default function ShopAdminPanel({
   );
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('7');
-  const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7').from);
-  const [salesTo, setSalesTo] = useState(() => getRangeDates('7').to);
+  const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7', clock.nowMs()).from);
+  const [salesTo, setSalesTo] = useState(() => getRangeDates('7', clock.nowMs()).to);
   const [salesCustomRange, setSalesCustomRange] = useState<SegmentedDateRange | null>(null);
   const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
@@ -1239,7 +1241,7 @@ export default function ShopAdminPanel({
         errorMessage: 'Could not fetch orders.',
       });
       const incoming = payload.orders as OrderListItem[];
-      setOrders(isBlacklineDemo ? mergeBlacklineSessionOrders(incoming) : incoming);
+      setOrders(isBlacklineDemo && !clock.frozen ? mergeBlacklineSessionOrders(incoming) : incoming);
     } catch (fetchError) {
       if (fetchError instanceof AdminFetchError && fetchError.status === 401) {
         setOrders([]);
@@ -1300,7 +1302,7 @@ export default function ShopAdminPanel({
     const range =
       preset === 'custom'
         ? { from, to }
-        : getRangeDates(preset);
+        : getRangeDates(preset, clock.nowMs());
 
     const query = new URLSearchParams();
     query.set('from', range.from);
@@ -1311,7 +1313,7 @@ export default function ShopAdminPanel({
         errorMessage: 'Could not fetch sales analytics.',
       });
       if (salesFetchRequestRef.current !== requestId) return;
-      const next = isBlacklineDemo
+      const next = isBlacklineDemo && !clock.frozen
         ? mergeBlacklineSessionSales(payload as SalesResponse)
         : (payload as SalesResponse);
       setSalesData(next);
@@ -1375,7 +1377,7 @@ export default function ShopAdminPanel({
 
 
   useEffect(() => {
-    if (activeTab !== 'orders') return;
+    if (activeTab !== 'orders' || clock.frozen) return;
     const intervalId = window.setInterval(() => {
       void fetchOrders();
       if (expandedOrderId) {
@@ -1484,7 +1486,7 @@ export default function ShopAdminPanel({
 
 
   function applyPreset(nextPreset: Exclude<SalesRangePreset, 'custom'>) {
-    const dates = getRangeDates(nextPreset);
+    const dates = getRangeDates(nextPreset, clock.nowMs());
     setSalesCustomRange(null);
     setSalesPreset(nextPreset);
     setSalesFrom(dates.from);

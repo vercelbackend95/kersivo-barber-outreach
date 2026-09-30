@@ -249,12 +249,19 @@
   height: 100%;
 }
 
+/*
+ * Posters are rendered at the real iframe size, so they must never be scaled: between
+ * representative widths only the right/bottom edges crop, top-left geometry stays 1:1.
+ */
 .fresha-alt-hero__product-poster img {
-  object-fit: cover;
+  object-fit: none;
   object-position: left top;
 }
 
-/* Hidden until its own document has loaded so the poster never flashes to an empty frame. */
+/*
+ * Atomic poster → live swap. The poster and live dashboard hold different dynamic
+ * states, so they must never be blended: no opacity transition here.
+ */
 .fresha-alt-hero__product-viewport .fresha-alt-hero__product-frame {
   opacity: 0;
   pointer-events: none;
@@ -265,10 +272,8 @@
   pointer-events: auto;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .fresha-alt-hero__product-viewport .fresha-alt-hero__product-frame {
-    transition: opacity 320ms ease-out;
-  }
+.fresha-alt-hero__product-viewport[data-frame-state='ready'] .fresha-alt-hero__product-poster {
+  visibility: hidden;
 }
 
 .fresha-alt-hero__product-caption {

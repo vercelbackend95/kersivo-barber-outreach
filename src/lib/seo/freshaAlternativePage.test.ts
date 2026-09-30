@@ -491,27 +491,40 @@ describe('hero dashboard progressive loading', () => {
     expect(frameMarkup).not.toMatch(/\ssrc=/);
     expect(frameMarkup).toContain('title="Interactive KERSIVO owner dashboard demo"');
     expect(frameMarkup).not.toContain('sandbox');
-    expect(heroSource).toContain('mountDeferredDemoFrame(viewport)');
+    expect(heroSource).toContain(
+      'mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE })',
+    );
   });
 
   it('ships lightweight WebP posters with explicit dimensions and a no-JS fallback', () => {
-    for (const variant of ['mobile', 'tablet', 'desktop']) {
+    for (const variant of [
+      'mobile',
+      'mobile-wide',
+      'tablet',
+      'desktop-compact',
+      'desktop',
+      'desktop-wide',
+    ]) {
       expect(heroSource).toContain(`/images/fresha-alternative/dashboard-poster-${variant}.webp`);
     }
     expect(heroSource).toMatch(/<picture class="fresha-alt-hero__product-poster" aria-hidden="true">/);
-    expect(heroSource).toMatch(/<img[\s\S]*?alt=""[\s\S]*?width="1437"[\s\S]*?height="805"/);
+    expect(heroSource).toMatch(/<img[\s\S]*?alt=""[\s\S]*?width="1458"[\s\S]*?height="816"/);
+    // The embed stays sidebar-only up to 768px of iframe width, i.e. an 800px page.
+    expect(heroSource).toContain('media="(max-width: 50rem)"');
+    expect(heroCss).toMatch(/\.fresha-alt-hero__product-poster img \{\s*object-fit: none;/);
     expect(heroSource).toMatch(
       /<noscript>\s*<iframe\s+src="\/demo\/admin\?embed=hero&section=bookings_dashboard"/,
     );
   });
 
-  it('keeps the frame non-interactive only until ready and respects reduced motion', () => {
+  it('swaps poster and live frame atomically without blending them', () => {
     expect(heroCss).toMatch(
       /\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame \{\s*opacity: 1;\s*pointer-events: auto;/,
     );
     expect(heroCss).toMatch(
-      /@media \(prefers-reduced-motion: no-preference\) \{\s*\.fresha-alt-hero__product-viewport \.fresha-alt-hero__product-frame \{\s*transition: opacity/,
+      /\[data-frame-state='ready'\] \.fresha-alt-hero__product-poster \{\s*visibility: hidden;/,
     );
+    expect(heroCss).not.toMatch(/\.fresha-alt-hero__product-frame \{[^}]*transition/);
     expect(heroCss).toMatch(/\.fresha-alt-hero__product-viewport \{[^}]*height: clamp\(38rem, 56vw, 51rem\)/);
   });
 });

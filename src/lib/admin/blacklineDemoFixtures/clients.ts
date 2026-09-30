@@ -140,8 +140,8 @@ export function getBlacklineClientNotesResponse(clientId: string) {
   return { notes: notesByClient.get(clientId) ?? [] };
 }
 
-export async function createBlacklineClientNoteFromRequest(clientId: string, request: Request) {
-  const detail = getBlacklineClientDetailResponse(clientId);
+export async function createBlacklineClientNoteFromRequest(clientId: string, request: Request, now?: Date) {
+  const detail = getBlacklineClientDetailResponse(clientId, now);
   if (!detail) return null;
   const body = (await request.json().catch(() => null)) as { body?: string } | null;
   const text = body?.body?.trim() ?? '';
@@ -150,7 +150,7 @@ export async function createBlacklineClientNoteFromRequest(clientId: string, req
   const note = {
     id: `bl-note-${clientId}-${Date.now()}`,
     body: text.slice(0, 2000),
-    createdAt: new Date().toISOString(),
+    createdAt: (now ?? new Date()).toISOString(),
     likeCount: 0,
     likedByMe: false,
     images: [],

@@ -18,6 +18,7 @@ import {
 } from '../lucide-react';
 
 import DemoActionLock from './DemoActionLock';
+import { useAdminClock } from './adminClock';
 import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
 import BlacklineConversionCard from './BlacklineConversionCard';
@@ -198,10 +199,12 @@ function SidebarStatus({
   paused?: boolean;
   underConstruction?: boolean;
 }) {
-  const dateStr = new Date().toLocaleDateString('en-GB', {
+  const clock = useAdminClock();
+  const dateStr = new Date(clock.nowMs()).toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
+    ...(clock.frozen ? { timeZone: 'Europe/London' } : {}),
   });
   const label = underConstruction ? 'Building' : paused ? 'Paused' : 'Online';
   const showDotAlert = paused || underConstruction;

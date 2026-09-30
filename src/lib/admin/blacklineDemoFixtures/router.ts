@@ -31,6 +31,11 @@ import {
 
 type FixtureResult = { status: number; body: unknown };
 
+export type BlacklineDemoFixtureOptions = {
+  /** Fixed clock for every date-dependent fixture (hero showcase). Defaults to the real time. */
+  now?: Date;
+};
+
 const API_PREFIX = '/api/demo/admin';
 
 export async function resolveBlacklineDemoFixture(
@@ -38,7 +43,9 @@ export async function resolveBlacklineDemoFixture(
   searchParams: URLSearchParams,
   method = 'GET',
   request?: Request,
+  options: BlacklineDemoFixtureOptions = {},
 ): Promise<FixtureResult | null> {
+  const { now } = options;
   const normalized = pathname.replace(/\/$/, '');
   if (!normalized.startsWith(API_PREFIX)) return null;
   const subPath = normalized.slice(API_PREFIX.length).replace(/^\//, '');
@@ -47,19 +54,19 @@ export async function resolveBlacklineDemoFixture(
     return { status: 200, body: blacklineSessionResponse };
   }
   if (subPath === 'team') {
-    return { status: 200, body: getBlacklineTeamResponse() };
+    return { status: 200, body: getBlacklineTeamResponse(now) };
   }
   if (subPath === 'bookings') {
     if (searchParams.get('view') === 'history') {
-      return { status: 200, body: getBlacklineBookingsHistoryResponse(searchParams) };
+      return { status: 200, body: getBlacklineBookingsHistoryResponse(searchParams, now) };
     }
     if (searchParams.get('view') === 'stats') {
-      return { status: 200, body: getBlacklineBookingsStatsResponse(searchParams) };
+      return { status: 200, body: getBlacklineBookingsStatsResponse(searchParams, now) };
     }
-    return { status: 200, body: getBlacklineBookingsResponse(searchParams) };
+    return { status: 200, body: getBlacklineBookingsResponse(searchParams, now) };
   }
   if (subPath === 'barbers') {
-    return { status: 200, body: getBlacklineBarbersResponse() };
+    return { status: 200, body: getBlacklineBarbersResponse(now) };
   }
   if (/^barbers\/[^/]+\/rules$/.test(subPath)) {
     return { status: 200, body: getBlacklineBarberRulesResponse() };
@@ -74,27 +81,27 @@ export async function resolveBlacklineDemoFixture(
     return { status: 200, body: blacklineServiceCategoriesResponse };
   }
   if (subPath === 'clients') {
-    return { status: 200, body: getBlacklineClientsResponse() };
+    return { status: 200, body: getBlacklineClientsResponse(now) };
   }
 
   const clientDetailMatch = subPath.match(/^clients\/([^/]+)$/);
   if (clientDetailMatch) {
-    const detail = getBlacklineClientDetailResponse(clientDetailMatch[1]!);
+    const detail = getBlacklineClientDetailResponse(clientDetailMatch[1]!, now);
     if (!detail) return { status: 404, body: { error: 'Client not found.' } };
     return { status: 200, body: detail };
   }
 
   const clientNotesMatch = subPath.match(/^clients\/([^/]+)\/notes$/);
   if (clientNotesMatch && method === 'GET') {
-    const detail = getBlacklineClientDetailResponse(clientNotesMatch[1]!);
+    const detail = getBlacklineClientDetailResponse(clientNotesMatch[1]!, now);
     if (!detail) return { status: 404, body: { error: 'Client not found.' } };
     return { status: 200, body: getBlacklineClientNotesResponse(clientNotesMatch[1]!) };
   }
   if (clientNotesMatch && method === 'POST' && request) {
-    const detail = getBlacklineClientDetailResponse(clientNotesMatch[1]!);
+    const detail = getBlacklineClientDetailResponse(clientNotesMatch[1]!, now);
     if (!detail) return { status: 404, body: { error: 'Client not found.' } };
     try {
-      const result = await createBlacklineClientNoteFromRequest(clientNotesMatch[1]!, request);
+      const result = await createBlacklineClientNoteFromRequest(clientNotesMatch[1]!, request, now);
       if (!result) return { status: 404, body: { error: 'Client not found.' } };
       return { status: 201, body: result };
     } catch (error) {
@@ -107,7 +114,7 @@ export async function resolveBlacklineDemoFixture(
 
   const clientNoteLikeMatch = subPath.match(/^clients\/([^/]+)\/notes\/([^/]+)\/like$/);
   if (clientNoteLikeMatch && method === 'POST') {
-    const detail = getBlacklineClientDetailResponse(clientNoteLikeMatch[1]!);
+    const detail = getBlacklineClientDetailResponse(clientNoteLikeMatch[1]!, now);
     if (!detail) return { status: 404, body: { error: 'Client not found.' } };
     const result = toggleBlacklineClientNoteLike(clientNoteLikeMatch[1]!, clientNoteLikeMatch[2]!);
     if (!result) return { status: 404, body: { error: 'Note not found.' } };
@@ -122,7 +129,7 @@ export async function resolveBlacklineDemoFixture(
       if (!fromParam || !toParam) {
         return { status: 400, body: { error: 'Custom range requires from and to (YYYY-MM-DD).' } };
       }
-      return { status: 200, body: getBlacklineReportsResponse('custom', fromParam, toParam) };
+      return { status: 200, body: getBlacklineReportsResponse('custom', fromParam, toParam, now) };
     }
     const range =
       rangeParam === '1d'
@@ -134,7 +141,7 @@ export async function resolveBlacklineDemoFixture(
       || rangeParam === 'month'
         ? rangeParam
         : '7d';
-    return { status: 200, body: getBlacklineReportsResponse(range) };
+    return { status: 200, body: getBlacklineReportsResponse(range, undefined, undefined, now) };
   }
 
   if (subPath === 'timeblocks') {
@@ -150,16 +157,16 @@ export async function resolveBlacklineDemoFixture(
     return { status: 200, body: detail };
   }
   if (subPath === 'shop/orders') {
-    return { status: 200, body: getBlacklineShopOrdersList() };
+    return { status: 200, body: getBlacklineShopOrdersList(now) };
   }
   const shopOrderMatch = subPath.match(/^shop\/orders\/([^/]+)$/);
   if (shopOrderMatch) {
-    const detail = getBlacklineShopOrderDetail(shopOrderMatch[1]!);
+    const detail = getBlacklineShopOrderDetail(shopOrderMatch[1]!, now);
     if (!detail) return { status: 404, body: { error: 'Order not found.' } };
     return { status: 200, body: detail };
   }
   if (subPath === 'shop/sales') {
-    return { status: 200, body: getBlacklineShopSalesResponse(searchParams) };
+    return { status: 200, body: getBlacklineShopSalesResponse(searchParams, now) };
   }
 
   return null;
