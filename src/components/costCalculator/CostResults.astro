@@ -1,19 +1,27 @@
 ---
+import { calculateMonthlyCosts } from '@/lib/costCalculator/barberSoftwareCostEngine';
 import {
+  caveatLabel,
   DEFAULT_PERIOD,
+  DEFAULT_SCENARIO,
   INSIGHT_EYEBROW,
   INSIGHT_PENDING,
+  NOTES_LABEL,
   PERIOD_OPTIONS,
-  PLACEHOLDER_TOTAL,
-  PLACEHOLDER_VALUE,
+  PERIOD_UNAVAILABLE_NOTE,
   PROVIDER_RESULTS,
   RESULTS_HEADING,
+  RESULTS_INVALID,
   RESULTS_SUPPORTING,
+  SHARED_NOTES_LABEL,
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
 } from '@/lib/costCalculator/calculatorUi';
+import { buildResultsView } from '@/lib/costCalculator/resultView';
 
 const defaultPeriod = PERIOD_OPTIONS.find((option) => option.value === DEFAULT_PERIOD)!;
+const view = buildResultsView(calculateMonthlyCosts(DEFAULT_SCENARIO));
+const viewFor = (id: string) => view.providers.find((provider) => provider.id === id)!;
 ---
 
 <section id="cost-comparison" class="calc-results" aria-labelledby="calc-results-title" data-calc-results>
@@ -24,71 +32,129 @@ const defaultPeriod = PERIOD_OPTIONS.find((option) => option.value === DEFAULT_P
         <p class="calc-results__supporting">{RESULTS_SUPPORTING}</p>
       </div>
 
-      <fieldset class="calc-segmented calc-results__period" data-calc-period>
-        <legend class="sr-only">Cost period</legend>
-        {
-          PERIOD_OPTIONS.map((option) => (
-            <label class="calc-segmented__option">
-              <input
-                type="radio"
-                name="period"
-                value={option.value}
-                checked={option.value === DEFAULT_PERIOD}
-                data-result-label={option.resultLabel}
-              />
-              <span>{option.label}</span>
-            </label>
-          ))
-        }
-      </fieldset>
+      <div class="calc-results__period-wrap">
+        <fieldset class="calc-segmented calc-results__period" data-calc-period aria-describedby="calc-period-note">
+          <legend class="sr-only">Cost period</legend>
+          {
+            PERIOD_OPTIONS.map((option) => (
+              <label class:list={['calc-segmented__option', { 'is-unavailable': !option.available }]}>
+                <input
+                  type="radio"
+                  name="period"
+                  value={option.value}
+                  checked={option.value === DEFAULT_PERIOD}
+                  disabled={!option.available}
+                  data-result-label={option.resultLabel}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))
+          }
+        </fieldset>
+        <p id="calc-period-note" class="calc-results__period-note">{PERIOD_UNAVAILABLE_NOTE}</p>
+      </div>
     </header>
 
     <p class="calc-results__note" data-calc-three-year-note hidden>{THREE_YEAR_NOTE}</p>
+    <p class="calc-results__status" data-slot="results-status" hidden={view.ok}>{RESULTS_INVALID}</p>
 
     <ol class="calc-results__cards">
       {
-        PROVIDER_RESULTS.map((provider) => (
-          <li class="calc-card" data-provider={provider.id}>
-            <article class="calc-card__inner" aria-labelledby={`calc-card-${provider.id}`}>
-              <h3 id={`calc-card-${provider.id}`} class="calc-card__name">
-                {provider.name}
-              </h3>
-              <p class="calc-card__period" data-calc-period-label>
-                {defaultPeriod.resultLabel}
-              </p>
-              <p class="calc-card__total">
-                <span aria-hidden="true">{PLACEHOLDER_TOTAL}</span>
-                <span class="sr-only">Not calculated yet</span>
-              </p>
+        PROVIDER_RESULTS.map((provider) => {
+          const result = viewFor(provider.id);
+          const hasNotes = result.warnings.length + result.assumptions.length > 0;
+          return (
+            <li class="calc-card" data-provider={provider.id} data-state={result.state}>
+              <article class="calc-card__inner" aria-labelledby={`calc-card-${provider.id}`}>
+                <h3 id={`calc-card-${provider.id}`} class="calc-card__name">
+                  {provider.name}
+                </h3>
+                <p class="calc-card__period" data-calc-period-label>
+                  {defaultPeriod.resultLabel}
+                </p>
+                <p class="calc-card__total">
+                  <span data-slot="total" aria-hidden={result.state === 'unavailable' ? 'true' : undefined}>
+                    {result.total}
+                  </span>
+                  <span class="sr-only" data-slot="total-sr">
+                    {result.totalSr}
+                  </span>
+                </p>
+                <p class="calc-card__custom" data-slot="custom-note" hidden={!result.customNote}>
+                  {result.customNote}
+                </p>
+                <p class="calc-card__net" data-slot="net">
+                  {result.net}
+                </p>
 
-              <dl class="calc-card__summary">
-                {SUMMARY_ROWS.map((row) => (
-                  <div class="calc-card__row">
-                    <dt>{row}</dt>
-                    <dd>{PLACEHOLDER_VALUE}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              <details class="calc-card__breakdown">
-                <summary>
-                  View breakdown<span class="sr-only"> for {provider.name}</span>
-                  <span class="calc-advanced__chevron" aria-hidden="true" />
-                </summary>
-                <dl class="calc-card__breakdown-list">
-                  {provider.breakdown.map((row) => (
+                <dl class="calc-card__summary">
+                  {SUMMARY_ROWS.map((row) => (
                     <div class="calc-card__row">
-                      <dt>{row}</dt>
-                      <dd>{PLACEHOLDER_VALUE}</dd>
+                      <dt>{row.label}</dt>
+                      <dd data-summary={row.id}>{result.summary[row.id]}</dd>
                     </div>
                   ))}
                 </dl>
-              </details>
-            </article>
-          </li>
-        ))
+
+                <details class="calc-card__breakdown">
+                  <summary>
+                    View breakdown<span class="sr-only"> for {provider.name}</span>
+                    <span class="calc-advanced__chevron" aria-hidden="true" />
+                  </summary>
+                  <dl class="calc-card__breakdown-list">
+                    {provider.breakdown.map((row) => {
+                      const cell = result.breakdown[row.id];
+                      return (
+                        <div class="calc-card__row" data-line={row.id}>
+                          <dt>
+                            {row.label}
+                            <span class="calc-card__detail" data-slot="detail">
+                              {cell?.detail}
+                            </span>
+                          </dt>
+                          <dd data-slot="value">{cell?.value}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </details>
+
+                <details class="calc-card__breakdown calc-card__notes" data-slot="notes" hidden={!hasNotes}>
+                  <summary>
+                    {NOTES_LABEL}
+                    <span class="calc-card__notes-flag" data-slot="notes-flag" hidden={result.warnings.length === 0}>
+                      {caveatLabel(result.warnings.length)}
+                    </span>
+                    <span class="sr-only"> for {provider.name}</span>
+                    <span class="calc-advanced__chevron" aria-hidden="true" />
+                  </summary>
+                  <ul class="calc-card__notes-list calc-card__notes-list--warnings" data-slot="warnings">
+                    {result.warnings.map((message) => (
+                      <li>{message}</li>
+                    ))}
+                  </ul>
+                  <ul class="calc-card__notes-list" data-slot="assumptions">
+                    {result.assumptions.map((message) => (
+                      <li>{message}</li>
+                    ))}
+                  </ul>
+                </details>
+              </article>
+            </li>
+          );
+        })
       }
     </ol>
+
+    <details class="calc-shared-notes" data-slot="shared-notes" hidden={view.sharedAssumptions.length === 0}>
+      <summary>
+        {SHARED_NOTES_LABEL}
+        <span class="calc-advanced__chevron" aria-hidden="true"></span>
+      </summary>
+      <ul class="calc-card__notes-list" data-slot="shared-assumptions">
+        {view.sharedAssumptions.map((message) => <li>{message}</li>)}
+      </ul>
+    </details>
 
     <aside class="calc-insight" aria-labelledby="calc-insight-title">
       <p id="calc-insight-title" class="calc-insight__eyebrow">{INSIGHT_EYEBROW}</p>

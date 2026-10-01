@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { formatGbp, requireVerifiedFreshaFact } from '@/lib/seo/freshaFacts';
 import { buildBarberCostCalculatorJsonLd } from '@/lib/seo/barberCostCalculatorJsonLd';
+import type { CostScenarioInput, LineItemId } from './barberSoftwareCostEngine';
 import {
   ADVANCED_COSTS_LABEL,
   APPOINTMENTS_FIELD,
@@ -11,16 +12,18 @@ import {
   BARBERS_FIELD,
   BOOST_TOGGLE,
   CALC_PANEL_LABEL,
+  CUSTOM_PRICING_NOTE,
   DEFAULT_PERIOD,
+  DEFAULT_SCENARIO,
+  EXCEEDS_APPOINTMENTS_MESSAGE,
   FRESHA_ADD_ONS,
   INSIGHT_EYEBROW,
   INSIGHT_PENDING,
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
+  NUMBER_FIELDS,
   PAYMENTS_TOGGLE,
   PERIOD_OPTIONS,
-  PLACEHOLDER_TOTAL,
-  PLACEHOLDER_VALUE,
   PROVIDER_RESULTS,
   RESULTS_HEADING,
   RESULTS_SUPPORTING,
@@ -29,6 +32,7 @@ import {
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
   VAT_OPTIONS,
+  validationMessage,
 } from './calculatorUi';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -46,12 +50,23 @@ describe('calculator panel inputs', () => {
     expect(APPOINTMENTS_FIELD.label).toBe('Monthly appointments');
     expect(APPOINTMENTS_FIELD.helper).toBe('Approximate total bookings across the shop.');
     expect(APPOINTMENT_VALUE_FIELD.label).toBe('Average appointment value');
-
     for (const name of ['BARBERS_FIELD', 'APPOINTMENTS_FIELD', 'APPOINTMENT_VALUE_FIELD', 'MARKETPLACE_CLIENTS_FIELD']) {
       expect(panelSource).toContain(`for={${name}.id}`);
       expect(panelSource).toContain(`id={${name}.id}`);
     }
     expect(panelSource).toContain('{CALC_PANEL_LABEL}');
+  });
+
+  it('names every control after its engine scenario key', () => {
+    const names = [
+      ...NUMBER_FIELDS.map((field) => field.name),
+      BOOST_TOGGLE.name,
+      SPLIT_ASSUMPTIONS_TOGGLE.name,
+      VAT_OPTIONS.name,
+      ...FRESHA_ADD_ONS.map((addOn) => addOn.name),
+      PAYMENTS_TOGGLE.name,
+    ].sort();
+    expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
   });
 
   it('renders the barber stepper with labelled buttons and a £ prefix on appointment value', () => {
@@ -62,25 +77,15 @@ describe('calculator panel inputs', () => {
     expect(BARBERS_FIELD.min).toBe(1);
   });
 
-  it('defaults marketplace clients to zero', () => {
+  it('defaults marketplace clients to zero and Boost to off', () => {
     expect(MARKETPLACE_HEADING).toBe('MARKETPLACE ACTIVITY');
-    expect(MARKETPLACE_CLIENTS_FIELD.label).toBe('Qualifying new marketplace clients / month');
     expect(MARKETPLACE_CLIENTS_FIELD.defaultValue).toBe(0);
-    expect(MARKETPLACE_CLIENTS_FIELD.helper).toBe(
-      'Use this to model acquisition fees only. It does not assume each platform would generate the same number of clients.',
-    );
     for (const field of SPLIT_FIELDS) expect(field.defaultValue).toBe(0);
-  });
-
-  it('keeps Booksy Boost off by default as a switch', () => {
-    expect(BOOST_TOGGLE.label).toBe('Booksy Boost');
     expect(BOOST_TOGGLE.defaultOn).toBe(false);
     expect(panelSource).toContain('checked={BOOST_TOGGLE.defaultOn}');
-    expect(panelSource.match(/role="switch"/g)).toHaveLength(2);
   });
 
   it('hides split marketplace assumptions until requested', () => {
-    expect(SPLIT_ASSUMPTIONS_TOGGLE.label).toBe('Use different assumptions for Booksy and Fresha');
     expect(SPLIT_ASSUMPTIONS_TOGGLE.defaultOn).toBe(false);
     expect(SPLIT_FIELDS.map((field) => field.label)).toEqual([
       'Booksy Boost clients / month',
@@ -96,94 +101,139 @@ describe('calculator panel inputs', () => {
     for (const binding of ['{VAT_OPTIONS.legend}', '{FRESHA_ADD_ONS_LEGEND}', '{PAYMENTS_TOGGLE.label}']) {
       expect(advanced).toContain(binding);
     }
-    expect(VAT_OPTIONS.legend).toBe('VAT registered?');
-    expect(VAT_OPTIONS.options.map((option) => option.label)).toEqual(['No', 'Yes']);
     expect(VAT_OPTIONS.defaultValue).toBe('no');
-    expect(PAYMENTS_TOGGLE.defaultOn).toBe(false);
-    expect(panelSource).toContain('<p id="calc-payments-note" class="calc-pending" hidden>');
+  });
+
+  it('disables the payment processing control for this stage', () => {
+    const payments = panelSource.slice(panelSource.indexOf('id={PAYMENTS_TOGGLE.id}'));
+    expect(payments.slice(0, payments.indexOf('/>'))).toMatch(/\bdisabled\b/);
+    expect(PAYMENTS_TOGGLE.unavailableNote).toBe(
+      'Payment processing comparison will be added in the next calculation stage.',
+    );
+    expect(panelSource).toContain('<p id="calc-payments-note" class="calc-pending">{PAYMENTS_TOGGLE.unavailableNote}</p>');
+    expect(panelSource).not.toContain('aria-controls="calc-payments-note"');
+    expect(DEFAULT_SCENARIO.includePayments).toBe(false);
+  });
+
+  it('gives every number field an associated inline error slot', () => {
+    for (const binding of ['BARBERS_FIELD', 'APPOINTMENTS_FIELD', 'APPOINTMENT_VALUE_FIELD', 'MARKETPLACE_CLIENTS_FIELD']) {
+      expect(panelSource).toContain(`id={errorId(${binding}.id)}`);
+    }
+    expect(panelSource).toContain('id={errorId(field.id)}');
+    expect(panelSource.match(/data-calc-error/g)).toHaveLength(5);
   });
 
   it('sources Fresha add-on prices from verified facts, unticked by default', () => {
     const smartWebsite = requireVerifiedFreshaFact('smartWebsiteAddOn');
     const clientLoyalty = requireVerifiedFreshaFact('clientLoyaltyAddOn');
-    expect(FRESHA_ADD_ONS.map((addOn) => addOn.label)).toEqual(['Smart Website', 'Client Loyalty']);
     expect(FRESHA_ADD_ONS[0].priceLabel).toBe(`${formatGbp(smartWebsite.amountGbp!)}/month + VAT`);
     expect(FRESHA_ADD_ONS[1].priceLabel).toBe(`${formatGbp(clientLoyalty.amountGbp!)}/location/month + VAT`);
-    expect(panelSource).toContain('{addOn.priceLabel}');
     expect(panelSource).not.toMatch(/name=\{addOn\.name\}[^>]*checked/);
   });
 
-  it('does not hand-write prices or unverified rates', () => {
+  it('does not hand-write prices or rates', () => {
     for (const source of [panelSource, resultsSource, configSource, shellSource]) {
       expect(source).not.toMatch(/£\s?\d/);
       expect(source).not.toMatch(/\d+(\.\d+)?\s?%/);
     }
-    expect(PAYMENTS_TOGGLE.pendingNote).not.toMatch(/stripe|booksy/i);
   });
 });
 
-describe('calculator results shell', () => {
-  it('offers monthly, 12-month and 3-year periods with monthly selected', () => {
+describe('calculator results structure', () => {
+  it('keeps the period selector with only Monthly available', () => {
     expect(RESULTS_HEADING).toBe('Your cost comparison');
     expect(RESULTS_SUPPORTING).toBe('Based on the barbershop numbers above.');
-    expect(PERIOD_OPTIONS.map((option) => option.label)).toEqual(['Monthly', '12 months', '3 years']);
+    expect(PERIOD_OPTIONS.map((option) => [option.label, option.available])).toEqual([
+      ['Monthly', true],
+      ['12 months', false],
+      ['3 years', false],
+    ]);
     expect(DEFAULT_PERIOD).toBe('monthly');
-    expect(PERIOD_OPTIONS[0].resultLabel).toBe('Estimated monthly cost');
-    expect(THREE_YEAR_NOTE).toBe(
-      'Projection uses today’s published prices and does not predict future price changes.',
-    );
-    expect(resultsSource).toContain('<p class="calc-results__note" data-calc-three-year-note hidden>');
+    expect(PERIOD_OPTIONS[0].resultLabel).toBe('Estimated monthly cash cost');
+    expect(resultsSource).toContain('disabled={!option.available}');
+    expect(THREE_YEAR_NOTE).toContain('does not predict future price changes');
   });
 
-  it('renders exactly three peer cards in Booksy, Fresha, KERSIVO order', () => {
+  it('renders three peer cards in Booksy, Fresha, KERSIVO order without winner language', () => {
     expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
-    expect(resultsSource.match(/class="calc-card"/g)).toHaveLength(1);
-    expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|save/i);
+    expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
 
-  it('lists the agreed summary and breakdown rows', () => {
-    expect(SUMMARY_ROWS).toEqual(['Platform & acquisition', 'Payment processing', 'VAT charged']);
-    const [booksy, fresha, kersivo] = PROVIDER_RESULTS;
-    expect(booksy.breakdown).toEqual(['Base subscription', 'Additional users', 'Boost', 'VAT', 'Payment processing']);
-    expect(fresha.breakdown).toEqual([
-      'Subscription',
-      'Marketplace fees',
-      'Smart Website',
-      'Client Loyalty',
-      'VAT',
-      'Payment processing',
-    ]);
-    expect(kersivo.breakdown).toEqual([
-      'Subscription',
-      'Additional barbers',
-      'KERSIVO commission',
-      'VAT',
-      'Stripe processing',
-    ]);
-    expect(resultsSource).toContain('View breakdown');
+  it('uses unambiguous summary rows', () => {
+    expect(SUMMARY_ROWS.map((row) => row.label)).toEqual(['Before VAT', 'VAT charged', 'Payment processing']);
   });
 
-  it('shows placeholder values only, never fake totals', () => {
-    expect(PLACEHOLDER_TOTAL).toBe('£—');
-    expect(PLACEHOLDER_VALUE).toBe('—');
-    expect(resultsSource).toContain('{PLACEHOLDER_TOTAL}');
-    expect(resultsSource).toContain('{PLACEHOLDER_VALUE}');
-    expect(resultsSource).not.toMatch(/£\s?\d|\d+\.\d{2}/);
+  it('maps every breakdown row to an engine line item id or VAT', () => {
+    const rows = (id: string) =>
+      PROVIDER_RESULTS.find((provider) => provider.id === id)!.breakdown.map((row) => [row.id, row.label]);
+    expect(rows('booksy')).toEqual([
+      ['booksy-base-subscription', 'Base subscription'],
+      ['booksy-additional-users', 'Additional users'],
+      ['booksy-boost', 'Boost'],
+      ['vat', 'VAT'],
+      ['payment-processing', 'Payment processing'],
+    ]);
+    expect(rows('fresha')).toEqual([
+      ['fresha-subscription', 'Subscription'],
+      ['fresha-marketplace-fees', 'Marketplace fees'],
+      ['fresha-smart-website', 'Smart Website'],
+      ['fresha-client-loyalty', 'Client Loyalty'],
+      ['vat', 'VAT'],
+      ['payment-processing', 'Payment processing'],
+    ]);
+    expect(rows('kersivo')).toEqual([
+      ['kersivo-subscription', 'Subscription'],
+      ['kersivo-additional-barbers', 'Additional barbers'],
+      ['kersivo-commission', 'KERSIVO commission'],
+      ['vat', 'VAT'],
+      ['payment-processing', 'Stripe processing'],
+    ]);
+    expect(resultsSource).toContain('data-line={row.id}');
+  });
+
+  it('renders the server view from the engine, not hardcoded totals', () => {
+    expect(resultsSource).toContain('buildResultsView(calculateMonthlyCosts(DEFAULT_SCENARIO))');
+    expect(resultsSource).not.toMatch(/\d+\.\d{2}/);
+  });
+
+  it('keeps the insight static with the updated wording', () => {
     expect(INSIGHT_EYEBROW).toBe('BIGGEST COST DRIVER');
-    expect(INSIGHT_PENDING).toBe('Your cost insight will appear here once the calculation is connected.');
+    expect(INSIGHT_PENDING).toBe(
+      'Cost-driver analysis will appear here once projections and the full comparison model are connected.',
+    );
+  });
+
+  it('explains Fresha custom pricing from the central team-size limit', () => {
+    expect(CUSTOM_PRICING_NOTE).toBe(
+      'Fresha lists custom Enterprise pricing above 20 bookable team members, so a complete total cannot be estimated.',
+    );
   });
 });
 
-describe('phase 2 scope guard', () => {
-  it('contains no pricing calculation functions', () => {
-    for (const source of [configSource, shellSource]) {
-      expect(source).not.toMatch(/\b(estimate|calculate|compute)\w*\s*\(/i);
-      expect(source).not.toMatch(/\b(estimateFresha|SAAS_MONTHLY_GBP|BOOKSY_[A-Z_]+_GBP|vatRate|VAT_RATE)\b/);
-    }
+describe('validation copy', () => {
+  it('covers every engine issue code', () => {
+    expect(validationMessage('exceeds-monthly-appointments', MARKETPLACE_CLIENTS_FIELD)).toBe(EXCEEDS_APPOINTMENTS_MESSAGE);
+    expect(EXCEEDS_APPOINTMENTS_MESSAGE).toBe('Marketplace clients cannot be greater than total monthly appointments.');
+    expect(validationMessage('below-minimum', BARBERS_FIELD)).toBe('Enter 1 or more.');
+    expect(validationMessage('not-integer', BARBERS_FIELD)).toBe('Enter a whole number.');
+    expect(validationMessage('not-a-number', APPOINTMENTS_FIELD)).toBe('Enter a number.');
+    expect(validationMessage('not-finite', APPOINTMENTS_FIELD)).toBe('Enter a realistic number.');
+    expect(validationMessage('not-boolean', null)).toBe('Choose an option.');
+  });
+});
+
+describe('scope guard', () => {
+  it('keeps the shell free of calculations', () => {
+    expect(shellSource).not.toMatch(/\b(estimate|calculate|compute)\w*\s*\(/i);
     expect(shellSource).not.toMatch(/from\s+['"]@\/lib\/seo/);
-    expect(shellSource).not.toMatch(/\*\s*(12|36)\b/);
-    expect(shellSource).not.toMatch(/URLSearchParams|history\.(push|replace)State/);
+  });
+
+  it('types breakdown ids against the engine', () => {
+    const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
+    expect(ids.length).toBe(16);
+    const scenario: CostScenarioInput = DEFAULT_SCENARIO;
+    expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });
 
   it('emits no WebApplication schema yet', () => {

@@ -1,15 +1,31 @@
-import { formatGbp, requireVerifiedFreshaFact } from '@/lib/seo/freshaFacts';
+import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
+import type {
+  CostScenarioInput,
+  LineItemId,
+  ProviderId,
+  ValidationIssueCode,
+} from './barberSoftwareCostEngine';
 
 /**
- * Static UI configuration for the barber software cost calculator shell.
- * Phase 2 is input/results structure only: nothing in this module prices a provider.
+ * Static UI configuration for the barber software cost calculator.
+ * Labels and defaults only: provider costs come exclusively from the calculation engine.
  */
 
 export const CALC_PANEL_LABEL = 'YOUR BARBERSHOP';
 
+type NumericScenarioKey =
+  | 'bookableBarbers'
+  | 'monthlyAppointments'
+  | 'averageAppointmentValueGbp'
+  | 'marketplaceClients'
+  | 'booksyBoostClients'
+  | 'freshaMarketplaceClients';
+
+type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey>;
+
 export type NumberFieldConfig = {
   id: string;
-  name: string;
+  name: NumericScenarioKey;
   label: string;
   helper?: string;
   defaultValue: number;
@@ -20,7 +36,7 @@ export type NumberFieldConfig = {
 
 export const BARBERS_FIELD: NumberFieldConfig = {
   id: 'calc-barbers',
-  name: 'barbers',
+  name: 'bookableBarbers',
   label: 'Bookable barbers',
   defaultValue: 3,
   min: 1,
@@ -30,7 +46,7 @@ export const BARBERS_FIELD: NumberFieldConfig = {
 
 export const APPOINTMENTS_FIELD: NumberFieldConfig = {
   id: 'calc-appointments',
-  name: 'appointments',
+  name: 'monthlyAppointments',
   label: 'Monthly appointments',
   helper: 'Approximate total bookings across the shop.',
   defaultValue: 400,
@@ -41,7 +57,7 @@ export const APPOINTMENTS_FIELD: NumberFieldConfig = {
 
 export const APPOINTMENT_VALUE_FIELD: NumberFieldConfig = {
   id: 'calc-appointment-value',
-  name: 'appointmentValue',
+  name: 'averageAppointmentValueGbp',
   label: 'Average appointment value',
   helper: 'In pounds sterling, per appointment.',
   defaultValue: 25,
@@ -64,20 +80,22 @@ export const MARKETPLACE_CLIENTS_FIELD: NumberFieldConfig = {
   step: 1,
 };
 
+type ToggleConfig = { id: string; name: BooleanScenarioKey; label: string; defaultOn: boolean };
+
 export const BOOST_TOGGLE = {
   id: 'calc-boost',
-  name: 'booksyBoost',
+  name: 'booksyBoostEnabled',
   label: 'Booksy Boost',
   helper: 'Optional paid promotion on the Booksy Marketplace. Leave off if you don’t use it.',
   defaultOn: false,
-} as const;
+} as const satisfies ToggleConfig & { helper: string };
 
 export const SPLIT_ASSUMPTIONS_TOGGLE = {
   id: 'calc-split-assumptions',
-  name: 'splitMarketplace',
+  name: 'splitMarketplaceAssumptions',
   label: 'Use different assumptions for Booksy and Fresha',
   defaultOn: false,
-} as const;
+} as const satisfies ToggleConfig;
 
 export const SPLIT_FIELDS: readonly NumberFieldConfig[] = [
   {
@@ -109,15 +127,15 @@ export const VAT_OPTIONS = {
     { value: 'no', label: 'No' },
     { value: 'yes', label: 'Yes' },
   ],
-  defaultValue: 'no',
-} as const;
+  defaultValue: 'no' as 'no' | 'yes',
+} as const satisfies { name: BooleanScenarioKey } & Record<string, unknown>;
 
 const smartWebsite = requireVerifiedFreshaFact('smartWebsiteAddOn');
 const clientLoyalty = requireVerifiedFreshaFact('clientLoyaltyAddOn');
 
 export type AddOnOption = {
   id: string;
-  name: string;
+  name: 'freshaSmartWebsite' | 'freshaClientLoyalty';
   label: string;
   priceLabel: string;
 };
@@ -144,72 +162,150 @@ export const PAYMENTS_TOGGLE = {
   name: 'includePayments',
   label: 'Include payment processing',
   defaultOn: false,
-  pendingNote:
-    'Payment assumptions, such as card mix and online versus in-person payments, will be configured in the calculation stage.',
-} as const;
+  unavailableNote: 'Payment processing comparison will be added in the next calculation stage.',
+} as const satisfies ToggleConfig & { unavailableNote: string };
+
+/** Defaults shared by the server-rendered results and the form controls. */
+export const DEFAULT_SCENARIO: CostScenarioInput = {
+  bookableBarbers: BARBERS_FIELD.defaultValue,
+  monthlyAppointments: APPOINTMENTS_FIELD.defaultValue,
+  averageAppointmentValueGbp: APPOINTMENT_VALUE_FIELD.defaultValue,
+  marketplaceClients: MARKETPLACE_CLIENTS_FIELD.defaultValue,
+  booksyBoostEnabled: BOOST_TOGGLE.defaultOn,
+  splitMarketplaceAssumptions: SPLIT_ASSUMPTIONS_TOGGLE.defaultOn,
+  booksyBoostClients: SPLIT_FIELDS[0].defaultValue,
+  freshaMarketplaceClients: SPLIT_FIELDS[1].defaultValue,
+  freshaSmartWebsite: false,
+  freshaClientLoyalty: false,
+  vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
+  includePayments: false,
+};
 
 /* --------------------------------- Results --------------------------------- */
 
 export const RESULTS_HEADING = 'Your cost comparison';
 export const RESULTS_SUPPORTING = 'Based on the barbershop numbers above.';
+export const RESULTS_INVALID = 'Check the highlighted inputs to see your cost comparison.';
 
 export type PeriodOption = {
   value: 'monthly' | 'annual' | 'threeYear';
   label: string;
   resultLabel: string;
+  available: boolean;
 };
 
 export const PERIOD_OPTIONS: readonly PeriodOption[] = [
-  { value: 'monthly', label: 'Monthly', resultLabel: 'Estimated monthly cost' },
-  { value: 'annual', label: '12 months', resultLabel: 'Estimated 12-month cost' },
-  { value: 'threeYear', label: '3 years', resultLabel: 'Estimated 3-year cost' },
+  { value: 'monthly', label: 'Monthly', resultLabel: 'Estimated monthly cash cost', available: true },
+  { value: 'annual', label: '12 months', resultLabel: 'Estimated 12-month cost', available: false },
+  { value: 'threeYear', label: '3 years', resultLabel: 'Estimated 3-year cost', available: false },
 ];
 
 export const DEFAULT_PERIOD: PeriodOption['value'] = 'monthly';
 
+export const PERIOD_UNAVAILABLE_NOTE = '12-month and 3-year views are coming in the next calculation stage.';
+
 export const THREE_YEAR_NOTE =
   'Projection uses today’s published prices and does not predict future price changes.';
 
-/** Shown wherever a monetary value will appear once the calculation is connected. */
+/** Shown wherever a monetary value cannot be calculated from the current inputs. */
 export const PLACEHOLDER_VALUE = '—';
 export const PLACEHOLDER_TOTAL = '£—';
+export const NOT_CALCULATED_SR = 'Not calculated. Check the highlighted inputs.';
 
-export const SUMMARY_ROWS: readonly string[] = [
-  'Platform & acquisition',
-  'Payment processing',
-  'VAT charged',
+export const NOT_INCLUDED = 'Not included';
+export const NOT_ESTIMATED = 'Not estimated';
+export const CUSTOM_PRICING = 'Custom pricing';
+export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
+export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
+
+export type SummaryRowId = 'before-vat' | 'vat' | 'payments';
+
+export const SUMMARY_ROWS: readonly { id: SummaryRowId; label: string }[] = [
+  { id: 'before-vat', label: 'Before VAT' },
+  { id: 'vat', label: 'VAT charged' },
+  { id: 'payments', label: 'Payment processing' },
 ];
 
+/** Breakdown rows map to engine line items by id; `vat` maps to the provider VAT amount. */
+export type BreakdownRowId = LineItemId | 'vat';
+
 export type ProviderResultConfig = {
-  id: 'booksy' | 'fresha' | 'kersivo';
+  id: ProviderId;
   name: string;
-  breakdown: readonly string[];
+  breakdown: readonly { id: BreakdownRowId; label: string }[];
 };
 
 export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
   {
     id: 'booksy',
     name: 'Booksy',
-    breakdown: ['Base subscription', 'Additional users', 'Boost', 'VAT', 'Payment processing'],
+    breakdown: [
+      { id: 'booksy-base-subscription', label: 'Base subscription' },
+      { id: 'booksy-additional-users', label: 'Additional users' },
+      { id: 'booksy-boost', label: 'Boost' },
+      { id: 'vat', label: 'VAT' },
+      { id: 'payment-processing', label: 'Payment processing' },
+    ],
   },
   {
     id: 'fresha',
     name: 'Fresha',
     breakdown: [
-      'Subscription',
-      'Marketplace fees',
-      'Smart Website',
-      'Client Loyalty',
-      'VAT',
-      'Payment processing',
+      { id: 'fresha-subscription', label: 'Subscription' },
+      { id: 'fresha-marketplace-fees', label: 'Marketplace fees' },
+      { id: 'fresha-smart-website', label: 'Smart Website' },
+      { id: 'fresha-client-loyalty', label: 'Client Loyalty' },
+      { id: 'vat', label: 'VAT' },
+      { id: 'payment-processing', label: 'Payment processing' },
     ],
   },
   {
     id: 'kersivo',
     name: 'KERSIVO',
-    breakdown: ['Subscription', 'Additional barbers', 'KERSIVO commission', 'VAT', 'Stripe processing'],
+    breakdown: [
+      { id: 'kersivo-subscription', label: 'Subscription' },
+      { id: 'kersivo-additional-barbers', label: 'Additional barbers' },
+      { id: 'kersivo-commission', label: 'KERSIVO commission' },
+      { id: 'vat', label: 'VAT' },
+      { id: 'payment-processing', label: 'Stripe processing' },
+    ],
   },
 ];
 
+export const NOTES_LABEL = 'Assumptions & notes';
+export const caveatLabel = (count: number) => (count === 1 ? '1 caveat' : `${count} caveats`);
+export const SHARED_NOTES_LABEL = 'Assumptions used for all three';
+
 export const INSIGHT_EYEBROW = 'BIGGEST COST DRIVER';
-export const INSIGHT_PENDING = 'Your cost insight will appear here once the calculation is connected.';
+export const INSIGHT_PENDING =
+  'Cost-driver analysis will appear here once projections and the full comparison model are connected.';
+
+/* -------------------------------- Validation -------------------------------- */
+
+export const EXCEEDS_APPOINTMENTS_MESSAGE =
+  'Marketplace clients cannot be greater than total monthly appointments.';
+
+export function validationMessage(code: ValidationIssueCode, field: NumberFieldConfig | null): string {
+  switch (code) {
+    case 'not-a-number':
+      return 'Enter a number.';
+    case 'not-finite':
+      return 'Enter a realistic number.';
+    case 'not-integer':
+      return 'Enter a whole number.';
+    case 'below-minimum':
+      return field ? `Enter ${field.min} or more.` : 'Enter a larger number.';
+    case 'not-boolean':
+      return 'Choose an option.';
+    case 'exceeds-monthly-appointments':
+      return EXCEEDS_APPOINTMENTS_MESSAGE;
+  }
+}
+
+export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
+  BARBERS_FIELD,
+  APPOINTMENTS_FIELD,
+  APPOINTMENT_VALUE_FIELD,
+  MARKETPLACE_CLIENTS_FIELD,
+  ...SPLIT_FIELDS,
+];

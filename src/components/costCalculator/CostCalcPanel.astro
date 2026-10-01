@@ -17,6 +17,9 @@ import {
 } from '@/lib/costCalculator/calculatorUi';
 
 const helperId = (id: string) => `${id}-helper`;
+const errorId = (id: string) => `${id}-error`;
+const describedBy = (id: string, withHelper: boolean) =>
+  withHelper ? `${helperId(id)} ${errorId(id)}` : errorId(id);
 ---
 
 <form
@@ -54,6 +57,7 @@ const helperId = (id: string) => `${id}-helper`;
           min={BARBERS_FIELD.min}
           max={BARBERS_FIELD.max}
           step={BARBERS_FIELD.step}
+          aria-describedby={describedBy(BARBERS_FIELD.id, false)}
         />
         <button
           type="button"
@@ -65,6 +69,7 @@ const helperId = (id: string) => `${id}-helper`;
           <span aria-hidden="true">+</span>
         </button>
       </div>
+      <p id={errorId(BARBERS_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
     </div>
 
     <div class="calc-panel__pair">
@@ -80,9 +85,10 @@ const helperId = (id: string) => `${id}-helper`;
           min={APPOINTMENTS_FIELD.min}
           max={APPOINTMENTS_FIELD.max}
           step={APPOINTMENTS_FIELD.step}
-          aria-describedby={helperId(APPOINTMENTS_FIELD.id)}
+          aria-describedby={describedBy(APPOINTMENTS_FIELD.id, true)}
         />
         <p id={helperId(APPOINTMENTS_FIELD.id)} class="calc-field__helper">{APPOINTMENTS_FIELD.helper}</p>
+        <p id={errorId(APPOINTMENTS_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
       </div>
 
       <div class="calc-field">
@@ -98,10 +104,11 @@ const helperId = (id: string) => `${id}-helper`;
             min={APPOINTMENT_VALUE_FIELD.min}
             max={APPOINTMENT_VALUE_FIELD.max}
             step={APPOINTMENT_VALUE_FIELD.step}
-            aria-describedby={helperId(APPOINTMENT_VALUE_FIELD.id)}
+            aria-describedby={describedBy(APPOINTMENT_VALUE_FIELD.id, true)}
           />
         </div>
         <p id={helperId(APPOINTMENT_VALUE_FIELD.id)} class="calc-field__helper">{APPOINTMENT_VALUE_FIELD.helper}</p>
+        <p id={errorId(APPOINTMENT_VALUE_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
       </div>
     </div>
   </div>
@@ -124,8 +131,9 @@ const helperId = (id: string) => `${id}-helper`;
         min={MARKETPLACE_CLIENTS_FIELD.min}
         max={MARKETPLACE_CLIENTS_FIELD.max}
         step={MARKETPLACE_CLIENTS_FIELD.step}
-        aria-describedby={helperId(MARKETPLACE_CLIENTS_FIELD.id)}
+        aria-describedby={describedBy(MARKETPLACE_CLIENTS_FIELD.id, true)}
       />
+      <p id={errorId(MARKETPLACE_CLIENTS_FIELD.id)} class="calc-field__error calc-field__error--full" data-calc-error hidden></p>
     </div>
 
     <div class="calc-field calc-field--inline">
@@ -183,7 +191,9 @@ const helperId = (id: string) => `${id}-helper`;
                 min={field.min}
                 max={field.max}
                 step={field.step}
+                aria-describedby={describedBy(field.id, false)}
               />
+              <p id={errorId(field.id)} class="calc-field__error" data-calc-error hidden />
             </div>
           ))
         }
@@ -235,7 +245,7 @@ const helperId = (id: string) => `${id}-helper`;
       </fieldset>
 
       <div class="calc-fieldset">
-        <div class="calc-field calc-field--inline">
+        <div class="calc-field calc-field--inline calc-field--unavailable">
           <label class="calc-field__label" for={PAYMENTS_TOGGLE.id}>{PAYMENTS_TOGGLE.label}</label>
           <span class="calc-switch">
             <input
@@ -245,8 +255,8 @@ const helperId = (id: string) => `${id}-helper`;
               role="switch"
               name={PAYMENTS_TOGGLE.name}
               checked={PAYMENTS_TOGGLE.defaultOn}
-              aria-controls="calc-payments-note"
-              data-calc-reveal
+              disabled
+              aria-describedby="calc-payments-note"
             />
             <span class="calc-switch__track" aria-hidden="true"><span class="calc-switch__thumb"></span></span>
             <span class="calc-switch__state" aria-hidden="true">
@@ -255,15 +265,15 @@ const helperId = (id: string) => `${id}-helper`;
             </span>
           </span>
         </div>
-        <p id="calc-payments-note" class="calc-pending" hidden>{PAYMENTS_TOGGLE.pendingNote}</p>
+        <p id="calc-payments-note" class="calc-pending">{PAYMENTS_TOGGLE.unavailableNote}</p>
       </div>
     </div>
   </details>
 </form>
 
 <script>
-  import { initCalculatorShell } from '@/lib/costCalculator/initCalculatorShell';
+  import { initCalculator } from '@/lib/costCalculator/initCalculator';
 
-  initCalculatorShell(document);
-  document.addEventListener('astro:page-load', () => initCalculatorShell(document));
+  initCalculator(document);
+  document.addEventListener('astro:page-load', () => initCalculator(document));
 </script>

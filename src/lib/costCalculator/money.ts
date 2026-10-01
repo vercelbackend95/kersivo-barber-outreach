@@ -27,3 +27,8 @@ export function percentOfPence(pence: number, percent: number): number {
 export function roundGbp(gbp: number): number {
   return penceToGbp(gbpToPence(gbp));
 }
+
+/** Locale-independent pounds-and-pence display, e.g. 35.8 → "£35.80". */
+export function formatMoneyGbp(gbp: number): string {
+  return `£${penceToGbp(gbpToPence(gbp)).toFixed(2)}`;
+}

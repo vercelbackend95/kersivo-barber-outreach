@@ -1,0 +1,408 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { calculateMonthlyCosts } from './barberSoftwareCostEngine';
+import {
+  BOOST_TOGGLE,
+  CUSTOM_PRICING_NOTE,
+  DEFAULT_SCENARIO,
+  FRESHA_ADD_ONS,
+  NUMBER_FIELDS,
+  PAYMENTS_TOGGLE,
+  PERIOD_OPTIONS,
+  PROVIDER_RESULTS,
+  SPLIT_ASSUMPTIONS_TOGGLE,
+  SUMMARY_ROWS,
+} from './calculatorUi';
+import { initCalculator, readScenario } from './initCalculator';
+import { formatMoneyGbp } from './money';
+
+/** Mirrors the data hooks rendered by CostCalcPanel.astro and CostResults.astro. */
+function mount() {
+  const numberField = (field: (typeof NUMBER_FIELDS)[number]) => `
+    <input id="${field.id}" name="${field.name}" type="number" value="${field.defaultValue}"
+      min="${field.min}" max="${field.max}" step="${field.step}" />
+    <p id="${field.id}-error" data-calc-error hidden></p>`;
+
+  const card = (provider: (typeof PROVIDER_RESULTS)[number]) => `
+    <li class="calc-card" data-provider="${provider.id}" data-state="unavailable">
+      <p data-calc-period-label>${PERIOD_OPTIONS[0].resultLabel}</p>
+      <p><span data-slot="total" aria-hidden="true">£—</span><span data-slot="total-sr"></span></p>
+      <p data-slot="custom-note" hidden></p>
+      <p data-slot="net"></p>
+      <dl>${SUMMARY_ROWS.map((row) => `<div><dt>${row.label}</dt><dd data-summary="${row.id}">—</dd></div>`).join('')}</dl>
+      <dl>${provider.breakdown
+        .map(
+          (row) =>
+            `<div data-line="${row.id}"><dt>${row.label}<span data-slot="detail"></span></dt><dd data-slot="value">—</dd></div>`,
+        )
+        .join('')}</dl>
+      <details data-slot="notes" hidden>
+        <summary>Assumptions &amp; notes<span data-slot="notes-flag" hidden></span></summary>
+        <ul data-slot="warnings"></ul>
+        <ul data-slot="assumptions"></ul>
+      </details>
+    </li>`;
+
+  document.body.innerHTML = `
+    <form data-calc-form>
+      <div data-calc-stepper>
+        <button type="button" data-step="-1">-</button>
+        ${numberField(NUMBER_FIELDS[0])}
+        <button type="button" data-step="1">+</button>
+      </div>
+      ${NUMBER_FIELDS.slice(1, 4).map(numberField).join('')}
+      <input id="${BOOST_TOGGLE.id}" name="${BOOST_TOGGLE.name}" type="checkbox" role="switch" />
+      <input id="${SPLIT_ASSUMPTIONS_TOGGLE.id}" name="${SPLIT_ASSUMPTIONS_TOGGLE.name}" type="checkbox"
+        aria-controls="calc-split-fields" data-calc-reveal />
+      <div id="calc-split-fields" hidden>${NUMBER_FIELDS.slice(4).map(numberField).join('')}</div>
+      <input type="radio" name="vatRegistered" value="no" checked />
+      <input type="radio" name="vatRegistered" value="yes" />
+      ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
+      <input id="${PAYMENTS_TOGGLE.id}" name="${PAYMENTS_TOGGLE.name}" type="checkbox" role="switch" disabled />
+    </form>
+    <section data-calc-results>
+      <fieldset data-calc-period>
+        ${PERIOD_OPTIONS.map(
+          (option) =>
+            `<input type="radio" name="period" value="${option.value}" ${option.value === 'monthly' ? 'checked' : ''}
+              ${option.available ? '' : 'disabled'} data-result-label="${option.resultLabel}" />`,
+        ).join('')}
+      </fieldset>
+      <p data-calc-three-year-note hidden></p>
+      <p data-slot="results-status" hidden></p>
+      <ol>${PROVIDER_RESULTS.map(card).join('')}</ol>
+      <details data-slot="shared-notes" hidden><ul data-slot="shared-assumptions"></ul></details>
+    </section>`;
+  initCalculator(document);
+}
+
+const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
+const cardEl = (id: string) => $(`[data-provider="${id}"]`);
+const total = (id: string) => cardEl(id).querySelector('[data-slot="total"]')!.textContent;
+const summary = (id: string, row: string) => cardEl(id).querySelector(`[data-summary="${row}"]`)!.textContent;
+const cell = (id: string, line: string) => cardEl(id).querySelector(`[data-line="${line}"] [data-slot="value"]`)!.textContent;
+const detail = (id: string, line: string) =>
+  cardEl(id).querySelector(`[data-line="${line}"] [data-slot="detail"]`)!.textContent;
+const warnings = (id: string) => [...cardEl(id).querySelectorAll('[data-slot="warnings"] li')].map((li) => li.textContent);
+const assumptions = (id: string) =>
+  [...cardEl(id).querySelectorAll('[data-slot="assumptions"] li')].map((li) => li.textContent ?? '');
+
+function setNumber(id: string, value: string) {
+  const input = $<HTMLInputElement>(`#${id}`);
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function toggle(id: string, checked: boolean) {
+  const input = $<HTMLInputElement>(`#${id}`);
+  input.checked = checked;
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function chooseVat(value: 'yes' | 'no') {
+  const radio = $<HTMLInputElement>(`input[name="vatRegistered"][value="${value}"]`);
+  radio.checked = true;
+  radio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function engineCash(overrides: Partial<typeof DEFAULT_SCENARIO>, index: number) {
+  const result = calculateMonthlyCosts({ ...DEFAULT_SCENARIO, ...overrides });
+  if (!result.ok) throw new Error('invalid');
+  const provider = result.providers[index];
+  if (provider.status !== 'calculated') throw new Error('not calculated');
+  return formatMoneyGbp(provider.amounts.cashTotalGbp);
+}
+
+beforeEach(mount);
+
+describe('initial calculation', () => {
+  it('calculates the default form immediately from the engine', () => {
+    expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
+    expect(total('booksy')).toBe(engineCash({}, 0));
+    expect(total('fresha')).toBe(engineCash({}, 1));
+    expect(total('kersivo')).toBe(engineCash({}, 2));
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
+    expect(document.body.innerHTML).not.toContain('£—');
+  });
+
+  it('keeps providers in Booksy, Fresha, KERSIVO order with no winner state', () => {
+    expect([...document.querySelectorAll('[data-provider]')].map((el) => (el as HTMLElement).dataset.provider)).toEqual([
+      'booksy',
+      'fresha',
+      'kersivo',
+    ]);
+    expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
+  });
+
+  it('binds once across repeated page-load initialisation', () => {
+    initCalculator(document);
+    $<HTMLButtonElement>('[data-step="1"]').click();
+    expect($<HTMLInputElement>('#calc-barbers').value).toBe('4');
+    expect(cell('booksy', 'booksy-additional-users')).toBe('£15.00');
+  });
+});
+
+describe('Booksy', () => {
+  it('reacts to barber count and shows additional-user quantity', () => {
+    setNumber('calc-barbers', '5');
+    expect(cell('booksy', 'booksy-additional-users')).toBe('£20.00');
+    expect(detail('booksy', 'booksy-additional-users')).toBe('4 × £5.00');
+    expect(total('booksy')).toBe(engineCash({ bookableBarbers: 5 }, 0));
+  });
+
+  it('shows £0.00 Boost while Boost is off, whatever the client count', () => {
+    setNumber('calc-marketplace-clients', '12');
+    expect(cell('booksy', 'booksy-boost')).toBe('£0.00');
+    expect(detail('booksy', 'booksy-boost')).toBe('Off');
+    expect(total('booksy')).toBe('£60.00');
+    expect(assumptions('booksy').some((text) => text.includes('Boost'))).toBe(false);
+  });
+
+  it('uses engine Boost fees when Boost is on (percentage and minimum)', () => {
+    setNumber('calc-marketplace-clients', '3');
+    toggle('calc-boost', true);
+    expect(cell('booksy', 'booksy-boost')).toBe('£22.50');
+    expect(detail('booksy', 'booksy-boost')).toBe('3 qualifying clients × £7.50');
+    setNumber('calc-appointment-value', '10');
+    expect(cell('booksy', 'booksy-boost')).toBe('£15.00');
+    expect(total('booksy')).toBe(
+      engineCash({ marketplaceClients: 3, booksyBoostEnabled: true, averageAppointmentValueGbp: 10 }, 0),
+    );
+    expect(assumptions('booksy').some((text) => text.includes('first-visit value'))).toBe(true);
+  });
+});
+
+describe('Fresha', () => {
+  it('switches Independent to Team with barber count', () => {
+    setNumber('calc-barbers', '1');
+    expect(detail('fresha', 'fresha-subscription')).toBe('Independent plan');
+    expect(cell('fresha', 'fresha-subscription')).toBe('£14.95');
+    setNumber('calc-barbers', '5');
+    expect(detail('fresha', 'fresha-subscription')).toBe('Team plan · 5 × £9.95');
+    expect(cell('fresha', 'fresha-subscription')).toBe('£49.75');
+  });
+
+  it('adds Marketplace fees and shows the unresolved cap warning', () => {
+    expect(warnings('fresha')).toEqual([]);
+    setNumber('calc-marketplace-clients', '2');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£10.00');
+    expect(total('fresha')).toBe(engineCash({ marketplaceClients: 2 }, 1));
+    expect(warnings('fresha')[0]).toContain('maximum Marketplace new-client fee cap');
+    expect(cardEl('fresha').querySelector<HTMLElement>('[data-slot="notes-flag"]')!.hidden).toBe(false);
+    expect(warnings('booksy')).toEqual([]);
+  });
+
+  it('adds selected add-ons', () => {
+    toggle('calc-fresha-smart-website', true);
+    toggle('calc-fresha-client-loyalty', true);
+    expect(cell('fresha', 'fresha-smart-website')).toBe('£12.95');
+    expect(cell('fresha', 'fresha-client-loyalty')).toBe('£49.95');
+    expect(total('fresha')).toBe(engineCash({ freshaSmartWebsite: true, freshaClientLoyalty: true }, 1));
+  });
+
+  it('renders Custom pricing above 20 barbers without a fake total', () => {
+    setNumber('calc-barbers', '21');
+    setNumber('calc-marketplace-clients', '2');
+    toggle('calc-fresha-smart-website', true);
+    const card = cardEl('fresha');
+    expect(card.dataset.state).toBe('custom-pricing');
+    expect(total('fresha')).toBe('Custom pricing');
+    expect(card.querySelector('[data-slot="custom-note"]')!.textContent).toBe(CUSTOM_PRICING_NOTE);
+    expect(cell('fresha', 'fresha-subscription')).toBe('Custom pricing');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£10.00');
+    expect(cell('fresha', 'fresha-smart-website')).toBe('£12.95');
+    expect(summary('fresha', 'before-vat')).toBe('Not estimated');
+    expect(card.textContent).not.toContain('£22.95');
+    expect(card.querySelector('[data-slot="net"]')!.textContent).toBe('');
+    expect(cardEl('booksy').dataset.state).toBe('calculated');
+  });
+});
+
+describe('KERSIVO', () => {
+  it('keeps one £39 subscription with zero additional barbers and commission', () => {
+    for (const barbers of ['1', '3', '20']) {
+      setNumber('calc-barbers', barbers);
+      expect(total('kersivo')).toBe('£39.00');
+      expect(cell('kersivo', 'kersivo-additional-barbers')).toBe('£0.00');
+      expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
+      expect(summary('kersivo', 'vat')).toBe('£0.00');
+    }
+  });
+});
+
+describe('VAT', () => {
+  it('keeps cash cost as the main total and adds the net line only when VAT registered', () => {
+    const before = total('booksy');
+    expect(cardEl('booksy').querySelector('[data-slot="net"]')!.textContent).toBe('');
+    chooseVat('yes');
+    expect(total('booksy')).toBe(before);
+    expect(summary('booksy', 'vat')).toBe('£10.00');
+    expect(cardEl('booksy').querySelector('[data-slot="net"]')!.textContent).toBe(
+      'Estimated net if VAT is fully recoverable: £50.00',
+    );
+    expect(cardEl('kersivo').querySelector('[data-slot="net"]')!.textContent).toBe(
+      'Estimated net if VAT is fully recoverable: £39.00',
+    );
+    chooseVat('no');
+    expect(cardEl('booksy').querySelector('[data-slot="net"]')!.textContent).toBe('');
+  });
+});
+
+describe('validation', () => {
+  it('clears totals and marks the field when input is invalid, then restores', () => {
+    setNumber('calc-barbers', '');
+    for (const id of ['booksy', 'fresha', 'kersivo']) {
+      expect(total(id)).toBe('£—');
+      expect(cardEl(id).dataset.state).toBe('unavailable');
+      expect(summary(id, 'before-vat')).toBe('—');
+    }
+    expect($('#calc-barbers').getAttribute('aria-invalid')).toBe('true');
+    expect($('#calc-barbers-error').textContent).toBe('Enter a number.');
+    expect($('[data-slot="results-status"]').hidden).toBe(false);
+
+    setNumber('calc-barbers', '3');
+    expect(total('booksy')).toBe('£60.00');
+    expect($('#calc-barbers').hasAttribute('aria-invalid')).toBe(false);
+    expect($('#calc-barbers-error').hidden).toBe(true);
+    expect($('[data-slot="results-status"]').hidden).toBe(true);
+  });
+
+  it('shows the business-logic message on the active marketplace field only', () => {
+    setNumber('calc-appointments', '5');
+    setNumber('calc-marketplace-clients', '6');
+    expect($('#calc-marketplace-clients').getAttribute('aria-invalid')).toBe('true');
+    expect($('#calc-marketplace-clients-error').textContent).toBe(
+      'Marketplace clients cannot be greater than total monthly appointments.',
+    );
+    expect($('#calc-appointments').hasAttribute('aria-invalid')).toBe(false);
+    expect(total('kersivo')).toBe('£—');
+    setNumber('calc-marketplace-clients', '5');
+    expect(total('kersivo')).toBe('£39.00');
+  });
+
+  it('maps non-integer and minimum errors to their fields', () => {
+    setNumber('calc-barbers', '2.5');
+    setNumber('calc-appointment-value', '-1');
+    expect($('#calc-barbers-error').textContent).toBe('Enter a whole number.');
+    expect($('#calc-appointment-value-error').textContent).toBe('Enter 0 or more.');
+  });
+});
+
+describe('split marketplace mode', () => {
+  it('seeds both provider fields from the shared count on first enable', () => {
+    setNumber('calc-marketplace-clients', '6');
+    toggle('calc-split-assumptions', true);
+    expect($<HTMLInputElement>('#calc-boost-clients').value).toBe('6');
+    expect($<HTMLInputElement>('#calc-fresha-marketplace-clients').value).toBe('6');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£30.00');
+  });
+
+  it('applies provider-specific counts to the matching provider only', () => {
+    setNumber('calc-marketplace-clients', '6');
+    toggle('calc-boost', true);
+    toggle('calc-split-assumptions', true);
+    setNumber('calc-fresha-marketplace-clients', '1');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£5.00');
+    expect(cell('booksy', 'booksy-boost')).toBe('£45.00');
+    setNumber('calc-boost-clients', '2');
+    expect(cell('booksy', 'booksy-boost')).toBe('£15.00');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£5.00');
+  });
+
+  it('keeps user-edited provider counts when split mode is toggled again', () => {
+    toggle('calc-split-assumptions', true);
+    setNumber('calc-fresha-marketplace-clients', '4');
+    toggle('calc-split-assumptions', false);
+    setNumber('calc-marketplace-clients', '9');
+    toggle('calc-split-assumptions', true);
+    expect($<HTMLInputElement>('#calc-fresha-marketplace-clients').value).toBe('4');
+  });
+
+  it('treats a stale Boost count as harmless while Boost is off', () => {
+    setNumber('calc-appointments', '10');
+    toggle('calc-split-assumptions', true);
+    setNumber('calc-boost-clients', '50');
+    expect($('#calc-boost-clients').hasAttribute('aria-invalid')).toBe(false);
+    expect(total('booksy')).toBe('£60.00');
+    toggle('calc-boost', true);
+    expect($('#calc-boost-clients-error').textContent).toBe(
+      'Marketplace clients cannot be greater than total monthly appointments.',
+    );
+  });
+});
+
+describe('payments and period', () => {
+  it('keeps payments disabled and labelled Not included', () => {
+    expect($<HTMLInputElement>('#calc-payments').disabled).toBe(true);
+    for (const id of ['booksy', 'fresha', 'kersivo']) {
+      expect(summary(id, 'payments')).toBe('Not included');
+      expect(cell(id, 'payment-processing')).toBe('Not included');
+    }
+  });
+
+  it('offers Monthly only and keeps the monthly cash label', () => {
+    const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="period"]')];
+    expect(radios.map((radio) => [radio.value, radio.disabled])).toEqual([
+      ['monthly', false],
+      ['annual', true],
+      ['threeYear', true],
+    ]);
+    expect(cardEl('booksy').querySelector('[data-calc-period-label]')!.textContent).toBe('Estimated monthly cash cost');
+  });
+
+  it('shows shared assumptions once', () => {
+    const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
+    expect(shared).toEqual([
+      'The same qualifying new marketplace client count is used for Booksy Boost and Fresha Marketplace.',
+      'Costs are for a single barbershop location.',
+    ]);
+    for (const id of ['booksy', 'fresha', 'kersivo']) {
+      expect(assumptions(id)).not.toContain('Costs are for a single barbershop location.');
+    }
+  });
+});
+
+describe('architecture guards', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const read = (file: string) => readFileSync(join(here, file), 'utf8');
+  const strip = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const controller = read('initCalculator.ts');
+  const clientFiles = ['initCalculator.ts', 'renderResults.ts', 'resultView.ts', 'initCalculatorShell.ts'].map((file) =>
+    strip(read(file)),
+  );
+  const components = ['CostCalcPanel.astro', 'CostResults.astro'].map((file) =>
+    read(`../../components/costCalculator/${file}`),
+  );
+
+  it('routes every calculation through the engine', () => {
+    expect(controller).toContain("from './barberSoftwareCostEngine'");
+    expect(controller).toContain('calculateMonthlyCosts(readScenario(form))');
+  });
+
+  it('duplicates no provider prices, rates or period multipliers in client code', () => {
+    for (const source of [...clientFiles, ...components]) {
+      expect(source).not.toMatch(/BOOKSY_[A-Z_]+|SAAS_MONTHLY|FRESHA_UK_COMMERCIAL_FACTS|requireVerifiedFreshaFact|UK_STANDARD_VAT/);
+      expect(source).not.toMatch(/\*\s*(12|36)\b|\b(12|36)\s*\*/);
+      expect(source).not.toMatch(/£\s?\d|\d+\.\d{2}/);
+    }
+  });
+
+  it('renders into every data slot the server template provides', () => {
+    const renderer = read('renderResults.ts');
+    const slots = [...renderer.matchAll(/data-slot="([a-z-]+)"/g)].map((match) => match[1]);
+    expect(slots.length).toBeGreaterThan(8);
+    for (const slot of slots) expect(components[1]).toContain(`data-slot="${slot}"`);
+    expect(components[1]).toContain('data-summary={row.id}');
+    expect(components[1]).toContain('data-line={row.id}');
+  });
+
+  it('keeps the engine DOM-free', () => {
+    const engine = strip(read('barberSoftwareCostEngine.ts'));
+    expect(engine).not.toMatch(/\b(document|window|HTMLElement)\b/);
+  });
+});
