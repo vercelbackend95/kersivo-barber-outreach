@@ -167,16 +167,12 @@
   color: color-mix(in srgb, var(--muted) 80%, transparent);
 }
 
-/* ------------------------- Reserved calculator surface ------------------------- */
+/* ---------------------------- Calculator panel chrome ---------------------------- */
 
 .cost-calc-surface {
   position: relative;
-  display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  gap: clamp(1.25rem, 2.4vw, 2rem);
   min-width: 0;
-  min-height: clamp(22rem, 52vw, 34rem);
-  padding: clamp(1.4rem, 3vw, 2.5rem);
+  padding: clamp(1.25rem, 2.6vw, 2.25rem);
   border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
   border-radius: clamp(0.9rem, 1.4vw, 1.25rem);
   background:
@@ -195,93 +191,6 @@
   width: 3.5rem;
   height: 2px;
   background: var(--accent);
-}
-
-@media (min-width: 1024px) {
-  .cost-calc-surface {
-    min-height: 36rem;
-  }
-}
-
-.cost-calc-surface__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-}
-
-.cost-calc-surface__label {
-  margin: 0;
-  color: var(--fg);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-
-.cost-calc-surface__models {
-  color: color-mix(in srgb, var(--muted) 85%, transparent);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-}
-
-.cost-calc-surface__body {
-  display: grid;
-  align-content: center;
-  gap: 0.85rem;
-}
-
-.cost-calc-surface__title {
-  margin: 0;
-  max-width: 22ch;
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 3.6vw, 3.25rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: var(--tracking-heading);
-  text-transform: uppercase;
-  color: var(--fg);
-  text-wrap: balance;
-}
-
-.cost-calc-surface__text {
-  margin: 0;
-  max-width: 52ch;
-  color: var(--muted);
-  font-size: clamp(0.92rem, 1.1vw, 1rem);
-  line-height: 1.6;
-}
-
-.cost-calc-surface__factors {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-}
-
-@media (min-width: 640px) {
-  .cost-calc-surface__factors {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.cost-calc-surface__factors li {
-  padding: 0.9rem 0.75rem 0.9rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
-
-.cost-calc-surface__note {
-  margin: 0;
-  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
-  font-size: 0.78rem;
-  line-height: 1.5;
 }
 
 /* --------------------------- Shared section pattern --------------------------- */
@@ -822,7 +731,6 @@
 .cost-calc-sources__item,
 .cost-calc-columns__item,
 .cost-calc-scenarios__item,
-.cost-calc-surface__factors li,
 .cost-calc-method__list li {
   max-width: none;
 }

@@ -115,6 +115,7 @@ describe('barber software cost calculator SEO foundation', () => {
   it('renders sections in the agreed order', () => {
     const order = [
       '<CostCalcHero',
+      '<CostResults',
       '<CostAtAGlance',
       '<CostBooksy',
       '<CostFresha',
@@ -349,22 +350,21 @@ describe('booksy additional-user wording', () => {
   });
 });
 
-describe('phase 1 static scope', () => {
-  it('ships no client JavaScript or hydrated islands', () => {
-    for (const source of [pageSource, ...componentSources]) {
-      expect(source).not.toMatch(/<script\b/);
+describe('calculator client scope', () => {
+  it('ships one contained shell script and no hydrated islands', () => {
+    expect(pageSource).not.toMatch(/<script\b/);
+    for (const [file, source] of Object.entries(components)) {
       expect(source).not.toMatch(/client:(load|idle|visible|only|media)/);
+      if (file !== 'CostCalcPanel.astro') expect(source).not.toMatch(/<script\b/);
     }
+    expect(components['CostCalcPanel.astro'].match(/<script\b/g)).toHaveLength(1);
   });
 
-  it('reserves the calculator surface without fake controls or results', () => {
-    const surface = heroSource.slice(heroSource.indexOf('<aside'), heroSource.indexOf('</aside>'));
-    expect(surface).toContain('{COST_CALC_SURFACE.label}');
-    expect(surface).toContain('{COST_CALC_SURFACE.note}');
-    expect(surface).not.toMatch(/<(input|button|select|textarea|form|output|canvas|svg)\b/);
-    expect(surface).not.toMatch(/range|slider|disabled/i);
-    for (const source of componentSources) {
+  it('keeps form controls inside the calculator panel and results', () => {
+    for (const [file, source] of Object.entries(components)) {
+      if (file === 'CostCalcPanel.astro' || file === 'CostResults.astro') continue;
       expect(source).not.toMatch(/<(input|select|textarea|form)\b/);
     }
+    expect(heroSource).toContain('<CostCalcPanel />');
   });
 });

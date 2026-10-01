@@ -1,9 +1,9 @@
 ---
+import CostCalcPanel from '@/components/costCalculator/CostCalcPanel.astro';
 import {
   BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
   BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL,
   COST_CALC_HERO,
-  COST_CALC_SURFACE,
   COST_CALC_TRUST_SIGNALS,
 } from '@/lib/seo/barberCostCalculatorPage';
 ---
@@ -40,22 +40,6 @@ import {
       </p>
     </div>
 
-    <aside id="calculator" class="cost-calc-surface" aria-labelledby="cost-calc-surface-title">
-      <div class="cost-calc-surface__head">
-        <p class="cost-calc-surface__label">{COST_CALC_SURFACE.label}</p>
-        <span class="cost-calc-surface__models" aria-hidden="true">Booksy · Fresha · KERSIVO</span>
-      </div>
-
-      <div class="cost-calc-surface__body">
-        <h2 id="cost-calc-surface-title" class="cost-calc-surface__title">{COST_CALC_SURFACE.heading}</h2>
-        <p class="cost-calc-surface__text">{COST_CALC_SURFACE.body}</p>
-      </div>
-
-      <ul class="cost-calc-surface__factors" aria-label="What the calculator will take into account">
-        {COST_CALC_SURFACE.factors.map((factor) => <li>{factor}</li>)}
-      </ul>
-
-      <p class="cost-calc-surface__note">{COST_CALC_SURFACE.note}</p>
-    </aside>
+    <CostCalcPanel />
   </div>
 </section>

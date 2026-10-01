@@ -1,0 +1,98 @@
+---
+import {
+  DEFAULT_PERIOD,
+  INSIGHT_EYEBROW,
+  INSIGHT_PENDING,
+  PERIOD_OPTIONS,
+  PLACEHOLDER_TOTAL,
+  PLACEHOLDER_VALUE,
+  PROVIDER_RESULTS,
+  RESULTS_HEADING,
+  RESULTS_SUPPORTING,
+  SUMMARY_ROWS,
+  THREE_YEAR_NOTE,
+} from '@/lib/costCalculator/calculatorUi';
+
+const defaultPeriod = PERIOD_OPTIONS.find((option) => option.value === DEFAULT_PERIOD)!;
+---
+
+<section id="cost-comparison" class="calc-results" aria-labelledby="calc-results-title" data-calc-results>
+  <div class="calc-results__inner">
+    <header class="calc-results__header">
+      <div class="calc-results__intro">
+        <h2 id="calc-results-title" class="calc-results__title">{RESULTS_HEADING}</h2>
+        <p class="calc-results__supporting">{RESULTS_SUPPORTING}</p>
+      </div>
+
+      <fieldset class="calc-segmented calc-results__period" data-calc-period>
+        <legend class="sr-only">Cost period</legend>
+        {
+          PERIOD_OPTIONS.map((option) => (
+            <label class="calc-segmented__option">
+              <input
+                type="radio"
+                name="period"
+                value={option.value}
+                checked={option.value === DEFAULT_PERIOD}
+                data-result-label={option.resultLabel}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))
+        }
+      </fieldset>
+    </header>
+
+    <p class="calc-results__note" data-calc-three-year-note hidden>{THREE_YEAR_NOTE}</p>
+
+    <ol class="calc-results__cards">
+      {
+        PROVIDER_RESULTS.map((provider) => (
+          <li class="calc-card" data-provider={provider.id}>
+            <article class="calc-card__inner" aria-labelledby={`calc-card-${provider.id}`}>
+              <h3 id={`calc-card-${provider.id}`} class="calc-card__name">
+                {provider.name}
+              </h3>
+              <p class="calc-card__period" data-calc-period-label>
+                {defaultPeriod.resultLabel}
+              </p>
+              <p class="calc-card__total">
+                <span aria-hidden="true">{PLACEHOLDER_TOTAL}</span>
+                <span class="sr-only">Not calculated yet</span>
+              </p>
+
+              <dl class="calc-card__summary">
+                {SUMMARY_ROWS.map((row) => (
+                  <div class="calc-card__row">
+                    <dt>{row}</dt>
+                    <dd>{PLACEHOLDER_VALUE}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <details class="calc-card__breakdown">
+                <summary>
+                  View breakdown<span class="sr-only"> for {provider.name}</span>
+                  <span class="calc-advanced__chevron" aria-hidden="true" />
+                </summary>
+                <dl class="calc-card__breakdown-list">
+                  {provider.breakdown.map((row) => (
+                    <div class="calc-card__row">
+                      <dt>{row}</dt>
+                      <dd>{PLACEHOLDER_VALUE}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </details>
+            </article>
+          </li>
+        ))
+      }
+    </ol>
+
+    <aside class="calc-insight" aria-labelledby="calc-insight-title">
+      <p id="calc-insight-title" class="calc-insight__eyebrow">{INSIGHT_EYEBROW}</p>
+      <p class="calc-insight__text">{INSIGHT_PENDING}</p>
+    </aside>
+  </div>
+</section>

@@ -73,14 +73,6 @@ export const COST_CALC_TRUST_SIGNALS: readonly string[] = [
   'Pricing checked regularly',
 ];
 
-export const COST_CALC_SURFACE = {
-  label: 'YOUR BARBERSHOP',
-  heading: 'Your numbers, three pricing models',
-  body: 'Team size, appointments, marketplace clients, VAT status and payments: the inputs that decide what booking software really costs a barbershop.',
-  note: 'Interactive cost calculator coming in the next build stage.',
-  factors: ['Bookable barbers', 'Marketplace clients', 'VAT status', 'Payments'],
-} as const;
-
 /* ----------------------------- Cost at a glance ---------------------------- */
 
 export type PricingModelSummary = {

@@ -3,6 +3,7 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import CostCalcHero from '@/components/costCalculator/CostCalcHero.astro';
+import CostResults from '@/components/costCalculator/CostResults.astro';
 import CostAtAGlance from '@/components/costCalculator/CostAtAGlance.astro';
 import CostBooksy from '@/components/costCalculator/CostBooksy.astro';
 import CostFresha from '@/components/costCalculator/CostFresha.astro';
@@ -26,6 +27,7 @@ import {
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/barber-cost-calculator.css';
+import '@/styles/components/barber-cost-calculator-tool.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -39,6 +41,7 @@ const currentYear = new Date().getFullYear();
 >
   <main class="cost-calc landing-overflow-guard">
     <CostCalcHero />
+    <CostResults />
     <CostAtAGlance />
     <CostBooksy />
     <CostFresha />
