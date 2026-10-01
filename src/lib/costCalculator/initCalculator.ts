@@ -19,7 +19,12 @@ import {
   SPLIT_FIELDS,
   validationMessage,
 } from './calculatorUi';
-import { buildScenarioUrl, decodeScenarioQuery, type DecodedUrlState } from './calculatorUrlState';
+import {
+  ADVANCED_SCENARIO_KEYS,
+  buildScenarioUrl,
+  decodeScenarioQuery,
+  type DecodedUrlState,
+} from './calculatorUrlState';
 import { isCostPeriod, type CostPeriod } from './costPeriod';
 import { initCalculatorShell } from './initCalculatorShell';
 import { renderResults } from './renderResults';
@@ -122,8 +127,6 @@ function setChecked(form: HTMLFormElement, name: string, checked: boolean) {
   if (input) input.checked = checked;
 }
 
-const ADVANCED_KEYS = ['vatRegistered', 'freshaSmartWebsite', 'freshaClientLoyalty', 'includeDepositProcessing'] as const;
-
 /** Writes a decoded, engine-valid scenario into the form before any listener or reveal sync runs. */
 export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement, state: DecodedUrlState) {
   const { scenario, period } = state;
@@ -150,7 +153,7 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   if (periodInput) periodInput.checked = true;
 
   const advanced = form.querySelector<HTMLDetailsElement>('details.calc-advanced');
-  if (advanced && ADVANCED_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key])) advanced.open = true;
+  if (advanced && ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key])) advanced.open = true;
 }
 
 async function copyText(doc: Document, text: string): Promise<boolean> {

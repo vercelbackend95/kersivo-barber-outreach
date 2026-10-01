@@ -10,9 +10,12 @@ import {
   COST_AT_A_GLANCE_MODELS,
   COST_CALC_HERO,
   COST_SCENARIOS,
+  METHODOLOGY_INTRO,
   PAYMENTS_INTRO,
   PAYMENTS_POINTS,
+  TEAM_SIZE_CLOSING,
   VAT_DISCLAIMER,
+  VAT_PARAGRAPHS,
 } from './barberCostCalculatorPage';
 import { BARBER_COST_CALCULATOR_FAQ_ITEMS } from './barberCostCalculatorFaq';
 import { buildBarberCostCalculatorJsonLd } from './barberCostCalculatorJsonLd';
@@ -280,6 +283,18 @@ describe('barber software cost calculator content safety', () => {
     }
   });
 
+  it('describes the live calculator in the present tense', () => {
+    expect(TEAM_SIZE_CLOSING).toContain('The calculator lets you enter your own number of bookable barbers');
+    expect(VAT_PARAGRAPHS).toContain(
+      'The calculator shows cash cost and estimated net cost separately, so you can see both views side by side.',
+    );
+    expect(METHODOLOGY_INTRO).toMatch(/These are the factors it uses\.$/);
+    for (const stale of ['calculator will let you enter', 'calculator will show', 'factors it will use']) {
+      expect(visibleCopy).not.toContain(stale);
+    }
+    expect(visibleCopy).not.toMatch(/\b(calculator|it) will (let|show|use)\b/);
+  });
+
   it('never renders unresolved Fresha facts', () => {
     const unresolvedKeys = Object.entries(FRESHA_UK_COMMERCIAL_FACTS)
       .filter(([, fact]) => !isVerifiedCommercialFact(fact))
@@ -435,13 +450,14 @@ describe('booksy additional-user wording', () => {
 });
 
 describe('calculator client scope', () => {
-  it('ships one contained shell script and no hydrated islands', () => {
+  it('ships one contained shell script, one inline pre-paint script and no hydrated islands', () => {
     expect(pageSource).not.toMatch(/<script\b/);
     for (const [file, source] of Object.entries(components)) {
       expect(source).not.toMatch(/client:(load|idle|visible|only|media)/);
       if (file !== 'CostCalcPanel.astro') expect(source).not.toMatch(/<script\b/);
     }
-    expect(components['CostCalcPanel.astro'].match(/<script\b/g)).toHaveLength(1);
+    const panelScripts = components['CostCalcPanel.astro'].match(/<script\b[^>]*>/g) ?? [];
+    expect(panelScripts).toEqual(['<script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />', '<script>']);
   });
 
   it('keeps form controls inside the calculator panel and results', () => {

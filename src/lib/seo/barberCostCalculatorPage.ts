@@ -217,7 +217,7 @@ export const TEAM_SIZE_PROFILES: readonly TeamSizeProfile[] = [
 ];
 
 export const TEAM_SIZE_CLOSING =
-  'No single platform is cheapest at every team size. The calculator will let you enter your own number of bookable barbers rather than relying on a typical shop.';
+  'No single platform is cheapest at every team size. The calculator lets you enter your own number of bookable barbers rather than relying on a typical shop.';
 
 /* ---------------------------- Marketplace fees ----------------------------- */
 
@@ -261,7 +261,7 @@ export const VAT_PARAGRAPHS: readonly string[] = [
   `Competitor prices are often listed before VAT. Booksy shows its UK prices plus VAT, and Fresha lists UK rates exclusive of ${FRESHA_VAT}. The amount that leaves your bank account is therefore higher than the headline price.`,
   'For a VAT-registered barbershop, the effective net cost can differ from that cash cost, depending on your own tax position and whether you can reclaim input VAT.',
   'KERSIVO is not currently VAT registered, so no VAT is added to the KERSIVO subscription.',
-  'The calculator will show cash cost and estimated net cost separately, so you can see both views side by side.',
+  'The calculator shows cash cost and estimated net cost separately, so you can see both views side by side.',
 ];
 
 export const VAT_DISCLAIMER =
@@ -333,7 +333,7 @@ export const SCENARIOS_NOTE =
 /* ------------------------------- Methodology ------------------------------- */
 
 export const METHODOLOGY_INTRO =
-  'The calculator compares estimated costs using your own inputs and each platform’s published UK pricing. These are the factors it will use.';
+  'The calculator compares estimated costs using your own inputs and each platform’s published UK pricing. These are the factors it uses.';
 
 export const METHODOLOGY_FACTORS: readonly string[] = [
   'Number of bookable barbers',

@@ -25,12 +25,13 @@ import {
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
 } from './calculatorUi';
+import { CALCULATOR_PREPAINT_SCRIPT } from './calculatorPrePaint';
 import { initCalculator, readPeriod, readScenario } from './initCalculator';
 import { formatMoneyGbp } from './money';
 import { STRIPE_FEE_PAYER_CAVEAT } from '@/lib/seo/stripeFacts';
 
 /** Mirrors the data hooks rendered by CostCalcPanel.astro and CostResults.astro. */
-function mount() {
+function mount({ prePaint = false } = {}) {
   const numberField = (field: (typeof NUMBER_FIELDS)[number]) => `
     <input id="${field.id}" name="${field.name}" type="number" value="${field.defaultValue}"
       min="${field.min}" max="${field.max}" step="${field.step}" />
@@ -91,6 +92,7 @@ function mount() {
       <details data-slot="shared-notes" hidden><ul data-slot="shared-assumptions"></ul></details>
       <aside><p data-slot="insight"></p></aside>
     </section>`;
+  if (prePaint) new Function(CALCULATOR_PREPAINT_SCRIPT)();
   initCalculator(document);
 }
 
@@ -147,7 +149,7 @@ const URL_SCENARIO: CostScenarioInput = {
   depositBookingsPerMonth: 300,
 };
 
-beforeEach(mount);
+beforeEach(() => mount());
 
 describe('initial calculation', () => {
   it('calculates the default form immediately from the engine', () => {
@@ -681,9 +683,9 @@ describe('cost-driver insight', () => {
 
 const BASE_PATH = '/barber-software-cost-calculator';
 
-function mountAt(search: string) {
+function mountAt(search: string, options?: { prePaint?: boolean }) {
   window.history.replaceState(null, '', `${BASE_PATH}${search}`);
-  mount();
+  mount(options);
 }
 
 function mockClipboard(impl: (text: string) => Promise<void>) {
@@ -763,6 +765,49 @@ describe('scenario URLs', () => {
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
     expect(document.querySelectorAll('[aria-invalid="true"]')).toHaveLength(0);
     expect(total('booksy')).not.toBe('£—');
+  });
+
+  describe('after the pre-paint script', () => {
+    const snapshot = () => ({
+      scenario: readScenario($<HTMLFormElement>('[data-calc-form]')),
+      period: readPeriod($('[data-calc-results]')),
+      totals: PROVIDER_RESULTS.map((provider) => total(provider.id)),
+      advancedOpen: $<HTMLDetailsElement>('details.calc-advanced').open,
+      splitHidden: $('#calc-split-fields').hidden,
+      depositHidden: $(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden,
+    });
+
+    it.each([
+      '',
+      '?period=36',
+      '?b=6&a=900&period=36',
+      '?vat=1',
+      '?sw=1',
+      '?loyalty=1',
+      '?dp=1&db=100',
+      '?dp=1&db=999',
+      '?vat=yes&dp=true&split=2',
+      `?${encodeScenarioQuery(URL_SCENARIO, 'threeYear')}`,
+    ])('hydrates %s to the same final state and totals as without it', (search) => {
+      mountAt(search);
+      const withoutPrePaint = snapshot();
+      mountAt(search, { prePaint: true });
+      expect(snapshot()).toEqual(withoutPrePaint);
+    });
+
+    it('still binds once and applies the URL exactly once', () => {
+      mountAt('?dp=1&db=100&vat=1', { prePaint: true });
+      setNumber(DEPOSIT_BOOKINGS_FIELD.id, '40');
+      toggle(DEPOSIT_PROCESSING_TOGGLE.id, false);
+      initCalculator(document);
+      initCalculator(document);
+      expect($<HTMLInputElement>(`#${DEPOSIT_BOOKINGS_FIELD.id}`).value).toBe('40');
+      expect($<HTMLInputElement>(`#${DEPOSIT_PROCESSING_TOGGLE.id}`).checked).toBe(false);
+      expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(true);
+      const writes = mockClipboard(() => Promise.resolve());
+      $<HTMLButtonElement>('[data-calc-share]').click();
+      expect(writes).toHaveLength(1);
+    });
   });
 
   it('binds listeners once and does not reapply the URL on repeated page-load calls', () => {

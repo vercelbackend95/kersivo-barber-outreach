@@ -52,6 +52,14 @@ export const PERIOD_PARAM_VALUES = {
   threeYear: '36',
 } as const satisfies Record<CostPeriod, string>;
 
+/** Inputs inside the collapsed Advanced costs section; a non-default value opens it. */
+export const ADVANCED_SCENARIO_KEYS = [
+  'vatRegistered',
+  'freshaSmartWebsite',
+  'freshaClientLoyalty',
+  'includeDepositProcessing',
+] as const satisfies readonly BooleanKey[];
+
 const SCENARIO_KEYS = Object.keys(SCENARIO_PARAMS) as ScenarioKey[];
 
 const isNumberKey = (key: ScenarioKey): key is NumberKey => typeof DEFAULT_SCENARIO[key] === 'number';
