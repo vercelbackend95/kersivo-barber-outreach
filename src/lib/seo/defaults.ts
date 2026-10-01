@@ -20,6 +20,9 @@ export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 
+/** KERSIVO does not currently add VAT to its subscription. */
+export const SAAS_ADDS_VAT = false;
+
 export const PAGE_DESCRIPTIONS = {
   privacy:
     'Privacy policy for Kersivo barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',

@@ -16,6 +16,9 @@ export const BOOKSY_BASE_PRICE_GBP = 40;
 /** Booksy additional user (GBP per user per month, ex VAT) as publicly listed. */
 export const BOOKSY_ADDITIONAL_USER_GBP = 5;
 
+/** Booksy lists its subscription, additional users and Boost fees exclusive of VAT. */
+export const BOOKSY_PRICES_VAT = 'exclusive' as const;
+
 /** Booksy UK base subscription as publicly listed. */
 export const BOOKSY_BASE_PRICE_LABEL = `£${BOOKSY_BASE_PRICE_GBP}/month + VAT`;
 
