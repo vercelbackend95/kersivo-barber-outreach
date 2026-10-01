@@ -247,7 +247,7 @@
 .faq4--landing .faq4__badge {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   letter-spacing: 0.14em;
   padding: 0.28rem 0.72rem;
   border-radius: var(--radius-4);

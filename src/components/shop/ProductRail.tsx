@@ -45,6 +45,8 @@ export type ProductRailProps = {
   chooseOptionsLabel?: string;
   soldOutLabel?: string;
   viewProductLabel?: string;
+  /** Eager-load the first two images; disable when the rail renders below the fold. */
+  eagerImages?: boolean;
 };
 
 function resolveProductHref(
@@ -106,6 +108,7 @@ export function ProductRail({
   chooseOptionsLabel = 'Choose options',
   soldOutLabel = 'Sold out',
   viewProductLabel = 'View product',
+  eagerImages = true,
 }: ProductRailProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const action: ProductRailAction =
@@ -220,7 +223,7 @@ export function ProductRail({
                       soldOutLabel,
                       viewProductLabel,
                     }}
-                    priority={index < 2}
+                    priority={eagerImages && index < 2}
                   />
                 </li>
               );
@@ -234,7 +237,7 @@ export function ProductRail({
                   shopName={shopName}
                   fallback={imageFallback}
                   brandMark={fallbackBrandMark}
-                  priority={index < 2}
+                  priority={eagerImages && index < 2}
                   className="product-rail__sf-media"
                 />
               </div>
