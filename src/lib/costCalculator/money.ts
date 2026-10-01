@@ -28,7 +28,14 @@ export function roundGbp(gbp: number): number {
   return penceToGbp(gbpToPence(gbp));
 }
 
-/** Locale-independent pounds-and-pence display, e.g. 35.8 → "£35.80". */
+/** Multiplies a pounds amount by a whole-number factor exactly, via integer pence. */
+export function multiplyGbp(gbp: number, factor: number): number {
+  if (!Number.isInteger(factor)) throw new Error('multiplyGbp factor must be an integer');
+  return penceToGbp(gbpToPence(gbp) * factor);
+}
+
+/** Locale-independent pounds-and-pence display, e.g. 12345.6 → "£12,345.60". */
 export function formatMoneyGbp(gbp: number): string {
-  return `£${penceToGbp(gbpToPence(gbp)).toFixed(2)}`;
+  const [pounds, pence] = penceToGbp(gbpToPence(gbp)).toFixed(2).split('.');
+  return `£${pounds.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${pence}`;
 }

@@ -29,11 +29,13 @@ function setList(list: Element | null, items: readonly string[]) {
   );
 }
 
-function renderProvider(card: HTMLElement, view: ProviderView) {
+function renderProvider(card: HTMLElement, view: ProviderView, periodLabel: string) {
   card.dataset.state = view.state;
+  setText(card.querySelector('[data-calc-period-label]'), periodLabel);
 
   const total = card.querySelector<HTMLElement>('[data-slot="total"]');
   setText(total, view.total);
+  if (total) total.dataset.size = view.totalSize;
   if (view.state === 'unavailable') total?.setAttribute('aria-hidden', 'true');
   else total?.removeAttribute('aria-hidden');
   setText(card.querySelector('[data-slot="total-sr"]'), view.totalSr);
@@ -63,13 +65,16 @@ function renderProvider(card: HTMLElement, view: ProviderView) {
 }
 
 export function renderResults(results: HTMLElement, view: ResultsView) {
+  results.dataset.period = view.period;
   setHidden(results.querySelector<HTMLElement>('[data-slot="results-status"]'), view.ok);
+  setHidden(results.querySelector<HTMLElement>('[data-calc-three-year-note]'), !view.showThreeYearNote);
 
   for (const provider of view.providers) {
     const card = results.querySelector<HTMLElement>(`[data-provider="${provider.id}"]`);
-    if (card) renderProvider(card, provider);
+    if (card) renderProvider(card, provider, view.periodLabel);
   }
 
   setList(results.querySelector('[data-slot="shared-assumptions"]'), view.sharedAssumptions);
   setHidden(results.querySelector<HTMLElement>('[data-slot="shared-notes"]'), view.sharedAssumptions.length === 0);
+  setText(results.querySelector('[data-slot="insight"]'), view.insight);
 }

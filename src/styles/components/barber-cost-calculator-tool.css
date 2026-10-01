@@ -805,25 +805,6 @@ details[open] > summary .calc-advanced__chevron {
   max-width: 100%;
 }
 
-.calc-results__period-note {
-  margin: 0;
-  max-width: 34ch;
-  color: color-mix(in srgb, var(--muted) 90%, transparent);
-  font-size: 0.75rem;
-  line-height: 1.45;
-  text-align: right;
-}
-
-.calc-segmented__option.is-unavailable span {
-  color: color-mix(in srgb, var(--muted) 55%, transparent);
-  text-decoration: none;
-  cursor: not-allowed;
-}
-
-.calc-segmented__option.is-unavailable input {
-  cursor: not-allowed;
-}
-
 .calc-results__status {
   margin: 0;
   max-width: none;
@@ -840,6 +821,10 @@ details[open] > summary .calc-advanced__chevron {
 
 .calc-card[data-state='calculated'] .calc-card__total {
   color: var(--fg);
+}
+
+.calc-card__total [data-size='long'] {
+  font-size: 0.8em;
 }
 
 .calc-card[data-state='custom-pricing'] .calc-card__total {
@@ -974,11 +959,6 @@ details[open] > summary .calc-advanced__chevron {
   .calc-results__period-wrap {
     justify-items: stretch;
     width: 100%;
-  }
-
-  .calc-results__period-note {
-    max-width: none;
-    text-align: left;
   }
 
   .calc-results__period {

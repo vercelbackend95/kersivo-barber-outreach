@@ -1,0 +1,236 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import {
+  calculateMonthlyCosts,
+  type CostScenarioInput,
+  type MonthlyAmounts,
+  type ProviderMonthlyResult,
+} from './barberSoftwareCostEngine';
+import { DEFAULT_SCENARIO } from './calculatorUi';
+import { COST_PERIODS, PERIOD_MONTHS, isCostPeriod } from './costPeriod';
+import { projectCostCalculation } from './costProjection';
+import { gbpToPence } from './money';
+
+const scenario = (overrides: Partial<CostScenarioInput> = {}): CostScenarioInput => ({
+  ...DEFAULT_SCENARIO,
+  ...overrides,
+});
+
+function providers(overrides: Partial<CostScenarioInput>, period: (typeof COST_PERIODS)[number]) {
+  const projected = projectCostCalculation(calculateMonthlyCosts(scenario(overrides)), period);
+  if (!projected.ok) throw new Error('invalid scenario');
+  return projected.providers;
+}
+
+function amounts(result: ProviderMonthlyResult): MonthlyAmounts {
+  if (result.status !== 'calculated') throw new Error('not calculated');
+  return result.amounts;
+}
+
+const AMOUNT_KEYS = [
+  'subscriptionExVatGbp',
+  'teamOrUserFeesExVatGbp',
+  'acquisitionFeesExVatGbp',
+  'addOnsExVatGbp',
+  'commissionExVatGbp',
+  'paymentProcessingExVatGbp',
+  'subtotalExVatGbp',
+  'vatChargedGbp',
+  'cashTotalGbp',
+] as const;
+
+const RICH_SCENARIO: Partial<CostScenarioInput> = {
+  bookableBarbers: 6,
+  marketplaceClients: 7,
+  booksyBoostEnabled: true,
+  averageAppointmentValueGbp: 33.33,
+  freshaSmartWebsite: true,
+  freshaClientLoyalty: true,
+  vatRegistered: true,
+};
+
+describe('period model', () => {
+  it('centralises the three periods and their month counts', () => {
+    expect(COST_PERIODS).toEqual(['monthly', 'annual', 'threeYear']);
+    expect(PERIOD_MONTHS).toEqual({ monthly: 1, annual: 12, threeYear: 36 });
+    expect(isCostPeriod('annual')).toBe(true);
+    expect(isCostPeriod('weekly')).toBe(false);
+    expect(isCostPeriod(undefined)).toBe(false);
+  });
+});
+
+describe('projectCostCalculation', () => {
+  it('returns monthly results unchanged for the monthly period', () => {
+    const monthly = calculateMonthlyCosts(scenario(RICH_SCENARIO));
+    const projected = projectCostCalculation(monthly, 'monthly');
+    expect(projected.months).toBe(1);
+    if (!projected.ok || !monthly.ok) throw new Error('invalid');
+    expect(projected.providers).toEqual(monthly.providers);
+  });
+
+  it('multiplies every monetary amount by the period month count', () => {
+    const monthly = providers(RICH_SCENARIO, 'monthly');
+    for (const period of ['annual', 'threeYear'] as const) {
+      const projected = providers(RICH_SCENARIO, period);
+      projected.forEach((result, index) => {
+        const base = amounts(monthly[index]);
+        const scaled = amounts(result);
+        for (const key of AMOUNT_KEYS) {
+          expect(gbpToPence(scaled[key])).toBe(gbpToPence(base[key]) * PERIOD_MONTHS[period]);
+        }
+      });
+    }
+  });
+
+  it('projects the default scenario to the expected totals', () => {
+    const cash = (period: 'monthly' | 'annual' | 'threeYear') =>
+      providers({}, period).map((result) => amounts(result).cashTotalGbp);
+    expect(cash('monthly')).toEqual([60, 35.82, 39]);
+    expect(cash('annual')).toEqual([720, 429.84, 468]);
+    expect(cash('threeYear')).toEqual([2160, 1289.52, 1404]);
+  });
+
+  it('keeps projected totals reconciled with their components', () => {
+    for (const period of COST_PERIODS) {
+      for (const result of providers(RICH_SCENARIO, period)) {
+        const a = amounts(result);
+        const parts = [
+          a.subscriptionExVatGbp,
+          a.teamOrUserFeesExVatGbp,
+          a.acquisitionFeesExVatGbp,
+          a.addOnsExVatGbp,
+          a.commissionExVatGbp,
+          a.paymentProcessingExVatGbp,
+        ].reduce((sum, value) => sum + gbpToPence(value), 0);
+        expect(gbpToPence(a.subtotalExVatGbp)).toBe(parts);
+        expect(gbpToPence(a.cashTotalGbp)).toBe(gbpToPence(a.subtotalExVatGbp) + gbpToPence(a.vatChargedGbp));
+        const lines = result.lineItems.reduce((sum, line) => sum + (line.exVatGbp === null ? 0 : gbpToPence(line.exVatGbp)), 0);
+        expect(lines).toBe(gbpToPence(a.subtotalExVatGbp));
+      }
+    }
+  });
+
+  it('projects a pence-level amount exactly (£20.01 × 12 = £240.12)', () => {
+    const monthly = calculateMonthlyCosts(scenario());
+    if (!monthly.ok) throw new Error('invalid');
+    const [booksy, fresha, kersivo] = monthly.providers;
+    if (booksy.status !== 'calculated') throw new Error('not calculated');
+    const withPennies = { ...booksy, amounts: { ...booksy.amounts, cashTotalGbp: 20.01, subtotalExVatGbp: 20.01 } };
+    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, kersivo] }, 'annual');
+    if (!projected.ok) throw new Error('invalid');
+    expect(amounts(projected.providers[0]).cashTotalGbp).toBe(240.12);
+    expect(amounts(projected.providers[0]).subtotalExVatGbp).toBe(240.12);
+  });
+
+  it('projects VAT and the net estimate, keeping null net when not VAT registered', () => {
+    const [booksyNoVat] = providers({}, 'annual');
+    expect(amounts(booksyNoVat).vatChargedGbp).toBe(120);
+    expect(amounts(booksyNoVat).estimatedNetCostIfVatRecoverableGbp).toBeNull();
+
+    const [booksy, fresha, kersivo] = providers({ vatRegistered: true }, 'threeYear');
+    expect(amounts(booksy).estimatedNetCostIfVatRecoverableGbp).toBe(1800);
+    expect(amounts(fresha).estimatedNetCostIfVatRecoverableGbp).toBe(1074.6);
+    expect(amounts(kersivo).estimatedNetCostIfVatRecoverableGbp).toBe(1404);
+  });
+
+  it('projects line totals but keeps unit prices and quantities monthly', () => {
+    const monthly = providers(RICH_SCENARIO, 'monthly');
+    const projected = providers(RICH_SCENARIO, 'threeYear');
+    projected.forEach((result, providerIndex) => {
+      result.lineItems.forEach((line, lineIndex) => {
+        const base = monthly[providerIndex].lineItems[lineIndex];
+        expect(line.id).toBe(base.id);
+        expect(line.quantity).toBe(base.quantity);
+        expect(line.unitExVatGbp).toBe(base.unitExVatGbp);
+        expect(line.status).toBe(base.status);
+        if (base.exVatGbp === null) expect(line.exVatGbp).toBeNull();
+        else expect(gbpToPence(line.exVatGbp!)).toBe(gbpToPence(base.exVatGbp) * 36);
+      });
+    });
+  });
+
+  it('keeps payment processing not included in every period', () => {
+    for (const period of COST_PERIODS) {
+      for (const result of providers(RICH_SCENARIO, period)) {
+        expect(result.paymentsIncluded).toBe(false);
+        expect(amounts(result).paymentProcessingExVatGbp).toBe(0);
+        const payment = result.lineItems.find((line) => line.id === 'payment-processing')!;
+        expect(payment.status).toBe('not-included');
+        expect(payment.exVatGbp).toBe(0);
+      }
+    }
+  });
+
+  it('keeps Fresha custom pricing without a total, projecting only known lines', () => {
+    for (const period of COST_PERIODS) {
+      const [, fresha] = providers({ bookableBarbers: 21, marketplaceClients: 2, freshaSmartWebsite: true }, period);
+      expect(fresha.status).toBe('custom-pricing');
+      if (fresha.status !== 'custom-pricing') continue;
+      expect(fresha.amounts).toBeNull();
+      const line = (id: string) => fresha.lineItems.find((entry) => entry.id === id)!;
+      expect(line('fresha-subscription').exVatGbp).toBeNull();
+      expect(line('fresha-subscription').status).toBe('custom-pricing');
+      expect(gbpToPence(line('fresha-marketplace-fees').exVatGbp!)).toBe(1000 * PERIOD_MONTHS[period]);
+    }
+  });
+
+  it('passes invalid scenarios through without projecting anything', () => {
+    const projected = projectCostCalculation(calculateMonthlyCosts(scenario({ bookableBarbers: Number.NaN })), 'threeYear');
+    expect(projected.ok).toBe(false);
+    expect(projected.period).toBe('threeYear');
+    if (projected.ok) return;
+    expect(projected.errors[0].field).toBe('bookableBarbers');
+    expect('providers' in projected).toBe(false);
+  });
+
+  it('does not mutate the monthly result', () => {
+    const monthly = calculateMonthlyCosts(scenario(RICH_SCENARIO));
+    const snapshot = JSON.stringify(monthly);
+    projectCostCalculation(monthly, 'threeYear');
+    expect(JSON.stringify(monthly)).toBe(snapshot);
+  });
+});
+
+describe('projection architecture guards', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const strip = (source: string) =>
+    source
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/`(?:\\.|[^`\\])*`|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/g, '""');
+  const sources = readdirSync(here)
+    .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+    .map((file) => {
+      const raw = readFileSync(join(here, file), 'utf8');
+      return { file, raw, code: strip(raw) };
+    });
+
+  it('defines the 12 and 36 month multipliers only in costPeriod.ts', () => {
+    for (const { file, code } of sources) {
+      if (file === 'costPeriod.ts') continue;
+      // toPrecision(12) is float stabilisation in money.ts, not a period multiplier.
+      expect(code.replace('toPrecision(12)', ''), file).not.toMatch(/\b(12|36)\b/);
+    }
+  });
+
+  it('applies period multipliers only in the projection layer', () => {
+    const users = sources.filter(({ code }) => /\bPERIOD_MONTHS\b/.test(code)).map(({ file }) => file);
+    expect(users.sort()).toEqual(['costPeriod.ts', 'costProjection.ts']);
+  });
+
+  it('keeps provider formulas in the engine only', () => {
+    for (const file of ['costProjection.ts', 'costInsight.ts', 'resultView.ts']) {
+      const { raw } = sources.find((entry) => entry.file === file)!;
+      expect(raw, file).not.toMatch(/booksyFacts|seo\/defaults|'\.\/vat'|percentOfPence|requireVerifiedFreshaFact|SAAS_MONTHLY/);
+      expect(raw, file).not.toMatch(/\b(document|window|HTMLElement|querySelector)\b/);
+    }
+  });
+
+  it('adds no winner, cheapest or savings logic anywhere in the calculator', () => {
+    for (const { file, raw } of sources) {
+      expect(raw, file).not.toMatch(/winner|cheapest|best value|recommended|saving|you save/i);
+    }
+  });
+});

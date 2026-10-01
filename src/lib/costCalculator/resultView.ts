@@ -1,29 +1,36 @@
 /**
- * Turns an engine calculation into display strings for the result cards.
+ * Turns engine results into display strings for the result cards.
  * Pure and DOM-free: shared by the server render and the client renderer.
- * It only formats values the engine returned; it never derives a cost.
+ * It only formats values the engine and projection returned; it never derives a cost.
  */
 
-import type {
-  AssumptionCode,
-  CostLineItem,
-  MonthlyCostCalculation,
-  ProviderId,
-  ProviderMonthlyResult,
+import {
+  calculateMonthlyCosts,
+  type AssumptionCode,
+  type CostLineItem,
+  type CostScenarioInput,
+  type ProviderId,
+  type ProviderMonthlyResult,
 } from './barberSoftwareCostEngine';
 import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
+  INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
   NOT_CALCULATED_SR,
   NOT_ESTIMATED,
   NOT_INCLUDED,
   PLACEHOLDER_TOTAL,
   PLACEHOLDER_VALUE,
+  PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
+  periodResultLabel,
   type BreakdownRowId,
   type SummaryRowId,
 } from './calculatorUi';
+import { describeCostInsight, determineCostInsight } from './costInsight';
+import type { CostPeriod } from './costPeriod';
+import { projectCostCalculation, type ProjectedCostCalculation } from './costProjection';
 import { formatMoneyGbp } from './money';
 
 export type ProviderViewState = 'calculated' | 'custom-pricing' | 'unavailable';
@@ -34,6 +41,8 @@ export type ProviderView = {
   id: ProviderId;
   state: ProviderViewState;
   total: string;
+  /** Long totals use a smaller type size so they never overflow the card. */
+  totalSize: 'regular' | 'long';
   totalSr: string | null;
   net: string | null;
   customNote: string | null;
@@ -45,8 +54,12 @@ export type ProviderView = {
 
 export type ResultsView = {
   ok: boolean;
+  period: CostPeriod;
+  periodLabel: string;
+  showThreeYearNote: boolean;
   providers: readonly ProviderView[];
   sharedAssumptions: readonly string[];
+  insight: string;
 };
 
 /** Assumptions that apply to every provider and are shown once rather than per card. */
@@ -57,25 +70,34 @@ const SHARED_ASSUMPTIONS: ReadonlySet<AssumptionCode> = new Set([
   'vat-recovery-depends-on-circumstances',
 ]);
 
+const LONG_TOTAL_LENGTH = 10;
+
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
+/** Quantity context always keeps the monthly pricing basis, whatever period is shown. */
 function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
   const unit = line.unitExVatGbp === null ? null : formatMoneyGbp(line.unitExVatGbp);
   switch (line.id) {
     case 'booksy-additional-users':
-      return line.quantity > 0 && unit ? `${line.quantity} × ${unit}` : null;
+      return line.quantity > 0 && unit
+        ? `${plural(line.quantity, 'additional user', 'additional users')} · ${unit} each/month`
+        : null;
     case 'booksy-boost':
       if (!boostEnabled) return 'Off';
       return line.quantity > 0 && unit
-        ? `${plural(line.quantity, 'qualifying client', 'qualifying clients')} × ${unit}`
+        ? `${plural(line.quantity, 'qualifying client', 'qualifying clients')}/month · ${unit} each`
         : null;
     case 'fresha-subscription':
-      if (line.plan === 'independent') return 'Independent plan';
-      if (line.plan === 'team' && unit) return `Team plan · ${line.quantity} × ${unit}`;
+      if (line.plan === 'independent' && unit) return `Independent plan · ${unit}/month`;
+      if (line.plan === 'team' && unit) {
+        return `Team plan · ${plural(line.quantity, 'bookable team member', 'bookable team members')} · ${unit} each/month`;
+      }
       if (line.plan === 'enterprise') return 'Enterprise';
       return null;
     case 'fresha-marketplace-fees':
-      return line.quantity > 0 && unit ? `${plural(line.quantity, 'new client', 'new clients')} × ${unit}` : null;
+      return line.quantity > 0 && unit
+        ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
+        : null;
     case 'kersivo-additional-barbers':
       return line.quantity > 0 ? `${line.quantity} included` : null;
     default:
@@ -95,6 +117,7 @@ function unavailableProvider(id: ProviderId): ProviderView {
     id,
     state: 'unavailable',
     total: PLACEHOLDER_TOTAL,
+    totalSize: 'regular',
     totalSr: NOT_CALCULATED_SR,
     net: null,
     customNote: null,
@@ -127,6 +150,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
       ...shared,
       state: 'custom-pricing',
       total: CUSTOM_PRICING,
+      totalSize: 'regular',
       totalSr: null,
       net: null,
       customNote: CUSTOM_PRICING_NOTE,
@@ -136,11 +160,13 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
   }
 
   const { amounts } = result;
+  const total = formatMoneyGbp(amounts.cashTotalGbp);
   breakdown.vat = { value: formatMoneyGbp(amounts.vatChargedGbp), detail: null };
   return {
     ...shared,
     state: 'calculated',
-    total: formatMoneyGbp(amounts.cashTotalGbp),
+    total,
+    totalSize: total.length >= LONG_TOTAL_LENGTH ? 'long' : 'regular',
     totalSr: null,
     net:
       amounts.estimatedNetCostIfVatRecoverableGbp === null
@@ -156,25 +182,43 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
   };
 }
 
-export function buildResultsView(calculation: MonthlyCostCalculation): ResultsView {
-  if (!calculation.ok) {
+export function buildResultsView(projected: ProjectedCostCalculation, insight: string): ResultsView {
+  const period = {
+    period: projected.period,
+    periodLabel: periodResultLabel(projected.period),
+    showThreeYearNote: projected.period === 'threeYear',
+    insight,
+  };
+
+  if (!projected.ok) {
     return {
+      ...period,
       ok: false,
       providers: PROVIDER_RESULTS.map((entry) => unavailableProvider(entry.id)),
       sharedAssumptions: [],
     };
   }
 
-  const sharedAssumptions = new Map<AssumptionCode, string>();
-  for (const entry of [...calculation.assumptions, ...calculation.providers.flatMap((p) => p.assumptions)]) {
+  const sharedAssumptions = new Map<string, string>();
+  for (const entry of [...projected.assumptions, ...projected.providers.flatMap((p) => p.assumptions)]) {
     if (SHARED_ASSUMPTIONS.has(entry.code)) sharedAssumptions.set(entry.code, entry.message);
   }
+  if (projected.months > 1) sharedAssumptions.set('projection', PROJECTION_ASSUMPTION);
 
   return {
+    ...period,
     ok: true,
-    providers: calculation.providers.map((result) =>
-      providerView(result, calculation.scenario.booksyBoostEnabled),
-    ),
+    providers: projected.providers.map((result) => providerView(result, projected.scenario.booksyBoostEnabled)),
     sharedAssumptions: [...sharedAssumptions.values()],
   };
+}
+
+/** The full pure pipeline: scenario → monthly engine → projection + monthly insight → view. */
+export function buildCalculatorView(scenario: CostScenarioInput, period: CostPeriod): ResultsView {
+  const monthly = calculateMonthlyCosts(scenario);
+  const insight = determineCostInsight(monthly);
+  return buildResultsView(
+    projectCostCalculation(monthly, period),
+    insight ? describeCostInsight(insight) : INSIGHT_INVALID,
+  );
 }

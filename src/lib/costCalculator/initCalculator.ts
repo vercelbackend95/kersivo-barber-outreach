@@ -5,20 +5,22 @@
  */
 
 import {
-  calculateMonthlyCosts,
+  validateCostScenario,
   type CostScenarioInput,
   type ValidationIssue,
 } from './barberSoftwareCostEngine';
 import {
+  DEFAULT_PERIOD,
   MARKETPLACE_CLIENTS_FIELD,
   NUMBER_FIELDS,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   validationMessage,
 } from './calculatorUi';
+import { isCostPeriod, type CostPeriod } from './costPeriod';
 import { initCalculatorShell } from './initCalculatorShell';
 import { renderResults } from './renderResults';
-import { buildResultsView } from './resultView';
+import { buildCalculatorView } from './resultView';
 
 const READY_FLAG = 'calcReady';
 
@@ -57,6 +59,11 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     // Payment processing is not part of this calculation stage; the control is disabled.
     includePayments: false,
   };
+}
+
+export function readPeriod(results: HTMLElement): CostPeriod {
+  const selected = results.querySelector<HTMLInputElement>('[data-calc-period] input[name="period"]:checked');
+  return isCostPeriod(selected?.value) ? selected.value : DEFAULT_PERIOD;
 }
 
 function renderValidation(form: HTMLFormElement, issues: readonly ValidationIssue[]) {
@@ -113,13 +120,14 @@ export function initCalculator(root: Document) {
   initSplitSeeding(form);
 
   const recalculate = () => {
-    const calculation = calculateMonthlyCosts(readScenario(form));
-    renderValidation(form, calculation.ok ? [] : calculation.errors);
-    renderResults(results, buildResultsView(calculation));
+    const scenario = readScenario(form);
+    renderValidation(form, validateCostScenario(scenario));
+    renderResults(results, buildCalculatorView(scenario, readPeriod(results)));
   };
 
   form.addEventListener('input', recalculate);
   form.addEventListener('change', recalculate);
+  results.querySelector('[data-calc-period]')?.addEventListener('change', recalculate);
   form.addEventListener('submit', () => {
     form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   });

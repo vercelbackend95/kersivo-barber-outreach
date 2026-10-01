@@ -1,0 +1,122 @@
+/**
+ * Neutral cost-driver insight from structured monthly engine results.
+ * Describes what drives cost; it never ranks providers or compares totals.
+ * Always classified from monthly values so the display period cannot change the driver.
+ */
+
+import { FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
+import type {
+  CalculatedProviderResult,
+  MonthlyCostCalculation,
+  ProviderId,
+} from './barberSoftwareCostEngine';
+import { formatMoneyGbp } from './money';
+
+type ProviderAmount = { provider: ProviderId; monthlyExVatGbp: number };
+
+export type CostInsight =
+  | { kind: 'custom-pricing'; provider: 'fresha' }
+  | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
+  | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
+  | { kind: 'add-ons'; freshaAddOnsGbp: number }
+  | { kind: 'base' };
+
+type DriverKind = 'acquisition' | 'team' | 'add-ons';
+
+/** Tie-break order when two driver categories have the same monthly amount. */
+const DRIVER_PRIORITY: readonly DriverKind[] = ['acquisition', 'team', 'add-ons'];
+
+const amountFor = (results: readonly CalculatedProviderResult[], provider: ProviderId, pick: (r: CalculatedProviderResult) => number) => {
+  const result = results.find((entry) => entry.provider === provider);
+  return result ? pick(result) : 0;
+};
+
+function largest(results: readonly CalculatedProviderResult[], pick: (r: CalculatedProviderResult) => number): ProviderAmount | null {
+  let best: ProviderAmount | null = null;
+  for (const result of results) {
+    const value = pick(result);
+    if (value > 0 && (!best || value > best.monthlyExVatGbp)) best = { provider: result.provider, monthlyExVatGbp: value };
+  }
+  return best;
+}
+
+export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
+  if (!monthly.ok) return null;
+  if (monthly.providers.some((result) => result.status === 'custom-pricing')) {
+    return { kind: 'custom-pricing', provider: 'fresha' };
+  }
+
+  const calculated = monthly.providers.filter(
+    (result): result is CalculatedProviderResult => result.status === 'calculated',
+  );
+  const candidates: Record<DriverKind, ProviderAmount | null> = {
+    acquisition: largest(calculated, (r) => r.amounts.acquisitionFeesExVatGbp),
+    team: largest(calculated, (r) => r.amounts.teamOrUserFeesExVatGbp),
+    'add-ons': largest(calculated, (r) => r.amounts.addOnsExVatGbp),
+  };
+
+  let driver: DriverKind | null = null;
+  for (const kind of DRIVER_PRIORITY) {
+    const candidate = candidates[kind];
+    if (!candidate) continue;
+    if (!driver || candidate.monthlyExVatGbp > candidates[driver]!.monthlyExVatGbp) driver = kind;
+  }
+
+  switch (driver) {
+    case 'acquisition':
+      return {
+        kind: 'acquisition',
+        booksyBoostGbp: amountFor(calculated, 'booksy', (r) => r.amounts.acquisitionFeesExVatGbp),
+        freshaMarketplaceGbp: amountFor(calculated, 'fresha', (r) => r.amounts.acquisitionFeesExVatGbp),
+      };
+    case 'team': {
+      const fresha = calculated.find((entry) => entry.provider === 'fresha');
+      const kersivo = calculated.find((entry) => entry.provider === 'kersivo');
+      return {
+        kind: 'team',
+        booksyUserFeesGbp: amountFor(calculated, 'booksy', (r) => r.amounts.teamOrUserFeesExVatGbp),
+        freshaTeamPlan: fresha?.lineItems.some((line) => line.plan === 'team') ?? false,
+        kersivoFlat:
+          kersivo !== undefined &&
+          kersivo.amounts.teamOrUserFeesExVatGbp === 0 &&
+          kersivo.lineItems.some((line) => line.id === 'kersivo-additional-barbers' && line.quantity > 0),
+      };
+    }
+    case 'add-ons':
+      return { kind: 'add-ons', freshaAddOnsGbp: amountFor(calculated, 'fresha', (r) => r.amounts.addOnsExVatGbp) };
+    default:
+      return { kind: 'base' };
+  }
+}
+
+const perMonth = (gbp: number) => `${formatMoneyGbp(gbp)}/month before VAT`;
+
+export function describeCostInsight(insight: CostInsight): string {
+  switch (insight.kind) {
+    case 'custom-pricing':
+      return `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete three-way cost comparison is not available.`;
+    case 'acquisition': {
+      const { booksyBoostGbp, freshaMarketplaceGbp } = insight;
+      if (booksyBoostGbp > 0 && freshaMarketplaceGbp > 0) {
+        return `Marketplace acquisition is the largest modelled variable cost in this scenario. Booksy Boost is estimated at ${perMonth(booksyBoostGbp)} and Fresha Marketplace fees at ${perMonth(freshaMarketplaceGbp)}, under the assumptions entered.`;
+      }
+      if (booksyBoostGbp > 0) {
+        return `Booksy Boost is the largest modelled variable cost in this scenario at ${perMonth(booksyBoostGbp)}, under the assumptions entered.`;
+      }
+      return `Marketplace acquisition is the largest modelled variable cost in this scenario. Fresha Marketplace fees are estimated at ${perMonth(freshaMarketplaceGbp)}, under the assumptions entered.`;
+    }
+    case 'team': {
+      const parts = [`Booksy adds ${perMonth(insight.booksyUserFeesGbp)} in additional-user fees`];
+      if (insight.freshaTeamPlan) parts.push('Fresha prices its Team plan per bookable team member');
+      const list = parts.join(', and ');
+      const kersivo = insight.kersivoFlat
+        ? ' KERSIVO stays flat per location in this single-location model.'
+        : '';
+      return `Team size is the largest modelled variable cost in this scenario. ${list}.${kersivo}`;
+    }
+    case 'add-ons':
+      return `Selected Fresha add-ons are the largest optional cost in this scenario at ${perMonth(insight.freshaAddOnsGbp)}.`;
+    case 'base':
+      return 'Base subscription pricing is the main modelled cost in this scenario.';
+  }
+}

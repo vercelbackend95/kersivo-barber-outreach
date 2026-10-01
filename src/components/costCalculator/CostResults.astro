@@ -1,14 +1,11 @@
 ---
-import { calculateMonthlyCosts } from '@/lib/costCalculator/barberSoftwareCostEngine';
 import {
   caveatLabel,
   DEFAULT_PERIOD,
   DEFAULT_SCENARIO,
   INSIGHT_EYEBROW,
-  INSIGHT_PENDING,
   NOTES_LABEL,
   PERIOD_OPTIONS,
-  PERIOD_UNAVAILABLE_NOTE,
   PROVIDER_RESULTS,
   RESULTS_HEADING,
   RESULTS_INVALID,
@@ -17,10 +14,9 @@ import {
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
 } from '@/lib/costCalculator/calculatorUi';
-import { buildResultsView } from '@/lib/costCalculator/resultView';
+import { buildCalculatorView } from '@/lib/costCalculator/resultView';
 
-const defaultPeriod = PERIOD_OPTIONS.find((option) => option.value === DEFAULT_PERIOD)!;
-const view = buildResultsView(calculateMonthlyCosts(DEFAULT_SCENARIO));
+const view = buildCalculatorView(DEFAULT_SCENARIO, DEFAULT_PERIOD);
 const viewFor = (id: string) => view.providers.find((provider) => provider.id === id)!;
 ---
 
@@ -33,29 +29,21 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
       </div>
 
       <div class="calc-results__period-wrap">
-        <fieldset class="calc-segmented calc-results__period" data-calc-period aria-describedby="calc-period-note">
+        <fieldset class="calc-segmented calc-results__period" data-calc-period>
           <legend class="sr-only">Cost period</legend>
           {
             PERIOD_OPTIONS.map((option) => (
-              <label class:list={['calc-segmented__option', { 'is-unavailable': !option.available }]}>
-                <input
-                  type="radio"
-                  name="period"
-                  value={option.value}
-                  checked={option.value === DEFAULT_PERIOD}
-                  disabled={!option.available}
-                  data-result-label={option.resultLabel}
-                />
+              <label class="calc-segmented__option">
+                <input type="radio" name="period" value={option.value} checked={option.value === view.period} />
                 <span>{option.label}</span>
               </label>
             ))
           }
         </fieldset>
-        <p id="calc-period-note" class="calc-results__period-note">{PERIOD_UNAVAILABLE_NOTE}</p>
       </div>
     </header>
 
-    <p class="calc-results__note" data-calc-three-year-note hidden>{THREE_YEAR_NOTE}</p>
+    <p class="calc-results__note" data-calc-three-year-note hidden={!view.showThreeYearNote}>{THREE_YEAR_NOTE}</p>
     <p class="calc-results__status" data-slot="results-status" hidden={view.ok}>{RESULTS_INVALID}</p>
 
     <ol class="calc-results__cards">
@@ -70,10 +58,14 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
                   {provider.name}
                 </h3>
                 <p class="calc-card__period" data-calc-period-label>
-                  {defaultPeriod.resultLabel}
+                  {view.periodLabel}
                 </p>
                 <p class="calc-card__total">
-                  <span data-slot="total" aria-hidden={result.state === 'unavailable' ? 'true' : undefined}>
+                  <span
+                    data-slot="total"
+                    data-size={result.totalSize}
+                    aria-hidden={result.state === 'unavailable' ? 'true' : undefined}
+                  >
                     {result.total}
                   </span>
                   <span class="sr-only" data-slot="total-sr">
@@ -158,7 +150,7 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
 
     <aside class="calc-insight" aria-labelledby="calc-insight-title">
       <p id="calc-insight-title" class="calc-insight__eyebrow">{INSIGHT_EYEBROW}</p>
-      <p class="calc-insight__text">{INSIGHT_PENDING}</p>
+      <p class="calc-insight__text" data-slot="insight">{view.insight}</p>
     </aside>
   </div>
 </section>

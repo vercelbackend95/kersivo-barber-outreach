@@ -18,12 +18,13 @@ import {
   EXCEEDS_APPOINTMENTS_MESSAGE,
   FRESHA_ADD_ONS,
   INSIGHT_EYEBROW,
-  INSIGHT_PENDING,
+  INSIGHT_INVALID,
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
   NUMBER_FIELDS,
   PAYMENTS_TOGGLE,
   PERIOD_OPTIONS,
+  PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
   RESULTS_HEADING,
   RESULTS_SUPPORTING,
@@ -140,18 +141,26 @@ describe('calculator panel inputs', () => {
 });
 
 describe('calculator results structure', () => {
-  it('keeps the period selector with only Monthly available', () => {
+  it('offers all three periods, Monthly by default, with cash-cost labels', () => {
     expect(RESULTS_HEADING).toBe('Your cost comparison');
     expect(RESULTS_SUPPORTING).toBe('Based on the barbershop numbers above.');
-    expect(PERIOD_OPTIONS.map((option) => [option.label, option.available])).toEqual([
-      ['Monthly', true],
-      ['12 months', false],
-      ['3 years', false],
+    expect(PERIOD_OPTIONS.map((option) => [option.value, option.label, option.resultLabel])).toEqual([
+      ['monthly', 'Monthly', 'Estimated monthly cash cost'],
+      ['annual', '12 months', 'Estimated 12-month cash cost'],
+      ['threeYear', '3 years', 'Estimated 3-year cash cost'],
     ]);
     expect(DEFAULT_PERIOD).toBe('monthly');
-    expect(PERIOD_OPTIONS[0].resultLabel).toBe('Estimated monthly cash cost');
-    expect(resultsSource).toContain('disabled={!option.available}');
-    expect(THREE_YEAR_NOTE).toContain('does not predict future price changes');
+    const fieldset = resultsSource.slice(resultsSource.indexOf('data-calc-period'), resultsSource.indexOf('</fieldset>'));
+    expect(fieldset).not.toMatch(/\bdisabled\b|is-unavailable/);
+    expect(resultsSource).not.toMatch(/calc-period-note|coming/i);
+  });
+
+  it('states the projection assumptions in English', () => {
+    expect(PROJECTION_ASSUMPTION).toBe(
+      '12-month and 3-year projections assume the monthly scenario remains unchanged and use the currently stored provider prices.',
+    );
+    expect(THREE_YEAR_NOTE).toBe('Projection uses today’s published prices and does not predict future price changes.');
+    expect(resultsSource).toContain('data-calc-three-year-note hidden={!view.showThreeYearNote}');
   });
 
   it('renders three peer cards in Booksy, Fresha, KERSIVO order without winner language', () => {
@@ -192,16 +201,17 @@ describe('calculator results structure', () => {
     expect(resultsSource).toContain('data-line={row.id}');
   });
 
-  it('renders the server view from the engine, not hardcoded totals', () => {
-    expect(resultsSource).toContain('buildResultsView(calculateMonthlyCosts(DEFAULT_SCENARIO))');
+  it('renders the server view through the shared pipeline, Monthly by default', () => {
+    expect(resultsSource).toContain('buildCalculatorView(DEFAULT_SCENARIO, DEFAULT_PERIOD)');
+    expect(resultsSource).toContain('checked={option.value === view.period}');
     expect(resultsSource).not.toMatch(/\d+\.\d{2}/);
   });
 
-  it('keeps the insight static with the updated wording', () => {
+  it('server-renders the cost-driver insight into a live slot', () => {
     expect(INSIGHT_EYEBROW).toBe('BIGGEST COST DRIVER');
-    expect(INSIGHT_PENDING).toBe(
-      'Cost-driver analysis will appear here once projections and the full comparison model are connected.',
-    );
+    expect(resultsSource).toContain('data-slot="insight">{view.insight}</p>');
+    expect(resultsSource).not.toMatch(/INSIGHT_PENDING|will appear here once projections/);
+    expect(INSIGHT_INVALID).toBe('The cost driver will appear once the highlighted inputs are valid.');
   });
 
   it('explains Fresha custom pricing from the central team-size limit', () => {

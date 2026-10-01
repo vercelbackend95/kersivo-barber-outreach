@@ -5,6 +5,7 @@ import type {
   ProviderId,
   ValidationIssueCode,
 } from './barberSoftwareCostEngine';
+import type { CostPeriod } from './costPeriod';
 
 /**
  * Static UI configuration for the barber software cost calculator.
@@ -188,22 +189,27 @@ export const RESULTS_SUPPORTING = 'Based on the barbershop numbers above.';
 export const RESULTS_INVALID = 'Check the highlighted inputs to see your cost comparison.';
 
 export type PeriodOption = {
-  value: 'monthly' | 'annual' | 'threeYear';
+  value: CostPeriod;
   label: string;
   resultLabel: string;
-  available: boolean;
 };
 
 export const PERIOD_OPTIONS: readonly PeriodOption[] = [
-  { value: 'monthly', label: 'Monthly', resultLabel: 'Estimated monthly cash cost', available: true },
-  { value: 'annual', label: '12 months', resultLabel: 'Estimated 12-month cost', available: false },
-  { value: 'threeYear', label: '3 years', resultLabel: 'Estimated 3-year cost', available: false },
+  { value: 'monthly', label: 'Monthly', resultLabel: 'Estimated monthly cash cost' },
+  { value: 'annual', label: '12 months', resultLabel: 'Estimated 12-month cash cost' },
+  { value: 'threeYear', label: '3 years', resultLabel: 'Estimated 3-year cash cost' },
 ];
 
-export const DEFAULT_PERIOD: PeriodOption['value'] = 'monthly';
+export const DEFAULT_PERIOD: CostPeriod = 'monthly';
 
-export const PERIOD_UNAVAILABLE_NOTE = '12-month and 3-year views are coming in the next calculation stage.';
+export const periodResultLabel = (period: CostPeriod) =>
+  PERIOD_OPTIONS.find((option) => option.value === period)!.resultLabel;
 
+/** Listed with the shared assumptions whenever a projected period is selected. */
+export const PROJECTION_ASSUMPTION =
+  '12-month and 3-year projections assume the monthly scenario remains unchanged and use the currently stored provider prices.';
+
+/** Visible under the period selector for the 3-year view only. */
 export const THREE_YEAR_NOTE =
   'Projection uses today’s published prices and does not predict future price changes.';
 
@@ -277,8 +283,7 @@ export const caveatLabel = (count: number) => (count === 1 ? '1 caveat' : `${cou
 export const SHARED_NOTES_LABEL = 'Assumptions used for all three';
 
 export const INSIGHT_EYEBROW = 'BIGGEST COST DRIVER';
-export const INSIGHT_PENDING =
-  'Cost-driver analysis will appear here once projections and the full comparison model are connected.';
+export const INSIGHT_INVALID = 'The cost driver will appear once the highlighted inputs are valid.';
 
 /* -------------------------------- Validation -------------------------------- */
 

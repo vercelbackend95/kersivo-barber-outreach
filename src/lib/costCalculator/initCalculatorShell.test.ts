@@ -16,16 +16,6 @@ function mount() {
       <input id="split" type="checkbox" aria-controls="split-fields" data-calc-reveal />
       <div id="split-fields" hidden></div>
     </form>
-    <section data-calc-results>
-      <fieldset data-calc-period>
-        <input type="radio" name="period" value="monthly" data-result-label="Estimated monthly cost" checked />
-        <input type="radio" name="period" value="threeYear" data-result-label="Estimated 3-year cost" />
-      </fieldset>
-      <p data-calc-three-year-note hidden></p>
-      <p data-calc-period-label>Estimated monthly cost</p>
-      <p data-calc-period-label>Estimated monthly cost</p>
-      <span class="total">£—</span>
-    </section>
   `;
   initCalculatorShell(document);
 }
@@ -68,17 +58,6 @@ describe('initCalculatorShell', () => {
     toggle.checked = false;
     toggle.dispatchEvent(new Event('change'));
     expect(target.hidden).toBe(true);
-  });
-
-  it('relabels cards for the chosen period without producing figures', () => {
-    const threeYear = $<HTMLInputElement>('input[value="threeYear"]');
-    threeYear.checked = true;
-    threeYear.dispatchEvent(new Event('change'));
-    const labels = [...document.querySelectorAll('[data-calc-period-label]')].map((node) => node.textContent);
-    expect(labels).toEqual(['Estimated 3-year cost', 'Estimated 3-year cost']);
-    expect($('[data-calc-three-year-note]').hidden).toBe(false);
-    expect($('[data-calc-results]').dataset.period).toBe('threeYear');
-    expect($('.total').textContent).toBe('£—');
   });
 
   it('binds only once across repeated page-load calls', () => {

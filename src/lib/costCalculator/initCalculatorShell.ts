@@ -1,7 +1,6 @@
 /**
- * Client-side behaviour for the calculator UI shell: steppers, input bounds,
- * reveal toggles and the results period selector.
- * Phase 2 only — this module must not price any provider.
+ * Client-side behaviour for the calculator form shell: steppers, input bounds
+ * and reveal toggles. This module must not price any provider.
  */
 
 const READY_FLAG = 'calcShellReady';
@@ -81,23 +80,6 @@ function initRevealToggles(form: HTMLElement) {
   }
 }
 
-function initPeriodSelector(results: HTMLElement) {
-  const radios = [...results.querySelectorAll<HTMLInputElement>('[data-calc-period] input[type="radio"]')];
-  const labels = results.querySelectorAll<HTMLElement>('[data-calc-period-label]');
-  const threeYearNote = results.querySelector<HTMLElement>('[data-calc-three-year-note]');
-
-  const sync = () => {
-    const selected = radios.find((radio) => radio.checked);
-    if (!selected) return;
-    for (const label of labels) label.textContent = selected.dataset.resultLabel ?? '';
-    if (threeYearNote) threeYearNote.hidden = selected.value !== 'threeYear';
-    results.dataset.period = selected.value;
-  };
-
-  for (const radio of radios) radio.addEventListener('change', sync);
-  sync();
-}
-
 export function initCalculatorShell(root: Document) {
   const form = root.querySelector<HTMLFormElement>('[data-calc-form]');
   if (form && !form.dataset[READY_FLAG]) {
@@ -106,11 +88,5 @@ export function initCalculatorShell(root: Document) {
     initSteppers(form);
     initNumberBounds(form);
     initRevealToggles(form);
-  }
-
-  const results = root.querySelector<HTMLElement>('[data-calc-results]');
-  if (results && !results.dataset[READY_FLAG]) {
-    results.dataset[READY_FLAG] = 'true';
-    initPeriodSelector(results);
   }
 }

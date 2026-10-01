@@ -15,10 +15,13 @@ import {
   PAYMENTS_TOGGLE,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
+  INSIGHT_INVALID,
+  PROJECTION_ASSUMPTION,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SUMMARY_ROWS,
+  THREE_YEAR_NOTE,
 } from './calculatorUi';
-import { initCalculator, readScenario } from './initCalculator';
+import { initCalculator, readPeriod, readScenario } from './initCalculator';
 import { formatMoneyGbp } from './money';
 
 /** Mirrors the data hooks rendered by CostCalcPanel.astro and CostResults.astro. */
@@ -35,12 +38,12 @@ function mount() {
       <p data-slot="custom-note" hidden></p>
       <p data-slot="net"></p>
       <dl>${SUMMARY_ROWS.map((row) => `<div><dt>${row.label}</dt><dd data-summary="${row.id}">—</dd></div>`).join('')}</dl>
-      <dl>${provider.breakdown
+      <details class="calc-card__breakdown"><summary>View breakdown</summary><dl>${provider.breakdown
         .map(
           (row) =>
             `<div data-line="${row.id}"><dt>${row.label}<span data-slot="detail"></span></dt><dd data-slot="value">—</dd></div>`,
         )
-        .join('')}</dl>
+        .join('')}</dl></details>
       <details data-slot="notes" hidden>
         <summary>Assumptions &amp; notes<span data-slot="notes-flag" hidden></span></summary>
         <ul data-slot="warnings"></ul>
@@ -69,14 +72,14 @@ function mount() {
       <fieldset data-calc-period>
         ${PERIOD_OPTIONS.map(
           (option) =>
-            `<input type="radio" name="period" value="${option.value}" ${option.value === 'monthly' ? 'checked' : ''}
-              ${option.available ? '' : 'disabled'} data-result-label="${option.resultLabel}" />`,
+            `<input type="radio" name="period" value="${option.value}" ${option.value === 'monthly' ? 'checked' : ''} />`,
         ).join('')}
       </fieldset>
-      <p data-calc-three-year-note hidden></p>
+      <p data-calc-three-year-note hidden>${THREE_YEAR_NOTE}</p>
       <p data-slot="results-status" hidden></p>
       <ol>${PROVIDER_RESULTS.map(card).join('')}</ol>
       <details data-slot="shared-notes" hidden><ul data-slot="shared-assumptions"></ul></details>
+      <aside><p data-slot="insight"></p></aside>
     </section>`;
   initCalculator(document);
 }
@@ -151,7 +154,7 @@ describe('Booksy', () => {
   it('reacts to barber count and shows additional-user quantity', () => {
     setNumber('calc-barbers', '5');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£20.00');
-    expect(detail('booksy', 'booksy-additional-users')).toBe('4 × £5.00');
+    expect(detail('booksy', 'booksy-additional-users')).toBe('4 additional users · £5.00 each/month');
     expect(total('booksy')).toBe(engineCash({ bookableBarbers: 5 }, 0));
   });
 
@@ -167,7 +170,7 @@ describe('Booksy', () => {
     setNumber('calc-marketplace-clients', '3');
     toggle('calc-boost', true);
     expect(cell('booksy', 'booksy-boost')).toBe('£22.50');
-    expect(detail('booksy', 'booksy-boost')).toBe('3 qualifying clients × £7.50');
+    expect(detail('booksy', 'booksy-boost')).toBe('3 qualifying clients/month · £7.50 each');
     setNumber('calc-appointment-value', '10');
     expect(cell('booksy', 'booksy-boost')).toBe('£15.00');
     expect(total('booksy')).toBe(
@@ -180,10 +183,10 @@ describe('Booksy', () => {
 describe('Fresha', () => {
   it('switches Independent to Team with barber count', () => {
     setNumber('calc-barbers', '1');
-    expect(detail('fresha', 'fresha-subscription')).toBe('Independent plan');
+    expect(detail('fresha', 'fresha-subscription')).toBe('Independent plan · £14.95/month');
     expect(cell('fresha', 'fresha-subscription')).toBe('£14.95');
     setNumber('calc-barbers', '5');
-    expect(detail('fresha', 'fresha-subscription')).toBe('Team plan · 5 × £9.95');
+    expect(detail('fresha', 'fresha-subscription')).toBe('Team plan · 5 bookable team members · £9.95 each/month');
     expect(cell('fresha', 'fresha-subscription')).toBe('£49.75');
   });
 
@@ -345,16 +348,6 @@ describe('payments and period', () => {
     }
   });
 
-  it('offers Monthly only and keeps the monthly cash label', () => {
-    const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="period"]')];
-    expect(radios.map((radio) => [radio.value, radio.disabled])).toEqual([
-      ['monthly', false],
-      ['annual', true],
-      ['threeYear', true],
-    ]);
-    expect(cardEl('booksy').querySelector('[data-calc-period-label]')!.textContent).toBe('Estimated monthly cash cost');
-  });
-
   it('shows shared assumptions once', () => {
     const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
     expect(shared).toEqual([
@@ -364,6 +357,182 @@ describe('payments and period', () => {
     for (const id of ['booksy', 'fresha', 'kersivo']) {
       expect(assumptions(id)).not.toContain('Costs are for a single barbershop location.');
     }
+  });
+});
+
+function choosePeriod(value: 'monthly' | 'annual' | 'threeYear') {
+  const radio = $<HTMLInputElement>(`input[name="period"][value="${value}"]`);
+  radio.checked = true;
+  radio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+const periodLabels = () =>
+  [...document.querySelectorAll('[data-calc-period-label]')].map((node) => node.textContent);
+const net = (id: string) => cardEl(id).querySelector('[data-slot="net"]')!.textContent;
+const insight = () => $('[data-slot="insight"]').textContent;
+const sharedNotes = () => [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
+
+describe('period selector', () => {
+  it('enables every period and defaults to Monthly', () => {
+    const radios = [...document.querySelectorAll<HTMLInputElement>('input[name="period"]')];
+    expect(radios.map((radio) => [radio.value, radio.disabled, radio.checked])).toEqual([
+      ['monthly', false, true],
+      ['annual', false, false],
+      ['threeYear', false, false],
+    ]);
+    expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
+    expect(periodLabels()).toEqual(Array(3).fill('Estimated monthly cash cost'));
+  });
+
+  it('reprojects cards, summaries and breakdowns for 12 months', () => {
+    choosePeriod('annual');
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
+    expect(periodLabels()).toEqual(Array(3).fill('Estimated 12-month cash cost'));
+    expect(summary('booksy', 'before-vat')).toBe('£600.00');
+    expect(summary('booksy', 'vat')).toBe('£120.00');
+    expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
+    expect(cell('booksy', 'vat')).toBe('£120.00');
+    expect(detail('booksy', 'booksy-additional-users')).toBe('2 additional users · £5.00 each/month');
+    expect(detail('fresha', 'fresha-subscription')).toBe('Team plan · 3 bookable team members · £9.95 each/month');
+    expect($('[data-calc-three-year-note]').hidden).toBe(true);
+    expect($('[data-calc-results]').dataset.period).toBe('annual');
+  });
+
+  it('shows 3-year totals and the price-change note, then restores Monthly', () => {
+    choosePeriod('threeYear');
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
+    expect(periodLabels()).toEqual(Array(3).fill('Estimated 3-year cash cost'));
+    expect($('[data-calc-three-year-note]').hidden).toBe(false);
+    expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
+
+    choosePeriod('monthly');
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
+    expect($('[data-calc-three-year-note]').hidden).toBe(true);
+    expect(periodLabels()).toEqual(Array(3).fill('Estimated monthly cash cost'));
+  });
+
+  it('lists the projection assumption only for projected periods', () => {
+    expect(sharedNotes()).not.toContain(PROJECTION_ASSUMPTION);
+    choosePeriod('annual');
+    expect(sharedNotes()).toContain(PROJECTION_ASSUMPTION);
+    choosePeriod('monthly');
+    expect(sharedNotes()).not.toContain(PROJECTION_ASSUMPTION);
+  });
+
+  it('preserves form state and recalculates edits in the selected period', () => {
+    setNumber('calc-barbers', '5');
+    toggle('calc-fresha-smart-website', true);
+    choosePeriod('annual');
+    expect($<HTMLInputElement>('#calc-barbers').value).toBe('5');
+    expect($<HTMLInputElement>('#calc-fresha-smart-website').checked).toBe(true);
+    expect(cell('booksy', 'booksy-additional-users')).toBe('£240.00');
+    setNumber('calc-barbers', '4');
+    expect(cell('booksy', 'booksy-additional-users')).toBe('£180.00');
+    expect(readPeriod($('[data-calc-results]'))).toBe('annual');
+  });
+
+  it('keeps open disclosures open across period changes', () => {
+    const breakdown = cardEl('booksy').querySelector<HTMLDetailsElement>('.calc-card__breakdown')!;
+    const shared = $<HTMLDetailsElement>('[data-slot="shared-notes"]');
+    breakdown.open = true;
+    shared.open = true;
+    choosePeriod('threeYear');
+    choosePeriod('annual');
+    expect(breakdown.open).toBe(true);
+    expect(shared.open).toBe(true);
+  });
+
+  it('projects the VAT net line and keeps cash as the main total', () => {
+    chooseVat('yes');
+    choosePeriod('annual');
+    expect(total('booksy')).toBe('£720.00');
+    expect(net('booksy')).toBe('Estimated net if VAT is fully recoverable: £600.00');
+    expect(net('kersivo')).toBe('Estimated net if VAT is fully recoverable: £468.00');
+    choosePeriod('threeYear');
+    expect(net('fresha')).toBe('Estimated net if VAT is fully recoverable: £1,074.60');
+  });
+
+  it('keeps payments Not included in every period', () => {
+    for (const period of ['annual', 'threeYear'] as const) {
+      choosePeriod(period);
+      for (const id of ['booksy', 'fresha', 'kersivo']) {
+        expect(summary(id, 'payments')).toBe('Not included');
+        expect(cell(id, 'payment-processing')).toBe('Not included');
+      }
+    }
+    expect($<HTMLInputElement>('#calc-payments').disabled).toBe(true);
+  });
+
+  it('keeps Fresha custom pricing in every period and projects only known lines', () => {
+    setNumber('calc-barbers', '21');
+    setNumber('calc-marketplace-clients', '2');
+    choosePeriod('threeYear');
+    expect(cardEl('fresha').dataset.state).toBe('custom-pricing');
+    expect(total('fresha')).toBe('Custom pricing');
+    expect(cell('fresha', 'fresha-subscription')).toBe('Custom pricing');
+    expect(cell('fresha', 'fresha-marketplace-fees')).toBe('£360.00');
+    expect(detail('fresha', 'fresha-marketplace-fees')).toBe('2 new clients/month · £5.00 each');
+    expect(summary('fresha', 'before-vat')).toBe('Not estimated');
+    expect(net('fresha')).toBe('');
+  });
+
+  it('never bypasses validation when the period changes', () => {
+    setNumber('calc-barbers', '');
+    choosePeriod('threeYear');
+    for (const id of ['booksy', 'fresha', 'kersivo']) {
+      expect(total(id)).toBe('£—');
+      expect(summary(id, 'before-vat')).toBe('—');
+    }
+    expect(insight()).toBe(INSIGHT_INVALID);
+    expect($('#calc-barbers').getAttribute('aria-invalid')).toBe('true');
+    expect($('[data-slot="results-status"]').hidden).toBe(false);
+
+    setNumber('calc-barbers', '3');
+    expect(total('booksy')).toBe('£2,160.00');
+  });
+
+  it('switches without submitting the form or replacing the page', () => {
+    const form = $<HTMLFormElement>('[data-calc-form]');
+    let submitted = false;
+    form.addEventListener('submit', () => {
+      submitted = true;
+    });
+    const fieldset = $('[data-calc-period]');
+    const card = cardEl('booksy');
+    choosePeriod('annual');
+    expect(form.contains(fieldset)).toBe(false);
+    expect(submitted).toBe(false);
+    expect(cardEl('booksy')).toBe(card);
+  });
+
+  it('flags long projected totals for the smaller type size', () => {
+    setNumber('calc-barbers', '20');
+    setNumber('calc-appointments', '5000');
+    setNumber('calc-appointment-value', '500');
+    setNumber('calc-marketplace-clients', '500');
+    toggle('calc-boost', true);
+    choosePeriod('threeYear');
+    const slot = cardEl('booksy').querySelector<HTMLElement>('[data-slot="total"]')!;
+    expect(slot.textContent!.length).toBeGreaterThanOrEqual(10);
+    expect(slot.dataset.size).toBe('long');
+    expect(cardEl('kersivo').querySelector<HTMLElement>('[data-slot="total"]')!.dataset.size).toBe('regular');
+  });
+});
+
+describe('cost-driver insight', () => {
+  it('describes the default scenario and keeps it monthly across periods', () => {
+    const monthly = insight();
+    expect(monthly).toContain('Team size is the largest modelled variable cost');
+    expect(monthly).toContain('£10.00/month before VAT');
+    choosePeriod('threeYear');
+    expect(insight()).toBe(monthly);
+  });
+
+  it('follows the inputs', () => {
+    setNumber('calc-marketplace-clients', '4');
+    expect(insight()).toContain('Fresha Marketplace fees are estimated at £20.00/month before VAT');
+    setNumber('calc-barbers', '21');
+    expect(insight()).toContain('custom Enterprise pricing above 20 bookable team members');
   });
 });
 
@@ -379,9 +548,12 @@ describe('architecture guards', () => {
     read(`../../components/costCalculator/${file}`),
   );
 
-  it('routes every calculation through the engine', () => {
-    expect(controller).toContain("from './barberSoftwareCostEngine'");
-    expect(controller).toContain('calculateMonthlyCosts(readScenario(form))');
+  it('routes every calculation through the engine, projection and view pipeline', () => {
+    const view = strip(read('resultView.ts'));
+    expect(controller).toContain('buildCalculatorView(scenario, readPeriod(results))');
+    expect(view).toContain('const monthly = calculateMonthlyCosts(scenario);');
+    expect(view).toContain('projectCostCalculation(monthly, period)');
+    expect(view).toContain('determineCostInsight(monthly)');
   });
 
   it('duplicates no provider prices, rates or period multipliers in client code', () => {
