@@ -494,7 +494,7 @@ describe('hero dashboard progressive loading', () => {
     expect(frameMarkup).toContain('title="Interactive KERSIVO owner dashboard demo"');
     expect(frameMarkup).not.toContain('sandbox');
     expect(heroSource).toMatch(
-      /mountDeferredDemoFrame\(viewport, window, \{\s*readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,\s*onReady:/,
+      /mountDeferredDemoFrame\(viewport, window, \{ readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE \}\);/,
     );
   });
 
@@ -544,26 +544,23 @@ describe('hero dashboard progressive loading', () => {
     expect(heroCss).toMatch(/\.fresha-alt-hero__product-viewport \{[^}]*height: clamp\(38rem, 56vw, 51rem\)/);
   });
 
-  it('hides the poster atomically at the swap while the live frame is still transparent', () => {
-    expect(heroCss).toMatch(
-      /\[data-frame-state='ready'\] \.fresha-alt-hero__product-poster \{\s*visibility: hidden;\s*\}/,
-    );
+  it('swaps poster and live frame atomically: visible and interactive together, poster hidden', () => {
     const readyFrame = ruleFor(/^\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame\s*$/);
-    expect(readyFrame).toHaveLength(2);
-    expect(readyFrame[0]).toMatch(/\{\s*pointer-events: auto;\s*\}$/);
+    expect(readyFrame).toHaveLength(1);
+    expect(readyFrame[0]).toMatch(/\{\s*opacity: 1;\s*pointer-events: auto;\s*\}$/);
+    const readyPoster = ruleFor(/\[data-frame-state='ready'\] \.fresha-alt-hero__product-poster/);
+    expect(readyPoster).toHaveLength(1);
+    expect(readyPoster[0]).toMatch(/\{\s*visibility: hidden;\s*\}$/);
+    for (const rule of ruleFor(/product-frame/).filter((r) => r.includes('pointer-events: auto'))) {
+      expect(rule).toContain('opacity: 1;');
+    }
   });
 
-  it('fades only the fully loaded live frame in, after the post-swap animation frames', () => {
-    expect(heroCss).toMatch(
-      /\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\]\[data-live-visible='true'\]\s+\.fresha-alt-hero__product-frame \{\s*opacity: 1;\s*\}/,
-    );
-    expect(heroCss).toMatch(
-      /@media \(prefers-reduced-motion: no-preference\) \{\s*\.fresha-alt-hero__product-viewport\[data-live-visible='true'\] \.fresha-alt-hero__product-frame \{\s*transition: opacity 680ms cubic-bezier\(0\.22, 0\.61, 0\.36, 1\);\s*\}\s*\}/,
-    );
-    const transitions = productRules().filter((rule) => /transition:/.test(rule));
-    expect(transitions).toHaveLength(1);
-    expect(transitions[0]).toContain("[data-live-visible='true']");
-    expect(heroSource).toMatch(/onReady: \(\) => \{\s*viewport\.dataset\.liveVisible = 'true';\s*\}/);
+  it('reveals the live frame with no fade, transition or reveal-specific state', () => {
+    for (const rule of productRules()) expect(rule).not.toMatch(/transition|animation|filter|will-change/);
+    expect(heroCss).not.toMatch(/live-visible|680ms/);
+    expect(heroCss).not.toMatch(/prefers-reduced-motion: (?:reduce|no-preference)\) \{\s*\.fresha-alt-hero__product/);
+    expect(heroSource).not.toMatch(/liveVisible|onReady/);
     expect(heroSource).not.toMatch(/window\.addEventListener\('load'|productFrame\.(?:onload|addEventListener\('load')|setTimeout/);
   });
 
@@ -580,25 +577,15 @@ describe('hero dashboard progressive loading', () => {
     const rules = productRules();
     expect(rules.length).toBeGreaterThan(5);
     for (const rule of rules) {
-      expect(rule).not.toMatch(/animation|scale|zoom|translate|rotate|will-change/);
+      expect(rule).not.toMatch(/animation|transition|scale|zoom|translate|rotate|will-change/);
       const transform = rule.match(/transform:\s*([^;]+);/);
       if (transform) expect(transform[1]).toBe('none');
-      const transition = rule.match(/transition:\s*([^;]+);/);
-      if (transition && transition[1] !== 'none') {
-        expect(transition[1].replace(/\([^)]*\)/g, '()')).toMatch(/^opacity [^,]+$/);
-      }
     }
-  });
-
-  it('shows the live frame immediately at the swap for reduced motion', () => {
-    expect(heroCss).toMatch(
-      /@media \(prefers-reduced-motion: reduce\) \{\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame \{\s*opacity: 1;\s*\}\s*\}/,
-    );
   });
 
   it('keeps the live dashboard clickable once revealed', () => {
     expect(heroCss).toMatch(
-      /\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame \{\s*pointer-events: auto;\s*\}/,
+      /\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame \{\s*opacity: 1;\s*pointer-events: auto;\s*\}/,
     );
     expect(heroCss).not.toMatch(/\.fresha-alt-hero__product-shell[^{]*\{[^}]*pointer-events: none/);
   });

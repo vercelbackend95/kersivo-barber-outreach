@@ -137,9 +137,6 @@ describe('mountDeferredDemoFrame', () => {
 
     flushFrame();
     expect(viewport.dataset.frameState).toBe('ready');
-
-    flushFrame();
-    flushFrame();
     expect(rafQueue.size).toBe(0);
   });
 
@@ -213,7 +210,7 @@ describe('mountDeferredDemoFrame with a ready message', () => {
     );
   }
 
-  function startWithReadyMessage(options: { revealFallbackMs?: number; onReady?: () => void } = {}) {
+  function startWithReadyMessage(options: { revealFallbackMs?: number } = {}) {
     const { viewport, frame } = setup();
     const cleanup = mountDeferredDemoFrame(viewport, window, { readyMessageType: READY, ...options });
     viewport.dispatchEvent(new Event('pointerdown'));
@@ -229,6 +226,7 @@ describe('mountDeferredDemoFrame with a ready message', () => {
 
     postFromFrame(frame);
     expect(viewport.dataset.frameState).toBe('ready');
+    expect(rafQueue.size).toBe(0);
   });
 
   it('ignores messages from another origin, another window or with another type', () => {
@@ -248,12 +246,17 @@ describe('mountDeferredDemoFrame with a ready message', () => {
     expect(viewport.dataset.frameState).toBe('poster');
   });
 
-  it('still falls back to a settled swap when the message never arrives but the document is parsed', () => {
+  it('keeps the poster when the ready message never arrives, even after the timeout with a complete document', () => {
     const { viewport, frame } = startWithReadyMessage({ revealFallbackMs: 5000 });
     setFrameReadyState(frame, 'complete');
-    vi.advanceTimersByTime(5000);
+    frame.dispatchEvent(new Event('load'));
+    vi.advanceTimersByTime(60000);
     flushFrame();
     flushFrame();
+    expect(viewport.dataset.frameState).toBe('loading');
+    expect(vi.getTimerCount()).toBe(0);
+
+    postFromFrame(frame);
     expect(viewport.dataset.frameState).toBe('ready');
   });
 
@@ -264,63 +267,14 @@ describe('mountDeferredDemoFrame with a ready message', () => {
     expect(viewport.dataset.frameState).toBe('loading');
   });
 
-  it('swaps on the verified message but calls onReady only two frames later, exactly once', () => {
-    const states: Array<string | undefined> = [];
-    const onReady = vi.fn(() => states.push(viewport.dataset.frameState));
-    const { viewport, frame } = startWithReadyMessage({ onReady });
+  it('swaps once and stays ready when further messages arrive', () => {
+    const { viewport, frame } = startWithReadyMessage();
     postFromFrame(frame);
-    expect(viewport.dataset.frameState).toBe('ready');
-    expect(onReady).not.toHaveBeenCalled();
-    flushFrame();
-    expect(onReady).not.toHaveBeenCalled();
-    flushFrame();
-    expect(onReady).toHaveBeenCalledTimes(1);
-
     postFromFrame(frame);
-    vi.advanceTimersByTime(20000);
-    flushFrame();
-    flushFrame();
-    expect(onReady).toHaveBeenCalledTimes(1);
-    expect(states).toEqual(['ready']);
-  });
-
-  it('never calls onReady if cleaned up between the swap and the reveal frames', () => {
-    const onReady = vi.fn();
-    const { frame, cleanup } = startWithReadyMessage({ onReady });
-    postFromFrame(frame);
-    flushFrame();
-    cleanup();
-    flushFrame();
-    flushFrame();
-    expect(onReady).not.toHaveBeenCalled();
-  });
-
-  it('never calls onReady on frame load or an unverified message', () => {
-    const onReady = vi.fn();
-    const { frame } = startWithReadyMessage({ onReady });
-    frame.dispatchEvent(new Event('load'));
-    flushFrame();
-    flushFrame();
-    postFromFrame(frame, { origin: 'https://evil.example' });
-    postFromFrame(frame, { source: window });
-    postFromFrame(frame, { data: { type: 'something-else' } });
-    expect(onReady).not.toHaveBeenCalled();
-  });
-
-  it('runs the same swap-then-onReady lifecycle when the parsed-document fallback reveals', () => {
-    const onReady = vi.fn();
-    const { viewport, frame } = startWithReadyMessage({ revealFallbackMs: 5000, onReady });
-    setFrameReadyState(frame, 'complete');
-    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(60000);
     flushFrame();
     flushFrame();
     expect(viewport.dataset.frameState).toBe('ready');
-    expect(onReady).not.toHaveBeenCalled();
-    flushFrame();
-    flushFrame();
-    postFromFrame(frame);
-    flushFrame();
-    flushFrame();
-    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(rafQueue.size).toBe(0);
   });
 });

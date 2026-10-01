@@ -147,11 +147,6 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
   const productFrame = viewport?.querySelector<HTMLIFrameElement>('.fresha-alt-hero__product-frame');
   if (productFrame) receiveHeroShowcaseWheel(productFrame, window);
   if (viewport) {
-    mountDeferredDemoFrame(viewport, window, {
-      readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
-      onReady: () => {
-        viewport.dataset.liveVisible = 'true';
-      },
-    });
+    mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
   }
 </script>
