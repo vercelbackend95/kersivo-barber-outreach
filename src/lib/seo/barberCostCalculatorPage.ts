@@ -2,6 +2,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
+  BOOKSY_PER_ADDITIONAL_USER_LABEL,
   BOOKSY_BOOST_COMMISSION_PERCENT,
   BOOKSY_BOOST_MINIMUM_GBP,
   BOOKSY_FACTS_CHECKED_DATE,
@@ -25,7 +26,7 @@ import {
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Booksy vs Fresha Cost Calculator UK (2026) | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Booksy vs Fresha Pricing Calculator UK (2026) | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
   'Compare the real cost of Booksy, Fresha and KERSIVO for your UK barbershop. Calculate staff fees, marketplace charges, VAT, payments and 3-year costs.';
@@ -85,6 +86,12 @@ export const COST_CALC_SURFACE = {
 export type PricingModelSummary = {
   name: string;
   descriptor: string;
+  /** Headline base price, from central facts. */
+  price: string;
+  /** What the headline price covers. */
+  priceNote: string;
+  /** Optional second price line, e.g. a team plan. */
+  secondaryPrice?: string;
   points: readonly string[];
 };
 
@@ -95,6 +102,8 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
     name: 'Booksy',
     descriptor: 'Subscription plus users',
+    price: BOOKSY_BASE_PRICE_LABEL,
+    priceNote: `+ ${BOOKSY_PER_ADDITIONAL_USER_LABEL}`,
     points: [
       'A base monthly subscription',
       'An extra monthly charge for each additional user',
@@ -105,6 +114,9 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
     name: 'Fresha',
     descriptor: 'Priced by team size',
+    price: `${FRESHA_INDEPENDENT_PRICE}/month + VAT`,
+    priceNote: 'Independent — 1 bookable team member',
+    secondaryPrice: `Team: ${FRESHA_TEAM_PRICE} per bookable team member/month + VAT`,
     points: [
       'A subscription based on the number of bookable team members',
       'A one-time Marketplace fee for brand-new Marketplace clients',
@@ -115,6 +127,8 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
     name: 'KERSIVO',
     descriptor: 'Flat per location',
+    price: `${KERSIVO_PRICE}/month per location`,
+    priceNote: 'Additional barbers included',
     points: [
       'A flat monthly cost per physical location',
       'Additional barbers within that location included',
@@ -192,7 +206,7 @@ export const TEAM_SIZE_PROFILES: readonly TeamSizeProfile[] = [
   {
     label: 'Small team',
     title: 'Two to four barbers',
-    body: 'Once a few barbers take bookings, per-user and per-team-member charges start to add up. How much depends on whether a platform charges for every bookable barber or for the location as a whole.',
+    body: 'Once a few barbers take bookings, per-user and per-team-member charges start to add up. How much depends on whether a platform charges per additional user, per bookable team member or for the location as a whole.',
   },
   {
     label: 'Larger barbershop',

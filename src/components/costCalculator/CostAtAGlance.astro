@@ -16,6 +16,13 @@ import { COST_AT_A_GLANCE_INTRO, COST_AT_A_GLANCE_MODELS } from '@/lib/seo/barbe
           <article class="cost-calc-models__item">
             <h3 class="cost-calc-models__name">{model.name}</h3>
             <p class="cost-calc-models__descriptor">{model.descriptor}</p>
+            <div class="cost-calc-models__pricing">
+              <p class="cost-calc-models__price">{model.price}</p>
+              <p class="cost-calc-models__price-note">{model.priceNote}</p>
+              {model.secondaryPrice && (
+                <p class="cost-calc-models__price-secondary">{model.secondaryPrice}</p>
+              )}
+            </div>
             <ul class="cost-calc__list">
               {model.points.map((point) => (
                 <li>{point}</li>

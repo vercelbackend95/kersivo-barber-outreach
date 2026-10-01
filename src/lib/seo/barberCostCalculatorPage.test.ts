@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +7,7 @@ import {
   BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
   BARBER_COST_CALCULATOR_PAGE_PATH,
   BARBER_COST_CALCULATOR_TITLE,
+  COST_AT_A_GLANCE_MODELS,
   COST_CALC_HERO,
   COST_SCENARIOS,
   VAT_DISCLAIMER,
@@ -14,8 +15,21 @@ import {
 import { BARBER_COST_CALCULATOR_FAQ_ITEMS } from './barberCostCalculatorFaq';
 import { buildBarberCostCalculatorJsonLd } from './barberCostCalculatorJsonLd';
 import { COST_CALCULATOR_SOURCES } from './barberCostCalculatorSources';
-import { BOOKSY_SOURCE_BOOST, BOOKSY_SOURCE_PRICING } from './booksyFacts';
-import { FRESHA_UK_COMMERCIAL_FACTS, isVerifiedCommercialFact } from './freshaFacts';
+import {
+  BOOKSY_ADDITIONAL_USER_GBP,
+  BOOKSY_BASE_PRICE_GBP,
+  BOOKSY_BASE_PRICE_LABEL,
+  BOOKSY_PER_ADDITIONAL_USER_LABEL,
+  BOOKSY_SOURCE_BOOST,
+  BOOKSY_SOURCE_PRICING,
+} from './booksyFacts';
+import { SAAS_MONTHLY_GBP } from './defaults';
+import {
+  FRESHA_UK_COMMERCIAL_FACTS,
+  formatGbp,
+  isVerifiedCommercialFact,
+  requireVerifiedFreshaFact,
+} from './freshaFacts';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { resolveCanonicalUrl } from './meta';
 
@@ -45,7 +59,9 @@ const visibleCopy = [
 describe('barber software cost calculator SEO foundation', () => {
   it('uses the evergreen route, exact title, description and canonical', () => {
     expect(BARBER_COST_CALCULATOR_PAGE_PATH).toBe('/barber-software-cost-calculator');
-    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Booksy vs Fresha Cost Calculator UK (2026) | KERSIVO');
+    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Booksy vs Fresha Pricing Calculator UK (2026) | KERSIVO');
+    expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
+    expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
       'Compare the real cost of Booksy, Fresha and KERSIVO for your UK barbershop. Calculate staff fees, marketplace charges, VAT, payments and 3-year costs.',
     );
@@ -269,6 +285,67 @@ describe('barber software cost calculator content safety', () => {
     expect(sourcesComponent).toContain('rel="noopener noreferrer"');
     expect(sourcesComponent).toContain('BOOKSY_TRADEMARK_DISCLAIMER');
     expect(sourcesComponent).toContain('FRESHA_TRADEMARK_DISCLAIMER');
+  });
+});
+
+describe('cost at a glance base pricing', () => {
+  const [booksy, fresha, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const independent = requireVerifiedFreshaFact('independentPlan');
+  const team = requireVerifiedFreshaFact('teamPlanPerMember');
+
+  it('shows the headline base price for each platform from central facts', () => {
+    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'KERSIVO']);
+
+    expect(booksy.price).toBe(BOOKSY_BASE_PRICE_LABEL);
+    expect(booksy.price).toBe(`£${BOOKSY_BASE_PRICE_GBP}/month + VAT`);
+    expect(booksy.priceNote).toBe(`+ ${BOOKSY_PER_ADDITIONAL_USER_LABEL}`);
+    expect(booksy.priceNote).toBe(`+ £${BOOKSY_ADDITIONAL_USER_GBP}/month + VAT per additional user`);
+
+    expect(fresha.price).toBe(`${formatGbp(independent.amountGbp!)}/month + VAT`);
+    expect(fresha.priceNote).toBe('Independent — 1 bookable team member');
+    expect(fresha.secondaryPrice).toBe(
+      `Team: ${formatGbp(team.amountGbp!)} per bookable team member/month + VAT`,
+    );
+
+    expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
+    expect(kersivo.priceNote).toBe('Additional barbers included');
+  });
+
+  it('renders the price lines above the explanatory bullets', () => {
+    const glance = components['CostAtAGlance.astro'];
+    for (const binding of ['{model.price}', '{model.priceNote}', '{model.secondaryPrice}']) {
+      expect(glance).toContain(binding);
+    }
+    expect(glance.indexOf('{model.price}')).toBeLessThan(glance.indexOf('model.points.map'));
+    for (const model of COST_AT_A_GLANCE_MODELS) {
+      expect(model.points.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('booksy additional-user wording', () => {
+  const answer = (question: string) =>
+    BARBER_COST_CALCULATOR_FAQ_ITEMS.find((item) => item.question === question)!.answer;
+
+  it('derives the per-user price from booksyFacts and does not equate barbers with users', () => {
+    const perBarber = answer('Does Booksy charge per barber?');
+    expect(perBarber).toBe(
+      `Booksy lists ${BOOKSY_PER_ADDITIONAL_USER_LABEL}. For a barbershop, team growth can therefore increase the subscription cost depending on how staff users are configured.`,
+    );
+    expect(faqSource).toContain('${BOOKSY_PER_ADDITIONAL_USER_LABEL}');
+    expect(faqSource).not.toMatch(/£\s?\d/);
+  });
+
+  it('avoids treating every barber as a Booksy user', () => {
+    const lower = visibleCopy.toLowerCase();
+    for (const phrase of [
+      'a team with more barbers pays more',
+      'charge per barber or per user',
+      'charges for every bookable barber',
+      'per barber on booksy',
+    ]) {
+      expect(lower).not.toContain(phrase);
+    }
   });
 });
 

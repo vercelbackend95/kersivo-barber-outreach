@@ -484,6 +484,41 @@
   font-size: var(--text-sm);
 }
 
+.cost-calc-models__pricing {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.cost-calc-models__pricing p {
+  margin: 0;
+}
+
+.cost-calc-models__price {
+  color: var(--fg);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-calc-models__price-note {
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.cost-calc-models__pricing .cost-calc-models__price-secondary {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ------------------------------ Platform sections ------------------------------ */
 
 .cost-calc-platform {

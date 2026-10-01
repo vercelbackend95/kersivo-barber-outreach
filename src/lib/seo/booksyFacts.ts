@@ -10,11 +10,20 @@ export const BOOKSY_FACTS_CHECKED_ISO = '2026-09-17';
 export const BOOKSY_SOURCE_PRICING = 'https://biz.booksy.com/en-gb/pricing';
 export const BOOKSY_SOURCE_BOOST = 'https://biz.booksy.com/en-gb/features/boost';
 
+/** Booksy UK base subscription (GBP, ex VAT) as publicly listed. */
+export const BOOKSY_BASE_PRICE_GBP = 40;
+
+/** Booksy additional user (GBP per user per month, ex VAT) as publicly listed. */
+export const BOOKSY_ADDITIONAL_USER_GBP = 5;
+
 /** Booksy UK base subscription as publicly listed. */
-export const BOOKSY_BASE_PRICE_LABEL = '£40/month + VAT';
+export const BOOKSY_BASE_PRICE_LABEL = `£${BOOKSY_BASE_PRICE_GBP}/month + VAT`;
 
 /** Booksy additional users as publicly listed. */
-export const BOOKSY_ADDITIONAL_USER_LABEL = '£5/month each + VAT';
+export const BOOKSY_ADDITIONAL_USER_LABEL = `£${BOOKSY_ADDITIONAL_USER_GBP}/month each + VAT`;
+
+/** Booksy additional users, phrased per user. */
+export const BOOKSY_PER_ADDITIONAL_USER_LABEL = `£${BOOKSY_ADDITIONAL_USER_GBP}/month + VAT per additional user`;
 
 /** Standard Marketplace bookings when Boost is not enabled. */
 export const BOOKSY_STANDARD_MARKETPLACE_BOOKINGS =

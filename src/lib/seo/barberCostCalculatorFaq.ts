@@ -1,6 +1,7 @@
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
+  BOOKSY_PER_ADDITIONAL_USER_LABEL,
   BOOKSY_STANDARD_MARKETPLACE_BOOKINGS,
 } from '@/lib/seo/booksyFacts';
 import {
@@ -28,7 +29,7 @@ const DEPENDS_ON =
 export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'How much is Booksy a month?',
-    answer: `Booksy’s UK base subscription is listed at ${BOOKSY_BASE_PRICE_LABEL}. Additional users are listed at ${BOOKSY_ADDITIONAL_USER_LABEL}, so the monthly cost rises with the size of your team.`,
+    answer: `Booksy’s UK base subscription is listed at ${BOOKSY_BASE_PRICE_LABEL}. Additional users are listed at ${BOOKSY_ADDITIONAL_USER_LABEL}, so the monthly cost can rise as staff users are added.`,
   },
   {
     question: 'How much does Booksy cost in the UK?',
@@ -36,7 +37,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'Does Booksy charge per barber?',
-    answer: `Booksy charges a base subscription, with additional users listed at ${BOOKSY_ADDITIONAL_USER_LABEL}, so a team with more barbers pays more each month.`,
+    answer: `Booksy lists ${BOOKSY_PER_ADDITIONAL_USER_LABEL}. For a barbershop, team growth can therefore increase the subscription cost depending on how staff users are configured.`,
   },
   {
     question: 'Does Booksy take commission?',
@@ -72,7 +73,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'Which booking system costs less for a larger barber team?',
-    answer: `${DEPENDS_ON} Platforms that charge per barber or per user grow with the team, while a flat per-location price such as KERSIVO’s stays the same as you add barbers. Marketplace fees and payment processing can still outweigh the subscription difference, so a larger team should compare the full cost rather than the headline price.`,
+    answer: `${DEPENDS_ON} Pricing based on bookable team members or additional users can grow with the team, while a flat per-location price such as KERSIVO’s stays the same as you add barbers. Marketplace fees and payment processing can still outweigh the subscription difference, so a larger team should compare the full cost rather than the headline price.`,
   },
 ];
 
