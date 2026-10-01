@@ -1,9 +1,10 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
-import type {
-  CostScenarioInput,
-  LineItemId,
-  ProviderId,
-  ValidationIssueCode,
+import {
+  DEPOSIT_BENCHMARK_GBP,
+  type CostScenarioInput,
+  type LineItemId,
+  type ProviderId,
+  type ValidationIssueCode,
 } from './barberSoftwareCostEngine';
 import type { CostPeriod } from './costPeriod';
 
@@ -20,7 +21,8 @@ type NumericScenarioKey =
   | 'averageAppointmentValueGbp'
   | 'marketplaceClients'
   | 'booksyBoostClients'
-  | 'freshaMarketplaceClients';
+  | 'freshaMarketplaceClients'
+  | 'depositBookingsPerMonth';
 
 type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey>;
 
@@ -158,13 +160,24 @@ export const FRESHA_ADD_ONS: readonly AddOnOption[] = [
   },
 ];
 
-export const PAYMENTS_TOGGLE = {
-  id: 'calc-payments',
-  name: 'includePayments',
-  label: 'Include payment processing',
+export const DEPOSIT_PROCESSING_TOGGLE = {
+  id: 'calc-deposit-processing',
+  name: 'includeDepositProcessing',
+  label: 'Include booking deposit processing',
   defaultOn: false,
-  unavailableNote: 'Payment processing comparison will be added in the next calculation stage.',
-} as const satisfies ToggleConfig & { unavailableNote: string };
+  fieldsId: 'calc-deposit-fields',
+} as const satisfies ToggleConfig & { fieldsId: string };
+
+export const DEPOSIT_BOOKINGS_FIELD: NumberFieldConfig = {
+  id: 'calc-deposit-bookings',
+  name: 'depositBookingsPerMonth',
+  label: 'Online bookings taking a deposit / month',
+  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark across all three providers. This compares deposit processing only, not the remaining appointment balance or in-person card payments.`,
+  defaultValue: 0,
+  min: 0,
+  max: APPOINTMENTS_FIELD.max,
+  step: 1,
+};
 
 /** Defaults shared by the server-rendered results and the form controls. */
 export const DEFAULT_SCENARIO: CostScenarioInput = {
@@ -179,7 +192,8 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
-  includePayments: false,
+  includeDepositProcessing: DEPOSIT_PROCESSING_TOGGLE.defaultOn,
+  depositBookingsPerMonth: DEPOSIT_BOOKINGS_FIELD.defaultValue,
 };
 
 /* --------------------------------- Results --------------------------------- */
@@ -250,7 +264,7 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'booksy-additional-users', label: 'Additional users' },
       { id: 'booksy-boost', label: 'Boost' },
       { id: 'vat', label: 'VAT' },
-      { id: 'payment-processing', label: 'Payment processing' },
+      { id: 'booksy-deposit-processing', label: 'Booking deposit processing' },
     ],
   },
   {
@@ -262,7 +276,7 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'fresha-smart-website', label: 'Smart Website' },
       { id: 'fresha-client-loyalty', label: 'Client Loyalty' },
       { id: 'vat', label: 'VAT' },
-      { id: 'payment-processing', label: 'Payment processing' },
+      { id: 'fresha-deposit-processing', label: 'Booking deposit processing' },
     ],
   },
   {
@@ -273,7 +287,7 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'kersivo-additional-barbers', label: 'Additional barbers' },
       { id: 'kersivo-commission', label: 'KERSIVO commission' },
       { id: 'vat', label: 'VAT' },
-      { id: 'payment-processing', label: 'Stripe processing' },
+      { id: 'kersivo-deposit-processing', label: 'Stripe deposit processing' },
     ],
   },
 ];
@@ -290,6 +304,9 @@ export const INSIGHT_INVALID = 'The cost driver will appear once the highlighted
 export const EXCEEDS_APPOINTMENTS_MESSAGE =
   'Marketplace clients cannot be greater than total monthly appointments.';
 
+export const DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE =
+  'Bookings taking a deposit cannot be greater than total monthly appointments.';
+
 export function validationMessage(code: ValidationIssueCode, field: NumberFieldConfig | null): string {
   switch (code) {
     case 'not-a-number':
@@ -304,6 +321,8 @@ export function validationMessage(code: ValidationIssueCode, field: NumberFieldC
       return 'Choose an option.';
     case 'exceeds-monthly-appointments':
       return EXCEEDS_APPOINTMENTS_MESSAGE;
+    case 'deposit-bookings-exceed-monthly-appointments':
+      return DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE;
   }
 }
 
@@ -313,4 +332,5 @@ export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
   APPOINTMENT_VALUE_FIELD,
   MARKETPLACE_CLIENTS_FIELD,
   ...SPLIT_FIELDS,
+  DEPOSIT_BOOKINGS_FIELD,
 ];

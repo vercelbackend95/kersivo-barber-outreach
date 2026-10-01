@@ -36,6 +36,19 @@ export const BOOKSY_STANDARD_MARKETPLACE_BOOKINGS =
 export const BOOKSY_BOOST_COMMISSION_PERCENT = 30;
 export const BOOKSY_BOOST_MINIMUM_GBP = 5;
 
+/**
+ * Booksy Mobile Payments (card payments taken online, including No-Show Protection deposits).
+ * Checked separately from the subscription facts; Tap to Pay and terminal rates are not modelled.
+ */
+export const BOOKSY_PAYMENT_FACTS_CHECKED_DATE = '1 October 2026';
+export const BOOKSY_PAYMENT_FACTS_CHECKED_ISO = '2026-10-01';
+export const BOOKSY_SOURCE_NO_SHOW_PROTECTION = 'https://biz.booksy.com/en-gb/features/no-show-protection';
+export const BOOKSY_SOURCE_PAYMENTS = 'https://biz.booksy.com/en-gb/features/payments';
+export const BOOKSY_MOBILE_PAYMENTS_PERCENT = 1.29;
+export const BOOKSY_MOBILE_PAYMENTS_FIXED_GBP = 0.2;
+/** Booksy lists Mobile Payments fees exclusive of VAT. */
+export const BOOKSY_MOBILE_PAYMENTS_VAT = 'exclusive' as const;
+
 export const BOOKSY_BOOST_SUMMARY =
   'Optional Boost can charge a one-time acquisition fee when it brings a qualifying new client — currently 30% of the first visit, minimum £5';
 

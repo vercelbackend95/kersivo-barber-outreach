@@ -24,6 +24,11 @@ export function percentOfPence(pence: number, percent: number): number {
   return Math.round(stabilise((pence * percent) / 100));
 }
 
+/** Per-transaction card fee: percent of the amount rounded to the nearest penny, plus a fixed fee. */
+export function transactionFeePence(amountPence: number, percent: number, fixedPence: number): number {
+  return percentOfPence(amountPence, percent) + fixedPence;
+}
+
 export function roundGbp(gbp: number): number {
   return penceToGbp(gbpToPence(gbp));
 }

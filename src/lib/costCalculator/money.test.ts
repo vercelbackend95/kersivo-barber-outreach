@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoneyGbp, gbpToPence, multiplyGbp, penceToGbp, percentOfPence, roundGbp } from './money';
+import {
+  formatMoneyGbp,
+  gbpToPence,
+  multiplyGbp,
+  penceToGbp,
+  percentOfPence,
+  roundGbp,
+  transactionFeePence,
+} from './money';
+
+describe('transactionFeePence', () => {
+  it('rounds the percentage part half-up to the penny before adding the fixed fee', () => {
+    expect(transactionFeePence(500, 1.29, 20)).toBe(26);
+    expect(transactionFeePence(500, 1.4, 25)).toBe(32);
+    expect(transactionFeePence(500, 1.5, 20)).toBe(28);
+    expect(transactionFeePence(0, 1.5, 20)).toBe(20);
+    expect(Number.isInteger(transactionFeePence(333, 1.29, 20))).toBe(true);
+  });
+});
 
 describe('calculator money helpers', () => {
   it('converts pounds to integer pence without floating-point drift', () => {

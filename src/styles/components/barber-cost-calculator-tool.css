@@ -415,6 +415,22 @@
   display: none;
 }
 
+.calc-deposit__fields {
+  display: grid;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--fg) 2%, transparent);
+}
+
+.calc-deposit__fields[hidden] {
+  display: none;
+}
+
+.calc-deposit__fields .calc-input {
+  max-width: 14rem;
+}
+
 @media (min-width: 560px) {
   .calc-split__fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -556,21 +572,6 @@ details[open] > summary .calc-advanced__chevron {
 
 .calc-addons {
   display: grid;
-}
-
-.calc-pending {
-  max-width: none;
-  margin: 0;
-  padding: 0.85rem 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--fg) 30%, transparent);
-  background: color-mix(in srgb, var(--fg) 3%, transparent);
-  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
-  font-size: 0.8rem;
-  line-height: 1.55;
-}
-
-.calc-pending[hidden] {
-  display: none;
 }
 
 /* ---------------------------------- Results ---------------------------------- */
@@ -787,15 +788,6 @@ details[open] > summary .calc-advanced__chevron {
 .calc-stepper input[aria-invalid='true'] {
   border-color: transparent;
   box-shadow: none;
-}
-
-.calc-field--unavailable .calc-field__label,
-.calc-field--unavailable .calc-switch {
-  opacity: 0.55;
-}
-
-.calc-field--unavailable .calc-switch__input {
-  cursor: not-allowed;
 }
 
 .calc-results__period-wrap {

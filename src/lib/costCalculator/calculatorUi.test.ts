@@ -22,7 +22,9 @@ import {
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
   NUMBER_FIELDS,
-  PAYMENTS_TOGGLE,
+  DEPOSIT_BOOKINGS_FIELD,
+  DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE,
+  DEPOSIT_PROCESSING_TOGGLE,
   PERIOD_OPTIONS,
   PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
@@ -65,7 +67,7 @@ describe('calculator panel inputs', () => {
       SPLIT_ASSUMPTIONS_TOGGLE.name,
       VAT_OPTIONS.name,
       ...FRESHA_ADD_ONS.map((addOn) => addOn.name),
-      PAYMENTS_TOGGLE.name,
+      DEPOSIT_PROCESSING_TOGGLE.name,
     ].sort();
     expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
   });
@@ -95,33 +97,65 @@ describe('calculator panel inputs', () => {
     expect(panelSource).toContain('<div id="calc-split-fields" class="calc-split__fields" hidden>');
   });
 
-  it('collapses VAT, Fresha add-ons and payments into an advanced disclosure', () => {
+  it('collapses VAT, Fresha add-ons and deposit processing into an advanced disclosure', () => {
     expect(ADVANCED_COSTS_LABEL).toBe('Advanced costs');
     const advanced = panelSource.slice(panelSource.indexOf('<details class="calc-advanced">'));
     expect(advanced).not.toMatch(/<details[^>]*\bopen\b/);
-    for (const binding of ['{VAT_OPTIONS.legend}', '{FRESHA_ADD_ONS_LEGEND}', '{PAYMENTS_TOGGLE.label}']) {
+    for (const binding of [
+      '{VAT_OPTIONS.legend}',
+      '{FRESHA_ADD_ONS_LEGEND}',
+      '{DEPOSIT_PROCESSING_TOGGLE.label}',
+      '{DEPOSIT_BOOKINGS_FIELD.label}',
+    ]) {
       expect(advanced).toContain(binding);
     }
     expect(VAT_OPTIONS.defaultValue).toBe('no');
   });
 
-  it('disables the payment processing control for this stage', () => {
-    const payments = panelSource.slice(panelSource.indexOf('id={PAYMENTS_TOGGLE.id}'));
-    expect(payments.slice(0, payments.indexOf('/>'))).toMatch(/\bdisabled\b/);
-    expect(PAYMENTS_TOGGLE.unavailableNote).toBe(
-      'Payment processing comparison will be added in the next calculation stage.',
+  it('offers an enabled booking deposit processing toggle, off by default, revealing the deposit count', () => {
+    expect(DEPOSIT_PROCESSING_TOGGLE.label).toBe('Include booking deposit processing');
+    expect(DEPOSIT_PROCESSING_TOGGLE.defaultOn).toBe(false);
+    expect(DEFAULT_SCENARIO.includeDepositProcessing).toBe(false);
+    const toggle = panelSource.slice(panelSource.indexOf('id={DEPOSIT_PROCESSING_TOGGLE.id}'));
+    const toggleTag = toggle.slice(0, toggle.indexOf('/>'));
+    expect(toggleTag).not.toMatch(/\bdisabled\b/);
+    expect(toggleTag).toContain('aria-controls={DEPOSIT_PROCESSING_TOGGLE.fieldsId}');
+    expect(toggleTag).toContain('data-calc-reveal');
+    expect(panelSource).toContain(
+      '<div id={DEPOSIT_PROCESSING_TOGGLE.fieldsId} class="calc-deposit__fields" hidden={!DEPOSIT_PROCESSING_TOGGLE.defaultOn}>',
     );
-    expect(panelSource).toContain('<p id="calc-payments-note" class="calc-pending">{PAYMENTS_TOGGLE.unavailableNote}</p>');
-    expect(panelSource).not.toContain('aria-controls="calc-payments-note"');
-    expect(DEFAULT_SCENARIO.includePayments).toBe(false);
+    expect(panelSource).not.toMatch(/calc-pending|calc-field--unavailable|calc-payments/);
+  });
+
+  it('configures the deposit count as a whole number bounded by monthly appointments, never seeded from them', () => {
+    expect(DEPOSIT_BOOKINGS_FIELD).toMatchObject({
+      name: 'depositBookingsPerMonth',
+      label: 'Online bookings taking a deposit / month',
+      defaultValue: 0,
+      min: 0,
+      max: APPOINTMENTS_FIELD.max,
+      step: 1,
+    });
+    expect(DEPOSIT_BOOKINGS_FIELD.max).toBe(20000);
+    expect(DEFAULT_SCENARIO.depositBookingsPerMonth).toBe(0);
+    expect(DEPOSIT_BOOKINGS_FIELD.helper).toBe(
+      'Uses a £5 online deposit benchmark across all three providers. This compares deposit processing only, not the remaining appointment balance or in-person card payments.',
+    );
+    expect(configSource).toContain('formatGbp(DEPOSIT_BENCHMARK_GBP)');
   });
 
   it('gives every number field an associated inline error slot', () => {
-    for (const binding of ['BARBERS_FIELD', 'APPOINTMENTS_FIELD', 'APPOINTMENT_VALUE_FIELD', 'MARKETPLACE_CLIENTS_FIELD']) {
+    for (const binding of [
+      'BARBERS_FIELD',
+      'APPOINTMENTS_FIELD',
+      'APPOINTMENT_VALUE_FIELD',
+      'MARKETPLACE_CLIENTS_FIELD',
+      'DEPOSIT_BOOKINGS_FIELD',
+    ]) {
       expect(panelSource).toContain(`id={errorId(${binding}.id)}`);
     }
     expect(panelSource).toContain('id={errorId(field.id)}');
-    expect(panelSource.match(/data-calc-error/g)).toHaveLength(5);
+    expect(panelSource.match(/data-calc-error/g)).toHaveLength(6);
   });
 
   it('sources Fresha add-on prices from verified facts, unticked by default', () => {
@@ -181,7 +215,7 @@ describe('calculator results structure', () => {
       ['booksy-additional-users', 'Additional users'],
       ['booksy-boost', 'Boost'],
       ['vat', 'VAT'],
-      ['payment-processing', 'Payment processing'],
+      ['booksy-deposit-processing', 'Booking deposit processing'],
     ]);
     expect(rows('fresha')).toEqual([
       ['fresha-subscription', 'Subscription'],
@@ -189,14 +223,14 @@ describe('calculator results structure', () => {
       ['fresha-smart-website', 'Smart Website'],
       ['fresha-client-loyalty', 'Client Loyalty'],
       ['vat', 'VAT'],
-      ['payment-processing', 'Payment processing'],
+      ['fresha-deposit-processing', 'Booking deposit processing'],
     ]);
     expect(rows('kersivo')).toEqual([
       ['kersivo-subscription', 'Subscription'],
       ['kersivo-additional-barbers', 'Additional barbers'],
       ['kersivo-commission', 'KERSIVO commission'],
       ['vat', 'VAT'],
-      ['payment-processing', 'Stripe processing'],
+      ['kersivo-deposit-processing', 'Stripe deposit processing'],
     ]);
     expect(resultsSource).toContain('data-line={row.id}');
   });
@@ -230,6 +264,12 @@ describe('validation copy', () => {
     expect(validationMessage('not-a-number', APPOINTMENTS_FIELD)).toBe('Enter a number.');
     expect(validationMessage('not-finite', APPOINTMENTS_FIELD)).toBe('Enter a realistic number.');
     expect(validationMessage('not-boolean', null)).toBe('Choose an option.');
+    expect(validationMessage('deposit-bookings-exceed-monthly-appointments', DEPOSIT_BOOKINGS_FIELD)).toBe(
+      DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE,
+    );
+    expect(DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE).toBe(
+      'Bookings taking a deposit cannot be greater than total monthly appointments.',
+    );
   });
 });
 

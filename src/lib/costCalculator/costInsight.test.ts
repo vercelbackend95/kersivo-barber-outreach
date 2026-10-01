@@ -71,6 +71,27 @@ describe('determineCostInsight', () => {
     expect(insightFor({ bookableBarbers: 1, vatRegistered: true })).toEqual({ kind: 'base' });
   });
 
+  it('excludes deposit processing while the toggle is off, even with a stale count', () => {
+    expect(insightFor({ depositBookingsPerMonth: 500 })).toEqual(insightFor());
+  });
+
+  it('detects booking deposit processing only when it is the largest driver', () => {
+    expect(insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100 })).toEqual({
+      kind: 'deposit-processing',
+      booksyGbp: 26,
+      freshaGbp: 32,
+      kersivoGbp: 28,
+    });
+    expect(insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 10 })?.kind).toBe('team');
+    expect(insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 0 })?.kind).toBe('team');
+    expect(
+      insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100, marketplaceClients: 10 })?.kind,
+    ).toBe('acquisition');
+    expect(
+      insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100, bookableBarbers: 21 })?.kind,
+    ).toBe('custom-pricing');
+  });
+
   it('returns no insight for invalid input', () => {
     expect(insightFor({ bookableBarbers: Number.NaN })).toBeNull();
     expect(insightFor({ monthlyAppointments: 1, marketplaceClients: 5 })).toBeNull();
@@ -78,6 +99,12 @@ describe('determineCostInsight', () => {
 });
 
 describe('describeCostInsight', () => {
+  it('describes deposit processing with all three monthly estimates', () => {
+    expect(textFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100 })).toBe(
+      'Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are £26.00/month for Booksy, £32.00/month for Fresha and £28.00/month for KERSIVO/Stripe before provider VAT where applicable.',
+    );
+  });
+
   it('writes neutral, monthly, ex-VAT example copy', () => {
     expect(textFor()).toBe(
       'Team size is the largest modelled variable cost in this scenario. Booksy adds £10.00/month before VAT in additional-user fees, and Fresha prices its Team plan per bookable team member. KERSIVO stays flat per location in this single-location model.',

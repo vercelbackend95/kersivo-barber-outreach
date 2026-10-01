@@ -23,6 +23,12 @@ export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 /** KERSIVO does not currently add VAT to its subscription. */
 export const SAAS_ADDS_VAT = false;
 
+/**
+ * KERSIVO online booking deposit (GBP). Must match `BOOKING_DEPOSIT_PENCE` in
+ * `src/lib/booking/depositGate.ts`, which is server-coupled and cannot be imported client-side.
+ */
+export const KERSIVO_BOOKING_DEPOSIT_GBP = 5;
+
 export const PAGE_DESCRIPTIONS = {
   privacy:
     'Privacy policy for Kersivo barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',

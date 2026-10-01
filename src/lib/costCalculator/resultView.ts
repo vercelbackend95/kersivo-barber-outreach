@@ -68,6 +68,10 @@ const SHARED_ASSUMPTIONS: ReadonlySet<AssumptionCode> = new Set([
   'shared-marketplace-clients',
   'split-marketplace-clients',
   'vat-recovery-depends-on-circumstances',
+  'deposit-processing-scope',
+  'deposit-benchmark',
+  'deposit-fee-rounding',
+  'deposit-refunds-not-modelled',
 ]);
 
 const LONG_TOTAL_LENGTH = 10;
@@ -100,9 +104,34 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
         : null;
     case 'kersivo-additional-barbers':
       return line.quantity > 0 ? `${line.quantity} included` : null;
+    case 'booksy-deposit-processing':
+    case 'fresha-deposit-processing':
+    case 'kersivo-deposit-processing':
+      return depositDetail(line, unit);
     default:
       return null;
   }
+}
+
+const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
+  'stripe-checkout-standard-uk-card': 'standard UK card',
+};
+
+function depositDetail(line: CostLineItem, unit: string | null): string | null {
+  if (line.status !== 'calculated' || !unit) return null;
+  const parts = [
+    `${plural(line.quantity, 'deposit', 'deposits')}/month`,
+    `estimated ${unit} each${line.vatApplies ? ' before VAT' : ''}`,
+  ];
+  const note = line.paymentMethod ? PAYMENT_METHOD_NOTE[line.paymentMethod] : undefined;
+  if (note) parts.push(note);
+  return parts.join(' · ');
+}
+
+/** The summary row mirrors the provider's single deposit processing line, including under custom pricing. */
+function paymentsSummary(result: ProviderMonthlyResult): string {
+  const line = result.lineItems.find((entry) => entry.category === 'payment-processing');
+  return line ? lineValue(line) : NOT_INCLUDED;
 }
 
 function lineValue(line: CostLineItem): string {
@@ -154,7 +183,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
       totalSr: null,
       net: null,
       customNote: CUSTOM_PRICING_NOTE,
-      summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: NOT_INCLUDED },
+      summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
   }
@@ -176,7 +205,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
     summary: {
       'before-vat': formatMoneyGbp(amounts.subtotalExVatGbp),
       vat: formatMoneyGbp(amounts.vatChargedGbp),
-      payments: result.paymentsIncluded ? formatMoneyGbp(amounts.paymentProcessingExVatGbp) : NOT_INCLUDED,
+      payments: paymentsSummary(result),
     },
     breakdown,
   };

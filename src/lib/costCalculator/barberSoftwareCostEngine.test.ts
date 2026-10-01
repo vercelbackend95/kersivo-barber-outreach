@@ -7,8 +7,18 @@ import {
   BOOKSY_BASE_PRICE_GBP,
   BOOKSY_BOOST_COMMISSION_PERCENT,
   BOOKSY_BOOST_MINIMUM_GBP,
+  BOOKSY_MOBILE_PAYMENTS_FIXED_GBP,
+  BOOKSY_MOBILE_PAYMENTS_PERCENT,
+  BOOKSY_MOBILE_PAYMENTS_VAT,
 } from '@/lib/seo/booksyFacts';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  KERSIVO_DEPOSIT_APPLICATION_FEE_GBP,
+  STRIPE_FEE_PAYER_CAVEAT,
+  STRIPE_FEE_VAT_CHARGED,
+  STRIPE_UK_STANDARD_CARD_FIXED_GBP,
+  STRIPE_UK_STANDARD_CARD_PERCENT,
+} from '@/lib/seo/stripeFacts';
 import {
   FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS,
   FRESHA_UK_COMMERCIAL_FACTS,
@@ -18,6 +28,7 @@ import {
 } from '@/lib/seo/freshaFacts';
 import {
   ASSUMPTION_MESSAGES,
+  DEPOSIT_BENCHMARK_GBP,
   WARNING_MESSAGES,
   calculateMonthlyCosts,
   type CalculatedProviderResult,
@@ -26,7 +37,7 @@ import {
   type ProviderId,
   type ProviderMonthlyResult,
 } from './barberSoftwareCostEngine';
-import { roundGbp } from './money';
+import { gbpToPence, penceToGbp, roundGbp } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
 const BASE: CostScenarioInput = {
@@ -41,7 +52,8 @@ const BASE: CostScenarioInput = {
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   vatRegistered: false,
-  includePayments: false,
+  includeDepositProcessing: false,
+  depositBookingsPerMonth: 0,
 };
 
 function run(overrides: Partial<CostScenarioInput> = {}) {
@@ -418,19 +430,6 @@ describe('shared behaviour', () => {
     });
   });
 
-  it('never includes payment processing, even when requested', () => {
-    const without = run({ bookableBarbers: 4, marketplaceClients: 2, booksyBoostEnabled: true });
-    const withPayments = run({ bookableBarbers: 4, marketplaceClients: 2, booksyBoostEnabled: true, includePayments: true });
-    withPayments.providers.forEach((entry, index) => {
-      expect(entry.paymentsIncluded).toBe(false);
-      expect(entry.amounts).toEqual(without.providers[index].amounts);
-      expect(line(entry, 'payment-processing')).toMatchObject({ status: 'not-included', exVatGbp: 0 });
-      expect(warningCodes(entry)).toContain('payments-not-included');
-      expect(warningCodes(without.providers[index])).not.toContain('payments-not-included');
-      if (entry.amounts) expect(entry.amounts.paymentProcessingExVatGbp).toBe(0);
-    });
-  });
-
   it('keeps VAT separate and exposes the recoverable estimate only when VAT registered', () => {
     const notRegistered = run({ bookableBarbers: 3 });
     const registered = run({ bookableBarbers: 3, vatRegistered: true });
@@ -459,6 +458,8 @@ describe('shared behaviour', () => {
               freshaSmartWebsite: flag,
               freshaClientLoyalty: !flag,
               vatRegistered: flag,
+              includeDepositProcessing: !flag,
+              depositBookingsPerMonth: 37,
             });
             for (const entry of result.providers) {
               if (entry.status !== 'calculated') continue;
@@ -487,6 +488,209 @@ describe('shared behaviour', () => {
       }
     }
     expect(checked).toBeGreaterThan(500);
+  });
+});
+
+describe('booking deposit processing', () => {
+  const DEPOSIT_LINES: Record<ProviderId, LineItemId> = {
+    booksy: 'booksy-deposit-processing',
+    fresha: 'fresha-deposit-processing',
+    kersivo: 'kersivo-deposit-processing',
+  };
+  const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
+  const on = (deposits: number, extra: Partial<CostScenarioInput> = {}) =>
+    run({ includeDepositProcessing: true, depositBookingsPerMonth: deposits, ...extra });
+  const onlinePayments = requireVerifiedFreshaFact('onlinePayments');
+
+  /** Independent re-derivation from the facts: percent of the benchmark, rounded, plus fixed fee. */
+  const expectedUnitPence = (percent: number, fixedGbp: number) =>
+    Math.round(gbpToPence(DEPOSIT_BENCHMARK_GBP) * percent / 100) + gbpToPence(fixedGbp);
+
+  it('mirrors the verified payment facts', () => {
+    expect(DEPOSIT_BENCHMARK_GBP).toBe(KERSIVO_BOOKING_DEPOSIT_GBP);
+    expect([BOOKSY_MOBILE_PAYMENTS_PERCENT, BOOKSY_MOBILE_PAYMENTS_FIXED_GBP, BOOKSY_MOBILE_PAYMENTS_VAT]).toEqual([
+      1.29,
+      0.2,
+      'exclusive',
+    ]);
+    expect([onlinePayments.percent, onlinePayments.amountGbp, onlinePayments.vat]).toEqual([1.4, 0.25, 'exclusive']);
+    expect([STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP, STRIPE_FEE_VAT_CHARGED]).toEqual([
+      1.5,
+      0.2,
+      false,
+    ]);
+    expect(KERSIVO_DEPOSIT_APPLICATION_FEE_GBP).toBe(0);
+  });
+
+  it('keeps the calculator benchmark equal to the production booking deposit', () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const gate = readFileSync(join(here, '..', 'booking', 'depositGate.ts'), 'utf8');
+    const match = gate.match(/export const BOOKING_DEPOSIT_PENCE\s*=\s*(\d+)\s*;/);
+    expect(match).not.toBeNull();
+    expect(gbpToPence(KERSIVO_BOOKING_DEPOSIT_GBP)).toBe(Number(match![1]));
+  });
+
+  it('is not included when the toggle is off, even with a stale deposit count', () => {
+    const off = run({ includeDepositProcessing: false, depositBookingsPerMonth: 100 });
+    const baseline = run();
+    off.providers.forEach((entry, index) => {
+      expect(entry.depositProcessingIncluded).toBe(false);
+      expect(depositLine(entry)).toMatchObject({ status: 'not-included', exVatGbp: 0, quantity: 0, unitExVatGbp: null });
+      expect(entry.amounts).toEqual(baseline.providers[index].amounts);
+    });
+    expect(off.assumptions.map((entry) => entry.code)).not.toContain('deposit-processing-scope');
+  });
+
+  it('ignores an invalid stale deposit value while the toggle is off', () => {
+    for (const stale of [Number.NaN, -3, 2.5, 99999, Number.POSITIVE_INFINITY]) {
+      const result = calculateMonthlyCosts({ ...BASE, includeDepositProcessing: false, depositBookingsPerMonth: stale });
+      expect(result.ok).toBe(true);
+    }
+  });
+
+  it('calculates the exact £5 unit fee for each provider from the facts', () => {
+    const [booksy, fresha, kersivo] = on(1).providers;
+    expect(depositLine(booksy).unitExVatGbp).toBe(
+      penceToGbp(expectedUnitPence(BOOKSY_MOBILE_PAYMENTS_PERCENT, BOOKSY_MOBILE_PAYMENTS_FIXED_GBP)),
+    );
+    expect(depositLine(fresha).unitExVatGbp).toBe(penceToGbp(expectedUnitPence(onlinePayments.percent!, onlinePayments.amountGbp!)));
+    expect(depositLine(kersivo).unitExVatGbp).toBe(
+      penceToGbp(expectedUnitPence(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)),
+    );
+    expect([booksy, fresha, kersivo].map((entry) => depositLine(entry).unitExVatGbp)).toEqual([0.26, 0.32, 0.28]);
+  });
+
+  it('multiplies the rounded unit fee by the monthly deposit count', () => {
+    const result = on(100);
+    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 28]);
+    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100]);
+    for (const entry of result.providers) {
+      expect(entry.depositProcessingIncluded).toBe(true);
+      expect(depositLine(entry).category).toBe('payment-processing');
+      expect(entry.amounts!.paymentProcessingExVatGbp).toBe(depositLine(entry).exVatGbp);
+    }
+  });
+
+  it('shows £0.00 as calculated, not as not included, with zero deposits', () => {
+    for (const entry of on(0).providers) {
+      expect(depositLine(entry)).toMatchObject({ status: 'calculated', exVatGbp: 0, quantity: 0 });
+      expect(depositLine(entry).unitExVatGbp).toBeGreaterThan(0);
+      expect(entry.amounts!.paymentProcessingExVatGbp).toBe(0);
+    }
+  });
+
+  it('adds provider VAT to Booksy and Fresha fees but not to Stripe fees', () => {
+    const [booksy, fresha, kersivo] = on(100).providers as readonly CalculatedProviderResult[];
+    const [booksyOff, freshaOff, kersivoOff] = run().providers as readonly CalculatedProviderResult[];
+    expect(depositLine(booksy).vatApplies).toBe(true);
+    expect(depositLine(fresha).vatApplies).toBe(true);
+    expect(depositLine(kersivo).vatApplies).toBe(false);
+    expect(roundGbp(booksy.amounts.vatChargedGbp - booksyOff.amounts.vatChargedGbp)).toBe(5.2);
+    expect(roundGbp(fresha.amounts.vatChargedGbp - freshaOff.amounts.vatChargedGbp)).toBe(6.4);
+    expect(kersivo.amounts.vatChargedGbp).toBe(kersivoOff.amounts.vatChargedGbp);
+    expect(kersivo.amounts.cashTotalGbp).toBe(roundGbp(kersivoOff.amounts.cashTotalGbp + 28));
+    expect(booksy.amounts.cashTotalGbp).toBe(roundGbp(booksyOff.amounts.cashTotalGbp + 31.2));
+    expect(fresha.amounts.cashTotalGbp).toBe(roundGbp(freshaOff.amounts.cashTotalGbp + 38.4));
+  });
+
+  it('feeds the VAT-registered net figure', () => {
+    const [booksy, , kersivo] = on(100, { vatRegistered: true }).providers as readonly CalculatedProviderResult[];
+    expect(booksy.amounts.estimatedNetCostIfVatRecoverableGbp).toBe(booksy.amounts.subtotalExVatGbp);
+    expect(kersivo.amounts.estimatedNetCostIfVatRecoverableGbp).toBe(roundGbp(SAAS_MONTHLY_GBP + 28));
+  });
+
+  it('keeps the KERSIVO commission line at £0.00 and separate from Stripe processing', () => {
+    const kersivo = on(100).providers[2];
+    expect(line(kersivo, 'kersivo-commission')).toMatchObject({ category: 'commission', exVatGbp: 0 });
+    expect(depositLine(kersivo)).toMatchObject({
+      category: 'payment-processing',
+      exVatGbp: 28,
+      paymentMethod: 'stripe-checkout-standard-uk-card',
+    });
+    expect((kersivo as CalculatedProviderResult).amounts.commissionExVatGbp).toBe(0);
+  });
+
+  it('stays independent of barbers, Boost, marketplace and add-ons', () => {
+    const plain = on(50).providers.map((entry) => depositLine(entry).exVatGbp);
+    const busy = on(50, {
+      bookableBarbers: 8,
+      booksyBoostEnabled: true,
+      marketplaceClients: 20,
+      freshaSmartWebsite: true,
+      freshaClientLoyalty: true,
+      averageAppointmentValueGbp: 80,
+    }).providers.map((entry) => depositLine(entry).exVatGbp);
+    expect(busy).toEqual(plain);
+  });
+
+  it('still shows the Fresha processing line above the team limit, with no partial total', () => {
+    const fresha = provider(
+      { includeDepositProcessing: true, depositBookingsPerMonth: 100, bookableBarbers: FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS + 1 },
+      'fresha',
+    );
+    expect(fresha.status).toBe('custom-pricing');
+    expect(fresha.amounts).toBeNull();
+    expect(depositLine(fresha)).toMatchObject({ status: 'calculated', exVatGbp: 32 });
+  });
+
+  it('validates the deposit count only when processing is on', () => {
+    const errors = (deposits: number, extra: Partial<CostScenarioInput> = {}) => {
+      const result = calculateMonthlyCosts({ ...BASE, includeDepositProcessing: true, depositBookingsPerMonth: deposits, ...extra });
+      return result.ok ? [] : result.errors;
+    };
+    expect(errors(Number.NaN)).toEqual([{ field: 'depositBookingsPerMonth', code: 'not-a-number' }]);
+    expect(errors(Number.POSITIVE_INFINITY)).toEqual([{ field: 'depositBookingsPerMonth', code: 'not-finite' }]);
+    expect(errors(2.5)).toEqual([{ field: 'depositBookingsPerMonth', code: 'not-integer' }]);
+    expect(errors(-1)).toEqual([{ field: 'depositBookingsPerMonth', code: 'below-minimum' }]);
+    expect(errors(401)).toEqual([
+      { field: 'depositBookingsPerMonth', code: 'deposit-bookings-exceed-monthly-appointments' },
+    ]);
+    expect(errors(400)).toEqual([]);
+    expect(errors(10, { monthlyAppointments: Number.NaN })).toEqual([{ field: 'monthlyAppointments', code: 'not-a-number' }]);
+  });
+
+  it('adds the deposit assumptions only when processing is on', () => {
+    const result = on(100);
+    expect(result.assumptions.map((entry) => entry.code)).toEqual(
+      expect.arrayContaining(['deposit-processing-scope', 'deposit-benchmark', 'deposit-fee-rounding', 'deposit-refunds-not-modelled']),
+    );
+    expect(assumptionCodes(result.providers[2])).toEqual(
+      expect.arrayContaining(['kersivo-stripe-standard-uk-card', 'stripe-fees-no-vat']),
+    );
+    expect(assumptionCodes(run().providers[2])).not.toContain('kersivo-stripe-standard-uk-card');
+    expect(ASSUMPTION_MESSAGES['deposit-benchmark']).toBe(
+      'The comparison uses a £5 deposit benchmark for all three providers.',
+    );
+    expect(ASSUMPTION_MESSAGES['deposit-fee-rounding']).toContain('round each modelled £5 deposit transaction to the nearest penny');
+    expect(ASSUMPTION_MESSAGES['deposit-processing-scope']).toContain('remaining appointment balance');
+  });
+});
+
+describe('KERSIVO / Stripe fee-payer assumption', () => {
+  const codesFor = (on: boolean) =>
+    run({ includeDepositProcessing: on, depositBookingsPerMonth: 100 }).providers.map(assumptionCodes);
+
+  it('is attached to KERSIVO only, and only when deposit processing is on', () => {
+    const [booksy, fresha, kersivo] = codesFor(true);
+    expect(kersivo).toContain('kersivo-stripe-fee-payer');
+    expect(booksy).not.toContain('kersivo-stripe-fee-payer');
+    expect(fresha).not.toContain('kersivo-stripe-fee-payer');
+    expect(codesFor(false)[2]).not.toContain('kersivo-stripe-fee-payer');
+  });
+
+  it('uses the central Stripe facts caveat', () => {
+    expect(ASSUMPTION_MESSAGES['kersivo-stripe-fee-payer']).toBe(STRIPE_FEE_PAYER_CAVEAT);
+    expect(STRIPE_FEE_PAYER_CAVEAT).toBe(
+      'The KERSIVO estimate assumes Stripe processing fees are charged to the connected barbershop account. Confirm this against your live Stripe Connect setup before relying on it for a specific account.',
+    );
+  });
+
+  it('changes no payment amounts', () => {
+    const result = run({ includeDepositProcessing: true, depositBookingsPerMonth: 100 });
+    expect(result.providers.map((entry) => entry.lineItems.find((item) => item.category === 'payment-processing')!.exVatGbp)).toEqual([
+      26, 32, 28,
+    ]);
+    expect(result.providers.map((entry) => entry.amounts!.cashTotalGbp)).toEqual([79.2, 56.34, 67]);
   });
 });
 

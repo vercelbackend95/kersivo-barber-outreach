@@ -51,6 +51,12 @@ const RICH_SCENARIO: Partial<CostScenarioInput> = {
   vatRegistered: true,
 };
 
+const RICH_WITH_DEPOSITS: Partial<CostScenarioInput> = {
+  ...RICH_SCENARIO,
+  includeDepositProcessing: true,
+  depositBookingsPerMonth: 73,
+};
+
 describe('period model', () => {
   it('centralises the three periods and their month counts', () => {
     expect(COST_PERIODS).toEqual(['monthly', 'annual', 'threeYear']);
@@ -71,9 +77,9 @@ describe('projectCostCalculation', () => {
   });
 
   it('multiplies every monetary amount by the period month count', () => {
-    const monthly = providers(RICH_SCENARIO, 'monthly');
+    const monthly = providers(RICH_WITH_DEPOSITS, 'monthly');
     for (const period of ['annual', 'threeYear'] as const) {
-      const projected = providers(RICH_SCENARIO, period);
+      const projected = providers(RICH_WITH_DEPOSITS, period);
       projected.forEach((result, index) => {
         const base = amounts(monthly[index]);
         const scaled = amounts(result);
@@ -94,7 +100,7 @@ describe('projectCostCalculation', () => {
 
   it('keeps projected totals reconciled with their components', () => {
     for (const period of COST_PERIODS) {
-      for (const result of providers(RICH_SCENARIO, period)) {
+      for (const result of providers(RICH_WITH_DEPOSITS, period)) {
         const a = amounts(result);
         const parts = [
           a.subscriptionExVatGbp,
@@ -136,8 +142,8 @@ describe('projectCostCalculation', () => {
   });
 
   it('projects line totals but keeps unit prices and quantities monthly', () => {
-    const monthly = providers(RICH_SCENARIO, 'monthly');
-    const projected = providers(RICH_SCENARIO, 'threeYear');
+    const monthly = providers(RICH_WITH_DEPOSITS, 'monthly');
+    const projected = providers(RICH_WITH_DEPOSITS, 'threeYear');
     projected.forEach((result, providerIndex) => {
       result.lineItems.forEach((line, lineIndex) => {
         const base = monthly[providerIndex].lineItems[lineIndex];
@@ -151,15 +157,31 @@ describe('projectCostCalculation', () => {
     });
   });
 
-  it('keeps payment processing not included in every period', () => {
+  it('keeps deposit processing not included in every period when the toggle is off', () => {
     for (const period of COST_PERIODS) {
-      for (const result of providers(RICH_SCENARIO, period)) {
-        expect(result.paymentsIncluded).toBe(false);
+      for (const result of providers({ ...RICH_SCENARIO, depositBookingsPerMonth: 100 }, period)) {
+        expect(result.depositProcessingIncluded).toBe(false);
         expect(amounts(result).paymentProcessingExVatGbp).toBe(0);
-        const payment = result.lineItems.find((line) => line.id === 'payment-processing')!;
+        const payment = result.lineItems.find((line) => line.category === 'payment-processing')!;
         expect(payment.status).toBe('not-included');
         expect(payment.exVatGbp).toBe(0);
       }
+    }
+  });
+
+  it('projects 100 monthly deposits to 12-month and 3-year totals, keeping unit and quantity monthly', () => {
+    const deposits = { includeDepositProcessing: true, depositBookingsPerMonth: 100 };
+    const processing = (period: (typeof COST_PERIODS)[number]) =>
+      providers(deposits, period).map((result) => result.lineItems.find((line) => line.category === 'payment-processing')!);
+    expect(processing('monthly').map((line) => line.exVatGbp)).toEqual([26, 32, 28]);
+    expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 336]);
+    expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 1008]);
+    for (const period of COST_PERIODS) {
+      expect(processing(period).map((line) => line.unitExVatGbp)).toEqual([0.26, 0.32, 0.28]);
+      expect(processing(period).map((line) => line.quantity)).toEqual([100, 100, 100]);
+      expect(providers(deposits, period).map((result) => amounts(result).paymentProcessingExVatGbp)).toEqual(
+        processing(period).map((line) => line.exVatGbp),
+      );
     }
   });
 
@@ -223,9 +245,30 @@ describe('projection architecture guards', () => {
   it('keeps provider formulas in the engine only', () => {
     for (const file of ['costProjection.ts', 'costInsight.ts', 'resultView.ts']) {
       const { raw } = sources.find((entry) => entry.file === file)!;
-      expect(raw, file).not.toMatch(/booksyFacts|seo\/defaults|'\.\/vat'|percentOfPence|requireVerifiedFreshaFact|SAAS_MONTHLY/);
+      expect(raw, file).not.toMatch(
+        /booksyFacts|stripeFacts|seo\/defaults|'\.\/vat'|percentOfPence|transactionFeePence|requireVerifiedFreshaFact|SAAS_MONTHLY|DEPOSIT_BENCHMARK/,
+      );
       expect(raw, file).not.toMatch(/\b(document|window|HTMLElement|querySelector)\b/);
     }
+  });
+
+  it('keeps payment rates and the deposit benchmark in the facts modules only', () => {
+    for (const { file, raw } of sources) {
+      if (file === 'barberSoftwareCostEngine.ts') continue;
+      expect(raw, file).not.toMatch(/stripeFacts|BOOKSY_MOBILE_PAYMENTS|STRIPE_UK_STANDARD|onlinePayments|KERSIVO_BOOKING_DEPOSIT/);
+    }
+    const engine = sources.find((entry) => entry.file === 'barberSoftwareCostEngine.ts')!.raw;
+    expect(engine).toMatch(/DEPOSIT_BENCHMARK_GBP = KERSIVO_BOOKING_DEPOSIT_GBP;/);
+  });
+
+  it('keeps Stripe SDKs, secrets, Prisma and server modules out of the browser calculator', () => {
+    for (const { file, raw } of sources) {
+      expect(raw, file).not.toMatch(/from\s+['"](stripe|@stripe\/[\w-]+|@prisma\/client)['"]/);
+      expect(raw, file).not.toMatch(/@\/lib\/(db|booking|shop|stripe|server)\b|\.\.\/(db|booking|shop)\//);
+      expect(raw, file).not.toMatch(/STRIPE_SECRET|sk_(live|test)_|process\.env|import\.meta\.env/);
+    }
+    const facts = readFileSync(join(here, '..', 'seo', 'stripeFacts.ts'), 'utf8');
+    expect(facts).not.toMatch(/^import\s/m);
   });
 
   it('adds no winner, cheapest or savings logic anywhere in the calculator', () => {

@@ -56,8 +56,8 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     freshaSmartWebsite: readChecked(form, 'freshaSmartWebsite'),
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     vatRegistered: readYesNo(form, 'vatRegistered'),
-    // Payment processing is not part of this calculation stage; the control is disabled.
-    includePayments: false,
+    includeDepositProcessing: readChecked(form, 'includeDepositProcessing'),
+    depositBookingsPerMonth: readNumber(form, 'depositBookingsPerMonth'),
   };
 }
 

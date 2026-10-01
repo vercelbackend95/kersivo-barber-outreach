@@ -1,4 +1,4 @@
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -6,8 +6,16 @@ import {
   BOOKSY_BOOST_COMMISSION_PERCENT,
   BOOKSY_BOOST_MINIMUM_GBP,
   BOOKSY_FACTS_CHECKED_DATE,
+  BOOKSY_MOBILE_PAYMENTS_FIXED_GBP,
+  BOOKSY_MOBILE_PAYMENTS_PERCENT,
+  BOOKSY_PAYMENT_FACTS_CHECKED_DATE,
   BOOKSY_STANDARD_MARKETPLACE_BOOKINGS,
 } from '@/lib/seo/booksyFacts';
+import {
+  STRIPE_FACTS_CHECKED_DATE,
+  STRIPE_UK_STANDARD_CARD_FIXED_GBP,
+  STRIPE_UK_STANDARD_CARD_PERCENT,
+} from '@/lib/seo/stripeFacts';
 import {
   FRESHA_BOOKABLE_TEAM_MEMBER_DEFINITION,
   FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS,
@@ -53,6 +61,7 @@ export const FRESHA_MARKETPLACE_MINIMUM = formatGbp(marketplaceFee.minimumGbp!);
 export const BOOKSY_BOOST_PERCENT = formatPercent(BOOKSY_BOOST_COMMISSION_PERCENT);
 export const BOOKSY_BOOST_MINIMUM = formatGbp(BOOKSY_BOOST_MINIMUM_GBP);
 const FRESHA_VAT = `${FRESHA_UK_VAT_PERCENT}% VAT`;
+const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent)} + ${formatGbp(fixedGbp)}`;
 
 /* ---------------------------------- Hero ---------------------------------- */
 
@@ -147,7 +156,7 @@ export const BOOKSY_COST_FACTS: readonly { label: string; value: string }[] = [
 export const BOOKSY_COST_NOTES: readonly string[] = [
   'Booksy lists its UK subscription and additional-user prices plus VAT, so the amount a shop actually pays is higher than the headline figure.',
   'The Boost fee is a one-time acquisition fee for a new client Boost brings in, not a charge on that client’s later visits.',
-  'Payment-processing fees apply separately when card payments are taken through Booksy. Check Booksy directly for its current processing rates.',
+  `Payment-processing fees apply separately when card payments are taken through Booksy. Online deposits use Booksy Mobile Payments at ${feeLabel(BOOKSY_MOBILE_PAYMENTS_PERCENT, BOOKSY_MOBILE_PAYMENTS_FIXED_GBP)} per transaction plus VAT.`,
 ];
 
 /* ---------------------------------- Fresha --------------------------------- */
@@ -260,25 +269,27 @@ export const VAT_DISCLAIMER =
 
 /* --------------------------------- Payments -------------------------------- */
 
-export const PAYMENTS_INTRO =
-  'Payment processing is a separate cost from the software subscription. It depends on how much you take through the platform and how you take it, so it is shown on its own rather than folded into the monthly price.';
+const DEPOSIT_BENCHMARK = formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP);
+const FRESHA_ONLINE_PAYMENTS_FEE = feeLabel(onlinePayments.percent!, onlinePayments.amountGbp!);
+
+export const PAYMENTS_INTRO = `Payment processing is a separate cost from the software subscription. The calculator can optionally compare one like-for-like flow: the same ${DEPOSIT_BENCHMARK} online booking deposit taken through each platform. It does not model the remaining appointment balance, in-person card payments or retail payments.`;
 
 export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
   {
-    title: 'Percentage fees',
-    body: 'Most processing charges include a percentage of each transaction, so the cost grows with your takings.',
+    title: 'Booksy Mobile Payments',
+    body: `Booksy deposits run through Mobile Payments at ${feeLabel(BOOKSY_MOBILE_PAYMENTS_PERCENT, BOOKSY_MOBILE_PAYMENTS_FIXED_GBP)} per transaction plus VAT, checked on ${BOOKSY_PAYMENT_FACTS_CHECKED_DATE}.`,
   },
   {
-    title: 'Fixed transaction fees',
-    body: 'Many rates also add a fixed amount per transaction, which weighs more heavily on lower-value services.',
+    title: 'Fresha Online Payments',
+    body: `Fresha applies its standard online payment rate of ${FRESHA_ONLINE_PAYMENTS_FEE} per transaction plus VAT to online deposits.`,
   },
   {
-    title: 'Online vs in person',
-    body: 'Online and in-person payments are often priced differently, so the mix of card-not-present and terminal payments matters.',
+    title: 'KERSIVO via Stripe Checkout',
+    body: `KERSIVO deposits are processed by Stripe Checkout, with no KERSIVO fee on top. The KERSIVO estimate assumes the connected barbershop pays Stripe’s standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked on ${STRIPE_FACTS_CHECKED_DATE}. Premium UK and international cards cost more.`,
   },
   {
-    title: 'Different payment flows',
-    body: 'Platforms support different flows for deposits, no-show protection, terminals and online checkout. Processing costs are not always a like-for-like comparison.',
+    title: 'What is not modelled',
+    body: 'Refund-related processing costs are excluded, and each modelled deposit is rounded to the nearest penny. Processing rates can change, so check each provider directly before deciding.',
   },
 ];
 
@@ -332,7 +343,7 @@ export const METHODOLOGY_FACTORS: readonly string[] = [
   'Optional Booksy Boost',
   'VAT status',
   'Optional add-ons',
-  'Optional payment processing',
+  'Optional booking deposit processing',
 ];
 
 export const METHODOLOGY_PRINCIPLES: readonly MarketplacePoint[] = [

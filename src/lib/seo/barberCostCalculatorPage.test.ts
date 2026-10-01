@@ -10,6 +10,8 @@ import {
   COST_AT_A_GLANCE_MODELS,
   COST_CALC_HERO,
   COST_SCENARIOS,
+  PAYMENTS_INTRO,
+  PAYMENTS_POINTS,
   VAT_DISCLAIMER,
 } from './barberCostCalculatorPage';
 import { BARBER_COST_CALCULATOR_FAQ_ITEMS } from './barberCostCalculatorFaq';
@@ -272,13 +274,25 @@ describe('barber software cost calculator content safety', () => {
     }
   });
 
-  it('lists official sources with checked dates and no Stripe source', () => {
+  it('lists official sources with checked dates, including the deposit payment sources', () => {
     const urls = COST_CALCULATOR_SOURCES.map((source) => source.url);
     expect(urls).toContain(BOOKSY_SOURCE_PRICING);
     expect(urls).toContain(BOOKSY_SOURCE_BOOST);
     expect(urls).toContain('https://www.fresha.com/en-GB/pricing');
     expect(urls).toContain('/#pricing');
-    expect(urls.some((url) => url.includes('stripe'))).toBe(false);
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        'https://biz.booksy.com/en-gb/features/no-show-protection',
+        'https://biz.booksy.com/en-gb/features/payments',
+        'https://www.fresha.com/help-center/knowledge-base/payments/101660-set-up-payment-policies',
+        'https://stripe.com/gb/pricing',
+      ]),
+    );
+    expect(new Set(urls).size).toBe(urls.length);
+    const stripe = COST_CALCULATOR_SOURCES.find((source) => source.provider === 'Stripe')!;
+    expect(stripe).toMatchObject({ checkedIso: '2026-10-01', checkedLabel: '1 October 2026', external: true });
+    const policies = COST_CALCULATOR_SOURCES.find((source) => source.url.includes('101660'))!;
+    expect(policies.checkedIso).toBe('2026-10-01');
     for (const source of COST_CALCULATOR_SOURCES.filter((entry) => entry.provider !== 'KERSIVO')) {
       expect(source.checkedIso).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
@@ -286,6 +300,33 @@ describe('barber software cost calculator content safety', () => {
     expect(sourcesComponent).toContain('rel="noopener noreferrer"');
     expect(sourcesComponent).toContain('BOOKSY_TRADEMARK_DISCLAIMER');
     expect(sourcesComponent).toContain('FRESHA_TRADEMARK_DISCLAIMER');
+  });
+});
+
+describe('booking deposit payment processing copy', () => {
+  const copy = [PAYMENTS_INTRO, ...PAYMENTS_POINTS.flatMap((point) => [point.title, point.body])].join(' ');
+
+  it('explains the optional like-for-like deposit model with bound rates', () => {
+    expect(PAYMENTS_INTRO).toContain('the same £5 online booking deposit');
+    expect(PAYMENTS_INTRO).toContain('remaining appointment balance');
+    expect(PAYMENTS_POINTS.map((point) => point.title)).toEqual([
+      'Booksy Mobile Payments',
+      'Fresha Online Payments',
+      'KERSIVO via Stripe Checkout',
+      'What is not modelled',
+    ]);
+    expect(copy).toContain('1.29% + £0.20 per transaction plus VAT');
+    expect(copy).toContain('1.40% + £0.25 per transaction plus VAT');
+    expect(copy).toContain(
+      'The KERSIVO estimate assumes the connected barbershop pays Stripe’s standard UK card rate of 1.50% + £0.20',
+    );
+    expect(copy).not.toMatch(/KERSIVO deposits are processed by Stripe Checkout at/);
+    expect(copy).toMatch(/Refund-related processing costs are excluded/);
+    expect(copy).toMatch(/rates can change/i);
+  });
+
+  it('never claims to model full appointment, terminal or retail payment processing', () => {
+    expect(copy).not.toMatch(/full appointment|tap to pay|terminal fee/i);
   });
 });
 

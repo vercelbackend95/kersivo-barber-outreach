@@ -12,7 +12,9 @@ import {
   DEFAULT_SCENARIO,
   FRESHA_ADD_ONS,
   NUMBER_FIELDS,
-  PAYMENTS_TOGGLE,
+  DEPOSIT_BOOKINGS_FIELD,
+  DEPOSIT_PROCESSING_TOGGLE,
+  SPLIT_FIELDS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
   INSIGHT_INVALID,
@@ -23,6 +25,7 @@ import {
 } from './calculatorUi';
 import { initCalculator, readPeriod, readScenario } from './initCalculator';
 import { formatMoneyGbp } from './money';
+import { STRIPE_FEE_PAYER_CAVEAT } from '@/lib/seo/stripeFacts';
 
 /** Mirrors the data hooks rendered by CostCalcPanel.astro and CostResults.astro. */
 function mount() {
@@ -62,11 +65,13 @@ function mount() {
       <input id="${BOOST_TOGGLE.id}" name="${BOOST_TOGGLE.name}" type="checkbox" role="switch" />
       <input id="${SPLIT_ASSUMPTIONS_TOGGLE.id}" name="${SPLIT_ASSUMPTIONS_TOGGLE.name}" type="checkbox"
         aria-controls="calc-split-fields" data-calc-reveal />
-      <div id="calc-split-fields" hidden>${NUMBER_FIELDS.slice(4).map(numberField).join('')}</div>
+      <div id="calc-split-fields" hidden>${SPLIT_FIELDS.map(numberField).join('')}</div>
       <input type="radio" name="vatRegistered" value="no" checked />
       <input type="radio" name="vatRegistered" value="yes" />
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
-      <input id="${PAYMENTS_TOGGLE.id}" name="${PAYMENTS_TOGGLE.name}" type="checkbox" role="switch" disabled />
+      <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
+        aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
+      <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
     </form>
     <section data-calc-results>
       <fieldset data-calc-period>
@@ -339,14 +344,132 @@ describe('split marketplace mode', () => {
   });
 });
 
-describe('payments and period', () => {
-  it('keeps payments disabled and labelled Not included', () => {
-    expect($<HTMLInputElement>('#calc-payments').disabled).toBe(true);
-    for (const id of ['booksy', 'fresha', 'kersivo']) {
+const DEPOSIT_LINE = {
+  booksy: 'booksy-deposit-processing',
+  fresha: 'fresha-deposit-processing',
+  kersivo: 'kersivo-deposit-processing',
+} as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'kersivo'] as const;
+const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
+const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
+
+function enableDeposits(count: string) {
+  toggle(depositToggleId, true);
+  setNumber(depositFieldId, count);
+}
+
+describe('booking deposit processing', () => {
+  it('hides the Stripe fee-payer assumption while deposit processing is off', () => {
+    expect(assumptions('kersivo')).not.toContain(STRIPE_FEE_PAYER_CAVEAT);
+    toggle(depositToggleId, true);
+    expect(assumptions('kersivo')).toContain(STRIPE_FEE_PAYER_CAVEAT);
+  });
+
+  it('starts off, enabled, with the deposit count hidden and every provider Not included', () => {
+    const control = $<HTMLInputElement>(`#${depositToggleId}`);
+    expect(control.disabled).toBe(false);
+    expect(control.checked).toBe(false);
+    expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(true);
+    for (const id of PROVIDER_IDS) {
       expect(summary(id, 'payments')).toBe('Not included');
-      expect(cell(id, 'payment-processing')).toBe('Not included');
+      expect(cell(id, DEPOSIT_LINE[id])).toBe('Not included');
+      expect(detail(id, DEPOSIT_LINE[id])).toBe('');
     }
   });
+
+  it('reveals the deposit count when switched on and shows £0.00 for zero deposits', () => {
+    toggle(depositToggleId, true);
+    expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(false);
+    expect($<HTMLInputElement>(`#${depositFieldId}`).value).toBe('0');
+    for (const id of PROVIDER_IDS) {
+      expect(summary(id, 'payments')).toBe('£0.00');
+      expect(cell(id, DEPOSIT_LINE[id])).toBe('£0.00');
+    }
+  });
+
+  it('updates all three cards with 100 deposits, keeping commission separate', () => {
+    enableDeposits('100');
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£28.00']);
+    expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
+    expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
+    expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
+    expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£67.00']);
+    expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
+  });
+
+  it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
+    enableDeposits('100');
+    choosePeriod('annual');
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£336.00']);
+    expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
+    choosePeriod('threeYear');
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£1,008.00']);
+    expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
+  });
+
+  it('preserves the entered count across off and on, and ignores it while off', () => {
+    enableDeposits('100');
+    toggle(depositToggleId, false);
+    expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(true);
+    expect(summary('booksy', 'payments')).toBe('Not included');
+    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
+    toggle(depositToggleId, true);
+    expect($<HTMLInputElement>(`#${depositFieldId}`).value).toBe('100');
+    expect(summary('booksy', 'payments')).toBe('£26.00');
+  });
+
+  it('maps deposit validation to the deposit input without clamping, and a stale value never blocks', () => {
+    enableDeposits('401');
+    expect($(`#${depositFieldId}`).getAttribute('aria-invalid')).toBe('true');
+    expect($(`#${depositFieldId}-error`).textContent).toBe(
+      'Bookings taking a deposit cannot be greater than total monthly appointments.',
+    );
+    expect($<HTMLInputElement>(`#${depositFieldId}`).value).toBe('401');
+    expect(total('booksy')).toBe('£—');
+
+    toggle(depositToggleId, false);
+    expect($(`#${depositFieldId}`).getAttribute('aria-invalid')).not.toBe('true');
+    expect(total('booksy')).toBe('£60.00');
+  });
+
+  it('keeps Fresha custom pricing overall while showing its known processing line', () => {
+    enableDeposits('100');
+    setNumber('calc-barbers', '21');
+    expect(total('fresha')).toBe('Custom pricing');
+    expect(summary('fresha', 'before-vat')).toBe('Not estimated');
+    expect(cell('fresha', DEPOSIT_LINE.fresha)).toBe('£32.00');
+    expect(summary('fresha', 'payments')).toBe('£32.00');
+  });
+
+  it('makes the deposit caveats discoverable and never mentions full appointment payments', () => {
+    enableDeposits('100');
+    const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
+    expect(shared).toEqual(
+      expect.arrayContaining([
+        'Payment processing compares online booking deposits only. It does not include the remaining appointment balance, in-person card payments or retail payments.',
+        'The comparison uses a £5 deposit benchmark for all three providers.',
+        'Refund-related processing costs are not modelled.',
+      ]),
+    );
+    expect(assumptions('kersivo')).toEqual(
+      expect.arrayContaining([
+        'The KERSIVO estimate assumes a standard UK card. Premium UK and international cards can have higher Stripe processing fees.',
+        'Stripe processing fees are modelled without VAT charged. Tax treatment can depend on business circumstances; this calculator is not tax advice.',
+        STRIPE_FEE_PAYER_CAVEAT,
+      ]),
+    );
+    expect(assumptions('booksy')).not.toContain(STRIPE_FEE_PAYER_CAVEAT);
+    expect(assumptions('fresha')).not.toContain(STRIPE_FEE_PAYER_CAVEAT);
+    expect(shared).not.toContain(STRIPE_FEE_PAYER_CAVEAT);
+    expect(assumptions('booksy')).not.toContain(shared[0]);
+    expect(document.body.textContent).not.toMatch(/full appointment|appointment payments|terminal|tap to pay/i);
+    expect(insight()).toContain('Booking deposit processing is the largest modelled variable cost');
+  });
+});
+
+describe('payments and period', () => {
 
   it('shows shared assumptions once', () => {
     const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
@@ -452,15 +575,14 @@ describe('period selector', () => {
     expect(net('fresha')).toBe('Estimated net if VAT is fully recoverable: £1,074.60');
   });
 
-  it('keeps payments Not included in every period', () => {
+  it('keeps deposit processing Not included in every period while off', () => {
     for (const period of ['annual', 'threeYear'] as const) {
       choosePeriod(period);
-      for (const id of ['booksy', 'fresha', 'kersivo']) {
+      for (const id of PROVIDER_IDS) {
         expect(summary(id, 'payments')).toBe('Not included');
-        expect(cell(id, 'payment-processing')).toBe('Not included');
+        expect(cell(id, DEPOSIT_LINE[id])).toBe('Not included');
       }
     }
-    expect($<HTMLInputElement>('#calc-payments').disabled).toBe(true);
   });
 
   it('keeps Fresha custom pricing in every period and projects only known lines', () => {
@@ -559,6 +681,9 @@ describe('architecture guards', () => {
   it('duplicates no provider prices, rates or period multipliers in client code', () => {
     for (const source of [...clientFiles, ...components]) {
       expect(source).not.toMatch(/BOOKSY_[A-Z_]+|SAAS_MONTHLY|FRESHA_UK_COMMERCIAL_FACTS|requireVerifiedFreshaFact|UK_STANDARD_VAT/);
+      expect(source).not.toMatch(/connected barbershop account|Stripe Connect/);
+      expect(source).not.toMatch(/STRIPE_[A-Z_]+|stripeFacts|DEPOSIT_BENCHMARK|KERSIVO_BOOKING_DEPOSIT|transactionFeePence|percentOfPence/);
+      expect(source).not.toMatch(/\bunitExVatGbp\s*\*|\*\s*\w*\.?quantity\b/);
       expect(source).not.toMatch(/\*\s*(12|36)\b|\b(12|36)\s*\*/);
       expect(source).not.toMatch(/£\s?\d|\d+\.\d{2}/);
     }

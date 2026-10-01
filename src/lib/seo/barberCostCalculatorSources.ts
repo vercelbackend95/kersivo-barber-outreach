@@ -1,7 +1,11 @@
 import {
   BOOKSY_FACTS_CHECKED_DATE,
   BOOKSY_FACTS_CHECKED_ISO,
+  BOOKSY_PAYMENT_FACTS_CHECKED_DATE,
+  BOOKSY_PAYMENT_FACTS_CHECKED_ISO,
   BOOKSY_SOURCE_BOOST,
+  BOOKSY_SOURCE_NO_SHOW_PROTECTION,
+  BOOKSY_SOURCE_PAYMENTS,
   BOOKSY_SOURCE_PRICING,
 } from '@/lib/seo/booksyFacts';
 import {
@@ -10,9 +14,10 @@ import {
   type FreshaSourceId,
   getFreshaSource,
 } from '@/lib/seo/freshaFacts';
+import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
@@ -21,11 +26,15 @@ export type CostCalculatorSource = {
   checkedLabel?: string;
 };
 
-const FRESHA_SOURCE_IDS: readonly FreshaSourceId[] = [
-  'pricingUk',
-  'marketplaceFee',
-  'bookingLinks',
-  'paymentsOverview',
+/** Deposit payment facts were re-checked separately from the subscription facts. */
+const PAYMENT_CHECK = { checkedIso: '2026-10-01', checkedLabel: '1 October 2026' } as const;
+
+const FRESHA_SOURCES: readonly { id: FreshaSourceId; checked?: typeof PAYMENT_CHECK }[] = [
+  { id: 'pricingUk' },
+  { id: 'marketplaceFee' },
+  { id: 'bookingLinks' },
+  { id: 'paymentsOverview' },
+  { id: 'paymentPolicies', checked: PAYMENT_CHECK },
 ];
 
 export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
@@ -47,7 +56,25 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
     checkedIso: BOOKSY_FACTS_CHECKED_ISO,
     checkedLabel: BOOKSY_FACTS_CHECKED_DATE,
   },
-  ...FRESHA_SOURCE_IDS.map((id) => {
+  {
+    provider: 'Booksy',
+    label: 'Booksy No-Show Protection',
+    supports: 'online booking deposits taken through Booksy Mobile Payments',
+    url: BOOKSY_SOURCE_NO_SHOW_PROTECTION,
+    external: true,
+    checkedIso: BOOKSY_PAYMENT_FACTS_CHECKED_ISO,
+    checkedLabel: BOOKSY_PAYMENT_FACTS_CHECKED_DATE,
+  },
+  {
+    provider: 'Booksy',
+    label: 'Booksy Payments',
+    supports: 'the Mobile Payments processing rate used for deposits',
+    url: BOOKSY_SOURCE_PAYMENTS,
+    external: true,
+    checkedIso: BOOKSY_PAYMENT_FACTS_CHECKED_ISO,
+    checkedLabel: BOOKSY_PAYMENT_FACTS_CHECKED_DATE,
+  },
+  ...FRESHA_SOURCES.map(({ id, checked }) => {
     const source = getFreshaSource(id);
     return {
       provider: 'Fresha' as const,
@@ -55,10 +82,19 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
       supports: source.supports,
       url: source.url,
       external: true,
-      checkedIso: FRESHA_FACTS_CHECKED_ISO ?? undefined,
-      checkedLabel: FRESHA_FACTS_CHECKED_DATE ?? undefined,
+      checkedIso: checked?.checkedIso ?? FRESHA_FACTS_CHECKED_ISO ?? undefined,
+      checkedLabel: checked?.checkedLabel ?? FRESHA_FACTS_CHECKED_DATE ?? undefined,
     };
   }),
+  {
+    provider: 'Stripe',
+    label: 'Stripe UK pricing',
+    supports: 'the standard UK card rate used for KERSIVO deposits through Stripe Checkout',
+    url: STRIPE_SOURCE_UK_PRICING,
+    external: true,
+    checkedIso: STRIPE_FACTS_CHECKED_ISO,
+    checkedLabel: STRIPE_FACTS_CHECKED_DATE,
+  },
   {
     provider: 'KERSIVO',
     label: 'KERSIVO pricing',

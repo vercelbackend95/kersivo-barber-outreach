@@ -19,12 +19,13 @@ export type CostInsight =
   | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
   | { kind: 'add-ons'; freshaAddOnsGbp: number }
+  | { kind: 'deposit-processing'; booksyGbp: number; freshaGbp: number; kersivoGbp: number }
   | { kind: 'base' };
 
-type DriverKind = 'acquisition' | 'team' | 'add-ons';
+type DriverKind = 'acquisition' | 'team' | 'add-ons' | 'deposit-processing';
 
 /** Tie-break order when two driver categories have the same monthly amount. */
-const DRIVER_PRIORITY: readonly DriverKind[] = ['acquisition', 'team', 'add-ons'];
+const DRIVER_PRIORITY: readonly DriverKind[] = ['acquisition', 'team', 'add-ons', 'deposit-processing'];
 
 const amountFor = (results: readonly CalculatedProviderResult[], provider: ProviderId, pick: (r: CalculatedProviderResult) => number) => {
   const result = results.find((entry) => entry.provider === provider);
@@ -53,6 +54,9 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
     acquisition: largest(calculated, (r) => r.amounts.acquisitionFeesExVatGbp),
     team: largest(calculated, (r) => r.amounts.teamOrUserFeesExVatGbp),
     'add-ons': largest(calculated, (r) => r.amounts.addOnsExVatGbp),
+    'deposit-processing': monthly.scenario.includeDepositProcessing
+      ? largest(calculated, (r) => r.amounts.paymentProcessingExVatGbp)
+      : null,
   };
 
   let driver: DriverKind | null = null;
@@ -84,6 +88,16 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
     }
     case 'add-ons':
       return { kind: 'add-ons', freshaAddOnsGbp: amountFor(calculated, 'fresha', (r) => r.amounts.addOnsExVatGbp) };
+    case 'deposit-processing': {
+      const processing = (provider: ProviderId) =>
+        amountFor(calculated, provider, (r) => r.amounts.paymentProcessingExVatGbp);
+      return {
+        kind: 'deposit-processing',
+        booksyGbp: processing('booksy'),
+        freshaGbp: processing('fresha'),
+        kersivoGbp: processing('kersivo'),
+      };
+    }
     default:
       return { kind: 'base' };
   }
@@ -116,6 +130,10 @@ export function describeCostInsight(insight: CostInsight): string {
     }
     case 'add-ons':
       return `Selected Fresha add-ons are the largest optional cost in this scenario at ${perMonth(insight.freshaAddOnsGbp)}.`;
+    case 'deposit-processing': {
+      const month = (gbp: number) => `${formatMoneyGbp(gbp)}/month`;
+      return `Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are ${month(insight.booksyGbp)} for Booksy, ${month(insight.freshaGbp)} for Fresha and ${month(insight.kersivoGbp)} for KERSIVO/Stripe before provider VAT where applicable.`;
+    }
     case 'base':
       return 'Base subscription pricing is the main modelled cost in this scenario.';
   }

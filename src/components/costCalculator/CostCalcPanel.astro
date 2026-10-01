@@ -10,7 +10,8 @@ import {
   FRESHA_ADD_ONS_LEGEND,
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
-  PAYMENTS_TOGGLE,
+  DEPOSIT_BOOKINGS_FIELD,
+  DEPOSIT_PROCESSING_TOGGLE,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   VAT_OPTIONS,
@@ -204,7 +205,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Fresha add-ons, payments</span>
+      <span class="calc-advanced__hint">VAT, Fresha add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -245,18 +246,18 @@ const describedBy = (id: string, withHelper: boolean) =>
       </fieldset>
 
       <div class="calc-fieldset">
-        <div class="calc-field calc-field--inline calc-field--unavailable">
-          <label class="calc-field__label" for={PAYMENTS_TOGGLE.id}>{PAYMENTS_TOGGLE.label}</label>
+        <div class="calc-field calc-field--inline">
+          <label class="calc-field__label" for={DEPOSIT_PROCESSING_TOGGLE.id}>{DEPOSIT_PROCESSING_TOGGLE.label}</label>
           <span class="calc-switch">
             <input
-              id={PAYMENTS_TOGGLE.id}
+              id={DEPOSIT_PROCESSING_TOGGLE.id}
               class="calc-switch__input"
               type="checkbox"
               role="switch"
-              name={PAYMENTS_TOGGLE.name}
-              checked={PAYMENTS_TOGGLE.defaultOn}
-              disabled
-              aria-describedby="calc-payments-note"
+              name={DEPOSIT_PROCESSING_TOGGLE.name}
+              checked={DEPOSIT_PROCESSING_TOGGLE.defaultOn}
+              aria-controls={DEPOSIT_PROCESSING_TOGGLE.fieldsId}
+              data-calc-reveal
             />
             <span class="calc-switch__track" aria-hidden="true"><span class="calc-switch__thumb"></span></span>
             <span class="calc-switch__state" aria-hidden="true">
@@ -265,7 +266,26 @@ const describedBy = (id: string, withHelper: boolean) =>
             </span>
           </span>
         </div>
-        <p id="calc-payments-note" class="calc-pending">{PAYMENTS_TOGGLE.unavailableNote}</p>
+
+        <div id={DEPOSIT_PROCESSING_TOGGLE.fieldsId} class="calc-deposit__fields" hidden={!DEPOSIT_PROCESSING_TOGGLE.defaultOn}>
+          <div class="calc-field">
+            <label class="calc-field__label" for={DEPOSIT_BOOKINGS_FIELD.id}>{DEPOSIT_BOOKINGS_FIELD.label}</label>
+            <input
+              id={DEPOSIT_BOOKINGS_FIELD.id}
+              class="calc-input"
+              type="number"
+              inputmode="numeric"
+              name={DEPOSIT_BOOKINGS_FIELD.name}
+              value={DEPOSIT_BOOKINGS_FIELD.defaultValue}
+              min={DEPOSIT_BOOKINGS_FIELD.min}
+              max={DEPOSIT_BOOKINGS_FIELD.max}
+              step={DEPOSIT_BOOKINGS_FIELD.step}
+              aria-describedby={describedBy(DEPOSIT_BOOKINGS_FIELD.id, true)}
+            />
+            <p id={helperId(DEPOSIT_BOOKINGS_FIELD.id)} class="calc-field__helper">{DEPOSIT_BOOKINGS_FIELD.helper}</p>
+            <p id={errorId(DEPOSIT_BOOKINGS_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
+          </div>
+        </div>
       </div>
     </div>
   </details>
