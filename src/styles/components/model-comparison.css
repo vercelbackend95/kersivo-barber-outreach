@@ -1,0 +1,369 @@
+/* Model comparison — two business models around a quiet central axis,
+   followed by an editorial conclusion. Brand-neutral: tokens only. */
+
+.model-comparison {
+  margin-top: clamp(0.3rem, 0.9vw, 0.55rem);
+}
+
+.model-comparison__grid {
+  display: grid;
+  gap: 0;
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.model-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--fg) 8.5%, transparent);
+  border-radius: var(--radius-20);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 78%, transparent) 0%,
+    color-mix(in srgb, var(--surface-1) 55%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent),
+    0 32px 64px -44px rgb(0 0 0 / 0.8);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Lighting falls from the side facing the other model. */
+.model-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 15rem;
+  background: radial-gradient(
+    70% 100% at var(--model-light-x, 100%) 0%,
+    color-mix(in srgb, var(--fg) 5.5%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+.model-panel--end {
+  --model-light-x: 0%;
+}
+
+.model-panel__head {
+  display: grid;
+  gap: clamp(1.25rem, 2.4vw, 1.6rem);
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.35rem, 3vw, 2.25rem) clamp(1.35rem, 2.6vw, 1.85rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 7%, transparent);
+  background: color-mix(in srgb, var(--fg) 1.6%, transparent);
+}
+
+.model-panel__brand {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.model-panel__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
+.model-panel__summary-row {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 1.05rem 1rem 0 0;
+}
+
+.model-panel__summary-row + .model-panel__summary-row {
+  padding-left: 1rem;
+  border-left: 1px solid color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.model-panel__summary dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+}
+
+.model-panel__summary dd {
+  margin: 0;
+  font-size: clamp(0.98rem, 0.93rem + 0.2vw, 1.075rem);
+  font-weight: 580;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+
+.model-panel__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 3.75rem;
+  height: 3.75rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--surface-3) 90%, transparent) 0%,
+    var(--surface-1) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 9%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--fg) 2.5%, transparent);
+  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
+}
+
+.model-panel__icon .insight-icon {
+  --insight-icon-size: 2rem;
+}
+
+.model-panel__identity {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.model-panel__label {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.6rem, 1.3rem + 0.9vw, 2rem);
+  font-weight: 640;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+}
+
+.model-panel__descriptor {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+}
+
+.model-panel__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: clamp(1.35rem, 2.6vw, 1.85rem) clamp(1.35rem, 3vw, 2.25rem) clamp(1.1rem, 2.4vw, 1.6rem);
+}
+
+.model-panel__title {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-body);
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem);
+  font-weight: 560;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+}
+
+.model-panel__points {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: model-point;
+}
+
+.model-panel__point {
+  display: grid;
+  grid-template-columns: 1.85rem minmax(0, 52ch);
+  align-items: start;
+  padding-block: 1.1rem;
+  font-size: clamp(0.98rem, 0.94rem + 0.15vw, 1.05rem);
+  line-height: 1.64;
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
+  text-wrap: pretty;
+  counter-increment: model-point;
+}
+
+.model-panel__point + .model-panel__point {
+  border-top: 1px solid color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.model-panel__point::before {
+  content: '';
+  width: 0.875rem;
+  height: 1.5px;
+  margin-top: 0.82em;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--fg) 34%, transparent);
+}
+/* Central axis between the two models */
+.model-comparison__axis {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-block: 1rem;
+}
+
+.model-comparison__axis::before,
+.model-comparison__axis::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--fg) 17%, transparent)
+  );
+}
+
+.model-comparison__axis::after {
+  transform: scaleX(-1);
+}
+
+.model-comparison__or {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 13%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+/* Editorial conclusion */
+.model-comparison__closing {
+  display: grid;
+  justify-items: center;
+  gap: 1.15rem;
+  margin: clamp(2.5rem, 5vw, 4rem) auto 0;
+  max-width: 46rem;
+  text-align: center;
+}
+
+.model-comparison__closing::before {
+  content: '';
+  width: 2.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--fg) 24%, transparent);
+}
+
+.model-comparison__conclusion {
+  margin: 0;
+  max-width: 52ch;
+  font-size: clamp(1.125rem, 1rem + 0.45vw, 1.35rem);
+  font-weight: 450;
+  line-height: 1.55;
+  letter-spacing: -0.012em;
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
+  text-wrap: balance;
+}
+
+.model-comparison__footer {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+}
+
+.model-comparison__footer a {
+  display: inline-block;
+  margin-left: 0.2rem;
+  padding-block: 0.5rem;
+  font-weight: 650;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg) 50%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+}
+
+.model-comparison__footer a span {
+  display: inline-block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .model-comparison__footer a {
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .model-comparison__footer a span {
+    transition: transform 200ms ease;
+  }
+
+  .model-comparison__footer a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .model-comparison__footer a:hover span {
+    transform: translateX(3px);
+  }
+}
+
+@media (max-width: 29.99rem) {
+  .model-panel__summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .model-panel__summary-row,
+  .model-panel__summary-row + .model-panel__summary-row {
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.8rem 0 0;
+    border-left: 0;
+  }
+
+  .model-panel__summary-row + .model-panel__summary-row {
+    margin-top: 0.8rem;
+    border-top: 1px solid color-mix(in srgb, var(--fg) 6%, transparent);
+  }
+}
+
+@media (min-width: 56rem) {
+  .model-comparison__grid {
+    grid-template-columns: minmax(0, 1fr) 4rem minmax(0, 1fr);
+    align-items: stretch;
+    max-width: none;
+  }
+
+  .model-comparison__axis {
+    flex-direction: column;
+    padding-block: 2.5rem;
+  }
+
+  .model-comparison__axis::before,
+  .model-comparison__axis::after {
+    width: 1px;
+    height: auto;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--fg) 17%, transparent)
+    );
+  }
+
+  .model-comparison__axis::after {
+    transform: scaleY(-1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-comparison__footer a:hover span {
+    transform: none;
+  }
+}

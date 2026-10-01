@@ -1,0 +1,49 @@
+---
+/**
+ * Numbered insight cards for competitor / comparison pages: icon, index,
+ * H3 title and body copy. All text is plain HTML; hover only adds polish.
+ */
+import InsightIcon from '@/components/editorial/InsightIcon.astro';
+import type { InsightCardItem } from '@/lib/editorial/insightIcons';
+import '@/styles/components/insight-cards.css';
+
+interface Props {
+  items: readonly InsightCardItem[];
+  class?: string;
+}
+
+const { items, class: className } = Astro.props;
+
+const UNEVEN_ROW_RATIO = 1.3;
+const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
+/** Two-up rows: the card with clearly more copy takes the wider column. */
+const widths = items.map((_, index) => {
+  const partnerIndex = index % 2 === 0 ? index + 1 : index - 1;
+  const partner = items[partnerIndex];
+  if (!partner) return undefined;
+  const own = wordCount(items[index].body);
+  const other = wordCount(partner.body);
+  if (own >= other * UNEVEN_ROW_RATIO) return 'wide';
+  if (other >= own * UNEVEN_ROW_RATIO) return 'narrow';
+  return undefined;
+});
+---
+
+<ol class:list={['insight-cards', className]}>
+  {
+    items.map((item, index) => (
+      <li class:list={['insight-card', widths[index] && `insight-card--${widths[index]}`]}>
+        <div class="insight-card__top" aria-hidden="true">
+          <span class="insight-card__icon">
+            <InsightIcon name={item.icon} />
+          </span>
+          <span class="insight-card__rule" />
+          <span class="insight-card__index">{String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <h3 class="insight-card__title">{item.title}</h3>
+        <p class="insight-card__body">{item.body}</p>
+      </li>
+    ))
+  }
+</ol>

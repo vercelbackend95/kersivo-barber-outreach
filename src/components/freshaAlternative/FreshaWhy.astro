@@ -1,4 +1,5 @@
 ---
+import InsightCards from '@/components/editorial/InsightCards.astro';
 import { FRESHA_WHY_INTRO, FRESHA_WHY_THEMES } from '@/lib/seo/freshaAlternativeContent';
 ---
 
@@ -12,18 +13,6 @@ import { FRESHA_WHY_INTRO, FRESHA_WHY_THEMES } from '@/lib/seo/freshaAlternative
       <p class="fresha-alt__lead">{FRESHA_WHY_INTRO}</p>
     </header>
 
-    <ol class="fresha-alt-why__grid">
-      {
-        FRESHA_WHY_THEMES.map((theme, index) => (
-          <li class="fresha-alt-card fresha-alt-why__item">
-            <span class="fresha-alt-card__index" aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <h3 class="fresha-alt-card__title">{theme.title}</h3>
-            <p class="fresha-alt-card__body">{theme.body}</p>
-          </li>
-        ))
-      }
-    </ol>
+    <InsightCards items={FRESHA_WHY_THEMES} />
   </div>
 </section>

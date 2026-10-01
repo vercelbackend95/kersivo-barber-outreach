@@ -1,3 +1,4 @@
+import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   FRESHA_BOOKABLE_TEAM_MEMBER_DEFINITION,
@@ -33,7 +34,15 @@ const MARKETPLACE_PERCENT = formatPercent(marketplaceFee.percent!);
 const MARKETPLACE_MINIMUM = formatGbp(marketplaceFee.minimumGbp!);
 const VAT = `${FRESHA_UK_VAT_PERCENT}% VAT`;
 
-export const FRESHA_QUICK_ANSWER = `KERSIVO is a Fresha alternative built for independent UK barbershops that want their website, booking journey and client relationship centred on their own brand. KERSIVO costs ${KERSIVO_PRICE} per month per location, with no setup fee and 0% KERSIVO commission on bookings and retail sales. Stripe processing fees still apply. Fresha follows a different model: business software priced per bookable team member (${INDEPENDENT_PRICE} a month for one person, or ${TEAM_PRICE} per team member on its Team plan, plus VAT), alongside the Fresha Marketplace, which charges a one-time fee for brand-new clients it introduces.`;
+export const FRESHA_QUICK_ANSWER_KICKER = 'The short version';
+
+export const FRESHA_QUICK_ANSWER_TITLE = 'A Fresha alternative built around your own brand.';
+
+export const FRESHA_QUICK_ANSWER_LEAD = `KERSIVO is a Fresha alternative built for independent UK barbershops that want their website, booking journey and client relationship centred on their own brand. KERSIVO costs ${KERSIVO_PRICE} per month per location, with no setup fee and 0% KERSIVO commission on bookings and retail sales. Stripe processing fees still apply.`;
+
+export const FRESHA_QUICK_ANSWER_DETAIL = `Fresha follows a different model: business software priced per bookable team member (${INDEPENDENT_PRICE} a month for one person, or ${TEAM_PRICE} per team member on its Team plan, plus VAT), alongside the Fresha Marketplace, which charges a one-time fee for brand-new clients it introduces.`;
+
+export const FRESHA_QUICK_ANSWER = `${FRESHA_QUICK_ANSWER_LEAD} ${FRESHA_QUICK_ANSWER_DETAIL}`;
 
 export const FRESHA_QUICK_ANSWER_FACTS: readonly { label: string; value: string }[] = [
   { label: 'KERSIVO', value: `${KERSIVO_PRICE}/month per location` },
@@ -49,20 +58,24 @@ export type FreshaContentTheme = {
 export const FRESHA_WHY_INTRO =
   'Fresha is a widely used booking platform. When independent barbers compare it with an own-brand system, the same four structural questions tend to come up.';
 
-export const FRESHA_WHY_THEMES: readonly FreshaContentTheme[] = [
+export const FRESHA_WHY_THEMES: readonly InsightCardItem[] = [
   {
+    icon: 'seats',
     title: 'Pricing that scales with the team',
     body: `Fresha’s Team plan is charged per bookable team member — ${TEAM_PRICE} a month each, plus VAT — so the subscription rises as more chairs take bookings. KERSIVO is ${KERSIVO_PRICE} a month per location, with unlimited barbers within that location, subject to reasonable fair use.`,
   },
   {
+    icon: 'storefront',
     title: 'A booking journey centred on your own brand',
     body: 'Fresha booking links open your Fresha booking page without showing other businesses. Some owners prefer the whole journey — website, domain and booking flow — to carry their own barbershop’s name. That is the model KERSIVO is built around.',
   },
   {
+    icon: 'discovery',
     title: 'Where marketplace discovery fits',
     body: 'The Fresha Marketplace is a genuine discovery channel for businesses that want new clients, and Fresha charges its one-time fee only for brand-new clients who first find you there. KERSIVO has no consumer marketplace, so the useful question is how much of your new business actually comes from one.',
   },
   {
+    icon: 'stack',
     title: 'What the plan includes',
     body: 'Fresha offers a range of optional paid add-ons, including its Smart Website. Some owners prefer one plan where the branded website, standard domain, online booking, reminders and retail pickup are already included.',
   },
@@ -181,15 +194,15 @@ export const FRESHA_MARKETPLACE_FEE_POINTS: readonly string[] = [
 
 export const FRESHA_MARKETPLACE_FEE_EXAMPLE = `For example, on a ${formatGbp(EXAMPLE_HIGHER_SERVICE_GBP)} first haircut the fee would be ${formatGbp(estimateFreshaMarketplaceNewClientFee(EXAMPLE_HIGHER_SERVICE_GBP))}. On a ${formatGbp(EXAMPLE_LOWER_SERVICE_GBP)} service, the ${MARKETPLACE_MINIMUM} minimum applies.`;
 
-export type FreshaFitPath = {
-  label: string;
-  heading: string;
-  points: readonly string[];
-};
-
-export const FRESHA_FIT_PATHS: readonly FreshaFitPath[] = [
+export const FRESHA_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonItem] = [
   {
     label: 'Fresha',
+    descriptor: 'Marketplace-led model',
+    icon: 'network',
+    summary: [
+      { label: 'Pricing', value: 'Per bookable team member' },
+      { label: 'Discovery', value: 'Fresha Marketplace' },
+    ],
     heading: 'Fresha may suit your shop if…',
     points: [
       'Marketplace discovery is an important source of new clients for you',
@@ -200,6 +213,12 @@ export const FRESHA_FIT_PATHS: readonly FreshaFitPath[] = [
   },
   {
     label: 'KERSIVO',
+    descriptor: 'Own-brand booking model',
+    icon: 'direct',
+    summary: [
+      { label: 'Pricing', value: `${KERSIVO_PRICE}/month per location` },
+      { label: 'Discovery', value: 'Your own website and channels' },
+    ],
     heading: 'KERSIVO may suit your shop if…',
     points: [
       'You want your own branded website and domain at the centre of the booking journey',

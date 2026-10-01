@@ -7,6 +7,11 @@ type UiMessage = ChatMessage & { id: string };
 
 type AiAssistantPanelProps = {
   isPublicDemo?: boolean;
+  /**
+   * Landing hero iframe: the Assistant is a fixed-height app chat. Only the message history
+   * scrolls, and it is pinned to the newest message without scrolling any ancestor.
+   */
+  showcaseMode?: boolean;
 };
 
 function createId(): string {
@@ -34,17 +39,32 @@ function renderMessageContent(content: string): React.ReactNode {
   });
 }
 
-export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPanelProps) {
+export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = false }: AiAssistantPanelProps) {
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
+  const pinFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (showcaseMode) {
+      if (pinFrameRef.current !== null) return;
+      pinFrameRef.current = window.requestAnimationFrame(() => {
+        pinFrameRef.current = null;
+        const list = messagesRef.current;
+        if (list) list.scrollTop = list.scrollHeight;
+      });
+      return;
+    }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages, isStreaming]);
+  }, [messages, isStreaming, showcaseMode]);
+
+  useEffect(() => () => {
+    if (pinFrameRef.current !== null) window.cancelAnimationFrame(pinFrameRef.current);
+  }, []);
 
   const stopStreaming = useCallback(() => {
     abortRef.current?.abort();
@@ -184,7 +204,11 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
   const showEmpty = messages.length === 0;
 
   return (
-    <section className="surface booking-shell admin-assistant-shell" aria-label="Assistant">
+    <section
+      className={`surface booking-shell admin-assistant-shell${showcaseMode ? ' admin-assistant-shell--showcase' : ''}`}
+      data-assistant-showcase={showcaseMode ? 'true' : undefined}
+      aria-label="Assistant"
+    >
       <AdminSectionHeader
         title="Assistant"
         description="Use every admin feature for stronger shop results — utilisation, no-shows, AOV, retail — plus SEO and ops. Advisory only."
@@ -204,10 +228,10 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
 
       <div className="admin-assistant-layout">
         <div className="admin-assistant-chat" role="region" aria-label="Assistant conversation">
-          <div className="admin-assistant-messages" aria-live="polite">
+          <div className="admin-assistant-messages" aria-live="polite" ref={messagesRef}>
             {showEmpty ? (
               <div className="admin-assistant-empty">
-                <p className="admin-assistant-empty-brand">Kersivo Assistant</p>
+                <p className="admin-assistant-empty-brand">KERSIVO Assistant</p>
                 <p className="admin-assistant-empty-copy">
                   Ask how to use Bookings, Barbers, Reports, History, Clients, Services, Products,
                   Orders, or Sales — and how each control drives utilisation, fewer no-shows,

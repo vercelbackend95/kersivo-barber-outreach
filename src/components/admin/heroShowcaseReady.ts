@@ -8,7 +8,7 @@ import {
 } from './heroShowcaseFetch';
 
 const SKELETON_SELECTOR = '[class*="skeleton"], [aria-busy="true"]';
-/** Safety valve only: the parent keeps its poster and applies its own fallback if we never settle. */
+/** Safety valve only: if we never settle we never announce, and the parent keeps the frame hidden. */
 const MAX_SETTLE_ATTEMPTS = 240;
 
 function hasVisibleSkeleton(win: Window): boolean {

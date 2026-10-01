@@ -1,0 +1,145 @@
+---
+/**
+ * Vertical process timeline: numbered steps on one path, alternating sides on
+ * desktop. The accent line grows with scroll and steps reveal once; reduced
+ * motion and no-JS show the complete path. The default slot renders as the
+ * note's link.
+ */
+import type { ProcessStep } from '@/lib/editorial/insightIcons';
+import '@/styles/components/process-timeline.css';
+
+interface Props {
+  steps: readonly ProcessStep[];
+  noteTitle?: string;
+  notePoints?: readonly string[];
+}
+
+const { steps, noteTitle, notePoints = [] } = Astro.props;
+const hasNoteLink = Astro.slots.has('default');
+---
+
+<div class="process-timeline" data-process-timeline>
+  <div class="process-timeline__path">
+    <span class="process-timeline__track" aria-hidden="true">
+      <span class="process-timeline__fill"></span>
+    </span>
+    <ol class="process-timeline__steps">
+      {
+        steps.map((step, index) => (
+          <li
+            class:list={[
+              'process-timeline__step',
+              index % 2 === 0 ? 'process-timeline__step--start' : 'process-timeline__step--end',
+            ]}
+          >
+            <span class="process-timeline__node" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <div class="process-timeline__content">
+              <h3 class="process-timeline__title">{step.title}</h3>
+              <p class="process-timeline__body">{step.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  {
+    noteTitle && (
+      <div class="process-timeline__note">
+        <h3 class="process-timeline__note-title">{noteTitle}</h3>
+        {notePoints.length > 0 && (
+          <ul class="process-timeline__note-points">
+            {notePoints.map((point) => (
+              <li>{point}</li>
+            ))}
+          </ul>
+        )}
+        {hasNoteLink && (
+          <p class="process-timeline__note-link">
+            <slot />
+          </p>
+        )}
+      </div>
+    )
+  }
+</div>
+
+<script>
+  const ANCHOR_RATIO = 0.62;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function enhance(root: HTMLElement) {
+    const path = root.querySelector<HTMLElement>('.process-timeline__path');
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('.process-timeline__step'));
+    const nodes = steps.map((step) => step.querySelector<HTMLElement>('.process-timeline__node'));
+    if (!path || steps.length === 0 || nodes.some((node) => !node)) return;
+
+    root.classList.add('is-enhanced');
+
+    let lineStart = 0;
+    let lineLength = 0;
+    let nodeOffsets: number[] = [];
+    let frame = 0;
+
+    const measure = () => {
+      const centres = steps.map((step, index) => {
+        const node = nodes[index]!;
+        return step.offsetTop + node.offsetTop + node.offsetHeight / 2;
+      });
+      lineStart = centres[0];
+      lineLength = Math.max(0, centres[centres.length - 1] - lineStart);
+      nodeOffsets = centres.map((centre) => centre - lineStart);
+      path.style.setProperty('--process-line-start', `${lineStart}px`);
+      path.style.setProperty('--process-line-length', `${lineLength}px`);
+    };
+
+    const update = () => {
+      frame = 0;
+      let filled = lineLength;
+      if (!reduceMotion.matches) {
+        const lineTop = path.getBoundingClientRect().top + lineStart;
+        filled = Math.min(lineLength, Math.max(0, window.innerHeight * ANCHOR_RATIO - lineTop));
+      }
+      root.style.setProperty('--process-progress', lineLength > 0 ? `${filled / lineLength}` : '1');
+      steps.forEach((step, index) => {
+        step.classList.toggle('is-reached', nodeOffsets[index] <= filled + 1);
+      });
+    };
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    const remeasure = () => {
+      measure();
+      schedule();
+    };
+
+    if (reduceMotion.matches || !('IntersectionObserver' in window)) {
+      steps.forEach((step) => step.classList.add('is-visible'));
+    } else {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        },
+        { rootMargin: '0px 0px -10% 0px', threshold: 0.15 },
+      );
+      steps.forEach((step) => observer.observe(step));
+    }
+
+    measure();
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', remeasure);
+    reduceMotion.addEventListener('change', remeasure);
+    if ('ResizeObserver' in window) new ResizeObserver(remeasure).observe(path);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-process-timeline]').forEach(enhance);
+</script>

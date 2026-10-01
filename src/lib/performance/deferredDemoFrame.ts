@@ -5,7 +5,7 @@ export type DeferredDemoFrameOptions = {
   idleTimeoutMs?: number;
   /**
    * Reveal a parsed frame even if its `load` event never arrives. Not used with
-   * `readyMessageType`: without the explicit ready message the poster stays.
+   * `readyMessageType`: without the explicit ready message the frame stays hidden.
    */
   revealFallbackMs?: number;
   rootMargin?: string;
@@ -20,9 +20,10 @@ export type DeferredDemoFrameOptions = {
 const INTENT_EVENTS = ['pointerenter', 'pointerdown', 'touchstart', 'focusin'] as const;
 
 /**
- * Keeps a heavy same-origin demo iframe off the critical path: the poster paints
- * with the page, the iframe starts after `load` + idle once it is near the
- * viewport, and any direct interaction with the frame starts it immediately.
+ * Keeps a heavy same-origin demo iframe off the critical path: the viewport paints
+ * with the page in its initial (`poster`) state, the iframe starts after `load` + idle
+ * once it is near the viewport, and any direct interaction with the frame starts it
+ * immediately.
  */
 export function mountDeferredDemoFrame(
   viewport: HTMLElement,
@@ -66,7 +67,7 @@ export function mountDeferredDemoFrame(
     setState('ready');
   };
 
-  /** Two frames give the loaded document a paint boundary before the atomic poster swap. */
+  /** Two frames give the loaded document a paint boundary before the atomic reveal. */
   const revealAfterSettle = () => {
     if (viewport.dataset.frameState === 'ready' || settleFrame !== undefined) return;
     settleFrame = win.requestAnimationFrame(() => {

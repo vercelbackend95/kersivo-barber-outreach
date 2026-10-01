@@ -6,7 +6,6 @@ import { isBlacklineAdminDemoPathname } from './demoConfig';
  * Tuesday 6 October 2026, 15:25 Europe/London (BST, UTC+1). At this instant the
  * BLACKLINE fixtures produce exactly 21 bookings with Noah Reid's real 15:15
  * Skin Fade in progress, so `ensureInProgress` never synthesises a live row.
- * Changing either value changes every hero poster — recapture them afterwards.
  */
 export const BLACKLINE_HERO_SHOWCASE_DAY = '2026-10-06';
 export const BLACKLINE_HERO_SHOWCASE_NOW_ISO = '2026-10-06T14:25:00.000Z';
@@ -24,6 +23,12 @@ export const HERO_SHOWCASE_READY_MESSAGE_TYPE = 'kersivo:hero-showcase-ready';
  * itself; the fixed showcase never scrolls internally.
  */
 export const HERO_SHOWCASE_WHEEL_MESSAGE_TYPE = 'kersivo:hero-showcase-wheel';
+
+/**
+ * Posted by the landing page to the hero iframe, once, after the iframe is ready and the
+ * visitor can clearly see the dashboard. Starts the one-time timeline scroll to "now".
+ */
+export const HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE = 'kersivo:hero-showcase-visible';
 
 /** Set on `<html>` inside the iframe at the same moment the ready message is posted. */
 export const HERO_SHOWCASE_READY_ATTRIBUTE = 'data-hero-showcase-ready';

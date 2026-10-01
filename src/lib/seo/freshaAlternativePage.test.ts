@@ -16,7 +16,11 @@ import {
   FRESHA_MARKETPLACE_FEE_EXAMPLE,
   FRESHA_MARKETPLACE_FEE_POINTS,
   FRESHA_QUICK_ANSWER,
+  FRESHA_QUICK_ANSWER_DETAIL,
   FRESHA_QUICK_ANSWER_FACTS,
+  FRESHA_QUICK_ANSWER_KICKER,
+  FRESHA_QUICK_ANSWER_LEAD,
+  FRESHA_QUICK_ANSWER_TITLE,
   FRESHA_SWITCHING_LIMITS,
   FRESHA_SWITCHING_REASSURANCE,
   FRESHA_SWITCHING_STEPS,
@@ -59,6 +63,11 @@ const pricingSource = readRepoFile(componentDir, 'FreshaPricing.astro');
 const proofSource = readRepoFile(componentDir, 'FreshaProof.astro');
 const finalCtaSource = readRepoFile(componentDir, 'FreshaFinalCta.astro');
 const quickAnswerSource = readRepoFile(componentDir, 'FreshaQuickAnswer.astro');
+const editorialIntroSource = readRepoFile('../../components/editorial/EditorialIntro.astro');
+const editorialIntroCss = readRepoFile('../../styles/components/editorial-intro.css');
+const insightCardsSource = readRepoFile('../../components/editorial/InsightCards.astro');
+const insightIconSource = readRepoFile('../../components/editorial/InsightIcon.astro');
+const insightCardsCss = readRepoFile('../../styles/components/insight-cards.css');
 const whySource = readRepoFile(componentDir, 'FreshaWhy.astro');
 const costsSource = readRepoFile(componentDir, 'FreshaCosts.astro');
 const fitSource = readRepoFile(componentDir, 'FreshaFit.astro');
@@ -72,6 +81,8 @@ const faqSource = readRepoFile('freshaAlternativeFaq.ts');
 
 const newComponentSources = [
   quickAnswerSource,
+  editorialIntroSource,
+  insightCardsSource,
   whySource,
   costsSource,
   fitSource,
@@ -80,6 +91,8 @@ const newComponentSources = [
 ];
 
 const renderedContentCopy = [
+  FRESHA_QUICK_ANSWER_KICKER,
+  FRESHA_QUICK_ANSWER_TITLE,
   FRESHA_QUICK_ANSWER,
   ...FRESHA_QUICK_ANSWER_FACTS.map((fact) => `${fact.label} ${fact.value}`),
   ...FRESHA_WHY_THEMES.map((theme) => `${theme.title} ${theme.body}`),
@@ -175,13 +188,115 @@ describe('fresha-alternative page SEO foundation', () => {
   });
 
   it('shows a concise Quick Answer directly after the hero', () => {
-    expect(quickAnswerSource).toContain('{FRESHA_QUICK_ANSWER}');
+    expect(quickAnswerSource).toContain('lead={FRESHA_QUICK_ANSWER_LEAD}');
+    expect(quickAnswerSource).toContain('detail={FRESHA_QUICK_ANSWER_DETAIL}');
+    expect(quickAnswerSource).toContain('facts={FRESHA_QUICK_ANSWER_FACTS}');
+    expect(quickAnswerSource).toContain('id="quick-answer"');
+    expect(FRESHA_QUICK_ANSWER).toBe(`${FRESHA_QUICK_ANSWER_LEAD} ${FRESHA_QUICK_ANSWER_DETAIL}`);
     const words = FRESHA_QUICK_ANSWER.split(/\s+/).filter(Boolean).length;
     expect(words).toBeGreaterThanOrEqual(60);
     expect(words).toBeLessThanOrEqual(110);
-    expect(FRESHA_QUICK_ANSWER).toContain('Fresha alternative');
-    expect(FRESHA_QUICK_ANSWER).toContain('UK barbershops');
-    expect(FRESHA_QUICK_ANSWER).toContain('Stripe processing fees still apply');
+    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('Fresha alternative');
+    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('UK barbershops');
+    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('Stripe processing fees still apply');
+    expect(FRESHA_QUICK_ANSWER_DETAIL).toMatch(/^Fresha follows a different model/);
+  });
+
+  it('presents the Quick Answer as an editorial intro with a real H2 and a fact list', () => {
+    expect(FRESHA_QUICK_ANSWER_TITLE).toBe('A Fresha alternative built around your own brand.');
+    expect(FRESHA_QUICK_ANSWER_TITLE.toLowerCase()).not.toMatch(/\b(best|better|cheaper)\b/);
+    expect(FRESHA_QUICK_ANSWER_KICKER).toBe('The short version');
+
+    expect(editorialIntroSource).toMatch(/<section\b[^>]*aria-labelledby=\{titleId\}/);
+    expect(editorialIntroSource).toMatch(/<h2 id=\{titleId\}/);
+    expect(editorialIntroSource).toContain('<dl class="editorial-intro__facts">');
+    expect(editorialIntroSource).toContain('<dt>{fact.label}</dt>');
+    expect(editorialIntroSource).toContain('<dd>{fact.value}</dd>');
+    expect(editorialIntroSource).not.toMatch(/fresha/i);
+  });
+
+  it('renders the four Why themes as reusable insight cards with a distinct topic icon each', () => {
+    expect(whySource).toContain('<InsightCards items={FRESHA_WHY_THEMES} />');
+    expect(FRESHA_WHY_THEMES).toHaveLength(4);
+    expect(FRESHA_WHY_THEMES.map((theme) => theme.icon)).toEqual([
+      'seats',
+      'storefront',
+      'discovery',
+      'stack',
+    ]);
+    for (const icon of ['seats', 'storefront', 'discovery', 'stack']) {
+      expect(insightIconSource).toContain(`name === '${icon}'`);
+    }
+    expect(insightIconSource).toContain('aria-hidden="true"');
+    expect(insightCardsSource).toContain('<h3 class="insight-card__title">{item.title}</h3>');
+    expect(insightCardsSource).toContain('<p class="insight-card__body">{item.body}</p>');
+    for (const source of [insightCardsSource, insightIconSource, insightCardsCss]) {
+      expect(source).not.toMatch(/fresha/i);
+    }
+  });
+
+  it('balances uneven insight-card rows by width instead of padding', () => {
+    expect(insightCardsSource).toContain('const UNEVEN_ROW_RATIO = 1.3;');
+    expect(insightCardsSource).toContain("`insight-card--${widths[index]}`");
+    expect(insightCardsCss).toMatch(/\.insight-card--wide \{\s*grid-column: span 7;/);
+    expect(insightCardsCss).toMatch(/\.insight-card--narrow \{\s*grid-column: span 5;/);
+    expect(insightCardsCss).not.toMatch(/min-height/);
+    const words = FRESHA_WHY_THEMES.map((theme) => theme.body.split(/\s+/).length);
+    expect(words[2]).toBeGreaterThanOrEqual(words[3] * 1.3);
+    expect(Math.max(words[0], words[1])).toBeLessThan(Math.min(words[0], words[1]) * 1.3);
+  });
+
+  it('renders the two models through the reusable model comparison with aligned summaries', () => {
+    const modelComparisonSource = readRepoFile('../../components/editorial/ModelComparison.astro');
+    const modelComparisonCss = readRepoFile('../../styles/components/model-comparison.css');
+    expect(fitSource).toContain('<ModelComparison');
+    expect(fitSource).toContain('conclusion={FRESHA_FIT_CLOSING}');
+    expect(FRESHA_FIT_PATHS.map((path) => path.icon)).toEqual(['network', 'direct']);
+    const summaryLabels = FRESHA_FIT_PATHS.map((path) => path.summary?.map((row) => row.label));
+    expect(summaryLabels[0]).toEqual(summaryLabels[1]);
+    expect(modelComparisonSource).toMatch(/<h3 id=\{`\$\{idPrefix\}-\$\{index\}-title`\}/);
+    expect(modelComparisonSource).toContain('aria-hidden="true"');
+    for (const source of [modelComparisonSource, modelComparisonCss]) {
+      expect(source).not.toMatch(/fresha|\bvs\b|winner/i);
+    }
+  });
+
+  it('renders the migration steps as one vertical, scroll-revealed process timeline', () => {
+    const timelineSource = readRepoFile('../../components/editorial/ProcessTimeline.astro');
+    const timelineCss = readRepoFile('../../styles/components/process-timeline.css');
+    expect(switchingSource).toContain('<ProcessTimeline');
+    expect(switchingSource).toContain('steps={FRESHA_SWITCHING_STEPS}');
+    expect(switchingSource).toContain('<a href="#contact">Ask about moving your Fresha data');
+    expect(timelineSource).toContain('<ol class="process-timeline__steps">');
+    expect(timelineSource).toContain('<h3 class="process-timeline__title">');
+    expect(timelineSource).toMatch(/process-timeline__node" aria-hidden="true"/);
+    expect(timelineSource).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+    expect(timelineCss).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\) \{\s*\.process-timeline\.is-enhanced \.process-timeline__step \{/,
+    );
+    expect(timelineCss).not.toMatch(/dashed|@keyframes|animation|scale\(/);
+    for (const source of [timelineSource, timelineCss]) {
+      expect(source).not.toMatch(/fresha|kersivo|\bvs\b/i);
+    }
+    expect(readRepoFile('../../styles/components/fresha-alternative.css')).not.toMatch(
+      /fresha-alt-switching__(steps|step|limits|cta)\b/,
+    );
+  });
+
+  it('keeps insight card text visible without hover and motion opt-out', () => {
+    expect(insightCardsCss).not.toMatch(/opacity:\s*0|display:\s*none|visibility:\s*hidden/);
+    expect(insightCardsCss).not.toMatch(/@keyframes|animation/);
+    expect(insightCardsCss).toContain('@media (hover: hover) and (pointer: fine)');
+    expect(insightCardsCss).toContain('@media (prefers-reduced-motion: reduce)');
+  });
+
+  it('styles the editorial intro on the page canvas rather than as a card', () => {
+    expect(editorialIntroCss).not.toMatch(/border-radius|box-shadow|gradient|animation|transition/);
+    expect(editorialIntroCss).not.toMatch(/background:(?!\s*var\(--accent\);)/);
+    expect(editorialIntroCss).not.toMatch(/border-left:\s*2px/);
+    expect(readRepoFile('../../styles/components/fresha-alternative.css')).not.toContain(
+      '.fresha-alt-quick',
+    );
   });
 
   it('includes the required H2 sections', () => {
@@ -485,7 +600,7 @@ describe('hero dashboard progressive loading', () => {
     heroSource.indexOf('</iframe>'),
   );
 
-  it('defers the dashboard iframe behind a poster at the same viewport', () => {
+  it('defers the dashboard iframe inside the reserved viewport', () => {
     expect(heroSource).toContain('data-deferred-demo-frame');
     expect(frameMarkup).toContain(
       'data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"',
@@ -498,88 +613,118 @@ describe('hero dashboard progressive loading', () => {
     );
   });
 
-  const posterBands: Array<[variant: string, media: string | null, width: number, height: number]> = [
-    ['mobile', '(max-width: 25rem)', 378, 608],
-    ['mobile-wide', '(max-width: 38rem)', 418, 640],
-    ['tablet', '(max-width: 48rem)', 756, 704],
-    ['tablet-wide', '(max-width: 50rem)', 768, 544],
-    ['desktop-narrow', '(max-width: 53.5rem)', 769, 544],
-    ['desktop-mid', '(max-width: 60rem)', 864, 603],
-    ['desktop-compact', '(max-width: 64rem)', 983, 686],
-    ['desktop-laptop', '(max-width: 85rem)', 1203, 717],
-    ['desktop', '(max-width: 96.875rem)', 1354, 806],
-    ['desktop-wide', null, 1458, 816],
-  ];
-
-  it('ships versioned WebP posters for every band with explicit dimensions and a no-JS fallback', () => {
-    const posterMarkup = heroSource.slice(heroSource.indexOf('<picture'), heroSource.indexOf('</picture>'));
-    for (const [variant, media, width, height] of posterBands) {
-      const url = `/images/fresha-alternative/dashboard-showcase-v2-${variant}.webp`;
-      expect(existsSync(join(repoRoot, 'public', url))).toBe(true);
-      const tag = media
-        ? new RegExp(`media="${media.replace(/[().]/g, '\\$&')}"\\s+srcset="${url}(?: 2x)?"\\s+width="${width}"\\s+height="${height}"`)
-        : new RegExp(`<img\\s+src="${url}"\\s+alt=""\\s+width="${width}"\\s+height="${height}"`);
-      expect(posterMarkup).toMatch(tag);
-    }
-    expect(posterMarkup.match(/<source/g)).toHaveLength(posterBands.length - 1);
-    expect(heroSource).not.toContain('dashboard-poster-');
-    expect(heroSource).toMatch(/<picture class="fresha-alt-hero__product-poster" aria-hidden="true">/);
-    expect(heroCss).toMatch(/\.fresha-alt-hero__product-poster img \{\s*object-fit: none;/);
+  it('uses the plain hero background as the loading state, with no dashboard poster', () => {
+    const viewportMarkup = heroSource.slice(
+      heroSource.indexOf('data-deferred-demo-frame'),
+      heroSource.indexOf('fresha-alt-hero__product-caption'),
+    );
+    expect(viewportMarkup).not.toMatch(/<picture|<img|<source|<svg|skeleton|spinner|Loading/i);
+    expect(heroSource).not.toMatch(/poster|dashboard-showcase-v2|\.webp|fetchpriority/i);
+    expect(heroCss).not.toMatch(/product-poster|object-fit: none/);
+    expect(existsSync(join(repoRoot, 'public/images/fresha-alternative'))).toBe(false);
+    expect(existsSync(join(repoRoot, 'scripts/capture-fresha-dashboard-posters.mjs'))).toBe(false);
     expect(heroSource).toMatch(
       /<noscript>\s*<iframe\s+src="\/demo\/admin\?embed=hero&section=bookings_dashboard"/,
     );
   });
 
   const productRules = () =>
-    heroCss.replace(/\/\*[\s\S]*?\*\//g, '').match(/[^{}]*\.fresha-alt-hero__product-(?:shell|viewport|poster|frame)[^{}]*\{[^}]*\}/g) ?? [];
+    heroCss.replace(/\/\*[\s\S]*?\*\//g, '').match(/[^{}]*\.fresha-alt-hero__product-(?:shell|viewport|frame)[^{}]*\{[^}]*\}/g) ?? [];
   const ruleFor = (selector: RegExp) => productRules().filter((rule) => selector.test(rule.split('{')[0]));
 
-  it('keeps the poster fully visible and the live frame transparent until the swap', () => {
+  it('reserves the final product viewport geometry before the dashboard appears', () => {
+    const viewport = ruleFor(/^\s*\.fresha-alt-hero__product-viewport\s*$/);
+    for (const rule of viewport.filter((r) => /height:/.test(r))) {
+      expect(rule).toMatch(/[^-]height: clamp\([^)]+\);/);
+      expect(rule).toMatch(/max-height: [^;]+;/);
+    }
+    expect(viewport[0]).toMatch(/height: clamp\(38rem, 56vw, 51rem\);/);
+    expect(viewport[0]).toMatch(/max-height: clamp\(38rem, 56vw, 51rem\);/);
+    expect(viewport[0]).toMatch(/contain: layout paint size;/);
+    expect(viewport[0]).toMatch(/background: #030303;/);
+    expect(heroCss).toMatch(/^\.fresha-alt-hero \{[^}]*background: #030303;/m);
+    expect(viewport[0]).toMatch(/border-radius: clamp\(0\.8rem, 1\.25vw, 1\.05rem\);/);
+    expect(viewport[0]).toMatch(/box-shadow:/);
+    expect(heroCss).toMatch(/\.fresha-alt-hero__product-viewport iframe \{[^}]*position: absolute;[^}]*inset: 0;[^}]*background: #030303;/);
+  });
+
+  it('keeps the live frame hidden and inert until the verified ready swap', () => {
     expect(heroCss).toMatch(
       /\.fresha-alt-hero__product-viewport \.fresha-alt-hero__product-frame \{\s*opacity: 0;\s*pointer-events: none;\s*\}/,
     );
-    const posterRules = ruleFor(/product-poster/);
-    expect(posterRules.length).toBeGreaterThan(0);
-    for (const rule of posterRules) expect(rule).not.toMatch(/opacity|transition/);
-    expect(heroCss).toMatch(/\.fresha-alt-hero__product-viewport \{[^}]*height: clamp\(38rem, 56vw, 51rem\)/);
   });
 
-  it('swaps poster and live frame atomically: visible and interactive together, poster hidden', () => {
+  it('reveals the live frame atomically: visible and interactive together', () => {
     const readyFrame = ruleFor(/^\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame\s*$/);
     expect(readyFrame).toHaveLength(1);
     expect(readyFrame[0]).toMatch(/\{\s*opacity: 1;\s*pointer-events: auto;\s*\}$/);
-    const readyPoster = ruleFor(/\[data-frame-state='ready'\] \.fresha-alt-hero__product-poster/);
-    expect(readyPoster).toHaveLength(1);
-    expect(readyPoster[0]).toMatch(/\{\s*visibility: hidden;\s*\}$/);
     for (const rule of ruleFor(/product-frame/).filter((r) => r.includes('pointer-events: auto'))) {
       expect(rule).toContain('opacity: 1;');
     }
   });
 
-  it('reveals the live frame with no fade, transition or reveal-specific state', () => {
-    for (const rule of productRules()) expect(rule).not.toMatch(/transition|animation|filter|will-change/);
-    expect(heroCss).not.toMatch(/live-visible|680ms/);
-    expect(heroCss).not.toMatch(/prefers-reduced-motion: (?:reduce|no-preference)\) \{\s*\.fresha-alt-hero__product/);
-    expect(heroSource).not.toMatch(/liveVisible|onReady/);
+  const REVEAL = 'opacity 800ms cubic-bezier(0.25, 0.1, 0.25, 1)';
+  const NOT_READY = ":not([data-frame-state='ready'])";
+
+  it('keeps the whole product (chrome, frame and glow) transparent but laid out until ready', () => {
+    const gate = heroCss.slice(heroCss.indexOf('@media (scripting: enabled) {'));
+    expect(gate).toMatch(
+      new RegExp(
+        String.raw`^@media \(scripting: enabled\) \{\s*\.fresha-alt-hero__product-viewport${NOT_READY.replace(/[[\]()]/g, '\\$&')} \{\s*opacity: 0;\s*\}`,
+      ),
+    );
+    expect(gate).toMatch(
+      /\.fresha-alt-hero__product-shell:has\(> \.fresha-alt-hero__product-viewport:not\(\[data-frame-state='ready'\]\)\)\s*> \.fresha-alt-hero__product-glow \{\s*opacity: 0;\s*\}/,
+    );
+    const chrome = productRules().filter((rule) => /box-shadow|border-radius|outline|border:/.test(rule));
+    expect(chrome.length).toBeGreaterThan(0);
+    for (const rule of chrome) expect(rule.trim()).toMatch(/^\.fresha-alt-hero__product-viewport(?:::after| iframe)?\s*\{/);
+    for (const rule of ruleFor(/product-viewport/)) expect(rule).not.toMatch(/display: none|visibility: hidden/);
+  });
+
+  it('fades the finished product in as one object, opacity only, only once ready', () => {
+    const motion = heroCss.slice(heroCss.indexOf('@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {'));
+    expect(motion).toMatch(
+      /^@media \(scripting: enabled\) and \(prefers-reduced-motion: no-preference\) \{\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \{\s*transition: opacity 800ms cubic-bezier\(0\.25, 0\.1, 0\.25, 1\);\s*\}\s*\.fresha-alt-hero__product-shell:has\(> \.fresha-alt-hero__product-viewport\[data-frame-state='ready'\]\)\s*> \.fresha-alt-hero__product-glow \{\s*transition: opacity 800ms cubic-bezier\(0\.25, 0\.1, 0\.25, 1\);\s*\}\s*\}/,
+    );
+    const transitions = productRules().filter((rule) => rule.includes('transition:'));
+    expect(transitions).toHaveLength(2);
+    for (const rule of transitions) {
+      expect(rule).toContain(`transition: ${REVEAL};`);
+      expect(rule.split('{')[0]).toContain("[data-frame-state='ready']");
+      expect(rule.split('{')[0]).not.toContain('product-frame');
+    }
+    expect(heroSource).not.toMatch(/liveVisible|onReady|poster/i);
     expect(heroSource).not.toMatch(/window\.addEventListener\('load'|productFrame\.(?:onload|addEventListener\('load')|setTimeout/);
   });
 
+  it('shows the product immediately for reduced motion', () => {
+    const withoutMotionBlock = heroCss.replace(
+      /@media \(scripting: enabled\) and \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}\n/,
+      '',
+    );
+    expect(withoutMotionBlock).not.toContain(REVEAL);
+    expect(withoutMotionBlock.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/\.fresha-alt-hero__product-[^{]*\{[^}]*transition/);
+  });
+
   it('keeps the product shell at full opacity and untransformed at all times', () => {
-    for (const rule of ruleFor(/product-shell/)) {
+    for (const rule of ruleFor(/product-shell\s*$/)) {
       expect(rule).not.toMatch(/opacity|transition|transform:\s*(?!none)/);
     }
     expect(heroCss).not.toContain('data-showcase-ready');
     expect(heroSource).not.toContain('showcaseReady');
   });
 
-  it('never moves, scales or animates the product dashboard', () => {
+  it('never moves, scales or animates the product dashboard beyond its opacity reveal', () => {
     expect(heroCss).not.toContain('freshaAltProductIn');
     const rules = productRules();
     expect(rules.length).toBeGreaterThan(5);
     for (const rule of rules) {
-      expect(rule).not.toMatch(/animation|transition|scale|zoom|translate|rotate|will-change/);
+      expect(rule).not.toMatch(/animation|scale|zoom|translate|rotate|will-change|filter/);
       const transform = rule.match(/transform:\s*([^;]+);/);
       if (transform) expect(transform[1]).toBe('none');
+      const transition = rule.match(/transition:\s*([^;]+);/);
+      if (transition) expect(transition[1]).toBe(REVEAL);
     }
   });
 

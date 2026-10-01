@@ -1,0 +1,82 @@
+---
+/**
+ * Two business models side by side around a neutral "or" axis, followed by
+ * an editorial conclusion. The default slot renders under the conclusion.
+ */
+import InsightIcon from '@/components/editorial/InsightIcon.astro';
+import type { ModelComparisonItem } from '@/lib/editorial/insightIcons';
+import '@/styles/components/model-comparison.css';
+
+interface Props {
+  idPrefix: string;
+  models: readonly [ModelComparisonItem, ModelComparisonItem];
+  conclusion: string;
+}
+
+const { idPrefix, models, conclusion } = Astro.props;
+const [first, second] = models;
+const hasFooter = Astro.slots.has('default');
+---
+
+<div class="model-comparison">
+  <div class="model-comparison__grid">
+    {
+      [first, second].map((model, index) => (
+        <Fragment>
+          {index === 1 && (
+            <div class="model-comparison__axis" aria-hidden="true">
+              <span class="model-comparison__or">or</span>
+            </div>
+          )}
+          <article
+            class:list={['model-panel', index === 0 ? 'model-panel--start' : 'model-panel--end']}
+            aria-labelledby={`${idPrefix}-${index}-title`}
+          >
+            <header class="model-panel__head">
+              <div class="model-panel__brand">
+                <span class="model-panel__icon">
+                  <InsightIcon name={model.icon} />
+                </span>
+                <div class="model-panel__identity">
+                  <p class="model-panel__label">{model.label}</p>
+                  <p class="model-panel__descriptor">{model.descriptor}</p>
+                </div>
+              </div>
+              {model.summary && model.summary.length > 0 && (
+                <dl class="model-panel__summary">
+                  {model.summary.map((row) => (
+                    <div class="model-panel__summary-row">
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </header>
+            <div class="model-panel__body">
+              <h3 id={`${idPrefix}-${index}-title`} class="model-panel__title">
+                {model.heading}
+              </h3>
+              <ul class="model-panel__points">
+                {model.points.map((point) => (
+                  <li class="model-panel__point">{point}</li>
+                ))}
+              </ul>
+            </div>
+          </article>
+        </Fragment>
+      ))
+    }
+  </div>
+
+  <div class="model-comparison__closing">
+    <p class="model-comparison__conclusion">{conclusion}</p>
+    {
+      hasFooter && (
+        <p class="model-comparison__footer">
+          <slot />
+        </p>
+      )
+    }
+  </div>
+</div>

@@ -1,4 +1,5 @@
 ---
+import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
 import {
   FRESHA_SWITCHING_LIMITS,
   FRESHA_SWITCHING_REASSURANCE,
@@ -14,30 +15,12 @@ import {
       <p class="fresha-alt-switching__reassurance">{FRESHA_SWITCHING_REASSURANCE}</p>
     </header>
 
-    <ol class="fresha-alt-switching__steps">
-      {
-        FRESHA_SWITCHING_STEPS.map((step, index) => (
-          <li class="fresha-alt-card fresha-alt-switching__step">
-            <span class="fresha-alt-card__index" aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <h3 class="fresha-alt-card__title">{step.title}</h3>
-            <p class="fresha-alt-card__body">{step.body}</p>
-          </li>
-        ))
-      }
-    </ol>
-
-    <div class="fresha-alt-switching__limits">
-      <h3 class="fresha-alt-costs__h3">Good to know</h3>
-      <ul class="fresha-alt-list">
-        {FRESHA_SWITCHING_LIMITS.map((limit) => (
-          <li>{limit}</li>
-        ))}
-      </ul>
-      <a href="#contact" class="fresha-alt-switching__cta">
-        Ask about moving your Fresha data <span aria-hidden="true">→</span>
-      </a>
-    </div>
+    <ProcessTimeline
+      steps={FRESHA_SWITCHING_STEPS}
+      noteTitle="Good to know"
+      notePoints={FRESHA_SWITCHING_LIMITS}
+    >
+      <a href="#contact">Ask about moving your Fresha data <span aria-hidden="true">→</span></a>
+    </ProcessTimeline>
   </div>
 </section>

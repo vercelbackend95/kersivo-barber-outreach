@@ -1,0 +1,186 @@
+/* Insight cards — numbered comparison-reason panels for competitor pages.
+   Brand-neutral: tokens only, one accent "signal" per icon. */
+
+.insight-cards {
+  display: grid;
+  gap: clamp(0.85rem, 1.6vw, 1.25rem);
+  margin: clamp(0.5rem, 1.4vw, 1rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insight-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1.35rem, 2.8vw, 2.25rem);
+  border: 1px solid color-mix(in srgb, var(--fg) 9%, transparent);
+  border-radius: var(--radius-20);
+  background:
+    radial-gradient(
+      16rem 11rem at 2.5rem 2.25rem,
+      color-mix(in srgb, var(--accent) 6%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      110% 70% at 0% 0%,
+      color-mix(in srgb, var(--fg) 4.5%, transparent) 0%,
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-2) 92%, transparent) 0%,
+      color-mix(in srgb, var(--surface-1) 72%, transparent) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 7%, transparent),
+    0 28px 56px -36px rgb(0 0 0 / 0.75);
+  isolation: isolate;
+}
+
+.insight-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--fg) 22%, transparent) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.insight-card__top {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.insight-card__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: var(--radius-12);
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--surface-3) 95%, transparent) 0%,
+    var(--surface-1) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 9%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--fg) 2.5%, transparent);
+  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
+}
+
+.insight-icon {
+  display: block;
+  width: var(--insight-icon-size, 2rem);
+  height: var(--insight-icon-size, 2rem);
+}
+
+/* Optical sizes: the storefront's solid frame and the stack's diamond read heavier. */
+.insight-icon--storefront {
+  --insight-icon-size: 1.925rem;
+}
+
+.insight-icon--stack {
+  --insight-icon-size: 1.97rem;
+}
+
+.insight-icon__signal {
+  stroke: var(--accent);
+}
+
+.insight-card__rule {
+  flex: 1 1 auto;
+  height: 1px;
+  margin-inline: 0.15rem 0.4rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fg) 8%, transparent) 0%,
+    color-mix(in srgb, var(--fg) 2.5%, transparent) 100%
+  );
+}
+
+.insight-card__index {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+.insight-card__title {
+  margin: clamp(1.5rem, 2.6vw, 2rem) 0 0;
+  max-width: 22ch;
+  font-family: var(--font-body);
+  font-size: clamp(1.3rem, 1.05rem + 0.75vw, 1.6rem);
+  font-weight: 620;
+  line-height: 1.18;
+  letter-spacing: -0.026em;
+  text-transform: none;
+  color: var(--fg);
+  text-wrap: balance;
+}
+
+.insight-card__body {
+  margin: 0.85rem 0 0;
+  max-width: 60ch;
+  font-size: clamp(0.975rem, 0.93rem + 0.15vw, 1.05rem);
+  line-height: 1.68;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+  text-wrap: pretty;
+}
+
+@media (min-width: 48rem) {
+  .insight-cards {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .insight-card {
+    grid-column: span 6;
+  }
+
+  .insight-card--wide {
+    grid-column: span 7;
+  }
+
+  .insight-card--narrow {
+    grid-column: span 5;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .insight-card,
+  .insight-card__icon {
+    transition:
+      border-color 220ms ease,
+      transform 220ms ease;
+  }
+
+  .insight-card:hover {
+    border-color: color-mix(in srgb, var(--fg) 17%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .insight-card:hover .insight-card__icon {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insight-card:hover {
+    transform: none;
+  }
+}

@@ -456,6 +456,7 @@ export default function AdminPanel({
           historyWithinBookings={activeSection === 'bookings_history_tab'}
           onOpenHistoryWithinBookings={() => handleSectionChange('bookings_history_tab')}
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
+          showcaseMode={showcaseMode}
         />
 
         <LazyPanelErrorBoundary>
@@ -481,7 +482,7 @@ export default function AdminPanel({
               />
             ) : null}
 
-            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
+            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} showcaseMode={showcaseMode} /> : null}
 
             {activeSection === 'barbershop_settings' ? (
               <BarbershopSettingsPanel

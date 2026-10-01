@@ -13,6 +13,7 @@ import ClientProfilePanel from './ClientProfilePanel';
 import { adminFetchJson, ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import { useAdminClock } from './adminClock';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
+import { scrollContainerToRow } from '../../lib/admin/timelineNowScroll';
 
 type TimelineBarber = {
   id: string;
@@ -60,6 +61,13 @@ type TodayTimelineProps = {
   isLoading?: boolean;
   isSearchActive?: boolean;
   allowInitialNowScroll?: boolean;
+  /**
+   * Landing showcase: move only the timeline's own scroll container to the "now" row (never
+   * the page or any other ancestor), with an eased scroll the visitor can watch.
+   */
+  containInitialNowScroll?: boolean;
+  /** Fires once when the initial scroll to "now" starts. */
+  onInitialNowScroll?: () => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   onBookingClick: (booking: TimelineBooking) => void;
   onGoToNextDay?: () => void;
@@ -1742,6 +1750,8 @@ function TodayTimeline({
   isLoading = false,
   isSearchActive = false,
   allowInitialNowScroll = true,
+  containInitialNowScroll = false,
+  onInitialNowScroll,
   onBookingClick,
   scrollContainerRef,
   onGoToNextDay,
@@ -1759,8 +1769,13 @@ function TodayTimeline({
   const nowRowRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToNow = useRef(false);
   const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
+  const containedNowScrollRef = useRef<(() => void) | null>(null);
   const handledFocusBookingIdRef = useRef<string | null>(null);
   const reduceMotion = useReducedMotion();
+  const reduceMotionRef = useRef(reduceMotion === true);
+  reduceMotionRef.current = reduceMotion === true;
+  const onInitialNowScrollRef = useRef(onInitialNowScroll);
+  onInitialNowScrollRef.current = onInitialNowScroll;
 
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
   const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
@@ -1902,6 +1917,26 @@ function TodayTimeline({
     const el = nowRowRef.current;
     if (!el) return;
     hasScrolledToNow.current = true;
+    if (containInitialNowScroll) {
+      scrollToNowRafRefs.current.first = window.requestAnimationFrame(() => {
+        scrollToNowRafRefs.current.first = null;
+        scrollToNowRafRefs.current.second = window.requestAnimationFrame(() => {
+          scrollToNowRafRefs.current.second = null;
+          const container = activeScrollRef.current;
+          if (!container) return;
+          onInitialNowScrollRef.current?.();
+          containedNowScrollRef.current?.();
+          containedNowScrollRef.current = scrollContainerToRow(container, el, reduceMotionRef.current);
+        });
+      });
+      return () => {
+        const pending = scrollToNowRafRefs.current.first !== null || scrollToNowRafRefs.current.second !== null;
+        if (scrollToNowRafRefs.current.first !== null) window.cancelAnimationFrame(scrollToNowRafRefs.current.first);
+        if (scrollToNowRafRefs.current.second !== null) window.cancelAnimationFrame(scrollToNowRafRefs.current.second);
+        scrollToNowRafRefs.current = { first: null, second: null };
+        if (pending) hasScrolledToNow.current = false;
+      };
+    }
     scrollToNowRafRefs.current.first = window.requestAnimationFrame(() => {
       scrollToNowRafRefs.current.first = null;
       scrollToNowRafRefs.current.second = window.requestAnimationFrame(() => {
@@ -1919,7 +1954,10 @@ function TodayTimeline({
         scrollToNowRafRefs.current.second = null;
       }
     };
-  }, [allowInitialNowScroll, focusBookingId, isToday, items]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowInitialNowScroll, containInitialNowScroll, focusBookingId, isToday, items]);
+
+  useEffect(() => () => containedNowScrollRef.current?.(), []);
 
   useEffect(() => {
     hasScrolledToNow.current = false;

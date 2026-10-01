@@ -40,6 +40,7 @@ import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 import { useAdminClock } from './adminClock';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
+import { listenForHeroShowcaseVisible } from '@/lib/admin/heroShowcaseVisibility';
 import { mergeBlacklineSessionBookings, isBlacklineSessionBookingId } from '@/lib/demo/blacklineSessionBookings';
 import {
   dismissBookingProof,
@@ -660,6 +661,8 @@ type BookingsAdminPanelProps = {
    * DemoDayBooking is a structural superset of Booking (extra snapshot fields ignored).
    */
   initialBookings?: Booking[];
+  /** Landing hero iframe: the timeline scrolls to "now" only once the visitor can see it. */
+  showcaseMode?: boolean;
 };
 
 export default function BookingsAdminPanel({
@@ -671,6 +674,7 @@ export default function BookingsAdminPanel({
   isPublicDemo = false,
   isBlacklineDemo = false,
   initialBookings,
+  showcaseMode = false,
 }: BookingsAdminPanelProps) {
   const clock = useAdminClock();
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
@@ -731,6 +735,14 @@ export default function BookingsAdminPanel({
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const prevViewRef = useRef<AdminBookingView>('timeline');
   const [isTimelineEnterComplete, setIsTimelineEnterComplete] = useState(activeView !== 'timeline');
+  /** Showcase only: armed once by the landing page's visibility message, disarmed when the scroll starts. */
+  const [showcaseNowScrollArmed, setShowcaseNowScrollArmed] = useState(false);
+  const disarmShowcaseNowScroll = useCallback(() => setShowcaseNowScrollArmed(false), []);
+
+  useEffect(() => {
+    if (!showcaseMode) return undefined;
+    return listenForHeroShowcaseVisible(window, () => setShowcaseNowScrollArmed(true));
+  }, [showcaseMode]);
   const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate(clock.nowMs()));
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
@@ -2622,7 +2634,11 @@ export default function BookingsAdminPanel({
                       onBookingClick={handleTimelineBookingClick}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
-                      allowInitialNowScroll={isTimelineEnterComplete && !timelineFocusBookingId}
+                      allowInitialNowScroll={
+                        (showcaseMode ? showcaseNowScrollArmed : isTimelineEnterComplete) && !timelineFocusBookingId
+                      }
+                      containInitialNowScroll={showcaseMode}
+                      onInitialNowScroll={showcaseMode ? disarmShowcaseNowScroll : undefined}
                       focusBookingId={timelineFocusBookingId}
                       onFocusBookingHandled={handleTimelineFocusBookingHandled}
                       sessionBarberId={sessionBarberId}

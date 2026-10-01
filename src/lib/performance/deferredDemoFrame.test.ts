@@ -153,7 +153,7 @@ describe('mountDeferredDemoFrame', () => {
     expect(viewport.dataset.frameState).toBe('ready');
   });
 
-  it('keeps the poster when the fallback fires before the frame document has been parsed', () => {
+  it('keeps the frame hidden when the fallback fires before the frame document has been parsed', () => {
     const { viewport, frame } = setup();
     mountDeferredDemoFrame(viewport, window, { revealFallbackMs: 5000 });
     viewport.dispatchEvent(new Event('pointerdown'));
@@ -217,7 +217,7 @@ describe('mountDeferredDemoFrame with a ready message', () => {
     return { viewport, frame, cleanup };
   }
 
-  it('keeps the poster after the frame load event until the ready message arrives', () => {
+  it('keeps the frame hidden after its load event until the ready message arrives', () => {
     const { viewport, frame } = startWithReadyMessage();
     frame.dispatchEvent(new Event('load'));
     flushFrame();
@@ -246,7 +246,7 @@ describe('mountDeferredDemoFrame with a ready message', () => {
     expect(viewport.dataset.frameState).toBe('poster');
   });
 
-  it('keeps the poster when the ready message never arrives, even after the timeout with a complete document', () => {
+  it('keeps the frame hidden when the ready message never arrives, even after the timeout with a complete document', () => {
     const { viewport, frame } = startWithReadyMessage({ revealFallbackMs: 5000 });
     setFrameReadyState(frame, 'complete');
     frame.dispatchEvent(new Event('load'));

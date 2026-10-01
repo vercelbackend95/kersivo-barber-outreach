@@ -1,0 +1,64 @@
+---
+/**
+ * Editorial article intro for competitor / comparison landing pages:
+ * kicker, large H2, lead paragraph, optional supporting paragraph and a
+ * hairline fact rail. Sits directly on the page background (no card).
+ */
+import '@/styles/components/editorial-intro.css';
+
+export type EditorialIntroFact = { label: string; value: string };
+
+interface Props {
+  id: string;
+  titleId: string;
+  kicker: string;
+  title: string;
+  titleSecondary?: string;
+  lead: string;
+  detail?: string;
+  facts?: readonly EditorialIntroFact[];
+  class?: string;
+}
+
+const {
+  id,
+  titleId,
+  kicker,
+  title,
+  titleSecondary,
+  lead,
+  detail,
+  facts = [],
+  class: className,
+} = Astro.props;
+---
+
+<section id={id} class:list={['editorial-intro', className]} aria-labelledby={titleId}>
+  <div class="container editorial-intro__inner">
+    <p class="editorial-intro__kicker">{kicker}</p>
+    <h2 id={titleId} class="editorial-intro__title">
+      <span class="editorial-intro__title-line">{title}</span>
+      {
+        titleSecondary && (
+          <span class="editorial-intro__title-line editorial-intro__title-line--secondary">
+            {titleSecondary}
+          </span>
+        )
+      }
+    </h2>
+    <p class="editorial-intro__lead">{lead}</p>
+    {detail && <p class="editorial-intro__detail">{detail}</p>}
+    {
+      facts.length > 0 && (
+        <dl class="editorial-intro__facts">
+          {facts.map((fact) => (
+            <div class="editorial-intro__fact">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+  </div>
+</section>
