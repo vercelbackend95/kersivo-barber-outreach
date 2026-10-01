@@ -1,0 +1,58 @@
+---
+import {
+  BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
+  BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL,
+} from '@/lib/seo/barberCostCalculatorPage';
+import { COST_CALCULATOR_SOURCES } from '@/lib/seo/barberCostCalculatorSources';
+import { BOOKSY_TRADEMARK_DISCLAIMER } from '@/lib/seo/booksyFacts';
+import { FRESHA_TRADEMARK_DISCLAIMER } from '@/lib/seo/freshaFacts';
+---
+
+<section id="sources" class="cost-calc__section cost-calc-sources" aria-labelledby="cost-calc-sources-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Sources</p>
+      <h2 id="cost-calc-sources-title" class="cost-calc__h2">Pricing sources and methodology</h2>
+      <p class="cost-calc__lead">
+        This resource is built by KERSIVO. Competitor pricing is taken from official UK pricing pages and help
+        centres only, never from third-party articles. Pricing and product features can change, so check each
+        provider directly before making a decision.
+      </p>
+      <p class="cost-calc__checked">
+        Last updated <time datetime={BARBER_COST_CALCULATOR_LAST_UPDATED_ISO}>{BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL}</time>
+      </p>
+    </header>
+
+    <ul class="cost-calc-sources__list">
+      {
+        COST_CALCULATOR_SOURCES.map((source) => (
+          <li class="cost-calc-sources__item">
+            <span class="cost-calc-sources__provider">{source.provider}</span>
+            <div class="cost-calc-sources__main">
+              {source.external ? (
+                <a href={source.url} target="_blank" rel="noopener noreferrer">
+                  {source.label}
+                </a>
+              ) : (
+                <a href={source.url}>{source.label}</a>
+              )}
+              <span class="cost-calc-sources__supports">Supports {source.supports}</span>
+            </div>
+            {source.checkedIso && source.checkedLabel ? (
+              <span class="cost-calc-sources__checked">
+                Checked <time datetime={source.checkedIso}>{source.checkedLabel}</time>
+              </span>
+            ) : (
+              <span class="cost-calc-sources__checked">KERSIVO’s own pricing</span>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="cost-calc-sources__legal">
+      <p>{BOOKSY_TRADEMARK_DISCLAIMER}</p>
+      <p>{FRESHA_TRADEMARK_DISCLAIMER}</p>
+    </div>
+  </div>
+</section>

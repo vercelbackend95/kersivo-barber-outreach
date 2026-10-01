@@ -1,6 +1,10 @@
 import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import {
+  BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
+  BARBER_COST_CALCULATOR_PAGE_PATH,
+} from './barberCostCalculatorPage';
+import {
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
@@ -27,6 +31,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/booksy-alternative' },
   /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
   { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
+  /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
+  { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: '2026-09-25' },
   /** Matches "Last updated" on src/pages/cookies.astro. */

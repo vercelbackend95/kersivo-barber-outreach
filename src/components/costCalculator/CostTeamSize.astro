@@ -1,0 +1,27 @@
+---
+import { TEAM_SIZE_CLOSING, TEAM_SIZE_INTRO, TEAM_SIZE_PROFILES } from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="team-size" class="cost-calc__section" aria-labelledby="cost-calc-team-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Team size</p>
+      <h2 id="cost-calc-team-title" class="cost-calc__h2">How team size changes your booking software cost</h2>
+      <p class="cost-calc__lead">{TEAM_SIZE_INTRO}</p>
+    </header>
+
+    <ol class="cost-calc-columns">
+      {
+        TEAM_SIZE_PROFILES.map((profile) => (
+          <li class="cost-calc-columns__item">
+            <p class="cost-calc-columns__kicker">{profile.label}</p>
+            <h3 class="cost-calc-columns__title">{profile.title}</h3>
+            <p class="cost-calc-columns__body">{profile.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="cost-calc__closing">{TEAM_SIZE_CLOSING}</p>
+  </div>
+</section>

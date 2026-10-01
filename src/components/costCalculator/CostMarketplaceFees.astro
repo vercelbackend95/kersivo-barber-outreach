@@ -1,0 +1,33 @@
+---
+import {
+  MARKETPLACE_INTRO,
+  MARKETPLACE_KERSIVO_NOTE,
+  MARKETPLACE_POINTS,
+} from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="marketplace-fees" class="cost-calc__section" aria-labelledby="cost-calc-marketplace-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Marketplace fees</p>
+      <h2 id="cost-calc-marketplace-title" class="cost-calc__h2">Booksy Boost and Fresha Marketplace fees explained</h2>
+      <p class="cost-calc__lead">{MARKETPLACE_INTRO}</p>
+    </header>
+
+    <dl class="cost-calc-rows">
+      {
+        MARKETPLACE_POINTS.map((point) => (
+          <div class="cost-calc-rows__row">
+            <dt>{point.title}</dt>
+            <dd>{point.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <aside class="cost-calc-callout" aria-label="How KERSIVO handles new clients">
+      <p class="cost-calc-callout__kicker">KERSIVO</p>
+      <p class="cost-calc-callout__body">{MARKETPLACE_KERSIVO_NOTE}</p>
+    </aside>
+  </div>
+</section>

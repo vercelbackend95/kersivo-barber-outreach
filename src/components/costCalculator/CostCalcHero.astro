@@ -1,0 +1,61 @@
+---
+import {
+  BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
+  BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL,
+  COST_CALC_HERO,
+  COST_CALC_SURFACE,
+  COST_CALC_TRUST_SIGNALS,
+} from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section class="cost-calc-hero" aria-labelledby="cost-calc-hero-title">
+  <div class="cost-calc-hero__grid">
+    <div class="cost-calc-hero__content">
+      <p class="cost-calc-hero__eyebrow">
+        <span class="cost-calc-hero__eyebrow-dot" aria-hidden="true"></span>
+        {COST_CALC_HERO.eyebrow}
+      </p>
+
+      <h1 id="cost-calc-hero-title" class="cost-calc-hero__title">{COST_CALC_HERO.title}</h1>
+
+      <p class="cost-calc-hero__lead">{COST_CALC_HERO.lead}</p>
+      <p class="cost-calc-hero__supporting">{COST_CALC_HERO.supporting}</p>
+
+      <ul class="cost-calc-hero__trust" aria-label="About this cost comparison">
+        {
+          COST_CALC_TRUST_SIGNALS.map((signal) => (
+            <li>
+              <span class="cost-calc-hero__check" aria-hidden="true" />
+              {signal}
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="cost-calc-hero__note">
+        {COST_CALC_HERO.builtBy}
+        <span class="cost-calc-hero__updated">
+          Last updated <time datetime={BARBER_COST_CALCULATOR_LAST_UPDATED_ISO}>{BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL}</time>
+        </span>
+      </p>
+    </div>
+
+    <aside id="calculator" class="cost-calc-surface" aria-labelledby="cost-calc-surface-title">
+      <div class="cost-calc-surface__head">
+        <p class="cost-calc-surface__label">{COST_CALC_SURFACE.label}</p>
+        <span class="cost-calc-surface__models" aria-hidden="true">Booksy · Fresha · KERSIVO</span>
+      </div>
+
+      <div class="cost-calc-surface__body">
+        <h2 id="cost-calc-surface-title" class="cost-calc-surface__title">{COST_CALC_SURFACE.heading}</h2>
+        <p class="cost-calc-surface__text">{COST_CALC_SURFACE.body}</p>
+      </div>
+
+      <ul class="cost-calc-surface__factors" aria-label="What the calculator will take into account">
+        {COST_CALC_SURFACE.factors.map((factor) => <li>{factor}</li>)}
+      </ul>
+
+      <p class="cost-calc-surface__note">{COST_CALC_SURFACE.note}</p>
+    </aside>
+  </div>
+</section>

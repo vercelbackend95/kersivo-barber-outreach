@@ -1,0 +1,37 @@
+---
+import {
+  METHODOLOGY_FACTORS,
+  METHODOLOGY_INTRO,
+  METHODOLOGY_PRINCIPLES,
+} from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="methodology" class="cost-calc__section" aria-labelledby="cost-calc-methodology-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Methodology</p>
+      <h2 id="cost-calc-methodology-title" class="cost-calc__h2">How the calculator works</h2>
+      <p class="cost-calc__lead">{METHODOLOGY_INTRO}</p>
+    </header>
+
+    <div class="cost-calc-method">
+      <div class="cost-calc-method__factors">
+        <h3 class="cost-calc__h3">What goes into the calculation</h3>
+        <ol class="cost-calc-method__list">
+          {METHODOLOGY_FACTORS.map((factor) => <li>{factor}</li>)}
+        </ol>
+      </div>
+
+      <dl class="cost-calc-rows cost-calc-method__principles">
+        {
+          METHODOLOGY_PRINCIPLES.map((principle) => (
+            <div class="cost-calc-rows__row">
+              <dt>{principle.title}</dt>
+              <dd>{principle.body}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</section>

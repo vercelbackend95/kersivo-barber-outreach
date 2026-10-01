@@ -1,0 +1,24 @@
+---
+import { PAYMENTS_INTRO, PAYMENTS_POINTS } from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="payments" class="cost-calc__section" aria-labelledby="cost-calc-payments-title">
+  <div class="container cost-calc-split">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Payments</p>
+      <h2 id="cost-calc-payments-title" class="cost-calc__h2">Payment processing costs</h2>
+      <p class="cost-calc__lead">{PAYMENTS_INTRO}</p>
+    </header>
+
+    <dl class="cost-calc-rows cost-calc-split__body">
+      {
+        PAYMENTS_POINTS.map((point) => (
+          <div class="cost-calc-rows__row">
+            <dt>{point.title}</dt>
+            <dd>{point.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

@@ -381,9 +381,9 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(serialized).not.toContain('"@type":"Review"');
   });
 
-  it('sitemap includes /booksy-alternative among seven marketing URLs', () => {
+  it('sitemap includes /booksy-alternative among eight marketing URLs', () => {
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).toHaveLength(7);
+    expect(locs).toHaveLength(8);
     expect(locs).toContain('https://kersivo.co.uk/booksy-alternative');
     expect(locs).toContain('https://kersivo.co.uk/dpa');
   });

@@ -1,0 +1,37 @@
+---
+import { BOOKSY_COST_FACTS, BOOKSY_COST_INTRO, BOOKSY_COST_NOTES } from '@/lib/seo/barberCostCalculatorPage';
+import { BOOKSY_FACTS_CHECKED_DATE, BOOKSY_FACTS_CHECKED_ISO, BOOKSY_SOURCE_PRICING } from '@/lib/seo/booksyFacts';
+---
+
+<section id="booksy-cost" class="cost-calc__section" aria-labelledby="cost-calc-booksy-title">
+  <div class="container cost-calc-platform">
+    <header class="cost-calc__intro cost-calc-platform__intro">
+      <p class="cost-calc__eyebrow">Booksy pricing</p>
+      <h2 id="cost-calc-booksy-title" class="cost-calc__h2">How much does Booksy cost in the UK?</h2>
+      <p class="cost-calc__lead">{BOOKSY_COST_INTRO}</p>
+      <p class="cost-calc__checked">
+        Checked <time datetime={BOOKSY_FACTS_CHECKED_ISO}>{BOOKSY_FACTS_CHECKED_DATE}</time> ·
+        <a href={BOOKSY_SOURCE_PRICING} target="_blank" rel="noopener noreferrer">Booksy UK Pricing</a>
+      </p>
+    </header>
+
+    <div class="cost-calc-platform__detail">
+      <dl class="cost-calc-facts">
+        {
+          BOOKSY_COST_FACTS.map((fact) => (
+            <div class="cost-calc-facts__row">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <ul class="cost-calc__list cost-calc-platform__notes">
+        {BOOKSY_COST_NOTES.map((note) => <li>{note}</li>)}
+      </ul>
+      <p class="cost-calc__crosslink">
+        <a href="/booksy-alternative">See the full KERSIVO vs Booksy comparison</a>
+      </p>
+    </div>
+  </div>
+</section>

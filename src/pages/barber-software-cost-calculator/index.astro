@@ -1,0 +1,94 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import CostCalcHero from '@/components/costCalculator/CostCalcHero.astro';
+import CostAtAGlance from '@/components/costCalculator/CostAtAGlance.astro';
+import CostBooksy from '@/components/costCalculator/CostBooksy.astro';
+import CostFresha from '@/components/costCalculator/CostFresha.astro';
+import CostTeamSize from '@/components/costCalculator/CostTeamSize.astro';
+import CostMarketplaceFees from '@/components/costCalculator/CostMarketplaceFees.astro';
+import CostVat from '@/components/costCalculator/CostVat.astro';
+import CostPayments from '@/components/costCalculator/CostPayments.astro';
+import CostScenarios from '@/components/costCalculator/CostScenarios.astro';
+import CostMethodology from '@/components/costCalculator/CostMethodology.astro';
+import CostSources from '@/components/costCalculator/CostSources.astro';
+import {
+  BARBER_COST_CALCULATOR_DESCRIPTION,
+  BARBER_COST_CALCULATOR_PAGE_PATH,
+  BARBER_COST_CALCULATOR_TITLE,
+} from '@/lib/seo/barberCostCalculatorPage';
+import { BARBER_COST_CALCULATOR_FAQ_ITEMS } from '@/lib/seo/barberCostCalculatorFaq';
+import { buildBarberCostCalculatorJsonLd } from '@/lib/seo/barberCostCalculatorJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/barber-cost-calculator.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BARBER_COST_CALCULATOR_TITLE}
+  description={BARBER_COST_CALCULATOR_DESCRIPTION}
+  canonicalPath={BARBER_COST_CALCULATOR_PAGE_PATH}
+  navbarVariant="booksyAlternative"
+  jsonLd={buildBarberCostCalculatorJsonLd()}
+>
+  <main class="cost-calc landing-overflow-guard">
+    <CostCalcHero />
+    <CostAtAGlance />
+    <CostBooksy />
+    <CostFresha />
+    <CostTeamSize />
+    <CostMarketplaceFees />
+    <CostVat />
+    <CostPayments />
+    <CostScenarios />
+    <CostMethodology />
+    <CostSources />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Booksy and Fresha pricing questions"
+      subHeading="Straight answers on subscriptions, per-barber charges, marketplace fees and which platform costs less."
+      supportHeading="Comparing booking software?"
+      supportText="See how KERSIVO’s flat per-location pricing works for an independent UK barbershop."
+      supportLinkLabel="View KERSIVO pricing"
+      supportLinkHref="/#pricing"
+      faqs={BARBER_COST_CALCULATOR_FAQ_ITEMS}
+    />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/#pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'Contact', href: '/#contact' },
+        { name: 'Start subscription', href: '/admin/launch' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

@@ -1,0 +1,27 @@
+---
+import { COST_SCENARIOS, SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="cost-examples" class="cost-calc__section" aria-labelledby="cost-calc-scenarios-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Worked examples</p>
+      <h2 id="cost-calc-scenarios-title" class="cost-calc__h2">Cost examples for different UK barbershops</h2>
+      <p class="cost-calc__lead">{SCENARIOS_INTRO}</p>
+    </header>
+
+    <ul class="cost-calc-scenarios">
+      {
+        COST_SCENARIOS.map((scenario) => (
+          <li class="cost-calc-scenarios__item">
+            <h3 class="cost-calc-scenarios__title">{scenario.label}</h3>
+            <p class="cost-calc-scenarios__barbers">{scenario.barbers}</p>
+            <p class="cost-calc-scenarios__body">{scenario.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="cost-calc__closing">{SCENARIOS_NOTE}</p>
+  </div>
+</section>

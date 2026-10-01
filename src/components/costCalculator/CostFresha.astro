@@ -1,0 +1,39 @@
+---
+import { FRESHA_COST_FACTS, FRESHA_COST_INTRO, FRESHA_COST_NOTES } from '@/lib/seo/barberCostCalculatorPage';
+import { FRESHA_FACTS_CHECKED_DATE, FRESHA_FACTS_CHECKED_ISO, getFreshaSource } from '@/lib/seo/freshaFacts';
+
+const pricingSource = getFreshaSource('pricingUk');
+---
+
+<section id="fresha-cost" class="cost-calc__section" aria-labelledby="cost-calc-fresha-title">
+  <div class="container cost-calc-platform">
+    <header class="cost-calc__intro cost-calc-platform__intro">
+      <p class="cost-calc__eyebrow">Fresha pricing</p>
+      <h2 id="cost-calc-fresha-title" class="cost-calc__h2">How much does Fresha cost in the UK?</h2>
+      <p class="cost-calc__lead">{FRESHA_COST_INTRO}</p>
+      <p class="cost-calc__checked">
+        Checked <time datetime={FRESHA_FACTS_CHECKED_ISO}>{FRESHA_FACTS_CHECKED_DATE}</time> ·
+        <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">{pricingSource.label}</a>
+      </p>
+    </header>
+
+    <div class="cost-calc-platform__detail">
+      <dl class="cost-calc-facts">
+        {
+          FRESHA_COST_FACTS.map((fact) => (
+            <div class="cost-calc-facts__row">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <ul class="cost-calc__list cost-calc-platform__notes">
+        {FRESHA_COST_NOTES.map((note) => <li>{note}</li>)}
+      </ul>
+      <p class="cost-calc__crosslink">
+        <a href="/fresha-alternative">See the full KERSIVO vs Fresha comparison</a>
+      </p>
+    </div>
+  </div>
+</section>

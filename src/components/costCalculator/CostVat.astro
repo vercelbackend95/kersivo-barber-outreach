@@ -1,0 +1,17 @@
+---
+import { VAT_DISCLAIMER, VAT_PARAGRAPHS } from '@/lib/seo/barberCostCalculatorPage';
+---
+
+<section id="vat" class="cost-calc__section" aria-labelledby="cost-calc-vat-title">
+  <div class="container cost-calc-split">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">VAT</p>
+      <h2 id="cost-calc-vat-title" class="cost-calc__h2">How VAT changes the real cost</h2>
+    </header>
+
+    <div class="cost-calc-split__body">
+      {VAT_PARAGRAPHS.map((paragraph) => <p class="cost-calc__prose">{paragraph}</p>)}
+      <p class="cost-calc__disclaimer">{VAT_DISCLAIMER}</p>
+    </div>
+  </div>
+</section>
