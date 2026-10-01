@@ -17,7 +17,7 @@ export const FRESHA_ALTERNATIVE_PAGE_PATH = '/fresha-alternative';
 export const FRESHA_ALTERNATIVE_TITLE = 'Fresha Alternative for UK Barbershops | KERSIVO';
 
 export const FRESHA_ALTERNATIVE_DESCRIPTION =
-  'Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching — a Fresha alternative built for independent UK barbershops.';
+  'Looking for a Fresha alternative in the UK? Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching for independent barbershops.';
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
 export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-09-30';

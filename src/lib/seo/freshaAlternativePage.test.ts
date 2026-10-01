@@ -148,7 +148,9 @@ describe('fresha-alternative page SEO foundation', () => {
     expect(FRESHA_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(110);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
-    expect(FRESHA_ALTERNATIVE_DESCRIPTION).toMatch(/^Compare KERSIVO and Fresha pricing, fees/);
+    expect(FRESHA_ALTERNATIVE_DESCRIPTION).toBe(
+      'Looking for a Fresha alternative in the UK? Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching for independent barbershops.',
+    );
     expect(FRESHA_ALTERNATIVE_DESCRIPTION).toContain('Fresha alternative');
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.match(/Fresha/g)?.length).toBeLessThanOrEqual(2);
   });
