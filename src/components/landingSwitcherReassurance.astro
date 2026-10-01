@@ -5,9 +5,15 @@ interface Props {
   className?: string;
   /** Homepage-only link to the Booksy comparison landing page. */
   showBooksyCompareLink?: boolean;
+  /** Homepage-only link to the Fresha comparison landing page. */
+  showFreshaCompareLink?: boolean;
 }
 
-const { className = '', showBooksyCompareLink = false } = Astro.props as Props;
+const {
+  className = '',
+  showBooksyCompareLink = false,
+  showFreshaCompareLink = false,
+} = Astro.props as Props;
 
 const trustPoints = [
   'Migration help for usable exported data',
@@ -119,6 +125,16 @@ const trustPoints = [
             class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare"
           >
             Compare KERSIVO and Booksy
+          </a>
+        ) : null
+      }
+      {
+        showFreshaCompareLink ? (
+          <a
+            href="/fresha-alternative"
+            class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare"
+          >
+            Compare KERSIVO and Fresha
           </a>
         ) : null
       }

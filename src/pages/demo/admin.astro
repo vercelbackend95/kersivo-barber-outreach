@@ -6,6 +6,7 @@ import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import { getBlacklineBookingsResponse } from '@/lib/admin/blacklineDemoFixtures/schedule';
 import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
 import { BLACKLINE_ADMIN_DEMO_PATH } from '@/lib/admin/demoConfig';
+import { BLACKLINE_HERO_SHOWCASE_DAY, blacklineHeroShowcaseNow } from '@/lib/admin/heroShowcase';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
@@ -28,9 +29,12 @@ import '@/styles/components/admin-retail-onboarding.css';
 import '@/styles/components/table.css';
 import '@/styles/components/admin-ai.css';
 
-const todayKey = blacklineDayKey();
+const heroEmbed = Astro.url.searchParams.get('embed') === 'hero';
+const bookingsNow = heroEmbed ? blacklineHeroShowcaseNow() : new Date();
+const todayKey = heroEmbed ? BLACKLINE_HERO_SHOWCASE_DAY : blacklineDayKey(bookingsNow);
 const { bookings: initialBookings } = getBlacklineBookingsResponse(
   new URLSearchParams({ date: todayKey, mode: 'day' }),
+  bookingsNow,
 );
 ---
 
@@ -39,9 +43,12 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
   description="Fictional BLACKLINE owner dashboard using sample KERSIVO admin data. No real appointments, orders or payments are created."
   canonicalPath={BLACKLINE_ADMIN_DEMO_PATH}
   htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
+  bodyClass={heroEmbed ? 'admin-theme-premium-black admin-hero-embed-body' : 'admin-theme-premium-black'}
   viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
   noindex={true}
+  enableAnalytics={!heroEmbed}
+  showCookieConsent={!heroEmbed}
+  enableClientRouter={!heroEmbed}
 >
   <link
     slot="head"
@@ -67,8 +74,12 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
     type="font/woff2"
     crossorigin
   />
-  <DemoBanner view="admin" />
-  <main class="container page-wrap admin-page-wrap" data-demo-tenant="blackline">
+  {heroEmbed ? null : <DemoBanner view="admin" />}
+  <main
+    class={heroEmbed ? 'page-wrap admin-page-wrap admin-page-wrap--hero-embed' : 'container page-wrap admin-page-wrap'}
+    data-demo-tenant="blackline"
+    data-hero-embed={heroEmbed ? 'true' : undefined}
+  >
     <h1 class="sr-only">BLACKLINE owner dashboard</h1>
     <AdminPanel
       client:load
@@ -76,7 +87,347 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       demoTenant="blackline"
       initialBookings={initialBookings}
       initialSection={Astro.url.searchParams.get('section')}
+      showcaseMode={heroEmbed}
     />
   </main>
-  <InitDataTrackScript />
+  {heroEmbed ? null : <InitDataTrackScript />}
+
+  {
+    heroEmbed ? (
+      <style is:global>
+        html.admin-app-scroll,
+        html.admin-app-scroll body.admin-hero-embed-body {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          background: #030303;
+          overflow: hidden !important;
+        }
+
+        /* The fixed showcase never scrolls itself, so touch drags must chain to the landing page. */
+        body.admin-hero-embed-body,
+        body.admin-hero-embed-body * {
+          overscroll-behavior: auto !important;
+        }
+
+        body.admin-hero-embed-body {
+          margin: 0;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed {
+          position: fixed;
+          inset: 0;
+          width: 100%;
+          max-width: none;
+          height: 100%;
+          min-height: 0;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+
+        /* Showcase host chain: iframe → body → main → astro-island → admin shell. */
+        /*
+         * Astro wraps hydrated React components in <astro-island>. In showcase
+         * mode this host must participate in the fixed-height chain; otherwise
+         * percentage heights inside AdminLayout can fall back to content height
+         * and the sidebar footer moves between sections.
+         */
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed > astro-island {
+          display: block;
+          width: 100%;
+          height: 100%;
+          min-width: 0;
+          min-height: 0;
+          overflow: hidden;
+          contain: layout paint size;
+        }
+
+        body.admin-hero-embed-body
+          .admin-page-wrap--hero-embed
+          > astro-island
+          > .admin-shell--showcase {
+          width: 100%;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: 100% !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-shell {
+          height: 100%;
+          min-height: 0 !important;
+          border-radius: 0;
+          overflow: hidden;
+        }
+
+        /*
+         * Linear-style showcase contract:
+         * one immutable application frame. The sidebar and outer grid never
+         * participate in section transitions; only the content canvas changes.
+         */
+        body.admin-hero-embed-body .admin-shell--showcase {
+          box-sizing: border-box;
+          width: 100%;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: 100% !important;
+          grid-template-rows: minmax(0, 1fr);
+          align-items: stretch;
+          overflow: hidden !important;
+          contain: layout paint size;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase > .admin-sidebar {
+          position: relative;
+          inset: auto;
+          top: auto;
+          align-self: stretch;
+          display: grid !important;
+          grid-template-rows: auto minmax(0, 1fr) auto;
+          align-content: stretch;
+          box-sizing: border-box;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: 100% !important;
+          overflow: hidden !important;
+          contain: layout paint size;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-brand {
+          min-height: 0;
+        }
+
+        /* The BLACKLINE lockup is pinned to the sidebar's left edge in every showcase frame. */
+        body.admin-hero-embed-body
+          .admin-shell--showcase
+          > .admin-sidebar
+          > .admin-sidebar-brand--blackline {
+          justify-self: stretch;
+          box-sizing: border-box;
+          width: 100%;
+          align-items: flex-start;
+          justify-content: flex-start;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shell--showcase
+          > .admin-sidebar
+          > .admin-sidebar-brand--blackline
+          .bl-lockup {
+          align-self: flex-start;
+          margin-inline: 0 auto;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-nav {
+          min-height: 0;
+          align-self: start;
+          align-content: start;
+          grid-auto-rows: max-content;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-sidebar-logout-wrap {
+          align-self: end;
+          min-height: 0;
+          margin-top: 0 !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase > .admin-main-content {
+          align-self: stretch;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100% !important;
+          min-height: 0 !important;
+          max-height: 100% !important;
+          overflow: hidden !important;
+          contain: layout paint size;
+        }
+
+        body.admin-hero-embed-body .admin-shell--showcase .admin-main-panel {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          max-height: 100%;
+          overflow: hidden !important;
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+          transition: none !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar {
+          height: 100% !important;
+          min-height: 0;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-sidebar-nav {
+          overflow-x: hidden !important;
+          overflow-y: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-content {
+          height: 100%;
+          min-height: 0 !important;
+          border-radius: 0;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .admin-main-panel {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden !important;
+        }
+
+        body.admin-hero-embed-body .admin-page-wrap--hero-embed .booking-shell {
+          box-sizing: border-box;
+          height: 100%;
+          min-height: 0;
+          max-height: 100%;
+          overflow: hidden !important;
+        }
+
+        /* Showcase lists are intentionally finite: never create a nested vertical scroller. */
+        body.admin-hero-embed-body .admin-timeline,
+        body.admin-hero-embed-body .admin-timeline-scroll,
+        body.admin-hero-embed-body .admin-products-scroll,
+        body.admin-hero-embed-body .admin-clients-table-wrap,
+        body.admin-hero-embed-body .admin-clients-list,
+        body.admin-hero-embed-body .admin-orders-panel,
+        body.admin-hero-embed-body .admin-orders-grid-wrap {
+          overflow-y: hidden !important;
+          scrollbar-width: none;
+        }
+
+        body.admin-hero-embed-body .admin-timeline-scroll::-webkit-scrollbar,
+        body.admin-hero-embed-body .admin-products-scroll::-webkit-scrollbar,
+        body.admin-hero-embed-body .admin-clients-table-wrap::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Bookings: keep the authentic timeline, simply crop the rest of the day. */
+        body.admin-hero-embed-body [data-feature261-booking-overview-shot] {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        /* Reports: the studio and its stats row are the complete showcase frame. */
+        body.admin-hero-embed-body .booking-shell--reports {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body .booking-shell--reports > .admin-section-header,
+        body.admin-hero-embed-body .booking-shell--reports > .admin-next-block--dash-hero-slot {
+          flex: 0 0 auto;
+        }
+
+        body.admin-hero-embed-body .booking-shell--reports > .admin-reports-body {
+          display: none !important;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          > .admin-analytics-studio--bookings-reports {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-analytics-studio__chart,
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-sales-chart-wrap,
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-sales-chart-inner {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .booking-shell--reports
+          .admin-analytics-studio__chart
+          .admin-sales-chart-canvas {
+          height: 100% !important;
+          min-height: 220px;
+          max-height: none;
+        }
+
+        /* Sales: let the main analytics card own the remaining viewport. */
+        body.admin-hero-embed-body .admin-shop-shell--sales {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales > .admin-section-header {
+          flex: 0 0 auto;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales > .admin-sales-panel {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          > .admin-sales-panel
+          > .admin-analytics-studio {
+          flex: 1 1 auto;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-analytics-studio__chart,
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-sales-chart-wrap,
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-sales-chart-inner {
+          height: 100%;
+          min-height: 0;
+        }
+
+        body.admin-hero-embed-body
+          .admin-shop-shell--sales
+          .admin-analytics-studio__chart
+          .admin-sales-chart-canvas {
+          height: 100% !important;
+          min-height: 300px;
+          max-height: none;
+        }
+
+        body.admin-hero-embed-body .admin-shop-shell--sales .admin-leaderboard {
+          display: none !important;
+        }
+
+        body.admin-hero-embed-body .admin-sidebar-launch-cta--conversion {
+          display: none;
+        }
+      </style>
+    ) : null
+  }
+  <script>
+    import { forwardHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
+
+    if (document.body.classList.contains('admin-hero-embed-body')) forwardHeroShowcaseWheel(window);
+  </script>
 </MinimalLayout>

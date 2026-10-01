@@ -1,0 +1,17 @@
+---
+import ModelComparison from '@/components/editorial/ModelComparison.astro';
+import { FRESHA_FIT_CLOSING, FRESHA_FIT_PATHS } from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="which-model" class="fresha-alt__section" aria-labelledby="fresha-alt-fit-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">TWO MODELS</p>
+      <h2 id="fresha-alt-fit-title" class="fresha-alt__h2">Which model fits your barbershop?</h2>
+    </header>
+
+    <ModelComparison idPrefix="fresha-alt-fit" models={FRESHA_FIT_PATHS} conclusion={FRESHA_FIT_CLOSING}>
+      Also comparing Booksy? <a href="/booksy-alternative">Compare KERSIVO and Booksy <span aria-hidden="true">→</span></a>
+    </ModelComparison>
+  </div>
+</section>

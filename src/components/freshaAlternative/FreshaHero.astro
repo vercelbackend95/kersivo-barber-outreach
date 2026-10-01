@@ -1,0 +1,83 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+---
+
+<section class="fresha-alt-hero" aria-labelledby="fresha-alt-hero-title">
+  <div class="fresha-alt-hero__content">
+    <p class="fresha-alt-hero__eyebrow">
+      <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
+      Fresha alternative for UK barbershops
+    </p>
+
+    <h1 id="fresha-alt-hero-title" class="fresha-alt-hero__title">
+      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Fresha alternative</span>
+      <span class="fresha-alt-hero__title-line">built around your</span>
+      <span class="fresha-alt-hero__title-line">barbershop.</span>
+    </h1>
+
+    <p class="fresha-alt-hero__lead">
+      Own your website, bookings and client relationship — all under your own brand.
+    </p>
+
+    <div class="fresha-alt-hero__actions">
+      <a
+        href="/demo"
+        class="fresha-alt-hero__action fresha-alt-hero__action--primary"
+        data-track="view_live_demo_click"
+      >
+        Open the full demo
+      </a>
+      <a
+        href="#comparison"
+        class="fresha-alt-hero__action fresha-alt-hero__action--secondary"
+      >
+        Compare KERSIVO and Fresha
+      </a>
+    </div>
+
+    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
+      <span><strong>£{SAAS_MONTHLY_GBP}/month</strong></span>
+      <span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission</span>
+      <span aria-hidden="true">·</span>
+      <span>Built for independent UK barbershops</span>
+    </div>
+  </div>
+
+  <div class="fresha-alt-hero__product-shell">
+    <div class="fresha-alt-hero__product-glow" aria-hidden="true"></div>
+
+    <div class="fresha-alt-hero__product-viewport" data-deferred-demo-frame>
+      <iframe
+        class="fresha-alt-hero__product-frame"
+        data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"
+        title="Interactive KERSIVO owner dashboard demo"
+      ></iframe>
+      <noscript>
+        <iframe
+          src="/demo/admin?embed=hero&section=bookings_dashboard"
+          title="Interactive KERSIVO owner dashboard demo"
+        ></iframe>
+      </noscript>
+    </div>
+
+    <p class="fresha-alt-hero__product-caption">
+      This is the real KERSIVO demo dashboard. Click around — bookings, team, reports and more.
+    </p>
+  </div>
+</section>
+
+<script>
+  import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
+    import { announceHeroShowcaseVisibleWhenSeen } from '@/lib/admin/heroShowcaseVisibility';
+    import { receiveHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
+    import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
+
+    const viewport = document.querySelector<HTMLElement>('[data-deferred-demo-frame]');
+    const productFrame = viewport?.querySelector<HTMLIFrameElement>('.fresha-alt-hero__product-frame');
+    if (productFrame) receiveHeroShowcaseWheel(productFrame, window);
+    if (viewport) {
+      mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
+      if (productFrame) announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, window);
+    }
+</script>

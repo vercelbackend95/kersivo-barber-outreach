@@ -4,6 +4,8 @@ import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
+import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
+import { signalHeroShowcaseReadyWhenSettled } from './heroShowcaseReady';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
 import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
@@ -118,6 +120,8 @@ type AdminPanelProps = {
   initialBookings?: DemoDayBooking[];
   /** URL `?section=` from the Astro host so the first paint matches the deep link. */
   initialSection?: string | null;
+  /** Fixed-height landing-page embed: render a finite, non-scrolling showcase of long lists. */
+  showcaseMode?: boolean;
 };
 
 export default function AdminPanel({
@@ -125,6 +129,7 @@ export default function AdminPanel({
   demoTenant = 'generic',
   initialBookings,
   initialSection = null,
+  showcaseMode = false,
 }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     resolveAdminSpaSection(
@@ -286,7 +291,7 @@ export default function AdminPanel({
   }, [demoMode]);
 
   useEffect(() => {
-    if (!demoMode) return;
+    if (!demoMode || showcaseMode) return;
     void (async () => {
       try {
         const response = await fetch('/api/admin-demo/session');
@@ -295,7 +300,12 @@ export default function AdminPanel({
         setDemoLoadError(true);
       }
     })();
-  }, [demoMode]);
+  }, [demoMode, showcaseMode]);
+
+  useEffect(() => {
+    if (!showcaseMode) return undefined;
+    return signalHeroShowcaseReadyWhenSettled();
+  }, [showcaseMode]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {
     if (section === activeSection) return;
@@ -314,9 +324,9 @@ export default function AdminPanel({
     }
 
     setActiveSection(section);
-    // Timeline ↔ History owns its compositor fade inside BookingsAdminPanel.
-    // Avoid stacking the route-level entrance animation on top of that fade.
-    setIsEntering(!isBookingsSubviewSwitch);
+    // Landing showcase keeps the application chrome completely static. Only the
+    // right-hand content canvas changes; no route-level entrance/pending state.
+    setIsEntering(showcaseMode ? false : !isBookingsSubviewSwitch);
     setShowPending(false);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
@@ -327,7 +337,7 @@ export default function AdminPanel({
       window.history.pushState({ adminSection: section }, '', nextUrl);
     }
 
-    if (isBookingsSubviewSwitch) return;
+    if (showcaseMode || isBookingsSubviewSwitch) return;
 
     pendingTimeoutRef.current = window.setTimeout(() => {
       setShowPending(true);
@@ -343,7 +353,7 @@ export default function AdminPanel({
       }
       transitionTimeoutRef.current = null;
     }, 180);
-  }, [activeSection]);
+  }, [activeSection, showcaseMode]);
 
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
@@ -358,8 +368,9 @@ export default function AdminPanel({
     || activeSection === 'bookings_history_tab';
 
   useEffect(() => {
+    if (showcaseMode) return;
     clearTransientAdminViewportState();
-  }, [activeSection]);
+  }, [activeSection, showcaseMode]);
 
   useEffect(() => {
     return () => {
@@ -398,6 +409,7 @@ export default function AdminPanel({
   const sessionPending = !demoMode && !authReady;
 
   return (
+    <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
     <AdminTodayBookingsLiveProvider
       isPublicDemo={demoMode}
       isBlacklineDemo={demoTenant === 'blackline'}
@@ -422,6 +434,7 @@ export default function AdminPanel({
         isPreviewAccess={demoMode ? false : isPreviewAccess}
         permissions={demoMode ? null : permissions}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
+        showcaseMode={showcaseMode}
       >
         {sessionPending ? null : (
           <>
@@ -443,21 +456,33 @@ export default function AdminPanel({
           historyWithinBookings={activeSection === 'bookings_history_tab'}
           onOpenHistoryWithinBookings={() => handleSectionChange('bookings_history_tab')}
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
+          showcaseMode={showcaseMode}
         />
 
         <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
             {activeSection === 'services' ? (
-              <ServicesAdminPanel key="services" isBlacklineDemo={demoTenant === 'blackline'} />
+              <ServicesAdminPanel
+                key="services"
+                isBlacklineDemo={demoTenant === 'blackline'}
+                showcaseMode={showcaseMode}
+              />
             ) : null}
 
-            {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
+            {activeSection === 'bookings_clients' ? (
+              <ClientsAdminPanel key="clients" showcaseMode={showcaseMode} />
+            ) : null}
 
             {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-              <ShopAdminPanel key="shop" initialTab={shopTab} isBlacklineDemo={demoTenant === 'blackline'} />
+              <ShopAdminPanel
+                key="shop"
+                initialTab={shopTab}
+                isBlacklineDemo={demoTenant === 'blackline'}
+                showcaseMode={showcaseMode}
+              />
             ) : null}
 
-            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
+            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} showcaseMode={showcaseMode} /> : null}
 
             {activeSection === 'barbershop_settings' ? (
               <BarbershopSettingsPanel
@@ -477,5 +502,6 @@ export default function AdminPanel({
         )}
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
+    </AdminClockContext.Provider>
   );
 }

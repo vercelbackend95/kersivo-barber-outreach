@@ -1,0 +1,314 @@
+/* Process timeline — one vertical path of numbered steps. Mobile: rail on the
+   left. Desktop: centred spine with steps alternating left/right. The accent
+   fill grows with scroll once the script enhances the component; without JS
+   or with reduced motion the path is shown complete. Brand-neutral. */
+
+.process-timeline {
+  --process-node: 2.5rem;
+  --process-gap: 1.25rem;
+  --process-line: 2px;
+  --process-track: color-mix(in srgb, var(--fg) 9%, transparent);
+  --process-red: color-mix(in srgb, var(--accent) 88%, var(--fg));
+  --process-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  max-width: 38rem;
+  margin: clamp(0.75rem, 2vw, 1.5rem) auto 0;
+}
+
+.process-timeline__path {
+  position: relative;
+}
+
+.process-timeline__track {
+  position: absolute;
+  top: var(--process-line-start, calc(var(--process-node) / 2));
+  left: calc(var(--process-node) / 2 - var(--process-line) / 2);
+  width: var(--process-line);
+  height: var(--process-line-length, calc(100% - var(--process-node) / 2));
+  border-radius: var(--process-line);
+  background: var(--process-track);
+  pointer-events: none;
+}
+
+.process-timeline__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--process-red) 55%, transparent) 0%,
+    var(--process-red) 18%,
+    var(--process-red) 100%
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 35%, transparent);
+  transform: scaleY(var(--process-progress, 1));
+  transform-origin: top;
+}
+
+.process-timeline__steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.75rem, 7vw, 3.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.process-timeline__step {
+  position: relative;
+  max-width: none;
+  display: grid;
+  grid-template-columns: var(--process-node) minmax(0, 1fr);
+  column-gap: var(--process-gap);
+  align-items: start;
+}
+
+.process-timeline__node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--process-node);
+  height: var(--process-node);
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--fg) 60%, var(--muted));
+  transition:
+    border-color 450ms ease,
+    color 450ms ease,
+    box-shadow 450ms ease;
+}
+
+.process-timeline:not(.is-enhanced) .process-timeline__node,
+.process-timeline__step.is-reached .process-timeline__node {
+  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  color: var(--fg);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.process-timeline__content {
+  min-width: 0;
+  padding-top: 0.45rem;
+}
+
+.process-timeline__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  font-weight: 620;
+  line-height: 1.3;
+  letter-spacing: -0.018em;
+  text-transform: none;
+  color: var(--fg);
+  text-wrap: balance;
+}
+
+.process-timeline__body {
+  margin: 0.45rem 0 0;
+  max-width: 40ch;
+  font-size: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
+  line-height: 1.62;
+  color: color-mix(in srgb, var(--fg) 64%, var(--muted));
+  text-wrap: pretty;
+}
+
+/* Scroll reveal — only once the script has enhanced the component */
+@media (prefers-reduced-motion: no-preference) {
+  .process-timeline.is-enhanced .process-timeline__step {
+    --process-reveal-x: 0px;
+
+    opacity: 0;
+    transform: translate3d(var(--process-reveal-x), 14px, 0);
+  }
+
+  .process-timeline.is-enhanced .process-timeline__step.is-visible {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 700ms var(--process-ease),
+      transform 800ms var(--process-ease);
+  }
+}
+
+/* Supporting note */
+.process-timeline__note {
+  max-width: 38rem;
+  margin: clamp(2.5rem, 5vw, 3.75rem) auto 0;
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.process-timeline__note-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+}
+
+.process-timeline__note-points {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.process-timeline__note-points li {
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: color-mix(in srgb, var(--fg) 64%, var(--muted));
+  text-wrap: pretty;
+}
+
+.process-timeline__note-link {
+  margin: 0.6rem 0 0;
+}
+
+.process-timeline__note-link a {
+  display: inline-block;
+  padding-block: 0.6rem;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg) 45%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+}
+
+.process-timeline__note-link a span {
+  display: inline-block;
+  margin-left: 0.3rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .process-timeline__note-link a {
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .process-timeline__note-link a span {
+    transition: transform 200ms ease;
+  }
+
+  .process-timeline__note-link a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .process-timeline__note-link a:hover span {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-timeline__node,
+  .process-timeline__note-link a span {
+    transition: none;
+  }
+
+  .process-timeline__note-link a:hover span {
+    transform: none;
+  }
+}
+
+/* Desktop: centred spine, steps alternate and interlock */
+@media (min-width: 60rem) {
+  .process-timeline {
+    --process-node: 2.75rem;
+    --process-arm: clamp(1.5rem, 2.6vw, 2.5rem);
+
+    max-width: 60rem;
+  }
+
+  .process-timeline__track {
+    left: calc(50% - var(--process-line) / 2);
+  }
+
+  .process-timeline__steps {
+    gap: 0;
+  }
+
+  .process-timeline__step {
+    grid-template-columns: minmax(0, 1fr) var(--process-node) minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .process-timeline__step + .process-timeline__step {
+    margin-top: 0.75rem;
+  }
+
+  .process-timeline__node {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .process-timeline__content {
+    grid-row: 1;
+    position: relative;
+    max-width: 24rem;
+    padding-top: 0.6rem;
+    padding-bottom: 2.25rem;
+  }
+
+  /* Short arm from the node towards the text */
+  .process-timeline__content::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--process-node) / 2 - 0.5px);
+    width: calc(var(--process-arm) - 0.75rem);
+    height: 1px;
+    background: color-mix(in srgb, var(--fg) 14%, transparent);
+  }
+
+  .process-timeline__step--start .process-timeline__content {
+    grid-column: 1;
+    justify-self: end;
+    padding-right: var(--process-arm);
+  }
+
+  .process-timeline__step--start .process-timeline__content::before {
+    right: 0;
+  }
+
+  .process-timeline__step--end .process-timeline__content {
+    grid-column: 3;
+    justify-self: start;
+    padding-left: var(--process-arm);
+  }
+
+  .process-timeline__step--end .process-timeline__content::before {
+    left: 0;
+  }
+
+  .process-timeline__step:last-child .process-timeline__content {
+    padding-bottom: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .process-timeline.is-enhanced .process-timeline__step--start {
+      --process-reveal-x: -10px;
+    }
+
+    .process-timeline.is-enhanced .process-timeline__step--end {
+      --process-reveal-x: 10px;
+    }
+  }
+
+  .process-timeline__note {
+    max-width: 52rem;
+  }
+
+  .process-timeline__note-points {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+  }
+}

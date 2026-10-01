@@ -253,6 +253,76 @@
   color: var(--muted);
 }
 
+/*
+ * Landing hero iframe: a fixed application chat. The shell is exactly the content canvas;
+ * the header keeps its intrinsic height and the layout takes only what is left. Inside the
+ * chat, the message history is the single flexible, scrollable child, so the starters,
+ * composer and Send never move however long the conversation gets.
+ */
+.admin-assistant-shell--showcase {
+  box-sizing: border-box;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.admin-assistant-shell--showcase > .admin-section-header {
+  flex: 0 0 auto;
+}
+
+.admin-assistant-shell--showcase > .admin-assistant-layout {
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.admin-assistant-shell--showcase .admin-assistant-chat {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.admin-assistant-shell--showcase .admin-assistant-messages {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-assistant-shell--showcase .admin-assistant-error,
+.admin-assistant-shell--showcase .admin-assistant-starters,
+.admin-assistant-shell--showcase .admin-assistant-composer {
+  flex: 0 0 auto;
+}
+
+.admin-assistant-shell--showcase .admin-assistant-rail {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Narrow showcase canvases are too short for wrapped starters beside the rail. */
+@media (max-width: 63.99rem) {
+  .admin-assistant-shell--showcase > .admin-assistant-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-assistant-shell--showcase .admin-assistant-rail {
+    display: none;
+  }
+
+  .admin-assistant-shell--showcase .admin-assistant-starters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .admin-assistant-shell--showcase .admin-assistant-starter {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 47.99rem) {
   .admin-assistant-layout {
     grid-template-columns: 1fr;

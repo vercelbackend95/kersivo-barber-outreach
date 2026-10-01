@@ -14,6 +14,7 @@ import { GET } from '../../pages/sitemap.xml';
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/booksy-alternative',
+  'https://kersivo.co.uk/fresha-alternative',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/dpa',
@@ -25,13 +26,14 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(7);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(6);
+    expect(new Set(locs).size).toBe(7);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-09-30');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
@@ -52,14 +54,15 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(6);
+    expect(urlMatches).toHaveLength(7);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
     expect(xml).toContain('<lastmod>2026-09-24</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
-    expect(xml.match(/<lastmod>/g)?.length).toBe(4);
+    expect(xml).toContain('<lastmod>2026-09-30</lastmod>');
+    expect(xml.match(/<lastmod>/g)?.length).toBe(5);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');

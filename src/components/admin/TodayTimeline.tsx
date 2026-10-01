@@ -11,7 +11,9 @@ import { ArrowRight, Sparkles, User, X } from '../lucide-react';
 import BookingStatusActionGlyph, { getStatusActionVisual } from './BookingStatusActionGlyph';
 import ClientProfilePanel from './ClientProfilePanel';
 import { adminFetchJson, ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
+import { useAdminClock } from './adminClock';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
+import { scrollContainerToRow } from '../../lib/admin/timelineNowScroll';
 
 type TimelineBarber = {
   id: string;
@@ -59,6 +61,13 @@ type TodayTimelineProps = {
   isLoading?: boolean;
   isSearchActive?: boolean;
   allowInitialNowScroll?: boolean;
+  /**
+   * Landing showcase: move only the timeline's own scroll container to the "now" row (never
+   * the page or any other ancestor), with an eased scroll the visitor can watch.
+   */
+  containInitialNowScroll?: boolean;
+  /** Fires once when the initial scroll to "now" starts. */
+  onInitialNowScroll?: () => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   onBookingClick: (booking: TimelineBooking) => void;
   onGoToNextDay?: () => void;
@@ -130,16 +139,15 @@ function getLondonRelativeMinute(input: Date | string): number {
   return getLondonMinuteOfDay(input) - TIMELINE_START_HOUR * 60;
 }
 
-function getCurrentLondonMinute(): number {
-  const now = new Date();
+function getCurrentLondonMinute(nowMs: number): number {
+  const now = new Date(nowMs);
   const hour = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'HH'));
   const minute = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'mm'));
   return hour * 60 + minute - TIMELINE_START_HOUR * 60;
 }
 
-function getCurrentLondonTimeLabel(): string {
-  const now = new Date();
-  return formatInTimeZone(now, ADMIN_TIMEZONE, 'HH:mm');
+function getCurrentLondonTimeLabel(nowMs: number): string {
+  return formatInTimeZone(new Date(nowMs), ADMIN_TIMEZONE, 'HH:mm');
 }
 
 // ─── Progress calculation ─────────────────────────────────────────────────────
@@ -257,10 +265,11 @@ function buildSlotList(
     .map((slot) => ({ kind: 'slot', slot }));
 
   if (nowMinute !== null && nowMinute >= 0 && nowMinute <= TIMELINE_TOTAL_MINUTES) {
+    const nowDayMinute = nowMinute + TIMELINE_START_HOUR * 60;
     const nowItem: ListItem = {
       kind: 'now',
       relativeMinute: nowMinute,
-      timeLabel: getCurrentLondonTimeLabel(),
+      timeLabel: `${String(Math.floor(nowDayMinute / 60)).padStart(2, '0')}:${String(nowDayMinute % 60).padStart(2, '0')}`,
     };
     const insertIdx = slots.findIndex(
       (item) => item.kind === 'slot' && item.slot.relativeMinute > nowMinute
@@ -368,6 +377,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   canChangeService = true,
   actionRoleScope = 'shop',
 }: BookingExpansionCardProps) {
+  const clock = useAdminClock();
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
   const [barberImgError, setBarberImgError] = useState(false);
@@ -801,6 +811,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     status: localStatus,
     startAt: booking.startAt,
     endAt: booking.endAt,
+    nowMs: clock.nowMs(),
   });
   const isCancelled = effectiveStatus.startsWith('CANCELLED');
   const isCompleted = effectiveStatus === 'COMPLETED';
@@ -827,6 +838,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         {
           startAt: booking.startAt,
           endAt: booking.endAt,
+          nowMs: clock.nowMs(),
         },
         actionRoleScope,
       ) as StatusMenuItem[])
@@ -1363,7 +1375,10 @@ const BarberAvatarPin = memo(function BarberAvatarPin({
 }: BarberAvatarPinProps) {
   const [imgError, setImgError] = useState(false);
   const initials = getInitials(barber.name);
-  const reduceMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
+  const { frozen: clockFrozen } = useAdminClock();
+  // A frozen clock has no "later" to animate towards: pins stay at their position at now.
+  const reduceMotion = prefersReducedMotion || clockFrozen;
 
   // Initialise the MotionValue imperatively so the avatar starts at the correct
   // progress point regardless of any parent AnimatePresence initial={false}.
@@ -1735,6 +1750,8 @@ function TodayTimeline({
   isLoading = false,
   isSearchActive = false,
   allowInitialNowScroll = true,
+  containInitialNowScroll = false,
+  onInitialNowScroll,
   onBookingClick,
   scrollContainerRef,
   onGoToNextDay,
@@ -1752,8 +1769,13 @@ function TodayTimeline({
   const nowRowRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToNow = useRef(false);
   const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
+  const containedNowScrollRef = useRef<(() => void) | null>(null);
   const handledFocusBookingIdRef = useRef<string | null>(null);
   const reduceMotion = useReducedMotion();
+  const reduceMotionRef = useRef(reduceMotion === true);
+  reduceMotionRef.current = reduceMotion === true;
+  const onInitialNowScrollRef = useRef(onInitialNowScroll);
+  onInitialNowScrollRef.current = onInitialNowScroll;
 
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
   const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
@@ -1851,14 +1873,15 @@ function TodayTimeline({
     }
   }, [focusBookingId]);
 
-  const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const clock = useAdminClock();
+  const todayLondon = formatInTimeZone(new Date(clock.nowMs()), ADMIN_TIMEZONE, 'yyyy-MM-dd');
   const isToday = selectedDate === todayLondon;
 
   const [nowMinute, setNowMinute] = useState<number | null>(() =>
-    isToday ? getCurrentLondonMinute() : null
+    isToday ? getCurrentLondonMinute(clock.nowMs()) : null
   );
   const [nowTimeLabel, setNowTimeLabel] = useState<string>(() =>
-    isToday ? getCurrentLondonTimeLabel() : ''
+    isToday ? getCurrentLondonTimeLabel(clock.nowMs()) : ''
   );
 
   useEffect(() => {
@@ -1868,20 +1891,21 @@ function TodayTimeline({
       return;
     }
     const tick = () => {
-      setNowMinute(getCurrentLondonMinute());
-      setNowTimeLabel(getCurrentLondonTimeLabel());
+      setNowMinute(getCurrentLondonMinute(clock.nowMs()));
+      setNowTimeLabel(getCurrentLondonTimeLabel(clock.nowMs()));
     };
     tick();
+    if (clock.frozen) return;
     const id = window.setInterval(tick, NOW_REFRESH_MS);
     return () => window.clearInterval(id);
-  }, [isToday, selectedDate]);
+  }, [clock, isToday, selectedDate]);
 
   // nowMs drives the progress animation in BarberAvatarPin. It is recomputed
   // every 15 s when nowMinute updates so Framer Motion gets fresh remaining-
   // duration values and continues each avatar's linear animation smoothly —
   // no requestAnimationFrame loop required between ticks.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const nowMs = useMemo(() => (isToday ? Date.now() : null), [nowMinute, isToday]);
+  const nowMs = useMemo(() => (isToday ? clock.nowMs() : null), [clock, nowMinute, isToday]);
 
   const items = useMemo(
     () => buildSlotList(barbers, bookings, timeBlocks, nowMinute),
@@ -1893,6 +1917,26 @@ function TodayTimeline({
     const el = nowRowRef.current;
     if (!el) return;
     hasScrolledToNow.current = true;
+    if (containInitialNowScroll) {
+      scrollToNowRafRefs.current.first = window.requestAnimationFrame(() => {
+        scrollToNowRafRefs.current.first = null;
+        scrollToNowRafRefs.current.second = window.requestAnimationFrame(() => {
+          scrollToNowRafRefs.current.second = null;
+          const container = activeScrollRef.current;
+          if (!container) return;
+          onInitialNowScrollRef.current?.();
+          containedNowScrollRef.current?.();
+          containedNowScrollRef.current = scrollContainerToRow(container, el, reduceMotionRef.current);
+        });
+      });
+      return () => {
+        const pending = scrollToNowRafRefs.current.first !== null || scrollToNowRafRefs.current.second !== null;
+        if (scrollToNowRafRefs.current.first !== null) window.cancelAnimationFrame(scrollToNowRafRefs.current.first);
+        if (scrollToNowRafRefs.current.second !== null) window.cancelAnimationFrame(scrollToNowRafRefs.current.second);
+        scrollToNowRafRefs.current = { first: null, second: null };
+        if (pending) hasScrolledToNow.current = false;
+      };
+    }
     scrollToNowRafRefs.current.first = window.requestAnimationFrame(() => {
       scrollToNowRafRefs.current.first = null;
       scrollToNowRafRefs.current.second = window.requestAnimationFrame(() => {
@@ -1910,7 +1954,10 @@ function TodayTimeline({
         scrollToNowRafRefs.current.second = null;
       }
     };
-  }, [allowInitialNowScroll, focusBookingId, isToday, items]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowInitialNowScroll, containInitialNowScroll, focusBookingId, isToday, items]);
+
+  useEffect(() => () => containedNowScrollRef.current?.(), []);
 
   useEffect(() => {
     hasScrolledToNow.current = false;

@@ -381,9 +381,9 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(serialized).not.toContain('"@type":"Review"');
   });
 
-  it('sitemap includes /booksy-alternative among six marketing URLs', () => {
+  it('sitemap includes /booksy-alternative among seven marketing URLs', () => {
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).toHaveLength(6);
+    expect(locs).toHaveLength(7);
     expect(locs).toContain('https://kersivo.co.uk/booksy-alternative');
     expect(locs).toContain('https://kersivo.co.uk/dpa');
   });
@@ -392,7 +392,7 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(homepageSource).toContain('title={DEFAULT_TITLE}');
     expect(homepageSource).toContain('description={DEFAULT_DESCRIPTION}');
     expect(homepageSource).toContain('canonicalPath="/"');
-    expect(homepageSource).toContain('<LandingSwitcherReassurance showBooksyCompareLink />');
+    expect(homepageSource).toMatch(/<LandingSwitcherReassurance showBooksyCompareLink\b[^>]*\/>/);
     expect(switcherSource).toContain('showBooksyCompareLink');
     expect(switcherSource).toContain('href="/booksy-alternative"');
     expect(switcherSource).toContain('Compare KERSIVO and Booksy');

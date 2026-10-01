@@ -1,0 +1,133 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import FreshaHero from '@/components/freshaAlternative/FreshaHero.astro';
+import FreshaCompare from '@/components/freshaAlternative/FreshaCompare.astro';
+import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
+import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
+import FreshaFinalCta from '@/components/freshaAlternative/FreshaFinalCta.astro';
+import FreshaQuickAnswer from '@/components/freshaAlternative/FreshaQuickAnswer.astro';
+import FreshaWhy from '@/components/freshaAlternative/FreshaWhy.astro';
+import FreshaCosts from '@/components/freshaAlternative/FreshaCosts.astro';
+import FreshaFit from '@/components/freshaAlternative/FreshaFit.astro';
+import FreshaSwitching from '@/components/freshaAlternative/FreshaSwitching.astro';
+import FreshaSources from '@/components/freshaAlternative/FreshaSources.astro';
+import {
+  FRESHA_ALTERNATIVE_DESCRIPTION,
+  FRESHA_ALTERNATIVE_FAQ_ITEMS,
+  FRESHA_ALTERNATIVE_PAGE_PATH,
+  FRESHA_ALTERNATIVE_TITLE,
+  buildFreshaAlternativeFaqJsonLd,
+} from '@/lib/seo/freshaAlternativeFaq';
+import { buildFreshaAlternativeWebPageJsonLd } from '@/lib/seo/freshaAlternativeJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={FRESHA_ALTERNATIVE_TITLE}
+  description={FRESHA_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={FRESHA_ALTERNATIVE_PAGE_PATH}
+  navbarVariant="booksyAlternative"
+  jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeFaqJsonLd()]}
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <FreshaHero />
+    <FreshaQuickAnswer />
+    <FreshaWhy />
+    <FreshaCosts />
+    <FreshaCompare />
+    <FreshaProof />
+    <FreshaFit />
+    <FreshaSwitching />
+    <FreshaPricing />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about comparing Fresha and KERSIVO?"
+      subHeading="Clear answers on pricing, commission, switching, client booking and the live demo."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
+      faqs={FRESHA_ALTERNATIVE_FAQ_ITEMS}
+    />
+
+    <FreshaFinalCta />
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still comparing KERSIVO and Fresha?"
+      description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+      messagePlaceholder="For example: switching from Fresha, setting up deposits, moving client data or launching a new booking website."
+    />
+
+    <FreshaSources />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start subscription', href: '/admin/launch' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initFeature261StaggerReveal());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

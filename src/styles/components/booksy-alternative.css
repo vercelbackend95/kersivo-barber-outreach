@@ -310,6 +310,23 @@
   text-wrap: balance;
 }
 
+.booksy-alt-crosslink {
+  margin: 1rem auto 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.booksy-alt-crosslink a {
+  display: inline-block;
+  padding-block: 0.6rem;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 /* ── Brand journey (centred header + full-width panel) ────── */
 
 .booksy-alt-brand-journey__layout {

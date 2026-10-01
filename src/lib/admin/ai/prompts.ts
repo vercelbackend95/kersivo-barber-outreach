@@ -61,6 +61,8 @@ export const ASSISTANT_STARTERS: StarterPrompt[] = [
   },
 ];
 
+export const ASSISTANT_UPGRADE_NOTE = 'Unlock the full power of KERSIVO Assistant with a KERSIVO subscription.';
+
 /** Fixed demo reply when public admin demo cannot call OpenAI. */
 export function buildDemoAssistantReply(userMessage: string): string {
   const lower = userMessage.toLowerCase();
@@ -80,7 +82,9 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — Barbers: hours On/Off match peaks; TIME OFF for breaks/vacation. Bookings: fill Timeline gaps; mark No Show / Cancel honestly.',
       '3. **Results** — cleaner supply + fewer dead chairs. Habit: Monday Reports check, then fix hours the same day.',
       '',
-      'Follow-up: Clients tags for repeat no-shows. Live AI streams fuller coaching with `OPENAI_API_KEY` on real admin.',
+      'Follow-up: Clients tags for repeat no-shows.',
+      '',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -92,7 +96,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — Feature aftercare that pairs with fades; offer one Featured SKU after Completed bookings; clear Paid pickups same day.',
       '3. **Results** — higher attach and trustworthy Sales. Habit: weekly Sales 7d after your Reports review.',
       '',
-      'Demo canned reply — production Assistant expands this live.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -108,7 +112,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — Find the **Paid** order → expand if needed → **Mark as Collected** after pickup.',
       '3. **Results** — fewer lost pickups and cleaner Sales KPIs. Habit: zero stale Paid at close.',
       '',
-      'Live AI answers need `OPENAI_API_KEY` on a real admin session.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -120,7 +124,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '- **History** — past appointments for patterns → tag Clients.',
       '- **Reports** — range analytics (utilisation, no-shows, leaderboard).',
       '',
-      'Full streaming answers on protected admin with OpenAI configured.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -137,7 +141,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — **Break** for short blocks; **Vacation** for longer; On/Off shift for regular weeks.',
       '3. **Results** — stops overbooking empty chairs → better utilisation and less cancel noise.',
       '',
-      'Canned demo reply grounded in the admin results playbook.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -149,7 +153,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — Read Reliability, Tags, Notes; Message quiet VIPs; tag no-show-risk.',
       '3. **Results** — deposits/reminders for risk clients; priority care for high spend → fewer no-shows, better AOV.',
       '',
-      'Production Assistant streams fuller answers when OpenAI is configured.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -178,7 +182,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **How** — Price £ + duration minutes + barber assignment; Featured for hero cuts; deactivate zombies.',
       '3. **Results** — better mix and chair-time math. Habit: monthly align top services with Reports “most popular”.',
       '',
-      'Demo preview — live model on real admin with `OPENAI_API_KEY`.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -190,7 +194,7 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '2. **Meta** — One sentence on services + own-domain booking + area (under ~155 characters).',
       '3. **Google Business** — Correct category (Barber shop), hours, photos of the chair line, and reply to every review within 48 hours.',
       '',
-      'Live AI answers need a configured OpenAI key on a real admin session.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
@@ -202,27 +206,29 @@ export function buildDemoAssistantReply(userMessage: string): string {
       '- Offer one Featured SKU after a Completed cut → attach rate.',
       '- Confirm movement in **Sales** (AOV / units / leaderboard).',
       '',
-      'Full AI drafting is available on the protected admin when OpenAI is configured.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
   if (lower.includes('deposit') || lower.includes('sms')) {
     return [
-      '**(Demo preview)** No-show reduction pattern that fits Kersivo shops:',
+      '**(Demo preview)** No-show reduction pattern that fits KERSIVO shops:',
       '',
       '- Deposits on peak slots; SMS confirm + day-before.',
       '- Mark **No Show** in **Bookings** promptly; tag risk in **Clients**.',
       '- Watch No-show + Utilisation in **Reports** weekly.',
       '',
-      'This is a canned demo reply; production Assistant streams live advice.',
+      ASSISTANT_UPGRADE_NOTE,
     ].join('\n');
   }
 
   return [
-    '**(Demo preview)** I’m the Kersivo Assistant — trained on every admin tab and how each feature drives utilisation, no-shows, AOV, retail attach, and reliability.',
+    '**(Demo preview)** I’m the KERSIVO Assistant — trained on every admin tab and how each feature drives utilisation, no-shows, AOV, retail attach, and reliability.',
     '',
-    'In this public demo I return sample guidance only (no live model calls). On your real admin with `OPENAI_API_KEY` set, this chat streams full Where / How / Results coaching.',
+    'In this demo I share sample guidance only.',
     '',
     'Try a starter: Raise utilisation, Cut no-shows, Grow retail AOV, or Weekly Reports check.',
+    '',
+    ASSISTANT_UPGRADE_NOTE,
   ].join('\n');
 }

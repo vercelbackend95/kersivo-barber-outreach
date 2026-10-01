@@ -30,6 +30,7 @@ function formatDate(iso: string | null): string {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Europe/London',
   });
 }
 
@@ -43,7 +44,7 @@ const MAX_VISIBLE_TAGS = 3;
 
 const DEBOUNCE_MS = 280;
 
-export default function ClientsAdminPanel() {
+export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMode?: boolean }) {
   const [clients, setClients] = useState<ClientListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +138,8 @@ export default function ClientsAdminPanel() {
     return () => { cancelled = true; };
   }, [debouncedSearch, listVersion]);
 
+  const showcasedClients = showcaseMode ? clients.slice(0, 8) : clients;
+
   return (
     <section className="surface booking-shell admin-clients-section" aria-label="Clients">
       <AdminSectionHeader
@@ -196,7 +199,7 @@ export default function ClientsAdminPanel() {
           </p>
         ) : (
           <ul className="admin-clients-list" role="list">
-            {clients.map((client) => {
+            {showcasedClients.map((client) => {
               const tone = reliabilityTone(client.reliabilityScore);
               const visibleTags = client.tags.slice(0, MAX_VISIBLE_TAGS);
               const hiddenTagCount = client.tags.length - visibleTags.length;

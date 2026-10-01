@@ -114,7 +114,13 @@ function useAdminBodyScrollLock(isLocked: boolean): void {
   }, [isLocked]);
 }
 
-export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlacklineDemo?: boolean }) {
+export default function ServicesAdminPanel({
+  isBlacklineDemo = false,
+  showcaseMode = false,
+}: {
+  isBlacklineDemo?: boolean;
+  showcaseMode?: boolean;
+}) {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +179,7 @@ export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlac
     () => services.filter((service) => service.featured ?? false).length,
     [services]
   );
+  const showcasedServices = showcaseMode ? filteredServices.slice(0, 6) : filteredServices;
   const servicesInitiallyLoading = loading && services.length === 0;
 
   const handleServiceSearchClear = useCallback(() => {
@@ -519,7 +526,7 @@ export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlac
                   variant="filtered"
                 />
               ) : (
-                filteredServices.map((service) => {
+                showcasedServices.map((service) => {
                   const isSavingRow = Boolean(serviceSavingById[service.id]);
                   const categoryLabel = formatCategoryLabel(service.category);
                   const hasTimestamp = Boolean(service.updatedAt || service.createdAt);

@@ -37,8 +37,10 @@ import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryP
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
+import { useAdminClock } from './adminClock';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
+import { listenForHeroShowcaseVisible } from '@/lib/admin/heroShowcaseVisibility';
 import { mergeBlacklineSessionBookings, isBlacklineSessionBookingId } from '@/lib/demo/blacklineSessionBookings';
 import {
   dismissBookingProof,
@@ -226,8 +228,8 @@ function useBodyScrollLock(isLocked: boolean): void {
 }
 
 
-function getTodayLondonDate() {
-  return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+function getTodayLondonDate(nowMs: number) {
+  return formatInTimeZone(new Date(nowMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
 
 function readInitialBookingDateFromUrl(): string | null {
@@ -659,6 +661,8 @@ type BookingsAdminPanelProps = {
    * DemoDayBooking is a structural superset of Booking (extra snapshot fields ignored).
    */
   initialBookings?: Booking[];
+  /** Landing hero iframe: the timeline scrolls to "now" only once the visitor can see it. */
+  showcaseMode?: boolean;
 };
 
 export default function BookingsAdminPanel({
@@ -670,7 +674,9 @@ export default function BookingsAdminPanel({
   isPublicDemo = false,
   isBlacklineDemo = false,
   initialBookings,
+  showcaseMode = false,
 }: BookingsAdminPanelProps) {
+  const clock = useAdminClock();
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
   const [loggedIn, setLoggedIn] = useState(true);
   const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
@@ -682,9 +688,9 @@ export default function BookingsAdminPanel({
   const [bookings, setBookings] = useState<Booking[]>(() => initialBookings ?? []);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(() => initialBookings == null);
   /** True only after a successful fetch (or seeded payload promoted after mount) — never show 0 TODAY on failure. */
-  const [bookingsLoadedOnce, setBookingsLoadedOnce] = useState(false);
+  const [bookingsLoadedOnce, setBookingsLoadedOnce] = useState(() => initialBookings != null && clock.frozen);
   const skipInitialBookingsFetchRef = useRef(
-    initialBookings != null && (urlBookingDate == null || urlBookingDate === getTodayLondonDate()),
+    initialBookings != null && (urlBookingDate == null || urlBookingDate === getTodayLondonDate(clock.nowMs())),
   );
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbersInitialLoading, setBarbersInitialLoading] = useState(true);
@@ -712,7 +718,7 @@ export default function BookingsAdminPanel({
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
   const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [nowMs, setNowMs] = useState(() => clock.nowMs());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isSearchDebouncing, setIsSearchDebouncing] = useState(false);
@@ -729,7 +735,15 @@ export default function BookingsAdminPanel({
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const prevViewRef = useRef<AdminBookingView>('timeline');
   const [isTimelineEnterComplete, setIsTimelineEnterComplete] = useState(activeView !== 'timeline');
-  const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate());
+  /** Showcase only: armed once by the landing page's visibility message, disarmed when the scroll starts. */
+  const [showcaseNowScrollArmed, setShowcaseNowScrollArmed] = useState(false);
+  const disarmShowcaseNowScroll = useCallback(() => setShowcaseNowScrollArmed(false), []);
+
+  useEffect(() => {
+    if (!showcaseMode) return undefined;
+    return listenForHeroShowcaseVisible(window, () => setShowcaseNowScrollArmed(true));
+  }, [showcaseMode]);
+  const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate(clock.nowMs()));
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
   const bookingProofArmedIdRef = useRef<string | null>(
@@ -785,8 +799,8 @@ export default function BookingsAdminPanel({
   const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
   const [blockErrorMessage, setBlockErrorMessage] = useState('');
   const [showHolidayModal, setShowHolidayModal] = useState(false);
-  const [holidayStartInput, setHolidayStartInput] = useState(() => formatLocalInputValue(roundUpLondon(new Date(), SLOT_STEP_MINUTES)));
-  const [holidayEndInput, setHolidayEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
+  const [holidayStartInput, setHolidayStartInput] = useState(() => formatLocalInputValue(roundUpLondon(new Date(clock.nowMs()), SLOT_STEP_MINUTES)));
+  const [holidayEndInput, setHolidayEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(clock.nowMs()), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
   const [holidayAllDay, setHolidayAllDay] = useState(false);
 
   const [openClientId, setOpenClientId] = useState<string | null>(null);
@@ -983,7 +997,7 @@ export default function BookingsAdminPanel({
       const incomingBookings = data.bookings ?? [];
       const prevList = bookingsRef.current;
       const mergedIncoming =
-        isBlacklineDemo && mode !== 'history'
+        isBlacklineDemo && mode !== 'history' && !clock.frozen
           ? (mergeBlacklineSessionBookings(incomingBookings, selectedDate) as Booking[])
           : incomingBookings;
       const mergedBookings = appendHistory ? [...prevList, ...mergedIncoming] : mergedIncoming;
@@ -1041,7 +1055,7 @@ export default function BookingsAdminPanel({
         }
       }
     }
-  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, historyWithinBookings, includeTodayInHistory, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, captureTimelineScroll, clock, debouncedSearchQuery, historyBarberId, historyDateRange, historyWithinBookings, includeTodayInHistory, isActive, isBlacklineDemo, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
@@ -1095,7 +1109,7 @@ export default function BookingsAdminPanel({
       setBookingsInitialLoading(false);
     }
 
-    if (mode === 'history' || mode === 'reports') return;
+    if (mode === 'history' || mode === 'reports' || clock.frozen) return;
 
     const id = window.setInterval(() => {
       void fetchBookings();
@@ -1103,14 +1117,14 @@ export default function BookingsAdminPanel({
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(id);
-  }, [fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, loggedIn, mode]);
+  }, [clock, fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, loggedIn, mode]);
 
   useEffect(() => {
-    if (!isBlacklineDemo || mode === 'history' || mode === 'reports') return;
+    if (!isBlacklineDemo || clock.frozen || mode === 'history' || mode === 'reports') return;
     setBookings((previous) => mergeBlacklineSessionBookings(previous, selectedDate) as Booking[]);
-  }, [isBlacklineDemo, mode, selectedDate]);
+  }, [clock, isBlacklineDemo, mode, selectedDate]);
 
-  useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
+  useEffect(() => { if (!loggedIn || !isActive || clock.frozen) return; const id = window.setInterval(() => setNowMs(clock.nowMs()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [clock, isActive, loggedIn]);
   useEffect(() => {
     if (mode === 'history') {
       setHistorySearchLoading(Boolean(normalizeSearchValue(debouncedSearchQuery)));
@@ -1270,7 +1284,7 @@ export default function BookingsAdminPanel({
 
 
 
-  const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
+  const todayLondonDate = useMemo(() => getTodayLondonDate(nowMs), [nowMs]);
 
   const todayBookings = useMemo(() => bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate)), [bookings, todayLondonDate]);
   const filteredBookings = useMemo(() => {
@@ -1565,11 +1579,11 @@ export default function BookingsAdminPanel({
 
     const fromYmd = formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
     const toYmd = formatInTimeZone(range.to, ADMIN_TIMEZONE, 'yyyy-MM-dd');
-    const todayYmd = getTodayLondonDate();
+    const todayYmd = getTodayLondonDate(clock.nowMs());
     if (fromYmd <= todayYmd && todayYmd <= toYmd) {
       setIncludeTodayInHistory(true);
     }
-  }, []);
+  }, [clock]);
   const clearHistoryDateRange = useCallback(() => {
     setHistoryDateRange(null);
   }, []);
@@ -1993,13 +2007,13 @@ export default function BookingsAdminPanel({
 
 
   async function handleQuickBlock30() {
-    const startAt = roundUpLondon(new Date(), SLOT_STEP_MINUTES);
+    const startAt = roundUpLondon(new Date(clock.nowMs()), SLOT_STEP_MINUTES);
     const endAt = new Date(startAt.getTime() + 30 * 60000);
     await createTimeBlock('Blocked', startAt, endAt);
   }
 
   async function handleQuickLunch() {
-    const { startAt, endAt } = nextLunchWindow(new Date());
+    const { startAt, endAt } = nextLunchWindow(new Date(clock.nowMs()));
     await createTimeBlock('Lunch', startAt, endAt);
   }
 
@@ -2620,7 +2634,11 @@ export default function BookingsAdminPanel({
                       onBookingClick={handleTimelineBookingClick}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
-                      allowInitialNowScroll={isTimelineEnterComplete && !timelineFocusBookingId}
+                      allowInitialNowScroll={
+                        (showcaseMode ? showcaseNowScrollArmed : isTimelineEnterComplete) && !timelineFocusBookingId
+                      }
+                      containInitialNowScroll={showcaseMode}
+                      onInitialNowScroll={showcaseMode ? disarmShowcaseNowScroll : undefined}
                       focusBookingId={timelineFocusBookingId}
                       onFocusBookingHandled={handleTimelineFocusBookingHandled}
                       sessionBarberId={sessionBarberId}

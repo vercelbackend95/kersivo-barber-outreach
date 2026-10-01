@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { fromZonedTime } from 'date-fns-tz';
 import { X } from '../lucide-react';
 import { dateToYmdInLondon } from '@/lib/admin/reportsRange';
+import { useAdminClock } from './adminClock';
 
 type HistoryDateRange = {
   from?: Date;
@@ -64,7 +65,8 @@ export default function HistoryDateRangePicker({
   const isSegmentVariant = variant === 'segment';
   const isDateLabelVariant = variant === 'date-label';
   const isCustomActive = Boolean(dateRange?.from && dateRange?.to);
-  const todayYmd = dateToYmd(new Date(), timezone);
+  const clock = useAdminClock();
+  const todayYmd = dateToYmd(new Date(clock.nowMs()), timezone);
   const fromMaxYmd = toYmd && toYmd < todayYmd ? toYmd : todayYmd;
 
   useEffect(() => {

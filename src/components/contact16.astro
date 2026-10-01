@@ -8,6 +8,7 @@ interface Contact16Props {
   title?: string;
   description?: string;
   note?: string;
+  messagePlaceholder?: string;
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   title = "Have a question before you subscribe?",
   description = "Tell us what you use today and what you want to improve. We’ll reply with a clear, practical answer for your barbershop.",
   note = "We’ll reply by email — no sales call required.",
+  messagePlaceholder = "For example: switching booking systems, setting up deposits, moving client data or launching a new booking website.",
 } = Astro.props as Contact16Props;
 ---
 
@@ -107,7 +109,7 @@ const {
             rows="5"
             maxlength="8000"
             data-demo-message
-            placeholder="For example: switching from Booksy, setting up deposits, moving client data or launching a new booking website."
+            placeholder={messagePlaceholder}
           ></textarea>
         </label>
 

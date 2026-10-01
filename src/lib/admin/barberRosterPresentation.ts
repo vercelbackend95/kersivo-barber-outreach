@@ -1,3 +1,4 @@
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import type { Barber } from '../../components/admin/barbersTypes';
 
 export type BarberBookingPreview = {
@@ -50,11 +51,14 @@ export function bookingDurationHours(booking: BarberBookingPreview): number {
 
 const SCHEDULED_BOOKING_STATUSES = ['BOOKED', 'PENDING', 'RESCHEDULED'] as const;
 
+const ROSTER_TIMEZONE = 'Europe/London';
+
 function formatTimeHHMM(date: Date) {
   return new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
+    timeZone: ROSTER_TIMEZONE,
   }).format(date);
 }
 
@@ -81,17 +85,16 @@ export function truncateServiceLabel(serviceName: string) {
   return `${trimmed.slice(0, 17)}...`;
 }
 
-/** Local calendar day bounds for the given `now` (matches previous BarbersOverview behaviour). */
-export function getLocalDayBounds(now: Date) {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  return { startMs: start.getTime(), endMs: end.getTime() };
+/** Shop (London) calendar day bounds for the given `now`, independent of the viewer's time zone. */
+export function getLondonDayBounds(now: Date) {
+  const dayKey = formatInTimeZone(now, ROSTER_TIMEZONE, 'yyyy-MM-dd');
+  const startMs = fromZonedTime(`${dayKey}T00:00:00.000`, ROSTER_TIMEZONE).getTime();
+  const endMs = fromZonedTime(`${dayKey}T23:59:59.999`, ROSTER_TIMEZONE).getTime();
+  return { startMs, endMs };
 }
 
 export function getTodayBookingsForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date) {
-  const { startMs, endMs } = getLocalDayBounds(now);
+  const { startMs, endMs } = getLondonDayBounds(now);
   return bookings.filter((b) => {
     if (b.barberId !== barberId) return false;
     if (!SCHEDULED_BOOKING_STATUSES.includes(b.status as (typeof SCHEDULED_BOOKING_STATUSES)[number])) return false;

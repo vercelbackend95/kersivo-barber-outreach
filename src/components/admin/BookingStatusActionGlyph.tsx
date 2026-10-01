@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { getBookingStatusTone, getStatusLabel, type BookingStatusTone } from './bookingStatus';
+import { useAdminClock } from './adminClock';
 
 export type StatusActionPhase =
   | 'BOOKED'
@@ -272,13 +273,14 @@ export default function BookingStatusActionGlyph({
 }: BookingStatusActionGlyphProps) {
   const reduceMotion = useReducedMotion();
   const visual = getStatusActionVisual(status, rescheduledAt);
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  const clock = useAdminClock();
+  const [nowMs, setNowMs] = useState(() => clock.nowMs());
 
   useEffect(() => {
-    if (!live || isTerminalPhase(visual.phase)) return undefined;
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    if (!live || clock.frozen || isTerminalPhase(visual.phase)) return undefined;
+    const id = window.setInterval(() => setNowMs(clock.nowMs()), 1000);
     return () => window.clearInterval(id);
-  }, [live, visual.phase]);
+  }, [clock, live, visual.phase]);
 
   const progress = getStatusRingProgress({
     phase: visual.phase,

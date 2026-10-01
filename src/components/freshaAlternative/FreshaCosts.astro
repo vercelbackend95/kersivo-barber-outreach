@@ -1,0 +1,113 @@
+---
+import {
+  FRESHA_COSTS_INTRO,
+  FRESHA_COST_ITEMS,
+  FRESHA_MARKETPLACE_FEE_EXAMPLE,
+  FRESHA_MARKETPLACE_FEE_POINTS,
+  FRESHA_WORKED_EXAMPLES,
+  FRESHA_WORKED_EXAMPLES_NOTE,
+  KERSIVO_MODEL_POINTS,
+} from '@/lib/seo/freshaAlternativeContent';
+import { FRESHA_FACTS_CHECKED_DATE, getFreshaSource } from '@/lib/seo/freshaFacts';
+
+const pricingSource = getFreshaSource('pricingUk');
+const marketplaceSource = getFreshaSource('marketplaceFee');
+---
+
+<section id="fresha-pricing" class="fresha-alt__section" aria-labelledby="fresha-alt-costs-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">FRESHA COSTS EXPLAINED</p>
+      <h2 id="fresha-alt-costs-title" class="fresha-alt__h2">
+        Fresha pricing and fees for UK barbers
+      </h2>
+      <p class="fresha-alt__lead">{FRESHA_COSTS_INTRO}</p>
+      <p class="fresha-alt-costs__checked">
+        Checked {FRESHA_FACTS_CHECKED_DATE} ·
+        <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">
+          {pricingSource.label}
+        </a>
+      </p>
+    </header>
+
+    <ul class="fresha-alt-costs__grid">
+      {
+        FRESHA_COST_ITEMS.map((item) => (
+          <li class="fresha-alt-card fresha-alt-costs__item">
+            <p class="fresha-alt-costs__kicker">{item.kicker}</p>
+            <p class="fresha-alt-costs__figure">{item.figure}</p>
+            <p class="fresha-alt-costs__unit">{item.unit}</p>
+            <ul class="fresha-alt-costs__notes">
+              {item.notes.map((note) => (
+                <li>{note}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="fresha-alt-costs__examples">
+      <div class="fresha-alt-costs__table-wrap">
+        <h3 id="fresha-alt-costs-examples-title" class="fresha-alt-costs__h3">
+          Subscription cost by team size
+        </h3>
+        <table class="fresha-alt-costs__table" aria-labelledby="fresha-alt-costs-examples-title">
+          <thead>
+            <tr>
+              <th scope="col">Team size</th>
+              <th scope="col">Fresha plan</th>
+              <th scope="col">Fresha (ex VAT)</th>
+              <th scope="col">Fresha (inc. VAT)</th>
+              <th scope="col">KERSIVO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              FRESHA_WORKED_EXAMPLES.map((row) => (
+                <tr>
+                  <th scope="row">{row.label}</th>
+                  <td data-label="Fresha plan">{row.plan}</td>
+                  <td data-label="Fresha (ex VAT)">{row.freshaExVat}</td>
+                  <td data-label="Fresha (inc. VAT)">{row.freshaIncVat}</td>
+                  <td data-label="KERSIVO" class="fresha-alt-costs__kersivo-cell">{row.kersivo}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <p class="fresha-alt-costs__note">{FRESHA_WORKED_EXAMPLES_NOTE}</p>
+      </div>
+
+      <aside class="fresha-alt-card fresha-alt-costs__kersivo" aria-labelledby="fresha-alt-costs-kersivo-title">
+        <p class="fresha-alt-costs__kicker">KERSIVO</p>
+        <h3 id="fresha-alt-costs-kersivo-title" class="fresha-alt-costs__h3">The KERSIVO model</h3>
+        <ul class="fresha-alt-list">
+          {KERSIVO_MODEL_POINTS.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+
+    <div class="fresha-alt-card fresha-alt-costs__marketplace">
+      <div class="fresha-alt-costs__marketplace-body">
+        <h3 class="fresha-alt-costs__h3">How the Fresha Marketplace new-client fee works</h3>
+        <ul class="fresha-alt-list">
+          {FRESHA_MARKETPLACE_FEE_POINTS.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </div>
+      <div class="fresha-alt-costs__marketplace-aside">
+        <p class="fresha-alt-costs__example">{FRESHA_MARKETPLACE_FEE_EXAMPLE}</p>
+        <p class="fresha-alt-costs__checked">
+          Source:
+          <a href={marketplaceSource.url} target="_blank" rel="noopener noreferrer">
+            {marketplaceSource.label}
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

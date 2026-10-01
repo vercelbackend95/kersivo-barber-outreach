@@ -29,6 +29,7 @@ import {
 } from '../../lib/admin/teamInviteResendUi';
 import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
+import { useAdminClock } from './adminClock';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import TeamInviteWizard from './TeamInviteWizard';
@@ -151,7 +152,8 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
     },
     ref,
   ) {
-  const [nowTick, setNowTick] = React.useState(() => Date.now());
+  const clock = useAdminClock();
+  const [nowTick, setNowTick] = React.useState(() => clock.nowMs());
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const [barberSearchQuery, setBarberSearchQuery] = React.useState('');
   const [searchShortcutHint, setSearchShortcutHint] = React.useState('Ctrl+K');
@@ -213,9 +215,10 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
   }, [loadTeam, barbers]);
 
   React.useEffect(() => {
-    const id = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    if (clock.frozen) return undefined;
+    const id = window.setInterval(() => setNowTick(clock.nowMs()), 60_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [clock]);
 
   React.useEffect(() => {
     const isApple = /Mac|iPhone|iPad|iPod/.test(navigator.platform) || navigator.userAgent.includes('Mac');

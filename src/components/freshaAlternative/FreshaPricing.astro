@@ -1,0 +1,39 @@
+---
+import { RateCard1Offer } from '@/components/rateCard1';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
+import '@/styles/rateCard1.css';
+
+const layout = getRateCard1LandingLayout();
+---
+
+<section
+  id="pricing"
+  class="fresha-alt__section scroll-mt-24"
+  aria-labelledby="fresha-alt-pricing-title"
+>
+  <div class="fresha-alt__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">SIMPLE PRICING</p>
+      <h2 id="fresha-alt-pricing-title" class="fresha-alt__h2">
+        One plan. One barbershop location.
+      </h2>
+      <p class="fresha-alt__lead">
+        Your branded barbershop website, standard domain, online bookings, deposits, client
+        management, appointment reminders, retail pickup, hosting, SSL and platform updates are
+        included.
+      </p>
+      <p class="fresha-alt__lead">
+        KERSIVO takes 0% commission on bookings and retail sales.
+      </p>
+    </header>
+
+    <div class="rate-card1--landing fresha-alt-pricing__offer-host">
+      <RateCard1Offer />
+      <div class="rate-card1__landing-conditions">
+        <p>{layout.conditionsLine1}</p>
+        <p>{layout.conditionsLine2}</p>
+      </div>
+    </div>
+  </div>
+</section>

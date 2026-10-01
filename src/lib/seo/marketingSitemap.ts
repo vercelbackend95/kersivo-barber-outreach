@@ -1,5 +1,9 @@
 import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
+import {
+  FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
+  FRESHA_ALTERNATIVE_PAGE_PATH,
+} from './freshaAlternativeFaq';
 import { buildAbsoluteUrl } from './meta';
 
 /**
@@ -21,6 +25,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/' },
   /** National SEO comparison landing page — no reliable editorial lastmod yet. */
   { path: '/booksy-alternative' },
+  /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
+  { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: '2026-09-25' },
   /** Matches "Last updated" on src/pages/cookies.astro. */
