@@ -11,12 +11,15 @@ import {
 } from './barberSoftwareCostEngine';
 import {
   DEFAULT_PERIOD,
+  DEFAULT_SCENARIO,
   MARKETPLACE_CLIENTS_FIELD,
   NUMBER_FIELDS,
+  SHARE_SCENARIO,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   validationMessage,
 } from './calculatorUi';
+import { buildScenarioUrl, decodeScenarioQuery, type DecodedUrlState } from './calculatorUrlState';
 import { isCostPeriod, type CostPeriod } from './costPeriod';
 import { initCalculatorShell } from './initCalculatorShell';
 import { renderResults } from './renderResults';
@@ -109,15 +112,115 @@ function initSplitSeeding(form: HTMLFormElement) {
   });
 }
 
-export function initCalculator(root: Document) {
-  initCalculatorShell(root);
+function setValue(form: HTMLFormElement, name: string, value: number) {
+  const input = control(form, name);
+  if (input) input.value = String(value);
+}
 
+function setChecked(form: HTMLFormElement, name: string, checked: boolean) {
+  const input = control(form, name);
+  if (input) input.checked = checked;
+}
+
+const ADVANCED_KEYS = ['vatRegistered', 'freshaSmartWebsite', 'freshaClientLoyalty', 'includeDepositProcessing'] as const;
+
+/** Writes a decoded, engine-valid scenario into the form before any listener or reveal sync runs. */
+export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement, state: DecodedUrlState) {
+  const { scenario, period } = state;
+  for (const field of NUMBER_FIELDS) setValue(form, field.name, scenario[field.name]);
+  setChecked(form, 'booksyBoostEnabled', scenario.booksyBoostEnabled);
+  setChecked(form, 'splitMarketplaceAssumptions', scenario.splitMarketplaceAssumptions);
+  setChecked(form, 'freshaSmartWebsite', scenario.freshaSmartWebsite);
+  setChecked(form, 'freshaClientLoyalty', scenario.freshaClientLoyalty);
+  setChecked(form, 'includeDepositProcessing', scenario.includeDepositProcessing);
+  const vat = form.querySelector<HTMLInputElement>(
+    `input[name="vatRegistered"][value="${scenario.vatRegistered ? 'yes' : 'no'}"]`,
+  );
+  if (vat) vat.checked = true;
+
+  // Loaded split counts are deliberate values, so enabling split later must not overwrite them.
+  if (scenario.splitMarketplaceAssumptions) {
+    for (const field of SPLIT_FIELDS) {
+      const input = control(form, field.name);
+      if (input) input.dataset.userEdited = 'true';
+    }
+  }
+
+  const periodInput = results.querySelector<HTMLInputElement>(`[data-calc-period] input[value="${period}"]`);
+  if (periodInput) periodInput.checked = true;
+
+  const advanced = form.querySelector<HTMLDetailsElement>('details.calc-advanced');
+  if (advanced && ADVANCED_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key])) advanced.open = true;
+}
+
+async function copyText(doc: Document, text: string): Promise<boolean> {
+  try {
+    await doc.defaultView!.navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const area = doc.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    doc.body.append(area);
+    area.select();
+    try {
+      return doc.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      area.remove();
+    }
+  }
+}
+
+const SHARE_STATUS_MS = 4000;
+
+function initShareLink(form: HTMLFormElement, results: HTMLElement) {
+  const button = results.querySelector<HTMLButtonElement>('[data-calc-share]');
+  const status = results.querySelector<HTMLElement>('[data-calc-share-status]');
+  if (!button || !status) return;
+  const doc = form.ownerDocument;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const show = (message: string) => {
+    clearTimeout(timer);
+    status.textContent = message;
+    status.dataset.state = message === SHARE_SCENARIO.copied ? 'success' : 'error';
+    timer = setTimeout(() => {
+      status.textContent = '';
+      delete status.dataset.state;
+    }, SHARE_STATUS_MS);
+  };
+
+  button.addEventListener('click', async () => {
+    const scenario = readScenario(form);
+    if (validateCostScenario(scenario).length > 0) {
+      show(SHARE_SCENARIO.invalid);
+      return;
+    }
+    const url = buildScenarioUrl(doc.defaultView!.location.href, scenario, readPeriod(results));
+    show((await copyText(doc, url)) ? SHARE_SCENARIO.copied : SHARE_SCENARIO.failed);
+  });
+}
+
+export function initCalculator(root: Document) {
   const form = root.querySelector<HTMLFormElement>('[data-calc-form]');
   const results = root.querySelector<HTMLElement>('[data-calc-results]');
+
+  if (form && results && !form.dataset[READY_FLAG]) {
+    const state = decodeScenarioQuery(root.defaultView?.location.search ?? '');
+    if (state.hasScenarioParams) applyScenarioToForm(form, results, state);
+  }
+
+  initCalculatorShell(root);
+
   if (!form || !results || form.dataset[READY_FLAG]) return;
   form.dataset[READY_FLAG] = 'true';
 
   initSplitSeeding(form);
+  initShareLink(form, results);
 
   const recalculate = () => {
     const scenario = readScenario(form);

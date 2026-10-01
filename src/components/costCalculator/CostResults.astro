@@ -11,6 +11,7 @@ import {
   RESULTS_INVALID,
   RESULTS_SUPPORTING,
   SHARED_NOTES_LABEL,
+  SHARE_SCENARIO,
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
 } from '@/lib/costCalculator/calculatorUi';
@@ -40,6 +41,10 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
             ))
           }
         </fieldset>
+        <div class="calc-share">
+          <button type="button" class="calc-share__button" data-calc-share>{SHARE_SCENARIO.label}</button>
+          <p class="calc-share__status" data-calc-share-status role="status" aria-live="polite"></p>
+        </div>
       </div>
     </header>
 

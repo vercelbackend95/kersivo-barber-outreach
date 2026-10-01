@@ -292,6 +292,13 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
   },
 ];
 
+export const SHARE_SCENARIO = {
+  label: 'Copy scenario link',
+  copied: 'Scenario link copied',
+  failed: 'Could not copy link',
+  invalid: 'Fix the highlighted inputs to copy a link',
+} as const;
+
 export const NOTES_LABEL = 'Assumptions & notes';
 export const caveatLabel = (count: number) => (count === 1 ? '1 caveat' : `${count} caveats`);
 export const SHARED_NOTES_LABEL = 'Assumptions used for all three';

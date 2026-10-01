@@ -25,6 +25,32 @@ export function buildBarberCostCalculatorWebPageJsonLd(): Record<string, unknown
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
     breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+    mainEntity: { '@id': `${pageUrl}#calculator` },
+  };
+}
+
+export const BARBER_COST_CALCULATOR_APP_NAME = 'Barber Booking Software Cost Calculator';
+
+export const BARBER_COST_CALCULATOR_APP_DESCRIPTION =
+  'Interactive calculator that estimates monthly, 12-month and 3-year booking software costs for a UK barbershop on Booksy, Fresha and KERSIVO, using each provider’s published UK pricing and the shop’s own inputs.';
+
+/** Static description of the tool only: never scenario values, ratings, offers or install claims. */
+export function buildBarberCostCalculatorWebApplicationJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = `${siteUrl}${BARBER_COST_CALCULATOR_PAGE_PATH}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    '@id': `${pageUrl}#calculator`,
+    name: BARBER_COST_CALCULATOR_APP_NAME,
+    url: pageUrl,
+    description: BARBER_COST_CALCULATOR_APP_DESCRIPTION,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Any',
+    inLanguage: 'en-GB',
+    isPartOf: { '@id': `${pageUrl}#webpage` },
+    publisher: { '@id': getKersivoOrganizationId(siteUrl) },
   };
 }
 
@@ -48,10 +74,10 @@ export function buildBarberCostCalculatorBreadcrumbJsonLd(): Record<string, unkn
   };
 }
 
-/** WebApplication must only be added here once the interactive calculator ships. */
 export function buildBarberCostCalculatorJsonLd(): Record<string, unknown>[] {
   return [
     buildBarberCostCalculatorWebPageJsonLd(),
+    buildBarberCostCalculatorWebApplicationJsonLd(),
     buildBarberCostCalculatorBreadcrumbJsonLd(),
     buildBarberCostCalculatorFaqJsonLd(),
   ];

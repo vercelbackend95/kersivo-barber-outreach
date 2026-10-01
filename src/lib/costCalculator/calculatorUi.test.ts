@@ -30,6 +30,7 @@ import {
   PROVIDER_RESULTS,
   RESULTS_HEADING,
   RESULTS_SUPPORTING,
+  SHARE_SCENARIO,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   SUMMARY_ROWS,
@@ -286,9 +287,27 @@ describe('scope guard', () => {
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });
 
-  it('emits no WebApplication schema yet', () => {
-    const serialized = JSON.stringify(buildBarberCostCalculatorJsonLd());
-    expect(serialized).not.toContain('WebApplication');
+  it('emits a static WebApplication schema with no scenario values', () => {
+    const app = buildBarberCostCalculatorJsonLd().find((block) => block['@type'] === 'WebApplication')!;
+    const serialized = JSON.stringify(app);
     expect(serialized).not.toContain('SoftwareApplication');
+    for (const value of [DEFAULT_SCENARIO.monthlyAppointments, DEFAULT_SCENARIO.averageAppointmentValueGbp]) {
+      expect(serialized).not.toContain(String(value));
+    }
+    expect(serialized).not.toMatch(/£|\?/);
+  });
+
+  it('offers an understated copy-link action with a polite status region', () => {
+    expect(SHARE_SCENARIO).toEqual({
+      label: 'Copy scenario link',
+      copied: 'Scenario link copied',
+      failed: 'Could not copy link',
+      invalid: 'Fix the highlighted inputs to copy a link',
+    });
+    expect(resultsSource).toContain(
+      '<button type="button" class="calc-share__button" data-calc-share>{SHARE_SCENARIO.label}</button>',
+    );
+    expect(resultsSource).toContain('data-calc-share-status role="status" aria-live="polite"');
+    expect(resultsSource).not.toMatch(/<a [^>]*\?b=|href=\{[^}]*encodeScenario/);
   });
 });

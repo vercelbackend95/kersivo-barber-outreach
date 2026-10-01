@@ -4,8 +4,10 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { calculateMonthlyCosts } from './barberSoftwareCostEngine';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { calculateMonthlyCosts, type CostScenarioInput } from './barberSoftwareCostEngine';
+import { decodeScenarioQuery, encodeScenarioQuery } from './calculatorUrlState';
+import { projectCostCalculation } from './costProjection';
 import {
   BOOST_TOGGLE,
   CUSTOM_PRICING_NOTE,
@@ -68,6 +70,7 @@ function mount() {
       <div id="calc-split-fields" hidden>${SPLIT_FIELDS.map(numberField).join('')}</div>
       <input type="radio" name="vatRegistered" value="no" checked />
       <input type="radio" name="vatRegistered" value="yes" />
+      <details class="calc-advanced"><summary>Advanced costs</summary></details>
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
@@ -80,6 +83,8 @@ function mount() {
             `<input type="radio" name="period" value="${option.value}" ${option.value === 'monthly' ? 'checked' : ''} />`,
         ).join('')}
       </fieldset>
+      <button type="button" data-calc-share>Copy scenario link</button>
+      <p data-calc-share-status role="status" aria-live="polite"></p>
       <p data-calc-three-year-note hidden>${THREE_YEAR_NOTE}</p>
       <p data-slot="results-status" hidden></p>
       <ol>${PROVIDER_RESULTS.map(card).join('')}</ol>
@@ -125,6 +130,22 @@ function engineCash(overrides: Partial<typeof DEFAULT_SCENARIO>, index: number) 
   if (provider.status !== 'calculated') throw new Error('not calculated');
   return formatMoneyGbp(provider.amounts.cashTotalGbp);
 }
+
+const URL_SCENARIO: CostScenarioInput = {
+  bookableBarbers: 6,
+  monthlyAppointments: 900,
+  averageAppointmentValueGbp: 27.5,
+  marketplaceClients: 4,
+  booksyBoostEnabled: true,
+  splitMarketplaceAssumptions: true,
+  booksyBoostClients: 8,
+  freshaMarketplaceClients: 15,
+  freshaSmartWebsite: true,
+  freshaClientLoyalty: false,
+  vatRegistered: true,
+  includeDepositProcessing: true,
+  depositBookingsPerMonth: 300,
+};
 
 beforeEach(mount);
 
@@ -655,6 +676,162 @@ describe('cost-driver insight', () => {
     expect(insight()).toContain('Fresha Marketplace fees are estimated at £20.00/month before VAT');
     setNumber('calc-barbers', '21');
     expect(insight()).toContain('custom Enterprise pricing above 20 bookable team members');
+  });
+});
+
+const BASE_PATH = '/barber-software-cost-calculator';
+
+function mountAt(search: string) {
+  window.history.replaceState(null, '', `${BASE_PATH}${search}`);
+  mount();
+}
+
+function mockClipboard(impl: (text: string) => Promise<void>) {
+  const writes: string[] = [];
+  Object.defineProperty(window.navigator, 'clipboard', {
+    configurable: true,
+    value: {
+      writeText: (text: string) => {
+        writes.push(text);
+        return impl(text);
+      },
+    },
+  });
+  return writes;
+}
+
+async function clickShare() {
+  $<HTMLButtonElement>('[data-calc-share]').click();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+const shareStatus = () => $('[data-calc-share-status]').textContent;
+
+describe('scenario URLs', () => {
+  afterEach(() => window.history.replaceState(null, '', BASE_PATH));
+
+  it('keeps the default state on the clean base URL', () => {
+    mountAt('');
+    expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
+    expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
+    expect(window.location.search).toBe('');
+  });
+
+  it('hydrates a valid scenario URL into the form, period and engine results', () => {
+    const query = encodeScenarioQuery(URL_SCENARIO, 'threeYear');
+    mountAt(`?${query}`);
+    expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(URL_SCENARIO);
+    expect(readPeriod($('[data-calc-results]'))).toBe('threeYear');
+    const projected = projectCostCalculation(calculateMonthlyCosts(URL_SCENARIO), 'threeYear');
+    if (!projected.ok) throw new Error('invalid');
+    projected.providers.forEach((provider) => {
+      if (provider.status !== 'calculated') throw new Error('not calculated');
+      expect(total(provider.provider)).toBe(formatMoneyGbp(provider.amounts.cashTotalGbp));
+    });
+    expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(false);
+    expect($('#calc-split-fields').hidden).toBe(false);
+    expect($<HTMLDetailsElement>('details.calc-advanced').open).toBe(true);
+    expect(window.location.search).toBe(`?${query}`);
+  });
+
+  it('does not rewrite the URL while the user edits', () => {
+    mountAt('');
+    setNumber('calc-barbers', '6');
+    toggle('calc-boost', true);
+    choosePeriod('annual');
+    expect(window.location.search).toBe('');
+  });
+
+  it('keeps loaded split counts when split is toggled off and on again', () => {
+    mountAt('?split=1&m=2&fc=7');
+    toggle(SPLIT_ASSUMPTIONS_TOGGLE.id, false);
+    toggle(SPLIT_ASSUMPTIONS_TOGGLE.id, true);
+    expect($<HTMLInputElement>('#calc-fresha-marketplace-clients').value).toBe('7');
+  });
+
+  it('loads a safe calculator from corrupted parameters', () => {
+    mountAt('?b=abc&a=50&dp=1&db=999&v=-4&period=weekly&m=Infinity');
+    const scenario = readScenario($<HTMLFormElement>('[data-calc-form]'));
+    expect(scenario).toMatchObject({
+      bookableBarbers: DEFAULT_SCENARIO.bookableBarbers,
+      monthlyAppointments: 50,
+      averageAppointmentValueGbp: DEFAULT_SCENARIO.averageAppointmentValueGbp,
+      marketplaceClients: DEFAULT_SCENARIO.marketplaceClients,
+      includeDepositProcessing: true,
+      depositBookingsPerMonth: DEFAULT_SCENARIO.depositBookingsPerMonth,
+    });
+    expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
+    expect(document.querySelectorAll('[aria-invalid="true"]')).toHaveLength(0);
+    expect(total('booksy')).not.toBe('£—');
+  });
+
+  it('binds listeners once and does not reapply the URL on repeated page-load calls', () => {
+    mountAt('?b=5');
+    setNumber('calc-barbers', '8');
+    initCalculator(document);
+    initCalculator(document);
+    expect($<HTMLInputElement>('#calc-barbers').value).toBe('8');
+    const writes = mockClipboard(() => Promise.resolve());
+    $<HTMLButtonElement>('[data-calc-share]').click();
+    expect(writes).toHaveLength(1);
+  });
+});
+
+describe('copy scenario link', () => {
+  afterEach(() => window.history.replaceState(null, '', BASE_PATH));
+
+  it('copies the current inputs and period, then reflects later edits', async () => {
+    mountAt('?utm_source=newsletter');
+    const writes = mockClipboard(() => Promise.resolve());
+    setNumber('calc-barbers', '5');
+    setNumber('calc-appointment-value', '27.5');
+    toggle(DEPOSIT_PROCESSING_TOGGLE.id, true);
+    setNumber(DEPOSIT_BOOKINGS_FIELD.id, '120');
+    choosePeriod('annual');
+    await clickShare();
+
+    const first = new URL(writes[0]);
+    expect(first.pathname).toBe(BASE_PATH);
+    expect(first.hash).toBe('');
+    expect(Object.fromEntries(first.searchParams)).toMatchObject({ b: '5', v: '27.5', dp: '1', db: '120', period: '12' });
+    expect(first.searchParams.has('utm_source')).toBe(false);
+    expect(decodeScenarioQuery(first.search).scenario).toEqual(readScenario($<HTMLFormElement>('[data-calc-form]')));
+    expect(shareStatus()).toBe('Scenario link copied');
+
+    setNumber('calc-barbers', '7');
+    choosePeriod('threeYear');
+    await clickShare();
+    const second = new URL(writes[1]);
+    expect(second.searchParams.get('b')).toBe('7');
+    expect(second.searchParams.get('period')).toBe('36');
+  });
+
+  it('never puts derived totals or prices in the URL', async () => {
+    mountAt('');
+    const writes = mockClipboard(() => Promise.resolve());
+    await clickShare();
+    const url = writes[0];
+    expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
+    expect([...new URL(url).searchParams.keys()]).toEqual([
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'vat', 'dp', 'db', 'period',
+    ]);
+  });
+
+  it('reports a failure when the clipboard is unavailable', async () => {
+    mountAt('');
+    mockClipboard(() => Promise.reject(new Error('denied')));
+    Object.defineProperty(document, 'execCommand', { configurable: true, value: () => false });
+    await clickShare();
+    expect(shareStatus()).toBe('Could not copy link');
+  });
+
+  it('refuses to copy an invalid scenario', async () => {
+    mountAt('');
+    const writes = mockClipboard(() => Promise.resolve());
+    setNumber('calc-barbers', '');
+    await clickShare();
+    expect(writes).toHaveLength(0);
+    expect(shareStatus()).toBe('Fix the highlighted inputs to copy a link');
   });
 });
 

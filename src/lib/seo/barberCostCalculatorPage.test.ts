@@ -158,18 +158,47 @@ describe('barber software cost calculator SEO foundation', () => {
 describe('barber software cost calculator structured data', () => {
   const blocks = buildBarberCostCalculatorJsonLd();
   const types = blocks.map((block) => block['@type']);
+  const byType = (type: string) => blocks.find((block) => block['@type'] === type)!;
+  const PAGE_URL = 'https://kersivo.co.uk/barber-software-cost-calculator';
 
-  it('emits WebPage, BreadcrumbList and FAQPage only', () => {
-    expect(types).toEqual(['WebPage', 'BreadcrumbList', 'FAQPage']);
-    const webPage = blocks[0];
-    expect(webPage.url).toBe('https://kersivo.co.uk/barber-software-cost-calculator');
+  it('emits WebPage, WebApplication, BreadcrumbList and FAQPage', () => {
+    expect(types).toEqual(['WebPage', 'WebApplication', 'BreadcrumbList', 'FAQPage']);
+    const webPage = byType('WebPage');
+    expect(webPage.url).toBe(PAGE_URL);
+    expect(webPage['@id']).toBe(`${PAGE_URL}#webpage`);
     expect(webPage.name).toBe(BARBER_COST_CALCULATOR_TITLE);
     expect(webPage.description).toBe(BARBER_COST_CALCULATOR_DESCRIPTION);
     expect(webPage.dateModified).toBe(BARBER_COST_CALCULATOR_LAST_UPDATED_ISO);
+    expect(webPage.breadcrumb).toEqual({ '@id': `${PAGE_URL}#breadcrumb` });
+  });
+
+  it('describes the interactive calculator as a conservative WebApplication', () => {
+    const app = byType('WebApplication');
+    expect(app).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      '@id': `${PAGE_URL}#calculator`,
+      name: 'Barber Booking Software Cost Calculator',
+      url: PAGE_URL,
+      description: expect.stringContaining('Booksy, Fresha and KERSIVO'),
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Any',
+      inLanguage: 'en-GB',
+      isPartOf: { '@id': `${PAGE_URL}#webpage` },
+      publisher: { '@id': 'https://kersivo.co.uk/#organization' },
+    });
+    expect(byType('WebPage').mainEntity).toEqual({ '@id': `${PAGE_URL}#calculator` });
+  });
+
+  it('never puts query parameters or scenario values into schema URLs', () => {
+    const serialized = JSON.stringify(blocks);
+    expect(serialized).not.toMatch(/\?[a-z]+=|[?&](b|a|v|m|period|dp|db)=/);
+    const app = JSON.stringify(byType('WebApplication'));
+    expect(app).not.toMatch(/£|\d+\.\d{2}|offers|price/i);
   });
 
   it('builds a two-level breadcrumb ending at the canonical URL', () => {
-    const items = blocks[1].itemListElement as Array<{ position: number; item: string }>;
+    const items = byType('BreadcrumbList').itemListElement as Array<{ position: number; item: string }>;
     expect(items.map((item) => item.position)).toEqual([1, 2]);
     expect(items[0].item).toBe('https://kersivo.co.uk/');
     expect(items[1].item).toBe('https://kersivo.co.uk/barber-software-cost-calculator');
@@ -177,7 +206,7 @@ describe('barber software cost calculator structured data', () => {
 
   it('keeps FAQ JSON-LD identical to the visible FAQ', () => {
     expect(pageSource).toContain('faqs={BARBER_COST_CALCULATOR_FAQ_ITEMS}');
-    const entities = blocks[2].mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
+    const entities = byType('FAQPage').mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
     expect(entities).toHaveLength(BARBER_COST_CALCULATOR_FAQ_ITEMS.length);
     BARBER_COST_CALCULATOR_FAQ_ITEMS.forEach((item, index) => {
       expect(entities[index].name).toBe(item.question);
@@ -185,18 +214,32 @@ describe('barber software cost calculator structured data', () => {
     });
   });
 
-  it('does not claim a WebApplication, ratings or reviews', () => {
+  it('makes no rating, review, offer, install, download or version claims', () => {
     const serialized = JSON.stringify(blocks);
     for (const banned of [
-      'WebApplication',
       'SoftwareApplication',
+      'MobileApplication',
       'AggregateRating',
       'aggregateRating',
       'reviewCount',
+      '"review"',
       '"Review"',
+      'offers',
+      'installUrl',
+      'downloadUrl',
+      'InstallAction',
+      'softwareVersion',
+      'award',
+      'interactionStatistic',
     ]) {
       expect(serialized).not.toContain(banned);
     }
+  });
+
+  it('keeps the canonical independent of query parameters', () => {
+    expect(resolveCanonicalUrl(BARBER_COST_CALCULATOR_PAGE_PATH)).toBe(PAGE_URL);
+    expect(pageSource).toContain('canonicalPath={BARBER_COST_CALCULATOR_PAGE_PATH}');
+    expect(pageSource).not.toMatch(/Astro\.url\.search|searchParams/);
   });
 });
 
