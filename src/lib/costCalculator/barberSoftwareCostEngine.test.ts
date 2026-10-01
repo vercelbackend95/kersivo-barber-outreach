@@ -17,6 +17,7 @@ import {
   requireVerifiedFreshaFact,
 } from '@/lib/seo/freshaFacts';
 import {
+  ASSUMPTION_MESSAGES,
   WARNING_MESSAGES,
   calculateMonthlyCosts,
   type CalculatedProviderResult,
@@ -171,6 +172,24 @@ describe('Fresha monthly model', () => {
     expect(warningCodes(fresha)).toContain('fresha-marketplace-cap-unresolved');
   });
 
+  it('describes the Independent, Team and custom Enterprise plan boundaries accurately', () => {
+    const message = ASSUMPTION_MESSAGES['fresha-plan-from-bookable-team-members'];
+    expect(message).toBe(
+      'One bookable team member uses the Fresha Independent plan. From two up to 20 bookable team members use the Team plan per bookable team member. Above 20, Fresha lists custom Enterprise pricing, so no Fresha subscription estimate is given.',
+    );
+    expect(message).not.toMatch(/two or more/i);
+    for (const barbers of [1, 2, 20, 21]) {
+      const fresha = provider({ bookableBarbers: barbers }, 'fresha');
+      expect(fresha.assumptions.find((entry) => entry.code === 'fresha-plan-from-bookable-team-members')?.message).toBe(
+        message,
+      );
+    }
+    expect(line(provider({ bookableBarbers: 1 }, 'fresha'), 'fresha-subscription').plan).toBe('independent');
+    expect(line(provider({ bookableBarbers: 2 }, 'fresha'), 'fresha-subscription').plan).toBe('team');
+    expect(line(provider({ bookableBarbers: 20 }, 'fresha'), 'fresha-subscription').plan).toBe('team');
+    expect(line(provider({ bookableBarbers: 21 }, 'fresha'), 'fresha-subscription').plan).toBe('enterprise');
+  });
+
   it('applies the Marketplace percentage when it exceeds the minimum', () => {
     const fresha = calculated({ marketplaceClients: 3, averageAppointmentValueGbp: 25 }, 'fresha');
     expect(line(fresha, 'fresha-marketplace-fees')).toMatchObject({ quantity: 3, unitExVatGbp: 5, exVatGbp: 15 });
@@ -320,6 +339,70 @@ describe('shared behaviour', () => {
         { field: 'bookableBarbers', code: 'not-a-number' },
         { field: 'marketplaceClients', code: 'below-minimum' },
       ],
+    });
+  });
+
+  describe('marketplace clients versus monthly appointments', () => {
+    const errorsFor = (overrides: Partial<CostScenarioInput>) => {
+      const result = calculateMonthlyCosts({ ...BASE, monthlyAppointments: 10, ...overrides });
+      return result.ok ? [] : result.errors;
+    };
+    const exceeds = (field: keyof CostScenarioInput) => ({ field, code: 'exceeds-monthly-appointments' });
+
+    it('accepts shared marketplace clients equal to monthly appointments', () => {
+      expect(errorsFor({ marketplaceClients: 10 })).toEqual([]);
+    });
+
+    it('rejects shared marketplace clients above monthly appointments', () => {
+      expect(errorsFor({ marketplaceClients: 11 })).toEqual([exceeds('marketplaceClients')]);
+    });
+
+    it('rejects split Fresha Marketplace clients above monthly appointments', () => {
+      expect(errorsFor({ splitMarketplaceAssumptions: true, freshaMarketplaceClients: 11 })).toEqual([
+        exceeds('freshaMarketplaceClients'),
+      ]);
+    });
+
+    it('rejects split Booksy Boost clients above monthly appointments when Boost is on', () => {
+      expect(
+        errorsFor({ splitMarketplaceAssumptions: true, booksyBoostEnabled: true, booksyBoostClients: 11 }),
+      ).toEqual([exceeds('booksyBoostClients')]);
+    });
+
+    it('ignores a stale Booksy Boost count while Boost is off', () => {
+      expect(
+        errorsFor({ splitMarketplaceAssumptions: true, booksyBoostEnabled: false, booksyBoostClients: 50 }),
+      ).toEqual([]);
+    });
+
+    it('ignores the inactive shared count while split assumptions are on', () => {
+      expect(
+        errorsFor({
+          splitMarketplaceAssumptions: true,
+          booksyBoostEnabled: true,
+          marketplaceClients: 50,
+          booksyBoostClients: 2,
+          freshaMarketplaceClients: 3,
+        }),
+      ).toEqual([]);
+    });
+
+    it('returns cross-field and basic errors together', () => {
+      expect(
+        errorsFor({
+          bookableBarbers: 0,
+          splitMarketplaceAssumptions: true,
+          booksyBoostEnabled: true,
+          booksyBoostClients: 12,
+          freshaMarketplaceClients: 15,
+          averageAppointmentValueGbp: -1,
+        }),
+      ).toEqual([
+        { field: 'bookableBarbers', code: 'below-minimum' },
+        { field: 'averageAppointmentValueGbp', code: 'below-minimum' },
+        exceeds('booksyBoostClients'),
+        exceeds('freshaMarketplaceClients'),
+      ]);
     });
   });
 

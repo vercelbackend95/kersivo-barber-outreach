@@ -44,7 +44,8 @@ export type ValidationIssueCode =
   | 'not-finite'
   | 'not-integer'
   | 'below-minimum'
-  | 'not-boolean';
+  | 'not-boolean'
+  | 'exceeds-monthly-appointments';
 
 export type ValidationIssue = {
   field: keyof CostScenarioInput;
@@ -99,7 +100,31 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     if (typeof input[field] !== 'boolean') issues.push({ field, code: 'not-boolean' });
   }
 
+  issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   return issues;
+}
+
+/**
+ * Qualifying new marketplace clients are appointments within the same month, so the active
+ * counts cannot exceed monthly appointments. Inactive fields are never checked.
+ */
+function validateMarketplaceAgainstAppointments(
+  input: CostScenarioInput,
+  basicIssues: readonly ValidationIssue[],
+): ValidationIssue[] {
+  const invalid = new Set(basicIssues.map((issue) => issue.field));
+  if (invalid.has('monthlyAppointments') || invalid.has('splitMarketplaceAssumptions')) return [];
+
+  const active: (keyof typeof NUMBER_RULES)[] = input.splitMarketplaceAssumptions
+    ? ['freshaMarketplaceClients']
+    : ['marketplaceClients'];
+  if (input.splitMarketplaceAssumptions && input.booksyBoostEnabled === true) {
+    active.unshift('booksyBoostClients');
+  }
+
+  return active
+    .filter((field) => !invalid.has(field) && input[field] > input.monthlyAppointments)
+    .map((field) => ({ field, code: 'exceeds-monthly-appointments' }));
 }
 
 /* --------------------------------- Results --------------------------------- */
@@ -185,8 +210,7 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
     'Each bookable barber is treated as one Booksy user: the first is covered by the base subscription and the rest are additional users. Real Booksy accounts may be configured differently.',
   'booksy-boost-first-visit-equals-average-appointment-value':
     'The average appointment value is used as the estimated first-visit value for Booksy Boost fees.',
-  'fresha-plan-from-bookable-team-members':
-    'One bookable team member uses the Fresha Independent plan; two or more use the Team plan per bookable team member.',
+  'fresha-plan-from-bookable-team-members': `One bookable team member uses the Fresha Independent plan. From two up to ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members use the Team plan per bookable team member. Above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS}, Fresha lists custom Enterprise pricing, so no Fresha subscription estimate is given.`,
   'fresha-first-appointment-equals-average-appointment-value':
     'The average appointment value is used as the estimated first completed appointment value for Fresha Marketplace fees.',
   'kersivo-additional-barbers-included':
