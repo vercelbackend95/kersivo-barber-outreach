@@ -1,11 +1,14 @@
 import { SAAS_MONTHLY_GBP } from './defaults';
-import { getFooterSocialLinks } from './footerSocialLinks';
+import {
+  KERSIVO_BRAND_SCHEMA_NAME,
+  buildKersivoOrganizationNode,
+  buildKersivoWebsiteNode,
+  getKersivoOrganizationId,
+  getKersivoWebsiteId,
+} from './kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
-const BRAND_SCHEMA_NAME = 'KERSIVO';
-
-const ORGANIZATION_DESCRIPTION =
-  'Barbershop software for independent UK barbershops, including online booking, client management, deposits, retail pickup and branded websites.';
+export { getKersivoOrganizationId, getKersivoWebsiteId };
 
 const SOFTWARE_DESCRIPTION =
   'Barbershop booking and management software for independent UK barbershops.';
@@ -22,15 +25,6 @@ export const KERSIVO_SOFTWARE_FEATURE_LIST = [
   'Own domain',
 ] as const;
 
-/** Stable @id for schema.org cross-references (brand site). */
-export function getKersivoOrganizationId(siteUrl: string): string {
-  return `${siteUrl}/#organization`;
-}
-
-export function getKersivoWebsiteId(siteUrl: string): string {
-  return `${siteUrl}/#website`;
-}
-
 export function getKersivoSoftwareId(siteUrl: string): string {
   return `${siteUrl}/#software`;
 }
@@ -42,41 +36,17 @@ export function getKersivoSoftwareId(siteUrl: string): string {
 export function buildBarberDemoJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
   const organizationId = getKersivoOrganizationId(siteUrl);
-  const websiteId = getKersivoWebsiteId(siteUrl);
   const softwareId = getKersivoSoftwareId(siteUrl);
-  const orgLogoUrl = `${siteUrl}/images/logo.jpg`;
-  const sameAs = getFooterSocialLinks().map((link) => link.href);
-
-  const organization: Record<string, unknown> = {
-    '@type': 'Organization',
-    '@id': organizationId,
-    name: BRAND_SCHEMA_NAME,
-    url: `${siteUrl}/`,
-    description: ORGANIZATION_DESCRIPTION,
-    logo: {
-      '@type': 'ImageObject',
-      url: orgLogoUrl,
-    },
-  };
-  if (sameAs.length > 0) {
-    organization.sameAs = sameAs;
-  }
 
   return {
     '@context': 'https://schema.org',
     '@graph': [
-      organization,
-      {
-        '@type': 'WebSite',
-        '@id': websiteId,
-        url: `${siteUrl}/`,
-        name: BRAND_SCHEMA_NAME,
-        publisher: { '@id': organizationId },
-      },
+      buildKersivoOrganizationNode(siteUrl),
+      buildKersivoWebsiteNode(siteUrl),
       {
         '@type': 'SoftwareApplication',
         '@id': softwareId,
-        name: BRAND_SCHEMA_NAME,
+        name: KERSIVO_BRAND_SCHEMA_NAME,
         url: `${siteUrl}/`,
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',

@@ -1,0 +1,223 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
+import InsightCards from '@/components/editorial/InsightCards.astro';
+import {
+  ABOUT_AUDIENCE,
+  ABOUT_AUDIENCE_INTRO,
+  ABOUT_ENTITY_DEFINITION,
+  ABOUT_FACTS,
+  ABOUT_INCLUDED_ITEMS,
+  ABOUT_MODEL_POINTS,
+  ABOUT_PAGE_DESCRIPTION,
+  ABOUT_PAGE_H1,
+  ABOUT_PAGE_LAST_UPDATED_ISO,
+  ABOUT_PAGE_LAST_UPDATED_LABEL,
+  ABOUT_PAGE_PATH,
+  ABOUT_PAGE_TITLE,
+  ABOUT_PRICING_SUMMARY,
+  ABOUT_WHAT_IT_IS_DETAIL,
+  ABOUT_WHAT_IT_IS_LEAD,
+  ABOUT_WHY_PARAGRAPHS,
+  ABOUT_WHY_TITLE,
+  buildAboutPageJsonLd,
+} from '@/lib/seo/aboutPage';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/company-pages.css';
+import '@/styles/components/landingFinalCta.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={ABOUT_PAGE_TITLE}
+  description={ABOUT_PAGE_DESCRIPTION}
+  canonicalPath={ABOUT_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), buildAboutPageJsonLd()]}
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <section class="fresha-alt-hero company-hero" aria-labelledby="about-hero-title">
+      <div class="fresha-alt-hero__content">
+        <p class="fresha-alt-hero__eyebrow">
+          <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
+          Booking software for UK barbershops
+        </p>
+        <h1 id="about-hero-title" class="fresha-alt-hero__title">
+          <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">
+            {ABOUT_PAGE_H1}
+          </span>
+        </h1>
+        <p class="fresha-alt-hero__lead">{ABOUT_ENTITY_DEFINITION}</p>
+        <div class="fresha-alt-hero__actions">
+          <a
+            href="/demo"
+            class="fresha-alt-hero__action fresha-alt-hero__action--primary"
+            data-track="view_live_demo_click"
+          >
+            See KERSIVO in Action
+          </a>
+          <a href="/pricing" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
+            View pricing
+          </a>
+        </div>
+        <p class="company-hero__updated">
+          Last updated <time datetime={ABOUT_PAGE_LAST_UPDATED_ISO}>{ABOUT_PAGE_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </section>
+
+    <EditorialIntro
+      id="what-it-is"
+      titleId="about-what-title"
+      class="fresha-alt-quick"
+      kicker="WHAT KERSIVO IS"
+      title="One system for your website, bookings and shop"
+      lead={ABOUT_WHAT_IT_IS_LEAD}
+      detail={ABOUT_WHAT_IT_IS_DETAIL}
+      facts={ABOUT_FACTS}
+    />
+
+    <section id="who-its-for" class="fresha-alt__section" aria-labelledby="about-who-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">WHO IT’S FOR</p>
+          <h2 id="about-who-title" class="fresha-alt__h2">Built for independent barbershops</h2>
+          <p class="fresha-alt__lead">{ABOUT_AUDIENCE_INTRO}</p>
+        </header>
+        <InsightCards items={ABOUT_AUDIENCE} />
+      </div>
+    </section>
+
+    <section id="why" class="fresha-alt__section" aria-labelledby="about-why-title">
+      <div class="fresha-alt__glow" aria-hidden="true"></div>
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">WHY KERSIVO EXISTS</p>
+          <h2 id="about-why-title" class="fresha-alt__h2">{ABOUT_WHY_TITLE}</h2>
+        </header>
+        <div class="company-prose">
+          {ABOUT_WHY_PARAGRAPHS.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+      </div>
+    </section>
+
+    <section id="included" class="fresha-alt__section" aria-labelledby="about-included-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">WHAT’S INCLUDED</p>
+          <h2 id="about-included-title" class="fresha-alt__h2">Everything a barbershop runs on</h2>
+        </header>
+        <ul class="company-checks company-checks--columns">
+          {ABOUT_INCLUDED_ITEMS.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section id="own-brand" class="fresha-alt__section" aria-labelledby="about-model-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">THE KERSIVO MODEL</p>
+          <h2 id="about-model-title" class="fresha-alt__h2">Your brand, your domain, direct booking</h2>
+        </header>
+        <ul class="company-points">
+          {
+            ABOUT_MODEL_POINTS.map((point) => (
+              <li class="company-point">
+                <h3 class="company-point__title">{point.title}</h3>
+                <p class="company-point__body">{point.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section id="pricing" class="fresha-alt__section" aria-labelledby="about-pricing-title">
+      <div class="fresha-alt__glow" aria-hidden="true"></div>
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">PRICING</p>
+          <h2 id="about-pricing-title" class="fresha-alt__h2">One plan. £{SAAS_MONTHLY_GBP} a month.</h2>
+        </header>
+        <div class="company-summary">
+          <p class="company-summary__text">{ABOUT_PRICING_SUMMARY}</p>
+          <a href="/pricing" class="company-link">See full KERSIVO pricing <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-final-cta fresha-alt-final" aria-labelledby="about-demo-title">
+      <div class="container">
+        <div class="landing-final-cta__panel">
+          <div class="landing-final-cta__content">
+            <p class="landing-final-cta__eyebrow">SEE IT FOR YOURSELF</p>
+            <h2 id="about-demo-title" class="landing-final-cta__heading">
+              Explore the KERSIVO demo
+            </h2>
+            <p class="landing-final-cta__subheadline">
+              Open the live demo to see the barbershop website, booking journey and admin dashboard —
+              no signup needed.
+            </p>
+          </div>
+          <div class="landing-final-cta__conversion">
+            <div class="fresha-alt-final__actions">
+              <a
+                href="/demo"
+                class="btn btn--primary btn--lg landing-final-cta__button"
+                data-track="view_live_demo_click"
+              >
+                See KERSIVO in Action
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Questions about KERSIVO?"
+      description={`Email ${KERSIVO_CONTACT_EMAIL} or send a message below. Tell us about your barbershop and what you use today, and we’ll reply with a clear answer.`}
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+    />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start subscription', href: '/admin/launch' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

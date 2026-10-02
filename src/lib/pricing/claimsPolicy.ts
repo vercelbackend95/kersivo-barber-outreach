@@ -225,9 +225,14 @@ export const EMAIL_REMINDERS_CLAIM = 'Email appointment confirmations and remind
 
 /**
  * Public / landing SMS claim — plain feature name only.
- * Do not say Unlimited, limited, allowance, or any £/message figure in marketing.
+ * Never say Unlimited or publish any £/message figure. Only the approved allowance
+ * qualifier below may mention the allowance on marketing surfaces.
  */
 export const SMS_INCLUDED_CLAIM = 'SMS appointment reminders';
+
+/** Approved pricing-page qualifier: names the allowance without publishing its size. */
+export const SMS_INCLUDED_WITH_ALLOWANCE_CLAIM =
+  'SMS appointment reminders are included, subject to the plan’s monthly SMS allowance.';
 
 /** Combined client communications claim for pricing / feature cards. */
 export const CLIENT_COMMS_CLAIM = `${EMAIL_REMINDERS_CLAIM}. ${SMS_INCLUDED_CLAIM}.`;

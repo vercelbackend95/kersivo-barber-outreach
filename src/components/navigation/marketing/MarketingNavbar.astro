@@ -62,7 +62,13 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
           {
             MARKETING_NAV_DIRECT_LINKS.map((link) => (
               <li class="mnav__item">
-                <a class="mnav__link" href={link.href} data-mnav-section={link.sectionId}>
+                <a
+                  class="mnav__link"
+                  href={link.href}
+                  data-mnav-section={link.sectionId}
+                  data-mnav-match={link.sectionId ? undefined : link.href}
+                  aria-current={!link.sectionId && link.href === pathname.replace(/\/$/, '') ? 'page' : undefined}
+                >
                   {link.label}
                 </a>
               </li>

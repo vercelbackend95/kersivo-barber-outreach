@@ -50,8 +50,25 @@ describe('buildBarberDemoJsonLd', () => {
     expect(organization.name).toBe('KERSIVO');
     expect(organization.url).toBe(`${siteUrl}/`);
     expect(organization.description).toBe(
-      'Barbershop software for independent UK barbershops, including online booking, client management, deposits, retail pickup and branded websites.',
+      'Booking and management software built specifically for independent UK barbershops.',
     );
+    expect(organization.email).toBe('hello@kersivo.co.uk');
+    expect(organization.areaServed).toEqual({
+      '@type': 'Country',
+      name: 'United Kingdom',
+      identifier: 'GB',
+    });
+    for (const forbidden of [
+      'address',
+      'telephone',
+      'foundingDate',
+      'numberOfEmployees',
+      'award',
+      'aggregateRating',
+      'review',
+    ]) {
+      expect(organization, forbidden).not.toHaveProperty(forbidden);
+    }
     expect(organization.logo).toEqual({
       '@type': 'ImageObject',
       url: `${siteUrl}/images/logo.jpg`,

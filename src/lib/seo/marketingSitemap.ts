@@ -12,7 +12,9 @@ import {
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
+import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { buildAbsoluteUrl } from './meta';
+import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
 
 /**
  * Marketing-domain sitemap for kersivo.co.uk only.
@@ -31,6 +33,10 @@ export type MarketingSitemapEntry = {
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/' },
+  /** Matches the visible "Last updated" date on src/pages/pricing.astro. */
+  { path: PRICING_PAGE_PATH, lastmod: PRICING_PAGE_LAST_UPDATED_ISO },
+  /** Matches the visible "Last updated" date on src/pages/about.astro. */
+  { path: ABOUT_PAGE_PATH, lastmod: ABOUT_PAGE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/booksy-alternative/index.astro. */
   { path: BOOKSY_ALTERNATIVE_PAGE_PATH, lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */

@@ -17,6 +17,7 @@ interface Props {
 }
 
 const { id, groups, directLinks, primary, secondary } = Astro.props;
+const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
 ---
 
 <div id={id} class="mnav-hub" data-mnav-hub hidden inert>
@@ -75,7 +76,13 @@ const { id, groups, directLinks, primary, secondary } = Astro.props;
         {
           directLinks.map((link) => (
             <li class="mnav-hub__group">
-              <a class="mnav-hub__row" href={link.href} data-mnav-section={link.sectionId}>
+              <a
+                class="mnav-hub__row"
+                href={link.href}
+                data-mnav-section={link.sectionId}
+                data-mnav-match={link.sectionId ? undefined : link.href}
+                aria-current={!link.sectionId && link.href === pathname ? 'page' : undefined}
+              >
                 <span class="mnav-hub__row-label">{link.label}</span>
               </a>
             </li>

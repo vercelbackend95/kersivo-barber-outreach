@@ -131,6 +131,8 @@ type BookingsReportsAnalyticsStudioProps = {
   /** Landing: defer chart stroke-draw until the studio is in view. */
   drawChartWhenVisible?: boolean;
   isBlacklineDemo?: boolean;
+  /** Public surfaces must not label service value as sales or revenue. */
+  useServiceValueLabels?: boolean;
 };
 
 const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAnalyticsStudioProps>(
@@ -153,6 +155,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
       onSelectedBarberIdsChange,
       drawChartWhenVisible = false,
       isBlacklineDemo = false,
+      useServiceValueLabels = false,
     },
     ref,
   ) {
@@ -340,7 +343,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
         toolbarSecondary={(
           <AdminSegmentedControl
             options={
-              isBlacklineDemo
+              isBlacklineDemo || useServiceValueLabels
                 ? REPORTS_CHART_METRIC_OPTIONS.map((option) =>
                     option.value === 'revenue' ? { ...option, label: 'Completed value' } : option,
                   )
@@ -378,7 +381,9 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
               responsive
               contentInsetTop={isCompactLayout ? 84 : undefined}
               emptyLabel="No data for this range"
-              ariaLabel={`${chartMetric} trend chart`}
+              ariaLabel={`${
+                useServiceValueLabels && chartMetric === 'revenue' ? 'Completed service value' : chartMetric
+              } trend chart`}
               drawWhenVisible={drawChartWhenVisible}
             />
           </div>

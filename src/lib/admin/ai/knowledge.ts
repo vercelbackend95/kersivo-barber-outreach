@@ -27,6 +27,7 @@ import {
   PRICE_CHANGE_NOTICE_CLAIM,
   PRICE_VAT_DISCLAIMER,
   SMS_INCLUDED_CLAIM,
+  SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
   STANDARD_SITE_NOT_BESPOKE_CLAIM,
   STANDARD_SITE_SCOPE_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
@@ -79,7 +80,7 @@ const BRAND_FACTS: KnowledgeSection = {
     `£39/month plan scope (full list): ${PLAN_SCOPE_FULL_LIST.join('; ')}.`,
     `${SMS_INCLUDED_CLAIM} — included in the £39/month plan while the subscription is active.`,
     'Email appointment confirmations and reminders are also included.',
-    'Do not say Unlimited SMS, limited SMS, or any SMS allowance amount or message count in customer-facing answers. Point to Terms for the monthly allowance wording only.',
+    `When asked about SMS, say: “${SMS_INCLUDED_WITH_ALLOWANCE_CLAIM}” Never say Unlimited SMS, and never state the internal SMS budget, any monetary SMS amount or a message count. Point to Terms for the full allowance wording.`,
     'Do not claim you can send SMS yourself as the assistant; describe the product capability only.',
     'Shop roles OWNER/MANAGER/BARBER are live via ShopMember + invites (bound to shopId). Barber access requires a linked roster seat. Do not invent a multi-shop switcher UI.',
     FAIR_USE_INTRO,

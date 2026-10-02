@@ -44,8 +44,8 @@ export type MarketingNavDirectLink = {
   id: string;
   label: string;
   href: string;
-  /** Homepage section id used for the in-view state on `/`. */
-  sectionId: string;
+  /** Homepage section id used for the in-view state on `/`. Omit for links to standalone pages. */
+  sectionId?: string;
 };
 
 export type MarketingNavAction = { label: string; href: string | null; track?: Navbar17CtaTrack };
@@ -137,7 +137,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-pricing',
     label: 'Pricing',
     description: 'One £39 monthly plan for one physical location.',
-    href: '/#pricing',
+    href: '/pricing',
     group: 'platform',
     section: 'explore',
     icon: 'pricing',
@@ -200,7 +200,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
 ];
 
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
-  { id: 'pricing', label: 'Pricing', href: '/#pricing', sectionId: 'pricing' },
+  { id: 'pricing', label: 'Pricing', href: '/pricing' },
   { id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' },
 ];
 

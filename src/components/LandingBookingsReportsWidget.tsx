@@ -145,6 +145,7 @@ export default function LandingBookingsReportsWidget() {
         onSelectedBarberIdsChange={setSelectedBarberIds}
         showStatsRow
         drawChartWhenVisible
+        useServiceValueLabels
         className="admin-analytics-studio--bookings-reports"
       />
     </div>
