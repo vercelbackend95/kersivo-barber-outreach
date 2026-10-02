@@ -27,9 +27,8 @@ import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
 import { SHOW_SETUP_PLAN_CARDS } from '@/lib/pricing/offerMode';
-import BarbershopBookingHero from '@/components/barbershopBookingHero.astro';
+import HomepageHero from '@/components/homepage/HomepageHero.astro';
 import '../styles/components/system-chooser.css';
-import '../styles/components/hero227.css';
 import '../styles/components/landingValueCards.css';
 
 const [carouselProducts, demoBarbers] = await Promise.all([
@@ -49,18 +48,11 @@ const currentYear = new Date().getFullYear();
     slot="head"
     rel="preload"
     as="image"
-    href="/images/hero/phone-5.webp"
-    fetchpriority="high"
-  />
-  <link
-    slot="head"
-    rel="preload"
-    as="image"
     href="/images/brand/logo-navbar-228.webp"
   />
   <main class="landing-overflow-guard">
     <SystemChooser />
-    <BarbershopBookingHero />
+    <HomepageHero />
     <LandingValueCards />
     <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} />
     {SHOW_SETUP_PLAN_CARDS ? (

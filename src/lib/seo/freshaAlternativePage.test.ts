@@ -595,155 +595,27 @@ describe('contact form placeholder', () => {
   });
 });
 
-describe('hero dashboard progressive loading', () => {
+describe('hero dashboard showcase', () => {
+  const showcaseSource = readRepoFile('../../components/marketing/HeroDashboardShowcase.astro');
   const heroCss = readRepoFile('../../styles/components/fresha-alternative.css');
-  const frameMarkup = heroSource.slice(
-    heroSource.indexOf('<iframe'),
-    heroSource.indexOf('</iframe>'),
-  );
 
-  it('defers the dashboard iframe inside the reserved viewport', () => {
-    expect(heroSource).toContain('data-deferred-demo-frame');
-    expect(frameMarkup).toContain(
-      'data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"',
-    );
-    expect(frameMarkup).not.toMatch(/\ssrc=/);
-    expect(frameMarkup).toContain('title="Interactive KERSIVO owner dashboard demo"');
-    expect(frameMarkup).not.toContain('sandbox');
-    expect(heroSource).toMatch(
-      /mountDeferredDemoFrame\(viewport, window, \{ readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE \}\);/,
-    );
+  it('renders the shared live dashboard showcase below the hero copy', () => {
+    expect(heroSource).toContain("import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';");
+    expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeGreaterThan(heroSource.indexOf('fresha-alt-hero__meta'));
+    expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeLessThan(heroSource.indexOf('</section>'));
+    expect(showcaseSource).toContain('data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"');
   });
 
-  it('uses the plain hero background as the loading state, with no dashboard poster', () => {
-    const viewportMarkup = heroSource.slice(
-      heroSource.indexOf('data-deferred-demo-frame'),
-      heroSource.indexOf('fresha-alt-hero__product-caption'),
-    );
-    expect(viewportMarkup).not.toMatch(/<picture|<img|<source|<svg|skeleton|spinner|Loading/i);
+  it('keeps no page-specific copy of the showcase markup, styles or loader', () => {
+    expect(heroSource).not.toMatch(/<iframe|<script|data-deferred-demo-frame|mountDeferredDemoFrame/);
     expect(heroSource).not.toMatch(/poster|dashboard-showcase-v2|\.webp|fetchpriority/i);
-    expect(heroCss).not.toMatch(/product-poster|object-fit: none/);
+    expect(heroCss).not.toMatch(/fresha-alt-hero__product-|fresha-admin-demo-max-width|freshaAltProductIn|product-poster/);
     expect(existsSync(join(repoRoot, 'public/images/fresha-alternative'))).toBe(false);
     expect(existsSync(join(repoRoot, 'scripts/capture-fresha-dashboard-posters.mjs'))).toBe(false);
-    expect(heroSource).toMatch(
-      /<noscript>\s*<iframe\s+src="\/demo\/admin\?embed=hero&section=bookings_dashboard"/,
-    );
   });
 
-  const productRules = () =>
-    heroCss.replace(/\/\*[\s\S]*?\*\//g, '').match(/[^{}]*\.fresha-alt-hero__product-(?:shell|viewport|frame)[^{}]*\{[^}]*\}/g) ?? [];
-  const ruleFor = (selector: RegExp) => productRules().filter((rule) => selector.test(rule.split('{')[0]));
-
-  it('reserves the final product viewport geometry before the dashboard appears', () => {
-    const viewport = ruleFor(/^\s*\.fresha-alt-hero__product-viewport\s*$/);
-    for (const rule of viewport.filter((r) => /height:/.test(r))) {
-      expect(rule).toMatch(/[^-]height: clamp\([^)]+\);/);
-      expect(rule).toMatch(/max-height: [^;]+;/);
-    }
-    expect(viewport[0]).toMatch(/height: clamp\(38rem, 56vw, 51rem\);/);
-    expect(viewport[0]).toMatch(/max-height: clamp\(38rem, 56vw, 51rem\);/);
-    expect(viewport[0]).toMatch(/contain: layout paint size;/);
-    expect(viewport[0]).toMatch(/background: #030303;/);
+  it('keeps the black hero background the showcase loads into', () => {
     expect(heroCss).toMatch(/^\.fresha-alt-hero \{[^}]*background: #030303;/m);
-    expect(viewport[0]).toMatch(/border-radius: clamp\(0\.8rem, 1\.25vw, 1\.05rem\);/);
-    expect(viewport[0]).toMatch(/box-shadow:/);
-    expect(heroCss).toMatch(/\.fresha-alt-hero__product-viewport iframe \{[^}]*position: absolute;[^}]*inset: 0;[^}]*background: #030303;/);
-  });
-
-  it('keeps the live frame hidden and inert until the verified ready swap', () => {
-    expect(heroCss).toMatch(
-      /\.fresha-alt-hero__product-viewport \.fresha-alt-hero__product-frame \{\s*opacity: 0;\s*pointer-events: none;\s*\}/,
-    );
-  });
-
-  it('reveals the live frame atomically: visible and interactive together', () => {
-    const readyFrame = ruleFor(/^\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame\s*$/);
-    expect(readyFrame).toHaveLength(1);
-    expect(readyFrame[0]).toMatch(/\{\s*opacity: 1;\s*pointer-events: auto;\s*\}$/);
-    for (const rule of ruleFor(/product-frame/).filter((r) => r.includes('pointer-events: auto'))) {
-      expect(rule).toContain('opacity: 1;');
-    }
-  });
-
-  const REVEAL = 'opacity 800ms cubic-bezier(0.25, 0.1, 0.25, 1)';
-  const NOT_READY = ":not([data-frame-state='ready'])";
-
-  it('keeps the whole product (chrome, frame and glow) transparent but laid out until ready', () => {
-    const gate = heroCss.slice(heroCss.indexOf('@media (scripting: enabled) {'));
-    expect(gate).toMatch(
-      new RegExp(
-        String.raw`^@media \(scripting: enabled\) \{\s*\.fresha-alt-hero__product-viewport${NOT_READY.replace(/[[\]()]/g, '\\$&')} \{\s*opacity: 0;\s*\}`,
-      ),
-    );
-    expect(gate).toMatch(
-      /\.fresha-alt-hero__product-shell:has\(> \.fresha-alt-hero__product-viewport:not\(\[data-frame-state='ready'\]\)\)\s*> \.fresha-alt-hero__product-glow \{\s*opacity: 0;\s*\}/,
-    );
-    const chrome = productRules().filter((rule) => /box-shadow|border-radius|outline|border:/.test(rule));
-    expect(chrome.length).toBeGreaterThan(0);
-    for (const rule of chrome) expect(rule.trim()).toMatch(/^\.fresha-alt-hero__product-viewport(?:::after| iframe)?\s*\{/);
-    for (const rule of ruleFor(/product-viewport/)) expect(rule).not.toMatch(/display: none|visibility: hidden/);
-  });
-
-  it('fades the finished product in as one object, opacity only, only once ready', () => {
-    const motion = heroCss.slice(heroCss.indexOf('@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {'));
-    expect(motion).toMatch(
-      /^@media \(scripting: enabled\) and \(prefers-reduced-motion: no-preference\) \{\s*\.fresha-alt-hero__product-viewport\[data-frame-state='ready'\] \{\s*transition: opacity 800ms cubic-bezier\(0\.25, 0\.1, 0\.25, 1\);\s*\}\s*\.fresha-alt-hero__product-shell:has\(> \.fresha-alt-hero__product-viewport\[data-frame-state='ready'\]\)\s*> \.fresha-alt-hero__product-glow \{\s*transition: opacity 800ms cubic-bezier\(0\.25, 0\.1, 0\.25, 1\);\s*\}\s*\}/,
-    );
-    const transitions = productRules().filter((rule) => rule.includes('transition:'));
-    expect(transitions).toHaveLength(2);
-    for (const rule of transitions) {
-      expect(rule).toContain(`transition: ${REVEAL};`);
-      expect(rule.split('{')[0]).toContain("[data-frame-state='ready']");
-      expect(rule.split('{')[0]).not.toContain('product-frame');
-    }
-    expect(heroSource).not.toMatch(/liveVisible|onReady|poster/i);
-    expect(heroSource).not.toMatch(/window\.addEventListener\('load'|productFrame\.(?:onload|addEventListener\('load')|setTimeout/);
-  });
-
-  it('shows the product immediately for reduced motion', () => {
-    const withoutMotionBlock = heroCss.replace(
-      /@media \(scripting: enabled\) and \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}\n/,
-      '',
-    );
-    expect(withoutMotionBlock).not.toContain(REVEAL);
-    expect(withoutMotionBlock.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/\.fresha-alt-hero__product-[^{]*\{[^}]*transition/);
-  });
-
-  it('keeps the product shell at full opacity and untransformed at all times', () => {
-    for (const rule of ruleFor(/product-shell\s*$/)) {
-      expect(rule).not.toMatch(/opacity|transition|transform:\s*(?!none)/);
-    }
-    expect(heroCss).not.toContain('data-showcase-ready');
-    expect(heroSource).not.toContain('showcaseReady');
-  });
-
-  it('never moves, scales or animates the product dashboard beyond its opacity reveal', () => {
-    expect(heroCss).not.toContain('freshaAltProductIn');
-    const rules = productRules();
-    expect(rules.length).toBeGreaterThan(5);
-    for (const rule of rules) {
-      expect(rule).not.toMatch(/animation|scale|zoom|translate|rotate|will-change|filter/);
-      const transform = rule.match(/transform:\s*([^;]+);/);
-      if (transform) expect(transform[1]).toBe('none');
-      const transition = rule.match(/transition:\s*([^;]+);/);
-      if (transition) expect(transition[1]).toBe(REVEAL);
-    }
-  });
-
-  it('keeps the live dashboard clickable once revealed', () => {
-    expect(heroCss).toMatch(
-      /\[data-frame-state='ready'\] \.fresha-alt-hero__product-frame \{\s*opacity: 1;\s*pointer-events: auto;\s*\}/,
-    );
-    expect(heroCss).not.toMatch(/\.fresha-alt-hero__product-shell[^{]*\{[^}]*pointer-events: none/);
-  });
-
-  it('forwards wheel scrolling over the hero iframe to the landing page', () => {
-    const adminPage = readRepoFile('../../pages/demo/admin.astro');
-    expect(heroSource).toContain('receiveHeroShowcaseWheel(productFrame, window)');
-    expect(adminPage).toMatch(
-      /import \{ forwardHeroShowcaseWheel \} from '@\/lib\/admin\/heroShowcaseWheel';\s*if \(document\.body\.classList\.contains\('admin-hero-embed-body'\)\) forwardHeroShowcaseWheel\(window\);/,
-    );
-    expect(adminPage).not.toContain('parent.scrollBy');
   });
 
   it('lets touch scrolling chain from the fixed hero showcase to the landing page', () => {

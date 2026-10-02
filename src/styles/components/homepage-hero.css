@@ -1,0 +1,275 @@
+/* ============================================================
+   Homepage hero — product-first, same visual language as the Fresha
+   Alternative hero; the live dashboard showcase is shared.
+   ============================================================ */
+
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3.25rem, 5.2vw, 4.75rem) 0 clamp(4.5rem, 8vw, 7rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: #030303;
+}
+
+.home-hero__content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: start;
+  width: min(94vw, 91.1rem);
+  margin-inline: auto;
+  text-align: left;
+}
+
+.home-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+  font-family: var(--font-body);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.home-hero__eyebrow-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.home-hero__title {
+  margin: 0;
+  max-width: none;
+  font-family: var(--font-body);
+  font-size: clamp(2.85rem, 5.25vw, 5.55rem);
+  font-weight: 650;
+  line-height: 0.84;
+  letter-spacing: -0.062em;
+  color: var(--fg);
+}
+
+.home-hero__title-line {
+  display: block;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+}
+
+.home-hero__title-line + .home-hero__title-line {
+  margin-top: 0;
+}
+
+.home-hero__title-line--primary {
+  color: var(--fg);
+}
+
+.home-hero__lead {
+  margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
+  max-width: 46ch;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: clamp(0.9rem, 1.05vw, 1rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.home-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.home-hero__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home-hero__action--primary {
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-hero__action--primary:hover,
+.home-hero__action--primary:focus-visible {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 90%, #fff 10%);
+}
+
+.home-hero__action--primary:hover {
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+}
+
+.home-hero__action--primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.home-hero__action--secondary {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: none;
+  backdrop-filter: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-hero__action--secondary:hover,
+.home-hero__action--secondary:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.home-hero__action--secondary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.home-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.4rem 0.62rem;
+  margin-top: 0.75rem;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.home-hero__meta strong {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  font-weight: 700;
+}
+
+@media (max-width: 64rem) {
+  .home-hero {
+    padding-top: clamp(3.25rem, 6vw, 4.25rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .home-hero {
+    padding-top: 3.25rem;
+    padding-bottom: 3.7rem;
+  }
+
+  .home-hero__content {
+    width: calc(100% - 1.35rem);
+  }
+
+  .home-hero__title {
+    max-width: 100%;
+    font-size: clamp(2.35rem, 10vw, 4.15rem);
+    letter-spacing: -0.055em;
+  }
+
+  .home-hero__title-line {
+    white-space: normal;
+  }
+
+  .home-hero__lead {
+    max-width: 31rem;
+  }
+}
+
+@media (max-width: 38rem) {
+  .home-hero__actions {
+    width: min(100%, 28rem);
+    flex-direction: column;
+  }
+
+  .home-hero__action {
+    width: 100%;
+  }
+
+  .home-hero__meta {
+    max-width: 25rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero__eyebrow,
+  .home-hero__lead,
+  .home-hero__actions,
+  .home-hero__meta {
+    animation: homeHeroRise 720ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
+  }
+
+  /* The H1 is the LCP candidate: it rises but stays fully opaque so it counts from first paint. */
+  .home-hero__title {
+    animation: homeHeroTitleRise 720ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
+  }
+
+  .home-hero__title {
+    animation-delay: 70ms;
+  }
+
+  .home-hero__lead {
+    animation-delay: 130ms;
+  }
+
+  .home-hero__actions {
+    animation-delay: 190ms;
+  }
+
+  .home-hero__meta {
+    animation-delay: 240ms;
+  }
+
+  @keyframes homeHeroRise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes homeHeroTitleRise {
+    from {
+      transform: translateY(14px);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/*
+ * One text block for LCP: as separate blocks each title line is smaller than the first-visit
+ * cookie banner. Inline lines split by <br> render identically to the block lines.
+ */
+.home-hero__title-line {
+  display: inline;
+}

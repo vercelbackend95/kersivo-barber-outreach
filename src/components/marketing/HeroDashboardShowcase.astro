@@ -1,0 +1,32 @@
+---
+import '@/styles/components/hero-dashboard-showcase.css';
+---
+
+<div class="hero-showcase">
+  <div class="hero-showcase__glow" aria-hidden="true"></div>
+
+  <div class="hero-showcase__viewport" data-deferred-demo-frame>
+    <iframe
+      class="hero-showcase__frame"
+      data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"
+      title="Interactive KERSIVO owner dashboard demo"
+    ></iframe>
+    <noscript>
+      <iframe
+        src="/demo/admin?embed=hero&section=bookings_dashboard"
+        title="Interactive KERSIVO owner dashboard demo"
+      ></iframe>
+    </noscript>
+  </div>
+
+  <p class="hero-showcase__caption">
+    This is the real KERSIVO demo dashboard. Click around — bookings, team, reports and more.
+  </p>
+</div>
+
+<script>
+  import { bindHeroDashboardShowcase } from '@/lib/marketing/heroDashboardShowcase';
+
+  bindHeroDashboardShowcase();
+  document.addEventListener('astro:page-load', () => bindHeroDashboardShowcase());
+</script>

@@ -1,9 +1,9 @@
 export const SITE_NAME = 'Kersivo';
 
-export const DEFAULT_TITLE = 'Barbershop Booking System UK | KERSIVO';
+export const DEFAULT_TITLE = 'Barbershop Software & Barber Booking System UK | KERSIVO';
 
 export const DEFAULT_DESCRIPTION =
-  'Booking, retail pickup and admin for independent UK barbershops. Built on your own domain with 0% KERSIVO commission on bookings and retail.';
+  'Barbershop software for independent UK barbershops. Run bookings, deposits, clients, retail and admin on your own domain for £39/month with 0% KERSIVO commission.';
 
 export const DEFAULT_OG_IMAGE_PATH = '/images/og/kersivo-og.jpg';
 

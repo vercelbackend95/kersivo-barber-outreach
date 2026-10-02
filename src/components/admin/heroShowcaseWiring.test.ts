@@ -10,7 +10,7 @@ import {
 const read = (...parts: string[]) => readFileSync(join(process.cwd(), ...parts), 'utf8');
 const adminPanel = read('src/components/admin/AdminPanel.tsx');
 const bookingsPanel = read('src/components/admin/BookingsAdminPanel.tsx');
-const hero = read('src/components/freshaAlternative/FreshaHero.astro');
+const heroBinding = read('src/lib/marketing/heroDashboardShowcase.ts');
 
 describe('hero showcase visibility wiring', () => {
   it('uses its own message type, separate from ready and wheel', () => {
@@ -19,7 +19,7 @@ describe('hero showcase visibility wiring', () => {
   });
 
   it('announces visibility from the landing page for the hero frame', () => {
-    expect(hero).toContain('announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, window)');
+    expect(heroBinding).toContain('announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win)');
   });
 
   it('passes showcaseMode to the bookings panel and the Assistant', () => {

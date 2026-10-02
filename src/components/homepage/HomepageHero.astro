@@ -1,0 +1,48 @@
+---
+import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/homepage-hero.css';
+---
+
+<section id="hero" class="home-hero" aria-labelledby="home-hero-title">
+  <div class="home-hero__content">
+    <p class="home-hero__eyebrow">
+      <span class="home-hero__eyebrow-dot" aria-hidden="true"></span>
+      Built for independent UK barbershops
+    </p>
+
+    <h1 id="home-hero-title" class="home-hero__title">
+      <span class="home-hero__title-line home-hero__title-line--primary">Barbershop software</span><br />
+      <span class="home-hero__title-line">built around your</span><br />
+      <span class="home-hero__title-line">brand.</span>
+    </h1>
+
+    <p class="home-hero__lead">
+      A barber booking system for independent UK barbershops — your branded website, bookings, deposits, clients,
+      retail and admin on your own domain.
+    </p>
+
+    <div class="home-hero__actions">
+      <a
+        href="/admin/launch"
+        class="home-hero__action home-hero__action--primary"
+        data-track="saas_subscribe_click"
+      >
+        Get started — £{SAAS_MONTHLY_GBP}/month
+      </a>
+      <a href="#live-demo" class="home-hero__action home-hero__action--secondary">
+        See KERSIVO in action
+      </a>
+    </div>
+
+    <div class="home-hero__meta" aria-label="KERSIVO commercial model">
+      <span><strong>£{SAAS_MONTHLY_GBP}/month</strong></span>
+      <span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission</span>
+      <span aria-hidden="true">·</span>
+      <span>Your own domain</span>
+    </div>
+  </div>
+
+  <HeroDashboardShowcase />
+</section>

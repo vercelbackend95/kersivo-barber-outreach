@@ -381,7 +381,7 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(switcherSource).toContain('showBooksyCompareLink');
     expect(switcherSource).toContain('href="/booksy-alternative"');
     expect(switcherSource).toContain('Compare KERSIVO and Booksy');
-    expect(DEFAULT_TITLE).toBe('Barbershop Booking System UK | KERSIVO');
+    expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toContain('0% KERSIVO commission');
   });
 
