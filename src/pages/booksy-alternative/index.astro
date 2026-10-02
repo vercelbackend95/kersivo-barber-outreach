@@ -36,7 +36,6 @@ const currentYear = new Date().getFullYear();
   title={BOOKSY_ALTERNATIVE_TITLE}
   description={BOOKSY_ALTERNATIVE_DESCRIPTION}
   canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}
-  navbarVariant="booksyAlternative"
   jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
 >
   <main class="booksy-alt landing-overflow-guard">
@@ -103,7 +102,12 @@ const currentYear = new Date().getFullYear();
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
 
   const scheduleInit = () => {
-    requestAnimationFrame(() => initFeature261StaggerReveal());
+    requestAnimationFrame(() => {
+      const section = document.querySelector('.feature261');
+      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
+      const cleanup = initFeature261StaggerReveal(section);
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    });
   };
 
   if (document.readyState === 'loading') {
@@ -111,6 +115,7 @@ const currentYear = new Date().getFullYear();
   } else {
     scheduleInit();
   }
+  document.addEventListener('astro:page-load', scheduleInit);
 </script>
 
 <script>

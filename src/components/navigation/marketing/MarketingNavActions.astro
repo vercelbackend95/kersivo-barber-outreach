@@ -1,0 +1,38 @@
+---
+import type { MarketingNavAction } from '@/lib/nav/marketingNavigation';
+import { getRouteFamily } from '@/lib/navigation/routeFamilies';
+
+interface Props {
+  primary: MarketingNavAction;
+  secondary: MarketingNavAction;
+  class?: string;
+}
+
+const { primary, secondary, class: className } = Astro.props;
+const family = getRouteFamily(Astro.url.pathname);
+const leavesFamily = (href: string | null) => (href ? getRouteFamily(new URL(href, Astro.url).pathname) !== family : false);
+---
+
+<div class:list={['mnav-actions', className]}>
+  {
+    secondary.href ? (
+      <a class="mnav-btn mnav-btn--secondary" href={secondary.href} data-astro-reload={leavesFamily(secondary.href) ? '' : undefined}>
+        {secondary.label}
+      </a>
+    ) : null
+  }
+  {
+    primary.href ? (
+      <a
+        class="mnav-btn mnav-btn--primary"
+        href={primary.href}
+        data-track={primary.track}
+        data-astro-reload={leavesFamily(primary.href) ? '' : undefined}
+      >
+        {primary.label}
+      </a>
+    ) : (
+      <button type="button" class="mnav-btn mnav-btn--primary">{primary.label}</button>
+    )
+  }
+</div>

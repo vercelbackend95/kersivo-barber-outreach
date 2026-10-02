@@ -1,0 +1,88 @@
+---
+import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
+import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+import type {
+  MarketingNavAction,
+  MarketingNavDirectLink,
+  ResolvedMarketingNavGroup,
+} from '@/lib/nav/marketingNavigation';
+
+interface Props {
+  id: string;
+  groups: ResolvedMarketingNavGroup[];
+  directLinks: readonly MarketingNavDirectLink[];
+  primary: MarketingNavAction;
+  secondary: MarketingNavAction;
+}
+
+const { id, groups, directLinks, primary, secondary } = Astro.props;
+---
+
+<div id={id} class="mnav-hub" data-mnav-hub hidden inert>
+  <div class="mnav-hub__scroll">
+    <p class="mnav-hub__context">Booking software for UK barbershops</p>
+    <nav class="mnav-hub__nav" aria-label="Main">
+      <ul class="mnav-hub__list" role="list">
+        {
+          groups.map((group) => (
+            <li class="mnav-hub__group">
+              <button
+                type="button"
+                class="mnav-hub__row mnav-hub__row--toggle"
+                aria-expanded="false"
+                aria-controls={`${id}-${group.id}`}
+                data-mnav-accordion={group.id}
+              >
+                <span class="mnav-hub__row-label">{group.label}</span>
+                <span class="mnav-hub__chevron" aria-hidden="true" />
+              </button>
+              <div id={`${id}-${group.id}`} class="mnav-hub__section" hidden>
+                {group.description ? <p class="mnav-hub__lead">{group.description}</p> : null}
+                {group.featured.length ? (
+                  <ul class="mnav-hub__items mnav-hub__items--featured" role="list">
+                    {group.featured.map((item) => (
+                      <li>
+                        <MarketingNavLink item={item} featured />
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {group.sections.map((section) => (
+                  <div class="mnav-hub__subsection">
+                    {section.label ? <p class="mnav-hub__section-label">{section.label}</p> : null}
+                    <ul class="mnav-hub__items" role="list">
+                      {section.items.map((item) => (
+                        <li>
+                          <MarketingNavLink item={item} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                {group.featuredAction ? (
+                  <a class="mnav-hub__action" href={group.featuredAction.href}>
+                    {group.featuredAction.label}
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d={MARKETING_NAV_ICONS.arrow} />
+                    </svg>
+                  </a>
+                ) : null}
+              </div>
+            </li>
+          ))
+        }
+        {
+          directLinks.map((link) => (
+            <li class="mnav-hub__group">
+              <a class="mnav-hub__row" href={link.href} data-mnav-section={link.sectionId}>
+                <span class="mnav-hub__row-label">{link.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+  <MarketingNavActions class="mnav-hub__actions" primary={primary} secondary={secondary} />
+</div>

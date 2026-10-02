@@ -23,13 +23,8 @@ import {
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
 import { resolveCanonicalUrl } from './meta';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
-import {
-  getNavbar17CtaHref,
-  getNavbar17CtaLabel,
-  getNavbar17Items,
-  navbar17ShowsCart,
-  NAVBAR_SUBSCRIBE_CTA_LABEL,
-} from '@/lib/nav/navbar17Items';
+import { MARKETING_NAV_ITEMS, MARKETING_NAV_PRIMARY_ACTION } from '@/lib/nav/marketingNavigation';
+import { getNavbar17Items, navbar17ShowsCart, NAVBAR_SUBSCRIBE_CTA_LABEL } from '@/lib/nav/navbar17Items';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -45,8 +40,8 @@ const heroSource = readRepoFile('../../components/booksyAlternative/BooksyHero.a
 const compareSource = readRepoFile('../../components/booksyAlternative/BooksyCompare.astro');
 const pricingSource = readRepoFile('../../components/booksyAlternative/BooksyPricing.astro');
 const rateCard1Source = readRepoFile('../../components/rateCard1.tsx');
-const navbarItemsSource = readRepoFile('../nav/navbar17Items.ts');
-const navbar17Source = readRepoFile('../../components/navbar17.astro');
+const landingLayoutSource = readRepoFile('../../layouts/LandingLayout.astro');
+const marketingNavbarSource = readRepoFile('../../components/navigation/marketing/MarketingNavbar.astro');
 const finalCtaSource = readRepoFile('../../components/booksyAlternative/BooksyFinalCta.astro');
 const approachesSource = readRepoFile('../../components/booksyAlternative/BooksyApproaches.astro');
 const fitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
@@ -71,13 +66,13 @@ const bannedPhrases = [
 ] as const;
 
 describe('booksy-alternative page SEO and claim safety', () => {
-  it('wires LandingLayout with exact title, description, canonical and booksyAlternative navbar', () => {
+  it('wires LandingLayout with exact title, description, canonical and the shared marketing navbar', () => {
     expect(pageSource).toContain('LandingLayout');
     expect(pageSource).toContain('title={BOOKSY_ALTERNATIVE_TITLE}');
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
-    expect(pageSource).toContain('navbarVariant="booksyAlternative"');
-    expect(pageSource).not.toContain('navbarVariant="shop"');
+    expect(pageSource).not.toContain('navbarVariant');
+    expect(landingLayoutSource).toContain('<MarketingNavbar />');
     expect(pageSource).not.toContain('showCart={false}');
     expect(pageSource).not.toContain('noindex');
     expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbers | KERSIVO');
@@ -86,22 +81,17 @@ describe('booksy-alternative page SEO and claim safety', () => {
     );
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
 
-    const booksyNav = getNavbar17Items('booksyAlternative');
-    expect(booksyNav.map((item) => item.link)).toEqual(['#pricing', '#faq', '#contact']);
-    expect(booksyNav.some((item) => item.link === '/#pricing')).toBe(false);
-    expect(booksyNav.some((item) => item.link === '/#faq')).toBe(false);
-    expect(booksyNav.some((item) => item.link === '/#contact')).toBe(false);
-    expect(booksyNav.find((item) => item.name === 'Contact')?.link).toBe('#contact');
-    expect(navbar17ShowsCart('booksyAlternative')).toBe(false);
-    expect(getNavbar17CtaHref('booksyAlternative')).toBe('/admin/launch');
-    expect(getNavbar17CtaLabel('booksyAlternative')).toBe(NAVBAR_SUBSCRIBE_CTA_LABEL);
+    expect(MARKETING_NAV_ITEMS.some((item) => item.href === BOOKSY_ALTERNATIVE_PAGE_PATH)).toBe(true);
+    expect(MARKETING_NAV_PRIMARY_ACTION).toMatchObject({
+      href: '/admin/launch',
+      label: NAVBAR_SUBSCRIBE_CTA_LABEL,
+    });
     expect(navbar17ShowsCart('shop')).toBe(true);
     expect(getNavbar17Items('shop').map((item) => item.link)).toEqual([
       '/#pricing',
       '/#faq',
       '/#contact',
     ]);
-    expect(navbarItemsSource).toContain("'booksyAlternative'");
   });
 
   it('has exactly one H1 with the approved text', () => {
@@ -166,12 +156,7 @@ describe('booksy-alternative page SEO and claim safety', () => {
     expect(finalCtaSource).not.toContain('saas_subscribe_click');
     expect(rateCard1Source).toContain('href="/admin/launch"');
     expect(rateCard1Source).toContain('data-track="saas_subscribe_click"');
-    expect(getNavbar17CtaHref('booksyAlternative')).toBe('/admin/launch');
-    expect(navbar17Source).toContain("const isBooksyAlternative = variant === 'booksyAlternative'");
-    expect(navbar17Source).toMatch(
-      /isBooksyAlternative\s*\n\s*\? '\/'\s*\n\s*: '\/#home'/,
-    );
-    expect(navbar17Source).toContain("? '/'");
+    expect(marketingNavbarSource).toContain('<a href="/" class="mnav__brand"');
     expect(compareSource).toContain('id="comparison"');
     expect(pageSource).toContain('<Faq4');
     expect(pricingSource.match(/id="pricing"/g)?.length).toBe(1);

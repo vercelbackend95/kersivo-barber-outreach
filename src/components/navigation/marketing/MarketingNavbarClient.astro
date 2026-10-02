@@ -1,0 +1,11 @@
+<script>
+  import { initMarketingNav } from '@/lib/nav/marketingNavController';
+
+  const boot = () => {
+    const root = document.querySelector('[data-mnav]');
+    if (root instanceof HTMLElement) initMarketingNav(root);
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>

@@ -1,0 +1,38 @@
+---
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+import { isMarketingNavItemCurrent, marketingNavItemMatch, type MarketingNavItem } from '@/lib/nav/marketingNavigation';
+import { getRouteFamily } from '@/lib/navigation/routeFamilies';
+
+interface Props {
+  item: MarketingNavItem;
+  featured?: boolean;
+}
+
+const { item, featured = false } = Astro.props;
+const pathname = Astro.url.pathname;
+const match = marketingNavItemMatch(item);
+const current = isMarketingNavItemCurrent(item, pathname);
+const target = new URL(item.href, Astro.url);
+const leavesFamily =
+  !item.external && target.origin === Astro.url.origin && getRouteFamily(target.pathname) !== getRouteFamily(pathname);
+---
+
+<a
+  href={item.href}
+  class:list={['mnav-link', { 'mnav-link--featured': featured }]}
+  aria-current={current ? 'page' : undefined}
+  data-mnav-match={match ?? undefined}
+  data-astro-reload={leavesFamily ? '' : undefined}
+  target={item.external ? '_blank' : undefined}
+  rel={item.external ? 'noopener' : undefined}
+>
+  <span class="mnav-link__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d={MARKETING_NAV_ICONS[item.icon]} />
+    </svg>
+  </span>
+  <span class="mnav-link__text">
+    <span class="mnav-link__label">{item.label}</span>
+    <span class="mnav-link__description">{item.description}</span>
+  </span>
+</a>

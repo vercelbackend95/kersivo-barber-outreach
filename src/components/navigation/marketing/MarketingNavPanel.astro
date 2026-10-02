@@ -1,0 +1,59 @@
+---
+import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+import type { ResolvedMarketingNavGroup } from '@/lib/nav/marketingNavigation';
+
+interface Props {
+  group: ResolvedMarketingNavGroup;
+  id: string;
+}
+
+const { group, id } = Astro.props;
+---
+
+<div id={id} class="mnav-panel" data-mnav-panel={group.id} hidden>
+  <div class="mnav-panel__surface" data-columns={group.sections.length}>
+    <div class="mnav-panel__intro">
+      <p class="mnav-panel__eyebrow">{group.eyebrow}</p>
+      <p class="mnav-panel__heading">{group.heading}</p>
+      {group.description ? <p class="mnav-panel__description">{group.description}</p> : null}
+      {
+        group.featuredAction ? (
+          <a class="mnav-panel__action" href={group.featuredAction.href}>
+            {group.featuredAction.label}
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d={MARKETING_NAV_ICONS.arrow} />
+            </svg>
+          </a>
+        ) : null
+      }
+      {
+        group.featured.length ? (
+          <ul class="mnav-panel__featured" role="list">
+            {group.featured.map((item) => (
+              <li>
+                <MarketingNavLink item={item} featured />
+              </li>
+            ))}
+          </ul>
+        ) : null
+      }
+    </div>
+    <div class="mnav-panel__sections">
+      {
+        group.sections.map((section) => (
+          <section class="mnav-panel__section" aria-label={section.label ?? group.label}>
+            {section.label ? <p class="mnav-panel__section-label" aria-hidden="true">{section.label}</p> : null}
+            <ul class="mnav-panel__list" role="list">
+              {section.items.map((item) => (
+                <li>
+                  <MarketingNavLink item={item} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</div>

@@ -73,11 +73,20 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
     import { receiveHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
     import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
 
-    const viewport = document.querySelector<HTMLElement>('[data-deferred-demo-frame]');
-    const productFrame = viewport?.querySelector<HTMLIFrameElement>('.fresha-alt-hero__product-frame');
-    if (productFrame) receiveHeroShowcaseWheel(productFrame, window);
-    if (viewport) {
-      mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
-      if (productFrame) announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, window);
-    }
+    const bindHeroFrame = () => {
+      const viewport = document.querySelector<HTMLElement>('[data-deferred-demo-frame]');
+      if (!viewport || viewport.dataset.heroFrameBound === 'true') return;
+      viewport.dataset.heroFrameBound = 'true';
+      const productFrame = viewport.querySelector<HTMLIFrameElement>('.fresha-alt-hero__product-frame');
+      const stopFrame = mountDeferredDemoFrame(viewport, window, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
+      const cleanups = [stopFrame];
+      if (productFrame) {
+        cleanups.push(receiveHeroShowcaseWheel(productFrame, window));
+        cleanups.push(announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, window));
+      }
+      document.addEventListener('astro:before-swap', () => cleanups.forEach((cleanup) => cleanup()), { once: true });
+    };
+
+    bindHeroFrame();
+    document.addEventListener('astro:page-load', bindHeroFrame);
 </script>

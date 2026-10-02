@@ -168,15 +168,18 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
 
   <script>
     import { CONSENT_OPEN_EVENT } from '@/lib/consent/config';
-    document.querySelectorAll('[data-cookie-settings]').forEach((el) => {
-      el.addEventListener('click', () => {
-        window.dispatchEvent(
-          new CustomEvent(CONSENT_OPEN_EVENT, {
-            detail: { trigger: el instanceof HTMLElement ? el : undefined },
-          }),
-        );
+    const bindCookieSettings = () => {
+      document.querySelectorAll<HTMLElement>('[data-cookie-settings]').forEach((el) => {
+        if (el.dataset.cookieSettingsBound === 'true') return;
+        el.dataset.cookieSettingsBound = 'true';
+        el.addEventListener('click', () => {
+          window.dispatchEvent(new CustomEvent(CONSENT_OPEN_EVENT, { detail: { trigger: el } }));
+        });
       });
-    });
+    };
+
+    bindCookieSettings();
+    document.addEventListener('astro:page-load', bindCookieSettings);
   </script>
 
   <div class="footer50__brand" aria-label={brandName}>

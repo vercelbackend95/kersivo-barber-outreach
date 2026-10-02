@@ -1,6 +1,7 @@
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
-export type Navbar17Variant = 'default' | 'landing' | 'shop' | 'testShop' | 'booksyAlternative';
+/** Marketing pages (LandingLayout) use MarketingNavbar; Navbar17 serves MainLayout pages only. */
+export type Navbar17Variant = 'default' | 'shop' | 'testShop';
 
 export type Navbar17CtaTrack = 'plan_my_setup_click' | 'saas_subscribe_click';
 
@@ -54,30 +55,6 @@ const DEFAULT_NAV_ITEMS: Navbar17Item[] = [
   },
 ];
 
-const LANDING_NAV_ITEMS: Navbar17Item[] = [
-  {
-    name: 'Pricing',
-    link: '#pricing',
-    sectionId: 'pricing',
-    isPage: false,
-    icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
-  },
-  {
-    name: 'FAQ',
-    link: '#faq',
-    sectionId: 'faq',
-    isPage: false,
-    icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
-  },
-  {
-    name: 'Contact',
-    link: '#contact',
-    sectionId: 'contact',
-    isPage: false,
-    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
-  },
-];
-
 const SHOP_NAV_ITEMS: Navbar17Item[] = [
   {
     name: 'Pricing',
@@ -102,30 +79,6 @@ const SHOP_NAV_ITEMS: Navbar17Item[] = [
   },
 ];
 
-const BOOKSY_ALTERNATIVE_NAV_ITEMS: Navbar17Item[] = [
-  {
-    name: 'Pricing',
-    link: '#pricing',
-    sectionId: 'pricing',
-    isPage: false,
-    icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
-  },
-  {
-    name: 'FAQ',
-    link: '#faq',
-    sectionId: 'faq',
-    isPage: false,
-    icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
-  },
-  {
-    name: 'Contact',
-    link: '#contact',
-    sectionId: 'contact',
-    isPage: false,
-    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
-  },
-];
-
 const TEST_SHOP_NAV_ITEMS: Navbar17Item[] = [
   {
     name: 'Shop',
@@ -144,32 +97,20 @@ const TEST_SHOP_NAV_ITEMS: Navbar17Item[] = [
 ];
 
 export function getNavbar17Items(variant: Navbar17Variant = 'default'): Navbar17Item[] {
-  if (variant === 'landing') return LANDING_NAV_ITEMS;
   if (variant === 'shop') return SHOP_NAV_ITEMS;
-  if (variant === 'booksyAlternative') return BOOKSY_ALTERNATIVE_NAV_ITEMS;
   if (variant === 'testShop') return TEST_SHOP_NAV_ITEMS;
   return DEFAULT_NAV_ITEMS;
 }
 
 export function getNavbar17CtaLabel(variant: Navbar17Variant = 'default'): string {
-  if (
-    variant === 'landing' ||
-    variant === 'shop' ||
-    variant === 'testShop' ||
-    variant === 'booksyAlternative'
-  ) {
+  if (variant === 'shop' || variant === 'testShop') {
     return NAVBAR_SUBSCRIBE_CTA_LABEL;
   }
   return 'Get started';
 }
 
 export function getNavbar17CtaHref(variant: Navbar17Variant = 'default'): string {
-  if (
-    variant === 'landing' ||
-    variant === 'shop' ||
-    variant === 'testShop' ||
-    variant === 'booksyAlternative'
-  ) {
+  if (variant === 'shop' || variant === 'testShop') {
     return '/admin/launch';
   }
   return '/#pricing';

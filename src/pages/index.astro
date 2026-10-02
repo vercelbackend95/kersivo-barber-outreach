@@ -118,7 +118,12 @@ const currentYear = new Date().getFullYear();
   import { initSystemChooser } from '@/lib/initSystemChooser';
 
   const scheduleInit = () => {
-    requestAnimationFrame(() => initSystemChooser());
+    requestAnimationFrame(() => {
+      const chooser = document.querySelector('[data-system-chooser]');
+      if (!(chooser instanceof HTMLElement) || chooser.dataset.systemChooserBound === 'true') return;
+      chooser.dataset.systemChooserBound = 'true';
+      initSystemChooser();
+    });
   };
 
   if (document.readyState === 'loading') {
@@ -126,13 +131,19 @@ const currentYear = new Date().getFullYear();
   } else {
     scheduleInit();
   }
+  document.addEventListener('astro:page-load', scheduleInit);
 </script>
 
 <script>
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
 
   const scheduleInit = () => {
-    requestAnimationFrame(() => initFeature261StaggerReveal());
+    requestAnimationFrame(() => {
+      const section = document.querySelector('.feature261');
+      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
+      const cleanup = initFeature261StaggerReveal(section);
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    });
   };
 
   if (document.readyState === 'loading') {
@@ -140,6 +151,7 @@ const currentYear = new Date().getFullYear();
   } else {
     scheduleInit();
   }
+  document.addEventListener('astro:page-load', scheduleInit);
 </script>
 
 <script>

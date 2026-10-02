@@ -25,7 +25,7 @@ interface Props {
   /** Override brand link aria-label (e.g. shop name when showing custom logo). */
   brandAriaLabel?: string;
   /**
-   * Server-resolved preview CTA for landing / shop / testShop.
+   * Server-resolved preview CTA for shop / testShop.
    * Must be computed outside this component so client scripts never see auth/Prisma.
    */
   previewCta?: Navbar17PreviewCtaProp | null;
@@ -43,14 +43,8 @@ const {
 
 const navItems = getNavbar17Items(variant);
 const showCart = typeof showCartProp === 'boolean' ? showCartProp : navbar17ShowsCart(variant);
-const isLanding = variant === 'landing';
 const isTestShop = variant === 'testShop';
-const isBooksyAlternative = variant === 'booksyAlternative';
-const usesLandingCta =
-  variant === 'landing' ||
-  variant === 'shop' ||
-  variant === 'testShop' ||
-  variant === 'booksyAlternative';
+const usesLandingCta = variant === 'shop' || variant === 'testShop';
 
 const previewCta =
   previewCtaProp ?? (usesLandingCta ? (Astro.locals.navbarPreviewCta ?? null) : null);
@@ -63,14 +57,8 @@ const ctaDemoAttr = usesLandingCta ? undefined : true;
 const hasCustomBrandLogo = Boolean(brandLogoUrl);
 const brandAriaLabel =
   brandAriaLabelProp ??
-  (isLanding ? 'KERSIVO – back to top' : isTestShop ? 'Back to shop' : 'Kersivo – back to homepage');
-const brandHref = isLanding
-  ? '#hero'
-  : isTestShop
-    ? '/admin/test-shop'
-    : isBooksyAlternative
-      ? '/'
-      : '/#home';
+  (isTestShop ? 'Back to shop' : 'Kersivo – back to homepage');
+const brandHref = isTestShop ? '/admin/test-shop' : '/#home';
 const currentFamily = getRouteFamily(Astro.url.pathname);
 
 function hrefLeavesFamily(href: string | null | undefined): boolean {
@@ -121,7 +109,7 @@ const brandLeavesFamily = hrefLeavesFamily(brandHref);
                 width="228"
                 height="159"
                 decoding="async"
-                {...(!isLanding ? { fetchpriority: 'high' as const } : {})}
+                fetchpriority="high"
               />
             )
           }

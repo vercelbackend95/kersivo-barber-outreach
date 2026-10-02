@@ -41,10 +41,10 @@ vi.mock('@/lib/db/client', () => ({
 import { resolveNavbarPreviewCta } from '@/lib/nav/navbarPreviewCta.server';
 
 describe('navbar17 CTA fallbacks', () => {
-  it('uses dynamic subscribe label and /admin/launch for landing/shop/testShop', () => {
+  it('uses dynamic subscribe label and /admin/launch for shop/testShop', () => {
     expect(NAVBAR_SUBSCRIBE_CTA_LABEL).toBe(`Get started — £${SAAS_MONTHLY_GBP}/month`);
 
-    for (const variant of ['landing', 'shop', 'testShop'] as const) {
+    for (const variant of ['shop', 'testShop'] as const) {
       expect(getNavbar17CtaLabel(variant)).toBe(NAVBAR_SUBSCRIBE_CTA_LABEL);
       expect(getNavbar17CtaHref(variant)).toBe('/admin/launch');
     }

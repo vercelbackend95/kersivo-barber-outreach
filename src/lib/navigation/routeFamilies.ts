@@ -19,6 +19,13 @@ export function isLiveTenantShopPath(pathname: string): boolean {
   return /^\/shop\/[^/]+(\/.*)?$/.test(path);
 }
 
+/** Public SEO, comparison and tool pages rendered with LandingLayout and the marketing navigation. */
+export const MARKETING_CONTENT_PATHS: readonly string[] = [
+  '/booksy-alternative',
+  '/fresha-alternative',
+  '/barber-software-cost-calculator',
+];
+
 export function getRouteFamily(pathname: string): RouteFamily {
   const path = normalizePathname(pathname);
 
@@ -50,7 +57,8 @@ export function getRouteFamily(pathname: string): RouteFamily {
     path.startsWith('/shop/demo/') ||
     path === '/privacy' ||
     path === '/cookies' ||
-    path === '/terms'
+    path === '/terms' ||
+    MARKETING_CONTENT_PATHS.includes(path)
   ) {
     return 'marketing';
   }

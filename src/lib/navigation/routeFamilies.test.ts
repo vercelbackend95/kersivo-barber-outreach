@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  MARKETING_CONTENT_PATHS,
   getRouteFamily,
   isLiveTenantShopPath,
   isSameRouteFamily,
@@ -38,6 +39,29 @@ describe('route families', () => {
     expect(getRouteFamily('/shop/success')).toBe('minimal');
     expect(getRouteFamily('/shop/cancelled')).toBe('minimal');
     expect(normalizePathname('/shop/')).toBe('/shop');
+  });
+
+  it('keeps marketing content pages in the marketing family and private surfaces out', () => {
+    for (const path of MARKETING_CONTENT_PATHS) {
+      expect(getRouteFamily(path)).toBe('marketing');
+      expect(getRouteFamily(`${path}/`)).toBe('marketing');
+      expect(isSameRouteFamily('/', path)).toBe(true);
+      expect(isSameRouteFamily(path, '/shop')).toBe(true);
+    }
+    expect(isSameRouteFamily('/booksy-alternative', '/fresha-alternative')).toBe(true);
+    for (const path of [
+      '/admin',
+      '/admin/launch',
+      '/setup',
+      '/preview/abc',
+      '/ops',
+      '/checkout',
+      '/book/abc',
+      '/shop/live-shop-id',
+      '/booksy-alternative-x',
+    ]) {
+      expect(getRouteFamily(path), path).not.toBe('marketing');
+    }
   });
 
   it('classifies live tenant storefront routes as tenant', () => {

@@ -1,0 +1,92 @@
+---
+import MarketingMobileNav from '@/components/navigation/marketing/MarketingMobileNav.astro';
+import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
+import MarketingNavbarClient from '@/components/navigation/marketing/MarketingNavbarClient.astro';
+import MarketingNavPanel from '@/components/navigation/marketing/MarketingNavPanel.astro';
+import {
+  MARKETING_NAV_DIRECT_LINKS,
+  MARKETING_NAV_PRIMARY_ACTION,
+  MARKETING_NAV_SECONDARY_ACTION,
+  buildMarketingNavigation,
+  isMarketingNavItemCurrent,
+  type MarketingNavAction,
+} from '@/lib/nav/marketingNavigation';
+
+const groups = buildMarketingNavigation();
+const pathname = Astro.url.pathname;
+const resolvedCta = Astro.locals.navbarPreviewCta;
+const primary: MarketingNavAction = resolvedCta
+  ? { label: resolvedCta.label, href: resolvedCta.href, track: resolvedCta.track }
+  : MARKETING_NAV_PRIMARY_ACTION;
+const groupIsCurrent = (group: (typeof groups)[number]) =>
+  [...group.featured, ...group.sections.flatMap((section) => section.items)].some((item) =>
+    isMarketingNavItemCurrent(item, pathname),
+  );
+---
+
+<header class="mnav" data-mnav transition:persist="ks-nav-marketing">
+  <div class="mnav__bar">
+    <div class="mnav__inner">
+      <a href="/" class="mnav__brand" aria-label="KERSIVO home">
+        <img
+          class="mnav__logo"
+          src="/images/brand/logo-navbar-228.webp"
+          srcset="/images/brand/logo-navbar-228.webp 1x, /images/brand/logo-navbar-456.webp 2x"
+          alt=""
+          width="228"
+          height="159"
+          decoding="async"
+        />
+      </a>
+
+      <nav class="mnav__desktop" aria-label="Main">
+        <ul class="mnav__list" role="list">
+          {
+            groups.map((group) => (
+              <li class="mnav__item">
+                <button
+                  type="button"
+                  class="mnav__trigger"
+                  aria-expanded="false"
+                  aria-controls={`mnav-panel-${group.id}`}
+                  data-mnav-trigger={group.id}
+                  data-current={groupIsCurrent(group) ? '' : undefined}
+                >
+                  {group.label}
+                  <span class="mnav__chevron" aria-hidden="true" />
+                </button>
+                <MarketingNavPanel group={group} id={`mnav-panel-${group.id}`} />
+              </li>
+            ))
+          }
+          {
+            MARKETING_NAV_DIRECT_LINKS.map((link) => (
+              <li class="mnav__item">
+                <a class="mnav__link" href={link.href} data-mnav-section={link.sectionId}>
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <MarketingNavActions class="mnav__actions" primary={primary} secondary={MARKETING_NAV_SECONDARY_ACTION} />
+
+      <button type="button" class="mnav__menu" aria-expanded="false" aria-controls="mnav-hub" data-mnav-menu>
+        <span class="mnav__menu-label" data-mnav-menu-label>Menu</span>
+        <span class="mnav__menu-icon" aria-hidden="true"><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <MarketingMobileNav
+    id="mnav-hub"
+    groups={groups}
+    directLinks={MARKETING_NAV_DIRECT_LINKS}
+    primary={primary}
+    secondary={MARKETING_NAV_SECONDARY_ACTION}
+  />
+</header>
+
+<MarketingNavbarClient />
