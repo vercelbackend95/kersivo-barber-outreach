@@ -3,9 +3,14 @@ import { announceHeroShowcaseVisibleWhenSeen } from '@/lib/admin/heroShowcaseVis
 import { receiveHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
 import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
 
+/** Must match the static-image breakpoint in hero-dashboard-showcase.css. */
+export const HERO_SHOWCASE_STILL_QUERY = '(max-width: 48rem)';
+
 /**
  * Binds the hero dashboard showcase on the current page (deferred load, ready-gated reveal,
  * wheel forwarding, visibility announcement) and tears it down before the next soft swap.
+ * Phone widths show a static image instead, so the live frame is never mounted (or fetched)
+ * there; it is bound if the viewport later grows past the breakpoint.
  * Safe to call repeatedly: a viewport is only ever bound once.
  */
 export function bindHeroDashboardShowcase(win: Window & typeof globalThis = window): void {
@@ -13,12 +18,30 @@ export function bindHeroDashboardShowcase(win: Window & typeof globalThis = wind
   const viewport = doc.querySelector<HTMLElement>('[data-deferred-demo-frame]');
   if (!viewport || viewport.dataset.heroFrameBound === 'true') return;
   viewport.dataset.heroFrameBound = 'true';
-  const productFrame = viewport.querySelector<HTMLIFrameElement>('.hero-showcase__frame');
-  const stopFrame = mountDeferredDemoFrame(viewport, win, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
-  const cleanups = [stopFrame];
-  if (productFrame) {
-    cleanups.push(receiveHeroShowcaseWheel(productFrame, win));
-    cleanups.push(announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win));
+  const cleanups: Array<() => void> = [];
+
+  const bindLiveFrame = () => {
+    const productFrame = viewport.querySelector<HTMLIFrameElement>('.hero-showcase__frame');
+    const stopFrame = mountDeferredDemoFrame(viewport, win, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
+    cleanups.push(stopFrame);
+    if (productFrame) {
+      cleanups.push(receiveHeroShowcaseWheel(productFrame, win));
+      cleanups.push(announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win));
+    }
+  };
+
+  const stillQuery = typeof win.matchMedia === 'function' ? win.matchMedia(HERO_SHOWCASE_STILL_QUERY) : null;
+  if (stillQuery?.matches) {
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) return;
+      stillQuery.removeEventListener('change', onChange);
+      bindLiveFrame();
+    };
+    stillQuery.addEventListener('change', onChange);
+    cleanups.push(() => stillQuery.removeEventListener('change', onChange));
+  } else {
+    bindLiveFrame();
   }
+
   doc.addEventListener('astro:before-swap', () => cleanups.forEach((cleanup) => cleanup()), { once: true });
 }

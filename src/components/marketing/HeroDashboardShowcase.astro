@@ -1,5 +1,13 @@
 ---
 import '@/styles/components/hero-dashboard-showcase.css';
+import {
+  DESKTOP_BLANK,
+  STILL_DIR,
+  STILL_SIZES,
+  TABLET_MEDIA,
+  phoneSrcset,
+  tabletSrcset,
+} from '@/lib/marketing/heroDashboardStill';
 ---
 
 <div class="hero-showcase">
@@ -19,9 +27,29 @@ import '@/styles/components/hero-dashboard-showcase.css';
     </noscript>
   </div>
 
-  <p class="hero-showcase__caption">
+  <picture class="hero-showcase__still">
+    <source media="not all and (max-width: 48rem)" srcset={DESKTOP_BLANK} />
+    <source media={TABLET_MEDIA} type="image/avif" srcset={tabletSrcset('avif')} sizes={STILL_SIZES} width="840" height="680" />
+    <source media={TABLET_MEDIA} type="image/webp" srcset={tabletSrcset('webp')} sizes={STILL_SIZES} width="840" height="680" />
+    <source type="image/avif" srcset={phoneSrcset('avif')} sizes={STILL_SIZES} />
+    <source type="image/webp" srcset={phoneSrcset('webp')} sizes={STILL_SIZES} />
+    <img
+      src={`${STILL_DIR}/hero-dashboard-mobile-1600.png`}
+      srcset={phoneSrcset('png')}
+      sizes={STILL_SIZES}
+      alt="KERSIVO barbershop admin dashboard preview"
+      width="800"
+      height="900"
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+    />
+  </picture>
+
+  <p class="hero-showcase__caption hero-showcase__caption--interactive">
     This is the real KERSIVO demo dashboard. Click around — bookings, team, reports and more.
   </p>
+  <p class="hero-showcase__caption hero-showcase__caption--still">Real KERSIVO dashboard preview.</p>
 </div>
 
 <script>

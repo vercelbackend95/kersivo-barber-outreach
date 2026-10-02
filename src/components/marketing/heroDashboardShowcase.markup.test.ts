@@ -65,10 +65,12 @@ describe('hero dashboard progressive loading', () => {
   it('uses the plain hero background as the loading state, with no dashboard poster', () => {
     const viewportMarkup = showcaseSource.slice(
       showcaseSource.indexOf('data-deferred-demo-frame'),
-      showcaseSource.indexOf('hero-showcase__caption'),
+      showcaseSource.indexOf('<picture class="hero-showcase__still">'),
     );
+    expect(viewportMarkup).toContain('</noscript>');
     expect(viewportMarkup).not.toMatch(/<picture|<img|<source|<svg|skeleton|spinner|Loading/i);
-    expect(showcaseSource).not.toMatch(/poster|dashboard-showcase-v2|\.webp|fetchpriority/i);
+    expect(showcaseSource).not.toMatch(/poster|dashboard-showcase-v2|rel="preload"/i);
+    expect(viewportMarkup).not.toContain('fetchpriority');
     expect(showcaseCss).not.toMatch(/product-poster|object-fit: none/);
     expect(existsSync(join(process.cwd(), 'public/images/fresha-alternative'))).toBe(false);
     expect(showcaseSource).toMatch(
@@ -119,6 +121,8 @@ describe('hero dashboard progressive loading', () => {
       /\.hero-showcase:has\(> \.hero-showcase__viewport:not\(\[data-frame-state='ready'\]\)\)\s*> \.hero-showcase__glow \{\s*opacity: 0;\s*\}/,
     );
     for (const rule of ruleFor(/hero-showcase__viewport/)) expect(rule).not.toMatch(/display: none|visibility: hidden/);
+    const desktopCss = showcaseCss.slice(0, showcaseCss.indexOf('@media (max-width: 48rem) {'));
+    expect(desktopCss).not.toMatch(/\.hero-showcase__viewport[^{]*\{[^}]*display: none/);
   });
 
   it('fades the finished product in as one object, opacity only, only once ready', () => {

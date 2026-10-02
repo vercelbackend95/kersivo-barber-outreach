@@ -19,7 +19,7 @@ vi.mock('@/lib/admin/heroShowcaseVisibility', () => ({
 }));
 
 import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
-import { bindHeroDashboardShowcase } from './heroDashboardShowcase';
+import { bindHeroDashboardShowcase, HERO_SHOWCASE_STILL_QUERY } from './heroDashboardShowcase';
 
 function renderShowcase() {
   document.body.innerHTML = `
@@ -95,6 +95,74 @@ describe('bindHeroDashboardShowcase', () => {
       readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
     });
     expect(mocks.stopFrame).toHaveBeenCalledTimes(1);
+  });
+
+  describe('at phone widths (static image)', () => {
+    let listeners: Array<(event: MediaQueryListEvent) => void>;
+    let query: { matches: boolean; addEventListener: ReturnType<typeof vi.fn>; removeEventListener: ReturnType<typeof vi.fn> };
+
+    beforeEach(() => {
+      listeners = [];
+      query = {
+        matches: true,
+        addEventListener: vi.fn((_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.push(listener)),
+        removeEventListener: vi.fn((_type: string, listener: (event: MediaQueryListEvent) => void) => {
+          listeners = listeners.filter((l) => l !== listener);
+        }),
+      };
+      vi.stubGlobal('matchMedia', vi.fn(() => query));
+    });
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    const resize = (matches: boolean) => {
+      query.matches = matches;
+      for (const listener of [...listeners]) listener({ matches } as MediaQueryListEvent);
+    };
+
+    it('never mounts the live frame, wheel forwarding or visibility announcement', () => {
+      renderShowcase();
+      bindHeroDashboardShowcase(window);
+
+      expect(window.matchMedia).toHaveBeenCalledWith(HERO_SHOWCASE_STILL_QUERY);
+      expect(HERO_SHOWCASE_STILL_QUERY).toBe('(max-width: 48rem)');
+      expect(mocks.mountDeferredDemoFrame).not.toHaveBeenCalled();
+      expect(mocks.receiveHeroShowcaseWheel).not.toHaveBeenCalled();
+      expect(mocks.announceHeroShowcaseVisibleWhenSeen).not.toHaveBeenCalled();
+      expect(document.querySelector('iframe')!.hasAttribute('src')).toBe(false);
+    });
+
+    it('binds the live frame once if the viewport grows past the breakpoint', () => {
+      const { viewport, frame } = renderShowcase();
+      bindHeroDashboardShowcase(window);
+      resize(true);
+      expect(mocks.mountDeferredDemoFrame).not.toHaveBeenCalled();
+
+      resize(false);
+      resize(true);
+      resize(false);
+      expect(mocks.mountDeferredDemoFrame).toHaveBeenCalledTimes(1);
+      expect(mocks.mountDeferredDemoFrame).toHaveBeenCalledWith(viewport, window, {
+        readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
+      });
+      expect(mocks.receiveHeroShowcaseWheel).toHaveBeenCalledWith(frame, window);
+      expect(listeners).toHaveLength(0);
+
+      swap();
+      expect(mocks.stopFrame).toHaveBeenCalledTimes(1);
+      expect(mocks.stopWheel).toHaveBeenCalledTimes(1);
+      expect(mocks.stopVisible).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops listening for resizes on a soft swap', () => {
+      renderShowcase();
+      bindHeroDashboardShowcase(window);
+      expect(listeners).toHaveLength(1);
+      swap();
+      expect(listeners).toHaveLength(0);
+      resize(false);
+      expect(mocks.mountDeferredDemoFrame).not.toHaveBeenCalled();
+    });
   });
 
   it('does nothing on pages without a showcase', () => {
