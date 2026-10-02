@@ -2,17 +2,18 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
-import BooksyHero from '@/components/booksyAlternative/BooksyHero.astro';
-import BooksyApproaches from '@/components/booksyAlternative/BooksyApproaches.astro';
-import BooksyCompare from '@/components/booksyAlternative/BooksyCompare.astro';
-import BooksyFit from '@/components/booksyAlternative/BooksyFit.astro';
-import BooksyJourney from '@/components/booksyAlternative/BooksyJourney.astro';
-import BooksyProof from '@/components/booksyAlternative/BooksyProof.astro';
-import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
-import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
-import BooksyDecision from '@/components/booksyAlternative/BooksyDecision.astro';
-import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
 import Contact16 from '@/components/contact16.astro';
+import BooksyHero from '@/components/booksyAlternative/BooksyHero.astro';
+import BooksyQuickAnswer from '@/components/booksyAlternative/BooksyQuickAnswer.astro';
+import BooksyWhy from '@/components/booksyAlternative/BooksyWhy.astro';
+import BooksyCosts from '@/components/booksyAlternative/BooksyCosts.astro';
+import BooksyCompare from '@/components/booksyAlternative/BooksyCompare.astro';
+import BooksyProof from '@/components/booksyAlternative/BooksyProof.astro';
+import BooksyFit from '@/components/booksyAlternative/BooksyFit.astro';
+import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
+import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
+import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
+import BooksySources from '@/components/booksyAlternative/BooksySources.astro';
 import {
   BOOKSY_ALTERNATIVE_DESCRIPTION,
   BOOKSY_ALTERNATIVE_FAQ_ITEMS,
@@ -21,13 +22,12 @@ import {
   buildBooksyAlternativeFaqJsonLd,
 } from '@/lib/seo/booksyAlternativeFaq';
 import { buildBooksyAlternativeWebPageJsonLd } from '@/lib/seo/booksyAlternativeJsonLd';
-import { BOOKSY_TRADEMARK_DISCLAIMER } from '@/lib/seo/booksyFacts';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
-import '@/styles/components/booksy-alternative.css';
+import '@/styles/components/fresha-alternative.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -38,27 +38,30 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}
   jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
 >
-  <main class="booksy-alt landing-overflow-guard">
+  <main class="fresha-alt landing-overflow-guard">
     <BooksyHero />
-    <BooksyApproaches />
+    <BooksyQuickAnswer />
+    <BooksyWhy />
+    <BooksyCosts />
     <BooksyCompare />
-    <BooksyFit />
-    <BooksyJourney />
     <BooksyProof />
-    <BooksyPricing />
+    <BooksyFit />
     <BooksySwitching />
-    <BooksyDecision />
+    <BooksyPricing />
+
     <Faq4
       className="faq4--landing"
-      heading="Questions about switching from Booksy?"
-      subHeading="Clear answers on pricing, marketplace discovery, migration, deposits and domains."
+      heading="Questions about comparing Booksy and KERSIVO?"
+      subHeading="Clear answers on Booksy pricing, Boost, commission, switching and client booking."
       supportHeading="Still comparing options?"
       supportText="Tell us what you use today and what you want your booking journey to look like."
       supportLinkLabel="Ask KERSIVO a question"
       supportLinkHref="#contact"
       faqs={BOOKSY_ALTERNATIVE_FAQ_ITEMS}
     />
+
     <BooksyFinalCta />
+
     <Contact16
       eyebrow="CONTACT KERSIVO"
       title="Still comparing KERSIVO and Booksy?"
@@ -67,11 +70,9 @@ const currentYear = new Date().getFullYear();
       submitLabel="Send my question"
       messagePlaceholder="For example: switching from Booksy, setting up deposits, moving client data or launching a new booking website."
     />
-    <aside class="booksy-alt-disclaimer" aria-label="Trademark and comparison disclaimer">
-      <div class="container">
-        <p>{BOOKSY_TRADEMARK_DISCLAIMER}</p>
-      </div>
-    </aside>
+
+    <BooksySources />
+
     <Footer50
       showIntro={false}
       brandLine="Own your brand. Own your bookings."
@@ -131,7 +132,6 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <style is:global>
-  /* Safeguard only — layout verified with no clip at 320–1440px */
   .landing-overflow-guard {
     overflow-x: clip;
   }

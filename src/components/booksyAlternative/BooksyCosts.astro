@@ -1,0 +1,118 @@
+---
+import {
+  BOOKSY_BOOST_EXAMPLE,
+  BOOKSY_BOOST_POINTS,
+  BOOKSY_COSTS_INTRO,
+  BOOKSY_COST_ITEMS,
+  BOOKSY_WORKED_EXAMPLES,
+  BOOKSY_WORKED_EXAMPLES_NOTE,
+  KERSIVO_MODEL_POINTS,
+} from '@/lib/seo/booksyAlternativeContent';
+import { BOOKSY_FACTS_CHECKED_DATE, getBooksySource } from '@/lib/seo/booksyFacts';
+
+const pricingSource = getBooksySource('pricingUk');
+const boostSource = getBooksySource('boost');
+---
+
+<section id="booksy-pricing" class="fresha-alt__section" aria-labelledby="booksy-alt-costs-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">BOOKSY COSTS EXPLAINED</p>
+      <h2 id="booksy-alt-costs-title" class="fresha-alt__h2">
+        Booksy pricing and fees for UK barbers
+      </h2>
+      <p class="fresha-alt__lead">{BOOKSY_COSTS_INTRO}</p>
+      <p class="fresha-alt-costs__checked">
+        Checked {BOOKSY_FACTS_CHECKED_DATE} ·
+        <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">
+          {pricingSource.label}
+        </a>
+      </p>
+    </header>
+
+    <ul class="fresha-alt-costs__grid">
+      {
+        BOOKSY_COST_ITEMS.map((item) => (
+          <li class="fresha-alt-card fresha-alt-costs__item">
+            <p class="fresha-alt-costs__kicker">{item.kicker}</p>
+            <p class="fresha-alt-costs__figure">{item.figure}</p>
+            <p class="fresha-alt-costs__unit">{item.unit}</p>
+            <ul class="fresha-alt-costs__notes">
+              {item.notes.map((note) => (
+                <li>{note}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="fresha-alt-costs__examples">
+      <div class="fresha-alt-costs__table-wrap">
+        <h3 id="booksy-alt-costs-examples-title" class="fresha-alt-costs__h3">
+          Subscription cost by team size
+        </h3>
+        <table class="fresha-alt-costs__table" aria-labelledby="booksy-alt-costs-examples-title">
+          <thead>
+            <tr>
+              <th scope="col">Team size</th>
+              <th scope="col">Booksy plan</th>
+              <th scope="col">Booksy (ex VAT)</th>
+              <th scope="col">Booksy (inc. VAT)</th>
+              <th scope="col">KERSIVO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              BOOKSY_WORKED_EXAMPLES.map((row) => (
+                <tr>
+                  <th scope="row">{row.label}</th>
+                  <td data-label="Booksy plan">{row.plan}</td>
+                  <td data-label="Booksy (ex VAT)">{row.booksyExVat}</td>
+                  <td data-label="Booksy (inc. VAT)">{row.booksyIncVat}</td>
+                  <td data-label="KERSIVO" class="fresha-alt-costs__kersivo-cell">{row.kersivo}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <p class="fresha-alt-costs__note">{BOOKSY_WORKED_EXAMPLES_NOTE}</p>
+        <p class="fresha-alt-costs__calculator">
+          Want to run the numbers for your own shop? Use the
+          <a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a>
+          to compare Booksy, Fresha and KERSIVO using your own shop numbers.
+        </p>
+      </div>
+
+      <aside class="fresha-alt-card fresha-alt-costs__kersivo" aria-labelledby="booksy-alt-costs-kersivo-title">
+        <p class="fresha-alt-costs__kicker">KERSIVO</p>
+        <h3 id="booksy-alt-costs-kersivo-title" class="fresha-alt-costs__h3">The KERSIVO model</h3>
+        <ul class="fresha-alt-list">
+          {KERSIVO_MODEL_POINTS.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+
+    <div class="fresha-alt-card fresha-alt-costs__marketplace">
+      <div class="fresha-alt-costs__marketplace-body">
+        <h3 class="fresha-alt-costs__h3">How Booksy Boost works</h3>
+        <ul class="fresha-alt-list">
+          {BOOKSY_BOOST_POINTS.map((point) => (
+            <li>{point}</li>
+          ))}
+        </ul>
+      </div>
+      <div class="fresha-alt-costs__marketplace-aside">
+        <p class="fresha-alt-costs__example">{BOOKSY_BOOST_EXAMPLE}</p>
+        <p class="fresha-alt-costs__checked">
+          Source:
+          <a href={boostSource.url} target="_blank" rel="noopener noreferrer">
+            {boostSource.label}
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

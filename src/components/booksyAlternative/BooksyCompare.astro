@@ -1,109 +1,200 @@
 ---
 import {
-  BOOKSY_COMPARE_ROWS,
-  BOOKSY_FACTS_CHECKED_DATE,
-  BOOKSY_SOURCE_BOOST,
-  BOOKSY_SOURCE_PRICING,
+  BarChart3,
+  CalendarDays,
+  ChevronDown,
+  CircleCheck,
+  CircleDot,
+  CreditCard,
+  Globe2,
+  ShoppingBag,
+  UsersRound,
+} from 'lucide-react';
+import {
+  BOOKSY_COMPARE_SECTIONS,
+  BOOKSY_COMPARISON_FOOTNOTE,
+  type BooksyCompareSectionId,
 } from '@/lib/seo/booksyFacts';
-import '@/styles/components/compare3.css';
+
+const sectionIcons: Record<BooksyCompareSectionId, typeof CalendarDays> = {
+  bookings: CalendarDays,
+  payments: CreditCard,
+  brand: Globe2,
+  retail: ShoppingBag,
+  clients: UsersRound,
+  reports: BarChart3,
+};
+
+const sections = BOOKSY_COMPARE_SECTIONS.map((section) => ({
+  ...section,
+  icon: sectionIcons[section.id],
+}));
+const sectionCountLabel = String(sections.length).padStart(2, '0');
 ---
 
 <section
   id="comparison"
-  class="compare3-block booksy-alt-compare scroll-mt-24"
+  class="fresha-alt-compare scroll-mt-24"
   aria-labelledby="booksy-alt-compare-title"
+  data-booksy-comparison
 >
-  <div class="container">
-    <div class="compare3-block__header">
-      <span class="compare3-block__badge">COMPARISON</span>
-      <h2 id="booksy-alt-compare-title">KERSIVO vs Booksy</h2>
-      <p>
-        Both platforms can handle online bookings, deposits and client management. Here’s where the
-        models differ.
+  <div class="fresha-alt-compare__container">
+    <header class="fresha-alt-compare__header">
+      <p class="fresha-alt-compare__eyebrow">COMPARISON</p>
+      <h2 id="booksy-alt-compare-title" class="fresha-alt-compare__title">
+        <span class="fresha-alt-compare__title-line">KERSIVO</span>
+        <span class="fresha-alt-compare__title-line fresha-alt-compare__title-line--vs">VS</span>
+        <span class="fresha-alt-compare__title-line">Booksy</span>
+      </h2>
+      <p class="fresha-alt-compare__lead">
+        Two different ways to run a barbershop. Open each category and compare the parts that
+        matter to your brand, bookings and client journey.
       </p>
+    </header>
+
+    <div class="fresha-alt-compare__accordion">
+      {sections.map((section, index) => {
+        const Icon = section.icon;
+
+        return (
+          <article
+            class="fresha-alt-compare__item"
+            data-comparison-item
+            data-open={index === 0 ? 'true' : 'false'}
+          >
+            <button
+              id={`booksy-compare-trigger-${section.id}`}
+              type="button"
+              class="fresha-alt-compare__summary"
+              aria-expanded={index === 0 ? 'true' : 'false'}
+              aria-controls={`booksy-compare-panel-${section.id}`}
+              data-comparison-trigger
+            >
+              <span class="fresha-alt-compare__summary-icon" aria-hidden="true">
+                <Icon size={19} strokeWidth={1.8} />
+              </span>
+
+              <span class="fresha-alt-compare__summary-copy">
+                <span class="fresha-alt-compare__summary-kicker">
+                  {String(index + 1).padStart(2, '0')} / {sectionCountLabel}
+                </span>
+                <strong>{section.title}</strong>
+                <span>{section.subtitle}</span>
+              </span>
+
+              <ChevronDown
+                className="fresha-alt-compare__chevron"
+                size={20}
+                strokeWidth={1.8}
+                aria-hidden="true"
+              />
+            </button>
+
+            <div
+              class="fresha-alt-compare__reveal"
+              data-comparison-reveal
+              aria-hidden={index === 0 ? 'false' : 'true'}
+            >
+              <div
+                id={`booksy-compare-panel-${section.id}`}
+                class="fresha-alt-compare__reveal-inner"
+                role="region"
+                aria-labelledby={`booksy-compare-trigger-${section.id}`}
+                data-comparison-reveal-inner
+                inert={index !== 0}
+              >
+                <div class="fresha-alt-compare__panel">
+              <article class="fresha-alt-compare__provider fresha-alt-compare__provider--booksy">
+                <div class="fresha-alt-compare__provider-label">BOOKSY ECOSYSTEM</div>
+                <div class="fresha-alt-compare__provider-head">
+                  <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--booksy" aria-hidden="true">
+                    booksy
+                  </span>
+                  <div>
+                    <p class="fresha-alt-compare__provider-name">Booksy</p>
+                    <p class="fresha-alt-compare__provider-lead">{section.booksyLead}</p>
+                  </div>
+                </div>
+
+                <ul class="fresha-alt-compare__points">
+                  {section.booksyPoints.map((point) => (
+                    <li>
+                      <CircleDot
+                        className="fresha-alt-compare__point-icon fresha-alt-compare__point-icon--neutral"
+                        size={15}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <div class="fresha-alt-compare__vs" aria-hidden="true">VS</div>
+
+              <article class="fresha-alt-compare__provider fresha-alt-compare__provider--kersivo">
+                <div class="fresha-alt-compare__provider-label fresha-alt-compare__provider-label--kersivo">
+                  YOUR OWN BRAND
+                </div>
+                <div class="fresha-alt-compare__provider-head">
+                  <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--kersivo" aria-hidden="true">
+                    <img src="/images/logo-kersivo.png" alt="" width="72" height="72" loading="lazy" decoding="async" />
+                  </span>
+                  <div>
+                    <p class="fresha-alt-compare__provider-name">KERSIVO</p>
+                    <p class="fresha-alt-compare__provider-lead">{section.kersivoLead}</p>
+                  </div>
+                </div>
+
+                <ul class="fresha-alt-compare__points">
+                  {section.kersivoPoints.map((point) => (
+                    <li>
+                      <CircleCheck
+                        className="fresha-alt-compare__point-icon fresha-alt-compare__point-icon--yes"
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+                </div>
+              </div>
+            </div>
+          </article>
+        );
+      })}
     </div>
 
-    <div class="compare3-block__table-wrap">
-      <div
-        class="compare3-block__grid compare3-block__grid--dual"
-        role="table"
-        aria-label="KERSIVO versus Booksy comparison"
-      >
-        <div
-          class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
-          role="columnheader"
-        >
-          <img
-            class="compare3-block__logo compare3-block__logo--kersivo"
-            src="/images/logo_nobg.png"
-            alt="KERSIVO"
-            width="160"
-            height="40"
-            loading="lazy"
-            decoding="async"
-          />
-          <p class="compare3-block__brand-copy">Your domain, your brand, zero KERSIVO commission</p>
-        </div>
-        <div
-          class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace"
-          role="columnheader"
-        >
-          <p class="compare3-block__brand-title">Booksy</p>
-          <p class="compare3-block__brand-sub">Marketplace model</p>
-          <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
-            Booking platform with Marketplace discovery and a customer app ecosystem.
-          </p>
-        </div>
+    <a
+      href="/demo"
+      class="fresha-alt-compare__demo-cta"
+      data-track="view_live_demo_click"
+    >
+      <span class="fresha-alt-compare__demo-play" aria-hidden="true">▶</span>
+      See KERSIVO demo
+      <span aria-hidden="true">→</span>
+    </a>
 
-        {BOOKSY_COMPARE_ROWS.map((row) => (
-          <>
-            <div
-              class="compare3-block__item compare3-block__value compare3-block__value--featured"
-              role="cell"
-            >
-              <span class="compare3-block__row-title">{row.title}</span>
-              <span class="compare3-block__status compare3-block__status--ok" aria-hidden="true"
-                >&middot;</span
-              >
-              <span>{row.kersivo}</span>
-            </div>
-            <div
-              class="compare3-block__item compare3-block__value compare3-block__value--marketplace"
-              role="cell"
-            >
-              <span class="compare3-block__row-title">{row.title}</span>
-              <span
-                class="compare3-block__status compare3-block__status--neutral"
-                aria-hidden="true">&middot;</span
-              >
-              <span>{row.booksy}</span>
-            </div>
-          </>
-        ))}
-      </div>
-    </div>
-
-    <p class="compare3-block__footnote booksy-alt-compare__footnote">
-      Booksy UK pricing and Boost information checked {BOOKSY_FACTS_CHECKED_DATE}. Sources:{' '}
-      <a
-        href={BOOKSY_SOURCE_PRICING}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="booksy-alt-compare__source-link"
-      >
-        Booksy Pricing
-      </a>
-      {' '}·{' '}
-      <a
-        href={BOOKSY_SOURCE_BOOST}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="booksy-alt-compare__source-link"
-      >
-        Booksy Boost
-      </a>
-      . Booksy may change its pricing, fees or features. Always check Booksy’s current terms before
-      making a decision.
+    <p class="fresha-alt-compare__footnote">
+      {BOOKSY_COMPARISON_FOOTNOTE} <a href="#sources">See sources</a>
     </p>
   </div>
 </section>
+
+<script>
+  import { bindComparisonAccordions } from '@/lib/landing/comparisonAccordion';
+
+  const bind = () => bindComparisonAccordions('[data-booksy-comparison]');
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
+  } else {
+    bind();
+  }
+
+  document.addEventListener('astro:page-load', bind);
+</script>

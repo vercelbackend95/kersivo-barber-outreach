@@ -1,5 +1,6 @@
 import {
   BOOKSY_ALTERNATIVE_DESCRIPTION,
+  BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
   BOOKSY_ALTERNATIVE_PAGE_PATH,
   BOOKSY_ALTERNATIVE_TITLE,
 } from '@/lib/seo/booksyAlternativeFaq';
@@ -20,6 +21,8 @@ export function buildBooksyAlternativeWebPageJsonLd(): Record<string, unknown> {
     url: pageUrl,
     name: BOOKSY_ALTERNATIVE_TITLE,
     description: BOOKSY_ALTERNATIVE_DESCRIPTION,
+    inLanguage: 'en-GB',
+    dateModified: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
   };

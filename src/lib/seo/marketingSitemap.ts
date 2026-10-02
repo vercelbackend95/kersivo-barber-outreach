@@ -5,6 +5,10 @@ import {
   BARBER_COST_CALCULATOR_PAGE_PATH,
 } from './barberCostCalculatorPage';
 import {
+  BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
+  BOOKSY_ALTERNATIVE_PAGE_PATH,
+} from './booksyAlternativeFaq';
+import {
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
@@ -27,8 +31,8 @@ export type MarketingSitemapEntry = {
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/' },
-  /** National SEO comparison landing page — no reliable editorial lastmod yet. */
-  { path: '/booksy-alternative' },
+  /** Matches the visible "Last updated" date on src/pages/booksy-alternative/index.astro. */
+  { path: BOOKSY_ALTERNATIVE_PAGE_PATH, lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
   { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */

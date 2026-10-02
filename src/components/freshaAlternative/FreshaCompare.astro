@@ -60,13 +60,13 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
           <article
             class="fresha-alt-compare__item"
             data-comparison-item
-            data-open="false"
+            data-open={index === 0 ? 'true' : 'false'}
           >
             <button
               id={`fresha-compare-trigger-${section.id}`}
               type="button"
               class="fresha-alt-compare__summary"
-              aria-expanded="false"
+              aria-expanded={index === 0 ? 'true' : 'false'}
               aria-controls={`fresha-compare-panel-${section.id}`}
               data-comparison-trigger
             >
@@ -93,7 +93,7 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
             <div
               class="fresha-alt-compare__reveal"
               data-comparison-reveal
-              aria-hidden="true"
+              aria-hidden={index === 0 ? 'false' : 'true'}
             >
               <div
                 id={`fresha-compare-panel-${section.id}`}
@@ -101,7 +101,7 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
                 role="region"
                 aria-labelledby={`fresha-compare-trigger-${section.id}`}
                 data-comparison-reveal-inner
-                inert
+                inert={index !== 0}
               >
                 <div class="fresha-alt-compare__panel">
               <article class="fresha-alt-compare__provider fresha-alt-compare__provider--fresha">
@@ -186,69 +186,15 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
 </section>
 
 <script>
-  const bindFreshaComparison = () => {
-    document.querySelectorAll<HTMLElement>('[data-fresha-comparison]').forEach((root) => {
-      if (root.dataset.accordionBound === 'true') return;
-      root.dataset.accordionBound = 'true';
+  import { bindComparisonAccordions } from '@/lib/landing/comparisonAccordion';
 
-      const items = Array.from(root.querySelectorAll<HTMLElement>('[data-comparison-item]'));
-
-      const setItemOpen = (item: HTMLElement, open: boolean) => {
-        const trigger = item.querySelector<HTMLButtonElement>('[data-comparison-trigger]');
-        const reveal = item.querySelector<HTMLElement>('[data-comparison-reveal]');
-        const revealInner = item.querySelector<HTMLElement>('[data-comparison-reveal-inner]');
-
-        item.dataset.open = open ? 'true' : 'false';
-        trigger?.setAttribute('aria-expanded', open ? 'true' : 'false');
-        reveal?.setAttribute('aria-hidden', open ? 'false' : 'true');
-
-        if (open) revealInner?.removeAttribute('inert');
-        else revealInner?.setAttribute('inert', '');
-      };
-
-      const openOnly = (target: HTMLElement) => {
-        items.forEach((item) => setItemOpen(item, item === target));
-      };
-
-      items.forEach((item) => {
-        item.querySelector<HTMLButtonElement>('[data-comparison-trigger]')?.addEventListener('click', () => {
-          root.dataset.userInteracted = 'true';
-          const shouldOpen = item.dataset.open !== 'true';
-          if (shouldOpen) openOnly(item);
-          else setItemOpen(item, false);
-        });
-      });
-
-      const firstItem = items[0];
-      if (!firstItem || !('IntersectionObserver' in window)) return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (!entry?.isIntersecting) return;
-          observer.disconnect();
-
-          if (root.dataset.autoOpened === 'true') return;
-          root.dataset.autoOpened = 'true';
-
-          if (root.dataset.userInteracted !== 'true') {
-            openOnly(firstItem);
-          }
-        },
-        {
-          threshold: 0.32,
-          rootMargin: '0px 0px -12% 0px',
-        },
-      );
-
-      observer.observe(firstItem);
-    });
-  };
+  const bind = () => bindComparisonAccordions('[data-fresha-comparison]');
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindFreshaComparison, { once: true });
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
   } else {
-    bindFreshaComparison();
+    bind();
   }
 
-  document.addEventListener('astro:page-load', bindFreshaComparison);
+  document.addEventListener('astro:page-load', bind);
 </script>

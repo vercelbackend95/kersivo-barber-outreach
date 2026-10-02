@@ -1,12 +1,6 @@
 ---
 import { RateCard1Offer } from '@/components/rateCard1';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
-import {
-  BOOKSY_ADDITIONAL_USER_LABEL,
-  BOOKSY_BASE_PRICE_LABEL,
-  BOOKSY_BOOST_COMMISSION_PERCENT,
-  BOOKSY_BOOST_MINIMUM_GBP,
-} from '@/lib/seo/booksyFacts';
 import '@/styles/rateCard1.css';
 
 const layout = getRateCard1LandingLayout();
@@ -14,45 +8,32 @@ const layout = getRateCard1LandingLayout();
 
 <section
   id="pricing"
-  class="booksy-alt__section scroll-mt-24"
+  class="fresha-alt__section scroll-mt-24"
   aria-labelledby="booksy-alt-pricing-title"
 >
-  <div class="booksy-alt__glow" aria-hidden="true"></div>
+  <div class="fresha-alt__glow" aria-hidden="true"></div>
   <div class="container">
-    <header class="booksy-alt__intro">
-      <p class="booksy-alt__eyebrow">SIMPLE PRICING</p>
-      <h2 id="booksy-alt-pricing-title" class="booksy-alt__h2">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">SIMPLE PRICING</p>
+      <h2 id="booksy-alt-pricing-title" class="fresha-alt__h2">
         One plan. One barbershop location.
       </h2>
-      <p class="booksy-alt__lead">
+      <p class="fresha-alt__lead">
         Your branded barbershop website, standard domain, online bookings, deposits, client
         management, appointment reminders, retail pickup, hosting, SSL and platform updates are
         included.
       </p>
-      <p class="booksy-alt__lead">
+      <p class="fresha-alt__lead">
         KERSIVO takes 0% commission on bookings and retail sales.
       </p>
     </header>
 
-    <div class="rate-card1--landing booksy-alt-pricing__offer-host">
+    <div class="rate-card1--landing fresha-alt-pricing__offer-host">
       <RateCard1Offer />
       <div class="rate-card1__landing-conditions">
         <p>{layout.conditionsLine1}</p>
         <p>{layout.conditionsLine2}</p>
       </div>
-    </div>
-
-    <div class="booksy-alt-pricing__compare">
-      <h3>How that compares with Booksy</h3>
-      <p>
-        Booksy currently lists its UK subscription at {BOOKSY_BASE_PRICE_LABEL}, with additional
-        users at {BOOKSY_ADDITIONAL_USER_LABEL}.
-      </p>
-      <p>
-        Its standard Marketplace bookings are free. If optional Boost is enabled and Booksy brings a
-        new client, Booksy currently states a one-time {BOOKSY_BOOST_COMMISSION_PERCENT}% fee on that
-        client’s first visit, with a £{BOOKSY_BOOST_MINIMUM_GBP} minimum.
-      </p>
     </div>
   </div>
 </section>

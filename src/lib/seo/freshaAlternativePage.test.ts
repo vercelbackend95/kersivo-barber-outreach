@@ -538,7 +538,7 @@ describe('fresha claim safety', () => {
 describe('comparison cluster internal links', () => {
   const homepageSource = readRepoFile('../../pages/index.astro');
   const switcherSource = readRepoFile('../../components/landingSwitcherReassurance.astro');
-  const booksyDecisionSource = readRepoFile('../../components/booksyAlternative/BooksyDecision.astro');
+  const booksyFitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
 
   function countLinks(source: string, href: string): number {
     return source.split(`href="${href}"`).length - 1;
@@ -553,10 +553,10 @@ describe('comparison cluster internal links', () => {
     expect(switcherSource).toContain('Compare KERSIVO and Fresha');
   });
 
-  it('links /booksy-alternative to /fresha-alternative once, from the decision section', () => {
-    expect(countLinks(booksyDecisionSource, '/fresha-alternative')).toBe(1);
-    expect(booksyDecisionSource).toContain('Also comparing Fresha?');
-    expect(booksyDecisionSource).toContain('See KERSIVO vs Fresha');
+  it('links /booksy-alternative to /fresha-alternative once, from the fit section', () => {
+    expect(countLinks(booksyFitSource, '/fresha-alternative')).toBe(1);
+    expect(booksyFitSource).toContain('Also comparing Fresha?');
+    expect(booksyFitSource).toContain('Compare KERSIVO and Fresha');
     expect(countLinks(booksyPageSource, '/fresha-alternative')).toBe(0);
   });
 
@@ -614,7 +614,7 @@ describe('comparison cluster internal links', () => {
   });
 
   it('does not link to a /compare hub before it exists', () => {
-    for (const source of [pageSource, ...newComponentSources, booksyDecisionSource, switcherSource]) {
+    for (const source of [pageSource, ...newComponentSources, booksyFitSource, switcherSource]) {
       expect(source).not.toMatch(/href="\/compare/);
     }
   });

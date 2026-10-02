@@ -716,7 +716,8 @@
   pointer-events: none;
 }
 
-.fresha-alt-compare__provider--fresha {
+.fresha-alt-compare__provider--fresha,
+.fresha-alt-compare__provider--booksy {
   border-color: color-mix(in srgb, var(--border) 90%, #000);
 }
 
@@ -798,7 +799,8 @@
   overflow: hidden;
 }
 
-.fresha-alt-compare__brand-mark--fresha {
+.fresha-alt-compare__brand-mark--fresha,
+.fresha-alt-compare__brand-mark--booksy {
   border: 1px solid color-mix(in srgb, var(--border) 92%, #000);
   background: #050505;
   color: #f2f2f2;
@@ -1197,6 +1199,7 @@
 #quick-answer,
 #why-switch,
 #fresha-pricing,
+#booksy-pricing,
 #which-model,
 #switching,
 #sources,

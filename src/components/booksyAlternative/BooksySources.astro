@@ -1,0 +1,45 @@
+---
+import {
+  BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
+  BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL,
+} from '@/lib/seo/booksyAlternativeFaq';
+import {
+  BOOKSY_FACTS_CHECKED_DATE,
+  BOOKSY_FACTS_CHECKED_ISO,
+  BOOKSY_SOURCES,
+  BOOKSY_TRADEMARK_DISCLAIMER,
+  BOOKSY_UK_VAT_PERCENT,
+} from '@/lib/seo/booksyFacts';
+---
+
+<section id="sources" class="fresha-alt-sources" aria-labelledby="booksy-alt-sources-title">
+  <div class="container">
+    <header class="fresha-alt-sources__header">
+      <h2 id="booksy-alt-sources-title" class="fresha-alt-sources__title">Sources &amp; comparison notes</h2>
+      <p class="fresha-alt-sources__meta">
+        Booksy facts checked <time datetime={BOOKSY_FACTS_CHECKED_ISO}>{BOOKSY_FACTS_CHECKED_DATE}</time>
+        <span aria-hidden="true">·</span>
+        Last updated <time datetime={BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO}>{BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL}</time>
+      </p>
+    </header>
+    <p>
+      Booksy pricing and features on this page were checked against Booksy’s official UK website and
+      UK Help Centre. Booksy lists UK prices in pounds sterling plus VAT; figures including VAT on this
+      page use the UK standard rate of {BOOKSY_UK_VAT_PERCENT}%. Pricing and product features can
+      change, so check Booksy directly before making a decision.
+    </p>
+    <ul class="fresha-alt-sources__list">
+      {
+        BOOKSY_SOURCES.map((source) => (
+          <li>
+            <a href={source.url} target="_blank" rel="noopener noreferrer">
+              {source.label}
+            </a>
+            <span class="fresha-alt-sources__supports">{source.supports}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="fresha-alt-sources__trademark">{BOOKSY_TRADEMARK_DISCLAIMER}</p>
+  </div>
+</section>
