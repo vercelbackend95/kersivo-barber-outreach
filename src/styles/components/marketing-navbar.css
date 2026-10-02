@@ -14,14 +14,34 @@
   font-family: var(--font-body);
 }
 
-/* The open hub is the active surface; everything behind it (cookie banner included, z 80–90) is inert. */
+/*
+ * The open hub is the active surface; everything behind it (cookie banner included, z 80–90) is inert.
+ * It is pinned to the viewport as one column (bar, then hub filling the rest): a sticky header follows
+ * the root scroller, which on phones can drift from the viewport (elastic overscroll, dynamic toolbars)
+ * and expose the page above the bar.
+ */
 .mnav[data-mnav-hub-open] {
+  position: fixed;
+  inset: 0;
   z-index: 95;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Lock the viewport only: overflow on <body> would make it a scroll container and unstick the header. */
+.mnav[data-mnav-hub-open] > .mnav__bar {
+  flex-shrink: 0;
+}
+
+/* Lock the viewport only: overflow on <body> would make it a scroll container. */
 html.mnav-locked {
   overflow: hidden;
+}
+
+/* Holds the header's measured in-flow height while it is fixed, so the page neither shifts nor loses its scroll position. */
+html.mnav-locked body::before {
+  content: '';
+  display: block;
+  height: var(--mnav-flow-h, 0px);
 }
 
 /* ------------------------------ Bar ------------------------------ */
@@ -289,15 +309,12 @@ html.mnav-locked {
 /* ------------------------------ Mobile hub ------------------------------ */
 
 .mnav-hub {
-  position: fixed;
-  top: var(--mnav-h);
-  right: 0;
-  left: 0;
+  position: relative;
   z-index: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  height: calc(100vh - var(--mnav-h));
-  height: calc(100dvh - var(--mnav-h));
+  min-height: 0;
   background: var(--mnav-bg);
   animation: mnav-hub-in 200ms ease-out;
 }

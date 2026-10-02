@@ -5,15 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   stopFrame: vi.fn(),
-  stopWheel: vi.fn(),
   stopVisible: vi.fn(),
   mountDeferredDemoFrame: vi.fn(),
-  receiveHeroShowcaseWheel: vi.fn(),
   announceHeroShowcaseVisibleWhenSeen: vi.fn(),
 }));
 
 vi.mock('@/lib/performance/deferredDemoFrame', () => ({ mountDeferredDemoFrame: mocks.mountDeferredDemoFrame }));
-vi.mock('@/lib/admin/heroShowcaseWheel', () => ({ receiveHeroShowcaseWheel: mocks.receiveHeroShowcaseWheel }));
 vi.mock('@/lib/admin/heroShowcaseVisibility', () => ({
   announceHeroShowcaseVisibleWhenSeen: mocks.announceHeroShowcaseVisibleWhenSeen,
 }));
@@ -36,7 +33,6 @@ const swap = () => document.dispatchEvent(new Event('astro:before-swap'));
 
 beforeEach(() => {
   mocks.mountDeferredDemoFrame.mockReturnValue(mocks.stopFrame);
-  mocks.receiveHeroShowcaseWheel.mockReturnValue(mocks.stopWheel);
   mocks.announceHeroShowcaseVisibleWhenSeen.mockReturnValue(mocks.stopVisible);
 });
 
@@ -47,16 +43,26 @@ afterEach(() => {
 });
 
 describe('bindHeroDashboardShowcase', () => {
-  it('mounts the deferred, ready-gated frame with wheel forwarding and the visibility announcement', () => {
+  it('mounts the deferred, ready-gated frame with the visibility announcement', () => {
     const { viewport, frame } = renderShowcase();
     bindHeroDashboardShowcase(window);
 
     expect(mocks.mountDeferredDemoFrame).toHaveBeenCalledWith(viewport, window, {
       readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
     });
-    expect(mocks.receiveHeroShowcaseWheel).toHaveBeenCalledWith(frame, window);
     expect(mocks.announceHeroShowcaseVisibleWhenSeen).toHaveBeenCalledWith(viewport, frame, window);
     expect(viewport.dataset.heroFrameBound).toBe('true');
+  });
+
+  it('leaves wheel scrolling to the browser: no wheel or message relay on the page', () => {
+    const add = vi.spyOn(window, 'addEventListener');
+    renderShowcase();
+    bindHeroDashboardShowcase(window);
+
+    const types = add.mock.calls.map(([type]) => type);
+    expect(types).not.toContain('wheel');
+    expect(types).not.toContain('message');
+    add.mockRestore();
   });
 
   it('binds a viewport only once, however often page-load fires', () => {
@@ -66,7 +72,6 @@ describe('bindHeroDashboardShowcase', () => {
     bindHeroDashboardShowcase(window);
 
     expect(mocks.mountDeferredDemoFrame).toHaveBeenCalledTimes(1);
-    expect(mocks.receiveHeroShowcaseWheel).toHaveBeenCalledTimes(1);
     expect(mocks.announceHeroShowcaseVisibleWhenSeen).toHaveBeenCalledTimes(1);
   });
 
@@ -77,7 +82,6 @@ describe('bindHeroDashboardShowcase', () => {
     swap();
 
     expect(mocks.stopFrame).toHaveBeenCalledTimes(1);
-    expect(mocks.stopWheel).toHaveBeenCalledTimes(1);
     expect(mocks.stopVisible).toHaveBeenCalledTimes(1);
   });
 
@@ -120,14 +124,13 @@ describe('bindHeroDashboardShowcase', () => {
       for (const listener of [...listeners]) listener({ matches } as MediaQueryListEvent);
     };
 
-    it('never mounts the live frame, wheel forwarding or visibility announcement', () => {
+    it('never mounts the live frame or visibility announcement', () => {
       renderShowcase();
       bindHeroDashboardShowcase(window);
 
       expect(window.matchMedia).toHaveBeenCalledWith(HERO_SHOWCASE_STILL_QUERY);
       expect(HERO_SHOWCASE_STILL_QUERY).toBe('(max-width: 48rem)');
       expect(mocks.mountDeferredDemoFrame).not.toHaveBeenCalled();
-      expect(mocks.receiveHeroShowcaseWheel).not.toHaveBeenCalled();
       expect(mocks.announceHeroShowcaseVisibleWhenSeen).not.toHaveBeenCalled();
       expect(document.querySelector('iframe')!.hasAttribute('src')).toBe(false);
     });
@@ -145,12 +148,11 @@ describe('bindHeroDashboardShowcase', () => {
       expect(mocks.mountDeferredDemoFrame).toHaveBeenCalledWith(viewport, window, {
         readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE,
       });
-      expect(mocks.receiveHeroShowcaseWheel).toHaveBeenCalledWith(frame, window);
+      expect(mocks.announceHeroShowcaseVisibleWhenSeen).toHaveBeenCalledWith(viewport, frame, window);
       expect(listeners).toHaveLength(0);
 
       swap();
       expect(mocks.stopFrame).toHaveBeenCalledTimes(1);
-      expect(mocks.stopWheel).toHaveBeenCalledTimes(1);
       expect(mocks.stopVisible).toHaveBeenCalledTimes(1);
     });
 

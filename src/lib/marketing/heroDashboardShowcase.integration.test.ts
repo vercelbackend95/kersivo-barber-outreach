@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { HERO_SHOWCASE_READY_MESSAGE_TYPE, HERO_SHOWCASE_WHEEL_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
 import { bindHeroDashboardShowcase } from './heroDashboardShowcase';
 
 const SRC = '/demo/admin?embed=hero&section=bookings_dashboard';
@@ -91,24 +91,23 @@ describe('shared hero dashboard showcase, end to end', () => {
     expect(frame.getAttribute('src')).toBe(SRC);
   });
 
-  it('forwards wheel gestures from the hero frame to the page', () => {
+  it('never scrolls the page itself in response to frame messages', () => {
     const { frame } = render();
     const scrollBy = vi.fn();
-    vi.stubGlobal('scrollBy', scrollBy);
     window.scrollBy = scrollBy as typeof window.scrollBy;
     bindHeroDashboardShowcase(window);
-    postFromFrame(frame, { type: HERO_SHOWCASE_WHEEL_MESSAGE_TYPE, deltaY: 120, deltaMode: 0 });
-    expect(scrollBy).toHaveBeenCalledWith({ top: 120, left: 0, behavior: 'instant' });
+    postFromFrame(frame, { type: 'kersivo:hero-showcase-wheel', deltaY: 120, deltaMode: 0 });
+    expect(scrollBy).not.toHaveBeenCalled();
   });
 
   it('stops listening after a soft swap and starts a fresh deferred frame on return', () => {
     const first = render();
-    const scrollBy = vi.fn();
-    window.scrollBy = scrollBy as typeof window.scrollBy;
     bindHeroDashboardShowcase(window);
+    idleCallback?.();
+    ioCallbacks[0]([{ isIntersecting: true }]);
     document.dispatchEvent(new Event('astro:before-swap'));
-    postFromFrame(first.frame, { type: HERO_SHOWCASE_WHEEL_MESSAGE_TYPE, deltaY: 120, deltaMode: 0 });
-    expect(scrollBy).not.toHaveBeenCalled();
+    postFromFrame(first.frame, { type: HERO_SHOWCASE_READY_MESSAGE_TYPE });
+    expect(first.viewport.dataset.frameState).not.toBe('ready');
 
     const second = render();
     bindHeroDashboardShowcase(window);

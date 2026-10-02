@@ -25,7 +25,7 @@ describe('shared hero dashboard showcase: one implementation for every hero', ()
 
   it('keeps no second copy of the iframe, loader or showcase styles in either hero', () => {
     for (const hero of [homepageHeroSource, freshaHeroSource]) {
-      expect(hero).not.toMatch(/<iframe|<script|data-deferred-demo-frame|mountDeferredDemoFrame|receiveHeroShowcaseWheel/);
+      expect(hero).not.toMatch(/<iframe|<script|data-deferred-demo-frame|mountDeferredDemoFrame/);
       expect(hero).not.toMatch(/announceHeroShowcaseVisibleWhenSeen|HERO_SHOWCASE_READY_MESSAGE_TYPE|demo\/admin/);
     }
     for (const css of [freshaCss, homepageHeroCss]) {
@@ -40,7 +40,6 @@ describe('shared hero dashboard showcase: one implementation for every hero', ()
     expect(bindingSource).toMatch(
       /mountDeferredDemoFrame\(viewport, win, \{ readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE \}\);/,
     );
-    expect(bindingSource).toContain('receiveHeroShowcaseWheel(productFrame, win)');
     expect(bindingSource).toContain('announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win)');
     expect(bindingSource).toMatch(/doc\.addEventListener\('astro:before-swap', [^\n]+\{ once: true \}\);/);
   });
@@ -160,10 +159,12 @@ describe('hero dashboard progressive loading', () => {
     for (const rule of shell) expect(rule).not.toMatch(/opacity|transition|transform|pointer-events: none/);
   });
 
-  it('forwards wheel scrolling over the hero iframe to the landing page', () => {
-    expect(adminPage).toMatch(
-      /import \{ forwardHeroShowcaseWheel \} from '@\/lib\/admin\/heroShowcaseWheel';\s*if \(document\.body\.classList\.contains\('admin-hero-embed-body'\)\) forwardHeroShowcaseWheel\(window\);/,
-    );
-    expect(adminPage).not.toContain('parent.scrollBy');
+  it('lets wheel scrolling over the hero iframe chain natively to the landing page', () => {
+    expect(existsSync(join(process.cwd(), 'src/lib/admin/heroShowcaseWheel.ts'))).toBe(false);
+    for (const source of [adminPage, bindingSource]) {
+      expect(source).not.toMatch(/['"]wheel['"]|scrollBy|hero-showcase-wheel/);
+    }
+    expect(adminPage).toMatch(/body\.admin-hero-embed-body \.admin-vtl-scroll \{\s*overflow-y: hidden !important;\s*\}/);
+    expect(adminPage).toMatch(/body\.admin-hero-embed-body \*\s*\{\s*overscroll-behavior: auto !important;/);
   });
 });

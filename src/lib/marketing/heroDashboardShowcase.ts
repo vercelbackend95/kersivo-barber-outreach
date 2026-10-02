@@ -1,6 +1,5 @@
 import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
 import { announceHeroShowcaseVisibleWhenSeen } from '@/lib/admin/heroShowcaseVisibility';
-import { receiveHeroShowcaseWheel } from '@/lib/admin/heroShowcaseWheel';
 import { mountDeferredDemoFrame } from '@/lib/performance/deferredDemoFrame';
 
 /** Must match the static-image breakpoint in hero-dashboard-showcase.css. */
@@ -8,7 +7,8 @@ export const HERO_SHOWCASE_STILL_QUERY = '(max-width: 48rem)';
 
 /**
  * Binds the hero dashboard showcase on the current page (deferred load, ready-gated reveal,
- * wheel forwarding, visibility announcement) and tears it down before the next soft swap.
+ * visibility announcement) and tears it down before the next soft swap. Wheel scrolling over the
+ * frame needs no wiring: the embed has no user-scrollable surface, so it chains to this page.
  * Phone widths show a static image instead, so the live frame is never mounted (or fetched)
  * there; it is bound if the viewport later grows past the breakpoint.
  * Safe to call repeatedly: a viewport is only ever bound once.
@@ -24,10 +24,7 @@ export function bindHeroDashboardShowcase(win: Window & typeof globalThis = wind
     const productFrame = viewport.querySelector<HTMLIFrameElement>('.hero-showcase__frame');
     const stopFrame = mountDeferredDemoFrame(viewport, win, { readyMessageType: HERO_SHOWCASE_READY_MESSAGE_TYPE });
     cleanups.push(stopFrame);
-    if (productFrame) {
-      cleanups.push(receiveHeroShowcaseWheel(productFrame, win));
-      cleanups.push(announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win));
-    }
+    if (productFrame) cleanups.push(announceHeroShowcaseVisibleWhenSeen(viewport, productFrame, win));
   };
 
   const stillQuery = typeof win.matchMedia === 'function' ? win.matchMedia(HERO_SHOWCASE_STILL_QUERY) : null;

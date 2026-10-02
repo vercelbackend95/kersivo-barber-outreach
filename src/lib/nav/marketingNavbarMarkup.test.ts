@@ -57,16 +57,34 @@ describe('marketing navbar markup', () => {
   });
 
   it('keeps the mobile hub viewport-safe', () => {
-    expect(css).toContain('100dvh');
     expect(css).toContain('env(safe-area-inset-bottom');
     expect(css).toContain('overscroll-behavior: contain');
     expect(css).toContain('html.mnav-locked');
     expect(css).toContain('prefers-reduced-motion');
   });
 
-  it('locks scroll on the root element only so the sticky header stays in view', () => {
-    expect(css).toMatch(/html\.mnav-locked\s*\{\s*overflow:\s*hidden;/);
-    expect(css).not.toMatch(/html\.mnav-locked\s+body/);
+  it('locks scroll on the root element only, never making <body> a scroll container', () => {
+    expect(css).toMatch(/html\.mnav-locked\s*\{\s*overflow:\s*hidden;\s*\}/);
+    expect(css).not.toMatch(/html\.mnav-locked\s+body\s*\{/);
+  });
+
+  it('pins the open header to the viewport as one column, with the hub directly under the bar', () => {
+    expect(css).toMatch(/\.mnav \{[^}]*position: sticky;\s*top: 0;/);
+    expect(css).toMatch(
+      /\.mnav\[data-mnav-hub-open\] \{\s*position: fixed;\s*inset: 0;\s*z-index: 95;\s*display: flex;\s*flex-direction: column;\s*\}/,
+    );
+    expect(css).toMatch(/\.mnav\[data-mnav-hub-open\] > \.mnav__bar \{\s*flex-shrink: 0;\s*\}/);
+    const hubRule = css.match(/\n\.mnav-hub \{([^}]*)\}/)?.[1] ?? '';
+    expect(hubRule).toMatch(/flex: 1;/);
+    expect(hubRule).toMatch(/min-height: 0;/);
+    expect(hubRule).not.toMatch(/position: fixed|top:|var\(--mnav-h\)|vh/);
+    expect(css).not.toMatch(/safe-area-inset-top/);
+  });
+
+  it('holds the header space in the page while it is fixed', () => {
+    expect(css).toMatch(
+      /html\.mnav-locked body::before \{\s*content: '';\s*display: block;\s*height: var\(--mnav-flow-h, 0px\);\s*\}/,
+    );
   });
 });
 

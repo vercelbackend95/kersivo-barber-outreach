@@ -1,11 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import {
-  HERO_SHOWCASE_READY_MESSAGE_TYPE,
-  HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE,
-  HERO_SHOWCASE_WHEEL_MESSAGE_TYPE,
-} from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_READY_MESSAGE_TYPE, HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
 
 const read = (...parts: string[]) => readFileSync(join(process.cwd(), ...parts), 'utf8');
 const adminPanel = read('src/components/admin/AdminPanel.tsx');
@@ -13,9 +9,9 @@ const bookingsPanel = read('src/components/admin/BookingsAdminPanel.tsx');
 const heroBinding = read('src/lib/marketing/heroDashboardShowcase.ts');
 
 describe('hero showcase visibility wiring', () => {
-  it('uses its own message type, separate from ready and wheel', () => {
+  it('uses its own message type, separate from ready', () => {
     expect(HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE).toBe('kersivo:hero-showcase-visible');
-    expect(new Set([HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE, HERO_SHOWCASE_READY_MESSAGE_TYPE, HERO_SHOWCASE_WHEEL_MESSAGE_TYPE]).size).toBe(3);
+    expect(HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE).not.toBe(HERO_SHOWCASE_READY_MESSAGE_TYPE);
   });
 
   it('announces visibility from the landing page for the hero frame', () => {

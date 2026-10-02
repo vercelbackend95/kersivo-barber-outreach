@@ -19,12 +19,6 @@ export function blacklineHeroShowcaseNow(): Date {
 export const HERO_SHOWCASE_READY_MESSAGE_TYPE = 'kersivo:hero-showcase-ready';
 
 /**
- * Posted by the hero iframe for each vertical wheel gesture so the landing page scrolls
- * itself; the fixed showcase never scrolls internally.
- */
-export const HERO_SHOWCASE_WHEEL_MESSAGE_TYPE = 'kersivo:hero-showcase-wheel';
-
-/**
  * Posted by the landing page to the hero iframe, once, after the iframe is ready and the
  * visitor can clearly see the dashboard. Starts the one-time timeline scroll to "now".
  */

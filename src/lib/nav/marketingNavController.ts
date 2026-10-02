@@ -14,6 +14,7 @@ export type MarketingNavOptions = {
 };
 
 const LOCK_CLASS = 'mnav-locked';
+const FLOW_HEIGHT_VAR = '--mnav-flow-h';
 const cleanups = new WeakMap<HTMLElement, () => void>();
 
 const normalizePath = (path: string) => (path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path || '/');
@@ -179,6 +180,7 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     hub.setAttribute('inert', '');
     root.removeAttribute('data-mnav-hub-open');
     doc.documentElement.classList.remove(LOCK_CLASS);
+    doc.body.style.removeProperty(FLOW_HEIGHT_VAR);
     setPageInert(false);
     if (returnFocus) menuButton.focus();
   };
@@ -186,13 +188,15 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
   const openHub = () => {
     if (!menuButton || !hub || isHubOpen()) return;
     closePanel();
+    doc.body.style.setProperty(FLOW_HEIGHT_VAR, `${root.getBoundingClientRect().height}px`);
+    // Pin the header before the hub is shown: an in-flow hub would grow the page and let scroll anchoring move it.
+    root.setAttribute('data-mnav-hub-open', '');
+    doc.documentElement.classList.add(LOCK_CLASS);
     menuButton.setAttribute('aria-expanded', 'true');
     if (menuLabel) menuLabel.textContent = 'Close';
     hub.hidden = false;
     hub.removeAttribute('inert');
     hub.scrollTop = 0;
-    root.setAttribute('data-mnav-hub-open', '');
-    doc.documentElement.classList.add(LOCK_CLASS);
     setPageInert(true);
     hub.querySelector<HTMLElement>('[data-mnav-accordion], a[href]')?.focus({ preventScroll: true });
   };

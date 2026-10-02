@@ -238,6 +238,61 @@ describe('mobile navigation hub', () => {
     expect($('#mnav-hub-resources').hidden).toBe(false);
   });
 
+  it('reserves the header’s measured in-flow height while open and releases it on close', () => {
+    const root = render();
+    root.getBoundingClientRect = () => ({ height: 61.25 }) as DOMRect;
+    cleanup = initMarketingNav(root);
+    const flow = () => document.body.style.getPropertyValue('--mnav-flow-h');
+
+    menu().click();
+    expect(flow()).toBe('61.25px');
+    menu().click();
+    expect(flow()).toBe('');
+
+    menu().click();
+    menu().click();
+    menu().click();
+    expect(flow()).toBe('61.25px');
+    press('Escape');
+    expect(flow()).toBe('');
+    expect(root.hasAttribute('data-mnav-hub-open')).toBe(false);
+  });
+
+  it('measures the header before pinning it, so the reserved space is its in-flow height', () => {
+    const root = render();
+    let measuredWhileOpen: boolean | null = null;
+    root.getBoundingClientRect = () => {
+      measuredWhileOpen = root.hasAttribute('data-mnav-hub-open');
+      return { height: 61 } as DOMRect;
+    };
+    cleanup = initMarketingNav(root);
+    menu().click();
+    expect(measuredWhileOpen).toBe(false);
+  });
+
+  it('pins the header and reserves its space before the hub becomes visible', () => {
+    const root = render();
+    const panel = hub();
+    const hidden = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'hidden')!;
+    let pinnedWhenShown: boolean | null = null;
+    Object.defineProperty(panel, 'hidden', {
+      configurable: true,
+      get: () => hidden.get!.call(panel),
+      set: (value: boolean) => {
+        if (!value && pinnedWhenShown === null) {
+          pinnedWhenShown =
+            root.hasAttribute('data-mnav-hub-open') &&
+            document.documentElement.classList.contains('mnav-locked') &&
+            document.body.style.getPropertyValue('--mnav-flow-h') !== '';
+        }
+        hidden.set!.call(panel, value);
+      },
+    });
+    cleanup = initMarketingNav(root);
+    menu().click();
+    expect(pinnedWhenShown).toBe(true);
+  });
+
   it('closes when a hub link is chosen', () => {
     cleanup = initMarketingNav(render());
     menu().click();
@@ -277,6 +332,8 @@ describe('lifecycle and current state', () => {
     document.dispatchEvent(new Event('astro:before-swap'));
     expect(menu().getAttribute('aria-expanded')).toBe('false');
     expect(document.documentElement.classList.contains('mnav-locked')).toBe(false);
+    expect(root.hasAttribute('data-mnav-hub-open')).toBe(false);
+    expect(document.body.style.getPropertyValue('--mnav-flow-h')).toBe('');
     expect($('#main').hasAttribute('inert')).toBe(false);
     expect(root.dataset.mnavBound).toBeUndefined();
 
