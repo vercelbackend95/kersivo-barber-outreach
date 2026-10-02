@@ -5,10 +5,10 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 const BRAND_SCHEMA_NAME = 'KERSIVO';
 
 const ORGANIZATION_DESCRIPTION =
-  'Booking and management software for independent UK barbershops.';
+  'Barbershop software for independent UK barbershops, including online booking, client management, deposits, retail pickup and branded websites.';
 
 const SOFTWARE_DESCRIPTION =
-  'Booking and management software built specifically for independent UK barbershops.';
+  'Barbershop booking and management software for independent UK barbershops.';
 
 /** Real features visible on the homepage / commercial offer — not marketing inventions. */
 export const KERSIVO_SOFTWARE_FEATURE_LIST = [

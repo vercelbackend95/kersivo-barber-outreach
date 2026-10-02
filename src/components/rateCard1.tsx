@@ -178,6 +178,11 @@ function RateCard1Landing({ className }: { className?: string }) {
         <div className="rate-card1__landing-conditions">
           <p>{layout.conditionsLine1}</p>
           <p>{layout.conditionsLine2}</p>
+          <p className="rate-card1__landing-calculator">
+            {layout.calculatorLink.before}
+            <a href={layout.calculatorLink.href}>{layout.calculatorLink.label}</a>
+            {layout.calculatorLink.after}
+          </p>
         </div>
       </div>
     </section>

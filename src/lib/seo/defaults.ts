@@ -2,9 +2,6 @@ export const SITE_NAME = 'Kersivo';
 
 export const DEFAULT_TITLE = 'Barbershop Software & Barber Booking System UK | KERSIVO';
 
-export const DEFAULT_DESCRIPTION =
-  'Barbershop software for independent UK barbershops. Run bookings, deposits, clients, retail and admin on your own domain for £39/month with 0% KERSIVO commission.';
-
 export const DEFAULT_OG_IMAGE_PATH = '/images/og/kersivo-og.jpg';
 
 /** Default Open Graph image dimensions (kersivo-og.jpg). */
@@ -17,6 +14,8 @@ export const ONGOING_CARE_MONTHLY_GBP = 39;
 
 /** Public SaaS monthly fee (same amount; preferred name in purchase UI). */
 export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
+
+export const DEFAULT_DESCRIPTION = `Barbershop software for independent UK barbershops. Manage bookings, deposits, clients, retail and admin on your own domain for £${SAAS_MONTHLY_GBP}/month.`;
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 

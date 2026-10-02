@@ -8,6 +8,16 @@ type LandingFaqItem = {
 
 export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
+    question: 'What is barbershop software?',
+    answer:
+      'Barbershop software helps a shop manage day-to-day tasks such as online bookings, appointment scheduling, barbers, services, clients, reminders, deposits and reporting. KERSIVO combines those tools with a branded barbershop website and retail pickup on your own domain.',
+  },
+  {
+    question: 'What should a barber booking system include?',
+    answer:
+      'A barber booking system should make it easy for clients to choose a service, barber and available time while giving the shop control over appointments, availability, client records, deposits and reminders. KERSIVO also includes a branded website, admin dashboard and retail pickup tools.',
+  },
+  {
     question: 'How much does KERSIVO cost?',
     answer: `KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location. There is no setup fee. Your first payment is taken when you subscribe, then monthly. KERSIVO is not currently VAT registered, so no VAT is added. Standard Stripe payment-processing fees apply to online card payments.`,
   },
@@ -20,6 +30,10 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
     question: `What is included in the £${SAAS_MONTHLY_GBP}/month plan?`,
     answer:
       'The plan includes a branded barbershop website on your own domain, online booking, deposits, client management, email confirmations, SMS appointment reminders, an admin dashboard, retail pickup, reports, hosting, SSL, maintenance and support.',
+  },
+  {
+    question: 'Does KERSIVO charge more when I add more barbers?',
+    answer: `No. KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location. Within that location, additional barbers are included without a numerical cap, subject to reasonable fair use. Standard Stripe payment-processing fees still apply to online card payments.`,
   },
   {
     question: 'Is the website fully bespoke?',

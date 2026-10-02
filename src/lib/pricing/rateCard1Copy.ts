@@ -57,6 +57,13 @@ export type RateCard1LandingLayout = {
   supportItems: string[];
   conditionsLine1: string;
   conditionsLine2: string;
+  /** Homepage-only contextual link below the landing pricing conditions. */
+  calculatorLink: {
+    before: string;
+    label: string;
+    href: string;
+    after: string;
+  };
 };
 
 const SHARED = {
@@ -86,10 +93,10 @@ const LANDING_COPY: RateCard1Copy = {
 };
 
 const LANDING_LAYOUT: RateCard1LandingLayout = {
-  eyebrow: 'SIMPLE PRICING',
-  headingBeforePrice: 'Everything included for £',
-  headingAfterPrice: '/month',
-  lead: 'Your branded website, booking system, admin, deposits, retail and support — all in one monthly plan for one physical location.',
+  eyebrow: 'BARBERSHOP SOFTWARE PRICING',
+  headingBeforePrice: 'Barbershop software pricing: £',
+  headingAfterPrice: '/month per location',
+  lead: 'One flat monthly plan with your branded website, booking system, deposits, client management, admin, retail and support. Extra barbers are included.',
   planLabel: 'MONTHLY SUBSCRIPTION',
   planValueLine: 'Everything included. No setup fee.',
   trustPoints: [
@@ -144,6 +151,12 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   conditionsLine1: 'Standard Stripe payment-processing fees apply.',
   conditionsLine2:
     'Billed today, then monthly. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added.',
+  calculatorLink: {
+    before: 'Comparing platforms? See the real cost of Booksy, Fresha and KERSIVO with our ',
+    label: 'Barber Software Cost Calculator',
+    href: '/barber-software-cost-calculator',
+    after: '.',
+  },
 };
 
 export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCard1Copy {

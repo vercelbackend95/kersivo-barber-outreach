@@ -6,7 +6,10 @@ import {
   getKersivoWebsiteId,
   KERSIVO_SOFTWARE_FEATURE_LIST,
 } from './barberDemoJsonLd';
-import { buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
+import {
+  BARBERSHOP_BOOKING_FAQ_ITEMS,
+  buildBarbershopBookingFaqJsonLd,
+} from './barbershopBookingFaq';
 import { getFooterSocialLinks } from './footerSocialLinks';
 import { SAAS_MONTHLY_GBP } from './defaults';
 
@@ -47,7 +50,7 @@ describe('buildBarberDemoJsonLd', () => {
     expect(organization.name).toBe('KERSIVO');
     expect(organization.url).toBe(`${siteUrl}/`);
     expect(organization.description).toBe(
-      'Booking and management software for independent UK barbershops.',
+      'Barbershop software for independent UK barbershops, including online booking, client management, deposits, retail pickup and branded websites.',
     );
     expect(organization.logo).toEqual({
       '@type': 'ImageObject',
@@ -71,7 +74,7 @@ describe('buildBarberDemoJsonLd', () => {
     expect(software.applicationCategory).toBe('BusinessApplication');
     expect(software.operatingSystem).toBe('Web');
     expect(software.description).toBe(
-      'Booking and management software built specifically for independent UK barbershops.',
+      'Barbershop booking and management software for independent UK barbershops.',
     );
     expect(software.provider).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
     expect(software.featureList).toEqual([...KERSIVO_SOFTWARE_FEATURE_LIST]);
@@ -99,5 +102,31 @@ describe('buildBarbershopBookingFaqJsonLd', () => {
     expect(Array.isArray(faq.mainEntity)).toBe(true);
     expect((faq.mainEntity as unknown[]).length).toBeGreaterThan(0);
     expect(() => JSON.parse(JSON.stringify(faq))).not.toThrow();
+  });
+
+  it('mirrors every visible FAQ item, including the barbershop software questions', () => {
+    const faq = buildBarbershopBookingFaqJsonLd();
+    const entities = faq.mainEntity as Array<{
+      '@type': string;
+      name: string;
+      acceptedAnswer: { '@type': string; text: string };
+    }>;
+    expect(entities.map((entity) => entity.name)).toEqual(
+      BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => item.question),
+    );
+    expect(entities.map((entity) => entity.acceptedAnswer.text)).toEqual(
+      BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => item.answer),
+    );
+    const names = entities.map((entity) => entity.name);
+    expect(names).toContain('What is barbershop software?');
+    expect(names).toContain('What should a barber booking system include?');
+    expect(names).toContain('Does KERSIVO charge more when I add more barbers?');
+    const barbersAnswer = entities.find(
+      (entity) => entity.name === 'Does KERSIVO charge more when I add more barbers?',
+    )!.acceptedAnswer.text;
+    expect(barbersAnswer).toBe(
+      `No. KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location. Within that location, additional barbers are included without a numerical cap, subject to reasonable fair use. Standard Stripe payment-processing fees still apply to online card payments.`,
+    );
+    expect(JSON.stringify(faq)).not.toMatch(/Review|AggregateRating|aggregateRating/);
   });
 });
