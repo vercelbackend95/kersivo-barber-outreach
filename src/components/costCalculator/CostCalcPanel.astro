@@ -16,7 +16,6 @@ import {
   SPLIT_FIELDS,
   VAT_OPTIONS,
 } from '@/lib/costCalculator/calculatorUi';
-import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePaint';
 
 const helperId = (id: string) => `${id}-helper`;
 const errorId = (id: string) => `${id}-error`;
@@ -290,7 +289,6 @@ const describedBy = (id: string, withHelper: boolean) =>
       </div>
     </div>
   </details>
-  <script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />
 </form>
 
 <script>

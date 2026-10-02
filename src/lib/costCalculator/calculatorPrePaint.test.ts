@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CALCULATOR_PREPAINT_SCRIPT } from './calculatorPrePaint';
 import { DEFAULT_SCENARIO, DEPOSIT_PROCESSING_TOGGLE, SPLIT_ASSUMPTIONS_TOGGLE } from './calculatorUi';
 import { ADVANCED_SCENARIO_KEYS, decodeScenarioQuery } from './calculatorUrlState';
@@ -36,7 +36,26 @@ function runAt(search: string) {
   };
 }
 
-afterEach(() => window.history.replaceState(null, '', BASE_PATH));
+/** Simulates a streamed response: the script runs first, then markup is appended piece by piece. */
+function stream(search: string) {
+  window.history.replaceState(null, '', `${BASE_PATH}${search}`);
+  document.body.innerHTML = '';
+  new Function(CALCULATOR_PREPAINT_SCRIPT)();
+  const append = async (parent: Element, html: string) => {
+    parent.insertAdjacentHTML('beforeend', html);
+    await Promise.resolve();
+    return parent.lastElementChild!;
+  };
+  return { append };
+}
+
+const advanced = () => document.querySelector<HTMLDetailsElement>('details.calc-advanced');
+
+afterEach(() => {
+  window.history.replaceState(null, '', BASE_PATH);
+  document.dispatchEvent(new Event('DOMContentLoaded'));
+  vi.restoreAllMocks();
+});
 
 describe('calculator pre-paint presentation state', () => {
   it('keeps Advanced costs closed on the base URL', () => {
@@ -113,11 +132,80 @@ describe('calculator pre-paint presentation state', () => {
     }
   });
 
-  it('is rendered inline right after Advanced costs, inside the form', () => {
+  it('is rendered inline before the calculator hero, never inside the form', () => {
     const here = dirname(fileURLToPath(import.meta.url));
-    const panel = readFileSync(join(here, '../../components/costCalculator/CostCalcPanel.astro'), 'utf8');
-    expect(panel).toMatch(
-      /<\/details>\s*<script is:inline set:html=\{CALCULATOR_PREPAINT_SCRIPT\} \/>\s*<\/form>/,
+    const components = join(here, '../../components/costCalculator');
+    const hero = readFileSync(join(components, 'CostCalcHero.astro'), 'utf8');
+    const panel = readFileSync(join(components, 'CostCalcPanel.astro'), 'utf8');
+    expect(hero).toMatch(/---\s*<script is:inline set:html=\{CALCULATOR_PREPAINT_SCRIPT\} \/>\s*<section class="cost-calc-hero"/);
+    expect(panel).not.toMatch(/<script is:inline/);
+  });
+});
+
+describe('calculator pre-paint with streamed HTML', () => {
+  it('opens Advanced costs as soon as the details element is parsed, before its body arrives', async () => {
+    for (const search of ['?vat=1', '?sw=1', '?loyalty=1', '?dp=1', COMPLEX]) {
+      const { append } = stream(search);
+      const form = await append(document.body, '<form data-calc-form></form>');
+      const details = (await append(form, '<details class="calc-advanced"><summary>Advanced costs</summary></details>')) as HTMLDetailsElement;
+      expect(details.open, search).toBe(true);
+      expect(details.querySelector('.calc-advanced__body')).toBeNull();
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+    }
+  });
+
+  it.each(['', '?period=36', '?b=6&a=900&period=36', '?vat=yes&sw=2&dp=true'])(
+    'leaves Advanced costs closed and observes nothing for %s',
+    async (search) => {
+      const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+      const { append } = stream(search);
+      const form = await append(document.body, '<form data-calc-form></form>');
+      await append(form, '<details class="calc-advanced"><summary>Advanced costs</summary></details>');
+      expect(advanced()!.open).toBe(false);
+      expect(observe).not.toHaveBeenCalled();
+    },
+  );
+
+  it('reveals split and deposit fields when their containers are parsed, before their inputs arrive', async () => {
+    const { append } = stream(COMPLEX);
+    const form = await append(document.body, '<form data-calc-form></form>');
+    await append(form, `<input id="${SPLIT_ASSUMPTIONS_TOGGLE.id}" type="checkbox" aria-controls="calc-split-fields" />`);
+    const split = (await append(form, '<div id="calc-split-fields" hidden></div>')) as HTMLElement;
+    expect(split.hidden).toBe(false);
+    expect(document.querySelector<HTMLInputElement>(`#${SPLIT_ASSUMPTIONS_TOGGLE.id}`)!.checked).toBe(true);
+    const details = await append(form, '<details class="calc-advanced"><summary>Advanced costs</summary></details>');
+    await append(
+      details,
+      `<input id="${DEPOSIT_PROCESSING_TOGGLE.id}" type="checkbox" aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" />`,
     );
+    const deposit = (await append(details, `<div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden></div>`)) as HTMLElement;
+    expect(deposit.hidden).toBe(false);
+    expect(deposit.childElementCount).toBe(0);
+  });
+
+  it('stops observing once every target is set, and never touches later DOM changes', async () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const { append } = stream('?vat=1');
+    const form = await append(document.body, '<form data-calc-form></form>');
+    const details = (await append(form, '<details class="calc-advanced"><summary>Advanced costs</summary></details>')) as HTMLDetailsElement;
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    details.open = false;
+    await append(form, '<p>later</p>');
+    expect(details.open).toBe(false);
+  });
+
+  it('stops at DOMContentLoaded even if a target never appears', async () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const { append } = stream('?dp=1');
+    await append(document.body, '<form data-calc-form></form>');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    expect(disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when the controller hydrated before the elements were found', async () => {
+    const { append } = stream('?vat=1');
+    const form = await append(document.body, '<form data-calc-form data-calc-ready="true"></form>');
+    await append(form, '<details class="calc-advanced"><summary>Advanced costs</summary></details>');
+    expect(advanced()!.open).toBe(false);
   });
 });

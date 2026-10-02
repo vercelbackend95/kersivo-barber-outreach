@@ -1,9 +1,12 @@
 /**
- * Parser-blocking inline script rendered directly after the calculator form markup.
- * It sets only presentation state (Advanced costs open, reveal toggles) from the shared
- * scenario URL before first paint, so hydration does not shift the layout.
- * It never reads numbers, prices or totals; initCalculator() stays authoritative and
- * re-applies the fully decoded, engine-validated scenario on hydration.
+ * Inline script rendered before the calculator hero. It sets only presentation state (Advanced costs open,
+ * reveal toggles) from the shared scenario URL as each element is parsed, before it can be painted.
+ * It must not be placed inside the hero: a parser-blocking script there lets the browser paint a partial
+ * form while stylesheets load, and the hero copy (vertically centred against the form) shifts as the rest
+ * of the streamed form arrives. A MutationObserver callback runs before the next paint, so state lands on
+ * elements as soon as they exist without adding a paint point.
+ * It never reads numbers, prices or totals; initCalculator() stays authoritative and re-applies the
+ * fully decoded, engine-validated scenario on hydration.
  */
 
 import { DEFAULT_SCENARIO, DEPOSIT_PROCESSING_TOGGLE, SPLIT_ASSUMPTIONS_TOGGLE } from './calculatorUi';
@@ -12,7 +15,7 @@ import { ADVANCED_SCENARIO_KEYS, SCENARIO_PARAMS } from './calculatorUrlState';
 type PrePaintConfig = {
   /** [query param, default value] for every input inside Advanced costs. */
   advanced: readonly (readonly [string, boolean])[];
-  /** Reveal toggles whose controlled fields change height when shown. */
+  /** [query param, toggle id] for reveal toggles whose controlled fields change height when shown. */
   reveals: readonly (readonly [string, string])[];
 };
 
@@ -26,28 +29,54 @@ const CONFIG: PrePaintConfig = {
 
 /** Booleans decode exactly like decodeScenarioQuery(): trimmed "1" or "0", anything else is ignored. */
 const SOURCE = `(function (c) {
-  var form = document.querySelector('[data-calc-form]');
-  if (!form || form.dataset.calcReady) return;
   var q = new URLSearchParams(window.location.search);
   var flag = function (p) {
     var v = q.get(p);
     v = v === null ? null : v.trim();
     return v === '1' ? true : v === '0' ? false : null;
   };
-  var advanced = form.querySelector('details.calc-advanced');
   var open = c.advanced.some(function (a) {
     var v = flag(a[0]);
     return v !== null && v !== a[1];
   });
-  if (advanced && open) advanced.open = true;
-  c.reveals.forEach(function (r) {
-    var v = flag(r[0]);
-    var toggle = document.getElementById(r[1]);
-    var target = toggle && document.getElementById(toggle.getAttribute('aria-controls') || '');
-    if (v === null || !toggle || !target) return;
-    toggle.checked = v;
-    target.hidden = !v;
-  });
+  var reveals = c.reveals
+    .map(function (r) {
+      return [flag(r[0]), r[1]];
+    })
+    .filter(function (r) {
+      return r[0] !== null;
+    });
+  if (!open && !reveals.length) return;
+  var observer;
+  var stop = function () {
+    if (observer) observer.disconnect();
+    document.removeEventListener('DOMContentLoaded', stop);
+  };
+  var apply = function () {
+    var form = document.querySelector('[data-calc-form]');
+    if (!form) return;
+    if (form.dataset.calcReady) return stop();
+    if (open) {
+      var advanced = form.querySelector('details.calc-advanced');
+      if (advanced) {
+        advanced.open = true;
+        open = false;
+      }
+    }
+    reveals = reveals.filter(function (r) {
+      var toggle = document.getElementById(r[1]);
+      var target = toggle && document.getElementById(toggle.getAttribute('aria-controls') || '');
+      if (!target) return true;
+      toggle.checked = r[0];
+      target.hidden = !r[0];
+      return false;
+    });
+    if (!open && !reveals.length) stop();
+  };
+  observer = new MutationObserver(apply);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', stop);
+  apply();
 })`;
 
 export const CALCULATOR_PREPAINT_SCRIPT = `${SOURCE}(${JSON.stringify(CONFIG)});`;

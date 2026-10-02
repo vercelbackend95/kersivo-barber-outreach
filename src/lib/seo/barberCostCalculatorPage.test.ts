@@ -454,10 +454,12 @@ describe('calculator client scope', () => {
     expect(pageSource).not.toMatch(/<script\b/);
     for (const [file, source] of Object.entries(components)) {
       expect(source).not.toMatch(/client:(load|idle|visible|only|media)/);
-      if (file !== 'CostCalcPanel.astro') expect(source).not.toMatch(/<script\b/);
+      if (file !== 'CostCalcPanel.astro' && file !== 'CostCalcHero.astro') expect(source).not.toMatch(/<script\b/);
     }
     const panelScripts = components['CostCalcPanel.astro'].match(/<script\b[^>]*>/g) ?? [];
-    expect(panelScripts).toEqual(['<script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />', '<script>']);
+    expect(panelScripts).toEqual(['<script>']);
+    const heroScripts = components['CostCalcHero.astro'].match(/<script\b[^>]*>/g) ?? [];
+    expect(heroScripts).toEqual(['<script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />']);
   });
 
   it('keeps form controls inside the calculator panel and results', () => {

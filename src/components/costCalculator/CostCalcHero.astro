@@ -6,8 +6,10 @@ import {
   COST_CALC_HERO,
   COST_CALC_TRUST_SIGNALS,
 } from '@/lib/seo/barberCostCalculatorPage';
+import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePaint';
 ---
 
+<script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />
 <section class="cost-calc-hero" aria-labelledby="cost-calc-hero-title">
   <div class="cost-calc-hero__grid">
     <div class="cost-calc-hero__content">
