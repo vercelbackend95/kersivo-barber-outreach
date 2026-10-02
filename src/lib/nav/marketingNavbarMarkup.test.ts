@@ -63,6 +63,11 @@ describe('marketing navbar markup', () => {
     expect(css).toContain('html.mnav-locked');
     expect(css).toContain('prefers-reduced-motion');
   });
+
+  it('locks scroll on the root element only so the sticky header stays in view', () => {
+    expect(css).toMatch(/html\.mnav-locked\s*\{\s*overflow:\s*hidden;/);
+    expect(css).not.toMatch(/html\.mnav-locked\s+body/);
+  });
 });
 
 describe('navbar boundaries', () => {

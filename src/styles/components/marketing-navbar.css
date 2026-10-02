@@ -19,8 +19,8 @@
   z-index: 95;
 }
 
-html.mnav-locked,
-html.mnav-locked body {
+/* Lock the viewport only: overflow on <body> would make it a scroll container and unstick the header. */
+html.mnav-locked {
   overflow: hidden;
 }
 
