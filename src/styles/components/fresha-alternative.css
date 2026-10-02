@@ -1391,6 +1391,32 @@
   color: color-mix(in srgb, var(--muted) 85%, transparent);
 }
 
+.fresha-alt-costs__calculator {
+  margin: 0.6rem 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+}
+
+.fresha-alt-costs__calculator a {
+  font-weight: 650;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg) 50%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fresha-alt-costs__calculator a {
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .fresha-alt-costs__calculator a:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
 .fresha-alt-costs__marketplace {
   margin-top: 0.85rem;
 }

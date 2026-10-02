@@ -6,6 +6,7 @@ import {
   FRESHA_ALTERNATIVE_DESCRIPTION,
   FRESHA_ALTERNATIVE_FAQ_ITEMS,
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
+  FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL,
   FRESHA_ALTERNATIVE_PAGE_PATH,
   FRESHA_ALTERNATIVE_TITLE,
   buildFreshaAlternativeFaqJsonLd,
@@ -377,7 +378,9 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-09-30');
+    expect(matches[0].lastmod).toBe('2026-10-02');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-02');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('2 October 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');
     expect(sourcesSource).toContain('datetime={FRESHA_ALTERNATIVE_LAST_UPDATED_ISO}');
   });
@@ -579,9 +582,40 @@ describe('comparison cluster internal links', () => {
     }
   });
 
-  it('does not link to a calculator or /compare hub before they exist', () => {
+  it('links to the cost calculator exactly once, from the costs section, with a descriptive anchor', () => {
+    expect(countLinks(costsSource, '/barber-software-cost-calculator')).toBe(1);
+    expect(costsSource).toMatch(
+      /<a href="\/barber-software-cost-calculator">\s*Barber Software Cost Calculator\s*<\/a>/,
+    );
+    expect(costsSource.indexOf('/barber-software-cost-calculator')).toBeGreaterThan(
+      costsSource.indexOf('{FRESHA_WORKED_EXAMPLES_NOTE}'),
+    );
+    const otherSources = [
+      pageSource,
+      heroSource,
+      compareSource,
+      pricingSource,
+      proofSource,
+      finalCtaSource,
+      quickAnswerSource,
+      whySource,
+      fitSource,
+      switchingSource,
+      sourcesSource,
+      faqSource,
+      contentSource,
+    ];
+    for (const source of otherSources) {
+      expect(source).not.toContain('/barber-software-cost-calculator');
+    }
+    for (const source of [costsSource, ...otherSources]) {
+      expect(source).not.toContain('/barber-booking-software-cost-calculator');
+    }
+  });
+
+  it('does not link to a /compare hub before it exists', () => {
     for (const source of [pageSource, ...newComponentSources, booksyDecisionSource, switcherSource]) {
-      expect(source).not.toMatch(/href="\/(compare|barber-booking-software-cost-calculator)/);
+      expect(source).not.toMatch(/href="\/compare/);
     }
   });
 });

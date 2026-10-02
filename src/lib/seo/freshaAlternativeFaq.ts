@@ -20,8 +20,8 @@ export const FRESHA_ALTERNATIVE_DESCRIPTION =
   'Looking for a Fresha alternative in the UK? Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching for independent barbershops.';
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
-export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-09-30';
-export const FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL = '30 September 2026';
+export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-02';
+export const FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL = '2 October 2026';
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const independent = requireVerifiedFreshaFact('independentPlan');
