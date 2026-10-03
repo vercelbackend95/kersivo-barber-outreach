@@ -9,6 +9,7 @@ import { prisma } from '../../../lib/db/client';
 import {
   checkFreeBookableBarberTotal,
   freeBookableBarberLimitResponse,
+  lockShopForBookableBarberChange,
 } from '../../../lib/shop/freeBookableBarbers';
 
 const barberSchema = z.object({
@@ -68,19 +69,30 @@ export const PUT: APIRoute = async (context) => {
     }));
 
     // Every listed barber becomes active; the rest are deactivated.
+    // Fast pre-check only; re-checked under the shop lock below.
     if (await checkFreeBookableBarberTotal({ shopId, resultingActiveCount: items.length })) {
       return freeBookableBarberLimitResponse();
     }
 
-    const existing = await prisma.barber.findMany({
-      where: { shopId },
-      select: { id: true },
-    });
-    const existingIds = new Set(existing.map((barber) => barber.id));
-    const keptIds = new Set<string>();
     let createdAny = false;
 
-    await prisma.$transaction(async (tx) => {
+    const limitError = await prisma.$transaction(async (tx) => {
+      await lockShopForBookableBarberChange(tx, shopId);
+
+      const blocked = await checkFreeBookableBarberTotal({
+        shopId,
+        resultingActiveCount: items.length,
+        db: tx,
+      });
+      if (blocked) return blocked;
+
+      const existing = await tx.barber.findMany({
+        where: { shopId },
+        select: { id: true },
+      });
+      const existingIds = new Set(existing.map((barber) => barber.id));
+      const keptIds = new Set<string>();
+
       await tx.shopSettings.update({
         where: { id: shopId },
         data: {
@@ -123,7 +135,9 @@ export const PUT: APIRoute = async (context) => {
           data: { active: false },
         });
       }
+      return null;
     });
+    if (limitError) return freeBookableBarberLimitResponse();
 
     if (createdAny) {
       await linkAllServicesToAllBarbers(shopId);

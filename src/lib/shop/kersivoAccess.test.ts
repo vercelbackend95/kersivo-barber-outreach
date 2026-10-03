@@ -213,6 +213,23 @@ describe('loadKersivoAccess', () => {
     expect((await loadKersivoAccess('shop_1', now)).state).toBe('FREE_BOOKING');
   });
 
+  it('reads through a provided transaction client instead of the global client', async () => {
+    const txShopFindUnique = vi.fn().mockResolvedValue(shop({ freeBookingActivatedAt: activatedAt }));
+    const txSubscriptionFindFirst = vi.fn().mockResolvedValue(null);
+    const tx = {
+      shopSettings: { findUnique: txShopFindUnique },
+      saasSubscription: { findFirst: txSubscriptionFindFirst },
+    };
+
+    const access = await loadKersivoAccess('shop_1', now, tx as never);
+
+    expect(access.state).toBe('FREE_BOOKING');
+    expect(txShopFindUnique).toHaveBeenCalledTimes(1);
+    expect(txSubscriptionFindFirst).toHaveBeenCalledTimes(1);
+    expect(shopFindUnique).not.toHaveBeenCalled();
+    expect(subscriptionFindFirst).not.toHaveBeenCalled();
+  });
+
   it('resolves missing, empty and demo shops to SETUP without querying', async () => {
     shopFindUnique.mockResolvedValue(null);
     expect((await loadKersivoAccess('missing', now)).state).toBe('SETUP');

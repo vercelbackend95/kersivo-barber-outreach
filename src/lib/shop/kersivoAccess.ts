@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../db/client';
 import type { SaasSubscriptionAccessFields } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
@@ -149,18 +150,22 @@ export function serializeKersivoAccess(access: KersivoAccess): SerializedKersivo
   return { state: access.state, capabilities };
 }
 
+export type KersivoAccessDb = Prisma.TransactionClient | typeof prisma;
+
 /**
  * Loads ShopSettings entitlement fields + latest non-PENDING SaaS subscription and resolves
  * product access. Missing / demo shops resolve to SETUP.
+ * Pass a transaction client to read state inside a transaction that holds the shop lock.
  */
 export async function loadKersivoAccess(
   shopId: string,
   now: Date = new Date(),
+  db: KersivoAccessDb = prisma,
 ): Promise<KersivoAccess> {
   const id = shopId.trim();
   if (!id || isDemoShopId(id)) return accessForState('SETUP');
 
-  const shop = await prisma.shopSettings.findUnique({
+  const shop = await db.shopSettings.findUnique({
     where: { id },
     select: {
       id: true,
@@ -171,7 +176,7 @@ export async function loadKersivoAccess(
   });
   if (!shop) return accessForState('SETUP');
 
-  const subscription = await prisma.saasSubscription.findFirst({
+  const subscription = await db.saasSubscription.findFirst({
     where: { shopId: id, status: { not: 'PENDING' } },
     orderBy: { createdAt: 'desc' },
     select: {

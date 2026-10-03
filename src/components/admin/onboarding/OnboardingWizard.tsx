@@ -1284,10 +1284,16 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                     type="button"
                     className="btn btn--secondary"
                     onClick={() => {
-                      if (atBookableBarberLimit) setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
+                      // Onboarding only round-trips bookable seats; extra non-bookable
+                      // records are added later through Team.
+                      if (atBookableBarberLimit) {
+                        setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
+                        return;
+                      }
+                      setBarberLimitNotice('');
                       setBarbers((current) => [
                         ...current,
-                        { name: '', onlineBookings: !atBookableBarberLimit, intendedRole: 'BARBER' },
+                        { name: '', onlineBookings: true, intendedRole: 'BARBER' },
                       ]);
                     }}
                   >

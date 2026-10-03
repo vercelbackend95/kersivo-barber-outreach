@@ -101,11 +101,15 @@ function normalizeItems(
   }));
 }
 
-/** Saving replaces the roster, so bookable cards are exactly the resulting active barbers. */
+function countBookableItems(items: BarberItem[]): number {
+  return items.filter((item) => item.onlineBookings).length;
+}
+
+/** Fast pre-check before uploads; the authoritative check runs again under the shop lock. */
 async function exceedsBookableLimit(shopId: string, items: BarberItem[]): Promise<boolean> {
   const limitError = await checkFreeBookableBarberTotal({
     shopId,
-    resultingActiveCount: items.filter((item) => item.onlineBookings).length,
+    resultingActiveCount: countBookableItems(items),
     includeSetup: true,
   });
   return limitError !== null;
@@ -176,38 +180,50 @@ export const PUT: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: 'Owner membership not found.' }), { status: 404 });
     }
 
-    const existing = await prisma.barber.findMany({
-      where: { shopId },
-      select: { id: true, userId: true, avatarUrl: true },
-    });
-    const existingIds = new Set(existing.map((barber) => barber.id));
-    const existingById = new Map(existing.map((barber) => [barber.id, barber]));
-
-    // Prefer updating the owner's existing seat when card #0 omits id.
-    if (!items[0]!.id) {
-      if (owner.barberId && existingIds.has(owner.barberId)) {
-        items[0]!.id = owner.barberId;
-      } else if (items.length === 1) {
-        const orphans = existing.filter((b) => !b.userId);
-        if (orphans.length === 1) items[0]!.id = orphans[0]!.id;
-      }
-    }
-
     const uploadedSet = new Set(uploadedAvatarUrls);
-    for (const item of items) {
-      if (!item.avatarUrl || uploadedSet.has(item.avatarUrl)) continue;
-      assertUserSuppliedPublicMediaUrlAllowed({
-        shopId,
-        proposedUrl: item.avatarUrl,
-        existingUrl: item.id ? existingById.get(item.id)?.avatarUrl : null,
-      });
-    }
-
-    const keptIds = new Set<string>();
 
     try {
-      await prisma.$transaction(async (tx) => {
+      const limitError = await prisma.$transaction(async (tx) => {
         await lockShopForPublicMediaAssociation(tx, shopId);
+
+        // Roster decisions use only state read under the shop lock.
+        const existing = await tx.barber.findMany({
+          where: { shopId },
+          select: { id: true, userId: true, avatarUrl: true },
+        });
+        const existingIds = new Set(existing.map((barber) => barber.id));
+        const existingById = new Map(existing.map((barber) => [barber.id, barber]));
+
+        // Prefer updating the owner's existing seat when card #0 omits id.
+        if (!items[0]!.id) {
+          if (owner.barberId && existingIds.has(owner.barberId)) {
+            items[0]!.id = owner.barberId;
+          } else if (items.length === 1) {
+            const orphans = existing.filter((b) => !b.userId);
+            if (orphans.length === 1) items[0]!.id = orphans[0]!.id;
+          }
+        }
+
+        for (const item of items) {
+          if (!item.avatarUrl || uploadedSet.has(item.avatarUrl)) continue;
+          assertUserSuppliedPublicMediaUrlAllowed({
+            shopId,
+            proposedUrl: item.avatarUrl,
+            existingUrl: item.id ? existingById.get(item.id)?.avatarUrl : null,
+          });
+        }
+
+        // Authoritative limit check: every existing row not kept is deactivated below,
+        // so the resulting bookable roster is exactly the bookable cards.
+        const blocked = await checkFreeBookableBarberTotal({
+          shopId,
+          resultingActiveCount: countBookableItems(items),
+          includeSetup: true,
+          db: tx,
+        });
+        if (blocked) return blocked;
+
+        const keptIds = new Set<string>();
         let ownerBarberId: string | null = null;
 
         for (let index = 0; index < items.length; index += 1) {
@@ -274,7 +290,14 @@ export const PUT: APIRoute = async (ctx) => {
             email: owner.user.email,
           });
         }
+        return null;
       });
+      if (limitError) {
+        for (const url of uploadedAvatarUrls) {
+          await compensateFreshPublicBlobUpload(url, { shopId, expectedPathPrefix: 'barbers/' });
+        }
+        return freeBookableBarberLimitResponse();
+      }
     } catch (error) {
       for (const url of uploadedAvatarUrls) {
         await compensateFreshPublicBlobUpload(url, { shopId, expectedPathPrefix: 'barbers/' });

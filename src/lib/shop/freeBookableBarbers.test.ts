@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { loadKersivoAccess } = vi.hoisted(() => ({ loadKersivoAccess: vi.fn() }));
 
-vi.mock('../db/client', () => ({ prisma: {} }));
+vi.mock('../db/client', () => ({ prisma: { __global: true } }));
 vi.mock('./kersivoAccess', () => ({
   loadKersivoAccess: (...a: unknown[]) => loadKersivoAccess(...a),
 }));
@@ -72,9 +72,24 @@ describe('Free bookable barber limit helpers', () => {
     ).toBeNull();
   });
 
+  it('resolves product state with the transaction client when one is given', async () => {
+    const { db } = dbWithActiveCount(4);
+    await checkFreeBookableBarberActivation(db, { shopId: 'shop-1' });
+    expect(loadKersivoAccess).toHaveBeenCalledWith('shop-1', undefined, db);
+
+    loadKersivoAccess.mockClear();
+    await checkFreeBookableBarberTotal({ shopId: 'shop-1', resultingActiveCount: 5, db });
+    expect(loadKersivoAccess).toHaveBeenCalledWith('shop-1', undefined, db);
+  });
+
   it('does not resolve product state while under the limit', async () => {
     expect(await checkFreeBookableBarberTotal({ shopId: 'shop-1', resultingActiveCount: 4 })).toBeNull();
     expect(loadKersivoAccess).not.toHaveBeenCalled();
+  });
+
+  it('pre-checks without a transaction fall back to the global client', async () => {
+    await checkFreeBookableBarberTotal({ shopId: 'shop-1', resultingActiveCount: 5 });
+    expect(loadKersivoAccess).toHaveBeenCalledWith('shop-1', undefined, { __global: true });
   });
 
   it('SETUP is limited only when the caller opts in', async () => {

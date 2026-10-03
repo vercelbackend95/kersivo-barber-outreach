@@ -90,7 +90,7 @@ describe('public booking create — Free Booking shop (real entitlement gate)', 
     db.subscription = null;
     createInstantBooking.mockResolvedValue({
       id: 'book_1',
-      status: BookingStatus.CONFIRMED,
+      status: BookingStatus.BOOKED,
       email: 'client@example.com',
       depositRequired: false,
       depositAmountPence: null,

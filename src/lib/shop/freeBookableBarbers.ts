@@ -108,17 +108,23 @@ export async function checkFreeBookableBarberActivation(
     shopId: params.shopId,
     resultingActiveCount: others + 1,
     includeSetup: params.includeSetup,
+    db,
   });
 }
 
-/** Whether a mutation that leaves `resultingActiveCount` bookable barbers is allowed. */
+/**
+ * Whether a mutation that leaves `resultingActiveCount` bookable barbers is allowed.
+ * Without `db` this is only a fast pre-check; the authoritative check must run with the
+ * transaction client after the shop row lock is held.
+ */
 export async function checkFreeBookableBarberTotal(params: {
   shopId: string;
   resultingActiveCount: number;
   includeSetup?: boolean;
+  db?: Db;
 }): Promise<FreeBookableBarberLimitError | null> {
   if (!exceedsFreeBookableBarberLimit(params.resultingActiveCount)) return null;
-  const { state } = await loadKersivoAccess(params.shopId);
+  const { state } = await loadKersivoAccess(params.shopId, undefined, params.db ?? prisma);
   if (!freeBookableBarberLimitApplies(state, { includeSetup: params.includeSetup })) return null;
   return freeBookableBarberLimitError();
 }

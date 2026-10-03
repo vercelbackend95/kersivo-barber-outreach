@@ -15,8 +15,10 @@ const {
   linkMemberToBarber,
   unlinkMemberBarber,
   loadKersivoAccess,
+  txQueryRaw,
 } = vi.hoisted(() => ({
   loadKersivoAccess: vi.fn(),
+  txQueryRaw: vi.fn(),
   requireOnboardingAccess: vi.fn(),
   advanceOnboardingStep: vi.fn(),
   loadOnboardingState: vi.fn(),
@@ -59,8 +61,8 @@ vi.mock('@/lib/db/client', () => ({
       findFirst: (...a: unknown[]) => shopMemberFindFirst(...a),
       update: (...a: unknown[]) => shopMemberUpdate(...a),
     },
+    // No global findMany: the roster must be read through the locked transaction.
     barber: {
-      findMany: (...a: unknown[]) => barberFindMany(...a),
       create: (...a: unknown[]) => barberCreate(...a),
       update: (...a: unknown[]) => barberUpdate(...a),
       updateMany: (...a: unknown[]) => barberUpdateMany(...a),
@@ -106,10 +108,13 @@ describe('PUT /api/admin/onboarding/barbers', () => {
     loadKersivoAccess.mockResolvedValue({ state: 'SETUP', capabilities: [] });
     advanceOnboardingStep.mockResolvedValue(undefined);
     loadOnboardingState.mockResolvedValue({ ok: true });
+    txQueryRaw.mockResolvedValue([{ id: 'shop-1' }]);
     prismaTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
-        $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
+        __tx: true,
+        $queryRaw: (...a: unknown[]) => txQueryRaw(...a),
         barber: {
+          findMany: (...a: unknown[]) => barberFindMany(...a),
           create: (...a: unknown[]) => barberCreate(...a),
           update: (...a: unknown[]) => barberUpdate(...a),
           updateMany: (...a: unknown[]) => barberUpdateMany(...a),
@@ -339,6 +344,69 @@ describe('PUT /api/admin/onboarding/barbers', () => {
       expect(res.status).toBe(200);
       expect(barberCreate).toHaveBeenCalledTimes(6);
       expect(loadKersivoAccess).not.toHaveBeenCalled();
+    });
+
+    it('re-checks under the shop lock: stale pre-lock FULL state cannot exceed the limit', async () => {
+      // Pre-check sees FULL; by the time the lock is held the shop resolves to FREE_BOOKING.
+      loadKersivoAccess
+        .mockResolvedValueOnce({ state: 'FULL_KERSIVO', capabilities: [] })
+        .mockResolvedValueOnce({ state: 'FREE_BOOKING', capabilities: [] });
+      const res = await PUT(
+        makeJsonCtx({ barbers: ['A', 'B', 'C', 'D', 'E'].map((name) => card(name, true)) }),
+      );
+      expect(res.status).toBe(409);
+      expect(await res.json()).toMatchObject({ code: 'FREE_BOOKABLE_BARBER_LIMIT', limit: 4 });
+      expect(prismaTransaction).toHaveBeenCalledTimes(1);
+      expect(loadKersivoAccess).toHaveBeenCalledTimes(2);
+      expect(loadKersivoAccess.mock.calls[1]![2]).toMatchObject({ __tx: true });
+      expect(barberCreate).not.toHaveBeenCalled();
+      expect(barberUpdate).not.toHaveBeenCalled();
+      expect(barberUpdateMany).not.toHaveBeenCalled();
+      expect(linkMemberToBarber).not.toHaveBeenCalled();
+      expect(advanceOnboardingStep).not.toHaveBeenCalled();
+    });
+
+    it('acquires the shop lock before reading the roster and resolving product state', async () => {
+      loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO', capabilities: [] });
+      const res = await PUT(
+        makeJsonCtx({ barbers: ['A', 'B', 'C', 'D', 'E'].map((name) => card(name, true)) }),
+      );
+      expect(res.status).toBe(200);
+      const lockOrder = txQueryRaw.mock.invocationCallOrder[0]!;
+      expect(barberFindMany.mock.invocationCallOrder[0]!).toBeGreaterThan(lockOrder);
+      expect(loadKersivoAccess.mock.invocationCallOrder[1]!).toBeGreaterThan(lockOrder);
+      expect(barberCreate.mock.invocationCallOrder[0]!).toBeGreaterThan(
+        loadKersivoAccess.mock.invocationCallOrder[1]!,
+      );
+    });
+
+    it('resolves the owner seat and deactivations from the roster read under the lock', async () => {
+      shopMemberFindFirst.mockResolvedValue({
+        id: 'mem-owner',
+        userId: 'user-o',
+        barberId: 'b-owner',
+        user: { email: 'owner@example.com' },
+      });
+      barberFindMany.mockResolvedValue([
+        { id: 'b-owner', userId: 'user-o', avatarUrl: null },
+        { id: 'b-stale', userId: null, avatarUrl: null },
+      ]);
+      const res = await PUT(
+        makeJsonCtx({ barbers: [card('Owner', true), card('Sam', true)] }),
+      );
+      expect(res.status).toBe(200);
+      expect(barberFindMany).toHaveBeenCalledWith({
+        where: { shopId: 'shop-1' },
+        select: { id: true, userId: true, avatarUrl: true },
+      });
+      expect(barberUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'b-owner' } }),
+      );
+      expect(barberCreate).toHaveBeenCalledTimes(1);
+      expect(barberUpdateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['b-stale'] }, shopId: 'shop-1' },
+        data: { active: false, userId: null },
+      });
     });
 
     it('J: FULL_KERSIVO is not subject to the Free four-barber limit', async () => {
