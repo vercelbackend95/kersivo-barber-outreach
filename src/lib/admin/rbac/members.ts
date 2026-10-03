@@ -6,6 +6,12 @@ import {
 } from '@/lib/admin/defaultAvailability';
 import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
+import {
+  checkFreeBookableBarberActivation,
+  freeBookableBarberLimitResponse,
+  isFreeBookableBarberLimitError,
+  lockShopForBookableBarberChange,
+} from '@/lib/shop/freeBookableBarbers';
 
 export const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
 export const INVITATION_RESEND_COOLDOWN_MS = 60_000;
@@ -182,21 +188,28 @@ export async function resolveBarberSeatForInvite(input: {
     );
   }
 
-  const maxSort = await prisma.barber.aggregate({
-    where: { shopId: input.shopId },
-    _max: { sortOrder: true },
-  });
+  const created = await prisma.$transaction(async (tx) => {
+    await lockShopForBookableBarberChange(tx, input.shopId);
+    const limitError = await checkFreeBookableBarberActivation(tx, { shopId: input.shopId });
+    if (limitError) return limitError;
 
-  const created = await prisma.barber.create({
-    data: {
-      shopId: input.shopId,
-      name: createName,
-      email: input.email,
-      active: true,
-      sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
-    },
-    select: { id: true },
+    const maxSort = await tx.barber.aggregate({
+      where: { shopId: input.shopId },
+      _max: { sortOrder: true },
+    });
+
+    return tx.barber.create({
+      data: {
+        shopId: input.shopId,
+        name: createName,
+        email: input.email,
+        active: true,
+        sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
+      },
+      select: { id: true },
+    });
   });
+  if (isFreeBookableBarberLimitError(created)) return freeBookableBarberLimitResponse();
 
   await ensureBarberHasAllServices(created.id, input.shopId);
   await ensureBarberHasAvailabilityRules(created.id);

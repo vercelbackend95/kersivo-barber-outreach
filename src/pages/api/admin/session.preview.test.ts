@@ -21,9 +21,13 @@ vi.mock('@/lib/admin/auth', async (importOriginal) => {
   };
 });
 
-vi.mock('@/lib/admin/onboarding', () => ({
-  healOnboardingCompletedIfEligible,
-}));
+vi.mock('@/lib/admin/onboarding', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/admin/onboarding')>();
+  return {
+    ...actual,
+    healOnboardingCompletedIfEligible,
+  };
+});
 
 vi.mock('@/lib/admin/shopPublicActivity', () => ({
   isPauseActiveNow: () => false,
@@ -213,5 +217,99 @@ describe('GET /api/admin/session productAccess', () => {
     expect(body.productAccess).toBeNull();
     expect(body.via).toBe('secret');
     expect(shopFindUnique).not.toHaveBeenCalled();
+    expect(body.onboardingGate).toBe('dashboard');
+    expect(body.onboardingRequired).toBe(false);
+  });
+});
+
+describe('GET /api/admin/session onboarding routing', () => {
+  const ownerAccess = {
+    ...tenantAccess,
+    permissions: ['bookings.manage', 'onboarding.manage'],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    healOnboardingCompletedIfEligible.mockResolvedValue(undefined);
+    subscriptionFindFirst.mockResolvedValue(null);
+  });
+
+  async function getBody() {
+    const res = await GET({
+      request: new Request('http://localhost/api/admin/session'),
+    } as unknown as APIContext);
+    expect(res.status).toBe(200);
+    return res.json();
+  }
+
+  it('A: onboarding not completed => onboarding required', async () => {
+    requireAdminContext.mockResolvedValue(ownerAccess);
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, id: 'shop_1', onboardingCompleted: false });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'onboarding', onboardingRequired: true });
+  });
+
+  it('K: SETUP + onboardingCompleted is still routed back to Free activation', async () => {
+    requireAdminContext.mockResolvedValue(ownerAccess);
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, id: 'shop_1', onboardingCompleted: true });
+    const body = await getBody();
+    expect(body).toMatchObject({
+      onboardingCompleted: true,
+      productAccess: { state: 'SETUP' },
+      onboardingGate: 'free_activation',
+      onboardingRequired: true,
+    });
+  });
+
+  it('K: members without onboarding.manage are not sent to an onboarding page they cannot use', async () => {
+    requireAdminContext.mockResolvedValue({
+      ...tenantAccess,
+      role: 'BARBER',
+      permissions: ['bookings.manage'],
+    });
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, id: 'shop_1', onboardingCompleted: true });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'free_activation', onboardingRequired: false });
+  });
+
+  it('L: FREE_BOOKING + onboardingCompleted can use the dashboard', async () => {
+    requireAdminContext.mockResolvedValue(ownerAccess);
+    shopFindUnique.mockResolvedValue({
+      ...sessionShopRow,
+      id: 'shop_1',
+      onboardingCompleted: true,
+      freeBookingActivatedAt: new Date('2026-07-01T00:00:00.000Z'),
+    });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'dashboard', onboardingRequired: false });
+  });
+
+  it('M: FULL_KERSIVO + completed works as before', async () => {
+    requireAdminContext.mockResolvedValue(ownerAccess);
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, id: 'shop_1', onboardingCompleted: true });
+    subscriptionFindFirst.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z'),
+    });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'dashboard', onboardingRequired: false });
+  });
+
+  it('E: FULL_KERSIVO but onboarding not completed keeps the onboarding requirement', async () => {
+    requireAdminContext.mockResolvedValue(ownerAccess);
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, id: 'shop_1', onboardingCompleted: false });
+    subscriptionFindFirst.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z'),
+    });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'onboarding', onboardingRequired: true });
+  });
+
+  it('preview access is never routed by the session onboarding gate', async () => {
+    requireAdminContext.mockResolvedValue({ ...ownerAccess, via: 'preview', userId: null });
+    shopFindUnique.mockResolvedValue({ ...sessionShopRow, onboardingCompleted: false });
+    const body = await getBody();
+    expect(body).toMatchObject({ onboardingGate: 'dashboard', onboardingRequired: false });
   });
 });

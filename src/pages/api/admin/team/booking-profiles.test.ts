@@ -35,7 +35,7 @@ vi.mock('@/lib/db/client', () => ({
   prisma: {
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
-      aggregate: (...a: unknown[]) => barberAggregate(...a),
+      aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
     },
     barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
     availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
@@ -96,7 +96,7 @@ describe('POST /api/admin/team/booking-profiles', () => {
         $queryRaw: vi.fn().mockResolvedValue([{ id: 'shop-1' }]),
         barber: {
           create: (...a: unknown[]) => barberCreate(...a),
-          aggregate: (...a: unknown[]) => barberAggregate(...a),
+          aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
         },
         barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
         availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },

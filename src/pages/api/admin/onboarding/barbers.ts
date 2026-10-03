@@ -13,6 +13,10 @@ import {
   unlinkMemberBarber,
 } from '@/lib/admin/onboardingOwnerSeat';
 import { prisma } from '@/lib/db/client';
+import {
+  checkFreeBookableBarberTotal,
+  freeBookableBarberLimitResponse,
+} from '@/lib/shop/freeBookableBarbers';
 import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '@/lib/storage/vercelBlob';
 import { compensateFreshPublicBlobUpload, assertUserSuppliedPublicMediaUrlAllowed, isUserSuppliedPublicMediaUrlRejectedError } from '@/lib/storage/publicBlobSafety';
 import {
@@ -97,6 +101,16 @@ function normalizeItems(
   }));
 }
 
+/** Saving replaces the roster, so bookable cards are exactly the resulting active barbers. */
+async function exceedsBookableLimit(shopId: string, items: BarberItem[]): Promise<boolean> {
+  const limitError = await checkFreeBookableBarberTotal({
+    shopId,
+    resultingActiveCount: items.filter((item) => item.onlineBookings).length,
+    includeSetup: true,
+  });
+  return limitError !== null;
+}
+
 export const PUT: APIRoute = async (ctx) => {
   const access = await requireOnboardingAccess(ctx);
   if (access instanceof Response) return access;
@@ -122,6 +136,7 @@ export const PUT: APIRoute = async (ctx) => {
         return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
       }
       items = normalizeItems(parsed.data.barbers);
+      if (await exceedsBookableLimit(shopId, items)) return freeBookableBarberLimitResponse();
 
       try {
         await assertShopAllowsPublicMediaMutation(shopId);
@@ -145,6 +160,7 @@ export const PUT: APIRoute = async (ctx) => {
         return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
       }
       items = normalizeItems(parsed.data.barbers);
+      if (await exceedsBookableLimit(shopId, items)) return freeBookableBarberLimitResponse();
     }
 
     const owner = await prisma.shopMember.findFirst({

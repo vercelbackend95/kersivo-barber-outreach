@@ -6,6 +6,10 @@ import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import { linkAllServicesToAllBarbers } from '../../../lib/admin/onboarding';
 import { prisma } from '../../../lib/db/client';
+import {
+  checkFreeBookableBarberTotal,
+  freeBookableBarberLimitResponse,
+} from '../../../lib/shop/freeBookableBarbers';
 
 const barberSchema = z.object({
   id: z.string().trim().min(1).optional(),
@@ -62,6 +66,11 @@ export const PUT: APIRoute = async (context) => {
       id: barber.id,
       name: barber.name.trim(),
     }));
+
+    // Every listed barber becomes active; the rest are deactivated.
+    if (await checkFreeBookableBarberTotal({ shopId, resultingActiveCount: items.length })) {
+      return freeBookableBarberLimitResponse();
+    }
 
     const existing = await prisma.barber.findMany({
       where: { shopId },

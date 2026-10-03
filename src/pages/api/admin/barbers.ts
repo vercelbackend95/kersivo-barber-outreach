@@ -20,6 +20,12 @@ import {
   lockShopForPublicMediaAssociation,
 } from '@/lib/storage/shopPublicMediaGate';
 import { toUtcFromLondon, addMinutes } from '../../../lib/booking/time';
+import {
+  checkFreeBookableBarberActivation,
+  freeBookableBarberLimitResponse,
+  isFreeBookableBarberLimitError,
+  lockShopForBookableBarberChange,
+} from '../../../lib/shop/freeBookableBarbers';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Prisma } from '@prisma/client';
 
@@ -249,8 +255,12 @@ export const POST: APIRoute = async (ctx) => {
       barber = id
       ? await prisma.$transaction(async (tx) => {
           await lockShopForPublicMediaAssociation(tx, shopId);
-          const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
+          const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true, active: true } });
           if (!existing) throw new Error('Barber not found.');
+          if (payload.active && !existing.active) {
+            const limitError = await checkFreeBookableBarberActivation(tx, { shopId, barberId: id });
+            if (limitError) throw limitError;
+          }
           const updatedBarber = await tx.barber.update({ where: { id }, data: payload });
           const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds, shopId);
           await tx.barberService.deleteMany({ where: { barberId: updatedBarber.id } });
@@ -265,6 +275,10 @@ export const POST: APIRoute = async (ctx) => {
 
       : await prisma.$transaction(async (tx) => {
           await lockShopForPublicMediaAssociation(tx, shopId);
+          if (payload.active) {
+            const limitError = await checkFreeBookableBarberActivation(tx, { shopId });
+            if (limitError) throw limitError;
+          }
           const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
           const createdBarber = await tx.barber.create({
             data: { ...payload, shopId, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 }
@@ -285,6 +299,7 @@ export const POST: APIRoute = async (ctx) => {
       if (avatarUrl) {
         await compensateFreshPublicBlobUpload(avatarUrl, { shopId, expectedPathPrefix: 'barbers/' });
       }
+      if (isFreeBookableBarberLimitError(error)) return freeBookableBarberLimitResponse();
       if (isShopMediaMutationBlockedError(error)) {
         return new Response(JSON.stringify({ error: error.message, code: error.code }), {
           status: 409,
@@ -337,8 +352,13 @@ export const POST: APIRoute = async (ctx) => {
         if (typeof avatarUrl === 'string') {
           await lockShopForPublicMediaAssociation(tx, shopId);
         }
-        const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
+        const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true, active: true } });
         if (!existing) throw new Error('Barber not found.');
+        if (data.active === true && !existing.active) {
+          await lockShopForBookableBarberChange(tx, shopId);
+          const limitError = await checkFreeBookableBarberActivation(tx, { shopId, barberId: id });
+          if (limitError) throw limitError;
+        }
         const updatedBarber = await tx.barber.update({ where: { id }, data });
         if (serviceIds.length > 0) {
           const validServiceIds = await ensureSelectedServices(tx, serviceIds, shopId);
@@ -353,6 +373,11 @@ export const POST: APIRoute = async (ctx) => {
 
     : await prisma.$transaction(async (tx) => {
         await lockShopForPublicMediaAssociation(tx, shopId);
+        const createActive = typeof isActive === 'boolean' ? isActive : true;
+        if (createActive) {
+          const limitError = await checkFreeBookableBarberActivation(tx, { shopId });
+          if (limitError) throw limitError;
+        }
         const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
         const createdBarber = await tx.barber.create({
           data: {
@@ -360,7 +385,7 @@ export const POST: APIRoute = async (ctx) => {
             name: name ?? 'Barber',
             email: email || null,
             avatarUrl: avatarUrl || null,
-            active: typeof isActive === 'boolean' ? isActive : true,
+            active: createActive,
             sortOrder: (maxSort._max.sortOrder ?? -1) + 1
           }
         });
@@ -385,6 +410,7 @@ export const POST: APIRoute = async (ctx) => {
 
   return new Response(JSON.stringify({ barber: { ...barber, isActive: barber.active } }));
   } catch (error) {
+    if (isFreeBookableBarberLimitError(error)) return freeBookableBarberLimitResponse();
     if (isShopMediaMutationBlockedError(error)) {
       return new Response(JSON.stringify({ error: error.message, code: error.code }), { status: 409 });
     }

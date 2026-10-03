@@ -4,6 +4,7 @@ import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 import { lockShopForPublicMediaAssociation } from '@/lib/storage/shopPublicMediaGate';
 import { inviteExpiresAt } from '@/lib/admin/rbac/members';
 import { canActorSetUpOnlineBookings } from '@/lib/admin/teamCards';
+import { checkFreeBookableBarberActivation } from '@/lib/shop/freeBookableBarbers';
 import {
   findActiveOrphanBarbers,
   linkMemberToBarber,
@@ -232,6 +233,16 @@ async function createBarberWithSetup(
       status: 422 as const,
       code: services.code,
       error: services.error,
+    } satisfies TeamCreationDomainError;
+  }
+
+  const limitError = await checkFreeBookableBarberActivation(tx, { shopId: params.shopId });
+  if (limitError) {
+    throw {
+      ok: false as const,
+      status: limitError.status,
+      code: limitError.code,
+      error: limitError.error,
     } satisfies TeamCreationDomainError;
   }
 

@@ -14,7 +14,9 @@ const {
   prismaTransaction,
   linkMemberToBarber,
   unlinkMemberBarber,
+  loadKersivoAccess,
 } = vi.hoisted(() => ({
+  loadKersivoAccess: vi.fn(),
   requireOnboardingAccess: vi.fn(),
   advanceOnboardingStep: vi.fn(),
   loadOnboardingState: vi.fn(),
@@ -34,6 +36,10 @@ vi.mock('@/lib/admin/onboarding', () => ({
   advanceOnboardingStep,
   loadOnboardingState,
   ONBOARDING_STEP_SERVICES: 4,
+}));
+
+vi.mock('@/lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...a: unknown[]) => loadKersivoAccess(...a),
 }));
 
 vi.mock('@/lib/admin/onboardingOwnerSeat', () => ({
@@ -97,6 +103,7 @@ describe('PUT /api/admin/onboarding/barbers', () => {
     barberUpdateMany.mockResolvedValue({ count: 0 });
     linkMemberToBarber.mockResolvedValue(undefined);
     unlinkMemberBarber.mockResolvedValue(undefined);
+    loadKersivoAccess.mockResolvedValue({ state: 'SETUP', capabilities: [] });
     advanceOnboardingStep.mockResolvedValue(undefined);
     loadOnboardingState.mockResolvedValue({ ok: true });
     prismaTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
@@ -286,5 +293,61 @@ describe('PUT /api/admin/onboarding/barbers', () => {
       expect.anything(),
       expect.objectContaining({ barberId: 'b-existing' }),
     );
+  });
+
+  describe('Free bookable barber limit', () => {
+    const card = (name: string, onlineBookings: boolean) => ({ name, onlineBookings });
+
+    it('rejects a 5th bookable barber for a shop heading into Free (SETUP)', async () => {
+      const res = await PUT(
+        makeJsonCtx({
+          barbers: ['A', 'B', 'C', 'D', 'E'].map((name) => card(name, true)),
+        }),
+      );
+      expect(res.status).toBe(409);
+      expect(await res.json()).toEqual({
+        code: 'FREE_BOOKABLE_BARBER_LIMIT',
+        error: 'KERSIVO Free includes up to 4 barbers taking online bookings.',
+        limit: 4,
+      });
+      expect(prismaTransaction).not.toHaveBeenCalled();
+      expect(barberCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects a 5th bookable barber for a live FREE_BOOKING shop', async () => {
+      loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING', capabilities: [] });
+      const res = await PUT(
+        makeJsonCtx({ barbers: ['A', 'B', 'C', 'D', 'E'].map((name) => card(name, true)) }),
+      );
+      expect(res.status).toBe(409);
+      expect(barberCreate).not.toHaveBeenCalled();
+    });
+
+    it('I: non-bookable team records do not count toward the four', async () => {
+      const res = await PUT(
+        makeJsonCtx({
+          barbers: [
+            card('Owner', false),
+            card('A', true),
+            card('B', true),
+            card('C', true),
+            card('D', true),
+            card('Manager', false),
+          ],
+        }),
+      );
+      expect(res.status).toBe(200);
+      expect(barberCreate).toHaveBeenCalledTimes(6);
+      expect(loadKersivoAccess).not.toHaveBeenCalled();
+    });
+
+    it('J: FULL_KERSIVO is not subject to the Free four-barber limit', async () => {
+      loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO', capabilities: [] });
+      const res = await PUT(
+        makeJsonCtx({ barbers: ['A', 'B', 'C', 'D', 'E', 'F'].map((name) => card(name, true)) }),
+      );
+      expect(res.status).toBe(200);
+      expect(barberCreate).toHaveBeenCalledTimes(6);
+    });
   });
 });

@@ -9,6 +9,17 @@ import {
   type OnboardingWeeklyRule,
 } from '@/lib/admin/shopOpeningHours';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
+import { publicBookingPath } from '@/lib/booking/publicBookingPath';
+import {
+  hasKersivoCapability,
+  loadKersivoAccess,
+  serializeKersivoAccess,
+  type KersivoProductState,
+} from '@/lib/shop/kersivoAccess';
+import {
+  FREE_BOOKABLE_BARBER_LIMIT,
+  freeBookableBarberLimitApplies,
+} from '@/lib/shop/freeBookableBarbers';
 
 export { minutesToTimeString, timeStringToMinutes } from './timeStrings';
 export { DEFAULT_ONBOARDING_HOURS, type OnboardingWeeklyRule } from '@/lib/admin/shopOpeningHours';
@@ -20,6 +31,21 @@ export const ONBOARDING_STEP_BARBERS = 3;
 export const ONBOARDING_STEP_SERVICES = 4;
 export const ONBOARDING_STEP_HOURS = 5;
 export const ONBOARDING_STEP_REVIEW = 6;
+
+/**
+ * Where a signed-in tenant belongs. onboardingCompleted is onboarding progress only;
+ * a SETUP shop still needs the explicit Free activation on the Review step.
+ */
+export type AdminOnboardingGate = 'onboarding' | 'free_activation' | 'dashboard';
+
+export function resolveAdminOnboardingGate(input: {
+  onboardingCompleted: boolean;
+  productState: KersivoProductState;
+}): AdminOnboardingGate {
+  if (!input.onboardingCompleted) return 'onboarding';
+  if (input.productState === 'SETUP') return 'free_activation';
+  return 'dashboard';
+}
 
 export async function requireOnboardingAccess(
   context: APIContext,
@@ -238,6 +264,14 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     hours = storedRuleCount > 0 ? await serializeBarberRules(firstBarber.id) : shopHours;
   }
 
+  // Guest preview never activates Free; only signed-in tenants see activation / limit state.
+  const signedIn = Boolean(access.userId);
+  const productAccess = await loadKersivoAccess(shopId);
+  const gate = resolveAdminOnboardingGate({
+    onboardingCompleted: shop.onboardingCompleted,
+    productState: productAccess.state,
+  });
+
   return {
     shop: {
       id: shop.id,
@@ -267,6 +301,15 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     })),
     shopHours,
     hours,
+    productAccess: serializeKersivoAccess(productAccess),
+    freeActivationRequired: signedIn && gate === 'free_activation',
+    freeBookableBarberLimit:
+      signedIn && freeBookableBarberLimitApplies(productAccess.state, { includeSetup: true })
+        ? FREE_BOOKABLE_BARBER_LIMIT
+        : null,
+    bookingUrl: hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
+      ? publicBookingPath(shop.id)
+      : null,
     user: access.userId
       ? {
           id: access.userId,

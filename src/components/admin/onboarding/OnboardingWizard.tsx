@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Camera, ImagePlus } from '../../lucide-react';
 import PrivateDemoAuthPanel from '../PrivateDemoAuthPanel';
 import {
+  countBookableBarberCards,
   DAY_LABELS,
   DEFAULT_HOURS,
+  FREE_BOOKABLE_BARBER_LIMIT_COPY,
   formatGbp,
   orderedHoursForDisplay,
   parseGbpToPence,
@@ -122,6 +124,9 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [finished, setFinished] = useState(false);
+  const [liveBookingUrl, setLiveBookingUrl] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [barberLimitNotice, setBarberLimitNotice] = useState('');
 
   const [step, setStep] = useState(0);
   const [state, setState] = useState<OnboardingState | null>(null);
@@ -224,7 +229,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
       const payload = (await response.json()) as OnboardingState;
       setHasAccess(true);
 
-      if (payload.onboardingCompleted && !isReopen) {
+      if (payload.onboardingCompleted && !payload.freeActivationRequired && !isReopen) {
         redirectingAway = true;
         window.location.assign('/admin');
         return;
@@ -254,6 +259,13 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   }, [logoPreview]);
 
   const setupProgressVisible = step >= 1 && step <= 6 && !finished;
+  const productState = state?.productAccess?.state ?? 'SETUP';
+  /** Signed-in SETUP shop: Review step is the explicit Free Booking activation. */
+  const freeActivationStep = !isGuest && productState === 'SETUP';
+  const bookableBarberLimit = isGuest ? null : (state?.freeBookableBarberLimit ?? null);
+  const bookableBarberCount = countBookableBarberCards(barbers);
+  const atBookableBarberLimit =
+    bookableBarberLimit != null && bookableBarberCount >= bookableBarberLimit;
 
   const validateHours = useCallback((rows: OnboardingHoursRow[]) => {
     for (const row of rows) {
@@ -345,6 +357,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     setBarberErrors(errors);
     if (errors.some(Boolean)) {
       setError('Enter a name for each barber.');
+      return;
+    }
+    if (bookableBarberLimit != null && countBookableBarberCards(cleaned) > bookableBarberLimit) {
+      setError(FREE_BOOKABLE_BARBER_LIMIT_COPY);
       return;
     }
 
@@ -571,18 +587,38 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   };
 
   const completeOnboarding = async () => {
+    if (freeActivationStep && !termsAccepted) {
+      setError('Please accept the Terms to continue.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
       const response = await fetch(`${apiBase}/complete`, {
         method: 'POST',
         credentials: 'include',
+        ...(isGuest
+          ? {}
+          : {
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ termsAccepted: termsAccepted === true }),
+            }),
       });
       if (response.status === 401) {
         setHasAccess(false);
         throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
+      if (!isGuest) {
+        const payload = (await response.json()) as OnboardingState;
+        if (payload.productAccess?.state === 'FREE_BOOKING') {
+          setState(payload);
+          setLiveBookingUrl(payload.bookingUrl ?? null);
+          setFinished(true);
+          setSaving(false);
+          return;
+        }
+      }
       window.location.assign('/admin/test-book');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not finish setup.');
@@ -620,9 +656,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
+    if (step === 6 && freeActivationStep) return 'Activate Free Booking';
+    if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step]);
+  }, [step, freeActivationStep, isGuest, productState]);
 
   if (!authReady || loading) {
     return (
@@ -715,6 +753,49 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           </div>
         </div>
       </>
+    );
+  }
+
+  if (finished && !isGuest && state?.productAccess?.state === 'FREE_BOOKING') {
+    return (
+      <div className="admin-onboarding">
+        <header className="admin-onboarding__header">
+          <div className="admin-onboarding__brand">
+            <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+            <span className="admin-onboarding__brand-name">Kersivo</span>
+          </div>
+        </header>
+        <main className="admin-onboarding__main admin-onboarding__success">
+          <h1 className="admin-onboarding__title">Your booking page is live.</h1>
+          <p className="admin-onboarding__description">
+            Clients can now book online with {state.shop.name || 'your barbershop'}.
+          </p>
+          <div
+            className="admin-onboarding__footer-row"
+            style={{ position: 'static', background: 'none', flexWrap: 'wrap' }}
+          >
+            {liveBookingUrl ? (
+              <a
+                className="btn btn--primary btn--lg"
+                href={liveBookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View my booking page
+              </a>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn--secondary btn--lg"
+              onClick={() => {
+                window.location.assign('/admin?section=bookings_dashboard');
+              }}
+            >
+              Go to dashboard
+            </button>
+          </div>
+        </main>
+      </div>
     );
   }
 
@@ -1179,6 +1260,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           type="checkbox"
                           checked={barber.onlineBookings !== false}
                           onChange={(event) => {
+                            if (event.target.checked && barber.onlineBookings === false && atBookableBarberLimit) {
+                              setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
+                              return;
+                            }
+                            setBarberLimitNotice('');
                             setBarbers((current) =>
                               current.map((item, itemIndex) =>
                                 itemIndex === index
@@ -1197,15 +1283,21 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                   <button
                     type="button"
                     className="btn btn--secondary"
-                    onClick={() =>
+                    onClick={() => {
+                      if (atBookableBarberLimit) setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
                       setBarbers((current) => [
                         ...current,
-                        { name: '', onlineBookings: true, intendedRole: 'BARBER' },
-                      ])
-                    }
+                        { name: '', onlineBookings: !atBookableBarberLimit, intendedRole: 'BARBER' },
+                      ]);
+                    }}
                   >
                     Add another barber
                   </button>
+                ) : null}
+                {barberLimitNotice ? (
+                  <p className="field__hint" role="status">
+                    {barberLimitNotice}
+                  </p>
                 ) : null}
               </div>
             ) : null}
@@ -1476,9 +1568,13 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
-                Your KERSIVO workspace is ready
+                {freeActivationStep ? 'Ready to go live' : 'Your KERSIVO workspace is ready'}
               </h1>
-              <p className="admin-onboarding__description">Review your setup, then finish to open your dashboard.</p>
+              <p className="admin-onboarding__description">
+                {freeActivationStep
+                  ? 'Review your setup, then activate KERSIVO Free Booking.'
+                  : 'Review your setup, then finish to open your dashboard.'}
+              </p>
             </div>
 
             <article className="admin-onboarding__summary-card">
@@ -1574,6 +1670,31 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 ))}
               </div>
             </article>
+
+            {freeActivationStep ? (
+              <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
+                <input
+                  id="onboarding-terms-accepted"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(event) => {
+                    setTermsAccepted(event.target.checked);
+                  }}
+                  required
+                />
+                <span>
+                  I agree to the KERSIVO{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer">
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
+              </label>
+            ) : null}
           </section>
         ) : null}
       </main>
@@ -1589,7 +1710,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             >
               Back
             </button>
-          ) : isReopen ? (
+          ) : isReopen && !state?.freeActivationRequired ? (
             <button
               type="button"
               className="btn btn--secondary btn--lg"
@@ -1612,7 +1733,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             onClick={() => {
               void handleContinue();
             }}
-            disabled={saving || (step === 3 && !teamMode)}
+            disabled={
+              saving ||
+              (step === 3 && !teamMode) ||
+              (step === 6 && freeActivationStep && !termsAccepted)
+            }
             aria-busy={saving}
           >
             {saving ? 'Saving…' : primaryLabel}

@@ -6,13 +6,19 @@ const barberAggregate = vi.fn();
 const barberServiceCreateMany = vi.fn();
 const availabilityRuleCreateMany = vi.fn();
 const transaction = vi.fn();
+const barberCount = vi.fn();
+const loadKersivoAccess = vi.fn();
+
+vi.mock('@/lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...a: unknown[]) => loadKersivoAccess(...a),
+}));
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
-      aggregate: (...a: unknown[]) => barberAggregate(...a),
+      aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
     },
     barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
     availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
@@ -26,7 +32,7 @@ vi.mock('@/lib/db/serializableTransaction', () => ({
       service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
       barber: {
         create: (...a: unknown[]) => barberCreate(...a),
-        aggregate: (...a: unknown[]) => barberAggregate(...a),
+        aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
         findFirst: vi.fn(),
       },
       barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
@@ -165,12 +171,15 @@ describe('createStandaloneBookingProfile', () => {
         barber: {
           create: (...a: unknown[]) => barberCreate(...a),
           aggregate: (...a: unknown[]) => barberAggregate(...a),
+          count: (...a: unknown[]) => barberCount(...a),
         },
         barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
         availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
         service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
       }),
     );
+    barberCount.mockResolvedValue(0);
+    loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING', capabilities: [] });
     barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
     barberCreate.mockResolvedValue({
       id: 'b1',
@@ -277,5 +286,48 @@ describe('createStandaloneBookingProfile', () => {
         ],
       }),
     ).rejects.toThrow('hours write failed');
+  });
+
+  const oneDay = [
+    { dayOfWeek: 1, startMinutes: 540, endMinutes: 1080, breakStartMin: null, breakEndMin: null, active: true },
+  ];
+
+  it('H: Free shop with 4 active bookable barbers cannot create a 5th', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberCount.mockResolvedValue(4);
+
+    await expect(
+      createStandaloneBookingProfile({ shopId: 'shop-1', name: 'Fifth', serviceIds: ['svc-1'], hours: oneDay }),
+    ).rejects.toMatchObject({
+      ok: false,
+      status: 409,
+      code: 'FREE_BOOKABLE_BARBER_LIMIT',
+      error: 'KERSIVO Free includes up to 4 barbers taking online bookings.',
+    });
+    expect(barberCount).toHaveBeenCalledWith({ where: { shopId: 'shop-1', active: true } });
+    expect(barberCreate).not.toHaveBeenCalled();
+  });
+
+  it('J: Full shop is not subject to the Free four-barber limit', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberCount.mockResolvedValue(7);
+    loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO', capabilities: [] });
+
+    await createStandaloneBookingProfile({
+      shopId: 'shop-1',
+      name: 'Eighth',
+      serviceIds: ['svc-1'],
+      hours: oneDay,
+    });
+    expect(barberCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('SETUP shops on the team path are not limited (only live Free is)', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberCount.mockResolvedValue(4);
+    loadKersivoAccess.mockResolvedValue({ state: 'SETUP', capabilities: [] });
+
+    await createStandaloneBookingProfile({ shopId: 'shop-1', name: 'Fifth', serviceIds: ['svc-1'], hours: oneDay });
+    expect(barberCreate).toHaveBeenCalledTimes(1);
   });
 });

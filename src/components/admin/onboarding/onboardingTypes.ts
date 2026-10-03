@@ -55,6 +55,19 @@ export type OnboardingState = {
   }>;
   hours: OnboardingHoursRow[];
   shopHours?: OnboardingHoursRow[];
+  /** Server-resolved product access; never infer entitlement from onboardingCompleted. */
+  productAccess?: {
+    state: 'SETUP' | 'FREE_BOOKING' | 'FULL_KERSIVO';
+    capabilities: Record<string, boolean>;
+  };
+  /** Signed-in SETUP shop that finished setup but has not activated Free Booking yet. */
+  freeActivationRequired?: boolean;
+  /** Max barbers accepting online bookings, or null when unlimited. */
+  freeBookableBarberLimit?: number | null;
+  /** Real public booking page when the shop accepts public bookings. */
+  bookingUrl?: string | null;
+  /** Present on the /complete response only. */
+  activation?: 'activated' | 'already_free' | 'full_kersivo';
   user: {
     id: string;
     name: string | null;
@@ -113,6 +126,15 @@ export function orderedHoursForDisplay(hours: OnboardingHoursRow[]) {
     };
   });
 }
+
+/** Cards that will accept online bookings when saved (a single card is always bookable). */
+export function countBookableBarberCards(barbers: Array<{ onlineBookings?: boolean }>): number {
+  if (barbers.length === 1) return 1;
+  return barbers.filter((barber) => barber.onlineBookings !== false).length;
+}
+
+export const FREE_BOOKABLE_BARBER_LIMIT_COPY =
+  'KERSIVO Free includes up to 4 barbers taking online bookings.';
 
 export async function readJsonError(response: Response) {
   try {

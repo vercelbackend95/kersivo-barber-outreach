@@ -170,6 +170,8 @@ export default function AdminPanel({
         const applySessionPayload = (payload: {
           ok?: boolean;
           onboardingCompleted?: boolean;
+          onboardingRequired?: boolean;
+          onboardingGate?: string;
           via?: string;
           permissions?: string[];
           shop?: {
@@ -181,12 +183,17 @@ export default function AdminPanel({
           shopId?: string | null;
           user?: { name?: string | null; email?: string | null; image?: string | null } | null;
         }) => {
-          if (payload.via === 'session' && payload.onboardingCompleted === false) {
+          const onboardingRequired =
+            payload.onboardingRequired ?? payload.onboardingCompleted === false;
+          if (payload.via === 'session' && onboardingRequired) {
             let skipGate = false;
-            try {
-              skipGate = sessionStorage.getItem('kersivo_skip_onboarding_gate') === '1';
-            } catch {
-              skipGate = false;
+            // The reopen escape hatch never bypasses explicit Free activation.
+            if (payload.onboardingGate !== 'free_activation') {
+              try {
+                skipGate = sessionStorage.getItem('kersivo_skip_onboarding_gate') === '1';
+              } catch {
+                skipGate = false;
+              }
             }
             if (!skipGate) {
               redirectingToOnboarding = true;
@@ -236,6 +243,8 @@ export default function AdminPanel({
             const payload = (await response.json()) as {
               ok?: boolean;
               onboardingCompleted?: boolean;
+              onboardingRequired?: boolean;
+              onboardingGate?: string;
               via?: string;
               permissions?: string[];
               shop?: { logoUrl?: string | null; name?: string | null } | null;

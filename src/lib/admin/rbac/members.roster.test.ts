@@ -73,6 +73,16 @@ describe('resolveBarberSeatForInvite', () => {
     barberCreate.mockResolvedValue({ id: 'barber-new' });
     ensureBarberHasAllServices.mockResolvedValue(undefined);
     ensureBarberHasAvailabilityRules.mockResolvedValue(undefined);
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        $queryRaw: async () => [],
+        barber: {
+          count: async () => 0,
+          aggregate: (...args: unknown[]) => barberAggregate(...args),
+          create: (...args: unknown[]) => barberCreate(...args),
+        },
+      }),
+    );
 
     const result = await resolveBarberSeatForInvite({
       shopId: 'shop-1',
