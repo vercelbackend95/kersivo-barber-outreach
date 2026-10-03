@@ -207,6 +207,9 @@ model ShopSettings {
   smsRemindersEnabled                Boolean                         @default(false)
   /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
   shopPaidAt                         DateTime?
+  /// Explicit Free Booking activation marker. Independent of onboardingCompleted and paid state;
+  /// product state is resolved in src/lib/shop/kersivoAccess.ts (FULL_KERSIVO > FREE_BOOKING > SETUP).
+  freeBookingActivatedAt             DateTime?
   /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
   depositsEnabled                    Boolean                         @default(false)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).

@@ -12,7 +12,8 @@ export type PaidShopFields = {
 };
 
 /**
- * Paying KERSIVO tenant gate.
+ * Paying KERSIVO tenant gate (FULL_KERSIVO entitlement).
+ * Product state incl. Free Booking is resolved in ./kersivoAccess.
  * When a non-PENDING SaaS subscription row is provided, that entitlement wins.
  * Otherwise falls back to shopPaidAt / smsRemindersEnabled (legacy / webhook cache).
  * Demo shop is never paid.

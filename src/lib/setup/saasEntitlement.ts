@@ -37,7 +37,7 @@ function periodStillValid(sub: SaasSubscriptionAccessFields, now: Date): boolean
 }
 
 /**
- * Paid-tenant features (public booking, SMS, deposits).
+ * Full KERSIVO paid entitlement (consumed via isPaidShop / kersivoAccess).
  * PAST_DUE keeps access only during the 7-day grace window.
  */
 export function saasSubscriptionGrantsAccess(
