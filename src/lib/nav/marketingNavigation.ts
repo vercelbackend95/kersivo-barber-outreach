@@ -195,7 +195,7 @@ export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
   { id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' },
 ];
 
-export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/#live-demo' };
+export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
 
 /** Fallback when middleware has not resolved a session-aware CTA. */
 export const MARKETING_NAV_PRIMARY_ACTION: MarketingNavAction = {

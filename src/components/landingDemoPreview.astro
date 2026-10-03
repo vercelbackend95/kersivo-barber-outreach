@@ -1,5 +1,6 @@
 ---
-import { adminDemoHref } from '@/lib/admin/demoConfig';
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
 import { ProductRail } from '@/components/shop/ProductRail';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
@@ -62,7 +63,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
     description:
       'Manage appointments, clients, barbers, services, working hours and daily activity from one central dashboard.',
     ctaLabel: 'Explore the admin system',
-    ctaHref: adminDemoHref('timeline'),
+    ctaHref: blacklineAdminHref('bookings_dashboard'),
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'widget',
@@ -73,7 +74,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
     description:
       'Clients choose a service, barber and available time through your own branded website — with no app download.',
     ctaLabel: 'Try the booking experience',
-    ctaHref: '/demo/book',
+    ctaHref: DEMO_BOOK_HREF,
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'booking',
@@ -84,7 +85,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
     description:
       'Let clients browse products online, place pickup orders and collect them from your barbershop.',
     ctaLabel: 'Explore the retail shop',
-    ctaHref: '/shop',
+    ctaHref: DEMO_SHOP_HREF,
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'carousel',

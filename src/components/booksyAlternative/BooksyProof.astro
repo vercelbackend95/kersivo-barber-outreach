@@ -1,5 +1,6 @@
 ---
-import { adminDemoHref } from '@/lib/admin/demoConfig';
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
 import LandingDemoPreview from '@/components/landingDemoPreview.astro';
 import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
@@ -16,7 +17,7 @@ const rows = [
     description:
       'Manage bookings, clients, barbers, services and daily activity from one central dashboard.',
     ctaLabel: 'Explore the admin system',
-    ctaHref: adminDemoHref('timeline'),
+    ctaHref: blacklineAdminHref('bookings_dashboard'),
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'widget' as const,
@@ -27,7 +28,7 @@ const rows = [
     description:
       'Clients choose a service, barber and available time through your own branded booking experience — with no app download required.',
     ctaLabel: 'Try the booking experience',
-    ctaHref: '/demo/book',
+    ctaHref: DEMO_BOOK_HREF,
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'booking' as const,
@@ -38,7 +39,7 @@ const rows = [
     description:
       'Let clients browse products online, place pickup orders and collect them from your barbershop.',
     ctaLabel: 'Explore the retail shop',
-    ctaHref: '/demo/shop',
+    ctaHref: DEMO_SHOP_HREF,
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'carousel' as const,

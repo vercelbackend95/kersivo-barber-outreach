@@ -41,7 +41,7 @@ describe('marketing navigation config', () => {
     const groups = buildMarketingNavigation();
     expect(groups.map((group) => group.label)).toEqual(['Platform', 'Compare', 'Resources']);
     expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(['Pricing', 'FAQ']);
-    expect(MARKETING_NAV_SECONDARY_ACTION).toMatchObject({ label: 'See live demo', href: '/#live-demo' });
+    expect(MARKETING_NAV_SECONDARY_ACTION).toMatchObject({ label: 'See live demo', href: '/demo' });
     expect(MARKETING_NAV_PRIMARY_ACTION).toMatchObject({
       label: NAVBAR_SUBSCRIBE_CTA_LABEL,
       href: '/admin/launch',
