@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { DEMO_BARBERS, toDemoBookingBarber } from '@/lib/demo/barbers';
+import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
 import { DEMO_SERVICE_CATEGORY_ORDER, DEMO_SERVICES } from '@/lib/demo/services';
 import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
 
@@ -82,7 +83,8 @@ describe('landing booking preview zero-DB wiring', () => {
   it('landingDemoPreview defaults to BLACKLINE data and /demo/book CTA', () => {
     const previewSrc = readSrc('src/components/landingDemoPreview.astro');
     expect(previewSrc).toContain('BLACKLINE_LANDING_BOOKING_DATA');
-    expect(previewSrc).toContain("ctaHref: '/demo/book'");
+    expect(previewSrc).toContain('ctaHref: DEMO_BOOK_HREF');
+    expect(DEMO_BOOK_HREF).toBe('/demo/book');
     expect(previewSrc).toContain('categoryOrder={bookingData.categoryOrder}');
     expect(previewSrc).toContain('presentation={bookingData.presentation}');
     expect(previewSrc).not.toContain('getLandingDemoBookingFallback');

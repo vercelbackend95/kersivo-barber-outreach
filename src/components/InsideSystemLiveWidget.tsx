@@ -32,9 +32,9 @@ import {
   prefersReducedMotion,
 } from '@/lib/landing/liveTimelineScroll';
 import { useMaxWidthPassive } from '@/lib/landing/useMaxWidthPassive';
-import { adminDemoHref } from '@/lib/admin/demoConfig';
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 
-const ADMIN_DEMO_HREF = adminDemoHref('timeline');
+const ADMIN_DEMO_HREF = blacklineAdminHref('bookings_dashboard');
 
 function readTimeLabel(node: HTMLElement): string {
   const fromData = node.getAttribute('data-vtl-time')?.trim();
