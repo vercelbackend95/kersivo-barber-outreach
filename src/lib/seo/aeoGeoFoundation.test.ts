@@ -294,8 +294,23 @@ describe('internal links, routes and comparison FAQ schema', () => {
   it('points every global Pricing nav link at /pricing', () => {
     const pricingDirect = MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'pricing');
     expect(pricingDirect).toEqual({ id: 'pricing', label: 'Pricing', href: '/pricing' });
-    expect(MARKETING_NAV_ITEMS.find((item) => item.id === 'platform-pricing')?.href).toBe('/pricing');
+    expect(MARKETING_NAV_ITEMS.filter((item) => item.label === 'Pricing' || item.href.includes('pricing'))).toEqual([]);
     expect(JSON.stringify([MARKETING_NAV_DIRECT_LINKS, MARKETING_NAV_ITEMS])).not.toContain('/#pricing');
+  });
+
+  it('links Pricing to /pricing and About to /about in every marketing footer', () => {
+    for (const page of [
+      'src/pages/index.astro',
+      'src/pages/booksy-alternative/index.astro',
+      'src/pages/fresha-alternative/index.astro',
+      'src/pages/barber-software-cost-calculator/index.astro',
+    ]) {
+      const source = read(page);
+      expect(source, page).toContain("{ name: 'Pricing', href: '/pricing' }");
+      expect(source, page).toContain("{ name: 'About', href: '/about' }");
+    }
+    expect(read('src/pages/about.astro')).toContain("{ name: 'Pricing', href: '/pricing' }");
+    expect(read('src/pages/pricing.astro')).toContain("{ name: 'About', href: '/about' }");
   });
 
   it('lets the assistant name the SMS allowance without its size', () => {

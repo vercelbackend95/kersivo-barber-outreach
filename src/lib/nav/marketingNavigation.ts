@@ -134,15 +134,6 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'retail',
   },
   {
-    id: 'platform-pricing',
-    label: 'Pricing',
-    description: 'One £39 monthly plan for one physical location.',
-    href: '/pricing',
-    group: 'platform',
-    section: 'explore',
-    icon: 'pricing',
-  },
-  {
     id: 'compare-booksy',
     label: 'Booksy Alternative',
     description: 'Compare Booksy and KERSIVO for an independent UK barbershop.',
