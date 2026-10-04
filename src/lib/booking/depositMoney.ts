@@ -222,14 +222,17 @@ export async function attemptDepositRefund(refundId: string): Promise<{
   try {
     // Free bookings carry a KERSIVO fee; a full deposit refund must return it too.
     // Historical / Full bookings have a 0 snapshot and never request a fee refund.
-    const feeSnapshot = await prisma.booking.findUnique({
+    const paymentSnapshot = await prisma.booking.findUnique({
       where: { id: row.bookingId },
-      select: { kersivoPlatformFeePence: true },
+      select: { kersivoPlatformFeePence: true, stripeConnectAccountIdAtPayment: true },
     });
-    const refundApplicationFee = (feeSnapshot?.kersivoPlatformFeePence ?? 0) > 0;
-    if (refundApplicationFee && !row.connectAccountId?.trim()) {
-      // A fee-bearing payment only exists on its connected account; never refund elsewhere.
-      const lastError = 'Missing connected account for fee-bearing booking refund.';
+    const refundApplicationFee = (paymentSnapshot?.kersivoPlatformFeePence ?? 0) > 0;
+    // A snapshotted direct charge (Free or Full, any fee) lives only on its connected account;
+    // the platform-account fallback is reserved for pre-snapshot destination charges.
+    const hasAccountSnapshot = Boolean(paymentSnapshot?.stripeConnectAccountIdAtPayment?.trim());
+    if ((refundApplicationFee || hasAccountSnapshot) && !row.connectAccountId?.trim()) {
+      // A connected-account payment only exists on that account; never refund elsewhere.
+      const lastError = 'Missing connected account for direct-charge booking refund.';
       const updated = await prisma.bookingDepositRefund.update({
         where: { id: row.id },
         data: {
@@ -247,6 +250,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
       amount: row.amountPence > 0 ? row.amountPence : undefined,
       idempotencyKey: row.idempotencyKey,
       ...(refundApplicationFee ? { refundApplicationFee: true } : {}),
+      allowPlatformLegacyFallback: !hasAccountSnapshot,
     });
 
     const stripeStatus = (result.status || '').toLowerCase();

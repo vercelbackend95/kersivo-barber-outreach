@@ -474,6 +474,12 @@ export async function refundPaymentIntent(
      * proportionally to the refunded amount.
      */
     refundApplicationFee?: boolean;
+    /**
+     * When the connected-account refund reports a missing PaymentIntent, retry on the platform
+     * account (historical destination charges). Defaults to true; pass false for payments whose
+     * connected account is a known snapshot — they must never be refunded elsewhere.
+     */
+    allowPlatformLegacyFallback?: boolean;
   },
 ): Promise<StripeRefundResult> {
   const params: Record<string, string> = {
@@ -497,6 +503,7 @@ export async function refundPaymentIntent(
       return parseRefundResult(refund, 'direct');
     } catch (error) {
       if (!isMissingPaymentIntentError(error)) throw error;
+      if (options?.allowPlatformLegacyFallback === false) throw error;
       // Legacy destination charges lived on the platform account.
     }
   }

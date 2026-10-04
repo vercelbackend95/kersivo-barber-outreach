@@ -233,6 +233,64 @@ describe('stripeConnect direct charges', () => {
     expect(String(legacyInit.body)).toContain('reverse_transfer=true');
   });
 
+  it('B: allowPlatformLegacyFallback=false fails closed on resource_missing — no platform request', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: { message: 'No such payment_intent: pi_snap', code: 'resource_missing' },
+      }),
+    });
+
+    await expect(
+      refundPaymentIntent('pi_snap', {
+        stripeAccount: 'acct_A',
+        amount: 500,
+        idempotencyKey: 'deposit_refund_book_1',
+        allowPlatformLegacyFallback: false,
+      }),
+    ).rejects.toBeInstanceOf(StripeConnectApiError);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const headers = (fetchMock.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>;
+    expect(headers['Stripe-Account']).toBe('acct_A');
+    expect(headers['Idempotency-Key']).toBe('deposit_refund_book_1:direct');
+  });
+
+  it('allowPlatformLegacyFallback=true keeps the explicit legacy platform fallback', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: { message: 'No such payment_intent', code: 'resource_missing' } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 're_legacy', status: 'succeeded', amount: 500 }),
+      });
+
+    const result = await refundPaymentIntent('pi_legacy', {
+      stripeAccount: 'acct_shop',
+      allowPlatformLegacyFallback: true,
+    });
+
+    expect(result.mode).toBe('platform_legacy');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('A: allowPlatformLegacyFallback=false still returns a successful direct refund', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 're_direct', status: 'succeeded', amount: 500 }),
+    });
+
+    const result = await refundPaymentIntent('pi_snap', {
+      stripeAccount: 'acct_A',
+      allowPlatformLegacyFallback: false,
+    });
+
+    expect(result.mode).toBe('direct');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('uses reverse_transfer when refunding without connected account', async () => {
     fetchMock.mockResolvedValue({
       ok: true,

@@ -151,6 +151,7 @@ describe('attemptDepositRefund', () => {
       reverseTransfer: true,
       amount: 500,
       idempotencyKey: 'deposit_refund_book_1',
+      allowPlatformLegacyFallback: true,
     });
     expect(updateBooking).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -453,7 +454,7 @@ describe('KERSIVO application fee on deposit refunds', () => {
     expect(result.outcome).toBe('refunded');
     expect(findUniqueBooking).toHaveBeenCalledWith({
       where: { id: 'book_1' },
-      select: { kersivoPlatformFeePence: true },
+      select: { kersivoPlatformFeePence: true, stripeConnectAccountIdAtPayment: true },
     });
     expect(refundPaymentIntent).toHaveBeenCalledWith(
       'pi_1',
@@ -598,6 +599,130 @@ describe('KERSIVO application fee on deposit refunds', () => {
 
       expect(result.outcome).toBe('failed');
       expect(refundPaymentIntent).not.toHaveBeenCalled();
+    });
+
+    describe('platform legacy fallback is decided by the account snapshot', () => {
+      function arrangeLedger(booking: Record<string, unknown>, connectAccountId: string | null = 'acct_A') {
+        findUniqueRefund.mockResolvedValue(pendingRow({ connectAccountId }));
+        findUniqueBooking.mockResolvedValue(booking);
+        updateManyRefund.mockResolvedValue({ count: 1 });
+        updateBooking.mockResolvedValue({});
+      }
+
+      it('A / E: Free snapshotted refund goes to acct_A with the fee refund and no platform fallback', async () => {
+        arrangeLedger({ kersivoPlatformFeePence: 5, stripeConnectAccountIdAtPayment: 'acct_A' });
+        refundPaymentIntent.mockResolvedValue({ id: 're_1', mode: 'direct', status: 'succeeded', amount: 500 });
+        updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED' }));
+
+        const result = await attemptDepositRefund('ref_1');
+
+        expect(result.outcome).toBe('refunded');
+        expect(refundPaymentIntent).toHaveBeenCalledWith('pi_1', {
+          stripeAccount: 'acct_A',
+          reverseTransfer: true,
+          amount: 500,
+          idempotencyKey: 'deposit_refund_book_1',
+          refundApplicationFee: true,
+          allowPlatformLegacyFallback: false,
+        });
+        expect(findUniqueBooking).toHaveBeenCalledWith({
+          where: { id: 'book_1' },
+          select: { kersivoPlatformFeePence: true, stripeConnectAccountIdAtPayment: true },
+        });
+      });
+
+      it('F / C: Full 0%-fee snapshotted refund omits the fee refund but is still NOT legacy', async () => {
+        arrangeLedger({ kersivoPlatformFeePence: 0, stripeConnectAccountIdAtPayment: 'acct_A' });
+        refundPaymentIntent.mockResolvedValue({ id: 're_1', mode: 'direct', status: 'succeeded', amount: 500 });
+        updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED' }));
+
+        await attemptDepositRefund('ref_1');
+
+        const options = refundPaymentIntent.mock.calls[0][1] as Record<string, unknown>;
+        expect(options.stripeAccount).toBe('acct_A');
+        expect(options.allowPlatformLegacyFallback).toBe(false);
+        expect(options).not.toHaveProperty('refundApplicationFee');
+      });
+
+      it('B / C / G: resource_missing on acct_A fails closed — booking never marked REFUNDED', async () => {
+        for (const fee of [5, 0]) {
+          vi.clearAllMocks();
+          arrangeLedger({ kersivoPlatformFeePence: fee, stripeConnectAccountIdAtPayment: 'acct_A' });
+          refundPaymentIntent.mockRejectedValue(
+            Object.assign(new Error('No such payment_intent: pi_1'), { code: 'resource_missing' }),
+          );
+          updateRefund.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
+            pendingRow({ ...data }),
+          );
+
+          const result = await attemptDepositRefund('ref_1');
+
+          expect(result.outcome).toBe('pending');
+          expect(refundPaymentIntent).toHaveBeenCalledTimes(1);
+          expect(refundPaymentIntent).toHaveBeenCalledWith(
+            'pi_1',
+            expect.objectContaining({ stripeAccount: 'acct_A', allowPlatformLegacyFallback: false }),
+          );
+          expect(updateRefund).toHaveBeenCalledWith(
+            expect.objectContaining({
+              data: expect.objectContaining({ status: 'REFUND_PENDING', lastError: expect.stringContaining('No such payment_intent') }),
+            }),
+          );
+          expect(updateBooking).not.toHaveBeenCalled();
+          expect(updateManyBooking).not.toHaveBeenCalled();
+        }
+      });
+
+      it('G: exhausted snapshotted refund becomes REFUND_FAILED with the ops signal, booking untouched', async () => {
+        findUniqueRefund.mockResolvedValue(pendingRow({ connectAccountId: 'acct_A', attempts: 5, maxAttempts: 6 }));
+        findUniqueBooking.mockResolvedValue({ kersivoPlatformFeePence: 0, stripeConnectAccountIdAtPayment: 'acct_A' });
+        updateManyRefund.mockResolvedValue({ count: 1 });
+        refundPaymentIntent.mockRejectedValue(new Error('No such payment_intent: pi_1'));
+        updateRefund.mockResolvedValue(pendingRow({ status: 'REFUND_FAILED', attempts: 6 }));
+
+        const result = await attemptDepositRefund('ref_1');
+
+        expect(result.outcome).toBe('failed');
+        expect(captureOpsException).toHaveBeenCalled();
+        expect(updateBooking).not.toHaveBeenCalled();
+      });
+
+      it('D: legacy null-snapshot refund keeps the platform legacy fallback enabled', async () => {
+        for (const snapshot of [null, '', '  ']) {
+          vi.clearAllMocks();
+          arrangeLedger({ kersivoPlatformFeePence: 0, stripeConnectAccountIdAtPayment: snapshot }, 'acct_shop');
+          refundPaymentIntent.mockResolvedValue({
+            id: 're_legacy',
+            mode: 'platform_legacy',
+            status: 'succeeded',
+            amount: 500,
+          });
+          updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED' }));
+
+          const result = await attemptDepositRefund('ref_1');
+
+          expect(result.outcome).toBe('refunded');
+          expect(refundPaymentIntent).toHaveBeenCalledWith(
+            'pi_1',
+            expect.objectContaining({
+              stripeAccount: 'acct_shop',
+              reverseTransfer: true,
+              allowPlatformLegacyFallback: true,
+            }),
+          );
+        }
+      });
+
+      it('snapshotted ledger row without a connected account never refunds on the platform', async () => {
+        arrangeLedger({ kersivoPlatformFeePence: 0, stripeConnectAccountIdAtPayment: 'acct_A' }, null);
+        updateRefund.mockResolvedValue(pendingRow({ status: 'REFUND_FAILED' }));
+
+        const result = await attemptDepositRefund('ref_1');
+
+        expect(result.outcome).toBe('failed');
+        expect(refundPaymentIntent).not.toHaveBeenCalled();
+        expect(updateBooking).not.toHaveBeenCalled();
+      });
     });
 
     it('existing ledger connectAccountId stays authoritative for retries', async () => {
