@@ -745,7 +745,15 @@ export default function BookingsAdminPanel({
     if (!showcaseMode) return undefined;
     return listenForHeroShowcaseVisible(window, () => setShowcaseNowScrollArmed(true));
   }, [showcaseMode]);
-  const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate(clock.nowMs()));
+  const { gate: productGate, openUpgrade } = useAdminProductLocks();
+  const historyLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
+  const clientsLocked = isCapabilityLocked(productGate, 'clients');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = getTodayLondonDate(clock.nowMs());
+    // Free: past days are booking history (server-gated); a past deep link opens on today.
+    if (urlBookingDate && historyLocked && urlBookingDate < today) return today;
+    return urlBookingDate ?? today;
+  });
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
   const bookingProofArmedIdRef = useRef<string | null>(
@@ -1611,11 +1619,17 @@ export default function BookingsAdminPanel({
   }, []);
 
 
-
-  const { gate: productGate, openUpgrade } = useAdminProductLocks();
-  const historyLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
-  const clientsLocked = isCapabilityLocked(productGate, 'clients');
   const openClientsUpgrade = useCallback(() => openUpgrade('clients'), [openUpgrade]);
+  const selectBookingDate = useCallback(
+    (next: string) => {
+      if (historyLocked && next < getTodayLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
+      setSelectedDate(next);
+    },
+    [clock, historyLocked, openUpgrade],
+  );
 
   const openClientProfileForBooking = useCallback(
     async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
@@ -2325,7 +2339,7 @@ export default function BookingsAdminPanel({
                     <AdminBookingDatePicker
                       value={selectedDate}
                       label={selectedDateLabel}
-                      onChange={setSelectedDate}
+                      onChange={selectBookingDate}
                     />
                   </div>
                 </div>
@@ -2671,7 +2685,7 @@ export default function BookingsAdminPanel({
                           <AdminBookingDatePicker
                             value={selectedDate}
                             label={selectedDateLabel}
-                            onChange={setSelectedDate}
+                            onChange={selectBookingDate}
                             className="admin-date-picker-label--floating"
                             showIcon={false}
                           />

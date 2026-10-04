@@ -1,7 +1,12 @@
 import type { APIContext } from 'astro';
 import { requireAdminPermission, type AdminAccess } from './auth';
 import type { Permission } from './rbac/permissions';
-import { ADMIN_UPGRADE_QUERY_PARAM, CAPABILITY_UPGRADE_FEATURE, isPlanLockedState } from './productLocks';
+import { accessCan } from './rbac/can';
+import {
+  ADMIN_UPGRADE_QUERY_PARAM,
+  CAPABILITY_UPGRADE_FEATURE,
+  type FullKersivoFeature,
+} from './productLocks';
 import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 import {
   hasKersivoCapability,
@@ -24,7 +29,8 @@ export const KERSIVO_UPGRADE_REQUIRED_MESSAGE = 'This feature is available with 
  * - guest preview (`preview`): a provisional SETUP shop that showcases the Full dashboard;
  * - legacy development access (`secret` / `legacy-cookie`);
  * - demo shops (public demo / BLACKLINE), which always resolve to SETUP yet showcase Full.
- * Among enforced tenants only FREE_BOOKING is locked (see isPlanLockedState).
+ * For enforced tenants the capability matrix is authoritative: SETUP (incl. a lapsed paid shop
+ * without the Free marker) has no paid capabilities and is denied exactly like Free.
  */
 export function adminProductCapabilityEnforced(access: Pick<AdminAccess, 'via' | 'shopId'>): boolean {
   return access.via === 'session' && !isDemoShopId(access.shopId);
@@ -54,7 +60,7 @@ export async function requireAdminProductCapability(
 ): Promise<AdminProductCapabilityGrant | Response> {
   if (!adminProductCapabilityEnforced(access)) return { access, productAccess: null };
   const productAccess = await loadKersivoAccess(access.shopId, now);
-  if (isPlanLockedState(productAccess.state) && !hasKersivoCapability(productAccess, capability)) {
+  if (!hasKersivoCapability(productAccess, capability)) {
     return kersivoUpgradeRequiredResponse(capability);
   }
   return { access, productAccess };
@@ -67,11 +73,22 @@ export async function requireAdminProductCapability(
 export async function adminPageUpgradeRedirect(
   access: AdminAccess,
   capability: KersivoCapability,
+  feature: FullKersivoFeature = CAPABILITY_UPGRADE_FEATURE[capability] ?? 'launch',
 ): Promise<string | null> {
   const grant = await requireAdminProductCapability(access, capability);
   if (!(grant instanceof Response)) return null;
-  const feature = CAPABILITY_UPGRADE_FEATURE[capability] ?? 'launch';
   return `/admin?${ADMIN_UPGRADE_QUERY_PARAM}=${feature}`;
+}
+
+/**
+ * /admin/launch guard. The wizard doubles as the public "Start subscription" entry, so anonymous
+ * visitors, guest preview and legacy access are untouched; real tenant sessions need billing.manage
+ * and the BRANDED_SITE capability (Full) — Free / SETUP tenants go to the upgrade dialog instead.
+ */
+export async function launchWizardPageRedirect(access: AdminAccess | null): Promise<string | null> {
+  if (!access || access.via !== 'session') return null;
+  if (!accessCan(access, 'billing.manage')) return '/admin';
+  return adminPageUpgradeRedirect(access, 'BRANDED_SITE', 'launch');
 }
 
 /** Auth + RBAC permission + product capability in one call. */

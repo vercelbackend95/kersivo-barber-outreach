@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { APIContext } from 'astro';
 import type { KersivoProductState } from '@/lib/shop/kersivoAccess';
 import type { Permission } from './rbac/permissions';
@@ -279,10 +279,10 @@ const PAID_ROUTES: GatedRoute[] = [
 
 const FREE_ROUTES: Omit<GatedRoute, 'capability'>[] = [
   {
-    name: 'K GET /api/admin/bookings?date= (current day)',
+    name: 'K GET /api/admin/bookings?range=today (current day)',
     load: () => import('@/pages/api/admin/bookings'),
     method: 'GET',
-    url: 'http://localhost/api/admin/bookings?date=2026-10-04&mode=day',
+    url: 'http://localhost/api/admin/bookings?range=today',
   },
   {
     name: 'K GET /api/admin/bookings?view=stats',
@@ -446,10 +446,132 @@ describe('S: demo, preview and legacy access are not plan-locked', () => {
     expect(loadKersivoAccessSpy).not.toHaveBeenCalled();
   });
 
-  it('SETUP tenants keep their current onboarding behaviour (not plan-locked)', async () => {
-    state.product = 'SETUP';
-    const { body } = await invoke(PAID_ROUTES.find((r) => r.name.startsWith('E '))!);
+});
+
+describe('SETUP tenants get no paid capabilities (capability matrix is authoritative)', () => {
+  describe.each(PAID_ROUTES)('$name', (route) => {
+    it('A–E: SETUP Owner with the RBAC permission is denied before any business operation', async () => {
+      state.product = 'SETUP';
+      const { status, body } = await invoke(route);
+      expect(status).toBe(403);
+      expect(body).toEqual({
+        error: KERSIVO_UPGRADE_REQUIRED_MESSAGE,
+        code: KERSIVO_UPGRADE_REQUIRED,
+        requiredCapability: route.capability,
+      });
+      expect(state.prismaCalls).toEqual([]);
+      expect(openaiCreate).not.toHaveBeenCalled();
+      expect(checkDurableRateLimit).not.toHaveBeenCalled();
+    });
+  });
+
+  const ONBOARDING_ROUTES: Omit<GatedRoute, 'capability'>[] = [
+    {
+      name: 'GET /api/admin/onboarding',
+      load: () => import('@/pages/api/admin/onboarding/index'),
+      method: 'GET',
+      url: 'http://localhost/api/admin/onboarding',
+    },
+    {
+      name: 'GET /api/admin/services',
+      load: () => import('@/pages/api/admin/services'),
+      method: 'GET',
+      url: 'http://localhost/api/admin/services',
+    },
+    {
+      name: 'GET /api/admin/barbers',
+      load: () => import('@/pages/api/admin/barbers'),
+      method: 'GET',
+      url: 'http://localhost/api/admin/barbers',
+    },
+  ];
+
+  describe.each(ONBOARDING_ROUTES)('H: $name', (route) => {
+    it('core onboarding / setup routes keep working for SETUP', async () => {
+      state.product = 'SETUP';
+      const { body } = await invoke(route);
+      expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+      expect(state.prismaCalls.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe('Free history cannot be recovered one day at a time (Europe/London)', () => {
+  const bookingsAt = (query: string) => ({
+    load: () => import('@/pages/api/admin/bookings'),
+    method: 'GET' as const,
+    url: `http://localhost/api/admin/bookings?${query}`,
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-04T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('K: Free + date=today is allowed', async () => {
+    const { body } = await invoke(bookingsAt('date=2026-10-04&mode=day'));
     expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
     expect(state.prismaCalls.length).toBeGreaterThan(0);
+  });
+
+  it('L: Free + date=tomorrow (upcoming) is allowed', async () => {
+    const { body } = await invoke(bookingsAt('date=2026-10-05&mode=day'));
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    expect(state.prismaCalls.length).toBeGreaterThan(0);
+  });
+
+  it('M: Free + historical date is 403 KERSIVO_UPGRADE_REQUIRED', async () => {
+    const { status, body } = await invoke(bookingsAt('date=2026-10-03&mode=day'));
+    expect(status).toBe(403);
+    expect(body).toEqual({
+      error: KERSIVO_UPGRADE_REQUIRED_MESSAGE,
+      code: KERSIVO_UPGRADE_REQUIRED,
+      requiredCapability: 'FULL_BOOKING_HISTORY',
+    });
+    expect(state.prismaCalls).toEqual([]);
+  });
+
+  it('N: Free cannot enumerate historical dates one-by-one', async () => {
+    for (let daysAgo = 1; daysAgo <= 45; daysAgo += 1) {
+      const day = new Date(Date.UTC(2026, 9, 4 - daysAgo)).toISOString().slice(0, 10);
+      const { status, body } = await invoke(bookingsAt(`date=${day}&mode=day`));
+      expect(status, day).toBe(403);
+      expect(body?.code, day).toBe(KERSIVO_UPGRADE_REQUIRED);
+    }
+    for (const malformed of ['2026-10', 'yesterday', '9999-99']) {
+      const { status } = await invoke(bookingsAt(`date=${encodeURIComponent(malformed)}`));
+      expect(status, malformed).toBe(403);
+    }
+    expect(state.prismaCalls).toEqual([]);
+  });
+
+  it('N: "today" follows the London calendar, not UTC', async () => {
+    // 23:30 UTC on 4 Oct is 00:30 BST on 5 Oct in London: 4 Oct is already history.
+    vi.setSystemTime(new Date('2026-10-04T23:30:00.000Z'));
+    expect((await invoke(bookingsAt('date=2026-10-04'))).status).toBe(403);
+    const { body } = await invoke(bookingsAt('date=2026-10-05'));
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+  });
+
+  it('O: Full keeps historical dates', async () => {
+    state.product = 'FULL_KERSIVO';
+    const { body } = await invoke(bookingsAt('date=2026-09-01&mode=day'));
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    expect(state.prismaCalls.length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['guest preview', { via: 'preview' as const, userId: null }],
+    ['legacy secret access', { via: 'secret' as const, userId: null }],
+    ['public demo shop session', { shopId: DEMO_SHOP_ID }],
+  ])('P: %s keeps historical dates unchanged', async (_label, overrides) => {
+    state.access = ownerAccess(overrides);
+    const { body } = await invoke(bookingsAt('date=2026-09-01&mode=day'));
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    expect(loadKersivoAccessSpy).not.toHaveBeenCalled();
   });
 });

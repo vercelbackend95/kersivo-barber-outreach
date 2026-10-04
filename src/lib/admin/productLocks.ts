@@ -80,8 +80,9 @@ export function parseFullKersivoFeature(raw: string | null | undefined): FullKer
 }
 
 /**
- * Only Free Booking is plan-locked. SETUP keeps its existing onboarding behaviour (pre-purchase
- * shops still build their shop, incl. the retail checklist step); Full has every capability.
+ * Dashboard lock presentation only. SETUP tenants are normally routed through onboarding /
+ * Free activation, so the SPA doesn't show them a Full-upgrade dashboard. Server authorization
+ * never uses this: APIs deny any missing capability, SETUP included.
  */
 export function isPlanLockedState(state: KersivoProductState): boolean {
   return state === 'FREE_BOOKING';

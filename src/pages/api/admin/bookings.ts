@@ -10,6 +10,7 @@ import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatu
 import { BookingStatus, Prisma } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const BOOKING_STATUS_VALUES = new Set<string>(Object.values(BookingStatus));
 
@@ -240,10 +241,14 @@ export const GET: APIRoute = async (ctx) => {
   const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
 
-  // Day views (date= / range=today) and per-barber stats stay operational on Free; the
+  // Today / upcoming day views and per-barber stats stay operational on Free. Past days, the
   // history list/search and the unbounded all-bookings list are Full booking history.
-  const dayScoped = Boolean(ctx.url.searchParams.get('date') || ctx.url.searchParams.get('range') === 'today');
-  if (view === 'history' || (view !== 'stats' && !dayScoped)) {
+  const dateParam = ctx.url.searchParams.get('date');
+  const londonToday = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const operationalDay =
+    ctx.url.searchParams.get('range') === 'today'
+    || (dateParam != null && ISO_DATE_PATTERN.test(dateParam) && dateParam >= londonToday);
+  if (view === 'history' || (view !== 'stats' && !operationalDay)) {
     const grant = await requireAdminProductCapability(access, 'FULL_BOOKING_HISTORY');
     if (grant instanceof Response) return grant;
   }

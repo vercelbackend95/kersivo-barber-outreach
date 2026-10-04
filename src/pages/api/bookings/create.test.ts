@@ -4,7 +4,7 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '@/lib/booking/sandboxBookings';
 
 const resolveAdminAccess = vi.fn();
 const createInstantBooking = vi.fn();
-const product = vi.hoisted(() => ({ state: 'FULL_KERSIVO' as 'FREE_BOOKING' | 'FULL_KERSIVO' }));
+const product = vi.hoisted(() => ({ state: 'FULL_KERSIVO' as 'SETUP' | 'FREE_BOOKING' | 'FULL_KERSIVO' }));
 
 vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/shop/kersivoAccess')>();
@@ -68,8 +68,8 @@ describe('POST /api/bookings/create', () => {
     product.state = 'FULL_KERSIVO';
   });
 
-  it('I: denies Free Booking manual booking creation before creating anything', async () => {
-    product.state = 'FREE_BOOKING';
+  it.each(['FREE_BOOKING', 'SETUP'] as const)('denies %s manual booking creation before creating anything', async (state) => {
+    product.state = state;
     resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
 
     const res = await POST(makeContext(validPayload) as never);
