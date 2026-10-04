@@ -39,12 +39,18 @@ function buildIdempotencyKey(bookingId: string): string {
   return `deposit_refund_${bookingId}`;
 }
 
-async function markBookingRefunded(bookingId: string, now = new Date()): Promise<void> {
+/** `refundedAmountPence` is set (not incremented) from the confirmed ledger row, so replays are idempotent. */
+async function markBookingRefunded(
+  bookingId: string,
+  refundedAmountPence: number,
+  now = new Date(),
+): Promise<void> {
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
       paymentStatus: PaymentStatus.REFUNDED,
       depositRefundedAt: now,
+      refundedAmountPence,
     },
   });
 }
@@ -239,7 +245,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
           confirmedAt,
         },
       });
-      await markBookingRefunded(row.bookingId, confirmedAt);
+      await markBookingRefunded(row.bookingId, updated.amountPence, confirmedAt);
       console.info('[deposit] refund ok', {
         bookingId: row.bookingId,
         reason: row.reason,
@@ -361,7 +367,7 @@ export async function confirmDepositRefundFromWebhook(input: {
           : {}),
       },
     });
-    await markBookingRefunded(row.bookingId, confirmedAt);
+    await markBookingRefunded(row.bookingId, updated.amountPence, confirmedAt);
     return { matched: true, refund: updated };
   }
 

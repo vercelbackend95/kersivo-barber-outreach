@@ -5,6 +5,7 @@ import type { ShopRole } from '@prisma/client';
 const requireAdminContext = vi.fn();
 const shopSettingsFindUnique = vi.fn();
 const shopSettingsUpdate = vi.fn();
+const shopSettingsUpdateMany = vi.fn();
 const createConnectExpressAccount = vi.fn();
 const createConnectAccountLink = vi.fn();
 const retrieveConnectAccount = vi.fn();
@@ -18,6 +19,7 @@ vi.mock('@/lib/db/client', () => ({
     shopSettings: {
       findUnique: (...args: unknown[]) => shopSettingsFindUnique(...args),
       update: (...args: unknown[]) => shopSettingsUpdate(...args),
+      updateMany: (...args: unknown[]) => shopSettingsUpdateMany(...args),
     },
   },
 }));
@@ -138,6 +140,7 @@ describe('barbershop-settings/deposits', () => {
       expect(body.permission).toBe('billing.manage');
       expect(shopSettingsFindUnique).not.toHaveBeenCalled();
       expect(shopSettingsUpdate).not.toHaveBeenCalled();
+      expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
 
     it('rejects BARBER with 403', async () => {
@@ -146,22 +149,79 @@ describe('barbershop-settings/deposits', () => {
       const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
       expect(res.status).toBe(403);
       expect(shopSettingsUpdate).not.toHaveBeenCalled();
+      expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
 
-    it('allows OWNER to toggle deposits when Connect is ready', async () => {
+    it('R: enabling deposits atomically syncs bookingPaymentMode = DEPOSIT', async () => {
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       shopSettingsFindUnique.mockResolvedValue(paidShop);
-      shopSettingsUpdate.mockResolvedValue({ depositsEnabled: true });
+      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
 
       const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body.depositsEnabled).toBe(true);
-      expect(shopSettingsUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { depositsEnabled: true },
-        }),
-      );
+      expect(body).toEqual({ depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' });
+      expect(shopSettingsUpdateMany).toHaveBeenCalledTimes(1);
+      expect(shopSettingsUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'shop-1', bookingPaymentMode: { not: 'FULL' } },
+        data: { depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' },
+      });
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    it('R: disabling deposits atomically syncs bookingPaymentMode = NONE', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, depositsEnabled: true });
+      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
+
+      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: false }));
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ depositsEnabled: false, bookingPaymentMode: 'NONE' });
+      expect(shopSettingsUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'shop-1', bookingPaymentMode: { not: 'FULL' } },
+        data: { depositsEnabled: false, bookingPaymentMode: 'NONE' },
+      });
+    });
+
+    it('S: a stale toggle cannot downgrade FULL mode (409, nothing written)', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue(paidShop);
+      // Guarded UPDATE matches no row because bookingPaymentMode is FULL.
+      shopSettingsUpdateMany.mockResolvedValue({ count: 0 });
+
+      for (const depositsEnabled of [false, true]) {
+        const res = await PATCH(jsonCtx('PATCH', { depositsEnabled }));
+        expect(res.status).toBe(409);
+        const body = await res.json();
+        expect(body.code).toBe('booking_payment_mode_full');
+      }
+      for (const call of shopSettingsUpdateMany.mock.calls) {
+        expect(call[0].where.bookingPaymentMode).toEqual({ not: 'FULL' });
+        expect(call[0].data.bookingPaymentMode).not.toBe('FULL');
+      }
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    it('stays Paid-only: unpaid shop gets 403 and nothing is written', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({
+        ...paidShop,
+        shopPaidAt: null,
+        smsRemindersEnabled: false,
+      });
+
+      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
+      expect(res.status).toBe(403);
+      expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('enabling without ready Connect is rejected and nothing is written', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, stripeConnectChargesEnabled: false });
+
+      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
+      expect(res.status).toBe(400);
+      expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
   });
 

@@ -17,6 +17,32 @@ describe('payment reporting rules', () => {
     ).toBe(true);
   });
 
+  it('T: treats PARTIALLY_REFUNDED as paid-qualified (online payment was taken)', () => {
+    const futureInput = {
+      status: 'BOOKED',
+      startAt,
+      endAt,
+      paymentStatus: 'PARTIALLY_REFUNDED',
+      nowMs: Date.parse('2026-06-01T09:00:00.000Z'),
+    };
+    expect(isBookingPaidQualified(futureInput)).toBe(true);
+    expect(getBookingPaymentChipState(futureInput)).toBe('paid');
+  });
+
+  it('does not treat UNPAID or REFUNDED future bookings as paid via payment status', () => {
+    for (const paymentStatus of ['UNPAID', 'REFUNDED']) {
+      expect(
+        isBookingPaidQualified({
+          status: 'BOOKED',
+          startAt,
+          endAt,
+          paymentStatus,
+          nowMs: Date.parse('2026-06-01T09:00:00.000Z'),
+        }),
+      ).toBe(false);
+    }
+  });
+
   it('treats completed-effective bookings as paid-qualified', () => {
     expect(
       isBookingPaidQualified({

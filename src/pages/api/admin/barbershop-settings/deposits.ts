@@ -5,6 +5,7 @@ import { requireAdminContext } from '@/lib/admin/auth';
 import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import { canCollectBookingDeposit, BOOKING_DEPOSIT_PENCE } from '@/lib/booking/depositGate';
+import { bookingPaymentModeForLegacyDepositToggle } from '@/lib/booking/bookingPaymentPolicy';
 import { isPaidShop } from '@/lib/shop/paidShop';
 import {
   createConnectAccountLink,
@@ -139,13 +140,24 @@ export const PATCH: APIRoute = async (ctx) => {
     return json({ error: 'Connect Stripe and finish onboarding before enabling deposits.' }, 400);
   }
 
-  const updated = await prisma.shopSettings.update({
-    where: { id: shop.id },
-    data: { depositsEnabled: body.depositsEnabled },
-    select: { depositsEnabled: true },
+  // Legacy toggle maps only to NONE/DEPOSIT. The mode guard is in the same UPDATE so a stale
+  // deposit toggle can never downgrade a FULL payment mode set elsewhere.
+  const bookingPaymentMode = bookingPaymentModeForLegacyDepositToggle(body.depositsEnabled);
+  const result = await prisma.shopSettings.updateMany({
+    where: { id: shop.id, bookingPaymentMode: { not: 'FULL' } },
+    data: { depositsEnabled: body.depositsEnabled, bookingPaymentMode },
   });
+  if (result.count === 0) {
+    return json(
+      {
+        error: 'Full upfront payment is enabled. Change the booking payment mode instead of the deposit toggle.',
+        code: 'booking_payment_mode_full',
+      },
+      409,
+    );
+  }
 
-  return json({ depositsEnabled: updated.depositsEnabled });
+  return json({ depositsEnabled: body.depositsEnabled, bookingPaymentMode });
 };
 
 /** Start or continue Stripe Connect Express onboarding. Owner / billing.manage only. */

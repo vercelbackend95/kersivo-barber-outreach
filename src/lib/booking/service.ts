@@ -30,6 +30,7 @@ import {
 } from '@/lib/admin/shopPublicActivity';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 import { canCollectBookingDeposit, resolveBookingDepositPence } from './depositGate';
+import { buildBookingPaymentSnapshot, FULL_KERSIVO_PLATFORM_FEE_BPS } from './bookingPaymentPolicy';
 import {
   depositRefundClientMessage,
   forfeitBookingDeposit,
@@ -504,6 +505,14 @@ export async function createInstantBooking(
       !isAdminSandbox &&
       canCollectBookingDeposit(shopForDeposit) &&
       depositPence > 0;
+    // Legacy deposits are Paid-shop only (depositGate), so they never carry a KERSIVO fee.
+    const paymentSnapshot = collectDeposit
+      ? buildBookingPaymentSnapshot({
+          type: 'DEPOSIT',
+          amountPence: depositPence,
+          feeBps: FULL_KERSIVO_PLATFORM_FEE_BPS,
+        })
+      : buildBookingPaymentSnapshot({ type: 'NONE', amountPence: 0, feeBps: 0 });
 
     // Hold window: floor 5m, default 15m, cap 120m so a DB-only value cannot outlive
     // Stripe's 24h session max in a way that leaves a payable session after release.
@@ -552,6 +561,7 @@ export async function createInstantBooking(
               depositAmountPence: collectDeposit ? depositPence : null,
               paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
               paymentExpiresAt,
+              ...paymentSnapshot,
               idempotencyKey: scopedIdempotencyKey,
             },
             include: { service: true, barber: true }

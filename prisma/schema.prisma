@@ -25,6 +25,25 @@ enum PaymentStatus {
   UNPAID
   PAID
   REFUNDED
+  /// Part of the online payment was refunded; the booking was still paid online.
+  PARTIALLY_REFUNDED
+}
+
+/// Shop-level online payment requirement for public bookings.
+enum BookingPaymentMode {
+  /// No required online payment (pay at the shop).
+  NONE
+  /// £5 required online (full service price when the service costs less than £5).
+  DEPOSIT
+  /// Full service price required upfront.
+  FULL
+}
+
+/// How a single booking was paid / expected to be paid (snapshot at booking time).
+enum BookingPaymentType {
+  NONE
+  DEPOSIT
+  FULL
 }
 
 enum DepositRefundStatus {
@@ -213,8 +232,11 @@ model ShopSettings {
   /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
   /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
   bookingSlug                        String?                         @unique
-  /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
+  /// Legacy owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
+  /// Kept in sync with bookingPaymentMode (true ⇔ DEPOSIT) during the migration period.
   depositsEnabled                    Boolean                         @default(false)
+  /// Online payment requirement for public bookings. Rules in src/lib/booking/bookingPaymentPolicy.ts.
+  bookingPaymentMode                 BookingPaymentMode              @default(NONE)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
   retailEnabled                      Boolean                         @default(false)
   /// Stripe Connect Express account id for booking deposits (and future shop payouts).
@@ -534,15 +556,30 @@ model Booking {
   manageTokenHash       String?
   manageTokenExpiresAt  DateTime?
 
+  /// Legacy: true when an online payment (currently the deposit) was required.
   paymentRequired         Boolean        @default(false)
+  /// Legacy deposit amount; see paymentAmountPence for the generic online amount.
   depositAmountPence      Int?
   paymentStatus           PaymentStatus?
-  /// Stripe Checkout Session for the deposit; unique so one session maps to one booking.
+  /// Stripe Checkout Session for this booking's online payment; unique so one session maps to one booking.
   stripeCheckoutSessionId String?        @unique
+  /// Stripe PaymentIntent for this booking's online payment.
   stripePaymentIntentId   String?
   paidAt                  DateTime?
   depositRefundedAt       DateTime?
   depositForfeitedAt      DateTime?
+
+  /// Snapshot: how THIS booking was paid / expected to be paid. Null on pre-snapshot bookings
+  /// that never took an online payment.
+  bookingPaymentType      BookingPaymentType?
+  /// Snapshot: amount charged (or to be charged) online for this booking, in pence.
+  paymentAmountPence      Int?
+  /// Snapshot: KERSIVO platform/application fee for this payment, in pence.
+  kersivoPlatformFeePence Int?
+  /// Snapshot: KERSIVO fee rate used at checkout, in basis points (100 = 1%).
+  kersivoPlatformFeeBps   Int?
+  /// Total confirmed refunded amount against the online payment, in pence.
+  refundedAmountPence     Int            @default(0)
   clientRescheduleCount   Int            @default(0)
   paymentExpiresAt        DateTime?
 

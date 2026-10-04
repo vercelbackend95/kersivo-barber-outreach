@@ -154,7 +154,7 @@ describe('attemptDepositRefund', () => {
     expect(updateBooking).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'book_1' },
-        data: expect.objectContaining({ paymentStatus: 'REFUNDED' }),
+        data: expect.objectContaining({ paymentStatus: 'REFUNDED', refundedAmountPence: 500 }),
       }),
     );
   });
