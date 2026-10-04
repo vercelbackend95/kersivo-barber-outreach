@@ -399,61 +399,205 @@ describe('KERSIVO application fee on FULL refunds', () => {
 });
 
 describe('webhook refund confirmation', () => {
-  function arrangeWebhook(booking: Record<string, unknown>, row: Record<string, unknown>) {
-    findFirstRefund.mockResolvedValue(row);
+  function arrangeWebhook(
+    booking: Record<string, unknown>,
+    row: Record<string, unknown>,
+    lookup: 'refund_id' | 'payment_intent' = 'refund_id',
+  ) {
+    if (lookup === 'refund_id') {
+      findFirstRefund.mockResolvedValue(row);
+    } else {
+      // No row carries the event's refund id yet; the PaymentIntent fallback finds the ledger.
+      findFirstRefund.mockResolvedValueOnce(null).mockResolvedValue(row);
+    }
     findUniqueBooking.mockResolvedValue(booking);
     updateRefund.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...row, ...data }));
     updateBooking.mockResolvedValue({});
   }
 
+  function expectIntegrityMismatch(result: Awaited<ReturnType<typeof confirmBookingPaymentRefundFromWebhook>>) {
+    expect(result).toMatchObject({ matched: true, confirmed: false, reason: 'refund_integrity_mismatch' });
+    expect(updateRefund).not.toHaveBeenCalled();
+    expect(updateBooking).not.toHaveBeenCalled();
+    expect(captureOpsMessage).toHaveBeenCalledWith(
+      'Stripe refund webhook does not match the booking refund ledger',
+      expect.objectContaining({ opsAlert: true }),
+    );
+  }
+
   it('AD: 3000 of 3000 → REFUNDED', async () => {
     arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 3000, stripeRefundId: 're_1' }));
-    await confirmBookingPaymentRefundFromWebhook({ stripeRefundId: 're_1', status: 'succeeded', amountPence: 3000 });
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_1',
+      status: 'succeeded',
+      amountPence: 3000,
+      stripeAccountId: 'acct_A',
+    });
+    expect(result.confirmed).toBe(true);
     expect(bookingUpdateData()).toEqual({ paymentStatus: 'REFUNDED', refundedAmountPence: 3000 });
   });
 
-  it('AE: 2500 of 3000 → PARTIALLY_REFUNDED with refundedAmountPence 2500', async () => {
-    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_1' }));
-    await confirmBookingPaymentRefundFromWebhook({ stripeRefundId: 're_1', status: 'succeeded', amountPence: 2500 });
+  it('A: PI-only race recovery — exact 2500 binds the refund id, ledger REFUNDED, booking PARTIALLY_REFUNDED', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: null }), 'payment_intent');
+
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_ours',
+      paymentIntentId: 'pi_1',
+      status: 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: 'acct_A',
+    });
+
+    expect(result).toMatchObject({ matched: true, confirmed: true });
     expect(updateRefund).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'REFUNDED', amountPence: 2500 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'REFUNDED', stripeRefundId: 're_ours' }),
+      }),
     );
+    expect(updateRefund.mock.calls[0][0].data).not.toHaveProperty('amountPence');
     expect(bookingUpdateData()).toEqual({ paymentStatus: 'PARTIALLY_REFUNDED', refundedAmountPence: 2500 });
   });
 
-  it('AF: replay of a confirmed refund does not double-count', async () => {
-    arrangeWebhook(
-      fullBooking({ paymentStatus: 'PARTIALLY_REFUNDED', refundedAmountPence: 2500 }),
-      ledgerRow({ amountPence: 2500, status: 'REFUNDED', stripeRefundId: 're_1' }),
-    );
+  it('B: PI-only match with a different refund (500 vs ledger 2500) is not ours — ledger and booking untouched', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: null }), 'payment_intent');
+
     const result = await confirmBookingPaymentRefundFromWebhook({
-      stripeRefundId: 're_1',
+      stripeRefundId: 're_manual',
+      paymentIntentId: 'pi_1',
       status: 'succeeded',
-      amountPence: 2500,
+      amountPence: 500,
+      stripeAccountId: 'acct_A',
     });
-    expect(result.matched).toBe(true);
-    expect(updateBooking).not.toHaveBeenCalled();
-    expect(updateRefund).not.toHaveBeenCalled();
+
+    expectIntegrityMismatch(result);
+    expect(result.refund).toMatchObject({ amountPence: 2500, status: 'REFUND_PENDING', stripeRefundId: null });
   });
 
-  it('refundedAmountPence is set (never incremented), so a repeated confirmation is idempotent', async () => {
-    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_1' }));
-    await confirmBookingPaymentRefundFromWebhook({ stripeRefundId: 're_1', status: 'succeeded', amountPence: 2500 });
-    await confirmBookingPaymentRefundFromWebhook({ stripeRefundId: 're_1', status: 'succeeded', amountPence: 2500 });
-    for (const call of updateBooking.mock.calls) {
-      expect(call[0].data.refundedAmountPence).toBe(2500);
+  it('B: a mismatching PI-only refund.failed cannot fail our pending ledger either', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: null }), 'payment_intent');
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_manual',
+      paymentIntentId: 'pi_1',
+      status: 'failed',
+      amountPence: 500,
+      stripeAccountId: 'acct_A',
+    });
+    expectIntegrityMismatch(result);
+  });
+
+  it('C: ledger bound to re_A ignores an event for re_B', async () => {
+    // The ledger is found via the PaymentIntent but already carries a different refund id.
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_A' }), 'payment_intent');
+
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_B',
+      paymentIntentId: 'pi_1',
+      status: 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: 'acct_A',
+    });
+
+    expectIntegrityMismatch(result);
+  });
+
+  it('D / AE: ledger re_A + event re_A + 2500 confirms normally → PARTIALLY_REFUNDED', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_A' }));
+
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_A',
+      paymentIntentId: 'pi_1',
+      status: 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: 'acct_A',
+    });
+
+    expect(result).toMatchObject({ matched: true, confirmed: true });
+    expect(bookingUpdateData()).toEqual({ paymentStatus: 'PARTIALLY_REFUNDED', refundedAmountPence: 2500 });
+  });
+
+  it('E: ledger acct_A + event.account acct_B (or missing) → no mutation, ops alert', async () => {
+    for (const stripeAccountId of ['acct_B', null]) {
+      vi.clearAllMocks();
+      arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_A' }));
+      const result = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: 're_A',
+        status: 'succeeded',
+        amountPence: 2500,
+        stripeAccountId,
+      });
+      expectIntegrityMismatch(result);
     }
   });
 
-  it('AG: refund above the payment is rejected and alerted; nothing is marked refunded', async () => {
-    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 3000, stripeRefundId: 're_1' }));
+  it('F: ledger acct_A + event.account acct_A → normal', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_A' }));
     const result = await confirmBookingPaymentRefundFromWebhook({
-      stripeRefundId: 're_1',
+      stripeRefundId: 're_A',
+      status: 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: ' acct_A ',
+    });
+    expect(result.confirmed).toBe(true);
+  });
+
+  it('G / AH: legacy ledger without an account snapshot keeps platform-event compatibility (no account filled in)', async () => {
+    arrangeWebhook(
+      fullBooking({ bookingPaymentType: null, paymentAmountPence: null, depositAmountPence: 500 }),
+      ledgerRow({ amountPence: 500, stripeRefundId: 're_legacy', connectAccountId: null }),
+    );
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_legacy',
+      status: 'succeeded',
+      amountPence: 500,
+      stripeAccountId: null,
+    });
+    expect(result.confirmed).toBe(true);
+    expect(updateRefund.mock.calls[0][0].data).not.toHaveProperty('connectAccountId');
+    expect(bookingUpdateData()).toMatchObject({
+      paymentStatus: 'REFUNDED',
+      refundedAmountPence: 500,
+      depositRefundedAt: expect.any(Date),
+    });
+  });
+
+  it('H: PI-only fallback without a webhook amount never confirms or rewrites the policy amount', async () => {
+    for (const amountPence of [null, undefined, 0, -100, 25.5]) {
+      vi.clearAllMocks();
+      arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: null }), 'payment_intent');
+      const result = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: 're_unknown',
+        paymentIntentId: 'pi_1',
+        status: 'succeeded',
+        amountPence,
+        stripeAccountId: 'acct_A',
+      });
+      expectIntegrityMismatch(result);
+    }
+  });
+
+  it('I / AG: a webhook can never change the ledger amount from 2500 to another positive amount', async () => {
+    for (const amountPence of [500, 3000, 3500]) {
+      vi.clearAllMocks();
+      arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 2500, stripeRefundId: 're_A' }));
+      const result = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: 're_A',
+        status: 'succeeded',
+        amountPence,
+        stripeAccountId: 'acct_A',
+      });
+      expectIntegrityMismatch(result);
+    }
+  });
+
+  it('a corrupt ledger amount above the payment is still never recorded', async () => {
+    arrangeWebhook(fullBooking(), ledgerRow({ amountPence: 3500, stripeRefundId: 're_A' }));
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_A',
       status: 'succeeded',
       amountPence: 3500,
+      stripeAccountId: 'acct_A',
     });
-    expect(result.refund?.status).toBe('REFUND_PENDING');
-    expect(updateRefund).not.toHaveBeenCalled();
+    expect(result.confirmed).toBe(false);
     expect(updateBooking).not.toHaveBeenCalled();
     expect(captureOpsMessage).toHaveBeenCalledWith(
       'Stripe refund webhook amount exceeds the booking payment',
@@ -461,17 +605,38 @@ describe('webhook refund confirmation', () => {
     );
   });
 
-  it('AH: legacy deposit (no snapshot) webhook still confirms REFUNDED with depositRefundedAt', async () => {
+  it('J / AF: replay of a confirmed refund is idempotent (no double-count, no writes)', async () => {
     arrangeWebhook(
-      fullBooking({ bookingPaymentType: null, paymentAmountPence: null, depositAmountPence: 500 }),
-      ledgerRow({ amountPence: 500, stripeRefundId: 're_legacy' }),
+      fullBooking({ paymentStatus: 'PARTIALLY_REFUNDED', refundedAmountPence: 2500 }),
+      ledgerRow({ amountPence: 2500, status: 'REFUNDED', stripeRefundId: 're_1' }),
     );
-    await confirmBookingPaymentRefundFromWebhook({ stripeRefundId: 're_legacy', status: 'succeeded', amountPence: 500 });
-    expect(bookingUpdateData()).toMatchObject({
-      paymentStatus: 'REFUNDED',
-      refundedAmountPence: 500,
-      depositRefundedAt: expect.any(Date),
+    for (let i = 0; i < 2; i += 1) {
+      const result = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: 're_1',
+        status: 'succeeded',
+        amountPence: 2500,
+        stripeAccountId: 'acct_A',
+      });
+      expect(result).toMatchObject({ matched: true, confirmed: false });
+      expect(result.reason).toBeUndefined();
+    }
+    expect(updateBooking).not.toHaveBeenCalled();
+    expect(updateRefund).not.toHaveBeenCalled();
+  });
+
+  it('charge.refunded-style lookups never use the PaymentIntent fallback', async () => {
+    findFirstRefund.mockResolvedValue(null);
+    const result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId: 're_other',
+      paymentIntentId: 'pi_1',
+      status: 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: 'acct_A',
+      requireStoredRefundId: true,
     });
+    expect(result.matched).toBe(false);
+    expect(findFirstRefund).toHaveBeenCalledTimes(1);
+    expect(findFirstRefund).toHaveBeenCalledWith({ where: { stripeRefundId: 're_other' } });
   });
 });
 

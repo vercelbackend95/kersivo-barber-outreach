@@ -426,8 +426,33 @@ export async function attemptBookingPaymentRefund(refundId: string): Promise<{
   }
 }
 
+export type RefundWebhookConfirmation = {
+  matched: boolean;
+  refund: BookingDepositRefund | null;
+  /** True only when this event moved the ledger to REFUNDED. */
+  confirmed?: boolean;
+  reason?: 'refund_integrity_mismatch';
+};
+
+type RefundIntegrityMismatch = 'account' | 'refund_id' | 'amount' | 'amount_missing' | 'refund_id_missing';
+
+function alertRefundIntegrityMismatch(row: BookingDepositRefund, mismatch: RefundIntegrityMismatch): void {
+  captureOpsMessage('Stripe refund webhook does not match the booking refund ledger', {
+    level: 'error',
+    route: 'depositMoney.applyStripeRefundWebhook',
+    shopId: row.shopId,
+    opsAlert: true,
+    tags: { bookingId: row.bookingId, refundLedgerId: row.id, mismatch },
+  });
+}
+
 /**
  * Confirm / fail a ledger row from Stripe webhook events.
+ *
+ * The webhook is evidence about the refund the settlement action already wrote; it never
+ * changes the refund amount. Before any write it must match the ledger's connected account,
+ * its stored refund id, and — when correlated only by PaymentIntent because the refund id is
+ * not persisted yet — exactly the ledger amount. Mismatches are alerted and left untouched.
  * Never demotes REFUNDED back to PENDING/FAILED.
  */
 export async function confirmBookingPaymentRefundFromWebhook(input: {
@@ -435,18 +460,27 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
   paymentIntentId?: string | null;
   status: 'succeeded' | 'failed' | 'pending' | 'canceled';
   amountPence?: number | null;
-}): Promise<{ matched: boolean; refund: BookingDepositRefund | null }> {
+  /** Connected account the Stripe event was delivered for (`event.account`). */
+  stripeAccountId?: string | null;
+  /** Only correlate via a refund id already stored on a ledger (no PaymentIntent fallback). */
+  requireStoredRefundId?: boolean;
+}): Promise<RefundWebhookConfirmation> {
   let row: BookingDepositRefund | null = null;
 
   const refundId = input.stripeRefundId?.trim() || '';
   const pi = input.paymentIntentId?.trim() || '';
+  const eventAccount = input.stripeAccountId?.trim() || '';
+  const eventAmount =
+    typeof input.amountPence === 'number' && Number.isInteger(input.amountPence) && input.amountPence > 0
+      ? input.amountPence
+      : null;
 
   if (refundId) {
     row = await prisma.bookingDepositRefund.findFirst({
       where: { stripeRefundId: refundId },
     });
   }
-  if (!row && pi) {
+  if (!row && pi && !input.requireStoredRefundId) {
     row = await prisma.bookingDepositRefund.findFirst({
       where: {
         stripePaymentIntentId: pi,
@@ -455,8 +489,8 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
       orderBy: { createdAt: 'desc' },
     });
   }
-  // Webhook may arrive before API wrote stripeRefundId — also match PENDING by PI only.
-  if (!row && pi) {
+  // Webhook may arrive before API wrote stripeRefundId — also match by PI only.
+  if (!row && pi && !input.requireStoredRefundId) {
     row = await prisma.bookingDepositRefund.findFirst({
       where: { stripePaymentIntentId: pi },
       orderBy: { createdAt: 'desc' },
@@ -465,6 +499,26 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
 
   if (!row) return { matched: false, refund: null };
 
+  const mismatch = ((): RefundIntegrityMismatch | null => {
+    // Legacy rows (null account snapshot) keep historical platform-account compatibility.
+    const ledgerAccount = row.connectAccountId?.trim() || '';
+    if (ledgerAccount && eventAccount !== ledgerAccount) return 'account';
+    if (row.stripeRefundId) {
+      if (!refundId) return 'refund_id_missing';
+      if (refundId !== row.stripeRefundId) return 'refund_id';
+      if (eventAmount !== null && eventAmount !== row.amountPence) return 'amount';
+      return null;
+    }
+    // PaymentIntent-only correlation: only the exact intended refund may bind to this ledger.
+    if (eventAmount === null) return 'amount_missing';
+    if (eventAmount !== row.amountPence) return 'amount';
+    return null;
+  })();
+  if (mismatch) {
+    alertRefundIntegrityMismatch(row, mismatch);
+    return { matched: true, confirmed: false, reason: 'refund_integrity_mismatch', refund: row };
+  }
+
   if (row.status === DepositRefundStatus.REFUNDED) {
     // Never demote; optionally backfill stripeRefundId.
     if (refundId && !row.stripeRefundId) {
@@ -472,14 +526,14 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
         where: { id: row.id },
         data: { stripeRefundId: refundId },
       });
-      return { matched: true, refund: updated };
+      return { matched: true, confirmed: false, refund: updated };
     }
-    return { matched: true, refund: row };
+    return { matched: true, confirmed: false, refund: row };
   }
 
   if (input.status === 'succeeded') {
-    const confirmedAmountPence =
-      typeof input.amountPence === 'number' && input.amountPence > 0 ? input.amountPence : row.amountPence;
+    // Single refund per booking: the durable ledger amount is what was refunded.
+    const confirmedAmountPence = row.amountPence;
     const booking = await prisma.booking.findUnique({
       where: { id: row.bookingId },
       select: {
@@ -509,7 +563,7 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
           paymentAmountPence: String(stored.amountPence),
         },
       });
-      return { matched: true, refund: row };
+      return { matched: true, confirmed: false, reason: 'refund_integrity_mismatch', refund: row };
     }
     const confirmedAt = new Date();
     const updated = await prisma.bookingDepositRefund.update({
@@ -520,11 +574,10 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
         confirmedAt,
         lastError: null,
         nextAttemptAt: null,
-        amountPence: confirmedAmountPence,
       },
     });
-    await markBookingRefunded(row.bookingId, updated.amountPence, confirmedAt);
-    return { matched: true, refund: updated };
+    await markBookingRefunded(row.bookingId, confirmedAmountPence, confirmedAt);
+    return { matched: true, confirmed: true, refund: updated };
   }
 
   if (input.status === 'failed' || input.status === 'canceled') {
@@ -547,7 +600,7 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
         stripeStatus: input.status,
       },
     });
-    return { matched: true, refund: updated };
+    return { matched: true, confirmed: false, refund: updated };
   }
 
   // pending — record refund id if we learned it.
@@ -556,10 +609,10 @@ export async function confirmBookingPaymentRefundFromWebhook(input: {
       where: { id: row.id },
       data: { stripeRefundId: refundId },
     });
-    return { matched: true, refund: updated };
+    return { matched: true, confirmed: false, refund: updated };
   }
 
-  return { matched: true, refund: row };
+  return { matched: true, confirmed: false, refund: row };
 }
 
 /**

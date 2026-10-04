@@ -7,6 +7,7 @@ const retrieveCheckoutSession = vi.fn();
 const confirmPaidBookingPayment = vi.fn();
 const findFirstBooking = vi.fn();
 const findUniqueShop = vi.fn();
+const confirmBookingPaymentRefundFromWebhook = vi.fn();
 
 vi.mock('../../../lib/shop/stripe', () => ({
   verifyStripeWebhookSignature: (...args: unknown[]) => verifyStripeWebhookSignature(...args),
@@ -70,7 +71,7 @@ vi.mock('../../../lib/booking/confirmPaidDeposit', () => ({
 }));
 
 vi.mock('../../../lib/booking/depositMoney', () => ({
-  confirmBookingPaymentRefundFromWebhook: vi.fn(),
+  confirmBookingPaymentRefundFromWebhook: (...args: unknown[]) => confirmBookingPaymentRefundFromWebhook(...args),
 }));
 
 vi.mock('../../../lib/booking/depositGate', () => ({
@@ -290,5 +291,138 @@ describe('POST /api/shop/webhook â€” booking payment sessions', () => {
 
     expect(res.status).toBe(400);
     expect(confirmPaidBookingPayment).not.toHaveBeenCalled();
+  });
+});
+
+function refundEvent(type: string, object: Record<string, unknown>, account: string | null = 'acct_A') {
+  const body = {
+    id: `evt_${type}_${String(object.id)}`,
+    type,
+    created: Math.floor(Date.now() / 1000),
+    ...(account ? { account } : {}),
+    data: { object },
+  };
+  return {
+    request: new Request('https://kersivo.co.uk/api/shop/webhook', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=x' },
+      body: JSON.stringify(body),
+    }),
+  };
+}
+
+describe('POST /api/shop/webhook — booking refund correlation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    verifyStripeWebhookSignature.mockReturnValue({ ok: true });
+    recordStripeWebhookReceived.mockResolvedValue({ alreadyFinalized: false, previousStatus: null });
+    markStripeWebhookStatus.mockResolvedValue(undefined);
+  });
+
+  it.each(['refund.updated', 'refund.failed'])('%s passes event.account, refund id and amount (never metadata)', async (type) => {
+    confirmBookingPaymentRefundFromWebhook.mockResolvedValue({ matched: false, refund: null });
+
+    const res = await POST(
+      refundEvent(type, {
+        id: 're_A',
+        object: 'refund',
+        status: type === 'refund.failed' ? 'failed' : 'succeeded',
+        amount: 2500,
+        payment_intent: 'pi_1',
+        metadata: { stripeAccountId: 'acct_spoofed' },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(confirmBookingPaymentRefundFromWebhook).toHaveBeenCalledWith({
+      stripeRefundId: 're_A',
+      paymentIntentId: 'pi_1',
+      status: type === 'refund.failed' ? 'failed' : 'succeeded',
+      amountPence: 2500,
+      stripeAccountId: 'acct_A',
+    });
+  });
+
+  it('a missing event.account is passed as null', async () => {
+    confirmBookingPaymentRefundFromWebhook.mockResolvedValue({ matched: false, refund: null });
+    await POST(
+      refundEvent('refund.updated', { id: 're_A', object: 'refund', status: 'succeeded', amount: 500 }, null) as never,
+    );
+    expect(confirmBookingPaymentRefundFromWebhook).toHaveBeenCalledWith(
+      expect.objectContaining({ stripeAccountId: null }),
+    );
+  });
+
+  it('integrity mismatch is acknowledged with 200 and no sensitive ids', async () => {
+    confirmBookingPaymentRefundFromWebhook.mockResolvedValue({
+      matched: true,
+      confirmed: false,
+      reason: 'refund_integrity_mismatch',
+      refund: { id: 'ledger_1', bookingId: 'book_1', status: 'REFUND_PENDING', connectAccountId: 'acct_A' },
+    });
+
+    const res = await POST(
+      refundEvent('refund.updated', { id: 're_B', object: 'refund', status: 'succeeded', amount: 500 }, 'acct_B') as never,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      ok: true,
+      matched: true,
+      confirmed: false,
+      reason: 'refund_integrity_mismatch',
+      status: 'REFUND_PENDING',
+    });
+    expect(JSON.stringify(body)).not.toMatch(/acct_|re_|book_1|ledger_1/);
+  });
+
+  it('charge.refunded only correlates individual refund ids via stored ledger ids, never amount_refunded', async () => {
+    confirmBookingPaymentRefundFromWebhook
+      .mockResolvedValueOnce({ matched: false, refund: null })
+      .mockResolvedValueOnce({ matched: true, confirmed: true, refund: { id: 'ledger_1', status: 'REFUNDED' } });
+
+    const res = await POST(
+      refundEvent('charge.refunded', {
+        id: 'ch_1',
+        object: 'charge',
+        payment_intent: 'pi_1',
+        amount_refunded: 3000,
+        refunds: {
+          data: [
+            { id: 're_manual', status: 'succeeded', amount: 500 },
+            { id: 're_ours', status: 'succeeded', amount: 2500 },
+          ],
+        },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(confirmBookingPaymentRefundFromWebhook).toHaveBeenCalledTimes(2);
+    expect(confirmBookingPaymentRefundFromWebhook).toHaveBeenNthCalledWith(1, {
+      stripeRefundId: 're_manual',
+      paymentIntentId: 'pi_1',
+      status: 'succeeded',
+      amountPence: 500,
+      stripeAccountId: 'acct_A',
+      requireStoredRefundId: true,
+    });
+    expect(confirmBookingPaymentRefundFromWebhook).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ stripeRefundId: 're_ours', amountPence: 2500, requireStoredRefundId: true }),
+    );
+    for (const [input] of confirmBookingPaymentRefundFromWebhook.mock.calls) {
+      expect((input as { amountPence: number }).amountPence).not.toBe(3000);
+    }
+    expect((await res.json()).confirmed).toBe(true);
+  });
+
+  it('charge.refunded without identifiable refunds leaves the ledger untouched', async () => {
+    const res = await POST(
+      refundEvent('charge.refunded', { id: 'ch_1', object: 'charge', payment_intent: 'pi_1', amount_refunded: 2500 }) as never,
+    );
+    expect(res.status).toBe(200);
+    expect(confirmBookingPaymentRefundFromWebhook).not.toHaveBeenCalled();
+    expect(await res.json()).toMatchObject({ matched: false, confirmed: false });
   });
 });

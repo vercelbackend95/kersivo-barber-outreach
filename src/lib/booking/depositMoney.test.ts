@@ -263,6 +263,7 @@ describe('confirmDepositRefundFromWebhook', () => {
       paymentIntentId: 'pi_1',
       status: 'succeeded',
       amountPence: 500,
+      stripeAccountId: 'acct_shop',
     });
 
     expect(result.matched).toBe(true);
@@ -281,6 +282,8 @@ describe('confirmDepositRefundFromWebhook', () => {
       stripeRefundId: 're_late',
       paymentIntentId: 'pi_1',
       status: 'succeeded',
+      amountPence: 500,
+      stripeAccountId: 'acct_shop',
     });
 
     expect(result.matched).toBe(true);
@@ -303,6 +306,7 @@ describe('confirmDepositRefundFromWebhook', () => {
       stripeRefundId: 're_1',
       paymentIntentId: 'pi_1',
       status: 'failed',
+      stripeAccountId: 'acct_shop',
     });
 
     expect(result.matched).toBe(true);
@@ -318,6 +322,7 @@ describe('confirmDepositRefundFromWebhook', () => {
       stripeRefundId: 're_bad',
       paymentIntentId: 'pi_1',
       status: 'failed',
+      stripeAccountId: 'acct_shop',
     });
 
     expect(result.matched).toBe(true);

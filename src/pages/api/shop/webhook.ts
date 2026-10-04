@@ -45,7 +45,10 @@ import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
 import { resolveBookingPaymentAccount } from '../../../lib/booking/bookingPaymentAccount';
-import { confirmBookingPaymentRefundFromWebhook } from '../../../lib/booking/depositMoney';
+import {
+  confirmBookingPaymentRefundFromWebhook,
+  type RefundWebhookConfirmation,
+} from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
 import {
@@ -818,56 +821,64 @@ function paymentIntentIdFromObject(
   return null;
 }
 
+function refundWebhookStatus(raw: string): 'succeeded' | 'failed' | 'pending' | 'canceled' {
+  const value = raw.toLowerCase();
+  if (value === 'succeeded') return 'succeeded';
+  if (value === 'failed') return 'failed';
+  if (value === 'canceled' || value === 'cancelled') return 'canceled';
+  return 'pending';
+}
+
+function integerAmount(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : null;
+}
+
 async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
   const obj = event.data.object;
   const objectType = (obj.object ?? '').trim();
 
+  // Account comes only from the authenticated event envelope, never from metadata.
+  const stripeAccountId = event.account?.trim() || null;
+  const paymentIntentId: string | null = paymentIntentIdFromObject(obj.payment_intent);
+
+  let result: RefundWebhookConfirmation = { matched: false, refund: null };
   let stripeRefundId: string | null = null;
-  let paymentIntentId: string | null = paymentIntentIdFromObject(obj.payment_intent);
-  let status: 'succeeded' | 'failed' | 'pending' | 'canceled' = 'pending';
-  let amountPence: number | null =
-    typeof obj.amount === 'number' && Number.isFinite(obj.amount)
-      ? Math.trunc(obj.amount)
-      : typeof obj.amount_refunded === 'number' && Number.isFinite(obj.amount_refunded)
-        ? Math.trunc(obj.amount_refunded)
-        : null;
 
-  if (event.type === 'refund.failed') {
-    status = 'failed';
-    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
-  } else if (event.type === 'refund.updated' || objectType === 'refund') {
-    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
-    const raw = (obj.status ?? '').toLowerCase();
-    if (raw === 'succeeded') status = 'succeeded';
-    else if (raw === 'failed') status = 'failed';
-    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
-    else status = 'pending';
-  } else if (event.type === 'charge.refunded') {
-    // Charge object: prefer the latest refund entry.
-    const latest = obj.refunds?.data?.[0];
-    stripeRefundId = typeof latest?.id === 'string' ? latest.id : null;
-    const raw = (latest?.status ?? 'succeeded').toLowerCase();
-    if (raw === 'failed') status = 'failed';
-    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
-    else if (raw === 'pending') status = 'pending';
-    else status = 'succeeded';
-    if (typeof latest?.amount === 'number' && Number.isFinite(latest.amount)) {
-      amountPence = Math.trunc(latest.amount);
+  if (event.type === 'charge.refunded' && objectType !== 'refund') {
+    // A charge can carry several refunds and `amount_refunded` is cumulative, so only a refund
+    // id already stored on a ledger identifies ours; anything else waits for refund.updated.
+    for (const entry of obj.refunds?.data ?? []) {
+      if (typeof entry?.id !== 'string' || !entry.id.startsWith('re_')) continue;
+      const entryResult = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: entry.id,
+        paymentIntentId,
+        status: refundWebhookStatus(entry.status ?? ''),
+        amountPence: integerAmount(entry.amount),
+        stripeAccountId,
+        requireStoredRefundId: true,
+      });
+      if (entryResult.matched) {
+        result = entryResult;
+        stripeRefundId = entry.id;
+        break;
+      }
     }
-    // Charge.payment_intent is the PI id for Connect deposits.
-    paymentIntentId = paymentIntentId ?? paymentIntentIdFromObject(obj.payment_intent);
+  } else {
+    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
+    result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId,
+      paymentIntentId,
+      status: event.type === 'refund.failed' ? 'failed' : refundWebhookStatus(obj.status ?? ''),
+      amountPence: integerAmount(obj.amount),
+      stripeAccountId,
+    });
   }
-
-  const result = await confirmBookingPaymentRefundFromWebhook({
-    stripeRefundId,
-    paymentIntentId,
-    status,
-    amountPence,
-  });
 
   opsLog('stripe.webhook', 'deposit_refund_event', {
     eventType: event.type,
     matched: result.matched,
+    confirmed: result.confirmed ?? false,
+    reason: result.reason ?? null,
     refundLedgerId: result.refund?.id ?? null,
     bookingId: result.refund?.bookingId ?? null,
     ledgerStatus: result.refund?.status ?? null,
@@ -875,11 +886,14 @@ async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
     paymentIntentId,
   });
 
-  // Unmatched is OK (retail / SaaS / manual Stripe refunds) — acknowledge so Stripe stops retrying.
+  // Unmatched is OK (retail / SaaS / manual Stripe refunds) and integrity mismatches cannot be
+  // repaired by a retry — acknowledge both so Stripe stops retrying.
   return new Response(
     JSON.stringify({
       ok: true,
       matched: result.matched,
+      confirmed: result.confirmed ?? false,
+      ...(result.reason ? { reason: result.reason } : {}),
       status: result.refund?.status ?? null,
     }),
     { status: 200 },
