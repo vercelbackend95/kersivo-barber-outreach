@@ -189,3 +189,22 @@ export async function loadKersivoAccess(
 
   return resolveKersivoAccess(shop, subscription, now);
 }
+
+/**
+ * Per-run memo for batch jobs (e.g. reminder crons) that must respect each shop's current
+ * product capability rather than stale stored booleans.
+ */
+export function shopCapabilityChecker(
+  capability: KersivoCapability,
+  now: Date = new Date(),
+): (shopId: string) => Promise<boolean> {
+  const cache = new Map<string, Promise<boolean>>();
+  return (shopId) => {
+    let entitled = cache.get(shopId);
+    if (!entitled) {
+      entitled = loadKersivoAccess(shopId, now).then((access) => hasKersivoCapability(access, capability));
+      cache.set(shopId, entitled);
+    }
+    return entitled;
+  };
+}

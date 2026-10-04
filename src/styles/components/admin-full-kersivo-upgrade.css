@@ -1,0 +1,70 @@
+/* Full KERSIVO plan locks: upgrade dialog, inline locked section, subtle sidebar lock. */
+
+.admin-full-upgrade__price {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.admin-full-upgrade__fee {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-full-upgrade__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-full-upgrade__actions .admin-demo-lock__cta {
+  align-self: stretch;
+  text-align: center;
+}
+
+.admin-full-upgrade-section {
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 4rem) 1rem;
+}
+
+.admin-full-upgrade-section__card {
+  max-width: 28rem;
+}
+
+.admin-full-upgrade__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-sidebar-link--locked .admin-sidebar-link-label {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.admin-sidebar-link-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.admin-sidebar-link--locked:hover .admin-sidebar-link-lock {
+  opacity: 1;
+}
+
+.admin-view-toggle-lock {
+  margin-left: 0.3rem;
+  opacity: 0.7;
+}

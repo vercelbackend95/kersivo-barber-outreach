@@ -32,7 +32,9 @@ import {
 import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
-import { Clock, ListOrdered, Plus } from '../lucide-react';
+import { Clock, ListOrdered, Lock, Plus } from '../lucide-react';
+import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
+import { isCapabilityLocked } from '@/lib/admin/productLocks';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -1610,8 +1612,17 @@ export default function BookingsAdminPanel({
 
 
 
+  const { gate: productGate, openUpgrade } = useAdminProductLocks();
+  const historyLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
+  const clientsLocked = isCapabilityLocked(productGate, 'clients');
+  const openClientsUpgrade = useCallback(() => openUpgrade('clients'), [openUpgrade]);
+
   const openClientProfileForBooking = useCallback(
     async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
+      if (clientsLocked) {
+        openUpgrade('clients');
+        return;
+      }
       try {
         const clientId = await resolveClientIdForBooking(booking);
         if (!clientId) {
@@ -1623,7 +1634,7 @@ export default function BookingsAdminPanel({
         setError('Could not open client profile.');
       }
     },
-    [],
+    [clientsLocked, openUpgrade],
   );
 
   const scrollToTimelineBooking = useCallback((bookingId: string) => {
@@ -1727,13 +1738,13 @@ export default function BookingsAdminPanel({
         }
       }
 
-      void openClientProfileForBooking(booking);
+      if (!clientsLocked) void openClientProfileForBooking(booking);
       setClientSearchQuery('');
       setDebouncedSearchQuery('');
       setActiveSearchResultIndex(-1);
       searchInputRef.current?.blur();
     },
-    [activeView, mode, openClientProfileForBooking, scrollToListBooking, scrollToTimelineBooking]
+    [activeView, clientsLocked, mode, openClientProfileForBooking, scrollToListBooking, scrollToTimelineBooking]
   );
 
   const handleTimelineBookingClick = useCallback(
@@ -2179,6 +2190,10 @@ export default function BookingsAdminPanel({
 
   const switchBookingsSubview = useCallback(
     async (target: 'dashboard' | 'history') => {
+      if (target === 'history' && historyLocked) {
+        openUpgrade('history');
+        return;
+      }
       if (mode === target || bookingsSubviewTransitionTargetRef.current) return;
 
       const navigate = target === 'history' ? onOpenHistoryWithinBookings : onBackToDashboard;
@@ -2205,7 +2220,7 @@ export default function BookingsAdminPanel({
       if (bookingsSubviewTransitionRunRef.current !== runId) return;
       navigate();
     },
-    [bookingsSubviewMotion, mode, onBackToDashboard, onOpenHistoryWithinBookings, reduceMotion],
+    [bookingsSubviewMotion, historyLocked, mode, onBackToDashboard, onOpenHistoryWithinBookings, openUpgrade, reduceMotion],
   );
 
   useEffect(() => {
@@ -2294,10 +2309,17 @@ export default function BookingsAdminPanel({
                         type="button"
                         role="tab"
                         aria-selected="false"
+                        data-locked={historyLocked ? 'true' : undefined}
                         onClick={() => void switchBookingsSubview('history')}
                       >
                         <ListOrdered className="admin-view-toggle-icon" aria-hidden />
                         <span className="admin-view-toggle-label">History</span>
+                        {historyLocked ? (
+                          <>
+                            <Lock className="admin-view-toggle-lock" width={12} height={12} aria-hidden="true" />
+                            <span className="sr-only"> (Full KERSIVO)</span>
+                          </>
+                        ) : null}
                       </button>
                     </div>
                     <AdminBookingDatePicker
@@ -2632,6 +2654,7 @@ export default function BookingsAdminPanel({
                       isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
                       scrollContainerRef={timelineScrollRef}
                       onBookingClick={handleTimelineBookingClick}
+                      onClientProfileIntercept={clientsLocked ? openClientsUpgrade : undefined}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
                       allowInitialNowScroll={

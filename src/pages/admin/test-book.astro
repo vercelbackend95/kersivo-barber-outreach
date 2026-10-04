@@ -4,6 +4,7 @@ export const prerender = false;
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '@/components/booking/BookingFlow';
 import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
+import { adminPageUpgradeRedirect } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
@@ -24,6 +25,10 @@ import '@/styles/components/skeleton.css';
 const access = await resolveAdminAccess(Astro);
 if (!isTenantAdminAccess(access)) {
   return Astro.redirect('/admin');
+}
+const upgradeRedirect = await adminPageUpgradeRedirect(access, 'MANUAL_BOOKINGS');
+if (upgradeRedirect) {
+  return Astro.redirect(upgradeRedirect);
 }
 
 const shop = await prisma.shopSettings.findUnique({

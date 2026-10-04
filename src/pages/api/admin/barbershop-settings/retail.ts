@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
+import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
 import { canSellRetail, evaluateRetailSelling } from '@/lib/shop/cardPaymentsGate';
 import { isPaidShop } from '@/lib/shop/paidShop';
@@ -58,6 +59,8 @@ export const PATCH: APIRoute = async (ctx) => {
   if (access instanceof Response) return access;
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+  const grant = await requireAdminProductCapability(access, 'RETAIL');
+  if (grant instanceof Response) return grant;
 
   const body = (await ctx.request.json().catch(() => null)) as { retailEnabled?: unknown } | null;
   if (!body || typeof body.retailEnabled !== 'boolean') {

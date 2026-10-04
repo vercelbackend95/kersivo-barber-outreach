@@ -30,7 +30,7 @@ describe('Admin AI assistant compliance surfaces', () => {
 
   it('forwards free-text messages to OpenAI without claiming server-side CPD scrub', () => {
     const api = readRepoFile('../../pages/api/admin/ai/chat.ts');
-    expect(api).toContain("requireAdminPermission(ctx, 'ai.use')");
+    expect(api).toContain("requireAdminPermissionAndCapability(ctx, 'ai.use', 'ASSISTANT')");
     expect(api).toContain('OPENAI_API_KEY');
     expect(api).toContain('chat.completions.create');
     expect(api).not.toContain('sanitizeOpsText');

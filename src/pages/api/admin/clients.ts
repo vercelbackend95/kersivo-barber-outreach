@@ -1,16 +1,16 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '../../../lib/admin/auth';
 import { canViewClientEmail } from '../../../lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import {
   computeClientStats,
   computeReliabilityScore,
 } from './clients/[clientId]/index';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.read');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.read', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const query = ctx.url.searchParams.get('query')?.trim();

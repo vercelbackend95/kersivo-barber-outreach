@@ -2,15 +2,15 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { persistProductOrder } from '../../../../../lib/products/sortOrder';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 const reorderSchema = z.object({
   orderedIds: z.array(z.string().min(1)).min(1)
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   const parsed = reorderSchema.safeParse(await ctx.request.json());

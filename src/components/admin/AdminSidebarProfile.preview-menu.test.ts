@@ -23,7 +23,7 @@ describe('preview sidebar account menu', () => {
     );
     expect(source).toContain("mode?: 'authenticated' | 'guest' | 'preview'");
     expect(source).toContain("const isPreview = mode === 'preview'");
-    expect(source).toContain("isPreview ? 'Preview'");
+    expect(source).toMatch(/isPreview\s*\?\s*'Preview'/);
     expect(source).toContain('!isPreview && shopId');
     expect(source).toContain('{!isPreview ? (');
     expect(source).toContain('Launch My Barbershop');

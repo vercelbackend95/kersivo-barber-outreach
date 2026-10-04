@@ -2,7 +2,6 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
@@ -19,6 +18,7 @@ import {
   isShopMediaMutationBlockedError,
   lockShopForPublicMediaAssociation,
 } from '@/lib/storage/shopPublicMediaGate';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
@@ -120,7 +120,7 @@ async function markRetailOnboardingCompleted(shopId: string, productId: string) 
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   const contentType = ctx.request.headers.get('content-type') ?? '';

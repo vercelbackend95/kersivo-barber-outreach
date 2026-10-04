@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AccountCircle, Ban, Calendar, Globe, LogOut, Package, Store } from '../lucide-react';
+import { AccountCircle, Ban, Calendar, Globe, Lock, LogOut, Package, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
+import type { KersivoProductState } from '@/lib/shop/kersivoAccess';
+import type { FullKersivoFeature } from '@/lib/admin/productLocks';
 import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
 export type AdminProfileUser = {
@@ -35,6 +37,9 @@ type AdminSidebarProfileProps = {
   createShopHref?: string;
   previewWebsiteHref?: string;
   kersivoHomeHref?: string;
+  /** Plan-locked product state for real tenants (from the admin product gate); null otherwise. */
+  productState?: KersivoProductState | null;
+  onLockedFeature?: (feature: FullKersivoFeature) => void;
 };
 
 function openDemoAuthLock(showAuth = true) {
@@ -57,9 +62,17 @@ export default function AdminSidebarProfile({
   createShopHref = '/admin/onboarding',
   previewWebsiteHref = '/demo',
   kersivoHomeHref = '/',
+  productState = null,
+  onLockedFeature,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const isPreview = mode === 'preview';
+  const isFreeBooking = !isGuest && !isPreview && productState === 'FREE_BOOKING';
+  const lockFeature = (feature: FullKersivoFeature): boolean => {
+    if (!isFreeBooking || !onLockedFeature) return false;
+    onLockedFeature(feature);
+    return true;
+  };
   const canManageBilling = isGuest || isPreview || !permissions || permissions.includes('billing.manage');
   const canManageOnboarding =
     isGuest || isPreview || !permissions || permissions.includes('onboarding.manage');
@@ -89,7 +102,15 @@ export default function AdminSidebarProfile({
       ? user?.name?.trim() || 'Owner demo'
       : 'Login'
     : user?.name?.trim() || user?.email?.trim() || (isPreview ? 'My Barbershop' : 'Account');
-  const planLabel = isGuest ? 'Demo' : isPreview ? 'Preview' : billingLabel ? billingLabel : 'Plus';
+  const planLabel = isGuest
+    ? 'Demo'
+    : isPreview
+      ? 'Preview'
+      : isFreeBooking
+        ? 'Free Booking'
+        : billingLabel
+          ? billingLabel
+          : 'Plus';
   const initials = user ? initialsFromUser(user) : isPreview ? initialsFromUser({ name: displayName, email: null, image: null }) : '?';
   const avatarImage = isGuest || isPreview ? null : user?.image ?? null;
 
@@ -362,6 +383,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock(!suppressAuthLock);
       return;
     }
+    if (lockFeature('branded_site')) return;
     window.location.assign('/admin/site-preview');
   };
 
@@ -371,6 +393,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock(!suppressAuthLock);
       return;
     }
+    if (lockFeature('launch')) return;
     window.location.assign('/admin/launch');
   };
 
@@ -395,6 +418,10 @@ export default function AdminSidebarProfile({
       openDemoAuthLock(!suppressAuthLock);
       return;
     }
+    if (isFreeBooking) {
+      window.location.assign('/admin/onboarding?reopen=1');
+      return;
+    }
     void resetRetailJourneyThen('/admin/onboarding?reopen=1');
   };
 
@@ -404,6 +431,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock(!suppressAuthLock);
       return;
     }
+    if (lockFeature('retail')) return;
     void resetRetailJourneyThen('/admin/retail-onboarding');
   };
 
@@ -573,6 +601,12 @@ export default function AdminSidebarProfile({
                     >
                       <Globe width={15} height={15} aria-hidden="true" />
                       Preview website
+                      {isFreeBooking ? (
+                      <>
+                        <Lock className="admin-sidebar-link-lock" width={13} height={13} aria-hidden="true" />
+                        <span className="sr-only"> (Full KERSIVO)</span>
+                      </>
+                    ) : null}
                     </button>
                   ) : null}
                   <button
@@ -583,6 +617,12 @@ export default function AdminSidebarProfile({
                   >
                     <Store width={15} height={15} aria-hidden="true" />
                     Launch My Barbershop
+                    {isFreeBooking ? (
+                      <>
+                        <Lock className="admin-sidebar-link-lock" width={13} height={13} aria-hidden="true" />
+                        <span className="sr-only"> (Full KERSIVO)</span>
+                      </>
+                    ) : null}
                   </button>
                   <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>
@@ -607,6 +647,12 @@ export default function AdminSidebarProfile({
                   >
                     <Package width={15} height={15} aria-hidden="true" />
                     Retail onboarding
+                    {isFreeBooking ? (
+                      <>
+                        <Lock className="admin-sidebar-link-lock" width={13} height={13} aria-hidden="true" />
+                        <span className="sr-only"> (Full KERSIVO)</span>
+                      </>
+                    ) : null}
                   </button>
                   <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>

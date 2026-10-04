@@ -3,11 +3,11 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { shouldIncludeTestActivityInAnalytics } from '../../../../../lib/admin/analyticsMode';
 import { orderAnalyticsWhere } from '../../../../../lib/booking/sandboxBookings';
 import { prisma } from '../../../../../lib/db/client';
 import { toLondonDateBucket } from '../../../../../lib/time/londonDateBucket';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const TZ = 'Europe/London';
 const PAID_STATUSES = ['PAID', 'READY_FOR_PICKUP', 'COLLECTED'] as const;
@@ -256,7 +256,7 @@ async function buildSalesResponse(
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
   try {

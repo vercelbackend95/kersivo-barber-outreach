@@ -7,6 +7,7 @@ import {
 import { prisma } from '../db/client';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../booking/sandboxBookings';
+import { shopCapabilityChecker } from '../shop/kersivoAccess';
 import {
   isReminderClaimSentinel,
   REMINDER_CLAIM_SENTINEL,
@@ -57,7 +58,8 @@ export type EmailReminderEligibilityReason =
   | 'invalid_email'
   | 'already_sent'
   | 'created_too_late'
-  | 'outside_window';
+  | 'outside_window'
+  | 'not_entitled';
 
 /**
  * Kill switch: default on (marketing claim is live).
@@ -386,8 +388,14 @@ export async function processDueAppointmentEmailReminders(
 
   const due = await findDueEmailReminders(now, options?.limit ?? DEFAULT_EMAIL_REMINDER_BATCH_LIMIT);
   result.scanned = due.length;
+  const isEntitled = shopCapabilityChecker('AUTOMATED_EMAIL_REMINDERS', now);
 
   for (const candidate of due) {
+    if (!(await isEntitled(candidate.shopId))) {
+      result.skipped += 1;
+      result.skipReasons.not_entitled = (result.skipReasons.not_entitled ?? 0) + 1;
+      continue;
+    }
     const outcome = await sendAppointmentEmailReminder(candidate, now);
     if (outcome.status === 'sent') {
       result.sent += 1;

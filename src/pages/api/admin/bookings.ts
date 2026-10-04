@@ -3,6 +3,7 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdminContext } from '../../../lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
+import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { requireLinkedBarber, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
@@ -238,6 +239,14 @@ export const GET: APIRoute = async (ctx) => {
     access.role === 'BARBER' && access.barberId ? access.barberId : null;
   const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
+
+  // Day views (date= / range=today) and per-barber stats stay operational on Free; the
+  // history list/search and the unbounded all-bookings list are Full booking history.
+  const dayScoped = Boolean(ctx.url.searchParams.get('date') || ctx.url.searchParams.get('range') === 'today');
+  if (view === 'history' || (view !== 'stats' && !dayScoped)) {
+    const grant = await requireAdminProductCapability(access, 'FULL_BOOKING_HISTORY');
+    if (grant instanceof Response) return grant;
+  }
 
   if (view === 'history') {
     const barberId = ctx.url.searchParams.get('barberId');

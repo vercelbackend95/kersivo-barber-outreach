@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { isTenantAdminAccess, requireAdminPermission } from '@/lib/admin/auth';
+import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
 
 /**
@@ -15,6 +16,8 @@ export const POST: APIRoute = async (ctx) => {
   if (!isTenantAdminAccess(access)) {
     return new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 403 });
   }
+  const grant = await requireAdminProductCapability(access, 'RETAIL');
+  if (grant instanceof Response) return grant;
 
   try {
     await prisma.shopSettings.update({

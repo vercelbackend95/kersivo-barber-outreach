@@ -1,10 +1,10 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { resolveActingBarberId } from '@/lib/admin/rbac/actingBarber';
 import { assertClientAccessible } from '@/lib/admin/rbac/scope';
 import { prisma } from '@/lib/db/client';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 async function assertNoteInClientShop(noteId: string, clientId: string, shopId: string) {
   return prisma.clientNote.findFirst({
@@ -18,7 +18,7 @@ async function assertNoteInClientShop(noteId: string, clientId: string, shopId: 
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.write');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.write', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;

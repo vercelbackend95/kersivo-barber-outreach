@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/shop/kersivoAccess')>();
+  return { ...actual, loadKersivoAccess: async () => actual.accessForState('FULL_KERSIVO') };
+});
 import type { APIContext } from 'astro';
 
 const resolveAdminAccess = vi.fn();

@@ -1,7 +1,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { assertClientAccessible, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import {
   eraseClientPersonalData,
@@ -11,6 +10,7 @@ import { shouldIncludeTestActivityInAnalytics } from '@/lib/admin/analyticsMode'
 import { orderAnalyticsWhere } from '@/lib/booking/sandboxBookings';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 import { prisma } from '@/lib/db/client';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;
@@ -173,7 +173,7 @@ export function computeClientStats(bookings: ScoredBooking[], nowMs = Date.now()
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.read');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.read', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
@@ -286,7 +286,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.write');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.write', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
@@ -477,7 +477,7 @@ export const PATCH: APIRoute = async (ctx) => {
  * Historical bookings/orders are anonymised, not hard-deleted.
  */
 export const DELETE: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.erase');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.erase', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId?.trim();

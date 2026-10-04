@@ -2,7 +2,6 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import OpenAI from 'openai';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { buildSystemPrompt } from '@/lib/admin/ai/systemPrompt';
 import {
   MAX_CHAT_MESSAGES,
@@ -16,6 +15,7 @@ import {
   clientIpFromRequest,
   rateLimitExceededResponse,
 } from '@/lib/rate-limit/durableRateLimit';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {
@@ -51,7 +51,7 @@ function parseMessages(body: unknown): ChatMessage[] | null {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'ai.use');
+  const access = await requireAdminPermissionAndCapability(ctx, 'ai.use', 'ASSISTANT');
   if (access instanceof Response) return access;
 
   const rateKey = access.userId ? `user:${access.userId}` : clientIpFromRequest(ctx.request);

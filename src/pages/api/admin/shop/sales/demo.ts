@@ -1,9 +1,9 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { lockShopCustomerIdentity } from '../../../../../lib/db/customerIdentityLock';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const LEGACY_DEMO_EMAIL_PREFIX = 'demo+shop-sales-';
 const DEMO_EMAIL_TAG = '+demo-';
@@ -28,7 +28,7 @@ function randomInt(min: number, max: number): number {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   if (!import.meta.env.DEV) {

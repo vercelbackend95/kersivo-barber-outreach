@@ -1,11 +1,11 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { assertClientAccessible } from '@/lib/admin/rbac/scope';
 import { prisma } from '@/lib/db/client';
 import { retrievePrivateOnboardingFile } from '@/lib/storage/privateOnboardingBlob';
 import { isPrivateNoteBlobPathname } from '@/lib/storage/storeNoteImage';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -19,7 +19,7 @@ function jsonResponse(body: unknown, status = 200) {
  * Legacy public http(s) note URLs are not served here — use them directly in <img>.
  */
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.read');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.read', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId?.trim();

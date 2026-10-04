@@ -8,6 +8,7 @@ import {
   reminderClaimStaleBefore,
 } from '../booking/reminderClaim';
 import { getSmsProvider, isSmsRemindersEnabled } from './client';
+import { shopCapabilityChecker } from '../shop/kersivoAccess';
 import { normalizePhoneToE164 } from './phone';
 import { buildAppointmentReminderBody } from './templates';
 import { SmsDeliveryError, type SmsProvider } from './types';
@@ -47,7 +48,8 @@ export type ReminderEligibilityReason =
   | 'invalid_phone'
   | 'already_sent'
   | 'created_too_late'
-  | 'outside_window';
+  | 'outside_window'
+  | 'not_entitled';
 
 export function reminderWindowBounds(now: Date): { windowStart: Date; windowEnd: Date } {
   const t = now.getTime();
@@ -340,8 +342,14 @@ export async function processDueAppointmentReminders(
 
   const due = await findDueReminders(now, options?.limit ?? DEFAULT_REMINDER_BATCH_LIMIT);
   result.scanned = due.length;
+  const isEntitled = shopCapabilityChecker('SMS_REMINDERS', now);
 
   for (const candidate of due) {
+    if (!(await isEntitled(candidate.shopId))) {
+      result.skipped += 1;
+      result.skipReasons.not_entitled = (result.skipReasons.not_entitled ?? 0) + 1;
+      continue;
+    }
     const outcome = await sendAppointmentReminder(candidate, now, options?.provider);
     if (outcome.status === 'sent') {
       result.sent += 1;
