@@ -293,15 +293,79 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
 
-    it('AA: FULL cannot be set through the Phase 4B settings endpoint', async () => {
+    it('4C-H: Free may set FULL when Connect is ready (depositsEnabled=false)', async () => {
+      asState('FREE_BOOKING');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue(paidShop);
+      shopSettingsFindUnique.mockResolvedValue(freeShop);
+      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
 
       const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
-      expect(res.status).toBe(400);
-      expect((await res.json()).code).toBe('FULL_BOOKING_PAYMENT_NOT_AVAILABLE');
-      expect(shopSettingsFindUnique).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ depositsEnabled: false, bookingPaymentMode: 'FULL' });
+      expect(shopSettingsUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'shop-1' },
+        data: { depositsEnabled: false, bookingPaymentMode: 'FULL' },
+      });
+    });
+
+    it('4C-I / K: Full may set FULL; FULL writes depositsEnabled=false', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' });
+      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
+
+      const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
+      expect(res.status).toBe(200);
+      expect(shopSettingsUpdateMany.mock.calls[0][0].data).toEqual({
+        depositsEnabled: false,
+        bookingPaymentMode: 'FULL',
+      });
+    });
+
+    it('4C-J: FULL cannot be enabled without ready Connect; SETUP and demo are denied', async () => {
+      asState('FREE_BOOKING');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      for (const shop of [
+        { ...freeShop, stripeConnectAccountId: null },
+        { ...freeShop, stripeConnectChargesEnabled: false },
+      ]) {
+        shopSettingsFindUnique.mockResolvedValue(shop);
+        const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
+        expect(res.status).toBe(400);
+        expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
+      }
+
+      asState('SETUP');
+      shopSettingsFindUnique.mockResolvedValue(freeShop);
+      const setup = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
+      expect(setup.status).toBe(403);
+      expect((await setup.json()).code).toBe('BOOKING_PAYMENTS_NOT_AVAILABLE');
+
+      asState('FULL_KERSIVO');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER', DEMO_SHOP_ID));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, id: DEMO_SHOP_ID });
+      const demo = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
+      expect(demo.status).toBe(403);
+
       expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('4C-M: an explicit bookingPaymentMode request may move FULL → NONE / DEPOSIT', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, bookingPaymentMode: 'FULL' });
+      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
+
+      for (const mode of ['NONE', 'DEPOSIT'] as const) {
+        const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: mode }));
+        expect(res.status).toBe(200);
+        expect((await res.json()).bookingPaymentMode).toBe(mode);
+      }
+      for (const call of shopSettingsUpdateMany.mock.calls) {
+        expect(call[0].where).toEqual({ id: 'shop-1' });
+      }
+      expect(shopSettingsUpdateMany.mock.calls.map((call) => call[0].data)).toEqual([
+        { depositsEnabled: false, bookingPaymentMode: 'NONE' },
+        { depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' },
+      ]);
     });
 
     it('rejects unknown modes and empty payloads', async () => {
@@ -313,12 +377,12 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
 
-    it('S: a stale request cannot overwrite a concurrent FULL mode (409, nothing written)', async () => {
+    it('S / 4C-L: a legacy depositsEnabled request cannot overwrite FULL (409, nothing written)', async () => {
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       shopSettingsFindUnique.mockResolvedValue(paidShop);
       shopSettingsUpdateMany.mockResolvedValue({ count: 0 });
 
-      for (const body of [{ depositsEnabled: false }, { bookingPaymentMode: 'DEPOSIT' }]) {
+      for (const body of [{ depositsEnabled: false }, { depositsEnabled: true }]) {
         const res = await PATCH(jsonCtx('PATCH', body));
         expect(res.status).toBe(409);
         expect((await res.json()).code).toBe('booking_payment_mode_full');

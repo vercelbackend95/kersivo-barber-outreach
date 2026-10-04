@@ -89,9 +89,10 @@ vi.mock('./depositGate', () => ({
 }));
 vi.mock('./depositMoney', () => ({
   depositRefundClientMessage: () => '',
+  bookingPaymentRefundClientMessage: () => '',
   forfeitBookingDeposit: vi.fn(),
-  requestDepositRefund: vi.fn(),
-  attemptDepositRefund: vi.fn(),
+  requestBookingPaymentRefund: vi.fn(),
+  attemptBookingPaymentRefund: vi.fn(),
 }));
 vi.mock('./slots', () => ({
   generateSlots: () => ['10:00', '10:30', '11:00'],

@@ -241,6 +241,8 @@ export type RescheduledBookingEmailInput = BookingEmailBaseInput & {
 
 export type LateDepositRefundEmailInput = BookingEmailBaseInput & {
   depositAmountPence: number;
+  /** FULL upfront payments are described as a "payment", not a "deposit". */
+  paymentKind?: 'deposit' | 'payment';
 };
 
 /** Pure builder: late payment after hold release when the slot was taken. */
@@ -250,11 +252,13 @@ export function buildLateDepositRefundEmail(input: LateDepositRefundEmailInput):
 } {
   const summaryHtml = renderBookingSummary(input);
   const pounds = (Math.max(0, Math.trunc(input.depositAmountPence)) / 100).toFixed(2);
-  const subject = 'Your deposit is being refunded';
+  const noun = input.paymentKind === 'payment' ? 'payment' : 'deposit';
+  const title = noun === 'payment' ? 'Payment refund' : 'Deposit refund';
+  const subject = `Your ${noun} is being refunded`;
   const html = `<p>Hi ${input.fullName},</p>
-  <h2>Deposit refund</h2>
-  <p>We received your deposit payment, but the appointment slot was released after the payment window closed and is no longer available.</p>
-  <p>Your £${pounds} deposit is being refunded to the original payment method. This usually appears within a few business days.</p>
+  <h2>${title}</h2>
+  <p>We received your ${noun}, but the appointment slot was released after the payment window closed and is no longer available.</p>
+  <p>Your £${pounds} ${noun} is being refunded in full to the original payment method. This usually appears within a few business days.</p>
   ${summaryHtml}
   <p>Please book a new appointment if you still need one.</p>`;
 
@@ -315,18 +319,29 @@ export async function sendShopCancelledBookingEmail(
   input: BookingEmailBaseInput & {
     reason?: string;
     /** When set, only mention a refund if Stripe has confirmed it. */
-    depositRefundStatus?: 'refunded' | 'pending' | 'failed' | 'skipped_unpaid' | 'skipped_already' | 'skipped_forfeited' | null;
+    depositRefundStatus?:
+      | 'refunded'
+      | 'pending'
+      | 'failed'
+      | 'skipped_unpaid'
+      | 'skipped_already'
+      | 'skipped_forfeited'
+      | 'skipped_no_refund_due'
+      | null;
+    /** FULL upfront payments are refunded as a "payment", not a "deposit". */
+    refundKind?: 'deposit' | 'payment';
   }
 ) {
   const summaryHtml = renderBookingSummary(input);
   const reasonHtml = input.reason ? `<p><strong>Reason:</strong> ${input.reason}</p>` : '';
+  const refundNoun = input.refundKind === 'payment' ? 'payment' : 'deposit';
   const refundHtml =
     input.depositRefundStatus === 'refunded'
-      ? '<p>Your booking deposit refund has been confirmed.</p>'
+      ? `<p>Your booking ${refundNoun} refund has been confirmed.</p>`
       : input.depositRefundStatus === 'pending'
-        ? '<p>Your booking deposit refund is being processed. You will see it on your card statement shortly.</p>'
+        ? `<p>Your booking ${refundNoun} refund is being processed. You will see it on your card statement shortly.</p>`
         : input.depositRefundStatus === 'failed'
-          ? '<p>We could not complete your deposit refund automatically. The shop will resolve this shortly.</p>'
+          ? `<p>We could not complete your ${refundNoun} refund automatically. The shop will resolve this shortly.</p>`
           : '';
 
   const html = `<p>Hi ${input.fullName},</p>

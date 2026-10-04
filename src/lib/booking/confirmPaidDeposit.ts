@@ -16,12 +16,13 @@ import type { StripeSession } from '../shop/stripe';
 import {
   isBookingCheckoutMetadataType,
   LEGACY_BOOKING_DEPOSIT_METADATA_TYPE,
+  resolveStoredBookingPayment,
 } from './bookingPaymentPolicy';
 import {
   bookingPaymentAccountSnapshot,
   isMissingRequiredPaymentAccountSnapshot,
 } from './bookingPaymentAccount';
-import { attemptDepositRefund, requestDepositRefund } from './depositMoney';
+import { attemptBookingPaymentRefund, requestBookingPaymentRefund } from './depositMoney';
 import { generateToken, hashToken } from './tokens';
 
 export type BookingWithRelations = Booking & {
@@ -336,7 +337,8 @@ async function handleLatePaidDeposit(input: {
         serviceName: updated.serviceNameAtBooking ?? updated.service.name,
         barberName: updated.barber.name,
         startAt: updated.startAt,
-        depositAmountPence: updated.depositAmountPence ?? 0,
+        depositAmountPence: resolveStoredBookingPayment(updated).amountPence,
+        ...(updated.bookingPaymentType === 'FULL' ? { paymentKind: 'payment' as const } : {}),
       });
       const outbound = await enqueueEmail(tx, {
         shopId,
@@ -393,12 +395,12 @@ async function handleLatePaidDeposit(input: {
       sessionId,
       paymentIntentId,
     });
-    const requested = await requestDepositRefund({
+    const requested = await requestBookingPaymentRefund({
       bookingId: claimed.id,
       reason: 'late_payment_slot_lost',
     });
     if (requested.refund) {
-      await attemptDepositRefund(requested.refund.id);
+      await attemptBookingPaymentRefund(requested.refund.id);
     }
     return { outcome: 'late_refunded', booking: claimed };
   }

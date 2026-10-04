@@ -322,7 +322,7 @@ describe('confirmDepositRefundFromWebhook', () => {
 
     expect(result.matched).toBe(true);
     expect(captureOpsMessage).toHaveBeenCalledWith(
-      'Deposit refund failed via Stripe webhook',
+      'Booking payment refund failed via Stripe webhook',
       expect.objectContaining({
         level: 'error',
         tags: expect.objectContaining({

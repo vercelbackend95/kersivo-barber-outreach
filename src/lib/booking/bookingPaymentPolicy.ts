@@ -19,7 +19,6 @@ export function isBookingCheckoutMetadataType(type: string | null | undefined): 
 }
 
 /** Stable API error codes for booking payments. */
-export const FULL_BOOKING_PAYMENT_NOT_AVAILABLE = 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE';
 export const BOOKING_PAYMENT_NOT_READY = 'BOOKING_PAYMENT_NOT_READY';
 
 /** KERSIVO platform fee in basis points (100 bps = 1%). */
@@ -105,6 +104,108 @@ export function buildBookingPaymentSnapshot(params: {
     kersivoPlatformFeeBps: feeBps,
     kersivoPlatformFeePence: calculatePlatformFeePence(amount, feeBps),
   };
+}
+
+/** Late cancel / no-show on a FULL upfront payment: the shop keeps at most £5. */
+export const FULL_PAYMENT_RETAINED_CAP_PENCE = 500;
+
+export const FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED =
+  'FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED';
+
+/** Online payment recorded on a Booking; pre-snapshot rows fall back to the legacy deposit fields. */
+export function resolveStoredBookingPayment(booking: {
+  bookingPaymentType?: BookingPaymentType | null;
+  paymentAmountPence?: number | null;
+  depositAmountPence?: number | null;
+  paymentRequired?: boolean | null;
+}): { type: BookingPaymentType; amountPence: number } {
+  const snapshotType = booking.bookingPaymentType;
+  const type =
+    snapshotType && snapshotType !== 'NONE' ? snapshotType : booking.paymentRequired ? 'DEPOSIT' : 'NONE';
+  if (type === 'NONE') return { type, amountPence: 0 };
+  return { type, amountPence: toPence(booking.paymentAmountPence ?? booking.depositAmountPence ?? 0) };
+}
+
+export type BookingSettlementEvent =
+  | 'client_cancel_in_window'
+  | 'client_cancel_late'
+  | 'no_show'
+  | 'shop_cancel'
+  | 'late_payment_slot_lost';
+
+export type BookingPaymentSettlement = {
+  /** Amount to refund to the customer, in pence. 0 means no Stripe refund. */
+  refundPence: number;
+  /** Amount the shop keeps, in pence. */
+  retainedPence: number;
+};
+
+/**
+ * Single source of truth for what happens to a captured online booking payment.
+ * Integer pence only.
+ *
+ * DEPOSIT: refunded in full on in-window client cancel / shop cancel / lost slot;
+ *          retained in full on late client cancel / no-show.
+ * FULL:    refunded in full on in-window client cancel / shop cancel / lost slot;
+ *          on late client cancel / no-show the shop keeps min(payment, £5), rest refunded.
+ */
+export function resolveBookingPaymentSettlement(params: {
+  bookingPaymentType: BookingPaymentType | null | undefined;
+  paymentAmountPence: number;
+  event: BookingSettlementEvent;
+}): BookingPaymentSettlement {
+  const amount = toPence(params.paymentAmountPence);
+  const type = params.bookingPaymentType ?? 'NONE';
+  if (type === 'NONE' || amount === 0) return { refundPence: 0, retainedPence: 0 };
+
+  switch (params.event) {
+    case 'client_cancel_in_window':
+    case 'shop_cancel':
+    case 'late_payment_slot_lost':
+      return { refundPence: amount, retainedPence: 0 };
+    case 'client_cancel_late':
+    case 'no_show': {
+      if (type === 'FULL') {
+        const retainedPence = Math.min(amount, FULL_PAYMENT_RETAINED_CAP_PENCE);
+        return { refundPence: amount - retainedPence, retainedPence };
+      }
+      return { refundPence: 0, retainedPence: amount };
+    }
+    default:
+      return { refundPence: 0, retainedPence: amount };
+  }
+}
+
+/**
+ * Payment status after confirmed refunds. Returns null for impossible values (negative refund
+ * or a refund above the original online payment) so callers can alert instead of corrupting state.
+ */
+export function paymentStatusAfterRefund(params: {
+  paymentAmountPence: number;
+  refundedAmountPence: number;
+}): 'PAID' | 'PARTIALLY_REFUNDED' | 'REFUNDED' | null {
+  const { paymentAmountPence: payment, refundedAmountPence: refunded } = params;
+  if (!Number.isInteger(payment) || !Number.isInteger(refunded)) return null;
+  if (payment <= 0 || refunded < 0 || refunded > payment) return null;
+  if (refunded === 0) return 'PAID';
+  return refunded === payment ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+}
+
+/**
+ * A paid FULL booking may move date/time/barber, but may only switch to a service with exactly
+ * the paid price — top-ups and partial service-change refunds are not supported.
+ */
+export function fullPaymentBlocksServicePrice(
+  booking: {
+    bookingPaymentType?: BookingPaymentType | null;
+    paymentAmountPence?: number | null;
+    paymentStatus?: string | null;
+  },
+  newServicePricePence: number,
+): boolean {
+  if (booking.bookingPaymentType !== 'FULL') return false;
+  if (booking.paymentStatus !== 'PAID' && booking.paymentStatus !== 'PARTIALLY_REFUNDED') return false;
+  return booking.paymentAmountPence !== newServicePricePence;
 }
 
 /** Payment mode equivalent of the legacy depositsEnabled toggle. */

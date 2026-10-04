@@ -59,8 +59,8 @@ vi.mock('../setup/siteUrl', () => ({
 }));
 
 vi.mock('./depositMoney', () => ({
-  requestDepositRefund: (...args: unknown[]) => requestDepositRefund(...args),
-  attemptDepositRefund: (...args: unknown[]) => attemptDepositRefund(...args),
+  requestBookingPaymentRefund: (...args: unknown[]) => requestDepositRefund(...args),
+  attemptBookingPaymentRefund: (...args: unknown[]) => attemptDepositRefund(...args),
 }));
 
 vi.mock('./tokens', () => ({

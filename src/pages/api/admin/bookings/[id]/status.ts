@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { PaymentStatus } from '@prisma/client';
 import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { accessCan, requireAnyPermission } from '@/lib/admin/rbac/can';
 import { assertBookingAccessible } from '@/lib/admin/rbac/scope';
@@ -16,6 +17,23 @@ import {
   isShopBookingAction,
   type BookingActionRoleScope,
 } from '../../../../../lib/booking/operationalStatus';
+import { markNoShowWithPaymentSettlement } from '../../../../../lib/booking/depositMoney';
+
+const PAID_BOOKING_STATUS_CHANGE_REQUIRES_PAYMENT_ACTION =
+  'PAID_BOOKING_STATUS_CHANGE_REQUIRES_PAYMENT_ACTION';
+
+const CAPTURED_PAYMENT_STATUSES = new Set<PaymentStatus>([
+  PaymentStatus.PAID,
+  PaymentStatus.PARTIALLY_REFUNDED,
+  PaymentStatus.REFUNDED,
+]);
+
+function paymentActionRequired(error: string): Response {
+  return new Response(
+    JSON.stringify({ error, code: PAID_BOOKING_STATUS_CHANGE_REQUIRES_PAYMENT_ACTION }),
+    { status: 409 },
+  );
+}
 
 function roleScopeForAccess(access: { role: string }): BookingActionRoleScope {
   return access.role === 'BARBER' ? 'barber' : 'shop';
@@ -66,12 +84,65 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const booking = await prisma.booking.findFirst({
     where: bookingWhereForShop(bookingId, access.shopId),
-    select: { id: true, status: true, startAt: true, endAt: true },
+    select: {
+      id: true,
+      status: true,
+      startAt: true,
+      endAt: true,
+      paymentRequired: true,
+      paymentStatus: true,
+      depositRefund: { select: { id: true } },
+    },
   });
 
   if (!booking) {
     return new Response(JSON.stringify({ error: 'Booking not found.' }), { status: 404 });
   }
+
+  // Captured online payments are settled only by payment-aware actions; a plain status write
+  // must never cancel or no-show a paid booking without applying the settlement policy.
+  const hasCapturedPayment =
+    Boolean(booking.paymentRequired) &&
+    booking.paymentStatus !== null &&
+    CAPTURED_PAYMENT_STATUSES.has(booking.paymentStatus);
+  if (
+    hasCapturedPayment &&
+    (requestedAction === 'CANCELLED_BY_CLIENT' || requestedAction === 'CANCELLED_BY_SHOP') &&
+    booking.status !== requestedAction
+  ) {
+    return paymentActionRequired(
+      'This booking has an online payment. Use Cancel booking so the payment is settled correctly.',
+    );
+  }
+  const settlesNoShow = requestedAction === 'NO_SHOW' && booking.status !== 'NO_SHOW';
+  if (
+    settlesNoShow &&
+    hasCapturedPayment &&
+    (booking.paymentStatus !== PaymentStatus.PAID || booking.depositRefund)
+  ) {
+    return paymentActionRequired(
+      'This booking’s payment has already been refunded or settled, so it cannot be changed to a no-show.',
+    );
+  }
+
+  const writeStatus = async (status: string) => {
+    const update = () =>
+      prisma.booking.update({
+        where: { id: booking.id },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { status: status as any },
+        select: { id: true, status: true, updatedAt: true },
+      });
+    if (status !== 'NO_SHOW' || !settlesNoShow) return update();
+    let updated: Awaited<ReturnType<typeof update>> | null = null;
+    await markNoShowWithPaymentSettlement({
+      bookingId: booking.id,
+      markNoShow: async () => {
+        updated = await update();
+      },
+    });
+    return updated as unknown as Awaited<ReturnType<typeof update>>;
+  };
 
   // Owner/Manager history sheet: cancel corrections after end (not day-of path).
   const isShopHistoryCorrection =
@@ -85,12 +156,7 @@ export const PATCH: APIRoute = async (ctx) => {
     });
 
   if (isShopHistoryCorrection) {
-    const updated = await prisma.booking.update({
-      where: { id: booking.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { status: requestedAction as any },
-      select: { id: true, status: true, updatedAt: true },
-    });
+    const updated = await writeStatus(requestedAction);
 
     return new Response(
       JSON.stringify({
@@ -117,12 +183,7 @@ export const PATCH: APIRoute = async (ctx) => {
     ).includes(requestedAction)
   ) {
     const storedStatus = requestedAction === 'COMPLETED' ? 'COMPLETED' : requestedAction;
-    const updated = await prisma.booking.update({
-      where: { id: booking.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { status: storedStatus as any },
-      select: { id: true, status: true, updatedAt: true },
-    });
+    const updated = await writeStatus(storedStatus);
 
     return new Response(
       JSON.stringify({
@@ -186,17 +247,7 @@ export const PATCH: APIRoute = async (ctx) => {
     );
   }
 
-  const updated = await prisma.booking.update({
-    where: { id: booking.id },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: { status: requestedAction as any },
-    select: { id: true, status: true, updatedAt: true },
-  });
-
-  if (requestedAction === 'NO_SHOW') {
-    const { forfeitBookingDeposit } = await import('../../../../../lib/booking/depositMoney');
-    await forfeitBookingDeposit(booking.id);
-  }
+  const updated = await writeStatus(requestedAction);
 
   return new Response(JSON.stringify({ booking: updated }));
 };

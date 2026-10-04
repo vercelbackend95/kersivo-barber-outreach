@@ -59,12 +59,11 @@ export function canStartBookingPaymentsOnboarding(params: {
 export type LiveBookingPaymentDecision =
   | { outcome: 'none' }
   | { outcome: 'collect'; snapshot: BookingPaymentSnapshot; stripeConnectAccountId: string }
-  | { outcome: 'full_not_available' }
   | { outcome: 'not_ready'; reason: BookingPaymentsGateReason };
 
 /**
- * Payment requirement for a live public booking. FULL mode is not available yet and fails
- * closed; DEPOSIT never silently falls back to pay-at-shop when payments are not ready.
+ * Payment requirement for a live public booking. DEPOSIT and FULL never silently fall back to
+ * pay-at-shop when payments are not ready.
  */
 export function resolveLiveBookingPayment(params: {
   mode: BookingPaymentMode;
@@ -72,8 +71,7 @@ export function resolveLiveBookingPayment(params: {
   shop: BookingPaymentsShopFields;
   access: KersivoAccess;
 }): LiveBookingPaymentDecision {
-  if (params.mode === 'FULL') return { outcome: 'full_not_available' };
-  if (params.mode !== 'DEPOSIT') return { outcome: 'none' };
+  if (params.mode !== 'DEPOSIT' && params.mode !== 'FULL') return { outcome: 'none' };
 
   const required = resolveRequiredBookingPayment({
     mode: params.mode,

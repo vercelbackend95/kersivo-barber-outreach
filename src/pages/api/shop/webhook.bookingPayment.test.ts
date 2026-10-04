@@ -70,7 +70,7 @@ vi.mock('../../../lib/booking/confirmPaidDeposit', () => ({
 }));
 
 vi.mock('../../../lib/booking/depositMoney', () => ({
-  confirmDepositRefundFromWebhook: vi.fn(),
+  confirmBookingPaymentRefundFromWebhook: vi.fn(),
 }));
 
 vi.mock('../../../lib/booking/depositGate', () => ({

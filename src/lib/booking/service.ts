@@ -32,16 +32,20 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 import {
   BOOKING_PAYMENT_NOT_READY,
   buildBookingPaymentSnapshot,
-  FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+  FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+  fullPaymentBlocksServicePrice,
+  resolveBookingPaymentSettlement,
+  resolveStoredBookingPayment,
 } from './bookingPaymentPolicy';
 import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bookingPaymentsGate';
 import { loadKersivoAccess } from '../shop/kersivoAccess';
 import {
+  attemptBookingPaymentRefund,
+  bookingPaymentRefundClientMessage,
   depositRefundClientMessage,
   forfeitBookingDeposit,
-  requestDepositRefund,
-  attemptDepositRefund,
-  type DepositRefundOutcome,
+  requestBookingPaymentRefund,
+  type BookingPaymentRefundOutcome,
 } from './depositMoney';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
@@ -493,7 +497,7 @@ export async function createInstantBooking(
         ? `${options.notesPrefix} Sandbox booking — not counted in live reports.`
         : null;
 
-    const shopForDeposit = await prisma.shopSettings.findUniqueOrThrow({
+    const shopForPayment = await prisma.shopSettings.findUniqueOrThrow({
       where: { id: service.shopId },
       select: {
         id: true,
@@ -509,34 +513,25 @@ export async function createInstantBooking(
     // Everything below fails BEFORE the booking row (and slot) is created.
     let paymentDecision: LiveBookingPaymentDecision = { outcome: 'none' };
     if (options.allowDepositCollection && !isAdminSandbox) {
-      const mode = shopForDeposit.bookingPaymentMode ?? 'NONE';
-      if (mode === 'FULL') {
-        paymentDecision = { outcome: 'full_not_available' };
-      } else if (mode === 'DEPOSIT') {
+      const mode = shopForPayment.bookingPaymentMode ?? 'NONE';
+      if (mode === 'DEPOSIT' || mode === 'FULL') {
         const access = await loadKersivoAccess(service.shopId);
         paymentDecision = resolveLiveBookingPayment({
           mode,
           servicePricePence: service.pricePence,
-          shop: shopForDeposit,
+          shop: shopForPayment,
           access,
         });
       }
     }
-    if (paymentDecision.outcome === 'full_not_available') {
-      throw new BookingActionError(
-        'Online payment for this booking is not available yet. Please contact the barbershop.',
-        409,
-        FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
-      );
-    }
     if (paymentDecision.outcome === 'not_ready') {
       throw new BookingActionError(
-        'Online booking deposits are not available for this shop right now. Please contact the barbershop.',
+        'Online booking payments are not available for this shop right now. Please contact the barbershop.',
         503,
         BOOKING_PAYMENT_NOT_READY,
       );
     }
-    const collectDeposit = paymentDecision.outcome === 'collect';
+    const collectPayment = paymentDecision.outcome === 'collect';
     const paymentSnapshot =
       paymentDecision.outcome === 'collect'
         ? paymentDecision.snapshot
@@ -544,8 +539,8 @@ export async function createInstantBooking(
 
     // Hold window: floor 5m, default 15m, cap 120m so a DB-only value cannot outlive
     // Stripe's 24h session max in a way that leaves a payable session after release.
-    const holdMins = Math.min(120, Math.max(5, shopForDeposit.pendingConfirmationMins || 15));
-    const paymentExpiresAt = collectDeposit
+    const holdMins = Math.min(120, Math.max(5, shopForPayment.pendingConfirmationMins || 15));
+    const paymentExpiresAt = collectPayment
       ? new Date(Date.now() + holdMins * 60 * 1000)
       : null;
 
@@ -580,14 +575,18 @@ export async function createInstantBooking(
               notes,
               startAt,
               endAt,
-              status: collectDeposit ? BookingStatus.PENDING_PAYMENT : BookingStatus.BOOKED,
+              status: collectPayment ? BookingStatus.PENDING_PAYMENT : BookingStatus.BOOKED,
               confirmTokenHash: null,
               confirmTokenExpiresAt: null,
               manageTokenHash: hashToken(manageToken),
               manageTokenExpiresAt: null,
-              paymentRequired: collectDeposit,
-              depositAmountPence: collectDeposit ? paymentSnapshot.paymentAmountPence : null,
-              paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
+              paymentRequired: collectPayment,
+              // Legacy field: only a real DEPOSIT is a "deposit" — never the full service price.
+              depositAmountPence:
+                collectPayment && paymentSnapshot.bookingPaymentType === 'DEPOSIT'
+                  ? paymentSnapshot.paymentAmountPence
+                  : null,
+              paymentStatus: collectPayment ? PaymentStatus.UNPAID : null,
               paymentExpiresAt,
               ...paymentSnapshot,
               stripeConnectAccountIdAtPayment:
@@ -597,7 +596,7 @@ export async function createInstantBooking(
             include: { service: true, barber: true }
           });
 
-          if (!collectDeposit && !options.skipConfirmationEmail) {
+          if (!collectPayment && !options.skipConfirmationEmail) {
             const rendered = buildInstantBookingConfirmationEmail({
               to: created.email,
               fullName: created.fullName,
@@ -641,7 +640,7 @@ export async function createInstantBooking(
           ...existing,
           manageToken: null as string | null,
           depositRequired: existing.paymentRequired && existing.status === BookingStatus.PENDING_PAYMENT,
-          shopName: shopForDeposit.name,
+          shopName: shopForPayment.name,
           replayed: true as const,
         };
       }
@@ -653,8 +652,8 @@ export async function createInstantBooking(
     return {
       ...booking,
       manageToken,
-      depositRequired: collectDeposit,
-      shopName: shopForDeposit.name,
+      depositRequired: collectPayment,
+      shopName: shopForPayment.name,
       replayed: false as const,
     };
   } catch (error) {
@@ -668,9 +667,26 @@ export async function confirmBookingByToken(token: string) {
 
 }
 
+/** A refund failure must never undo or block the cancellation that already happened. */
+async function attemptRefundWithoutBlocking(
+  refundId: string,
+  bookingId: string,
+): Promise<BookingPaymentRefundOutcome> {
+  try {
+    const attempted = await attemptBookingPaymentRefund(refundId);
+    return attempted.outcome;
+  } catch (error) {
+    console.error('[booking-payment] refund attempt threw after cancel', {
+      bookingId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return 'pending';
+  }
+}
+
 export async function cancelByManageToken(token: string): Promise<{
   booking: Awaited<ReturnType<typeof prisma.booking.update>>;
-  refundOutcome: DepositRefundOutcome | null;
+  refundOutcome: BookingPaymentRefundOutcome | null;
   message: string;
 }> {
   try {
@@ -693,46 +709,58 @@ export async function cancelByManageToken(token: string): Promise<{
     }
 
     const inWindow = canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours);
-    if (!inWindow) {
-      // Outside window with paid deposit → forfeit, still allow cancel record.
-      if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
-        await forfeitBookingDeposit(booking.id);
-        const updated = await prisma.booking.update({
-          where: { id: booking.id },
-          data: { status: BookingStatus.CANCELLED_BY_CLIENT },
-        });
-        return {
-          booking: updated,
-          refundOutcome: 'skipped_forfeited',
-          message: depositRefundClientMessage('skipped_forfeited'),
-        };
-      }
-      throw new BookingActionError('Cancellation window has passed.', 409);
-    }
+    const paid = booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID;
+    const stored = resolveStoredBookingPayment(booking);
 
-    let refundOutcome: DepositRefundOutcome | null = null;
-    if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
-      // Write-ahead ledger before status change so a crash mid-cancel still retries.
-      const requested = await requestDepositRefund({
-        bookingId: booking.id,
-        reason: 'client_cancel_in_window',
+    if (!paid) {
+      if (!inWindow) throw new BookingActionError('Cancellation window has passed.', 409);
+      const updated = await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: BookingStatus.CANCELLED_BY_CLIENT },
       });
-      if (requested.refund) {
-        const attempted = await attemptDepositRefund(requested.refund.id);
-        refundOutcome = attempted.outcome;
-      } else {
-        refundOutcome = requested.outcome;
-      }
+      return { booking: updated, refundOutcome: null, message: depositRefundClientMessage(null) };
     }
 
+    if (!inWindow && stored.type !== 'FULL') {
+      // Late cancel with a paid deposit → forfeit, still allow cancel record.
+      await forfeitBookingDeposit(booking.id);
+      const updated = await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: BookingStatus.CANCELLED_BY_CLIENT },
+      });
+      return {
+        booking: updated,
+        refundOutcome: 'skipped_forfeited',
+        message: depositRefundClientMessage('skipped_forfeited'),
+      };
+    }
+
+    const settlement = resolveBookingPaymentSettlement({
+      bookingPaymentType: stored.type,
+      paymentAmountPence: stored.amountPence,
+      event: inWindow ? 'client_cancel_in_window' : 'client_cancel_late',
+    });
+
+    // Write-ahead ledger before status change so a crash mid-cancel still retries.
+    const requested = await requestBookingPaymentRefund({
+      bookingId: booking.id,
+      reason: inWindow ? 'client_cancel_in_window' : 'client_cancel_late',
+    });
     const updated = await prisma.booking.update({
       where: { id: booking.id },
       data: { status: BookingStatus.CANCELLED_BY_CLIENT },
     });
+    let refundOutcome: BookingPaymentRefundOutcome = requested.outcome;
+    if (requested.refund) {
+      refundOutcome = await attemptRefundWithoutBlocking(requested.refund.id, booking.id);
+    }
     return {
       booking: updated,
       refundOutcome,
-      message: depositRefundClientMessage(refundOutcome),
+      message: bookingPaymentRefundClientMessage(refundOutcome, {
+        bookingPaymentType: stored.type,
+        partial: settlement.retainedPence > 0,
+      }),
     };
   } catch (error) {
     rethrowBookingQuotaError(error);
@@ -761,10 +789,11 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
     );
   }
 
-  let refundOutcome: DepositRefundOutcome | null = null;
+  let refundOutcome: BookingPaymentRefundOutcome | null = null;
   if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
+    const refundNoun = resolveStoredBookingPayment(booking).type === 'FULL' ? 'Payment' : 'Deposit';
     // Write-ahead ledger BEFORE status change so money path is durable even if cancel crashes.
-    const requested = await requestDepositRefund({
+    const requested = await requestBookingPaymentRefund({
       bookingId: booking.id,
       reason: 'shop_cancel',
     });
@@ -784,8 +813,7 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
     });
 
     if (requested.refund) {
-      const attempted = await attemptDepositRefund(requested.refund.id);
-      refundOutcome = attempted.outcome;
+      refundOutcome = await attemptRefundWithoutBlocking(requested.refund.id, booking.id);
     }
 
     try {
@@ -802,6 +830,7 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
         startAt: updatedBooking.startAt,
         reason: input.reason,
         depositRefundStatus: refundOutcome,
+        ...(refundNoun === 'Payment' ? { refundKind: 'payment' as const } : {}),
       });
     } catch (error) {
       // Intentional soft-fail: shop cancellation is the business outcome.
@@ -821,11 +850,11 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
       refundOutcome,
       message:
         refundOutcome === 'refunded'
-          ? 'Booking cancelled. Deposit refund confirmed.'
+          ? `Booking cancelled. ${refundNoun} refund confirmed.`
           : refundOutcome === 'pending'
-            ? 'Booking cancelled. Deposit refund is being processed.'
+            ? `Booking cancelled. ${refundNoun} refund is being processed.`
             : refundOutcome === 'failed'
-              ? 'Booking cancelled. Deposit refund failed — use Retry refund.'
+              ? `Booking cancelled. ${refundNoun} refund failed — use Retry refund.`
               : 'Booking cancelled successfully.',
     };
   }
@@ -879,11 +908,18 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
   try {
     const existing = await resolveManageTokenBooking(input.token);
     if (existing.status === BookingStatus.PENDING_PAYMENT) {
-      throw new BookingActionError('Finish deposit payment before rescheduling.', 409);
+      throw new BookingActionError('Finish payment before rescheduling.', 409);
     }
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (service.shopId !== existing.barber.shopId) {
       throw new BookingActionError('Selected service is not available for this booking.', 403);
+    }
+    if (fullPaymentBlocksServicePrice(existing, service.pricePence)) {
+      throw new BookingActionError(
+        'This booking was paid in full. You can change the date, time or barber, or choose a service with the same price.',
+        409,
+        FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+      );
     }
     if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) {
       throw new BookingActionError('Reschedule window has passed.', 409);

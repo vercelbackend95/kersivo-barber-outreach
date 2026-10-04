@@ -87,9 +87,10 @@ vi.mock('@/lib/admin/shopPublicActivity', () => ({
 }));
 vi.mock('./depositMoney', () => ({
   depositRefundClientMessage: () => '',
+  bookingPaymentRefundClientMessage: () => '',
   forfeitBookingDeposit: vi.fn(),
-  requestDepositRefund: vi.fn(),
-  attemptDepositRefund: vi.fn(),
+  requestBookingPaymentRefund: vi.fn(),
+  attemptBookingPaymentRefund: vi.fn(),
 }));
 vi.mock('./slots', () => ({
   generateSlots: () => ['10:00', '10:30', '11:00'],
@@ -341,17 +342,86 @@ describe('createInstantBooking — live booking payment runtime', () => {
     expect(bookingCreate).not.toHaveBeenCalled();
   });
 
-  it('G: FULL mode returns FULL_BOOKING_PAYMENT_NOT_AVAILABLE and creates no booking', async () => {
-    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'FULL' });
+  describe('Phase 4C: FULL upfront payment', () => {
+    const fullModeShop = (overrides: Record<string, unknown> = {}) => ({
+      ...baseShop,
+      bookingPaymentMode: 'FULL' as const,
+      stripeConnectAccountId: 'acct_full_mode',
+      ...overrides,
+    });
 
-    for (const state of ['FREE_BOOKING', 'FULL_KERSIVO'] as const) {
-      asState(state);
-      const error = await createInstantBooking(bookingInput('full-mode'), publicOptions).catch((e) => e);
-      expect(error).toBeInstanceOf(BookingActionError);
-      expect(error).toMatchObject({ statusCode: 409, code: 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE' });
-    }
-    expect(transaction).not.toHaveBeenCalled();
-    expect(bookingCreate).not.toHaveBeenCalled();
+    it('4C-A: Free + FULL + £30 → PENDING_PAYMENT, 3000p, 1% / 30p fee, account snapshot, no deposit field', async () => {
+      findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
+
+      const result = await createInstantBooking(bookingInput('full-free-30'), publicOptions);
+
+      expect(result.depositRequired).toBe(true);
+      expect(createdData()).toMatchObject({
+        status: BookingStatus.PENDING_PAYMENT,
+        paymentRequired: true,
+        paymentStatus: PaymentStatus.UNPAID,
+        depositAmountPence: null,
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        kersivoPlatformFeeBps: 100,
+        kersivoPlatformFeePence: 30,
+        stripeConnectAccountIdAtPayment: 'acct_full_mode',
+      });
+      expect(enqueueEmail).not.toHaveBeenCalled();
+    });
+
+    it('4C-B: Full KERSIVO + FULL + £30 → 3000p, 0 bps, 0 fee', async () => {
+      asState('FULL_KERSIVO');
+      findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
+
+      await createInstantBooking(bookingInput('full-full-30'), publicOptions);
+
+      expect(createdData()).toMatchObject({
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        kersivoPlatformFeeBps: 0,
+        kersivoPlatformFeePence: 0,
+        depositAmountPence: null,
+      });
+    });
+
+    it('4C-C: Free + FULL + £3 → 300p, 3p fee', async () => {
+      findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
+      findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
+
+      await createInstantBooking(bookingInput('full-free-3'), publicOptions);
+
+      expect(createdData()).toMatchObject({
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 300,
+        kersivoPlatformFeePence: 3,
+        depositAmountPence: null,
+      });
+    });
+
+    it('4C-D: FULL + £0 service → BOOKED, no Stripe', async () => {
+      findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
+      findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 0 });
+
+      const result = await createInstantBooking(bookingInput('full-zero'), publicOptions);
+
+      expect(result.depositRequired).toBe(false);
+      expect(createdData()).toMatchObject(NONE_SNAPSHOT);
+    });
+
+    it('4C-E: FULL with Connect missing / not ready fails closed — never pay-at-shop, no booking', async () => {
+      for (const shop of [
+        fullModeShop({ stripeConnectAccountId: null }),
+        fullModeShop({ stripeConnectChargesEnabled: false }),
+      ]) {
+        findUniqueOrThrowShop.mockResolvedValue(shop);
+        const error = await createInstantBooking(bookingInput('full-no-connect'), publicOptions).catch((e) => e);
+        expect(error).toBeInstanceOf(BookingActionError);
+        expect(error).toMatchObject({ statusCode: 503, code: 'BOOKING_PAYMENT_NOT_READY' });
+      }
+      expect(transaction).not.toHaveBeenCalled();
+      expect(bookingCreate).not.toHaveBeenCalled();
+    });
   });
 
   it('£0 service never requires Stripe even in DEPOSIT mode', async () => {

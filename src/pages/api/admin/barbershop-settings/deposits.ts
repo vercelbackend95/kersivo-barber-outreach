@@ -10,7 +10,7 @@ import {
   BOOKING_PAYMENT_NOT_READY,
   bookingPaymentModeForLegacyDepositToggle,
   calculatePlatformFeePence,
-  FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+  FULL_PAYMENT_RETAINED_CAP_PENCE,
   kersivoPlatformFeeBps,
 } from '@/lib/booking/bookingPaymentPolicy';
 import {
@@ -117,7 +117,8 @@ export const GET: APIRoute = async (ctx) => {
     }),
     bookingPaymentsReady: gate.ok,
     bookingPaymentsGateReason: gate.reason,
-    collectReady: gate.ok && shop.bookingPaymentMode === 'DEPOSIT',
+    collectReady:
+      gate.ok && (shop.bookingPaymentMode === 'DEPOSIT' || shop.bookingPaymentMode === 'FULL'),
     platformFeeBps,
     platformFeeExamplePence:
       platformFeeBps === null ? null : calculatePlatformFeePence(BOOKING_DEPOSIT_PENCE, platformFeeBps),
@@ -135,46 +136,42 @@ export const GET: APIRoute = async (ctx) => {
       refundInWindow: true,
       forfeitOutsideWindowOrNoShow: true,
       shopCancelRefunds: true,
+      fullPaymentRetainedOnLateCancelOrNoShowPence: FULL_PAYMENT_RETAINED_CAP_PENCE,
     },
   });
 };
 
 type ModeRequest =
-  | { ok: true; mode: Extract<BookingPaymentMode, 'NONE' | 'DEPOSIT'> }
+  | { ok: true; mode: BookingPaymentMode; legacy: boolean }
   | { ok: false; response: Response };
 
 function parseModeRequest(body: { bookingPaymentMode?: unknown; depositsEnabled?: unknown } | null): ModeRequest {
   if (body && body.bookingPaymentMode !== undefined) {
-    if (body.bookingPaymentMode === 'FULL') {
-      return {
-        ok: false,
-        response: json(
-          {
-            error: 'Full upfront payment is not available yet.',
-            code: FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
-          },
-          400,
-        ),
-      };
+    if (
+      body.bookingPaymentMode === 'NONE' ||
+      body.bookingPaymentMode === 'DEPOSIT' ||
+      body.bookingPaymentMode === 'FULL'
+    ) {
+      return { ok: true, mode: body.bookingPaymentMode, legacy: false };
     }
-    if (body.bookingPaymentMode === 'NONE' || body.bookingPaymentMode === 'DEPOSIT') {
-      return { ok: true, mode: body.bookingPaymentMode };
-    }
-    return { ok: false, response: json({ error: 'bookingPaymentMode must be NONE or DEPOSIT.' }, 400) };
+    return { ok: false, response: json({ error: 'bookingPaymentMode must be NONE, DEPOSIT or FULL.' }, 400) };
   }
   if (body && typeof body.depositsEnabled === 'boolean') {
-    const mode = bookingPaymentModeForLegacyDepositToggle(body.depositsEnabled);
-    return { ok: true, mode: mode === 'DEPOSIT' ? 'DEPOSIT' : 'NONE' };
+    return { ok: true, mode: bookingPaymentModeForLegacyDepositToggle(body.depositsEnabled), legacy: true };
   }
   return {
     ok: false,
-    response: json({ error: 'bookingPaymentMode (NONE or DEPOSIT) or depositsEnabled boolean required.' }, 400),
+    response: json(
+      { error: 'bookingPaymentMode (NONE, DEPOSIT or FULL) or depositsEnabled boolean required.' },
+      400,
+    ),
   };
 }
 
 /**
- * Set the booking payment mode (NONE / DEPOSIT only in this phase). Owner / billing.manage only.
- * Legacy `{ depositsEnabled }` payloads map false → NONE, true → DEPOSIT.
+ * Set the booking payment mode (NONE / DEPOSIT / FULL). Owner / billing.manage only.
+ * Legacy `{ depositsEnabled }` payloads map false → NONE, true → DEPOSIT and can never
+ * overwrite an existing FULL mode — only an explicit `bookingPaymentMode` may leave FULL.
  */
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
@@ -189,6 +186,7 @@ export const PATCH: APIRoute = async (ctx) => {
   const parsed = parseModeRequest(body);
   if (!parsed.ok) return parsed.response;
   const bookingPaymentMode = parsed.mode;
+  const requiresOnlinePayment = bookingPaymentMode === 'DEPOSIT' || bookingPaymentMode === 'FULL';
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
@@ -200,13 +198,13 @@ export const PATCH: APIRoute = async (ctx) => {
   });
   if (!shop) return json({ error: 'Shop not found.' }, 404);
 
-  if (bookingPaymentMode === 'DEPOSIT') {
+  if (requiresOnlinePayment) {
     const kersivoAccess = await loadKersivoAccess(shop.id);
     const gate = evaluateBookingPayments({ shop, access: kersivoAccess });
     if (gate.reason === 'demo_shop' || gate.reason === 'no_booking_payments_capability') {
       return json(
         {
-          error: 'Booking deposits are available once KERSIVO Free or Full is active.',
+          error: 'Online booking payments are available once KERSIVO Free or Full is active.',
           code: BOOKING_PAYMENTS_NOT_AVAILABLE,
         },
         403,
@@ -215,7 +213,7 @@ export const PATCH: APIRoute = async (ctx) => {
     if (!gate.ok) {
       return json(
         {
-          error: 'Connect Stripe and finish onboarding before requiring deposits.',
+          error: 'Connect Stripe and finish onboarding before requiring online payments.',
           code: BOOKING_PAYMENT_NOT_READY,
         },
         400,
@@ -223,14 +221,15 @@ export const PATCH: APIRoute = async (ctx) => {
     }
   }
 
-  // depositsEnabled is kept in sync (DEPOSIT ⇔ true) in the same UPDATE. The mode guard means a
-  // stale request can never overwrite a FULL mode that appears concurrently.
+  // depositsEnabled is kept in sync (only DEPOSIT ⇔ true) in the same UPDATE. Legacy toggle
+  // requests are guarded so a stale/legacy client can never overwrite a FULL mode.
   const depositsEnabled = bookingPaymentMode === 'DEPOSIT';
   const result = await prisma.shopSettings.updateMany({
-    where: { id: shop.id, bookingPaymentMode: { not: 'FULL' } },
+    where: parsed.legacy ? { id: shop.id, bookingPaymentMode: { not: 'FULL' } } : { id: shop.id },
     data: { depositsEnabled, bookingPaymentMode },
   });
   if (result.count === 0) {
+    if (!parsed.legacy) return json({ error: 'Shop not found.' }, 404);
     return json(
       {
         error: 'Full upfront payment is enabled. Change the booking payment mode instead of the deposit toggle.',

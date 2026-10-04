@@ -8,20 +8,52 @@ import { prisma } from '../db/client';
 import { captureOpsException, captureOpsMessage } from '../ops/sentry';
 import { refundPaymentIntent } from '../shop/stripeConnect';
 import { resolveBookingPaymentAccount } from './bookingPaymentAccount';
+import {
+  paymentStatusAfterRefund,
+  resolveBookingPaymentSettlement,
+  resolveStoredBookingPayment,
+  type BookingSettlementEvent,
+} from './bookingPaymentPolicy';
 
-export type DepositRefundReason =
-  | 'client_cancel_in_window'
-  | 'shop_cancel'
-  | 'manual_retry'
-  | 'late_payment_slot_lost';
+/** Ledger reason; every value except manual_retry is a settlement event. */
+export type BookingPaymentRefundReason = BookingSettlementEvent | 'manual_retry';
+/** @deprecated Use BookingPaymentRefundReason. */
+export type DepositRefundReason = BookingPaymentRefundReason;
 
-export type DepositRefundOutcome =
+export type BookingPaymentRefundOutcome =
   | 'refunded'
   | 'pending'
   | 'failed'
   | 'skipped_unpaid'
   | 'skipped_already'
-  | 'skipped_forfeited';
+  | 'skipped_forfeited'
+  /** Settlement leaves nothing to refund (e.g. FULL £3 late cancel) — no Stripe call. */
+  | 'skipped_no_refund_due';
+/** @deprecated Use BookingPaymentRefundOutcome. */
+export type DepositRefundOutcome = BookingPaymentRefundOutcome;
+
+type StoredPaymentFields = {
+  bookingPaymentType?: Parameters<typeof resolveStoredBookingPayment>[0]['bookingPaymentType'];
+  paymentAmountPence?: number | null;
+  depositAmountPence?: number | null;
+  paymentRequired?: boolean | null;
+};
+
+/**
+ * Customer refund owed for a ledger reason. Operator retries without a ledger only re-issue a
+ * full refund for deposits; FULL payments must go through a settlement-backed action.
+ */
+function refundAmountForReason(booking: StoredPaymentFields, reason: BookingPaymentRefundReason): number {
+  const stored = resolveStoredBookingPayment(booking);
+  if (reason === 'manual_retry') {
+    return stored.type === 'FULL' ? 0 : stored.amountPence;
+  }
+  return resolveBookingPaymentSettlement({
+    bookingPaymentType: stored.type,
+    paymentAmountPence: stored.amountPence,
+    event: reason,
+  }).refundPence;
+}
 
 const DEFAULT_MAX_ATTEMPTS = 6;
 const BASE_BACKOFF_MS = 60_000;
@@ -40,20 +72,56 @@ function buildIdempotencyKey(bookingId: string): string {
   return `deposit_refund_${bookingId}`;
 }
 
-/** `refundedAmountPence` is set (not incremented) from the confirmed ledger row, so replays are idempotent. */
+/**
+ * `refundedAmountPence` is set (not incremented) from the confirmed ledger row, so replays are
+ * idempotent. Status is derived from the confirmed amount: equal to the payment → REFUNDED,
+ * less → PARTIALLY_REFUNDED. `depositRefundedAt` stays a deposit/legacy-only marker.
+ * Returns false (and alerts) when the amount is impossible for the booking's payment.
+ */
 async function markBookingRefunded(
   bookingId: string,
   refundedAmountPence: number,
   now = new Date(),
-): Promise<void> {
+): Promise<boolean> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      bookingPaymentType: true,
+      paymentAmountPence: true,
+      depositAmountPence: true,
+      paymentRequired: true,
+      barber: { select: { shopId: true } },
+    },
+  });
+  const stored = resolveStoredBookingPayment(booking ?? {});
+  const paymentStatus = paymentStatusAfterRefund({
+    paymentAmountPence: stored.amountPence,
+    refundedAmountPence,
+  });
+  if (!booking || !paymentStatus) {
+    captureOpsMessage('Booking refund amount is impossible for the original payment', {
+      level: 'error',
+      route: 'depositMoney.markBookingRefunded',
+      shopId: booking?.barber?.shopId,
+      opsAlert: true,
+      tags: {
+        bookingId,
+        refundedAmountPence: String(refundedAmountPence),
+        paymentAmountPence: String(stored.amountPence),
+      },
+    });
+    return false;
+  }
+  const isFullRefund = paymentStatus === PaymentStatus.REFUNDED;
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
-      paymentStatus: PaymentStatus.REFUNDED,
-      depositRefundedAt: now,
+      paymentStatus,
       refundedAmountPence,
+      ...(stored.type !== 'FULL' && isFullRefund ? { depositRefundedAt: now } : {}),
     },
   });
+  return true;
 }
 
 async function alertRefundFailed(row: BookingDepositRefund, errorMessage: string): Promise<void> {
@@ -67,13 +135,17 @@ async function alertRefundFailed(row: BookingDepositRefund, errorMessage: string
 
 /**
  * Write-ahead: create (or return existing) ledger row before calling Stripe.
- * Does not call Stripe.
+ * The ledger amount is the actual customer refund from the settlement policy (e.g. a late FULL
+ * £30 cancel stores 2500, not 3000). One ledger row per booking. Does not call Stripe.
  */
-export async function requestDepositRefund(input: {
+export async function requestBookingPaymentRefund(input: {
   bookingId: string;
-  reason: DepositRefundReason;
+  reason: BookingPaymentRefundReason;
 }): Promise<
-  | { outcome: 'skipped_unpaid' | 'skipped_already' | 'skipped_forfeited'; refund: null }
+  | {
+      outcome: 'skipped_unpaid' | 'skipped_already' | 'skipped_forfeited' | 'skipped_no_refund_due';
+      refund: null;
+    }
   | { outcome: 'pending'; refund: BookingDepositRefund }
 > {
   const booking = await prisma.booking.findUnique({
@@ -90,9 +162,16 @@ export async function requestDepositRefund(input: {
   });
 
   if (!booking) return { outcome: 'skipped_unpaid', refund: null };
+  if (
+    booking.paymentStatus === PaymentStatus.REFUNDED ||
+    booking.paymentStatus === PaymentStatus.PARTIALLY_REFUNDED
+  ) {
+    return { outcome: 'skipped_already', refund: null };
+  }
   if (!booking.paymentRequired || booking.paymentStatus !== PaymentStatus.PAID) {
     return { outcome: 'skipped_unpaid', refund: null };
   }
+  // depositForfeitedAt / depositRefundedAt are deposit + legacy markers; FULL never sets them.
   if (booking.depositForfeitedAt) {
     return { outcome: 'skipped_forfeited', refund: null };
   }
@@ -101,6 +180,13 @@ export async function requestDepositRefund(input: {
   }
   if (booking.depositRefund?.status === DepositRefundStatus.REFUNDED) {
     return { outcome: 'skipped_already', refund: null };
+  }
+  if (booking.depositRefund) {
+    return { outcome: 'pending', refund: booking.depositRefund };
+  }
+  const amountPence = refundAmountForReason(booking, input.reason);
+  if (amountPence <= 0) {
+    return { outcome: 'skipped_no_refund_due', refund: null };
   }
   // The PaymentIntent lives on the account the booking was paid on — never a later shop account.
   const paymentAccount = resolveBookingPaymentAccount({
@@ -117,11 +203,6 @@ export async function requestDepositRefund(input: {
       ? 'Missing stripePaymentIntentId on paid booking.'
       : 'Missing Stripe Connect payment account snapshot on fee-bearing booking.';
     // Create a FAILED ledger so ops can see the gap; never refund via a guessed account.
-    const amountPence = booking.depositAmountPence ?? 0;
-    const existing = booking.depositRefund;
-    if (existing) {
-      return { outcome: 'pending', refund: existing };
-    }
     const failed = await prisma.bookingDepositRefund.create({
       data: {
         bookingId: booking.id,
@@ -142,11 +223,6 @@ export async function requestDepositRefund(input: {
     return { outcome: 'pending', refund: failed };
   }
 
-  if (booking.depositRefund) {
-    return { outcome: 'pending', refund: booking.depositRefund };
-  }
-
-  const amountPence = booking.depositAmountPence ?? 0;
   const refund = await prisma.bookingDepositRefund.create({
     data: {
       bookingId: booking.id,
@@ -169,8 +245,8 @@ export async function requestDepositRefund(input: {
 /**
  * Attempt Stripe refund for an existing ledger row. Idempotent via Stripe Idempotency-Key.
  */
-export async function attemptDepositRefund(refundId: string): Promise<{
-  outcome: DepositRefundOutcome;
+export async function attemptBookingPaymentRefund(refundId: string): Promise<{
+  outcome: BookingPaymentRefundOutcome;
   refund: BookingDepositRefund | null;
 }> {
   const row = await prisma.bookingDepositRefund.findUnique({ where: { id: refundId } });
@@ -220,8 +296,18 @@ export async function attemptDepositRefund(refundId: string): Promise<{
   }
 
   try {
-    // Free bookings carry a KERSIVO fee; a full deposit refund must return it too.
-    // Historical / Full bookings have a 0 snapshot and never request a fee refund.
+    if (!Number.isInteger(row.amountPence) || row.amountPence <= 0) {
+      // An amount-less Stripe refund would refund the whole PaymentIntent; never guess.
+      const lastError = 'Refund ledger amount must be a positive integer.';
+      const updated = await prisma.bookingDepositRefund.update({
+        where: { id: row.id },
+        data: { status: DepositRefundStatus.REFUND_FAILED, lastError, nextAttemptAt: null },
+      });
+      await alertRefundFailed(updated, lastError);
+      return { outcome: 'failed', refund: updated };
+    }
+    // Free bookings carry a KERSIVO fee; Stripe returns it proportionally for full and partial
+    // refunds when refund_application_fee is set. Full bookings have a 0 fee and never set it.
     const paymentSnapshot = await prisma.booking.findUnique({
       where: { id: row.bookingId },
       select: { kersivoPlatformFeePence: true, stripeConnectAccountIdAtPayment: true },
@@ -247,7 +333,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
     const result = await refundPaymentIntent(row.stripePaymentIntentId, {
       stripeAccount: row.connectAccountId ?? undefined,
       reverseTransfer: true,
-      amount: row.amountPence > 0 ? row.amountPence : undefined,
+      amount: row.amountPence,
       idempotencyKey: row.idempotencyKey,
       ...(refundApplicationFee ? { refundApplicationFee: true } : {}),
       allowPlatformLegacyFallback: !hasAccountSnapshot,
@@ -285,7 +371,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
         },
       });
       await markBookingRefunded(row.bookingId, updated.amountPence, confirmedAt);
-      console.info('[deposit] refund ok', {
+      console.info('[booking-payment] refund ok', {
         bookingId: row.bookingId,
         reason: row.reason,
         mode: result.mode,
@@ -313,7 +399,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
     const attempts = row.attempts + 1;
     const exhausted = attempts >= row.maxAttempts;
 
-    console.error('[deposit] refund failed', {
+    console.error('[booking-payment] refund failed', {
       bookingId: row.bookingId,
       reason: row.reason,
       connectAccountId: row.connectAccountId,
@@ -344,7 +430,7 @@ export async function attemptDepositRefund(refundId: string): Promise<{
  * Confirm / fail a ledger row from Stripe webhook events.
  * Never demotes REFUNDED back to PENDING/FAILED.
  */
-export async function confirmDepositRefundFromWebhook(input: {
+export async function confirmBookingPaymentRefundFromWebhook(input: {
   stripeRefundId?: string | null;
   paymentIntentId?: string | null;
   status: 'succeeded' | 'failed' | 'pending' | 'canceled';
@@ -392,6 +478,39 @@ export async function confirmDepositRefundFromWebhook(input: {
   }
 
   if (input.status === 'succeeded') {
+    const confirmedAmountPence =
+      typeof input.amountPence === 'number' && input.amountPence > 0 ? input.amountPence : row.amountPence;
+    const booking = await prisma.booking.findUnique({
+      where: { id: row.bookingId },
+      select: {
+        bookingPaymentType: true,
+        paymentAmountPence: true,
+        depositAmountPence: true,
+        paymentRequired: true,
+      },
+    });
+    const stored = resolveStoredBookingPayment(booking ?? {});
+    if (
+      !paymentStatusAfterRefund({
+        paymentAmountPence: stored.amountPence,
+        refundedAmountPence: confirmedAmountPence,
+      })
+    ) {
+      // Never record more than was paid online; leave the ledger for ops to inspect.
+      captureOpsMessage('Stripe refund webhook amount exceeds the booking payment', {
+        level: 'error',
+        route: 'depositMoney.applyStripeRefundWebhook',
+        shopId: row.shopId,
+        opsAlert: true,
+        tags: {
+          bookingId: row.bookingId,
+          refundLedgerId: row.id,
+          refundAmountPence: String(confirmedAmountPence),
+          paymentAmountPence: String(stored.amountPence),
+        },
+      });
+      return { matched: true, refund: row };
+    }
     const confirmedAt = new Date();
     const updated = await prisma.bookingDepositRefund.update({
       where: { id: row.id },
@@ -401,9 +520,7 @@ export async function confirmDepositRefundFromWebhook(input: {
         confirmedAt,
         lastError: null,
         nextAttemptAt: null,
-        ...(typeof input.amountPence === 'number' && input.amountPence > 0
-          ? { amountPence: input.amountPence }
-          : {}),
+        amountPence: confirmedAmountPence,
       },
     });
     await markBookingRefunded(row.bookingId, updated.amountPence, confirmedAt);
@@ -420,7 +537,7 @@ export async function confirmDepositRefundFromWebhook(input: {
         nextAttemptAt: null,
       },
     });
-    captureOpsMessage('Deposit refund failed via Stripe webhook', {
+    captureOpsMessage('Booking payment refund failed via Stripe webhook', {
       level: 'error',
       route: 'depositMoney.applyStripeRefundWebhook',
       shopId: updated.shopId,
@@ -445,21 +562,24 @@ export async function confirmDepositRefundFromWebhook(input: {
   return { matched: true, refund: row };
 }
 
-/** Operator repair: re-open a FAILED (or stuck PENDING) row and attempt again. */
-export async function retryDepositRefundForOperator(bookingId: string): Promise<{
-  outcome: DepositRefundOutcome;
+/**
+ * Operator repair: re-open a FAILED (or stuck PENDING) row and attempt again. Always retries the
+ * stored ledger amount (full or partial) — the settlement policy is never recalculated here.
+ */
+export async function retryBookingPaymentRefundForOperator(bookingId: string): Promise<{
+  outcome: BookingPaymentRefundOutcome;
   refund: BookingDepositRefund | null;
 }> {
   const row = await prisma.bookingDepositRefund.findUnique({ where: { bookingId } });
   if (!row) {
-    const requested = await requestDepositRefund({
+    const requested = await requestBookingPaymentRefund({
       bookingId,
       reason: 'manual_retry',
     });
     if (!requested.refund) {
       return { outcome: requested.outcome, refund: null };
     }
-    return attemptDepositRefund(requested.refund.id);
+    return attemptBookingPaymentRefund(requested.refund.id);
   }
 
   if (row.status === DepositRefundStatus.REFUNDED) {
@@ -486,7 +606,7 @@ export async function retryDepositRefundForOperator(bookingId: string): Promise<
     },
   });
 
-  return attemptDepositRefund(row.id);
+  return attemptBookingPaymentRefund(row.id);
 }
 
 /** Cron: claim and attempt due PENDING refunds. */
@@ -522,7 +642,7 @@ export async function processDueDepositRefunds(now = new Date()): Promise<{
   let failed = 0;
 
   for (const { id } of due) {
-    const result = await attemptDepositRefund(id);
+    const result = await attemptBookingPaymentRefund(id);
     if (result.outcome === 'refunded') refunded += 1;
     else if (result.outcome === 'failed') failed += 1;
     else pending += 1;
@@ -537,8 +657,8 @@ export async function processDueDepositRefunds(now = new Date()): Promise<{
 export async function refundBookingDepositIfEligible(input: {
   bookingId: string;
   reason: 'client_cancel_in_window' | 'shop_cancel';
-}): Promise<DepositRefundOutcome> {
-  const requested = await requestDepositRefund(input);
+}): Promise<BookingPaymentRefundOutcome> {
+  const requested = await requestBookingPaymentRefund(input);
   if (!requested.refund) return requested.outcome;
 
   if (requested.refund.status === DepositRefundStatus.REFUNDED) return 'refunded';
@@ -549,7 +669,7 @@ export async function refundBookingDepositIfEligible(input: {
     return 'failed';
   }
 
-  const attempted = await attemptDepositRefund(requested.refund.id);
+  const attempted = await attemptBookingPaymentRefund(requested.refund.id);
   return attempted.outcome;
 }
 
@@ -576,6 +696,89 @@ export async function expireUnpaidDepositHolds(now: Date = new Date()): Promise<
   });
   return result.count;
 }
+
+/**
+ * The single no-show path for every endpoint: DEPOSIT retains the deposit, FULL retains up to £5
+ * and refunds the rest. A FULL refund ledger is written before the status change; a Stripe
+ * failure never blocks marking the no-show.
+ */
+export async function markNoShowWithPaymentSettlement(params: {
+  bookingId: string;
+  markNoShow: () => Promise<void>;
+}): Promise<{ outcome: BookingPaymentRefundOutcome | null }> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: params.bookingId },
+    select: {
+      bookingPaymentType: true,
+      paymentAmountPence: true,
+      depositAmountPence: true,
+      paymentRequired: true,
+      paymentStatus: true,
+    },
+  });
+  const stored = resolveStoredBookingPayment(booking ?? {});
+  const paid = Boolean(booking?.paymentRequired) && booking?.paymentStatus === PaymentStatus.PAID;
+
+  if (!paid || stored.type === 'NONE') {
+    await params.markNoShow();
+    return { outcome: null };
+  }
+
+  if (stored.type === 'DEPOSIT') {
+    await params.markNoShow();
+    await forfeitBookingDeposit(params.bookingId);
+    return { outcome: 'skipped_forfeited' };
+  }
+
+  const requested = await requestBookingPaymentRefund({ bookingId: params.bookingId, reason: 'no_show' });
+  await params.markNoShow();
+  if (!requested.refund) return { outcome: requested.outcome };
+  try {
+    const attempted = await attemptBookingPaymentRefund(requested.refund.id);
+    return { outcome: attempted.outcome };
+  } catch (error) {
+    captureOpsException(error, {
+      route: 'depositMoney.markNoShowWithPaymentSettlement',
+      opsAlert: true,
+      tags: { bookingId: params.bookingId },
+    });
+    return { outcome: 'pending' };
+  }
+}
+
+/** Customer-facing cancel message; FULL payments use payment wording, deposits keep deposit wording. */
+export function bookingPaymentRefundClientMessage(
+  outcome: BookingPaymentRefundOutcome | null | undefined,
+  options: { bookingPaymentType?: string | null; partial?: boolean } = {},
+): string {
+  if (options.bookingPaymentType !== 'FULL') return depositRefundClientMessage(outcome);
+  const partial = Boolean(options.partial);
+  switch (outcome) {
+    case 'refunded':
+      return partial
+        ? 'Your booking has been cancelled. Your partial refund has been confirmed.'
+        : 'Your booking has been cancelled. Your payment refund has been confirmed.';
+    case 'pending':
+      return partial
+        ? 'Your booking has been cancelled. A partial refund is being processed.'
+        : 'Your booking has been cancelled. Your payment refund is being processed.';
+    case 'failed':
+      return 'Your booking has been cancelled. Your refund could not be completed automatically — the shop will resolve this shortly.';
+    case 'skipped_no_refund_due':
+      return 'Your booking has been cancelled. Your payment was kept because the cancellation window has passed.';
+    default:
+      return 'Your booking has been cancelled successfully.';
+  }
+}
+
+/** @deprecated Use requestBookingPaymentRefund. */
+export const requestDepositRefund = requestBookingPaymentRefund;
+/** @deprecated Use attemptBookingPaymentRefund. */
+export const attemptDepositRefund = attemptBookingPaymentRefund;
+/** @deprecated Use retryBookingPaymentRefundForOperator. */
+export const retryDepositRefundForOperator = retryBookingPaymentRefundForOperator;
+/** @deprecated Use confirmBookingPaymentRefundFromWebhook. */
+export const confirmDepositRefundFromWebhook = confirmBookingPaymentRefundFromWebhook;
 
 export function depositRefundClientMessage(outcome: DepositRefundOutcome | null | undefined): string {
   switch (outcome) {

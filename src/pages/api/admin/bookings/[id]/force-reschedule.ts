@@ -12,6 +12,10 @@ import { findShopBarber, findShopService } from '@/lib/admin/shopScoped';
 import { addMinutes, toUtcFromLondon } from '@/lib/booking/time';
 import { smsReminderClearData } from '@/lib/sms/reminders';
 import { emailReminderClearData } from '@/lib/email/reminders';
+import {
+  FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+  fullPaymentBlocksServicePrice,
+} from '@/lib/booking/bookingPaymentPolicy';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -44,13 +48,22 @@ export const POST: APIRoute = async (ctx) => {
   });
   if (!existing) return json({ error: 'Booking not found.' }, 404);
   if (existing.status === BookingStatus.PENDING_PAYMENT) {
-    return json({ error: 'Cannot force-reschedule an unpaid deposit hold.' }, 409);
+    return json({ error: 'Cannot force-reschedule an unpaid payment hold.' }, 409);
   }
 
   const settings = await prisma.shopSettings.findUniqueOrThrow({ where: { id: access.shopId } });
   const service = await findShopService(parsed.data.serviceId, access.shopId);
   const barber = await findShopBarber(parsed.data.barberId, access.shopId);
   if (!service || !barber) return json({ error: 'Service or barber not found.' }, 404);
+  if (fullPaymentBlocksServicePrice(existing, service.pricePence)) {
+    return json(
+      {
+        error: 'This booking was paid in full upfront. Choose a service with the same price.',
+        code: FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+      },
+      409,
+    );
+  }
 
   const [h, m] = parsed.data.time.split(':').map(Number);
   const startAt = toUtcFromLondon(parsed.data.date, h * 60 + m);

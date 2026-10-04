@@ -70,7 +70,7 @@ async function loadBookingPage() {
       shop,
       services: [],
       barbers: [],
-      depositRequired: false,
+      bookingPaymentMode: 'NONE' as const,
       bookingUnavailable: true,
     };
   }
@@ -91,17 +91,17 @@ async function loadBookingPage() {
     }),
   ]);
 
-  // Payment intent follows the shop's mode, not momentary Stripe readiness: a DEPOSIT shop is
-  // never advertised as pay-at-shop. The create endpoint stays authoritative and returns
-  // BOOKING_PAYMENT_NOT_READY if Connect is unavailable.
-  const depositRequired = shop.bookingPaymentMode === 'DEPOSIT';
+  // Payment intent follows the shop's mode, not momentary Stripe readiness: a DEPOSIT or FULL
+  // shop is never advertised as pay-at-shop. The create endpoint stays authoritative and
+  // returns BOOKING_PAYMENT_NOT_READY if Connect is unavailable.
+  const bookingPaymentMode = shop.bookingPaymentMode ?? 'NONE';
 
   return {
     kind: 'shop' as const,
     shop,
     services,
     barbers,
-    depositRequired,
+    bookingPaymentMode,
     bookingUnavailable: false,
   };
 }
@@ -128,7 +128,7 @@ const resolvedPage = bookingPageData.kind === 'shop' ? bookingPageData : null;
 const shop = resolvedPage?.shop ?? null;
 const services = resolvedPage?.services ?? [];
 const barbers = resolvedPage?.barbers ?? [];
-const depositRequired = resolvedPage?.depositRequired ?? false;
+const bookingPaymentMode = resolvedPage?.bookingPaymentMode ?? 'NONE';
 const bookingUnavailable = !resolvedPage || resolvedPage.bookingUnavailable;
 const seo = shop ? publicBookingPageSeo(shop) : null;
 const pageTitle = shop ? `Book — ${shop.name}` : 'Book — KERSIVO';
@@ -160,7 +160,7 @@ const createUrl = shop ? `/api/public/bookings/${shop.id}/create` : '';
           mode="create"
           publicShopId={shop.id}
           publicCreateUrl={createUrl}
-          depositRequired={depositRequired}
+          bookingPaymentMode={bookingPaymentMode}
           services={services.map((s) => ({
             id: s.id,
             name: s.name,

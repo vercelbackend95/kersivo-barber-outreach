@@ -419,6 +419,17 @@ describe('createBookingPaymentCheckoutSession (generic booking payments)', () =>
     expect(sentParams().get('line_items[0][price_data][unit_amount]')).toBe('300');
   });
 
+  it('4C-F: FULL £30 Free booking sends 3000p, a 30p application fee and bookingPaymentType=FULL metadata', async () => {
+    await createBookingPaymentCheckoutSession(
+      baseInput({ bookingPaymentType: 'FULL', paymentAmountPence: 3000, applicationFeePence: 30 }),
+    );
+    const params = sentParams();
+    expect(params.get('line_items[0][price_data][unit_amount]')).toBe('3000');
+    expect(params.get('payment_intent_data[application_fee_amount]')).toBe('30');
+    expect(params.get('metadata[type]')).toBe('booking_payment');
+    expect(params.get('metadata[bookingPaymentType]')).toBe('FULL');
+  });
+
   it('I: Full (0% fee) omits application_fee_amount', async () => {
     await createBookingPaymentCheckoutSession(baseInput({ applicationFeePence: 0 }));
     expect(sentParams().has('payment_intent_data[application_fee_amount]')).toBe(false);

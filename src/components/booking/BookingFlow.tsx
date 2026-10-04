@@ -12,6 +12,7 @@ import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
+import type { BookingPaymentMode } from '@prisma/client';
 import { resolveRequiredBookingPayment } from '../../lib/booking/bookingPaymentPolicy';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
@@ -116,8 +117,8 @@ type Props = {
   publicCreateUrl?: string;
   /** Live tenant book: scopes availability to this shop (no admin session / demo fallback). */
   publicShopId?: string;
-  /** When true, confirm CTA may redirect to Stripe deposit Checkout. */
-  depositRequired?: boolean;
+  /** Shop booking payment mode; DEPOSIT / FULL confirm CTAs redirect to Stripe Checkout. */
+  bookingPaymentMode?: BookingPaymentMode;
   onComplete?: () => void;
   postConfirmCta?: PostConfirmCtaConfig | null;
   /** Preselect a service from the provided catalogue. Ignored if it does not match. */
@@ -243,16 +244,23 @@ function formatPrice(pricePence: number, wholePounds = false): string {
 }
 
 /**
- * Final CTA for a DEPOSIT-mode shop: £5 deposit, the full price when the service costs £5 or
- * less, and no payment wording for a £0 service. Null means no online payment.
+ * Final CTA for an online-payment shop. DEPOSIT: £5 deposit, or the full price when the service
+ * costs £5 or less. FULL: the full service price. Null means no online payment (NONE or £0).
  */
-export function depositSubmitLabel(servicePricePence: number): string | null {
-  const required = resolveRequiredBookingPayment({ mode: 'DEPOSIT', servicePricePence });
+export function bookingPaymentSubmitLabel(
+  bookingPaymentMode: BookingPaymentMode,
+  servicePricePence: number,
+): string | null {
+  const required = resolveRequiredBookingPayment({ mode: bookingPaymentMode, servicePricePence });
   if (required.amountPence <= 0) return null;
   const amount = formatPrice(required.amountPence, true);
   return required.amountPence < servicePricePence
     ? `Pay ${amount} deposit & book`
     : `Pay ${amount} & book`;
+}
+
+export function depositSubmitLabel(servicePricePence: number): string | null {
+  return bookingPaymentSubmitLabel('DEPOSIT', servicePricePence);
 }
 
 function resolveInitialServiceId(services: Service[], initialServiceId?: string): string {
@@ -347,7 +355,7 @@ export default function BookingFlow({
   persistDemoSessionBooking = false,
   publicCreateUrl,
   publicShopId,
-  depositRequired = false,
+  bookingPaymentMode = 'NONE',
   onComplete,
   postConfirmCta = null,
   initialServiceId,
@@ -1002,9 +1010,9 @@ export default function BookingFlow({
     }
     if (wizardStep < maxStep) return 'Continue';
     if (publicDemoMode) return 'Complete demo booking';
-    if (depositRequired && publicCreateUrl && selectedService) {
-      const depositLabel = depositSubmitLabel(selectedService.pricePence);
-      if (depositLabel) return depositLabel;
+    if (bookingPaymentMode !== 'NONE' && publicCreateUrl && selectedService) {
+      const paymentLabel = bookingPaymentSubmitLabel(bookingPaymentMode, selectedService.pricePence);
+      if (paymentLabel) return paymentLabel;
     }
     return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
   })();

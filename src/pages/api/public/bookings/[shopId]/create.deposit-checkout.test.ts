@@ -381,17 +381,42 @@ describe('public booking create — booking payment checkout', () => {
     });
   });
 
-  it('G: FULL mode error is returned with the stable code and no checkout', async () => {
-    createInstantBooking.mockRejectedValue(
-      new BookingActionError('not yet', 409, 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE'),
+  it('4C-F / G: FULL booking uses the generic Checkout with the FULL type, amount, fee and account snapshot', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop_1',
+      name: 'Test Shop',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      depositsEnabled: false,
+      stripeConnectAccountId: 'acct_now_different',
+      stripeConnectChargesEnabled: true,
+      publicActivityPaused: false,
+    });
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({
+        depositAmountPence: null,
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        kersivoPlatformFeeBps: 100,
+        kersivoPlatformFeePence: 30,
+        stripeConnectAccountIdAtPayment: 'acct_full_snapshot',
+      }),
     );
 
     const res = await POST(requestCtx(bookingBody) as never);
 
-    expect(res.status).toBe(409);
-    expect(await res.json()).toEqual({ error: 'not yet', code: 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE' });
-    expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
-    expect(updateBooking).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledTimes(1);
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookingId: 'book_1',
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        applicationFeePence: 30,
+        shopConnectAccountId: 'acct_full_snapshot',
+      }),
+    );
+    expect(createBookingDepositCheckoutSession).not.toHaveBeenCalled();
   });
 
   it('F: payments-not-ready error is returned with the stable code and no checkout', async () => {

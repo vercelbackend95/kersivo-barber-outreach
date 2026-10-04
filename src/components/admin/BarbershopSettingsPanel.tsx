@@ -84,7 +84,7 @@ export default function BarbershopSettingsPanel({
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
   const [depositsPaid, setDepositsPaid] = useState(false);
-  const [depositsEnabled, setDepositsEnabled] = useState(false);
+  const [bookingPaymentMode, setBookingPaymentMode] = useState<'NONE' | 'DEPOSIT' | 'FULL'>('NONE');
   const [bookingPaymentsAvailable, setBookingPaymentsAvailable] = useState(false);
   const [bookingProductState, setBookingProductState] = useState<string | null>(null);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
@@ -239,10 +239,14 @@ export default function BarbershopSettingsPanel({
       setDepositsPaid(Boolean(payload?.paid));
       setBookingPaymentsAvailable(Boolean(payload?.bookingPaymentsAvailable));
       setBookingProductState(payload?.productState ?? null);
-      setDepositsEnabled(
-        payload?.bookingPaymentMode
-          ? payload.bookingPaymentMode === 'DEPOSIT'
-          : Boolean(payload?.depositsEnabled),
+      setBookingPaymentMode(
+        payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+          ? payload.bookingPaymentMode
+          : payload?.bookingPaymentMode === 'NONE'
+            ? 'NONE'
+            : payload?.depositsEnabled
+              ? 'DEPOSIT'
+              : 'NONE',
       );
       setDepositsCollectReady(Boolean(payload?.collectReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
@@ -767,9 +771,10 @@ export default function BarbershopSettingsPanel({
             Booking payments
           </h2>
           <p className="admin-barbershop-settings__card-copy">
-            Choose whether clients pay at the shop or pay a £5 deposit online when they book
-            (services under £5 are paid in full). Deposits are refunded if the client cancels
-            inside your policy window or you cancel; kept on late cancel or no-show.
+            Choose whether clients pay at the shop, pay a £5 deposit online (services under £5 are
+            paid in full), or pay the full service price upfront when they book. Payments are
+            refunded if the client cancels inside your policy window or you cancel. On a late
+            cancel or no-show you keep the deposit, or up to £5 of a full upfront payment.
           </p>
           {bookingProductState === 'FREE_BOOKING' ? (
             <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
@@ -844,9 +849,10 @@ export default function BarbershopSettingsPanel({
                   [
                     { mode: 'NONE', label: 'Pay at shop' },
                     { mode: 'DEPOSIT', label: 'Require £5 deposit' },
+                    { mode: 'FULL', label: 'Require full payment upfront' },
                   ] as const
                 ).map((option) => {
-                  const checked = option.mode === 'DEPOSIT' ? depositsEnabled : !depositsEnabled;
+                  const checked = option.mode === bookingPaymentMode;
                   return (
                     <label
                       key={option.mode}
@@ -857,7 +863,7 @@ export default function BarbershopSettingsPanel({
                         name="bbs-booking-payment-mode"
                         value={option.mode}
                         checked={checked}
-                        disabled={option.mode === 'DEPOSIT' && !connectChargesEnabled && !depositsEnabled}
+                        disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
                         onChange={async () => {
                           if (checked) return;
                           setDepositsBusy(true);
@@ -877,12 +883,17 @@ export default function BarbershopSettingsPanel({
                             if (!response.ok) {
                               throw new Error(payload?.error || 'Could not update booking payments.');
                             }
-                            const isDeposit = payload?.bookingPaymentMode === 'DEPOSIT';
-                            setDepositsEnabled(isDeposit);
+                            const nextMode =
+                              payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+                                ? payload.bookingPaymentMode
+                                : 'NONE';
+                            setBookingPaymentMode(nextMode);
                             setDepositsMessage(
-                              isDeposit
+                              nextMode === 'DEPOSIT'
                                 ? '£5 deposit required on online bookings.'
-                                : 'Clients pay at the shop.',
+                                : nextMode === 'FULL'
+                                  ? 'Full payment required upfront on online bookings.'
+                                  : 'Clients pay at the shop.',
                             );
                             await loadDeposits();
                           } catch (error) {

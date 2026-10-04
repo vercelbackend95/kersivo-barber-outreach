@@ -94,16 +94,51 @@ describe('bookingPaymentsGate', () => {
 describe('resolveLiveBookingPayment', () => {
   const freeAccess = () => resolveKersivoAccess(freeShop(), null, NOW);
 
-  it('NONE → no payment; FULL → not available (fails closed, never NONE/DEPOSIT)', () => {
+  it('NONE → no payment', () => {
     expect(
       resolveLiveBookingPayment({ mode: 'NONE', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
     ).toEqual({ outcome: 'none' });
+  });
+
+  it('FULL collects the full service price: Free 100 bps, Full 0 bps, £0 needs no Stripe', () => {
     expect(
       resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
-    ).toEqual({ outcome: 'full_not_available' });
+    ).toEqual({
+      outcome: 'collect',
+      stripeConnectAccountId: 'acct_ready',
+      snapshot: { bookingPaymentType: 'FULL', paymentAmountPence: 3000, kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 30 },
+    });
+    const full = fullShop();
+    expect(
+      resolveLiveBookingPayment({
+        mode: 'FULL',
+        servicePricePence: 3000,
+        shop: full,
+        access: resolveKersivoAccess(full, null, NOW),
+      }),
+    ).toEqual({
+      outcome: 'collect',
+      stripeConnectAccountId: 'acct_ready',
+      snapshot: { bookingPaymentType: 'FULL', paymentAmountPence: 3000, kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 },
+    });
+    expect(
+      resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 300, shop: freeShop(), access: freeAccess() }),
+    ).toMatchObject({ outcome: 'collect', snapshot: { paymentAmountPence: 300, kersivoPlatformFeePence: 3 } });
     expect(
       resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 0, shop: freeShop(), access: freeAccess() }),
-    ).toEqual({ outcome: 'full_not_available' });
+    ).toEqual({ outcome: 'none' });
+  });
+
+  it('FULL with Connect not ready fails closed (never pay-at-shop)', () => {
+    const s = freeShop({ stripeConnectChargesEnabled: false });
+    expect(
+      resolveLiveBookingPayment({
+        mode: 'FULL',
+        servicePricePence: 3000,
+        shop: s,
+        access: resolveKersivoAccess(s, null, NOW),
+      }),
+    ).toEqual({ outcome: 'not_ready', reason: 'connect_not_ready' });
   });
 
   it('DEPOSIT snapshots Free at 100 bps and Full at 0 bps', () => {

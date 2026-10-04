@@ -45,7 +45,7 @@ import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
 import { resolveBookingPaymentAccount } from '../../../lib/booking/bookingPaymentAccount';
-import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
+import { confirmBookingPaymentRefundFromWebhook } from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
 import {
@@ -858,7 +858,7 @@ async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
     paymentIntentId = paymentIntentId ?? paymentIntentIdFromObject(obj.payment_intent);
   }
 
-  const result = await confirmDepositRefundFromWebhook({
+  const result = await confirmBookingPaymentRefundFromWebhook({
     stripeRefundId,
     paymentIntentId,
     status,
