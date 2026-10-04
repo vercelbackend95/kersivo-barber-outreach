@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   BOOKING_SLUG_ADVISORY_LOCK_KEY,
   RESERVED_BOOKING_SLUGS,
+  bookingSlugAllocationLockSql,
   bookingSlugCandidates,
   deterministicSlugSuffix,
   ensureShopBookingSlug,
@@ -13,24 +14,36 @@ type Row = { id: string; name: string; townCity: string | null; bookingSlug: str
 function fakeTx(rows: Row[]) {
   const calls: string[] = [];
   const tx = {
-    $queryRaw: vi.fn(async () => {
+    $queryRaw: vi.fn(async (sql: { sql: string; values: unknown[] }) => {
+      if (sql.sql.includes('pg_advisory_xact_lock')) {
+        calls.push('advisory_lock');
+        return [{ locked: 1 }];
+      }
       calls.push('row_lock');
       return [{ id: 'x' }];
     }),
-    $executeRaw: vi.fn(async (_sql: { values: unknown[] }) => {
-      calls.push('advisory_lock');
-      return 1;
-    }),
+    $executeRaw: vi.fn(),
     shopSettings: {
       findUniqueOrThrow: vi.fn(async ({ where }: { where: { id: string } }) => {
         const row = rows.find((r) => r.id === where.id);
         if (!row) throw new Error('not found');
         return { ...row };
       }),
-      findMany: vi.fn(async ({ where }: { where: { bookingSlug: { in: string[] } } }) =>
-        rows
-          .filter((r) => r.bookingSlug && where.bookingSlug.in.includes(r.bookingSlug))
-          .map((r) => ({ bookingSlug: r.bookingSlug })),
+      findMany: vi.fn(
+        async ({
+          where,
+        }: {
+          where: { OR: [{ bookingSlug: { in: string[] } }, { id: { in: string[] } }] };
+        }) => {
+          const [slugFilter, idFilter] = where.OR;
+          return rows
+            .filter(
+              (r) =>
+                (r.bookingSlug && slugFilter.bookingSlug.in.includes(r.bookingSlug)) ||
+                idFilter.id.in.includes(r.id),
+            )
+            .map((r) => ({ id: r.id, bookingSlug: r.bookingSlug }));
+        },
       ),
       update: vi.fn(async ({ where, data }: { where: { id: string }; data: { bookingSlug: string } }) => {
         calls.push('update');
@@ -103,7 +116,38 @@ describe('ensureShopBookingSlug', () => {
     expect(await ensureShopBookingSlug(tx, 's1')).toBe('blackline-barbers');
     expect(rows[0]!.bookingSlug).toBe('blackline-barbers');
     expect(calls).toEqual(['row_lock', 'advisory_lock', 'update']);
-    expect(raw.$executeRaw.mock.calls[0]![0].values).toContain(BOOKING_SLUG_ADVISORY_LOCK_KEY);
+    const advisory = raw.$queryRaw.mock.calls[1]![0];
+    expect(advisory.sql).toContain('pg_advisory_xact_lock');
+    expect(advisory.sql).toContain('SELECT 1::int AS locked');
+    expect(advisory.values).toEqual([BOOKING_SLUG_ADVISORY_LOCK_KEY]);
+    expect(raw.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('builds the advisory lock as a parameterised query returning an int', () => {
+    const sql = bookingSlugAllocationLockSql();
+    expect(sql.text).toMatch(/WITH lock_row AS \(\s*SELECT pg_advisory_xact_lock\(\$1::bigint\)\s*\)/);
+    expect(sql.text).toMatch(/SELECT 1::int AS locked\s+FROM lock_row/);
+    expect(sql.text).not.toContain(String(BOOKING_SLUG_ADVISORY_LOCK_KEY));
+    expect(sql.values).toEqual([BOOKING_SLUG_ADVISORY_LOCK_KEY]);
+  });
+
+  it('rejects a candidate equal to another shop id and allocates the next safe candidate', async () => {
+    const rows: Row[] = [
+      { id: 'fade-lab', name: 'Legacy Shop', townCity: null, bookingSlug: null },
+      { id: 's1', name: 'Fade Lab', townCity: 'Leeds', bookingSlug: null },
+    ];
+    const { tx } = fakeTx(rows);
+    expect(await ensureShopBookingSlug(tx, 's1')).toBe('fade-lab-leeds');
+  });
+
+  it('skips name and town candidates that match shop ids, falling back to the hash suffix', async () => {
+    const rows: Row[] = [
+      { id: 'fade-lab', name: 'x', townCity: null, bookingSlug: null },
+      { id: 'other', name: 'x', townCity: null, bookingSlug: 'fade-lab-leeds' },
+      { id: 's1', name: 'Fade Lab', townCity: 'Leeds', bookingSlug: null },
+    ];
+    const { tx } = fakeTx(rows);
+    expect(await ensureShopBookingSlug(tx, 's1')).toBe(`fade-lab-${deterministicSlugSuffix('s1', 4)}`);
   });
 
   it('C: a shop that already has a slug keeps it unchanged (even after a rename)', async () => {
@@ -112,7 +156,7 @@ describe('ensureShopBookingSlug', () => {
 
     expect(await ensureShopBookingSlug(tx, 's1')).toBe('blackline-barbers');
     expect(raw.shopSettings.update).not.toHaveBeenCalled();
-    expect(raw.$executeRaw).not.toHaveBeenCalled();
+    expect(raw.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
   it('D: name collision uses the town suffix when available', async () => {

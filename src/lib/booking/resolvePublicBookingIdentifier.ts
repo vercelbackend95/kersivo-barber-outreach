@@ -24,6 +24,23 @@ export async function resolvePublicBookingIdentifier(
   // Demo routing never resolves to (or redirects into) a real tenant.
   if (identifier === DEMO_SHOP_ID || isDemoShopId(identifier)) return { kind: 'demo' };
 
+  // A legacy shop id is authoritative: an existing /book/{shopId} URL can never be taken over
+  // by another shop's slug.
+  const byId = await db.shopSettings.findUnique({
+    where: { id: identifier },
+    select: { id: true, bookingSlug: true },
+  });
+  if (byId) {
+    if (byId.bookingSlug && byId.bookingSlug !== identifier) {
+      return {
+        kind: 'redirect',
+        location: `${publicBookingPathFromSlug(byId.bookingSlug)}${search}`,
+        status: 308,
+      };
+    }
+    return { kind: 'shop', shopId: byId.id, bookingSlug: byId.bookingSlug, resolvedBy: 'id' };
+  }
+
   const bySlug = await db.shopSettings.findUnique({
     where: { bookingSlug: identifier },
     select: { id: true, bookingSlug: true },
@@ -31,21 +48,7 @@ export async function resolvePublicBookingIdentifier(
   if (bySlug) {
     return { kind: 'shop', shopId: bySlug.id, bookingSlug: bySlug.bookingSlug, resolvedBy: 'slug' };
   }
-
-  const byId = await db.shopSettings.findUnique({
-    where: { id: identifier },
-    select: { id: true, bookingSlug: true },
-  });
-  if (!byId) return { kind: 'not_found' };
-
-  if (byId.bookingSlug) {
-    return {
-      kind: 'redirect',
-      location: `${publicBookingPathFromSlug(byId.bookingSlug)}${search}`,
-      status: 308,
-    };
-  }
-  return { kind: 'shop', shopId: byId.id, bookingSlug: null, resolvedBy: 'id' };
+  return { kind: 'not_found' };
 }
 
 /** SEO for a resolved booking page: always noindex (crawlable for the directive), canonical slug. */

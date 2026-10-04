@@ -23,6 +23,8 @@ const db = vi.hoisted(() => ({
   onLock: null as null | (() => void),
   /** Slugs held by other shops (for collision checks). */
   otherSlugs: [] as string[],
+  /** Ids of other shops (slugs must never equal a shop id). */
+  otherShopIds: [] as string[],
 }));
 
 const {
@@ -35,19 +37,37 @@ const {
   markOnboardingCompleted: vi.fn(),
 }));
 
+const slugAdvisoryLock = vi.fn();
+
 const tx = {
-  $queryRaw: async () => {
+  $queryRaw: async (sql: { sql: string }) => {
+    if (sql.sql.includes('pg_advisory_xact_lock')) {
+      slugAdvisoryLock();
+      return [{ locked: 1 }];
+    }
     db.onLock?.();
     return [{ id: db.shop.id }];
   },
-  $executeRaw: vi.fn(async () => 1),
   shopSettings: {
     findUnique: vi.fn(async () => ({ ...db.shop })),
     findUniqueOrThrow: async () => ({ ...db.shop }),
-    findMany: async ({ where }: { where: { bookingSlug: { in: string[] } } }) =>
-      [...db.otherSlugs, ...(db.shop.bookingSlug ? [db.shop.bookingSlug] : [])]
-        .filter((slug) => where.bookingSlug.in.includes(slug))
-        .map((bookingSlug) => ({ bookingSlug })),
+    findMany: async ({
+      where,
+    }: {
+      where: { OR: [{ bookingSlug: { in: string[] } }, { id: { in: string[] } }] };
+    }) => {
+      const [slugFilter, idFilter] = where.OR;
+      const slugs = [...db.otherSlugs, ...(db.shop.bookingSlug ? [db.shop.bookingSlug] : [])];
+      return [
+        ...slugs.filter((slug) => slugFilter.bookingSlug.in.includes(slug)).map((bookingSlug) => ({
+          id: `owner-of-${bookingSlug}`,
+          bookingSlug,
+        })),
+        ...[db.shop.id, ...db.otherShopIds]
+          .filter((id) => idFilter.id.in.includes(id))
+          .map((id) => ({ id, bookingSlug: null })),
+      ];
+    },
     update: async ({ data }: { data: Partial<ShopRow> }) => {
       Object.assign(db.shop, data);
       return { ...db.shop };
@@ -169,6 +189,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     db.legal = [];
     db.onLock = null;
     db.otherSlugs = [];
+    db.otherShopIds = [];
     requireOnboardingAccess.mockResolvedValue(ownerAccess);
     shopMeetsOnboardingCompletionRequirements.mockResolvedValue(true);
     markOnboardingCompleted.mockImplementation(async () => {
@@ -276,12 +297,19 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       expect(res.body.bookingUrl).not.toContain('shop_1');
       expect(db.legal).toHaveLength(1);
       expect(db.legal[0]!.meta).toMatchObject({ bookingSlug: 'fade-lab' });
-      expect(tx.$executeRaw).toHaveBeenCalled();
+      expect(slugAdvisoryLock).toHaveBeenCalledTimes(1);
     });
 
     it('F: a taken name slug uses the town suffix', async () => {
       db.otherSlugs = ['fade-lab'];
       await complete({ termsAccepted: true });
+      expect(db.shop.bookingSlug).toBe('fade-lab-leeds');
+    });
+
+    it('F: a name slug equal to an existing shop id is skipped', async () => {
+      db.otherShopIds = ['fade-lab'];
+      const res = await complete({ termsAccepted: true });
+      expect(res.status).toBe(200);
       expect(db.shop.bookingSlug).toBe('fade-lab-leeds');
     });
 
@@ -339,7 +367,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       expect(res.body.activation).toBe('full_kersivo');
       expect(db.shop.freeBookingActivatedAt).toBeNull();
       expect(db.shop.bookingSlug).toBeNull();
-      expect(tx.$executeRaw).not.toHaveBeenCalled();
+      expect(slugAdvisoryLock).not.toHaveBeenCalled();
     });
 
     it('J: Full discovered under the lock also allocates no slug', async () => {

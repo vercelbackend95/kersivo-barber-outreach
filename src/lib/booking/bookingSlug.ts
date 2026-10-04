@@ -100,6 +100,24 @@ export function bookingSlugCandidates(params: {
   return candidates.filter((candidate) => !RESERVED_BOOKING_SLUGS.has(candidate));
 }
 
+/** SQL for the transaction-scoped slug allocation lock; returns an int row, not PostgreSQL void. */
+export function bookingSlugAllocationLockSql(): Prisma.Sql {
+  return Prisma.sql`
+    WITH lock_row AS (
+      SELECT pg_advisory_xact_lock(${BOOKING_SLUG_ADVISORY_LOCK_KEY}::bigint)
+    )
+    SELECT 1::int AS locked
+    FROM lock_row
+  `;
+}
+
+/** Blocks until this transaction holds the slug allocation lock; released at commit/rollback. */
+export async function acquireBookingSlugAllocationLock(
+  tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
+): Promise<void> {
+  await tx.$queryRaw<Array<{ locked: number }>>(bookingSlugAllocationLockSql());
+}
+
 /**
  * Returns the shop's bookingSlug, allocating one if missing. An existing slug is never changed.
  * Must run inside a transaction; takes the shop row lock and the slug advisory lock.
@@ -115,15 +133,20 @@ export async function ensureShopBookingSlug(
   });
   if (shop.bookingSlug) return shop.bookingSlug;
 
-  // pg_advisory_xact_lock returns void, which $queryRaw cannot deserialise.
-  await tx.$executeRaw(Prisma.sql`SELECT pg_advisory_xact_lock(${BOOKING_SLUG_ADVISORY_LOCK_KEY}::bigint)`);
+  await acquireBookingSlugAllocationLock(tx);
 
   const candidates = bookingSlugCandidates({ shopId, name: shop.name, townCity: shop.townCity });
-  const taken = await tx.shopSettings.findMany({
-    where: { bookingSlug: { in: candidates } },
-    select: { bookingSlug: true },
+  // Slugs and shop ids share the /book/{identifier} namespace, so a candidate equal to any
+  // existing shop id is as unavailable as one equal to another shop's slug.
+  const conflicts = await tx.shopSettings.findMany({
+    where: { OR: [{ bookingSlug: { in: candidates } }, { id: { in: candidates } }] },
+    select: { id: true, bookingSlug: true },
   });
-  const takenSet = new Set(taken.map((row) => row.bookingSlug));
+  const takenSet = new Set<string>();
+  for (const row of conflicts) {
+    takenSet.add(row.id);
+    if (row.bookingSlug) takenSet.add(row.bookingSlug);
+  }
   const slug = candidates.find((candidate) => !takenSet.has(candidate));
   if (!slug) {
     throw new Error('Unable to allocate a unique booking slug.');

@@ -79,14 +79,42 @@ describe('resolvePublicBookingIdentifier', () => {
     expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it('prefers a slug match over an id match', async () => {
+  it('a real shop id wins over another shop slug that is identical to it', async () => {
     const { db } = fakeDb([
-      { id: 'shop-a', bookingSlug: 'shop-b' },
-      { id: 'shop-b', bookingSlug: 'other' },
+      { id: 'cmlegacy1', bookingSlug: null },
+      { id: 'cmhijacker', bookingSlug: 'cmlegacy1' },
     ]);
-    expect(await resolvePublicBookingIdentifier('shop-b', '', db)).toMatchObject({
+    expect(await resolvePublicBookingIdentifier('cmlegacy1', '', db)).toEqual({
       kind: 'shop',
-      shopId: 'shop-a',
+      shopId: 'cmlegacy1',
+      bookingSlug: null,
+      resolvedBy: 'id',
+    });
+  });
+
+  it('in an ambiguity the id shop redirects to its OWN canonical slug', async () => {
+    const { db } = fakeDb([
+      { id: 'cmlegacy1', bookingSlug: 'fade-lab' },
+      { id: 'cmhijacker', bookingSlug: 'cmlegacy1' },
+    ]);
+    expect(await resolvePublicBookingIdentifier('cmlegacy1', '?a=1', db)).toEqual({
+      kind: 'redirect',
+      location: '/book/fade-lab?a=1',
+      status: 308,
+    });
+  });
+
+  it('checks the shop id before the slug and only falls back to slug lookup on an id miss', async () => {
+    const { db, findUnique } = fakeDb([freeShop]);
+    await resolvePublicBookingIdentifier('blackline-barbers', '', db);
+    expect(findUnique.mock.calls.map(([args]) => Object.keys(args.where)[0])).toEqual(['id', 'bookingSlug']);
+  });
+
+  it('never self-redirects if a shop slug equals its own id', async () => {
+    const { db } = fakeDb([{ id: 'same-value', bookingSlug: 'same-value' }]);
+    expect(await resolvePublicBookingIdentifier('same-value', '', db)).toMatchObject({
+      kind: 'shop',
+      shopId: 'same-value',
     });
   });
 });
