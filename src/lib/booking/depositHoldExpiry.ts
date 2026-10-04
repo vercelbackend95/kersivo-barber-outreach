@@ -6,7 +6,7 @@ import {
   retrieveBookingDepositSession,
 } from '../shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '../shop/stripe';
-import { confirmPaidDeposit } from './confirmPaidDeposit';
+import { confirmPaidBookingPayment } from './confirmPaidDeposit';
 
 const BATCH_LIMIT = 25;
 const STUCK_ALERT_AFTER_MS = 60 * 60 * 1000;
@@ -93,11 +93,12 @@ export async function processExpiredDepositHolds(
       let paymentStatus = (session.payment_status ?? '').toLowerCase();
 
       if (status === 'complete' && paymentStatus === 'paid') {
-        const result = await confirmPaidDeposit({
+        const result = await confirmPaidBookingPayment({
           bookingId: row.id,
           shopId,
           sessionId,
           paymentIntentId: getCheckoutPaymentIntentId(session),
+          session,
           paidAt: now,
         });
         if (
@@ -127,11 +128,12 @@ export async function processExpiredDepositHolds(
           status = (session.status ?? '').toLowerCase();
           paymentStatus = (session.payment_status ?? '').toLowerCase();
           if (status === 'complete' && paymentStatus === 'paid') {
-            const result = await confirmPaidDeposit({
+            const result = await confirmPaidBookingPayment({
               bookingId: row.id,
               shopId,
               sessionId,
               paymentIntentId: getCheckoutPaymentIntentId(session),
+              session,
               paidAt: now,
             });
             if (

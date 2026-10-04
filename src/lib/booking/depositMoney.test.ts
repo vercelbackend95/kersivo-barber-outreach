@@ -43,6 +43,7 @@ vi.mock('../ops/sentry', () => ({
 import {
   attemptDepositRefund,
   confirmDepositRefundFromWebhook,
+  forfeitBookingDeposit,
   refundBookingDepositIfEligible,
   requestDepositRefund,
   retryDepositRefundForOperator,
@@ -415,5 +416,115 @@ describe('refundBookingDepositIfEligible wrapper', () => {
       reason: 'client_cancel_in_window',
     });
     expect(result).toBe('failed');
+  });
+});
+
+describe('KERSIVO application fee on deposit refunds', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    updateManyRefund.mockResolvedValue({ count: 1 });
+    updateBooking.mockResolvedValue({});
+  });
+
+  function arrangeRefund(depositPence: number, feePence: number | null) {
+    findUniqueBooking.mockResolvedValue(
+      paidBooking({ depositAmountPence: depositPence, kersivoPlatformFeePence: feePence }),
+    );
+    createRefund.mockResolvedValue(pendingRow({ amountPence: depositPence }));
+    findUniqueRefund.mockResolvedValue(pendingRow({ amountPence: depositPence }));
+    refundPaymentIntent.mockResolvedValue({
+      id: 're_1',
+      mode: 'direct',
+      status: 'succeeded',
+      amount: depositPence,
+    });
+    updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED', amountPence: depositPence }));
+  }
+
+  it('R: Free deposit refund requests refund_application_fee (fee snapshot > 0)', async () => {
+    arrangeRefund(500, 5);
+
+    const result = await attemptDepositRefund('ref_1');
+
+    expect(result.outcome).toBe('refunded');
+    expect(findUniqueBooking).toHaveBeenCalledWith({
+      where: { id: 'book_1' },
+      select: { kersivoPlatformFeePence: true },
+    });
+    expect(refundPaymentIntent).toHaveBeenCalledWith(
+      'pi_1',
+      expect.objectContaining({ amount: 500, refundApplicationFee: true }),
+    );
+  });
+
+  it('S: Full / historical 0%-fee deposits never request an application-fee refund', async () => {
+    for (const fee of [0, null]) {
+      vi.clearAllMocks();
+      updateManyRefund.mockResolvedValue({ count: 1 });
+      updateBooking.mockResolvedValue({});
+      arrangeRefund(500, fee);
+
+      await attemptDepositRefund('ref_1');
+
+      const options = refundPaymentIntent.mock.calls[0][1] as Record<string, unknown>;
+      expect(options.amount).toBe(500);
+      expect(options).not.toHaveProperty('refundApplicationFee');
+    }
+  });
+
+  it('T: Free in-window client cancel and shop cancel refund the FULL deposit plus the fee', async () => {
+    for (const [deposit, fee] of [
+      [500, 5],
+      [300, 3],
+    ] as const) {
+      for (const reason of ['client_cancel_in_window', 'shop_cancel'] as const) {
+        vi.clearAllMocks();
+        updateManyRefund.mockResolvedValue({ count: 1 });
+        updateBooking.mockResolvedValue({});
+        arrangeRefund(deposit, fee);
+
+        const outcome = await refundBookingDepositIfEligible({ bookingId: 'book_1', reason });
+
+        expect(outcome).toBe('refunded');
+        expect(createRefund).toHaveBeenCalledWith(
+          expect.objectContaining({ data: expect.objectContaining({ amountPence: deposit, reason }) }),
+        );
+        expect(refundPaymentIntent).toHaveBeenCalledWith(
+          'pi_1',
+          expect.objectContaining({ amount: deposit, refundApplicationFee: true }),
+        );
+        expect(updateBooking).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ paymentStatus: 'REFUNDED', refundedAmountPence: deposit }),
+          }),
+        );
+      }
+    }
+  });
+
+  it('U: late cancel / no-show forfeits the deposit — no Stripe refund, KERSIVO fee retained', async () => {
+    updateManyBooking.mockResolvedValue({ count: 1 });
+
+    await forfeitBookingDeposit('book_1');
+
+    expect(updateManyBooking).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'book_1', depositRefundedAt: null, depositForfeitedAt: null }),
+        data: { depositForfeitedAt: expect.any(Date) },
+      }),
+    );
+    expect(refundPaymentIntent).not.toHaveBeenCalled();
+    expect(createRefund).not.toHaveBeenCalled();
+  });
+
+  it('U: a forfeited Free deposit is never refunded afterwards', async () => {
+    findUniqueBooking.mockResolvedValue(
+      paidBooking({ kersivoPlatformFeePence: 5, depositForfeitedAt: new Date() }),
+    );
+
+    const outcome = await refundBookingDepositIfEligible({ bookingId: 'book_1', reason: 'shop_cancel' });
+
+    expect(outcome).toBe('skipped_forfeited');
+    expect(refundPaymentIntent).not.toHaveBeenCalled();
   });
 });

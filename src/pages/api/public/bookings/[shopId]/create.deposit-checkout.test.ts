@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingStatus } from '@prisma/client';
 
 const createInstantBooking = vi.fn();
+const createBookingPaymentCheckoutSession = vi.fn();
 const createBookingDepositCheckoutSession = vi.fn();
 const retrieveBookingDepositSession = vi.fn();
 const updateBooking = vi.fn();
@@ -12,15 +13,19 @@ const checkBookingRateLimit = vi.fn();
 vi.mock('@/lib/booking/service', () => ({
   BookingActionError: class BookingActionError extends Error {
     statusCode: number;
-    constructor(message: string, statusCode = 400) {
+    code?: string;
+    constructor(message: string, statusCode = 400, code?: string) {
       super(message);
       this.statusCode = statusCode;
+      if (code) this.code = code;
     }
   },
   createInstantBooking: (...args: unknown[]) => createInstantBooking(...args),
 }));
 
 vi.mock('@/lib/shop/stripeConnect', () => ({
+  createBookingPaymentCheckoutSession: (...args: unknown[]) =>
+    createBookingPaymentCheckoutSession(...args),
   createBookingDepositCheckoutSession: (...args: unknown[]) =>
     createBookingDepositCheckoutSession(...args),
   retrieveBookingDepositSession: (...args: unknown[]) => retrieveBookingDepositSession(...args),
@@ -62,6 +67,7 @@ vi.mock('@/lib/booking/schemas', () => ({
   },
 }));
 
+import { BookingActionError } from '@/lib/booking/service';
 import { POST } from './create';
 
 function requestCtx(body: Record<string, unknown>, headers?: Record<string, string>) {
@@ -78,7 +84,41 @@ function requestCtx(body: Record<string, unknown>, headers?: Record<string, stri
   };
 }
 
-describe('public booking create — deposit checkout reuse', () => {
+const bookingBody = {
+  serviceId: 'svc_1',
+  barberId: 'barber_1',
+  fullName: 'Client',
+  email: 'client@example.com',
+  startAt: '2026-08-10T10:00:00.000Z',
+  idempotencyKey: 'idem-key-abcdef12',
+};
+
+function pendingCreated(overrides: Record<string, unknown> = {}) {
+  const createdAt = new Date();
+  return {
+    id: 'book_1',
+    status: BookingStatus.PENDING_PAYMENT,
+    email: 'client@example.com',
+    depositRequired: true,
+    depositAmountPence: 500,
+    bookingPaymentType: 'DEPOSIT',
+    paymentAmountPence: 500,
+    kersivoPlatformFeeBps: 0,
+    kersivoPlatformFeePence: 0,
+    shopName: 'Test Shop',
+    stripeCheckoutSessionId: null,
+    replayed: false,
+    service: { name: 'Fade' },
+    barber: { name: 'Alex' },
+    serviceNameAtBooking: 'Fade',
+    startAt: new Date(),
+    createdAt,
+    paymentExpiresAt: new Date(createdAt.getTime() + 15 * 60 * 1000),
+    ...overrides,
+  };
+}
+
+describe('public booking create — booking payment checkout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     findUniqueShop.mockResolvedValue({
@@ -94,23 +134,16 @@ describe('public booking create — deposit checkout reuse', () => {
     shopAcceptsPublicBookings.mockResolvedValue(true);
     checkBookingRateLimit.mockResolvedValue({ ok: true });
     updateBooking.mockResolvedValue({});
+    createBookingPaymentCheckoutSession.mockResolvedValue({
+      id: 'cs_new',
+      url: 'https://checkout.stripe.test/cs_new',
+    });
   });
 
   it('reuses an open Checkout Session on retry instead of creating another', async () => {
-    createInstantBooking.mockResolvedValue({
-      id: 'book_1',
-      status: BookingStatus.PENDING_PAYMENT,
-      email: 'client@example.com',
-      depositRequired: true,
-      depositAmountPence: 500,
-      shopName: 'Test Shop',
-      stripeCheckoutSessionId: 'cs_existing',
-      replayed: true,
-      service: { name: 'Fade' },
-      barber: { name: 'Alex' },
-      serviceNameAtBooking: 'Fade',
-      startAt: new Date(),
-    });
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({ stripeCheckoutSessionId: 'cs_existing', replayed: true }),
+    );
     retrieveBookingDepositSession.mockResolvedValue({
       id: 'cs_existing',
       status: 'open',
@@ -120,45 +153,22 @@ describe('public booking create — deposit checkout reuse', () => {
     });
 
     const res = await POST(
-      requestCtx(
-        {
-          serviceId: 'svc_1',
-          barberId: 'barber_1',
-          fullName: 'Client',
-          email: 'client@example.com',
-          startAt: '2026-08-10T10:00:00.000Z',
-          idempotencyKey: 'idem-key-12345678',
-        },
-        { 'Idempotency-Key': 'idem-key-12345678' },
-      ) as never,
+      requestCtx(bookingBody, { 'Idempotency-Key': 'idem-key-abcdef12' }) as never,
     );
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.booking.checkoutUrl).toBe('https://checkout.stripe.test/cs_existing');
     expect(retrieveBookingDepositSession).toHaveBeenCalledWith('cs_existing', 'acct_shop');
+    expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
     expect(createBookingDepositCheckoutSession).not.toHaveBeenCalled();
     expect(updateBooking).not.toHaveBeenCalled();
   });
 
-  it('creates a new session when the existing one is no longer open', async () => {
-    const createdAt = new Date();
-    createInstantBooking.mockResolvedValue({
-      id: 'book_1',
-      status: BookingStatus.PENDING_PAYMENT,
-      email: 'client@example.com',
-      depositRequired: true,
-      depositAmountPence: 500,
-      shopName: 'Test Shop',
-      stripeCheckoutSessionId: 'cs_expired',
-      replayed: true,
-      service: { name: 'Fade' },
-      barber: { name: 'Alex' },
-      serviceNameAtBooking: 'Fade',
-      startAt: new Date(),
-      createdAt,
-      paymentExpiresAt: new Date(createdAt.getTime() + 15 * 60 * 1000),
-    });
+  it('creates a new generic session when the existing one is no longer open', async () => {
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({ stripeCheckoutSessionId: 'cs_expired', replayed: true }),
+    );
     retrieveBookingDepositSession.mockResolvedValue({
       id: 'cs_expired',
       status: 'expired',
@@ -166,31 +176,131 @@ describe('public booking create — deposit checkout reuse', () => {
       amount_total: 500,
       currency: 'gbp',
     });
-    createBookingDepositCheckoutSession.mockResolvedValue({
-      id: 'cs_new',
-      url: 'https://checkout.stripe.test/cs_new',
-    });
 
-    const res = await POST(
-      requestCtx({
-        serviceId: 'svc_1',
-        barberId: 'barber_1',
-        fullName: 'Client',
-        email: 'client@example.com',
-        startAt: '2026-08-10T10:00:00.000Z',
-        idempotencyKey: 'idem-key-abcdef12',
-      }) as never,
-    );
+    const res = await POST(requestCtx(bookingBody) as never);
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.booking.checkoutUrl).toBe('https://checkout.stripe.test/cs_new');
-    expect(createBookingDepositCheckoutSession).toHaveBeenCalledTimes(1);
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledTimes(1);
+    expect(createBookingDepositCheckoutSession).not.toHaveBeenCalled();
     expect(updateBooking).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'book_1' },
         data: { stripeCheckoutSessionId: 'cs_new' },
       }),
     );
+  });
+
+  it('H: Free booking snapshot (500p, 5p fee) is passed to checkout as the application fee', async () => {
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({ kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 }),
+    );
+
+    const res = await POST(requestCtx(bookingBody) as never);
+
+    expect(res.status).toBe(200);
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookingId: 'book_1',
+        shopId: 'shop_1',
+        shopConnectAccountId: 'acct_shop',
+        bookingPaymentType: 'DEPOSIT',
+        paymentAmountPence: 500,
+        applicationFeePence: 5,
+      }),
+    );
+  });
+
+  it('J: checkout uses the stored snapshot even if the shop is now on Full (no plan recompute)', async () => {
+    // Shop has since upgraded (paid) — the stored Free snapshot must still be honoured.
+    findUniqueShop.mockResolvedValue({
+      id: 'shop_1',
+      name: 'Test Shop',
+      shopPaidAt: new Date(),
+      smsRemindersEnabled: true,
+      depositsEnabled: true,
+      stripeConnectAccountId: 'acct_shop',
+      stripeConnectChargesEnabled: true,
+      publicActivityPaused: false,
+    });
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({
+        replayed: true,
+        paymentAmountPence: 300,
+        depositAmountPence: 300,
+        kersivoPlatformFeeBps: 100,
+        kersivoPlatformFeePence: 3,
+      }),
+    );
+
+    await POST(requestCtx(bookingBody) as never);
+
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentAmountPence: 300, applicationFeePence: 3 }),
+    );
+  });
+
+  it('K: retries for the same booking send identical amount, fee and expiry anchor', async () => {
+    const created = pendingCreated({ kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 });
+    createInstantBooking.mockResolvedValue(created);
+
+    await POST(requestCtx(bookingBody) as never);
+    createInstantBooking.mockResolvedValue({ ...created, replayed: true });
+    await POST(requestCtx(bookingBody) as never);
+
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledTimes(2);
+    const [first, second] = createBookingPaymentCheckoutSession.mock.calls.map((call) => call[0]);
+    for (const key of [
+      'paymentAmountPence',
+      'applicationFeePence',
+      'bookingPaymentType',
+      'bookingCreatedAt',
+      'holdExpiresAt',
+    ] as const) {
+      expect(second[key]).toEqual(first[key]);
+    }
+  });
+
+  it('pre-snapshot pending booking falls back to the legacy deposit amount with 0 fee', async () => {
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({
+        bookingPaymentType: null,
+        paymentAmountPence: null,
+        kersivoPlatformFeeBps: null,
+        kersivoPlatformFeePence: null,
+      }),
+    );
+
+    await POST(requestCtx(bookingBody) as never);
+
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+      expect.objectContaining({ bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, applicationFeePence: 0 }),
+    );
+  });
+
+  it('G: FULL mode error is returned with the stable code and no checkout', async () => {
+    createInstantBooking.mockRejectedValue(
+      new BookingActionError('not yet', 409, 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE'),
+    );
+
+    const res = await POST(requestCtx(bookingBody) as never);
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'not yet', code: 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE' });
+    expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
+    expect(updateBooking).not.toHaveBeenCalled();
+  });
+
+  it('F: payments-not-ready error is returned with the stable code and no checkout', async () => {
+    createInstantBooking.mockRejectedValue(
+      new BookingActionError('not ready', 503, 'BOOKING_PAYMENT_NOT_READY'),
+    );
+
+    const res = await POST(requestCtx(bookingBody) as never);
+
+    expect(res.status).toBe(503);
+    expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
+    expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
   });
 });

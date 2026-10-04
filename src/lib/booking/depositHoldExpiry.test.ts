@@ -28,7 +28,7 @@ vi.mock('../shop/stripe', () => ({
 }));
 
 vi.mock('./confirmPaidDeposit', () => ({
-  confirmPaidDeposit: (...args: unknown[]) => confirmPaidDeposit(...args),
+  confirmPaidBookingPayment: (...args: unknown[]) => confirmPaidDeposit(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -103,10 +103,29 @@ describe('processExpiredDepositHolds', () => {
         shopId: 'shop_1',
         sessionId: 'cs_1',
         paymentIntentId: 'pi_1',
+        session: expect.objectContaining({ id: 'cs_1', status: 'complete' }),
       }),
     );
     expect(updateManyBooking).not.toHaveBeenCalled();
     expect(result).toEqual({ scanned: 1, released: 0, recovered: 1, deferred: 0 });
+  });
+
+  it('keeps the hold (deferred) when a paid session fails amount verification', async () => {
+    findManyBooking.mockResolvedValue([dueRow()]);
+    retrieveBookingDepositSession.mockResolvedValue({
+      id: 'cs_1',
+      status: 'complete',
+      payment_status: 'paid',
+      payment_intent: 'pi_1',
+      amount_total: 999,
+      metadata: { type: 'booking_payment', bookingId: 'book_1', shopId: 'shop_1', bookingPaymentType: 'DEPOSIT' },
+    });
+    confirmPaidDeposit.mockResolvedValue({ outcome: 'amount_mismatch' });
+
+    const result = await processExpiredDepositHolds(now);
+
+    expect(updateManyBooking).not.toHaveBeenCalled();
+    expect(result).toEqual({ scanned: 1, released: 0, recovered: 0, deferred: 1 });
   });
 
   it('defers release when Stripe expire API fails', async () => {

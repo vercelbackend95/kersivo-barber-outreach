@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 
 /**
- * Booking payment snapshot written by createInstantBooking, using the REAL depositGate
- * (legacy Paid-only deposit rules) so Free pay-at-shop behaviour is exercised end to end.
+ * Live booking payment runtime in createInstantBooking: ShopSettings.bookingPaymentMode +
+ * central product access decide the payment, snapshotted onto the Booking before Checkout.
  */
 
 const findUniqueBooking = vi.fn();
@@ -18,6 +18,7 @@ const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
 const buildInstantBookingConfirmationEmail = vi.fn();
 const getShopPublicActivityPauseOnDate = vi.fn();
+const loadKersivoAccess = vi.fn();
 
 vi.mock('../db/client', () => ({
   prisma: {
@@ -93,14 +94,24 @@ vi.mock('./depositMoney', () => ({
 vi.mock('./slots', () => ({
   generateSlots: () => ['10:00', '10:30', '11:00'],
 }));
+vi.mock('../shop/kersivoAccess', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../shop/kersivoAccess')>()),
+  loadKersivoAccess: (...args: unknown[]) => loadKersivoAccess(...args),
+}));
 
-import { createInstantBooking } from './service';
+import { DEMO_SHOP_ID } from '../db/shopScope';
+import { accessForState, type KersivoProductState } from '../shop/kersivoAccess';
+import { BookingActionError, createInstantBooking } from './service';
+
+function asState(state: KersivoProductState) {
+  loadKersivoAccess.mockResolvedValue(accessForState(state));
+}
 
 const baseService = {
   id: 'svc_1',
   shopId: 'shop_1',
   name: 'Cut',
-  pricePence: 2000,
+  pricePence: 3000,
   durationMinutes: 30,
   bufferMinutes: 0,
   isActive: true,
@@ -109,10 +120,7 @@ const baseService = {
 const baseShop = {
   id: 'shop_1',
   name: 'Test Shop',
-  shopPaidAt: new Date('2026-01-01T00:00:00.000Z') as Date | null,
-  smsRemindersEnabled: false,
-  freeBookingActivatedAt: null as Date | null,
-  depositsEnabled: true,
+  bookingPaymentMode: 'DEPOSIT' as 'NONE' | 'DEPOSIT' | 'FULL',
   stripeConnectAccountId: 'acct_ready' as string | null,
   stripeConnectChargesEnabled: true,
   pendingConfirmationMins: 15,
@@ -136,20 +144,36 @@ function bookingInput(key: string) {
   };
 }
 
+const publicOptions = { requiredShopId: 'shop_1', allowDepositCollection: true };
+
 function createdData(): Record<string, unknown> {
   expect(bookingCreate).toHaveBeenCalledTimes(1);
   return bookingCreate.mock.calls[0][0].data as Record<string, unknown>;
 }
 
-describe('createInstantBooking — booking payment snapshot', () => {
+const NONE_SNAPSHOT = {
+  status: BookingStatus.BOOKED,
+  paymentRequired: false,
+  depositAmountPence: null,
+  paymentStatus: null,
+  paymentExpiresAt: null,
+  bookingPaymentType: 'NONE',
+  paymentAmountPence: 0,
+  kersivoPlatformFeeBps: 0,
+  kersivoPlatformFeePence: 0,
+};
+
+describe('createInstantBooking — live booking payment runtime', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    asState('FREE_BOOKING');
     getShopPublicActivityPauseOnDate.mockResolvedValue({ paused: false });
     buildInstantBookingConfirmationEmail.mockReturnValue({ subject: 's', html: '<p>ok</p>' });
     tryDeliverOutboxEmail.mockResolvedValue(undefined);
     enqueueEmail.mockResolvedValue({ id: 'out_1' });
     findUniqueBooking.mockResolvedValue(null);
     findUniqueOrThrowService.mockResolvedValue(baseService);
+    findUniqueOrThrowShop.mockResolvedValue(baseShop);
     findUniqueShop.mockResolvedValue({ name: 'Test Shop' });
     findUniqueBarber.mockResolvedValue({ id: 'barber_1', shopId: 'shop_1', name: 'Alex', active: true });
     findUniqueBarberService.mockResolvedValue({ serviceId: 'svc_1' });
@@ -172,16 +196,60 @@ describe('createInstantBooking — booking payment snapshot', () => {
     );
   });
 
-  it('P: Paid shop deposit booking snapshots DEPOSIT / deposit amount / 0 bps / 0 fee (legacy flow unchanged)', async () => {
-    findUniqueOrThrowShop.mockResolvedValue(baseShop);
+  it('A: Free + DEPOSIT + £30 → PENDING_PAYMENT, 500p payment, 1% / 5p fee', async () => {
+    const result = await createInstantBooking(bookingInput('free-30'), publicOptions);
 
-    const result = await createInstantBooking(bookingInput('paid-deposit-key'), {
-      requiredShopId: 'shop_1',
-      allowDepositCollection: true,
-    });
-
+    expect(loadKersivoAccess).toHaveBeenCalledWith('shop_1');
     const data = createdData();
     expect(data).toMatchObject({
+      status: BookingStatus.PENDING_PAYMENT,
+      paymentRequired: true,
+      depositAmountPence: 500,
+      paymentStatus: PaymentStatus.UNPAID,
+      bookingPaymentType: 'DEPOSIT',
+      paymentAmountPence: 500,
+      kersivoPlatformFeeBps: 100,
+      kersivoPlatformFeePence: 5,
+    });
+    expect(data.paymentExpiresAt).toBeInstanceOf(Date);
+    expect(result.depositRequired).toBe(true);
+    // Confirmation email still waits for payment.
+    expect(enqueueEmail).not.toHaveBeenCalled();
+  });
+
+  it('B: Free + DEPOSIT + £3 → 300p payment, 3p fee', async () => {
+    findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
+
+    await createInstantBooking(bookingInput('free-3'), publicOptions);
+
+    expect(createdData()).toMatchObject({
+      status: BookingStatus.PENDING_PAYMENT,
+      depositAmountPence: 300,
+      bookingPaymentType: 'DEPOSIT',
+      paymentAmountPence: 300,
+      kersivoPlatformFeeBps: 100,
+      kersivoPlatformFeePence: 3,
+    });
+  });
+
+  it('C: Free + NONE → BOOKED, no Stripe, confirmation sent immediately', async () => {
+    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
+
+    const result = await createInstantBooking(bookingInput('free-none'), publicOptions);
+
+    expect(result.depositRequired).toBe(false);
+    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(loadKersivoAccess).not.toHaveBeenCalled();
+  });
+
+  it('D / AC: Full + DEPOSIT → 500p, 0 bps, 0 fee (existing Paid deposit behaviour)', async () => {
+    asState('FULL_KERSIVO');
+
+    const result = await createInstantBooking(bookingInput('full-30'), publicOptions);
+
+    expect(result.depositRequired).toBe(true);
+    expect(createdData()).toMatchObject({
       status: BookingStatus.PENDING_PAYMENT,
       paymentRequired: true,
       depositAmountPence: 500,
@@ -191,79 +259,74 @@ describe('createInstantBooking — booking payment snapshot', () => {
       kersivoPlatformFeeBps: 0,
       kersivoPlatformFeePence: 0,
     });
-    expect(data.paymentExpiresAt).toBeInstanceOf(Date);
-    expect(result.depositRequired).toBe(true);
-    // Confirmation email still waits for payment.
-    expect(enqueueEmail).not.toHaveBeenCalled();
   });
 
-  it('P: deposit on a sub-£5 service snapshots the service price', async () => {
-    findUniqueOrThrowShop.mockResolvedValue(baseShop);
-    findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
+  it('E: SETUP shop with DEPOSIT mode cannot take booking payment (fails closed, no booking)', async () => {
+    asState('SETUP');
 
-    await createInstantBooking(bookingInput('paid-cheap-key'), {
-      requiredShopId: 'shop_1',
-      allowDepositCollection: true,
+    await expect(createInstantBooking(bookingInput('setup'), publicOptions)).rejects.toMatchObject({
+      statusCode: 503,
+      code: 'BOOKING_PAYMENT_NOT_READY',
     });
-
-    expect(createdData()).toMatchObject({
-      depositAmountPence: 300,
-      bookingPaymentType: 'DEPOSIT',
-      paymentAmountPence: 300,
-      kersivoPlatformFeePence: 0,
-    });
+    expect(transaction).not.toHaveBeenCalled();
+    expect(bookingCreate).not.toHaveBeenCalled();
   });
 
-  it('non-payment booking snapshots NONE / 0 / 0 / 0', async () => {
-    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, depositsEnabled: false });
-
-    await createInstantBooking(bookingInput('paid-no-deposit-key'), {
-      requiredShopId: 'shop_1',
-      allowDepositCollection: true,
-    });
-
-    expect(createdData()).toMatchObject({
-      status: BookingStatus.BOOKED,
-      paymentRequired: false,
-      depositAmountPence: null,
-      paymentStatus: null,
-      paymentExpiresAt: null,
-      bookingPaymentType: 'NONE',
-      paymentAmountPence: 0,
-      kersivoPlatformFeeBps: 0,
-      kersivoPlatformFeePence: 0,
-    });
+  it('F: DEPOSIT with Connect missing / not ready fails closed before any booking is created', async () => {
+    for (const shop of [
+      { ...baseShop, stripeConnectAccountId: null },
+      { ...baseShop, stripeConnectChargesEnabled: false },
+    ]) {
+      findUniqueOrThrowShop.mockResolvedValue(shop);
+      const error = await createInstantBooking(bookingInput('no-connect'), publicOptions).catch((e) => e);
+      expect(error).toBeInstanceOf(BookingActionError);
+      expect(error).toMatchObject({ statusCode: 503, code: 'BOOKING_PAYMENT_NOT_READY' });
+    }
+    expect(transaction).not.toHaveBeenCalled();
+    expect(bookingCreate).not.toHaveBeenCalled();
   });
 
-  it('Q: Free shop with stale depositsEnabled + ready Connect stays pay-at-shop (no Stripe deposit, BOOKED)', async () => {
-    findUniqueOrThrowShop.mockResolvedValue({
-      ...baseShop,
-      shopPaidAt: null,
-      smsRemindersEnabled: false,
-      freeBookingActivatedAt: new Date('2026-10-04T09:00:00.000Z'),
-      depositsEnabled: true,
-      stripeConnectAccountId: 'acct_free_ready',
-      stripeConnectChargesEnabled: true,
-    });
+  it('F: demo shop never takes booking payments', async () => {
+    findUniqueOrThrowService.mockResolvedValue({ ...baseService, shopId: DEMO_SHOP_ID });
+    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, id: DEMO_SHOP_ID });
+    findUniqueBarber.mockResolvedValue({ id: 'barber_1', shopId: DEMO_SHOP_ID, name: 'Alex', active: true });
+    asState('FULL_KERSIVO');
 
-    const result = await createInstantBooking(bookingInput('free-key'), {
-      requiredShopId: 'shop_1',
-      allowDepositCollection: true,
+    await expect(createInstantBooking(bookingInput('demo'), { allowDepositCollection: true })).rejects.toMatchObject({
+      code: 'BOOKING_PAYMENT_NOT_READY',
     });
+    expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('G: FULL mode returns FULL_BOOKING_PAYMENT_NOT_AVAILABLE and creates no booking', async () => {
+    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'FULL' });
+
+    for (const state of ['FREE_BOOKING', 'FULL_KERSIVO'] as const) {
+      asState(state);
+      const error = await createInstantBooking(bookingInput('full-mode'), publicOptions).catch((e) => e);
+      expect(error).toBeInstanceOf(BookingActionError);
+      expect(error).toMatchObject({ statusCode: 409, code: 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE' });
+    }
+    expect(transaction).not.toHaveBeenCalled();
+    expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('£0 service never requires Stripe even in DEPOSIT mode', async () => {
+    findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 0 });
+
+    const result = await createInstantBooking(bookingInput('free-zero'), publicOptions);
 
     expect(result.depositRequired).toBe(false);
-    expect(createdData()).toMatchObject({
-      status: BookingStatus.BOOKED,
-      paymentRequired: false,
-      depositAmountPence: null,
-      paymentStatus: null,
-      paymentExpiresAt: null,
-      bookingPaymentType: 'NONE',
-      paymentAmountPence: 0,
-      kersivoPlatformFeeBps: 0,
-      kersivoPlatformFeePence: 0,
-    });
-    // Pay-at-shop confirmation is sent immediately, exactly as before.
-    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
+  });
+
+  it('owner sandbox / non-public bookings never collect, even in FULL mode', async () => {
+    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'FULL' });
+
+    const result = await createInstantBooking(bookingInput('admin'), { requiredShopId: 'shop_1' });
+
+    expect(result.depositRequired).toBe(false);
+    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
+    expect(loadKersivoAccess).not.toHaveBeenCalled();
   });
 });

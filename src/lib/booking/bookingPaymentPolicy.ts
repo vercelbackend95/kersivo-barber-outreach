@@ -8,6 +8,20 @@ import type { KersivoProductState } from '../shop/kersivoAccess';
 /** DEPOSIT mode charges £5, or the full service price when the service costs less. */
 export const BOOKING_DEPOSIT_CAP_PENCE = 500;
 
+/** Checkout Session metadata.type for booking payments created from Phase 4B onward. */
+export const BOOKING_PAYMENT_METADATA_TYPE = 'booking_payment';
+/** Pre-4B deposit sessions; still honoured so open sessions keep working after deploy. */
+export const LEGACY_BOOKING_DEPOSIT_METADATA_TYPE = 'booking_deposit';
+
+export function isBookingCheckoutMetadataType(type: string | null | undefined): boolean {
+  const value = (type ?? '').trim();
+  return value === BOOKING_PAYMENT_METADATA_TYPE || value === LEGACY_BOOKING_DEPOSIT_METADATA_TYPE;
+}
+
+/** Stable API error codes for booking payments. */
+export const FULL_BOOKING_PAYMENT_NOT_AVAILABLE = 'FULL_BOOKING_PAYMENT_NOT_AVAILABLE';
+export const BOOKING_PAYMENT_NOT_READY = 'BOOKING_PAYMENT_NOT_READY';
+
 /** KERSIVO platform fee in basis points (100 bps = 1%). */
 export const FREE_BOOKING_PLATFORM_FEE_BPS = 100;
 export const FULL_KERSIVO_PLATFORM_FEE_BPS = 0;

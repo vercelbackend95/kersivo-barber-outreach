@@ -42,8 +42,8 @@ import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
-import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate';
-import { confirmPaidDeposit } from '../../../lib/booking/confirmPaidDeposit';
+import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
+import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
 import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
@@ -1019,31 +1019,35 @@ async function handleBookingDepositCheckout(
   eventCreated: number,
 ): Promise<Response> {
   if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
-    return new Response(JSON.stringify({ error: 'Deposit not paid' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Booking payment not paid' }), { status: 400 });
   }
   const bookingId = metadata.bookingId?.trim();
   const shopId = metadata.shopId?.trim();
   if (!bookingId || !shopId || shopId === DEMO_SHOP_ID) {
-    return new Response(JSON.stringify({ error: 'Invalid booking deposit metadata' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Invalid booking payment metadata' }), { status: 400 });
   }
 
   const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
-  const result = await confirmPaidDeposit({
+  const result = await confirmPaidBookingPayment({
     bookingId,
     shopId,
     sessionId,
     paymentIntentId: getCheckoutPaymentIntentId(session),
+    session,
     paidAt,
   });
 
   if (result.outcome === 'not_found') {
     return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 });
   }
+  if (result.outcome === 'invalid_session') {
+    return new Response(JSON.stringify({ error: 'Invalid booking payment session' }), { status: 400 });
+  }
   if (result.outcome === 'duplicate') {
     return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
   }
-  // confirmed / reinstated / late_refunded / conflicting_payment all ack Stripe
-  // (alerts already fired for conflict and late-paid paths).
+  // confirmed / reinstated / late_refunded / conflicting_payment / amount_mismatch /
+  // payment_type_mismatch all ack Stripe (ops alerts already fired for the failure paths).
   return new Response(JSON.stringify({ ok: true, bookingId, outcome: result.outcome }), {
     status: 200,
   });
@@ -1057,7 +1061,7 @@ async function handleBookingDepositSessionExpired(event: StripeEvent): Promise<R
   const sessionId =
     typeof event.data.object.id === 'string' ? event.data.object.id.trim() : '';
   const metadata = event.data.object.metadata ?? {};
-  if ((metadata.type ?? '').trim() !== BOOKING_DEPOSIT_METADATA_TYPE) {
+  if (!isBookingCheckoutMetadataType(metadata.type)) {
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
   const bookingId = metadata.bookingId?.trim();
@@ -1320,7 +1324,7 @@ export const POST: APIRoute = async ({ request }) => {
     const eventMetadata = event.data.object.metadata ?? {};
     let stripeAccount: string | undefined;
 
-    if ((eventMetadata.type ?? '').trim() === BOOKING_DEPOSIT_METADATA_TYPE) {
+    if (isBookingCheckoutMetadataType(eventMetadata.type)) {
       const resolved = await resolveBookingDepositStripeAccount(event, eventMetadata);
       if (!resolved) {
         return await finalize(
@@ -1349,7 +1353,7 @@ export const POST: APIRoute = async ({ request }) => {
       return await finalize(await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created));
     }
 
-    if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === BOOKING_DEPOSIT_METADATA_TYPE) {
+    if (SETUP_FULFILMENT_EVENTS.has(event.type) && isBookingCheckoutMetadataType(metadata.type)) {
       return await finalize(
         await handleBookingDepositCheckout(sessionId, session, metadata, event.created),
       );

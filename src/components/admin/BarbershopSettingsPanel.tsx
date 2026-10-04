@@ -85,6 +85,8 @@ export default function BarbershopSettingsPanel({
 
   const [depositsPaid, setDepositsPaid] = useState(false);
   const [depositsEnabled, setDepositsEnabled] = useState(false);
+  const [bookingPaymentsAvailable, setBookingPaymentsAvailable] = useState(false);
+  const [bookingProductState, setBookingProductState] = useState<string | null>(null);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
@@ -216,6 +218,9 @@ export default function BarbershopSettingsPanel({
       const payload = (await depositsResponse.json().catch(() => null)) as {
         error?: string;
         paid?: boolean;
+        productState?: string;
+        bookingPaymentMode?: string;
+        bookingPaymentsAvailable?: boolean;
         depositsEnabled?: boolean;
         collectReady?: boolean;
         canManagePayouts?: boolean;
@@ -230,9 +235,15 @@ export default function BarbershopSettingsPanel({
           maxClientReschedules: number;
         };
       } | null;
-      if (!depositsResponse.ok) throw new Error(payload?.error || 'Could not load deposits settings.');
+      if (!depositsResponse.ok) throw new Error(payload?.error || 'Could not load booking payment settings.');
       setDepositsPaid(Boolean(payload?.paid));
-      setDepositsEnabled(Boolean(payload?.depositsEnabled));
+      setBookingPaymentsAvailable(Boolean(payload?.bookingPaymentsAvailable));
+      setBookingProductState(payload?.productState ?? null);
+      setDepositsEnabled(
+        payload?.bookingPaymentMode
+          ? payload.bookingPaymentMode === 'DEPOSIT'
+          : Boolean(payload?.depositsEnabled),
+      );
       setDepositsCollectReady(Boolean(payload?.collectReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
       setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
@@ -257,7 +268,7 @@ export default function BarbershopSettingsPanel({
         );
       }
     } catch (error) {
-      setDepositsError(error instanceof Error ? error.message : 'Could not load deposits settings.');
+      setDepositsError(error instanceof Error ? error.message : 'Could not load booking payment settings.');
     }
   }, []);
 
@@ -753,16 +764,26 @@ export default function BarbershopSettingsPanel({
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-deposits-title">
           <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
-            Booking deposits
+            Booking payments
           </h2>
           <p className="admin-barbershop-settings__card-copy">
-            Optional £5 online booking deposit via your Stripe account. Off for demos and unpaid
-            shops. Refund if the client cancels inside the policy window; forfeit on late cancel /
-            no-show; always refund on shop cancel.
+            Choose whether clients pay at the shop or pay a £5 deposit online when they book
+            (services under £5 are paid in full). Deposits are refunded if the client cancels
+            inside your policy window or you cancel; kept on late cancel or no-show.
           </p>
-          {!depositsPaid ? (
+          {bookingProductState === 'FREE_BOOKING' ? (
+            <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
+              KERSIVO Free charges a 1% platform fee on online booking payments. Stripe processing
+              fees also apply.
+            </p>
+          ) : bookingProductState === 'FULL_KERSIVO' ? (
+            <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
+              KERSIVO charges 0% platform fee on booking payments. Stripe processing fees apply.
+            </p>
+          ) : null}
+          {!bookingPaymentsAvailable ? (
             <p className="admin-barbershop-settings__card-copy" role="status">
-              Available after your KERSIVO subscription is active.
+              Available once KERSIVO Free or Full is active.
             </p>
           ) : (
             <>
@@ -801,67 +822,87 @@ export default function BarbershopSettingsPanel({
                   </button>
                 ) : (
                   <p className="admin-barbershop-settings__card-copy" role="status">
-                    The shop owner connects Stripe and manages deposit settings. You can see the
-                    current status below.
+                    The shop owner connects Stripe and manages booking payment settings. You can
+                    see the current status below.
                   </p>
                 )}
                 <span className="muted">
                   {connectChargesEnabled
-                    ? 'Stripe ready for deposits'
+                    ? 'Stripe ready for booking payments'
                     : connectAccountLinked
                       ? 'Finish Stripe onboarding'
                       : 'Not connected'}
                 </span>
               </div>
-              <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={depositsEnabled}
-                  disabled={
-                    depositsBusy ||
-                    !canManagePayouts ||
-                    (!connectChargesEnabled && !depositsEnabled)
-                  }
-                  onChange={async (event) => {
-                    const next = event.target.checked;
-                    setDepositsBusy(true);
-                    setDepositsError('');
-                    setDepositsMessage('');
-                    try {
-                      const response = await fetch('/api/admin/barbershop-settings/deposits', {
-                        method: 'PATCH',
-                        credentials: 'include',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ depositsEnabled: next }),
-                      });
-                      const payload = (await response.json().catch(() => null)) as {
-                        error?: string;
-                        depositsEnabled?: boolean;
-                      } | null;
-                      if (!response.ok) {
-                        throw new Error(payload?.error || 'Could not update deposits.');
-                      }
-                      setDepositsEnabled(Boolean(payload?.depositsEnabled));
-                      setDepositsMessage(
-                        payload?.depositsEnabled
-                          ? '£5 deposits required on online bookings.'
-                          : 'Deposits turned off.',
-                      );
-                      await loadDeposits();
-                    } catch (error) {
-                      setDepositsError(
-                        error instanceof Error ? error.message : 'Could not update deposits.',
-                      );
-                    } finally {
-                      setDepositsBusy(false);
-                    }
-                  }}
-                />
-                <span>
-                  Require £5 deposit on online bookings
-                  {!canManagePayouts ? ' (owner only)' : ''}
-                </span>
-              </label>
+              <fieldset
+                className="field"
+                style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
+                disabled={depositsBusy || !canManagePayouts}
+              >
+                <legend className="sr-only">Booking payment option</legend>
+                {(
+                  [
+                    { mode: 'NONE', label: 'Pay at shop' },
+                    { mode: 'DEPOSIT', label: 'Require £5 deposit' },
+                  ] as const
+                ).map((option) => {
+                  const checked = option.mode === 'DEPOSIT' ? depositsEnabled : !depositsEnabled;
+                  return (
+                    <label
+                      key={option.mode}
+                      style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                    >
+                      <input
+                        type="radio"
+                        name="bbs-booking-payment-mode"
+                        value={option.mode}
+                        checked={checked}
+                        disabled={option.mode === 'DEPOSIT' && !connectChargesEnabled && !depositsEnabled}
+                        onChange={async () => {
+                          if (checked) return;
+                          setDepositsBusy(true);
+                          setDepositsError('');
+                          setDepositsMessage('');
+                          try {
+                            const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                              method: 'PATCH',
+                              credentials: 'include',
+                              headers: { 'content-type': 'application/json' },
+                              body: JSON.stringify({ bookingPaymentMode: option.mode }),
+                            });
+                            const payload = (await response.json().catch(() => null)) as {
+                              error?: string;
+                              bookingPaymentMode?: string;
+                            } | null;
+                            if (!response.ok) {
+                              throw new Error(payload?.error || 'Could not update booking payments.');
+                            }
+                            const isDeposit = payload?.bookingPaymentMode === 'DEPOSIT';
+                            setDepositsEnabled(isDeposit);
+                            setDepositsMessage(
+                              isDeposit
+                                ? '£5 deposit required on online bookings.'
+                                : 'Clients pay at the shop.',
+                            );
+                            await loadDeposits();
+                          } catch (error) {
+                            setDepositsError(
+                              error instanceof Error ? error.message : 'Could not update booking payments.',
+                            );
+                          } finally {
+                            setDepositsBusy(false);
+                          }
+                        }}
+                      />
+                      <span>
+                        {option.label}
+                        {!canManagePayouts && checked ? ' (owner only)' : ''}
+                      </span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+              {depositsPaid ? (
               <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input
                   type="checkbox"
@@ -921,12 +962,13 @@ export default function BarbershopSettingsPanel({
                   {!canManagePayouts ? ' (owner only)' : ''}
                 </span>
               </label>
-              {retailGateReason && !retailSellReady ? (
+              ) : null}
+              {depositsPaid && retailGateReason && !retailSellReady ? (
                 <p className="admin-barbershop-settings__card-copy" role="status">
                   Retail blocked: {retailGateReason.replaceAll('_', ' ')}
                 </p>
               ) : null}
-              {publicShopUrl ? (
+              {depositsPaid && publicShopUrl ? (
                 <p className="admin-barbershop-settings__card-copy">
                   Public shop link:{' '}
                   <a href={publicShopUrl} target="_blank" rel="noreferrer">

@@ -12,6 +12,11 @@ import { buildInstantBookingConfirmationEmail, buildLateDepositRefundEmail } fro
 import { enqueueEmail, tryDeliverOutboxEmail } from '../email/outbox';
 import { captureOpsException } from '../ops/sentry';
 import { getPublicSiteUrl } from '../setup/siteUrl';
+import type { StripeSession } from '../shop/stripe';
+import {
+  isBookingCheckoutMetadataType,
+  LEGACY_BOOKING_DEPOSIT_METADATA_TYPE,
+} from './bookingPaymentPolicy';
 import { attemptDepositRefund, requestDepositRefund } from './depositMoney';
 import { generateToken, hashToken } from './tokens';
 
@@ -20,13 +25,108 @@ export type BookingWithRelations = Booking & {
   service: Service;
 };
 
-export type ConfirmPaidDepositResult =
+export type ConfirmPaidBookingPaymentResult =
   | { outcome: 'confirmed'; booking: BookingWithRelations }
   | { outcome: 'duplicate'; booking: BookingWithRelations }
   | { outcome: 'not_found' }
   | { outcome: 'conflicting_payment'; booking: BookingWithRelations }
   | { outcome: 'reinstated'; booking: BookingWithRelations }
-  | { outcome: 'late_refunded'; booking: BookingWithRelations };
+  | { outcome: 'late_refunded'; booking: BookingWithRelations }
+  /** Session is not paid, or not a booking session for this booking/shop. */
+  | { outcome: 'invalid_session' }
+  | { outcome: 'payment_type_mismatch'; booking: BookingWithRelations }
+  | { outcome: 'amount_mismatch'; booking: BookingWithRelations };
+
+/** @deprecated alias kept for existing callers. */
+export type ConfirmPaidDepositResult = ConfirmPaidBookingPaymentResult;
+
+/** Fields of the retrieved Stripe Checkout Session used to verify a booking payment. */
+export type BookingPaymentSessionEvidence = Pick<
+  StripeSession,
+  'amount_total' | 'currency' | 'payment_status' | 'metadata'
+> & { id?: string };
+
+type SessionVerdict =
+  | { ok: true }
+  | { ok: false; outcome: 'payment_type_mismatch' | 'amount_mismatch'; detail: string };
+
+function sessionBelongsToBooking(input: {
+  session: BookingPaymentSessionEvidence;
+  sessionId: string;
+  bookingId: string;
+  shopId: string;
+}): boolean {
+  const { session } = input;
+  if ((session.payment_status ?? '').toLowerCase() !== 'paid') return false;
+  if (session.id && session.id !== input.sessionId) return false;
+  const metadata = session.metadata ?? {};
+  if (!isBookingCheckoutMetadataType(metadata.type)) return false;
+  return metadata.bookingId?.trim() === input.bookingId && metadata.shopId?.trim() === input.shopId;
+}
+
+/**
+ * The Booking snapshot is authoritative: payment type and amount_total must match it exactly.
+ * Metadata never supplies money amounts.
+ */
+function verifySessionAgainstSnapshot(
+  booking: BookingWithRelations,
+  session: BookingPaymentSessionEvidence,
+): SessionVerdict {
+  const metadata = session.metadata ?? {};
+  const isLegacy = metadata.type?.trim() === LEGACY_BOOKING_DEPOSIT_METADATA_TYPE;
+  const storedType = booking.bookingPaymentType ?? (booking.paymentRequired ? 'DEPOSIT' : null);
+
+  if (!storedType || storedType === 'NONE') {
+    return { ok: false, outcome: 'payment_type_mismatch', detail: `stored=${storedType ?? 'null'}` };
+  }
+  const sessionType = isLegacy ? 'DEPOSIT' : metadata.bookingPaymentType?.trim();
+  if (sessionType !== storedType) {
+    return {
+      ok: false,
+      outcome: 'payment_type_mismatch',
+      detail: `stored=${storedType} session=${sessionType ?? 'missing'}`,
+    };
+  }
+
+  const expected = booking.paymentAmountPence ?? booking.depositAmountPence;
+  if (typeof expected !== 'number' || expected <= 0) {
+    return { ok: false, outcome: 'amount_mismatch', detail: 'missing stored payment amount' };
+  }
+  const currency = session.currency?.trim().toLowerCase();
+  if (currency && currency !== 'gbp') {
+    return { ok: false, outcome: 'amount_mismatch', detail: `currency=${currency}` };
+  }
+  const total = session.amount_total;
+  if (typeof total !== 'number') {
+    // Pre-4B deposit sessions were confirmed without amount evidence; keep accepting them.
+    if (isLegacy) return { ok: true };
+    return { ok: false, outcome: 'amount_mismatch', detail: 'missing amount_total' };
+  }
+  if (total !== expected) {
+    return { ok: false, outcome: 'amount_mismatch', detail: `expected=${expected} paid=${total}` };
+  }
+  return { ok: true };
+}
+
+function alertSessionVerificationFailed(input: {
+  booking: BookingWithRelations;
+  shopId: string;
+  sessionId: string;
+  outcome: 'payment_type_mismatch' | 'amount_mismatch';
+  detail: string;
+}): void {
+  captureOpsException(
+    new Error(
+      `Booking payment ${input.outcome} for booking ${input.booking.id} (session ${input.sessionId}): ${input.detail}. Booking not confirmed.`,
+    ),
+    {
+      route: 'confirmPaidBookingPayment',
+      shopId: input.shopId,
+      opsAlert: true,
+      tags: { bookingId: input.booking.id, sessionId: input.sessionId, outcome: input.outcome },
+    },
+  );
+}
 
 async function loadBooking(
   bookingId: string,
@@ -274,22 +374,28 @@ async function handleLatePaidDeposit(input: {
 }
 
 /**
- * Single domain entry for confirming a paid booking deposit.
- * Webhook and success page both call this — CAS ensures one token rotation
- * and one confirmation email per booking.
+ * Single domain entry for confirming a paid booking payment (deposit today).
+ * Webhook, success page and hold expiry all call this — CAS ensures one token rotation
+ * and one confirmation email per booking. Accepts legacy `booking_deposit` and generic
+ * `booking_payment` sessions; the stored Booking snapshot is authoritative for type + amount.
  */
-export async function confirmPaidDeposit(input: {
+export async function confirmPaidBookingPayment(input: {
   bookingId: string;
   shopId: string;
   sessionId: string;
   paymentIntentId: string | null;
+  /** Retrieved Checkout Session — verified against the Booking before any state change. */
+  session: BookingPaymentSessionEvidence;
   paidAt?: Date;
-}): Promise<ConfirmPaidDepositResult> {
+}): Promise<ConfirmPaidBookingPaymentResult> {
   const bookingId = input.bookingId.trim();
   const shopId = input.shopId.trim();
   const sessionId = input.sessionId.trim();
   if (!bookingId || !shopId || !sessionId) {
     return { outcome: 'not_found' };
+  }
+  if (!sessionBelongsToBooking({ session: input.session, sessionId, bookingId, shopId })) {
+    return { outcome: 'invalid_session' };
   }
 
   const existing = await loadBooking(bookingId, shopId);
@@ -320,6 +426,18 @@ export async function confirmPaidDeposit(input: {
     existing.stripeCheckoutSessionId === sessionId
   ) {
     return { outcome: 'late_refunded', booking: existing };
+  }
+
+  const verdict = verifySessionAgainstSnapshot(existing, input.session);
+  if (!verdict.ok) {
+    alertSessionVerificationFailed({
+      booking: existing,
+      shopId,
+      sessionId,
+      outcome: verdict.outcome,
+      detail: verdict.detail,
+    });
+    return { outcome: verdict.outcome, booking: existing };
   }
 
   const paidAt = input.paidAt ?? new Date();
@@ -438,3 +556,6 @@ export async function confirmPaidDeposit(input: {
   await tryDeliverOutboxEmail(outboxId);
   return { outcome: 'confirmed', booking: claimed };
 }
+
+/** @deprecated compatibility alias — use confirmPaidBookingPayment. */
+export const confirmPaidDeposit = confirmPaidBookingPayment;

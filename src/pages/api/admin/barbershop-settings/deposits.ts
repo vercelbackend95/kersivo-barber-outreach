@@ -1,11 +1,23 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import type { BookingPaymentMode } from '@prisma/client';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
-import { canCollectBookingDeposit, BOOKING_DEPOSIT_PENCE } from '@/lib/booking/depositGate';
-import { bookingPaymentModeForLegacyDepositToggle } from '@/lib/booking/bookingPaymentPolicy';
+import { BOOKING_DEPOSIT_PENCE } from '@/lib/booking/depositGate';
+import {
+  BOOKING_PAYMENT_NOT_READY,
+  bookingPaymentModeForLegacyDepositToggle,
+  calculatePlatformFeePence,
+  FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+  kersivoPlatformFeeBps,
+} from '@/lib/booking/bookingPaymentPolicy';
+import {
+  canStartBookingPaymentsOnboarding,
+  evaluateBookingPayments,
+} from '@/lib/booking/bookingPaymentsGate';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { isPaidShop } from '@/lib/shop/paidShop';
 import {
   createConnectAccountLink,
@@ -14,6 +26,8 @@ import {
 } from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
+const BOOKING_PAYMENTS_NOT_AVAILABLE = 'BOOKING_PAYMENTS_NOT_AVAILABLE';
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -21,6 +35,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
+/** Booking payment settings + Connect status. Retail eligibility is reported separately. */
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -36,6 +51,7 @@ export const GET: APIRoute = async (ctx) => {
       shopPaidAt: true,
       smsRemindersEnabled: true,
       depositsEnabled: true,
+      bookingPaymentMode: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       stripeConnectDetailsSubmitted: true,
@@ -77,21 +93,34 @@ export const GET: APIRoute = async (ctx) => {
     }
   }
 
-  const paid = isPaidShop(shop);
-  const collectReady = canCollectBookingDeposit({
-    id: shop.id,
-    shopPaidAt: shop.shopPaidAt,
-    smsRemindersEnabled: shop.smsRemindersEnabled,
-    depositsEnabled: shop.depositsEnabled,
-    stripeConnectAccountId: connect.accountId,
-    stripeConnectChargesEnabled: connect.chargesEnabled,
+  const kersivoAccess = await loadKersivoAccess(shop.id);
+  const gate = evaluateBookingPayments({
+    shop: {
+      id: shop.id,
+      stripeConnectAccountId: connect.accountId,
+      stripeConnectChargesEnabled: connect.chargesEnabled,
+    },
+    access: kersivoAccess,
   });
+  const platformFeeBps = kersivoPlatformFeeBps(kersivoAccess.state);
 
   return json({
-    paid,
+    /** Paid (FULL_KERSIVO) entitlement — Retail stays Full-only. */
+    paid: isPaidShop(shop),
+    productState: kersivoAccess.state,
+    bookingPaymentMode: shop.bookingPaymentMode,
     depositsEnabled: shop.depositsEnabled,
     depositAmountPence: BOOKING_DEPOSIT_PENCE,
-    collectReady,
+    bookingPaymentsAvailable: canStartBookingPaymentsOnboarding({
+      shopId: shop.id,
+      access: kersivoAccess,
+    }),
+    bookingPaymentsReady: gate.ok,
+    bookingPaymentsGateReason: gate.reason,
+    collectReady: gate.ok && shop.bookingPaymentMode === 'DEPOSIT',
+    platformFeeBps,
+    platformFeeExamplePence:
+      platformFeeBps === null ? null : calculatePlatformFeePence(BOOKING_DEPOSIT_PENCE, platformFeeBps),
     canManagePayouts,
     connect: {
       accountId: canManagePayouts ? connect.accountId : null,
@@ -110,42 +139,96 @@ export const GET: APIRoute = async (ctx) => {
   });
 };
 
-/** Toggle depositsEnabled. Owner / billing.manage only — same financial class as Connect. */
+type ModeRequest =
+  | { ok: true; mode: Extract<BookingPaymentMode, 'NONE' | 'DEPOSIT'> }
+  | { ok: false; response: Response };
+
+function parseModeRequest(body: { bookingPaymentMode?: unknown; depositsEnabled?: unknown } | null): ModeRequest {
+  if (body && body.bookingPaymentMode !== undefined) {
+    if (body.bookingPaymentMode === 'FULL') {
+      return {
+        ok: false,
+        response: json(
+          {
+            error: 'Full upfront payment is not available yet.',
+            code: FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+          },
+          400,
+        ),
+      };
+    }
+    if (body.bookingPaymentMode === 'NONE' || body.bookingPaymentMode === 'DEPOSIT') {
+      return { ok: true, mode: body.bookingPaymentMode };
+    }
+    return { ok: false, response: json({ error: 'bookingPaymentMode must be NONE or DEPOSIT.' }, 400) };
+  }
+  if (body && typeof body.depositsEnabled === 'boolean') {
+    const mode = bookingPaymentModeForLegacyDepositToggle(body.depositsEnabled);
+    return { ok: true, mode: mode === 'DEPOSIT' ? 'DEPOSIT' : 'NONE' };
+  }
+  return {
+    ok: false,
+    response: json({ error: 'bookingPaymentMode (NONE or DEPOSIT) or depositsEnabled boolean required.' }, 400),
+  };
+}
+
+/**
+ * Set the booking payment mode (NONE / DEPOSIT only in this phase). Owner / billing.manage only.
+ * Legacy `{ depositsEnabled }` payloads map false → NONE, true → DEPOSIT.
+ */
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
 
-  const body = (await ctx.request.json().catch(() => null)) as { depositsEnabled?: unknown } | null;
-  if (!body || typeof body.depositsEnabled !== 'boolean') {
-    return json({ error: 'depositsEnabled boolean required.' }, 400);
-  }
+  const body = (await ctx.request.json().catch(() => null)) as {
+    bookingPaymentMode?: unknown;
+    depositsEnabled?: unknown;
+  } | null;
+  const parsed = parseModeRequest(body);
+  if (!parsed.ok) return parsed.response;
+  const bookingPaymentMode = parsed.mode;
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
     select: {
       id: true,
-      shopPaidAt: true,
-      smsRemindersEnabled: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
     },
   });
   if (!shop) return json({ error: 'Shop not found.' }, 404);
-  if (!isPaidShop(shop)) {
-    return json({ error: 'Deposits are available after your KERSIVO subscription is active.' }, 403);
-  }
-  if (body.depositsEnabled && (!shop.stripeConnectAccountId || !shop.stripeConnectChargesEnabled)) {
-    return json({ error: 'Connect Stripe and finish onboarding before enabling deposits.' }, 400);
+
+  if (bookingPaymentMode === 'DEPOSIT') {
+    const kersivoAccess = await loadKersivoAccess(shop.id);
+    const gate = evaluateBookingPayments({ shop, access: kersivoAccess });
+    if (gate.reason === 'demo_shop' || gate.reason === 'no_booking_payments_capability') {
+      return json(
+        {
+          error: 'Booking deposits are available once KERSIVO Free or Full is active.',
+          code: BOOKING_PAYMENTS_NOT_AVAILABLE,
+        },
+        403,
+      );
+    }
+    if (!gate.ok) {
+      return json(
+        {
+          error: 'Connect Stripe and finish onboarding before requiring deposits.',
+          code: BOOKING_PAYMENT_NOT_READY,
+        },
+        400,
+      );
+    }
   }
 
-  // Legacy toggle maps only to NONE/DEPOSIT. The mode guard is in the same UPDATE so a stale
-  // deposit toggle can never downgrade a FULL payment mode set elsewhere.
-  const bookingPaymentMode = bookingPaymentModeForLegacyDepositToggle(body.depositsEnabled);
+  // depositsEnabled is kept in sync (DEPOSIT ⇔ true) in the same UPDATE. The mode guard means a
+  // stale request can never overwrite a FULL mode that appears concurrently.
+  const depositsEnabled = bookingPaymentMode === 'DEPOSIT';
   const result = await prisma.shopSettings.updateMany({
     where: { id: shop.id, bookingPaymentMode: { not: 'FULL' } },
-    data: { depositsEnabled: body.depositsEnabled, bookingPaymentMode },
+    data: { depositsEnabled, bookingPaymentMode },
   });
   if (result.count === 0) {
     return json(
@@ -157,10 +240,13 @@ export const PATCH: APIRoute = async (ctx) => {
     );
   }
 
-  return json({ depositsEnabled: body.depositsEnabled, bookingPaymentMode });
+  return json({ depositsEnabled, bookingPaymentMode });
 };
 
-/** Start or continue Stripe Connect Express onboarding. Owner / billing.manage only. */
+/**
+ * Start or continue Stripe Connect Express onboarding for booking payments
+ * (KERSIVO Free or Full). Owner / billing.manage only. Retail stays Full-only elsewhere.
+ */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -171,15 +257,20 @@ export const POST: APIRoute = async (ctx) => {
     where: { id: access.shopId },
     select: {
       id: true,
-      shopPaidAt: true,
-      smsRemindersEnabled: true,
       stripeConnectAccountId: true,
       owner: { select: { email: true } },
     },
   });
   if (!shop) return json({ error: 'Shop not found.' }, 404);
-  if (!isPaidShop(shop)) {
-    return json({ error: 'Connect Stripe after your KERSIVO subscription is active.' }, 403);
+  const kersivoAccess = await loadKersivoAccess(shop.id);
+  if (!canStartBookingPaymentsOnboarding({ shopId: shop.id, access: kersivoAccess })) {
+    return json(
+      {
+        error: 'Connect Stripe after activating KERSIVO Free or Full.',
+        code: BOOKING_PAYMENTS_NOT_AVAILABLE,
+      },
+      403,
+    );
   }
 
   let accountId = shop.stripeConnectAccountId;

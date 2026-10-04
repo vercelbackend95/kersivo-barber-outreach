@@ -207,11 +207,19 @@ export async function attemptDepositRefund(refundId: string): Promise<{
   }
 
   try {
+    // Free bookings carry a KERSIVO fee; a full deposit refund must return it too.
+    // Historical / Full bookings have a 0 snapshot and never request a fee refund.
+    const feeSnapshot = await prisma.booking.findUnique({
+      where: { id: row.bookingId },
+      select: { kersivoPlatformFeePence: true },
+    });
+    const refundApplicationFee = (feeSnapshot?.kersivoPlatformFeePence ?? 0) > 0;
     const result = await refundPaymentIntent(row.stripePaymentIntentId, {
       stripeAccount: row.connectAccountId ?? undefined,
       reverseTransfer: true,
       amount: row.amountPence > 0 ? row.amountPence : undefined,
       idempotencyKey: row.idempotencyKey,
+      ...(refundApplicationFee ? { refundApplicationFee: true } : {}),
     });
 
     const stripeStatus = (result.status || '').toLowerCase();

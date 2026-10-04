@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
-import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
+import { isBookingCheckoutMetadataType } from '@/lib/booking/bookingPaymentPolicy';
 import { buildBookingIcs } from '@/lib/booking/calendarIcs';
 import { prisma } from '@/lib/db/client';
 import { retrieveCheckoutSession } from '@/lib/shop/stripe';
@@ -29,7 +29,7 @@ export const GET: APIRoute = async (ctx) => {
     const session = await retrieveCheckoutSession(sessionId, { stripeAccount: connectAccountId });
     const metadata = session.metadata ?? {};
     if (
-      metadata.type !== BOOKING_DEPOSIT_METADATA_TYPE ||
+      !isBookingCheckoutMetadataType(metadata.type) ||
       metadata.shopId !== shopId ||
       !metadata.bookingId ||
       (session.payment_status ?? '').toLowerCase() !== 'paid'

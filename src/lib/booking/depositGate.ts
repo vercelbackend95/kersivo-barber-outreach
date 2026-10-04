@@ -8,6 +8,7 @@ import {
 
 /** Cap for online booking deposit (WP-B / H04). Actual charge = min(service price, this). */
 export const BOOKING_DEPOSIT_PENCE = 500;
+/** Legacy deposit session type; new sessions use BOOKING_PAYMENT_METADATA_TYPE. */
 export const BOOKING_DEPOSIT_METADATA_TYPE = 'booking_deposit';
 
 /**

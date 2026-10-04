@@ -7,7 +7,8 @@ import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
   withPrismaQuotaFallback,
 } from '../../lib/db/resilience';
-import { canCollectBookingDeposit } from '../../lib/booking/depositGate';
+import { shopRequiresOnlineDeposit } from '../../lib/booking/bookingPaymentsGate';
+import { loadKersivoAccess } from '../../lib/shop/kersivoAccess';
 import { shopAcceptsPublicBookings } from '../../lib/setup/shopPublicBookingGate';
 import {
   publicBookingPageSeo,
@@ -55,9 +56,7 @@ async function loadBookingPage() {
       timezone: true,
       cancellationWindowHours: true,
       rescheduleWindowHours: true,
-      shopPaidAt: true,
-      smsRemindersEnabled: true,
-      depositsEnabled: true,
+      bookingPaymentMode: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       publicActivityPaused: true,
@@ -96,12 +95,20 @@ async function loadBookingPage() {
     }),
   ]);
 
+  const depositRequired =
+    shop.bookingPaymentMode === 'DEPOSIT' &&
+    shopRequiresOnlineDeposit({
+      mode: shop.bookingPaymentMode,
+      shop,
+      access: await loadKersivoAccess(shopId),
+    });
+
   return {
     kind: 'shop' as const,
     shop,
     services,
     barbers,
-    depositRequired: canCollectBookingDeposit(shop),
+    depositRequired,
     bookingUnavailable: false,
   };
 }

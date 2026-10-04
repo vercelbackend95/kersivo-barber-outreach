@@ -29,8 +29,13 @@ import {
   getShopPublicActivityPauseOnDate,
 } from '@/lib/admin/shopPublicActivity';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
-import { canCollectBookingDeposit, resolveBookingDepositPence } from './depositGate';
-import { buildBookingPaymentSnapshot, FULL_KERSIVO_PLATFORM_FEE_BPS } from './bookingPaymentPolicy';
+import {
+  BOOKING_PAYMENT_NOT_READY,
+  buildBookingPaymentSnapshot,
+  FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+} from './bookingPaymentPolicy';
+import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bookingPaymentsGate';
+import { loadKersivoAccess } from '../shop/kersivoAccess';
 import {
   depositRefundClientMessage,
   forfeitBookingDeposit,
@@ -54,11 +59,14 @@ function resolvePublicSiteUrl(): string {
 
 export class BookingActionError extends Error {
   statusCode: number;
+  /** Stable machine-readable code for API clients (optional). */
+  code?: string;
 
-  constructor(message: string, statusCode = 400) {
+  constructor(message: string, statusCode = 400, code?: string) {
     super(message);
     this.name = 'BookingActionError';
     this.statusCode = statusCode;
+    if (code) this.code = code;
   }
 }
 
@@ -489,9 +497,7 @@ export async function createInstantBooking(
       where: { id: service.shopId },
       select: {
         id: true,
-        shopPaidAt: true,
-        smsRemindersEnabled: true,
-        depositsEnabled: true,
+        bookingPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
         pendingConfirmationMins: true,
@@ -499,20 +505,42 @@ export async function createInstantBooking(
       },
     });
 
-    const depositPence = resolveBookingDepositPence(service.pricePence);
-    const collectDeposit =
-      Boolean(options.allowDepositCollection) &&
-      !isAdminSandbox &&
-      canCollectBookingDeposit(shopForDeposit) &&
-      depositPence > 0;
-    // Legacy deposits are Paid-shop only (depositGate), so they never carry a KERSIVO fee.
-    const paymentSnapshot = collectDeposit
-      ? buildBookingPaymentSnapshot({
-          type: 'DEPOSIT',
-          amountPence: depositPence,
-          feeBps: FULL_KERSIVO_PLATFORM_FEE_BPS,
-        })
-      : buildBookingPaymentSnapshot({ type: 'NONE', amountPence: 0, feeBps: 0 });
+    // ShopSettings.bookingPaymentMode is authoritative for live public bookings.
+    // Everything below fails BEFORE the booking row (and slot) is created.
+    let paymentDecision: LiveBookingPaymentDecision = { outcome: 'none' };
+    if (options.allowDepositCollection && !isAdminSandbox) {
+      const mode = shopForDeposit.bookingPaymentMode ?? 'NONE';
+      if (mode === 'FULL') {
+        paymentDecision = { outcome: 'full_not_available' };
+      } else if (mode === 'DEPOSIT') {
+        const access = await loadKersivoAccess(service.shopId);
+        paymentDecision = resolveLiveBookingPayment({
+          mode,
+          servicePricePence: service.pricePence,
+          shop: shopForDeposit,
+          access,
+        });
+      }
+    }
+    if (paymentDecision.outcome === 'full_not_available') {
+      throw new BookingActionError(
+        'Online payment for this booking is not available yet. Please contact the barbershop.',
+        409,
+        FULL_BOOKING_PAYMENT_NOT_AVAILABLE,
+      );
+    }
+    if (paymentDecision.outcome === 'not_ready') {
+      throw new BookingActionError(
+        'Online booking deposits are not available for this shop right now. Please contact the barbershop.',
+        503,
+        BOOKING_PAYMENT_NOT_READY,
+      );
+    }
+    const collectDeposit = paymentDecision.outcome === 'collect';
+    const paymentSnapshot =
+      paymentDecision.outcome === 'collect'
+        ? paymentDecision.snapshot
+        : buildBookingPaymentSnapshot({ type: 'NONE', amountPence: 0, feeBps: 0 });
 
     // Hold window: floor 5m, default 15m, cap 120m so a DB-only value cannot outlive
     // Stripe's 24h session max in a way that leaves a payable session after release.
@@ -558,7 +586,7 @@ export async function createInstantBooking(
               manageTokenHash: hashToken(manageToken),
               manageTokenExpiresAt: null,
               paymentRequired: collectDeposit,
-              depositAmountPence: collectDeposit ? depositPence : null,
+              depositAmountPence: collectDeposit ? paymentSnapshot.paymentAmountPence : null,
               paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
               paymentExpiresAt,
               ...paymentSnapshot,

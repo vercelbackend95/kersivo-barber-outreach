@@ -81,6 +81,7 @@ vi.mock('../../../lib/shop/finalizeRetailOrder', () => ({
 
 vi.mock('../../../lib/booking/confirmPaidDeposit', () => ({
   confirmPaidDeposit: vi.fn(),
+  confirmPaidBookingPayment: vi.fn(),
 }));
 
 vi.mock('../../../lib/booking/depositMoney', () => ({

@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { canSellRetail, evaluateRetailSelling } from '../shop/cardPaymentsGate';
 import { accessForState, resolveKersivoAccess } from '../shop/kersivoAccess';
-import { canTakeBookingPayments, evaluateBookingPayments } from './bookingPaymentsGate';
+import {
+  canStartBookingPaymentsOnboarding,
+  canTakeBookingPayments,
+  evaluateBookingPayments,
+  resolveLiveBookingPayment,
+} from './bookingPaymentsGate';
 import { canCollectBookingDeposit } from './depositGate';
 
 const NOW = new Date('2026-10-04T12:00:00.000Z');
@@ -75,13 +80,80 @@ describe('bookingPaymentsGate', () => {
     expect(evaluate(s).ok).toBe(false);
   });
 
-  it('is not wired into live deposit collection yet (Free still cannot collect legacy deposits)', () => {
+  it('live booking runtime uses this gate; the legacy Paid-only depositGate is no longer consulted', () => {
     const s = freeShop({ depositsEnabled: true });
     expect(evaluate(s).ok).toBe(true);
     expect(canCollectBookingDeposit(s)).toBe(false);
 
     const serviceSource = readFileSync(resolve(__dirname, 'service.ts'), 'utf8');
-    expect(serviceSource).not.toMatch(/bookingPaymentsGate/);
+    expect(serviceSource).toMatch(/resolveLiveBookingPayment/);
+    expect(serviceSource).not.toMatch(/canCollectBookingDeposit/);
+  });
+});
+
+describe('resolveLiveBookingPayment', () => {
+  const freeAccess = () => resolveKersivoAccess(freeShop(), null, NOW);
+
+  it('NONE → no payment; FULL → not available (fails closed, never NONE/DEPOSIT)', () => {
+    expect(
+      resolveLiveBookingPayment({ mode: 'NONE', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
+    ).toEqual({ outcome: 'none' });
+    expect(
+      resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
+    ).toEqual({ outcome: 'full_not_available' });
+    expect(
+      resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 0, shop: freeShop(), access: freeAccess() }),
+    ).toEqual({ outcome: 'full_not_available' });
+  });
+
+  it('DEPOSIT snapshots Free at 100 bps and Full at 0 bps', () => {
+    expect(
+      resolveLiveBookingPayment({ mode: 'DEPOSIT', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
+    ).toEqual({
+      outcome: 'collect',
+      snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 },
+    });
+    const full = fullShop();
+    expect(
+      resolveLiveBookingPayment({
+        mode: 'DEPOSIT',
+        servicePricePence: 3000,
+        shop: full,
+        access: resolveKersivoAccess(full, null, NOW),
+      }),
+    ).toEqual({
+      outcome: 'collect',
+      snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 },
+    });
+  });
+
+  it('DEPOSIT without ready Connect / for SETUP is not_ready; £0 service is none', () => {
+    expect(
+      resolveLiveBookingPayment({
+        mode: 'DEPOSIT',
+        servicePricePence: 3000,
+        shop: freeShop({ stripeConnectChargesEnabled: false }),
+        access: freeAccess(),
+      }),
+    ).toEqual({ outcome: 'not_ready', reason: 'connect_not_ready' });
+    expect(
+      resolveLiveBookingPayment({
+        mode: 'DEPOSIT',
+        servicePricePence: 3000,
+        shop: shop(),
+        access: resolveKersivoAccess(shop(), null, NOW),
+      }),
+    ).toEqual({ outcome: 'not_ready', reason: 'no_booking_payments_capability' });
+    expect(
+      resolveLiveBookingPayment({ mode: 'DEPOSIT', servicePricePence: 0, shop: freeShop(), access: freeAccess() }),
+    ).toEqual({ outcome: 'none' });
+  });
+
+  it('onboarding: Free and Full allowed; SETUP and demo denied', () => {
+    expect(canStartBookingPaymentsOnboarding({ shopId: 'shop_1', access: accessForState('FREE_BOOKING') })).toBe(true);
+    expect(canStartBookingPaymentsOnboarding({ shopId: 'shop_1', access: accessForState('FULL_KERSIVO') })).toBe(true);
+    expect(canStartBookingPaymentsOnboarding({ shopId: 'shop_1', access: accessForState('SETUP') })).toBe(false);
+    expect(canStartBookingPaymentsOnboarding({ shopId: DEMO_SHOP_ID, access: accessForState('FULL_KERSIVO') })).toBe(false);
   });
 });
 
