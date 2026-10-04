@@ -63,38 +63,20 @@ export async function activateFreeBooking(params: {
     };
   }
 
-  const { state } = await loadKersivoAccess(shopId);
-  if (state === 'FULL_KERSIVO') {
+  const now = params.now ?? new Date();
+
+  // Fast paths only: neither writes the Free marker, so a stale read here is harmless.
+  const { state: preLockState } = await loadKersivoAccess(shopId, now);
+  if (preLockState === 'FULL_KERSIVO') {
     await markOnboardingCompleted(shopId);
     return { ok: true, outcome: 'full_kersivo' };
   }
-  if (state === 'FREE_BOOKING') {
+  if (preLockState === 'FREE_BOOKING') {
     await markOnboardingCompleted(shopId);
     return { ok: true, outcome: 'already_free' };
   }
 
-  if (params.termsAccepted !== true) {
-    return {
-      ok: false,
-      status: 400,
-      code: 'TERMS_NOT_ACCEPTED',
-      error: TERMS_ACCEPTANCE_REQUIRED_MESSAGE,
-    };
-  }
-
-  const email = params.email?.trim().toLowerCase() ?? '';
-  if (!email) {
-    return {
-      ok: false,
-      status: 400,
-      code: 'ACCOUNT_EMAIL_REQUIRED',
-      error: 'Your account needs an email address before activating Free Booking.',
-    };
-  }
-
-  const now = params.now ?? new Date();
-
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx): Promise<FreeBookingActivationResult> => {
     await lockShopForBookableBarberChange(tx, shopId);
 
     const shop = await tx.shopSettings.findUniqueOrThrow({
@@ -105,8 +87,47 @@ export async function activateFreeBooking(params: {
         onboardingCompletedAt: true,
       },
     });
-    if (shop.freeBookingActivatedAt) {
-      return { ok: true as const, outcome: 'already_free' as const };
+
+    const completeOnboarding = async () => {
+      if (shop.onboardingCompleted) return;
+      await tx.shopSettings.update({
+        where: { id: shopId },
+        data: {
+          onboardingCompleted: true,
+          onboardingCompletedAt: now,
+          onboardingCurrentStep: ONBOARDING_STEP_REVIEW,
+        },
+      });
+    };
+
+    // Authoritative decision: state resolved under the shop lock overrides the pre-lock read.
+    const { state } = await loadKersivoAccess(shopId, now, tx);
+    if (state === 'FULL_KERSIVO') {
+      await completeOnboarding();
+      return { ok: true, outcome: 'full_kersivo' };
+    }
+    if (state === 'FREE_BOOKING' || shop.freeBookingActivatedAt) {
+      await completeOnboarding();
+      return { ok: true, outcome: 'already_free' };
+    }
+
+    if (params.termsAccepted !== true) {
+      return {
+        ok: false,
+        status: 400,
+        code: 'TERMS_NOT_ACCEPTED',
+        error: TERMS_ACCEPTANCE_REQUIRED_MESSAGE,
+      };
+    }
+
+    const email = params.email?.trim().toLowerCase() ?? '';
+    if (!email) {
+      return {
+        ok: false,
+        status: 400,
+        code: 'ACCOUNT_EMAIL_REQUIRED',
+        error: 'Your account needs an email address before activating Free Booking.',
+      };
     }
 
     const bookable = await countActiveBookableBarbers(shopId, tx);
@@ -139,6 +160,6 @@ export async function activateFreeBooking(params: {
       db: tx,
     });
 
-    return { ok: true as const, outcome: 'activated' as const };
+    return { ok: true, outcome: 'activated' };
   });
 }

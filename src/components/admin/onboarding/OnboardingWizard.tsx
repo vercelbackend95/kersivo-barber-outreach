@@ -266,6 +266,8 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const bookableBarberCount = countBookableBarberCards(barbers);
   const atBookableBarberLimit =
     bookableBarberLimit != null && bookableBarberCount >= bookableBarberLimit;
+  /** Onboarding only round-trips active barbers, so cap total cards, not just bookable ones. */
+  const atBarberCardLimit = bookableBarberLimit != null && barbers.length >= bookableBarberLimit;
 
   const validateHours = useCallback((rows: OnboardingHoursRow[]) => {
     for (const row of rows) {
@@ -1184,6 +1186,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           type="button"
                           className="btn btn--ghost btn--sm"
                           onClick={() => {
+                            setBarberLimitNotice('');
                             setBarbers((current) => current.filter((_, itemIndex) => itemIndex !== index));
                           }}
                         >
@@ -1284,9 +1287,8 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                     type="button"
                     className="btn btn--secondary"
                     onClick={() => {
-                      // Onboarding only round-trips bookable seats; extra non-bookable
-                      // records are added later through Team.
-                      if (atBookableBarberLimit) {
+                      // Extra non-bookable records are added later through Team.
+                      if (atBarberCardLimit) {
                         setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
                         return;
                       }

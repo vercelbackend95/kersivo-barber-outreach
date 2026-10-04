@@ -38,11 +38,15 @@ const tx = {
     return [{ id: db.shop.id }];
   },
   shopSettings: {
+    findUnique: vi.fn(async () => ({ ...db.shop })),
     findUniqueOrThrow: async () => ({ ...db.shop }),
     update: async ({ data }: { data: Partial<ShopRow> }) => {
       Object.assign(db.shop, data);
       return { ...db.shop };
     },
+  },
+  saasSubscription: {
+    findFirst: vi.fn(async () => db.subscription),
   },
   barber: {
     count: async () => db.activeBookableBarbers,
@@ -238,6 +242,70 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     expect(res.body.activation).toBe('already_free');
     expect(db.shop.freeBookingActivatedAt).toBe(winnerAt);
     expect(db.legal).toHaveLength(0);
+  });
+
+  describe('product state re-resolved under the shop lock', () => {
+    const activeSubscription = {
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z'),
+    };
+
+    it('A: pre-check SETUP, locked FULL_KERSIVO → full_kersivo with no Free marker or legal record', async () => {
+      db.shop = freshShop({ onboardingCompleted: false, onboardingCompletedAt: null });
+      db.onLock = () => {
+        db.subscription = activeSubscription;
+      };
+
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ activation: 'full_kersivo', productAccess: { state: 'FULL_KERSIVO' } });
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+      expect(db.legal).toHaveLength(0);
+      expect(db.shop.onboardingCompleted).toBe(true);
+      expect(db.shop.onboardingCompletedAt).toBeInstanceOf(Date);
+      expect(markOnboardingCompleted).not.toHaveBeenCalled();
+    });
+
+    it('A: locked FULL_KERSIVO does not require Terms even though the pre-check saw SETUP', async () => {
+      db.onLock = () => {
+        db.subscription = activeSubscription;
+      };
+
+      const res = await complete();
+
+      expect(res.status).toBe(200);
+      expect(res.body.activation).toBe('full_kersivo');
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+      expect(db.legal).toHaveLength(0);
+    });
+
+    it('B: pre-check SETUP, locked FREE_BOOKING → already_free, timestamp and legal record unchanged', async () => {
+      const existingActivation = new Date('2026-10-03T08:00:00.000Z');
+      const existingLegal = { purpose: 'FREE_BOOKING_ACTIVATION', shopId: 'shop_1' };
+      db.legal = [existingLegal];
+      db.onLock = () => {
+        db.shop.freeBookingActivatedAt = existingActivation;
+      };
+
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ activation: 'already_free', productAccess: { state: 'FREE_BOOKING' } });
+      expect(db.shop.freeBookingActivatedAt).toBe(existingActivation);
+      expect(db.legal).toEqual([existingLegal]);
+    });
+
+    it('C: SETUP under the lock still activates, resolving state through the transaction', async () => {
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body.activation).toBe('activated');
+      expect(db.shop.freeBookingActivatedAt).toBeInstanceOf(Date);
+      expect(db.legal).toHaveLength(1);
+      expect(tx.shopSettings.findUnique).toHaveBeenCalled();
+      expect(tx.saasSubscription.findFirst).toHaveBeenCalled();
+    });
   });
 
   it('E: FULL_KERSIVO completion stays Full and never writes the Free marker', async () => {

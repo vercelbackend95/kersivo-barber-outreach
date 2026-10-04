@@ -77,6 +77,31 @@ describe('OnboardingWizard — Free bookable barber limit', () => {
     expect(barberCards(container)).toHaveLength(4);
   });
 
+  it('caps total cards at four even after a barber stops taking online bookings', async () => {
+    const { container } = render(<OnboardingWizard />);
+    const addButton = await screen.findByRole('button', { name: 'Add another barber' });
+    const toggle = container.querySelector<HTMLInputElement>('#onboarding-barber-bookings-2')!;
+
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle.checked).toBe(false));
+    fireEvent.click(addButton);
+
+    expect(barberCards(container)).toHaveLength(4);
+    expect(screen.getByRole('status').textContent).toBe(LIMIT_COPY);
+  });
+
+  it('allows adding a card after removing an existing non-owner card', async () => {
+    const { container } = render(<OnboardingWizard />);
+    const addButton = await screen.findByRole('button', { name: 'Add another barber' });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0]!);
+    expect(barberCards(container)).toHaveLength(3);
+    fireEvent.click(addButton);
+
+    expect(barberCards(container)).toHaveLength(4);
+    expect(screen.queryByText(LIMIT_COPY)).toBeNull();
+  });
+
   it('appends a bookable card while under the limit', async () => {
     vi.stubGlobal(
       'fetch',
