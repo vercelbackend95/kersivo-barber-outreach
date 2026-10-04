@@ -166,7 +166,7 @@ const genericMetadata = {
 
 const legacyMetadata = { type: 'booking_deposit', bookingId: 'book_1', shopId: 'shop_1' };
 
-describe('POST /api/shop/webhook â€” booking payment sessions', () => {
+describe('POST /api/shop/webhook - booking payment sessions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     verifyStripeWebhookSignature.mockReturnValue({ ok: true });
@@ -311,7 +311,7 @@ function refundEvent(type: string, object: Record<string, unknown>, account: str
   };
 }
 
-describe('POST /api/shop/webhook — booking refund correlation', () => {
+describe('POST /api/shop/webhook - booking refund correlation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     verifyStripeWebhookSignature.mockReturnValue({ ok: true });
