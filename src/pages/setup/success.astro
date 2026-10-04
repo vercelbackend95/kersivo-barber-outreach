@@ -60,6 +60,7 @@ const adsPurchaseSendTo = resolveGoogleAdsPurchaseSendToFromProcessEnv();
             client:load
             stripeSessionId={verified.sessionId}
             customerEmail={verified.customerEmail}
+            isAdminUpgrade={verified.isAdminUpgrade}
           />
           <div class="setup-success__actions">
             <a class="btn btn--secondary" href="/">Back to KERSIVO</a>

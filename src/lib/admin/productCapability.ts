@@ -8,6 +8,7 @@ import {
   type FullKersivoFeature,
 } from './productLocks';
 import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
+import { resolveFullUpgradeEligibility } from '@/lib/setup/fullKersivoUpgrade';
 import {
   hasKersivoCapability,
   loadKersivoAccess,
@@ -80,15 +81,31 @@ export async function adminPageUpgradeRedirect(
   return `/admin?${ADMIN_UPGRADE_QUERY_PARAM}=${feature}`;
 }
 
+/** Signed-in purchase entry for SETUP / Free Booking owners (no dashboard needed). */
+export const FULL_UPGRADE_PAGE_PATH = '/admin/upgrade';
+
+/**
+ * /admin/upgrade guard — purchase eligibility, not entitlement: a real signed-in tenant with
+ * billing.manage whose shop may start a Full KERSIVO checkout. Everyone else goes to /admin.
+ */
+export async function fullUpgradePageRedirect(access: AdminAccess | null): Promise<string | null> {
+  if (!access || access.via !== 'session' || isDemoShopId(access.shopId)) return '/admin';
+  if (!accessCan(access, 'billing.manage')) return '/admin';
+  const eligibility = await resolveFullUpgradeEligibility(access.shopId);
+  return eligibility.ok ? null : '/admin';
+}
+
 /**
  * /admin/launch guard. The wizard doubles as the public "Start subscription" entry, so anonymous
- * visitors, guest preview and legacy access are untouched; real tenant sessions need billing.manage
- * and the BRANDED_SITE capability (Full) — Free / SETUP tenants go to the upgrade dialog instead.
+ * visitors, guest preview and legacy access are untouched; real tenant sessions need billing.manage.
+ * The wizard's branded-site launch needs BRANDED_SITE (Full), so SETUP / Free owners are sent to the
+ * dedicated purchase page instead of being locked out of buying.
  */
 export async function launchWizardPageRedirect(access: AdminAccess | null): Promise<string | null> {
   if (!access || access.via !== 'session') return null;
   if (!accessCan(access, 'billing.manage')) return '/admin';
-  return adminPageUpgradeRedirect(access, 'BRANDED_SITE', 'launch');
+  const grant = await requireAdminProductCapability(access, 'BRANDED_SITE');
+  return grant instanceof Response ? FULL_UPGRADE_PAGE_PATH : null;
 }
 
 /** Auth + RBAC permission + product capability in one call. */

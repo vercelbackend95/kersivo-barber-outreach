@@ -12,6 +12,8 @@ import {
 type SetupSuccessSaasContinueProps = {
   stripeSessionId: string;
   customerEmail: string;
+  /** Signed-in upgrade of an existing shop: confirm in place, then return to the dashboard. */
+  isAdminUpgrade?: boolean;
 };
 
 type ClaimResponseBody = {
@@ -39,8 +41,10 @@ async function postClaim(stripeSessionId: string): Promise<{ status: number; bod
 export default function SetupSuccessSaasContinue({
   stripeSessionId,
   customerEmail,
+  isAdminUpgrade = false,
 }: SetupSuccessSaasContinueProps) {
   const [ux, setUx] = useState<ClaimUxState>({ kind: 'idle' });
+  const [upgradeActive, setUpgradeActive] = useState(false);
   const autoClaimStarted = useRef(false);
   const claimingRef = useRef(false);
   const callbackURL = buildSetupSuccessCallbackUrl(stripeSessionId);
@@ -52,6 +56,11 @@ export default function SetupSuccessSaasContinue({
     try {
       const { status, body } = await postClaim(stripeSessionId);
       if (status >= 200 && status < 300 && body.ok) {
+        if (isAdminUpgrade) {
+          setUpgradeActive(true);
+          setUx({ kind: 'idle' });
+          return;
+        }
         window.location.assign('/admin/client-onboarding');
         return;
       }
@@ -64,7 +73,7 @@ export default function SetupSuccessSaasContinue({
     } finally {
       claimingRef.current = false;
     }
-  }, [stripeSessionId]);
+  }, [stripeSessionId, isAdminUpgrade]);
 
   useEffect(() => {
     if (autoClaimStarted.current) return;
@@ -85,6 +94,50 @@ export default function SetupSuccessSaasContinue({
 
   const showAuth = ux.kind === 'need_auth';
   const busy = ux.kind === 'claiming';
+
+  if (isAdminUpgrade && upgradeActive) {
+    return (
+      <div className="setup-success-saas-continue" data-upgrade-state="active">
+        <p className="setup-success__email" role="status">
+          Full KERSIVO is active.
+        </p>
+        <p className="setup-success__note">
+          Reports, Clients, Retail, Assistant and your full booking history are now unlocked.
+        </p>
+        <div className="setup-success__actions setup-success-saas-continue__actions">
+          <a className="btn btn--primary setup-success__cta" href="/admin">
+            Go to dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAdminUpgrade && !showAuth) {
+    return (
+      <div className="setup-success-saas-continue" data-upgrade-state="verifying">
+        {ux.kind === 'error' ? (
+          <p className="setup-success__note" role="alert">
+            {ux.message}
+          </p>
+        ) : (
+          <p className="setup-success__email" role="status">
+            Confirming your Full KERSIVO access…
+          </p>
+        )}
+        <div className="setup-success__actions setup-success-saas-continue__actions">
+          <button
+            type="button"
+            className="btn btn--primary setup-success__cta"
+            disabled={busy}
+            onClick={() => void runClaim()}
+          >
+            {busy ? 'Confirming…' : ux.kind === 'error' ? 'Try again' : 'Confirm upgrade'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="setup-success-saas-continue">

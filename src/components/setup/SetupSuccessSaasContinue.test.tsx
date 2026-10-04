@@ -194,4 +194,80 @@ describe('SetupSuccessSaasContinue', () => {
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/admin/client-onboarding'));
     expect(claimCalls).toBe(1);
   });
+
+  describe('signed-in Full KERSIVO upgrade of an existing shop', () => {
+    function renderUpgrade() {
+      return render(
+        <SetupSuccessSaasContinue
+          stripeSessionId={sessionId}
+          customerEmail="owner@example.com"
+          isAdminUpgrade
+        />,
+      );
+    }
+
+    it('shows a safe verifying state, then "Full KERSIVO is active." with Go to dashboard → /admin', async () => {
+      let releaseClaim: () => void = () => undefined;
+      const claimGate = new Promise<void>((resolve) => {
+        releaseClaim = resolve;
+      });
+      vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/admin/session')) return jsonResponse({ authenticated: true }, 200);
+        if (url.includes('/api/setup/claim-paid-subscription')) {
+          await claimGate;
+          return jsonResponse({ ok: true, claimed: false, idempotent: true, shopId: 'shop-1' }, 200);
+        }
+        return jsonResponse({}, 500);
+      });
+
+      renderUpgrade();
+      expect(screen.getByRole('status').textContent).toContain('Confirming your Full KERSIVO access');
+      expect(document.body.textContent).not.toContain('Full KERSIVO is active.');
+
+      releaseClaim();
+      const active = await screen.findByText('Full KERSIVO is active.');
+      expect(active).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'Go to dashboard' }).getAttribute('href')).toBe('/admin');
+      expect(assignMock).not.toHaveBeenCalled();
+      expect(document.body.textContent).not.toMatch(/continue your setup/i);
+    });
+
+    it('keeps the claim retryable on a temporary failure', async () => {
+      let claimCalls = 0;
+      vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/admin/session')) return jsonResponse({ authenticated: true }, 200);
+        if (url.includes('/api/setup/claim-paid-subscription')) {
+          claimCalls += 1;
+          return claimCalls === 1
+            ? jsonResponse({ error: 'Unable to verify', code: 'STRIPE_SUBSCRIPTION_LOOKUP_FAILED' }, 502)
+            : jsonResponse({ ok: true }, 200);
+        }
+        return jsonResponse({}, 500);
+      });
+
+      renderUpgrade();
+      await screen.findByRole('alert');
+      fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      await screen.findByText('Full KERSIVO is active.');
+      expect(claimCalls).toBe(2);
+    });
+
+    it('signed-out return still uses the existing sign-in claim flow', async () => {
+      vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/admin/session')) return jsonResponse({ authenticated: false }, 401);
+        if (url.includes('/api/setup/claim-paid-subscription')) return jsonResponse({ error: 'Unauthorized' }, 401);
+        return jsonResponse({}, 500);
+      });
+
+      renderUpgrade();
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm upgrade' }));
+      await waitFor(() => expect(screen.getByTestId('auth-panel')).toBeTruthy());
+      expect(screen.getByTestId('auth-panel').getAttribute('data-callback-url')).toBe(
+        `/setup/success?session_id=${sessionId}`,
+      );
+    });
+  });
 });

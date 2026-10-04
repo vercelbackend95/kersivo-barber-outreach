@@ -1703,6 +1703,13 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 </span>
               </label>
             ) : null}
+            {freeActivationStep ? (
+              <p className="admin-onboarding__description" data-full-upgrade-entry>
+                Want Reports, Clients, Retail and Assistant from day one?{' '}
+                <a href="/admin/upgrade">Upgrade straight to Full KERSIVO</a> (£39/month per
+                location).
+              </p>
+            ) : null}
           </section>
         ) : null}
       </main>

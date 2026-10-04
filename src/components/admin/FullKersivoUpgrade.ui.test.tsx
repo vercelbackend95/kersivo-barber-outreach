@@ -55,8 +55,18 @@ vi.mock('@/lib/auth-client', () => ({
   authClient: { getSession: vi.fn(async () => null), signOut: vi.fn(async () => undefined) },
 }));
 
+const redirectToStripe = vi.hoisted(() => vi.fn());
+
+vi.mock('@/lib/setup/fullKersivoUpgrade.client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/setup/fullKersivoUpgrade.client')>();
+  return { ...actual, redirectToStripe: (url: string) => redirectToStripe(url) };
+});
+
 import AdminPanel from './AdminPanel';
-import FullKersivoUpgradeDialog, { FULL_KERSIVO_UPGRADE_COPY } from './FullKersivoUpgradeDialog';
+import FullKersivoUpgradeDialog, {
+  FULL_KERSIVO_UPGRADE_COPY,
+  FullKersivoUpgradePage,
+} from './FullKersivoUpgradeDialog';
 import { resolveAdminProductGate } from '@/lib/admin/productLocks';
 
 const NO_PAID = {
@@ -428,7 +438,7 @@ describe('AC: demo, BLACKLINE, showcase and preview do not regress', () => {
 });
 
 describe('FullKersivoUpgradeDialog', () => {
-  it('renders the spec copy with a non-destructive pricing CTA, closes on Escape and restores focus', async () => {
+  it('renders the spec copy, closes on Escape and restores focus', async () => {
     const trigger = document.createElement('button');
     trigger.textContent = 'Reports';
     document.body.append(trigger);
@@ -441,8 +451,7 @@ describe('FullKersivoUpgradeDialog', () => {
     expect(
       screen.getByText('Upgrade to access Reports, Clients, Retail, Assistant and your full booking history.'),
     ).toBeTruthy();
-    const cta = screen.getByRole('link', { name: 'Upgrade to Full KERSIVO' });
-    expect(cta.getAttribute('href')).toBe('/pricing');
+    expect(screen.getByRole('button', { name: 'Upgrade to Full KERSIVO' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Not now' })).toBeTruthy();
 
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' })));
@@ -454,5 +463,191 @@ describe('FullKersivoUpgradeDialog', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(trigger);
     trigger.remove();
+  });
+});
+
+describe('Authenticated Full KERSIVO checkout from the upgrade dialog', () => {
+  const UPGRADE_ENDPOINT = '/api/admin/subscription/upgrade-checkout';
+  let checkoutFetch: ReturnType<typeof vi.fn>;
+
+  function respond(status: number, body: unknown) {
+    return { ok: status >= 200 && status < 300, status, json: async () => body };
+  }
+
+  function stubCheckout(...responses: Array<{ status: number; body: unknown } | Promise<never>>) {
+    let call = 0;
+    checkoutFetch = vi.fn(async () => {
+      const next = responses[Math.min(call, responses.length - 1)];
+      call += 1;
+      if (next instanceof Promise) return next;
+      return respond(next!.status, next!.body);
+    });
+    vi.stubGlobal('fetch', checkoutFetch);
+  }
+
+  function upgradeCalls() {
+    return checkoutFetch.mock.calls.filter((call) => String(call[0]) === UPGRADE_ENDPOINT);
+  }
+
+  function openDialog() {
+    render(<FullKersivoUpgradeDialog feature="reports" onClose={() => undefined} />);
+    return {
+      terms: screen.getByRole('checkbox', { name: /I agree to the KERSIVO Terms of Service/ }) as HTMLInputElement,
+      cta: screen.getByRole('button', { name: FULL_KERSIVO_UPGRADE_COPY.cta }) as HTMLButtonElement,
+    };
+  }
+
+  beforeEach(() => {
+    redirectToStripe.mockReset();
+    window.sessionStorage.clear();
+  });
+
+  it('Z: the CTA is a checkout button, not a /pricing link', () => {
+    stubCheckout({ status: 200, body: {} });
+    openDialog();
+    expect(screen.queryByRole('link', { name: FULL_KERSIVO_UPGRADE_COPY.cta })).toBeNull();
+    expect(document.querySelector('a[href="/pricing"]')).toBeNull();
+  });
+
+  it('AA: the Terms checkbox starts unticked and links Terms; Privacy is linked separately', () => {
+    stubCheckout({ status: 200, body: {} });
+    const { terms } = openDialog();
+    expect(terms.checked).toBe(false);
+    expect(screen.getByRole('link', { name: 'Terms of Service' }).getAttribute('href')).toBe('/terms');
+    expect(screen.getByRole('link', { name: 'Privacy Policy' }).getAttribute('href')).toBe('/privacy');
+  });
+
+  it('AB: the CTA stays disabled and sends nothing until Terms are accepted', () => {
+    stubCheckout({ status: 200, body: {} });
+    const { terms, cta } = openDialog();
+    expect(cta.disabled).toBe(true);
+    fireEvent.click(cta);
+    expect(checkoutFetch).not.toHaveBeenCalled();
+    fireEvent.click(terms);
+    expect(cta.disabled).toBe(false);
+  });
+
+  it('AC/AE: clicking the CTA POSTs the authenticated checkout and redirects to the Stripe URL', async () => {
+    stubCheckout({
+      status: 200,
+      body: { ok: true, url: 'https://checkout.stripe.test/cs_up', reused: false, state: 'open' },
+    });
+    const { terms, cta } = openDialog();
+    fireEvent.click(terms);
+    fireEvent.click(cta);
+
+    await waitFor(() => expect(redirectToStripe).toHaveBeenCalledWith('https://checkout.stripe.test/cs_up'));
+    expect(upgradeCalls()).toHaveLength(1);
+    const [, init] = upgradeCalls()[0]!;
+    expect(init).toMatchObject({ method: 'POST', credentials: 'include' });
+    const payload = JSON.parse(String((init as RequestInit).body));
+    expect(payload.termsAccepted).toBe(true);
+    expect(payload.checkoutAttemptId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(fetchedFromCheckout('/api/setup/subscription-checkout')).toBe(false);
+    expect(cta.disabled).toBe(true);
+    expect(cta.textContent).toBe(FULL_KERSIVO_UPGRADE_COPY.loading);
+  });
+
+  it('AD: a double click sends exactly one checkout request', async () => {
+    let resolveCheckout: (value: unknown) => void = () => undefined;
+    checkoutFetch = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveCheckout = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', checkoutFetch);
+    const { terms, cta } = openDialog();
+    fireEvent.click(terms);
+    // Both clicks land before React re-renders the disabled button (same frame).
+    act(() => {
+      cta.click();
+      cta.click();
+    });
+    fireEvent.click(cta);
+    expect(upgradeCalls()).toHaveLength(1);
+    expect(cta.getAttribute('aria-busy')).toBe('true');
+    await act(async () => {
+      resolveCheckout(respond(200, { ok: true, url: 'https://checkout.stripe.test/once', state: 'open' }));
+    });
+    await waitFor(() => expect(redirectToStripe).toHaveBeenCalledTimes(1));
+    expect(upgradeCalls()).toHaveLength(1);
+  });
+
+  it('reuses the same checkoutAttemptId on retry and rotates once on an expired attempt', async () => {
+    stubCheckout(
+      { status: 409, body: { code: 'CHECKOUT_ATTEMPT_EXPIRED', rotateAttempt: true, error: 'expired' } },
+      { status: 200, body: { ok: true, url: 'https://checkout.stripe.test/rotated', state: 'open' } },
+    );
+    const { terms, cta } = openDialog();
+    fireEvent.click(terms);
+    fireEvent.click(cta);
+    await waitFor(() => expect(redirectToStripe).toHaveBeenCalledWith('https://checkout.stripe.test/rotated'));
+    const ids = upgradeCalls().map((call) => JSON.parse(String((call[1] as RequestInit).body)).checkoutAttemptId);
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).not.toBe(ids[1]);
+  });
+
+  it('AF: a server error stays in the dialog and the user can retry', async () => {
+    stubCheckout(
+      { status: 503, body: { error: 'Unable to verify existing checkout session. Please try again shortly.' } },
+      { status: 200, body: { ok: true, url: 'https://checkout.stripe.test/retry', state: 'open' } },
+    );
+    const { terms, cta } = openDialog();
+    fireEvent.click(terms);
+    fireEvent.click(cta);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Unable to verify existing checkout session');
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(redirectToStripe).not.toHaveBeenCalled();
+    expect(cta.disabled).toBe(false);
+
+    fireEvent.click(cta);
+    await waitFor(() => expect(redirectToStripe).toHaveBeenCalledWith('https://checkout.stripe.test/retry'));
+    const ids = upgradeCalls().map((call) => JSON.parse(String((call[1] as RequestInit).body)).checkoutAttemptId);
+    expect(ids[0]).toBe(ids[1]);
+  });
+
+  it('M: billing recovery offers Manage billing instead of a second checkout', async () => {
+    stubCheckout({
+      status: 409,
+      body: { code: 'BILLING_RECOVERY_REQUIRED', billingPortal: true, error: 'Payment issue.' },
+    });
+    const { terms, cta } = openDialog();
+    fireEvent.click(terms);
+    fireEvent.click(cta);
+    await screen.findByRole('alert');
+    expect(screen.getByRole('button', { name: 'Manage billing' })).toBeTruthy();
+    expect(redirectToStripe).not.toHaveBeenCalled();
+  });
+
+  it('AG: the /admin/upgrade purchase page offers the same Terms + checkout flow', async () => {
+    stubCheckout({ status: 200, body: { ok: true, url: 'https://checkout.stripe.test/page', state: 'open' } });
+    render(<FullKersivoUpgradePage />);
+    expect(screen.getByRole('heading', { name: FULL_KERSIVO_UPGRADE_COPY.heading })).toBeTruthy();
+    const terms = screen.getByRole('checkbox', { name: /Terms of Service/ }) as HTMLInputElement;
+    const cta = screen.getByRole('button', { name: FULL_KERSIVO_UPGRADE_COPY.cta }) as HTMLButtonElement;
+    expect(terms.checked).toBe(false);
+    expect(cta.disabled).toBe(true);
+    fireEvent.click(terms);
+    fireEvent.click(cta);
+    await waitFor(() => expect(redirectToStripe).toHaveBeenCalledWith('https://checkout.stripe.test/page'));
+    expect(upgradeCalls()).toHaveLength(1);
+  });
+
+  function fetchedFromCheckout(fragment: string) {
+    return checkoutFetch.mock.calls.some((call) => String(call[0]).includes(fragment));
+  }
+});
+
+describe('AH: Full shops see no upgrade CTA', () => {
+  it('a Full Owner has no locks, no upgrade dialog and no checkout button in the dashboard', async () => {
+    installSession({ productAccess: FULL_ACCESS });
+    await renderAdmin('/admin?upgrade=reports');
+    await waitFor(() => expect(window.location.search).toBe(''));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByRole('button', { name: FULL_KERSIVO_UPGRADE_COPY.cta })).toBeNull();
+    expect(document.querySelector('.admin-sidebar-link--locked')).toBeNull();
   });
 });

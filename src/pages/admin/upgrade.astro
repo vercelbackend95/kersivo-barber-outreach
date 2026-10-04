@@ -1,0 +1,31 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { FullKersivoUpgradePage } from '@/components/admin/FullKersivoUpgradeDialog';
+import { resolveAdminAccess } from '@/lib/admin/auth';
+import { fullUpgradePageRedirect } from '@/lib/admin/productCapability';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+
+const upgradeRedirect = await fullUpgradePageRedirect(await resolveAdminAccess(Astro));
+if (upgradeRedirect) {
+  return Astro.redirect(upgradeRedirect);
+}
+---
+
+<MinimalLayout
+  title="Upgrade to Full KERSIVO | Kersivo Admin"
+  description="Upgrade your barbershop to Full KERSIVO."
+  canonicalPath="/admin/upgrade"
+  noindex={true}
+  enableAnalytics={false}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <FullKersivoUpgradePage client:load />
+</MinimalLayout>

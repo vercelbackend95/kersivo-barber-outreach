@@ -26,6 +26,82 @@
   text-align: center;
 }
 
+.admin-full-upgrade__actions .admin-demo-lock__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-full-upgrade__checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-full-upgrade__terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-full-upgrade__terms input {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.admin-full-upgrade__terms a,
+.admin-full-upgrade__privacy a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.admin-full-upgrade__privacy {
+  margin: -0.2rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: left;
+}
+
+.admin-full-upgrade__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--danger, #f87171);
+  text-align: left;
+}
+
+.admin-full-upgrade__error p {
+  margin: 0;
+}
+
+.admin-full-upgrade-page {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 4rem) 1rem;
+}
+
+.admin-full-upgrade-page__card {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.admin-full-upgrade-page__back {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
 .admin-full-upgrade-section {
   display: flex;
   justify-content: center;

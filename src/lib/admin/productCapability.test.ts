@@ -16,7 +16,9 @@ import type { AdminAccess } from './auth';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
+  FULL_UPGRADE_PAGE_PATH,
   KERSIVO_UPGRADE_REQUIRED,
+  fullUpgradePageRedirect,
   launchWizardPageRedirect,
   requireAdminProductCapability,
 } from './productCapability';
@@ -112,14 +114,14 @@ describe('I / J: Free stays locked, Full stays allowed', () => {
 });
 
 describe('/admin/launch page guard', () => {
-  it('redirects a Free tenant to the launch upgrade dialog', async () => {
+  it('sends a Free tenant to the real purchase page instead of the branded-site wizard', async () => {
     shopFindUnique.mockResolvedValue(shopRow({ freeBookingActivatedAt: new Date('2026-09-01T00:00:00.000Z') }));
-    expect(await launchWizardPageRedirect(sessionAccess())).toBe('/admin?upgrade=launch');
+    expect(await launchWizardPageRedirect(sessionAccess())).toBe(FULL_UPGRADE_PAGE_PATH);
   });
 
-  it('redirects a non-entitled SETUP tenant session too', async () => {
+  it('AG: sends a non-entitled SETUP owner to the purchase page (buying never needs BRANDED_SITE)', async () => {
     shopFindUnique.mockResolvedValue(shopRow());
-    expect(await launchWizardPageRedirect(sessionAccess())).toBe('/admin?upgrade=launch');
+    expect(await launchWizardPageRedirect(sessionAccess())).toBe('/admin/upgrade');
   });
 
   it('keeps the wizard working for Full', async () => {
@@ -141,6 +143,60 @@ describe('/admin/launch page guard', () => {
   ])('leaves %s unchanged', async (_label, access) => {
     expect(await launchWizardPageRedirect(access)).toBeNull();
     expect(shopFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('AG: /admin/upgrade purchase page guard (may buy ≠ has Full)', () => {
+  it('lets a signed-in SETUP owner in without granting any paid capability', async () => {
+    shopFindUnique.mockResolvedValue(shopRow());
+    expect(await fullUpgradePageRedirect(sessionAccess())).toBeNull();
+    expect(await requireAdminProductCapability(sessionAccess(), 'BRANDED_SITE', now)).toBeInstanceOf(Response);
+  });
+
+  it('lets a signed-in Free owner in', async () => {
+    shopFindUnique.mockResolvedValue(shopRow({ freeBookingActivatedAt: new Date('2026-09-01T00:00:00.000Z') }));
+    expect(await fullUpgradePageRedirect(sessionAccess())).toBeNull();
+  });
+
+  it('sends Full shops back to the dashboard', async () => {
+    shopFindUnique.mockResolvedValue(shopRow());
+    subscriptionFindFirst.mockResolvedValue(ACTIVE_SUBSCRIPTION);
+    expect(await fullUpgradePageRedirect(sessionAccess())).toBe('/admin');
+  });
+
+  it('sends a Barber without billing.manage back without loading the plan', async () => {
+    expect(await fullUpgradePageRedirect(sessionAccess({ role: 'BARBER', barberId: 'b1' }))).toBe('/admin');
+    expect(shopFindUnique).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['anonymous visitor', null],
+    ['guest preview', sessionAccess({ via: 'preview', userId: null })],
+    ['legacy secret access', sessionAccess({ via: 'secret', userId: null })],
+    ['demo shop session', sessionAccess({ shopId: DEMO_SHOP_ID })],
+  ])('sends %s back to /admin', async (_label, access) => {
+    expect(await fullUpgradePageRedirect(access)).toBe('/admin');
+    expect(shopFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('runs server-side before rendering the purchase UI', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const source = fs.readFileSync(path.resolve(__dirname, '../../pages/admin/upgrade.astro'), 'utf8');
+    expect(source).toContain('export const prerender = false;');
+    expect(source).toMatch(/fullUpgradePageRedirect\(await resolveAdminAccess\(Astro\)\)/);
+    expect(source).toMatch(/if \(upgradeRedirect\) \{\s*return Astro\.redirect\(upgradeRedirect\);/);
+    expect(source).toContain('<FullKersivoUpgradePage client:load />');
+  });
+
+  it('SETUP onboarding Review links to the purchase page', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../components/admin/onboarding/OnboardingWizard.tsx'),
+      'utf8',
+    );
+    expect(source).toMatch(/freeActivationStep \? \(\s*<p[^>]*data-full-upgrade-entry[\s\S]*?href="\/admin\/upgrade"/);
   });
 });
 

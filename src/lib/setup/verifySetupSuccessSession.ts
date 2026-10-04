@@ -1,6 +1,9 @@
 import { getSetupPlan, isSetupPlanId } from '@/lib/setup/plans';
 import { SAAS_MONTHLY_GBP, SAAS_MONTHLY_PENCE } from '@/lib/seo/defaults';
-import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '@/lib/setup/saasSubscription';
+import {
+  SAAS_CHECKOUT_SOURCE_ADMIN_UPGRADE,
+  SAAS_SUBSCRIPTION_METADATA_TYPE,
+} from '@/lib/setup/saasSubscription';
 import { formatGbp } from '@/lib/shop/money';
 import {
   getCheckoutPaymentIntentId,
@@ -18,6 +21,8 @@ export type VerifiedSaasSubscriptionView = {
   monthlyFormatted: string;
   monthlyValueGbp: number;
   transactionId: string;
+  /** Started from the signed-in Full KERSIVO upgrade of an existing shop. */
+  isAdminUpgrade: boolean;
 };
 
 export type VerifiedSetupDepositView = {
@@ -96,6 +101,7 @@ export async function resolveSetupSuccessView(
       monthlyFormatted: formatGbp(monthlyPence),
       monthlyValueGbp: monthlyPence / 100 || SAAS_MONTHLY_GBP,
       transactionId,
+      isAdminUpgrade: (metadata.source ?? '').trim() === SAAS_CHECKOUT_SOURCE_ADMIN_UPGRADE,
     };
   }
 

@@ -1,17 +1,17 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Lock } from '../lucide-react';
 import type { SerializedKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { FULL_KERSIVO_FEATURE_LABELS, type FullKersivoFeature } from '@/lib/admin/productLocks';
+import {
+  openKersivoBillingPortal,
+  redirectToStripe,
+  startFullKersivoUpgradeCheckout,
+  type FullKersivoUpgradeCheckoutResult,
+} from '@/lib/setup/fullKersivoUpgrade.client';
 import '@/styles/components/admin-login.css';
 import '@/styles/components/admin-demo.css';
 import '@/styles/components/admin-full-kersivo-upgrade.css';
-
-/**
- * Temporary, non-destructive upgrade destination until authenticated one-click upgrade
- * checkout exists. Never starts a subscription checkout from here.
- */
-export const FULL_KERSIVO_UPGRADE_HREF = '/pricing';
 
 export const FULL_KERSIVO_UPGRADE_COPY = {
   heading: 'Unlock Full KERSIVO',
@@ -19,8 +19,122 @@ export const FULL_KERSIVO_UPGRADE_COPY = {
   price: '£39/month per location',
   fee: '0% KERSIVO platform fee on booking and retail payments. Stripe processing fees apply.',
   cta: 'Upgrade to Full KERSIVO',
+  loading: 'Opening secure checkout…',
   dismiss: 'Not now',
 } as const;
+
+type CheckoutError = Extract<FullKersivoUpgradeCheckoutResult, { kind: 'error' }>;
+
+/**
+ * Terms acceptance + authenticated Full KERSIVO checkout (redirects to Stripe). Used by the
+ * upgrade dialog, in-place locked sections and the /admin/upgrade purchase page.
+ */
+export function FullKersivoUpgradeCheckout({
+  feature,
+  onDismiss,
+}: {
+  feature?: FullKersivoFeature;
+  onDismiss?: () => void;
+}) {
+  const termsId = useId();
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<CheckoutError | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const inFlightRef = useRef(false);
+
+  const startCheckout = async () => {
+    if (!termsAccepted || inFlightRef.current) return;
+    inFlightRef.current = true;
+    setBusy(true);
+    setError(null);
+    const result = await startFullKersivoUpgradeCheckout();
+    if (result.kind === 'redirect') {
+      // Stay busy: the page is navigating to Stripe Checkout.
+      redirectToStripe(result.url);
+      return;
+    }
+    inFlightRef.current = false;
+    setBusy(false);
+    setError(result);
+  };
+
+  const openBilling = async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    const result = await openKersivoBillingPortal();
+    if ('url' in result) {
+      redirectToStripe(result.url);
+      return;
+    }
+    setPortalBusy(false);
+    setError((current) => (current ? { ...current, message: result.error } : current));
+  };
+
+  return (
+    <div className="admin-full-upgrade__checkout">
+      <label className="admin-full-upgrade__terms" htmlFor={termsId}>
+        <input
+          id={termsId}
+          type="checkbox"
+          checked={termsAccepted}
+          disabled={busy}
+          onChange={(event) => setTermsAccepted(event.target.checked)}
+        />
+        <span>
+          I agree to the KERSIVO{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer">
+            Terms of Service
+          </a>
+          .
+        </span>
+      </label>
+      <p className="admin-full-upgrade__privacy">
+        See how we handle your data in our{' '}
+        <a href="/privacy" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a>
+        .
+      </p>
+      {error ? (
+        <div className="admin-full-upgrade__error" role="alert">
+          <p>{error.message}</p>
+          {error.billingPortal ? (
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm"
+              disabled={portalBusy}
+              onClick={() => void openBilling()}
+            >
+              {portalBusy ? 'Opening billing…' : 'Manage billing'}
+            </button>
+          ) : error.redirectTo ? (
+            <a className="btn btn--secondary btn--sm" href={error.redirectTo}>
+              Go to dashboard
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+      <div className="admin-full-upgrade__actions">
+        <button
+          type="button"
+          className="btn btn--primary admin-demo-lock__cta"
+          data-upgrade-feature={feature}
+          disabled={!termsAccepted || busy}
+          aria-busy={busy}
+          onClick={() => void startCheckout()}
+        >
+          {busy ? FULL_KERSIVO_UPGRADE_COPY.loading : FULL_KERSIVO_UPGRADE_COPY.cta}
+        </button>
+        {onDismiss ? (
+          <button type="button" className="admin-demo-lock__explore" onClick={onDismiss}>
+            {FULL_KERSIVO_UPGRADE_COPY.dismiss}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 type AdminProductLocks = {
   /** Null when nothing is plan-locked (Full, demo, preview, legacy access). */
@@ -64,20 +178,7 @@ function UpgradeCopy({
       </p>
       <p className="admin-full-upgrade__price">{FULL_KERSIVO_UPGRADE_COPY.price}</p>
       <p className="admin-full-upgrade__fee">{FULL_KERSIVO_UPGRADE_COPY.fee}</p>
-      <div className="admin-full-upgrade__actions">
-        <a
-          className="btn btn--primary admin-demo-lock__cta"
-          href={FULL_KERSIVO_UPGRADE_HREF}
-          data-upgrade-feature={feature}
-        >
-          {FULL_KERSIVO_UPGRADE_COPY.cta}
-        </a>
-        {onDismiss ? (
-          <button type="button" className="admin-demo-lock__explore" onClick={onDismiss}>
-            {FULL_KERSIVO_UPGRADE_COPY.dismiss}
-          </button>
-        ) : null}
-      </div>
+      <FullKersivoUpgradeCheckout feature={feature} onDismiss={onDismiss} />
     </>
   );
 }
@@ -164,6 +265,29 @@ export default function FullKersivoUpgradeDialog({ feature, onClose }: FullKersi
       </div>
     </div>,
     document.body,
+  );
+}
+
+/** /admin/upgrade: signed-in SETUP / Free Booking owners buy Full without the dashboard. */
+export function FullKersivoUpgradePage() {
+  return (
+    <main className="admin-full-upgrade-page">
+      <section
+        className="auth-gate-card admin-full-upgrade-page__card"
+        aria-labelledby="full-kersivo-upgrade-page-title"
+      >
+        <h1 id="full-kersivo-upgrade-page-title" className="admin-demo-lock__title">
+          {FULL_KERSIVO_UPGRADE_COPY.heading}
+        </h1>
+        <p className="admin-demo-lock__body">{FULL_KERSIVO_UPGRADE_COPY.body}</p>
+        <p className="admin-full-upgrade__price">{FULL_KERSIVO_UPGRADE_COPY.price}</p>
+        <p className="admin-full-upgrade__fee">{FULL_KERSIVO_UPGRADE_COPY.fee}</p>
+        <FullKersivoUpgradeCheckout />
+        <a className="admin-full-upgrade-page__back" href="/admin">
+          Back
+        </a>
+      </section>
+    </main>
   );
 }
 
