@@ -6,6 +6,7 @@ import {
   retrieveBookingDepositSession,
 } from '../shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '../shop/stripe';
+import { resolveBookingPaymentAccount } from './bookingPaymentAccount';
 import { confirmPaidBookingPayment } from './confirmPaidDeposit';
 
 const BATCH_LIMIT = 25;
@@ -64,6 +65,8 @@ export async function processExpiredDepositHolds(
       id: true,
       stripeCheckoutSessionId: true,
       paymentExpiresAt: true,
+      stripeConnectAccountIdAtPayment: true,
+      kersivoPlatformFeePence: true,
       barber: {
         select: {
           shopId: true,
@@ -80,7 +83,28 @@ export async function processExpiredDepositHolds(
   for (const row of due) {
     const shopId = row.barber.shopId;
     const sessionId = row.stripeCheckoutSessionId?.trim() || '';
-    const connectAccountId = row.barber.shop.stripeConnectAccountId?.trim() || '';
+    const paymentAccount = resolveBookingPaymentAccount({
+      booking: row,
+      currentShopAccountId: row.barber.shop.stripeConnectAccountId,
+    });
+
+    if (
+      sessionId &&
+      !paymentAccount.ok &&
+      paymentAccount.reason === 'missing_payment_account_snapshot'
+    ) {
+      // The session may still be payable on an unknown account — never free the slot blindly.
+      deferred += 1;
+      await alertHoldStuck({
+        bookingId: row.id,
+        shopId,
+        sessionId,
+        paymentExpiresAt: row.paymentExpiresAt,
+        errorMessage: 'Deposit hold has no Stripe Connect payment account snapshot.',
+      });
+      continue;
+    }
+    const connectAccountId = paymentAccount.ok ? paymentAccount.accountId : '';
 
     if (!sessionId || !connectAccountId) {
       if (await releaseHold(row.id)) released += 1;
@@ -99,6 +123,7 @@ export async function processExpiredDepositHolds(
           sessionId,
           paymentIntentId: getCheckoutPaymentIntentId(session),
           session,
+          stripeAccountId: connectAccountId,
           paidAt: now,
         });
         if (
@@ -134,6 +159,7 @@ export async function processExpiredDepositHolds(
               sessionId,
               paymentIntentId: getCheckoutPaymentIntentId(session),
               session,
+              stripeAccountId: connectAccountId,
               paidAt: now,
             });
             if (

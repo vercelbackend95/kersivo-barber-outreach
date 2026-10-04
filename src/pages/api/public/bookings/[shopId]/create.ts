@@ -12,6 +12,8 @@ import {
   retrieveBookingDepositSession,
 } from '@/lib/shop/stripeConnect';
 import { BOOKING_PAYMENT_NOT_READY } from '@/lib/booking/bookingPaymentPolicy';
+import { resolveBookingPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
+import { captureOpsException } from '@/lib/ops/sentry';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
 
@@ -139,12 +141,31 @@ export const POST: APIRoute = async ({ request, params }) => {
     );
 
     if (created.depositRequired) {
-      if (!shop.stripeConnectAccountId) {
+      // The Booking's payment-account snapshot is authoritative; the current shop account is
+      // only a fallback for pre-snapshot (legacy) rows replayed through this endpoint.
+      const paymentAccount = resolveBookingPaymentAccount({
+        booking: created,
+        currentShopAccountId: shop.stripeConnectAccountId,
+        requireSnapshot: !created.replayed,
+      });
+      if (!paymentAccount.ok) {
+        if (paymentAccount.reason === 'missing_payment_account_snapshot') {
+          captureOpsException(
+            new Error(`Booking ${created.id} requires payment but has no Stripe Connect account snapshot.`),
+            {
+              route: '/api/public/bookings/[shopId]/create',
+              shopId,
+              opsAlert: true,
+              tags: { bookingId: created.id, reason: paymentAccount.reason },
+            },
+          );
+        }
         return json(
           { error: 'Booking payment checkout is not configured for this shop.', code: BOOKING_PAYMENT_NOT_READY },
           503,
         );
       }
+      const connectAccountId = paymentAccount.accountId;
       // The stored Booking snapshot is authoritative — never recompute from the shop's current plan.
       const checkoutSnapshot = resolveStoredCheckoutSnapshot(created);
       if (!checkoutSnapshot) {
@@ -155,7 +176,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         const reusedUrl = await resolveOpenDepositCheckoutUrl({
           bookingId: created.id,
           shopId,
-          connectAccountId: shop.stripeConnectAccountId,
+          connectAccountId,
           existingSessionId: created.stripeCheckoutSessionId,
         });
         if (reusedUrl) {
@@ -186,7 +207,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
       const baseUrl = getPublicSiteUrl();
       const session = await createBookingPaymentCheckoutSession({
-        shopConnectAccountId: shop.stripeConnectAccountId,
+        shopConnectAccountId: connectAccountId,
         bookingId: created.id,
         shopId,
         customerEmail: created.email,

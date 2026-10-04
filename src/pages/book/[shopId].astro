@@ -7,8 +7,6 @@ import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
   withPrismaQuotaFallback,
 } from '../../lib/db/resilience';
-import { shopRequiresOnlineDeposit } from '../../lib/booking/bookingPaymentsGate';
-import { loadKersivoAccess } from '../../lib/shop/kersivoAccess';
 import { shopAcceptsPublicBookings } from '../../lib/setup/shopPublicBookingGate';
 import {
   publicBookingPageSeo,
@@ -57,8 +55,6 @@ async function loadBookingPage() {
       cancellationWindowHours: true,
       rescheduleWindowHours: true,
       bookingPaymentMode: true,
-      stripeConnectAccountId: true,
-      stripeConnectChargesEnabled: true,
       publicActivityPaused: true,
     },
   });
@@ -95,13 +91,10 @@ async function loadBookingPage() {
     }),
   ]);
 
-  const depositRequired =
-    shop.bookingPaymentMode === 'DEPOSIT' &&
-    shopRequiresOnlineDeposit({
-      mode: shop.bookingPaymentMode,
-      shop,
-      access: await loadKersivoAccess(shopId),
-    });
+  // Payment intent follows the shop's mode, not momentary Stripe readiness: a DEPOSIT shop is
+  // never advertised as pay-at-shop. The create endpoint stays authoritative and returns
+  // BOOKING_PAYMENT_NOT_READY if Connect is unavailable.
+  const depositRequired = shop.bookingPaymentMode === 'DEPOSIT';
 
   return {
     kind: 'shop' as const,

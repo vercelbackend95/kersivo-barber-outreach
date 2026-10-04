@@ -111,6 +111,7 @@ describe('resolveLiveBookingPayment', () => {
       resolveLiveBookingPayment({ mode: 'DEPOSIT', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
     ).toEqual({
       outcome: 'collect',
+      stripeConnectAccountId: freeShop().stripeConnectAccountId,
       snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 },
     });
     const full = fullShop();
@@ -123,6 +124,7 @@ describe('resolveLiveBookingPayment', () => {
       }),
     ).toEqual({
       outcome: 'collect',
+      stripeConnectAccountId: full.stripeConnectAccountId,
       snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 },
     });
   });

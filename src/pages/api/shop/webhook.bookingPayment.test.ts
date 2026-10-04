@@ -5,6 +5,8 @@ const recordStripeWebhookReceived = vi.fn();
 const markStripeWebhookStatus = vi.fn();
 const retrieveCheckoutSession = vi.fn();
 const confirmPaidBookingPayment = vi.fn();
+const findFirstBooking = vi.fn();
+const findUniqueShop = vi.fn();
 
 vi.mock('../../../lib/shop/stripe', () => ({
   verifyStripeWebhookSignature: (...args: unknown[]) => verifyStripeWebhookSignature(...args),
@@ -35,9 +37,13 @@ vi.mock('../../../lib/ops/sentry', () => ({
 
 vi.mock('../../../lib/db/client', () => ({
   prisma: {
-    shopSettings: { updateMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
+    shopSettings: {
+      updateMany: vi.fn(),
+      count: vi.fn(),
+      findUnique: (...args: unknown[]) => findUniqueShop(...args),
+    },
     order: { findFirst: vi.fn(), updateMany: vi.fn() },
-    booking: { findFirst: vi.fn(), updateMany: vi.fn() },
+    booking: { findFirst: (...args: unknown[]) => findFirstBooking(...args), updateMany: vi.fn() },
     saasSubscription: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     setupDeposit: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
@@ -122,12 +128,12 @@ vi.mock('../../../lib/setup/saasEntitlement', () => ({
 
 import { POST } from './webhook';
 
-function completedEvent(metadata: Record<string, string>) {
+function completedEvent(metadata: Record<string, string>, account: string | null = 'acct_shop') {
   const body = {
     id: `evt_${metadata.type}`,
     type: 'checkout.session.completed',
     created: Math.floor(Date.now() / 1000),
-    account: 'acct_shop',
+    ...(account ? { account } : {}),
     data: { object: { id: 'cs_book_1', object: 'checkout.session', metadata } },
   };
   return {
@@ -187,8 +193,75 @@ describe('POST /api/shop/webhook — booking payment sessions', () => {
         sessionId: 'cs_book_1',
         paymentIntentId: 'pi_book_1',
         session,
+        stripeAccountId: 'acct_shop',
       }),
     );
+  });
+
+  it('O: event.account is passed through as the processing account for verification', async () => {
+    retrieveCheckoutSession.mockResolvedValue(paidSession(genericMetadata));
+    confirmPaidBookingPayment.mockResolvedValue({ outcome: 'confirmed', booking: { id: 'book_1' } });
+
+    const res = await POST(completedEvent(genericMetadata, 'acct_original') as never);
+
+    expect(res.status).toBe(200);
+    expect(retrieveCheckoutSession).toHaveBeenCalledWith('cs_book_1', { stripeAccount: 'acct_original' });
+    expect(confirmPaidBookingPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ stripeAccountId: 'acct_original' }),
+    );
+    expect(findFirstBooking).not.toHaveBeenCalled();
+  });
+
+  it('P: account mismatch is acknowledged without confirming (ops alert raised in domain)', async () => {
+    retrieveCheckoutSession.mockResolvedValue(paidSession(genericMetadata));
+    confirmPaidBookingPayment.mockResolvedValue({ outcome: 'account_mismatch', booking: { id: 'book_1' } });
+
+    const res = await POST(completedEvent(genericMetadata, 'acct_other') as never);
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, bookingId: 'book_1', outcome: 'account_mismatch' });
+  });
+
+  it('without event.account the Booking snapshot wins over the current shop account', async () => {
+    findFirstBooking.mockResolvedValue({
+      stripeConnectAccountIdAtPayment: 'acct_original',
+      kersivoPlatformFeePence: 5,
+    });
+    findUniqueShop.mockResolvedValue({ stripeConnectAccountId: 'acct_new' });
+    retrieveCheckoutSession.mockResolvedValue(paidSession(genericMetadata));
+    confirmPaidBookingPayment.mockResolvedValue({ outcome: 'confirmed', booking: { id: 'book_1' } });
+
+    await POST(completedEvent(genericMetadata, null) as never);
+
+    expect(findFirstBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'book_1', barber: { shopId: 'shop_1' } } }),
+    );
+    expect(retrieveCheckoutSession).toHaveBeenCalledWith('cs_book_1', { stripeAccount: 'acct_original' });
+    expect(confirmPaidBookingPayment).toHaveBeenCalledWith(
+      expect.objectContaining({ stripeAccountId: 'acct_original' }),
+    );
+  });
+
+  it('Q: without event.account a legacy null-snapshot booking falls back to the shop account', async () => {
+    findFirstBooking.mockResolvedValue({ stripeConnectAccountIdAtPayment: null, kersivoPlatformFeePence: 0 });
+    findUniqueShop.mockResolvedValue({ stripeConnectAccountId: 'acct_current' });
+    retrieveCheckoutSession.mockResolvedValue(paidSession(legacyMetadata));
+    confirmPaidBookingPayment.mockResolvedValue({ outcome: 'confirmed', booking: { id: 'book_1' } });
+
+    await POST(completedEvent(legacyMetadata, null) as never);
+
+    expect(retrieveCheckoutSession).toHaveBeenCalledWith('cs_book_1', { stripeAccount: 'acct_current' });
+  });
+
+  it('without event.account a fee-bearing booking lacking a snapshot is rejected, not guessed', async () => {
+    findFirstBooking.mockResolvedValue({ stripeConnectAccountIdAtPayment: null, kersivoPlatformFeePence: 5 });
+    findUniqueShop.mockResolvedValue({ stripeConnectAccountId: 'acct_current' });
+
+    const res = await POST(completedEvent(genericMetadata, null) as never);
+
+    expect(res.status).toBe(400);
+    expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+    expect(confirmPaidBookingPayment).not.toHaveBeenCalled();
   });
 
   it('acknowledges amount_mismatch without confirming (alert raised in domain layer)', async () => {

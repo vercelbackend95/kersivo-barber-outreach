@@ -58,7 +58,7 @@ export function canStartBookingPaymentsOnboarding(params: {
 
 export type LiveBookingPaymentDecision =
   | { outcome: 'none' }
-  | { outcome: 'collect'; snapshot: BookingPaymentSnapshot }
+  | { outcome: 'collect'; snapshot: BookingPaymentSnapshot; stripeConnectAccountId: string }
   | { outcome: 'full_not_available' }
   | { outcome: 'not_ready'; reason: BookingPaymentsGateReason };
 
@@ -82,26 +82,21 @@ export function resolveLiveBookingPayment(params: {
   if (!requiresOnlineBookingPayment(required)) return { outcome: 'none' };
 
   const gate = evaluateBookingPayments({ shop: params.shop, access: params.access });
-  if (!gate.ok) return { outcome: 'not_ready', reason: gate.reason };
+  const stripeConnectAccountId = params.shop.stripeConnectAccountId?.trim();
+  if (!gate.ok || !stripeConnectAccountId) {
+    return { outcome: 'not_ready', reason: gate.ok ? 'connect_missing' : gate.reason };
+  }
 
   const feeBps = kersivoPlatformFeeBps(params.access.state);
   if (feeBps === null) return { outcome: 'not_ready', reason: 'no_booking_payments_capability' };
 
   return {
     outcome: 'collect',
+    stripeConnectAccountId,
     snapshot: buildBookingPaymentSnapshot({
       type: required.type,
       amountPence: required.amountPence,
       feeBps,
     }),
   };
-}
-
-/** Public booking page hint: will a priced service require an online deposit right now? */
-export function shopRequiresOnlineDeposit(params: {
-  mode: BookingPaymentMode;
-  shop: BookingPaymentsShopFields;
-  access: KersivoAccess;
-}): boolean {
-  return params.mode === 'DEPOSIT' && evaluateBookingPayments(params).ok;
 }

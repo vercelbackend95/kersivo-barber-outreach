@@ -428,7 +428,11 @@ describe('KERSIVO application fee on deposit refunds', () => {
 
   function arrangeRefund(depositPence: number, feePence: number | null) {
     findUniqueBooking.mockResolvedValue(
-      paidBooking({ depositAmountPence: depositPence, kersivoPlatformFeePence: feePence }),
+      paidBooking({
+        depositAmountPence: depositPence,
+        kersivoPlatformFeePence: feePence,
+        stripeConnectAccountIdAtPayment: 'acct_shop',
+      }),
     );
     createRefund.mockResolvedValue(pendingRow({ amountPence: depositPence }));
     findUniqueRefund.mockResolvedValue(pendingRow({ amountPence: depositPence }));
@@ -515,6 +519,115 @@ describe('KERSIVO application fee on deposit refunds', () => {
     );
     expect(refundPaymentIntent).not.toHaveBeenCalled();
     expect(createRefund).not.toHaveBeenCalled();
+  });
+
+  describe('payment account snapshot', () => {
+    function bookingOnOriginalAccount(overrides: Record<string, unknown> = {}) {
+      return paidBooking({
+        kersivoPlatformFeePence: 5,
+        stripeConnectAccountIdAtPayment: 'acct_original',
+        barber: { shopId: 'shop_1', shop: { stripeConnectAccountId: 'acct_new' } },
+        ...overrides,
+      });
+    }
+
+    it('J: refund ledger uses the original Booking account after the shop account changed', async () => {
+      findUniqueBooking.mockResolvedValue(bookingOnOriginalAccount());
+      createRefund.mockResolvedValue(pendingRow({ connectAccountId: 'acct_original' }));
+
+      await requestDepositRefund({ bookingId: 'book_1', reason: 'shop_cancel' });
+
+      expect(createRefund).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'REFUND_PENDING',
+            connectAccountId: 'acct_original',
+          }),
+        }),
+      );
+    });
+
+    it('K: Free application-fee refund is sent against the original connected account', async () => {
+      findUniqueBooking.mockResolvedValue(bookingOnOriginalAccount());
+      createRefund.mockResolvedValue(pendingRow({ connectAccountId: 'acct_original' }));
+      findUniqueRefund.mockResolvedValue(pendingRow({ connectAccountId: 'acct_original' }));
+      refundPaymentIntent.mockResolvedValue({ id: 're_1', mode: 'direct', status: 'succeeded', amount: 500 });
+      updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED', connectAccountId: 'acct_original' }));
+
+      const outcome = await refundBookingDepositIfEligible({ bookingId: 'book_1', reason: 'shop_cancel' });
+
+      expect(outcome).toBe('refunded');
+      expect(refundPaymentIntent).toHaveBeenCalledWith(
+        'pi_1',
+        expect.objectContaining({ stripeAccount: 'acct_original', refundApplicationFee: true, amount: 500 }),
+      );
+      expect(refundPaymentIntent).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ stripeAccount: 'acct_new' }),
+      );
+    });
+
+    it('fee-bearing booking without an account snapshot never refunds via the current shop account', async () => {
+      findUniqueBooking.mockResolvedValue(bookingOnOriginalAccount({ stripeConnectAccountIdAtPayment: null }));
+      createRefund.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
+        pendingRow({ ...data, id: 'ref_failed' }),
+      );
+
+      const outcome = await refundBookingDepositIfEligible({ bookingId: 'book_1', reason: 'shop_cancel' });
+
+      expect(outcome).toBe('failed');
+      expect(createRefund).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'REFUND_FAILED',
+            connectAccountId: null,
+            stripePaymentIntentId: '',
+          }),
+        }),
+      );
+      expect(refundPaymentIntent).not.toHaveBeenCalled();
+      expect(captureOpsException).toHaveBeenCalled();
+    });
+
+    it('a fee-bearing ledger row without a connected account is failed without calling Stripe', async () => {
+      findUniqueRefund.mockResolvedValue(pendingRow({ connectAccountId: null }));
+      findUniqueBooking.mockResolvedValue({ kersivoPlatformFeePence: 5 });
+      updateRefund.mockResolvedValue(pendingRow({ status: 'REFUND_FAILED', connectAccountId: null }));
+
+      const result = await attemptDepositRefund('ref_1');
+
+      expect(result.outcome).toBe('failed');
+      expect(refundPaymentIntent).not.toHaveBeenCalled();
+    });
+
+    it('existing ledger connectAccountId stays authoritative for retries', async () => {
+      findUniqueRefund.mockResolvedValue(pendingRow({ connectAccountId: 'acct_original' }));
+      findUniqueBooking.mockResolvedValue({ kersivoPlatformFeePence: 5 });
+      refundPaymentIntent.mockResolvedValue({ id: 're_1', mode: 'direct', status: 'succeeded', amount: 500 });
+      updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED' }));
+
+      await attemptDepositRefund('ref_1');
+
+      expect(refundPaymentIntent).toHaveBeenCalledWith(
+        'pi_1',
+        expect.objectContaining({ stripeAccount: 'acct_original' }),
+      );
+    });
+
+    it('Q: legacy 0%-fee booking with null snapshot falls back to the current shop account', async () => {
+      findUniqueBooking.mockResolvedValue(
+        paidBooking({ kersivoPlatformFeePence: 0, stripeConnectAccountIdAtPayment: null }),
+      );
+      createRefund.mockResolvedValue(pendingRow());
+
+      await requestDepositRefund({ bookingId: 'book_1', reason: 'shop_cancel' });
+
+      expect(createRefund).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'REFUND_PENDING', connectAccountId: 'acct_shop' }),
+        }),
+      );
+    });
   });
 
   it('U: a forfeited Free deposit is never refunded afterwards', async () => {

@@ -161,6 +161,7 @@ const NONE_SNAPSHOT = {
   paymentAmountPence: 0,
   kersivoPlatformFeeBps: 0,
   kersivoPlatformFeePence: 0,
+  stripeConnectAccountIdAtPayment: null,
 };
 
 describe('createInstantBooking — live booking payment runtime', () => {
@@ -215,6 +216,48 @@ describe('createInstantBooking — live booking payment runtime', () => {
     expect(result.depositRequired).toBe(true);
     // Confirmation email still waits for payment.
     expect(enqueueEmail).not.toHaveBeenCalled();
+  });
+
+  describe('payment account snapshot', () => {
+    it('F: new Free DEPOSIT booking snapshots the exact connected account in the create', async () => {
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, stripeConnectAccountId: 'acct_free_exact' });
+
+      await createInstantBooking(bookingInput('free-acct'), publicOptions);
+
+      expect(createdData()).toMatchObject({
+        status: BookingStatus.PENDING_PAYMENT,
+        kersivoPlatformFeePence: 5,
+        stripeConnectAccountIdAtPayment: 'acct_free_exact',
+      });
+      // One payment-state read decides collection AND supplies the account snapshot.
+      const paymentReads = findUniqueOrThrowShop.mock.calls.filter(
+        ([args]) => (args as { select?: Record<string, unknown> }).select?.bookingPaymentMode,
+      );
+      expect(paymentReads).toHaveLength(1);
+      expect(paymentReads[0][0]).toMatchObject({
+        select: expect.objectContaining({ stripeConnectAccountId: true, stripeConnectChargesEnabled: true }),
+      });
+    });
+
+    it('G: new Full DEPOSIT booking snapshots the exact connected account', async () => {
+      asState('FULL_KERSIVO');
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, stripeConnectAccountId: 'acct_full_exact' });
+
+      await createInstantBooking(bookingInput('full-acct'), publicOptions);
+
+      expect(createdData()).toMatchObject({
+        kersivoPlatformFeePence: 0,
+        stripeConnectAccountIdAtPayment: 'acct_full_exact',
+      });
+    });
+
+    it('H: NONE booking has a null payment-account snapshot', async () => {
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
+
+      await createInstantBooking(bookingInput('none-acct'), publicOptions);
+
+      expect(createdData()).toMatchObject({ stripeConnectAccountIdAtPayment: null });
+    });
   });
 
   it('B: Free + DEPOSIT + £3 → 300p payment, 3p fee', async () => {

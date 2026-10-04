@@ -590,6 +590,8 @@ export async function createInstantBooking(
               paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
               paymentExpiresAt,
               ...paymentSnapshot,
+              stripeConnectAccountIdAtPayment:
+                paymentDecision.outcome === 'collect' ? paymentDecision.stripeConnectAccountId : null,
               idempotencyKey: scopedIdempotencyKey,
             },
             include: { service: true, barber: true }

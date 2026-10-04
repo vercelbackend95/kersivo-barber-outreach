@@ -17,6 +17,10 @@ import {
   isBookingCheckoutMetadataType,
   LEGACY_BOOKING_DEPOSIT_METADATA_TYPE,
 } from './bookingPaymentPolicy';
+import {
+  bookingPaymentAccountSnapshot,
+  isMissingRequiredPaymentAccountSnapshot,
+} from './bookingPaymentAccount';
 import { attemptDepositRefund, requestDepositRefund } from './depositMoney';
 import { generateToken, hashToken } from './tokens';
 
@@ -35,7 +39,9 @@ export type ConfirmPaidBookingPaymentResult =
   /** Session is not paid, or not a booking session for this booking/shop. */
   | { outcome: 'invalid_session' }
   | { outcome: 'payment_type_mismatch'; booking: BookingWithRelations }
-  | { outcome: 'amount_mismatch'; booking: BookingWithRelations };
+  | { outcome: 'amount_mismatch'; booking: BookingWithRelations }
+  /** Session was processed on a different connected account than the Booking payment snapshot. */
+  | { outcome: 'account_mismatch'; booking: BookingWithRelations };
 
 /** @deprecated alias kept for existing callers. */
 export type ConfirmPaidDepositResult = ConfirmPaidBookingPaymentResult;
@@ -46,9 +52,35 @@ export type BookingPaymentSessionEvidence = Pick<
   'amount_total' | 'currency' | 'payment_status' | 'metadata'
 > & { id?: string };
 
-type SessionVerdict =
-  | { ok: true }
-  | { ok: false; outcome: 'payment_type_mismatch' | 'amount_mismatch'; detail: string };
+type SessionVerificationFailure = 'payment_type_mismatch' | 'amount_mismatch' | 'account_mismatch';
+
+type SessionVerdict = { ok: true } | { ok: false; outcome: SessionVerificationFailure; detail: string };
+
+/**
+ * The connected account the session was retrieved/processed on must be the Booking's payment
+ * account. Legacy rows without a snapshot (and no KERSIVO fee) keep the pre-snapshot behaviour.
+ */
+function verifyPaymentAccount(
+  booking: BookingWithRelations,
+  processedAccountId: string | null | undefined,
+): SessionVerdict {
+  const snapshot = bookingPaymentAccountSnapshot(booking);
+  if (!snapshot) {
+    if (isMissingRequiredPaymentAccountSnapshot(booking)) {
+      return { ok: false, outcome: 'account_mismatch', detail: 'missing payment account snapshot' };
+    }
+    return { ok: true };
+  }
+  const processed = processedAccountId?.trim() || null;
+  if (processed !== snapshot) {
+    return {
+      ok: false,
+      outcome: 'account_mismatch',
+      detail: `stored=${snapshot} processed=${processed ?? 'missing'}`,
+    };
+  }
+  return { ok: true };
+}
 
 function sessionBelongsToBooking(input: {
   session: BookingPaymentSessionEvidence;
@@ -92,9 +124,10 @@ function verifySessionAgainstSnapshot(
   if (typeof expected !== 'number' || expected <= 0) {
     return { ok: false, outcome: 'amount_mismatch', detail: 'missing stored payment amount' };
   }
-  const currency = session.currency?.trim().toLowerCase();
-  if (currency && currency !== 'gbp') {
-    return { ok: false, outcome: 'amount_mismatch', detail: `currency=${currency}` };
+  // Generic sessions must prove GBP; legacy sessions may omit currency but never be non-GBP.
+  const currency = session.currency?.trim().toLowerCase() || null;
+  if (isLegacy ? currency !== null && currency !== 'gbp' : currency !== 'gbp') {
+    return { ok: false, outcome: 'amount_mismatch', detail: `currency=${currency ?? 'missing'}` };
   }
   const total = session.amount_total;
   if (typeof total !== 'number') {
@@ -112,7 +145,7 @@ function alertSessionVerificationFailed(input: {
   booking: BookingWithRelations;
   shopId: string;
   sessionId: string;
-  outcome: 'payment_type_mismatch' | 'amount_mismatch';
+  outcome: SessionVerificationFailure;
   detail: string;
 }): void {
   captureOpsException(
@@ -386,6 +419,8 @@ export async function confirmPaidBookingPayment(input: {
   paymentIntentId: string | null;
   /** Retrieved Checkout Session — verified against the Booking before any state change. */
   session: BookingPaymentSessionEvidence;
+  /** Connected account the session was retrieved / delivered on (webhook `event.account`). */
+  stripeAccountId: string | null;
   paidAt?: Date;
 }): Promise<ConfirmPaidBookingPaymentResult> {
   const bookingId = input.bookingId.trim();
@@ -428,7 +463,10 @@ export async function confirmPaidBookingPayment(input: {
     return { outcome: 'late_refunded', booking: existing };
   }
 
-  const verdict = verifySessionAgainstSnapshot(existing, input.session);
+  const accountVerdict = verifyPaymentAccount(existing, input.stripeAccountId);
+  const verdict = accountVerdict.ok
+    ? verifySessionAgainstSnapshot(existing, input.session)
+    : accountVerdict;
   if (!verdict.ok) {
     alertSessionVerificationFailed({
       booking: existing,

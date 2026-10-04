@@ -12,6 +12,7 @@ import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
+import { resolveRequiredBookingPayment } from '../../lib/booking/bookingPaymentPolicy';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import EmptyState from '../EmptyState';
@@ -239,6 +240,19 @@ function formatPrice(pricePence: number, wholePounds = false): string {
     return `£${pricePence / 100}`;
   }
   return `£${(pricePence / 100).toFixed(2)}`;
+}
+
+/**
+ * Final CTA for a DEPOSIT-mode shop: £5 deposit, the full price when the service costs £5 or
+ * less, and no payment wording for a £0 service. Null means no online payment.
+ */
+export function depositSubmitLabel(servicePricePence: number): string | null {
+  const required = resolveRequiredBookingPayment({ mode: 'DEPOSIT', servicePricePence });
+  if (required.amountPence <= 0) return null;
+  const amount = formatPrice(required.amountPence, true);
+  return required.amountPence < servicePricePence
+    ? `Pay ${amount} deposit & book`
+    : `Pay ${amount} & book`;
 }
 
 function resolveInitialServiceId(services: Service[], initialServiceId?: string): string {
@@ -988,7 +1002,10 @@ export default function BookingFlow({
     }
     if (wizardStep < maxStep) return 'Continue';
     if (publicDemoMode) return 'Complete demo booking';
-    if (depositRequired && publicCreateUrl) return 'Pay £5 deposit & book';
+    if (depositRequired && publicCreateUrl && selectedService) {
+      const depositLabel = depositSubmitLabel(selectedService.pricePence);
+      if (depositLabel) return depositLabel;
+    }
     return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
   })();
 

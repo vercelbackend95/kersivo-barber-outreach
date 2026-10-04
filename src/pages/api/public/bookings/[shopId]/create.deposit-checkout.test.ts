@@ -9,6 +9,12 @@ const updateBooking = vi.fn();
 const findUniqueShop = vi.fn();
 const shopAcceptsPublicBookings = vi.fn();
 const checkBookingRateLimit = vi.fn();
+const captureOpsException = vi.fn();
+
+vi.mock('@/lib/ops/sentry', () => ({
+  captureOpsException: (...args: unknown[]) => captureOpsException(...args),
+  captureOpsMessage: vi.fn(),
+}));
 
 vi.mock('@/lib/booking/service', () => ({
   BookingActionError: class BookingActionError extends Error {
@@ -105,6 +111,7 @@ function pendingCreated(overrides: Record<string, unknown> = {}) {
     paymentAmountPence: 500,
     kersivoPlatformFeeBps: 0,
     kersivoPlatformFeePence: 0,
+    stripeConnectAccountIdAtPayment: 'acct_shop',
     shopName: 'Test Shop',
     stripeCheckoutSessionId: null,
     replayed: false,
@@ -265,10 +272,12 @@ describe('public booking create — booking payment checkout', () => {
   it('pre-snapshot pending booking falls back to the legacy deposit amount with 0 fee', async () => {
     createInstantBooking.mockResolvedValue(
       pendingCreated({
+        replayed: true,
         bookingPaymentType: null,
         paymentAmountPence: null,
         kersivoPlatformFeeBps: null,
         kersivoPlatformFeePence: null,
+        stripeConnectAccountIdAtPayment: null,
       }),
     );
 
@@ -277,6 +286,99 @@ describe('public booking create — booking payment checkout', () => {
     expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
       expect.objectContaining({ bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, applicationFeePence: 0 }),
     );
+  });
+
+  describe('payment account snapshot', () => {
+    function shopNowOn(accountId: string) {
+      findUniqueShop.mockResolvedValue({
+        id: 'shop_1',
+        name: 'Test Shop',
+        shopPaidAt: null,
+        smsRemindersEnabled: false,
+        depositsEnabled: true,
+        stripeConnectAccountId: accountId,
+        stripeConnectChargesEnabled: true,
+        publicActivityPaused: false,
+      });
+    }
+
+    it('I: after the shop account changes, Checkout reuse + creation use the Booking snapshot', async () => {
+      shopNowOn('acct_new');
+      createInstantBooking.mockResolvedValue(
+        pendingCreated({
+          replayed: true,
+          stripeCheckoutSessionId: 'cs_expired',
+          stripeConnectAccountIdAtPayment: 'acct_original',
+          kersivoPlatformFeeBps: 100,
+          kersivoPlatformFeePence: 5,
+        }),
+      );
+      retrieveBookingDepositSession.mockResolvedValue({ id: 'cs_expired', status: 'expired', url: null });
+
+      const res = await POST(requestCtx(bookingBody) as never);
+
+      expect(res.status).toBe(200);
+      expect(retrieveBookingDepositSession).toHaveBeenCalledWith('cs_expired', 'acct_original');
+      expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({ shopConnectAccountId: 'acct_original', applicationFeePence: 5 }),
+      );
+      expect(retrieveBookingDepositSession).not.toHaveBeenCalledWith(expect.anything(), 'acct_new');
+    });
+
+    it('a NEW paid booking without an account snapshot fails closed and alerts ops', async () => {
+      createInstantBooking.mockResolvedValue(
+        pendingCreated({ replayed: false, stripeConnectAccountIdAtPayment: null }),
+      );
+
+      const res = await POST(requestCtx(bookingBody) as never);
+
+      expect(res.status).toBe(503);
+      expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
+      expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
+      expect(captureOpsException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ opsAlert: true, tags: expect.objectContaining({ bookingId: 'book_1' }) }),
+      );
+    });
+
+    it('a replayed fee-bearing booking without a snapshot never falls back to the shop account', async () => {
+      createInstantBooking.mockResolvedValue(
+        pendingCreated({
+          replayed: true,
+          stripeConnectAccountIdAtPayment: null,
+          kersivoPlatformFeeBps: 100,
+          kersivoPlatformFeePence: 5,
+        }),
+      );
+
+      const res = await POST(requestCtx(bookingBody) as never);
+
+      expect(res.status).toBe(503);
+      expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
+      expect(retrieveBookingDepositSession).not.toHaveBeenCalled();
+    });
+
+    it('Q: replayed legacy 0%-fee booking with null snapshot uses the current shop account', async () => {
+      shopNowOn('acct_current');
+      createInstantBooking.mockResolvedValue(
+        pendingCreated({
+          replayed: true,
+          stripeCheckoutSessionId: 'cs_legacy',
+          stripeConnectAccountIdAtPayment: null,
+        }),
+      );
+      retrieveBookingDepositSession.mockResolvedValue({
+        id: 'cs_legacy',
+        status: 'open',
+        url: 'https://checkout.stripe.test/cs_legacy',
+      });
+
+      const res = await POST(requestCtx(bookingBody) as never);
+
+      expect(res.status).toBe(200);
+      expect(retrieveBookingDepositSession).toHaveBeenCalledWith('cs_legacy', 'acct_current');
+      expect(captureOpsException).not.toHaveBeenCalled();
+    });
   });
 
   it('G: FULL mode error is returned with the stable code and no checkout', async () => {

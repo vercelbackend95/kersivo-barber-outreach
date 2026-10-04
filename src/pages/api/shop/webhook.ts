@@ -44,6 +44,7 @@ import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscrip
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
+import { resolveBookingPaymentAccount } from '../../../lib/booking/bookingPaymentAccount';
 import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
@@ -952,13 +953,26 @@ async function resolveBookingDepositStripeAccount(
   const fromEvent = event.account?.trim() || null;
   if (fromEvent) return fromEvent;
 
+  // No event.account: the Booking's payment-account snapshot wins; the current shop account
+  // is only a fallback for legacy pre-snapshot bookings.
   const shopId = metadata.shopId?.trim();
+  const bookingId = metadata.bookingId?.trim();
   if (!shopId) return null;
+  const booking = bookingId
+    ? await prisma.booking.findFirst({
+        where: { id: bookingId, barber: { shopId } },
+        select: { stripeConnectAccountIdAtPayment: true, kersivoPlatformFeePence: true },
+      })
+    : null;
   const shop = await prisma.shopSettings.findUnique({
     where: { id: shopId },
     select: { stripeConnectAccountId: true },
   });
-  return shop?.stripeConnectAccountId?.trim() || null;
+  const resolved = resolveBookingPaymentAccount({
+    booking: booking ?? {},
+    currentShopAccountId: shop?.stripeConnectAccountId,
+  });
+  return resolved.ok ? resolved.accountId : null;
 }
 
 async function handleRetailOrderCheckout(
@@ -1017,6 +1031,7 @@ async function handleBookingDepositCheckout(
   session: StripeSession,
   metadata: Record<string, string>,
   eventCreated: number,
+  stripeAccountId: string | null,
 ): Promise<Response> {
   if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
     return new Response(JSON.stringify({ error: 'Booking payment not paid' }), { status: 400 });
@@ -1034,6 +1049,7 @@ async function handleBookingDepositCheckout(
     sessionId,
     paymentIntentId: getCheckoutPaymentIntentId(session),
     session,
+    stripeAccountId,
     paidAt,
   });
 
@@ -1047,7 +1063,8 @@ async function handleBookingDepositCheckout(
     return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
   }
   // confirmed / reinstated / late_refunded / conflicting_payment / amount_mismatch /
-  // payment_type_mismatch all ack Stripe (ops alerts already fired for the failure paths).
+  // payment_type_mismatch / account_mismatch all ack Stripe (ops alerts already fired for the
+  // failure paths; retries cannot change the outcome).
   return new Response(JSON.stringify({ ok: true, bookingId, outcome: result.outcome }), {
     status: 200,
   });
@@ -1355,7 +1372,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && isBookingCheckoutMetadataType(metadata.type)) {
       return await finalize(
-        await handleBookingDepositCheckout(sessionId, session, metadata, event.created),
+        await handleBookingDepositCheckout(
+          sessionId,
+          session,
+          metadata,
+          event.created,
+          stripeAccount ?? null,
+        ),
       );
     }
 

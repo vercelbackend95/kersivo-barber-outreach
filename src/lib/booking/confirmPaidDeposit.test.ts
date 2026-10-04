@@ -78,8 +78,11 @@ type ConfirmInput = {
   shopId: string;
   sessionId: string;
   paymentIntentId: string | null;
+  stripeAccountId?: string | null;
   paidAt?: Date;
 };
+
+type GenericConfirmInput = ConfirmInput & { stripeAccountId: string | null };
 
 /** Pre-4B session shape: metadata.type = booking_deposit, no bookingPaymentType. */
 function legacySession(input: ConfirmInput, overrides: Partial<BookingPaymentSessionEvidence> = {}) {
@@ -109,7 +112,11 @@ function genericSession(input: ConfirmInput, overrides: Partial<BookingPaymentSe
 
 /** Legacy booking_deposit session (AD / M): existing behaviour must keep working. */
 function confirmPaidDeposit(input: ConfirmInput) {
-  return confirmPaidBookingPayment({ ...input, session: legacySession(input) });
+  return confirmPaidBookingPayment({
+    ...input,
+    stripeAccountId: input.stripeAccountId ?? 'acct_shop',
+    session: legacySession(input),
+  });
 }
 
 function pendingBooking(overrides: Record<string, unknown> = {}) {
@@ -457,18 +464,21 @@ describe('confirmPaidDeposit', () => {
 });
 
 describe('confirmPaidBookingPayment — generic booking_payment sessions', () => {
-  const input: ConfirmInput = {
+  const input: GenericConfirmInput = {
     bookingId: 'book_1',
     shopId: 'shop_1',
     sessionId: 'cs_1',
     paymentIntentId: 'pi_1',
+    stripeAccountId: 'acct_original',
   };
-  const freePending = () =>
+  const freePending = (overrides: Record<string, unknown> = {}) =>
     pendingBooking({
       paymentAmountPence: 500,
       depositAmountPence: 500,
       kersivoPlatformFeeBps: 100,
       kersivoPlatformFeePence: 5,
+      stripeConnectAccountIdAtPayment: 'acct_original',
+      ...overrides,
     });
 
   beforeEach(() => {
@@ -549,16 +559,128 @@ describe('confirmPaidBookingPayment — generic booking_payment sessions', () =>
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it('N: new session without amount_total or in another currency is rejected', async () => {
+  it('N: new session without amount_total is rejected', async () => {
     findFirstBooking.mockResolvedValue(freePending());
-    for (const overrides of [{ amount_total: null }, { currency: 'eur' }]) {
+    const result = await confirmPaidBookingPayment({
+      ...input,
+      session: genericSession(input, { amount_total: null }),
+    });
+    expect(result.outcome).toBe('amount_mismatch');
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  describe('currency verification', () => {
+    it('A: generic booking_payment in GBP (any case / whitespace) is valid', async () => {
+      findFirstBooking.mockResolvedValueOnce(freePending());
+      findFirstOrThrowBooking.mockResolvedValue(paidBooking());
+      updateManyBooking.mockResolvedValue({ count: 1 });
+
       const result = await confirmPaidBookingPayment({
         ...input,
-        session: genericSession(input, overrides),
+        session: genericSession(input, { currency: ' GBP ' }),
+      });
+      expect(result.outcome).toBe('confirmed');
+    });
+
+    it('B: generic booking_payment with missing currency is rejected', async () => {
+      findFirstBooking.mockResolvedValue(freePending());
+      for (const currency of [null, '', '   ']) {
+        const result = await confirmPaidBookingPayment({
+          ...input,
+          session: genericSession(input, { currency }),
+        });
+        expect(result.outcome).toBe('amount_mismatch');
+      }
+      expect(transaction).not.toHaveBeenCalled();
+      expect(updateManyBooking).not.toHaveBeenCalled();
+    });
+
+    it('C: generic booking_payment in EUR is rejected', async () => {
+      findFirstBooking.mockResolvedValue(freePending());
+      const result = await confirmPaidBookingPayment({
+        ...input,
+        session: genericSession(input, { currency: 'eur' }),
       });
       expect(result.outcome).toBe('amount_mismatch');
-    }
-    expect(transaction).not.toHaveBeenCalled();
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('D: legacy booking_deposit with missing currency stays compatible', async () => {
+      findFirstBooking.mockResolvedValueOnce(pendingBooking());
+      findFirstOrThrowBooking.mockResolvedValue(paidBooking());
+      updateManyBooking.mockResolvedValue({ count: 1 });
+
+      const result = await confirmPaidBookingPayment({
+        ...input,
+        session: legacySession(input, { currency: null }),
+      });
+      expect(result.outcome).toBe('confirmed');
+    });
+
+    it('E: legacy booking_deposit in EUR is rejected', async () => {
+      findFirstBooking.mockResolvedValue(pendingBooking());
+      const result = await confirmPaidBookingPayment({
+        ...input,
+        session: legacySession(input, { currency: 'EUR' }),
+      });
+      expect(result.outcome).toBe('amount_mismatch');
+      expect(transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('payment account verification', () => {
+    it('O: session processed on the snapshot account confirms', async () => {
+      findFirstBooking.mockResolvedValueOnce(freePending());
+      findFirstOrThrowBooking.mockResolvedValue(paidBooking());
+      updateManyBooking.mockResolvedValue({ count: 1 });
+
+      const result = await confirmPaidBookingPayment({ ...input, session: genericSession(input) });
+      expect(result.outcome).toBe('confirmed');
+    });
+
+    it('P: session processed on another account is NOT confirmed and raises an ops alert', async () => {
+      findFirstBooking.mockResolvedValue(freePending());
+
+      for (const stripeAccountId of ['acct_new', null]) {
+        const result = await confirmPaidBookingPayment({
+          ...input,
+          stripeAccountId,
+          session: genericSession(input),
+        });
+        expect(result.outcome).toBe('account_mismatch');
+      }
+      expect(transaction).not.toHaveBeenCalled();
+      expect(updateManyBooking).not.toHaveBeenCalled();
+      expect(enqueueEmail).not.toHaveBeenCalled();
+      expect(captureOpsException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          opsAlert: true,
+          route: 'confirmPaidBookingPayment',
+          tags: expect.objectContaining({ outcome: 'account_mismatch' }),
+        }),
+      );
+    });
+
+    it('fee-bearing booking without an account snapshot is an integrity failure', async () => {
+      findFirstBooking.mockResolvedValue(freePending({ stripeConnectAccountIdAtPayment: null }));
+      const result = await confirmPaidBookingPayment({ ...input, session: genericSession(input) });
+      expect(result.outcome).toBe('account_mismatch');
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('Q: legacy 0%-fee booking without a snapshot keeps the pre-snapshot behaviour', async () => {
+      findFirstBooking.mockResolvedValueOnce(pendingBooking({ stripeConnectAccountIdAtPayment: null }));
+      findFirstOrThrowBooking.mockResolvedValue(paidBooking());
+      updateManyBooking.mockResolvedValue({ count: 1 });
+
+      const result = await confirmPaidBookingPayment({
+        ...input,
+        stripeAccountId: 'acct_current_shop',
+        session: legacySession(input),
+      });
+      expect(result.outcome).toBe('confirmed');
+    });
   });
 
   it('O: payment type mismatch is rejected', async () => {

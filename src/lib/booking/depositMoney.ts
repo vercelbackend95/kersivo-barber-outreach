@@ -7,6 +7,7 @@ import {
 import { prisma } from '../db/client';
 import { captureOpsException, captureOpsMessage } from '../ops/sentry';
 import { refundPaymentIntent } from '../shop/stripeConnect';
+import { resolveBookingPaymentAccount } from './bookingPaymentAccount';
 
 export type DepositRefundReason =
   | 'client_cancel_in_window'
@@ -101,8 +102,21 @@ export async function requestDepositRefund(input: {
   if (booking.depositRefund?.status === DepositRefundStatus.REFUNDED) {
     return { outcome: 'skipped_already', refund: null };
   }
-  if (!booking.stripePaymentIntentId) {
-    // Create a FAILED ledger so ops can see the gap (no PI to refund).
+  // The PaymentIntent lives on the account the booking was paid on — never a later shop account.
+  const paymentAccount = resolveBookingPaymentAccount({
+    booking,
+    currentShopAccountId: booking.barber.shop.stripeConnectAccountId,
+  });
+  const connectAccountId = paymentAccount.ok ? paymentAccount.accountId : null;
+
+  const missingAccountSnapshot =
+    !paymentAccount.ok && paymentAccount.reason === 'missing_payment_account_snapshot';
+
+  if (!booking.stripePaymentIntentId || missingAccountSnapshot) {
+    const integrityError = !booking.stripePaymentIntentId
+      ? 'Missing stripePaymentIntentId on paid booking.'
+      : 'Missing Stripe Connect payment account snapshot on fee-bearing booking.';
+    // Create a FAILED ledger so ops can see the gap; never refund via a guessed account.
     const amountPence = booking.depositAmountPence ?? 0;
     const existing = booking.depositRefund;
     if (existing) {
@@ -117,14 +131,14 @@ export async function requestDepositRefund(input: {
         reason: input.reason,
         idempotencyKey: buildIdempotencyKey(booking.id),
         stripePaymentIntentId: '',
-        connectAccountId: booking.barber.shop.stripeConnectAccountId?.trim() || null,
+        connectAccountId,
         attempts: 0,
         maxAttempts: DEFAULT_MAX_ATTEMPTS,
-        lastError: 'Missing stripePaymentIntentId on paid booking.',
+        lastError: integrityError,
         nextAttemptAt: null,
       },
     });
-    await alertRefundFailed(failed, 'Missing stripePaymentIntentId on paid booking.');
+    await alertRefundFailed(failed, integrityError);
     return { outcome: 'pending', refund: failed };
   }
 
@@ -132,7 +146,6 @@ export async function requestDepositRefund(input: {
     return { outcome: 'pending', refund: booking.depositRefund };
   }
 
-  const connectAccountId = booking.barber.shop.stripeConnectAccountId?.trim() || null;
   const amountPence = booking.depositAmountPence ?? 0;
   const refund = await prisma.bookingDepositRefund.create({
     data: {
@@ -214,6 +227,20 @@ export async function attemptDepositRefund(refundId: string): Promise<{
       select: { kersivoPlatformFeePence: true },
     });
     const refundApplicationFee = (feeSnapshot?.kersivoPlatformFeePence ?? 0) > 0;
+    if (refundApplicationFee && !row.connectAccountId?.trim()) {
+      // A fee-bearing payment only exists on its connected account; never refund elsewhere.
+      const lastError = 'Missing connected account for fee-bearing booking refund.';
+      const updated = await prisma.bookingDepositRefund.update({
+        where: { id: row.id },
+        data: {
+          status: DepositRefundStatus.REFUND_FAILED,
+          lastError,
+          nextAttemptAt: null,
+        },
+      });
+      await alertRefundFailed(updated, lastError);
+      return { outcome: 'failed', refund: updated };
+    }
     const result = await refundPaymentIntent(row.stripePaymentIntentId, {
       stripeAccount: row.connectAccountId ?? undefined,
       reverseTransfer: true,

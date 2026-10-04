@@ -578,6 +578,9 @@ model Booking {
   kersivoPlatformFeePence Int?
   /// Snapshot: KERSIVO fee rate used at checkout, in basis points (100 = 1%).
   kersivoPlatformFeeBps   Int?
+  /// Snapshot: Stripe Connect account the online payment was created on.
+  /// Null = no online payment, or a legacy row created before the snapshot existed.
+  stripeConnectAccountIdAtPayment String?
   /// Total confirmed refunded amount against the online payment, in pence.
   refundedAmountPence     Int            @default(0)
   clientRescheduleCount   Int            @default(0)

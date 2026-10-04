@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { isBookingCheckoutMetadataType } from '@/lib/booking/bookingPaymentPolicy';
+import { resolveCheckoutSessionPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
 import { buildBookingIcs } from '@/lib/booking/calendarIcs';
 import { prisma } from '@/lib/db/client';
 import { retrieveCheckoutSession } from '@/lib/shop/stripe';
@@ -21,10 +22,15 @@ export const GET: APIRoute = async (ctx) => {
       where: { id: shopId },
       select: { name: true, stripeConnectAccountId: true },
     });
-    const connectAccountId = shop?.stripeConnectAccountId?.trim();
-    if (!connectAccountId) {
+    const paymentAccount = await resolveCheckoutSessionPaymentAccount({
+      shopId,
+      sessionId,
+      currentShopAccountId: shop?.stripeConnectAccountId,
+    });
+    if (!paymentAccount.ok) {
       return new Response('Shop Connect account missing.', { status: 404 });
     }
+    const connectAccountId = paymentAccount.accountId;
 
     const session = await retrieveCheckoutSession(sessionId, { stripeAccount: connectAccountId });
     const metadata = session.metadata ?? {};

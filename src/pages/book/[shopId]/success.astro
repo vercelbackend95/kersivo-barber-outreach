@@ -8,6 +8,7 @@ import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
 import { isBookingCheckoutMetadataType } from '@/lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '@/lib/booking/confirmPaidDeposit';
+import { resolveCheckoutSessionPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
 import { formatInTimeZone } from 'date-fns-tz';
 import '@/styles/tokens.css';
 import '@/styles/fonts.css';
@@ -46,9 +47,17 @@ if (shopId) {
 
   if (sessionId) {
     try {
-      const connectAccountId = shopForConnect?.stripeConnectAccountId?.trim();
+      const paymentAccount = await resolveCheckoutSessionPaymentAccount({
+        shopId,
+        sessionId,
+        currentShopAccountId: shopForConnect?.stripeConnectAccountId,
+      });
+      const connectAccountId = paymentAccount.ok ? paymentAccount.accountId : null;
       if (!connectAccountId) {
-        errorMessage = 'This shop is not ready to confirm booking payments.';
+        errorMessage =
+          !paymentAccount.ok && paymentAccount.reason === 'missing_payment_account_snapshot'
+            ? 'We could not confirm this payment automatically. Please contact the barbershop — your appointment is not confirmed yet.'
+            : 'This shop is not ready to confirm booking payments.';
       } else {
         const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
         const metadata = session.metadata ?? {};
@@ -64,6 +73,7 @@ if (shopId) {
             sessionId,
             paymentIntentId: getCheckoutPaymentIntentId(session),
             session,
+            stripeAccountId: connectAccountId,
           });
 
           if (
@@ -89,6 +99,7 @@ if (shopId) {
           } else if (
             result.outcome === 'amount_mismatch' ||
             result.outcome === 'payment_type_mismatch' ||
+            result.outcome === 'account_mismatch' ||
             result.outcome === 'invalid_session'
           ) {
             errorMessage =
