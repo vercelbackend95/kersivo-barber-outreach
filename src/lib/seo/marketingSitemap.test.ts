@@ -25,6 +25,16 @@ const EXPECTED_LOCS = [
 ] as const;
 
 describe('marketing sitemap', () => {
+  it('S: excludes dynamic tenant booking URLs and QR redirects', async () => {
+    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
+    expect(locs.some((loc) => new URL(loc).pathname.startsWith('/book/'))).toBe(false);
+    expect(locs.some((loc) => new URL(loc).pathname.startsWith('/q/'))).toBe(false);
+
+    const xml = await (await GET({} as Parameters<typeof GET>[0])).text();
+    expect(xml).not.toContain('/book/');
+    expect(xml).not.toContain('/q/');
+  });
+
   it('builds canonical marketing URLs including /dpa with accurate or omitted lastmod', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);

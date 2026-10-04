@@ -9,6 +9,7 @@ type ShopRow = {
   shopPaidAt: Date | null;
   smsRemindersEnabled: boolean;
   freeBookingActivatedAt: Date | null;
+  bookingSlug: string | null;
   onboardingCompleted: boolean;
   onboardingCurrentStep: number;
   onboardingCompletedAt: Date | null;
@@ -20,6 +21,8 @@ const db = vi.hoisted(() => ({
   activeBookableBarbers: 1,
   legal: [] as Array<Record<string, unknown>>,
   onLock: null as null | (() => void),
+  /** Slugs held by other shops (for collision checks). */
+  otherSlugs: [] as string[],
 }));
 
 const {
@@ -37,9 +40,14 @@ const tx = {
     db.onLock?.();
     return [{ id: db.shop.id }];
   },
+  $executeRaw: vi.fn(async () => 1),
   shopSettings: {
     findUnique: vi.fn(async () => ({ ...db.shop })),
     findUniqueOrThrow: async () => ({ ...db.shop }),
+    findMany: async ({ where }: { where: { bookingSlug: { in: string[] } } }) =>
+      [...db.otherSlugs, ...(db.shop.bookingSlug ? [db.shop.bookingSlug] : [])]
+        .filter((slug) => where.bookingSlug.in.includes(slug))
+        .map((bookingSlug) => ({ bookingSlug })),
     update: async ({ data }: { data: Partial<ShopRow> }) => {
       Object.assign(db.shop, data);
       return { ...db.shop };
@@ -61,7 +69,18 @@ const tx = {
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
-    $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx),
+    // Rolls back the fake rows when the transaction callback throws.
+    $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => {
+      const shopSnapshot = { ...db.shop };
+      const legalSnapshot = [...db.legal];
+      try {
+        return await fn(tx);
+      } catch (error) {
+        db.shop = shopSnapshot;
+        db.legal = legalSnapshot;
+        throw error;
+      }
+    },
     shopSettings: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         where.id === db.shop.id ? { ...db.shop } : null,
@@ -118,6 +137,7 @@ function freshShop(overrides: Partial<ShopRow> = {}): ShopRow {
     shopPaidAt: null,
     smsRemindersEnabled: false,
     freeBookingActivatedAt: null,
+    bookingSlug: null,
     // Legacy hours save already marks onboarding complete before the final action.
     onboardingCompleted: true,
     onboardingCurrentStep: 6,
@@ -148,6 +168,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     db.activeBookableBarbers = 1;
     db.legal = [];
     db.onLock = null;
+    db.otherSlugs = [];
     requireOnboardingAccess.mockResolvedValue(ownerAccess);
     shopMeetsOnboardingCompletionRequirements.mockResolvedValue(true);
     markOnboardingCompleted.mockImplementation(async () => {
@@ -167,7 +188,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       activation: 'activated',
       onboardingCompleted: true,
       productAccess: { state: 'FREE_BOOKING', capabilities: { publicBooking: true, retail: false } },
-      bookingUrl: '/book/shop_1',
+      bookingUrl: '/book/fade-lab',
       freeActivationRequired: false,
     });
     expect(db.shop.onboardingCompletedAt).toEqual(new Date('2026-10-01T10:00:00.000Z'));
@@ -242,6 +263,95 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     expect(res.body.activation).toBe('already_free');
     expect(db.shop.freeBookingActivatedAt).toBe(winnerAt);
     expect(db.legal).toHaveLength(0);
+  });
+
+  describe('stable booking slug', () => {
+    it('F: SETUP → Free allocates the slug in the activation transaction and returns /book/{slug}', async () => {
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.status).toBe(200);
+      expect(db.shop.bookingSlug).toBe('fade-lab');
+      expect(db.shop.freeBookingActivatedAt).toBeInstanceOf(Date);
+      expect(res.body.bookingUrl).toBe('/book/fade-lab');
+      expect(res.body.bookingUrl).not.toContain('shop_1');
+      expect(db.legal).toHaveLength(1);
+      expect(db.legal[0]!.meta).toMatchObject({ bookingSlug: 'fade-lab' });
+      expect(tx.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('F: a taken name slug uses the town suffix', async () => {
+      db.otherSlugs = ['fade-lab'];
+      await complete({ termsAccepted: true });
+      expect(db.shop.bookingSlug).toBe('fade-lab-leeds');
+    });
+
+    it('G: a failed legal write leaves no Free marker and no partially committed slug', async () => {
+      vi.spyOn(tx.legalAcceptance, 'create').mockRejectedValueOnce(new Error('db down'));
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.status).toBe(500);
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+      expect(db.shop.bookingSlug).toBeNull();
+      expect(db.legal).toHaveLength(0);
+    });
+
+    it('G: the barber limit rejection allocates no slug', async () => {
+      db.activeBookableBarbers = 5;
+      const res = await complete({ termsAccepted: true });
+      expect(res.status).toBe(409);
+      expect(db.shop.bookingSlug).toBeNull();
+    });
+
+    it('H: already-Free replay keeps the slug unchanged even after a shop rename', async () => {
+      await complete({ termsAccepted: true });
+      const activatedAt = db.shop.freeBookingActivatedAt;
+      db.shop.name = 'Totally New Name';
+      db.shop.townCity = 'York';
+
+      const replay = await complete();
+
+      expect(replay.body.activation).toBe('already_free');
+      expect(db.shop.bookingSlug).toBe('fade-lab');
+      expect(replay.body.bookingUrl).toBe('/book/fade-lab');
+      expect(db.shop.freeBookingActivatedAt).toBe(activatedAt);
+      expect(db.legal).toHaveLength(1);
+    });
+
+    it('I: a legacy Free row without a slug is repaired without touching activation or legal records', async () => {
+      const activatedAt = new Date('2026-09-01T00:00:00.000Z');
+      const existingLegal = { purpose: 'FREE_BOOKING_ACTIVATION', shopId: 'shop_1' };
+      db.shop = freshShop({ freeBookingActivatedAt: activatedAt, bookingSlug: null });
+      db.legal = [existingLegal];
+
+      const res = await complete();
+
+      expect(res.status).toBe(200);
+      expect(res.body.activation).toBe('already_free');
+      expect(db.shop.bookingSlug).toBe('fade-lab');
+      expect(db.shop.freeBookingActivatedAt).toBe(activatedAt);
+      expect(db.legal).toEqual([existingLegal]);
+    });
+
+    it('J: Full completion writes no Free marker and allocates no slug', async () => {
+      db.subscription = { status: 'ACTIVE', currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z') };
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.body.activation).toBe('full_kersivo');
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+      expect(db.shop.bookingSlug).toBeNull();
+      expect(tx.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('J: Full discovered under the lock also allocates no slug', async () => {
+      db.onLock = () => {
+        db.subscription = { status: 'ACTIVE', currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z') };
+      };
+      const res = await complete({ termsAccepted: true });
+
+      expect(res.body.activation).toBe('full_kersivo');
+      expect(db.shop.bookingSlug).toBeNull();
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+    });
   });
 
   describe('product state re-resolved under the shop lock', () => {

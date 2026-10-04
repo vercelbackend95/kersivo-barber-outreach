@@ -210,6 +210,9 @@ model ShopSettings {
   /// Explicit Free Booking activation marker. Independent of onboardingCompleted and paid state;
   /// product state is resolved in src/lib/shop/kersivoAccess.ts (FULL_KERSIVO > FREE_BOOKING > SETUP).
   freeBookingActivatedAt             DateTime?
+  /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
+  /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
+  bookingSlug                        String?                         @unique
   /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
   depositsEnabled                    Boolean                         @default(false)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
@@ -256,6 +259,27 @@ model ShopSettings {
   productSemanticProfiles            ProductSemanticProfile[]
   recommendationSets                 RecommendationSet[]
   recommendationSetItems             RecommendationSetItem[]
+  qrCodes                            ShopQrCode[]
+}
+
+enum ShopQrPlacement {
+  WINDOW
+  REBOOK
+}
+
+/// Physical QR identity: belongs to shop + placement. The scan destination is resolved at
+/// request time (src/lib/qr/qrDestination.ts) and is intentionally not stored here.
+model ShopQrCode {
+  id        String          @id @default(cuid())
+  shopId    String
+  /// Opaque random code used in /q/{code}; never derived from shop id/name.
+  code      String          @unique
+  placement ShopQrPlacement
+  createdAt DateTime        @default(now())
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, placement])
 }
 
 // Login membership for one shop — roles never keyed by shop name.

@@ -9,7 +9,7 @@ import {
   type OnboardingWeeklyRule,
 } from '@/lib/admin/shopOpeningHours';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
-import { publicBookingPath } from '@/lib/booking/publicBookingPath';
+import { preferredPublicBookingPath } from '@/lib/booking/publicBookingPath';
 import {
   hasKersivoCapability,
   loadKersivoAccess,
@@ -222,6 +222,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
       onboardingCompleted: true,
       onboardingCurrentStep: true,
       onboardingCompletedAt: true,
+      bookingSlug: true,
     },
   });
 
@@ -308,7 +309,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
         ? FREE_BOOKABLE_BARBER_LIMIT
         : null,
     bookingUrl: hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
-      ? publicBookingPath(shop.id)
+      ? preferredPublicBookingPath(shop)
       : null,
     user: access.userId
       ? {

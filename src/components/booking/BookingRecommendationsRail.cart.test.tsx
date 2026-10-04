@@ -418,8 +418,9 @@ describe('booking page production cart opt-in contracts', () => {
     const bookPage = readFileSync(join(root, 'src/pages/book/[shopId].astro'), 'utf8');
     const successPage = readFileSync(join(root, 'src/pages/book/[shopId]/success.astro'), 'utf8');
 
-    expect(bookPage).toMatch(/enableProductionCart=\{true\}/);
-    expect(bookPage).toMatch(/shopId=\{shop\.id\}/);
+    // Only a resolved shop (never an unresolved slug during an outage) opts into the cart.
+    expect(bookPage).toMatch(/enableProductionCart=\{Boolean\(shop\)\}/);
+    expect(bookPage).toMatch(/ shopId=\{shop\?\.id\}/);
     expect(successPage).toMatch(/enableProductionCart=\{Boolean\(shopId\)\}/);
     expect(successPage).toMatch(/shopId=\{shopId \|\| undefined\}/);
   });

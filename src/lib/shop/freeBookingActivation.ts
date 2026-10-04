@@ -18,6 +18,7 @@ import {
   type FreeBookableBarberLimitError,
 } from './freeBookableBarbers';
 import { loadKersivoAccess } from './kersivoAccess';
+import { ensureShopBookingSlug } from '../booking/bookingSlug';
 
 export const ONBOARDING_REQUIREMENTS_MESSAGE =
   'Finish shop, team, services and hours before continuing.';
@@ -65,15 +66,12 @@ export async function activateFreeBooking(params: {
 
   const now = params.now ?? new Date();
 
-  // Fast paths only: neither writes the Free marker, so a stale read here is harmless.
+  // Fast path only: it never writes the Free marker or a slug, so a stale read here is harmless.
+  // Already-Free replays go through the locked path so a missing slug can be repaired.
   const { state: preLockState } = await loadKersivoAccess(shopId, now);
   if (preLockState === 'FULL_KERSIVO') {
     await markOnboardingCompleted(shopId);
     return { ok: true, outcome: 'full_kersivo' };
-  }
-  if (preLockState === 'FREE_BOOKING') {
-    await markOnboardingCompleted(shopId);
-    return { ok: true, outcome: 'already_free' };
   }
 
   return prisma.$transaction(async (tx): Promise<FreeBookingActivationResult> => {
@@ -107,6 +105,9 @@ export async function activateFreeBooking(params: {
       return { ok: true, outcome: 'full_kersivo' };
     }
     if (state === 'FREE_BOOKING' || shop.freeBookingActivatedAt) {
+      // Defensive repair for legacy/dev Free rows without a slug; keeps the existing slug,
+      // activation timestamp and legal record untouched.
+      await ensureShopBookingSlug(tx, shopId);
       await completeOnboarding();
       return { ok: true, outcome: 'already_free' };
     }
@@ -135,6 +136,9 @@ export async function activateFreeBooking(params: {
       return freeBookableBarberLimitError();
     }
 
+    // Slug, Free marker and Terms acceptance commit or roll back together.
+    const bookingSlug = await ensureShopBookingSlug(tx, shopId);
+
     await tx.shopSettings.update({
       where: { id: shopId },
       data: {
@@ -156,6 +160,7 @@ export async function activateFreeBooking(params: {
         freeBookingActivatedAt: now.toISOString(),
         activeBookableBarbers: bookable,
         freeBookableBarberLimit: FREE_BOOKABLE_BARBER_LIMIT,
+        bookingSlug,
       },
       db: tx,
     });

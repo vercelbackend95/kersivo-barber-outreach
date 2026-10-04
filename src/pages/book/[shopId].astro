@@ -9,6 +9,10 @@ import {
 } from '../../lib/db/resilience';
 import { canCollectBookingDeposit } from '../../lib/booking/depositGate';
 import { shopAcceptsPublicBookings } from '../../lib/setup/shopPublicBookingGate';
+import {
+  publicBookingPageSeo,
+  resolvePublicBookingIdentifier,
+} from '../../lib/booking/resolvePublicBookingIdentifier';
 import '../../styles/tokens.css';
 import '../../styles/fonts.css';
 import '../../styles/global.css';
@@ -23,124 +27,129 @@ import '../../styles/components/skeleton.css';
 
 export const prerender = false;
 
-const shopId = Astro.params.shopId?.trim() ?? '';
+/** Public identifier: a stable bookingSlug or a legacy raw shop id. Never an internal API id. */
+const identifier = Astro.params.shopId?.trim() ?? '';
 
-if (!shopId || shopId === DEMO_SHOP_ID) {
+if (!identifier || identifier === DEMO_SHOP_ID) {
   return Astro.redirect('/book');
 }
 
 /**
- * Stand-in shop for database outages: keeps the "temporarily unavailable" page reachable
- * instead of 404ing a shop that does exist. Booking is off on every flag.
+ * Database outage: the identifier may be a slug, so it is never used as an internal shop id.
+ * Render a generic "temporarily unavailable" page with no shop-scoped APIs or cart.
  */
-const outageShop = {
-  id: shopId,
-  name: 'Barbershop',
-  timezone: 'Europe/London',
-  cancellationWindowHours: 24,
-  rescheduleWindowHours: 24,
-  shopPaidAt: null,
-  smsRemindersEnabled: false,
-  depositsEnabled: false,
-  stripeConnectAccountId: null,
-  stripeConnectChargesEnabled: false,
-  publicActivityPaused: true,
-  logoUrl: null,
-};
+const OUTAGE = { kind: 'outage' as const };
 
-const bookingPageData = await withPrismaQuotaFallback(
-  'book/[shopId].astro',
-  async () => {
-    const shop = await prisma.shopSettings.findUnique({
-      where: { id: shopId },
+async function loadBookingPage() {
+  const resolution = await resolvePublicBookingIdentifier(identifier, Astro.url.search);
+  if (resolution.kind !== 'shop') return resolution;
+  const shopId = resolution.shopId;
+
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: {
+      id: true,
+      name: true,
+      logoUrl: true,
+      bookingSlug: true,
+      timezone: true,
+      cancellationWindowHours: true,
+      rescheduleWindowHours: true,
+      shopPaidAt: true,
+      smsRemindersEnabled: true,
+      depositsEnabled: true,
+      stripeConnectAccountId: true,
+      stripeConnectChargesEnabled: true,
+      publicActivityPaused: true,
+    },
+  });
+
+  if (!shop) {
+    return { kind: 'not_found' as const };
+  }
+
+  const acceptsPublic = await shopAcceptsPublicBookings(shopId);
+  if (!acceptsPublic) {
+    return {
+      kind: 'shop' as const,
+      shop,
+      services: [],
+      barbers: [],
+      depositRequired: false,
+      bookingUnavailable: true,
+    };
+  }
+
+  const [services, barbers] = await Promise.all([
+    prisma.service.findMany({
+      where: { isActive: true, shopId },
+      orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
+    }),
+    prisma.barber.findMany({
+      where: { active: true, shopId },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
         name: true,
-        logoUrl: true,
-        timezone: true,
-        cancellationWindowHours: true,
-        rescheduleWindowHours: true,
-        shopPaidAt: true,
-        smsRemindersEnabled: true,
-        depositsEnabled: true,
-        stripeConnectAccountId: true,
-        stripeConnectChargesEnabled: true,
-        publicActivityPaused: true,
+        barberServices: { select: { serviceId: true } },
       },
-    });
+    }),
+  ]);
 
-    if (!shop) {
-      return { notFound: true as const };
-    }
+  return {
+    kind: 'shop' as const,
+    shop,
+    services,
+    barbers,
+    depositRequired: canCollectBookingDeposit(shop),
+    bookingUnavailable: false,
+  };
+}
 
-    const acceptsPublic = await shopAcceptsPublicBookings(shopId);
-    if (!acceptsPublic) {
-      return {
-        notFound: false as const,
-        shop,
-        services: [],
-        barbers: [],
-        depositRequired: false,
-        bookingUnavailable: true,
-      };
-    }
+type BookingPageData = Awaited<ReturnType<typeof loadBookingPage>> | typeof OUTAGE;
 
-    const [services, barbers] = await Promise.all([
-      prisma.service.findMany({
-        where: { isActive: true, shopId },
-        orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
-      }),
-      prisma.barber.findMany({
-        where: { active: true, shopId },
-        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-        select: {
-          id: true,
-          name: true,
-          barberServices: { select: { serviceId: true } },
-        },
-      }),
-    ]);
-
-    return {
-      notFound: false as const,
-      shop,
-      services,
-      barbers,
-      depositRequired: canCollectBookingDeposit(shop),
-      bookingUnavailable: false,
-    };
-  },
-  {
-    notFound: false as const,
-    shop: outageShop,
-    services: [],
-    barbers: [],
-    depositRequired: false,
-    bookingUnavailable: true,
-  },
+const bookingPageData = await withPrismaQuotaFallback<BookingPageData>(
+  'book/[shopId].astro',
+  loadBookingPage,
+  OUTAGE,
 );
 
-if (bookingPageData.notFound || !bookingPageData.shop) {
+if (bookingPageData.kind === 'demo') {
+  return Astro.redirect('/book');
+}
+if (bookingPageData.kind === 'redirect') {
+  return Astro.redirect(bookingPageData.location, bookingPageData.status);
+}
+if (bookingPageData.kind === 'not_found') {
   return new Response('Shop not found', { status: 404 });
 }
 
-const { shop, services, barbers, depositRequired, bookingUnavailable } = bookingPageData;
-const createUrl = `/api/public/bookings/${shop.id}/create`;
+const resolvedPage = bookingPageData.kind === 'shop' ? bookingPageData : null;
+const shop = resolvedPage?.shop ?? null;
+const services = resolvedPage?.services ?? [];
+const barbers = resolvedPage?.barbers ?? [];
+const depositRequired = resolvedPage?.depositRequired ?? false;
+const bookingUnavailable = !resolvedPage || resolvedPage.bookingUnavailable;
+const seo = shop ? publicBookingPageSeo(shop) : null;
+const pageTitle = shop ? `Book — ${shop.name}` : 'Book — KERSIVO';
+const createUrl = shop ? `/api/public/bookings/${shop.id}/create` : '';
 ---
 
 <MinimalLayout
-  title={`Book — ${shop.name}`}
-  description={`Book an appointment at ${shop.name} with KERSIVO.`}
-  canonicalPath={`/book/${shop.id}`}
+  title={pageTitle}
+  description={shop ? `Book an appointment at ${shop.name} with KERSIVO.` : 'Book an appointment with KERSIVO.'}
+  canonicalPath={seo?.canonicalPath ?? '/book'}
+  noindex={true}
+  robotsFollow={true}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}
   enableAnalytics={false}
-  enableProductionCart={true}
-  shopId={shop.id}
-  shopName={shop.name}
+  enableProductionCart={Boolean(shop)}
+  shopId={shop?.id}
+  shopName={shop?.name}
 >
   {
-    bookingUnavailable ? (
+    bookingUnavailable || !shop ? (
       <main class="container page-wrap booking-page-wrap">
         <p class="muted">{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
       </main>
