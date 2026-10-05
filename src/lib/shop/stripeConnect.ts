@@ -85,6 +85,7 @@ async function stripeGet(
   return json;
 }
 
+/** Legacy only: existing Express accounts remain supported for historical payments/refunds. */
 export async function createConnectExpressAccount(input: {
   email?: string;
   shopId: string;
@@ -102,6 +103,40 @@ export async function createConnectExpressAccount(input: {
   const id = typeof account.id === 'string' ? account.id : '';
   if (!id) throw new Error('Stripe Connect account id missing.');
   return { id };
+}
+
+/**
+ * v1.18 public Connect onboarding target: Standard connected account + Stripe-hosted onboarding.
+ * Stripe handles processing pricing on the connected account; KERSIVO booking payments use direct
+ * charges and add no application fee for new Starter/Full payments.
+ */
+export async function createConnectStandardAccount(input: {
+  email?: string;
+  shopId: string;
+}): Promise<{ id: string }> {
+  const params: Record<string, string> = {
+    type: 'standard',
+    country: 'GB',
+    'capabilities[card_payments][requested]': 'true',
+    'capabilities[transfers][requested]': 'true',
+    'metadata[shopId]': input.shopId,
+    'metadata[kersivo]': 'booking_payments',
+  };
+  if (input.email?.trim()) params.email = input.email.trim();
+  const account = await stripeForm('/accounts', params);
+  const id = typeof account.id === 'string' ? account.id : '';
+  if (!id) throw new Error('Stripe Connect account id missing.');
+  return { id };
+}
+
+export type StripeConnectAccountType = 'STANDARD' | 'EXPRESS' | 'CUSTOM' | 'UNKNOWN';
+
+function normalizeConnectAccountType(value: unknown): StripeConnectAccountType {
+  const type = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (type === 'standard') return 'STANDARD';
+  if (type === 'express') return 'EXPRESS';
+  if (type === 'custom') return 'CUSTOM';
+  return 'UNKNOWN';
 }
 
 export async function createConnectAccountLink(input: {
@@ -123,11 +158,13 @@ export async function createConnectAccountLink(input: {
 export async function retrieveConnectAccount(accountId: string): Promise<{
   chargesEnabled: boolean;
   detailsSubmitted: boolean;
+  accountType: StripeConnectAccountType;
 }> {
   const account = await stripeGet(`/accounts/${encodeURIComponent(accountId)}`);
   return {
     chargesEnabled: Boolean(account.charges_enabled),
     detailsSubmitted: Boolean(account.details_submitted),
+    accountType: normalizeConnectAccountType(account.type),
   };
 }
 
@@ -310,7 +347,7 @@ export async function createBookingDepositCheckoutSession(
       bookingId: input.bookingId,
       shopId: input.shopId,
     },
-    applicationFeeParam: '0',
+    applicationFeeParam: null,
     idempotencyKey: bookingDepositCheckoutIdempotencyKey(input.bookingId),
   });
 }
@@ -366,7 +403,6 @@ export async function createRetailCheckoutSession(input: {
     'metadata[type]': SHOP_ORDER_METADATA_TYPE,
     'metadata[orderId]': input.orderId,
     'metadata[shopId]': input.shopId,
-    'payment_intent_data[application_fee_amount]': '0',
   };
 
   const customerEmail = input.customerEmail?.trim().toLowerCase();
