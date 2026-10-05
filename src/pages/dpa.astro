@@ -246,17 +246,20 @@ import '@/styles/legal-pages.css';
       <p>
         At the end of the Services, the Client may instruct {TRADING_NAME} to return and/or delete the Customer Personal
         Data processed on the Client&rsquo;s behalf, unless Applicable Data Protection Law requires continued storage.
-        Return is available through the self-service CSV where that format suffices, and through reasonable assistance
-        for other categories on documented request. Deletion of the live tenant production graph follows the standard
-        purge process described below (or an earlier lawful instruction, including where the Client&rsquo;s account
-        deletion ends sole-owner shop retention before the default window). Not every return or deletion instruction is
-        available as a single button in the admin UI.
+        For clarity, moving from Full KERSIVO to KERSIVO Starter does <strong>not</strong> end the Services for that
+        shop: the processor relationship continues for the active Starter service. The relevant termination boundary is
+        complete departure from KERSIVO for the shop, after any necessary wind-down of existing future operational
+        appointments. Return is available through the self-service CSV where that format suffices, and through
+        reasonable assistance for other categories on documented request. Deletion of the live tenant production graph
+        follows the standard purge process described below. Not every return or deletion instruction is available as a
+        single button in the admin UI.
       </p>
 
       <p>
         Unless the Client gives a different lawful instruction before the end of the retention period, {TRADING_NAME}
         applies its standard <strong>{SAAS_EXPORT_RETENTION_DAYS}-day</strong> post-termination export and retention
-        window, after which Customer Personal Data in the live tenant production environment is deleted through the
+        window after the shop has left KERSIVO completely and any operational wind-down blockers have been resolved.
+        After that window, Customer Personal Data in the live tenant production environment is deleted through the
         standard purge process, including tenant EmailOutbound and SmsOutbound records and the associated private Blob
         cleanup lifecycle (best-effort provider object deletion). Current tenant purge also performs best-effort
         deletion of public media objects that {TRADING_NAME} can safely attribute to that tenant, including the
@@ -359,17 +362,19 @@ import '@/styles/legal-pages.css';
       <h3>Duration</h3>
 
       <p>
-        For the active service duration, plus the applicable post-termination export/deletion period, and limited
-        residual provider backup lifecycle.
+        For the active KERSIVO service duration — including continued KERSIVO Starter service after a Full downgrade —
+        plus the applicable post-complete-departure export/deletion period and limited residual provider backup
+        lifecycle.
       </p>
 
       <h3>Nature / operations</h3>
 
       <p>
         Collection, recording, organisation, storage, retrieval, display to authorised Client users, booking creation,
-        rescheduling and cancellation, client CRM, notes, image and file storage, retail order processing,
-        transactional email, optional SMS reminders, deposit and payment-status recording, migration/import, export,
-        deletion, and security/operational Processing necessary to provide the service.
+        rescheduling and cancellation, Clients Core and (where included in the Client&rsquo;s service level) advanced
+        CRM, notes, image and file storage, Full retail order processing, transactional email, optional Full SMS
+        reminders, deposit/full-payment status recording, migration/import, export, deletion, and security/operational
+        Processing necessary to provide the service.
       </p>
 
       <h3>Purpose</h3>
@@ -488,8 +493,9 @@ import '@/styles/legal-pages.css';
       <p>
         The following are <strong>not</strong> listed as Sub-processors for Customer Personal Data under this DPA:
         Google Analytics / Google Ads (tenant analytics disabled; {TRADING_NAME} own marketing-controller processing);
-        Stripe platform SaaS billing ({TRADING_NAME} independent-controller billing on {TRADING_NAME}&rsquo;s own Stripe
-        account); and Google OAuth ({TRADING_NAME} account/auth context).
+        Stripe Full KERSIVO SaaS billing ({TRADING_NAME} independent-controller billing on
+        {TRADING_NAME}&rsquo;s own Stripe account); Stripe Connect payment services described below; and Google OAuth
+        ({TRADING_NAME} account/auth context).
       </p>
 
       <p>
@@ -505,7 +511,8 @@ import '@/styles/legal-pages.css';
       </p>
       <ul>
         <li>
-          <strong>A. {TRADING_NAME} SaaS billing.</strong> The £39/month subscription is charged on
+          <strong>A. {TRADING_NAME} Full SaaS billing.</strong> KERSIVO Starter is £0/month and does not create a
+          KERSIVO SaaS subscription charge. Full KERSIVO is £39/month per physical location and is charged on
           {TRADING_NAME}&rsquo;s platform Stripe account. {TRADING_NAME} is an independent Controller for that
           business-customer billing data. Stripe provides payment services under Stripe&rsquo;s Services Agreement /
           Data Processing Agreement (for a UK Stripe account: contracting DPA entity Stripe Payments Europe, Limited
@@ -513,11 +520,16 @@ import '@/styles/legal-pages.css';
           as an independent controller for fraud, regulatory and compliance purposes under Stripe&rsquo;s terms.
         </li>
         <li>
-          <strong>B. Client connected-account payments.</strong> Live booking deposits and retail card payments use
-          Stripe Connect Express with direct charges on the Client&rsquo;s connected Stripe account (merchants collect
-          payments directly; {TRADING_NAME} <code>application_fee_amount</code> is 0). The Client remains seller /
-          Controller for the End Customer payment. {TRADING_NAME} facilitates the technical flow and stores limited
-          identifiers/statuses; it does not store full card numbers or CVC.
+          <strong>B. Client connected-account payments.</strong> Live booking deposits / full upfront booking payments
+          and Full retail card payments use Stripe Connect with direct charges on the Client&rsquo;s connected Stripe
+          account. New public connected-account onboarding uses <strong>Stripe Standard</strong>; historical Express
+          connections may remain supported where already established. The Client remains merchant / seller and
+          Controller for the End Customer payment. {TRADING_NAME} facilitates the technical flow, stores limited
+          payment/refund/account identifiers and statuses, and adds <strong>0% application / platform fee</strong> to
+          new Starter and Full booking payments; it does not store full card numbers or CVC. Stripe processing fees are
+          separate. Stripe may separately pay {TRADING_NAME} partner compensation / revenue share if
+          {TRADING_NAME} qualifies; that is not a fee deducted by {TRADING_NAME} from the Client&rsquo;s booking
+          payment.
         </li>
         <li>
           <strong>C. Stripe&rsquo;s independent functions.</strong> Stripe may process personal data as processor for
@@ -526,6 +538,15 @@ import '@/styles/legal-pages.css';
           Personal Data merely because {TRADING_NAME} facilitates Connect Checkout.
         </li>
       </ul>
+
+      <p>
+        <strong>QR and Google service configuration.</strong> KERSIVO QR Kit fulfilment contact/delivery data and
+        merchant-managed Google booking-link configuration are primarily business-customer service-administration
+        records handled by {TRADING_NAME} in its own controller capacity where applicable. Where those records contain
+        Customer Personal Data supplied on the Client&rsquo;s instructions, the processor obligations in this DPA apply
+        to that Customer Personal Data. KERSIVO does not claim that the guided Google booking-link flow gives KERSIVO
+        access to edit the Client&rsquo;s Google Business Profile.
+      </p>
 
       <h2>Schedule 3 — Technical and organisational measures</h2>
 
