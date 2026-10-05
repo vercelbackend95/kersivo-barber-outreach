@@ -240,11 +240,15 @@ model ShopSettings {
   bookingPaymentMode                 BookingPaymentMode              @default(NONE)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
   retailEnabled                      Boolean                         @default(false)
-  /// Stripe Connect Express account id for booking deposits (and future shop payouts).
+  /// Current Stripe Connect account used for NEW payments. Historical payment rows snapshot their own account id.
   stripeConnectAccountId             String?
+  /// Legacy Express accounts remain supported for historical compatibility; new public onboarding targets Standard.
+  stripeConnectAccountType           StripeConnectAccountType?
   stripeConnectChargesEnabled        Boolean                         @default(false)
   stripeConnectDetailsSubmitted      Boolean                         @default(false)
-  /// Stripe event.created of the last applied account.updated (ordering guard).
+  /// Set when the current connected account deauthorizes KERSIVO. Account id is retained for historical reconciliation.
+  stripeConnectDisconnectedAt        DateTime?
+  /// Stripe event.created of the last applied account.updated / deauthorization event (ordering guard).
   connectStatusEventAt               DateTime?
   /// Private preview URL set by OPS when tenant site is ready for owner review.
   sitePreviewUrl                     String?
@@ -774,6 +778,11 @@ model RateLimitEvent {
   createdAt DateTime @default(now())
 
   @@index([ip, action, createdAt])
+}
+
+enum StripeConnectAccountType {
+  EXPRESS
+  STANDARD
 }
 
 enum SetupPlan {
