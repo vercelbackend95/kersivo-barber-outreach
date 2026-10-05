@@ -68,24 +68,11 @@ import FullKersivoUpgradeDialog, {
   FullKersivoUpgradePage,
 } from './FullKersivoUpgradeDialog';
 import { resolveAdminProductGate } from '@/lib/admin/productLocks';
+import { accessForState, serializeKersivoAccess } from '@/lib/shop/kersivoAccess';
 
-const NO_PAID = {
-  reports: false,
-  clients: false,
-  fullBookingHistory: false,
-  retail: false,
-  assistant: false,
-  smsReminders: false,
-  automatedEmailReminders: false,
-  brandedSite: false,
-  manualBookings: false,
-};
-const CORE = { bookingCore: true, publicBooking: true, bookingPayments: true, team: true, services: true };
-const FREE_ACCESS = { state: 'FREE_BOOKING', capabilities: { ...CORE, ...NO_PAID } };
-const FULL_ACCESS = {
-  state: 'FULL_KERSIVO',
-  capabilities: Object.fromEntries(Object.keys({ ...CORE, ...NO_PAID }).map((k) => [k, true])),
-};
+// Session payloads come from the authoritative server capability matrix (v1.18).
+const FREE_ACCESS = serializeKersivoAccess(accessForState('FREE_BOOKING'));
+const FULL_ACCESS = serializeKersivoAccess(accessForState('FULL_KERSIVO'));
 
 const OWNER_PERMISSIONS = [
   'bookings.manage',
@@ -176,6 +163,7 @@ function fetchedUrls(): string[] {
 }
 
 const PAID_LABELS = ['Reports', 'Clients', 'Products', 'Orders', 'Sales', 'Assistant'];
+const STARTER_LOCKED_LABELS = ['Reports', 'Products', 'Orders', 'Sales'];
 
 beforeEach(() => {
   panels.bookings.length = 0;
@@ -198,11 +186,11 @@ afterEach(() => {
 });
 
 describe('Free Booking dashboard sidebar', () => {
-  it('T: Bookings, Team and Services stay unlocked for a Free Owner', async () => {
+  it('T: Bookings, Clients (Core), Team and Services stay unlocked for a Starter Owner', async () => {
     installSession();
     await renderAdmin();
     await waitFor(() => expect(sidebarLink('Reports')?.dataset.locked).toBe('true'));
-    for (const label of ['Bookings', 'Team', 'Services']) {
+    for (const label of ['Bookings', 'Clients', 'Team', 'Services']) {
       const link = sidebarLink(label);
       expect(link, label).toBeTruthy();
       expect(link!.dataset.locked).toBeUndefined();
@@ -210,11 +198,11 @@ describe('Free Booking dashboard sidebar', () => {
     }
   });
 
-  it('U: the six paid modules are visible but locked with a subtle lock icon', async () => {
+  it('U: Full-only modules are visible but locked with a subtle lock icon', async () => {
     installSession();
     await renderAdmin();
     await waitFor(() => expect(sidebarLink('Reports')?.dataset.locked).toBe('true'));
-    for (const label of PAID_LABELS) {
+    for (const label of STARTER_LOCKED_LABELS) {
       const link = sidebarLink(label);
       expect(link, label).toBeTruthy();
       expect(link!.dataset.locked).toBe('true');
@@ -289,20 +277,27 @@ describe('Locked module interactions', () => {
     expect(fetchedUrls().slice(callsBefore).some((url) => url.includes('/api/admin/reports'))).toBe(false);
   });
 
-  it('X: clicking locked Clients / Products / Assistant never mounts those panels', async () => {
+  it('X: clicking locked Products / Orders / Sales never mounts the Retail panels', async () => {
     installSession();
     await renderAdmin();
-    await waitFor(() => expect(sidebarLink('Clients')?.dataset.locked).toBe('true'));
-    for (const label of ['Clients', 'Products', 'Orders', 'Sales', 'Assistant']) {
+    await waitFor(() => expect(sidebarLink('Products')?.dataset.locked).toBe('true'));
+    for (const label of ['Products', 'Orders', 'Sales']) {
       fireEvent.click(sidebarLink(label)!);
       await screen.findByRole('dialog', { name: FULL_KERSIVO_UPGRADE_COPY.heading });
       fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     }
-    expect(screen.queryByTestId('clients-panel')).toBeNull();
     expect(screen.queryByTestId('shop-panel')).toBeNull();
-    expect(screen.queryByTestId('assistant-panel')).toBeNull();
     expect(window.location.search).toBe('');
+  });
+
+  it('X: Assistant stays visible on Starter; the live Assistant is locked inside the panel and by the API', async () => {
+    installSession();
+    await renderAdmin();
+    await waitFor(() => expect(sidebarLink('Assistant')).toBeTruthy());
+    expect(sidebarLink('Assistant')!.dataset.locked).toBeUndefined();
+    expect(FULL_ACCESS.capabilities.assistant).toBe(true);
+    expect(FREE_ACCESS.capabilities.assistant).toBe(false);
   });
 
   it('Y: a Free deep link keeps the chrome, shows the lock and never mounts the paid panel', async () => {
@@ -324,13 +319,22 @@ describe('Locked module interactions', () => {
     expect(fetchedUrls().some((url) => url.includes('/api/admin/reports'))).toBe(false);
   });
 
+  it('X: clicking Clients opens Clients Core for a Starter Owner without an upgrade dialog', async () => {
+    installSession();
+    await renderAdmin();
+    await waitFor(() => expect(sidebarLink('Clients')).toBeTruthy());
+    expect(sidebarLink('Clients')!.dataset.locked).toBeUndefined();
+    fireEvent.click(sidebarLink('Clients')!);
+    await screen.findByTestId('clients-panel');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('Y: back/forward into locked sections stays locked consistently', async () => {
     installSession();
-    await renderAdmin('/admin?section=bookings_clients');
+    await renderAdmin('/admin?section=bookings_reports');
     await waitFor(() =>
-      expect(document.querySelector('[data-locked-feature]')?.getAttribute('data-locked-feature')).toBe('clients'),
+      expect(document.querySelector('[data-locked-feature]')?.getAttribute('data-locked-feature')).toBe('reports'),
     );
-    expect(screen.queryByTestId('clients-panel')).toBeNull();
 
     act(() => {
       window.history.pushState(null, '', '/admin?section=shop_products');
@@ -349,19 +353,28 @@ describe('Locked module interactions', () => {
     expect(screen.getByTestId('bookings-panel').dataset.active).toBe('true');
   });
 
-  it('Z: the History affordance opens the lock instead of navigating', async () => {
+  it('Z: the History affordance opens rolling 90-day History for Starter', async () => {
     installSession();
     await renderAdmin();
     await waitFor(() => expect(sidebarLink('Reports')?.dataset.locked).toBe('true'));
     const latest = panels.bookings[panels.bookings.length - 1]!;
     act(() => latest.onOpenHistoryWithinBookings?.());
-    await screen.findByRole('dialog', { name: FULL_KERSIVO_UPGRADE_COPY.heading });
-    expect(window.location.search).toBe('');
-    expect(panels.bookings.some((p) => p.mode === 'history')).toBe(false);
+    await waitFor(() => expect(panels.bookings.some((p) => p.mode === 'history')).toBe(true));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('Z: a History deep link is locked for Free', async () => {
+  it('Z: a History deep link opens for Starter (server enforces the 90-day window)', async () => {
     installSession();
+    await renderAdmin('/admin?section=bookings_history_tab');
+    await waitFor(() => expect(panels.bookings.some((p) => p.mode === 'history')).toBe(true));
+    expect(document.querySelector('[data-locked-feature]')).toBeNull();
+  });
+
+  it('Z: a History deep link stays locked for a tenant without recent history', async () => {
+    const access = serializeKersivoAccess(accessForState('FREE_BOOKING'));
+    installSession({
+      productAccess: { ...access, capabilities: { ...access.capabilities, recentBookingHistory: false } },
+    });
     await renderAdmin('/admin?section=bookings_history_tab');
     await waitFor(() =>
       expect(document.querySelector('[data-locked-feature]')?.getAttribute('data-locked-feature')).toBe('history'),
@@ -369,11 +382,18 @@ describe('Locked module interactions', () => {
     expect(panels.bookings.some((p) => p.mode === 'history')).toBe(false);
   });
 
-  it('AA: the manual booking entry point (upgrade redirect) opens the lock and strips the param', async () => {
+  it('AA: a stale manual-bookings upgrade link never pitches Full to Starter, and strips the param', async () => {
     installSession();
     await renderAdmin('/admin?upgrade=manual_bookings');
+    await waitFor(() => expect(window.location.search).toBe(''));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('AA: an upgrade link for a Full-only feature opens the lock and strips the param', async () => {
+    installSession();
+    await renderAdmin('/admin?upgrade=reports');
     const dialog = await screen.findByRole('dialog', { name: FULL_KERSIVO_UPGRADE_COPY.heading });
-    expect(dialog.textContent).toContain('Manual bookings');
+    expect(dialog.textContent).toContain('Reports');
     expect(window.location.search).toBe('');
   });
 
@@ -412,7 +432,7 @@ describe('AC: demo, BLACKLINE, showcase and preview do not regress', () => {
   });
 
   it('guest preview keeps showcasing Full even though it resolves to SETUP', async () => {
-    installSession({ via: 'preview', productAccess: { state: 'SETUP', capabilities: { ...CORE, ...NO_PAID } } });
+    installSession({ via: 'preview', productAccess: serializeKersivoAccess(accessForState('SETUP')) });
     await renderAdmin('/admin?section=bookings_reports');
     await waitFor(() => expect(screen.getByTestId('bookings-panel').dataset.mode).toBe('reports'));
     expect(document.querySelector('.admin-sidebar-link--locked')).toBeNull();
@@ -431,7 +451,7 @@ describe('AC: demo, BLACKLINE, showcase and preview do not regress', () => {
       resolveAdminProductGate({
         demoMode: false,
         via: 'session',
-        productAccess: { state: 'SETUP', capabilities: { ...CORE, ...NO_PAID } } as never,
+        productAccess: serializeKersivoAccess(accessForState('SETUP')) as never,
       }),
     ).toBeNull();
   });

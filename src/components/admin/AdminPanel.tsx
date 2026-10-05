@@ -25,6 +25,7 @@ import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConst
 import type { SerializedKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
   ADMIN_UPGRADE_QUERY_PARAM,
+  isUpgradeFeatureLocked,
   lockedFeatureForSection,
   parseFullKersivoFeature,
   resolveAdminProductGate,
@@ -366,7 +367,7 @@ export default function AdminPanel({
       '',
       `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`,
     );
-    if (feature && productGate) setUpgradeFeature(feature);
+    if (feature && isUpgradeFeatureLocked(productGate, feature)) setUpgradeFeature(feature);
   }, [authReady, demoMode, productGate]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {

@@ -73,6 +73,30 @@ export const CAPABILITY_UPGRADE_FEATURE: Readonly<Partial<Record<KersivoCapabili
   BRANDED_SITE: 'branded_site',
 };
 
+/** Capability that a Full upgrade adds for each feature; null = the generic Full pitch. */
+export const FEATURE_UPGRADE_CAPABILITY: Readonly<
+  Record<FullKersivoFeature, keyof SerializedKersivoCapabilities | null>
+> = {
+  reports: 'reports',
+  clients: 'clients',
+  retail: 'retail',
+  assistant: 'assistant',
+  history: 'fullBookingHistory',
+  manual_bookings: 'manualBookings',
+  branded_site: 'brandedSite',
+  launch: null,
+};
+
+/** True when the upgrade dialog for `feature` would pitch something the shop doesn't already have. */
+export function isUpgradeFeatureLocked(
+  gate: SerializedKersivoAccess | null,
+  feature: FullKersivoFeature,
+): boolean {
+  if (!gate) return false;
+  const capability = FEATURE_UPGRADE_CAPABILITY[feature];
+  return capability === null || !gate.capabilities[capability];
+}
+
 export const ADMIN_UPGRADE_QUERY_PARAM = 'upgrade';
 
 export function parseFullKersivoFeature(raw: string | null | undefined): FullKersivoFeature | null {
