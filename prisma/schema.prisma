@@ -303,6 +303,60 @@ model ShopSettings {
   qrKitFulfilment                    QrKitFulfilment?
   qrKitFulfilmentEvents              QrKitFulfilmentEvent[]
   departure                          ShopDeparture?
+  fullBookingDestination             FullBookingDestination?
+  fullBookingDestinationEvents       FullBookingDestinationEvent[]
+}
+
+enum FullBookingDestinationStatus {
+  /// KERSIVO OPS attested the exact URL is live (DNS, HTTPS, correct shop, real booking flow).
+  VERIFIED_LIVE
+  /// No longer authoritative; Full falls back to the KERSIVO-hosted booking route.
+  INVALIDATED
+}
+
+enum FullBookingDestinationEventAction {
+  VERIFIED
+  URL_CHANGED
+  INVALIDATED
+}
+
+/// Authoritative live Full own-domain booking destination for one shop/location. Written only by
+/// the operator workflow (src/lib/shop/fullBookingDestination.ts); never derived from site preview,
+/// launch approval or onboarding domain fields. Used for QR / Google only while Full is active.
+model FullBookingDestination {
+  id                 String                       @id @default(cuid())
+  shopId             String                       @unique
+  status             FullBookingDestinationStatus
+  /// Exact public URL where a customer completes a booking (not just a hostname).
+  url                String
+  verifiedAt         DateTime
+  verificationMethod String
+  verifiedByUserId   String?
+  verifiedByEmail    String?
+  siteVersion        String?
+  invalidatedAt      DateTime?
+  invalidationReason String?                      @db.Text
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model FullBookingDestinationEvent {
+  id          String                            @id @default(cuid())
+  shopId      String
+  action      FullBookingDestinationEventAction
+  url         String?
+  previousUrl String?
+  siteVersion String?
+  actorUserId String?
+  actorEmail  String?
+  note        String?                           @db.Text
+  createdAt   DateTime                          @default(now())
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, createdAt])
 }
 
 enum ShopDepartureStatus {

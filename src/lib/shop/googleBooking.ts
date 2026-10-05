@@ -1,7 +1,10 @@
 import type { GoogleBookingLinkStatus } from '@prisma/client';
-import { preferredPublicBookingPath } from '../booking/publicBookingPath';
 import { getPublicSiteUrl } from '../setup/siteUrl';
 import type { KersivoProductState } from './kersivoAccess';
+import {
+  resolvePublicBookingDestination,
+  type StoredFullBookingDestination,
+} from './publicBookingDestination';
 
 export const GOOGLE_BUSINESS_PROFILE_MANAGE_URL = 'https://business.google.com/';
 
@@ -9,7 +12,7 @@ export type GoogleBookingDestination =
   | {
       available: true;
       url: string;
-      source: 'starter_hosted' | 'full_hosted_fallback';
+      source: 'starter_hosted' | 'full_hosted_fallback' | 'full_verified_own_domain';
     }
   | {
       available: false;
@@ -18,33 +21,26 @@ export type GoogleBookingDestination =
     };
 
 /**
- * Authoritative V1 Google booking destination.
- *
- * Starter always uses the stable KERSIVO-hosted /book/{slug} destination.
- * Full currently uses the same stable booking route until a separately verified live Full
- * own-domain booking destination exists. Do not infer that destination from preview URLs,
- * customer-entered domain text or social links.
+ * Authoritative V1 Google booking destination (merchant pastes it into Google Business Profile).
+ * Derived from the shared public booking destination, so it always matches the QR:
+ * Starter → KERSIVO-hosted /book/{slug}; Full → the OPS-verified live own-domain URL, or the
+ * hosted route until one exists. Never a /q/{code} QR URL.
  */
 export function resolveGoogleBookingDestination(params: {
   state: KersivoProductState;
   shop: { id: string; bookingSlug: string | null };
+  fullDestination?: StoredFullBookingDestination | null;
   publicSiteUrl?: string;
 }): GoogleBookingDestination {
-  if (params.state === 'SETUP') {
+  const destination = resolvePublicBookingDestination(params);
+  if (destination.kind === 'unavailable') {
     return { available: false, url: null, source: 'setup_unavailable' };
   }
-
+  if (destination.kind === 'own_domain') {
+    return { available: true, url: destination.url, source: destination.source };
+  }
   const base = (params.publicSiteUrl ?? getPublicSiteUrl()).replace(/\/$/, '');
-  const url = `${base}${preferredPublicBookingPath(params.shop)}`;
-
-  return {
-    available: true,
-    url,
-    source:
-      params.state === 'FREE_BOOKING'
-        ? 'starter_hosted'
-        : 'full_hosted_fallback',
-  };
+  return { available: true, url: `${base}${destination.path}`, source: destination.source };
 }
 
 export type GoogleBookingSetupViewStatus =

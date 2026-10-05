@@ -3,7 +3,8 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { prisma } from '../../lib/db/client';
 import { normalizeQrCode } from '../../lib/qr/shopQrCodes';
-import { resolveQrDestination } from '../../lib/qr/qrDestination';
+import { qrRedirectLocation, resolveQrDestination } from '../../lib/qr/qrDestination';
+import { loadFullBookingDestinationForState } from '../../lib/shop/fullBookingDestination';
 import { hasKersivoCapability, loadKersivoAccess } from '../../lib/shop/kersivoAccess';
 
 /** Destinations change with plan state: never cache, never index. */
@@ -22,6 +23,8 @@ function notFound(): Response {
 /**
  * Dynamic physical QR redirect. The code identifies shop + placement only; the destination is
  * resolved from current product access on every scan and is always a temporary (302) redirect.
+ * The Location is never taken from request input: it is the scanned shop's hosted booking path or
+ * its OPS-verified live Full destination.
  */
 export const GET: APIRoute = async ({ params }) => {
   const code = normalizeQrCode(params.code);
@@ -37,12 +40,15 @@ export const GET: APIRoute = async ({ params }) => {
     const access = await loadKersivoAccess(qr.shop.id);
     if (!hasKersivoCapability(access, 'PUBLIC_BOOKING')) return notFound();
 
-    const destination = resolveQrDestination({ state: access.state, shop: qr.shop });
-    if (destination.kind !== 'redirect') return notFound();
+    const fullDestination = await loadFullBookingDestinationForState(qr.shop.id, access.state);
+    const location = qrRedirectLocation(
+      resolveQrDestination({ state: access.state, shop: qr.shop, fullDestination }),
+    );
+    if (!location) return notFound();
 
     return new Response(null, {
       status: 302,
-      headers: { ...QR_RESPONSE_HEADERS, Location: destination.path },
+      headers: { ...QR_RESPONSE_HEADERS, Location: location },
     });
   } catch (error) {
     console.error('[qr] scan resolution failed', error);

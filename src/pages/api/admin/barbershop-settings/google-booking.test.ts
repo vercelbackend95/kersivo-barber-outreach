@@ -31,43 +31,14 @@ vi.mock('@/lib/shop/kersivoAccess', () => ({
   loadKersivoAccess: (...args: unknown[]) => loadKersivoAccess(...args),
 }));
 
-vi.mock('@/lib/shop/googleBooking', () => ({
-  GOOGLE_BUSINESS_PROFILE_MANAGE_URL: 'https://business.google.com/',
-  resolveGoogleBookingDestination: ({
-    state,
-    shop,
-  }: {
-    state: string;
-    shop: { bookingSlug: string | null };
-  }) =>
-    state === 'SETUP'
-      ? { available: false, url: null, source: 'setup_unavailable' }
-      : {
-          available: true,
-          url: `https://kersivo.test/book/${shop.bookingSlug ?? 'legacy'}`,
-          source: state === 'FREE_BOOKING' ? 'starter_hosted' : 'full_hosted_fallback',
-        },
-  resolveGoogleBookingSetupView: ({
-    status,
-    confirmedUrl,
-    authoritativeUrl,
-  }: {
-    status: string;
-    confirmedUrl: string | null;
-    authoritativeUrl: string;
-  }) => {
-    if (status === 'MERCHANT_CONFIRMED') {
-      const requiresUpdate = confirmedUrl !== authoritativeUrl;
-      return {
-        status: requiresUpdate ? 'UPDATE_REQUIRED' : 'MERCHANT_CONFIRMED',
-        requiresUpdate,
-      };
-    }
-    return {
-      status: status === 'SETUP_STARTED' ? 'SETUP_STARTED' : 'NOT_SET',
-      requiresUpdate: false,
-    };
-  },
+vi.mock('@/lib/setup/siteUrl', () => ({
+  getPublicSiteUrl: () => 'https://kersivo.test',
+}));
+
+const loadFullBookingDestinationForState = vi.fn();
+vi.mock('@/lib/shop/fullBookingDestination', () => ({
+  loadFullBookingDestinationForState: (...args: unknown[]) =>
+    loadFullBookingDestinationForState(...args),
 }));
 
 import { GET, PATCH } from './google-booking';
@@ -86,6 +57,14 @@ let shop = {
   googleBookingConfirmedUrl: null as string | null,
   googleBookingStatusUpdatedAt: null as Date | null,
 };
+
+const OWN_DOMAIN = 'https://fade-room.co.uk/book';
+const HOSTED = 'https://kersivo.test/book/fade-room';
+let destination: { shopId: string; status: string; url: string } | null = null;
+
+function onFull() {
+  loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO', capabilities: ['GOOGLE_BOOKING_SETUP'] });
+}
 
 function ctx(method = 'GET', body?: unknown): APIContext {
   return {
@@ -108,6 +87,10 @@ describe('Google booking settings API', () => {
       googleBookingConfirmedUrl: null,
       googleBookingStatusUpdatedAt: null,
     };
+    destination = null;
+    loadFullBookingDestinationForState.mockImplementation(async (shopId: string, state: string) =>
+      state === 'FULL_KERSIVO' && destination?.shopId === shopId ? { ...destination } : null,
+    );
     requireAdminPermissionAndCapability.mockResolvedValue(access);
     loadKersivoAccess.mockResolvedValue({
       state: 'FREE_BOOKING',
@@ -216,6 +199,80 @@ describe('Google booking settings API', () => {
 
     expect(res.status).toBe(403);
     expect(shopFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('37: Full without a verified destination exposes the hosted fallback', async () => {
+    onFull();
+    const body = await (await GET(ctx())).json();
+    expect(body).toMatchObject({ bookingUrl: HOSTED, destinationSource: 'full_hosted_fallback' });
+  });
+
+  it('38 + 39: Full with a verified destination exposes the exact own-domain URL, never /q/', async () => {
+    onFull();
+    destination = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: OWN_DOMAIN };
+    const body = await (await GET(ctx())).json();
+    expect(body).toMatchObject({ bookingUrl: OWN_DOMAIN, destinationSource: 'full_verified_own_domain' });
+    expect(body.bookingUrl).not.toContain('/q/');
+  });
+
+  it('40 + 43: merchant-confirmed hosted URL + newly verified Full destination → UPDATE_REQUIRED, Google untouched', async () => {
+    onFull();
+    shop.googleBookingLinkStatus = 'MERCHANT_CONFIRMED';
+    shop.googleBookingConfirmedUrl = HOSTED;
+    expect((await (await GET(ctx())).json()).status).toBe('MERCHANT_CONFIRMED');
+
+    destination = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: OWN_DOMAIN };
+    const body = await (await GET(ctx())).json();
+    expect(body).toMatchObject({
+      status: 'UPDATE_REQUIRED',
+      requiresUpdate: true,
+      confirmedUrl: HOSTED,
+      bookingUrl: OWN_DOMAIN,
+    });
+    // Nothing is written on read: KERSIVO never claims it changed Google.
+    expect(shopUpdate).not.toHaveBeenCalled();
+    expect(shop.googleBookingConfirmedUrl).toBe(HOSTED);
+  });
+
+  it('41: merchant-confirmed own-domain URL + Full → Starter → UPDATE_REQUIRED (hosted again)', async () => {
+    destination = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: OWN_DOMAIN };
+    shop.googleBookingLinkStatus = 'MERCHANT_CONFIRMED';
+    shop.googleBookingConfirmedUrl = OWN_DOMAIN;
+    const body = await (await GET(ctx())).json();
+    expect(body).toMatchObject({
+      status: 'UPDATE_REQUIRED',
+      bookingUrl: HOSTED,
+      destinationSource: 'starter_hosted',
+    });
+  });
+
+  it('42: invalidated Full destination → hosted fallback and UPDATE_REQUIRED for the old own-domain confirmation', async () => {
+    onFull();
+    destination = { shopId: 'shop-1', status: 'INVALIDATED', url: OWN_DOMAIN };
+    shop.googleBookingLinkStatus = 'MERCHANT_CONFIRMED';
+    shop.googleBookingConfirmedUrl = OWN_DOMAIN;
+    const body = await (await GET(ctx())).json();
+    expect(body).toMatchObject({
+      status: 'UPDATE_REQUIRED',
+      bookingUrl: HOSTED,
+      destinationSource: 'full_hosted_fallback',
+    });
+  });
+
+  it('confirming after verification stores exactly the own-domain URL the merchant pasted', async () => {
+    onFull();
+    destination = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: OWN_DOMAIN };
+    const body = await (await PATCH(ctx('PATCH', { action: 'CONFIRM_CURRENT_URL' }))).json();
+    expect(shop.googleBookingConfirmedUrl).toBe(OWN_DOMAIN);
+    expect(body.status).toBe('MERCHANT_CONFIRMED');
+  });
+
+  it('a departed shop (SETUP) exposes no Google booking destination even with a stored record', async () => {
+    loadKersivoAccess.mockResolvedValue({ state: 'SETUP', capabilities: [], departure: 'WINDING_DOWN' });
+    destination = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: OWN_DOMAIN };
+    const res = await GET(ctx());
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('GOOGLE_BOOKING_NOT_AVAILABLE');
   });
 
   it('rejects arbitrary status payloads', async () => {

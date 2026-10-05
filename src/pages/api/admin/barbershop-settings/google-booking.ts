@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 import { ensureShopBookingSlug } from '@/lib/booking/bookingSlug';
 import { prisma } from '@/lib/db/client';
+import { loadFullBookingDestinationForState } from '@/lib/shop/fullBookingDestination';
 import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
   GOOGLE_BUSINESS_PROFILE_MANAGE_URL,
@@ -46,9 +47,11 @@ async function loadGoogleBookingState(shopId: string) {
     shop = { ...shop, bookingSlug };
   }
 
+  const fullDestination = await loadFullBookingDestinationForState(shopId, productAccess.state);
   const destination = resolveGoogleBookingDestination({
     state: productAccess.state,
     shop,
+    fullDestination,
   });
   if (!destination.available) {
     return {

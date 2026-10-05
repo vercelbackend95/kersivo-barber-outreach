@@ -47,6 +47,45 @@ describe('Google booking destination', () => {
       source: 'full_hosted_fallback',
     });
   });
+
+  const verified = { shopId: 'shop-1', status: 'VERIFIED_LIVE', url: 'https://fade-room.co.uk/book' };
+
+  it('38: Full with a verified destination uses the exact own-domain URL', () => {
+    expect(
+      resolveGoogleBookingDestination({
+        state: 'FULL_KERSIVO',
+        shop: { id: 'shop-1', bookingSlug: 'fade-room' },
+        fullDestination: verified,
+        publicSiteUrl: 'https://kersivo.test',
+      }),
+    ).toEqual({ available: true, url: 'https://fade-room.co.uk/book', source: 'full_verified_own_domain' });
+  });
+
+  it('36 + 39: Starter ignores a stored Full destination and never returns a /q/ URL', () => {
+    for (const state of ['FREE_BOOKING', 'FULL_KERSIVO'] as const) {
+      for (const fullDestination of [null, verified, { ...verified, status: 'INVALIDATED' }]) {
+        const result = resolveGoogleBookingDestination({
+          state,
+          shop: { id: 'shop-1', bookingSlug: 'fade-room' },
+          fullDestination,
+          publicSiteUrl: 'https://kersivo.test',
+        });
+        if (result.available) expect(result.url).not.toMatch(/\/q\//);
+        if (state === 'FREE_BOOKING') expect(result.url).toBe('https://kersivo.test/book/fade-room');
+      }
+    }
+  });
+
+  it('42: an invalidated Full destination falls back to the hosted route', () => {
+    expect(
+      resolveGoogleBookingDestination({
+        state: 'FULL_KERSIVO',
+        shop: { id: 'shop-1', bookingSlug: 'fade-room' },
+        fullDestination: { ...verified, status: 'INVALIDATED' },
+        publicSiteUrl: 'https://kersivo.test',
+      }),
+    ).toEqual({ available: true, url: 'https://kersivo.test/book/fade-room', source: 'full_hosted_fallback' });
+  });
 });
 
 describe('Google booking setup status', () => {

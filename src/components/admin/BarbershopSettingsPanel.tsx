@@ -19,7 +19,7 @@ type Identity = {
 
 type GoogleBookingSetupState = {
   bookingUrl: string;
-  destinationSource: 'starter_hosted' | 'full_hosted_fallback';
+  destinationSource: 'starter_hosted' | 'full_hosted_fallback' | 'full_verified_own_domain';
   status: 'NOT_SET' | 'SETUP_STARTED' | 'MERCHANT_CONFIRMED' | 'UPDATE_REQUIRED';
   requiresUpdate: boolean;
   confirmedUrl: string | null;
@@ -1300,15 +1300,21 @@ export default function BarbershopSettingsPanel({
               <ol className="admin-barbershop-settings__card-copy">
                 <li>Open the Google account that manages your Business Profile.</li>
                 <li>Find the booking, appointment or links section for this location.</li>
-                <li>Add or replace the booking link with the exact KERSIVO URL shown above.</li>
+                <li>Add or replace the booking link with the exact URL shown above.</li>
                 <li>Save the change in Google, then return here and confirm it.</li>
               </ol>
 
               {googleBooking.destinationSource === 'full_hosted_fallback' ? (
                 <p className="muted" data-google-full-hosted-fallback>
-                  This is your current KERSIVO-hosted booking destination. When a verified live
-                  Full KERSIVO own-domain booking destination becomes available, KERSIVO will flag
-                  the Google link here for updating.
+                  Your KERSIVO-hosted booking link remains active while your Full site/domain is
+                  being prepared. Once booking on your own domain is verified live, KERSIVO will
+                  flag the Google link here for updating.
+                </p>
+              ) : null}
+              {googleBooking.destinationSource === 'full_verified_own_domain' ? (
+                <p className="muted" data-google-full-own-domain>
+                  Booking on your own domain is live. This is your live Full KERSIVO booking
+                  destination. KERSIVO does not edit Google for you — update the link there yourself.
                 </p>
               ) : null}
 
