@@ -260,3 +260,59 @@
     width: 100%;
   }
 }
+
+
+/* Physical Booking QR Kit claim */
+.admin-barbershop-settings__qr-kit-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.admin-barbershop-settings__qr-kit-preview > div {
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 82%, transparent);
+}
+
+.admin-barbershop-settings__qr-kit-preview strong {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.admin-barbershop-settings__qr-kit-preview span {
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.admin-barbershop-settings__qr-kit-preview small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.admin-barbershop-settings__qr-address-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9rem, 0.55fr);
+  gap: 0.85rem;
+}
+
+.admin-barbershop-settings__qr-requirements {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 36rem) {
+  .admin-barbershop-settings__qr-kit-preview,
+  .admin-barbershop-settings__qr-address-row {
+    grid-template-columns: 1fr;
+  }
+}
