@@ -303,20 +303,14 @@ describe('PUT /api/admin/onboarding/barbers', () => {
   describe('Free bookable barber limit', () => {
     const card = (name: string, onlineBookings: boolean) => ({ name, onlineBookings });
 
-    it('rejects a 5th bookable barber for a shop heading into Free (SETUP)', async () => {
+    it('allows SETUP to exceed four before the owner chooses Starter or Full', async () => {
       const res = await PUT(
         makeJsonCtx({
           barbers: ['A', 'B', 'C', 'D', 'E'].map((name) => card(name, true)),
         }),
       );
-      expect(res.status).toBe(409);
-      expect(await res.json()).toEqual({
-        code: 'FREE_BOOKABLE_BARBER_LIMIT',
-        error: 'KERSIVO Starter includes up to 4 barbers taking online bookings.',
-        limit: 4,
-      });
-      expect(prismaTransaction).not.toHaveBeenCalled();
-      expect(barberCreate).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(barberCreate).toHaveBeenCalledTimes(5);
     });
 
     it('rejects a 5th bookable barber for a live FREE_BOOKING shop', async () => {
