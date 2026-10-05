@@ -8,7 +8,7 @@ const requireAdminContext = vi.fn();
 const shopSettingsFindUnique = vi.fn();
 const shopSettingsUpdate = vi.fn();
 const shopSettingsUpdateMany = vi.fn();
-const createConnectExpressAccount = vi.fn();
+const createConnectStandardAccount = vi.fn();
 const createConnectAccountLink = vi.fn();
 const retrieveConnectAccount = vi.fn();
 const loadKersivoAccess = vi.fn();
@@ -33,7 +33,7 @@ vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => ({
 }));
 
 vi.mock('@/lib/shop/stripeConnect', () => ({
-  createConnectExpressAccount: (...args: unknown[]) => createConnectExpressAccount(...args),
+  createConnectStandardAccount: (...args: unknown[]) => createConnectStandardAccount(...args),
   createConnectAccountLink: (...args: unknown[]) => createConnectAccountLink(...args),
   retrieveConnectAccount: (...args: unknown[]) => retrieveConnectAccount(...args),
 }));
@@ -71,8 +71,10 @@ const paidShop = {
   depositsEnabled: false,
   bookingPaymentMode: 'NONE',
   stripeConnectAccountId: 'acct_existing' as string | null,
+  stripeConnectAccountType: 'EXPRESS' as 'EXPRESS' | 'STANDARD' | null,
   stripeConnectChargesEnabled: true,
   stripeConnectDetailsSubmitted: true,
+  stripeConnectDisconnectedAt: null as Date | null,
   cancellationWindowHours: 24,
   rescheduleWindowHours: 24,
   maxClientReschedules: 2,
@@ -92,6 +94,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
     retrieveConnectAccount.mockResolvedValue({
       chargesEnabled: true,
       detailsSubmitted: true,
+      accountType: 'STANDARD',
     });
     createConnectAccountLink.mockResolvedValue({ url: 'https://connect.stripe.com/setup/s/xxx' });
     shopSettingsUpdate.mockResolvedValue({});
@@ -105,7 +108,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(res.status).toBe(403);
       const body = await res.json();
       expect(body.permission).toBe('billing.manage');
-      expect(createConnectExpressAccount).not.toHaveBeenCalled();
+      expect(createConnectStandardAccount).not.toHaveBeenCalled();
       expect(createConnectAccountLink).not.toHaveBeenCalled();
       expect(shopSettingsFindUnique).not.toHaveBeenCalled();
       expect(shopSettingsUpdate).not.toHaveBeenCalled();
@@ -116,27 +119,35 @@ describe('barbershop-settings/deposits (booking payments)', () => {
 
       const res = await POST(jsonCtx('POST'));
       expect(res.status).toBe(403);
-      expect(createConnectExpressAccount).not.toHaveBeenCalled();
+      expect(createConnectStandardAccount).not.toHaveBeenCalled();
       expect(createConnectAccountLink).not.toHaveBeenCalled();
     });
 
     it('W: Full OWNER creates a Connect account and gets an onboarding url', async () => {
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, stripeConnectAccountId: null });
-      createConnectExpressAccount.mockResolvedValue({ id: 'acct_new' });
+      shopSettingsFindUnique.mockResolvedValue({
+        ...paidShop,
+        stripeConnectAccountId: null,
+        stripeConnectAccountType: null,
+      });
+      createConnectStandardAccount.mockResolvedValue({ id: 'acct_new' });
 
       const res = await POST(jsonCtx('POST'));
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.url).toBe('https://connect.stripe.com/setup/s/xxx');
       expect(body.accountId).toBe('acct_new');
-      expect(createConnectExpressAccount).toHaveBeenCalledWith({
+      expect(createConnectStandardAccount).toHaveBeenCalledWith({
         shopId: 'shop-1',
         email: 'owner@example.com',
       });
       expect(shopSettingsUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { stripeConnectAccountId: 'acct_new' },
+          data: expect.objectContaining({
+            stripeConnectAccountId: 'acct_new',
+            stripeConnectAccountType: 'STANDARD',
+            stripeConnectDisconnectedAt: null,
+          }),
         }),
       );
     });
@@ -144,14 +155,74 @@ describe('barbershop-settings/deposits (booking payments)', () => {
     it('V: Free OWNER can start Stripe Connect onboarding', async () => {
       asState('FREE_BOOKING');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue({ ...freeShop, stripeConnectAccountId: null });
-      createConnectExpressAccount.mockResolvedValue({ id: 'acct_free' });
+      shopSettingsFindUnique.mockResolvedValue({
+        ...freeShop,
+        stripeConnectAccountId: null,
+        stripeConnectAccountType: null,
+      });
+      createConnectStandardAccount.mockResolvedValue({ id: 'acct_free' });
 
       const res = await POST(jsonCtx('POST'));
       expect(res.status).toBe(200);
       expect((await res.json()).accountId).toBe('acct_free');
       expect(loadKersivoAccess).toHaveBeenCalledWith('shop-1');
-      expect(createConnectExpressAccount).toHaveBeenCalled();
+      expect(createConnectStandardAccount).toHaveBeenCalled();
+    });
+
+    it('creates a fresh Standard account after the previous connection was deauthorized', async () => {
+      asState('FREE_BOOKING');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({
+        ...freeShop,
+        stripeConnectAccountId: 'acct_old_standard',
+        stripeConnectAccountType: 'STANDARD',
+        stripeConnectDisconnectedAt: new Date('2026-10-05T10:00:00.000Z'),
+        stripeConnectChargesEnabled: false,
+        stripeConnectDetailsSubmitted: false,
+      });
+      createConnectStandardAccount.mockResolvedValue({ id: 'acct_reconnected' });
+
+      const res = await POST(jsonCtx('POST'));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.accountId).toBe('acct_reconnected');
+      expect(body.accountType).toBe('STANDARD');
+      expect(createConnectStandardAccount).toHaveBeenCalled();
+      expect(shopSettingsUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            stripeConnectAccountId: 'acct_reconnected',
+            stripeConnectAccountType: 'STANDARD',
+            stripeConnectChargesEnabled: false,
+            stripeConnectDetailsSubmitted: false,
+            stripeConnectDisconnectedAt: null,
+            connectStatusEventAt: null,
+          }),
+        }),
+      );
+    });
+
+    it('does not silently migrate an existing active Express account', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({
+        ...paidShop,
+        stripeConnectAccountId: 'acct_legacy_express',
+        stripeConnectAccountType: 'EXPRESS',
+        stripeConnectDisconnectedAt: null,
+      });
+
+      const res = await POST(jsonCtx('POST'));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.accountId).toBe('acct_legacy_express');
+      expect(body.accountType).toBe('EXPRESS');
+      expect(body.legacyExpress).toBe(true);
+      expect(createConnectStandardAccount).not.toHaveBeenCalled();
+      expect(createConnectAccountLink).toHaveBeenCalledWith(
+        expect.objectContaining({ accountId: 'acct_legacy_express' }),
+      );
     });
 
     it('X: SETUP shop cannot start onboarding', async () => {
@@ -162,7 +233,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       const res = await POST(jsonCtx('POST'));
       expect(res.status).toBe(403);
       expect((await res.json()).code).toBe('BOOKING_PAYMENTS_NOT_AVAILABLE');
-      expect(createConnectExpressAccount).not.toHaveBeenCalled();
+      expect(createConnectStandardAccount).not.toHaveBeenCalled();
       expect(createConnectAccountLink).not.toHaveBeenCalled();
     });
 
@@ -172,7 +243,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
 
       const res = await POST(jsonCtx('POST'));
       expect(res.status).toBe(403);
-      expect(createConnectExpressAccount).not.toHaveBeenCalled();
+      expect(createConnectStandardAccount).not.toHaveBeenCalled();
     });
   });
 
