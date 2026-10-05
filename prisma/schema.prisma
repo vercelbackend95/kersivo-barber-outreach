@@ -29,6 +29,12 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+enum GoogleBookingLinkStatus {
+  NOT_SET
+  SETUP_STARTED
+  MERCHANT_CONFIRMED
+}
+
 /// Shop-level online payment requirement for public bookings.
 enum BookingPaymentMode {
   /// No required online payment (pay at the shop).
@@ -233,6 +239,11 @@ model ShopSettings {
   /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
   /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
   bookingSlug                        String?                         @unique
+  /// Merchant-managed Google Business Profile booking-link setup state (guided V1).
+  googleBookingLinkStatus            GoogleBookingLinkStatus         @default(NOT_SET)
+  /// Exact authoritative URL last confirmed by the merchant in Google; used to detect URL changes.
+  googleBookingConfirmedUrl          String?
+  googleBookingStatusUpdatedAt       DateTime?
   /// Legacy owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
   /// Kept in sync with bookingPaymentMode (true ⇔ DEPOSIT) during the migration period.
   depositsEnabled                    Boolean                         @default(false)
