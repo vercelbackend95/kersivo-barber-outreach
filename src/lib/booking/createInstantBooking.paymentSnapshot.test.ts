@@ -382,8 +382,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
       ...overrides,
     });
 
-    it('4C-A: Starter + FULL + £30 → PENDING_PAYMENT, 3000p, 0% / 0p fee, account snapshot, no deposit field', async () => {
-      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
+    it('4C-A: Starter FULL choice overrides stored NONE and snapshots the connected account', async () => {
+      findUniqueOrThrowShop.mockResolvedValue(fullModeShop({ bookingPaymentMode: 'NONE' }));
 
       const result = await createInstantBooking(bookingInput('full-free-30', 'FULL'), publicOptions);
 
@@ -441,7 +441,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
       expect(createdData()).toMatchObject(NONE_SNAPSHOT);
     });
 
-    it('4C-E: FULL with Connect missing / not ready fails closed — never pay-at-shop, no booking', async () => {
+    it('4C-E: Full KERSIVO FULL mode with Connect missing / not ready fails closed — never pay-at-shop', async () => {
+      asState('FULL_KERSIVO');
       for (const shop of [
         fullModeShop({ stripeConnectAccountId: null }),
         fullModeShop({ stripeConnectChargesEnabled: false }),
