@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildLaunchProgress,
+  buildStarterLaunchProgress,
   demoLaunchProgress,
   emptyLaunchProgress,
   resolveLaunchBillingFlags,
   resolveLaunchCtaPresentation,
+  resolveStarterLaunchCtaPresentation,
 } from './launchCtaProgress';
 
 describe('buildLaunchProgress', () => {
@@ -154,5 +156,102 @@ describe('resolveLaunchCtaPresentation', () => {
     expect(result.doneCount).toBe(4);
     expect(result.totalCount).toBe(4);
     expect(result.href).toBe('/admin/launch');
+  });
+});
+
+
+describe('v1.19 Starter launch progress', () => {
+  it('replaces Retail with Stripe and requires a valid Starter team/services state', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 2,
+      activeServiceCount: 3,
+      servicesMeetPriceFloor: true,
+      stripeReady: false,
+    });
+    expect(progress.steps.map((step) => step.id)).toEqual([
+      'barbershop',
+      'team',
+      'services',
+      'stripe',
+    ]);
+    expect(progress.steps.map((step) => step.label)).not.toContain('Set up your retail shop');
+    expect(progress.complete).toBe(false);
+    expect(progress.nextHref).toBe('/admin?section=barbershop_settings');
+  });
+
+  it('blocks launch when active services are below the £5 Starter floor', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 1,
+      activeServiceCount: 2,
+      servicesMeetPriceFloor: false,
+      stripeReady: true,
+    });
+    expect(progress.steps.find((step) => step.id === 'services')?.done).toBe(false);
+    expect(progress.nextHref).toBe('/admin?section=services');
+  });
+
+  it('marks Starter complete only when Stripe is ready too', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 4,
+      activeServiceCount: 1,
+      servicesMeetPriceFloor: true,
+      stripeReady: true,
+    });
+    expect(progress.complete).toBe(true);
+  });
+
+  it('resolves Launch / Finish / Reconnect Stripe copy', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 1,
+      activeServiceCount: 1,
+      servicesMeetPriceFloor: true,
+      stripeReady: false,
+    });
+    const base = {
+      stripeAccountLinked: false,
+      stripeReady: false,
+      stripeDisconnected: false,
+      servicesMeetPriceFloor: true,
+      activeServiceCount: 1,
+      activeBookableBarbers: 1,
+      publicBookingReady: false,
+    };
+
+    expect(resolveStarterLaunchCtaPresentation(progress, base).title).toBe('Launch your bookings');
+    expect(
+      resolveStarterLaunchCtaPresentation(progress, { ...base, stripeAccountLinked: true }).title,
+    ).toBe('Finish Stripe setup');
+    expect(
+      resolveStarterLaunchCtaPresentation(progress, {
+        ...base,
+        stripeAccountLinked: false,
+        stripeDisconnected: true,
+      }).title,
+    ).toBe('Reconnect Stripe');
+  });
+
+  it('returns no-action success once Starter bookings are live', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 1,
+      activeServiceCount: 1,
+      servicesMeetPriceFloor: true,
+      stripeReady: true,
+    });
+    expect(
+      resolveStarterLaunchCtaPresentation(progress, {
+        stripeAccountLinked: true,
+        stripeReady: true,
+        stripeDisconnected: false,
+        servicesMeetPriceFloor: true,
+        activeServiceCount: 1,
+        activeBookableBarbers: 1,
+        publicBookingReady: true,
+      }),
+    ).toMatchObject({ action: 'none', title: 'Bookings live ✓' });
   });
 });
