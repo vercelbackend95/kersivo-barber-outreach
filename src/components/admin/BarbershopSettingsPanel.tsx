@@ -115,6 +115,10 @@ export default function BarbershopSettingsPanel({
   const [hasSubscription, setHasSubscription] = useState(false);
   const [canCancelSubscription, setCanCancelSubscription] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [postFullPlan, setPostFullPlan] = useState<string | null>(null);
+  const [postFullPlanChoiceRequired, setPostFullPlanChoiceRequired] = useState(false);
+  const [showCancelChoices, setShowCancelChoices] = useState(false);
+  const [starterTermsAccepted, setStarterTermsAccepted] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
   const [cancelSubBusy, setCancelSubBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -132,6 +136,8 @@ export default function BarbershopSettingsPanel({
         setExportConsumed(false);
         setCanCancelSubscription(false);
         setCancelAtPeriodEnd(false);
+        setPostFullPlan(null);
+        setPostFullPlanChoiceRequired(false);
         setBillingPhase(null);
         setBillingLabel(null);
         return;
@@ -148,6 +154,9 @@ export default function BarbershopSettingsPanel({
         retentionEndsAt?: string | null;
         grantsAccess?: boolean;
         canCancelSubscription?: boolean;
+        postFullPlan?: string | null;
+        postFullPlanChosenAt?: string | null;
+        postFullPlanChoiceRequired?: boolean;
         error?: string;
       } | null;
       if (!response.ok) {
@@ -160,6 +169,8 @@ export default function BarbershopSettingsPanel({
       setExportConsumed(Boolean(data?.exportConsumed));
       setCanCancelSubscription(Boolean(data?.canCancelSubscription));
       setCancelAtPeriodEnd(Boolean(data?.cancelAtPeriodEnd));
+      setPostFullPlan(data?.postFullPlan ?? null);
+      setPostFullPlanChoiceRequired(Boolean(data?.postFullPlanChoiceRequired));
       setBillingPhase(data?.phase ?? null);
 
       const formatDate = (iso: string) => {
@@ -206,6 +217,65 @@ export default function BarbershopSettingsPanel({
       setBillingError(error instanceof Error ? error.message : 'Could not load billing status.');
     }
   }, []);
+
+  const choosePostFullPlan = useCallback(
+    async (choice: 'STARTER' | 'LEAVE') => {
+      if (cancelSubBusy) return;
+      if (choice === 'STARTER' && !starterTermsAccepted) {
+        setBillingError('Please accept the Terms to continue on KERSIVO Starter.');
+        return;
+      }
+
+      setCancelSubBusy(true);
+      setBillingError('');
+      setBillingMessage('');
+      try {
+        if (!cancelAtPeriodEnd && billingPhase !== 'canceled') {
+          const cancelResponse = await fetch('/api/setup/cancel-subscription', {
+            method: 'POST',
+            credentials: 'include',
+          });
+          const cancelPayload = (await cancelResponse.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          if (!cancelResponse.ok) {
+            throw new Error(cancelPayload?.error || 'Unable to cancel subscription.');
+          }
+        }
+
+        const choiceResponse = await fetch('/api/setup/post-full-plan', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            choice,
+            termsAccepted: choice === 'STARTER' ? starterTermsAccepted : false,
+          }),
+        });
+        const choicePayload = (await choiceResponse.json().catch(() => null)) as {
+          error?: string;
+          currentPeriodEnd?: string | null;
+        } | null;
+        if (!choiceResponse.ok) {
+          throw new Error(choicePayload?.error || 'Unable to save your post-Full choice.');
+        }
+
+        setShowCancelChoices(false);
+        setStarterTermsAccepted(false);
+        setBillingMessage(
+          choice === 'STARTER'
+            ? 'Full KERSIVO will remain active until the paid period ends, then KERSIVO Starter will continue at £0/month.'
+            : 'Full KERSIVO will remain active until the paid period ends, then the KERSIVO service will end.',
+        );
+        await loadBilling();
+      } catch (error) {
+        setBillingError(error instanceof Error ? error.message : 'Unable to save cancellation choice.');
+      } finally {
+        setCancelSubBusy(false);
+      }
+    },
+    [billingPhase, cancelAtPeriodEnd, cancelSubBusy, loadBilling, starterTermsAccepted],
+  );
 
   const loadDeposits = useCallback(async () => {
     setDepositsError('');
@@ -1075,54 +1145,64 @@ export default function BarbershopSettingsPanel({
               type="button"
               className="btn btn--secondary"
               disabled={!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd}
-              onClick={async () => {
+              onClick={() => {
                 if (!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd) return;
-                setCancelSubBusy(true);
                 setBillingError('');
                 setBillingMessage('');
-                try {
-                  const response = await fetch('/api/setup/cancel-subscription', {
-                    method: 'POST',
-                    credentials: 'include',
-                  });
-                  const payload = (await response.json().catch(() => null)) as {
-                    error?: string;
-                    currentPeriodEnd?: string | null;
-                    alreadyScheduled?: boolean;
-                  } | null;
-                  if (!response.ok) {
-                    throw new Error(payload?.error || 'Unable to cancel subscription.');
-                  }
-                  setCanCancelSubscription(false);
-                  setCancelAtPeriodEnd(true);
-                  const end = payload?.currentPeriodEnd
-                    ? new Date(payload.currentPeriodEnd).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : null;
-                  setBillingMessage(
-                    end
-                      ? `Subscription will cancel at period end (${end}).`
-                      : 'Subscription will cancel at period end.',
-                  );
-                  await loadBilling();
-                } catch (error) {
-                  setBillingError(
-                    error instanceof Error ? error.message : 'Unable to cancel subscription.',
-                  );
-                } finally {
-                  setCancelSubBusy(false);
-                }
+                setShowCancelChoices(true);
               }}
             >
-              {cancelSubBusy
-                ? 'Canceling…'
-                : cancelAtPeriodEnd
-                  ? 'Cancellation scheduled'
-                  : 'Cancel subscription'}
+              {cancelAtPeriodEnd ? 'Cancellation scheduled' : 'Cancel subscription'}
             </button>
+            {(showCancelChoices || postFullPlanChoiceRequired) ? (
+              <div className="admin-barbershop-settings__cancel-choice" role="group" aria-label="After Full KERSIVO">
+                <p className="admin-barbershop-settings__card-copy">
+                  What should happen when your paid Full KERSIVO period ends?
+                </p>
+                <label className="admin-barbershop-settings__card-copy">
+                  <input
+                    type="checkbox"
+                    checked={starterTermsAccepted}
+                    onChange={(event) => setStarterTermsAccepted(event.target.checked)}
+                  />{' '}
+                  I agree to the Terms if I continue on KERSIVO Starter.
+                </label>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={cancelSubBusy}
+                  onClick={() => void choosePostFullPlan('STARTER')}
+                >
+                  {cancelSubBusy ? 'Saving…' : 'Continue on KERSIVO Starter — £0/month'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={cancelSubBusy}
+                  onClick={() => void choosePostFullPlan('LEAVE')}
+                >
+                  Leave KERSIVO after the paid period
+                </button>
+                {showCancelChoices && !postFullPlanChoiceRequired ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    disabled={cancelSubBusy}
+                    onClick={() => setShowCancelChoices(false)}
+                  >
+                    Keep Full KERSIVO
+                  </button>
+                ) : null}
+              </div>
+            ) : postFullPlan === 'STARTER' && cancelAtPeriodEnd ? (
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
+              </p>
+            ) : postFullPlan === 'LEAVE' && cancelAtPeriodEnd ? (
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                After Full ends: <strong>Leave KERSIVO</strong>.
+              </p>
+            ) : null}
             <button
               type="button"
               className="btn btn--secondary"
