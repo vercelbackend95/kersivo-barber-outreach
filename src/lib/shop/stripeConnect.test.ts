@@ -389,7 +389,7 @@ describe('createBookingPaymentCheckoutSession (generic booking payments)', () =>
     return new URLSearchParams(String((fetchMock.mock.calls[index] as [string, RequestInit])[1].body));
   }
 
-  it('H: Free £5 deposit sends application_fee_amount=5 as a direct charge with generic metadata', async () => {
+  it('H: historical 1% £5 deposit snapshot still sends application_fee_amount=5 as a direct charge with generic metadata', async () => {
     const result = await createBookingPaymentCheckoutSession(baseInput());
 
     expect(result).toEqual({ id: 'cs_generic', url: 'https://checkout.stripe.test/cs_generic' });
@@ -413,13 +413,13 @@ describe('createBookingPaymentCheckoutSession (generic booking payments)', () =>
     }
   });
 
-  it('H: Free £3 deposit sends application_fee_amount=3', async () => {
+  it('H: historical 1% £3 deposit snapshot sends application_fee_amount=3', async () => {
     await createBookingPaymentCheckoutSession(baseInput({ paymentAmountPence: 300, applicationFeePence: 3 }));
     expect(sentParams().get('payment_intent_data[application_fee_amount]')).toBe('3');
     expect(sentParams().get('line_items[0][price_data][unit_amount]')).toBe('300');
   });
 
-  it('4C-F: FULL £30 Free booking sends 3000p, a 30p application fee and bookingPaymentType=FULL metadata', async () => {
+  it('4C-F: historical 1% FULL £30 snapshot sends 3000p, a 30p application fee and bookingPaymentType=FULL metadata', async () => {
     await createBookingPaymentCheckoutSession(
       baseInput({ bookingPaymentType: 'FULL', paymentAmountPence: 3000, applicationFeePence: 30 }),
     );
@@ -430,10 +430,14 @@ describe('createBookingPaymentCheckoutSession (generic booking payments)', () =>
     expect(params.get('metadata[bookingPaymentType]')).toBe('FULL');
   });
 
-  it('I: Full (0% fee) omits application_fee_amount', async () => {
+  it('I: Starter / Full (0% fee) omits application_fee_amount for DEPOSIT and FULL', async () => {
     await createBookingPaymentCheckoutSession(baseInput({ applicationFeePence: 0 }));
     expect(sentParams().has('payment_intent_data[application_fee_amount]')).toBe(false);
     expect(sentParams().get('metadata[type]')).toBe('booking_payment');
+    await createBookingPaymentCheckoutSession(
+      baseInput({ bookingPaymentType: 'FULL', paymentAmountPence: 3000, applicationFeePence: 0 }),
+    );
+    expect(sentParams(1).has('payment_intent_data[application_fee_amount]')).toBe(false);
   });
 
   it('K: identical snapshot → identical request body + idempotency key on retry', async () => {

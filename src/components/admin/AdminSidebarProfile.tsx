@@ -107,7 +107,7 @@ export default function AdminSidebarProfile({
     : isPreview
       ? 'Preview'
       : isFreeBooking
-        ? 'Free Booking'
+        ? 'KERSIVO Starter'
         : billingLabel
           ? billingLabel
           : 'Plus';

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   BOOKING_DEPOSIT_CAP_PENCE,
-  FREE_BOOKING_PLATFORM_FEE_BPS,
   FULL_KERSIVO_PLATFORM_FEE_BPS,
+  KERSIVO_STARTER_PLATFORM_FEE_BPS,
   bookingPaymentModeForLegacyDepositToggle,
   buildBookingPaymentSnapshot,
   calculatePlatformFeePence,
@@ -66,35 +66,74 @@ describe('bookingPaymentPolicy — required payment', () => {
   });
 });
 
-describe('bookingPaymentPolicy — KERSIVO platform fee', () => {
-  it('fee rates: Free 100 bps, Full 0 bps, SETUP none', () => {
-    expect(FREE_BOOKING_PLATFORM_FEE_BPS).toBe(100);
+describe('bookingPaymentPolicy — KERSIVO platform fee (v1.18: 0% on Starter and Full)', () => {
+  it('fee rates for new payments: Starter 0 bps, Full 0 bps, SETUP none', () => {
+    expect(KERSIVO_STARTER_PLATFORM_FEE_BPS).toBe(0);
     expect(FULL_KERSIVO_PLATFORM_FEE_BPS).toBe(0);
-    expect(kersivoPlatformFeeBps('FREE_BOOKING')).toBe(100);
+    expect(kersivoPlatformFeeBps('FREE_BOOKING')).toBe(0);
     expect(kersivoPlatformFeeBps('FULL_KERSIVO')).toBe(0);
     expect(kersivoPlatformFeeBps('SETUP')).toBeNull();
   });
 
-  it('F: Free £5 deposit → 5p fee', () => {
-    expect(calculatePlatformFeePence(500, FREE_BOOKING_PLATFORM_FEE_BPS)).toBe(5);
+  it('F: Starter £5 deposit → KERSIVO fee 0', () => {
+    expect(
+      buildBookingPaymentSnapshot({
+        type: 'DEPOSIT',
+        amountPence: 500,
+        feeBps: kersivoPlatformFeeBps('FREE_BOOKING')!,
+      }),
+    ).toEqual({
+      bookingPaymentType: 'DEPOSIT',
+      paymentAmountPence: 500,
+      kersivoPlatformFeeBps: 0,
+      kersivoPlatformFeePence: 0,
+    });
   });
 
-  it('G: Free £30 full payment → 30p fee', () => {
-    expect(calculatePlatformFeePence(3000, FREE_BOOKING_PLATFORM_FEE_BPS)).toBe(30);
+  it('G: Starter £30 FULL payment → KERSIVO fee 0', () => {
+    expect(
+      buildBookingPaymentSnapshot({
+        type: 'FULL',
+        amountPence: 3000,
+        feeBps: kersivoPlatformFeeBps('FREE_BOOKING')!,
+      }),
+    ).toEqual({
+      bookingPaymentType: 'FULL',
+      paymentAmountPence: 3000,
+      kersivoPlatformFeeBps: 0,
+      kersivoPlatformFeePence: 0,
+    });
   });
 
-  it('H: Free £12.50 full payment → 13p fee (Math.round)', () => {
-    expect(calculatePlatformFeePence(1250, FREE_BOOKING_PLATFORM_FEE_BPS)).toBe(13);
+  it('I: Full £30 payment → KERSIVO fee 0', () => {
+    expect(
+      buildBookingPaymentSnapshot({
+        type: 'FULL',
+        amountPence: 3000,
+        feeBps: kersivoPlatformFeeBps('FULL_KERSIVO')!,
+      }),
+    ).toMatchObject({ kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 });
   });
 
-  it('I: Full £30 payment → 0p fee', () => {
-    expect(calculatePlatformFeePence(3000, FULL_KERSIVO_PLATFORM_FEE_BPS)).toBe(0);
-  });
-
-  it('Free fee equals Math.round(pence / 100) across a range of amounts', () => {
-    for (let pence = 0; pence <= 20_000; pence += 37) {
-      expect(calculatePlatformFeePence(pence, FREE_BOOKING_PLATFORM_FEE_BPS)).toBe(Math.round(pence / 100));
+  it('no product state yields a positive fee for any new payment amount', () => {
+    for (const state of ['FREE_BOOKING', 'FULL_KERSIVO'] as const) {
+      for (let pence = 0; pence <= 20_000; pence += 37) {
+        const bps = kersivoPlatformFeeBps(state)!;
+        expect(calculatePlatformFeePence(pence, bps), `${state} ${pence}`).toBe(0);
+      }
     }
+  });
+
+  it('historical 1% snapshots stay interpretable: 100 bps maths is unchanged (Math.round)', () => {
+    expect(calculatePlatformFeePence(500, 100)).toBe(5);
+    expect(calculatePlatformFeePence(3000, 100)).toBe(30);
+    expect(calculatePlatformFeePence(1250, 100)).toBe(13);
+    expect(buildBookingPaymentSnapshot({ type: 'DEPOSIT', amountPence: 500, feeBps: 100 })).toEqual({
+      bookingPaymentType: 'DEPOSIT',
+      paymentAmountPence: 500,
+      kersivoPlatformFeeBps: 100,
+      kersivoPlatformFeePence: 5,
+    });
   });
 
   it('snapshot: NONE is always 0 / 0 / 0', () => {
@@ -103,15 +142,6 @@ describe('bookingPaymentPolicy — KERSIVO platform fee', () => {
       paymentAmountPence: 0,
       kersivoPlatformFeeBps: 0,
       kersivoPlatformFeePence: 0,
-    });
-  });
-
-  it('snapshot: Free £5 deposit records amount, bps and fee', () => {
-    expect(buildBookingPaymentSnapshot({ type: 'DEPOSIT', amountPence: 500, feeBps: 100 })).toEqual({
-      bookingPaymentType: 'DEPOSIT',
-      paymentAmountPence: 500,
-      kersivoPlatformFeeBps: 100,
-      kersivoPlatformFeePence: 5,
     });
   });
 

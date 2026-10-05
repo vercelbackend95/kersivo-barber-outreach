@@ -3,13 +3,13 @@ import { prisma } from '../db/client';
 import { loadKersivoAccess, type KersivoProductState } from './kersivoAccess';
 
 /**
- * KERSIVO Free Booking: max active bookable barbers per location.
+ * KERSIVO Starter: max active bookable barbers per location.
  * "Bookable" is Barber.active (the canonical Online bookings flag); non-bookable seats do not count.
  */
 export const FREE_BOOKABLE_BARBER_LIMIT = 4;
 export const FREE_BOOKABLE_BARBER_LIMIT_CODE = 'FREE_BOOKABLE_BARBER_LIMIT';
 export const FREE_BOOKABLE_BARBER_LIMIT_MESSAGE =
-  'KERSIVO Free includes up to 4 barbers taking online bookings.';
+  'KERSIVO Starter includes up to 4 barbers taking online bookings.';
 
 type Db = Prisma.TransactionClient | typeof prisma;
 

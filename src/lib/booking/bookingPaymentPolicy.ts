@@ -21,8 +21,12 @@ export function isBookingCheckoutMetadataType(type: string | null | undefined): 
 /** Stable API error codes for booking payments. */
 export const BOOKING_PAYMENT_NOT_READY = 'BOOKING_PAYMENT_NOT_READY';
 
-/** KERSIVO platform fee in basis points (100 bps = 1%). */
-export const FREE_BOOKING_PLATFORM_FEE_BPS = 100;
+/**
+ * KERSIVO platform fee in basis points for NEW booking payments (v1.18: 0% on both plans).
+ * The former Starter/Free 1% (100 bps) model is superseded; booking rows that already store a
+ * non-zero snapshot keep it and are charged / refunded from that snapshot, never recomputed.
+ */
+export const KERSIVO_STARTER_PLATFORM_FEE_BPS = 0;
 export const FULL_KERSIVO_PLATFORM_FEE_BPS = 0;
 
 export type RequiredBookingPayment = {
@@ -59,11 +63,11 @@ export function requiresOnlineBookingPayment(payment: RequiredBookingPayment): b
   return payment.type !== 'NONE' && payment.amountPence > 0;
 }
 
-/** KERSIVO fee rate for the product state; SETUP cannot take live booking payments. */
+/** KERSIVO fee rate for new payments by product state; SETUP cannot take live booking payments. */
 export function kersivoPlatformFeeBps(state: KersivoProductState): number | null {
   switch (state) {
     case 'FREE_BOOKING':
-      return FREE_BOOKING_PLATFORM_FEE_BPS;
+      return KERSIVO_STARTER_PLATFORM_FEE_BPS;
     case 'FULL_KERSIVO':
       return FULL_KERSIVO_PLATFORM_FEE_BPS;
     case 'SETUP':
@@ -74,7 +78,7 @@ export function kersivoPlatformFeeBps(state: KersivoProductState): number | null
 
 /**
  * Fee in pence for an online payment at `feeBps`. Integer maths only; rounds to the nearest
- * penny with Math.round semantics (1250p at 1% → 13p).
+ * penny with Math.round semantics (1250p at 1% → 13p). Kept for interpreting historical snapshots.
  */
 export function calculatePlatformFeePence(paymentAmountPence: number, feeBps: number): number {
   const amount = toPence(paymentAmountPence);

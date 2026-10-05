@@ -134,7 +134,7 @@ export function countBookableBarberCards(barbers: Array<{ onlineBookings?: boole
 }
 
 export const FREE_BOOKABLE_BARBER_LIMIT_COPY =
-  'KERSIVO Free includes up to 4 barbers taking online bookings.';
+  'KERSIVO Starter includes up to 4 barbers taking online bookings.';
 
 export async function readJsonError(response: Response) {
   try {

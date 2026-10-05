@@ -198,7 +198,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
     );
   });
 
-  it('A: Free + DEPOSIT + £30 → PENDING_PAYMENT, 500p payment, 1% / 5p fee', async () => {
+  it('A: Starter + DEPOSIT + £30 → PENDING_PAYMENT, 500p payment, 0% / 0p KERSIVO fee', async () => {
     const result = await createInstantBooking(bookingInput('free-30'), publicOptions);
 
     expect(loadKersivoAccess).toHaveBeenCalledWith('shop_1');
@@ -210,8 +210,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
       paymentStatus: PaymentStatus.UNPAID,
       bookingPaymentType: 'DEPOSIT',
       paymentAmountPence: 500,
-      kersivoPlatformFeeBps: 100,
-      kersivoPlatformFeePence: 5,
+      kersivoPlatformFeeBps: 0,
+      kersivoPlatformFeePence: 0,
     });
     expect(data.paymentExpiresAt).toBeInstanceOf(Date);
     expect(result.depositRequired).toBe(true);
@@ -220,14 +220,14 @@ describe('createInstantBooking — live booking payment runtime', () => {
   });
 
   describe('payment account snapshot', () => {
-    it('F: new Free DEPOSIT booking snapshots the exact connected account in the create', async () => {
+    it('F: new Starter DEPOSIT booking snapshots the exact connected account in the create', async () => {
       findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, stripeConnectAccountId: 'acct_free_exact' });
 
       await createInstantBooking(bookingInput('free-acct'), publicOptions);
 
       expect(createdData()).toMatchObject({
         status: BookingStatus.PENDING_PAYMENT,
-        kersivoPlatformFeePence: 5,
+        kersivoPlatformFeePence: 0,
         stripeConnectAccountIdAtPayment: 'acct_free_exact',
       });
       // One payment-state read decides collection AND supplies the account snapshot.
@@ -261,7 +261,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
     });
   });
 
-  it('B: Free + DEPOSIT + £3 → 300p payment, 3p fee', async () => {
+  it('B: Starter + DEPOSIT + £3 → 300p payment, 0p KERSIVO fee', async () => {
     findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
 
     await createInstantBooking(bookingInput('free-3'), publicOptions);
@@ -271,8 +271,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
       depositAmountPence: 300,
       bookingPaymentType: 'DEPOSIT',
       paymentAmountPence: 300,
-      kersivoPlatformFeeBps: 100,
-      kersivoPlatformFeePence: 3,
+      kersivoPlatformFeeBps: 0,
+      kersivoPlatformFeePence: 0,
     });
   });
 
@@ -350,7 +350,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
       ...overrides,
     });
 
-    it('4C-A: Free + FULL + £30 → PENDING_PAYMENT, 3000p, 1% / 30p fee, account snapshot, no deposit field', async () => {
+    it('4C-A: Starter + FULL + £30 → PENDING_PAYMENT, 3000p, 0% / 0p fee, account snapshot, no deposit field', async () => {
       findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
 
       const result = await createInstantBooking(bookingInput('full-free-30'), publicOptions);
@@ -363,8 +363,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
         depositAmountPence: null,
         bookingPaymentType: 'FULL',
         paymentAmountPence: 3000,
-        kersivoPlatformFeeBps: 100,
-        kersivoPlatformFeePence: 30,
+        kersivoPlatformFeeBps: 0,
+        kersivoPlatformFeePence: 0,
         stripeConnectAccountIdAtPayment: 'acct_full_mode',
       });
       expect(enqueueEmail).not.toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
       });
     });
 
-    it('4C-C: Free + FULL + £3 → 300p, 3p fee', async () => {
+    it('4C-C: Starter + FULL + £3 → 300p, 0p KERSIVO fee', async () => {
       findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
       findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
 
@@ -394,7 +394,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
       expect(createdData()).toMatchObject({
         bookingPaymentType: 'FULL',
         paymentAmountPence: 300,
-        kersivoPlatformFeePence: 3,
+        kersivoPlatformFeePence: 0,
         depositAmountPence: null,
       });
     });

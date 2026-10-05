@@ -18,7 +18,7 @@ export type FullUpgradeEligibility =
  * shopPaidAt marker alone:
  * - PAST_DUE (in or after grace) / SUSPENDED → fix billing on the existing subscription instead;
  * - FULL_KERSIVO (ACTIVE, cancelAtPeriodEnd before period end, legacy paid) → already subscribed;
- * - SETUP / FREE_BOOKING (incl. CANCELED or ended subscriptions) → may buy.
+ * - SETUP / KERSIVO Starter (incl. CANCELED or ended subscriptions) → may buy.
  * Open / expired PENDING attempts are handled by the shared checkout core.
  */
 export async function resolveFullUpgradeEligibility(
@@ -48,6 +48,7 @@ export async function resolveFullUpgradeEligibility(
       currentPeriodEnd: true,
       pastDueSince: true,
       cancelAtPeriodEnd: true,
+      postFullPlan: true,
     },
   });
 

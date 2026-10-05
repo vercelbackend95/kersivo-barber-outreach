@@ -199,7 +199,20 @@ describe('public booking create — booking payment checkout', () => {
     );
   });
 
-  it('H: Free booking snapshot (500p, 5p fee) is passed to checkout as the application fee', async () => {
+  it('H0: new Starter booking snapshot (500p, 0% fee) reaches checkout with no KERSIVO application fee', async () => {
+    createInstantBooking.mockResolvedValue(
+      pendingCreated({ kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 }),
+    );
+
+    const res = await POST(requestCtx(bookingBody) as never);
+
+    expect(res.status).toBe(200);
+    expect(createBookingPaymentCheckoutSession).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentAmountPence: 500, applicationFeePence: 0 }),
+    );
+  });
+
+  it('H: a historical 1% snapshot (500p, 5p fee) is still honoured as the application fee', async () => {
     createInstantBooking.mockResolvedValue(
       pendingCreated({ kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 }),
     );

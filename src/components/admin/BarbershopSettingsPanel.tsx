@@ -778,8 +778,8 @@ export default function BarbershopSettingsPanel({
           </p>
           {bookingProductState === 'FREE_BOOKING' ? (
             <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
-              KERSIVO Free charges a 1% platform fee on online booking payments. Stripe processing
-              fees also apply.
+              KERSIVO Starter: £0/month · 0% KERSIVO commission on booking payments. Stripe
+              processing fees apply.
             </p>
           ) : bookingProductState === 'FULL_KERSIVO' ? (
             <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
@@ -788,7 +788,7 @@ export default function BarbershopSettingsPanel({
           ) : null}
           {!bookingPaymentsAvailable ? (
             <p className="admin-barbershop-settings__card-copy" role="status">
-              Available once KERSIVO Free or Full is active.
+              Available once KERSIVO Starter or Full KERSIVO is active.
             </p>
           ) : (
             <>

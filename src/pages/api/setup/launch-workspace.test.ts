@@ -101,7 +101,7 @@ describe('PUT /api/setup/launch-workspace — Free bookable barber limit', () =>
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({
       code: 'FREE_BOOKABLE_BARBER_LIMIT',
-      error: 'KERSIVO Free includes up to 4 barbers taking online bookings.',
+      error: 'KERSIVO Starter includes up to 4 barbers taking online bookings.',
       limit: 4,
     });
     expect(prismaTransaction).not.toHaveBeenCalled();

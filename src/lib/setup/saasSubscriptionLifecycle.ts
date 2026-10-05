@@ -21,6 +21,10 @@ import {
   saasSubscriptionGrantsAccess,
   SAAS_GRACE_DAYS,
 } from '@/lib/setup/saasEntitlement';
+import {
+  resolveShopPurgeEligibility,
+  type ShopPurgeBlockReason,
+} from '@/lib/setup/shopPurgeEligibility';
 
 export type SaasLifecycleSyncResult = {
   record: SaasSubscription | null;
@@ -160,6 +164,9 @@ export async function applyStripeSubscriptionToSaasRecord(
       currentPeriodEnd: currentPeriodEnd ?? existing.currentPeriodEnd,
       canceledAt,
       retentionEndsAt,
+      ...(status === 'CANCELED' && existing.postFullPlan === 'UNDECIDED'
+        ? { postFullPlan: 'CHOICE_REQUIRED' as const }
+        : {}),
       pastDueSince:
         status === 'PAST_DUE' || status === 'SUSPENDED'
           ? existing.pastDueSince
@@ -284,6 +291,16 @@ export async function suspendPastDueSubscriptionsPastGrace(now: Date = new Date(
   return { suspended };
 }
 
+class ShopPurgeNoLongerEligibleError extends Error {
+  constructor(readonly reason: ShopPurgeBlockReason) {
+    super(`Shop no longer eligible for retention purge: ${reason}`);
+  }
+}
+
+/**
+ * Cron: whole-shop purge once a canceled subscription's retention ends — only for shops that are
+ * genuinely departed (see resolveShopPurgeEligibility). Re-checked inside the purge transaction.
+ */
 export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Promise<{
   purged: number;
 }> {
@@ -306,25 +323,43 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
     const shopId = row.shopId?.trim();
     if (!shopId) continue;
 
-    const shop = await prisma.shopSettings.findUnique({
-      where: { id: shopId },
-      select: { id: true },
+    // A canceled row is never purge authority on its own: resolve the shop's current state first.
+    const eligibility = await resolveShopPurgeEligibility({
+      shopId,
+      saasSubscriptionId: row.id,
+      now,
     });
-    if (!shop) {
-      await prisma.saasSubscription.update({
-        where: { id: row.id },
-        data: { shopId: null },
-      });
+    if (!eligibility.ok) {
+      if (eligibility.reason === 'shop_not_found') {
+        await prisma.saasSubscription.update({
+          where: { id: row.id },
+          data: { shopId: null },
+        });
+      } else {
+        console.warn('[saas-lifecycle] retention purge skipped', {
+          shopId,
+          saasSubscriptionId: row.id,
+          reason: eligibility.reason,
+        });
+      }
       continue;
     }
 
     let privateBlobPaths: string[] = [];
     let publicBlobUrls: string[] = [];
+    let gateOpenedHere = false;
     try {
-      await beginShopPurgeGate(shopId);
+      gateOpenedHere = !(await beginShopPurgeGate(shopId)).alreadyStarted;
       privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
       publicBlobUrls = await listPublicBlobUrlsForShopPurge(shopId);
       await prisma.$transaction(async (tx) => {
+        const recheck = await resolveShopPurgeEligibility({
+          shopId,
+          saasSubscriptionId: row.id,
+          now,
+          db: tx,
+        });
+        if (!recheck.ok) throw new ShopPurgeNoLongerEligibleError(recheck.reason);
         await purgeShopData(tx, shopId);
         await tx.saasSubscription.update({
           where: { id: row.id },
@@ -332,6 +367,21 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
         });
       });
     } catch (error) {
+      if (error instanceof ShopPurgeNoLongerEligibleError) {
+        console.warn('[saas-lifecycle] retention purge aborted: shop no longer eligible', {
+          shopId,
+          saasSubscriptionId: row.id,
+          reason: error.reason,
+        });
+        if (gateOpenedHere) {
+          await prisma.shopSettings
+            .update({ where: { id: shopId }, data: { purgeStartedAt: null } })
+            .catch((releaseError: unknown) =>
+              console.error('[saas-lifecycle] failed to release purge gate', { shopId, releaseError }),
+            );
+        }
+        continue;
+      }
       console.error(`[saas-lifecycle] purge failed for shop ${shopId}`, error);
       continue;
     }

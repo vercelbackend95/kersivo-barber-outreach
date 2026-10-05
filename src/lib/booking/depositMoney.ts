@@ -306,8 +306,9 @@ export async function attemptBookingPaymentRefund(refundId: string): Promise<{
       await alertRefundFailed(updated, lastError);
       return { outcome: 'failed', refund: updated };
     }
-    // Free bookings carry a KERSIVO fee; Stripe returns it proportionally for full and partial
-    // refunds when refund_application_fee is set. Full bookings have a 0 fee and never set it.
+    // Historical (pre-v1.18 Starter/Free) bookings may carry a non-zero KERSIVO fee snapshot; Stripe
+    // returns it proportionally for full and partial refunds when refund_application_fee is set.
+    // New v1.18 bookings snapshot a 0 fee and never set it.
     const paymentSnapshot = await prisma.booking.findUnique({
       where: { id: row.bookingId },
       select: { kersivoPlatformFeePence: true, stripeConnectAccountIdAtPayment: true },

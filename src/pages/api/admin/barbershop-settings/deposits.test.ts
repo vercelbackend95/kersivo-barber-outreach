@@ -428,7 +428,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(body.connect.accountId).toBe('acct_existing');
     });
 
-    it('Free: reports a 1% fee (5p on a £5 deposit) and paid=false (Retail stays Full-only)', async () => {
+    it('Starter: reports a 0% KERSIVO fee and paid=false (Retail stays Full-only)', async () => {
       asState('FREE_BOOKING');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       shopSettingsFindUnique.mockResolvedValue(freeShop);
@@ -441,8 +441,8 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         bookingPaymentsAvailable: true,
         bookingPaymentsReady: true,
         collectReady: false,
-        platformFeeBps: 100,
-        platformFeeExamplePence: 5,
+        platformFeeBps: 0,
+        platformFeeExamplePence: 0,
       });
     });
 

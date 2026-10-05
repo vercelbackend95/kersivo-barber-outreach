@@ -330,7 +330,7 @@ describe('no-show settlement (single helper for every NO_SHOW path)', () => {
 });
 
 describe('KERSIVO application fee on FULL refunds', () => {
-  it('Y: Free FULL full refund 3000 sends refund_application_fee', async () => {
+  it('Y: historical 1% FULL full refund 3000 sends refund_application_fee', async () => {
     arrangeSuccessfulAttempt(fullBooking(), ledgerRow({ amountPence: 3000 }));
     await attemptBookingPaymentRefund('ref_1');
     expect(refundPaymentIntent).toHaveBeenCalledWith('pi_1', {
@@ -343,7 +343,7 @@ describe('KERSIVO application fee on FULL refunds', () => {
     });
   });
 
-  it('Z: Free FULL partial refund 2500 still sends refund_application_fee (Stripe prorates; no manual fee refund)', async () => {
+  it('Z: historical 1% FULL partial refund 2500 still sends refund_application_fee (Stripe prorates; no manual fee refund)', async () => {
     arrangeSuccessfulAttempt(fullBooking(), ledgerRow({ amountPence: 2500 }));
     await attemptBookingPaymentRefund('ref_1');
     expect(refundPaymentIntent).toHaveBeenCalledTimes(1);

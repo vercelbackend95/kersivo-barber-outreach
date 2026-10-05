@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, SaasPostFullPlan } from '@prisma/client';
 import { prisma } from '../db/client';
 import type { SaasSubscriptionAccessFields } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
@@ -63,23 +63,35 @@ export type KersivoAccessShopFields = PaidShopFields & {
   freeBookingActivatedAt: Date | null;
 };
 
+/** Latest non-PENDING SaaS subscription incl. its explicit post-Full plan choice. */
+export type KersivoSubscriptionFields = SaasSubscriptionAccessFields & {
+  postFullPlan?: SaasPostFullPlan | string | null;
+};
+
 export type KersivoAccess = {
   state: KersivoProductState;
   capabilities: readonly KersivoCapability[];
 };
 
 /**
- * FULL_KERSIVO > FREE_BOOKING > SETUP.
- * Full derives from the existing paid entitlement (isPaidShop); Free requires the explicit
- * freeBookingActivatedAt marker. Demo shops always resolve to SETUP.
+ * FULL_KERSIVO > KERSIVO Starter (internal FREE_BOOKING) > SETUP. Demo shops always resolve to SETUP.
+ * - Full derives from the paid entitlement (isPaidShop).
+ * - A shop that has had Full (any non-PENDING subscription) and lost it is Starter ONLY when that
+ *   subscription records an explicit postFullPlan = STARTER. The legacy freeBookingActivatedAt marker
+ *   never revives Starter after Full, and billing recovery (PAST_DUE after grace / SUSPENDED),
+ *   an undecided cancellation or LEAVE all resolve to SETUP (no active service).
+ * - A shop that never had Full is Starter when it activated Starter (freeBookingActivatedAt).
  */
 export function resolveKersivoProductState(
   shop: KersivoAccessShopFields,
-  subscription?: SaasSubscriptionAccessFields | null,
+  subscription?: KersivoSubscriptionFields | null,
   now: Date = new Date(),
 ): KersivoProductState {
   if (isDemoShopId(shop.id)) return 'SETUP';
   if (isPaidShop(shop, subscription, now)) return 'FULL_KERSIVO';
+  if (subscription && String(subscription.status) !== 'PENDING') {
+    return String(subscription.postFullPlan ?? '') === 'STARTER' ? 'FREE_BOOKING' : 'SETUP';
+  }
   if (shop.freeBookingActivatedAt != null) return 'FREE_BOOKING';
   return 'SETUP';
 }
@@ -90,7 +102,7 @@ export function accessForState(state: KersivoProductState): KersivoAccess {
 
 export function resolveKersivoAccess(
   shop: KersivoAccessShopFields,
-  subscription?: SaasSubscriptionAccessFields | null,
+  subscription?: KersivoSubscriptionFields | null,
   now: Date = new Date(),
 ): KersivoAccess {
   return accessForState(resolveKersivoProductState(shop, subscription, now));
@@ -184,6 +196,7 @@ export async function loadKersivoAccess(
       currentPeriodEnd: true,
       pastDueSince: true,
       cancelAtPeriodEnd: true,
+      postFullPlan: true,
     },
   });
 

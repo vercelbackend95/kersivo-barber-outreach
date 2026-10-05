@@ -451,7 +451,7 @@ describe('KERSIVO application fee on deposit refunds', () => {
     updateRefund.mockResolvedValue(pendingRow({ status: 'REFUNDED', amountPence: depositPence }));
   }
 
-  it('R: Free deposit refund requests refund_application_fee (fee snapshot > 0)', async () => {
+  it('R: historical 1% deposit refund requests refund_application_fee (fee snapshot > 0)', async () => {
     arrangeRefund(500, 5);
 
     const result = await attemptDepositRefund('ref_1');

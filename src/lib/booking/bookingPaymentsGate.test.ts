@@ -100,13 +100,13 @@ describe('resolveLiveBookingPayment', () => {
     ).toEqual({ outcome: 'none' });
   });
 
-  it('FULL collects the full service price: Free 100 bps, Full 0 bps, £0 needs no Stripe', () => {
+  it('FULL collects the full service price: Starter 0 bps, Full 0 bps, £0 needs no Stripe', () => {
     expect(
       resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
     ).toEqual({
       outcome: 'collect',
       stripeConnectAccountId: 'acct_ready',
-      snapshot: { bookingPaymentType: 'FULL', paymentAmountPence: 3000, kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 30 },
+      snapshot: { bookingPaymentType: 'FULL', paymentAmountPence: 3000, kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 },
     });
     const full = fullShop();
     expect(
@@ -123,7 +123,7 @@ describe('resolveLiveBookingPayment', () => {
     });
     expect(
       resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 300, shop: freeShop(), access: freeAccess() }),
-    ).toMatchObject({ outcome: 'collect', snapshot: { paymentAmountPence: 300, kersivoPlatformFeePence: 3 } });
+    ).toMatchObject({ outcome: 'collect', snapshot: { paymentAmountPence: 300, kersivoPlatformFeePence: 0 } });
     expect(
       resolveLiveBookingPayment({ mode: 'FULL', servicePricePence: 0, shop: freeShop(), access: freeAccess() }),
     ).toEqual({ outcome: 'none' });
@@ -141,13 +141,13 @@ describe('resolveLiveBookingPayment', () => {
     ).toEqual({ outcome: 'not_ready', reason: 'connect_not_ready' });
   });
 
-  it('DEPOSIT snapshots Free at 100 bps and Full at 0 bps', () => {
+  it('DEPOSIT snapshots Starter and Full at 0 bps', () => {
     expect(
       resolveLiveBookingPayment({ mode: 'DEPOSIT', servicePricePence: 3000, shop: freeShop(), access: freeAccess() }),
     ).toEqual({
       outcome: 'collect',
       stripeConnectAccountId: freeShop().stripeConnectAccountId,
-      snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 5 },
+      snapshot: { bookingPaymentType: 'DEPOSIT', paymentAmountPence: 500, kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0 },
     });
     const full = fullShop();
     expect(

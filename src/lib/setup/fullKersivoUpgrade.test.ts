@@ -35,8 +35,23 @@ describe('Full KERSIVO entitlement after upgrade (central resolver)', () => {
     expect(access.state).toBe('FULL_KERSIVO');
   });
 
-  it('S: Free marker + lapsed subscription → FREE_BOOKING', () => {
-    const access = resolveKersivoAccess(freeShop, { status: 'CANCELED', currentPeriodEnd: PAST }, NOW);
+  it('S: Starter marker + ended Full without an explicit Starter choice → SETUP', () => {
+    for (const postFullPlan of [undefined, 'UNDECIDED', 'CHOICE_REQUIRED', 'LEAVE']) {
+      const access = resolveKersivoAccess(
+        freeShop,
+        { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan },
+        NOW,
+      );
+      expect(access.state, String(postFullPlan)).toBe('SETUP');
+    }
+  });
+
+  it('S2: ended Full + explicit Starter choice → FREE_BOOKING', () => {
+    const access = resolveKersivoAccess(
+      freeShop,
+      { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' },
+      NOW,
+    );
     expect(access.state).toBe('FREE_BOOKING');
   });
 
@@ -86,7 +101,7 @@ describe('resolveFullUpgradeEligibility', () => {
         NOW,
         dbWith(stale, { status: 'CANCELED', currentPeriodEnd: PAST }),
       ),
-    ).resolves.toEqual({ ok: true, state: 'FREE_BOOKING' });
+    ).resolves.toEqual({ ok: true, state: 'SETUP' });
   });
 
   it.each([
@@ -122,7 +137,7 @@ describe('booking payment continuity across the upgrade', () => {
   const before = resolveKersivoAccess(freeShop, null, NOW);
   const after = resolveKersivoAccess(freeShop, { status: 'ACTIVE', currentPeriodEnd: FUTURE }, NOW);
 
-  it('V: a booking taken while Free keeps its 1% fee snapshot', () => {
+  it('V: a booking taken while on Starter has a 0% KERSIVO fee snapshot', () => {
     const decision = resolveLiveBookingPayment({
       mode: 'FULL',
       servicePricePence: 2500,
@@ -131,7 +146,7 @@ describe('booking payment continuity across the upgrade', () => {
     });
     expect(decision).toMatchObject({
       outcome: 'collect',
-      snapshot: { kersivoPlatformFeeBps: 100, kersivoPlatformFeePence: 25 },
+      snapshot: { kersivoPlatformFeeBps: 0, kersivoPlatformFeePence: 0, paymentAmountPence: 2500 },
     });
   });
 

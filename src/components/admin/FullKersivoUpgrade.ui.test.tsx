@@ -252,20 +252,20 @@ describe('Free Booking dashboard sidebar', () => {
     expect(sidebarLink('Team')!.dataset.locked).toBeUndefined();
   });
 
-  it('AB: the profile plan label reads "Free Booking"', async () => {
+  it('AB: the profile plan label reads "KERSIVO Starter"', async () => {
     installSession();
     await renderAdmin();
     await waitFor(() => {
-      expect(document.querySelector('.admin-sidebar-profile__plan')?.textContent).toBe('Free Booking');
+      expect(document.querySelector('.admin-sidebar-profile__plan')?.textContent).toBe('KERSIVO Starter');
     });
-    expect(document.body.textContent).not.toMatch(/trial|free forever/i);
+    expect(document.body.textContent).not.toMatch(/trial|free forever|Free Booking|KERSIVO Free/i);
   });
 
   it('AB: Full keeps the existing plan label treatment', async () => {
     installSession({ productAccess: FULL_ACCESS });
     await renderAdmin();
     await waitFor(() => expect(document.querySelector('.admin-sidebar-profile__plan')).toBeTruthy());
-    expect(document.querySelector('.admin-sidebar-profile__plan')?.textContent).not.toBe('Free Booking');
+    expect(document.querySelector('.admin-sidebar-profile__plan')?.textContent).not.toBe('KERSIVO Starter');
   });
 });
 

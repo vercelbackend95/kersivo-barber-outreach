@@ -83,11 +83,45 @@ describe('resolveKersivoProductState', () => {
     ).toBe('FULL_KERSIVO');
   });
 
-  it('E: paid entitlement lapsed + free marker => FREE_BOOKING', () => {
-    const freeShop = shop({ freeBookingActivatedAt: activatedAt, shopPaidAt: activatedAt });
+  it('E: Full ended + legacy Starter marker but no explicit choice => SETUP (no silent fallback)', () => {
+    const formerStarter = shop({ freeBookingActivatedAt: activatedAt, shopPaidAt: activatedAt });
     for (const sub of [expiredGraceSub, suspendedSub, canceledSub]) {
-      expect(resolveKersivoProductState(freeShop, sub, now)).toBe('FREE_BOOKING');
+      for (const postFullPlan of [undefined, null, 'UNDECIDED', 'CHOICE_REQUIRED', 'LEAVE']) {
+        expect(
+          resolveKersivoProductState(formerStarter, { ...sub, postFullPlan }, now),
+          `${sub.status} / ${String(postFullPlan)}`,
+        ).toBe('SETUP');
+      }
     }
+  });
+
+  it('E2: Full ended + explicit Starter choice => FREE_BOOKING (with or without the legacy marker)', () => {
+    for (const s of [shop(), shop({ freeBookingActivatedAt: activatedAt, shopPaidAt: activatedAt })]) {
+      for (const sub of [expiredGraceSub, suspendedSub, canceledSub]) {
+        expect(resolveKersivoProductState(s, { ...sub, postFullPlan: 'STARTER' }, now)).toBe(
+          'FREE_BOOKING',
+        );
+      }
+    }
+  });
+
+  it('E3: active Full always wins over a recorded post-Full choice', () => {
+    const formerStarter = shop({ freeBookingActivatedAt: activatedAt });
+    for (const postFullPlan of ['STARTER', 'LEAVE', 'CHOICE_REQUIRED']) {
+      expect(resolveKersivoProductState(formerStarter, { ...activeSub, postFullPlan }, now)).toBe(
+        'FULL_KERSIVO',
+      );
+      expect(resolveKersivoProductState(formerStarter, { ...graceSub, postFullPlan }, now)).toBe(
+        'FULL_KERSIVO',
+      );
+    }
+  });
+
+  it('E4: PENDING checkout rows are ignored, so initial Starter shops stay Starter', () => {
+    const starter = shop({ freeBookingActivatedAt: activatedAt });
+    const pending = { status: 'PENDING', currentPeriodEnd: null, postFullPlan: 'UNDECIDED' };
+    expect(resolveKersivoProductState(starter, pending, now)).toBe('FREE_BOOKING');
+    expect(resolveKersivoProductState(shop(), pending, now)).toBe('SETUP');
   });
 
   it('F: paid entitlement lapsed + no free marker => SETUP', () => {
@@ -201,15 +235,19 @@ describe('loadKersivoAccess', () => {
       expect.objectContaining({
         where: { shopId: 'shop_1', status: { not: 'PENDING' } },
         orderBy: { createdAt: 'desc' },
+        select: expect.objectContaining({ postFullPlan: true }),
       }),
     );
   });
 
-  it('falls back to the free marker when the subscription no longer grants access', async () => {
+  it('does not fall back to the Starter marker once Full ends without an explicit choice', async () => {
     shopFindUnique.mockResolvedValue(
       shop({ freeBookingActivatedAt: activatedAt, shopPaidAt: activatedAt }),
     );
-    subscriptionFindFirst.mockResolvedValue(canceledSub);
+    subscriptionFindFirst.mockResolvedValue({ ...canceledSub, postFullPlan: 'CHOICE_REQUIRED' });
+    expect((await loadKersivoAccess('shop_1', now)).state).toBe('SETUP');
+
+    subscriptionFindFirst.mockResolvedValue({ ...canceledSub, postFullPlan: 'STARTER' });
     expect((await loadKersivoAccess('shop_1', now)).state).toBe('FREE_BOOKING');
   });
 

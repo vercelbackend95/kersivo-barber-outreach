@@ -475,7 +475,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     expect(res.status).toBe(409);
     expect(res.body).toEqual({
       code: 'FREE_BOOKABLE_BARBER_LIMIT',
-      error: 'KERSIVO Free includes up to 4 barbers taking online bookings.',
+      error: 'KERSIVO Starter includes up to 4 barbers taking online bookings.',
       limit: 4,
     });
     expect(db.shop.freeBookingActivatedAt).toBeNull();

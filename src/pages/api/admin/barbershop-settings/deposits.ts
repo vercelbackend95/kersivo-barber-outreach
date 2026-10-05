@@ -204,7 +204,7 @@ export const PATCH: APIRoute = async (ctx) => {
     if (gate.reason === 'demo_shop' || gate.reason === 'no_booking_payments_capability') {
       return json(
         {
-          error: 'Online booking payments are available once KERSIVO Free or Full is active.',
+          error: 'Online booking payments are available once KERSIVO Starter or Full KERSIVO is active.',
           code: BOOKING_PAYMENTS_NOT_AVAILABLE,
         },
         403,
@@ -244,7 +244,7 @@ export const PATCH: APIRoute = async (ctx) => {
 
 /**
  * Start or continue Stripe Connect Express onboarding for booking payments
- * (KERSIVO Free or Full). Owner / billing.manage only. Retail stays Full-only elsewhere.
+ * (KERSIVO Starter or Full). Owner / billing.manage only. Retail stays Full-only elsewhere.
  */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
@@ -265,7 +265,7 @@ export const POST: APIRoute = async (ctx) => {
   if (!canStartBookingPaymentsOnboarding({ shopId: shop.id, access: kersivoAccess })) {
     return json(
       {
-        error: 'Connect Stripe after activating KERSIVO Free or Full.',
+        error: 'Connect Stripe after activating KERSIVO Starter or Full KERSIVO.',
         code: BOOKING_PAYMENTS_NOT_AVAILABLE,
       },
       403,

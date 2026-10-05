@@ -302,7 +302,7 @@ describe('createStandaloneBookingProfile', () => {
       ok: false,
       status: 409,
       code: 'FREE_BOOKABLE_BARBER_LIMIT',
-      error: 'KERSIVO Free includes up to 4 barbers taking online bookings.',
+      error: 'KERSIVO Starter includes up to 4 barbers taking online bookings.',
     });
     expect(barberCount).toHaveBeenCalledWith({ where: { shopId: 'shop-1', active: true } });
     expect(barberCreate).not.toHaveBeenCalled();

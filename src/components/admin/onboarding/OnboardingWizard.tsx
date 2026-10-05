@@ -658,7 +658,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6 && freeActivationStep) return 'Activate Free Booking';
+    if (step === 6 && freeActivationStep) return 'Activate KERSIVO Starter';
     if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
@@ -1580,7 +1580,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
               </h1>
               <p className="admin-onboarding__description">
                 {freeActivationStep
-                  ? 'Review your setup, then activate KERSIVO Free Booking.'
+                  ? 'Review your setup, then activate KERSIVO Starter.'
                   : 'Review your setup, then finish to open your dashboard.'}
               </p>
             </div>

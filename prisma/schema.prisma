@@ -226,8 +226,9 @@ model ShopSettings {
   smsRemindersEnabled                Boolean                         @default(false)
   /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
   shopPaidAt                         DateTime?
-  /// Explicit Free Booking activation marker. Independent of onboardingCompleted and paid state;
-  /// product state is resolved in src/lib/shop/kersivoAccess.ts (FULL_KERSIVO > FREE_BOOKING > SETUP).
+  /// Explicit KERSIVO Starter activation marker (legacy name). Independent of onboardingCompleted and
+  /// paid state; product state is resolved in src/lib/shop/kersivoAccess.ts. Never grants Starter
+  /// after Full ends on its own — that needs SaasSubscription.postFullPlan = STARTER.
   freeBookingActivatedAt             DateTime?
   /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
   /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
@@ -819,6 +820,20 @@ enum SaasSubscriptionStatus {
   CANCELED
 }
 
+/// What a shop continues with once THIS Full KERSIVO subscription's entitlement ends.
+/// Per subscription row, so a later Full subscription never inherits an earlier choice.
+/// Resolved in src/lib/shop/kersivoAccess.ts; purge safety in src/lib/setup/shopPurgeEligibility.ts.
+enum SaasPostFullPlan {
+  /// Normal state: no post-Full decision recorded.
+  UNDECIDED
+  /// Owner explicitly chose to continue on KERSIVO Starter after Full.
+  STARTER
+  /// Owner explicitly chose to leave KERSIVO completely.
+  LEAVE
+  /// Full ended outside KERSIVO (Stripe portal / dunning) without a recorded choice.
+  CHOICE_REQUIRED
+}
+
 model SaasSubscription {
   id                     String                 @id @default(cuid())
   stripeSessionId        String                 @unique
@@ -835,6 +850,8 @@ model SaasSubscription {
   suspendedAt            DateTime?
   retentionEndsAt        DateTime?
   dataExportDownloadedAt DateTime?
+  postFullPlan           SaasPostFullPlan       @default(UNDECIDED)
+  postFullPlanChosenAt   DateTime?
   customerName           String
   customerEmail          String
   shopName               String

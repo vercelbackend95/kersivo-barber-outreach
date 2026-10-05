@@ -129,11 +129,23 @@ describe('GET /q/{code}', () => {
     const full = await scan(WINDOW_CODE);
     expect(full.status).toBe(302);
 
-    // FULL → FREE: subscription ends, the same code returns to the Free slug route.
-    db.subscription = { status: 'CANCELED', currentPeriodEnd: new Date('2000-01-01') };
-    const backToFree = await scan(WINDOW_CODE);
-    expect(backToFree.status).toBe(302);
-    expect(backToFree.headers.get('Location')).toBe('/book/blackline-barbers');
+    // Full ends without a plan choice: no silent fallback to Starter, so no public redirect.
+    db.subscription = {
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2000-01-01'),
+      postFullPlan: 'CHOICE_REQUIRED',
+    };
+    expect((await scan(WINDOW_CODE)).status).toBe(404);
+
+    // FULL → Starter only via an explicit choice: the same code returns to the Starter slug route.
+    db.subscription = {
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2000-01-01'),
+      postFullPlan: 'STARTER',
+    };
+    const backToStarter = await scan(WINDOW_CODE);
+    expect(backToStarter.status).toBe(302);
+    expect(backToStarter.headers.get('Location')).toBe('/book/blackline-barbers');
   });
 
   it('AC: redirects are non-permanent and carry no-store / noindex headers', async () => {

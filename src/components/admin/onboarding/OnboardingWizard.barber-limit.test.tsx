@@ -12,7 +12,7 @@ vi.mock('../PrivateDemoAuthPanel', () => ({
   },
 }));
 
-const LIMIT_COPY = 'KERSIVO Free includes up to 4 barbers taking online bookings.';
+const LIMIT_COPY = 'KERSIVO Starter includes up to 4 barbers taking online bookings.';
 
 function onboardingState(barberCount: number) {
   return {

@@ -127,7 +127,7 @@ export async function activateFreeBooking(params: {
         ok: false,
         status: 400,
         code: 'ACCOUNT_EMAIL_REQUIRED',
-        error: 'Your account needs an email address before activating Free Booking.',
+        error: 'Your account needs an email address before activating KERSIVO Starter.',
       };
     }
 
