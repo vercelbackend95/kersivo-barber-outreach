@@ -15,6 +15,16 @@ type Identity = {
   logoUrl: string | null;
 };
 
+type GoogleBookingSetupState = {
+  bookingUrl: string;
+  destinationSource: 'starter_hosted' | 'full_hosted_fallback';
+  status: 'NOT_SET' | 'SETUP_STARTED' | 'MERCHANT_CONFIRMED' | 'UPDATE_REQUIRED';
+  requiresUpdate: boolean;
+  confirmedUrl: string | null;
+  googleBusinessProfileUrl: string;
+  productState: string;
+};
+
 type PauseState = {
   paused: boolean;
   pausedNow: boolean;
@@ -108,6 +118,12 @@ export default function BarbershopSettingsPanel({
     maxClientReschedules: number;
   } | null>(null);
 
+  const [googleBooking, setGoogleBooking] = useState<GoogleBookingSetupState | null>(null);
+  const [googleBookingLoading, setGoogleBookingLoading] = useState(false);
+  const [googleBookingBusy, setGoogleBookingBusy] = useState(false);
+  const [googleBookingError, setGoogleBookingError] = useState('');
+  const [googleBookingMessage, setGoogleBookingMessage] = useState('');
+
   const [billingPhase, setBillingPhase] = useState<string | null>(null);
   const [billingLabel, setBillingLabel] = useState<string | null>(null);
   const [hasBillingPortal, setHasBillingPortal] = useState(false);
@@ -125,6 +141,75 @@ export default function BarbershopSettingsPanel({
   const [exportBusy, setExportBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [billingMessage, setBillingMessage] = useState('');
+
+  const loadGoogleBooking = useCallback(async () => {
+    setGoogleBookingLoading(true);
+    setGoogleBookingError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/google-booking', {
+        credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | (GoogleBookingSetupState & { error?: string })
+        | { error?: string }
+        | null;
+      if (!response.ok) {
+        throw new Error(payload && 'error' in payload && payload.error
+          ? payload.error
+          : 'Could not load Google booking setup.');
+      }
+      setGoogleBooking(payload as GoogleBookingSetupState);
+    } catch (error) {
+      setGoogleBooking(null);
+      setGoogleBookingError(
+        error instanceof Error ? error.message : 'Could not load Google booking setup.',
+      );
+    } finally {
+      setGoogleBookingLoading(false);
+    }
+  }, []);
+
+  const updateGoogleBooking = useCallback(
+    async (action: 'START_SETUP' | 'CONFIRM_CURRENT_URL' | 'RESET') => {
+      if (googleBookingBusy) return null;
+      setGoogleBookingBusy(true);
+      setGoogleBookingError('');
+      setGoogleBookingMessage('');
+      try {
+        const response = await fetch('/api/admin/barbershop-settings/google-booking', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | (GoogleBookingSetupState & { error?: string })
+          | { error?: string }
+          | null;
+        if (!response.ok) {
+          throw new Error(payload && 'error' in payload && payload.error
+            ? payload.error
+            : 'Could not update Google booking setup.');
+        }
+        const next = payload as GoogleBookingSetupState;
+        setGoogleBooking(next);
+        if (action === 'CONFIRM_CURRENT_URL') {
+          setGoogleBookingMessage('Google booking link marked as updated.');
+        } else if (action === 'RESET') {
+          setGoogleBookingMessage('Google booking setup reset.');
+        }
+        return next;
+      } catch (error) {
+        setGoogleBookingError(
+          error instanceof Error ? error.message : 'Could not update Google booking setup.',
+        );
+        return null;
+      } finally {
+        setGoogleBookingBusy(false);
+      }
+    },
+    [googleBookingBusy],
+  );
 
   const loadBilling = useCallback(async () => {
     setBillingError('');
@@ -386,6 +471,7 @@ export default function BarbershopSettingsPanel({
       // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
       void loadDeposits();
       void loadBilling();
+      void loadGoogleBooking();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -393,7 +479,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadDeposits, loadBilling]);
+  }, [loadDeposits, loadBilling, loadGoogleBooking]);
 
   useEffect(() => {
     void load();
