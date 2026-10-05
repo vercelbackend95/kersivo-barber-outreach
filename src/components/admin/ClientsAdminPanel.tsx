@@ -4,20 +4,22 @@ import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 import ClientListAvatar from './ClientListAvatar';
 import ClientProfilePanel from './ClientProfilePanel';
+import ClientCoreProfilePanel from './ClientCoreProfilePanel';
 
 type ClientListRow = {
   id: string;
   fullName: string | null;
   email: string | null;
   phone: string | null;
-  tags: string[];
+  tags?: string[];
   avatarUrl?: string | null;
-  reliabilityScore: number;
+  reliabilityScore?: number;
   lastVisitAt: string | null;
+  nextBookingAt?: string | null;
   totalSpentPence?: number;
-  totalBookings: number;
-  completedCount: number;
-  noShowCount: number;
+  totalBookings?: number;
+  completedCount?: number;
+  noShowCount?: number;
 };
 
 function formatPence(pence: number): string {
@@ -49,6 +51,7 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTotalSpent, setShowTotalSpent] = useState(true);
+  const [clientsMode, setClientsMode] = useState<'core' | 'advanced'>('advanced');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -118,12 +121,18 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
               : 'Could not load clients.';
           throw new Error(message);
         }
-        return r.json() as Promise<{ clients: ClientListRow[]; financialsHidden?: boolean }>;
+        return r.json() as Promise<{
+          clients: ClientListRow[];
+          mode?: 'core' | 'advanced';
+          financialsHidden?: boolean;
+        }>;
       })
       .then((data) => {
         if (!cancelled) {
+          const mode = data.mode === 'core' ? 'core' : 'advanced';
+          setClientsMode(mode);
           setClients(data.clients ?? []);
-          setShowTotalSpent(data.financialsHidden !== true);
+          setShowTotalSpent(mode === 'advanced' && data.financialsHidden !== true);
         }
       })
       .catch((err) => {
@@ -144,14 +153,18 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
     <section className="surface booking-shell admin-clients-section" aria-label="Clients">
       <AdminSectionHeader
         title="Clients"
-        description="Manage your client list, tags and reliability scores"
+        description={
+          clientsMode === 'core'
+            ? 'Search client contacts and see recent operational booking context'
+            : 'Manage your client list, tags and reliability scores'
+        }
         metaBadge={!loading && !error ? String(clients.length) : undefined}
       />
 
       <AdminDesktopDashHeroSlot />
 
       <div
-        className={`admin-clients-table-wrap${showTotalSpent ? '' : ' admin-clients-table-wrap--no-spent'}`}
+        className={`admin-clients-table-wrap${clientsMode === 'advanced' && !showTotalSpent ? ' admin-clients-table-wrap--no-spent' : ''}`}
       >
         <div className="admin-clients-search-row">
           <AdminPremiumSearchBar
@@ -172,10 +185,21 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
         <div className="admin-clients-header-row" aria-hidden="true">
           <span />
           <span>Client</span>
-          <span>Tags</span>
-          <span>Reliability</span>
-          <span>Last visit</span>
-          {showTotalSpent ? <span>Total spent</span> : null}
+          {clientsMode === 'core' ? (
+            <>
+              <span>Phone</span>
+              <span>Last visit</span>
+              <span>Next booking</span>
+              <span>Advanced CRM</span>
+            </>
+          ) : (
+            <>
+              <span>Tags</span>
+              <span>Reliability</span>
+              <span>Last visit</span>
+              {showTotalSpent ? <span>Total spent</span> : null}
+            </>
+          )}
         </div>
 
         {loading ? (
@@ -187,7 +211,7 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
                 <span className="admin-clients-skeleton-cell" />
                 <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--bar" />
                 <span className="admin-clients-skeleton-cell" />
-                {showTotalSpent ? <span className="admin-clients-skeleton-cell" /> : null}
+                {clientsMode === 'core' || showTotalSpent ? <span className="admin-clients-skeleton-cell" /> : null}
               </div>
             ))}
           </div>
@@ -200,9 +224,11 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
         ) : (
           <ul className="admin-clients-list" role="list">
             {showcasedClients.map((client) => {
-              const tone = reliabilityTone(client.reliabilityScore);
-              const visibleTags = client.tags.slice(0, MAX_VISIBLE_TAGS);
-              const hiddenTagCount = client.tags.length - visibleTags.length;
+              const reliabilityScore = client.reliabilityScore ?? 0;
+              const tone = reliabilityTone(reliabilityScore);
+              const tags = client.tags ?? [];
+              const visibleTags = tags.slice(0, MAX_VISIBLE_TAGS);
+              const hiddenTagCount = tags.length - visibleTags.length;
               const displayName = client.fullName || client.phone || client.email || 'Client';
 
               return (
@@ -223,7 +249,7 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
                     <ClientListAvatar
                       clientId={client.id}
                       fullName={client.fullName || client.phone || client.email || 'Client'}
-                      avatarUrl={client.avatarUrl}
+                      avatarUrl={clientsMode === 'advanced' ? client.avatarUrl : null}
                       className="admin-clients-avatar"
                       onClick={() => setOpenClientId(client.id)}
                     />
@@ -236,47 +262,55 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
                       ) : null}
                     </div>
 
-                    {/* Tags */}
-                    <div className="admin-clients-tags">
-                      {visibleTags.map((tag) => (
-                        <span key={tag} className="admin-clients-tag-chip">{tag}</span>
-                      ))}
-                      {hiddenTagCount > 0 && (
-                        <span className="admin-clients-tags-overflow">+{hiddenTagCount}</span>
-                      )}
-                      {client.tags.length === 0 && (
-                        <span className="admin-clients-tags-none">—</span>
-                      )}
-                    </div>
+                    {clientsMode === 'core' ? (
+                      <>
+                        <span className="admin-clients-last-visit">{client.phone || '—'}</span>
+                        <span className="admin-clients-last-visit">{formatDate(client.lastVisitAt)}</span>
+                        <span className="admin-clients-last-visit">{formatDate(client.nextBookingAt ?? null)}</span>
+                        <span className="admin-clients-spent">Full KERSIVO 🔒</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="admin-clients-tags">
+                          {visibleTags.map((tag) => (
+                            <span key={tag} className="admin-clients-tag-chip">{tag}</span>
+                          ))}
+                          {hiddenTagCount > 0 && (
+                            <span className="admin-clients-tags-overflow">+{hiddenTagCount}</span>
+                          )}
+                          {tags.length === 0 && (
+                            <span className="admin-clients-tags-none">—</span>
+                          )}
+                        </div>
 
-                    {/* Reliability bar */}
-                    <div className="admin-clients-reliability">
-                      <div
-                        className={`admin-clients-reliability-track admin-clients-reliability-track--${tone}`}
-                        title={`${client.reliabilityScore} / 100`}
-                      >
-                        <div
-                          className="admin-clients-reliability-fill"
-                          style={{ width: `${client.reliabilityScore}%` }}
-                        />
-                      </div>
-                      <span className="admin-clients-reliability-label">
-                        {client.reliabilityScore}
-                      </span>
-                    </div>
+                        <div className="admin-clients-reliability">
+                          <div
+                            className={`admin-clients-reliability-track admin-clients-reliability-track--${tone}`}
+                            title={`${reliabilityScore} / 100`}
+                          >
+                            <div
+                              className="admin-clients-reliability-fill"
+                              style={{ width: `${reliabilityScore}%` }}
+                            />
+                          </div>
+                          <span className="admin-clients-reliability-label">
+                            {reliabilityScore}
+                          </span>
+                        </div>
 
-                    {/* Last visit */}
-                    <span className="admin-clients-last-visit">
-                      {formatDate(client.lastVisitAt)}
-                    </span>
+                        <span className="admin-clients-last-visit">
+                          {formatDate(client.lastVisitAt)}
+                        </span>
 
-                    {showTotalSpent ? (
-                      <span className="admin-clients-spent">
-                        {typeof client.totalSpentPence === 'number'
-                          ? formatPence(client.totalSpentPence)
-                          : '—'}
-                      </span>
-                    ) : null}
+                        {showTotalSpent ? (
+                          <span className="admin-clients-spent">
+                            {typeof client.totalSpentPence === 'number'
+                              ? formatPence(client.totalSpentPence)
+                              : '—'}
+                          </span>
+                        ) : null}
+                      </>
+                    )}
                   </div>
                 </li>
               );
@@ -285,7 +319,14 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
         )}
       </div>
 
-      {openClientId && (
+      {openClientId && clientsMode === 'core' ? (
+        <ClientCoreProfilePanel
+          clientId={openClientId}
+          onClose={() => setOpenClientId(null)}
+        />
+      ) : null}
+
+      {openClientId && clientsMode === 'advanced' ? (
         <ClientProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
@@ -294,7 +335,7 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
             setListVersion((version) => version + 1);
           }}
         />
-      )}
+      ) : null}
     </section>
   );
 }
