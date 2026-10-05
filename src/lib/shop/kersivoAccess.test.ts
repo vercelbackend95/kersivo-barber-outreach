@@ -154,6 +154,7 @@ describe('capability matrix', () => {
       'BOOKING_PAYMENTS',
       'TEAM',
       'SERVICES',
+      'AUTOMATED_EMAIL_REMINDERS',
     ];
     const fullOnly = [
       'REPORTS',
@@ -162,7 +163,6 @@ describe('capability matrix', () => {
       'RETAIL',
       'ASSISTANT',
       'SMS_REMINDERS',
-      'AUTOMATED_EMAIL_REMINDERS',
       'BRANDED_SITE',
       'MANUAL_BOOKINGS',
     ];
@@ -199,7 +199,7 @@ describe('capability matrix', () => {
         retail: false,
         assistant: false,
         smsReminders: false,
-        automatedEmailReminders: false,
+        automatedEmailReminders: true,
         brandedSite: false,
         manualBookings: false,
       },
