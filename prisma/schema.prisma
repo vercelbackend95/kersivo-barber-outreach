@@ -77,6 +77,7 @@ enum EmailOutboundPurpose {
   DEPOSIT_REFUNDED_SLOT_LOST
   CLIENT_ONBOARDING_INTERNAL
   CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
+  QR_KIT_REQUEST_ACKNOWLEDGEMENT
 }
 
 enum EmailOutboundStatus {
@@ -298,6 +299,8 @@ model ShopSettings {
   recommendationSets                 RecommendationSet[]
   recommendationSetItems             RecommendationSetItem[]
   qrCodes                            ShopQrCode[]
+  qrKitFulfilment                    QrKitFulfilment?
+  qrKitFulfilmentEvents              QrKitFulfilmentEvent[]
 }
 
 enum ShopQrPlacement {
@@ -318,6 +321,82 @@ model ShopQrCode {
   shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@unique([shopId, placement])
+}
+
+enum QrKitFulfilmentStatus {
+  REQUESTED
+  VERIFYING
+  APPROVED
+  PRINT_QUEUED
+  DISPATCHED
+  NEEDS_REVIEW
+  REJECTED
+}
+
+/// Initial physical QR Kit (WINDOW + REBOOK) for one KERSIVO location. Internal ops state;
+/// never exposed to the barber beyond "request received".
+model QrKitFulfilment {
+  id                String                @id @default(cuid())
+  /// One canonical initial kit per shop/location.
+  shopId            String                @unique
+  status            QrKitFulfilmentStatus @default(REQUESTED)
+  requestedAt       DateTime              @default(now())
+  requestedByUserId String?
+
+  contactName      String
+  contactEmail     String
+  contactPhone     String
+  shopNameSnapshot String
+  addressLine1     String
+  addressLine2     String?
+  townCity         String
+  postcode         String
+  countryCode      String  @default("GB")
+
+  verifyingAt   DateTime?
+  approvedAt    DateTime?
+  printQueuedAt DateTime?
+  dispatchedAt  DateTime?
+  needsReviewAt DateTime?
+  rejectedAt    DateTime?
+
+  verificationNote  String? @db.Text
+  printReference    String?
+  dispatchCarrier   String?
+  dispatchReference String?
+
+  /// Internal unit economics (GBP pence). Never returned by customer APIs.
+  printCostPence     Int?
+  packagingCostPence Int?
+  postageCostPence   Int?
+  otherCostPence     Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   ShopSettings           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  events QrKitFulfilmentEvent[]
+
+  @@index([status, requestedAt])
+}
+
+/// Append-only audit trail for QR Kit fulfilment transitions.
+model QrKitFulfilmentEvent {
+  id           String                 @id @default(cuid())
+  fulfilmentId String
+  shopId       String
+  fromStatus   QrKitFulfilmentStatus?
+  toStatus     QrKitFulfilmentStatus
+  actorUserId  String?
+  actorEmail   String?
+  note         String?                @db.Text
+  createdAt    DateTime               @default(now())
+
+  fulfilment QrKitFulfilment @relation(fields: [fulfilmentId], references: [id], onDelete: Cascade)
+  shop       ShopSettings    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([fulfilmentId, createdAt])
+  @@index([shopId])
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -587,20 +666,20 @@ model Booking {
 
   /// Snapshot: how THIS booking was paid / expected to be paid. Null on pre-snapshot bookings
   /// that never took an online payment.
-  bookingPaymentType      BookingPaymentType?
+  bookingPaymentType              BookingPaymentType?
   /// Snapshot: amount charged (or to be charged) online for this booking, in pence.
-  paymentAmountPence      Int?
+  paymentAmountPence              Int?
   /// Snapshot: KERSIVO platform/application fee for this payment, in pence.
-  kersivoPlatformFeePence Int?
+  kersivoPlatformFeePence         Int?
   /// Snapshot: KERSIVO fee rate used at checkout, in basis points (100 = 1%).
-  kersivoPlatformFeeBps   Int?
+  kersivoPlatformFeeBps           Int?
   /// Snapshot: Stripe Connect account the online payment was created on.
   /// Null = no online payment, or a legacy row created before the snapshot existed.
   stripeConnectAccountIdAtPayment String?
   /// Total confirmed refunded amount against the online payment, in pence.
-  refundedAmountPence     Int            @default(0)
-  clientRescheduleCount   Int            @default(0)
-  paymentExpiresAt        DateTime?
+  refundedAmountPence             Int                 @default(0)
+  clientRescheduleCount           Int                 @default(0)
+  paymentExpiresAt                DateTime?
 
   serviceNameAtBooking            String?
   servicePricePenceAtBooking      Int?

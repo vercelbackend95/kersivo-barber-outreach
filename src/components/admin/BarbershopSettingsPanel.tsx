@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import AdminSectionHeader from './AdminSectionHeader';
+import QrKitSettingsCard from './QrKitSettingsCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
 import '@/styles/components/admin-barbershop-settings.css';
@@ -1329,6 +1330,8 @@ export default function BarbershopSettingsPanel({
             </p>
           ) : null}
         </section>
+
+        <QrKitSettingsCard />
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-billing-title">
           <h2 id="bbs-billing-title" className="admin-barbershop-settings__card-title">
