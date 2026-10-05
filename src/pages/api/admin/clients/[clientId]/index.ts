@@ -547,9 +547,11 @@ export const PATCH: APIRoute = async (ctx) => {
 /**
  * Erase customer personal data for this Client (OWNER/MANAGER via clients.erase).
  * Historical bookings/orders are anonymised, not hard-deleted.
+ * Gated by CLIENTS_CORE, not Advanced Clients: the DPA lets Owner/Manager instruct erasure on
+ * every active plan, including KERSIVO Starter.
  */
 export const DELETE: APIRoute = async (ctx) => {
-  const access = await requireAdminPermissionAndCapability(ctx, 'clients.erase', 'CLIENTS');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.erase', 'CLIENTS_CORE');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId?.trim();

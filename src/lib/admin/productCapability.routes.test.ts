@@ -189,6 +189,15 @@ const PAID_ROUTES: GatedRoute[] = [
     capability: 'CLIENTS',
   },
   {
+    name: 'D PATCH /api/admin/clients/[clientId] (Advanced Clients edit)',
+    load: () => import('@/pages/api/admin/clients/[clientId]/index'),
+    method: 'PATCH',
+    url: 'http://localhost/api/admin/clients/client-1',
+    params: { clientId: 'client-1' },
+    body: { tags: ['vip'] },
+    capability: 'CLIENTS',
+  },
+  {
     name: 'C POST /api/admin/clients/ensure',
     load: () => import('@/pages/api/admin/clients/ensure'),
     method: 'POST',
@@ -265,6 +274,15 @@ const STARTER_CORE_ROUTES: GatedRoute[] = [
     method: 'GET',
     url: 'http://localhost/api/admin/clients/client-1',
     params: { clientId: 'client-1' },
+    capability: 'CLIENTS_CORE',
+  },
+  {
+    name: 'D DELETE /api/admin/clients/[clientId] (customer erasure, DPA compliance)',
+    load: () => import('@/pages/api/admin/clients/[clientId]/index'),
+    method: 'DELETE',
+    url: 'http://localhost/api/admin/clients/client-1',
+    params: { clientId: 'client-1' },
+    body: { confirm: 'DELETE' },
     capability: 'CLIENTS_CORE',
   },
   {
@@ -397,6 +415,27 @@ describe('v1.18 Starter core: Clients Core and rolling History are Starter featu
       });
       expect(state.prismaCalls).toEqual([]);
     });
+  });
+});
+
+describe('Starter customer erasure keeps clients.erase RBAC', () => {
+  const erase = STARTER_CORE_ROUTES.find((r) => r.method === 'DELETE')!;
+
+  it.each(['OWNER', 'MANAGER'] as const)('Starter %s passes RBAC and the product gate', async (role) => {
+    state.access = ownerAccess({ role });
+    const { status, body } = await invoke(erase);
+    expect(status).not.toBe(403);
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    expect(state.prismaCalls.length).toBeGreaterThan(0);
+  });
+
+  it.each(['FREE_BOOKING', 'FULL_KERSIVO'] as const)('BARBER on %s is denied before any business operation', async (product) => {
+    state.product = product;
+    state.access = ownerAccess({ role: 'BARBER', barberId: 'b1' });
+    const { status, body } = await invoke(erase);
+    expect(status).toBe(403);
+    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    expect(state.prismaCalls).toEqual([]);
   });
 });
 

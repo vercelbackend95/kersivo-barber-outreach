@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, Lock, Mail, Phone, X } from '../lucide-react';
 import { adminFetchJson } from './adminAuth';
+import ClientErasureDangerZone from './ClientErasureDangerZone';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 
 type CoreProfileData = {
@@ -31,18 +32,40 @@ function formatDateTime(iso: string | null): string {
 
 /**
  * Starter-safe client profile. Intentionally does not mount ClientProfilePanel or call any
- * notes/images/tags/retail/advanced-CRM endpoints.
+ * notes/images/tags/retail/advanced-CRM endpoints. Customer erasure is a compliance action
+ * (not Advanced Clients) and is shown only when the session grants clients.erase.
  */
 export default function ClientCoreProfilePanel({
   clientId,
   onClose,
+  onErased,
 }: {
   clientId: string;
   onClose: () => void;
+  onErased?: () => void;
 }) {
   const [data, setData] = useState<CoreProfileData | null>(null);
   const [error, setError] = useState('');
+  const [canErase, setCanErase] = useState(false);
   const { openUpgrade } = useAdminProductLocks();
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        if (!response.ok || cancelled) return;
+        const payload = (await response.json()) as { permissions?: unknown };
+        if (cancelled) return;
+        setCanErase(Array.isArray(payload.permissions) && payload.permissions.includes('clients.erase'));
+      } catch {
+        // keep erase hidden
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const load = useCallback(async () => {
     setError('');
@@ -166,6 +189,16 @@ export default function ClientCoreProfilePanel({
                 Unlock with Full KERSIVO
               </button>
             </div>
+
+            {canErase ? (
+              <ClientErasureDangerZone
+                clientId={clientId}
+                onErased={() => {
+                  onErased?.();
+                  onClose();
+                }}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

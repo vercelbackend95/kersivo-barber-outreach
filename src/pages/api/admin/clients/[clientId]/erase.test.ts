@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+const product = vi.hoisted(() => ({ state: 'FULL_KERSIVO' as 'FULL_KERSIVO' | 'FREE_BOOKING' | 'SETUP' }));
+
 vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/shop/kersivoAccess')>();
-  return { ...actual, loadKersivoAccess: async () => actual.accessForState('FULL_KERSIVO') };
+  return { ...actual, loadKersivoAccess: async () => actual.accessForState(product.state) };
 });
 import type { APIContext } from 'astro';
 
@@ -88,6 +90,7 @@ const managerAccess = {
 
 describe('DELETE /api/admin/clients/[clientId]', () => {
   beforeEach(() => {
+    product.state = 'FULL_KERSIVO';
     requireAdminPermission.mockReset();
     assertClientAccessible.mockReset();
     eraseClientPersonalData.mockReset();
@@ -145,6 +148,53 @@ describe('DELETE /api/admin/clients/[clientId]', () => {
     requireAdminPermission.mockResolvedValue(managerAccess);
     const res = await DELETE(makeContext({ body: { confirm: 'DELETE' } }));
     expect(res.status).toBe(200);
+  });
+
+  it.each([
+    ['OWNER', ownerAccess],
+    ['MANAGER', managerAccess],
+  ] as const)('allows Starter %s through the same eraseClientPersonalData flow', async (_role, access) => {
+    product.state = 'FREE_BOOKING';
+    requireAdminPermission.mockResolvedValue(access);
+    const res = await DELETE(makeContext({ body: { confirm: 'DELETE' } }));
+    expect(res.status).toBe(200);
+    expect(requireAdminPermission).toHaveBeenCalledWith(expect.anything(), 'clients.erase');
+    expect(assertClientAccessible).toHaveBeenCalledWith(access, 'client-1');
+    expect(eraseClientPersonalData).toHaveBeenCalledWith({
+      shopId: 'shop-1',
+      clientId: 'client-1',
+      actorUserId: access.userId,
+    });
+  });
+
+  it('Starter still requires the explicit DELETE confirmation', async () => {
+    product.state = 'FREE_BOOKING';
+    requireAdminPermission.mockResolvedValue(ownerAccess);
+    const res = await DELETE(makeContext({ body: {} }));
+    expect(res.status).toBe(400);
+    expect(eraseClientPersonalData).not.toHaveBeenCalled();
+  });
+
+  it('Starter still surfaces unresolved-operation blockers as 409', async () => {
+    product.state = 'FREE_BOOKING';
+    requireAdminPermission.mockResolvedValue(ownerAccess);
+    eraseClientPersonalData.mockRejectedValue({
+      code: CLIENT_ERASURE_BLOCKED_CODE,
+      message: 'This customer still has an active or unpaid appointment.',
+    });
+    const res = await DELETE(makeContext({ body: { confirm: 'DELETE' } }));
+    expect(res.status).toBe(409);
+  });
+
+  it('SETUP (no Clients Core) is denied before erasure with KERSIVO_UPGRADE_REQUIRED', async () => {
+    product.state = 'SETUP';
+    requireAdminPermission.mockResolvedValue(ownerAccess);
+    const res = await DELETE(makeContext({ body: { confirm: 'DELETE' } }));
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.requiredCapability).toBe('CLIENTS_CORE');
+    expect(assertClientAccessible).not.toHaveBeenCalled();
+    expect(eraseClientPersonalData).not.toHaveBeenCalled();
   });
 
   it('rejects missing confirm DELETE', async () => {

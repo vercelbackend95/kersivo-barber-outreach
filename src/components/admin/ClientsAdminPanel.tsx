@@ -323,6 +323,10 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
         <ClientCoreProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
+          onErased={() => {
+            setOpenClientId(null);
+            setListVersion((version) => version + 1);
+          }}
         />
       ) : null}
 

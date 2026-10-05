@@ -3035,6 +3035,7 @@ export default function BookingsAdminPanel({
         <ClientCoreProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
+          onErased={() => setOpenClientId(null)}
         />
       ) : null}
 
