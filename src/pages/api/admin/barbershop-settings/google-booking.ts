@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
+import { ensureShopBookingSlug } from '@/lib/booking/bookingSlug';
 import { prisma } from '@/lib/db/client';
 import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
@@ -23,7 +24,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 async function loadGoogleBookingState(shopId: string) {
-  const [shop, productAccess] = await Promise.all([
+  const [initialShop, productAccess] = await Promise.all([
     prisma.shopSettings.findUnique({
       where: { id: shopId },
       select: {
@@ -37,7 +38,13 @@ async function loadGoogleBookingState(shopId: string) {
     loadKersivoAccess(shopId),
   ]);
 
-  if (!shop) return null;
+  if (!initialShop) return null;
+
+  let shop = initialShop;
+  if (productAccess.state !== 'SETUP' && !shop.bookingSlug) {
+    const bookingSlug = await prisma.$transaction((tx) => ensureShopBookingSlug(tx, shopId));
+    shop = { ...shop, bookingSlug };
+  }
 
   const destination = resolveGoogleBookingDestination({
     state: productAccess.state,
