@@ -215,6 +215,13 @@ async function resolveP2002OnGuestLink(
   );
 }
 
+export const SAAS_CHECKOUT_CANCEL_PATH_DEFAULT = '/setup/cancel';
+export const SAAS_CHECKOUT_CANCEL_PATH_ONBOARDING = '/admin/onboarding?full_checkout=cancelled';
+
+export type SaasCheckoutCancelPath =
+  | typeof SAAS_CHECKOUT_CANCEL_PATH_DEFAULT
+  | typeof SAAS_CHECKOUT_CANCEL_PATH_ONBOARDING;
+
 export type AuthenticatedSaasCheckoutInput = {
   shopId: string;
   userId: string | null;
@@ -227,6 +234,8 @@ export type AuthenticatedSaasCheckoutInput = {
   checkoutAttemptId: string;
   request: Request;
   source?: SaasCheckoutSource;
+  /** First-party path Stripe returns to when Checkout is cancelled. */
+  cancelPath?: SaasCheckoutCancelPath;
   /**
    * Runs first inside the shop checkout lock. Return a Response to stop (e.g. the shop is already
    * entitled), or null to continue. Must read through `tx` so the decision is race-safe.
@@ -421,7 +430,7 @@ export async function runAuthenticatedSaasCheckout(
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
       successUrl: `${baseUrl}/setup/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/setup/cancel`,
+      cancelUrl: `${baseUrl}${input.cancelPath ?? SAAS_CHECKOUT_CANCEL_PATH_DEFAULT}`,
       productId: 'saas-subscription',
       name: 'Kersivo — monthly subscription',
       unitAmount: SAAS_MONTHLY_PENCE,

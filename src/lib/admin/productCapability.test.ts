@@ -189,14 +189,15 @@ describe('AG: /admin/upgrade purchase page guard (may buy ≠ has Full)', () => 
     expect(source).toContain('<FullKersivoUpgradePage client:load />');
   });
 
-  it('SETUP onboarding Review links to the purchase page', async () => {
+  it('SETUP onboarding Review offers Full via the authenticated upgrade checkout', async () => {
     const fs = await import('node:fs');
     const path = await import('node:path');
     const source = fs.readFileSync(
       path.resolve(__dirname, '../../components/admin/onboarding/OnboardingWizard.tsx'),
       'utf8',
     );
-    expect(source).toMatch(/freeActivationStep \? \(\s*<p[^>]*data-full-upgrade-entry[\s\S]*?href="\/admin\/upgrade"/);
+    expect(source).toMatch(/freeActivationStep \? \(\s*<section[^>]*data-onboarding-plan-choice/);
+    expect(source).toContain("startFullKersivoUpgradeCheckout({ returnTo: 'onboarding' })");
   });
 });
 

@@ -31,8 +31,18 @@ export type FreeBookingActivationOutcome =
   /** FULL_KERSIVO: onboarding completed, no Free opt-in marker written. */
   | 'full_kersivo';
 
+export const STARTER_PLAN_CHOICE = 'STARTER';
+
+export const PLAN_CHOICE_REQUIRED_MESSAGE =
+  'Choose KERSIVO Starter or Full KERSIVO before finishing setup.';
+
+export const POST_FULL_PLAN_CHOICE_REQUIRED_MESSAGE =
+  'Your Full KERSIVO subscription has ended. Choose KERSIVO Starter from the plan choice to continue on Starter.';
+
 export type FreeBookingActivationFailure =
   | { ok: false; status: 400; code: 'ONBOARDING_INCOMPLETE'; error: string }
+  | { ok: false; status: 400; code: 'PLAN_CHOICE_REQUIRED'; error: string }
+  | { ok: false; status: 409; code: 'POST_FULL_PLAN_CHOICE_REQUIRED'; error: string }
   | { ok: false; status: 400; code: 'TERMS_NOT_ACCEPTED'; error: string }
   | { ok: false; status: 400; code: 'ACCOUNT_EMAIL_REQUIRED'; error: string }
   | FreeBookableBarberLimitError;
@@ -44,12 +54,16 @@ export type FreeBookingActivationResult =
 /**
  * Authoritative final onboarding action for signed-in tenants.
  * The only production path that writes ShopSettings.freeBookingActivatedAt.
+ * A new Starter activation requires the explicit `plan: 'STARTER'` choice; replays and Full shops
+ * complete without one, so an absent choice can never activate a plan.
  */
 export async function activateFreeBooking(params: {
   shopId: string;
   userId: string;
   email: string | null;
   termsAccepted: boolean;
+  /** Explicit onboarding plan choice; only 'STARTER' may write a new activation. */
+  plan: string | null;
   request: Request;
   now?: Date;
 }): Promise<FreeBookingActivationResult> {
@@ -104,12 +118,35 @@ export async function activateFreeBooking(params: {
       await completeOnboarding();
       return { ok: true, outcome: 'full_kersivo' };
     }
+    if (state === 'SETUP') {
+      // After Full, the legacy marker never grants Starter: only the post-Full choice can.
+      const hadFull = await tx.saasSubscription.count({
+        where: { shopId, status: { not: 'PENDING' } },
+      });
+      if (hadFull > 0) {
+        return {
+          ok: false,
+          status: 409,
+          code: 'POST_FULL_PLAN_CHOICE_REQUIRED',
+          error: POST_FULL_PLAN_CHOICE_REQUIRED_MESSAGE,
+        };
+      }
+    }
     if (state === 'FREE_BOOKING' || shop.freeBookingActivatedAt) {
       // Defensive repair for legacy/dev Free rows without a slug; keeps the existing slug,
       // activation timestamp and legal record untouched.
       await ensureShopBookingSlug(tx, shopId);
       await completeOnboarding();
       return { ok: true, outcome: 'already_free' };
+    }
+
+    if (params.plan !== STARTER_PLAN_CHOICE) {
+      return {
+        ok: false,
+        status: 400,
+        code: 'PLAN_CHOICE_REQUIRED',
+        error: PLAN_CHOICE_REQUIRED_MESSAGE,
+      };
     }
 
     if (params.termsAccepted !== true) {

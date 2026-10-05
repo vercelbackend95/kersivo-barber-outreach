@@ -23,7 +23,10 @@ const FALLBACK_ERROR = 'Unable to start checkout. Please try again.';
  * Starts (or reuses) the authenticated Full KERSIVO checkout for the signed-in shop. One
  * checkoutAttemptId per tab; an expired attempt is rotated and retried once.
  */
-export async function startFullKersivoUpgradeCheckout(): Promise<FullKersivoUpgradeCheckoutResult> {
+export async function startFullKersivoUpgradeCheckout(options?: {
+  /** Return a cancelled Checkout to the onboarding plan choice instead of /setup/cancel. */
+  returnTo?: 'onboarding';
+}): Promise<FullKersivoUpgradeCheckoutResult> {
   try {
     const { response, data } = await runSaasCheckoutWithSingleRotate({
       start: (checkoutAttemptId) =>
@@ -31,7 +34,11 @@ export async function startFullKersivoUpgradeCheckout(): Promise<FullKersivoUpgr
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ termsAccepted: true, checkoutAttemptId }),
+          body: JSON.stringify({
+            termsAccepted: true,
+            checkoutAttemptId,
+            ...(options?.returnTo ? { returnTo: options.returnTo } : {}),
+          }),
         }),
       getAttemptId: getOrCreateSaasCheckoutAttemptId,
       rotateAttemptId: rotateSaasCheckoutAttemptId,

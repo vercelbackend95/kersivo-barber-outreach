@@ -372,6 +372,65 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
     });
   });
 
+  describe('Phase 5F.1 Full chosen on the onboarding plan step', () => {
+    const onboardingBody = { termsAccepted: true, checkoutAttemptId: ATTEMPT, returnTo: 'onboarding' };
+
+    beforeEach(() => {
+      shopRow = setupShop();
+      findUniqueShop.mockResolvedValue({
+        onboardingCompleted: true,
+        name: 'Fade Studio',
+        _count: { barbers: 2 },
+      });
+    });
+
+    it('7: reuses the authenticated Full checkout and returns a cancelled Checkout to the plan choice', async () => {
+      const { res, body } = await post(onboardingBody);
+
+      expect(res.status).toBe(200);
+      expect(body).toMatchObject({ ok: true, url: expect.any(String) });
+      expect(createSubscriptionCheckoutSession).toHaveBeenCalledTimes(1);
+      const args = createSubscriptionCheckoutSession.mock.calls[0][0];
+      expect(args.cancelUrl).toBe('https://kersivo.test/admin/onboarding?full_checkout=cancelled');
+      expect(args.successUrl).toBe('https://kersivo.test/setup/success?session_id={CHECKOUT_SESSION_ID}');
+      expect(args.unitAmount).toBe(3900);
+      expect(args.metadata).toMatchObject({ shopId: 'shop-1', source: 'admin_upgrade', terms_accepted: '1' });
+      expect(txSubCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING', shopId: 'shop-1' }) }),
+      );
+      expect(recordTermsAcceptance).toHaveBeenCalledWith(
+        expect.objectContaining({ purpose: 'SAAS_CHECKOUT', stripeSessionId: 'cs_upgrade_1' }),
+      );
+    });
+
+    it('7: the default and any unknown returnTo keep the existing /setup/cancel return', async () => {
+      await post();
+      await post({ ...onboardingBody, returnTo: 'https://evil.example/' });
+      const [first, second] = createSubscriptionCheckoutSession.mock.calls.map(([args]) => args);
+      expect(first.cancelUrl).toBe('https://kersivo.test/setup/cancel');
+      expect(second.cancelUrl).toBe('https://kersivo.test/setup/cancel');
+    });
+
+    it('8: choosing Full grants nothing: no shop writes, no Starter marker, only a PENDING row', async () => {
+      await post(onboardingBody);
+
+      expect(globalShopUpdate).not.toHaveBeenCalled();
+      expect(globalShopCreate).not.toHaveBeenCalled();
+      expect(shopRow?.freeBookingActivatedAt).toBeNull();
+      const created = txSubCreate.mock.calls[0][0].data;
+      expect(created.status).toBe('PENDING');
+      expect(created.activatedAt).toBeNull();
+    });
+
+    it('Full Terms are required: no consent → no checkout', async () => {
+      const { res, body } = await post({ ...onboardingBody, termsAccepted: false });
+      expect(res.status).toBe(400);
+      expect(body.error).toBe(TERMS_ACCEPTANCE_REQUIRED_MESSAGE);
+      expect(withLock).not.toHaveBeenCalled();
+      expectNoCheckoutSideEffects();
+    });
+  });
+
   describe('existing checkout attempts', () => {
     it('J: an open PENDING checkout is reused without a new session, row or Terms record', async () => {
       openSubscription = {

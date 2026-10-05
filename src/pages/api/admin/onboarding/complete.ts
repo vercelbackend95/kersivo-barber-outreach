@@ -11,6 +11,10 @@ export const POST: APIRoute = async (ctx) => {
   const shopId = access.shopId;
 
   const body: unknown = await ctx.request.json().catch(() => null);
+  const plan =
+    body && typeof body === 'object' && typeof (body as { plan?: unknown }).plan === 'string'
+      ? (body as { plan: string }).plan
+      : null;
 
   try {
     const result = await activateFreeBooking({
@@ -18,6 +22,7 @@ export const POST: APIRoute = async (ctx) => {
       userId: access.userId!,
       email: access.userEmail,
       termsAccepted: parseTermsAccepted(body),
+      plan,
       request: ctx.request,
     });
 

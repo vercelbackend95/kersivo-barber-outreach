@@ -60,8 +60,12 @@ export type OnboardingState = {
     state: 'SETUP' | 'FREE_BOOKING' | 'FULL_KERSIVO';
     capabilities: Record<string, boolean>;
   };
-  /** Signed-in SETUP shop that finished setup but has not activated Free Booking yet. */
+  /** Signed-in SETUP shop that finished setup but has not chosen a plan yet. */
   freeActivationRequired?: boolean;
+  /** SETUP shop with an unfinished (PENDING) Full KERSIVO checkout. */
+  fullCheckoutPending?: boolean;
+  /** SETUP shop whose Full subscription ended: Starter is chosen via the post-Full plan choice. */
+  postFullPlanChoiceRequired?: boolean;
   /** Max barbers accepting online bookings, or null when unlimited. */
   freeBookableBarberLimit?: number | null;
   /** Real public booking page when the shop accepts public bookings. */
@@ -132,6 +136,56 @@ export function countBookableBarberCards(barbers: Array<{ onlineBookings?: boole
   if (barbers.length === 1) return 1;
   return barbers.filter((barber) => barber.onlineBookings !== false).length;
 }
+
+export type OnboardingPlanChoice = 'STARTER' | 'FULL';
+
+export const STARTER_PLAN_CARD = {
+  name: 'KERSIVO Starter',
+  price: '£0/month',
+  tagline: 'Start taking bookings with the core tools you need to run your diary.',
+  points: [
+    'Hosted booking page',
+    'Up to 4 bookable barbers',
+    'Bookings and availability',
+    '90-day booking history',
+    'Clients Core',
+    'Email reminders',
+    '0% KERSIVO commission',
+  ],
+  cta: 'Start with KERSIVO Starter',
+} as const;
+
+export const FULL_PLAN_CARD = {
+  name: 'Full KERSIVO',
+  price: '£39/month',
+  priceNote: 'per location',
+  tagline: 'Own the full customer experience with your website, brand and complete business toolkit.',
+  points: [
+    'Full branded website',
+    'Own domain',
+    'Full booking history',
+    'Advanced Clients / CRM',
+    'Reports',
+    'Retail',
+    'SMS reminders',
+    'Live KERSIVO Assistant',
+    '0% KERSIVO commission',
+  ],
+  cta: 'Choose Full KERSIVO',
+} as const;
+
+export const PLAN_CHOICE_STRIPE_FEES_COPY = 'Stripe processing fees apply to online card payments.';
+
+export const STARTER_PAY_AT_SHOP_COPY =
+  'Starter works with Pay at shop — no Stripe account needed. Connect Stripe later in Settings if you want deposits or card payments.';
+
+export const FULL_CHECKOUT_CANCELLED_COPY =
+  'Full KERSIVO checkout was not completed and you have not been charged. Choose a plan to continue.';
+
+export const FULL_CHECKOUT_PENDING_COPY =
+  'A Full KERSIVO checkout is still open. If you have just paid, it can take a moment to confirm — refresh shortly. Choosing Full KERSIVO again resumes the same checkout.';
+
+export const ONBOARDING_PLAN_STORAGE_KEY = 'kersivo_onboarding_plan_choice';
 
 export const FREE_BOOKABLE_BARBER_LIMIT_COPY =
   'KERSIVO Starter includes up to 4 barbers taking online bookings.';

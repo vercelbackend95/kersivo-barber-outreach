@@ -273,6 +273,19 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     productState: productAccess.state,
   });
 
+  // Plan-choice context for a signed-in SETUP shop: an unfinished Full checkout, or a Full
+  // subscription that ended (Starter then goes through the post-Full choice, not the marker).
+  let fullCheckoutPending = false;
+  let postFullPlanChoiceRequired = false;
+  if (signedIn && productAccess.state === 'SETUP') {
+    const [pending, endedFull] = await Promise.all([
+      prisma.saasSubscription.count({ where: { shopId, status: 'PENDING' } }),
+      prisma.saasSubscription.count({ where: { shopId, status: { not: 'PENDING' } } }),
+    ]);
+    fullCheckoutPending = pending > 0;
+    postFullPlanChoiceRequired = endedFull > 0;
+  }
+
   return {
     shop: {
       id: shop.id,
@@ -304,6 +317,8 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     hours,
     productAccess: serializeKersivoAccess(productAccess),
     freeActivationRequired: signedIn && gate === 'free_activation',
+    fullCheckoutPending,
+    postFullPlanChoiceRequired,
     freeBookableBarberLimit:
       signedIn && freeBookableBarberLimitApplies(productAccess.state, { includeSetup: true })
         ? FREE_BOOKABLE_BARBER_LIMIT

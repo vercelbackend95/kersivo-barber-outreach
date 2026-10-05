@@ -2,20 +2,61 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Camera, ImagePlus } from '../../lucide-react';
 import PrivateDemoAuthPanel from '../PrivateDemoAuthPanel';
 import {
+  redirectToStripe,
+  startFullKersivoUpgradeCheckout,
+} from '@/lib/setup/fullKersivoUpgrade.client';
+import {
   countBookableBarberCards,
   DAY_LABELS,
   DEFAULT_HOURS,
   FREE_BOOKABLE_BARBER_LIMIT_COPY,
+  FULL_CHECKOUT_CANCELLED_COPY,
+  FULL_CHECKOUT_PENDING_COPY,
+  FULL_PLAN_CARD,
   formatGbp,
+  ONBOARDING_PLAN_STORAGE_KEY,
   orderedHoursForDisplay,
   parseGbpToPence,
+  PLAN_CHOICE_STRIPE_FEES_COPY,
   readJsonError,
   SERVICE_PRESETS,
+  STARTER_PAY_AT_SHOP_COPY,
+  STARTER_PLAN_CARD,
   type OnboardingBarber,
   type OnboardingHoursRow,
+  type OnboardingPlanChoice,
   type OnboardingService,
   type OnboardingState,
 } from './onboardingTypes';
+
+function readStoredPlanChoice(): OnboardingPlanChoice | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (new URLSearchParams(window.location.search).get('full_checkout') === 'cancelled') {
+      return 'FULL';
+    }
+    const stored = sessionStorage.getItem(ONBOARDING_PLAN_STORAGE_KEY);
+    return stored === 'STARTER' || stored === 'FULL' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storePlanChoice(choice: OnboardingPlanChoice) {
+  try {
+    sessionStorage.setItem(ONBOARDING_PLAN_STORAGE_KEY, choice);
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearStoredPlanChoice() {
+  try {
+    sessionStorage.removeItem(ONBOARDING_PLAN_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 7]; // Mon–Sun (dayOfWeek 1–7)
 
@@ -126,6 +167,12 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const [finished, setFinished] = useState(false);
   const [liveBookingUrl, setLiveBookingUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  /** Selection only: a plan is acted on solely by the explicit primary action below. */
+  const [planChoice, setPlanChoice] = useState<OnboardingPlanChoice | null>(readStoredPlanChoice);
+  const fullCheckoutCancelled = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('full_checkout') === 'cancelled';
+  }, []);
   const [barberLimitNotice, setBarberLimitNotice] = useState('');
 
   const [step, setStep] = useState(0);
@@ -260,7 +307,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const setupProgressVisible = step >= 1 && step <= 6 && !finished;
   const productState = state?.productAccess?.state ?? 'SETUP';
-  /** Signed-in SETUP shop: Review step is the explicit Free Booking activation. */
+  /** Signed-in SETUP shop: Review step is the explicit Starter vs Full plan choice. */
   const freeActivationStep = !isGuest && productState === 'SETUP';
   const bookableBarberLimit = isGuest ? null : (state?.freeBookableBarberLimit ?? null);
   const bookableBarberCount = countBookableBarberCards(barbers);
@@ -588,11 +635,74 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     }
   };
 
+  const showStarterLive = (payload: OnboardingState) => {
+    clearStoredPlanChoice();
+    setState(payload);
+    setLiveBookingUrl(payload.bookingUrl ?? null);
+    setFinished(true);
+    setSaving(false);
+  };
+
+  /** Full is granted only by the paid subscription lifecycle; a failure never falls back to Starter. */
+  const startFullCheckout = async () => {
+    setSaving(true);
+    setError('');
+    const result = await startFullKersivoUpgradeCheckout({ returnTo: 'onboarding' });
+    if (result.kind === 'redirect') {
+      redirectToStripe(result.url);
+      return;
+    }
+    if (result.code === 'SUBSCRIPTION_ALREADY_EXISTS') {
+      clearStoredPlanChoice();
+      window.location.assign(result.redirectTo || '/admin');
+      return;
+    }
+    setError(result.message);
+    setSaving(false);
+  };
+
+  /** Former Full shop: Starter is recorded through the existing post-Full plan choice. */
+  const chooseStarterAfterFull = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/setup/post-full-plan', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ choice: 'STARTER', termsAccepted: termsAccepted === true }),
+      });
+      if (response.status === 401) {
+        setHasAccess(false);
+        throw new Error(sessionExpiredMessage);
+      }
+      if (!response.ok) throw new Error(await readJsonError(response));
+      const stateResponse = await fetch(apiBase, { credentials: 'include' });
+      if (!stateResponse.ok) throw new Error(await readJsonError(stateResponse));
+      const payload = (await stateResponse.json()) as OnboardingState;
+      if (payload.productAccess?.state === 'FREE_BOOKING') {
+        showStarterLive(payload);
+        return;
+      }
+      applyState(payload);
+      setSaving(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not switch to KERSIVO Starter.');
+      setSaving(false);
+    }
+  };
+
   const completeOnboarding = async () => {
+    if (freeActivationStep && !planChoice) {
+      setError('Choose KERSIVO Starter or Full KERSIVO to continue.');
+      return;
+    }
     if (freeActivationStep && !termsAccepted) {
       setError('Please accept the Terms to continue.');
       return;
     }
+    if (freeActivationStep && planChoice === 'FULL') return startFullCheckout();
+    if (freeActivationStep && state?.postFullPlanChoiceRequired) return chooseStarterAfterFull();
     setSaving(true);
     setError('');
     try {
@@ -603,7 +713,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           ? {}
           : {
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ termsAccepted: termsAccepted === true }),
+              body: JSON.stringify({
+                termsAccepted: termsAccepted === true,
+                ...(freeActivationStep ? { plan: 'STARTER' } : {}),
+              }),
             }),
       });
       if (response.status === 401) {
@@ -614,10 +727,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
       if (!isGuest) {
         const payload = (await response.json()) as OnboardingState;
         if (payload.productAccess?.state === 'FREE_BOOKING') {
-          setState(payload);
-          setLiveBookingUrl(payload.bookingUrl ?? null);
-          setFinished(true);
-          setSaving(false);
+          showStarterLive(payload);
           return;
         }
       }
@@ -658,11 +768,15 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6 && freeActivationStep) return 'Activate KERSIVO Starter';
+    if (step === 6 && freeActivationStep) {
+      if (planChoice === 'FULL') return FULL_PLAN_CARD.cta;
+      if (planChoice === 'STARTER') return STARTER_PLAN_CARD.cta;
+      return 'Choose a plan';
+    }
     if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step, freeActivationStep, isGuest, productState]);
+  }, [step, freeActivationStep, isGuest, productState, planChoice]);
 
   if (!authReady || loading) {
     return (
@@ -1576,11 +1690,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
-                {freeActivationStep ? 'Ready to go live' : 'Your KERSIVO workspace is ready'}
+                {freeActivationStep ? 'Choose your plan' : 'Your KERSIVO workspace is ready'}
               </h1>
               <p className="admin-onboarding__description">
                 {freeActivationStep
-                  ? 'Review your setup, then activate KERSIVO Starter.'
+                  ? 'Review your setup, then choose KERSIVO Starter or Full KERSIVO.'
                   : 'Review your setup, then finish to open your dashboard.'}
               </p>
             </div>
@@ -1680,6 +1794,70 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             </article>
 
             {freeActivationStep ? (
+              <section
+                className="admin-onboarding__plan-choice"
+                aria-labelledby="onboarding-plan-choice-title"
+                data-onboarding-plan-choice
+              >
+                <h2 id="onboarding-plan-choice-title" className="admin-onboarding__plan-choice-title">
+                  Choose how you want to run KERSIVO
+                </h2>
+                {fullCheckoutCancelled ? (
+                  <p className="admin-onboarding__plan-notice" role="status" data-full-checkout-cancelled>
+                    {FULL_CHECKOUT_CANCELLED_COPY}
+                  </p>
+                ) : state?.fullCheckoutPending ? (
+                  <p className="admin-onboarding__plan-notice" role="status" data-full-checkout-pending>
+                    {FULL_CHECKOUT_PENDING_COPY}
+                  </p>
+                ) : null}
+                <div className="admin-onboarding__plan-grid" role="radiogroup" aria-label="Plan">
+                  {(
+                    [
+                      ['STARTER', STARTER_PLAN_CARD],
+                      ['FULL', FULL_PLAN_CARD],
+                    ] as const
+                  ).map(([choice, card]) => {
+                    const selected = planChoice === choice;
+                    return (
+                      <button
+                        key={choice}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        className={`admin-onboarding__plan-card${selected ? ' is-selected' : ''}`}
+                        data-plan-card={choice}
+                        disabled={saving}
+                        onClick={() => {
+                          setPlanChoice(choice);
+                          storePlanChoice(choice);
+                          setError('');
+                        }}
+                      >
+                        <span className="admin-onboarding__plan-name">{card.name}</span>
+                        <span className="admin-onboarding__plan-price">
+                          {card.price}
+                          {'priceNote' in card ? (
+                            <span className="admin-onboarding__plan-price-note"> {card.priceNote}</span>
+                          ) : null}
+                        </span>
+                        <span className="admin-onboarding__plan-tagline">{card.tagline}</span>
+                        <ul className="admin-onboarding__plan-points">
+                          {card.points.map((point) => (
+                            <li key={point}>{point}</li>
+                          ))}
+                        </ul>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="admin-onboarding__plan-footnote">
+                  {planChoice === 'STARTER' ? `${STARTER_PAY_AT_SHOP_COPY} ` : ''}
+                  {PLAN_CHOICE_STRIPE_FEES_COPY}
+                </p>
+              </section>
+            ) : null}
+            {freeActivationStep ? (
               <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
                 <input
                   id="onboarding-terms-accepted"
@@ -1702,13 +1880,6 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                   .
                 </span>
               </label>
-            ) : null}
-            {freeActivationStep ? (
-              <p className="admin-onboarding__description" data-full-upgrade-entry>
-                Want Reports, Clients, Retail and Assistant from day one?{' '}
-                <a href="/admin/upgrade">Upgrade straight to Full KERSIVO</a> (£39/month per
-                location).
-              </p>
             ) : null}
           </section>
         ) : null}
@@ -1751,7 +1922,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             disabled={
               saving ||
               (step === 3 && !teamMode) ||
-              (step === 6 && freeActivationStep && !termsAccepted)
+              (step === 6 && freeActivationStep && (!planChoice || !termsAccepted))
             }
             aria-busy={saving}
           >

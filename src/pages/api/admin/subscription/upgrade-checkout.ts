@@ -8,6 +8,8 @@ import { prisma } from '@/lib/db/client';
 import { parseTermsAccepted, termsAcceptedErrorResponse } from '@/lib/legal/requireTermsAcceptance';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 import {
+  SAAS_CHECKOUT_CANCEL_PATH_DEFAULT,
+  SAAS_CHECKOUT_CANCEL_PATH_ONBOARDING,
   runAuthenticatedSaasCheckout,
   saasCheckoutJsonResponse as jsonResponse,
   subscriptionAlreadyExistsResponse,
@@ -23,6 +25,8 @@ import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 type UpgradeCheckoutInput = {
   termsAccepted?: unknown;
   checkoutAttemptId?: unknown;
+  /** 'onboarding' when Full was chosen on the onboarding plan step. */
+  returnTo?: unknown;
 };
 
 function badRequest(message: string, code?: string) {
@@ -120,6 +124,10 @@ export const POST: APIRoute = async (context) => {
       checkoutAttemptId,
       request: context.request,
       source: SAAS_CHECKOUT_SOURCE_ADMIN_UPGRADE,
+      cancelPath:
+        body.returnTo === 'onboarding'
+          ? SAAS_CHECKOUT_CANCEL_PATH_ONBOARDING
+          : SAAS_CHECKOUT_CANCEL_PATH_DEFAULT,
       checkEligibility: async (tx) => {
         const eligibility = await resolveFullUpgradeEligibility(access.shopId, new Date(), tx);
         if (eligibility.ok) return null;
