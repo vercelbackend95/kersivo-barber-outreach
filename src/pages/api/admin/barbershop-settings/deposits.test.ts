@@ -36,6 +36,15 @@ vi.mock('@/lib/shop/stripeConnect', () => ({
   createConnectStandardAccount: (...args: unknown[]) => createConnectStandardAccount(...args),
   createConnectAccountLink: (...args: unknown[]) => createConnectAccountLink(...args),
   retrieveConnectAccount: (...args: unknown[]) => retrieveConnectAccount(...args),
+  StripeConnectApiError: class StripeConnectApiError extends Error {
+    status: number;
+    code: string | null;
+    constructor(message: string, status: number, code: string | null = null) {
+      super(message);
+      this.status = status;
+      this.code = code;
+    }
+  },
 }));
 
 vi.mock('@/lib/setup/siteUrl', () => ({
@@ -515,6 +524,33 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         platformFeeBps: 0,
         platformFeeExamplePence: 0,
       });
+    });
+
+    it('fails closed when Stripe says the stored account is no longer accessible', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue(paidShop);
+      const { StripeConnectApiError } = await import('@/lib/shop/stripeConnect');
+      retrieveConnectAccount.mockRejectedValue(
+        new StripeConnectApiError('No access to connected account', 403, 'account_invalid'),
+      );
+
+      const res = await GET(jsonCtx('GET'));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.connect.accountLinked).toBe(false);
+      expect(body.connect.chargesEnabled).toBe(false);
+      expect(body.connect.disconnected).toBe(true);
+      expect(shopSettingsUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'shop-1' },
+          data: expect.objectContaining({
+            stripeConnectChargesEnabled: false,
+            stripeConnectDetailsSubmitted: false,
+            stripeConnectDisconnectedAt: expect.any(Date),
+          }),
+        }),
+      );
     });
 
     it('SETUP: booking payments unavailable, no fee', async () => {
