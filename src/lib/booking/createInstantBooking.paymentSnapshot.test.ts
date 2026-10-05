@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 
 /**
- * Live booking payment runtime in createInstantBooking: ShopSettings.bookingPaymentMode +
- * central product access decide the payment, snapshotted onto the Booking before Checkout.
+ * Live booking payment runtime in createInstantBooking:
+ * - v1.19 Starter uses the fixed customer DEPOSIT/FULL choice and ignores editable shop mode;
+ * - Full uses ShopSettings.bookingPaymentMode.
+ * The resolved payment is snapshotted onto the Booking before Checkout.
  */
 
 const findUniqueBooking = vi.fn();
@@ -133,7 +135,7 @@ const baseShop = {
   maxClientReschedules: 2,
 };
 
-function bookingInput(key: string) {
+function bookingInput(key: string, paymentChoice: 'DEPOSIT' | 'FULL' = 'DEPOSIT') {
   return {
     serviceId: 'svc_1',
     barberId: 'barber_1',
@@ -142,6 +144,7 @@ function bookingInput(key: string) {
     fullName: 'A Client',
     email: 'a@example.com',
     idempotencyKey: key,
+    paymentChoice,
   };
 }
 
@@ -252,7 +255,8 @@ describe('createInstantBooking — live booking payment runtime', () => {
       });
     });
 
-    it('H: NONE booking has a null payment-account snapshot', async () => {
+    it('H: Full NONE booking has a null payment-account snapshot', async () => {
+      asState('FULL_KERSIVO');
       findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
 
       await createInstantBooking(bookingInput('none-acct'), publicOptions);
@@ -261,30 +265,58 @@ describe('createInstantBooking — live booking payment runtime', () => {
     });
   });
 
-  it('B: Starter + DEPOSIT + £3 → 300p payment, 0p KERSIVO fee', async () => {
+  it('B: Starter rejects a public service below the £5 minimum before creating a booking', async () => {
     findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
 
-    await createInstantBooking(bookingInput('free-3'), publicOptions);
-
-    expect(createdData()).toMatchObject({
-      status: BookingStatus.PENDING_PAYMENT,
-      depositAmountPence: 300,
-      bookingPaymentType: 'DEPOSIT',
-      paymentAmountPence: 300,
-      kersivoPlatformFeeBps: 0,
-      kersivoPlatformFeePence: 0,
+    await expect(
+      createInstantBooking(bookingInput('free-3'), publicOptions),
+    ).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'STARTER_SERVICE_PRICE_TOO_LOW',
     });
+    expect(transaction).not.toHaveBeenCalled();
+    expect(bookingCreate).not.toHaveBeenCalled();
   });
 
-  it('C: Free + NONE → BOOKED, no Stripe, confirmation sent immediately', async () => {
+  it('C: Starter ignores stored NONE / Pay-at-shop and still collects the customer-selected £5 deposit', async () => {
     findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
 
     const result = await createInstantBooking(bookingInput('free-none'), publicOptions);
 
-    expect(result.depositRequired).toBe(false);
-    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
-    expect(enqueueEmail).toHaveBeenCalledTimes(1);
-    expect(loadKersivoAccess).not.toHaveBeenCalled();
+    expect(result.depositRequired).toBe(true);
+    expect(createdData()).toMatchObject({
+      status: BookingStatus.PENDING_PAYMENT,
+      bookingPaymentType: 'DEPOSIT',
+      paymentAmountPence: 500,
+      kersivoPlatformFeePence: 0,
+    });
+    expect(enqueueEmail).not.toHaveBeenCalled();
+    expect(loadKersivoAccess).toHaveBeenCalledWith('shop_1');
+  });
+
+  it('C2: Starter above £5 fails closed when the customer payment choice is missing', async () => {
+    const input = bookingInput('free-choice-required');
+    delete (input as { paymentChoice?: string }).paymentChoice;
+
+    await expect(createInstantBooking(input, publicOptions)).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'STARTER_PAYMENT_CHOICE_REQUIRED',
+    });
+    expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('C3: exactly £5 on Starter becomes one FULL £5 payment, not a deposit', async () => {
+    findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 500 });
+
+    await createInstantBooking(bookingInput('free-exact-5', 'DEPOSIT'), publicOptions);
+
+    expect(createdData()).toMatchObject({
+      status: BookingStatus.PENDING_PAYMENT,
+      bookingPaymentType: 'FULL',
+      paymentAmountPence: 500,
+      depositAmountPence: null,
+      kersivoPlatformFeePence: 0,
+    });
   });
 
   it('D / AC: Full + DEPOSIT → 500p, 0 bps, 0 fee (existing Paid deposit behaviour)', async () => {
@@ -351,9 +383,9 @@ describe('createInstantBooking — live booking payment runtime', () => {
     });
 
     it('4C-A: Starter + FULL + £30 → PENDING_PAYMENT, 3000p, 0% / 0p fee, account snapshot, no deposit field', async () => {
-      findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
 
-      const result = await createInstantBooking(bookingInput('full-free-30'), publicOptions);
+      const result = await createInstantBooking(bookingInput('full-free-30', 'FULL'), publicOptions);
 
       expect(result.depositRequired).toBe(true);
       expect(createdData()).toMatchObject({
@@ -385,21 +417,21 @@ describe('createInstantBooking — live booking payment runtime', () => {
       });
     });
 
-    it('4C-C: Starter + FULL + £3 → 300p, 0p KERSIVO fee', async () => {
+    it('4C-C: Starter + FULL choice still rejects a service below £5', async () => {
       findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
       findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 300 });
 
-      await createInstantBooking(bookingInput('full-free-3'), publicOptions);
-
-      expect(createdData()).toMatchObject({
-        bookingPaymentType: 'FULL',
-        paymentAmountPence: 300,
-        kersivoPlatformFeePence: 0,
-        depositAmountPence: null,
+      await expect(
+        createInstantBooking(bookingInput('full-free-3', 'FULL'), publicOptions),
+      ).rejects.toMatchObject({
+        statusCode: 422,
+        code: 'STARTER_SERVICE_PRICE_TOO_LOW',
       });
+      expect(bookingCreate).not.toHaveBeenCalled();
     });
 
-    it('4C-D: FULL + £0 service → BOOKED, no Stripe', async () => {
+    it('4C-D: Full KERSIVO + FULL mode + £0 service → BOOKED, no Stripe', async () => {
+      asState('FULL_KERSIVO');
       findUniqueOrThrowShop.mockResolvedValue(fullModeShop());
       findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 0 });
 
@@ -424,13 +456,14 @@ describe('createInstantBooking — live booking payment runtime', () => {
     });
   });
 
-  it('£0 service never requires Stripe even in DEPOSIT mode', async () => {
+  it('Starter £0 public service is rejected rather than falling back to no payment', async () => {
     findUniqueOrThrowService.mockResolvedValue({ ...baseService, pricePence: 0 });
 
-    const result = await createInstantBooking(bookingInput('free-zero'), publicOptions);
-
-    expect(result.depositRequired).toBe(false);
-    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
+    await expect(createInstantBooking(bookingInput('free-zero'), publicOptions)).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+    });
+    expect(bookingCreate).not.toHaveBeenCalled();
   });
 
   it('owner sandbox / non-public bookings never collect, even in FULL mode', async () => {
