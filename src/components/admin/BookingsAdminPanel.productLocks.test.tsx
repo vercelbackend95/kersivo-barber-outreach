@@ -12,7 +12,7 @@ function LiveShell({ children }: { children: React.ReactNode }) {
   return <AdminTodayBookingsLiveProvider isPublicDemo={false}>{children}</AdminTodayBookingsLiveProvider>;
 }
 
-const FREE_GATE = {
+const STARTER_GATE = {
   state: 'FREE_BOOKING' as const,
   capabilities: {
     bookingCore: true,
@@ -21,14 +21,17 @@ const FREE_GATE = {
     team: true,
     services: true,
     reports: false,
+    clientsCore: true,
     clients: false,
+    recentBookingHistory: true,
     fullBookingHistory: false,
     retail: false,
     assistant: false,
     smsReminders: false,
-    automatedEmailReminders: false,
+    automatedEmailReminders: true,
     brandedSite: false,
-    manualBookings: false,
+    manualBookings: true,
+    googleBookingSetup: true,
   },
 };
 
@@ -54,13 +57,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('BookingsAdminPanel Free Booking locks', () => {
-  it('Z: the History tab shows a lock and opens the upgrade dialog without navigating', async () => {
+describe('BookingsAdminPanel Starter product boundaries', () => {
+  it('Starter can open the rolling 90-day History view', async () => {
     const openUpgrade = vi.fn();
     const onOpenHistoryWithinBookings = vi.fn();
     render(
       <LiveShell>
-        <AdminProductLockProvider value={{ gate: FREE_GATE, openUpgrade }}>
+        <AdminProductLockProvider value={{ gate: STARTER_GATE, openUpgrade }}>
           <BookingsAdminPanel isActive mode="dashboard" onOpenHistoryWithinBookings={onOpenHistoryWithinBookings} />
         </AdminProductLockProvider>
       </LiveShell>,
@@ -73,12 +76,12 @@ describe('BookingsAdminPanel Free Booking locks', () => {
       expect(tab).toBeTruthy();
       return tab!;
     });
-    expect(historyTab.dataset.locked).toBe('true');
-    expect(historyTab.querySelector('.admin-view-toggle-lock')).toBeTruthy();
+    expect(historyTab.dataset.locked).toBeUndefined();
+    expect(historyTab.querySelector('.admin-view-toggle-lock')).toBeFalsy();
 
     fireEvent.click(historyTab);
-    expect(openUpgrade).toHaveBeenCalledWith('history');
-    expect(onOpenHistoryWithinBookings).not.toHaveBeenCalled();
+    await waitFor(() => expect(onOpenHistoryWithinBookings).toHaveBeenCalled());
+    expect(openUpgrade).not.toHaveBeenCalled();
   });
 
   it('Full (no gate) keeps the History tab navigating as before', async () => {
