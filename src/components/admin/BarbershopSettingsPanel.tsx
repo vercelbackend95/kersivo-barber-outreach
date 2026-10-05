@@ -15,6 +15,18 @@ type Identity = {
   logoUrl: string | null;
 };
 
+type QrKitState = {
+  eligible: boolean;
+  reasons: string[];
+  existingRequest: {
+    requestedAt: string;
+    status: string;
+  } | null;
+  includedPlacements: string[];
+  windowTargetMm: { width: number; height: number };
+  rebookTargetMm: { width: number; height: number };
+};
+
 type GoogleBookingState = {
   bookingUrl: string | null;
   needsPreparation: boolean;
@@ -140,6 +152,91 @@ export default function BarbershopSettingsPanel({
   const [googleBookingBusy, setGoogleBookingBusy] = useState(false);
   const [googleBookingError, setGoogleBookingError] = useState('');
   const [googleBookingMessage, setGoogleBookingMessage] = useState('');
+
+  const [qrKit, setQrKit] = useState<QrKitState | null>(null);
+  const [qrKitAvailable, setQrKitAvailable] = useState(true);
+  const [qrKitBusy, setQrKitBusy] = useState(false);
+  const [qrKitError, setQrKitError] = useState('');
+  const [qrKitMessage, setQrKitMessage] = useState('');
+  const [qrContactName, setQrContactName] = useState('');
+  const [qrPhone, setQrPhone] = useState('');
+  const [qrAddressLine1, setQrAddressLine1] = useState('');
+  const [qrAddressLine2, setQrAddressLine2] = useState('');
+  const [qrTownCity, setQrTownCity] = useState('');
+  const [qrPostcode, setQrPostcode] = useState('');
+
+  const loadQrKit = useCallback(async () => {
+    setQrKitError('');
+    try {
+      const response = await fetch('/api/admin/qr-kit', { credentials: 'include' });
+      const payload = (await response.json().catch(() => null)) as
+        | (QrKitState & { error?: string })
+        | null;
+      if (response.status === 403) {
+        setQrKitAvailable(false);
+        setQrKit(null);
+        return;
+      }
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error || 'Could not load QR Kit eligibility.');
+      }
+      setQrKitAvailable(true);
+      setQrKit(payload);
+    } catch (error) {
+      setQrKitError(error instanceof Error ? error.message : 'Could not load QR Kit eligibility.');
+    }
+  }, []);
+
+  const requestQrKit = useCallback(async () => {
+    if (qrKitBusy) return;
+    setQrKitBusy(true);
+    setQrKitError('');
+    setQrKitMessage('');
+    try {
+      const response = await fetch('/api/admin/qr-kit', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deliveryContactName: qrContactName,
+          deliveryPhone: qrPhone,
+          addressLine1: qrAddressLine1,
+          addressLine2: qrAddressLine2,
+          townCity: qrTownCity,
+          postcode: qrPostcode,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        code?: string;
+        request?: { requestedAt?: string; status?: string };
+        includedPlacements?: string[];
+      } | null;
+      if (!response.ok) {
+        if (response.status === 409 && payload?.code === 'QR_KIT_ALREADY_REQUESTED') {
+          await loadQrKit();
+          setQrKitMessage('Your included initial QR Kit request is already on file.');
+          return;
+        }
+        throw new Error(payload?.error || 'Could not request your QR Kit.');
+      }
+      setQrKitMessage('QR Kit request received. Check your email for the delivery confirmation.');
+      await loadQrKit();
+    } catch (error) {
+      setQrKitError(error instanceof Error ? error.message : 'Could not request your QR Kit.');
+    } finally {
+      setQrKitBusy(false);
+    }
+  }, [
+    loadQrKit,
+    qrAddressLine1,
+    qrAddressLine2,
+    qrContactName,
+    qrKitBusy,
+    qrPhone,
+    qrPostcode,
+    qrTownCity,
+  ]);
 
   const loadGoogleBooking = useCallback(async () => {
     setGoogleBookingError('');
@@ -451,6 +548,7 @@ export default function BarbershopSettingsPanel({
       }
       setName(payload?.identity?.name ?? '');
       setTownCity(payload?.identity?.townCity ?? '');
+      setQrTownCity((current) => current || payload?.identity?.townCity || '');
       setLogoUrl(payload?.identity?.logoUrl ?? null);
       setLogoPreview(payload?.identity?.logoUrl ?? null);
       setLogoFile(null);
@@ -472,6 +570,7 @@ export default function BarbershopSettingsPanel({
       void loadDeposits();
       void loadBilling();
       void loadGoogleBooking();
+      void loadQrKit();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -479,7 +578,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadDeposits, loadBilling, loadGoogleBooking]);
+  }, [loadDeposits, loadBilling, loadGoogleBooking, loadQrKit]);
 
   useEffect(() => {
     void load();
@@ -1036,6 +1135,185 @@ export default function BarbershopSettingsPanel({
               <p className="admin-inline-success" role="status">
                 {googleBookingMessage}
               </p>
+            ) : null}
+          </section>
+        ) : null}
+
+        {qrKitAvailable ? (
+          <section className="admin-barbershop-settings__card" aria-labelledby="bbs-qr-kit-title">
+            <div className="admin-barbershop-settings__summary-top">
+              <div>
+                <h2 id="bbs-qr-kit-title" className="admin-barbershop-settings__card-title">
+                  Booking QR Kit
+                </h2>
+                <p className="admin-barbershop-settings__card-copy">
+                  One included initial physical QR Kit is available for an eligible verified UK
+                  barbershop location. KERSIVO handles the QR design, printing and fulfilment.
+                </p>
+              </div>
+              <span className="admin-barbershop-settings__integration-status">
+                {qrKit?.existingRequest ? 'Request received' : qrKit?.eligible ? 'Eligible' : 'Setup required'}
+              </span>
+            </div>
+
+            {qrKit?.existingRequest ? (
+              <>
+                <p className="admin-inline-success" role="status">
+                  Request received on{' '}
+                  {new Date(qrKit.existingRequest.requestedAt).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                  .
+                </p>
+                <p className="admin-barbershop-settings__card-copy">
+                  KERSIVO will complete the business and delivery-detail checks before print and
+                  dispatch. We’ll contact you if anything needs clarification.
+                </p>
+              </>
+            ) : qrKit?.eligible ? (
+              <>
+                <div className="admin-barbershop-settings__qr-kit-preview" aria-label="Included QR Kit">
+                  <div>
+                    <strong>WINDOW</strong>
+                    <span>Approx. 150 × 170 mm</span>
+                    <small>BOOK ONLINE · Scan to book</small>
+                  </div>
+                  <div>
+                    <strong>REBOOK</strong>
+                    <span>Approx. 100 × 100 mm</span>
+                    <small>REBOOK BEFORE YOU LEAVE · Scan to book</small>
+                  </div>
+                </div>
+
+                <div className="admin-barbershop-settings__fields">
+                  <div className="field">
+                    <label className="field__label" htmlFor="bbs-qr-contact">Delivery contact name</label>
+                    <input
+                      id="bbs-qr-contact"
+                      className="input"
+                      value={qrContactName}
+                      maxLength={120}
+                      autoComplete="name"
+                      onChange={(event) => setQrContactName(event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="bbs-qr-phone">Phone number</label>
+                    <input
+                      id="bbs-qr-phone"
+                      className="input"
+                      value={qrPhone}
+                      maxLength={40}
+                      autoComplete="tel"
+                      onChange={(event) => setQrPhone(event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="bbs-qr-address1">Address line 1</label>
+                    <input
+                      id="bbs-qr-address1"
+                      className="input"
+                      value={qrAddressLine1}
+                      maxLength={160}
+                      autoComplete="address-line1"
+                      onChange={(event) => setQrAddressLine1(event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="bbs-qr-address2">
+                      Address line 2 <span className="field__hint">(optional)</span>
+                    </label>
+                    <input
+                      id="bbs-qr-address2"
+                      className="input"
+                      value={qrAddressLine2}
+                      maxLength={160}
+                      autoComplete="address-line2"
+                      onChange={(event) => setQrAddressLine2(event.target.value)}
+                    />
+                  </div>
+                  <div className="admin-barbershop-settings__qr-address-row">
+                    <div className="field">
+                      <label className="field__label" htmlFor="bbs-qr-town">Town or city</label>
+                      <input
+                        id="bbs-qr-town"
+                        className="input"
+                        value={qrTownCity}
+                        maxLength={120}
+                        autoComplete="address-level2"
+                        onChange={(event) => setQrTownCity(event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field__label" htmlFor="bbs-qr-postcode">UK postcode</label>
+                      <input
+                        id="bbs-qr-postcode"
+                        className="input"
+                        value={qrPostcode}
+                        maxLength={12}
+                        autoComplete="postal-code"
+                        onChange={(event) => setQrPostcode(event.target.value.toUpperCase())}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="admin-barbershop-settings__card-copy">
+                  Marketing consent is not required. These details are used for QR Kit verification
+                  and fulfilment.
+                </p>
+                <div className="admin-barbershop-settings__actions">
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={
+                      qrKitBusy ||
+                      qrContactName.trim().length < 2 ||
+                      qrPhone.trim().length < 7 ||
+                      qrAddressLine1.trim().length < 3 ||
+                      qrTownCity.trim().length < 2 ||
+                      qrPostcode.trim().length < 5
+                    }
+                    onClick={() => void requestQrKit()}
+                  >
+                    {qrKitBusy ? 'Requesting…' : 'Get my Booking QR Kit'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="admin-barbershop-settings__card-copy">
+                  Finish the required booking setup before claiming the included initial QR Kit.
+                </p>
+                {qrKit?.reasons?.length ? (
+                  <ul className="admin-barbershop-settings__qr-requirements">
+                    {qrKit.reasons.map((reason) => (
+                      <li key={reason}>
+                        {reason === 'active_barber_required'
+                          ? 'Add at least one active bookable barber.'
+                          : reason === 'active_service_required'
+                            ? 'Add at least one active service.'
+                            : reason === 'availability_required'
+                              ? 'Configure active barber availability.'
+                              : reason === 'terms_acceptance_required'
+                                ? 'Accept the applicable KERSIVO Terms.'
+                                : reason === 'shop_identity_required'
+                                  ? 'Complete your barbershop identity.'
+                                  : 'Complete the remaining setup requirement.'}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            )}
+
+            {qrKitError ? (
+              <p className="admin-inline-error" role="alert">{qrKitError}</p>
+            ) : null}
+            {qrKitMessage ? (
+              <p className="admin-inline-success" role="status">{qrKitMessage}</p>
             ) : null}
           </section>
         ) : null}
