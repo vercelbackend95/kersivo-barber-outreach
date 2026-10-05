@@ -12,6 +12,7 @@ import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import ClientProfilePanel from './ClientProfilePanel';
+import ClientCoreProfilePanel from './ClientCoreProfilePanel';
 import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
@@ -758,7 +759,7 @@ export default function BookingsAdminPanel({
   const { gate: productGate, openUpgrade } = useAdminProductLocks();
   const historyLocked = isCapabilityLocked(productGate, 'recentBookingHistory');
   const fullHistoryLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
-  const clientsLocked = isCapabilityLocked(productGate, 'clients');
+  const advancedClientsLocked = isCapabilityLocked(productGate, 'clients');
   const manualBookingsLocked = isCapabilityLocked(productGate, 'manualBookings');
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = getTodayLondonDate(clock.nowMs());
@@ -1645,7 +1646,6 @@ export default function BookingsAdminPanel({
   }, []);
 
 
-  const openClientsUpgrade = useCallback(() => openUpgrade('clients'), [openUpgrade]);
   const selectBookingDate = useCallback(
     (next: string) => {
       if (historyLocked && next < getTodayLondonDate(clock.nowMs())) {
@@ -1663,10 +1663,6 @@ export default function BookingsAdminPanel({
 
   const openClientProfileForBooking = useCallback(
     async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
-      if (clientsLocked) {
-        openUpgrade('clients');
-        return;
-      }
       try {
         const clientId = await resolveClientIdForBooking(booking);
         if (!clientId) {
@@ -1678,7 +1674,7 @@ export default function BookingsAdminPanel({
         setError('Could not open client profile.');
       }
     },
-    [clientsLocked, openUpgrade],
+    [],
   );
 
   const scrollToTimelineBooking = useCallback((bookingId: string) => {
@@ -1782,13 +1778,13 @@ export default function BookingsAdminPanel({
         }
       }
 
-      if (!clientsLocked) void openClientProfileForBooking(booking);
+      void openClientProfileForBooking(booking);
       setClientSearchQuery('');
       setDebouncedSearchQuery('');
       setActiveSearchResultIndex(-1);
       searchInputRef.current?.blur();
     },
-    [activeView, clientsLocked, mode, openClientProfileForBooking, scrollToListBooking, scrollToTimelineBooking]
+    [activeView, mode, openClientProfileForBooking, scrollToListBooking, scrollToTimelineBooking]
   );
 
   const handleTimelineBookingClick = useCallback(
@@ -2698,7 +2694,6 @@ export default function BookingsAdminPanel({
                       isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
                       scrollContainerRef={timelineScrollRef}
                       onBookingClick={handleTimelineBookingClick}
-                      onClientProfileIntercept={clientsLocked ? openClientsUpgrade : undefined}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
                       allowInitialNowScroll={
@@ -3036,13 +3031,20 @@ export default function BookingsAdminPanel({
         </div>
       )}
 
-      {openClientId && (
+      {openClientId && advancedClientsLocked ? (
+        <ClientCoreProfilePanel
+          clientId={openClientId}
+          onClose={() => setOpenClientId(null)}
+        />
+      ) : null}
+
+      {openClientId && !advancedClientsLocked ? (
         <ClientProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
           onErased={() => setOpenClientId(null)}
         />
-      )}
+      ) : null}
 
       {barberProfileView ? (
         <AdminErrorBoundary
