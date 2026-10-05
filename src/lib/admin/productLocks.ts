@@ -53,7 +53,7 @@ export type SectionProductLock = {
 export const SECTION_PRODUCT_LOCKS: Readonly<Partial<Record<AdminSpaSection, SectionProductLock>>> = {
   bookings_reports: { capability: 'reports', feature: 'reports' },
   bookings_clients: { capability: 'clients', feature: 'clients' },
-  bookings_history_tab: { capability: 'fullBookingHistory', feature: 'history' },
+  bookings_history_tab: { capability: 'recentBookingHistory', feature: 'history' },
   shop_products: { capability: 'retail', feature: 'retail' },
   shop_orders: { capability: 'retail', feature: 'retail' },
   shop_sales: { capability: 'retail', feature: 'retail' },
@@ -65,6 +65,7 @@ export const SECTION_PRODUCT_LOCKS: Readonly<Partial<Record<AdminSpaSection, Sec
 export const CAPABILITY_UPGRADE_FEATURE: Readonly<Partial<Record<KersivoCapability, FullKersivoFeature>>> = {
   REPORTS: 'reports',
   CLIENTS: 'clients',
+  RECENT_BOOKING_HISTORY: 'history',
   FULL_BOOKING_HISTORY: 'history',
   RETAIL: 'retail',
   ASSISTANT: 'assistant',
