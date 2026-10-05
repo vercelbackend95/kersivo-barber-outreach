@@ -22,6 +22,7 @@ function shop(overrides: Record<string, unknown> = {}) {
     freeBookingActivatedAt: null as Date | null,
     stripeConnectAccountId: 'acct_ready' as string | null,
     stripeConnectChargesEnabled: true,
+    stripeConnectDisconnectedAt: null as Date | null,
     retailEnabled: false,
     depositsEnabled: false,
     ...overrides,
@@ -70,6 +71,12 @@ describe('bookingPaymentsGate', () => {
       ok: false,
       reason: 'connect_not_ready',
     });
+  });
+
+  it('M2: explicit Stripe disconnect is denied even if chargesEnabled is stale true', () => {
+    expect(
+      evaluate(freeShop({ stripeConnectDisconnectedAt: new Date('2026-10-05T12:00:00.000Z') })),
+    ).toEqual({ ok: false, reason: 'connect_not_ready' });
   });
 
   it('N: demo shop is denied, even if handed Full access', () => {
