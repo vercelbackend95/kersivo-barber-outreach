@@ -621,6 +621,7 @@ model Booking {
 
   @@index([barberId, startAt, endAt])
   @@index([status])
+  @@index([paidAt])
   @@index([email])
   @@index([clientId])
   @@index([status, startAt])
@@ -751,6 +752,7 @@ model Order {
   items OrderItem[]
 
   @@index([shopId, createdAt])
+  @@index([paidAt])
   @@index([shopId, status])
   @@index([shopId, isTestOrder])
 }
