@@ -11,6 +11,20 @@ export const POST: APIRoute = async (ctx) => {
   const shopId = access.shopId;
 
   const body: unknown = await ctx.request.json().catch(() => null);
+  const plan =
+    body && typeof body === 'object'
+      ? String((body as { plan?: unknown }).plan ?? '').trim().toUpperCase()
+      : '';
+
+  if (plan !== 'STARTER') {
+    return new Response(
+      JSON.stringify({
+        error: 'Choose KERSIVO Starter explicitly before activation.',
+        code: 'STARTER_PLAN_NOT_SELECTED',
+      }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
   try {
     const result = await activateFreeBooking({
