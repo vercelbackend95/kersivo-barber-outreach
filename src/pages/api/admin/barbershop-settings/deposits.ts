@@ -338,17 +338,22 @@ export const POST: APIRoute = async (ctx) => {
     });
   }
 
+  const resolvedAccountId = accountId?.trim();
+  if (!resolvedAccountId) {
+    return json({ error: 'Stripe Connect account is unavailable.' }, 500);
+  }
+
   const base = getPublicSiteUrl();
   // Settings live as an AdminPanel section — not a standalone /admin/barbershop-settings page.
   const link = await createConnectAccountLink({
-    accountId,
+    accountId: resolvedAccountId,
     refreshUrl: `${base}/admin?section=barbershop_settings&connect=refresh`,
     returnUrl: `${base}/admin?section=barbershop_settings&connect=return`,
   });
 
   return json({
     url: link.url,
-    accountId,
+    accountId: resolvedAccountId,
     accountType,
     legacyExpress: accountType === 'EXPRESS',
   });
