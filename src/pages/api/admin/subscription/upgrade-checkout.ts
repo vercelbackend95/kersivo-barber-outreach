@@ -2,7 +2,10 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
-import { shopMeetsOnboardingCompletionRequirements } from '@/lib/admin/onboarding';
+import {
+  markOnboardingCompleted,
+  shopMeetsOnboardingCompletionRequirements,
+} from '@/lib/admin/onboarding';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import { parseTermsAccepted, termsAcceptedErrorResponse } from '@/lib/legal/requireTermsAcceptance';
@@ -85,14 +88,17 @@ export const POST: APIRoute = async (context) => {
       return jsonResponse({ error: 'Shop not found.' }, 404);
     }
 
-    if (
-      !shop.onboardingCompleted &&
-      !(await shopMeetsOnboardingCompletionRequirements(access.shopId))
-    ) {
-      return badRequest(
-        'Finish your shop, team, services and hours before upgrading.',
-        'ONBOARDING_INCOMPLETE',
-      );
+    if (!shop.onboardingCompleted) {
+      if (!(await shopMeetsOnboardingCompletionRequirements(access.shopId))) {
+        return badRequest(
+          'Finish your shop, team, services and hours before upgrading.',
+          'ONBOARDING_INCOMPLETE',
+        );
+      }
+
+      // Direct Full-from-onboarding path: setup is complete, but no Starter activation marker is
+      // written. If checkout is abandoned, the shop returns to the explicit plan-choice gate.
+      await markOnboardingCompleted(access.shopId);
     }
 
     const name = (access.userName ?? '').trim();
