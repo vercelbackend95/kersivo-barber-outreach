@@ -18,6 +18,7 @@ export const KERSIVO_CAPABILITIES = [
   'TEAM',
   'SERVICES',
   'REPORTS',
+  'CLIENTS_CORE',
   'CLIENTS',
   'RECENT_BOOKING_HISTORY',
   'FULL_BOOKING_HISTORY',
@@ -39,6 +40,7 @@ const FREE_BOOKING_CAPABILITIES: readonly KersivoCapability[] = [
   'SERVICES',
   'AUTOMATED_EMAIL_REMINDERS',
   'RECENT_BOOKING_HISTORY',
+  'CLIENTS_CORE',
 ];
 
 const FULL_KERSIVO_CAPABILITIES: readonly KersivoCapability[] = [
@@ -125,6 +127,7 @@ export type SerializedKersivoCapabilities = {
   team: boolean;
   services: boolean;
   reports: boolean;
+  clientsCore: boolean;
   clients: boolean;
   recentBookingHistory: boolean;
   fullBookingHistory: boolean;
@@ -143,6 +146,7 @@ const CAPABILITY_KEYS: Readonly<Record<KersivoCapability, keyof SerializedKersiv
   TEAM: 'team',
   SERVICES: 'services',
   REPORTS: 'reports',
+  CLIENTS_CORE: 'clientsCore',
   CLIENTS: 'clients',
   RECENT_BOOKING_HISTORY: 'recentBookingHistory',
   FULL_BOOKING_HISTORY: 'fullBookingHistory',
