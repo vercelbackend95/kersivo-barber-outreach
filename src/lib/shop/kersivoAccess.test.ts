@@ -158,6 +158,7 @@ describe('capability matrix', () => {
       'RECENT_BOOKING_HISTORY',
       'CLIENTS_CORE',
       'MANUAL_BOOKINGS',
+      'GOOGLE_BOOKING_SETUP',
     ];
     const fullOnly = [
       'REPORTS',
@@ -206,6 +207,7 @@ describe('capability matrix', () => {
         automatedEmailReminders: true,
         brandedSite: false,
         manualBookings: true,
+        googleBookingSetup: true,
       },
     });
     const full = serializeKersivoAccess(resolveKersivoAccess(shop(), activeSub, now));
