@@ -378,9 +378,9 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-10-02');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-02');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('2 October 2026');
+    expect(matches[0].lastmod).toBe('2026-10-05');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-05');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('5 October 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');
     expect(sourcesSource).toContain('datetime={FRESHA_ALTERNATIVE_LAST_UPDATED_ISO}');
   });
@@ -462,7 +462,11 @@ describe('fresha facts verification', () => {
       '£35.82',
       '£59.70',
     ]);
-    expect(FRESHA_WORKED_EXAMPLES.every((row) => row.kersivo === '£39')).toBe(true);
+    expect(FRESHA_WORKED_EXAMPLES.map((row) => row.kersivo)).toEqual([
+      '£0 Starter or £39 Full',
+      '£0 Starter or £39 Full',
+      '£39 Full',
+    ]);
   });
 
   it('describes the Marketplace fee as one-time for brand-new Marketplace clients', () => {
@@ -480,6 +484,7 @@ describe('fresha claim safety', () => {
     const lower = pageCorpus.toLowerCase();
     for (const phrase of [
       '£39 forever',
+      'one plan. one barbershop location',
       'unlimited sms',
       'no fees whatsoever',
       'guaranteed more bookings',
@@ -668,5 +673,24 @@ describe('hero dashboard showcase', () => {
     expect(adminPage).toMatch(
       /> \.admin-sidebar-brand--blackline\s+\.bl-lockup \{\s*align-self: flex-start;\s*margin-inline: 0 auto;/,
     );
+  });
+});
+
+describe('fresha-alternative: v1.18 Starter / Full distinction', () => {
+  const sentences = renderedContentCopy.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/);
+
+  it('never presents KERSIVO as one paid plan for one location', () => {
+    expect(pricingSource).not.toContain('One plan. One barbershop location.');
+    expect(pricingSource).toContain('KERSIVO Starter');
+    expect(pricingSource).toContain('Full KERSIVO');
+  });
+
+  it('scopes unlimited barbers, branded site, own domain and Retail to Full KERSIVO', () => {
+    for (const sentence of sentences.filter((s) => /unlimited barbers/i.test(s))) {
+      expect(sentence, sentence).toMatch(/Full/);
+    }
+    for (const sentence of sentences.filter((s) => !s.endsWith('?') && /\b(own domain|standard domain)\b/i.test(s))) {
+      expect(sentence, sentence).toMatch(/Full|Starter/);
+    }
   });
 });

@@ -28,6 +28,8 @@ const smartWebsite = requireVerifiedFreshaFact('smartWebsiteAddOn');
 const clientLoyalty = requireVerifiedFreshaFact('clientLoyaltyAddOn');
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
+const STARTER_PRICE = formatGbp(0);
+const STARTER_MAX_BARBERS = 4;
 const INDEPENDENT_PRICE = formatGbp(independent.amountGbp!);
 const TEAM_PRICE = formatGbp(teamPlan.amountGbp!);
 const MARKETPLACE_PERCENT = formatPercent(marketplaceFee.percent!);
@@ -38,15 +40,16 @@ export const FRESHA_QUICK_ANSWER_KICKER = 'The short version';
 
 export const FRESHA_QUICK_ANSWER_TITLE = 'A Fresha alternative built around your own brand.';
 
-export const FRESHA_QUICK_ANSWER_LEAD = `KERSIVO is a Fresha alternative built for independent UK barbershops that want their website, booking journey and client relationship centred on their own brand. KERSIVO costs ${KERSIVO_PRICE} per month per location, with no setup fee and 0% KERSIVO commission on bookings and retail sales. Stripe processing fees still apply.`;
+export const FRESHA_QUICK_ANSWER_LEAD = `KERSIVO is a Fresha alternative for independent UK barbershops that want bookings and client relationships under their own brand. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted booking page. Full KERSIVO is ${KERSIVO_PRICE}/month per location and adds your own website and domain, Reports, Retail, SMS and more. Both take 0% KERSIVO commission on booking payments. Stripe processing fees still apply.`;
 
 export const FRESHA_QUICK_ANSWER_DETAIL = `Fresha follows a different model: business software priced per bookable team member (${INDEPENDENT_PRICE} a month for one person, or ${TEAM_PRICE} per team member on its Team plan, plus VAT), alongside the Fresha Marketplace, which charges a one-time fee for brand-new clients it introduces.`;
 
 export const FRESHA_QUICK_ANSWER = `${FRESHA_QUICK_ANSWER_LEAD} ${FRESHA_QUICK_ANSWER_DETAIL}`;
 
 export const FRESHA_QUICK_ANSWER_FACTS: readonly { label: string; value: string }[] = [
-  { label: 'KERSIVO', value: `${KERSIVO_PRICE}/month per location` },
-  { label: 'KERSIVO commission', value: '0% on bookings and retail' },
+  { label: 'KERSIVO Starter', value: `${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers` },
+  { label: 'Full KERSIVO', value: `${KERSIVO_PRICE}/month per location` },
+  { label: 'KERSIVO commission', value: '0% on booking payments' },
   { label: 'Fresha', value: 'Priced per bookable team member' },
 ];
 
@@ -62,7 +65,7 @@ export const FRESHA_WHY_THEMES: readonly InsightCardItem[] = [
   {
     icon: 'seats',
     title: 'Pricing that scales with the team',
-    body: `Fresha’s Team plan is charged per bookable team member — ${TEAM_PRICE} a month each, plus VAT — so the subscription rises as more chairs take bookings. KERSIVO is ${KERSIVO_PRICE} a month per location, with unlimited barbers within that location, subject to reasonable fair use.`,
+    body: `Fresha’s Team plan is charged per bookable team member — ${TEAM_PRICE} a month each, plus VAT — so the subscription rises as more chairs take bookings. KERSIVO Starter is ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers; Full KERSIVO is ${KERSIVO_PRICE} a month per location, with unlimited barbers subject to fair use.`,
   },
   {
     icon: 'storefront',
@@ -77,7 +80,7 @@ export const FRESHA_WHY_THEMES: readonly InsightCardItem[] = [
   {
     icon: 'stack',
     title: 'What the plan includes',
-    body: 'Fresha offers a range of optional paid add-ons, including its Smart Website. Some owners prefer one plan where the branded website, standard domain, online booking, reminders and retail pickup are already included.',
+    body: `Fresha offers optional paid add-ons, including its Smart Website. KERSIVO Starter covers hosted booking for ${STARTER_PRICE}; Full KERSIVO includes the branded website, domain and retail pickup.`,
   },
 ];
 
@@ -166,18 +169,19 @@ export const FRESHA_WORKED_EXAMPLES: readonly FreshaWorkedExample[] =
           : `Team: ${size} × ${TEAM_PRICE}`,
       freshaExVat: formatGbp(estimate.exVatGbp),
       freshaIncVat: formatGbp(estimate.incVatGbp),
-      kersivo: KERSIVO_PRICE,
+      kersivo: size <= STARTER_MAX_BARBERS ? `${STARTER_PRICE} Starter or ${KERSIVO_PRICE} Full` : `${KERSIVO_PRICE} Full`,
     };
   });
 
 export const FRESHA_WORKED_EXAMPLES_NOTE = `Subscription cost only — not a total cost of ownership. Potential additional costs depend on each shop: for Fresha, Marketplace new-client fees, payment processing and optional add-ons; for KERSIVO, Stripe payment-processing fees. KERSIVO is not currently VAT registered, so no VAT is added.`;
 
 export const KERSIVO_MODEL_POINTS: readonly string[] = [
-  `${KERSIVO_PRICE}/month per physical location`,
-  'No setup fee',
-  'Unlimited barbers within one location, subject to reasonable fair use',
-  '0% KERSIVO commission on bookings',
-  '0% KERSIVO commission on retail sales',
+  `KERSIVO Starter: ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers, with a hosted booking page`,
+  `Full KERSIVO: ${KERSIVO_PRICE}/month per physical location`,
+  'No setup fee on either plan',
+  'Full: unlimited barbers within one location, subject to reasonable fair use',
+  '0% KERSIVO commission on booking payments',
+  '0% KERSIVO commission on Full retail sales',
   'Stripe payment-processing fees still apply',
 ];
 
@@ -216,15 +220,15 @@ export const FRESHA_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonIte
     descriptor: 'Own-brand booking model',
     icon: 'direct',
     summary: [
-      { label: 'Pricing', value: `${KERSIVO_PRICE}/month per location` },
+      { label: 'Pricing', value: `${STARTER_PRICE} Starter or ${KERSIVO_PRICE}/month per location on Full` },
       { label: 'Discovery', value: 'Your own website and channels' },
     ],
     heading: 'KERSIVO may suit your shop if…',
     points: [
-      'You want your own branded website and domain at the centre of the booking journey',
+      'You want a direct booking journey under your own brand, with your own website and domain on Full KERSIVO',
       'Your clients already find you through Google, Instagram, referrals or walk-ins',
-      `You prefer a flat ${KERSIVO_PRICE}/month per location, however many barbers take bookings`,
-      'You want 0% KERSIVO commission on bookings and retail sales',
+      `You prefer ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers on Starter, or a flat ${KERSIVO_PRICE}/month per location on Full, however many barbers take bookings`,
+      'You want 0% KERSIVO commission on booking payments, and on retail sales with Full',
     ],
   },
 ];
@@ -248,8 +252,8 @@ export const FRESHA_SWITCHING_STEPS: readonly FreshaContentTheme[] = [
     body: 'We’ll help migrate the usable business data available from your current booking system, including supported CSV exports.',
   },
   {
-    title: 'We prepare your setup and branded website',
-    body: 'Services, barbers, opening hours and your branded barbershop website are prepared in KERSIVO.',
+    title: 'We prepare your setup',
+    body: 'Services, barbers and opening hours are prepared in KERSIVO, plus your branded barbershop website on Full KERSIVO.',
   },
   {
     title: 'You review a private preview',
@@ -257,7 +261,7 @@ export const FRESHA_SWITCHING_STEPS: readonly FreshaContentTheme[] = [
   },
   {
     title: 'Switch when you approve',
-    body: 'Only once you approve are your public booking links and domain routing switched to KERSIVO.',
+    body: 'Only once you approve are your public booking links (and, on Full, your domain routing) switched to KERSIVO.',
   },
 ];
 

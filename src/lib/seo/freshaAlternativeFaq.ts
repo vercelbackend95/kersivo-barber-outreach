@@ -20,10 +20,12 @@ export const FRESHA_ALTERNATIVE_DESCRIPTION =
   'Looking for a Fresha alternative in the UK? Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching for independent barbershops.';
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
-export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-02';
-export const FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL = '2 October 2026';
+export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-05';
+export const FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL = '5 October 2026';
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
+const STARTER_PRICE = formatGbp(0);
+const STARTER_MAX_BARBERS = 4;
 const independent = requireVerifiedFreshaFact('independentPlan');
 const teamPlan = requireVerifiedFreshaFact('teamPlanPerMember');
 const marketplaceFee = requireVerifiedFreshaFact('marketplaceNewClientFee');
@@ -33,20 +35,20 @@ export const FRESHA_ALTERNATIVE_FAQ_ITEMS: FreshaAlternativeFaqItem[] = [
   {
     question: 'What is the best Fresha alternative for UK barbers?',
     answer:
-      'It depends on how your shop wins clients. KERSIVO may be a strong Fresha alternative for independent UK barbershops that prioritise their own brand, their own domain and a direct client relationship: it combines a branded barbershop website with online booking, optional deposits, client management and retail pickup. If Marketplace discovery is central to how you grow, Fresha’s model may suit you better.',
+      `It depends on how your shop wins clients. KERSIVO may be a strong Fresha alternative for independent UK barbershops that prioritise their own brand and a direct client relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you hosted online booking, optional deposits, Clients Core and email reminders, and Full KERSIVO adds a branded barbershop website, own domain, Advanced Clients, Reports, Retail pickup, SMS and the live Assistant. If Marketplace discovery is central to how you grow, Fresha’s model may suit you better.`,
   },
   {
     question: 'How does KERSIVO pricing compare with Fresha?',
-    answer: `KERSIVO is ${KERSIVO_PRICE}/month per location, with no setup fee, unlimited barbers within that location subject to reasonable fair use, and 0% KERSIVO commission on bookings and retail sales. Fresha’s UK pricing is ${formatGbp(independent.amountGbp!)}/month on its Independent plan or ${formatGbp(teamPlan.amountGbp!)} per bookable team member per month on its Team plan, exclusive of ${FRESHA_UK_VAT_PERCENT}% VAT, plus a one-time ${formatPercent(marketplaceFee.percent!)} fee (minimum ${formatGbp(marketplaceFee.minimumGbp!)}) for brand-new Marketplace clients. Which costs less depends on your team size, add-ons and how many new clients come through the Marketplace. Card payment-processing fees apply on either platform when you take payments through it.`,
+    answer: `KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers. Full KERSIVO is ${KERSIVO_PRICE}/month per location, with unlimited barbers within that location subject to reasonable fair use. Neither plan has a setup fee, and both take 0% KERSIVO commission on booking payments (plus 0% on Full retail sales). Fresha’s UK pricing is ${formatGbp(independent.amountGbp!)}/month on its Independent plan or ${formatGbp(teamPlan.amountGbp!)} per bookable team member per month on its Team plan, exclusive of ${FRESHA_UK_VAT_PERCENT}% VAT, plus a one-time ${formatPercent(marketplaceFee.percent!)} fee (minimum ${formatGbp(marketplaceFee.minimumGbp!)}) for brand-new Marketplace clients. Which costs less depends on your team size, add-ons and how many new clients come through the Marketplace. Card payment-processing fees apply on either platform when you take payments through it.`,
   },
   {
     question: 'Does KERSIVO charge commission on bookings?',
     answer:
-      'KERSIVO takes 0% commission on bookings and retail sales. The platform is built around a simple monthly subscription for one barbershop location. Standard Stripe processing fees still apply where payments are processed.',
+      `No. KERSIVO takes 0% commission on booking payments on both KERSIVO Starter (${STARTER_PRICE}/month) and Full KERSIVO (${KERSIVO_PRICE}/month per location), and 0% on Full retail sales. Standard Stripe processing fees still apply where payments are processed.`,
   },
   {
     question: 'Does KERSIVO charge per barber?',
-    answer: `No. KERSIVO is ${KERSIVO_PRICE}/month per physical location, with unlimited barbers within that location, subject to reasonable fair use.`,
+    answer: `No. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers at one location. Full KERSIVO is ${KERSIVO_PRICE}/month per physical location, with unlimited barbers within that location, subject to reasonable fair use.`,
   },
   {
     question: 'Can I move my clients from Fresha to KERSIVO?',
@@ -56,26 +58,26 @@ export const FRESHA_ALTERNATIVE_FAQ_ITEMS: FreshaAlternativeFaqItem[] = [
   {
     question: 'Can I keep Fresha running while KERSIVO is set up?',
     answer:
-      'Yes. Keep Fresha live while your KERSIVO setup is prepared. You review a private preview first, and your public booking links and domain routing are only switched once you approve.',
+      'Yes. Keep Fresha live while your KERSIVO setup is prepared. You review a private preview first, and your public booking links (and, on Full, your domain routing) are only switched once you approve.',
   },
   {
     question: 'Do clients need to download an app?',
     answer:
-      'No. Clients can book through your own branded website and booking journey without downloading a separate customer app.',
+      'No. Clients book in the browser without downloading a separate customer app: through a hosted KERSIVO booking page on Starter, or your own branded website on Full KERSIVO.',
   },
   {
     question: 'Does KERSIVO have a marketplace?',
     answer:
-      'No. KERSIVO does not run a consumer marketplace. It is built around your own website, domain and booking journey, which suits shops whose clients already find them through Google, Instagram, referrals or walk-ins. If you rely on marketplace discovery for new clients, that is worth weighing up.',
+      'No. KERSIVO does not run a consumer marketplace. It is built around your own booking journey (and, on Full KERSIVO, your own website and domain), which suits shops whose clients already find them through Google, Instagram, referrals or walk-ins. If you rely on marketplace discovery for new clients, that is worth weighing up.',
   },
   {
     question: 'Can KERSIVO run on my barbershop’s own domain?',
-    answer: `Yes. The ${KERSIVO_PRICE} monthly plan includes one standard domain for your branded barbershop website and booking journey.`,
+    answer: `Yes, with Full KERSIVO. Full KERSIVO (${KERSIVO_PRICE}/month per location) includes one standard domain for your branded barbershop website and booking journey. KERSIVO Starter uses a hosted KERSIVO booking page, not your own domain.`,
   },
   {
     question: 'Can I see the booking experience before subscribing?',
     answer:
-      'Yes. The live KERSIVO demo lets you explore the client booking journey, admin system and retail pickup experience before you make a decision.',
+      'Yes. The live KERSIVO demo lets you explore the client booking journey, admin system and the Full KERSIVO retail pickup experience before you make a decision.',
   },
 ];
 

@@ -338,7 +338,7 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
     freshaSourceIds: ['pricingUk', 'bookingLinks', 'paymentPolicies'],
     kersivoLead: 'A branded booking journey built around your own barbershop.',
     kersivoPoints: [
-      'Branded booking website on your own domain',
+      'Hosted booking page on Starter; branded booking website on your own domain with Full',
       'Services, barbers and availability inside your own flow',
       'Deposits and payment steps built into the booking journey',
       'Bookings managed from one owner dashboard',
@@ -361,7 +361,7 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
       'Optional booking deposits for online appointments',
       'Deposit status visible in the KERSIVO admin',
       'Client payment steps stay connected to your booking flow',
-      '0% KERSIVO commission on bookings',
+      '0% KERSIVO commission on booking payments, on Starter and Full',
     ],
   },
   {
@@ -376,9 +376,10 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
       'Fresha booking links require your Marketplace profile to be listed',
     ],
     freshaSourceIds: ['bookingLinks', 'marketplaceFee'],
-    kersivoLead: 'Your website and booking journey stay under your own identity.',
+    kersivoLead: 'Your booking journey stays under your own shop identity.',
     kersivoPoints: [
-      'Your own branded website on your own domain',
+      'Full KERSIVO: your own branded website on your own domain',
+      'Starter: a hosted KERSIVO booking page with your services and team',
       'Your logo, services and shop identity throughout the journey',
       'No marketplace dependency required to take bookings',
       'A direct client relationship built around your business',
@@ -396,12 +397,13 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
       'The online product store requires Fresha Payments to be enabled',
     ],
     freshaSourceIds: ['onlineStore', 'pricingUk'],
-    kersivoLead: 'Retail pickup built directly into your own barbershop website.',
+    kersivoLead: 'Retail pickup built into your own barbershop website with Full KERSIVO.',
     kersivoPoints: [
+      'Retail is included in Full KERSIVO, not Starter',
       'Products sold from your own branded website',
       'Pickup orders managed from the KERSIVO admin',
       'Product recommendations can appear after a booking',
-      '0% KERSIVO commission on retail sales',
+      '0% KERSIVO commission on Full retail sales',
     ],
   },
   {
@@ -418,9 +420,9 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
     freshaSourceIds: ['pricingUk', 'clientConnect'],
     kersivoLead: 'Client records connected directly to your own booking operation.',
     kersivoPoints: [
-      'Client profiles and booking history in your admin',
-      'Internal notes and operational client context',
-      'Email reminders, plus SMS reminders subject to allowance',
+      'Clients Core on Starter: contact details, recent visits and upcoming bookings',
+      'Advanced Clients on Full: full history, internal notes and operational context',
+      'Email reminders on both plans; SMS reminders on Full, subject to allowance',
     ],
   },
   {
@@ -437,8 +439,8 @@ export const FRESHA_COMPARE_SECTIONS: readonly FreshaCompareSection[] = [
     freshaSourceIds: ['reportExport', 'pricingUk'],
     kersivoLead: 'A focused owner dashboard built specifically for independent barbershops.',
     kersivoPoints: [
-      'Bookings, team, clients, services, products and orders',
-      'Sales, bookings and cancellation reporting',
+      'Bookings, team, clients and services on both plans',
+      'Reports, products and orders with Full KERSIVO',
       'Daily operational view from one dashboard',
       'Built around the workflow of an independent barbershop',
     ],
