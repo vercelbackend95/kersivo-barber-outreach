@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { canViewClientEmail } from '../../../lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
+import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import {
   computeClientStats,
   computeReliabilityScore,
