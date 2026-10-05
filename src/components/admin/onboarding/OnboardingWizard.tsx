@@ -6,6 +6,7 @@ import {
   startFullKersivoUpgradeCheckout,
 } from '@/lib/setup/fullKersivoUpgrade.client';
 import {
+  BILLING_RECOVERY_COPY,
   countBookableBarberCards,
   DAY_LABELS,
   DEFAULT_HOURS,
@@ -643,6 +644,28 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     setSaving(false);
   };
 
+  const openBillingPortal = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/setup/billing-portal', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        url?: string;
+        error?: string;
+      } | null;
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error || 'Unable to open billing portal.');
+      }
+      window.location.assign(payload.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to open billing portal.');
+      setSaving(false);
+    }
+  };
+
   /** Full is granted only by the paid subscription lifecycle; a failure never falls back to Starter. */
   const startFullCheckout = async () => {
     setSaving(true);
@@ -655,6 +678,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     if (result.code === 'SUBSCRIPTION_ALREADY_EXISTS') {
       clearStoredPlanChoice();
       window.location.assign(result.redirectTo || '/admin');
+      return;
+    }
+    if (result.billingPortal) {
+      await openBillingPortal();
       return;
     }
     setError(result.message);
@@ -693,6 +720,9 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   };
 
   const completeOnboarding = async () => {
+    if (freeActivationStep && state?.billingRecoveryRequired) {
+      return openBillingPortal();
+    }
     if (freeActivationStep && !planChoice) {
       setError('Choose KERSIVO Starter or Full KERSIVO to continue.');
       return;
@@ -769,6 +799,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
     if (step === 6 && freeActivationStep) {
+      if (state?.billingRecoveryRequired) return 'Open billing';
       if (planChoice === 'FULL') return FULL_PLAN_CARD.cta;
       if (planChoice === 'STARTER') return STARTER_PLAN_CARD.cta;
       return 'Choose a plan';
@@ -776,7 +807,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step, freeActivationStep, isGuest, productState, planChoice]);
+  }, [step, freeActivationStep, isGuest, productState, planChoice, state?.billingRecoveryRequired]);
 
   if (!authReady || loading) {
     return (
@@ -1800,9 +1831,19 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 data-onboarding-plan-choice
               >
                 <h2 id="onboarding-plan-choice-title" className="admin-onboarding__plan-choice-title">
-                  Choose how you want to run KERSIVO
+                  {state?.billingRecoveryRequired
+                    ? 'Your Full KERSIVO billing needs attention'
+                    : 'Choose how you want to run KERSIVO'}
                 </h2>
-                {fullCheckoutCancelled ? (
+                {state?.billingRecoveryRequired ? (
+                  <p
+                    className="admin-onboarding__plan-notice"
+                    role="status"
+                    data-billing-recovery-required
+                  >
+                    {BILLING_RECOVERY_COPY}
+                  </p>
+                ) : fullCheckoutCancelled ? (
                   <p className="admin-onboarding__plan-notice" role="status" data-full-checkout-cancelled>
                     {FULL_CHECKOUT_CANCELLED_COPY}
                   </p>
@@ -1811,53 +1852,57 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                     {FULL_CHECKOUT_PENDING_COPY}
                   </p>
                 ) : null}
-                <div className="admin-onboarding__plan-grid" role="radiogroup" aria-label="Plan">
-                  {(
-                    [
-                      ['STARTER', STARTER_PLAN_CARD],
-                      ['FULL', FULL_PLAN_CARD],
-                    ] as const
-                  ).map(([choice, card]) => {
-                    const selected = planChoice === choice;
-                    return (
-                      <button
-                        key={choice}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        className={`admin-onboarding__plan-card${selected ? ' is-selected' : ''}`}
-                        data-plan-card={choice}
-                        disabled={saving}
-                        onClick={() => {
-                          setPlanChoice(choice);
-                          storePlanChoice(choice);
-                          setError('');
-                        }}
-                      >
-                        <span className="admin-onboarding__plan-name">{card.name}</span>
-                        <span className="admin-onboarding__plan-price">
-                          {card.price}
-                          {'priceNote' in card ? (
-                            <span className="admin-onboarding__plan-price-note"> {card.priceNote}</span>
-                          ) : null}
-                        </span>
-                        <span className="admin-onboarding__plan-tagline">{card.tagline}</span>
-                        <ul className="admin-onboarding__plan-points">
-                          {card.points.map((point) => (
-                            <li key={point}>{point}</li>
-                          ))}
-                        </ul>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="admin-onboarding__plan-footnote">
-                  {planChoice === 'STARTER' ? `${STARTER_PAY_AT_SHOP_COPY} ` : ''}
-                  {PLAN_CHOICE_STRIPE_FEES_COPY}
-                </p>
+                {!state?.billingRecoveryRequired ? (
+                  <>
+                    <div className="admin-onboarding__plan-grid" role="radiogroup" aria-label="Plan">
+                      {(
+                        [
+                          ['STARTER', STARTER_PLAN_CARD],
+                          ['FULL', FULL_PLAN_CARD],
+                        ] as const
+                      ).map(([choice, card]) => {
+                        const selected = planChoice === choice;
+                        return (
+                          <button
+                            key={choice}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            className={`admin-onboarding__plan-card${selected ? ' is-selected' : ''}`}
+                            data-plan-card={choice}
+                            disabled={saving}
+                            onClick={() => {
+                              setPlanChoice(choice);
+                              storePlanChoice(choice);
+                              setError('');
+                            }}
+                          >
+                            <span className="admin-onboarding__plan-name">{card.name}</span>
+                            <span className="admin-onboarding__plan-price">
+                              {card.price}
+                              {'priceNote' in card ? (
+                                <span className="admin-onboarding__plan-price-note"> {card.priceNote}</span>
+                              ) : null}
+                            </span>
+                            <span className="admin-onboarding__plan-tagline">{card.tagline}</span>
+                            <ul className="admin-onboarding__plan-points">
+                              {card.points.map((point) => (
+                                <li key={point}>{point}</li>
+                              ))}
+                            </ul>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="admin-onboarding__plan-footnote">
+                      {planChoice === 'STARTER' ? `${STARTER_PAY_AT_SHOP_COPY} ` : ''}
+                      {PLAN_CHOICE_STRIPE_FEES_COPY}
+                    </p>
+                  </>
+                ) : null}
               </section>
             ) : null}
-            {freeActivationStep ? (
+            {freeActivationStep && !state?.billingRecoveryRequired ? (
               <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
                 <input
                   id="onboarding-terms-accepted"
@@ -1922,7 +1967,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             disabled={
               saving ||
               (step === 3 && !teamMode) ||
-              (step === 6 && freeActivationStep && (!planChoice || !termsAccepted))
+              (step === 6 &&
+                freeActivationStep &&
+                !state?.billingRecoveryRequired &&
+                (!planChoice || !termsAccepted))
             }
             aria-busy={saving}
           >
