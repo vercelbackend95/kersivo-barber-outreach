@@ -2,6 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Camera, ImagePlus } from '../../lucide-react';
 import PrivateDemoAuthPanel from '../PrivateDemoAuthPanel';
 import {
+  redirectToStripe,
+  startFullKersivoUpgradeCheckout,
+} from '@/lib/setup/fullKersivoUpgrade.client';
+import {
   countBookableBarberCards,
   DAY_LABELS,
   DEFAULT_HOURS,
@@ -126,6 +130,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const [finished, setFinished] = useState(false);
   const [liveBookingUrl, setLiveBookingUrl] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'STARTER' | 'FULL' | null>(null);
   const [barberLimitNotice, setBarberLimitNotice] = useState('');
 
   const [step, setStep] = useState(0);
@@ -264,6 +269,8 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const freeActivationStep = !isGuest && productState === 'SETUP';
   const bookableBarberLimit = isGuest ? null : (state?.freeBookableBarberLimit ?? null);
   const bookableBarberCount = countBookableBarberCards(barbers);
+  const starterBookableBarberLimit = state?.starterBookableBarberLimit ?? 4;
+  const starterPlanEligible = bookableBarberCount <= starterBookableBarberLimit;
   const atBookableBarberLimit =
     bookableBarberLimit != null && bookableBarberCount >= bookableBarberLimit;
   /** Onboarding only round-trips active barbers, so cap total cards, not just bookable ones. */
@@ -589,13 +596,37 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   };
 
   const completeOnboarding = async () => {
+    if (freeActivationStep && !selectedPlan) {
+      setError('Choose KERSIVO Starter or Full KERSIVO to continue.');
+      return;
+    }
     if (freeActivationStep && !termsAccepted) {
       setError('Please accept the Terms to continue.');
       return;
     }
+    if (freeActivationStep && selectedPlan === 'STARTER' && !starterPlanEligible) {
+      setError(
+        `KERSIVO Starter supports up to ${starterBookableBarberLimit} active bookable barbers. Choose Full KERSIVO or reduce the booking team.`,
+      );
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
+      if (freeActivationStep && selectedPlan === 'FULL') {
+        const result = await startFullKersivoUpgradeCheckout();
+        if (result.kind === 'redirect') {
+          redirectToStripe(result.url);
+          return;
+        }
+        if (result.redirectTo) {
+          window.location.assign(result.redirectTo);
+          return;
+        }
+        throw new Error(result.message);
+      }
+
       const response = await fetch(`${apiBase}/complete`, {
         method: 'POST',
         credentials: 'include',
@@ -658,11 +689,17 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6 && freeActivationStep) return 'Activate KERSIVO Starter';
+    if (step === 6 && freeActivationStep && selectedPlan === 'STARTER') {
+      return 'Activate KERSIVO Starter';
+    }
+    if (step === 6 && freeActivationStep && selectedPlan === 'FULL') {
+      return 'Continue to secure checkout';
+    }
+    if (step === 6 && freeActivationStep) return 'Choose a plan';
     if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step, freeActivationStep, isGuest, productState]);
+  }, [step, freeActivationStep, isGuest, productState, selectedPlan]);
 
   if (!authReady || loading) {
     return (
@@ -1576,11 +1613,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
-                {freeActivationStep ? 'Ready to go live' : 'Your KERSIVO workspace is ready'}
+                {freeActivationStep ? 'Review your setup and choose your plan' : 'Your KERSIVO workspace is ready'}
               </h1>
               <p className="admin-onboarding__description">
                 {freeActivationStep
-                  ? 'Review your setup, then activate KERSIVO Starter.'
+                  ? 'Both plans keep KERSIVO commission at 0%. Choose the level that fits your shop today.'
                   : 'Review your setup, then finish to open your dashboard.'}
               </p>
             </div>
@@ -1680,6 +1717,60 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             </article>
 
             {freeActivationStep ? (
+              <div className="admin-onboarding__plan-choice" aria-label="Choose your KERSIVO plan">
+                <button
+                  type="button"
+                  className={`admin-onboarding__plan-card${selectedPlan === 'STARTER' ? ' is-selected' : ''}`}
+                  aria-pressed={selectedPlan === 'STARTER'}
+                  disabled={!starterPlanEligible || saving}
+                  onClick={() => {
+                    setSelectedPlan('STARTER');
+                    setError('');
+                  }}
+                >
+                  <span className="admin-onboarding__plan-kicker">KERSIVO Starter</span>
+                  <strong className="admin-onboarding__plan-price">£0/month</strong>
+                  <span className="admin-onboarding__plan-fee">0% KERSIVO commission</span>
+                  <span className="admin-onboarding__plan-copy">
+                    Hosted booking page, bookings, up to {starterBookableBarberLimit} active
+                    bookable barbers, 90-day history, Clients Core and email reminders.
+                  </span>
+                  {!starterPlanEligible ? (
+                    <span className="admin-onboarding__plan-warning">
+                      Your setup currently has {bookableBarberCount} active bookable barbers.
+                      Starter supports up to {starterBookableBarberLimit}. Reduce the booking team
+                      or choose Full.
+                    </span>
+                  ) : null}
+                </button>
+
+                <button
+                  type="button"
+                  className={`admin-onboarding__plan-card admin-onboarding__plan-card--full${selectedPlan === 'FULL' ? ' is-selected' : ''}`}
+                  aria-pressed={selectedPlan === 'FULL'}
+                  disabled={saving}
+                  onClick={() => {
+                    setSelectedPlan('FULL');
+                    setError('');
+                  }}
+                >
+                  <span className="admin-onboarding__plan-kicker">Full KERSIVO</span>
+                  <strong className="admin-onboarding__plan-price">£39/month</strong>
+                  <span className="admin-onboarding__plan-fee">0% KERSIVO commission</span>
+                  <span className="admin-onboarding__plan-copy">
+                    Full branded website and domain, expanded team, full history, Advanced Clients,
+                    Reports, Retail, SMS reminders and live Assistant.
+                  </span>
+                </button>
+
+                <p className="admin-onboarding__plan-stripe">
+                  Stripe processing fees are separate where online card payments are used. Stripe
+                  is optional for Starter if you only use Pay at shop.
+                </p>
+              </div>
+            ) : null}
+
+            {freeActivationStep ? (
               <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
                 <input
                   id="onboarding-terms-accepted"
@@ -1695,20 +1786,13 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                   <a href="/terms" target="_blank" rel="noopener noreferrer">
                     Terms of Service
                   </a>{' '}
-                  and{' '}
+                  and acknowledge the{' '}
                   <a href="/privacy" target="_blank" rel="noopener noreferrer">
                     Privacy Policy
                   </a>
                   .
                 </span>
               </label>
-            ) : null}
-            {freeActivationStep ? (
-              <p className="admin-onboarding__description" data-full-upgrade-entry>
-                Want Reports, Clients, Retail and Assistant from day one?{' '}
-                <a href="/admin/upgrade">Upgrade straight to Full KERSIVO</a> (£39/month per
-                location).
-              </p>
             ) : null}
           </section>
         ) : null}
@@ -1751,7 +1835,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             disabled={
               saving ||
               (step === 3 && !teamMode) ||
-              (step === 6 && freeActivationStep && !termsAccepted)
+              (step === 6 && freeActivationStep && (!selectedPlan || !termsAccepted))
             }
             aria-busy={saving}
           >
