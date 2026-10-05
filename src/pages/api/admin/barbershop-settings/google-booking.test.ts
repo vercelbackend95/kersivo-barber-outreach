@@ -1,0 +1,200 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { APIContext } from 'astro';
+
+const requireAdminPermissionAndCapability = vi.fn();
+const shopFindUnique = vi.fn();
+const shopUpdate = vi.fn();
+const loadKersivoAccess = vi.fn();
+
+vi.mock('@/lib/admin/productCapability', () => ({
+  requireAdminPermissionAndCapability: (...args: unknown[]) =>
+    requireAdminPermissionAndCapability(...args),
+}));
+
+vi.mock('@/lib/db/client', () => ({
+  prisma: {
+    shopSettings: {
+      findUnique: (...args: unknown[]) => shopFindUnique(...args),
+      update: (...args: unknown[]) => shopUpdate(...args),
+    },
+  },
+}));
+
+vi.mock('@/lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...args: unknown[]) => loadKersivoAccess(...args),
+}));
+
+vi.mock('@/lib/shop/googleBooking', () => ({
+  GOOGLE_BUSINESS_PROFILE_MANAGE_URL: 'https://business.google.com/',
+  resolveGoogleBookingDestination: ({
+    state,
+    shop,
+  }: {
+    state: string;
+    shop: { bookingSlug: string | null };
+  }) =>
+    state === 'SETUP'
+      ? { available: false, url: null, source: 'setup_unavailable' }
+      : {
+          available: true,
+          url: `https://kersivo.test/book/${shop.bookingSlug ?? 'legacy'}`,
+          source: state === 'FREE_BOOKING' ? 'starter_hosted' : 'full_hosted_fallback',
+        },
+  resolveGoogleBookingSetupView: ({
+    status,
+    confirmedUrl,
+    authoritativeUrl,
+  }: {
+    status: string;
+    confirmedUrl: string | null;
+    authoritativeUrl: string;
+  }) => {
+    if (status === 'MERCHANT_CONFIRMED') {
+      const requiresUpdate = confirmedUrl !== authoritativeUrl;
+      return {
+        status: requiresUpdate ? 'UPDATE_REQUIRED' : 'MERCHANT_CONFIRMED',
+        requiresUpdate,
+      };
+    }
+    return {
+      status: status === 'SETUP_STARTED' ? 'SETUP_STARTED' : 'NOT_SET',
+      requiresUpdate: false,
+    };
+  },
+}));
+
+import { GET, PATCH } from './google-booking';
+
+const access = {
+  shopId: 'shop-1',
+  userId: 'owner-1',
+  via: 'session' as const,
+  role: 'OWNER' as const,
+};
+
+let shop = {
+  id: 'shop-1',
+  bookingSlug: 'fade-room' as string | null,
+  googleBookingLinkStatus: 'NOT_SET',
+  googleBookingConfirmedUrl: null as string | null,
+  googleBookingStatusUpdatedAt: null as Date | null,
+};
+
+function ctx(method = 'GET', body?: unknown): APIContext {
+  return {
+    request: new Request('http://localhost/api/admin/barbershop-settings/google-booking', {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+    url: new URL('http://localhost/api/admin/barbershop-settings/google-booking'),
+  } as unknown as APIContext;
+}
+
+describe('Google booking settings API', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    shop = {
+      id: 'shop-1',
+      bookingSlug: 'fade-room',
+      googleBookingLinkStatus: 'NOT_SET',
+      googleBookingConfirmedUrl: null,
+      googleBookingStatusUpdatedAt: null,
+    };
+    requireAdminPermissionAndCapability.mockResolvedValue(access);
+    loadKersivoAccess.mockResolvedValue({
+      state: 'FREE_BOOKING',
+      capabilities: ['GOOGLE_BOOKING_SETUP'],
+    });
+    shopFindUnique.mockImplementation(async () => ({ ...shop }));
+    shopUpdate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
+      shop = { ...shop, ...data } as typeof shop;
+      return { ...shop };
+    });
+  });
+
+  it('requires shop.settings plus GOOGLE_BOOKING_SETUP', async () => {
+    const res = await GET(ctx());
+
+    expect(res.status).toBe(200);
+    expect(requireAdminPermissionAndCapability).toHaveBeenCalledWith(
+      expect.anything(),
+      'shop.settings',
+      'GOOGLE_BOOKING_SETUP',
+    );
+  });
+
+  it('returns the authoritative Starter booking URL and Not set status', async () => {
+    const res = await GET(ctx());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({
+      bookingUrl: 'https://kersivo.test/book/fade-room',
+      destinationSource: 'starter_hosted',
+      status: 'NOT_SET',
+      requiresUpdate: false,
+      googleBusinessProfileUrl: 'https://business.google.com/',
+    });
+    expect(body.bookingUrl).not.toContain('/q/');
+  });
+
+  it('marks setup started without claiming Google was updated', async () => {
+    const res = await PATCH(ctx('PATCH', { action: 'START_SETUP' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(shop.googleBookingLinkStatus).toBe('SETUP_STARTED');
+    expect(shop.googleBookingConfirmedUrl).toBeNull();
+    expect(body.status).toBe('SETUP_STARTED');
+  });
+
+  it('confirms only the current authoritative URL', async () => {
+    const res = await PATCH(ctx('PATCH', { action: 'CONFIRM_CURRENT_URL' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(shop.googleBookingLinkStatus).toBe('MERCHANT_CONFIRMED');
+    expect(shop.googleBookingConfirmedUrl).toBe('https://kersivo.test/book/fade-room');
+    expect(body.status).toBe('MERCHANT_CONFIRMED');
+    expect(body.requiresUpdate).toBe(false);
+  });
+
+  it('surfaces update required after the authoritative URL changes', async () => {
+    shop.googleBookingLinkStatus = 'MERCHANT_CONFIRMED';
+    shop.googleBookingConfirmedUrl = 'https://kersivo.test/book/old-link';
+
+    const res = await GET(ctx());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.status).toBe('UPDATE_REQUIRED');
+    expect(body.requiresUpdate).toBe(true);
+    expect(body.confirmedUrl).toBe('https://kersivo.test/book/old-link');
+    expect(body.bookingUrl).toBe('https://kersivo.test/book/fade-room');
+  });
+
+  it('does not expose setup before a product with the capability is active', async () => {
+    requireAdminPermissionAndCapability.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 'KERSIVO_UPGRADE_REQUIRED',
+          requiredCapability: 'GOOGLE_BOOKING_SETUP',
+        }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const res = await GET(ctx());
+
+    expect(res.status).toBe(403);
+    expect(shopFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects arbitrary status payloads', async () => {
+    const res = await PATCH(ctx('PATCH', { action: 'MERCHANT_CONFIRMED' }));
+
+    expect(res.status).toBe(400);
+    expect(shopUpdate).not.toHaveBeenCalled();
+  });
+});
