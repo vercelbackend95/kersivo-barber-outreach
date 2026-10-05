@@ -27,6 +27,7 @@ import {
 } from '@/lib/setup/shopPurgeEligibility';
 import {
   advanceWindingDownDepartures,
+  materializeAndRecordEndedFullDeparture,
   materializePostFullDepartures,
 } from '@/lib/shop/shopDeparture';
 
@@ -184,6 +185,12 @@ export async function applyStripeSubscriptionToSaasRecord(
 
   const shopId = record.shopId?.trim() || null;
   const grantedAccess = await applyShopAccessFromSubscription(shopId, record);
+
+  // Full has genuinely ended: LEAVE / no Starter choice enters the departure lifecycle now
+  // (the SaaS lifecycle cron is the idempotent backstop for missed events).
+  if (shopId && record.status === 'CANCELED' && !grantedAccess) {
+    await materializeAndRecordEndedFullDeparture(record.id);
+  }
 
   return { record, grantedAccess, shopId };
 }

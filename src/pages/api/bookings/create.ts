@@ -84,6 +84,7 @@ export const POST: APIRoute = async (ctx) => {
         requiredShopId,
         notesPrefix,
         skipConfirmationEmail: false,
+        requiredCapability: 'MANUAL_BOOKINGS',
       },
     );
     return new Response(

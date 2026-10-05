@@ -108,9 +108,42 @@ describe('resolveFullUpgradeEligibility', () => {
       resolveFullUpgradeEligibility(
         'shop-1',
         NOW,
-        dbWith(stale, { status: 'CANCELED', currentPeriodEnd: PAST }),
+        dbWith(stale, { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' }),
       ),
-    ).resolves.toEqual({ ok: true, state: 'SETUP' });
+    ).resolves.toEqual({ ok: true, state: 'FREE_BOOKING' });
+  });
+
+  it.each(['LEAVE', 'CHOICE_REQUIRED', 'UNDECIDED', undefined])(
+    'ended Full + %s before the ShopDeparture row exists → no new Full checkout',
+    async (postFullPlan) => {
+      await expect(
+        resolveFullUpgradeEligibility(
+          'shop-1',
+          NOW,
+          dbWith(freeShop, { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan }),
+        ),
+      ).resolves.toEqual({ ok: false, reason: 'departure_in_progress' });
+    },
+  );
+
+  it('ended Full + explicit STARTER → active Starter may still upgrade to Full', async () => {
+    await expect(
+      resolveFullUpgradeEligibility(
+        'shop-1',
+        NOW,
+        dbWith(freeShop, { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' }),
+      ),
+    ).resolves.toEqual({ ok: true, state: 'FREE_BOOKING' });
+  });
+
+  it('active paid Full with LEAVE scheduled stays already_full (not departure logic)', async () => {
+    await expect(
+      resolveFullUpgradeEligibility(
+        'shop-1',
+        NOW,
+        dbWith(freeShop, { status: 'ACTIVE', currentPeriodEnd: FUTURE, cancelAtPeriodEnd: true, postFullPlan: 'LEAVE' }),
+      ),
+    ).resolves.toEqual({ ok: false, reason: 'already_full' });
   });
 
   it.each([

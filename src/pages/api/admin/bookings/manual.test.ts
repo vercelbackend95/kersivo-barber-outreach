@@ -121,6 +121,7 @@ describe('POST /api/admin/bookings/manual', () => {
         allowDepositCollection: false,
         ignorePublicActivityPause: true,
         notes: 'Walk-in booked by shop.',
+        requiredCapability: 'MANUAL_BOOKINGS',
       },
     );
   });

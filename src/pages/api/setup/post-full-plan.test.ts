@@ -8,6 +8,7 @@ const transaction = vi.fn();
 const findFirst = vi.fn();
 const update = vi.fn();
 const findDeparture = vi.fn();
+const queryRaw = vi.fn(async (..._args: unknown[]) => []);
 const countActiveBookableBarbers = vi.fn();
 const recordTermsAcceptance = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
@@ -107,6 +108,7 @@ describe('POST /api/setup/post-full-plan', () => {
     }));
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
+        $queryRaw: (...args: unknown[]) => queryRaw(...args),
         saasSubscription: {
           findFirst: (...args: unknown[]) => findFirst(...args),
           update: (...args: unknown[]) => update(...args),
@@ -245,6 +247,32 @@ describe('POST /api/setup/post-full-plan', () => {
     expect(countActiveBookableBarbers).not.toHaveBeenCalled();
     expect(recordTermsAcceptance).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it('a Starter choice after Full has ended (departure not yet recorded) never resurrects Starter', async () => {
+    findFirst.mockResolvedValue(
+      subscription({ status: 'CANCELED', cancelAtPeriodEnd: false, postFullPlan: 'CHOICE_REQUIRED' }),
+    );
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+    expect(queryRaw).toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+    expect(recordTermsAcceptance).not.toHaveBeenCalled();
+  });
+
+  it('a Starter choice recorded before Full ended still replays after the end', async () => {
+    findFirst.mockResolvedValue(
+      subscription({
+        status: 'CANCELED',
+        cancelAtPeriodEnd: false,
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: new Date('2026-09-01T00:00:00.000Z'),
+      }),
+    );
+    const res = await POST(ctx({ choice: 'STARTER' }) as never);
+    expect(res.status).toBe(200);
+    expect((await res.json()).alreadyChosen).toBe(true);
   });
 
   it('refuses a late choice after the canceled retention window ended', async () => {

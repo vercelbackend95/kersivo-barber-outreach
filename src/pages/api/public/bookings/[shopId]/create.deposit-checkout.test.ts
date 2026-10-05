@@ -443,4 +443,21 @@ describe('public booking create — booking payment checkout', () => {
     expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
     expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
   });
+
+  it('Leave wins the shop lock: in-transaction refusal → no booking and no Stripe checkout', async () => {
+    createInstantBooking.mockRejectedValue(
+      new BookingActionError('no longer taking bookings', 403, 'SHOP_NOT_ACCEPTING_NEW_BOOKINGS'),
+    );
+
+    const res = await POST(requestCtx(bookingBody) as never);
+
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe('SHOP_NOT_ACCEPTING_NEW_BOOKINGS');
+    expect(createInstantBooking).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ requiredCapability: 'PUBLIC_BOOKING' }),
+    );
+    expect(createBookingPaymentCheckoutSession).not.toHaveBeenCalled();
+    expect(createBookingDepositCheckoutSession).not.toHaveBeenCalled();
+  });
 });

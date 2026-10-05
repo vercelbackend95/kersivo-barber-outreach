@@ -14,7 +14,10 @@ import {
 } from '../../../lib/setup/authenticatedSaasCheckout';
 import { parseCheckoutAttemptId } from '../../../lib/setup/saasCheckoutGuard';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
-import { shopDepartureInProgressResponse } from '@/lib/shop/shopDeparture';
+import {
+  isPostFullDeparturePlan,
+  shopDepartureInProgressResponse,
+} from '@/lib/shop/shopDeparture';
 
 type LaunchSubscriptionCheckoutInput = {
   termsAccepted?: boolean;
@@ -116,6 +119,18 @@ export const POST: APIRoute = async (context) => {
             },
             409,
           );
+        }
+        const endedFull = await tx.saasSubscription.findFirst({
+          where: { shopId: access.shopId, status: { not: 'PENDING' } },
+          orderBy: { createdAt: 'desc' },
+          select: { status: true, postFullPlan: true },
+        });
+        if (
+          endedFull &&
+          String(endedFull.status) === 'CANCELED' &&
+          isPostFullDeparturePlan(endedFull.postFullPlan)
+        ) {
+          return shopDepartureInProgressResponse();
         }
         return null;
       },

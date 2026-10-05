@@ -38,7 +38,11 @@ import {
   resolveStoredBookingPayment,
 } from './bookingPaymentPolicy';
 import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bookingPaymentsGate';
-import { loadKersivoAccess } from '../shop/kersivoAccess';
+import { loadKersivoAccess, type KersivoCapability } from '../shop/kersivoAccess';
+import {
+  SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
+  lockShopAndCheckNewBookingCapability,
+} from './bookingCreationGate';
 import {
   attemptBookingPaymentRefund,
   bookingPaymentRefundClientMessage,
@@ -429,6 +433,12 @@ export async function createInstantBooking(
      * hold if deposits are required. Sandbox / [TEST] never collects.
      */
     allowDepositCollection?: boolean;
+    /**
+     * Product capability the shop must still hold when the booking row is inserted (PUBLIC_BOOKING
+     * for online bookings, MANUAL_BOOKINGS for staff-created ones). Checked under the shop row lock
+     * inside the create transaction; idempotent replays of an existing booking skip it.
+     */
+    requiredCapability?: KersivoCapability;
   } = {},
 ) {
   try {
@@ -555,6 +565,23 @@ export async function createInstantBooking(
     try {
       booking = await prisma.$transaction(
         async (tx) => {
+          if (options.requiredCapability) {
+            const gate = await lockShopAndCheckNewBookingCapability(
+              tx,
+              service.shopId,
+              options.requiredCapability,
+            );
+            if (!gate.ok) {
+              throw new BookingActionError(
+                gate.departed
+                  ? 'This barbershop is no longer taking new bookings through KERSIVO.'
+                  : 'New bookings are not available for this shop.',
+                403,
+                SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
+              );
+            }
+          }
+
           await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
 
           const client = await upsertClientForBooking(tx, {

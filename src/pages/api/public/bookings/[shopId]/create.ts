@@ -137,6 +137,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       {
         requiredShopId: shopId,
         allowDepositCollection: true,
+        requiredCapability: 'PUBLIC_BOOKING',
       },
     );
 

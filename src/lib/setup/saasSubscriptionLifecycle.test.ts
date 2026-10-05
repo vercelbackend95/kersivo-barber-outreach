@@ -66,6 +66,13 @@ vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
   recordAccountLifecycleEvent: (...args: unknown[]) => recordAccountLifecycleEvent(...args),
 }));
 
+const materializeAndRecordEndedFullDeparture = vi.fn();
+vi.mock('@/lib/shop/shopDeparture', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/shop/shopDeparture')>()),
+  materializeAndRecordEndedFullDeparture: (...args: unknown[]) =>
+    materializeAndRecordEndedFullDeparture(...args),
+}));
+
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import {
   applyInvoicePaid,
@@ -198,6 +205,8 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     deletePrivateBlobPathsBestEffort.mockReset();
     runPostCommitPublicBlobCleanup.mockReset();
     recordAccountLifecycleEvent.mockReset();
+    materializeAndRecordEndedFullDeparture.mockReset();
+    materializeAndRecordEndedFullDeparture.mockResolvedValue(true);
     updateMany.mockReset();
     findManyDeparture.mockReset();
     findManyBooking.mockReset();
@@ -506,6 +515,32 @@ describe('saasSubscriptionLifecycle WP-I', () => {
         expect.objectContaining({ data: expect.not.objectContaining({ postFullPlan: expect.anything() }) }),
       );
     }
+  });
+
+  it('webhook: Full actually ending materializes the departure promptly (cron is only the backstop)', async () => {
+    findFirst.mockResolvedValue(baseRecord);
+    update.mockResolvedValue({ ...baseRecord, status: 'CANCELED', postFullPlan: 'CHOICE_REQUIRED' });
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'canceled',
+      cancel_at_period_end: false,
+      canceled_at: Math.floor(new Date('2026-07-20T00:00:00.000Z').getTime() / 1000),
+      customer: 'cus_1',
+    });
+    expect(materializeAndRecordEndedFullDeparture).toHaveBeenCalledWith('saas-1');
+  });
+
+  it('webhook: a scheduled cancellation (still ACTIVE) never materializes a departure', async () => {
+    findFirst.mockResolvedValue(baseRecord);
+    update.mockResolvedValue({ ...baseRecord, cancelAtPeriodEnd: true, postFullPlan: 'LEAVE' });
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'active',
+      cancel_at_period_end: true,
+      current_period_end: Math.floor(FUTURE_PERIOD_END.getTime() / 1000),
+      customer: 'cus_1',
+    });
+    expect(materializeAndRecordEndedFullDeparture).not.toHaveBeenCalled();
   });
 
   it('webhook: non-cancel updates never touch postFullPlan', async () => {

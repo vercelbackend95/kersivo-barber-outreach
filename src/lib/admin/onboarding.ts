@@ -294,10 +294,10 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
       billingRecoveryRequired =
         (status === 'PAST_DUE' || status === 'SUSPENDED') &&
         !latestSubscription.cancelAtPeriodEnd;
+      // Starter must be chosen before Full ends; an ended Full without it becomes a departure.
       postFullPlanChoiceRequired =
-        status === 'CANCELED' ||
-        ((status === 'PAST_DUE' || status === 'SUSPENDED' || status === 'ACTIVE') &&
-          latestSubscription.cancelAtPeriodEnd);
+        (status === 'PAST_DUE' || status === 'SUSPENDED' || status === 'ACTIVE') &&
+        latestSubscription.cancelAtPeriodEnd;
     }
   }
 

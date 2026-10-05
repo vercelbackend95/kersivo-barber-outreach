@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { Prisma } from '@prisma/client';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
@@ -68,6 +69,10 @@ export const POST: APIRoute = async (context) => {
   const now = new Date();
 
   const outcome = await prisma.$transaction(async (tx) => {
+    // Same shop lock as departure materialization: a choice and a departure never interleave.
+    await tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "ShopSettings" WHERE id = ${access.shopId} FOR UPDATE`,
+    );
     const subscription = await tx.saasSubscription.findFirst({
       where: { shopId: access.shopId, status: { not: 'PENDING' } },
       orderBy: { createdAt: 'desc' },
@@ -143,6 +148,16 @@ export const POST: APIRoute = async (context) => {
         choice,
         currentPeriodEnd: subscription.currentPeriodEnd,
         alreadyChosen: true,
+      } as const;
+    }
+
+    if (choice === 'STARTER' && alreadyCanceled) {
+      // Starter must be chosen before Full ends; an ended Full without it is a departure.
+      return {
+        response: json(
+          { error: SHOP_DEPARTURE_IN_PROGRESS_MESSAGE, code: SHOP_DEPARTURE_IN_PROGRESS },
+          409,
+        ),
       } as const;
     }
 

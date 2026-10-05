@@ -64,6 +64,7 @@ export const POST: APIRoute = async (ctx) => {
         allowDepositCollection: false,
         ignorePublicActivityPause: true,
         notes: parsed.data.note,
+        requiredCapability: 'MANUAL_BOOKINGS',
       },
     );
 

@@ -114,6 +114,7 @@ type SubRow = {
   currentPeriodEnd?: Date | null;
   pastDueSince?: Date | null;
   cancelAtPeriodEnd?: boolean;
+  postFullPlan?: string;
 };
 
 type OpenRow = {
@@ -569,12 +570,21 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
       expectNoCheckoutSideEffects();
     });
 
-    it('O: an ended CANCELED subscription may start a new checkout, despite a stale shopPaidAt', async () => {
+    it('O: an ended Full with an explicit Starter choice may start a new checkout, despite a stale shopPaidAt', async () => {
       shopRow = { ...freeShop(), shopPaidAt: new Date('2026-01-01T00:00:00Z') };
-      latestSubscription = { status: 'CANCELED', currentPeriodEnd: PAST };
+      latestSubscription = { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' };
       const { res } = await post();
       expect(res.status).toBe(200);
       expect(txSubCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it('an ended Full with LEAVE (departure not yet recorded) cannot open a new checkout', async () => {
+      shopRow = { ...freeShop() };
+      latestSubscription = { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'LEAVE' };
+      const { res, body } = await post();
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+      expect(txSubCreate).not.toHaveBeenCalled();
     });
   });
 

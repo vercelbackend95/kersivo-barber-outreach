@@ -5,6 +5,7 @@ import {
   type KersivoAccessDb,
   type KersivoProductState,
 } from '../shop/kersivoAccess';
+import { isPostFullDeparturePlan } from '../shop/shopDeparture';
 
 export const BILLING_RECOVERY_REQUIRED = 'BILLING_RECOVERY_REQUIRED';
 
@@ -18,8 +19,9 @@ export type FullUpgradeEligibility =
  * shopPaidAt marker alone:
  * - PAST_DUE (in or after grace) / SUSPENDED → fix billing on the existing subscription instead;
  * - FULL_KERSIVO (ACTIVE, cancelAtPeriodEnd before period end, legacy paid) → already subscribed;
- * - a shop leaving KERSIVO (ShopDeparture) → no new checkout; reactivation goes through support;
- * - SETUP / KERSIVO Starter (incl. CANCELED or ended subscriptions) → may buy.
+ * - a shop leaving KERSIVO (ShopDeparture, or an ended Full with LEAVE / no Starter choice) → no
+ *   new checkout; reactivation goes through support;
+ * - SETUP / KERSIVO Starter (incl. an ended Full with an explicit Starter choice) → may buy.
  * Open / expired PENDING attempts are handled by the shared checkout core.
  */
 export async function resolveFullUpgradeEligibility(
@@ -62,5 +64,10 @@ export async function resolveFullUpgradeEligibility(
 
   const { state } = resolveKersivoAccess(shop, subscription, now);
   if (state === 'FULL_KERSIVO') return { ok: false, reason: 'already_full' };
+  // Full ended with LEAVE / no Starter choice: the shop is leaving even before its ShopDeparture
+  // row is materialized. An explicit STARTER choice keeps normal upgrade eligibility.
+  if (status === 'CANCELED' && isPostFullDeparturePlan(subscription?.postFullPlan)) {
+    return { ok: false, reason: 'departure_in_progress' };
+  }
   return { ok: true, state };
 }

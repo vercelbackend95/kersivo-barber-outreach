@@ -695,5 +695,22 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
       expect(createSubscriptionCheckoutSession).toHaveBeenCalledOnce();
       expect(txCreate).toHaveBeenCalled();
     });
+
+    it.each(['LEAVE', 'CHOICE_REQUIRED', 'UNDECIDED'])(
+      'Full ended with %s blocks a new Full checkout before the departure row exists',
+      async (postFullPlan) => {
+        txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: null, departure: null });
+        txFindFirst.mockResolvedValueOnce({ status: 'CANCELED', postFullPlan });
+
+        const res = await POST(
+          makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+        );
+
+        expect(res.status).toBe(409);
+        expect((await res.json()).code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+        expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+        expect(txCreate).not.toHaveBeenCalled();
+      },
+    );
   });
 });

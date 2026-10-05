@@ -13,7 +13,7 @@ import {
 import { enqueueEmail } from '../email/outbox';
 import { buildShopDepartureConfirmationEmail } from '../email/shopDepartureEmails';
 import { ACCOUNT_LIFECYCLE_ACTIONS, recordAccountLifecycleEvent } from '../setup/accountLifecycleAudit';
-import { SAAS_EXPORT_RETENTION_DAYS, retentionEndsAtFrom } from '../setup/saasEntitlement';
+import { retentionEndsAtFrom } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
 import { loadKersivoAccess, type KersivoAccessDb } from './kersivoAccess';
 import {
@@ -235,39 +235,131 @@ export async function loadShopDepartureView(
   };
 }
 
-const POST_FULL_DEPARTURE_PLANS = ['LEAVE', 'CHOICE_REQUIRED', 'UNDECIDED'] as const;
+/** Post-Full plans that mean "leaving KERSIVO" once Full has actually ended (never STARTER). */
+export const POST_FULL_DEPARTURE_PLANS = ['LEAVE', 'CHOICE_REQUIRED', 'UNDECIDED'] as const;
+
+export function isPostFullDeparturePlan(plan: unknown): boolean {
+  return (POST_FULL_DEPARTURE_PLANS as readonly string[]).includes(String(plan ?? 'UNDECIDED'));
+}
 
 /**
- * Cron: a Full subscription that ended with "Leave" (immediately) or with no Starter choice once
- * the post-Full choice window closed enters the same departure lifecycle. Never activates Starter.
+ * Records the departure for a Full subscription whose paid entitlement has ended (CANCELED) without
+ * an explicit Starter choice: LEAVE → FULL_POST_PERIOD_LEAVE, CHOICE_REQUIRED / UNDECIDED →
+ * NO_POST_FULL_CHOICE. Runs under the shop row lock and re-reads the subscription there, so a
+ * Starter choice committed first wins and a departure committed first is never overridden.
+ * Idempotent: returns null when nothing was created.
+ */
+export async function materializeDepartureForEndedFull(
+  saasSubscriptionId: string,
+  now: Date = new Date(),
+  db: typeof prisma = prisma,
+): Promise<{ shopId: string; email: string | null; departure: ShopDepartureSummary } | null> {
+  try {
+    return await db.$transaction(async (tx) => {
+      const ref = await tx.saasSubscription.findUnique({
+        where: { id: saasSubscriptionId },
+        select: { shopId: true },
+      });
+      const shopId = ref?.shopId?.trim();
+      if (!shopId || isDemoShopId(shopId)) return null;
+      const shop = await tx.shopSettings.findUnique({ where: { id: shopId }, select: { id: true } });
+      if (!shop) return null;
+      await lockShop(tx, shopId);
+      if (await tx.shopDeparture.findUnique({ where: { shopId }, select: { id: true } })) return null;
+
+      const sub = await tx.saasSubscription.findUnique({
+        where: { id: saasSubscriptionId },
+        select: {
+          id: true,
+          shopId: true,
+          status: true,
+          postFullPlan: true,
+          canceledAt: true,
+          currentPeriodEnd: true,
+          customerEmail: true,
+        },
+      });
+      if (!sub || sub.shopId?.trim() !== shopId) return null;
+      if (String(sub.status) !== 'CANCELED' || !isPostFullDeparturePlan(sub.postFullPlan)) return null;
+
+      const open = await tx.saasSubscription.count({
+        where: { shopId, status: { in: [...OPEN_SUBSCRIPTION_STATUSES] } },
+      });
+      if (open > 0) return null;
+      const latest = await tx.saasSubscription.findFirst({
+        where: { shopId, status: { not: 'PENDING' } },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+      if (latest?.id !== sub.id) return null;
+      // Authoritative paid entitlement: a still-paid Full shop never departs early.
+      const access = await loadKersivoAccess(shopId, now, tx);
+      if (access.state !== 'SETUP') return null;
+
+      const isLeave = String(sub.postFullPlan) === 'LEAVE';
+      const futureAppointments = await countFutureOperationalBookings(shopId, now, tx);
+      const departure = await tx.shopDeparture.create({
+        data: {
+          shopId,
+          origin: isLeave
+            ? ShopDepartureOrigin.FULL_POST_PERIOD_LEAVE
+            : ShopDepartureOrigin.NO_POST_FULL_CHOICE,
+          requestedAt: now,
+          requestedByEmail: sub.customerEmail?.trim().toLowerCase() || null,
+          saasSubscriptionId: sub.id,
+          serviceEndedAt: sub.canceledAt ?? sub.currentPeriodEnd ?? now,
+          ...initialDepartureFields({ now, futureAppointments, retentionEndsAt: retentionEndsAtFrom(now) }),
+        },
+      });
+      return {
+        shopId,
+        email: sub.customerEmail ?? null,
+        departure: summarize(departure, futureAppointments),
+      };
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) return null;
+    throw error;
+  }
+}
+
+/** Materializes and audits a post-Full departure; never throws (cron is the backstop). */
+export async function materializeAndRecordEndedFullDeparture(
+  saasSubscriptionId: string,
+  now: Date = new Date(),
+  db: typeof prisma = prisma,
+): Promise<boolean> {
+  try {
+    const made = await materializeDepartureForEndedFull(saasSubscriptionId, now, db);
+    if (!made) return false;
+    await recordShopDepartureRequested({
+      shopId: made.shopId,
+      userId: null,
+      email: made.email,
+      departure: made.departure,
+    });
+    return true;
+  } catch (error) {
+    console.error('[shop-departure] failed to record post-Full departure', { saasSubscriptionId, error });
+    return false;
+  }
+}
+
+/**
+ * Cron backstop: any ended Full without an explicit Starter choice whose departure was not yet
+ * recorded (e.g. a missed webhook) enters the departure lifecycle now. Never activates Starter.
  */
 export async function materializePostFullDepartures(
   now: Date = new Date(),
   db: typeof prisma = prisma,
 ): Promise<{ created: number }> {
-  const choiceWindowCutoff = new Date(
-    now.getTime() - SAAS_EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-  );
   const candidates = await db.saasSubscription.findMany({
     where: {
       status: 'CANCELED',
       shopId: { not: null },
       postFullPlan: { in: [...POST_FULL_DEPARTURE_PLANS] },
-      OR: [
-        { postFullPlan: 'LEAVE' },
-        { retentionEndsAt: { lte: now } },
-        { retentionEndsAt: null, canceledAt: { lte: choiceWindowCutoff } },
-      ],
     },
-    select: {
-      id: true,
-      shopId: true,
-      postFullPlan: true,
-      canceledAt: true,
-      currentPeriodEnd: true,
-      retentionEndsAt: true,
-      customerEmail: true,
-    },
+    select: { id: true, shopId: true },
   });
   if (candidates.length === 0) return { created: 0 };
 
@@ -282,61 +374,9 @@ export async function materializePostFullDepartures(
   for (const row of candidates) {
     const shopId = row.shopId?.trim();
     if (!shopId || departed.has(shopId) || isDemoShopId(shopId)) continue;
-
-    try {
-      const made = await db.$transaction(async (tx) => {
-        const shop = await tx.shopSettings.findUnique({ where: { id: shopId }, select: { id: true } });
-        if (!shop) return false;
-        await lockShop(tx, shopId);
-        if (await tx.shopDeparture.findUnique({ where: { shopId }, select: { id: true } })) return false;
-
-        const open = await tx.saasSubscription.count({
-          where: { shopId, status: { in: [...OPEN_SUBSCRIPTION_STATUSES] } },
-        });
-        if (open > 0) return false;
-        const latest = await tx.saasSubscription.findFirst({
-          where: { shopId, status: { not: 'PENDING' } },
-          orderBy: { createdAt: 'desc' },
-          select: { id: true },
-        });
-        if (latest?.id !== row.id) return false;
-        const access = await loadKersivoAccess(shopId, now, tx);
-        if (access.state !== 'SETUP') return false;
-
-        const isLeave = String(row.postFullPlan) === 'LEAVE';
-        const serviceEndedAt = row.canceledAt ?? row.currentPeriodEnd ?? now;
-        const retentionEndsAt = isLeave
-          ? (row.retentionEndsAt ?? retentionEndsAtFrom(serviceEndedAt))
-          : retentionEndsAtFrom(now);
-        const futureAppointments = await countFutureOperationalBookings(shopId, now, tx);
-        const departure = await tx.shopDeparture.create({
-          data: {
-            shopId,
-            origin: isLeave
-              ? ShopDepartureOrigin.FULL_POST_PERIOD_LEAVE
-              : ShopDepartureOrigin.NO_POST_FULL_CHOICE,
-            requestedAt: now,
-            requestedByEmail: row.customerEmail?.trim().toLowerCase() || null,
-            saasSubscriptionId: row.id,
-            serviceEndedAt,
-            ...initialDepartureFields({ now, futureAppointments, retentionEndsAt }),
-          },
-        });
-        return summarize(departure, futureAppointments);
-      });
-      if (made) {
-        created += 1;
-        departed.add(shopId);
-        await recordShopDepartureRequested({
-          shopId,
-          userId: null,
-          email: row.customerEmail,
-          departure: made,
-        });
-      }
-    } catch (error) {
-      if (isUniqueViolation(error)) continue;
-      console.error('[shop-departure] failed to record post-Full departure', { shopId, error });
+    if (await materializeAndRecordEndedFullDeparture(row.id, now, db)) {
+      created += 1;
+      departed.add(shopId);
     }
   }
   return { created };

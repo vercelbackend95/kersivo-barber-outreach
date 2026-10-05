@@ -24,6 +24,7 @@ import {
   advanceWindingDownDepartures,
   countFutureOperationalBookings,
   loadShopDepartureView,
+  materializeDepartureForEndedFull,
   materializePostFullDepartures,
   requestStarterDeparture,
 } from './shopDeparture';
@@ -95,6 +96,9 @@ function makeDb(world: World) {
     },
     saasSubscription: {
       findFirst: vi.fn(async () => world.subscription),
+      findUnique: vi.fn(async () =>
+        world.subscription ? { id: 'saas-1', shopId: 'shop-1', ...world.subscription } : null,
+      ),
       count: vi.fn(async () => world.openSubscriptions ?? 0),
       findMany: vi.fn(async () => world.candidates ?? []),
     },
@@ -327,62 +331,124 @@ describe('departure lifecycle cron steps', () => {
     expectBookingsUntouched(db);
   });
 
-  const canceledFull = {
-    id: 'saas-1',
-    shopId: 'shop-1',
-    canceledAt: new Date('2026-09-20T00:00:00.000Z'),
-    currentPeriodEnd: new Date('2026-09-20T00:00:00.000Z'),
-    retentionEndsAt: new Date('2026-10-20T00:00:00.000Z'),
-    customerEmail: 'owner@example.com',
-  };
+  const FULL_END = new Date('2026-10-04T00:00:00.000Z');
 
-  it('Full → Leave enters the same departure pipeline after the paid period (no Starter activation)', async () => {
-    const world: World = {
+  function endedFull(postFullPlan: string, overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'saas-1',
+      shopId: 'shop-1',
+      status: 'CANCELED',
+      cancelAtPeriodEnd: true,
+      currentPeriodEnd: FULL_END,
+      canceledAt: FULL_END,
+      // Billing retention still open: it must NOT delay the departure.
+      retentionEndsAt: new Date(FULL_END.getTime() + 30 * DAY),
+      customerEmail: 'owner@example.com',
+      postFullPlan,
+      ...overrides,
+    };
+  }
+
+  function worldFor(subscription: Record<string, unknown>, extra: Partial<World> = {}): World {
+    return {
       shop: { ...starterShop, freeBookingActivatedAt: null },
       departure: null,
-      subscription: { id: 'saas-1', status: 'CANCELED', currentPeriodEnd: canceledFull.currentPeriodEnd, postFullPlan: 'LEAVE' },
+      subscription,
       bookings: [],
-      candidates: [{ ...canceledFull, postFullPlan: 'LEAVE' }],
+      ...extra,
     };
+  }
+
+  it('1: ACTIVE Full with cancellation scheduled + LEAVE → no departure before the paid period ends', async () => {
+    const world = worldFor(
+      endedFull('LEAVE', { status: 'ACTIVE', currentPeriodEnd: new Date(NOW.getTime() + 10 * DAY), canceledAt: null }),
+      { shop: { ...starterShop, shopPaidAt: new Date('2026-09-01T00:00:00.000Z') }, openSubscriptions: 1 },
+    );
     const db = makeDb(world);
-    expect(await materializePostFullDepartures(NOW, db as never)).toEqual({ created: 1 });
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).toBeNull();
+    expect(world.departure).toBeNull();
+  });
+
+  it('2: ended Full + LEAVE → departure immediately, retention from the departure (not billing retention)', async () => {
+    const world = worldFor(endedFull('LEAVE'));
+    const db = makeDb(world);
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).toMatchObject({
+      shopId: 'shop-1',
+      departure: { origin: 'FULL_POST_PERIOD_LEAVE', status: 'RETENTION' },
+    });
     expect(world.departure).toMatchObject({
       origin: 'FULL_POST_PERIOD_LEAVE',
-      status: 'RETENTION',
       saasSubscriptionId: 'saas-1',
-      serviceEndedAt: canceledFull.canceledAt,
-      retentionEndsAt: canceledFull.retentionEndsAt,
+      serviceEndedAt: FULL_END,
+      retentionStartedAt: NOW,
+      retentionEndsAt: new Date(NOW.getTime() + 30 * DAY),
     });
-    const where = db.saasSubscription.findMany.mock.calls[0][0].where;
-    expect(where.postFullPlan.in).not.toContain('STARTER');
   });
 
-  it('CHOICE_REQUIRED with no Starter choice becomes an ordinary departure, kept in wind-down while bookings exist', async () => {
-    const world: World = {
-      shop: starterShop,
-      departure: null,
-      subscription: { id: 'saas-1', status: 'CANCELED', currentPeriodEnd: canceledFull.currentPeriodEnd, postFullPlan: 'CHOICE_REQUIRED' },
-      bookings: [futureBooking],
-      candidates: [{ ...canceledFull, postFullPlan: 'CHOICE_REQUIRED', retentionEndsAt: new Date(NOW.getTime() - DAY) }],
-    };
+  it('3 + 8: ended Full + CHOICE_REQUIRED → NO_POST_FULL_CHOICE departure while billing retention is still open', async () => {
+    const world = worldFor(endedFull('CHOICE_REQUIRED'));
+    const db = makeDb(world);
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).not.toBeNull();
+    expect(world.departure).toMatchObject({ origin: 'NO_POST_FULL_CHOICE' });
+  });
+
+  it('4: ended Full + legacy UNDECIDED → ordinary departure immediately', async () => {
+    const world = worldFor(endedFull('UNDECIDED'));
+    const db = makeDb(world);
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).not.toBeNull();
+    expect(world.departure).toMatchObject({ origin: 'NO_POST_FULL_CHOICE' });
+  });
+
+  it('5: ended Full + explicit STARTER → never a departure (Starter wins under the shop lock)', async () => {
+    const world = worldFor(endedFull('STARTER'), { shop: starterShop });
+    const db = makeDb(world);
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).toBeNull();
+    expect(world.departure).toBeNull();
+    expect(db.$queryRaw).toHaveBeenCalled();
+  });
+
+  it('6: CHOICE_REQUIRED with a future operational booking → WINDING_DOWN, no retention countdown', async () => {
+    const world = worldFor(endedFull('CHOICE_REQUIRED'), { bookings: [futureBooking] });
+    const db = makeDb(world);
+    await materializeDepartureForEndedFull('saas-1', NOW, db as never);
+    expect(world.departure).toMatchObject({ status: 'WINDING_DOWN', retentionEndsAt: null });
+    expectBookingsUntouched(db);
+    expect(
+      resolveKersivoProductState({ ...starterShop, departure: { status: 'WINDING_DOWN' } }, world.subscription as never, NOW),
+    ).toBe('SETUP');
+  });
+
+  it('7: CHOICE_REQUIRED without future bookings → departure retention path', async () => {
+    const world = worldFor(endedFull('CHOICE_REQUIRED'));
+    const db = makeDb(world);
+    await materializeDepartureForEndedFull('saas-1', NOW, db as never);
+    expect(world.departure).toMatchObject({
+      status: 'RETENTION',
+      retentionEndsAt: new Date(NOW.getTime() + 30 * DAY),
+    });
+  });
+
+  it('a newer subscription or an existing departure is never overridden; replays create nothing', async () => {
+    const world = worldFor(endedFull('LEAVE'));
+    const db = makeDb(world);
+    await materializeDepartureForEndedFull('saas-1', NOW, db as never);
+    expect(await materializeDepartureForEndedFull('saas-1', NOW, db as never)).toBeNull();
+    expect(db.shopDeparture.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('cron backstop materializes ended Full rows without waiting for billing retention', async () => {
+    const world = worldFor(endedFull('CHOICE_REQUIRED'), {
+      candidates: [{ id: 'saas-1', shopId: 'shop-1' }],
+    });
     const db = makeDb(world);
     expect(await materializePostFullDepartures(NOW, db as never)).toEqual({ created: 1 });
-    expect(world.departure).toMatchObject({ origin: 'NO_POST_FULL_CHOICE', status: 'WINDING_DOWN' });
-    expect(resolveKersivoProductState({ ...starterShop, departure: { status: 'WINDING_DOWN' } }, world.subscription as never, NOW)).toBe('SETUP');
-  });
-
-  it('a still-paid Full shop never gets a departure', async () => {
-    const world: World = {
-      shop: { ...starterShop, shopPaidAt: new Date('2026-09-01T00:00:00.000Z') },
-      departure: null,
-      subscription: { id: 'saas-1', status: 'ACTIVE', currentPeriodEnd: new Date(NOW.getTime() + 10 * DAY), postFullPlan: 'LEAVE' },
-      openSubscriptions: 1,
-      bookings: [],
-      candidates: [{ ...canceledFull, postFullPlan: 'LEAVE' }],
-    };
-    const db = makeDb(world);
-    expect(await materializePostFullDepartures(NOW, db as never)).toEqual({ created: 0 });
-    expect(world.departure).toBeNull();
+    const where = (db.saasSubscription.findMany.mock.calls as unknown as Array<[{ where: Record<string, unknown> }]>)[0][0].where;
+    expect(where).toEqual({
+      status: 'CANCELED',
+      shopId: { not: null },
+      postFullPlan: { in: ['LEAVE', 'CHOICE_REQUIRED', 'UNDECIDED'] },
+    });
+    expect(recordAccountLifecycleEvent).toHaveBeenCalledTimes(1);
   });
 });
 

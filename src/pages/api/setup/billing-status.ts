@@ -105,7 +105,9 @@ export const GET: APIRoute = async (context) => {
     !subscription.cancelAtPeriodEnd;
   const postFullPlan = String(subscription.postFullPlan ?? 'UNDECIDED');
   const postFullPlanChoiceRequired =
-    (subscription.cancelAtPeriodEnd || phase === 'canceled') &&
+    // Starter must be chosen before Full ends; an ended Full without it becomes a departure.
+    subscription.cancelAtPeriodEnd &&
+    phase !== 'canceled' &&
     postFullPlan !== 'STARTER' &&
     postFullPlan !== 'LEAVE';
 
