@@ -1,10 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { loadKersivoAccessMock } = vi.hoisted(() => ({
+  loadKersivoAccessMock: vi.fn(),
+}));
+
 vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/shop/kersivoAccess')>();
-  return { ...actual, loadKersivoAccess: async () => actual.accessForState('FULL_KERSIVO') };
+  return {
+    ...actual,
+    loadKersivoAccess: (...args: unknown[]) => loadKersivoAccessMock(...args),
+  };
 });
 import type { APIContext } from 'astro';
 import { BookingStatus, Prisma } from '@prisma/client';
+import { accessForState } from '@/lib/shop/kersivoAccess';
 
 const requireAdminContext = vi.fn();
 const bookingFindMany = vi.fn();
@@ -78,7 +87,13 @@ describe('GET /api/admin/bookings', () => {
     requireAdminContext.mockReset();
     bookingFindMany.mockReset();
     bookingCount.mockReset();
+    loadKersivoAccessMock.mockReset();
+    loadKersivoAccessMock.mockResolvedValue(accessForState('FULL_KERSIVO'));
     requireAdminContext.mockResolvedValue(adminAccess);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('returns 400 for an invalid non-empty status and does not query Prisma', async () => {
@@ -124,6 +139,58 @@ describe('GET /api/admin/bookings', () => {
       where: { status?: BookingStatus };
     };
     expect(args.where.status).toBeUndefined();
+  });
+
+  it('Starter history is server-clamped to the rolling 90-day window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-05T12:00:00.000Z'));
+    loadKersivoAccessMock.mockResolvedValue(accessForState('FREE_BOOKING'));
+    bookingFindMany.mockResolvedValue([]);
+
+    const res = await GET(
+      makeContext('http://localhost/api/admin/bookings?view=history&scope=past&limit=20'),
+    );
+
+    expect(res.status).toBe(200);
+    const args = bookingFindMany.mock.calls[0]?.[0] as {
+      where: { AND?: Array<{ startAt?: { gte?: Date } }> };
+    };
+    const floor = (args.where.AND ?? [])
+      .map((condition) => condition.startAt?.gte)
+      .find((value): value is Date => value instanceof Date);
+    expect(floor).toBeInstanceOf(Date);
+    expect(floor!.toISOString()).toBe('2026-07-06T23:00:00.000Z');
+  });
+
+  it('Starter direct day access older than 90 days remains a Full upgrade gate', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-05T12:00:00.000Z'));
+    loadKersivoAccessMock.mockResolvedValue(accessForState('FREE_BOOKING'));
+    bookingFindMany.mockResolvedValue([]);
+
+    const res = await GET(
+      makeContext('http://localhost/api/admin/bookings?date=2026-06-01&mode=day'),
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.code).toBe('KERSIVO_UPGRADE_REQUIRED');
+    expect(body.requiredCapability).toBe('FULL_BOOKING_HISTORY');
+    expect(bookingFindMany).not.toHaveBeenCalled();
+  });
+
+  it('Starter direct past day inside 90 days remains available', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-05T12:00:00.000Z'));
+    loadKersivoAccessMock.mockResolvedValue(accessForState('FREE_BOOKING'));
+    bookingFindMany.mockResolvedValue([]);
+
+    const res = await GET(
+      makeContext('http://localhost/api/admin/bookings?date=2026-09-01&mode=day'),
+    );
+
+    expect(res.status).toBe(200);
+    expect(bookingFindMany).toHaveBeenCalledTimes(1);
   });
 
   it('keeps standalone history unscoped while Bookings history can exclude or include today', async () => {
