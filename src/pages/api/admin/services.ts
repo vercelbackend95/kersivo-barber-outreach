@@ -16,6 +16,8 @@ import {
   assertUserSuppliedPublicMediaUrlAllowed,
   isUserSuppliedPublicMediaUrlRejectedError,
 } from '@/lib/storage/publicBlobSafety';
+import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '@/lib/booking/bookingPaymentPolicy';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
   isShopMediaMutationBlockedError,
   lockShopForPublicMediaAssociation,
@@ -87,6 +89,21 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const payload = parsed.data;
+  const productAccess = await loadKersivoAccess(shopId);
+  if (
+    productAccess.state === 'FREE_BOOKING' &&
+    payload.isActive &&
+    payload.pricePence < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE
+  ) {
+    return new Response(
+      JSON.stringify({
+        error: 'Starter services must be priced at £5 or more to be available for online booking.',
+        code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+      }),
+      { status: 400 },
+    );
+  }
+
   const category = normalizeServiceCategory(payload.category);
   if (!category) {
     return new Response(JSON.stringify({ error: 'Category is required.' }), { status: 400 });
