@@ -201,6 +201,7 @@ export const GET: APIRoute = async (context) => {
         id: shop.id,
         stripeConnectAccountId: shop.stripeConnectAccountId ?? null,
         stripeConnectChargesEnabled: Boolean(shop.stripeConnectChargesEnabled),
+        stripeConnectDisconnectedAt: shop.stripeConnectDisconnectedAt ?? null,
       },
       access: productAccess,
     }).ok;
