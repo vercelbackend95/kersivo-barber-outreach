@@ -615,7 +615,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     setError('');
     try {
       if (freeActivationStep && selectedPlan === 'FULL') {
-        const result = await startFullKersivoUpgradeCheckout();
+        const result = await startFullKersivoUpgradeCheckout({ returnToOnboarding: true });
         if (result.kind === 'redirect') {
           redirectToStripe(result.url);
           return;
