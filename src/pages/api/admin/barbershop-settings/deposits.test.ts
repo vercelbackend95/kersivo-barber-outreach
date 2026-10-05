@@ -306,86 +306,34 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       });
     });
 
-    it('Y: Free may switch NONE → DEPOSIT → NONE when Connect is ready (depositsEnabled synced)', async () => {
+    it('v1.19: Starter payment controls are read-only even for OWNER with billing.manage', async () => {
       asState('FREE_BOOKING');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue(freeShop);
-      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
 
-      const on = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'DEPOSIT' }));
-      expect(on.status).toBe(200);
-      expect(await on.json()).toEqual({ depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' });
-
-      const off = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'NONE' }));
-      expect(off.status).toBe(200);
-      expect(await off.json()).toEqual({ depositsEnabled: false, bookingPaymentMode: 'NONE' });
-
-      expect(shopSettingsUpdateMany.mock.calls.map((call) => call[0].data)).toEqual([
-        { depositsEnabled: true, bookingPaymentMode: 'DEPOSIT' },
-        { depositsEnabled: false, bookingPaymentMode: 'NONE' },
-      ]);
-    });
-
-    it('Y: legacy depositsEnabled payload also works for Free', async () => {
-      asState('FREE_BOOKING');
-      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue(freeShop);
-      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
-
-      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
-      expect(res.status).toBe(200);
-      expect((await res.json()).bookingPaymentMode).toBe('DEPOSIT');
-    });
-
-    it('Z: Free cannot enable DEPOSIT without ready Connect', async () => {
-      asState('FREE_BOOKING');
-      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      for (const shop of [
-        { ...freeShop, stripeConnectAccountId: null },
-        { ...freeShop, stripeConnectChargesEnabled: false },
+      for (const body of [
+        { bookingPaymentMode: 'NONE' },
+        { bookingPaymentMode: 'DEPOSIT' },
+        { bookingPaymentMode: 'FULL' },
+        { depositsEnabled: true },
+        { depositsEnabled: false },
       ]) {
-        shopSettingsFindUnique.mockResolvedValue(shop);
-        const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'DEPOSIT' }));
-        expect(res.status).toBe(400);
-        expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
+        const res = await PATCH(jsonCtx('PATCH', body));
+        expect(res.status).toBe(403);
+        expect((await res.json()).code).toBe('STARTER_PAYMENT_SETTINGS_READ_ONLY');
       }
+
+      expect(shopSettingsFindUnique).not.toHaveBeenCalled();
       expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
     });
 
-    it('Free can always switch back to NONE even when Connect is not ready', async () => {
-      asState('FREE_BOOKING');
-      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue({ ...freeShop, stripeConnectChargesEnabled: false });
-      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
-
-      const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'NONE' }));
-      expect(res.status).toBe(200);
-    });
-
-    it('SETUP shop cannot enable DEPOSIT', async () => {
+    it('v1.19: SETUP cannot edit booking payment controls', async () => {
       asState('SETUP');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue(freeShop);
 
       const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'DEPOSIT' }));
       expect(res.status).toBe(403);
-      expect((await res.json()).code).toBe('BOOKING_PAYMENTS_NOT_AVAILABLE');
+      expect((await res.json()).code).toBe('STARTER_PAYMENT_SETTINGS_READ_ONLY');
       expect(shopSettingsUpdateMany).not.toHaveBeenCalled();
-    });
-
-    it('4C-H: Free may set FULL when Connect is ready (depositsEnabled=false)', async () => {
-      asState('FREE_BOOKING');
-      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
-      shopSettingsFindUnique.mockResolvedValue(freeShop);
-      shopSettingsUpdateMany.mockResolvedValue({ count: 1 });
-
-      const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
-      expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ depositsEnabled: false, bookingPaymentMode: 'FULL' });
-      expect(shopSettingsUpdateMany).toHaveBeenCalledWith({
-        where: { id: 'shop-1' },
-        data: { depositsEnabled: false, bookingPaymentMode: 'FULL' },
-      });
     });
 
     it('4C-I / K: Full may set FULL; FULL writes depositsEnabled=false', async () => {
@@ -401,24 +349,17 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       });
     });
 
-    it('4C-J: FULL cannot be enabled without ready Connect; SETUP and demo are denied', async () => {
-      asState('FREE_BOOKING');
+    it('4C-J: Full online-payment modes fail closed without ready Connect; demo is denied', async () => {
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       for (const shop of [
-        { ...freeShop, stripeConnectAccountId: null },
-        { ...freeShop, stripeConnectChargesEnabled: false },
+        { ...paidShop, stripeConnectAccountId: null },
+        { ...paidShop, stripeConnectChargesEnabled: false },
       ]) {
         shopSettingsFindUnique.mockResolvedValue(shop);
         const res = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
         expect(res.status).toBe(400);
         expect((await res.json()).code).toBe('BOOKING_PAYMENT_NOT_READY');
       }
-
-      asState('SETUP');
-      shopSettingsFindUnique.mockResolvedValue(freeShop);
-      const setup = await PATCH(jsonCtx('PATCH', { bookingPaymentMode: 'FULL' }));
-      expect(setup.status).toBe(403);
-      expect((await setup.json()).code).toBe('BOOKING_PAYMENTS_NOT_AVAILABLE');
 
       asState('FULL_KERSIVO');
       requireAdminContext.mockResolvedValue(accessFor('OWNER', DEMO_SHOP_ID));
@@ -498,6 +439,9 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         paid: true,
         productState: 'FULL_KERSIVO',
         bookingPaymentMode: 'DEPOSIT',
+        effectiveBookingPaymentPolicy: 'DEPOSIT',
+        paymentControlsEditable: true,
+        starterPaymentPolicy: null,
         bookingPaymentsAvailable: true,
         bookingPaymentsReady: true,
         collectReady: true,
@@ -518,9 +462,16 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         paid: false,
         productState: 'FREE_BOOKING',
         bookingPaymentMode: 'NONE',
+        effectiveBookingPaymentPolicy: 'STARTER_FIXED',
+        paymentControlsEditable: false,
+        starterPaymentPolicy: {
+          minimumOnlinePaymentPence: 500,
+          payInFullAvailable: true,
+          publicPayAtShop: false,
+        },
         bookingPaymentsAvailable: true,
         bookingPaymentsReady: true,
-        collectReady: false,
+        collectReady: true,
         platformFeeBps: 0,
         platformFeeExamplePence: 0,
       });
