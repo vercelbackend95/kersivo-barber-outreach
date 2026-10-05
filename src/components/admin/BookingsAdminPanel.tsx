@@ -276,6 +276,12 @@ function addOneLondonCalendarDay(isoDate: string): string {
   return formatInTimeZone(addDays(anchor, 1), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
 
+function getStarterHistoryFloorLondonDate(nowMs: number): string {
+  const today = getTodayLondonDate(nowMs);
+  const anchor = fromZonedTime(`${today}T12:00:00`, ADMIN_TIMEZONE);
+  return formatInTimeZone(addDays(anchor, -90), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
 function formatRelativeTime(startAt: string, endAt: string) {
   const nowMs = Date.now();
   const startMs = new Date(startAt).getTime();
@@ -746,12 +752,14 @@ export default function BookingsAdminPanel({
     return listenForHeroShowcaseVisible(window, () => setShowcaseNowScrollArmed(true));
   }, [showcaseMode]);
   const { gate: productGate, openUpgrade } = useAdminProductLocks();
-  const historyLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
+  const historyLocked = isCapabilityLocked(productGate, 'recentBookingHistory');
+  const fullHistoryLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
   const clientsLocked = isCapabilityLocked(productGate, 'clients');
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = getTodayLondonDate(clock.nowMs());
-    // Free: past days are booking history (server-gated); a past deep link opens on today.
+    const starterFloor = getStarterHistoryFloorLondonDate(clock.nowMs());
     if (urlBookingDate && historyLocked && urlBookingDate < today) return today;
+    if (urlBookingDate && fullHistoryLocked && urlBookingDate < starterFloor) return starterFloor;
     return urlBookingDate ?? today;
   });
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
@@ -1584,6 +1592,14 @@ export default function BookingsAdminPanel({
     return 'Choose dates';
   }, [historyDateRange]);
   const handleHistoryDateRangeChange = useCallback((range: HistoryDateRange | null) => {
+    if (range?.from && fullHistoryLocked) {
+      const fromYmd = formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      if (fromYmd < getStarterHistoryFloorLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
+    }
+
     setHistoryDateRange(range);
     if (!range?.from || !range?.to) return;
 
@@ -1593,7 +1609,7 @@ export default function BookingsAdminPanel({
     if (fromYmd <= todayYmd && todayYmd <= toYmd) {
       setIncludeTodayInHistory(true);
     }
-  }, [clock]);
+  }, [clock, fullHistoryLocked, openUpgrade]);
   const clearHistoryDateRange = useCallback(() => {
     setHistoryDateRange(null);
   }, []);
@@ -1626,9 +1642,13 @@ export default function BookingsAdminPanel({
         openUpgrade('history');
         return;
       }
+      if (fullHistoryLocked && next < getStarterHistoryFloorLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
       setSelectedDate(next);
     },
-    [clock, historyLocked, openUpgrade],
+    [clock, fullHistoryLocked, historyLocked, openUpgrade],
   );
 
   const openClientProfileForBooking = useCallback(
@@ -2920,8 +2940,8 @@ export default function BookingsAdminPanel({
                         dateRange={historyDateRange}
                         isMobileViewport={isMobileViewport}
                         timezone={ADMIN_TIMEZONE}
-                        onChangeRange={setHistoryDateRange}
-                        onClear={() => setHistoryDateRange(null)}
+                        onChangeRange={handleHistoryDateRangeChange}
+                        onClear={clearHistoryDateRange}
                       />
                     ) : null}
                   </div>
