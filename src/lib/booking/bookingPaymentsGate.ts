@@ -20,6 +20,7 @@ export type BookingPaymentsShopFields = {
   id: string;
   stripeConnectAccountId: string | null;
   stripeConnectChargesEnabled: boolean;
+  stripeConnectDisconnectedAt?: Date | null;
 };
 
 /**
@@ -36,6 +37,7 @@ export function evaluateBookingPayments(params: {
     return { ok: false, reason: 'no_booking_payments_capability' };
   }
   if (!shop.stripeConnectAccountId?.trim()) return { ok: false, reason: 'connect_missing' };
+  if (shop.stripeConnectDisconnectedAt) return { ok: false, reason: 'connect_not_ready' };
   if (!shop.stripeConnectChargesEnabled) return { ok: false, reason: 'connect_not_ready' };
   return { ok: true, reason: 'ok' };
 }
