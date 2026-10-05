@@ -84,7 +84,7 @@ describe('booking write surface', () => {
     ).toEqual([]);
   });
 
-  it('does not ship the unvalidated admin manual booking route', () => {
+  it('ships manual booking only as a validated delegate to createInstantBooking', () => {
     const manualRoute = resolve(
       process.cwd(),
       'src',
@@ -94,8 +94,10 @@ describe('booking write surface', () => {
       'bookings',
       'manual.ts',
     );
-    expect(existsSync(manualRoute), 'src/pages/api/admin/bookings/manual.ts must not exist').toBe(
-      false,
-    );
+    expect(existsSync(manualRoute), 'validated manual booking route should exist').toBe(true);
+    const src = readFileSync(manualRoute, 'utf8');
+    expect(src).toContain('createInstantBooking');
+    expect(src).toContain('allowDepositCollection: false');
+    expect(src).not.toMatch(BOOKING_CREATE_CALL);
   });
 });
