@@ -88,6 +88,9 @@ export default function SiteLaunchHubPanel() {
     );
   }
 
+  const testBookingHref =
+    data.liveBookingDestination ?? (data.shopId ? `/book/${encodeURIComponent(data.shopId)}` : null);
+
   return (
     <div className="site-launch-hub">
       <h2 className="site-launch-hub__title">Site launch</h2>
@@ -138,7 +141,7 @@ export default function SiteLaunchHubPanel() {
             </a>
             {data.shopId ? (
               <a
-                href={`/book/${encodeURIComponent(data.shopId)}`}
+                href={testBookingHref ?? '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn--secondary btn--sm"
@@ -155,7 +158,7 @@ export default function SiteLaunchHubPanel() {
         <div className="site-launch-hub__actions">
           {data.shopId ? (
             <a
-              href={`/book/${encodeURIComponent(data.shopId)}`}
+              href={testBookingHref ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn--secondary btn--sm"
