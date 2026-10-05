@@ -18,6 +18,8 @@ import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import '@/styles/components/starter-landing.css';
 
 const currentYear = new Date().getFullYear();
@@ -25,27 +27,27 @@ const currentYear = new Date().getFullYear();
 const starterFeatures = [
   {
     title: 'Hosted booking page',
-    body: 'Give clients a clean KERSIVO-hosted booking page without building a website first.',
+    body: 'Give clients a clean KERSIVO-hosted booking page they can open from Google, a QR code or a link — no website build needed.',
   },
   {
-    title: 'Up to 4 bookable barbers',
-    body: 'Run the core diary for one physical shop with up to four active barbers taking bookings.',
+    title: 'Bookings and timeline',
+    body: 'See every current and upcoming booking on the timeline, and add walk-ins and phone bookings manually with the same availability rules.',
   },
   {
-    title: 'Manual bookings',
-    body: 'Add walk-ins and phone bookings from the dashboard while keeping availability and overlap rules intact.',
+    title: 'Team, services and availability',
+    body: 'Set up to 4 active bookable barbers, your services and prices, and when each barber can be booked.',
   },
   {
-    title: '90-day booking history',
-    body: 'Keep recent booking context available for daily operations without exposing the full historical CRM layer.',
+    title: 'Rolling 90-day history',
+    body: 'Keep the last 90 days of past bookings to hand for day-to-day questions, alongside all current and future bookings.',
   },
   {
     title: 'Clients Core',
-    body: 'Search client contacts and see the recent operational context you need to run the day.',
+    body: 'Find client contact details and recent booking context quickly while you run the day.',
   },
   {
-    title: 'Email reminders',
-    body: 'Automated booking emails help clients remember appointments without requiring the Full plan.',
+    title: 'Automated email reminders',
+    body: 'Booking confirmations and appointment reminders go out by email automatically, so clients remember to turn up.',
   },
 ] as const;
 
@@ -65,7 +67,7 @@ const fullOnly = [
   title={STARTER_PAGE_TITLE}
   description={STARTER_PAGE_DESCRIPTION}
   canonicalPath={STARTER_PAGE_PATH}
-  jsonLd={[buildStarterWebPageJsonLd(), buildStarterFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterFaqJsonLd()]}
 >
   <main class="starter-landing">
     <section class="starter-hero" aria-labelledby="starter-hero-title">
@@ -88,10 +90,15 @@ const fullOnly = [
           </div>
 
           <div class="starter-hero__actions">
-            <a href="/admin" class="starter-btn starter-btn--primary" data-track="starter_signup_click">
+            <a
+              href="/admin"
+              class="starter-btn starter-btn--primary"
+              data-track="starter_signup_click"
+              data-track-placement="starter_hero"
+            >
               Start KERSIVO Starter
             </a>
-            <a href="/demo" class="starter-btn starter-btn--secondary">
+            <a href="/demo" class="starter-btn starter-btn--secondary" data-track="view_live_demo_click">
               See KERSIVO in action
             </a>
           </div>
@@ -180,11 +187,13 @@ const fullOnly = [
             <span class="starter-distribution-card__number">02</span>
             <h3>Included initial QR Kit</h3>
             <p>
-              Eligible verified UK Starter locations can request one initial kit with separate
-              WINDOW and REBOOK dynamic booking QR assets.
+              Eligible verified UK Starter locations can request one initial kit with two separate
+              QR codes: WINDOW for inside the shop glass and REBOOK for the counter. Both open your
+              booking page and keep working if you later move to Full.
             </p>
             <p class="starter-note">
-              Shop details are verified before print. Replacement and reorder handling is separate.
+              Shop details are verified before the kit goes to print. Replacements and reorders are
+              handled separately.
             </p>
           </article>
 
@@ -239,25 +248,35 @@ const fullOnly = [
             <ul>
               <li>KERSIVO-hosted booking page</li>
               <li>Up to 4 active bookable barbers</li>
-              <li>Bookings, services and availability</li>
+              <li>Bookings, team, services and availability</li>
               <li>Manual bookings</li>
-              <li>90-day booking history</li>
+              <li>Rolling 90-day booking history</li>
               <li>Clients Core</li>
-              <li>Email reminders</li>
-              <li>Google booking setup</li>
-              <li>Included initial QR Kit for eligible verified UK shops</li>
+              <li>Automated email reminders</li>
+              <li>Pay at shop, or Stripe deposits and upfront payments</li>
+              <li>Guided Google booking-link setup</li>
+              <li>Included initial QR Kit for eligible verified UK locations</li>
             </ul>
-            <a href="/admin" class="starter-btn starter-btn--primary">Start Starter</a>
+            <a
+              href="/admin"
+              class="starter-btn starter-btn--primary"
+              data-track="starter_signup_click"
+              data-track-placement="starter_compare"
+            >
+              Start KERSIVO Starter
+            </a>
           </article>
 
           <article class="starter-plan-card">
             <p class="starter-plan-card__label">FULL KERSIVO</p>
-            <p class="starter-plan-card__price">£39<span>/month per location</span></p>
-            <p class="starter-plan-card__intro">Move up when you want the full KERSIVO ownership layer:</p>
+            <p class="starter-plan-card__price">£{SAAS_MONTHLY_GBP}<span>/month per location</span></p>
+            <p class="starter-plan-card__intro">
+              Everything in the Starter booking operation, plus the full KERSIVO ownership layer:
+            </p>
             <ul>
               {fullOnly.map((item) => <li>{item}</li>)}
             </ul>
-            <a href="/admin/launch" class="starter-btn starter-btn--secondary">Explore Full KERSIVO</a>
+            <a href="/pricing#plan" class="starter-btn starter-btn--secondary">See Full KERSIVO pricing</a>
           </article>
         </div>
       </div>
@@ -268,6 +287,10 @@ const fullOnly = [
         <header class="starter-section__header">
           <p class="starter-section__eyebrow">START IN THREE STEPS</p>
           <h2 id="starter-steps-title">Build the booking setup first. Choose Starter when you are ready to go live.</h2>
+          <p>
+            Nothing is charged and nothing goes live until you explicitly choose your plan at the end
+            of setup.
+          </p>
         </header>
 
         <ol class="starter-steps">
@@ -275,7 +298,7 @@ const fullOnly = [
             <span>01</span>
             <div>
               <h3>Create your KERSIVO account</h3>
-              <p>Add the basic shop information that powers your booking workspace.</p>
+              <p>Sign up and add the basic details for your shop.</p>
             </div>
           </li>
           <li>
@@ -289,7 +312,10 @@ const fullOnly = [
             <span>03</span>
             <div>
               <h3>Choose KERSIVO Starter</h3>
-              <p>Activate at £0/month and publish your hosted booking page. Stripe remains optional.</p>
+              <p>
+                Pick Starter in the final plan choice and accept the KERSIVO Terms. Your hosted
+                booking page goes live at £0/month — no card and no Stripe account needed.
+              </p>
             </div>
           </li>
         </ol>
@@ -318,7 +344,14 @@ const fullOnly = [
           </p>
         </div>
         <div class="starter-final__actions">
-          <a href="/admin" class="starter-btn starter-btn--primary">Start KERSIVO Starter</a>
+          <a
+            href="/admin"
+            class="starter-btn starter-btn--primary"
+            data-track="starter_signup_click"
+            data-track-placement="starter_final"
+          >
+            Start KERSIVO Starter
+          </a>
           <a href="/pricing" class="starter-text-link">Compare with Full KERSIVO →</a>
         </div>
       </div>
@@ -333,7 +366,7 @@ const fullOnly = [
       navigation={[
         { name: 'Home', href: '/' },
         { name: 'Starter', href: '/starter' },
-        { name: 'Full pricing', href: '/pricing' },
+        { name: 'Pricing', href: '/pricing' },
         { name: 'Live demo', href: '/demo' },
         { name: 'Booksy comparison', href: '/booksy-alternative' },
         { name: 'Fresha comparison', href: '/fresha-alternative' },

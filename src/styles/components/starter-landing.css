@@ -56,6 +56,8 @@
   line-height: 0.96;
   letter-spacing: -0.055em;
   font-weight: 700;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .starter-hero__lead {
@@ -106,6 +108,31 @@
 
 .starter-btn:hover {
   transform: translateY(-1px);
+}
+
+.starter-btn:focus-visible,
+.starter-text-link:focus-visible {
+  outline: 2px solid #ff5b5b;
+  outline-offset: 3px;
+}
+
+.starter-btn--primary:hover {
+  background: #e60f0f;
+  border-color: #e60f0f;
+}
+
+.starter-btn--secondary:hover {
+  border-color: rgba(255,255,255,0.32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starter-btn {
+    transition: none;
+  }
+
+  .starter-btn:hover {
+    transform: none;
+  }
 }
 
 .starter-btn--primary {
@@ -195,6 +222,8 @@
   font-size: clamp(2rem, 4vw, 3.8rem);
   line-height: 1.02;
   letter-spacing: -0.04em;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .starter-section__header > p:last-child,
@@ -444,7 +473,19 @@
   }
 
   .starter-hero__title {
-    font-size: clamp(2.65rem, 14vw, 4.4rem);
+    font-size: clamp(2.3rem, 12vw, 4.4rem);
+    letter-spacing: -0.045em;
+  }
+
+  .starter-section__header h2,
+  .starter-split h2,
+  .starter-final h2 {
+    font-size: clamp(1.75rem, 8.5vw, 2.4rem);
+  }
+
+  .starter-hero__card,
+  .starter-payment-card {
+    padding: 1.15rem;
   }
 
   .starter-hero__actions,

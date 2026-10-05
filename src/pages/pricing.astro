@@ -56,8 +56,9 @@ const currentYear = new Date().getFullYear();
           </span>
         </h1>
         <p class="fresha-alt-hero__lead">
-          One plan for one barbershop location: your branded website, own domain, online bookings,
-          deposits, client management and retail pickup for £{SAAS_MONTHLY_GBP} a month.
+          Two plans for one barbershop location. Start taking bookings on KERSIVO Starter for £0 a
+          month, or choose Full KERSIVO for £{SAAS_MONTHLY_GBP} a month to add your branded website,
+          own domain and the complete business toolkit. 0% KERSIVO commission on both.
         </p>
         <div class="fresha-alt-hero__actions">
           <a
@@ -68,7 +69,7 @@ const currentYear = new Date().getFullYear();
             See KERSIVO in action
           </a>
           <a href="#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
-            View the £{SAAS_MONTHLY_GBP} plan
+            Compare Starter and Full
           </a>
         </div>
         <p class="company-hero__updated">
@@ -92,7 +93,7 @@ const currentYear = new Date().getFullYear();
         <header class="fresha-alt__intro">
           <p class="fresha-alt__eyebrow">WHAT’S INCLUDED</p>
           <h2 id="pricing-included-title" class="fresha-alt__h2">
-            Everything in the £{SAAS_MONTHLY_GBP} plan
+            What each plan includes
           </h2>
         </header>
         <ul class="company-groups">
@@ -116,9 +117,36 @@ const currentYear = new Date().getFullYear();
       <div class="fresha-alt__glow" aria-hidden="true"></div>
       <div class="container">
         <header class="fresha-alt__intro">
-          <p class="fresha-alt__eyebrow">ONE PLAN</p>
-          <h2 id="pricing-plan-title" class="fresha-alt__h2">One plan. One barbershop location.</h2>
+          <p class="fresha-alt__eyebrow">TWO PLANS</p>
+          <h2 id="pricing-plan-title" class="fresha-alt__h2">
+            Start on Starter. Move to Full when you want the complete brand.
+          </h2>
         </header>
+        <article class="pricing-starter-offer" aria-labelledby="pricing-starter-title">
+          <div class="pricing-starter-offer__head">
+            <p class="pricing-starter-offer__label">KERSIVO STARTER</p>
+            <h3 id="pricing-starter-title" class="pricing-starter-offer__price">
+              £0<span>/month</span>
+            </h3>
+            <p class="pricing-starter-offer__lead">
+              A real booking system for one shop: hosted booking page, up to 4 active bookable
+              barbers, Clients Core and email reminders. 0% KERSIVO commission. No Stripe needed for
+              Pay at shop.
+            </p>
+          </div>
+          <div class="pricing-starter-offer__actions">
+            <a
+              href="/admin"
+              class="btn btn--primary"
+              data-track="starter_signup_click"
+              data-track-placement="pricing_plans"
+            >
+              Start KERSIVO Starter
+            </a>
+            <a href="/starter" class="company-link">What’s in KERSIVO Starter →</a>
+          </div>
+        </article>
+        <p class="fresha-alt__eyebrow pricing-full-offer__label">FULL KERSIVO</p>
         <div class="rate-card1--landing fresha-alt-pricing__offer-host">
           <RateCard1Offer />
           <div class="rate-card1__landing-conditions">
@@ -150,7 +178,7 @@ const currentYear = new Date().getFullYear();
     <Faq4
       className="faq4--landing"
       heading="Questions about KERSIVO pricing?"
-      subHeading="Clear answers on the monthly plan, fees, VAT, domains, SMS reminders and cancelling."
+      subHeading="Clear answers on Starter and Full KERSIVO, fees, VAT, SMS reminders and cancelling."
       supportHeading="Still have a question?"
       supportText="Tell us about your barbershop and we’ll give you a clear answer."
       supportLinkLabel="Ask a question"
@@ -164,11 +192,11 @@ const currentYear = new Date().getFullYear();
           <div class="landing-final-cta__content">
             <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
             <h2 id="pricing-final-title" class="landing-final-cta__heading">
-              See what £{SAAS_MONTHLY_GBP} a month gets your barbershop
+              See what KERSIVO can do for your barbershop
             </h2>
             <p class="landing-final-cta__subheadline">
-              Open the live demo to explore the website, booking journey and admin dashboard before
-              you subscribe.
+              Open the live demo to explore the booking journey and admin dashboard, then start on
+              KERSIVO Starter or go straight to Full KERSIVO for £{SAAS_MONTHLY_GBP} a month.
             </p>
           </div>
           <div class="landing-final-cta__conversion">
@@ -179,6 +207,14 @@ const currentYear = new Date().getFullYear();
                 data-track="view_live_demo_click"
               >
                 See KERSIVO in action
+              </a>
+              <a
+                href="/admin"
+                class="btn btn--secondary btn--lg landing-final-cta__button"
+                data-track="starter_signup_click"
+                data-track-placement="pricing_final"
+              >
+                Start KERSIVO Starter
               </a>
               <a
                 href="/admin/launch"
@@ -209,11 +245,12 @@ const currentYear = new Date().getFullYear();
       copyright={`© ${currentYear} KERSIVO`}
       navigation={[
         { name: 'Home', href: '/' },
+        { name: 'KERSIVO Starter', href: '/starter' },
         { name: 'Live demo', href: '/demo' },
         { name: 'About', href: '/about' },
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },
-        { name: 'Start subscription', href: '/admin/launch' },
+        { name: 'Start Full KERSIVO', href: '/admin/launch' },
       ]}
       social={getFooterSocialLinks()}
       legal={[
@@ -230,5 +267,65 @@ const currentYear = new Date().getFullYear();
 <style is:global>
   .landing-overflow-guard {
     overflow-x: clip;
+  }
+
+  .pricing-starter-offer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem 2rem;
+    align-items: center;
+    margin: 0 auto 2.5rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 1.15rem;
+    background: color-mix(in srgb, var(--fg) 4%, transparent);
+  }
+
+  .pricing-starter-offer__label,
+  .pricing-full-offer__label {
+    margin: 0 0 0.6rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .pricing-full-offer__label {
+    margin-bottom: 1rem;
+  }
+
+  .pricing-starter-offer__price {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 750;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .pricing-starter-offer__price span {
+    margin-left: 0.3rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+
+  .pricing-starter-offer__lead {
+    margin: 0.85rem 0 0;
+    max-width: 44rem;
+    line-height: 1.6;
+    opacity: 0.82;
+  }
+
+  .pricing-starter-offer__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .pricing-starter-offer {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

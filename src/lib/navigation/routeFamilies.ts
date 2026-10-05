@@ -25,6 +25,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/fresha-alternative',
   '/barber-software-cost-calculator',
   '/pricing',
+  '/starter',
   '/about',
 ];
 

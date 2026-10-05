@@ -1,4 +1,5 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const STARTER_PAGE_PATH = '/starter';
@@ -7,7 +8,7 @@ export const STARTER_PAGE_TITLE =
   'KERSIVO Starter for UK Barbers | £0/Month & 0% Commission';
 
 export const STARTER_PAGE_DESCRIPTION =
-  'Start taking bookings with KERSIVO Starter. £0/month, 0% KERSIVO commission, up to 4 bookable barbers, Clients Core, email reminders, Google booking setup and an included QR Kit.';
+  'KERSIVO Starter for UK barbershops: £0/month, 0% KERSIVO commission. Hosted booking page, up to 4 barbers, email reminders, Google booking setup and a QR Kit.';
 
 export const STARTER_PAGE_H1 = 'Start taking bookings with KERSIVO Starter.';
 
@@ -23,7 +24,12 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   {
     question: 'Is KERSIVO Starter really £0 a month?',
     answer:
-      'Yes. KERSIVO Starter has no monthly subscription fee and KERSIVO takes 0% commission on bookings. Standard Stripe processing fees apply only when you choose to take online card payments.',
+      'Yes. KERSIVO Starter has no monthly subscription fee and no setup fee. It is a real operating plan, not a time-limited trial.',
+  },
+  {
+    question: 'Does KERSIVO charge commission on Starter bookings?',
+    answer:
+      'No. KERSIVO takes 0% commission on Starter bookings. Standard Stripe processing fees apply only if you connect Stripe to take deposits or full payments online, and that money goes to your own Stripe account.',
   },
   {
     question: 'Do I need Stripe to use KERSIVO Starter?',
@@ -43,7 +49,7 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   {
     question: 'What is included in the KERSIVO QR Kit?',
     answer:
-      'Eligible verified UK Starter locations can request one included initial QR Kit with separate WINDOW and REBOOK booking QR assets. KERSIVO verifies the shop details before the kit goes to print. Replacement and reorder handling is separate.',
+      'Eligible verified UK Starter locations can request one included initial QR Kit with two printed QR codes: a WINDOW code for inside the shop glass and a REBOOK code for the counter. Both open your booking page and keep working if you later move to Full KERSIVO. KERSIVO verifies the shop details before the kit goes to print. Replacements and reorders are handled separately.',
   },
   {
     question: 'Can customers book from my Google Business Profile?',
@@ -57,8 +63,7 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   },
   {
     question: 'Can I upgrade from Starter to Full KERSIVO later?',
-    answer:
-      'Yes. Starter is designed as a real operating plan, with a clear path to Full KERSIVO when you want your own branded website and domain, full booking history, Advanced Clients, Reports, Retail, SMS reminders and the live KERSIVO Assistant.',
+    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders and the live KERSIVO Assistant.`,
   },
 ];
 

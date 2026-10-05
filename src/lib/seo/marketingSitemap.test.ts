@@ -46,7 +46,7 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-02');
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-02');
