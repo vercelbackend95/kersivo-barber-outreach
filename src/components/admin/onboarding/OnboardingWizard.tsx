@@ -265,8 +265,8 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const setupProgressVisible = step >= 1 && step <= 6 && !finished;
   const productState = state?.productAccess?.state ?? 'SETUP';
-  /** Signed-in SETUP shop: Review step is the explicit Free Booking activation. */
-  const freeActivationStep = !isGuest && productState === 'SETUP';
+  /** Signed-in SETUP shop: Review step requires an explicit Starter vs Full plan choice. */
+  const planChoiceStep = !isGuest && productState === 'SETUP';
   const bookableBarberLimit = isGuest ? null : (state?.freeBookableBarberLimit ?? null);
   const bookableBarberCount = countBookableBarberCards(barbers);
   const starterBookableBarberLimit = state?.starterBookableBarberLimit ?? 4;
@@ -596,15 +596,15 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   };
 
   const completeOnboarding = async () => {
-    if (freeActivationStep && !selectedPlan) {
+    if (planChoiceStep && !selectedPlan) {
       setError('Choose KERSIVO Starter or Full KERSIVO to continue.');
       return;
     }
-    if (freeActivationStep && !termsAccepted) {
+    if (planChoiceStep && !termsAccepted) {
       setError('Please accept the Terms to continue.');
       return;
     }
-    if (freeActivationStep && selectedPlan === 'STARTER' && !starterPlanEligible) {
+    if (planChoiceStep && selectedPlan === 'STARTER' && !starterPlanEligible) {
       setError(
         `KERSIVO Starter supports up to ${starterBookableBarberLimit} active bookable barbers. Choose Full KERSIVO or reduce the booking team.`,
       );
@@ -614,7 +614,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     setSaving(true);
     setError('');
     try {
-      if (freeActivationStep && selectedPlan === 'FULL') {
+      if (planChoiceStep && selectedPlan === 'FULL') {
         const result = await startFullKersivoUpgradeCheckout({ returnToOnboarding: true });
         if (result.kind === 'redirect') {
           redirectToStripe(result.url);
@@ -689,17 +689,17 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6 && freeActivationStep && selectedPlan === 'STARTER') {
+    if (step === 6 && planChoiceStep && selectedPlan === 'STARTER') {
       return 'Activate KERSIVO Starter';
     }
-    if (step === 6 && freeActivationStep && selectedPlan === 'FULL') {
+    if (step === 6 && planChoiceStep && selectedPlan === 'FULL') {
       return 'Continue to secure checkout';
     }
-    if (step === 6 && freeActivationStep) return 'Choose a plan';
+    if (step === 6 && planChoiceStep) return 'Choose a plan';
     if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step, freeActivationStep, isGuest, productState, selectedPlan]);
+  }, [step, planChoiceStep, isGuest, productState, selectedPlan]);
 
   if (!authReady || loading) {
     return (
@@ -1613,10 +1613,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
-                {freeActivationStep ? 'Review your setup and choose your plan' : 'Your KERSIVO workspace is ready'}
+                {planChoiceStep ? 'Review your setup and choose your plan' : 'Your KERSIVO workspace is ready'}
               </h1>
               <p className="admin-onboarding__description">
-                {freeActivationStep
+                {planChoiceStep
                   ? 'Both plans keep KERSIVO commission at 0%. Choose the level that fits your shop today.'
                   : 'Review your setup, then finish to open your dashboard.'}
               </p>
@@ -1716,7 +1716,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
               </div>
             </article>
 
-            {freeActivationStep ? (
+            {planChoiceStep ? (
               <div className="admin-onboarding__plan-choice" aria-label="Choose your KERSIVO plan">
                 <button
                   type="button"
@@ -1770,7 +1770,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
               </div>
             ) : null}
 
-            {freeActivationStep ? (
+            {planChoiceStep ? (
               <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
                 <input
                   id="onboarding-terms-accepted"
@@ -1835,7 +1835,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             disabled={
               saving ||
               (step === 3 && !teamMode) ||
-              (step === 6 && freeActivationStep && (!selectedPlan || !termsAccepted))
+              (step === 6 && planChoiceStep && (!selectedPlan || !termsAccepted))
             }
             aria-busy={saving}
           >
