@@ -21,7 +21,7 @@ import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { isPaidShop } from '@/lib/shop/paidShop';
 import {
   createConnectAccountLink,
-  createConnectExpressAccount,
+  createConnectStandardAccount,
   retrieveConnectAccount,
 } from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -53,8 +53,10 @@ export const GET: APIRoute = async (ctx) => {
       depositsEnabled: true,
       bookingPaymentMode: true,
       stripeConnectAccountId: true,
+      stripeConnectAccountType: true,
       stripeConnectChargesEnabled: true,
       stripeConnectDetailsSubmitted: true,
+      stripeConnectDisconnectedAt: true,
       cancellationWindowHours: true,
       rescheduleWindowHours: true,
       maxClientReschedules: true,
@@ -64,28 +66,39 @@ export const GET: APIRoute = async (ctx) => {
 
   let connect = {
     accountId: shop.stripeConnectAccountId,
+    accountType: shop.stripeConnectAccountType,
     chargesEnabled: shop.stripeConnectChargesEnabled,
     detailsSubmitted: shop.stripeConnectDetailsSubmitted,
+    disconnectedAt: shop.stripeConnectDisconnectedAt,
   };
 
-  if (shop.stripeConnectAccountId) {
+  if (shop.stripeConnectAccountId && !shop.stripeConnectDisconnectedAt) {
     try {
       const live = await retrieveConnectAccount(shop.stripeConnectAccountId);
       if (
         live.chargesEnabled !== shop.stripeConnectChargesEnabled ||
-        live.detailsSubmitted !== shop.stripeConnectDetailsSubmitted
+        live.detailsSubmitted !== shop.stripeConnectDetailsSubmitted ||
+        (live.accountType !== 'UNKNOWN' && live.accountType !== shop.stripeConnectAccountType)
       ) {
         await prisma.shopSettings.update({
           where: { id: shop.id },
           data: {
             stripeConnectChargesEnabled: live.chargesEnabled,
             stripeConnectDetailsSubmitted: live.detailsSubmitted,
+            ...(live.accountType === 'STANDARD' || live.accountType === 'EXPRESS'
+              ? { stripeConnectAccountType: live.accountType }
+              : {}),
           },
         });
         connect = {
           accountId: shop.stripeConnectAccountId,
+          accountType:
+            live.accountType === 'STANDARD' || live.accountType === 'EXPRESS'
+              ? live.accountType
+              : shop.stripeConnectAccountType,
           chargesEnabled: live.chargesEnabled,
           detailsSubmitted: live.detailsSubmitted,
+          disconnectedAt: null,
         };
       }
     } catch {
@@ -125,9 +138,12 @@ export const GET: APIRoute = async (ctx) => {
     canManagePayouts,
     connect: {
       accountId: canManagePayouts ? connect.accountId : null,
-      accountLinked: Boolean(connect.accountId),
+      accountLinked: Boolean(connect.accountId) && !connect.disconnectedAt,
+      accountType: connect.accountType,
       chargesEnabled: connect.chargesEnabled,
       detailsSubmitted: connect.detailsSubmitted,
+      disconnected: Boolean(connect.disconnectedAt),
+      disconnectedAt: connect.disconnectedAt?.toISOString() ?? null,
     },
     policy: {
       cancellationWindowHours: shop.cancellationWindowHours,
@@ -243,8 +259,9 @@ export const PATCH: APIRoute = async (ctx) => {
 };
 
 /**
- * Start or continue Stripe Connect Express onboarding for booking payments
- * (KERSIVO Starter or Full). Owner / billing.manage only. Retail stays Full-only elsewhere.
+ * Start or continue Stripe Connect onboarding for booking payments.
+ * New connections use Standard accounts; an existing legacy Express account remains supported
+ * until an explicit migration/cutover is performed. Owner / billing.manage only.
  */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
@@ -257,6 +274,8 @@ export const POST: APIRoute = async (ctx) => {
     select: {
       id: true,
       stripeConnectAccountId: true,
+      stripeConnectAccountType: true,
+      stripeConnectDisconnectedAt: true,
       owner: { select: { email: true } },
     },
   });
@@ -273,15 +292,26 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   let accountId = shop.stripeConnectAccountId;
-  if (!accountId) {
-    const created = await createConnectExpressAccount({
+  let accountType = shop.stripeConnectAccountType;
+  const mustCreateStandard = !accountId || Boolean(shop.stripeConnectDisconnectedAt);
+
+  if (mustCreateStandard) {
+    const created = await createConnectStandardAccount({
       shopId: shop.id,
       email: shop.owner?.email ?? undefined,
     });
     accountId = created.id;
+    accountType = 'STANDARD';
     await prisma.shopSettings.update({
       where: { id: shop.id },
-      data: { stripeConnectAccountId: accountId },
+      data: {
+        stripeConnectAccountId: accountId,
+        stripeConnectAccountType: 'STANDARD',
+        stripeConnectChargesEnabled: false,
+        stripeConnectDetailsSubmitted: false,
+        stripeConnectDisconnectedAt: null,
+        connectStatusEventAt: null,
+      },
     });
   }
 
@@ -293,5 +323,10 @@ export const POST: APIRoute = async (ctx) => {
     returnUrl: `${base}/admin?section=barbershop_settings&connect=return`,
   });
 
-  return json({ url: link.url, accountId });
+  return json({
+    url: link.url,
+    accountId,
+    accountType,
+    legacyExpress: accountType === 'EXPRESS',
+  });
 };
