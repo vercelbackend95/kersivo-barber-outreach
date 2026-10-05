@@ -37,7 +37,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 25 September 2026');
+    expect(privacySource).toContain('Last updated: 5 October 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
@@ -63,10 +63,10 @@ describe('Privacy Policy dual-role DPA wording', () => {
   it('describes current Stripe SaaS vs Connect roles without treating Stripe as a general CPD sub-processor', () => {
     const normalized = privacySource.replace(/\s+/g, ' ');
     expect(normalized).toContain('£39/month');
-    expect(normalized).toContain('SaaS subscription billing');
+    expect(normalized).toContain('KERSIVO plan activation and Full subscription billing');
     expect(normalized).toContain('does <strong>not</strong> receive or store full card numbers or CVC');
     expect(normalized).toContain('barbershop&rsquo;s connected Stripe account');
-    expect(normalized).toContain('does <strong>not</strong> charge an application/platform commission');
+    expect(normalized).toContain('0% KERSIVO application / platform fee');
     expect(normalized).toContain('processor for User-directed payment services');
     expect(normalized).toContain('independent controller for fraud prevention');
     expect(normalized).toContain('not</strong> listed above as a general {TRADING_NAME} Customer Personal Data sub-processor');
@@ -151,7 +151,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('explicit account deletion');
     expect(privacySource).toContain('this right is not absolute');
     expect(privacySource).toContain('provider systems');
-    expect(privacySource).toContain('Last updated: 25 September 2026');
+    expect(privacySource).toContain('Last updated: 5 October 2026');
     expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
     expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
     expect(privacySource).toMatch(/does <strong>not<\/strong> separately persist those checkout\s+campaign identifiers into Stripe Checkout metadata/);
