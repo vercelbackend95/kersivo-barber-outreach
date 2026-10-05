@@ -1185,6 +1185,151 @@ export default function BarbershopSettingsPanel({
           ) : null}
         </section>
 
+        <section
+          className="admin-barbershop-settings__card"
+          aria-labelledby="bbs-google-booking-title"
+          data-google-booking-card
+        >
+          <h2 id="bbs-google-booking-title" className="admin-barbershop-settings__card-title">
+            Google booking link
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Add your KERSIVO booking page to your Google Business Profile so customers can reach
+            your booking flow from Google Search or Maps where Google makes booking links available.
+          </p>
+
+          {googleBookingLoading ? (
+            <p className="muted" role="status">Loading Google booking setup…</p>
+          ) : googleBooking ? (
+            <>
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                Status:{' '}
+                <strong data-google-booking-status={googleBooking.status}>
+                  {googleBooking.status === 'MERCHANT_CONFIRMED'
+                    ? 'Merchant confirmed'
+                    : googleBooking.status === 'SETUP_STARTED'
+                      ? 'Setup started'
+                      : googleBooking.status === 'UPDATE_REQUIRED'
+                        ? 'Update required'
+                        : 'Not set'}
+                </strong>
+              </p>
+
+              {googleBooking.requiresUpdate ? (
+                <p className="admin-inline-error" role="alert" data-google-booking-update-required>
+                  Your KERSIVO booking destination has changed. Update the booking link in Google
+                  to the URL below, then confirm it here again.
+                </p>
+              ) : null}
+
+              <div className="field">
+                <label className="field__label" htmlFor="bbs-google-booking-url">
+                  Booking URL
+                </label>
+                <input
+                  id="bbs-google-booking-url"
+                  className="input"
+                  value={googleBooking.bookingUrl}
+                  readOnly
+                  spellCheck={false}
+                />
+              </div>
+
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={googleBookingBusy}
+                  onClick={async () => {
+                    setGoogleBookingError('');
+                    setGoogleBookingMessage('');
+                    try {
+                      if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(googleBooking.bookingUrl);
+                      } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = googleBooking.bookingUrl;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        textarea.remove();
+                      }
+                      setGoogleBookingMessage('Booking link copied.');
+                    } catch {
+                      setGoogleBookingError('Could not copy the booking link. Select and copy it manually.');
+                    }
+                  }}
+                >
+                  Copy booking link
+                </button>
+
+                <a
+                  className="btn btn--secondary"
+                  href={googleBooking.googleBusinessProfileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => {
+                    if (
+                      googleBooking.status !== 'MERCHANT_CONFIRMED' ||
+                      googleBooking.requiresUpdate
+                    ) {
+                      void updateGoogleBooking('START_SETUP');
+                    }
+                  }}
+                >
+                  Open Google Business Profile
+                </a>
+
+                {googleBooking.status !== 'MERCHANT_CONFIRMED' || googleBooking.requiresUpdate ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={googleBookingBusy}
+                    onClick={() => void updateGoogleBooking('CONFIRM_CURRENT_URL')}
+                  >
+                    {googleBookingBusy ? 'Saving…' : "I've updated Google"}
+                  </button>
+                ) : null}
+              </div>
+
+              <ol className="admin-barbershop-settings__card-copy">
+                <li>Open the Google account that manages your Business Profile.</li>
+                <li>Find the booking, appointment or links section for this location.</li>
+                <li>Add or replace the booking link with the exact KERSIVO URL shown above.</li>
+                <li>Save the change in Google, then return here and confirm it.</li>
+              </ol>
+
+              {googleBooking.destinationSource === 'full_hosted_fallback' ? (
+                <p className="muted" data-google-full-hosted-fallback>
+                  This is your current verified KERSIVO booking destination. When a verified live
+                  Full KERSIVO own-domain booking destination becomes available, KERSIVO will flag
+                  the Google link here for updating.
+                </p>
+              ) : null}
+
+              <p className="muted">
+                Google controls Business Profile eligibility and where booking actions appear.
+                KERSIVO provides the booking destination but cannot guarantee that Google displays
+                a Book button in a particular placement.
+              </p>
+            </>
+          ) : null}
+
+          {googleBookingError ? (
+            <p className="admin-inline-error" role="alert">
+              {googleBookingError}
+            </p>
+          ) : null}
+          {googleBookingMessage ? (
+            <p className="admin-inline-success" role="status">
+              {googleBookingMessage}
+            </p>
+          ) : null}
+        </section>
+
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-billing-title">
           <h2 id="bbs-billing-title" className="admin-barbershop-settings__card-title">
             Subscription &amp; data
