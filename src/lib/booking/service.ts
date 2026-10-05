@@ -32,6 +32,7 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 import {
   BOOKING_PAYMENT_NOT_READY,
   buildBookingPaymentSnapshot,
+  resolveStarterPublicPaymentMode,
   FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
   fullPaymentBlocksServicePrice,
   resolveBookingPaymentSettlement,
@@ -416,6 +417,8 @@ export async function createInstantBooking(
     email: string;
     phone?: string;
     idempotencyKey?: string;
+    /** v1.19 Starter public booking: explicit DEPOSIT or FULL customer choice. */
+    paymentChoice?: 'DEPOSIT' | 'FULL';
   },
   options: {
     /** When set, service must belong to this shop. */
@@ -523,13 +526,30 @@ export async function createInstantBooking(
       },
     });
 
-    // ShopSettings.bookingPaymentMode is authoritative for live public bookings.
-    // Everything below fails BEFORE the booking row (and slot) is created.
+    // v1.19: Starter public booking is payment-powered and ignores the editable Full payment
+    // setting. Full continues to follow ShopSettings.bookingPaymentMode. Everything below fails
+    // BEFORE the booking row (and slot) is created.
     let paymentDecision: LiveBookingPaymentDecision = { outcome: 'none' };
     if (options.allowDepositCollection && !isAdminSandbox) {
-      const mode = shopForPayment.bookingPaymentMode ?? 'NONE';
+      const access = await loadKersivoAccess(service.shopId);
+      let mode = shopForPayment.bookingPaymentMode ?? 'NONE';
+
+      if (access.state === 'FREE_BOOKING') {
+        const starterPayment = resolveStarterPublicPaymentMode({
+          servicePricePence: service.pricePence,
+          requestedChoice: input.paymentChoice ?? null,
+        });
+        if (!starterPayment.ok) {
+          throw new BookingActionError(
+            starterPayment.message,
+            starterPayment.code === 'STARTER_SERVICE_PRICE_TOO_LOW' ? 422 : 400,
+            starterPayment.code,
+          );
+        }
+        mode = starterPayment.mode;
+      }
+
       if (mode === 'DEPOSIT' || mode === 'FULL') {
-        const access = await loadKersivoAccess(service.shopId);
         paymentDecision = resolveLiveBookingPayment({
           mode,
           servicePricePence: service.pricePence,
