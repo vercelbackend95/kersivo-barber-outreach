@@ -34,6 +34,12 @@ vi.mock('@/lib/db/client', () => ({
         db.shop && db.shop.id === where.id ? { ...db.shop } : null,
     },
     saasSubscription: { findFirst: async () => db.subscription },
+    service: {
+      findFirst: async ({ where }: { where: Record<string, unknown> }) => {
+        if ('pricePence' in where) return null;
+        return { id: 'svc_1' };
+      },
+    },
     booking: { update: vi.fn() },
   },
 }));
@@ -59,8 +65,8 @@ function freeShop(overrides: Record<string, unknown> = {}) {
     smsRemindersEnabled: false,
     freeBookingActivatedAt: new Date('2026-10-04T09:00:00.000Z'),
     depositsEnabled: false,
-    stripeConnectAccountId: null,
-    stripeConnectChargesEnabled: false,
+    stripeConnectAccountId: 'acct_ready',
+    stripeConnectChargesEnabled: true,
     publicActivityPaused: false,
     ...overrides,
   };
@@ -78,6 +84,7 @@ function post() {
         fullName: 'Client',
         email: 'client@example.com',
         startAt: '2026-10-10T10:00:00.000Z',
+        paymentChoice: 'DEPOSIT',
       }),
     }),
   } as never);
@@ -102,17 +109,25 @@ describe('public booking create — Free Booking shop (real entitlement gate)', 
     });
   });
 
-  it('creates a pay-at-shop booking for an activated Free shop', async () => {
+  it('passes an activated, Stripe-ready Starter booking request through to booking creation', async () => {
     const res = await post();
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.booking).toMatchObject({ id: 'book_1', depositRequired: false, barberName: 'Sam' });
     expect(createInstantBooking).toHaveBeenCalledWith(
-      expect.objectContaining({ serviceId: 'svc_1', barberId: 'barber_1' }),
+      expect.objectContaining({ serviceId: 'svc_1', barberId: 'barber_1', paymentChoice: 'DEPOSIT' }),
       expect.objectContaining({ requiredShopId: 'shop_free' }),
     );
     expect(createBookingDepositCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it('rejects Starter public booking before Stripe is ready', async () => {
+    db.shop = freeShop({ stripeConnectAccountId: null, stripeConnectChargesEnabled: false });
+    const res = await post();
+
+    expect(res.status).toBe(403);
+    expect(createInstantBooking).not.toHaveBeenCalled();
   });
 
   it('rejects an unactivated SETUP shop even when onboarding is complete', async () => {
