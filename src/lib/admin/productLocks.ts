@@ -57,7 +57,6 @@ export const SECTION_PRODUCT_LOCKS: Readonly<Partial<Record<AdminSpaSection, Sec
   shop_products: { capability: 'retail', feature: 'retail' },
   shop_orders: { capability: 'retail', feature: 'retail' },
   shop_sales: { capability: 'retail', feature: 'retail' },
-  assistant: { capability: 'assistant', feature: 'assistant' },
   site_launch: { capability: 'brandedSite', feature: 'branded_site' },
 };
 
