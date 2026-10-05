@@ -52,7 +52,7 @@ export type SectionProductLock = {
 
 export const SECTION_PRODUCT_LOCKS: Readonly<Partial<Record<AdminSpaSection, SectionProductLock>>> = {
   bookings_reports: { capability: 'reports', feature: 'reports' },
-  bookings_clients: { capability: 'clients', feature: 'clients' },
+  bookings_clients: { capability: 'clientsCore', feature: 'clients' },
   bookings_history_tab: { capability: 'recentBookingHistory', feature: 'history' },
   shop_products: { capability: 'retail', feature: 'retail' },
   shop_orders: { capability: 'retail', feature: 'retail' },
@@ -64,6 +64,7 @@ export const SECTION_PRODUCT_LOCKS: Readonly<Partial<Record<AdminSpaSection, Sec
 /** Server capability name → upgrade-dialog feature, for page-level redirects. */
 export const CAPABILITY_UPGRADE_FEATURE: Readonly<Partial<Record<KersivoCapability, FullKersivoFeature>>> = {
   REPORTS: 'reports',
+  CLIENTS_CORE: 'clients',
   CLIENTS: 'clients',
   RECENT_BOOKING_HISTORY: 'history',
   FULL_BOOKING_HISTORY: 'history',
