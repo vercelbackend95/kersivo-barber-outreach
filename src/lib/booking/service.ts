@@ -521,6 +521,7 @@ export async function createInstantBooking(
         bookingPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
+        stripeConnectDisconnectedAt: true,
         pendingConfirmationMins: true,
         name: true,
       },
