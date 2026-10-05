@@ -144,7 +144,9 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Stripe roles (summary)');
     expect(dpaSource).toContain('not</strong> listed above as a normal {TRADING_NAME} Sub-processor');
     expect(dpaSource).toContain('Stripe Payments Europe, Limited');
-    expect(dpaSource).toContain('application_fee_amount');
+    expect(dpaSource).toContain('Stripe Standard');
+    expect(dpaSource).toContain('historical Express');
+    expect(dpaSource).toContain('0% application / platform fee');
     expect(dpaSource).toContain('independent Controller for that');
   });
 
