@@ -15,6 +15,15 @@ type Identity = {
   logoUrl: string | null;
 };
 
+type GoogleBookingState = {
+  bookingUrl: string | null;
+  needsPreparation: boolean;
+  confirmed: boolean;
+  confirmedAt: string | null;
+  staleConfirmation: boolean;
+  googleBusinessProfileUrl: string;
+};
+
 type PauseState = {
   paused: boolean;
   pausedNow: boolean;
@@ -125,6 +134,82 @@ export default function BarbershopSettingsPanel({
   const [exportBusy, setExportBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [billingMessage, setBillingMessage] = useState('');
+
+  const [googleBooking, setGoogleBooking] = useState<GoogleBookingState | null>(null);
+  const [googleBookingAvailable, setGoogleBookingAvailable] = useState(true);
+  const [googleBookingBusy, setGoogleBookingBusy] = useState(false);
+  const [googleBookingError, setGoogleBookingError] = useState('');
+  const [googleBookingMessage, setGoogleBookingMessage] = useState('');
+
+  const loadGoogleBooking = useCallback(async () => {
+    setGoogleBookingError('');
+    try {
+      const response = await fetch('/api/admin/google-booking', { credentials: 'include' });
+      const payload = (await response.json().catch(() => null)) as
+        | (GoogleBookingState & { error?: string })
+        | null;
+      if (response.status === 403) {
+        setGoogleBookingAvailable(false);
+        setGoogleBooking(null);
+        return;
+      }
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error || 'Could not load Google booking setup.');
+      }
+      setGoogleBookingAvailable(true);
+      setGoogleBooking(payload);
+    } catch (error) {
+      setGoogleBookingError(
+        error instanceof Error ? error.message : 'Could not load Google booking setup.',
+      );
+    }
+  }, []);
+
+  const updateGoogleBooking = useCallback(async (action: 'prepare' | 'confirm') => {
+    if (googleBookingBusy) return;
+    setGoogleBookingBusy(true);
+    setGoogleBookingError('');
+    setGoogleBookingMessage('');
+    try {
+      const response = await fetch('/api/admin/google-booking', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | (GoogleBookingState & { error?: string })
+        | null;
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error || 'Could not update Google booking setup.');
+      }
+      setGoogleBooking(payload);
+      setGoogleBookingMessage(
+        action === 'confirm'
+          ? 'Google booking link marked as added.'
+          : 'Your stable KERSIVO booking link is ready.',
+      );
+    } catch (error) {
+      setGoogleBookingError(
+        error instanceof Error ? error.message : 'Could not update Google booking setup.',
+      );
+    } finally {
+      setGoogleBookingBusy(false);
+    }
+  }, [googleBookingBusy]);
+
+  const copyGoogleBookingUrl = useCallback(async () => {
+    const url = googleBooking?.bookingUrl;
+    if (!url) return;
+    setGoogleBookingError('');
+    setGoogleBookingMessage('');
+    try {
+      await navigator.clipboard.writeText(url);
+      setGoogleBookingMessage('Booking link copied.');
+    } catch {
+      setGoogleBookingError('Could not copy the link. Select the URL and copy it manually.');
+    }
+  }, [googleBooking?.bookingUrl]);
 
   const loadBilling = useCallback(async () => {
     setBillingError('');
@@ -383,9 +468,10 @@ export default function BarbershopSettingsPanel({
       setPauseUntil(nextPause.until ?? '');
       setPauseReason(nextPause.reason ?? '');
       onPauseChanged?.(nextPause.pausedNow);
-      // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
+      // Do not block the settings shell on independent integrations — failures stay in their cards.
       void loadDeposits();
       void loadBilling();
+      void loadGoogleBooking();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -393,7 +479,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadDeposits, loadBilling]);
+  }, [loadDeposits, loadBilling, loadGoogleBooking]);
 
   useEffect(() => {
     void load();
@@ -839,6 +925,120 @@ export default function BarbershopSettingsPanel({
             </p>
           ) : null}
         </section>
+
+        {googleBookingAvailable ? (
+          <section className="admin-barbershop-settings__card" aria-labelledby="bbs-google-booking-title">
+            <div className="admin-barbershop-settings__summary-top">
+              <div>
+                <h2 id="bbs-google-booking-title" className="admin-barbershop-settings__card-title">
+                  Google booking
+                </h2>
+                <p className="admin-barbershop-settings__card-copy">
+                  Add your KERSIVO booking link to your Google Business Profile so customers can
+                  reach your booking page directly from your business listing.
+                </p>
+              </div>
+              <span
+                className={`admin-barbershop-settings__integration-status${googleBooking?.confirmed ? ' is-confirmed' : ''}`}
+                role="status"
+              >
+                {googleBooking?.confirmed ? 'Added to Google' : 'Not set up'}
+              </span>
+            </div>
+
+            {!googleBooking?.bookingUrl ? (
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={googleBookingBusy}
+                  onClick={() => void updateGoogleBooking('prepare')}
+                >
+                  {googleBookingBusy ? 'Preparing…' : 'Prepare booking link'}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="admin-barbershop-settings__google-link">
+                  <label className="field__label" htmlFor="bbs-google-booking-url">
+                    Your booking URL
+                  </label>
+                  <div className="admin-barbershop-settings__google-link-row">
+                    <input
+                      id="bbs-google-booking-url"
+                      className="input"
+                      value={googleBooking.bookingUrl}
+                      readOnly
+                      onFocus={(event) => event.currentTarget.select()}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      onClick={() => void copyGoogleBookingUrl()}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                <ol className="admin-barbershop-settings__google-steps">
+                  <li>Open your Google Business Profile.</li>
+                  <li>Select <strong>Booking</strong>, then <strong>Add link</strong>.</li>
+                  <li>Paste the KERSIVO booking URL above and save.</li>
+                </ol>
+
+                <div className="admin-barbershop-settings__actions admin-barbershop-settings__actions--wrap">
+                  <a
+                    className="btn btn--secondary"
+                    href={googleBooking.googleBusinessProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open Google Business Profile
+                  </a>
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={googleBookingBusy || googleBooking.confirmed}
+                    onClick={() => void updateGoogleBooking('confirm')}
+                  >
+                    {googleBooking.confirmed
+                      ? 'Link added'
+                      : googleBookingBusy
+                        ? 'Saving…'
+                        : 'I’ve added the link'}
+                  </button>
+                </div>
+
+                {googleBooking.confirmed ? (
+                  <p className="admin-barbershop-settings__card-copy">
+                    KERSIVO has recorded that this exact booking URL was added to Google.
+                  </p>
+                ) : googleBooking.staleConfirmation ? (
+                  <p className="admin-barbershop-settings__pause-banner" role="status">
+                    Your booking destination changed. Update the link in Google and confirm it again.
+                  </p>
+                ) : null}
+
+                <p className="admin-barbershop-settings__card-copy">
+                  Google controls where and how booking links appear on Business Profiles. This
+                  setup does not guarantee a native Google booking button.
+                </p>
+              </>
+            )}
+
+            {googleBookingError ? (
+              <p className="admin-inline-error" role="alert">
+                {googleBookingError}
+              </p>
+            ) : null}
+            {googleBookingMessage ? (
+              <p className="admin-inline-success" role="status">
+                {googleBookingMessage}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-deposits-title">
           <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
