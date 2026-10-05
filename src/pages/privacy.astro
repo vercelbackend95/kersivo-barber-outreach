@@ -19,19 +19,20 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 25 September 2026</p>
+      <p class="legal-page__updated">Last updated: 5 October 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
-        KERSIVO brand for UK barbershops, including marketing pages, live product preview booking and shop flows,
-        monthly subscription checkout, and (where applicable) the barbershop admin experience. It is written in plain
-        language and does not replace legal advice.
+        KERSIVO brand for UK barbershops, including marketing pages, KERSIVO Starter activation, Full KERSIVO
+        subscription checkout, live booking and shop flows, the barbershop admin experience, QR Kit fulfilment and
+        related service operations. It is written in plain language and does not replace legal advice.
       </p>
       <p>
-        <strong>Note:</strong> The live public offer is a <strong>£39/month</strong> {TRADING_NAME} SaaS subscription
-        paid via Stripe Checkout on {TRADING_NAME}&rsquo;s own Stripe account. There is no current public setup-fee
-        offer. Legacy setup-deposit checkout creation is disabled; any historical setup-deposit records may still be
-        supported for fulfilment and customer support.
+        <strong>Note:</strong> The live public offer includes <strong>KERSIVO Starter at £0/month</strong> and
+        <strong>Full KERSIVO at £39/month per physical location</strong>. Starter does not create a KERSIVO SaaS
+        subscription charge. Full subscription billing uses Stripe Checkout on {TRADING_NAME}&rsquo;s own Stripe
+        account. There is no current public setup-fee offer. Legacy setup-deposit checkout creation is disabled; any
+        historical setup-deposit records may still be supported for fulfilment and customer support.
       </p>
 
       <h2>Who is responsible for your data?</h2>
@@ -70,7 +71,7 @@ import '@/styles/legal-pages.css';
       </p>
       <ul>
         <li>{TRADING_NAME} account-holder details and authentication / security records;</li>
-        <li>subscription and billing administration;</li>
+        <li>plan activation, subscription and billing administration;</li>
         <li>terms acceptance and related contract records;</li>
         <li>support and contact enquiries sent directly to {TRADING_NAME};</li>
         <li>direct communications between {TRADING_NAME} and the business customer (the barbershop);</li>
@@ -95,17 +96,20 @@ import '@/styles/legal-pages.css';
           legitimate interests. ({TRADING_NAME} as independent controller.)
         </li>
         <li>
-          <strong>SaaS subscription billing (£39/month)</strong> — when you subscribe via Stripe Checkout on
+          <strong>KERSIVO plan activation and Full subscription billing</strong> — Starter is activated at
+          <strong>£0/month</strong> without a KERSIVO SaaS subscription charge. When you purchase
+          <strong>Full KERSIVO at £39/month per physical location</strong> via Stripe Checkout on
           {TRADING_NAME}&rsquo;s platform Stripe account, we process business-customer billing details such as name,
           email, shop/business details needed for fulfilment, payment status, amount/currency, and Stripe-generated
-          customer, subscription, Checkout session and related payment identifiers. Stripe hosts card entry;
-          {TRADING_NAME} does <strong>not</strong> receive or store full card numbers or CVC.
-          <strong>Purpose:</strong> taking and administering the subscription, confirming payment, onboarding and
-          related fulfilment notices. <strong>Legal basis (UK):</strong> performance of a contract / steps prior to a
-          contract where you are personally the contracting party; legitimate interests where we process contact or
-          administrative details of representatives of a corporate customer for billing and fulfilment administration.
+          customer, subscription, Checkout session and related payment identifiers. We also retain Terms acceptance and
+          service-plan lifecycle records for Starter / Full activation, downgrade and departure. Stripe hosts card
+          entry; {TRADING_NAME} does <strong>not</strong> receive or store full card numbers or CVC.
+          <strong>Purpose:</strong> activating and administering the service, taking Full subscription payments,
+          confirming payment, onboarding and related fulfilment notices. <strong>Legal basis (UK):</strong>
+          performance of a contract / steps prior to a contract where you are personally the contracting party;
+          legitimate interests where we process administrative details of representatives of a corporate customer.
           Specific accounting or tax records may also be processed where a UK legal obligation requires them.
-          ({TRADING_NAME} as independent controller for this billing relationship.)
+          ({TRADING_NAME} as independent controller for this business-customer relationship.)
         </li>
         <li>
           <strong>B2B prospecting and business outreach</strong> — {TRADING_NAME} may identify relevant UK barbershop
@@ -166,30 +170,57 @@ import '@/styles/legal-pages.css';
           marketing site are simulations or previews and are described separately where they apply.
         </li>
         <li>
-          <strong>Shop orders (buy-and-collect)</strong> — for a <strong>live</strong> barbershop shop: email address
-          used at checkout, order contents, payment status as recorded after payment, and related confirmation emails to
-          fulfil your purchase. Card payments are handled securely by <strong>Stripe</strong> on the
-          <strong>barbershop&rsquo;s connected Stripe account</strong> (Stripe Connect Express / direct charges). The
-          barbershop remains the seller and controller for that customer payment; {TRADING_NAME} facilitates the
-          technical checkout flow and does <strong>not</strong> charge an application/platform commission (Stripe&rsquo;s
-          own processing fees are separate). {TRADING_NAME} does not store full card numbers or CVC. The barbershop is
-          typically the controller of retail customer data; {TRADING_NAME} processes related shop records as processor
-          to run the shop software. The public retail demo on this marketing site is a simulation only and does not
-          collect checkout personal data, take payment, or create an order. Private owner test orders in admin may
-          create marked test records without payment.
+          <strong>Shop orders (buy-and-collect)</strong> — a Full KERSIVO feature for a <strong>live</strong>
+          barbershop shop: email address used at checkout, order contents, payment status as recorded after payment, and
+          related confirmation emails to fulfil your purchase. Card payments are handled securely by
+          <strong>Stripe</strong> on the <strong>barbershop&rsquo;s connected Stripe account</strong> using direct
+          charges. New public connected-account onboarding uses Stripe Standard; historical Express connections may
+          remain supported where already established. The barbershop remains the seller and controller for that customer
+          payment; {TRADING_NAME} facilitates the technical checkout flow and adds <strong>0% KERSIVO application /
+          platform fee</strong> (Stripe&rsquo;s own processing fees are separate). {TRADING_NAME} does not store full
+          card numbers or CVC. The barbershop is typically the controller of retail customer data; {TRADING_NAME}
+          processes related shop records as processor to run the shop software. The public retail demo on this marketing
+          site is a simulation only and does not collect checkout personal data, take payment, or create an order.
+          Private owner test orders in admin may create marked test records without payment.
         </li>
         <li>
-          <strong>Booking deposits (live barbershop)</strong> — where enabled, booking deposits are taken through the
-          barbershop&rsquo;s connected Stripe account under the same Connect model (barbershop seller/controller;
-          {TRADING_NAME} facilitator; no {TRADING_NAME} application fee). {TRADING_NAME} may store limited payment
-          status and Stripe identifiers needed to operate the booking software, not full card details.
+          <strong>Booking card payments (live barbershop)</strong> — where enabled, required deposits or full upfront
+          payments are taken through the barbershop&rsquo;s connected Stripe account under the same direct-charge
+          Connect model (barbershop seller/controller; {TRADING_NAME} facilitator; <strong>0% KERSIVO application /
+          platform fee</strong>). Stripe processing fees are separate. {TRADING_NAME} may store limited payment,
+          refund and connected-account identifiers/statuses needed to operate the booking software, not full card
+          details. {TRADING_NAME} may separately receive compensation or revenue share from Stripe under Stripe&rsquo;s
+          partner arrangements if it qualifies; that Stripe-paid compensation is not a fee deducted by {TRADING_NAME}
+          from the barbershop&rsquo;s booking payment.
         </li>
         <li>
-          <strong>Post-purchase setup</strong> — after a KERSIVO subscription purchase, information you submit in the
-          authenticated KERSIVO client onboarding (for example business details, branding, team, services, opening hours,
-          photos and migration notes) is processed to prepare your barbershop for launch.
+          <strong>KERSIVO setup and onboarding</strong> — information you submit in the authenticated KERSIVO
+          onboarding (for example business details, branding, team, services, opening hours, photos and migration notes)
+          is processed to configure Starter or prepare Full KERSIVO delivery.
           ({TRADING_NAME} as independent controller for the business-customer relationship; some fields may also relate
           to staff or migration content controlled by the barbershop once live.)
+        </li>
+        <li>
+          <strong>QR Kit fulfilment</strong> — where an eligible UK Starter location requests the included initial QR
+          Kit, {TRADING_NAME} processes the responsible contact name, email, phone, delivery/address details, postcode,
+          verification/fulfilment status and, where used, supplier, carrier or tracking references needed to verify,
+          print and dispatch the kit. Internal print/postage unit-cost data is operational business data and is not
+          exposed as customer-facing personal data. <strong>Purpose:</strong> service fulfilment, fraud/eligibility
+          checks and support. <strong>Legal basis (UK):</strong> performance of contract / legitimate interests as
+          appropriate to the business-customer relationship.
+        </li>
+        <li>
+          <strong>Google booking-link setup</strong> — {TRADING_NAME} stores the current KERSIVO booking URL and local
+          setup/confirmation status so the barbershop can add or update that URL in its own Google Business Profile.
+          KERSIVO does not use this guided flow to access or edit the Client&rsquo;s Google Business Profile and does not
+          claim that Google changed the link remotely. Google independently processes data when the Client uses Google
+          services.
+        </li>
+        <li>
+          <strong>Full live booking-destination verification</strong> — where Full KERSIVO is delivered on the
+          Client&rsquo;s own domain, authorised KERSIVO operations users may record the exact verified live booking URL,
+          verification timestamps/method, site version and audit identity of the operator who confirmed it. This is used
+          to route the Client&rsquo;s QR codes and show the correct booking URL for Google setup.
         </li>
         <li>
           <strong>Admin access</strong> — first-party session cookies / tokens that keep you signed in to the
@@ -263,15 +294,19 @@ import '@/styles/legal-pages.css';
       <p>Other providers are used in specific functional contexts and are not listed above as general sub-processors:</p>
       <ul>
         <li>
-          <strong>Stripe</strong> — payment services for (a) {TRADING_NAME}&rsquo;s own £39/month SaaS subscription
-          billing on {TRADING_NAME}&rsquo;s platform Stripe account, and (b) live barbershop booking deposits and retail
-          payments through the barbershop&rsquo;s connected Stripe account (Stripe Connect Express; merchants collect
-          payments directly; {TRADING_NAME} application fee is 0%). Stripe processes card payments; {TRADING_NAME} does
-          not store full card numbers or CVC. Under Stripe&rsquo;s terms, Stripe may process personal data both as a
-          processor for User-directed payment services and as an independent controller for fraud prevention,
-          regulatory, compliance and other Stripe purposes. Stripe is therefore <strong>not</strong> listed above as a
-          general {TRADING_NAME} Customer Personal Data sub-processor merely because Connect payments are facilitated.
-          The public retail demo does not use Stripe Checkout.
+          <strong>Stripe</strong> — payment services for (a) Full KERSIVO <strong>£39/month per-location</strong>
+          subscription billing on {TRADING_NAME}&rsquo;s platform Stripe account, and (b) live barbershop booking card
+          payments and Full retail payments through the barbershop&rsquo;s connected Stripe account using direct
+          charges. New public connected-account onboarding uses <strong>Stripe Standard</strong>; historical Express
+          connections may remain supported where already established. Merchants collect customer payments directly and
+          {TRADING_NAME} adds <strong>0% application / platform fee</strong> to new Starter and Full booking payments.
+          Stripe processes card payments; {TRADING_NAME} does not store full card numbers or CVC. Stripe may pay
+          {TRADING_NAME} separate partner compensation / revenue share if {TRADING_NAME} qualifies; that is not a fee
+          deducted by {TRADING_NAME} from the barbershop&rsquo;s booking payment. Under Stripe&rsquo;s terms, Stripe may
+          process personal data both as a processor for User-directed payment services and as an independent controller
+          for fraud prevention, regulatory, compliance and other Stripe purposes. Stripe is therefore
+          <strong>not</strong> listed above as a general {TRADING_NAME} Customer Personal Data sub-processor merely
+          because Connect payments are facilitated. The public retail demo does not use Stripe Checkout.
         </li>
         <li>
           <strong>Google Sign-In</strong> — optional identity / authentication for {TRADING_NAME} business/admin
@@ -312,22 +347,24 @@ import '@/styles/legal-pages.css';
       </p>
       <ul>
         <li>
-          <strong>Live barbershop (Customer Personal Data).</strong> While a subscription is active, shop customer and
-          booking data is kept to run the service under the barbershop&rsquo;s instructions.
-          {TRADING_NAME} does <strong>not</strong> independently apply a blanket deletion period to active shop
-          customer/booking records. After a subscription ends, the barbershop may export a free CSV of client contact
-          details and booking history for up to <strong>{SAAS_EXPORT_RETENTION_DAYS} days</strong>. After that window,
-          the live shop data graph is eligible to be permanently deleted from the production database. Cancellation does
-          <strong>not</strong> delete shop data instantly. An explicit account deletion (or another documented lawful
-          instruction from the barbershop) may end live shop retention earlier than that default window. Where the
-          barbershop is the controller, authorised barbershop admins can also instruct {TRADING_NAME} to erase an
-          individual customer&rsquo;s profile and related customer-controlled data (for example notes). Historical
-          booking or payment records may remain in anonymised or minimised form where retention is still needed for
-          operational, payment, accounting, legal or dispute purposes. Active or unresolved appointments, payments or
-          in-flight messages may temporarily prevent erasure until resolved. Residual copies may remain temporarily in
-          encrypted backups or other provider systems until those copies expire or are deleted
-          under the provider&rsquo;s normal lifecycle; we do not promise immediate physical erasure from every
-          backup or provider replica.
+          <strong>Live barbershop (Customer Personal Data).</strong> While the KERSIVO service for a shop is active
+          — whether on Starter or Full — shop customer and booking data is kept to run the service under the
+          barbershop&rsquo;s instructions. {TRADING_NAME} does <strong>not</strong> independently apply a blanket
+          deletion period to active shop customer/booking records. Moving from Full KERSIVO to KERSIVO Starter does
+          <strong>not</strong> start the post-service retention window because the KERSIVO service continues.
+          When the shop leaves KERSIVO completely, new public booking intake stops and existing future accepted
+          appointments are preserved for safe wind-down rather than silently deleted. Once the service has ended and
+          operational blockers are resolved, the barbershop has the standard
+          <strong>{SAAS_EXPORT_RETENTION_DAYS}-day</strong> post-termination export / retention window before the live
+          shop data graph becomes eligible for permanent purge from the production database. Departure does
+          <strong>not</strong> delete shop data instantly. Where the barbershop is the controller, authorised
+          barbershop admins can also instruct {TRADING_NAME} to erase an individual customer&rsquo;s profile and
+          related customer-controlled data (for example notes). Historical booking or payment records may remain in
+          anonymised or minimised form where retention is still needed for operational, payment, accounting, legal or
+          dispute purposes. Active or unresolved appointments, payments or in-flight messages may temporarily prevent
+          erasure until resolved. Residual copies may remain temporarily in encrypted backups or other provider systems
+          until those copies expire or are deleted under the provider&rsquo;s normal lifecycle; we do not promise
+          immediate physical erasure from every backup or provider replica.
         </li>
         <li>
           <strong>{TRADING_NAME} independent-controller records.</strong> Account, billing, tax, legal acceptance,
@@ -336,10 +373,10 @@ import '@/styles/legal-pages.css';
           end of the relevant commercial relationship, unless a live dispute or legal obligation requires longer). That
           does <strong>not</strong> mean all personal data of every type is kept for six years, and it is
           <strong>not</strong> a claim that UK GDPR itself imposes a single six-year retention rule for everything.
-          Cancelling a subscription does <strong>not</strong> necessarily delete Stripe-held financial/payment records
-          immediately; Stripe&rsquo;s own retention of payment data is controlled by Stripe. {TRADING_NAME}
-          account-deletion workflows also do not currently delete every provider-side Stripe Customer or Subscription
-          record. Local deletion likewise does not guarantee immediate erasure of every residual copy held by other
+          Ending Full KERSIVO or leaving KERSIVO does <strong>not</strong> necessarily delete Stripe-held
+          financial/payment records immediately; Stripe&rsquo;s own retention of payment data is controlled by Stripe.
+          {TRADING_NAME} shop-departure / account-deletion workflows do not imply deletion of every provider-side
+          Stripe Customer, Subscription or connected-account record. Local deletion likewise does not guarantee immediate erasure of every residual copy held by other
           providers (for example email, SMS, monitoring, hosting or AI providers where used).
         </li>
         <li>
