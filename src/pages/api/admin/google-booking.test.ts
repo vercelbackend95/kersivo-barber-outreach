@@ -150,6 +150,21 @@ describe('/api/admin/google-booking', () => {
     expect(shopUpdate).not.toHaveBeenCalled();
   });
 
+  it('prepare preserves stale confirmation until the current URL is reconfirmed', async () => {
+    shopFindUniqueOrThrow.mockResolvedValue({
+      googleBookingLinkConfirmedAt: new Date('2026-09-01T12:00:00.000Z'),
+      googleBookingLinkConfirmedUrl: 'https://old.example/book/fade-studio',
+    });
+
+    const res = await POST(ctx('POST', { action: 'prepare' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.confirmed).toBe(false);
+    expect(body.staleConfirmation).toBe(true);
+    expect(shopUpdate).not.toHaveBeenCalled();
+  });
+
   it('confirm snapshots the exact canonical booking URL and timestamp', async () => {
     const confirmedAt = new Date('2026-10-05T12:00:00.000Z');
     shopFindUniqueOrThrow.mockImplementation(async () => ({
