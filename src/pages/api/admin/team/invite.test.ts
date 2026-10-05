@@ -25,7 +25,7 @@ function txClient() {
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
       update: (...a: unknown[]) => barberUpdate(...a),
-      aggregate: (...a: unknown[]) => barberAggregate(...a),
+      aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
       findFirst: (...a: unknown[]) => barberFindFirst(...a),
     },
     barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
@@ -84,7 +84,7 @@ vi.mock('@/lib/db/client', () => ({
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
       update: (...a: unknown[]) => barberUpdate(...a),
-      aggregate: (...a: unknown[]) => barberAggregate(...a),
+      aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
       findFirst: (...a: unknown[]) => barberFindFirst(...a),
     },
     barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },

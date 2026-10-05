@@ -4,6 +4,7 @@ import AdminLaunchCtaButton from './AdminLaunchCtaButton';
 import {
   demoLaunchProgress,
   emptyLaunchProgress,
+  OWNER_LAUNCH_HREF,
   resolveLaunchCtaPresentation,
   type LaunchProgress,
 } from '@/lib/admin/launchCtaProgress';
@@ -20,11 +21,14 @@ type LaunchContextPayload = {
 type AdminSidebarLaunchCtaProps = {
   isPublicDemo?: boolean;
   onSpaSection?: (section: import('./AdminPanel').AdminSection) => void;
+  /** Free Booking: the paid launch step opens the Full KERSIVO upgrade dialog instead. */
+  onUpgrade?: () => void;
 };
 
 export default function AdminSidebarLaunchCta({
   isPublicDemo = false,
   onSpaSection,
+  onUpgrade,
 }: AdminSidebarLaunchCtaProps) {
   const [loading, setLoading] = useState(!isPublicDemo);
   const [progress, setProgress] = useState<LaunchProgress>(() =>
@@ -98,6 +102,10 @@ export default function AdminSidebarLaunchCta({
           detail: { showAuth: true },
         }),
       );
+      return;
+    }
+    if (onUpgrade && presentation.href.startsWith(OWNER_LAUNCH_HREF)) {
+      onUpgrade();
       return;
     }
     const spaSection = parseAdminSpaHref(presentation.href);

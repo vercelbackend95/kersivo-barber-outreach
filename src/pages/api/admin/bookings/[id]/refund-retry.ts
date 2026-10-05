@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import { assertBookingAccessible } from '@/lib/admin/rbac/scope';
-import { retryDepositRefundForOperator } from '@/lib/booking/depositMoney';
+import { retryBookingPaymentRefundForOperator } from '@/lib/booking/depositMoney';
 
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
@@ -22,7 +22,7 @@ export const POST: APIRoute = async (ctx) => {
   if (scoped instanceof Response) return scoped;
 
   try {
-    const result = await retryDepositRefundForOperator(bookingId);
+    const result = await retryBookingPaymentRefundForOperator(bookingId);
     const message =
       result.outcome === 'refunded'
         ? 'Deposit refund confirmed.'

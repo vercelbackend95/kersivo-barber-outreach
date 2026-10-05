@@ -2,9 +2,18 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { isTenantAdminAccess, requireAdminContext } from '../../../lib/admin/auth';
-import { healOnboardingCompletedIfEligible } from '../../../lib/admin/onboarding';
+import {
+  healOnboardingCompletedIfEligible,
+  resolveAdminOnboardingGate,
+  type AdminOnboardingGate,
+} from '../../../lib/admin/onboarding';
 import { isPauseActiveNow } from '../../../lib/admin/shopPublicActivity';
 import { prisma } from '../../../lib/db/client';
+import {
+  loadKersivoAccess,
+  serializeKersivoAccess,
+  type SerializedKersivoAccess,
+} from '../../../lib/shop/kersivoAccess';
 
 export const GET: APIRoute = async (context) => {
   const access = await requireAdminContext(context);
@@ -22,6 +31,8 @@ export const GET: APIRoute = async (context) => {
   let shopName: string | null = null;
   let publicActivityPaused = false;
   let publicActivityPauseReason: string | null = null;
+  let productAccess: SerializedKersivoAccess | null = null;
+  let onboardingGate: AdminOnboardingGate = 'dashboard';
 
   if (isTenantAdminAccess(access)) {
     try {
@@ -60,6 +71,13 @@ export const GET: APIRoute = async (context) => {
       shopName = shop?.name ?? null;
       publicActivityPaused = shop ? isPauseActiveNow(shop) : false;
       publicActivityPauseReason = shop?.publicActivityPauseReason?.trim() || null;
+      productAccess = serializeKersivoAccess(await loadKersivoAccess(access.shopId));
+      if (access.via === 'session') {
+        onboardingGate = resolveAdminOnboardingGate({
+          onboardingCompleted,
+          productState: productAccess.state,
+        });
+      }
     } catch (error) {
       console.error('Failed to load admin session shop settings', error);
       return new Response(JSON.stringify({ error: 'Could not load admin session.' }), {
@@ -97,6 +115,13 @@ export const GET: APIRoute = async (context) => {
       role: access.role,
       barberId: access.barberId,
       permissions: access.permissions,
+      productAccess,
+      onboardingGate,
+      // Free activation is owner-level (onboarding.manage); other members keep the dashboard.
+      onboardingRequired:
+        onboardingGate === 'onboarding' ||
+        (onboardingGate === 'free_activation' &&
+          access.permissions.includes('onboarding.manage')),
       via: access.via,
     }),
   );

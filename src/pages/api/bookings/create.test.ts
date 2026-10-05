@@ -4,6 +4,12 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '@/lib/booking/sandboxBookings';
 
 const resolveAdminAccess = vi.fn();
 const createInstantBooking = vi.fn();
+const product = vi.hoisted(() => ({ state: 'FULL_KERSIVO' as 'SETUP' | 'FREE_BOOKING' | 'FULL_KERSIVO' }));
+
+vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/shop/kersivoAccess')>();
+  return { ...actual, loadKersivoAccess: async () => actual.accessForState(product.state) };
+});
 
 vi.mock('@/lib/admin/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/admin/auth')>();
@@ -59,6 +65,41 @@ describe('POST /api/bookings/create', () => {
   beforeEach(() => {
     resolveAdminAccess.mockReset();
     createInstantBooking.mockReset();
+    product.state = 'FULL_KERSIVO';
+  });
+
+  it('v1.18: Starter (FREE_BOOKING) may create manual bookings, gated again inside the create transaction', async () => {
+    product.state = 'FREE_BOOKING';
+    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
+    createInstantBooking.mockResolvedValue({
+      id: 'b-1',
+      status: 'BOOKED',
+      serviceNameAtBooking: 'Cut',
+      service: { name: 'Cut' },
+      barber: { name: 'Alex' },
+      startAt: new Date('2026-07-20T09:00:00.000Z'),
+    });
+
+    const res = await POST(makeContext(validPayload) as never);
+    expect(res.status).toBe(200);
+    expect(createInstantBooking).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ requiredShopId: 'owner-shop-1', requiredCapability: 'MANUAL_BOOKINGS' }),
+    );
+  });
+
+  it.each(['SETUP'] as const)('denies %s manual booking creation before creating anything', async (state) => {
+    product.state = state;
+    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
+
+    const res = await POST(makeContext(validPayload) as never);
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({
+      error: 'This feature is available with Full KERSIVO.',
+      code: 'KERSIVO_UPGRADE_REQUIRED',
+      requiredCapability: 'MANUAL_BOOKINGS',
+    });
+    expect(createInstantBooking).not.toHaveBeenCalled();
   });
 
   it('returns 401 without an owner session and does not create a booking', async () => {

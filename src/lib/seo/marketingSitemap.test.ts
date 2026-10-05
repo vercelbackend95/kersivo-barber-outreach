@@ -14,6 +14,7 @@ import { GET } from '../../pages/sitemap.xml';
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/pricing',
+  'https://kersivo.co.uk/starter',
   'https://kersivo.co.uk/about',
   'https://kersivo.co.uk/booksy-alternative',
   'https://kersivo.co.uk/fresha-alternative',
@@ -25,27 +26,38 @@ const EXPECTED_LOCS = [
 ] as const;
 
 describe('marketing sitemap', () => {
+  it('S: excludes dynamic tenant booking URLs and QR redirects', async () => {
+    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
+    expect(locs.some((loc) => new URL(loc).pathname.startsWith('/book/'))).toBe(false);
+    expect(locs.some((loc) => new URL(loc).pathname.startsWith('/q/'))).toBe(false);
+
+    const xml = await (await GET({} as Parameters<typeof GET>[0])).text();
+    expect(xml).not.toContain('/book/');
+    expect(xml).not.toContain('/q/');
+  });
+
   it('builds canonical marketing URLs including /dpa with accurate or omitted lastmod', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(10);
+    expect(entries).toHaveLength(11);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(10);
+    expect(new Set(locs).size).toBe(11);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-02');
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-05');
+    expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
-    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-02');
-    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-02');
+    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-05');
+    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-01');
-    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-25');
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
 
     expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
     for (const loc of EXPECTED_LOCS.slice(1)) {
@@ -60,16 +72,17 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(10);
+    expect(urlMatches).toHaveLength(11);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
-    expect(xml).toContain('<lastmod>2026-09-24</lastmod>');
+    expect(xml).toContain('<lastmod>2026-09-25</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-05</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-01</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(9);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(10);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');

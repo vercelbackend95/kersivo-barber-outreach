@@ -12,6 +12,7 @@ import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import ClientProfilePanel from './ClientProfilePanel';
+import ClientCoreProfilePanel from './ClientCoreProfilePanel';
 import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
@@ -32,7 +33,10 @@ import {
 import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
-import { Clock, ListOrdered, Plus } from '../lucide-react';
+import NewBookingPanel from './NewBookingPanel';
+import { Clock, ListOrdered, Lock, Plus } from '../lucide-react';
+import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
+import { isCapabilityLocked } from '@/lib/admin/productLocks';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -272,6 +276,12 @@ function formatTimelineDateLabel(date: string) {
 function addOneLondonCalendarDay(isoDate: string): string {
   const anchor = fromZonedTime(`${isoDate}T12:00:00`, ADMIN_TIMEZONE);
   return formatInTimeZone(addDays(anchor, 1), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
+function getStarterHistoryFloorLondonDate(nowMs: number): string {
+  const today = getTodayLondonDate(nowMs);
+  const anchor = fromZonedTime(`${today}T12:00:00`, ADMIN_TIMEZONE);
+  return formatInTimeZone(addDays(anchor, -90), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
 
 function formatRelativeTime(startAt: string, endAt: string) {
@@ -681,6 +691,7 @@ export default function BookingsAdminPanel({
   const [loggedIn, setLoggedIn] = useState(true);
   const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
   const [canManageBookings, setCanManageBookings] = useState(true);
+  const [canCreateManualBooking, setCanCreateManualBooking] = useState(false);
   const [canEditTeam, setCanEditTeam] = useState(true);
   const urlBookingDate = readInitialBookingDateFromUrl();
   const urlBookingId = readInitialBookingIdFromUrl();
@@ -702,6 +713,8 @@ export default function BookingsAdminPanel({
   const [editingBarberAvatarPreviewUrl, setEditingBarberAvatarPreviewUrl] = useState<string | null>(null);
 
   const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+  const [manualBookingMessage, setManualBookingMessage] = useState('');
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'team' | 'reports' | null>(null);
@@ -743,7 +756,18 @@ export default function BookingsAdminPanel({
     if (!showcaseMode) return undefined;
     return listenForHeroShowcaseVisible(window, () => setShowcaseNowScrollArmed(true));
   }, [showcaseMode]);
-  const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate(clock.nowMs()));
+  const { gate: productGate, openUpgrade } = useAdminProductLocks();
+  const historyLocked = isCapabilityLocked(productGate, 'recentBookingHistory');
+  const fullHistoryLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
+  const advancedClientsLocked = isCapabilityLocked(productGate, 'clients');
+  const manualBookingsLocked = isCapabilityLocked(productGate, 'manualBookings');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = getTodayLondonDate(clock.nowMs());
+    const starterFloor = getStarterHistoryFloorLondonDate(clock.nowMs());
+    if (urlBookingDate && historyLocked && urlBookingDate < today) return today;
+    if (urlBookingDate && fullHistoryLocked && urlBookingDate < starterFloor) return starterFloor;
+    return urlBookingDate ?? today;
+  });
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
   const bookingProofArmedIdRef = useRef<string | null>(
@@ -1080,7 +1104,12 @@ export default function BookingsAdminPanel({
         };
         setSessionBarberId(payload.barberId ?? null);
         const perms = payload.permissions ?? [];
-        setCanManageBookings(perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER');
+        const managesBookings =
+          perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER';
+        setCanManageBookings(managesBookings);
+        setCanCreateManualBooking(
+          managesBookings || perms.includes('bookings.self') || payload.role === 'BARBER',
+        );
         setCanEditTeam(
           perms.includes('catalog.manage') ||
             perms.includes('members.manage') ||
@@ -1574,6 +1603,14 @@ export default function BookingsAdminPanel({
     return 'Choose dates';
   }, [historyDateRange]);
   const handleHistoryDateRangeChange = useCallback((range: HistoryDateRange | null) => {
+    if (range?.from && fullHistoryLocked) {
+      const fromYmd = formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+      if (fromYmd < getStarterHistoryFloorLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
+    }
+
     setHistoryDateRange(range);
     if (!range?.from || !range?.to) return;
 
@@ -1583,7 +1620,7 @@ export default function BookingsAdminPanel({
     if (fromYmd <= todayYmd && todayYmd <= toYmd) {
       setIncludeTodayInHistory(true);
     }
-  }, [clock]);
+  }, [clock, fullHistoryLocked, openUpgrade]);
   const clearHistoryDateRange = useCallback(() => {
     setHistoryDateRange(null);
   }, []);
@@ -1609,6 +1646,20 @@ export default function BookingsAdminPanel({
   }, []);
 
 
+  const selectBookingDate = useCallback(
+    (next: string) => {
+      if (historyLocked && next < getTodayLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
+      if (fullHistoryLocked && next < getStarterHistoryFloorLondonDate(clock.nowMs())) {
+        openUpgrade('history');
+        return;
+      }
+      setSelectedDate(next);
+    },
+    [clock, fullHistoryLocked, historyLocked, openUpgrade],
+  );
 
   const openClientProfileForBooking = useCallback(
     async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
@@ -2179,6 +2230,10 @@ export default function BookingsAdminPanel({
 
   const switchBookingsSubview = useCallback(
     async (target: 'dashboard' | 'history') => {
+      if (target === 'history' && historyLocked) {
+        openUpgrade('history');
+        return;
+      }
       if (mode === target || bookingsSubviewTransitionTargetRef.current) return;
 
       const navigate = target === 'history' ? onOpenHistoryWithinBookings : onBackToDashboard;
@@ -2205,7 +2260,7 @@ export default function BookingsAdminPanel({
       if (bookingsSubviewTransitionRunRef.current !== runId) return;
       navigate();
     },
-    [bookingsSubviewMotion, mode, onBackToDashboard, onOpenHistoryWithinBookings, reduceMotion],
+    [bookingsSubviewMotion, historyLocked, mode, onBackToDashboard, onOpenHistoryWithinBookings, openUpgrade, reduceMotion],
   );
 
   useEffect(() => {
@@ -2294,16 +2349,23 @@ export default function BookingsAdminPanel({
                         type="button"
                         role="tab"
                         aria-selected="false"
+                        data-locked={historyLocked ? 'true' : undefined}
                         onClick={() => void switchBookingsSubview('history')}
                       >
                         <ListOrdered className="admin-view-toggle-icon" aria-hidden />
                         <span className="admin-view-toggle-label">History</span>
+                        {historyLocked ? (
+                          <>
+                            <Lock className="admin-view-toggle-lock" width={12} height={12} aria-hidden="true" />
+                            <span className="sr-only"> (Full KERSIVO)</span>
+                          </>
+                        ) : null}
                       </button>
                     </div>
                     <AdminBookingDatePicker
                       value={selectedDate}
                       label={selectedDateLabel}
-                      onChange={setSelectedDate}
+                      onChange={selectBookingDate}
                     />
                   </div>
                 </div>
@@ -2648,7 +2710,7 @@ export default function BookingsAdminPanel({
                           <AdminBookingDatePicker
                             value={selectedDate}
                             label={selectedDateLabel}
-                            onChange={setSelectedDate}
+                            onChange={selectBookingDate}
                             className="admin-date-picker-label--floating"
                             showIcon={false}
                           />
@@ -2690,6 +2752,7 @@ export default function BookingsAdminPanel({
       )}
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
+      {manualBookingMessage && <p className="admin-inline-success">{manualBookingMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {mode !== 'reports' && (
         <>
@@ -2883,8 +2946,8 @@ export default function BookingsAdminPanel({
                         dateRange={historyDateRange}
                         isMobileViewport={isMobileViewport}
                         timezone={ADMIN_TIMEZONE}
-                        onChangeRange={setHistoryDateRange}
-                        onClear={() => setHistoryDateRange(null)}
+                        onChangeRange={handleHistoryDateRangeChange}
+                        onClear={clearHistoryDateRange}
                       />
                     ) : null}
                   </div>
@@ -2968,13 +3031,21 @@ export default function BookingsAdminPanel({
         </div>
       )}
 
-      {openClientId && (
+      {openClientId && advancedClientsLocked ? (
+        <ClientCoreProfilePanel
+          clientId={openClientId}
+          onClose={() => setOpenClientId(null)}
+          onErased={() => setOpenClientId(null)}
+        />
+      ) : null}
+
+      {openClientId && !advancedClientsLocked ? (
         <ClientProfilePanel
           clientId={openClientId}
           onClose={() => setOpenClientId(null)}
           onErased={() => setOpenClientId(null)}
         />
-      )}
+      ) : null}
 
       {barberProfileView ? (
         <AdminErrorBoundary
@@ -2985,6 +3056,39 @@ export default function BookingsAdminPanel({
         >
           {barberProfileView}
         </AdminErrorBoundary>
+      ) : null}
+
+      {canCreateManualBooking && !isPublicDemo && (mode === 'dashboard' || mode === 'history') ? (
+        <button
+          type="button"
+          className="admin-manual-booking-fab"
+          aria-label="Create booking"
+          title="Create booking"
+          onClick={() => {
+            setManualBookingMessage('');
+            if (manualBookingsLocked) {
+              openUpgrade('manual_bookings');
+              return;
+            }
+            setIsNewBookingOpen(true);
+          }}
+        >
+          <Plus aria-hidden />
+        </button>
+      ) : null}
+
+      {isNewBookingOpen ? (
+        <NewBookingPanel
+          fixedBarberId={!canManageBookings ? sessionBarberId : null}
+          onClose={() => setIsNewBookingOpen(false)}
+          onCreated={(created) => {
+            setIsNewBookingOpen(false);
+            setManualBookingMessage('Booking created.');
+            setSelectedDate(created.date);
+            setTimelineFocusBookingId(created.id);
+            if (mode === 'history') onBackToDashboard?.();
+          }}
+        />
       ) : null}
 
       <HistoryBookingStatusSheet

@@ -1,7 +1,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '../../../../lib/admin/auth';
 import {
   compensateFreshPublicBlobUpload,
 } from '@/lib/storage/publicBlobSafety';
@@ -14,6 +13,7 @@ import {
   makeBlobPath,
   uploadPublicImageToBlob,
 } from '../../../../lib/storage/vercelBlob';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const BLOCKED_IMAGE_TYPES = new Set(['image/svg+xml', 'image/svg']);
@@ -26,7 +26,7 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   if (!getBlobReadWriteToken()) {

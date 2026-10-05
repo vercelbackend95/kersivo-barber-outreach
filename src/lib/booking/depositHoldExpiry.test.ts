@@ -28,7 +28,7 @@ vi.mock('../shop/stripe', () => ({
 }));
 
 vi.mock('./confirmPaidDeposit', () => ({
-  confirmPaidDeposit: (...args: unknown[]) => confirmPaidDeposit(...args),
+  confirmPaidBookingPayment: (...args: unknown[]) => confirmPaidDeposit(...args),
 }));
 
 vi.mock('../ops/sentry', () => ({
@@ -103,10 +103,29 @@ describe('processExpiredDepositHolds', () => {
         shopId: 'shop_1',
         sessionId: 'cs_1',
         paymentIntentId: 'pi_1',
+        session: expect.objectContaining({ id: 'cs_1', status: 'complete' }),
       }),
     );
     expect(updateManyBooking).not.toHaveBeenCalled();
     expect(result).toEqual({ scanned: 1, released: 0, recovered: 1, deferred: 0 });
+  });
+
+  it('keeps the hold (deferred) when a paid session fails amount verification', async () => {
+    findManyBooking.mockResolvedValue([dueRow()]);
+    retrieveBookingDepositSession.mockResolvedValue({
+      id: 'cs_1',
+      status: 'complete',
+      payment_status: 'paid',
+      payment_intent: 'pi_1',
+      amount_total: 999,
+      metadata: { type: 'booking_payment', bookingId: 'book_1', shopId: 'shop_1', bookingPaymentType: 'DEPOSIT' },
+    });
+    confirmPaidDeposit.mockResolvedValue({ outcome: 'amount_mismatch' });
+
+    const result = await processExpiredDepositHolds(now);
+
+    expect(updateManyBooking).not.toHaveBeenCalled();
+    expect(result).toEqual({ scanned: 1, released: 0, recovered: 0, deferred: 1 });
   });
 
   it('defers release when Stripe expire API fails', async () => {
@@ -135,6 +154,60 @@ describe('processExpiredDepositHolds', () => {
     expect(expireBookingDepositSession).not.toHaveBeenCalled();
     expect(updateManyBooking).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ scanned: 1, released: 1, recovered: 0, deferred: 0 });
+  });
+
+  describe('payment account snapshot', () => {
+    const onOriginal = (overrides: Record<string, unknown> = {}) =>
+      dueRow({
+        stripeConnectAccountIdAtPayment: 'acct_original',
+        kersivoPlatformFeePence: 5,
+        barber: { shopId: 'shop_1', shop: { stripeConnectAccountId: 'acct_new' } },
+        ...overrides,
+      });
+
+    it('N: recovery retrieves / expires / confirms on the original Booking account', async () => {
+      findManyBooking.mockResolvedValue([onOriginal()]);
+      retrieveBookingDepositSession
+        .mockResolvedValueOnce({ id: 'cs_1', status: 'open', payment_status: 'unpaid' })
+        .mockResolvedValueOnce({ id: 'cs_1', status: 'complete', payment_status: 'paid' });
+      expireBookingDepositSession.mockResolvedValue('already_completed');
+      confirmPaidDeposit.mockResolvedValue({ outcome: 'confirmed' });
+
+      const result = await processExpiredDepositHolds(now);
+
+      expect(findManyBooking).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({ stripeConnectAccountIdAtPayment: true }),
+        }),
+      );
+      expect(retrieveBookingDepositSession).toHaveBeenCalledWith('cs_1', 'acct_original');
+      expect(expireBookingDepositSession).toHaveBeenCalledWith('cs_1', 'acct_original');
+      expect(retrieveBookingDepositSession).not.toHaveBeenCalledWith('cs_1', 'acct_new');
+      expect(confirmPaidDeposit).toHaveBeenCalledWith(
+        expect.objectContaining({ stripeAccountId: 'acct_original' }),
+      );
+      expect(result.recovered).toBe(1);
+    });
+
+    it('fee-bearing hold without a snapshot is deferred + alerted, never released blindly', async () => {
+      findManyBooking.mockResolvedValue([onOriginal({ stripeConnectAccountIdAtPayment: null })]);
+
+      const result = await processExpiredDepositHolds(now);
+
+      expect(retrieveBookingDepositSession).not.toHaveBeenCalled();
+      expect(updateManyBooking).not.toHaveBeenCalled();
+      expect(captureOpsException).toHaveBeenCalled();
+      expect(result).toEqual({ scanned: 1, released: 0, recovered: 0, deferred: 1 });
+    });
+
+    it('Q: legacy null-snapshot hold falls back to the current shop account', async () => {
+      findManyBooking.mockResolvedValue([dueRow({ stripeConnectAccountIdAtPayment: null, kersivoPlatformFeePence: 0 })]);
+      retrieveBookingDepositSession.mockResolvedValue({ id: 'cs_1', status: 'expired' });
+
+      await processExpiredDepositHolds(now);
+
+      expect(retrieveBookingDepositSession).toHaveBeenCalledWith('cs_1', 'acct_shop');
+    });
   });
 
   it('alerts ops when a hold is stuck more than 60 minutes', async () => {

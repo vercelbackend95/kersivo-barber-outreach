@@ -18,7 +18,7 @@ vi.mock('@/lib/admin/rbac/scope', () => ({
 }));
 
 vi.mock('@/lib/booking/depositMoney', () => ({
-  retryDepositRefundForOperator: (...args: unknown[]) => retryDepositRefundForOperator(...args),
+  retryBookingPaymentRefundForOperator: (...args: unknown[]) => retryDepositRefundForOperator(...args),
 }));
 
 import { POST } from './refund-retry';

@@ -1,7 +1,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { assertClientAccessible, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import {
   eraseClientPersonalData,
@@ -11,6 +10,14 @@ import { shouldIncludeTestActivityInAnalytics } from '@/lib/admin/analyticsMode'
 import { orderAnalyticsWhere } from '@/lib/booking/sandboxBookings';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 import { prisma } from '@/lib/db/client';
+import {
+  adminProductCapabilityEnforced,
+  requireAdminPermissionAndCapability,
+} from '@/lib/admin/productCapability';
+import {
+  hasKersivoCapability,
+  loadKersivoAccess,
+} from '@/lib/shop/kersivoAccess';
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;
@@ -173,8 +180,14 @@ export function computeClientStats(bookings: ScoredBooking[], nowMs = Date.now()
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.read');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.read', 'CLIENTS_CORE');
   if (access instanceof Response) return access;
+
+  const productAccess = adminProductCapabilityEnforced(access)
+    ? await loadKersivoAccess(access.shopId)
+    : null;
+  const advancedClients =
+    productAccess === null || hasKersivoCapability(productAccess, 'CLIENTS');
 
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
@@ -190,9 +203,22 @@ export const GET: APIRoute = async (ctx) => {
 
   const isBarber = access.role === 'BARBER';
   const showEmail = canViewClientEmail(access);
+  const nowMs = Date.now();
+  const now = new Date(nowMs);
+  const coreHistoryFloor = new Date(nowMs - 90 * MS_PER_DAY);
 
   const allBookings = await prisma.booking.findMany({
-    where: { clientId },
+    where: {
+      clientId,
+      ...(advancedClients
+        ? {}
+        : {
+            OR: [
+              { startAt: { gte: coreHistoryFloor, lt: now } },
+              { startAt: { gte: now } },
+            ],
+          }),
+    },
     orderBy: { startAt: 'desc' },
     select: {
       status: true,
@@ -207,8 +233,52 @@ export const GET: APIRoute = async (ctx) => {
     },
   });
 
-  const stats = computeClientStats(allBookings);
-  const reliabilityScore = computeReliabilityScore(allBookings);
+  if (!advancedClients) {
+    let lastVisitAt: Date | null = null;
+    let nextBookingAt: Date | null = null;
+
+    for (const booking of allBookings) {
+      const effectiveStatus = getEffectiveBookingStatus({
+        status: booking.status,
+        startAt: booking.startAt,
+        endAt: booking.endAt,
+        nowMs,
+      });
+      if (
+        booking.startAt.getTime() < nowMs &&
+        booking.startAt >= coreHistoryFloor &&
+        effectiveStatus === 'COMPLETED' &&
+        (!lastVisitAt || booking.startAt > lastVisitAt)
+      ) {
+        lastVisitAt = booking.startAt;
+      }
+      if (
+        booking.startAt.getTime() >= nowMs &&
+        (effectiveStatus === 'BOOKED' || effectiveStatus === 'RESCHEDULED') &&
+        (!nextBookingAt || booking.startAt < nextBookingAt)
+      ) {
+        nextBookingAt = booking.startAt;
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        mode: 'core',
+        client: {
+          id: client.id,
+          fullName: client.fullName,
+          email: showEmail ? client.email : null,
+          phone: client.phone,
+        },
+        lastVisitAt: lastVisitAt?.toISOString() ?? null,
+        nextBookingAt: nextBookingAt?.toISOString() ?? null,
+        emailHidden: !showEmail,
+      }),
+    );
+  }
+
+  const stats = computeClientStats(allBookings, nowMs);
+  const reliabilityScore = computeReliabilityScore(allBookings, nowMs);
 
   const clientPayload = {
     id: client.id,
@@ -226,6 +296,7 @@ export const GET: APIRoute = async (ctx) => {
   if (isBarber) {
     return new Response(
       JSON.stringify({
+        mode: 'advanced',
         client: clientPayload,
         stats: {
           totalBookings: stats.totalBookings,
@@ -274,6 +345,7 @@ export const GET: APIRoute = async (ctx) => {
 
   return new Response(
     JSON.stringify({
+      mode: 'advanced',
       client: clientPayload,
       stats,
       reliabilityScore,
@@ -286,7 +358,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.write');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.write', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
@@ -475,9 +547,11 @@ export const PATCH: APIRoute = async (ctx) => {
 /**
  * Erase customer personal data for this Client (OWNER/MANAGER via clients.erase).
  * Historical bookings/orders are anonymised, not hard-deleted.
+ * Gated by CLIENTS_CORE, not Advanced Clients: the DPA lets Owner/Manager instruct erasure on
+ * every active plan, including KERSIVO Starter.
  */
 export const DELETE: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.erase');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.erase', 'CLIENTS_CORE');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId?.trim();

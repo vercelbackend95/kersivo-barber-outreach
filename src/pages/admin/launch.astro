@@ -1,6 +1,10 @@
 ---
+export const prerender = false;
+
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import LaunchWizard from '@/components/admin/launch/LaunchWizard';
+import { resolveAdminAccess } from '@/lib/admin/auth';
+import { launchWizardPageRedirect } from '@/lib/admin/productCapability';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
@@ -10,6 +14,11 @@ import '@/styles/components/buttons.css';
 import '@/styles/components/admin-login.css';
 import '@/styles/components/admin-onboarding.css';
 import '@/styles/components/admin-launch.css';
+
+const launchRedirect = await launchWizardPageRedirect(await resolveAdminAccess(Astro));
+if (launchRedirect) {
+  return Astro.redirect(launchRedirect);
+}
 ---
 
 <MinimalLayout

@@ -2,7 +2,6 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { Prisma } from '@prisma/client';
-import { requireAdminPermission } from '../../../lib/admin/auth';
 import { shouldIncludeTestActivityInAnalytics } from '../../../lib/admin/analyticsMode';
 import { bookingAnalyticsWhere } from '../../../lib/booking/sandboxBookings';
 import {
@@ -21,6 +20,7 @@ import {
   type AggregatableBooking,
   type RangeBoundaries,
 } from '../../../lib/admin/reportsMetrics';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 function getBookingShopScopeWhere(shopId: string): Prisma.BookingWhereInput {
   // Reports are chair/barber analytics — scope by the barber's shop only.
@@ -278,7 +278,7 @@ async function computeMetrics(
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'reports.view');
+  const access = await requireAdminPermissionAndCapability(ctx, 'reports.view', 'REPORTS');
   if (access instanceof Response) return access;
 
   const resolved = resolveReportsRequest(ctx.url.searchParams);

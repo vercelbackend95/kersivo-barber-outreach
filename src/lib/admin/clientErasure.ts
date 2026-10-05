@@ -5,7 +5,7 @@ import {
   EmailOutboundStatus,
   Prisma,
 } from '@prisma/client';
-import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
+import { isOperationalBooking } from '@/lib/booking/operationalBookings';
 import {
   isReminderClaimFresh,
   isReminderClaimStale,
@@ -85,30 +85,14 @@ export type ClientErasureResult = {
   blobCleanupWarning: boolean;
 };
 
-/**
- * True when a booking still needs live customer identity for ops/comms/payment.
- * Reuses getEffectiveBookingStatus for BOOKED clock semantics.
- */
+/** True when a booking still needs live customer identity for ops/comms/payment. */
 export function bookingBlocksClientErasure(input: {
   status: string;
   startAt: Date;
   endAt: Date;
   nowMs?: number;
 }): boolean {
-  const nowMs = input.nowMs ?? Date.now();
-  if (input.status === 'PENDING_PAYMENT') return true;
-  if (input.status === 'ARRIVED' || input.status === 'IN_PROGRESS') return true;
-
-  const effective = getEffectiveBookingStatus({
-    status: input.status,
-    startAt: input.startAt,
-    endAt: input.endAt,
-    nowMs,
-  });
-
-  if (effective === 'IN_PROGRESS') return true;
-  if (effective === 'BOOKED' && input.startAt.getTime() > nowMs) return true;
-  return false;
+  return isOperationalBooking(input);
 }
 
 function throwBlocked(

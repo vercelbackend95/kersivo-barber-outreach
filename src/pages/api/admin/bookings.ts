@@ -3,12 +3,18 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdminContext } from '../../../lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
+import {
+  adminProductCapabilityEnforced,
+  requireAdminProductCapability,
+} from '@/lib/admin/productCapability';
+import { hasKersivoCapability, loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { requireLinkedBarber, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import { BookingStatus, Prisma } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const BOOKING_STATUS_VALUES = new Set<string>(Object.values(BookingStatus));
 
@@ -24,14 +30,18 @@ function parseBookingStatusFilter(
   return { ok: false };
 }
 
-function nextIsoCalendarDay(date: string): string {
+function addIsoCalendarDays(date: string, days: number): string {
   const [year, month, day] = date.split('-').map(Number);
-  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  const shifted = new Date(Date.UTC(year, month - 1, day + days));
   return [
-    next.getUTCFullYear(),
-    String(next.getUTCMonth() + 1).padStart(2, '0'),
-    String(next.getUTCDate()).padStart(2, '0'),
+    shifted.getUTCFullYear(),
+    String(shifted.getUTCMonth() + 1).padStart(2, '0'),
+    String(shifted.getUTCDate()).padStart(2, '0'),
   ].join('-');
+}
+
+function nextIsoCalendarDay(date: string): string {
+  return addIsoCalendarDays(date, 1);
 }
 
 function getLondonDayRange(date: string) {
@@ -55,8 +65,13 @@ function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | n
 
 function withClientTags<
   T extends { client?: { tags?: string[] | null; avatarUrl?: string | null } | null }
->(booking: T): Omit<T, 'client'> & { clientTags: string[]; clientAvatarUrl: string | null } {
+>(
+  booking: T,
+  advancedClients = true,
+): Omit<T, 'client'> & { clientTags: string[]; clientAvatarUrl: string | null } {
   const { client, ...rest } = booking;
+  // Client tags and avatars are Advanced Clients (Full) data; Clients Core never receives them.
+  if (!advancedClients) return { ...rest, clientTags: [], clientAvatarUrl: null };
   return {
     ...rest,
     clientTags: Array.isArray(client?.tags)
@@ -239,6 +254,47 @@ export const GET: APIRoute = async (ctx) => {
   const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
 
+  for (const key of ['date', 'from', 'to'] as const) {
+    const value = ctx.url.searchParams.get(key);
+    if (value && !ISO_DATE_PATTERN.test(value)) {
+      return new Response(JSON.stringify({ error: 'Invalid date.' }), { status: 400 });
+    }
+  }
+
+  // Today/upcoming views stay core. Starter receives bounded recent history; Full remains unbounded.
+  const dateParam = ctx.url.searchParams.get('date');
+  const londonToday = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const starterHistoryFloorDate = addIsoCalendarDays(londonToday, -90);
+  const starterHistoryFloorStart = getLondonDayRange(starterHistoryFloorDate).gte;
+  const operationalDay =
+    ctx.url.searchParams.get('range') === 'today'
+    || (dateParam != null && ISO_DATE_PATTERN.test(dateParam) && dateParam >= londonToday);
+
+  let boundedRecentHistory = false;
+  if (view === 'history' || (view !== 'stats' && !operationalDay)) {
+    const grant = await requireAdminProductCapability(access, 'RECENT_BOOKING_HISTORY');
+    if (grant instanceof Response) return grant;
+    const hasFullHistory =
+      grant.productAccess === null || grant.productAccess.capabilities.includes('FULL_BOOKING_HISTORY');
+    boundedRecentHistory = !hasFullHistory;
+
+    // Direct deep-links to an individual day older than Starter's 90-day window remain a Full gate.
+    if (
+      boundedRecentHistory &&
+      dateParam != null &&
+      ISO_DATE_PATTERN.test(dateParam) &&
+      dateParam < starterHistoryFloorDate
+    ) {
+      const fullGrant = await requireAdminProductCapability(access, 'FULL_BOOKING_HISTORY');
+      if (fullGrant instanceof Response) return fullGrant;
+    }
+  }
+
+  const advancedClients =
+    view === 'stats' ||
+    !adminProductCapabilityEnforced(access) ||
+    hasKersivoCapability(await loadKersivoAccess(shopId), 'CLIENTS');
+
   if (view === 'history') {
     const barberId = ctx.url.searchParams.get('barberId');
     const from = ctx.url.searchParams.get('from');
@@ -261,6 +317,8 @@ export const GET: APIRoute = async (ctx) => {
       : undefined;
 
     const andConditions: Prisma.BookingWhereInput[] = [{ barber: { shopId } }];
+    // Server-authoritative Starter boundary. This also protects search, pagination and crafted URLs.
+    if (boundedRecentHistory) andConditions.push({ startAt: { gte: starterHistoryFloorStart } });
     // Shop-wide for Barber (and Owner/Manager). Optional colleague filter via ?barberId=.
     if (barberId && barberId !== 'all') andConditions.push({ barberId });
     if (startAtFilter) andConditions.push({ startAt: startAtFilter });
@@ -310,7 +368,7 @@ export const GET: APIRoute = async (ctx) => {
       bookings: page
         .map(withHistoricalServiceName)
         .map(withEffectiveBookingStatus)
-        .map(withClientTags)
+        .map((b) => withClientTags(b, advancedClients))
         .map((b) => withClientEmailVisibility(b, showEmail)),
       hasMore,
       cursor: nextCursor,
@@ -346,12 +404,21 @@ export const GET: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Invalid booking status.' }), { status: 400 });
   }
 
-  const startAtRange = range === 'today'
+  const requestedRange = range === 'today'
     ? getTodayRangeInLondon()
     : date
       ? getLondonDayRange(date)
-
       : undefined;
+  // Starter's rolling window is a hard floor for every list shape, not only the history view.
+  const startAtRange = boundedRecentHistory
+    ? {
+        ...requestedRange,
+        gte:
+          requestedRange && requestedRange.gte > starterHistoryFloorStart
+            ? requestedRange.gte
+            : starterHistoryFloorStart,
+      }
+    : requestedRange;
 
   const bookings = await findBookingsWithFallback({
     where: {
@@ -374,7 +441,7 @@ export const GET: APIRoute = async (ctx) => {
       bookings: bookings
         .map(withHistoricalServiceName)
         .map(withEffectiveBookingStatus)
-        .map(withClientTags)
+        .map((b) => withClientTags(b, advancedClients))
         .map((b) => withClientEmailVisibility(b, showEmail)),
       emailHidden: !showEmail,
     }),

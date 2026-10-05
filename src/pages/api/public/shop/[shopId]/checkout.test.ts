@@ -116,6 +116,23 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
     expect(createRetailCheckoutSession).not.toHaveBeenCalled();
   });
 
+  it('AB: Free shop with Connect ready + retailEnabled still cannot check out Retail (Full-only gate)', async () => {
+    findUniqueShop.mockResolvedValue({
+      ...readyShop,
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: new Date('2026-10-01T00:00:00.000Z'),
+      bookingPaymentMode: 'DEPOSIT',
+    });
+
+    const res = await POST(ctx('shop_1', { items: [{ productId: 'prod_1', quantity: 1 }] }) as never);
+
+    expect(res.status).toBe(503);
+    expect((await res.json()).reason).toBe('unpaid_shop');
+    expect(createRetailCheckoutSession).not.toHaveBeenCalled();
+    expect(orderCreate).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when subscription entitlement is missing', async () => {
     shopAcceptsPublicBookings.mockResolvedValue(false);
     const res = await POST(ctx('shop_1', { items: [{ productId: 'prod_1', quantity: 1 }] }) as never);

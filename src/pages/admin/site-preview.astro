@@ -5,6 +5,7 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import SitePreviewShell from '@/components/admin/SitePreviewShell';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { accessCan } from '@/lib/admin/rbac/can';
+import { adminPageUpgradeRedirect } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
 import { getSiteLaunchStatus } from '@/lib/setup/siteLaunch';
 import '@/styles/tokens.css';
@@ -19,6 +20,10 @@ if (!access || access.via !== 'session') {
 }
 if (!accessCan(access, 'billing.manage')) {
   return Astro.redirect('/admin');
+}
+const upgradeRedirect = await adminPageUpgradeRedirect(access, 'BRANDED_SITE');
+if (upgradeRedirect) {
+  return Astro.redirect(upgradeRedirect);
 }
 
 const shop = await prisma.shopSettings.findUnique({

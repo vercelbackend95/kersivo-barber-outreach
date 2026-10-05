@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
+import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { approveSiteLaunch } from '@/lib/setup/siteLaunch';
 
 export const POST: APIRoute = async (context) => {
@@ -12,6 +13,8 @@ export const POST: APIRoute = async (context) => {
   }
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+  const grant = await requireAdminProductCapability(access, 'BRANDED_SITE');
+  if (grant instanceof Response) return grant;
 
   let body: { confirm?: boolean };
   try {

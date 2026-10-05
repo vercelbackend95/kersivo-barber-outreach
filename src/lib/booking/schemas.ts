@@ -12,6 +12,10 @@ export const bookingCreateSchema = z.object({
   idempotencyKey: z.string().min(8).max(200).optional(),
 });
 
+export const manualBookingCreateSchema = bookingCreateSchema.extend({
+  note: z.string().trim().max(1000).optional().or(z.literal('')),
+});
+
 export const tokenSchema = z.object({ token: z.string().min(8) });
 
 export const rescheduleSchema = tokenSchema.extend({

@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useStat
 import AdminLayout from './AdminLayout';
 import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
+import ShopDepartureBanner from './ShopDepartureBanner';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
@@ -21,6 +22,19 @@ import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/li
 import { SkeletonKPICards } from '../skeleton';
 import { authClient } from '@/lib/auth-client';
 import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConstruction';
+import type { SerializedKersivoAccess } from '@/lib/shop/kersivoAccess';
+import {
+  ADMIN_UPGRADE_QUERY_PARAM,
+  isUpgradeFeatureLocked,
+  lockedFeatureForSection,
+  parseFullKersivoFeature,
+  resolveAdminProductGate,
+  type FullKersivoFeature,
+} from '@/lib/admin/productLocks';
+import FullKersivoUpgradeDialog, {
+  AdminProductLockProvider,
+  FullKersivoLockedSection,
+} from './FullKersivoUpgradeDialog';
 
 const ServicesAdminPanel = lazy(() => import('./ServicesAdminPanel'));
 const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
@@ -151,6 +165,10 @@ export default function AdminPanel({
   const [previewUnderConstruction, setPreviewUnderConstruction] = useState(false);
   const [isPreviewAccess, setIsPreviewAccess] = useState(false);
   const [permissions, setPermissions] = useState<string[] | null>(null);
+  const [sessionVia, setSessionVia] = useState<string | null>(null);
+  const [productAccess, setProductAccess] = useState<SerializedKersivoAccess | null>(null);
+  const [upgradeFeature, setUpgradeFeature] = useState<FullKersivoFeature | null>(null);
+  const upgradeParamHandledRef = useRef(false);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
   const pendingTimeoutRef = useRef<number | null>(null);
@@ -170,8 +188,11 @@ export default function AdminPanel({
         const applySessionPayload = (payload: {
           ok?: boolean;
           onboardingCompleted?: boolean;
+          onboardingRequired?: boolean;
+          onboardingGate?: string;
           via?: string;
           permissions?: string[];
+          productAccess?: SerializedKersivoAccess | null;
           shop?: {
             logoUrl?: string | null;
             name?: string | null;
@@ -181,12 +202,17 @@ export default function AdminPanel({
           shopId?: string | null;
           user?: { name?: string | null; email?: string | null; image?: string | null } | null;
         }) => {
-          if (payload.via === 'session' && payload.onboardingCompleted === false) {
+          const onboardingRequired =
+            payload.onboardingRequired ?? payload.onboardingCompleted === false;
+          if (payload.via === 'session' && onboardingRequired) {
             let skipGate = false;
-            try {
-              skipGate = sessionStorage.getItem('kersivo_skip_onboarding_gate') === '1';
-            } catch {
-              skipGate = false;
+            // The reopen escape hatch never bypasses explicit Free activation.
+            if (payload.onboardingGate !== 'free_activation') {
+              try {
+                skipGate = sessionStorage.getItem('kersivo_skip_onboarding_gate') === '1';
+              } catch {
+                skipGate = false;
+              }
             }
             if (!skipGate) {
               redirectingToOnboarding = true;
@@ -205,6 +231,8 @@ export default function AdminPanel({
               isGuestPreviewConstructionPause(payload.shop?.pauseReason),
           );
           setPermissions(payload.permissions ?? null);
+          setSessionVia(typeof payload.via === 'string' ? payload.via : null);
+          setProductAccess(payload.productAccess ?? null);
           if (payload.user) {
             setProfileUser({
               name: payload.user.name ?? null,
@@ -236,8 +264,11 @@ export default function AdminPanel({
             const payload = (await response.json()) as {
               ok?: boolean;
               onboardingCompleted?: boolean;
+              onboardingRequired?: boolean;
+              onboardingGate?: string;
               via?: string;
               permissions?: string[];
+              productAccess?: SerializedKersivoAccess | null;
               shop?: { logoUrl?: string | null; name?: string | null } | null;
               user?: { name?: string | null; email?: string | null; image?: string | null } | null;
             };
@@ -249,6 +280,8 @@ export default function AdminPanel({
             setShopName(null);
             setShopId(null);
             setPermissions(null);
+            setSessionVia(null);
+            setProductAccess(null);
           }
         } catch {
           setHasAccess(Boolean(getStoredAdminSecret()));
@@ -257,6 +290,8 @@ export default function AdminPanel({
           setShopName(null);
           setShopId(null);
           setPermissions(null);
+          setSessionVia(null);
+          setProductAccess(null);
         } finally {
           if (!redirectingToOnboarding) {
             setAuthReady(true);
@@ -278,6 +313,8 @@ export default function AdminPanel({
       setShopName(null);
       setShopId(null);
       setPermissions(null);
+      setSessionVia(null);
+      setProductAccess(null);
     };
     window.addEventListener('popstate', handlePopState);
     window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired);
@@ -307,7 +344,38 @@ export default function AdminPanel({
     return signalHeroShowcaseReadyWhenSettled();
   }, [showcaseMode]);
 
+  const productGate = useMemo(
+    () => resolveAdminProductGate({ demoMode, via: sessionVia, productAccess }),
+    [demoMode, sessionVia, productAccess],
+  );
+  const openUpgrade = useCallback((feature: FullKersivoFeature) => setUpgradeFeature(feature), []);
+  const closeUpgrade = useCallback(() => setUpgradeFeature(null), []);
+  const productLocks = useMemo(() => ({ gate: productGate, openUpgrade }), [productGate, openUpgrade]);
+  // Deep links / back-forward into a plan-locked section keep the chrome but never mount the panel.
+  const activeLockedFeature = lockedFeatureForSection(productGate, activeSection);
+
+  useEffect(() => {
+    if (demoMode || !authReady || upgradeParamHandledRef.current) return;
+    upgradeParamHandledRef.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has(ADMIN_UPGRADE_QUERY_PARAM)) return;
+    const feature = parseFullKersivoFeature(params.get(ADMIN_UPGRADE_QUERY_PARAM));
+    params.delete(ADMIN_UPGRADE_QUERY_PARAM);
+    const nextSearch = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`,
+    );
+    if (feature && isUpgradeFeatureLocked(productGate, feature)) setUpgradeFeature(feature);
+  }, [authReady, demoMode, productGate]);
+
   const handleSectionChange = useCallback((section: AdminSection) => {
+    const lockedFeature = lockedFeatureForSection(productGate, section);
+    if (lockedFeature) {
+      setUpgradeFeature(lockedFeature);
+      return;
+    }
     if (section === activeSection) return;
 
     const isBookingsSubviewSwitch =
@@ -353,7 +421,7 @@ export default function AdminPanel({
       }
       transitionTimeoutRef.current = null;
     }, 180);
-  }, [activeSection, showcaseMode]);
+  }, [activeSection, productGate, showcaseMode]);
 
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
@@ -416,6 +484,7 @@ export default function AdminPanel({
       showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
       initialBookings={initialBookings}
     >
+      <AdminProductLockProvider value={productLocks}>
       <AdminLayout
         activeSection={activeSection === 'bookings_history_tab' ? 'bookings_dashboard' : activeSection}
         onChangeSection={handleSectionChange}
@@ -438,14 +507,17 @@ export default function AdminPanel({
       >
         {sessionPending ? null : (
           <>
+        {!demoMode && !showcaseMode && !isPreviewAccess ? <ShopDepartureBanner /> : null}
         <BookingsAdminPanel
           key="bookings"
-          isActive={isBookingsSection}
+          isActive={isBookingsSection && !activeLockedFeature}
           isPublicDemo={demoMode}
           isBlacklineDemo={demoTenant === 'blackline'}
           initialBookings={initialBookings as never}
           mode={
-            activeSection === 'bookings_blocks'
+            activeLockedFeature
+              ? 'dashboard'
+              : activeSection === 'bookings_blocks'
               ? 'blocks'
               : activeSection === 'bookings_reports'
                 ? 'reports'
@@ -453,12 +525,15 @@ export default function AdminPanel({
                   ? 'history'
                   : 'dashboard'
           }
-          historyWithinBookings={activeSection === 'bookings_history_tab'}
+          historyWithinBookings={activeSection === 'bookings_history_tab' && !activeLockedFeature}
           onOpenHistoryWithinBookings={() => handleSectionChange('bookings_history_tab')}
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
           showcaseMode={showcaseMode}
         />
 
+        {activeLockedFeature ? (
+          <FullKersivoLockedSection feature={activeLockedFeature} />
+        ) : (
         <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
             {activeSection === 'services' ? (
@@ -498,9 +573,12 @@ export default function AdminPanel({
             {activeSection === 'site_launch' ? <SiteLaunchHubPanel key="site-launch" /> : null}
           </Suspense>
         </LazyPanelErrorBoundary>
+        )}
           </>
         )}
       </AdminLayout>
+      <FullKersivoUpgradeDialog feature={upgradeFeature} onClose={closeUpgrade} />
+      </AdminProductLockProvider>
     </AdminTodayBookingsLiveProvider>
     </AdminClockContext.Provider>
   );

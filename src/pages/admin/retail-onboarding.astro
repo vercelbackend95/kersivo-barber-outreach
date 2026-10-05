@@ -1,6 +1,8 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import RetailOnboardingWizard from '@/components/admin/retail-onboarding/RetailOnboardingWizard';
+import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
+import { adminPageUpgradeRedirect } from '@/lib/admin/productCapability';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
@@ -12,6 +14,14 @@ import '@/styles/components/admin-onboarding.css';
 import '@/styles/components/admin-retail-onboarding.css';
 import '@/styles/components/shop-product.css';
 import '@/styles/components/booking-flow.css';
+
+const access = await resolveAdminAccess(Astro);
+if (isTenantAdminAccess(access)) {
+  const upgradeRedirect = await adminPageUpgradeRedirect(access, 'RETAIL');
+  if (upgradeRedirect) {
+    return Astro.redirect(upgradeRedirect);
+  }
+}
 ---
 
 <MinimalLayout

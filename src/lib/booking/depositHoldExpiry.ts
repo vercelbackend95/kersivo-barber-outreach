@@ -6,7 +6,8 @@ import {
   retrieveBookingDepositSession,
 } from '../shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '../shop/stripe';
-import { confirmPaidDeposit } from './confirmPaidDeposit';
+import { resolveBookingPaymentAccount } from './bookingPaymentAccount';
+import { confirmPaidBookingPayment } from './confirmPaidDeposit';
 
 const BATCH_LIMIT = 25;
 const STUCK_ALERT_AFTER_MS = 60 * 60 * 1000;
@@ -64,6 +65,8 @@ export async function processExpiredDepositHolds(
       id: true,
       stripeCheckoutSessionId: true,
       paymentExpiresAt: true,
+      stripeConnectAccountIdAtPayment: true,
+      kersivoPlatformFeePence: true,
       barber: {
         select: {
           shopId: true,
@@ -80,7 +83,28 @@ export async function processExpiredDepositHolds(
   for (const row of due) {
     const shopId = row.barber.shopId;
     const sessionId = row.stripeCheckoutSessionId?.trim() || '';
-    const connectAccountId = row.barber.shop.stripeConnectAccountId?.trim() || '';
+    const paymentAccount = resolveBookingPaymentAccount({
+      booking: row,
+      currentShopAccountId: row.barber.shop.stripeConnectAccountId,
+    });
+
+    if (
+      sessionId &&
+      !paymentAccount.ok &&
+      paymentAccount.reason === 'missing_payment_account_snapshot'
+    ) {
+      // The session may still be payable on an unknown account — never free the slot blindly.
+      deferred += 1;
+      await alertHoldStuck({
+        bookingId: row.id,
+        shopId,
+        sessionId,
+        paymentExpiresAt: row.paymentExpiresAt,
+        errorMessage: 'Deposit hold has no Stripe Connect payment account snapshot.',
+      });
+      continue;
+    }
+    const connectAccountId = paymentAccount.ok ? paymentAccount.accountId : '';
 
     if (!sessionId || !connectAccountId) {
       if (await releaseHold(row.id)) released += 1;
@@ -93,11 +117,13 @@ export async function processExpiredDepositHolds(
       let paymentStatus = (session.payment_status ?? '').toLowerCase();
 
       if (status === 'complete' && paymentStatus === 'paid') {
-        const result = await confirmPaidDeposit({
+        const result = await confirmPaidBookingPayment({
           bookingId: row.id,
           shopId,
           sessionId,
           paymentIntentId: getCheckoutPaymentIntentId(session),
+          session,
+          stripeAccountId: connectAccountId,
           paidAt: now,
         });
         if (
@@ -127,11 +153,13 @@ export async function processExpiredDepositHolds(
           status = (session.status ?? '').toLowerCase();
           paymentStatus = (session.payment_status ?? '').toLowerCase();
           if (status === 'complete' && paymentStatus === 'paid') {
-            const result = await confirmPaidDeposit({
+            const result = await confirmPaidBookingPayment({
               bookingId: row.id,
               shopId,
               sessionId,
               paymentIntentId: getCheckoutPaymentIntentId(session),
+              session,
+              stripeAccountId: connectAccountId,
               paidAt: now,
             });
             if (

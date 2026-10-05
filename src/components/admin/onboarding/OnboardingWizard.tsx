@@ -2,18 +2,62 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Camera, ImagePlus } from '../../lucide-react';
 import PrivateDemoAuthPanel from '../PrivateDemoAuthPanel';
 import {
+  redirectToStripe,
+  startFullKersivoUpgradeCheckout,
+} from '@/lib/setup/fullKersivoUpgrade.client';
+import {
+  BILLING_RECOVERY_COPY,
+  countBookableBarberCards,
   DAY_LABELS,
   DEFAULT_HOURS,
+  FREE_BOOKABLE_BARBER_LIMIT_COPY,
+  FULL_CHECKOUT_CANCELLED_COPY,
+  FULL_CHECKOUT_PENDING_COPY,
+  FULL_PLAN_CARD,
   formatGbp,
+  ONBOARDING_PLAN_STORAGE_KEY,
   orderedHoursForDisplay,
   parseGbpToPence,
+  PLAN_CHOICE_STRIPE_FEES_COPY,
   readJsonError,
   SERVICE_PRESETS,
+  STARTER_PAY_AT_SHOP_COPY,
+  STARTER_PLAN_CARD,
   type OnboardingBarber,
   type OnboardingHoursRow,
+  type OnboardingPlanChoice,
   type OnboardingService,
   type OnboardingState,
 } from './onboardingTypes';
+
+function readStoredPlanChoice(): OnboardingPlanChoice | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (new URLSearchParams(window.location.search).get('full_checkout') === 'cancelled') {
+      return 'FULL';
+    }
+    const stored = sessionStorage.getItem(ONBOARDING_PLAN_STORAGE_KEY);
+    return stored === 'STARTER' || stored === 'FULL' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storePlanChoice(choice: OnboardingPlanChoice) {
+  try {
+    sessionStorage.setItem(ONBOARDING_PLAN_STORAGE_KEY, choice);
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearStoredPlanChoice() {
+  try {
+    sessionStorage.removeItem(ONBOARDING_PLAN_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 7]; // Mon–Sun (dayOfWeek 1–7)
 
@@ -122,6 +166,15 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [finished, setFinished] = useState(false);
+  const [liveBookingUrl, setLiveBookingUrl] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  /** Selection only: a plan is acted on solely by the explicit primary action below. */
+  const [planChoice, setPlanChoice] = useState<OnboardingPlanChoice | null>(readStoredPlanChoice);
+  const fullCheckoutCancelled = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('full_checkout') === 'cancelled';
+  }, []);
+  const [barberLimitNotice, setBarberLimitNotice] = useState('');
 
   const [step, setStep] = useState(0);
   const [state, setState] = useState<OnboardingState | null>(null);
@@ -224,7 +277,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
       const payload = (await response.json()) as OnboardingState;
       setHasAccess(true);
 
-      if (payload.onboardingCompleted && !isReopen) {
+      if (payload.onboardingCompleted && !payload.freeActivationRequired && !isReopen) {
         redirectingAway = true;
         window.location.assign('/admin');
         return;
@@ -254,6 +307,15 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   }, [logoPreview]);
 
   const setupProgressVisible = step >= 1 && step <= 6 && !finished;
+  const productState = state?.productAccess?.state ?? 'SETUP';
+  /** Signed-in SETUP shop: Review step is the explicit Starter vs Full plan choice. */
+  const freeActivationStep = !isGuest && productState === 'SETUP';
+  const bookableBarberLimit = isGuest ? null : (state?.freeBookableBarberLimit ?? null);
+  const bookableBarberCount = countBookableBarberCards(barbers);
+  const atBookableBarberLimit =
+    bookableBarberLimit != null && bookableBarberCount >= bookableBarberLimit;
+  /** Onboarding only round-trips active barbers, so cap total cards, not just bookable ones. */
+  const atBarberCardLimit = bookableBarberLimit != null && barbers.length >= bookableBarberLimit;
 
   const validateHours = useCallback((rows: OnboardingHoursRow[]) => {
     for (const row of rows) {
@@ -345,6 +407,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     setBarberErrors(errors);
     if (errors.some(Boolean)) {
       setError('Enter a name for each barber.');
+      return;
+    }
+    if (bookableBarberLimit != null && countBookableBarberCards(cleaned) > bookableBarberLimit) {
+      setError(FREE_BOOKABLE_BARBER_LIMIT_COPY);
       return;
     }
 
@@ -570,19 +636,131 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     }
   };
 
-  const completeOnboarding = async () => {
+  const showStarterLive = (payload: OnboardingState) => {
+    clearStoredPlanChoice();
+    setState(payload);
+    setLiveBookingUrl(payload.bookingUrl ?? null);
+    setFinished(true);
+    setSaving(false);
+  };
+
+  const openBillingPortal = async () => {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch(`${apiBase}/complete`, {
+      const response = await fetch('/api/setup/billing-portal', {
         method: 'POST',
         credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        url?: string;
+        error?: string;
+      } | null;
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error || 'Unable to open billing portal.');
+      }
+      window.location.assign(payload.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to open billing portal.');
+      setSaving(false);
+    }
+  };
+
+  /** Full is granted only by the paid subscription lifecycle; a failure never falls back to Starter. */
+  const startFullCheckout = async () => {
+    setSaving(true);
+    setError('');
+    const result = await startFullKersivoUpgradeCheckout({ returnTo: 'onboarding' });
+    if (result.kind === 'redirect') {
+      redirectToStripe(result.url);
+      return;
+    }
+    if (result.code === 'SUBSCRIPTION_ALREADY_EXISTS') {
+      clearStoredPlanChoice();
+      window.location.assign(result.redirectTo || '/admin');
+      return;
+    }
+    if (result.billingPortal) {
+      await openBillingPortal();
+      return;
+    }
+    setError(result.message);
+    setSaving(false);
+  };
+
+  /** Former Full shop: Starter is recorded through the existing post-Full plan choice. */
+  const chooseStarterAfterFull = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/setup/post-full-plan', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ choice: 'STARTER', termsAccepted: termsAccepted === true }),
       });
       if (response.status === 401) {
         setHasAccess(false);
         throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
+      const stateResponse = await fetch(apiBase, { credentials: 'include' });
+      if (!stateResponse.ok) throw new Error(await readJsonError(stateResponse));
+      const payload = (await stateResponse.json()) as OnboardingState;
+      if (payload.productAccess?.state === 'FREE_BOOKING') {
+        showStarterLive(payload);
+        return;
+      }
+      applyState(payload);
+      setSaving(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not switch to KERSIVO Starter.');
+      setSaving(false);
+    }
+  };
+
+  const completeOnboarding = async () => {
+    if (freeActivationStep && state?.billingRecoveryRequired) {
+      return openBillingPortal();
+    }
+    if (freeActivationStep && !planChoice) {
+      setError('Choose KERSIVO Starter or Full KERSIVO to continue.');
+      return;
+    }
+    if (freeActivationStep && !termsAccepted) {
+      setError('Please accept the Terms to continue.');
+      return;
+    }
+    if (freeActivationStep && planChoice === 'FULL') return startFullCheckout();
+    if (freeActivationStep && state?.postFullPlanChoiceRequired) return chooseStarterAfterFull();
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch(`${apiBase}/complete`, {
+        method: 'POST',
+        credentials: 'include',
+        ...(isGuest
+          ? {}
+          : {
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                termsAccepted: termsAccepted === true,
+                ...(freeActivationStep ? { plan: 'STARTER' } : {}),
+              }),
+            }),
+      });
+      if (response.status === 401) {
+        setHasAccess(false);
+        throw new Error(sessionExpiredMessage);
+      }
+      if (!response.ok) throw new Error(await readJsonError(response));
+      if (!isGuest) {
+        const payload = (await response.json()) as OnboardingState;
+        if (payload.productAccess?.state === 'FREE_BOOKING') {
+          showStarterLive(payload);
+          return;
+        }
+      }
       window.location.assign('/admin/test-book');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not finish setup.');
@@ -620,9 +798,16 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
+    if (step === 6 && freeActivationStep) {
+      if (state?.billingRecoveryRequired) return 'Open billing';
+      if (planChoice === 'FULL') return FULL_PLAN_CARD.cta;
+      if (planChoice === 'STARTER') return STARTER_PLAN_CARD.cta;
+      return 'Choose a plan';
+    }
+    if (step === 6 && !isGuest && productState === 'FREE_BOOKING') return 'Finish setup';
     if (step === 6) return 'Continue to test booking';
     return 'Continue';
-  }, [step]);
+  }, [step, freeActivationStep, isGuest, productState, planChoice, state?.billingRecoveryRequired]);
 
   if (!authReady || loading) {
     return (
@@ -715,6 +900,49 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           </div>
         </div>
       </>
+    );
+  }
+
+  if (finished && !isGuest && state?.productAccess?.state === 'FREE_BOOKING') {
+    return (
+      <div className="admin-onboarding">
+        <header className="admin-onboarding__header">
+          <div className="admin-onboarding__brand">
+            <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+            <span className="admin-onboarding__brand-name">Kersivo</span>
+          </div>
+        </header>
+        <main className="admin-onboarding__main admin-onboarding__success">
+          <h1 className="admin-onboarding__title">Your booking page is live.</h1>
+          <p className="admin-onboarding__description">
+            Clients can now book online with {state.shop.name || 'your barbershop'}.
+          </p>
+          <div
+            className="admin-onboarding__footer-row"
+            style={{ position: 'static', background: 'none', flexWrap: 'wrap' }}
+          >
+            {liveBookingUrl ? (
+              <a
+                className="btn btn--primary btn--lg"
+                href={liveBookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View my booking page
+              </a>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn--secondary btn--lg"
+              onClick={() => {
+                window.location.assign('/admin?section=bookings_dashboard');
+              }}
+            >
+              Go to dashboard
+            </button>
+          </div>
+        </main>
+      </div>
     );
   }
 
@@ -1103,6 +1331,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           type="button"
                           className="btn btn--ghost btn--sm"
                           onClick={() => {
+                            setBarberLimitNotice('');
                             setBarbers((current) => current.filter((_, itemIndex) => itemIndex !== index));
                           }}
                         >
@@ -1179,6 +1408,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           type="checkbox"
                           checked={barber.onlineBookings !== false}
                           onChange={(event) => {
+                            if (event.target.checked && barber.onlineBookings === false && atBookableBarberLimit) {
+                              setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
+                              return;
+                            }
+                            setBarberLimitNotice('');
                             setBarbers((current) =>
                               current.map((item, itemIndex) =>
                                 itemIndex === index
@@ -1197,15 +1431,26 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                   <button
                     type="button"
                     className="btn btn--secondary"
-                    onClick={() =>
+                    onClick={() => {
+                      // Extra non-bookable records are added later through Team.
+                      if (atBarberCardLimit) {
+                        setBarberLimitNotice(FREE_BOOKABLE_BARBER_LIMIT_COPY);
+                        return;
+                      }
+                      setBarberLimitNotice('');
                       setBarbers((current) => [
                         ...current,
                         { name: '', onlineBookings: true, intendedRole: 'BARBER' },
-                      ])
-                    }
+                      ]);
+                    }}
                   >
                     Add another barber
                   </button>
+                ) : null}
+                {barberLimitNotice ? (
+                  <p className="field__hint" role="status">
+                    {barberLimitNotice}
+                  </p>
                 ) : null}
               </div>
             ) : null}
@@ -1476,9 +1721,13 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
-                Your KERSIVO workspace is ready
+                {freeActivationStep ? 'Choose your plan' : 'Your KERSIVO workspace is ready'}
               </h1>
-              <p className="admin-onboarding__description">Review your setup, then finish to open your dashboard.</p>
+              <p className="admin-onboarding__description">
+                {freeActivationStep
+                  ? 'Review your setup, then choose KERSIVO Starter or Full KERSIVO.'
+                  : 'Review your setup, then finish to open your dashboard.'}
+              </p>
             </div>
 
             <article className="admin-onboarding__summary-card">
@@ -1574,6 +1823,109 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 ))}
               </div>
             </article>
+
+            {freeActivationStep ? (
+              <section
+                className="admin-onboarding__plan-choice"
+                aria-labelledby="onboarding-plan-choice-title"
+                data-onboarding-plan-choice
+              >
+                <h2 id="onboarding-plan-choice-title" className="admin-onboarding__plan-choice-title">
+                  {state?.billingRecoveryRequired
+                    ? 'Your Full KERSIVO billing needs attention'
+                    : 'Choose how you want to run KERSIVO'}
+                </h2>
+                {state?.billingRecoveryRequired ? (
+                  <p
+                    className="admin-onboarding__plan-notice"
+                    role="status"
+                    data-billing-recovery-required
+                  >
+                    {BILLING_RECOVERY_COPY}
+                  </p>
+                ) : fullCheckoutCancelled ? (
+                  <p className="admin-onboarding__plan-notice" role="status" data-full-checkout-cancelled>
+                    {FULL_CHECKOUT_CANCELLED_COPY}
+                  </p>
+                ) : state?.fullCheckoutPending ? (
+                  <p className="admin-onboarding__plan-notice" role="status" data-full-checkout-pending>
+                    {FULL_CHECKOUT_PENDING_COPY}
+                  </p>
+                ) : null}
+                {!state?.billingRecoveryRequired ? (
+                  <>
+                    <div className="admin-onboarding__plan-grid" role="radiogroup" aria-label="Plan">
+                      {(
+                        [
+                          ['STARTER', STARTER_PLAN_CARD],
+                          ['FULL', FULL_PLAN_CARD],
+                        ] as const
+                      ).map(([choice, card]) => {
+                        const selected = planChoice === choice;
+                        return (
+                          <button
+                            key={choice}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            className={`admin-onboarding__plan-card${selected ? ' is-selected' : ''}`}
+                            data-plan-card={choice}
+                            disabled={saving}
+                            onClick={() => {
+                              setPlanChoice(choice);
+                              storePlanChoice(choice);
+                              setError('');
+                            }}
+                          >
+                            <span className="admin-onboarding__plan-name">{card.name}</span>
+                            <span className="admin-onboarding__plan-price">
+                              {card.price}
+                              {'priceNote' in card ? (
+                                <span className="admin-onboarding__plan-price-note"> {card.priceNote}</span>
+                              ) : null}
+                            </span>
+                            <span className="admin-onboarding__plan-tagline">{card.tagline}</span>
+                            <ul className="admin-onboarding__plan-points">
+                              {card.points.map((point) => (
+                                <li key={point}>{point}</li>
+                              ))}
+                            </ul>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="admin-onboarding__plan-footnote">
+                      {planChoice === 'STARTER' ? `${STARTER_PAY_AT_SHOP_COPY} ` : ''}
+                      {PLAN_CHOICE_STRIPE_FEES_COPY}
+                    </p>
+                  </>
+                ) : null}
+              </section>
+            ) : null}
+            {freeActivationStep && !state?.billingRecoveryRequired ? (
+              <label className="admin-onboarding__bookings-toggle" htmlFor="onboarding-terms-accepted">
+                <input
+                  id="onboarding-terms-accepted"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(event) => {
+                    setTermsAccepted(event.target.checked);
+                  }}
+                  required
+                />
+                <span>
+                  I agree to the KERSIVO{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer">
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
+              </label>
+            ) : null}
           </section>
         ) : null}
       </main>
@@ -1589,7 +1941,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             >
               Back
             </button>
-          ) : isReopen ? (
+          ) : isReopen && !state?.freeActivationRequired ? (
             <button
               type="button"
               className="btn btn--secondary btn--lg"
@@ -1612,7 +1964,14 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             onClick={() => {
               void handleContinue();
             }}
-            disabled={saving || (step === 3 && !teamMode)}
+            disabled={
+              saving ||
+              (step === 3 && !teamMode) ||
+              (step === 6 &&
+                freeActivationStep &&
+                !state?.billingRecoveryRequired &&
+                (!planChoice || !termsAccepted))
+            }
             aria-busy={saving}
           >
             {saving ? 'Saving…' : primaryLabel}

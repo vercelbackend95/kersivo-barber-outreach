@@ -51,7 +51,8 @@ export function initDataTrack() {
       const name = el.getAttribute('data-track')?.trim();
       if (!name) return;
 
-      trackConsentedEvent(name, undefined, 'analytics');
+      const placement = el.getAttribute('data-track-placement')?.trim();
+      trackConsentedEvent(name, placement ? { placement } : undefined, 'analytics');
     },
     true,
   );

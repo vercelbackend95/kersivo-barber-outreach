@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AdminSectionHeader from './AdminSectionHeader';
 import { ASSISTANT_STARTERS, buildDemoAssistantReply } from '@/lib/admin/ai/prompts';
 import type { ChatMessage } from '@/lib/admin/ai/types';
+import { isCapabilityLocked } from '@/lib/admin/productLocks';
+import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
+import { Lock } from '../lucide-react';
 
 type UiMessage = ChatMessage & { id: string };
 
@@ -40,6 +43,8 @@ function renderMessageContent(content: string): React.ReactNode {
 }
 
 export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = false }: AiAssistantPanelProps) {
+  const { gate: productGate, openUpgrade } = useAdminProductLocks();
+  const assistantLocked = !isPublicDemo && isCapabilityLocked(productGate, 'assistant');
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -74,7 +79,7 @@ export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = 
 
   const sendMessage = useCallback(async (rawText: string) => {
     const text = rawText.trim();
-    if (!text || isStreaming) return;
+    if (!text || isStreaming || assistantLocked) return;
 
     setError('');
     setDraft('');
@@ -180,7 +185,7 @@ export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = 
       abortRef.current = null;
       setIsStreaming(false);
     }
-  }, [isPublicDemo, isStreaming, messages]);
+  }, [assistantLocked, isPublicDemo, isStreaming, messages]);
 
   const handleClear = useCallback(() => {
     stopStreaming();
@@ -202,6 +207,90 @@ export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = 
   };
 
   const showEmpty = messages.length === 0;
+
+  if (assistantLocked) {
+    return (
+      <section
+        className={`surface booking-shell admin-assistant-shell${showcaseMode ? ' admin-assistant-shell--showcase' : ''}`}
+        aria-label="Assistant"
+        data-assistant-status="offline"
+      >
+        <AdminSectionHeader
+          title="Assistant"
+          description="KERSIVO Assistant is available with Full KERSIVO."
+          metaBadge="OFFLINE"
+          metaBadgeVariant="info"
+        />
+
+        <div className="admin-assistant-layout">
+          <div className="admin-assistant-chat" role="region" aria-label="Assistant offline preview">
+            <div className="admin-assistant-messages">
+              <div className="admin-assistant-empty">
+                <p className="admin-assistant-empty-brand">KERSIVO Assistant</p>
+                <p className="admin-assistant-empty-copy">
+                  Your KERSIVO Assistant is offline on Starter. Upgrade to Full KERSIVO to activate
+                  live AI assistance across your bookings, clients, reports and shop operations.
+                </p>
+              </div>
+            </div>
+
+            <div className="admin-assistant-starters" aria-label="Assistant capabilities preview">
+              {ASSISTANT_STARTERS.map((starter) => (
+                <button
+                  key={starter.id}
+                  type="button"
+                  className="admin-assistant-starter"
+                  disabled
+                  aria-disabled="true"
+                >
+                  {starter.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="admin-assistant-composer">
+              <label className="sr-only" htmlFor="admin-assistant-offline-input">
+                Assistant offline
+              </label>
+              <textarea
+                id="admin-assistant-offline-input"
+                className="admin-assistant-input"
+                rows={2}
+                value=""
+                readOnly
+                disabled
+                placeholder="Assistant is offline on KERSIVO Starter"
+              />
+              <div className="admin-assistant-composer-actions">
+                <button type="button" className="btn btn--primary btn--sm" disabled>
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <aside className="admin-assistant-rail" aria-label="Unlock Assistant">
+            <div className="admin-assistant-soon">
+              <span className="admin-assistant-soon-badge">
+                <Lock width={12} height={12} aria-hidden /> Full KERSIVO
+              </span>
+              <h3 className="admin-assistant-soon-title">Assistant offline</h3>
+              <p className="admin-assistant-soon-copy">
+                Activate the live KERSIVO Assistant with Full KERSIVO.
+              </p>
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={() => openUpgrade('assistant')}
+              >
+                Activate Assistant
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

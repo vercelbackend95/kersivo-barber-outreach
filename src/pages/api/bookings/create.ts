@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { isTenantAdminAccess, resolveAdminAccess } from '../../../lib/admin/auth';
+import { requireAdminProductCapability } from '../../../lib/admin/productCapability';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../../../lib/booking/sandboxBookings';
 import { BookingActionError, createInstantBooking } from '../../../lib/booking/service';
@@ -28,6 +29,9 @@ export const POST: APIRoute = async (ctx) => {
   if (!isTenantAdminAccess(access)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
+
+  const grant = await requireAdminProductCapability(access, 'MANUAL_BOOKINGS');
+  if (grant instanceof Response) return grant;
 
   // Rate-limit in production for owners (DEV owner sessions skip).
   if (!import.meta.env.DEV) {
@@ -80,6 +84,7 @@ export const POST: APIRoute = async (ctx) => {
         requiredShopId,
         notesPrefix,
         skipConfirmationEmail: false,
+        requiredCapability: 'MANUAL_BOOKINGS',
       },
     );
     return new Response(

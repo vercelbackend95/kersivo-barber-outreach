@@ -9,6 +9,7 @@ import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
 import StorefrontShopPage from '@/components/shop/storefront/StorefrontShopPage';
 import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
+import { adminPageUpgradeRedirect } from '@/lib/admin/productCapability';
 import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
 import {
@@ -32,6 +33,10 @@ import '@/styles/components/inputs.css';
 const access = await resolveAdminAccess(Astro);
 if (!isTenantAdminAccess(access)) {
   return Astro.redirect('/admin');
+}
+const upgradeRedirect = await adminPageUpgradeRedirect(access, 'RETAIL');
+if (upgradeRedirect) {
+  return Astro.redirect(upgradeRedirect);
 }
 
 const shop = await prisma.shopSettings.findUnique({

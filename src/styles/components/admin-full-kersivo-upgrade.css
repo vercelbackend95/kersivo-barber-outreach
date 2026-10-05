@@ -1,0 +1,146 @@
+/* Full KERSIVO plan locks: upgrade dialog, inline locked section, subtle sidebar lock. */
+
+.admin-full-upgrade__price {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.admin-full-upgrade__fee {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-full-upgrade__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-full-upgrade__actions .admin-demo-lock__cta {
+  align-self: stretch;
+  text-align: center;
+}
+
+.admin-full-upgrade__actions .admin-demo-lock__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-full-upgrade__checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-full-upgrade__terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-full-upgrade__terms input {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.admin-full-upgrade__terms a,
+.admin-full-upgrade__privacy a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.admin-full-upgrade__privacy {
+  margin: -0.2rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: left;
+}
+
+.admin-full-upgrade__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--danger, #f87171);
+  text-align: left;
+}
+
+.admin-full-upgrade__error p {
+  margin: 0;
+}
+
+.admin-full-upgrade-page {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 4rem) 1rem;
+}
+
+.admin-full-upgrade-page__card {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.admin-full-upgrade-page__back {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.admin-full-upgrade-section {
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vw, 4rem) 1rem;
+}
+
+.admin-full-upgrade-section__card {
+  max-width: 28rem;
+}
+
+.admin-full-upgrade__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-sidebar-link--locked .admin-sidebar-link-label {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.admin-sidebar-link-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.admin-sidebar-link--locked:hover .admin-sidebar-link-lock {
+  opacity: 1;
+}
+
+.admin-view-toggle-lock {
+  margin-left: 0.3rem;
+  opacity: 0.7;
+}

@@ -30,7 +30,7 @@ describe('Admin AI assistant compliance surfaces', () => {
 
   it('forwards free-text messages to OpenAI without claiming server-side CPD scrub', () => {
     const api = readRepoFile('../../pages/api/admin/ai/chat.ts');
-    expect(api).toContain("requireAdminPermission(ctx, 'ai.use')");
+    expect(api).toContain("requireAdminPermissionAndCapability(ctx, 'ai.use', 'ASSISTANT')");
     expect(api).toContain('OPENAI_API_KEY');
     expect(api).toContain('chat.completions.create');
     expect(api).not.toContain('sanitizeOpsText');
@@ -50,9 +50,9 @@ describe('Admin AI assistant compliance surfaces', () => {
     expect(panel).not.toMatch(/I consent to AI/i);
   });
 
-  it('keeps explicit Terms and DPA versions after non-material DPA correction', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
+  it('keeps explicit Terms and DPA versions for the v1.18 legal package', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
   });
 
   it('keeps a single LaunchWizard Terms acceptance checkbox', () => {

@@ -1,11 +1,11 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'billing.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'billing.manage', 'RETAIL');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
 

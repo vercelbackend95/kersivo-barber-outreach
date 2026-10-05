@@ -22,6 +22,10 @@ import {
   verifyStripeWebhookSignature,
 } from '../../../lib/shop/stripe';
 import { SHOP_ORDER_METADATA_TYPE } from '../../../lib/shop/cardPaymentsGate';
+import {
+  applyConnectAccountDeauthorized,
+  applyConnectAccountUpdated,
+} from '../../../lib/shop/stripeConnectAccountState';
 import { finalizeRetailOrderFromCheckout } from '../../../lib/shop/finalizeRetailOrder';
 import {
   EmailDeliveryError,
@@ -42,9 +46,13 @@ import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
-import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate';
-import { confirmPaidDeposit } from '../../../lib/booking/confirmPaidDeposit';
-import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
+import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
+import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
+import { resolveBookingPaymentAccount } from '../../../lib/booking/bookingPaymentAccount';
+import {
+  confirmBookingPaymentRefundFromWebhook,
+  type RefundWebhookConfirmation,
+} from '../../../lib/booking/depositMoney';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException, captureOpsMessage } from '../../../lib/ops/sentry';
 import {
@@ -817,56 +825,64 @@ function paymentIntentIdFromObject(
   return null;
 }
 
+function refundWebhookStatus(raw: string): 'succeeded' | 'failed' | 'pending' | 'canceled' {
+  const value = raw.toLowerCase();
+  if (value === 'succeeded') return 'succeeded';
+  if (value === 'failed') return 'failed';
+  if (value === 'canceled' || value === 'cancelled') return 'canceled';
+  return 'pending';
+}
+
+function integerAmount(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : null;
+}
+
 async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
   const obj = event.data.object;
   const objectType = (obj.object ?? '').trim();
 
+  // Account comes only from the authenticated event envelope, never from metadata.
+  const stripeAccountId = event.account?.trim() || null;
+  const paymentIntentId: string | null = paymentIntentIdFromObject(obj.payment_intent);
+
+  let result: RefundWebhookConfirmation = { matched: false, refund: null };
   let stripeRefundId: string | null = null;
-  let paymentIntentId: string | null = paymentIntentIdFromObject(obj.payment_intent);
-  let status: 'succeeded' | 'failed' | 'pending' | 'canceled' = 'pending';
-  let amountPence: number | null =
-    typeof obj.amount === 'number' && Number.isFinite(obj.amount)
-      ? Math.trunc(obj.amount)
-      : typeof obj.amount_refunded === 'number' && Number.isFinite(obj.amount_refunded)
-        ? Math.trunc(obj.amount_refunded)
-        : null;
 
-  if (event.type === 'refund.failed') {
-    status = 'failed';
-    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
-  } else if (event.type === 'refund.updated' || objectType === 'refund') {
-    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
-    const raw = (obj.status ?? '').toLowerCase();
-    if (raw === 'succeeded') status = 'succeeded';
-    else if (raw === 'failed') status = 'failed';
-    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
-    else status = 'pending';
-  } else if (event.type === 'charge.refunded') {
-    // Charge object: prefer the latest refund entry.
-    const latest = obj.refunds?.data?.[0];
-    stripeRefundId = typeof latest?.id === 'string' ? latest.id : null;
-    const raw = (latest?.status ?? 'succeeded').toLowerCase();
-    if (raw === 'failed') status = 'failed';
-    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
-    else if (raw === 'pending') status = 'pending';
-    else status = 'succeeded';
-    if (typeof latest?.amount === 'number' && Number.isFinite(latest.amount)) {
-      amountPence = Math.trunc(latest.amount);
+  if (event.type === 'charge.refunded' && objectType !== 'refund') {
+    // A charge can carry several refunds and `amount_refunded` is cumulative, so only a refund
+    // id already stored on a ledger identifies ours; anything else waits for refund.updated.
+    for (const entry of obj.refunds?.data ?? []) {
+      if (typeof entry?.id !== 'string' || !entry.id.startsWith('re_')) continue;
+      const entryResult = await confirmBookingPaymentRefundFromWebhook({
+        stripeRefundId: entry.id,
+        paymentIntentId,
+        status: refundWebhookStatus(entry.status ?? ''),
+        amountPence: integerAmount(entry.amount),
+        stripeAccountId,
+        requireStoredRefundId: true,
+      });
+      if (entryResult.matched) {
+        result = entryResult;
+        stripeRefundId = entry.id;
+        break;
+      }
     }
-    // Charge.payment_intent is the PI id for Connect deposits.
-    paymentIntentId = paymentIntentId ?? paymentIntentIdFromObject(obj.payment_intent);
+  } else {
+    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
+    result = await confirmBookingPaymentRefundFromWebhook({
+      stripeRefundId,
+      paymentIntentId,
+      status: event.type === 'refund.failed' ? 'failed' : refundWebhookStatus(obj.status ?? ''),
+      amountPence: integerAmount(obj.amount),
+      stripeAccountId,
+    });
   }
-
-  const result = await confirmDepositRefundFromWebhook({
-    stripeRefundId,
-    paymentIntentId,
-    status,
-    amountPence,
-  });
 
   opsLog('stripe.webhook', 'deposit_refund_event', {
     eventType: event.type,
     matched: result.matched,
+    confirmed: result.confirmed ?? false,
+    reason: result.reason ?? null,
     refundLedgerId: result.refund?.id ?? null,
     bookingId: result.refund?.bookingId ?? null,
     ledgerStatus: result.refund?.status ?? null,
@@ -874,11 +890,14 @@ async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
     paymentIntentId,
   });
 
-  // Unmatched is OK (retail / SaaS / manual Stripe refunds) — acknowledge so Stripe stops retrying.
+  // Unmatched is OK (retail / SaaS / manual Stripe refunds) and integrity mismatches cannot be
+  // repaired by a retry — acknowledge both so Stripe stops retrying.
   return new Response(
     JSON.stringify({
       ok: true,
       matched: result.matched,
+      confirmed: result.confirmed ?? false,
+      ...(result.reason ? { reason: result.reason } : {}),
       status: result.refund?.status ?? null,
     }),
     { status: 200 },
@@ -898,49 +917,60 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
       ? new Date(event.created * 1000)
       : new Date();
 
-  const result = await prisma.shopSettings.updateMany({
-    where: {
-      stripeConnectAccountId: accountId,
-      OR: [{ connectStatusEventAt: null }, { connectStatusEventAt: { lte: eventAt } }],
-    },
-    data: {
-      stripeConnectChargesEnabled: chargesEnabled,
-      stripeConnectDetailsSubmitted: detailsSubmitted,
-      connectStatusEventAt: eventAt,
-    },
+  const result = await applyConnectAccountUpdated({
+    accountId,
+    chargesEnabled,
+    detailsSubmitted,
+    eventAt,
   });
-
-  if (result.count === 0) {
-    const known = await prisma.shopSettings.count({
-      where: { stripeConnectAccountId: accountId },
-    });
-    console.info('[webhook] account.updated', {
-      accountId,
-      chargesEnabled,
-      detailsSubmitted,
-      shopsUpdated: 0,
-      reason: known > 0 ? 'stale_ignored' : 'unknown_account',
-    });
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        accountId,
-        shopsUpdated: 0,
-        ignored: known > 0 ? 'stale_event' : 'unknown_account',
-      }),
-      { status: 200 },
-    );
-  }
 
   console.info('[webhook] account.updated', {
     accountId,
     chargesEnabled,
     detailsSubmitted,
-    shopsUpdated: result.count,
+    shopsUpdated: result.shopsUpdated,
+    ignored: result.ignored,
   });
 
   return new Response(
-    JSON.stringify({ ok: true, accountId, shopsUpdated: result.count }),
+    JSON.stringify({
+      ok: true,
+      accountId,
+      shopsUpdated: result.shopsUpdated,
+      ...(result.ignored ? { ignored: result.ignored } : {}),
+    }),
+    { status: 200 },
+  );
+}
+
+async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Response> {
+  // Stripe documents the disconnected connected account on the top-level event.account.
+  // data.object is the Application object, not the connected Account.
+  const accountId = event.account?.trim() || '';
+  if (!accountId || !accountId.startsWith('acct_')) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+
+  const eventAt =
+    Number.isFinite(event.created) && event.created > 0
+      ? new Date(event.created * 1000)
+      : new Date();
+
+  const result = await applyConnectAccountDeauthorized({ accountId, eventAt });
+
+  console.info('[webhook] account.application.deauthorized', {
+    accountId,
+    shopsUpdated: result.shopsUpdated,
+    ignored: result.ignored,
+  });
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      accountId,
+      shopsUpdated: result.shopsUpdated,
+      ...(result.ignored ? { ignored: result.ignored } : {}),
+    }),
     { status: 200 },
   );
 }
@@ -952,13 +982,26 @@ async function resolveBookingDepositStripeAccount(
   const fromEvent = event.account?.trim() || null;
   if (fromEvent) return fromEvent;
 
+  // No event.account: the Booking's payment-account snapshot wins; the current shop account
+  // is only a fallback for legacy pre-snapshot bookings.
   const shopId = metadata.shopId?.trim();
+  const bookingId = metadata.bookingId?.trim();
   if (!shopId) return null;
+  const booking = bookingId
+    ? await prisma.booking.findFirst({
+        where: { id: bookingId, barber: { shopId } },
+        select: { stripeConnectAccountIdAtPayment: true, kersivoPlatformFeePence: true },
+      })
+    : null;
   const shop = await prisma.shopSettings.findUnique({
     where: { id: shopId },
     select: { stripeConnectAccountId: true },
   });
-  return shop?.stripeConnectAccountId?.trim() || null;
+  const resolved = resolveBookingPaymentAccount({
+    booking: booking ?? {},
+    currentShopAccountId: shop?.stripeConnectAccountId,
+  });
+  return resolved.ok ? resolved.accountId : null;
 }
 
 async function handleRetailOrderCheckout(
@@ -1017,33 +1060,40 @@ async function handleBookingDepositCheckout(
   session: StripeSession,
   metadata: Record<string, string>,
   eventCreated: number,
+  stripeAccountId: string | null,
 ): Promise<Response> {
   if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
-    return new Response(JSON.stringify({ error: 'Deposit not paid' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Booking payment not paid' }), { status: 400 });
   }
   const bookingId = metadata.bookingId?.trim();
   const shopId = metadata.shopId?.trim();
   if (!bookingId || !shopId || shopId === DEMO_SHOP_ID) {
-    return new Response(JSON.stringify({ error: 'Invalid booking deposit metadata' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Invalid booking payment metadata' }), { status: 400 });
   }
 
   const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
-  const result = await confirmPaidDeposit({
+  const result = await confirmPaidBookingPayment({
     bookingId,
     shopId,
     sessionId,
     paymentIntentId: getCheckoutPaymentIntentId(session),
+    session,
+    stripeAccountId,
     paidAt,
   });
 
   if (result.outcome === 'not_found') {
     return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 });
   }
+  if (result.outcome === 'invalid_session') {
+    return new Response(JSON.stringify({ error: 'Invalid booking payment session' }), { status: 400 });
+  }
   if (result.outcome === 'duplicate') {
     return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
   }
-  // confirmed / reinstated / late_refunded / conflicting_payment all ack Stripe
-  // (alerts already fired for conflict and late-paid paths).
+  // confirmed / reinstated / late_refunded / conflicting_payment / amount_mismatch /
+  // payment_type_mismatch / account_mismatch all ack Stripe (ops alerts already fired for the
+  // failure paths; retries cannot change the outcome).
   return new Response(JSON.stringify({ ok: true, bookingId, outcome: result.outcome }), {
     status: 200,
   });
@@ -1057,7 +1107,7 @@ async function handleBookingDepositSessionExpired(event: StripeEvent): Promise<R
   const sessionId =
     typeof event.data.object.id === 'string' ? event.data.object.id.trim() : '';
   const metadata = event.data.object.metadata ?? {};
-  if ((metadata.type ?? '').trim() !== BOOKING_DEPOSIT_METADATA_TYPE) {
+  if (!isBookingCheckoutMetadataType(metadata.type)) {
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
   const bookingId = metadata.bookingId?.trim();
@@ -1285,6 +1335,10 @@ export const POST: APIRoute = async ({ request }) => {
     const finalize = (response: Response, opts?: { ignored?: boolean }) =>
       finalizeWebhookResponse(eventId, response, { ...opts, eventType: event.type });
 
+    if (event.type === 'account.application.deauthorized') {
+      return await finalize(await handleConnectAccountDeauthorized(event));
+    }
+
     if (event.type === 'account.updated') {
       return await finalize(await handleConnectAccountUpdated(event));
     }
@@ -1320,7 +1374,7 @@ export const POST: APIRoute = async ({ request }) => {
     const eventMetadata = event.data.object.metadata ?? {};
     let stripeAccount: string | undefined;
 
-    if ((eventMetadata.type ?? '').trim() === BOOKING_DEPOSIT_METADATA_TYPE) {
+    if (isBookingCheckoutMetadataType(eventMetadata.type)) {
       const resolved = await resolveBookingDepositStripeAccount(event, eventMetadata);
       if (!resolved) {
         return await finalize(
@@ -1349,9 +1403,15 @@ export const POST: APIRoute = async ({ request }) => {
       return await finalize(await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created));
     }
 
-    if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === BOOKING_DEPOSIT_METADATA_TYPE) {
+    if (SETUP_FULFILMENT_EVENTS.has(event.type) && isBookingCheckoutMetadataType(metadata.type)) {
       return await finalize(
-        await handleBookingDepositCheckout(sessionId, session, metadata, event.created),
+        await handleBookingDepositCheckout(
+          sessionId,
+          session,
+          metadata,
+          event.created,
+          stripeAccount ?? null,
+        ),
       );
     }
 

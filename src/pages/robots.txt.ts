@@ -10,6 +10,8 @@ const PRIVATE_PATH_RULES = [
   'Disallow: /shop/cancelled',
   'Disallow: /shop/*/success',
   'Disallow: /shop/*/cancelled',
+  // Dynamic QR redirects. /book/ stays crawlable so its noindex directive can be seen.
+  'Disallow: /q/',
 ] as const;
 
 export const GET: APIRoute = () => {

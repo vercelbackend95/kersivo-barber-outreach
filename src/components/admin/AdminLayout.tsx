@@ -5,6 +5,7 @@ import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
 import {
   BarChart2,
   Calendar,
+  Lock,
   LogOut,
   Menu,
   Package,
@@ -22,6 +23,8 @@ import { useAdminClock } from './adminClock';
 import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
 import BlacklineConversionCard from './BlacklineConversionCard';
+import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
+import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
@@ -364,6 +367,13 @@ export default function AdminLayout({
     onChangeSection(section);
   };
 
+  const { gate: productGate, openUpgrade } = useAdminProductLocks();
+  const isFreeBooking = productGate?.state === 'FREE_BOOKING';
+  const openLaunchUpgrade = useCallback(() => {
+    setIsMobileMenuOpen(false);
+    openUpgrade('launch');
+  }, [openUpgrade]);
+
   useEffect(() => {
     const panel = mainContentRef.current;
     if (!panel) return;
@@ -421,6 +431,8 @@ export default function AdminLayout({
       permissions={permissions}
       shopId={shopId}
       onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+      productState={productGate?.state ?? null}
+      onLockedFeature={openUpgrade}
     />
   ) : (
     <button
@@ -460,6 +472,8 @@ export default function AdminLayout({
       permissions={permissions}
       shopId={shopId}
       onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+      productState={productGate?.state ?? null}
+      onLockedFeature={openUpgrade}
     />
   ) : (
     <button
@@ -477,18 +491,28 @@ export default function AdminLayout({
       {visibleMenuGroups.map((group) => (
         <div className="admin-sidebar-group" key={group.title}>
           <p className="admin-sidebar-group-title">{group.title}</p>
-          {group.items.map((item) => (
-            <button
-              key={item.section}
-              type="button"
-              className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
-              aria-current={activeSection === item.section ? 'page' : undefined}
-              onClick={() => onSelectSection(item.section)}
-            >
-              <span className="admin-sidebar-link-icon">{item.icon}</span>
-              <span className="admin-sidebar-link-label">{item.label}</span>
-            </button>
-          ))}
+          {group.items.map((item) => {
+            const locked = lockedFeatureForSection(productGate, item.section) !== null;
+            return (
+              <button
+                key={item.section}
+                type="button"
+                className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}${locked ? ' admin-sidebar-link--locked' : ''}`}
+                aria-current={activeSection === item.section ? 'page' : undefined}
+                aria-label={locked ? `${item.label} (Full KERSIVO)` : undefined}
+                data-locked={locked ? 'true' : undefined}
+                onClick={() => onSelectSection(item.section)}
+              >
+                <span className="admin-sidebar-link-icon">{item.icon}</span>
+                <span className="admin-sidebar-link-label">{item.label}</span>
+                {locked ? (
+                  <span className="admin-sidebar-link-lock" aria-hidden="true">
+                    <Lock width={13} height={13} />
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
       ))}
       {isBlacklineDemo && showLaunchCta ? (
@@ -497,7 +521,11 @@ export default function AdminLayout({
         </div>
       ) : showLaunchCta && canManageBilling ? (
         <div className="admin-sidebar-group">
-          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
+          <AdminSidebarLaunchCta
+            isPublicDemo={isPublicDemo}
+            onSpaSection={onChangeSection}
+            onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
+          />
         </div>
       ) : null}
     </nav>
@@ -748,7 +776,11 @@ export default function AdminLayout({
           {isBlacklineDemo ? (
             <BlacklineConversionCard />
           ) : canManageBilling ? (
-            <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
+            <AdminSidebarLaunchCta
+              isPublicDemo={isPublicDemo}
+              onSpaSection={onChangeSection}
+              onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
+            />
           ) : null}
         </div>
         {renderMenu(false)}

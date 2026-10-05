@@ -1,4 +1,6 @@
+import type { BookingPaymentType } from '@prisma/client';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '../booking/depositGate';
+import { BOOKING_PAYMENT_METADATA_TYPE } from '../booking/bookingPaymentPolicy';
 import { SHOP_ORDER_METADATA_TYPE } from './cardPaymentsGate';
 import { retrieveCheckoutSession, type StripeSession } from './stripe';
 
@@ -83,6 +85,7 @@ async function stripeGet(
   return json;
 }
 
+/** Legacy only: existing Express accounts remain supported for historical payments/refunds. */
 export async function createConnectExpressAccount(input: {
   email?: string;
   shopId: string;
@@ -100,6 +103,40 @@ export async function createConnectExpressAccount(input: {
   const id = typeof account.id === 'string' ? account.id : '';
   if (!id) throw new Error('Stripe Connect account id missing.');
   return { id };
+}
+
+/**
+ * v1.18 public Connect onboarding target: Standard connected account + Stripe-hosted onboarding.
+ * Stripe handles processing pricing on the connected account; KERSIVO booking payments use direct
+ * charges and add no application fee for new Starter/Full payments.
+ */
+export async function createConnectStandardAccount(input: {
+  email?: string;
+  shopId: string;
+}): Promise<{ id: string }> {
+  const params: Record<string, string> = {
+    type: 'standard',
+    country: 'GB',
+    'capabilities[card_payments][requested]': 'true',
+    'capabilities[transfers][requested]': 'true',
+    'metadata[shopId]': input.shopId,
+    'metadata[kersivo]': 'booking_payments',
+  };
+  if (input.email?.trim()) params.email = input.email.trim();
+  const account = await stripeForm('/accounts', params);
+  const id = typeof account.id === 'string' ? account.id : '';
+  if (!id) throw new Error('Stripe Connect account id missing.');
+  return { id };
+}
+
+export type StripeConnectAccountType = 'STANDARD' | 'EXPRESS' | 'CUSTOM' | 'UNKNOWN';
+
+function normalizeConnectAccountType(value: unknown): StripeConnectAccountType {
+  const type = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (type === 'standard') return 'STANDARD';
+  if (type === 'express') return 'EXPRESS';
+  if (type === 'custom') return 'CUSTOM';
+  return 'UNKNOWN';
 }
 
 export async function createConnectAccountLink(input: {
@@ -121,18 +158,17 @@ export async function createConnectAccountLink(input: {
 export async function retrieveConnectAccount(accountId: string): Promise<{
   chargesEnabled: boolean;
   detailsSubmitted: boolean;
+  accountType: StripeConnectAccountType;
 }> {
   const account = await stripeGet(`/accounts/${encodeURIComponent(accountId)}`);
   return {
     chargesEnabled: Boolean(account.charges_enabled),
     detailsSubmitted: Boolean(account.details_submitted),
+    accountType: normalizeConnectAccountType(account.type),
   };
 }
 
-/**
- * Direct charge on the connected account (shop is MoR).
- * KERSIVO application fee is £0 today; hook kept for a future SaaS fee.
- */
+/** Idempotency key for legacy booking_deposit sessions. */
 export function bookingDepositCheckoutIdempotencyKey(bookingId: string): string {
   return `booking_deposit_checkout_${bookingId.trim()}`;
 }
@@ -180,26 +216,43 @@ function isSessionAlreadyTerminalError(error: unknown): 'already_completed' | 'a
   return null;
 }
 
-export async function createBookingDepositCheckoutSession(input: {
+/**
+ * New key prefix for generic sessions: reusing the legacy key with different params would make
+ * Stripe reject retries for bookings created before the switch.
+ */
+export function bookingPaymentCheckoutIdempotencyKey(bookingId: string): string {
+  return `booking_payment_checkout_${bookingId.trim()}`;
+}
+
+type BookingCheckoutBaseInput = {
   shopConnectAccountId: string;
   bookingId: string;
   shopId: string;
   customerEmail: string;
   shopName: string;
-  /** Snapshot deposit in pence; must be > 0 (H04: min(service price, £5)). */
-  amountPence: number;
   successUrl: string;
   cancelUrl: string;
   /** Booking.createdAt — anchors deterministic expires_at for Idempotency-Key stability. */
   bookingCreatedAt: Date;
   /** Local hold deadline; session backstop is at least 30 minutes from bookingCreatedAt. */
   holdExpiresAt?: Date | null;
-}): Promise<{ id: string; url: string }> {
+};
+
+async function createBookingCheckoutSessionInternal(
+  input: BookingCheckoutBaseInput & {
+    amountPence: number;
+    productName: string;
+    metadata: Record<string, string>;
+    /** null = omit application_fee_amount entirely. */
+    applicationFeeParam: string | null;
+    idempotencyKey: string;
+  },
+): Promise<{ id: string; url: string }> {
   const connectAccountId = input.shopConnectAccountId.trim();
-  if (!connectAccountId) throw new Error('shopConnectAccountId is required for deposit checkout.');
+  if (!connectAccountId) throw new Error('shopConnectAccountId is required for booking checkout.');
   const amountPence = Math.trunc(input.amountPence);
   if (!Number.isFinite(amountPence) || amountPence <= 0) {
-    throw new Error('amountPence must be a positive integer for deposit checkout.');
+    throw new Error('amountPence must be a positive integer for booking checkout.');
   }
 
   const expiresAt = resolveDepositSessionExpiresAt({
@@ -207,37 +260,96 @@ export async function createBookingDepositCheckoutSession(input: {
     holdExpiresAt: input.holdExpiresAt ?? null,
   });
 
-  const session = await stripeForm(
-    '/checkout/sessions',
-    {
-      mode: 'payment',
-      success_url: input.successUrl,
-      cancel_url: input.cancelUrl,
-      customer_email: input.customerEmail,
-      'payment_method_types[0]': 'card',
-      'line_items[0][price_data][currency]': 'gbp',
-      'line_items[0][price_data][unit_amount]': String(amountPence),
-      'line_items[0][price_data][product_data][name]': `Booking deposit — ${input.shopName}`.slice(
-        0,
-        120,
-      ),
-      'line_items[0][quantity]': '1',
-      expires_at: String(Math.floor(expiresAt.getTime() / 1000)),
-      'metadata[type]': BOOKING_DEPOSIT_METADATA_TYPE,
-      'metadata[bookingId]': input.bookingId,
-      'metadata[shopId]': input.shopId,
-      'payment_intent_data[application_fee_amount]': '0',
-    },
-    {
-      stripeAccount: connectAccountId,
-      idempotencyKey: bookingDepositCheckoutIdempotencyKey(input.bookingId),
-    },
-  );
+  const params: Record<string, string> = {
+    mode: 'payment',
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    customer_email: input.customerEmail,
+    'payment_method_types[0]': 'card',
+    'line_items[0][price_data][currency]': 'gbp',
+    'line_items[0][price_data][unit_amount]': String(amountPence),
+    'line_items[0][price_data][product_data][name]': `${input.productName} — ${input.shopName}`.slice(
+      0,
+      120,
+    ),
+    'line_items[0][quantity]': '1',
+    expires_at: String(Math.floor(expiresAt.getTime() / 1000)),
+  };
+  for (const [key, value] of Object.entries(input.metadata)) {
+    params[`metadata[${key}]`] = value;
+  }
+  if (input.applicationFeeParam !== null) {
+    params['payment_intent_data[application_fee_amount]'] = input.applicationFeeParam;
+  }
+
+  const session = await stripeForm('/checkout/sessions', params, {
+    stripeAccount: connectAccountId,
+    idempotencyKey: input.idempotencyKey,
+  });
 
   const id = typeof session.id === 'string' ? session.id : '';
   const url = typeof session.url === 'string' ? session.url : '';
-  if (!id || !url) throw new Error('Stripe deposit session incomplete.');
+  if (!id || !url) throw new Error('Stripe booking payment session incomplete.');
   return { id, url };
+}
+
+/**
+ * Booking payment Checkout as a direct charge on the connected account (shop is MoR).
+ * Amount and KERSIVO fee MUST come from the Booking snapshot, never recomputed from the plan.
+ */
+export async function createBookingPaymentCheckoutSession(
+  input: BookingCheckoutBaseInput & {
+    bookingPaymentType: Exclude<BookingPaymentType, 'NONE'>;
+    /** Booking.paymentAmountPence snapshot; must be > 0. */
+    paymentAmountPence: number;
+    /** Booking.kersivoPlatformFeePence snapshot; 0 omits application_fee_amount. */
+    applicationFeePence: number;
+  },
+): Promise<{ id: string; url: string }> {
+  const amountPence = Math.trunc(input.paymentAmountPence);
+  const feePence = Math.trunc(input.applicationFeePence);
+  if (!Number.isFinite(feePence) || feePence < 0) {
+    throw new Error('applicationFeePence must be a non-negative integer.');
+  }
+  if (feePence >= amountPence) {
+    throw new Error('applicationFeePence must be lower than the payment amount.');
+  }
+  return createBookingCheckoutSessionInternal({
+    ...input,
+    amountPence,
+    productName: input.bookingPaymentType === 'FULL' ? 'Booking payment' : 'Booking deposit',
+    metadata: {
+      type: BOOKING_PAYMENT_METADATA_TYPE,
+      bookingId: input.bookingId,
+      shopId: input.shopId,
+      bookingPaymentType: input.bookingPaymentType,
+    },
+    applicationFeeParam: feePence > 0 ? String(feePence) : null,
+    idempotencyKey: bookingPaymentCheckoutIdempotencyKey(input.bookingId),
+  });
+}
+
+/**
+ * Legacy deposit Checkout (metadata.type = booking_deposit, £0 application fee).
+ * Kept for compatibility; live booking flows use createBookingPaymentCheckoutSession.
+ */
+export async function createBookingDepositCheckoutSession(
+  input: BookingCheckoutBaseInput & {
+    /** Snapshot deposit in pence; must be > 0 (H04: min(service price, £5)). */
+    amountPence: number;
+  },
+): Promise<{ id: string; url: string }> {
+  return createBookingCheckoutSessionInternal({
+    ...input,
+    productName: 'Booking deposit',
+    metadata: {
+      type: BOOKING_DEPOSIT_METADATA_TYPE,
+      bookingId: input.bookingId,
+      shopId: input.shopId,
+    },
+    applicationFeeParam: null,
+    idempotencyKey: bookingDepositCheckoutIdempotencyKey(input.bookingId),
+  });
 }
 
 export async function retrieveBookingDepositSession(
@@ -291,7 +403,6 @@ export async function createRetailCheckoutSession(input: {
     'metadata[type]': SHOP_ORDER_METADATA_TYPE,
     'metadata[orderId]': input.orderId,
     'metadata[shopId]': input.shopId,
-    'payment_intent_data[application_fee_amount]': '0',
   };
 
   const customerEmail = input.customerEmail?.trim().toLowerCase();
@@ -394,6 +505,17 @@ export async function refundPaymentIntent(
     amount?: number;
     /** Base key; `:direct` / `:legacy` suffixes are appended so paths stay distinct. */
     idempotencyKey?: string;
+    /**
+     * Also refund the KERSIVO application fee (direct charges). Stripe refunds the fee
+     * proportionally to the refunded amount.
+     */
+    refundApplicationFee?: boolean;
+    /**
+     * When the connected-account refund reports a missing PaymentIntent, retry on the platform
+     * account (historical destination charges). Defaults to true; pass false for payments whose
+     * connected account is a known snapshot — they must never be refunded elsewhere.
+     */
+    allowPlatformLegacyFallback?: boolean;
   },
 ): Promise<StripeRefundResult> {
   const params: Record<string, string> = {
@@ -401,6 +523,9 @@ export async function refundPaymentIntent(
   };
   if (typeof options?.amount === 'number' && Number.isFinite(options.amount) && options.amount > 0) {
     params.amount = String(Math.trunc(options.amount));
+  }
+  if (options?.refundApplicationFee === true) {
+    params.refund_application_fee = 'true';
   }
 
   const baseKey = options?.idempotencyKey?.trim() || '';
@@ -414,6 +539,7 @@ export async function refundPaymentIntent(
       return parseRefundResult(refund, 'direct');
     } catch (error) {
       if (!isMissingPaymentIntentError(error)) throw error;
+      if (options?.allowPlatformLegacyFallback === false) throw error;
       // Legacy destination charges lived on the platform account.
     }
   }

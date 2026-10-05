@@ -1,4 +1,8 @@
 import { prisma } from '@/lib/db/client';
+import {
+  checkFreeBookableBarberActivation,
+  lockShopForBookableBarberChange,
+} from '@/lib/shop/freeBookableBarbers';
 
 export type OnlineBookingSetupMissing = 'services' | 'workingHours';
 
@@ -6,7 +10,7 @@ export type SetOnlineBookingsEnabledResult =
   | { ok: true; active: boolean }
   | {
       ok: false;
-      status: 404 | 422;
+      status: 404 | 409 | 422;
       code: string;
       error: string;
       missing?: OnlineBookingSetupMissing[];
@@ -92,6 +96,20 @@ export async function setOnlineBookingsEnabled(params: {
 
   if (barber.active === enabled) {
     return { ok: true, active: enabled };
+  }
+
+  if (enabled) {
+    const limitError = await prisma.$transaction(async (tx) => {
+      await lockShopForBookableBarberChange(tx, shopId);
+      const blocked = await checkFreeBookableBarberActivation(tx, { shopId, barberId });
+      if (blocked) return blocked;
+      await tx.barber.update({ where: { id: barberId }, data: { active: true } });
+      return null;
+    });
+    if (limitError) {
+      return { ok: false, status: limitError.status, code: limitError.code, error: limitError.error };
+    }
+    return { ok: true, active: true };
   }
 
   await prisma.barber.update({

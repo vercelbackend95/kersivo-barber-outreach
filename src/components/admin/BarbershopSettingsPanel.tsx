@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import AdminSectionHeader from './AdminSectionHeader';
+import QrKitSettingsCard from './QrKitSettingsCard';
+import LeaveKersivoCard from './LeaveKersivoCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
 import '@/styles/components/admin-barbershop-settings.css';
@@ -13,6 +15,16 @@ type Identity = {
   name: string;
   townCity: string | null;
   logoUrl: string | null;
+};
+
+type GoogleBookingSetupState = {
+  bookingUrl: string;
+  destinationSource: 'starter_hosted' | 'full_hosted_fallback' | 'full_verified_own_domain';
+  status: 'NOT_SET' | 'SETUP_STARTED' | 'MERCHANT_CONFIRMED' | 'UPDATE_REQUIRED';
+  requiresUpdate: boolean;
+  confirmedUrl: string | null;
+  googleBusinessProfileUrl: string;
+  productState: string;
 };
 
 type PauseState = {
@@ -84,10 +96,13 @@ export default function BarbershopSettingsPanel({
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
   const [depositsPaid, setDepositsPaid] = useState(false);
-  const [depositsEnabled, setDepositsEnabled] = useState(false);
+  const [bookingPaymentMode, setBookingPaymentMode] = useState<'NONE' | 'DEPOSIT' | 'FULL'>('NONE');
+  const [bookingPaymentsAvailable, setBookingPaymentsAvailable] = useState(false);
+  const [bookingProductState, setBookingProductState] = useState<string | null>(null);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
+  const [connectDisconnected, setConnectDisconnected] = useState(false);
   const [canManagePayouts, setCanManagePayouts] = useState(false);
   const [depositsBusy, setDepositsBusy] = useState(false);
   const [depositsError, setDepositsError] = useState('');
@@ -105,6 +120,12 @@ export default function BarbershopSettingsPanel({
     maxClientReschedules: number;
   } | null>(null);
 
+  const [googleBooking, setGoogleBooking] = useState<GoogleBookingSetupState | null>(null);
+  const [googleBookingLoading, setGoogleBookingLoading] = useState(false);
+  const [googleBookingBusy, setGoogleBookingBusy] = useState(false);
+  const [googleBookingError, setGoogleBookingError] = useState('');
+  const [googleBookingMessage, setGoogleBookingMessage] = useState('');
+
   const [billingPhase, setBillingPhase] = useState<string | null>(null);
   const [billingLabel, setBillingLabel] = useState<string | null>(null);
   const [hasBillingPortal, setHasBillingPortal] = useState(false);
@@ -113,11 +134,84 @@ export default function BarbershopSettingsPanel({
   const [hasSubscription, setHasSubscription] = useState(false);
   const [canCancelSubscription, setCanCancelSubscription] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [postFullPlan, setPostFullPlan] = useState<string | null>(null);
+  const [postFullPlanChoiceRequired, setPostFullPlanChoiceRequired] = useState(false);
+  const [showCancelChoices, setShowCancelChoices] = useState(false);
+  const [starterTermsAccepted, setStarterTermsAccepted] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
   const [cancelSubBusy, setCancelSubBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [billingMessage, setBillingMessage] = useState('');
+
+  const loadGoogleBooking = useCallback(async () => {
+    setGoogleBookingLoading(true);
+    setGoogleBookingError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/google-booking', {
+        credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | (GoogleBookingSetupState & { error?: string })
+        | { error?: string }
+        | null;
+      if (!response.ok) {
+        throw new Error(payload && 'error' in payload && payload.error
+          ? payload.error
+          : 'Could not load Google booking setup.');
+      }
+      setGoogleBooking(payload as GoogleBookingSetupState);
+    } catch (error) {
+      setGoogleBooking(null);
+      setGoogleBookingError(
+        error instanceof Error ? error.message : 'Could not load Google booking setup.',
+      );
+    } finally {
+      setGoogleBookingLoading(false);
+    }
+  }, []);
+
+  const updateGoogleBooking = useCallback(
+    async (action: 'START_SETUP' | 'CONFIRM_CURRENT_URL' | 'RESET') => {
+      if (googleBookingBusy) return null;
+      setGoogleBookingBusy(true);
+      setGoogleBookingError('');
+      setGoogleBookingMessage('');
+      try {
+        const response = await fetch('/api/admin/barbershop-settings/google-booking', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | (GoogleBookingSetupState & { error?: string })
+          | { error?: string }
+          | null;
+        if (!response.ok) {
+          throw new Error(payload && 'error' in payload && payload.error
+            ? payload.error
+            : 'Could not update Google booking setup.');
+        }
+        const next = payload as GoogleBookingSetupState;
+        setGoogleBooking(next);
+        if (action === 'CONFIRM_CURRENT_URL') {
+          setGoogleBookingMessage('Google booking link marked as updated.');
+        } else if (action === 'RESET') {
+          setGoogleBookingMessage('Google booking setup reset.');
+        }
+        return next;
+      } catch (error) {
+        setGoogleBookingError(
+          error instanceof Error ? error.message : 'Could not update Google booking setup.',
+        );
+        return null;
+      } finally {
+        setGoogleBookingBusy(false);
+      }
+    },
+    [googleBookingBusy],
+  );
 
   const loadBilling = useCallback(async () => {
     setBillingError('');
@@ -130,6 +224,8 @@ export default function BarbershopSettingsPanel({
         setExportConsumed(false);
         setCanCancelSubscription(false);
         setCancelAtPeriodEnd(false);
+        setPostFullPlan(null);
+        setPostFullPlanChoiceRequired(false);
         setBillingPhase(null);
         setBillingLabel(null);
         return;
@@ -146,6 +242,9 @@ export default function BarbershopSettingsPanel({
         retentionEndsAt?: string | null;
         grantsAccess?: boolean;
         canCancelSubscription?: boolean;
+        postFullPlan?: string | null;
+        postFullPlanChosenAt?: string | null;
+        postFullPlanChoiceRequired?: boolean;
         error?: string;
       } | null;
       if (!response.ok) {
@@ -158,6 +257,8 @@ export default function BarbershopSettingsPanel({
       setExportConsumed(Boolean(data?.exportConsumed));
       setCanCancelSubscription(Boolean(data?.canCancelSubscription));
       setCancelAtPeriodEnd(Boolean(data?.cancelAtPeriodEnd));
+      setPostFullPlan(data?.postFullPlan ?? null);
+      setPostFullPlanChoiceRequired(Boolean(data?.postFullPlanChoiceRequired));
       setBillingPhase(data?.phase ?? null);
 
       const formatDate = (iso: string) => {
@@ -205,6 +306,65 @@ export default function BarbershopSettingsPanel({
     }
   }, []);
 
+  const choosePostFullPlan = useCallback(
+    async (choice: 'STARTER' | 'LEAVE') => {
+      if (cancelSubBusy) return;
+      if (choice === 'STARTER' && !starterTermsAccepted) {
+        setBillingError('Please accept the Terms to continue on KERSIVO Starter.');
+        return;
+      }
+
+      setCancelSubBusy(true);
+      setBillingError('');
+      setBillingMessage('');
+      try {
+        if (!cancelAtPeriodEnd && billingPhase !== 'canceled') {
+          const cancelResponse = await fetch('/api/setup/cancel-subscription', {
+            method: 'POST',
+            credentials: 'include',
+          });
+          const cancelPayload = (await cancelResponse.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          if (!cancelResponse.ok) {
+            throw new Error(cancelPayload?.error || 'Unable to cancel subscription.');
+          }
+        }
+
+        const choiceResponse = await fetch('/api/setup/post-full-plan', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            choice,
+            termsAccepted: choice === 'STARTER' ? starterTermsAccepted : false,
+          }),
+        });
+        const choicePayload = (await choiceResponse.json().catch(() => null)) as {
+          error?: string;
+          currentPeriodEnd?: string | null;
+        } | null;
+        if (!choiceResponse.ok) {
+          throw new Error(choicePayload?.error || 'Unable to save your post-Full choice.');
+        }
+
+        setShowCancelChoices(false);
+        setStarterTermsAccepted(false);
+        setBillingMessage(
+          choice === 'STARTER'
+            ? 'Full KERSIVO will remain active until the paid period ends, then KERSIVO Starter will continue at £0/month.'
+            : 'Full KERSIVO will remain active until the paid period ends, then the KERSIVO service will end.',
+        );
+        await loadBilling();
+      } catch (error) {
+        setBillingError(error instanceof Error ? error.message : 'Unable to save cancellation choice.');
+      } finally {
+        setCancelSubBusy(false);
+      }
+    },
+    [billingPhase, cancelAtPeriodEnd, cancelSubBusy, loadBilling, starterTermsAccepted],
+  );
+
   const loadDeposits = useCallback(async () => {
     setDepositsError('');
     setRetailError('');
@@ -216,13 +376,18 @@ export default function BarbershopSettingsPanel({
       const payload = (await depositsResponse.json().catch(() => null)) as {
         error?: string;
         paid?: boolean;
+        productState?: string;
+        bookingPaymentMode?: string;
+        bookingPaymentsAvailable?: boolean;
         depositsEnabled?: boolean;
         collectReady?: boolean;
         canManagePayouts?: boolean;
         connect?: {
           accountId?: string | null;
           accountLinked?: boolean;
+          accountType?: string | null;
           chargesEnabled?: boolean;
+          disconnected?: boolean;
         };
         policy?: {
           cancellationWindowHours: number;
@@ -230,12 +395,23 @@ export default function BarbershopSettingsPanel({
           maxClientReschedules: number;
         };
       } | null;
-      if (!depositsResponse.ok) throw new Error(payload?.error || 'Could not load deposits settings.');
+      if (!depositsResponse.ok) throw new Error(payload?.error || 'Could not load booking payment settings.');
       setDepositsPaid(Boolean(payload?.paid));
-      setDepositsEnabled(Boolean(payload?.depositsEnabled));
+      setBookingPaymentsAvailable(Boolean(payload?.bookingPaymentsAvailable));
+      setBookingProductState(payload?.productState ?? null);
+      setBookingPaymentMode(
+        payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+          ? payload.bookingPaymentMode
+          : payload?.bookingPaymentMode === 'NONE'
+            ? 'NONE'
+            : payload?.depositsEnabled
+              ? 'DEPOSIT'
+              : 'NONE',
+      );
       setDepositsCollectReady(Boolean(payload?.collectReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
       setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
+      setConnectDisconnected(Boolean(payload?.connect?.disconnected));
       setCanManagePayouts(Boolean(payload?.canManagePayouts));
       setPolicySummary(payload?.policy ?? null);
 
@@ -257,7 +433,7 @@ export default function BarbershopSettingsPanel({
         );
       }
     } catch (error) {
-      setDepositsError(error instanceof Error ? error.message : 'Could not load deposits settings.');
+      setDepositsError(error instanceof Error ? error.message : 'Could not load booking payment settings.');
     }
   }, []);
 
@@ -297,6 +473,7 @@ export default function BarbershopSettingsPanel({
       // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
       void loadDeposits();
       void loadBilling();
+      void loadGoogleBooking();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -304,7 +481,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadDeposits, loadBilling]);
+  }, [loadDeposits, loadBilling, loadGoogleBooking]);
 
   useEffect(() => {
     void load();
@@ -753,16 +930,27 @@ export default function BarbershopSettingsPanel({
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-deposits-title">
           <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
-            Booking deposits
+            Booking payments
           </h2>
           <p className="admin-barbershop-settings__card-copy">
-            Optional £5 online booking deposit via your Stripe account. Off for demos and unpaid
-            shops. Refund if the client cancels inside the policy window; forfeit on late cancel /
-            no-show; always refund on shop cancel.
+            Choose whether clients pay at the shop, pay a £5 deposit online (services under £5 are
+            paid in full), or pay the full service price upfront when they book. Payments are
+            refunded if the client cancels inside your policy window or you cancel. On a late
+            cancel or no-show you keep the deposit, or up to £5 of a full upfront payment.
           </p>
-          {!depositsPaid ? (
+          {bookingProductState === 'FREE_BOOKING' ? (
+            <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
+              KERSIVO Starter: £0/month · 0% KERSIVO commission on booking payments. Stripe
+              processing fees apply.
+            </p>
+          ) : bookingProductState === 'FULL_KERSIVO' ? (
+            <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
+              KERSIVO charges 0% platform fee on booking payments. Stripe processing fees apply.
+            </p>
+          ) : null}
+          {!bookingPaymentsAvailable ? (
             <p className="admin-barbershop-settings__card-copy" role="status">
-              Available after your KERSIVO subscription is active.
+              Available once KERSIVO Starter or Full KERSIVO is active.
             </p>
           ) : (
             <>
@@ -797,71 +985,103 @@ export default function BarbershopSettingsPanel({
                       }
                     }}
                   >
-                    {connectAccountLinked ? 'Continue Stripe Connect' : 'Connect Stripe'}
+                    {connectDisconnected
+                      ? 'Reconnect Stripe'
+                      : connectAccountLinked
+                        ? 'Continue Stripe Connect'
+                        : 'Connect Stripe'}
                   </button>
                 ) : (
                   <p className="admin-barbershop-settings__card-copy" role="status">
-                    The shop owner connects Stripe and manages deposit settings. You can see the
-                    current status below.
+                    The shop owner connects Stripe and manages booking payment settings. You can
+                    see the current status below.
                   </p>
                 )}
                 <span className="muted">
-                  {connectChargesEnabled
-                    ? 'Stripe ready for deposits'
-                    : connectAccountLinked
-                      ? 'Finish Stripe onboarding'
-                      : 'Not connected'}
+                  {connectDisconnected
+                    ? 'Stripe disconnected — reconnect to take online payments'
+                    : connectChargesEnabled
+                      ? 'Stripe ready for booking payments'
+                      : connectAccountLinked
+                        ? 'Finish Stripe onboarding'
+                        : 'Not connected'}
                 </span>
               </div>
-              <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={depositsEnabled}
-                  disabled={
-                    depositsBusy ||
-                    !canManagePayouts ||
-                    (!connectChargesEnabled && !depositsEnabled)
-                  }
-                  onChange={async (event) => {
-                    const next = event.target.checked;
-                    setDepositsBusy(true);
-                    setDepositsError('');
-                    setDepositsMessage('');
-                    try {
-                      const response = await fetch('/api/admin/barbershop-settings/deposits', {
-                        method: 'PATCH',
-                        credentials: 'include',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ depositsEnabled: next }),
-                      });
-                      const payload = (await response.json().catch(() => null)) as {
-                        error?: string;
-                        depositsEnabled?: boolean;
-                      } | null;
-                      if (!response.ok) {
-                        throw new Error(payload?.error || 'Could not update deposits.');
-                      }
-                      setDepositsEnabled(Boolean(payload?.depositsEnabled));
-                      setDepositsMessage(
-                        payload?.depositsEnabled
-                          ? '£5 deposits required on online bookings.'
-                          : 'Deposits turned off.',
-                      );
-                      await loadDeposits();
-                    } catch (error) {
-                      setDepositsError(
-                        error instanceof Error ? error.message : 'Could not update deposits.',
-                      );
-                    } finally {
-                      setDepositsBusy(false);
-                    }
-                  }}
-                />
-                <span>
-                  Require £5 deposit on online bookings
-                  {!canManagePayouts ? ' (owner only)' : ''}
-                </span>
-              </label>
+              <fieldset
+                className="field"
+                style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
+                disabled={depositsBusy || !canManagePayouts}
+              >
+                <legend className="sr-only">Booking payment option</legend>
+                {(
+                  [
+                    { mode: 'NONE', label: 'Pay at shop' },
+                    { mode: 'DEPOSIT', label: 'Require £5 deposit' },
+                    { mode: 'FULL', label: 'Require full payment upfront' },
+                  ] as const
+                ).map((option) => {
+                  const checked = option.mode === bookingPaymentMode;
+                  return (
+                    <label
+                      key={option.mode}
+                      style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                    >
+                      <input
+                        type="radio"
+                        name="bbs-booking-payment-mode"
+                        value={option.mode}
+                        checked={checked}
+                        disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
+                        onChange={async () => {
+                          if (checked) return;
+                          setDepositsBusy(true);
+                          setDepositsError('');
+                          setDepositsMessage('');
+                          try {
+                            const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                              method: 'PATCH',
+                              credentials: 'include',
+                              headers: { 'content-type': 'application/json' },
+                              body: JSON.stringify({ bookingPaymentMode: option.mode }),
+                            });
+                            const payload = (await response.json().catch(() => null)) as {
+                              error?: string;
+                              bookingPaymentMode?: string;
+                            } | null;
+                            if (!response.ok) {
+                              throw new Error(payload?.error || 'Could not update booking payments.');
+                            }
+                            const nextMode =
+                              payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+                                ? payload.bookingPaymentMode
+                                : 'NONE';
+                            setBookingPaymentMode(nextMode);
+                            setDepositsMessage(
+                              nextMode === 'DEPOSIT'
+                                ? '£5 deposit required on online bookings.'
+                                : nextMode === 'FULL'
+                                  ? 'Full payment required upfront on online bookings.'
+                                  : 'Clients pay at the shop.',
+                            );
+                            await loadDeposits();
+                          } catch (error) {
+                            setDepositsError(
+                              error instanceof Error ? error.message : 'Could not update booking payments.',
+                            );
+                          } finally {
+                            setDepositsBusy(false);
+                          }
+                        }}
+                      />
+                      <span>
+                        {option.label}
+                        {!canManagePayouts && checked ? ' (owner only)' : ''}
+                      </span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+              {depositsPaid ? (
               <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input
                   type="checkbox"
@@ -921,12 +1141,13 @@ export default function BarbershopSettingsPanel({
                   {!canManagePayouts ? ' (owner only)' : ''}
                 </span>
               </label>
-              {retailGateReason && !retailSellReady ? (
+              ) : null}
+              {depositsPaid && retailGateReason && !retailSellReady ? (
                 <p className="admin-barbershop-settings__card-copy" role="status">
                   Retail blocked: {retailGateReason.replaceAll('_', ' ')}
                 </p>
               ) : null}
-              {publicShopUrl ? (
+              {depositsPaid && publicShopUrl ? (
                 <p className="admin-barbershop-settings__card-copy">
                   Public shop link:{' '}
                   <a href={publicShopUrl} target="_blank" rel="noreferrer">
@@ -965,6 +1186,159 @@ export default function BarbershopSettingsPanel({
             </p>
           ) : null}
         </section>
+
+        <section
+          className="admin-barbershop-settings__card"
+          aria-labelledby="bbs-google-booking-title"
+          data-google-booking-card
+        >
+          <h2 id="bbs-google-booking-title" className="admin-barbershop-settings__card-title">
+            Google booking link
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Add your KERSIVO booking page to your Google Business Profile so customers can reach
+            your booking flow from Google Search or Maps where Google makes booking links available.
+          </p>
+
+          {googleBookingLoading ? (
+            <p className="muted" role="status">Loading Google booking setup…</p>
+          ) : googleBooking ? (
+            <>
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                Status:{' '}
+                <strong data-google-booking-status={googleBooking.status}>
+                  {googleBooking.status === 'MERCHANT_CONFIRMED'
+                    ? 'Merchant confirmed'
+                    : googleBooking.status === 'SETUP_STARTED'
+                      ? 'Setup started'
+                      : googleBooking.status === 'UPDATE_REQUIRED'
+                        ? 'Update required'
+                        : 'Not set'}
+                </strong>
+              </p>
+
+              {googleBooking.requiresUpdate ? (
+                <p className="admin-inline-error" role="alert" data-google-booking-update-required>
+                  Your KERSIVO booking destination has changed. Update the booking link in Google
+                  to the URL below, then confirm it here again.
+                </p>
+              ) : null}
+
+              <div className="field">
+                <label className="field__label" htmlFor="bbs-google-booking-url">
+                  Booking URL
+                </label>
+                <input
+                  id="bbs-google-booking-url"
+                  className="input"
+                  value={googleBooking.bookingUrl}
+                  readOnly
+                  spellCheck={false}
+                />
+              </div>
+
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={googleBookingBusy}
+                  onClick={async () => {
+                    setGoogleBookingError('');
+                    setGoogleBookingMessage('');
+                    try {
+                      if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(googleBooking.bookingUrl);
+                      } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = googleBooking.bookingUrl;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        textarea.remove();
+                      }
+                      setGoogleBookingMessage('Booking link copied.');
+                    } catch {
+                      setGoogleBookingError('Could not copy the booking link. Select and copy it manually.');
+                    }
+                  }}
+                >
+                  Copy booking link
+                </button>
+
+                <a
+                  className="btn btn--secondary"
+                  href={googleBooking.googleBusinessProfileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => {
+                    if (
+                      googleBooking.status !== 'MERCHANT_CONFIRMED' ||
+                      googleBooking.requiresUpdate
+                    ) {
+                      void updateGoogleBooking('START_SETUP');
+                    }
+                  }}
+                >
+                  Open Google Business Profile
+                </a>
+
+                {googleBooking.status !== 'MERCHANT_CONFIRMED' || googleBooking.requiresUpdate ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={googleBookingBusy}
+                    onClick={() => void updateGoogleBooking('CONFIRM_CURRENT_URL')}
+                  >
+                    {googleBookingBusy ? 'Saving…' : "I've updated Google"}
+                  </button>
+                ) : null}
+              </div>
+
+              <ol className="admin-barbershop-settings__card-copy">
+                <li>Open the Google account that manages your Business Profile.</li>
+                <li>Find the booking, appointment or links section for this location.</li>
+                <li>Add or replace the booking link with the exact URL shown above.</li>
+                <li>Save the change in Google, then return here and confirm it.</li>
+              </ol>
+
+              {googleBooking.destinationSource === 'full_hosted_fallback' ? (
+                <p className="muted" data-google-full-hosted-fallback>
+                  Your KERSIVO-hosted booking link remains active while your Full site/domain is
+                  being prepared. Once booking on your own domain is verified live, KERSIVO will
+                  flag the Google link here for updating.
+                </p>
+              ) : null}
+              {googleBooking.destinationSource === 'full_verified_own_domain' ? (
+                <p className="muted" data-google-full-own-domain>
+                  Booking on your own domain is live. This is your live Full KERSIVO booking
+                  destination. KERSIVO does not edit Google for you — update the link there yourself.
+                </p>
+              ) : null}
+
+              <p className="muted">
+                Google controls Business Profile eligibility and where booking actions appear.
+                KERSIVO provides the booking destination but cannot guarantee that Google displays
+                a Book button in a particular placement.
+              </p>
+            </>
+          ) : null}
+
+          {googleBookingError ? (
+            <p className="admin-inline-error" role="alert">
+              {googleBookingError}
+            </p>
+          ) : null}
+          {googleBookingMessage ? (
+            <p className="admin-inline-success" role="status">
+              {googleBookingMessage}
+            </p>
+          ) : null}
+        </section>
+
+        <QrKitSettingsCard />
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-billing-title">
           <h2 id="bbs-billing-title" className="admin-barbershop-settings__card-title">
@@ -1018,58 +1392,70 @@ export default function BarbershopSettingsPanel({
             >
               {billingBusy ? 'Opening billing…' : 'Manage billing'}
             </button>
+            {hasSubscription ? (
             <button
               type="button"
               className="btn btn--secondary"
               disabled={!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd}
-              onClick={async () => {
+              onClick={() => {
                 if (!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd) return;
-                setCancelSubBusy(true);
                 setBillingError('');
                 setBillingMessage('');
-                try {
-                  const response = await fetch('/api/setup/cancel-subscription', {
-                    method: 'POST',
-                    credentials: 'include',
-                  });
-                  const payload = (await response.json().catch(() => null)) as {
-                    error?: string;
-                    currentPeriodEnd?: string | null;
-                    alreadyScheduled?: boolean;
-                  } | null;
-                  if (!response.ok) {
-                    throw new Error(payload?.error || 'Unable to cancel subscription.');
-                  }
-                  setCanCancelSubscription(false);
-                  setCancelAtPeriodEnd(true);
-                  const end = payload?.currentPeriodEnd
-                    ? new Date(payload.currentPeriodEnd).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : null;
-                  setBillingMessage(
-                    end
-                      ? `Subscription will cancel at period end (${end}).`
-                      : 'Subscription will cancel at period end.',
-                  );
-                  await loadBilling();
-                } catch (error) {
-                  setBillingError(
-                    error instanceof Error ? error.message : 'Unable to cancel subscription.',
-                  );
-                } finally {
-                  setCancelSubBusy(false);
-                }
+                setShowCancelChoices(true);
               }}
             >
-              {cancelSubBusy
-                ? 'Canceling…'
-                : cancelAtPeriodEnd
-                  ? 'Cancellation scheduled'
-                  : 'Cancel subscription'}
+              {cancelAtPeriodEnd ? 'Cancellation scheduled' : 'Cancel subscription'}
             </button>
+            ) : null}
+            {(showCancelChoices || postFullPlanChoiceRequired) ? (
+              <div className="admin-barbershop-settings__cancel-choice" role="group" aria-label="After Full KERSIVO">
+                <p className="admin-barbershop-settings__card-copy">
+                  What should happen when your paid Full KERSIVO period ends?
+                </p>
+                <label className="admin-barbershop-settings__card-copy">
+                  <input
+                    type="checkbox"
+                    checked={starterTermsAccepted}
+                    onChange={(event) => setStarterTermsAccepted(event.target.checked)}
+                  />{' '}
+                  I agree to the Terms if I continue on KERSIVO Starter.
+                </label>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={cancelSubBusy}
+                  onClick={() => void choosePostFullPlan('STARTER')}
+                >
+                  {cancelSubBusy ? 'Saving…' : 'Continue on KERSIVO Starter — £0/month'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={cancelSubBusy}
+                  onClick={() => void choosePostFullPlan('LEAVE')}
+                >
+                  Leave KERSIVO after the paid period
+                </button>
+                {showCancelChoices && !postFullPlanChoiceRequired ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    disabled={cancelSubBusy}
+                    onClick={() => setShowCancelChoices(false)}
+                  >
+                    Keep Full KERSIVO
+                  </button>
+                ) : null}
+              </div>
+            ) : postFullPlan === 'STARTER' && cancelAtPeriodEnd ? (
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
+              </p>
+            ) : postFullPlan === 'LEAVE' && cancelAtPeriodEnd ? (
+              <p className="admin-barbershop-settings__card-copy" role="status">
+                After Full ends: <strong>Leave KERSIVO</strong>.
+              </p>
+            ) : null}
             <button
               type="button"
               className="btn btn--secondary"
@@ -1139,6 +1525,8 @@ export default function BarbershopSettingsPanel({
             </p>
           ) : null}
         </section>
+
+        <LeaveKersivoCard />
 
         <section
           className="admin-barbershop-settings__card admin-barbershop-settings__card--muted"

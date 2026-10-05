@@ -148,38 +148,55 @@ describe('/pricing page', () => {
   const text = pricingRenderedText();
 
   it('has the approved title, H1, description and quick answer', () => {
-    expect(PRICING_PAGE_TITLE).toBe('KERSIVO Pricing | £39/Month for UK Barbershops');
-    expect(PRICING_PAGE_H1).toBe('Simple KERSIVO pricing for independent barbershops');
+    expect(PRICING_PAGE_TITLE).toBe('KERSIVO Pricing | Starter £0 & Full £39/Month');
+    expect(PRICING_PAGE_TITLE.length).toBeLessThanOrEqual(60);
+    expect(PRICING_PAGE_H1).toBe('KERSIVO pricing for independent barbershops');
     expect(PRICING_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(170);
-    expect(PRICING_QUICK_ANSWER).toBe(
-      'KERSIVO costs £39 per month per physical barbershop location. There is no setup fee, and KERSIVO takes 0% commission on bookings and retail sales. Standard Stripe payment-processing fees still apply.',
-    );
+    expect(PRICING_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month');
+    expect(PRICING_QUICK_ANSWER).toContain('Full KERSIVO is £39/month per physical barbershop location');
+    expect(PRICING_QUICK_ANSWER).toContain('0% commission on both plans');
+    expect(PRICING_QUICK_ANSWER).toContain('Standard Stripe processing fees');
     expect(page).toContain('canonicalPath={PRICING_PAGE_PATH}');
     expect(page.match(/<h1\b/g)).toHaveLength(1);
   });
 
-  it('renders every approved commercial fact', () => {
+  it('renders every approved commercial fact for both plans', () => {
     for (const fact of [
-      '£39 per month per physical barbershop location',
+      'KERSIVO Starter — £0/month',
+      'Full KERSIVO — £39/month per location',
+      'Up to 4 active bookable barbers',
+      'Automated email confirmations and reminders',
+      'Pay at shop without connecting Stripe',
       'No setup fee',
       'subject to reasonable fair use',
       'Your own standard domain included',
       'Your own branded barbershop website',
-      'Online bookings',
-      'Optional booking deposits',
-      'Client management',
-      'Team, service and working-hours management',
       'SMS appointment reminders are included, subject to the plan’s monthly SMS allowance.',
       'Retail pickup shop',
       'Hosting, SSL and platform updates',
       'Migration assistance',
-      '0% commission on bookings and retail sales',
       'Standard Stripe payment-processing fees',
       'not currently VAT registered',
       'Cancel anytime',
     ]) {
       expect(text, fact).toContain(fact);
     }
+  });
+
+  it('keeps Full-only features out of the Starter plan group', () => {
+    const starter = PRICING_INCLUDED_GROUPS.find((group) => group.title.startsWith('KERSIVO Starter'));
+    expect(starter).toBeDefined();
+    const starterText = starter!.items.join(' ');
+    expect(starterText).not.toMatch(/domain|branded .*website|SMS|Reports|Retail|Advanced Clients|Assistant|unlimited/i);
+    expect(starterText).toContain('Up to 4');
+  });
+
+  it('no longer presents a single £39 plan as the only option', () => {
+    expect(page).not.toMatch(/One plan for one barbershop location|ONE PLAN|One plan\. One barbershop location|Everything in the £/);
+    expect(page).toContain('TWO PLANS');
+    expect(page).toContain('href="/starter"');
+    expect(page).toMatch(/href="\/admin"[\s\S]*?data-track="starter_signup_click"[\s\S]*?Start KERSIVO Starter/);
+    expect(text).not.toMatch(/\b1%|application fee|platform fee|Free Booking/i);
   });
 
   it('never makes banned pricing claims', () => {

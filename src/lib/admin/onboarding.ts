@@ -9,6 +9,17 @@ import {
   type OnboardingWeeklyRule,
 } from '@/lib/admin/shopOpeningHours';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
+import { preferredPublicBookingPath } from '@/lib/booking/publicBookingPath';
+import {
+  hasKersivoCapability,
+  loadKersivoAccess,
+  serializeKersivoAccess,
+  type KersivoProductState,
+} from '@/lib/shop/kersivoAccess';
+import {
+  FREE_BOOKABLE_BARBER_LIMIT,
+  freeBookableBarberLimitApplies,
+} from '@/lib/shop/freeBookableBarbers';
 
 export { minutesToTimeString, timeStringToMinutes } from './timeStrings';
 export { DEFAULT_ONBOARDING_HOURS, type OnboardingWeeklyRule } from '@/lib/admin/shopOpeningHours';
@@ -20,6 +31,21 @@ export const ONBOARDING_STEP_BARBERS = 3;
 export const ONBOARDING_STEP_SERVICES = 4;
 export const ONBOARDING_STEP_HOURS = 5;
 export const ONBOARDING_STEP_REVIEW = 6;
+
+/**
+ * Where a signed-in tenant belongs. onboardingCompleted is onboarding progress only;
+ * a SETUP shop still needs the explicit Free activation on the Review step.
+ */
+export type AdminOnboardingGate = 'onboarding' | 'free_activation' | 'dashboard';
+
+export function resolveAdminOnboardingGate(input: {
+  onboardingCompleted: boolean;
+  productState: KersivoProductState;
+}): AdminOnboardingGate {
+  if (!input.onboardingCompleted) return 'onboarding';
+  if (input.productState === 'SETUP') return 'free_activation';
+  return 'dashboard';
+}
 
 export async function requireOnboardingAccess(
   context: APIContext,
@@ -196,6 +222,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
       onboardingCompleted: true,
       onboardingCurrentStep: true,
       onboardingCompletedAt: true,
+      bookingSlug: true,
     },
   });
 
@@ -238,6 +265,42 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     hours = storedRuleCount > 0 ? await serializeBarberRules(firstBarber.id) : shopHours;
   }
 
+  // Guest preview never activates Free; only signed-in tenants see activation / limit state.
+  const signedIn = Boolean(access.userId);
+  const productAccess = await loadKersivoAccess(shopId);
+  const gate = resolveAdminOnboardingGate({
+    onboardingCompleted: shop.onboardingCompleted,
+    productState: productAccess.state,
+  });
+
+  // Plan-choice context for a signed-in SETUP shop: an unfinished Full checkout, or a Full
+  // subscription that ended (Starter then goes through the post-Full choice, not the marker).
+  let fullCheckoutPending = false;
+  let postFullPlanChoiceRequired = false;
+  let billingRecoveryRequired = false;
+  if (signedIn && productAccess.state === 'SETUP') {
+    const [pending, latestSubscription] = await Promise.all([
+      prisma.saasSubscription.count({ where: { shopId, status: 'PENDING' } }),
+      prisma.saasSubscription.findFirst({
+        where: { shopId, status: { not: 'PENDING' } },
+        orderBy: { createdAt: 'desc' },
+        select: { status: true, cancelAtPeriodEnd: true },
+      }),
+    ]);
+    fullCheckoutPending = pending > 0;
+
+    if (latestSubscription) {
+      const status = String(latestSubscription.status);
+      billingRecoveryRequired =
+        (status === 'PAST_DUE' || status === 'SUSPENDED') &&
+        !latestSubscription.cancelAtPeriodEnd;
+      // Starter must be chosen before Full ends; an ended Full without it becomes a departure.
+      postFullPlanChoiceRequired =
+        (status === 'PAST_DUE' || status === 'SUSPENDED' || status === 'ACTIVE') &&
+        latestSubscription.cancelAtPeriodEnd;
+    }
+  }
+
   return {
     shop: {
       id: shop.id,
@@ -267,6 +330,18 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     })),
     shopHours,
     hours,
+    productAccess: serializeKersivoAccess(productAccess),
+    freeActivationRequired: signedIn && gate === 'free_activation',
+    fullCheckoutPending,
+    postFullPlanChoiceRequired,
+    billingRecoveryRequired,
+    freeBookableBarberLimit:
+      signedIn && freeBookableBarberLimitApplies(productAccess.state)
+        ? FREE_BOOKABLE_BARBER_LIMIT
+        : null,
+    bookingUrl: hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
+      ? preferredPublicBookingPath(shop)
+      : null,
     user: access.userId
       ? {
           id: access.userId,

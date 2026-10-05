@@ -74,7 +74,7 @@ vi.mock('@/lib/db/serializableTransaction', () => ({
         findMany: (...a: unknown[]) => barberFindMany(...a),
         create: (...a: unknown[]) => barberCreate(...a),
         update: (...a: unknown[]) => barberUpdate(...a),
-        aggregate: (...a: unknown[]) => barberAggregate(...a),
+        aggregate: (...a: unknown[]) => barberAggregate(...a), count: async () => 0,
       },
       barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
       availabilityRule: {

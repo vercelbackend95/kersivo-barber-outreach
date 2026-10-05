@@ -6,9 +6,25 @@ const barberCreate = vi.fn();
 const barberServiceFindMany = vi.fn();
 const availabilityRuleFindMany = vi.fn();
 const shopMemberUpdate = vi.fn();
+const barberCount = vi.fn();
+const queryRaw = vi.fn();
+const loadKersivoAccess = vi.fn();
+
+const tx = {
+  $queryRaw: (...a: unknown[]) => queryRaw(...a),
+  barber: {
+    count: (...a: unknown[]) => barberCount(...a),
+    update: (...a: unknown[]) => barberUpdate(...a),
+  },
+};
+
+vi.mock('@/lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...a: unknown[]) => loadKersivoAccess(...a),
+}));
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
+    $transaction: async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx),
     barber: {
       findFirst: (...a: unknown[]) => barberFindFirst(...a),
       update: (...a: unknown[]) => barberUpdate(...a),
@@ -82,6 +98,9 @@ describe('isValidWorkingHoursRule', () => {
 describe('setOnlineBookingsEnabled', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    barberCount.mockResolvedValue(0);
+    queryRaw.mockResolvedValue([]);
+    loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING', capabilities: [] });
     barberFindFirst.mockResolvedValue({ id: 'b1', active: true });
     barberUpdate.mockResolvedValue({ id: 'b1', active: false });
     barberServiceFindMany.mockResolvedValue([{ serviceId: 'svc-1' }]);
@@ -123,6 +142,61 @@ describe('setOnlineBookingsEnabled', () => {
       data: { active: true },
     });
     expect(JSON.stringify(barberUpdate.mock.calls)).not.toMatch(/teamStatus/);
+  });
+
+  it('Free shop with 4 bookable barbers cannot enable a 5th', async () => {
+    barberFindFirst.mockResolvedValue({ id: 'b5', active: false });
+    barberCount.mockResolvedValue(4);
+
+    const result = await setOnlineBookingsEnabled({
+      shopId: 'shop-1',
+      barberId: 'b5',
+      enabled: true,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      status: 409,
+      code: 'FREE_BOOKABLE_BARBER_LIMIT',
+      error: 'KERSIVO Starter includes up to 4 barbers taking online bookings.',
+    });
+    expect(queryRaw).toHaveBeenCalled();
+    expect(barberCount).toHaveBeenCalledWith({
+      where: { shopId: 'shop-1', active: true, id: { not: 'b5' } },
+    });
+    expect(barberUpdate).not.toHaveBeenCalled();
+  });
+
+  it('Free shop with 3 bookable barbers may enable a 4th without resolving product state', async () => {
+    barberFindFirst.mockResolvedValue({ id: 'b4', active: false });
+    barberCount.mockResolvedValue(3);
+
+    const result = await setOnlineBookingsEnabled({ shopId: 'shop-1', barberId: 'b4', enabled: true });
+
+    expect(result).toEqual({ ok: true, active: true });
+    expect(loadKersivoAccess).not.toHaveBeenCalled();
+    expect(barberUpdate).toHaveBeenCalledWith({ where: { id: 'b4' }, data: { active: true } });
+  });
+
+  it('Full shop is not subject to the Free four-barber limit', async () => {
+    loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO', capabilities: [] });
+    barberFindFirst.mockResolvedValue({ id: 'b9', active: false });
+    barberCount.mockResolvedValue(8);
+
+    const result = await setOnlineBookingsEnabled({ shopId: 'shop-1', barberId: 'b9', enabled: true });
+
+    expect(result).toEqual({ ok: true, active: true });
+    expect(barberUpdate).toHaveBeenCalledWith({ where: { id: 'b9' }, data: { active: true } });
+  });
+
+  it('disabling a barber in an over-limit Free shop is always allowed', async () => {
+    barberFindFirst.mockResolvedValue({ id: 'b1', active: true });
+    barberCount.mockResolvedValue(6);
+
+    const result = await setOnlineBookingsEnabled({ shopId: 'shop-1', barberId: 'b1', enabled: false });
+
+    expect(result).toEqual({ ok: true, active: false });
+    expect(barberCount).not.toHaveBeenCalled();
   });
 
   it('returns 422 when services are missing', async () => {

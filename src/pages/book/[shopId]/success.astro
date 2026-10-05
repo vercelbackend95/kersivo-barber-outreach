@@ -6,8 +6,9 @@ import BookingThemeRoot from '@/components/booking/BookingThemeRoot';
 import { prisma } from '@/lib/db/client';
 import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
-import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
-import { confirmPaidDeposit } from '@/lib/booking/confirmPaidDeposit';
+import { isBookingCheckoutMetadataType } from '@/lib/booking/bookingPaymentPolicy';
+import { confirmPaidBookingPayment } from '@/lib/booking/confirmPaidDeposit';
+import { resolveCheckoutSessionPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
 import { formatInTimeZone } from 'date-fns-tz';
 import '@/styles/tokens.css';
 import '@/styles/fonts.css';
@@ -30,7 +31,7 @@ type ConfirmSummary = {
 };
 
 let ok = false;
-let errorMessage = 'Unable to confirm deposit payment.';
+let errorMessage = 'Unable to confirm booking payment.';
 let summary: ConfirmSummary | null = null;
 let serviceId: string | null = null;
 let shopTimezone = 'Europe/London';
@@ -46,23 +47,33 @@ if (shopId) {
 
   if (sessionId) {
     try {
-      const connectAccountId = shopForConnect?.stripeConnectAccountId?.trim();
+      const paymentAccount = await resolveCheckoutSessionPaymentAccount({
+        shopId,
+        sessionId,
+        currentShopAccountId: shopForConnect?.stripeConnectAccountId,
+      });
+      const connectAccountId = paymentAccount.ok ? paymentAccount.accountId : null;
       if (!connectAccountId) {
-        errorMessage = 'This shop is not ready to confirm deposit payments.';
+        errorMessage =
+          !paymentAccount.ok && paymentAccount.reason === 'missing_payment_account_snapshot'
+            ? 'We could not confirm this payment automatically. Please contact the barbershop — your appointment is not confirmed yet.'
+            : 'This shop is not ready to confirm booking payments.';
       } else {
         const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
         const metadata = session.metadata ?? {};
         if (
-          metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
+          isBookingCheckoutMetadataType(metadata.type) &&
           metadata.shopId === shopId &&
           metadata.bookingId &&
           (session.payment_status ?? '').toLowerCase() === 'paid'
         ) {
-          const result = await confirmPaidDeposit({
+          const result = await confirmPaidBookingPayment({
             bookingId: metadata.bookingId,
             shopId,
             sessionId,
             paymentIntentId: getCheckoutPaymentIntentId(session),
+            session,
+            stripeAccountId: connectAccountId,
           });
 
           if (
@@ -82,9 +93,17 @@ if (shopId) {
             ok = true;
           } else if (result.outcome === 'late_refunded') {
             errorMessage =
-              'Your payment was received, but this appointment slot was released after the payment window closed and is no longer available. Your deposit is being refunded to the original payment method.';
+              'Your payment was received, but this appointment slot was released after the payment window closed and is no longer available. Your payment is being refunded to the original payment method.';
           } else if (result.outcome === 'not_found') {
             errorMessage = 'Booking not found for this payment.';
+          } else if (
+            result.outcome === 'amount_mismatch' ||
+            result.outcome === 'payment_type_mismatch' ||
+            result.outcome === 'account_mismatch' ||
+            result.outcome === 'invalid_session'
+          ) {
+            errorMessage =
+              'We could not confirm this payment automatically. Please contact the barbershop — your appointment is not confirmed yet.';
           } else {
             errorMessage =
               'Payment is already recorded for this booking. If you were charged twice, contact the barbershop.';
@@ -111,7 +130,7 @@ const calendarHref =
 
 <MinimalLayout
   title={ok ? 'Booking confirmed' : 'Booking payment'}
-  description="Deposit confirmation"
+  description="Booking payment confirmation"
   canonicalPath={shopId ? `/book/${shopId}/success` : '/book'}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}

@@ -2,9 +2,9 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const toggleSchema = z.object({
   id: z.string().min(1),
@@ -13,7 +13,7 @@ const toggleSchema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   const parsed = toggleSchema.safeParse(await ctx.request.json());

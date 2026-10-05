@@ -45,9 +45,17 @@ describe('KERSIVO route transition families', () => {
   });
 
   it('uses dashboard SPA history and does not remount shop on tab change', () => {
-    expect(adminPanel).toContain('history.pushState');
-    expect(adminPanel).not.toContain('history.replaceState');
-    expect(adminPanel).toContain('<ShopAdminPanel key="shop"');
+    const sectionChange = adminPanel.slice(
+      adminPanel.indexOf('const handleSectionChange'),
+      adminPanel.indexOf('pendingTimeoutRef.current = window.setTimeout', adminPanel.indexOf('const handleSectionChange')),
+    );
+    expect(sectionChange).toContain('history.pushState');
+    expect(sectionChange).not.toContain('history.replaceState');
+    // replaceState is reserved for consuming the one-shot ?upgrade= deep-link param.
+    expect(adminPanel.match(/history\.replaceState/g)).toHaveLength(1);
+    const replaceBlock = adminPanel.slice(adminPanel.indexOf('upgradeParamHandledRef.current = true'), adminPanel.indexOf('history.replaceState'));
+    expect(replaceBlock).toContain('params.delete(ADMIN_UPGRADE_QUERY_PARAM)');
+    expect(adminPanel).toMatch(/<ShopAdminPanel\s+key="shop"/);
     expect(adminPanel).not.toContain('key={activeSection}');
     expect(adminPanel).toContain('ADMIN_SESSION_EXPIRED_EVENT');
     expect(adminPanel).not.toContain('Checking session…');

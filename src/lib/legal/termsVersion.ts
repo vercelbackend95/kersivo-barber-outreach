@@ -3,11 +3,13 @@
  * Bump this when Terms content changes in a material way.
  * Material DPA updates also require a Terms bump because /dpa is incorporated by reference.
  */
-export const CURRENT_TERMS_VERSION = '2026-09-23';
+export const CURRENT_TERMS_VERSION = '2026-10-05';
 
 export const TERMS_ACCEPTANCE_PURPOSES = {
   SAAS_CHECKOUT: 'SAAS_CHECKOUT',
   SETUP_DEPOSIT_CHECKOUT: 'SETUP_DEPOSIT_CHECKOUT',
+  FREE_BOOKING_ACTIVATION: 'FREE_BOOKING_ACTIVATION',
+  FULL_TO_STARTER: 'FULL_TO_STARTER',
 } as const;
 
 export type TermsAcceptancePurpose =

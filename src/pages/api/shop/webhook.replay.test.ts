@@ -8,6 +8,7 @@ const alertStripeWebhookFailure = vi.fn();
 const captureOpsMessage = vi.fn();
 const updateMany = vi.fn();
 const countShops = vi.fn();
+const findFirstShop = vi.fn();
 const applyInvoicePaymentFailed = vi.fn();
 const applyInvoicePaid = vi.fn();
 const applyStripeSubscriptionToSaasRecord = vi.fn();
@@ -44,6 +45,7 @@ vi.mock('../../../lib/db/client', () => ({
     shopSettings: {
       updateMany: (...args: unknown[]) => updateMany(...args),
       count: (...args: unknown[]) => countShops(...args),
+      findFirst: (...args: unknown[]) => findFirstShop(...args),
       findUnique: vi.fn(),
     },
     order: { findFirst: vi.fn(), updateMany: vi.fn() },
@@ -71,10 +73,11 @@ vi.mock('../../../lib/shop/finalizeRetailOrder', () => ({
 
 vi.mock('../../../lib/booking/confirmPaidDeposit', () => ({
   confirmPaidDeposit: vi.fn(),
+  confirmPaidBookingPayment: vi.fn(),
 }));
 
 vi.mock('../../../lib/booking/depositMoney', () => ({
-  confirmDepositRefundFromWebhook: vi.fn(),
+  confirmBookingPaymentRefundFromWebhook: vi.fn(),
 }));
 
 vi.mock('../../../lib/booking/depositGate', () => ({
@@ -214,8 +217,10 @@ describe('POST /api/shop/webhook replay hardening', () => {
   });
 
   it('ignores stale account.updated without writing Connect flags', async () => {
+    // A newer status was already applied, so the guarded write matches no row.
     updateMany.mockResolvedValue({ count: 0 });
     countShops.mockResolvedValue(1);
+    findFirstShop.mockResolvedValue({ stripeConnectDisconnectedAt: null });
 
     const created = Math.floor(Date.UTC(2026, 0, 1) / 1000);
     const res = await POST(
@@ -237,13 +242,39 @@ describe('POST /api/shop/webhook replay hardening', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.ignored).toBe('stale_event');
+    expect(body.shopsUpdated).toBe(0);
+    expect(updateMany).toHaveBeenCalledTimes(1);
     expect(updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           stripeConnectAccountId: 'acct_shop',
-          OR: expect.any(Array),
-        }),
+          stripeConnectDisconnectedAt: null,
+          OR: [
+            { connectStatusEventAt: null },
+            { connectStatusEventAt: { lte: new Date(created * 1000) } },
+          ],
+        },
       }),
     );
+  });
+
+  it('never revives a deauthorized account from a later account.updated', async () => {
+    updateMany.mockResolvedValue({ count: 0 });
+    findFirstShop.mockResolvedValue({ stripeConnectDisconnectedAt: new Date('2026-09-01') });
+
+    const res = await POST(
+      signedRequest({
+        id: 'evt_acct_after_deauth',
+        type: 'account.updated',
+        created: Math.floor(Date.now() / 1000),
+        account: 'acct_shop',
+        data: { object: { id: 'acct_shop', charges_enabled: true, details_submitted: true } },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ignored).toBe('deauthorized_account');
+    expect(body.shopsUpdated).toBe(0);
   });
 });

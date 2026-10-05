@@ -19997,3 +19997,120 @@ button.admin-leaderboard-avatar--action:focus-visible {
     margin-right: 8px;
   }
 }
+
+
+/* KERSIVO v1.18 manual booking — persistent Bookings action + focused staff form. */
+.admin-manual-booking-fab {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 70;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 28%);
+  cursor: pointer;
+}
+
+.admin-manual-booking-fab:hover {
+  transform: translateY(-1px);
+}
+
+.admin-manual-booking-fab:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.admin-manual-booking-fab svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.admin-new-booking-panel {
+  max-width: 34rem;
+}
+
+.admin-new-booking-form {
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-new-booking-payment-note {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+  font-size: 0.9rem;
+}
+
+.admin-new-booking-field {
+  display: grid;
+  gap: 0.38rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-new-booking-field small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.admin-new-booking-field input,
+.admin-new-booking-field select,
+.admin-new-booking-field textarea {
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+}
+
+.admin-new-booking-field textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.admin-new-booking-field input:focus,
+.admin-new-booking-field select:focus,
+.admin-new-booking-field textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.admin-new-booking-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding-top: 0.25rem;
+}
+
+@media (max-width: 720px) {
+  .admin-manual-booking-fab {
+    right: max(0.85rem, env(safe-area-inset-right));
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .admin-new-booking-panel {
+    width: min(100%, 34rem);
+  }
+
+  .admin-new-booking-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

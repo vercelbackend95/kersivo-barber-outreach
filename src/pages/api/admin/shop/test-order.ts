@@ -1,10 +1,11 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { isTenantAdminAccess, requireAdminPermission } from '../../../../lib/admin/auth';
+import { isTenantAdminAccess } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
 import { lockShopCustomerIdentity } from '../../../../lib/db/customerIdentityLock';
 import { formatGbp } from '../../../../lib/shop/money';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 type TestOrderInput = {
   items?: Array<{ productId?: string; quantity?: number }>;
@@ -55,7 +56,7 @@ function serializeOrder(order: {
  * Tenant access only (session or guest preview) — never public storefront or secret/demo.
  */
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   if (!isTenantAdminAccess(access)) {

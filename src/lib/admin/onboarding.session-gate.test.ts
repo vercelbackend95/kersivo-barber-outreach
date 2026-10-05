@@ -11,7 +11,39 @@ vi.mock('@/lib/db/client', () => ({
   prisma: {},
 }));
 
-import { requireOnboardingAccess } from '@/lib/admin/onboarding';
+import { requireOnboardingAccess, resolveAdminOnboardingGate } from '@/lib/admin/onboarding';
+
+describe('resolveAdminOnboardingGate (onboardingCompleted is not product access)', () => {
+  it('A: onboarding not completed => onboarding', () => {
+    expect(resolveAdminOnboardingGate({ onboardingCompleted: false, productState: 'SETUP' })).toBe(
+      'onboarding',
+    );
+  });
+
+  it('B/K: completed but SETUP => Free activation still required', () => {
+    expect(resolveAdminOnboardingGate({ onboardingCompleted: true, productState: 'SETUP' })).toBe(
+      'free_activation',
+    );
+  });
+
+  it('C/L: completed + FREE_BOOKING => dashboard', () => {
+    expect(
+      resolveAdminOnboardingGate({ onboardingCompleted: true, productState: 'FREE_BOOKING' }),
+    ).toBe('dashboard');
+  });
+
+  it('D/M: completed + FULL_KERSIVO => dashboard', () => {
+    expect(
+      resolveAdminOnboardingGate({ onboardingCompleted: true, productState: 'FULL_KERSIVO' }),
+    ).toBe('dashboard');
+  });
+
+  it('E: FULL_KERSIVO but onboarding not completed keeps onboarding', () => {
+    expect(
+      resolveAdminOnboardingGate({ onboardingCompleted: false, productState: 'FULL_KERSIVO' }),
+    ).toBe('onboarding');
+  });
+});
 
 describe('requireOnboardingAccess', () => {
   beforeEach(() => {

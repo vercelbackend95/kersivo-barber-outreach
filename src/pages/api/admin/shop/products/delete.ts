@@ -6,13 +6,13 @@ import type { APIRoute } from 'astro';
 
 import { z } from 'zod';
 
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 
 import { normalizeProductOrderAfterDeletion } from '../../../../../lib/products/sortOrder';
 
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const deleteSchema = z.object({ id: z.string().min(1) });
 
@@ -38,7 +38,7 @@ function isOrderItemConstraintViolation(error: unknown): boolean {
 
 export const POST: APIRoute = async (ctx) => {
 
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
 
   if (access instanceof Response) return access;
 

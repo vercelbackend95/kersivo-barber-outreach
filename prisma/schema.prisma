@@ -25,6 +25,31 @@ enum PaymentStatus {
   UNPAID
   PAID
   REFUNDED
+  /// Part of the online payment was refunded; the booking was still paid online.
+  PARTIALLY_REFUNDED
+}
+
+enum GoogleBookingLinkStatus {
+  NOT_SET
+  SETUP_STARTED
+  MERCHANT_CONFIRMED
+}
+
+/// Shop-level online payment requirement for public bookings.
+enum BookingPaymentMode {
+  /// No required online payment (pay at the shop).
+  NONE
+  /// £5 required online (full service price when the service costs less than £5).
+  DEPOSIT
+  /// Full service price required upfront.
+  FULL
+}
+
+/// How a single booking was paid / expected to be paid (snapshot at booking time).
+enum BookingPaymentType {
+  NONE
+  DEPOSIT
+  FULL
 }
 
 enum DepositRefundStatus {
@@ -52,6 +77,8 @@ enum EmailOutboundPurpose {
   DEPOSIT_REFUNDED_SLOT_LOST
   CLIENT_ONBOARDING_INTERNAL
   CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
+  QR_KIT_REQUEST_ACKNOWLEDGEMENT
+  SHOP_DEPARTURE_CONFIRMATION
 }
 
 enum EmailOutboundStatus {
@@ -207,15 +234,34 @@ model ShopSettings {
   smsRemindersEnabled                Boolean                         @default(false)
   /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
   shopPaidAt                         DateTime?
-  /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
+  /// Explicit KERSIVO Starter activation marker (legacy name). Independent of onboardingCompleted and
+  /// paid state; product state is resolved in src/lib/shop/kersivoAccess.ts. Never grants Starter
+  /// after Full ends on its own — that needs SaasSubscription.postFullPlan = STARTER.
+  freeBookingActivatedAt             DateTime?
+  /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
+  /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
+  bookingSlug                        String?                         @unique
+  /// Merchant-managed Google Business Profile booking-link setup state (guided V1).
+  googleBookingLinkStatus            GoogleBookingLinkStatus         @default(NOT_SET)
+  /// Exact authoritative URL last confirmed by the merchant in Google; used to detect URL changes.
+  googleBookingConfirmedUrl          String?
+  googleBookingStatusUpdatedAt       DateTime?
+  /// Legacy owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
+  /// Kept in sync with bookingPaymentMode (true ⇔ DEPOSIT) during the migration period.
   depositsEnabled                    Boolean                         @default(false)
+  /// Online payment requirement for public bookings. Rules in src/lib/booking/bookingPaymentPolicy.ts.
+  bookingPaymentMode                 BookingPaymentMode              @default(NONE)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
   retailEnabled                      Boolean                         @default(false)
-  /// Stripe Connect Express account id for booking deposits (and future shop payouts).
+  /// Current Stripe Connect account used for NEW payments. Historical payment rows snapshot their own account id.
   stripeConnectAccountId             String?
+  /// Legacy Express accounts remain supported for historical compatibility; new public onboarding targets Standard.
+  stripeConnectAccountType           StripeConnectAccountType?
   stripeConnectChargesEnabled        Boolean                         @default(false)
   stripeConnectDetailsSubmitted      Boolean                         @default(false)
-  /// Stripe event.created of the last applied account.updated (ordering guard).
+  /// Set when the current connected account deauthorizes KERSIVO. Account id is retained for historical reconciliation.
+  stripeConnectDisconnectedAt        DateTime?
+  /// Stripe event.created of the last applied account.updated / deauthorization event (ordering guard).
   connectStatusEventAt               DateTime?
   /// Private preview URL set by OPS when tenant site is ready for owner review.
   sitePreviewUrl                     String?
@@ -253,6 +299,196 @@ model ShopSettings {
   productSemanticProfiles            ProductSemanticProfile[]
   recommendationSets                 RecommendationSet[]
   recommendationSetItems             RecommendationSetItem[]
+  qrCodes                            ShopQrCode[]
+  qrKitFulfilment                    QrKitFulfilment?
+  qrKitFulfilmentEvents              QrKitFulfilmentEvent[]
+  departure                          ShopDeparture?
+  fullBookingDestination             FullBookingDestination?
+  fullBookingDestinationEvents       FullBookingDestinationEvent[]
+}
+
+enum FullBookingDestinationStatus {
+  /// KERSIVO OPS attested the exact URL is live (DNS, HTTPS, correct shop, real booking flow).
+  VERIFIED_LIVE
+  /// No longer authoritative; Full falls back to the KERSIVO-hosted booking route.
+  INVALIDATED
+}
+
+enum FullBookingDestinationEventAction {
+  VERIFIED
+  URL_CHANGED
+  INVALIDATED
+}
+
+/// Authoritative live Full own-domain booking destination for one shop/location. Written only by
+/// the operator workflow (src/lib/shop/fullBookingDestination.ts); never derived from site preview,
+/// launch approval or onboarding domain fields. Used for QR / Google only while Full is active.
+model FullBookingDestination {
+  id                 String                       @id @default(cuid())
+  shopId             String                       @unique
+  status             FullBookingDestinationStatus
+  /// Exact public URL where a customer completes a booking (not just a hostname).
+  url                String
+  verifiedAt         DateTime
+  verificationMethod String
+  verifiedByUserId   String?
+  verifiedByEmail    String?
+  siteVersion        String?
+  invalidatedAt      DateTime?
+  invalidationReason String?                      @db.Text
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model FullBookingDestinationEvent {
+  id          String                            @id @default(cuid())
+  shopId      String
+  action      FullBookingDestinationEventAction
+  url         String?
+  previousUrl String?
+  siteVersion String?
+  actorUserId String?
+  actorEmail  String?
+  note        String?                           @db.Text
+  createdAt   DateTime                          @default(now())
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, createdAt])
+}
+
+enum ShopDepartureStatus {
+  /// Service ended; existing future appointments still need handling. Never purged.
+  WINDING_DOWN
+  /// Inactive retention; purge only after retentionEndsAt and re-checks (see shopDeparture.ts).
+  RETENTION
+}
+
+enum ShopDepartureOrigin {
+  DIRECT_STARTER_LEAVE
+  FULL_POST_PERIOD_LEAVE
+  NO_POST_FULL_CHOICE
+}
+
+/// KERSIVO service departure for one shop/location. Never deletes the owner identity, memberships
+/// or other shops; its presence always resolves the shop to SETUP (no public booking).
+model ShopDeparture {
+  id                 String              @id @default(cuid())
+  shopId             String              @unique
+  status             ShopDepartureStatus
+  origin             ShopDepartureOrigin
+  requestedAt        DateTime
+  requestedByUserId  String?
+  requestedByEmail   String?
+  saasSubscriptionId String?
+  serviceEndedAt     DateTime
+  windDownStartedAt  DateTime?
+  retentionStartedAt DateTime?
+  retentionEndsAt    DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([status, retentionEndsAt])
+}
+
+enum ShopQrPlacement {
+  WINDOW
+  REBOOK
+}
+
+/// Physical QR identity: belongs to shop + placement. The scan destination is resolved at
+/// request time (src/lib/qr/qrDestination.ts) and is intentionally not stored here.
+model ShopQrCode {
+  id        String          @id @default(cuid())
+  shopId    String
+  /// Opaque random code used in /q/{code}; never derived from shop id/name.
+  code      String          @unique
+  placement ShopQrPlacement
+  createdAt DateTime        @default(now())
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, placement])
+}
+
+enum QrKitFulfilmentStatus {
+  REQUESTED
+  VERIFYING
+  APPROVED
+  PRINT_QUEUED
+  DISPATCHED
+  NEEDS_REVIEW
+  REJECTED
+}
+
+/// Initial physical QR Kit (WINDOW + REBOOK) for one KERSIVO location. Internal ops state;
+/// never exposed to the barber beyond "request received".
+model QrKitFulfilment {
+  id                String                @id @default(cuid())
+  /// One canonical initial kit per shop/location.
+  shopId            String                @unique
+  status            QrKitFulfilmentStatus @default(REQUESTED)
+  requestedAt       DateTime              @default(now())
+  requestedByUserId String?
+
+  contactName      String
+  contactEmail     String
+  contactPhone     String
+  shopNameSnapshot String
+  addressLine1     String
+  addressLine2     String?
+  townCity         String
+  postcode         String
+  countryCode      String  @default("GB")
+
+  verifyingAt   DateTime?
+  approvedAt    DateTime?
+  printQueuedAt DateTime?
+  dispatchedAt  DateTime?
+  needsReviewAt DateTime?
+  rejectedAt    DateTime?
+
+  verificationNote  String? @db.Text
+  printReference    String?
+  dispatchCarrier   String?
+  dispatchReference String?
+
+  /// Internal unit economics (GBP pence). Never returned by customer APIs.
+  printCostPence     Int?
+  packagingCostPence Int?
+  postageCostPence   Int?
+  otherCostPence     Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   ShopSettings           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  events QrKitFulfilmentEvent[]
+
+  @@index([status, requestedAt])
+}
+
+/// Append-only audit trail for QR Kit fulfilment transitions.
+model QrKitFulfilmentEvent {
+  id           String                 @id @default(cuid())
+  fulfilmentId String
+  shopId       String
+  fromStatus   QrKitFulfilmentStatus?
+  toStatus     QrKitFulfilmentStatus
+  actorUserId  String?
+  actorEmail   String?
+  note         String?                @db.Text
+  createdAt    DateTime               @default(now())
+
+  fulfilment QrKitFulfilment @relation(fields: [fulfilmentId], references: [id], onDelete: Cascade)
+  shop       ShopSettings    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([fulfilmentId, createdAt])
+  @@index([shopId])
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -507,17 +743,35 @@ model Booking {
   manageTokenHash       String?
   manageTokenExpiresAt  DateTime?
 
+  /// Legacy: true when an online payment (currently the deposit) was required.
   paymentRequired         Boolean        @default(false)
+  /// Legacy deposit amount; see paymentAmountPence for the generic online amount.
   depositAmountPence      Int?
   paymentStatus           PaymentStatus?
-  /// Stripe Checkout Session for the deposit; unique so one session maps to one booking.
+  /// Stripe Checkout Session for this booking's online payment; unique so one session maps to one booking.
   stripeCheckoutSessionId String?        @unique
+  /// Stripe PaymentIntent for this booking's online payment.
   stripePaymentIntentId   String?
   paidAt                  DateTime?
   depositRefundedAt       DateTime?
   depositForfeitedAt      DateTime?
-  clientRescheduleCount   Int            @default(0)
-  paymentExpiresAt        DateTime?
+
+  /// Snapshot: how THIS booking was paid / expected to be paid. Null on pre-snapshot bookings
+  /// that never took an online payment.
+  bookingPaymentType              BookingPaymentType?
+  /// Snapshot: amount charged (or to be charged) online for this booking, in pence.
+  paymentAmountPence              Int?
+  /// Snapshot: KERSIVO platform/application fee for this payment, in pence.
+  kersivoPlatformFeePence         Int?
+  /// Snapshot: KERSIVO fee rate used at checkout, in basis points (100 = 1%).
+  kersivoPlatformFeeBps           Int?
+  /// Snapshot: Stripe Connect account the online payment was created on.
+  /// Null = no online payment, or a legacy row created before the snapshot existed.
+  stripeConnectAccountIdAtPayment String?
+  /// Total confirmed refunded amount against the online payment, in pence.
+  refundedAmountPence             Int                 @default(0)
+  clientRescheduleCount           Int                 @default(0)
+  paymentExpiresAt                DateTime?
 
   serviceNameAtBooking            String?
   servicePricePenceAtBooking      Int?
@@ -549,6 +803,7 @@ model Booking {
 
   @@index([barberId, startAt, endAt])
   @@index([status])
+  @@index([paidAt])
   @@index([email])
   @@index([clientId])
   @@index([status, startAt])
@@ -679,6 +934,7 @@ model Order {
   items OrderItem[]
 
   @@index([shopId, createdAt])
+  @@index([paidAt])
   @@index([shopId, status])
   @@index([shopId, isTestOrder])
 }
@@ -706,6 +962,11 @@ model RateLimitEvent {
   createdAt DateTime @default(now())
 
   @@index([ip, action, createdAt])
+}
+
+enum StripeConnectAccountType {
+  EXPRESS
+  STANDARD
 }
 
 enum SetupPlan {
@@ -752,6 +1013,20 @@ enum SaasSubscriptionStatus {
   CANCELED
 }
 
+/// What a shop continues with once THIS Full KERSIVO subscription's entitlement ends.
+/// Per subscription row, so a later Full subscription never inherits an earlier choice.
+/// Resolved in src/lib/shop/kersivoAccess.ts; purge safety in src/lib/setup/shopPurgeEligibility.ts.
+enum SaasPostFullPlan {
+  /// Normal state: no post-Full decision recorded.
+  UNDECIDED
+  /// Owner explicitly chose to continue on KERSIVO Starter after Full.
+  STARTER
+  /// Owner explicitly chose to leave KERSIVO completely.
+  LEAVE
+  /// Full ended outside KERSIVO (Stripe portal / dunning) without a recorded choice.
+  CHOICE_REQUIRED
+}
+
 model SaasSubscription {
   id                     String                 @id @default(cuid())
   stripeSessionId        String                 @unique
@@ -768,6 +1043,8 @@ model SaasSubscription {
   suspendedAt            DateTime?
   retentionEndsAt        DateTime?
   dataExportDownloadedAt DateTime?
+  postFullPlan           SaasPostFullPlan       @default(UNDECIDED)
+  postFullPlanChosenAt   DateTime?
   customerName           String
   customerEmail          String
   shopName               String

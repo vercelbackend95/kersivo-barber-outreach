@@ -7,6 +7,7 @@ import {
 import { prisma } from '../db/client';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../booking/sandboxBookings';
+import { shopCapabilityChecker } from '../shop/kersivoAccess';
 import {
   isReminderClaimSentinel,
   REMINDER_CLAIM_SENTINEL,
@@ -40,7 +41,6 @@ export type EmailReminderCandidate = {
   notes: string | null;
   emailReminderSentAt: Date | null;
   emailReminderForStartAt: Date | null;
-  shopPaidAt: Date | null;
   shopName: string;
   shopTimezone: string;
   serviceName: string;
@@ -51,13 +51,13 @@ export type EmailReminderEligibilityReason =
   | 'ok'
   | 'kill_switch'
   | 'demo_shop'
-  | 'shop_unpaid'
   | 'test_booking'
   | 'no_email'
   | 'invalid_email'
   | 'already_sent'
   | 'created_too_late'
-  | 'outside_window';
+  | 'outside_window'
+  | 'not_entitled';
 
 /**
  * Kill switch: default on (marketing claim is live).
@@ -102,7 +102,6 @@ export function evaluateEmailReminderEligibility(
     | 'notes'
     | 'emailReminderSentAt'
     | 'emailReminderForStartAt'
-    | 'shopPaidAt'
   >,
   now: Date,
   options?: { enabled?: boolean },
@@ -110,7 +109,6 @@ export function evaluateEmailReminderEligibility(
   const enabled = options?.enabled ?? isEmailRemindersEnabled();
   if (!enabled) return { ok: false, reason: 'kill_switch' };
   if (candidate.shopId === DEMO_SHOP_ID) return { ok: false, reason: 'demo_shop' };
-  if (candidate.shopPaidAt == null) return { ok: false, reason: 'shop_unpaid' };
   if (isSandboxBookingNotes(candidate.notes)) return { ok: false, reason: 'test_booking' };
 
   const toEmail = candidate.email?.trim() ?? '';
@@ -151,7 +149,6 @@ export async function findDueEmailReminders(
       startAt: { gte: windowStart, lte: windowEnd },
       barber: {
         shopId: { not: DEMO_SHOP_ID },
-        shop: { shopPaidAt: { not: null } },
       },
       AND: [
         {
@@ -194,7 +191,7 @@ export async function findDueEmailReminders(
         select: {
           name: true,
           shopId: true,
-          shop: { select: { name: true, timezone: true, shopPaidAt: true } },
+          shop: { select: { name: true, timezone: true } },
         },
       },
       service: { select: { name: true } },
@@ -211,7 +208,6 @@ export async function findDueEmailReminders(
     notes: row.notes,
     emailReminderSentAt: row.emailReminderSentAt,
     emailReminderForStartAt: row.emailReminderForStartAt,
-    shopPaidAt: row.barber.shop.shopPaidAt,
     shopName: row.barber.shop.name,
     shopTimezone: row.barber.shop.timezone || 'Europe/London',
     serviceName: row.serviceNameAtBooking?.trim() || row.service.name,
@@ -386,8 +382,14 @@ export async function processDueAppointmentEmailReminders(
 
   const due = await findDueEmailReminders(now, options?.limit ?? DEFAULT_EMAIL_REMINDER_BATCH_LIMIT);
   result.scanned = due.length;
+  const isEntitled = shopCapabilityChecker('AUTOMATED_EMAIL_REMINDERS', now);
 
   for (const candidate of due) {
+    if (!(await isEntitled(candidate.shopId))) {
+      result.skipped += 1;
+      result.skipReasons.not_entitled = (result.skipReasons.not_entitled ?? 0) + 1;
+      continue;
+    }
     const outcome = await sendAppointmentEmailReminder(candidate, now);
     if (outcome.status === 'sent') {
       result.sent += 1;

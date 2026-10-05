@@ -25,6 +25,8 @@ const subscriptionSelect = {
   stripeSubscriptionId: true,
   monthlyPence: true,
   currency: true,
+  postFullPlan: true,
+  postFullPlanChosenAt: true,
 } as const;
 
 export const GET: APIRoute = async (context) => {
@@ -83,6 +85,9 @@ export const GET: APIRoute = async (context) => {
         exportConsumed: false,
         blocksAccountDeletion: false,
         canCancelSubscription: false,
+        postFullPlan: null,
+        postFullPlanChosenAt: null,
+        postFullPlanChoiceRequired: false,
       }),
       { status: 200 },
     );
@@ -98,6 +103,13 @@ export const GET: APIRoute = async (context) => {
     blocksAccountDeletion &&
     Boolean(subscription.stripeSubscriptionId) &&
     !subscription.cancelAtPeriodEnd;
+  const postFullPlan = String(subscription.postFullPlan ?? 'UNDECIDED');
+  const postFullPlanChoiceRequired =
+    // Starter must be chosen before Full ends; an ended Full without it becomes a departure.
+    subscription.cancelAtPeriodEnd &&
+    phase !== 'canceled' &&
+    postFullPlan !== 'STARTER' &&
+    postFullPlan !== 'LEAVE';
 
   return new Response(
     JSON.stringify({
@@ -118,6 +130,9 @@ export const GET: APIRoute = async (context) => {
       canCancelSubscription,
       monthlyPence: subscription.monthlyPence,
       currency: subscription.currency,
+      postFullPlan,
+      postFullPlanChosenAt: subscription.postFullPlanChosenAt?.toISOString() ?? null,
+      postFullPlanChoiceRequired,
     }),
     { status: 200 },
   );

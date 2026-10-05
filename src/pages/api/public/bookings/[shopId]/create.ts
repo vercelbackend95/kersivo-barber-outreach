@@ -8,9 +8,12 @@ import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import { prisma } from '@/lib/db/client';
 import { checkBookingRateLimit } from '@/lib/rate-limit/bookingRateLimit';
 import {
-  createBookingDepositCheckoutSession,
+  createBookingPaymentCheckoutSession,
   retrieveBookingDepositSession,
 } from '@/lib/shop/stripeConnect';
+import { BOOKING_PAYMENT_NOT_READY } from '@/lib/booking/bookingPaymentPolicy';
+import { resolveBookingPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
+import { captureOpsException } from '@/lib/ops/sentry';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
 
@@ -28,6 +31,25 @@ function json(body: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+/**
+ * Checkout params from the Booking snapshot. Rows created before the snapshot columns were
+ * populated fall back to the legacy deposit amount with a 0% KERSIVO fee.
+ */
+function resolveStoredCheckoutSnapshot(booking: {
+  bookingPaymentType?: string | null;
+  paymentAmountPence?: number | null;
+  kersivoPlatformFeePence?: number | null;
+  depositAmountPence?: number | null;
+}): { bookingPaymentType: 'DEPOSIT' | 'FULL'; paymentAmountPence: number; applicationFeePence: number } | null {
+  const type = booking.bookingPaymentType ?? 'DEPOSIT';
+  if (type !== 'DEPOSIT' && type !== 'FULL') return null;
+  const amount = booking.paymentAmountPence ?? booking.depositAmountPence;
+  if (typeof amount !== 'number' || amount <= 0) return null;
+  const fee = booking.kersivoPlatformFeePence ?? 0;
+  if (fee < 0 || fee >= amount) return null;
+  return { bookingPaymentType: type, paymentAmountPence: amount, applicationFeePence: fee };
 }
 
 async function resolveOpenDepositCheckoutUrl(input: {
@@ -115,23 +137,47 @@ export const POST: APIRoute = async ({ request, params }) => {
       {
         requiredShopId: shopId,
         allowDepositCollection: true,
+        requiredCapability: 'PUBLIC_BOOKING',
       },
     );
 
     if (created.depositRequired) {
-      if (!shop.stripeConnectAccountId) {
-        return json({ error: 'Deposit checkout is not configured for this shop.' }, 503);
+      // The Booking's payment-account snapshot is authoritative; the current shop account is
+      // only a fallback for pre-snapshot (legacy) rows replayed through this endpoint.
+      const paymentAccount = resolveBookingPaymentAccount({
+        booking: created,
+        currentShopAccountId: shop.stripeConnectAccountId,
+        requireSnapshot: !created.replayed,
+      });
+      if (!paymentAccount.ok) {
+        if (paymentAccount.reason === 'missing_payment_account_snapshot') {
+          captureOpsException(
+            new Error(`Booking ${created.id} requires payment but has no Stripe Connect account snapshot.`),
+            {
+              route: '/api/public/bookings/[shopId]/create',
+              shopId,
+              opsAlert: true,
+              tags: { bookingId: created.id, reason: paymentAccount.reason },
+            },
+          );
+        }
+        return json(
+          { error: 'Booking payment checkout is not configured for this shop.', code: BOOKING_PAYMENT_NOT_READY },
+          503,
+        );
       }
-      const amountPence = created.depositAmountPence;
-      if (typeof amountPence !== 'number' || amountPence <= 0) {
-        return json({ error: 'Invalid deposit amount for this booking.' }, 500);
+      const connectAccountId = paymentAccount.accountId;
+      // The stored Booking snapshot is authoritative — never recompute from the shop's current plan.
+      const checkoutSnapshot = resolveStoredCheckoutSnapshot(created);
+      if (!checkoutSnapshot) {
+        return json({ error: 'Invalid payment amount for this booking.' }, 500);
       }
 
       if (created.status === BookingStatus.PENDING_PAYMENT) {
         const reusedUrl = await resolveOpenDepositCheckoutUrl({
           bookingId: created.id,
           shopId,
-          connectAccountId: shop.stripeConnectAccountId,
+          connectAccountId,
           existingSessionId: created.stripeCheckoutSessionId,
         });
         if (reusedUrl) {
@@ -161,13 +207,15 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
 
       const baseUrl = getPublicSiteUrl();
-      const session = await createBookingDepositCheckoutSession({
-        shopConnectAccountId: shop.stripeConnectAccountId,
+      const session = await createBookingPaymentCheckoutSession({
+        shopConnectAccountId: connectAccountId,
         bookingId: created.id,
         shopId,
         customerEmail: created.email,
         shopName: created.shopName || shop.name,
-        amountPence,
+        bookingPaymentType: checkoutSnapshot.bookingPaymentType,
+        paymentAmountPence: checkoutSnapshot.paymentAmountPence,
+        applicationFeePence: checkoutSnapshot.applicationFeePence,
         bookingCreatedAt:
           created.createdAt instanceof Date ? created.createdAt : new Date(),
         holdExpiresAt,
@@ -204,7 +252,10 @@ export const POST: APIRoute = async ({ request, params }) => {
     });
   } catch (error) {
     if (error instanceof BookingActionError) {
-      return json({ error: error.message }, error.statusCode);
+      return json(
+        error.code ? { error: error.message, code: error.code } : { error: error.message },
+        error.statusCode,
+      );
     }
     return json({ error: error instanceof Error ? error.message : 'Booking failed.' }, 400);
   }

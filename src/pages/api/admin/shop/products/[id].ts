@@ -2,10 +2,10 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { normalizeProductFlags } from '../../../../../lib/products/normalizeProductFlags';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -15,7 +15,7 @@ const patchSchema = z.object({
 });
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'retail.manage');
+  const access = await requireAdminPermissionAndCapability(ctx, 'retail.manage', 'RETAIL');
   if (access instanceof Response) return access;
 
   const id = ctx.params.id;

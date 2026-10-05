@@ -57,6 +57,15 @@ describe('robots.txt', () => {
     expect(body).not.toContain('GPTBot');
   });
 
+  it('disallows dynamic QR redirects for both crawler groups but keeps /book/ crawlable', async () => {
+    const body = await readRobots();
+    for (const agent of ['OAI-SearchBot', '*']) {
+      const group = groupFor(body, agent);
+      expect(group).toMatch(/^Disallow: \/q\/$/m);
+      expect(group).not.toMatch(/^Disallow: \/book/m);
+    }
+  });
+
   it('keeps checkout and ops blocks', () => {
     const here = dirname(fileURLToPath(import.meta.url));
     const src = readFileSync(join(here, '../../pages/robots.txt.ts'), 'utf8');

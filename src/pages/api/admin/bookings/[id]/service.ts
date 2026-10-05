@@ -12,6 +12,10 @@ import { BookingActionError } from '@/lib/booking/service';
 import { ensureSlotAvailable, SlotUnavailableError } from '@/lib/booking/slotGuard';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 import { addMinutes } from '@/lib/booking/time';
+import {
+  FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+  fullPaymentBlocksServicePrice,
+} from '@/lib/booking/bookingPaymentPolicy';
 
 const EDITABLE_STATUSES = new Set<BookingStatus>([
   BookingStatus.BOOKED,
@@ -61,6 +65,9 @@ export const PATCH: APIRoute = async (ctx) => {
         startAt: true,
         endAt: true,
         status: true,
+        bookingPaymentType: true,
+        paymentAmountPence: true,
+        paymentStatus: true,
       },
     }),
     findShopService(serviceId, access.shopId),
@@ -78,6 +85,15 @@ export const PATCH: APIRoute = async (ctx) => {
   }
   if (!service.isActive) {
     return json({ error: 'Service is not active.' }, 409);
+  }
+  if (fullPaymentBlocksServicePrice(booking, service.pricePence)) {
+    return json(
+      {
+        error: 'This booking was paid in full upfront. Choose a service with the same price.',
+        code: FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
+      },
+      409,
+    );
   }
 
   const barberService = await prisma.barberService.findUnique({

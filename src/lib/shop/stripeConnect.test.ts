@@ -10,7 +10,10 @@ vi.mock('./stripe', () => ({
 
 import {
   createBookingDepositCheckoutSession,
+  createBookingPaymentCheckoutSession,
   createRetailCheckoutSession,
+  createConnectStandardAccount,
+  retrieveConnectAccount,
   expireBookingDepositSession,
   refundPaymentIntent,
   resolveDepositSessionExpiresAt,
@@ -19,6 +22,58 @@ import {
 } from './stripeConnect';
 
 const BOOKING_CREATED_AT = new Date('2026-08-01T12:00:00.000Z');
+
+describe('Stripe Connect Standard onboarding', () => {
+  const prevKey = process.env.STRIPE_SECRET_KEY;
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    process.env.STRIPE_SECRET_KEY = 'sk_test_standard';
+  });
+
+  afterEach(() => {
+    process.env.STRIPE_SECRET_KEY = prevKey;
+  });
+
+  it('creates a GB Standard connected account for new KERSIVO onboarding', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'acct_standard_1' }),
+    });
+
+    await expect(
+      createConnectStandardAccount({ shopId: 'shop_1', email: 'owner@example.com' }),
+    ).resolves.toEqual({ id: 'acct_standard_1' });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/accounts');
+    const params = new URLSearchParams(String(init.body));
+    expect(params.get('type')).toBe('standard');
+    expect(params.get('country')).toBe('GB');
+    expect(params.get('email')).toBe('owner@example.com');
+    expect(params.get('capabilities[card_payments][requested]')).toBe('true');
+    expect(params.get('capabilities[transfers][requested]')).toBe('true');
+    expect(params.get('metadata[shopId]')).toBe('shop_1');
+  });
+
+  it('retrieves the connected-account readiness and account type', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'acct_standard_1',
+        type: 'standard',
+        charges_enabled: true,
+        details_submitted: true,
+      }),
+    });
+
+    await expect(retrieveConnectAccount('acct_standard_1')).resolves.toEqual({
+      chargesEnabled: true,
+      detailsSubmitted: true,
+      accountType: 'STANDARD',
+    });
+  });
+});
 
 describe('stripeConnect direct charges', () => {
   const prevKey = process.env.STRIPE_SECRET_KEY;
@@ -59,7 +114,7 @@ describe('stripeConnect direct charges', () => {
     expect(headers['Stripe-Account']).toBe('acct_shop');
     const body = String(init.body);
     expect(body).not.toContain('transfer_data');
-    expect(body).toContain('payment_intent_data%5Bapplication_fee_amount%5D=0');
+    expect(body).not.toContain('application_fee_amount');
     expect(body).toContain('booking_deposit');
     expect(body).toContain('unit_amount');
     expect(body).toContain('300');
@@ -122,7 +177,7 @@ describe('stripeConnect direct charges', () => {
     expect(headers['Idempotency-Key']).toBe('shop_order_checkout_ord_9');
     const body = String(init.body);
     expect(body).toContain('shop_order');
-    expect(body).toContain('payment_intent_data%5Bapplication_fee_amount%5D=0');
+    expect(body).not.toContain('application_fee_amount');
     expect(body).not.toContain('transfer_data');
     expect(body).toContain('line_items%5B0%5D');
     expect(body).toContain('line_items%5B1%5D');
@@ -232,6 +287,64 @@ describe('stripeConnect direct charges', () => {
     expect(String(legacyInit.body)).toContain('reverse_transfer=true');
   });
 
+  it('B: allowPlatformLegacyFallback=false fails closed on resource_missing — no platform request', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: { message: 'No such payment_intent: pi_snap', code: 'resource_missing' },
+      }),
+    });
+
+    await expect(
+      refundPaymentIntent('pi_snap', {
+        stripeAccount: 'acct_A',
+        amount: 500,
+        idempotencyKey: 'deposit_refund_book_1',
+        allowPlatformLegacyFallback: false,
+      }),
+    ).rejects.toBeInstanceOf(StripeConnectApiError);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const headers = (fetchMock.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>;
+    expect(headers['Stripe-Account']).toBe('acct_A');
+    expect(headers['Idempotency-Key']).toBe('deposit_refund_book_1:direct');
+  });
+
+  it('allowPlatformLegacyFallback=true keeps the explicit legacy platform fallback', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: { message: 'No such payment_intent', code: 'resource_missing' } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 're_legacy', status: 'succeeded', amount: 500 }),
+      });
+
+    const result = await refundPaymentIntent('pi_legacy', {
+      stripeAccount: 'acct_shop',
+      allowPlatformLegacyFallback: true,
+    });
+
+    expect(result.mode).toBe('platform_legacy');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('A: allowPlatformLegacyFallback=false still returns a successful direct refund', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 're_direct', status: 'succeeded', amount: 500 }),
+    });
+
+    const result = await refundPaymentIntent('pi_snap', {
+      stripeAccount: 'acct_A',
+      allowPlatformLegacyFallback: false,
+    });
+
+    expect(result.mode).toBe('direct');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('uses reverse_transfer when refunding without connected account', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
@@ -257,5 +370,166 @@ describe('stripeConnect direct charges', () => {
       StripeConnectApiError,
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('R: refundApplicationFee sends refund_application_fee=true on the direct refund', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 're_fee', status: 'succeeded', amount: 500 }),
+    });
+
+    await refundPaymentIntent('pi_free', {
+      stripeAccount: 'acct_shop',
+      amount: 500,
+      idempotencyKey: 'deposit_refund_book_1',
+      refundApplicationFee: true,
+    });
+
+    const body = String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body);
+    expect(body).toContain('refund_application_fee=true');
+    expect(body).toContain('amount=500');
+  });
+
+  it('S: refund_application_fee is omitted unless explicitly requested', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 're_plain', status: 'succeeded', amount: 500 }),
+    });
+
+    await refundPaymentIntent('pi_full', { stripeAccount: 'acct_shop', amount: 500 });
+    await refundPaymentIntent('pi_full', { stripeAccount: 'acct_shop', amount: 500, refundApplicationFee: false });
+
+    for (const call of fetchMock.mock.calls) {
+      expect(String((call as [string, RequestInit])[1].body)).not.toContain('refund_application_fee');
+    }
+  });
+});
+
+describe('createBookingPaymentCheckoutSession (generic booking payments)', () => {
+  const prevKey = process.env.STRIPE_SECRET_KEY;
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    process.env.STRIPE_SECRET_KEY = 'sk_test_b05';
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'cs_generic', url: 'https://checkout.stripe.test/cs_generic' }),
+    });
+  });
+
+  afterEach(() => {
+    process.env.STRIPE_SECRET_KEY = prevKey;
+  });
+
+  function baseInput(overrides: Partial<Parameters<typeof createBookingPaymentCheckoutSession>[0]> = {}) {
+    return {
+      shopConnectAccountId: 'acct_shop',
+      bookingId: 'book_1',
+      shopId: 'shop_1',
+      customerEmail: 'client@example.com',
+      shopName: 'Test Shop',
+      bookingPaymentType: 'DEPOSIT' as const,
+      paymentAmountPence: 500,
+      applicationFeePence: 5,
+      bookingCreatedAt: BOOKING_CREATED_AT,
+      holdExpiresAt: new Date(BOOKING_CREATED_AT.getTime() + 15 * 60 * 1000),
+      successUrl: 'https://kersivo.test/success',
+      cancelUrl: 'https://kersivo.test/cancel',
+      ...overrides,
+    };
+  }
+
+  function sentParams(index = 0): URLSearchParams {
+    return new URLSearchParams(String((fetchMock.mock.calls[index] as [string, RequestInit])[1].body));
+  }
+
+  it('H: historical 1% £5 deposit snapshot still sends application_fee_amount=5 as a direct charge with generic metadata', async () => {
+    const result = await createBookingPaymentCheckoutSession(baseInput());
+
+    expect(result).toEqual({ id: 'cs_generic', url: 'https://checkout.stripe.test/cs_generic' });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Stripe-Account']).toBe('acct_shop');
+    expect(headers['Idempotency-Key']).toBe('booking_payment_checkout_book_1');
+
+    const params = sentParams();
+    expect(params.get('payment_intent_data[application_fee_amount]')).toBe('5');
+    expect(params.get('line_items[0][price_data][unit_amount]')).toBe('500');
+    expect(params.get('line_items[0][price_data][currency]')).toBe('gbp');
+    expect(params.get('metadata[type]')).toBe('booking_payment');
+    expect(params.get('metadata[bookingId]')).toBe('book_1');
+    expect(params.get('metadata[shopId]')).toBe('shop_1');
+    expect(params.get('metadata[bookingPaymentType]')).toBe('DEPOSIT');
+    expect(String(init.body)).not.toContain('transfer_data');
+    // No money amounts in metadata.
+    for (const [key] of params) {
+      if (key.startsWith('metadata[')) expect(key).not.toMatch(/amount|fee/i);
+    }
+  });
+
+  it('H: historical 1% £3 deposit snapshot sends application_fee_amount=3', async () => {
+    await createBookingPaymentCheckoutSession(baseInput({ paymentAmountPence: 300, applicationFeePence: 3 }));
+    expect(sentParams().get('payment_intent_data[application_fee_amount]')).toBe('3');
+    expect(sentParams().get('line_items[0][price_data][unit_amount]')).toBe('300');
+  });
+
+  it('4C-F: historical 1% FULL £30 snapshot sends 3000p, a 30p application fee and bookingPaymentType=FULL metadata', async () => {
+    await createBookingPaymentCheckoutSession(
+      baseInput({ bookingPaymentType: 'FULL', paymentAmountPence: 3000, applicationFeePence: 30 }),
+    );
+    const params = sentParams();
+    expect(params.get('line_items[0][price_data][unit_amount]')).toBe('3000');
+    expect(params.get('payment_intent_data[application_fee_amount]')).toBe('30');
+    expect(params.get('metadata[type]')).toBe('booking_payment');
+    expect(params.get('metadata[bookingPaymentType]')).toBe('FULL');
+  });
+
+  it('I: Starter / Full (0% fee) omits application_fee_amount for DEPOSIT and FULL', async () => {
+    await createBookingPaymentCheckoutSession(baseInput({ applicationFeePence: 0 }));
+    expect(sentParams().has('payment_intent_data[application_fee_amount]')).toBe(false);
+    expect(sentParams().get('metadata[type]')).toBe('booking_payment');
+    await createBookingPaymentCheckoutSession(
+      baseInput({ bookingPaymentType: 'FULL', paymentAmountPence: 3000, applicationFeePence: 0 }),
+    );
+    expect(sentParams(1).has('payment_intent_data[application_fee_amount]')).toBe(false);
+  });
+
+  it('K: identical snapshot → identical request body + idempotency key on retry', async () => {
+    await createBookingPaymentCheckoutSession(baseInput());
+    await createBookingPaymentCheckoutSession(baseInput());
+    const [first, second] = fetchMock.mock.calls as [string, RequestInit][];
+    expect(String(second[1].body)).toBe(String(first[1].body));
+    expect((second[1].headers as Record<string, string>)['Idempotency-Key']).toBe(
+      (first[1].headers as Record<string, string>)['Idempotency-Key'],
+    );
+  });
+
+  it('rejects invalid amounts and fees >= amount', async () => {
+    await expect(createBookingPaymentCheckoutSession(baseInput({ paymentAmountPence: 0 }))).rejects.toThrow();
+    await expect(createBookingPaymentCheckoutSession(baseInput({ applicationFeePence: -1 }))).rejects.toThrow();
+    await expect(
+      createBookingPaymentCheckoutSession(baseInput({ paymentAmountPence: 5, applicationFeePence: 5 })),
+    ).rejects.toThrow();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('AD: legacy wrapper still produces booking_deposit metadata, legacy key and £0 fee', async () => {
+    await createBookingDepositCheckoutSession({
+      shopConnectAccountId: 'acct_shop',
+      bookingId: 'book_1',
+      shopId: 'shop_1',
+      customerEmail: 'client@example.com',
+      shopName: 'Test Shop',
+      amountPence: 500,
+      bookingCreatedAt: BOOKING_CREATED_AT,
+      successUrl: 'https://kersivo.test/success',
+      cancelUrl: 'https://kersivo.test/cancel',
+    });
+    const params = sentParams();
+    expect(params.get('metadata[type]')).toBe('booking_deposit');
+    expect(params.has('payment_intent_data[application_fee_amount]')).toBe(false);
+    expect(params.has('metadata[bookingPaymentType]')).toBe(false);
+    const headers = (fetchMock.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>;
+    expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_1');
   });
 });

@@ -19,7 +19,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   },
   {
     question: 'How much does KERSIVO cost?',
-    answer: `KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location. There is no setup fee. Your first payment is taken when you subscribe, then monthly. KERSIVO is not currently VAT registered, so no VAT is added. Standard Stripe payment-processing fees apply to online card payments.`,
+    answer: `Full KERSIVO, with your branded website and own domain, costs £${SAAS_MONTHLY_GBP}/month per physical location. There is no setup fee. Your first payment is taken when you subscribe, then monthly. KERSIVO is not currently VAT registered, so no VAT is added. Shops that only need the core booking operation can start on KERSIVO Starter for £0/month. Standard Stripe payment-processing fees apply to online card payments.`,
   },
   {
     question: 'Do you take commission on bookings or retail sales?',
@@ -27,9 +27,9 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
       'KERSIVO charges 0% commission on bookings and retail sales. Standard Stripe payment-processing fees still apply to online card payments.',
   },
   {
-    question: `What is included in the £${SAAS_MONTHLY_GBP}/month plan?`,
+    question: `What is included in the £${SAAS_MONTHLY_GBP}/month Full KERSIVO plan?`,
     answer:
-      'The plan includes a branded barbershop website on your own domain, online booking, deposits, client management, email confirmations, SMS appointment reminders, an admin dashboard, retail pickup, reports, hosting, SSL, maintenance and support.',
+      'Full KERSIVO includes a branded barbershop website on your own domain, online booking, deposits, client management, email confirmations, SMS appointment reminders, an admin dashboard, retail pickup, reports, hosting, SSL, maintenance and support.',
   },
   {
     question: 'Does KERSIVO charge more when I add more barbers?',

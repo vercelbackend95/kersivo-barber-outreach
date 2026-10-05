@@ -11,7 +11,8 @@ function readRepoFile(...segments: string[]): string {
   return readFileSync(join(here, ...segments), 'utf8');
 }
 
-const dpaSource = readRepoFile('../../pages/dpa.astro');
+// Whitespace-normalized so prose reflows in the page don't break wording assertions.
+const dpaSource = readRepoFile('../../pages/dpa.astro').replace(/\s+/g, ' ');
 const termsSource = readRepoFile('../../pages/terms.astro');
 const launchWizardSource = readRepoFile('../../components/admin/launch/LaunchWizard.tsx');
 const legalFooterSource = readRepoFile('../../components/LegalFooter.astro');
@@ -24,13 +25,13 @@ const FALSE_CORPORATE = [
 ] as const;
 
 describe('dpaVersion', () => {
-  it('exports CURRENT_DPA_VERSION 2026-09-24 and formats Last updated', () => {
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
-    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('24 September 2026');
+  it('exports CURRENT_DPA_VERSION 2026-10-05 and formats Last updated', () => {
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('5 October 2026');
   });
 
-  it('keeps Terms at 2026-09-23 for this non-material DPA factual revision', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+  it('keeps Terms and DPA on the same v1.18 material legal-package version', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
   });
 
   it('documents that material DPA updates require a Terms bump', () => {
@@ -109,8 +110,8 @@ describe('Data Processing Agreement page', () => {
     const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
     expect(notListedBlock).toMatch(/Google OAuth/);
     expect(notListedBlock).toMatch(/account\/auth/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
   });
 
   it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
@@ -136,15 +137,17 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Only where SMS functionality is enabled');
     expect(dpaSource).not.toMatch(/End User Messaging/i);
     expect(dpaSource).not.toMatch(/\bAWS\b/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
     expect(dpaSource).toContain('Stripe roles (summary)');
     expect(dpaSource).toContain('not</strong> listed above as a normal {TRADING_NAME} Sub-processor');
     expect(dpaSource).toContain('Stripe Payments Europe, Limited');
-    expect(dpaSource).toContain('application_fee_amount');
+    expect(dpaSource).toContain('Stripe Standard');
+    expect(dpaSource).toContain('historical Express');
+    expect(dpaSource).toContain('0% application / platform fee');
     expect(dpaSource).toContain('independent Controller for that');
   });
 
@@ -161,7 +164,7 @@ describe('Data Processing Agreement page', () => {
 
 describe('Terms / checkout / footer DPA integration', () => {
   it('Terms incorporate /dpa and share the bumped Terms version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
     expect(termsSource).toContain('href="/dpa"');
     expect(termsSource).toContain('forms part of these Terms');
     expect(termsSource).toContain('Client is the Controller');

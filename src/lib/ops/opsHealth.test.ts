@@ -6,6 +6,9 @@ const smsFindMany = vi.fn();
 const webhookFindMany = vi.fn();
 const refundFindMany = vi.fn();
 const emailFindMany = vi.fn();
+const bookingAggregate = vi.fn();
+const orderAggregate = vi.fn();
+const shopSettingsCount = vi.fn();
 const captureOpsMessage = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
@@ -24,6 +27,15 @@ vi.mock('@/lib/db/client', () => ({
     bookingDepositRefund: {
       findMany: (...args: unknown[]) => refundFindMany(...args),
     },
+    booking: {
+      aggregate: (...args: unknown[]) => bookingAggregate(...args),
+    },
+    order: {
+      aggregate: (...args: unknown[]) => orderAggregate(...args),
+    },
+    shopSettings: {
+      count: (...args: unknown[]) => shopSettingsCount(...args),
+    },
   },
 }));
 
@@ -35,7 +47,11 @@ vi.mock('@/lib/ops/opsLog', () => ({
   opsLog: vi.fn(),
 }));
 
-import { evaluateMessagingFailRate, runOpsHealthChecks } from './opsHealth';
+import {
+  collectStripeConnectVolumeMetrics,
+  evaluateMessagingFailRate,
+  runOpsHealthChecks,
+} from './opsHealth';
 
 describe('evaluateMessagingFailRate', () => {
   it('does not alert below sample size', () => {
@@ -99,6 +115,9 @@ describe('runOpsHealthChecks Sentry alerts', () => {
         createdAt: new Date('2026-01-01T00:00:00Z'),
       },
     ]);
+    bookingAggregate.mockResolvedValue({ _sum: { paymentAmountPence: 0 } });
+    orderAggregate.mockResolvedValue({ _sum: { totalPence: 0 } });
+    shopSettingsCount.mockResolvedValue(0);
     emailFindMany.mockResolvedValue([
       {
         id: 'email_1',
@@ -149,5 +168,42 @@ describe('runOpsHealthChecks Sentry alerts', () => {
     expect(sentryJson).not.toContain('provider down');
     expect(sentryJson).not.toContain('deliver failed');
     expect(summary.stuckRefundCount).toBe(1);
+  });
+});
+
+
+describe('collectStripeConnectVolumeMetrics', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('tracks 30-day gross card volume, annualised GBP run-rate and account mix', async () => {
+    bookingAggregate
+      .mockResolvedValueOnce({ _sum: { paymentAmountPence: 120_000 } })
+      .mockResolvedValueOnce({ _sum: { paymentAmountPence: 900_000 } });
+    orderAggregate
+      .mockResolvedValueOnce({ _sum: { totalPence: 30_000 } })
+      .mockResolvedValueOnce({ _sum: { totalPence: 100_000 } });
+    shopSettingsCount
+      .mockResolvedValueOnce(12)
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(2);
+
+    const metrics = await collectStripeConnectVolumeMetrics(
+      new Date('2026-10-05T12:00:00.000Z'),
+    );
+
+    expect(metrics).toEqual({
+      windowDays: 30,
+      bookingOnlineCardPence30d: 120_000,
+      retailOnlineCardPence30d: 30_000,
+      totalOnlineCardPence30d: 150_000,
+      annualisedOnlineCardPenceGbp: 1_825_000,
+      totalOnlineCardPence365d: 1_000_000,
+      activeStandardAccounts: 12,
+      activeLegacyExpressAccounts: 3,
+      disconnectedAccounts: 2,
+      publishedThresholdUsd: 1_000_000,
+    });
   });
 });

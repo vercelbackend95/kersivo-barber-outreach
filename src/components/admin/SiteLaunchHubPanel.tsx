@@ -11,6 +11,8 @@ type LaunchData = {
   approvedByEmail: string | null;
   approvedVersion: string | null;
   goLiveAt: string | null;
+  /** Set only once KERSIVO OPS verified the live own-domain booking destination. */
+  liveBookingDestination?: string | null;
 };
 
 const CHECKLIST = [
@@ -86,6 +88,9 @@ export default function SiteLaunchHubPanel() {
     );
   }
 
+  const testBookingHref =
+    data.liveBookingDestination ?? (data.shopId ? `/book/${encodeURIComponent(data.shopId)}` : null);
+
   return (
     <div className="site-launch-hub">
       <h2 className="site-launch-hub__title">Site launch</h2>
@@ -136,7 +141,7 @@ export default function SiteLaunchHubPanel() {
             </a>
             {data.shopId ? (
               <a
-                href={`/book/${encodeURIComponent(data.shopId)}`}
+                href={testBookingHref ?? '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn--secondary btn--sm"
@@ -153,7 +158,7 @@ export default function SiteLaunchHubPanel() {
         <div className="site-launch-hub__actions">
           {data.shopId ? (
             <a
-              href={`/book/${encodeURIComponent(data.shopId)}`}
+              href={testBookingHref ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn--secondary btn--sm"
@@ -182,6 +187,23 @@ export default function SiteLaunchHubPanel() {
           </dl>
         </div>
       ) : null}
+
+      <div className="site-launch-hub__approval" data-live-booking-destination>
+        <h3>Live booking destination</h3>
+        {data.liveBookingDestination ? (
+          <p>
+            Booking on your own domain is live:{' '}
+            <a href={data.liveBookingDestination} target="_blank" rel="noopener noreferrer">
+              {data.liveBookingDestination}
+            </a>
+          </p>
+        ) : (
+          <p className="muted">
+            Your KERSIVO-hosted booking link remains active while your Full site/domain is being
+            prepared.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

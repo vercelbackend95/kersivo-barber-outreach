@@ -1,12 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '@/lib/admin/auth';
 import { resolveActingBarberId } from '@/lib/admin/rbac/actingBarber';
 import { assertClientAccessible } from '@/lib/admin/rbac/scope';
 import { clientNoteBaseSelect, mapNoteWithLikes } from '@/lib/admin/clientNoteLikes';
 import { prisma } from '@/lib/db/client';
 import { storeNoteImage } from '@/lib/storage/storeNoteImage';
+import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
 
 const MAX_NOTE_LENGTH = 2000;
 const MAX_NOTE_IMAGES = 3;
@@ -52,7 +52,7 @@ async function parseNotePostPayload(ctx: Parameters<APIRoute>[0]) {
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.read');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.read', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
@@ -91,7 +91,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'clients.write');
+  const access = await requireAdminPermissionAndCapability(ctx, 'clients.write', 'CLIENTS');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;

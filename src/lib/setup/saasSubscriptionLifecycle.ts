@@ -21,6 +21,15 @@ import {
   saasSubscriptionGrantsAccess,
   SAAS_GRACE_DAYS,
 } from '@/lib/setup/saasEntitlement';
+import {
+  resolveShopPurgeEligibility,
+  type ShopPurgeBlockReason,
+} from '@/lib/setup/shopPurgeEligibility';
+import {
+  advanceWindingDownDepartures,
+  materializeAndRecordEndedFullDeparture,
+  materializePostFullDepartures,
+} from '@/lib/shop/shopDeparture';
 
 export type SaasLifecycleSyncResult = {
   record: SaasSubscription | null;
@@ -160,6 +169,9 @@ export async function applyStripeSubscriptionToSaasRecord(
       currentPeriodEnd: currentPeriodEnd ?? existing.currentPeriodEnd,
       canceledAt,
       retentionEndsAt,
+      ...(status === 'CANCELED' && existing.postFullPlan === 'UNDECIDED'
+        ? { postFullPlan: 'CHOICE_REQUIRED' as const }
+        : {}),
       pastDueSince:
         status === 'PAST_DUE' || status === 'SUSPENDED'
           ? existing.pastDueSince
@@ -173,6 +185,12 @@ export async function applyStripeSubscriptionToSaasRecord(
 
   const shopId = record.shopId?.trim() || null;
   const grantedAccess = await applyShopAccessFromSubscription(shopId, record);
+
+  // Full has genuinely ended: LEAVE / no Starter choice enters the departure lifecycle now
+  // (the SaaS lifecycle cron is the idempotent backstop for missed events).
+  if (shopId && record.status === 'CANCELED' && !grantedAccess) {
+    await materializeAndRecordEndedFullDeparture(record.id);
+  }
 
   return { record, grantedAccess, shopId };
 }
@@ -284,54 +302,79 @@ export async function suspendPastDueSubscriptionsPastGrace(now: Date = new Date(
   return { suspended };
 }
 
+class ShopPurgeNoLongerEligibleError extends Error {
+  constructor(readonly reason: ShopPurgeBlockReason) {
+    super(`Shop no longer eligible for retention purge: ${reason}`);
+  }
+}
+
+/**
+ * Cron: whole-shop purge once a shop's departure retention ends. Candidates come only from the
+ * ShopDeparture lifecycle — a canceled subscription or an old retention date is never purge
+ * authority on its own (see resolveShopPurgeEligibility). Re-checked inside the purge transaction.
+ */
 export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Promise<{
   purged: number;
 }> {
-  const candidates = await prisma.saasSubscription.findMany({
+  const candidates = await prisma.shopDeparture.findMany({
     where: {
-      status: 'CANCELED',
+      status: 'RETENTION',
       retentionEndsAt: { lte: now },
-      shopId: { not: null },
     },
     select: {
-      id: true,
       shopId: true,
-      customerEmail: true,
+      origin: true,
+      requestedByEmail: true,
+      saasSubscriptionId: true,
       retentionEndsAt: true,
     },
   });
 
   let purged = 0;
   for (const row of candidates) {
-    const shopId = row.shopId?.trim();
+    const shopId = row.shopId.trim();
     if (!shopId) continue;
 
-    const shop = await prisma.shopSettings.findUnique({
-      where: { id: shopId },
-      select: { id: true },
-    });
-    if (!shop) {
-      await prisma.saasSubscription.update({
-        where: { id: row.id },
-        data: { shopId: null },
+    const eligibility = await resolveShopPurgeEligibility({ shopId, now });
+    if (!eligibility.ok) {
+      console.warn('[saas-lifecycle] retention purge skipped', {
+        shopId,
+        reason: eligibility.reason,
       });
       continue;
     }
 
     let privateBlobPaths: string[] = [];
     let publicBlobUrls: string[] = [];
+    let gateOpenedHere = false;
     try {
-      await beginShopPurgeGate(shopId);
+      gateOpenedHere = !(await beginShopPurgeGate(shopId)).alreadyStarted;
       privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
       publicBlobUrls = await listPublicBlobUrlsForShopPurge(shopId);
       await prisma.$transaction(async (tx) => {
+        const recheck = await resolveShopPurgeEligibility({ shopId, now, db: tx });
+        if (!recheck.ok) throw new ShopPurgeNoLongerEligibleError(recheck.reason);
         await purgeShopData(tx, shopId);
-        await tx.saasSubscription.update({
-          where: { id: row.id },
+        await tx.saasSubscription.updateMany({
+          where: { shopId },
           data: { shopId: null },
         });
       });
     } catch (error) {
+      if (error instanceof ShopPurgeNoLongerEligibleError) {
+        console.warn('[saas-lifecycle] retention purge aborted: shop no longer eligible', {
+          shopId,
+          reason: error.reason,
+        });
+        if (gateOpenedHere) {
+          await prisma.shopSettings
+            .update({ where: { id: shopId }, data: { purgeStartedAt: null } })
+            .catch((releaseError: unknown) =>
+              console.error('[saas-lifecycle] failed to release purge gate', { shopId, releaseError }),
+            );
+        }
+        continue;
+      }
       console.error(`[saas-lifecycle] purge failed for shop ${shopId}`, error);
       continue;
     }
@@ -350,10 +393,11 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
 
     await recordAccountLifecycleEvent({
       action: ACCOUNT_LIFECYCLE_ACTIONS.SHOP_PURGED_AFTER_RETENTION,
-      email: row.customerEmail,
+      email: row.requestedByEmail,
       shopId,
       meta: {
-        saasSubscriptionId: row.id,
+        departureOrigin: row.origin,
+        saasSubscriptionId: row.saasSubscriptionId,
         retentionEndsAt: row.retentionEndsAt?.toISOString() ?? null,
       },
     });
@@ -365,9 +409,18 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
 
 export async function runSaasLifecycleCron(now: Date = new Date()): Promise<{
   suspended: number;
+  departuresCreated: number;
+  windDownsCompleted: number;
   purged: number;
 }> {
   const suspended = await suspendPastDueSubscriptionsPastGrace(now);
+  const departures = await materializePostFullDepartures(now);
+  const windDowns = await advanceWindingDownDepartures(now);
   const purged = await purgeShopsAfterRetentionEnds(now);
-  return { suspended: suspended.suspended, purged: purged.purged };
+  return {
+    suspended: suspended.suspended,
+    departuresCreated: departures.created,
+    windDownsCompleted: windDowns.advanced,
+    purged: purged.purged,
+  };
 }
