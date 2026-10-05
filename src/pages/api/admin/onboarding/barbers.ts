@@ -110,7 +110,6 @@ async function exceedsBookableLimit(shopId: string, items: BarberItem[]): Promis
   const limitError = await checkFreeBookableBarberTotal({
     shopId,
     resultingActiveCount: countBookableItems(items),
-    includeSetup: true,
   });
   return limitError !== null;
 }
@@ -218,8 +217,7 @@ export const PUT: APIRoute = async (ctx) => {
         const blocked = await checkFreeBookableBarberTotal({
           shopId,
           resultingActiveCount: countBookableItems(items),
-          includeSetup: true,
-          db: tx,
+                db: tx,
         });
         if (blocked) return blocked;
 
