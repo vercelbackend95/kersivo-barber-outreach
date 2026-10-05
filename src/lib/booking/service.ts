@@ -420,6 +420,10 @@ export async function createInstantBooking(
     notesPrefix?: string;
     /** Skip confirmation email (public demo noise). */
     skipConfirmationEmail?: boolean;
+    /** Staff-side manual booking note. Never used to signal sandbox/test state. */
+    notes?: string;
+    /** Staff booking may continue while public online booking is intentionally paused. */
+    ignorePublicActivityPause?: boolean;
     /**
      * When true, evaluate deposit gate for the shop and create PENDING_PAYMENT
      * hold if deposits are required. Sandbox / [TEST] never collects.
@@ -435,7 +439,7 @@ export async function createInstantBooking(
     const isAdminSandbox =
       options.notesPrefix === OWNER_TEST_BOOKING_NOTES_PREFIX ||
       Boolean(options.notesPrefix?.startsWith(`${OWNER_TEST_BOOKING_NOTES_PREFIX} `));
-    if (!isAdminSandbox) {
+    if (!isAdminSandbox && !options.ignorePublicActivityPause) {
       const pauseOnDate = await getShopPublicActivityPauseOnDate(settings.id, input.date);
       if (pauseOnDate.paused) {
         throw new BookingActionError(
@@ -495,7 +499,7 @@ export async function createInstantBooking(
     const notes =
       options.notesPrefix != null
         ? `${options.notesPrefix} Sandbox booking — not counted in live reports.`
-        : null;
+        : options.notes?.trim() || null;
 
     const shopForPayment = await prisma.shopSettings.findUniqueOrThrow({
       where: { id: service.shopId },
