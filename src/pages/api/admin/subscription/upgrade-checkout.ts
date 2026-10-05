@@ -26,6 +26,7 @@ import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 type UpgradeCheckoutInput = {
   termsAccepted?: unknown;
   checkoutAttemptId?: unknown;
+  returnToOnboarding?: unknown;
 };
 
 function badRequest(message: string, code?: string) {
@@ -126,6 +127,7 @@ export const POST: APIRoute = async (context) => {
       checkoutAttemptId,
       request: context.request,
       source: SAAS_CHECKOUT_SOURCE_ADMIN_UPGRADE,
+      cancelPath: body.returnToOnboarding === true ? '/admin/onboarding' : '/setup/cancel',
       checkEligibility: async (tx) => {
         const eligibility = await resolveFullUpgradeEligibility(access.shopId, new Date(), tx);
         if (eligibility.ok) return null;
