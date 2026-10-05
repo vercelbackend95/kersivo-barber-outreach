@@ -78,6 +78,7 @@ enum EmailOutboundPurpose {
   CLIENT_ONBOARDING_INTERNAL
   CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
   QR_KIT_REQUEST_ACKNOWLEDGEMENT
+  SHOP_DEPARTURE_CONFIRMATION
 }
 
 enum EmailOutboundStatus {
@@ -301,6 +302,43 @@ model ShopSettings {
   qrCodes                            ShopQrCode[]
   qrKitFulfilment                    QrKitFulfilment?
   qrKitFulfilmentEvents              QrKitFulfilmentEvent[]
+  departure                          ShopDeparture?
+}
+
+enum ShopDepartureStatus {
+  /// Service ended; existing future appointments still need handling. Never purged.
+  WINDING_DOWN
+  /// Inactive retention; purge only after retentionEndsAt and re-checks (see shopDeparture.ts).
+  RETENTION
+}
+
+enum ShopDepartureOrigin {
+  DIRECT_STARTER_LEAVE
+  FULL_POST_PERIOD_LEAVE
+  NO_POST_FULL_CHOICE
+}
+
+/// KERSIVO service departure for one shop/location. Never deletes the owner identity, memberships
+/// or other shops; its presence always resolves the shop to SETUP (no public booking).
+model ShopDeparture {
+  id                 String              @id @default(cuid())
+  shopId             String              @unique
+  status             ShopDepartureStatus
+  origin             ShopDepartureOrigin
+  requestedAt        DateTime
+  requestedByUserId  String?
+  requestedByEmail   String?
+  saasSubscriptionId String?
+  serviceEndedAt     DateTime
+  windDownStartedAt  DateTime?
+  retentionStartedAt DateTime?
+  retentionEndsAt    DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([status, retentionEndsAt])
 }
 
 enum ShopQrPlacement {

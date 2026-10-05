@@ -1,4 +1,4 @@
-import type { Prisma, SaasPostFullPlan } from '@prisma/client';
+import type { Prisma, SaasPostFullPlan, ShopDepartureStatus } from '@prisma/client';
 import { prisma } from '../db/client';
 import type { SaasSubscriptionAccessFields } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
@@ -67,8 +67,26 @@ export const PRODUCT_STATE_CAPABILITIES: Readonly<
   FULL_KERSIVO: FULL_KERSIVO_CAPABILITIES,
 };
 
+/**
+ * Departure wind-down: existing appointments stay manageable (incl. reminders) but nothing that
+ * creates new bookings or new public channels (no PUBLIC_BOOKING / BOOKING_PAYMENTS /
+ * MANUAL_BOOKINGS / GOOGLE_BOOKING_SETUP).
+ */
+export const DEPARTURE_WIND_DOWN_CAPABILITIES: readonly KersivoCapability[] = [
+  'BOOKING_CORE',
+  'TEAM',
+  'SERVICES',
+  'RECENT_BOOKING_HISTORY',
+  'CLIENTS_CORE',
+  'AUTOMATED_EMAIL_REMINDERS',
+];
+
+export type KersivoDepartureStatus = 'WINDING_DOWN' | 'RETENTION';
+
 export type KersivoAccessShopFields = PaidShopFields & {
   freeBookingActivatedAt: Date | null;
+  /** ShopDeparture row (status only). Absent / null = no departure. */
+  departure?: { status: ShopDepartureStatus | string } | null;
 };
 
 /** Latest non-PENDING SaaS subscription incl. its explicit post-Full plan choice. */
@@ -79,6 +97,8 @@ export type KersivoSubscriptionFields = SaasSubscriptionAccessFields & {
 export type KersivoAccess = {
   state: KersivoProductState;
   capabilities: readonly KersivoCapability[];
+  /** Set only while the shop has a ShopDeparture (always state SETUP). */
+  departure?: KersivoDepartureStatus;
 };
 
 /**
@@ -89,6 +109,8 @@ export type KersivoAccess = {
  *   never revives Starter after Full, and billing recovery (PAST_DUE after grace / SUSPENDED),
  *   an undecided cancellation or LEAVE all resolve to SETUP (no active service).
  * - A shop that never had Full is Starter when it activated Starter (freeBookingActivatedAt).
+ * - A shop with a ShopDeparture has left KERSIVO: SETUP regardless of freeBookingActivatedAt or a
+ *   STARTER post-Full choice (only paid Full outranks it, and that blocks any purge).
  */
 export function resolveKersivoProductState(
   shop: KersivoAccessShopFields,
@@ -97,6 +119,7 @@ export function resolveKersivoProductState(
 ): KersivoProductState {
   if (isDemoShopId(shop.id)) return 'SETUP';
   if (isPaidShop(shop, subscription, now)) return 'FULL_KERSIVO';
+  if (shop.departure) return 'SETUP';
   if (subscription && String(subscription.status) !== 'PENDING') {
     return String(subscription.postFullPlan ?? '') === 'STARTER' ? 'FREE_BOOKING' : 'SETUP';
   }
@@ -113,7 +136,15 @@ export function resolveKersivoAccess(
   subscription?: KersivoSubscriptionFields | null,
   now: Date = new Date(),
 ): KersivoAccess {
-  return accessForState(resolveKersivoProductState(shop, subscription, now));
+  const state = resolveKersivoProductState(shop, subscription, now);
+  const departureStatus = shop.departure ? String(shop.departure.status) : null;
+  if (state === 'SETUP' && departureStatus && !isDemoShopId(shop.id)) {
+    if (departureStatus === 'WINDING_DOWN') {
+      return { state, capabilities: DEPARTURE_WIND_DOWN_CAPABILITIES, departure: 'WINDING_DOWN' };
+    }
+    return { state, capabilities: PRODUCT_STATE_CAPABILITIES.SETUP, departure: 'RETENTION' };
+  }
+  return accessForState(state);
 }
 
 export function hasKersivoCapability(
@@ -198,6 +229,7 @@ export async function loadKersivoAccess(
       shopPaidAt: true,
       smsRemindersEnabled: true,
       freeBookingActivatedAt: true,
+      departure: { select: { status: true } },
     },
   });
   if (!shop) return accessForState('SETUP');

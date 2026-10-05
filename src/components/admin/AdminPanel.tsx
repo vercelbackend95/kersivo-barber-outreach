@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useStat
 import AdminLayout from './AdminLayout';
 import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
+import ShopDepartureBanner from './ShopDepartureBanner';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
@@ -505,6 +506,7 @@ export default function AdminPanel({
       >
         {sessionPending ? null : (
           <>
+        {!demoMode && !showcaseMode && !isPreviewAccess ? <ShopDepartureBanner /> : null}
         <BookingsAdminPanel
           key="bookings"
           isActive={isBookingsSection && !activeLockedFeature}

@@ -148,6 +148,20 @@ describe('GET /q/{code}', () => {
     expect(backToStarter.headers.get('Location')).toBe('/book/blackline-barbers');
   });
 
+  it('a departed Starter shop keeps its QR records but /q opens no booking flow', async () => {
+    for (const status of ['WINDING_DOWN', 'RETENTION']) {
+      db.shops.set('cmshop1', {
+        ...shop({ freeBookingActivatedAt: new Date('2026-10-01') }),
+        departure: { status },
+      } as ShopRow);
+      const res = await scan(WINDOW_CODE);
+      expect(res.status).toBe(404);
+      expect(res.headers.get('Location')).toBeNull();
+      expectQrHeaders(res);
+    }
+    expect(db.qr.size).toBe(2);
+  });
+
   it('AC: redirects are non-permanent and carry no-store / noindex headers', async () => {
     db.shops.set('cmshop1', shop({ freeBookingActivatedAt: new Date('2026-10-01') }));
     const res = await scan(REBOOK_CODE.toLowerCase());

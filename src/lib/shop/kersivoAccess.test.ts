@@ -235,6 +235,7 @@ describe('loadKersivoAccess', () => {
         shopPaidAt: true,
         smsRemindersEnabled: true,
         freeBookingActivatedAt: true,
+        departure: { select: { status: true } },
       },
     });
     expect(subscriptionFindFirst).toHaveBeenCalledWith(

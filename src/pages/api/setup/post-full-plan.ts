@@ -19,6 +19,10 @@ import {
   ACCOUNT_LIFECYCLE_ACTIONS,
   recordAccountLifecycleEvent,
 } from '@/lib/setup/accountLifecycleAudit';
+import {
+  SHOP_DEPARTURE_IN_PROGRESS,
+  SHOP_DEPARTURE_IN_PROGRESS_MESSAGE,
+} from '@/lib/shop/shopDepartureCopy';
 
 type PostFullChoice = 'STARTER' | 'LEAVE';
 
@@ -80,6 +84,19 @@ export const POST: APIRoute = async (context) => {
 
     if (!subscription) {
       return { response: json({ error: 'No Full KERSIVO subscription found.' }, 404) } as const;
+    }
+
+    const departure = await tx.shopDeparture.findUnique({
+      where: { shopId: access.shopId },
+      select: { id: true },
+    });
+    if (departure) {
+      return {
+        response: json(
+          { error: SHOP_DEPARTURE_IN_PROGRESS_MESSAGE, code: SHOP_DEPARTURE_IN_PROGRESS },
+          409,
+        ),
+      } as const;
     }
 
     const status = String(subscription.status);

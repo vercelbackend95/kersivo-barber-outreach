@@ -16,6 +16,9 @@ const listPublicBlobUrlsForShopPurge = vi.fn();
 const deletePrivateBlobPathsBestEffort = vi.fn();
 const runPostCommitPublicBlobCleanup = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
+const updateMany = vi.fn();
+const findManyDeparture = vi.fn();
+const findManyBooking = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
@@ -23,11 +26,18 @@ vi.mock('@/lib/db/client', () => ({
       findFirst: (...args: unknown[]) => findFirst(...args),
       findMany: (...args: unknown[]) => findMany(...args),
       update: (...args: unknown[]) => update(...args),
+      updateMany: (...args: unknown[]) => updateMany(...args),
       count: (...args: unknown[]) => count(...args),
     },
     shopSettings: {
       findUnique: (...args: unknown[]) => findUniqueShop(...args),
       update: (...args: unknown[]) => updateShop(...args),
+    },
+    shopDeparture: {
+      findMany: (...args: unknown[]) => findManyDeparture(...args),
+    },
+    booking: {
+      findMany: (...args: unknown[]) => findManyBooking(...args),
     },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
@@ -108,13 +118,17 @@ type PurgeWorld = {
   shop: Record<string, unknown> | null;
   openSubscriptions?: number;
   latest: Record<string, unknown> | null;
+  bookings?: Array<{ status: string; startAt: Date; endAt: Date }>;
 };
+
+const RETENTION_ENDED = new Date('2026-08-01T00:00:00.000Z');
 
 const departedShop = {
   id: 'shop-1',
   shopPaidAt: null,
   smsRemindersEnabled: false,
   freeBookingActivatedAt: null,
+  departure: { status: 'RETENTION', retentionEndsAt: RETENTION_ENDED },
 };
 
 const expiredCanceledRow = {
@@ -126,32 +140,42 @@ const expiredCanceledRow = {
   postFullPlan: 'CHOICE_REQUIRED',
 };
 
+const futureBooking = {
+  status: 'BOOKED',
+  startAt: new Date('2026-08-20T10:00:00.000Z'),
+  endAt: new Date('2026-08-20T10:30:00.000Z'),
+};
+
 /**
  * Wire the eligibility reads (pre-gate on the global client, re-check on the tx client).
  * `inTx` overrides the world seen inside the purge transaction to simulate a concurrent change.
  */
 function mockPurgeWorld(world: PurgeWorld, inTx: PurgeWorld = world) {
-  findMany.mockResolvedValue([
+  findManyDeparture.mockResolvedValue([
     {
-      id: 'saas-1',
-      shopId: 'shop-1',
-      customerEmail: 'owner@example.com',
-      retentionEndsAt: new Date('2026-08-01T00:00:00.000Z'),
+      shopId: String(world.shop?.id ?? 'shop-1'),
+      origin: 'DIRECT_STARTER_LEAVE',
+      requestedByEmail: 'owner@example.com',
+      saasSubscriptionId: null,
+      retentionEndsAt: RETENTION_ENDED,
     },
   ]);
   findUniqueShop.mockResolvedValue(world.shop);
   count.mockResolvedValue(world.openSubscriptions ?? 0);
   findFirst.mockResolvedValue(world.latest);
+  findManyBooking.mockResolvedValue(world.bookings ?? []);
   const tx = {
     shopSettings: { findUnique: vi.fn(async () => inTx.shop) },
     saasSubscription: {
       count: vi.fn(async () => inTx.openSubscriptions ?? 0),
       findFirst: vi.fn(async () => inTx.latest),
       update,
+      updateMany,
     },
+    booking: { findMany: vi.fn(async () => inTx.bookings ?? []) },
   };
   transaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) => fn(tx));
-  update.mockResolvedValue({ ...baseRecord, shopId: null });
+  updateMany.mockResolvedValue({ count: 1 });
   return tx;
 }
 
@@ -174,6 +198,11 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     deletePrivateBlobPathsBestEffort.mockReset();
     runPostCommitPublicBlobCleanup.mockReset();
     recordAccountLifecycleEvent.mockReset();
+    updateMany.mockReset();
+    findManyDeparture.mockReset();
+    findManyBooking.mockReset();
+    findManyDeparture.mockResolvedValue([]);
+    findManyBooking.mockResolvedValue([]);
     beginShopPurgeGate.mockResolvedValue({ alreadyStarted: false });
     listPrivateBlobPathsForShopPurge.mockResolvedValue([]);
     listPublicBlobUrlsForShopPurge.mockResolvedValue([]);
@@ -294,16 +323,23 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     expect(markShopUnpaid).toHaveBeenCalledWith('shop-1');
   });
 
-  it('C: purges a genuinely departed shop after retentionEndsAt', async () => {
-    const tx = mockPurgeWorld({ shop: departedShop, latest: expiredCanceledRow });
+  it('C: purges a departed shop once departure retention has ended', async () => {
+    const tx = mockPurgeWorld({ shop: departedShop, latest: null });
 
     const result = await purgeShopsAfterRetentionEnds(PURGE_NOW);
     expect(result.purged).toBe(1);
-    expect(tx.saasSubscription.findFirst).toHaveBeenCalled();
+    expect(findManyDeparture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: 'RETENTION', retentionEndsAt: { lte: PURGE_NOW } },
+      }),
+    );
+    expect(tx.shopSettings.findUnique).toHaveBeenCalled();
+    expect(tx.booking.findMany).toHaveBeenCalled();
     expect(beginShopPurgeGate).toHaveBeenCalledWith('shop-1');
     expect(listPrivateBlobPathsForShopPurge).toHaveBeenCalledWith('shop-1');
     expect(listPublicBlobUrlsForShopPurge).toHaveBeenCalledWith('shop-1');
     expect(purgeShopData).toHaveBeenCalled();
+    expect(updateMany).toHaveBeenCalledWith({ where: { shopId: 'shop-1' }, data: { shopId: null } });
     expect(deletePrivateBlobPathsBestEffort).toHaveBeenCalled();
     expect(runPostCommitPublicBlobCleanup).toHaveBeenCalledWith('shop-1', []);
     expect(recordAccountLifecycleEvent).toHaveBeenCalled();
@@ -318,7 +354,7 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     expect(recordAccountLifecycleEvent).toHaveBeenCalled();
   });
 
-  it('C: an explicit LEAVE choice is purged even for a former Starter shop', async () => {
+  it('C: a Full LEAVE departure of a former Starter shop is purged after retention', async () => {
     mockPurgeWorld({
       shop: { ...departedShop, freeBookingActivatedAt: new Date('2026-05-01T00:00:00.000Z') },
       latest: { ...expiredCanceledRow, postFullPlan: 'LEAVE' },
@@ -334,27 +370,51 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     expect(recordAccountLifecycleEvent).not.toHaveBeenCalled();
   }
 
-  it('A: expired canceled Full + active Starter (explicit choice) → no purge', async () => {
+  it('P0: an expired canceled Full row is never a purge candidate by itself (active Starter kept)', async () => {
+    findManyDeparture.mockResolvedValue([]);
+    findMany.mockResolvedValue([{ id: 'saas-1', shopId: 'shop-1', retentionEndsAt: RETENTION_ENDED }]);
+    expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
+    expect(findMany).not.toHaveBeenCalled();
+    expectNoPurge();
+  });
+
+  it('P0: a shop without a departure fails closed even if listed', async () => {
     mockPurgeWorld({
-      shop: { ...departedShop, freeBookingActivatedAt: new Date('2026-05-01T00:00:00.000Z') },
+      shop: { ...departedShop, freeBookingActivatedAt: new Date('2026-05-01T00:00:00.000Z'), departure: null },
       latest: { ...expiredCanceledRow, postFullPlan: 'STARTER' },
     });
     expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
     expectNoPurge();
   });
 
-  it('A: expired canceled Full + Starter used before Full, no plan recorded → no purge (fail closed)', async () => {
-    for (const postFullPlan of ['UNDECIDED', 'CHOICE_REQUIRED']) {
-      mockPurgeWorld({
-        shop: { ...departedShop, freeBookingActivatedAt: new Date('2026-05-01T00:00:00.000Z') },
-        latest: { ...expiredCanceledRow, postFullPlan },
-      });
-      expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
-    }
+  it('wind-down departures are never purged', async () => {
+    mockPurgeWorld({
+      shop: { ...departedShop, departure: { status: 'WINDING_DOWN', retentionEndsAt: null } },
+      latest: null,
+    });
+    expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
     expectNoPurge();
   });
 
-  it('B: expired canceled Full + current active Full (newer subscription) → no purge', async () => {
+  it('departure retention not ended yet → no purge', async () => {
+    mockPurgeWorld({
+      shop: {
+        ...departedShop,
+        departure: { status: 'RETENTION', retentionEndsAt: new Date('2026-09-01T00:00:00.000Z') },
+      },
+      latest: null,
+    });
+    expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
+    expectNoPurge();
+  });
+
+  it('future operational bookings block the purge', async () => {
+    mockPurgeWorld({ shop: departedShop, latest: null, bookings: [futureBooking] });
+    expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
+    expectNoPurge();
+  });
+
+  it('B: an active Full subscription blocks the purge of a departed shop', async () => {
     mockPurgeWorld({
       shop: departedShop,
       openSubscriptions: 1,
@@ -364,46 +424,35 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     expectNoPurge();
   });
 
-  it('B: a newer canceled-but-still-paid-through Full row also blocks purge of the old row', async () => {
+  it('B: a canceled-but-still-paid-through Full row blocks the purge (active service)', async () => {
     mockPurgeWorld({
       shop: departedShop,
-      latest: { ...expiredCanceledRow, id: 'saas-2', currentPeriodEnd: ACTIVE_FUTURE_END },
+      latest: { ...expiredCanceledRow, id: 'saas-2', status: 'ACTIVE', cancelAtPeriodEnd: true, currentPeriodEnd: ACTIVE_FUTURE_END },
     });
     expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
     expectNoPurge();
   });
 
-  it('D: a historical canceled subscription alone is not purge authority', async () => {
-    // Open subscription (e.g. PAST_DUE / SUSPENDED / PENDING) present for the shop.
-    mockPurgeWorld({ shop: departedShop, openSubscriptions: 1, latest: expiredCanceledRow });
-    expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
-    expectNoPurge();
-  });
-
-  it('D: demo / showcase shops are protected even with an expired canceled row', async () => {
-    mockPurgeWorld({ shop: { ...departedShop, id: DEMO_SHOP_ID }, latest: expiredCanceledRow });
-    findMany.mockResolvedValue([
-      { id: 'saas-1', shopId: DEMO_SHOP_ID, customerEmail: 'x@example.com', retentionEndsAt: PURGE_NOW },
-    ]);
+  it('D: demo / showcase shops are protected even with a departure row', async () => {
+    mockPurgeWorld({ shop: { ...departedShop, id: DEMO_SHOP_ID }, latest: null });
     expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
     expect(findUniqueShop).not.toHaveBeenCalled();
-    expect(update).not.toHaveBeenCalled();
     expectNoPurge();
   });
 
-  it('D: shop changes after the gate (e.g. Starter chosen) → in-transaction recheck aborts and releases the gate', async () => {
+  it('D: a new future booking after the gate → in-transaction recheck aborts and releases the gate', async () => {
     const tx = mockPurgeWorld(
-      { shop: departedShop, latest: expiredCanceledRow },
-      { shop: departedShop, latest: { ...expiredCanceledRow, postFullPlan: 'STARTER' } },
+      { shop: departedShop, latest: null },
+      { shop: departedShop, latest: null, bookings: [futureBooking] },
     );
 
     const result = await purgeShopsAfterRetentionEnds(PURGE_NOW);
 
     expect(result.purged).toBe(0);
     expect(beginShopPurgeGate).toHaveBeenCalledWith('shop-1');
-    expect(tx.saasSubscription.findFirst).toHaveBeenCalled();
+    expect(tx.booking.findMany).toHaveBeenCalled();
     expect(purgeShopData).not.toHaveBeenCalled();
-    expect(tx.saasSubscription.update).not.toHaveBeenCalled();
+    expect(updateMany).not.toHaveBeenCalled();
     expect(updateShop).toHaveBeenCalledWith({ where: { id: 'shop-1' }, data: { purgeStartedAt: null } });
     expect(recordAccountLifecycleEvent).not.toHaveBeenCalled();
   });
@@ -411,17 +460,16 @@ describe('saasSubscriptionLifecycle WP-I', () => {
   it('D: aborted recheck does not release a gate opened by an earlier run', async () => {
     beginShopPurgeGate.mockResolvedValue({ alreadyStarted: true });
     mockPurgeWorld(
-      { shop: departedShop, latest: expiredCanceledRow },
-      { shop: departedShop, latest: expiredCanceledRow, openSubscriptions: 1 },
+      { shop: departedShop, latest: null },
+      { shop: departedShop, latest: null, openSubscriptions: 1 },
     );
     expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
     expect(updateShop).not.toHaveBeenCalled();
   });
 
-  it('unlinks the row without purging when the shop no longer exists', async () => {
+  it('skips a departure whose shop no longer exists', async () => {
     mockPurgeWorld({ shop: null, latest: null });
     expect((await purgeShopsAfterRetentionEnds(PURGE_NOW)).purged).toBe(0);
-    expect(update).toHaveBeenCalledWith({ where: { id: 'saas-1' }, data: { shopId: null } });
     expectNoPurge();
   });
 

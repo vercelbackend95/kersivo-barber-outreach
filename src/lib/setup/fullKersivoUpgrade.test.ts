@@ -46,6 +46,15 @@ describe('Full KERSIVO entitlement after upgrade (central resolver)', () => {
     }
   });
 
+  it('a shop leaving KERSIVO cannot start a Full checkout', async () => {
+    const result = await resolveFullUpgradeEligibility(
+      'shop-1',
+      NOW,
+      dbWith({ ...freeShop, departure: { status: 'WINDING_DOWN' } }, null),
+    );
+    expect(result).toEqual({ ok: false, reason: 'departure_in_progress' });
+  });
+
   it('S2: ended Full + explicit Starter choice → FREE_BOOKING', () => {
     const access = resolveKersivoAccess(
       freeShop,

@@ -10,7 +10,7 @@ export const BILLING_RECOVERY_REQUIRED = 'BILLING_RECOVERY_REQUIRED';
 
 export type FullUpgradeEligibility =
   | { ok: true; state: Exclude<KersivoProductState, 'FULL_KERSIVO'> }
-  | { ok: false; reason: 'not_purchasable' | 'shop_not_found' | 'already_full' | 'billing_recovery' };
+  | { ok: false; reason: 'not_purchasable' | 'shop_not_found' | 'already_full' | 'billing_recovery' | 'departure_in_progress' };
 
 /**
  * Whether an existing shop may start a new Full KERSIVO subscription checkout. Decided from the
@@ -18,6 +18,7 @@ export type FullUpgradeEligibility =
  * shopPaidAt marker alone:
  * - PAST_DUE (in or after grace) / SUSPENDED → fix billing on the existing subscription instead;
  * - FULL_KERSIVO (ACTIVE, cancelAtPeriodEnd before period end, legacy paid) → already subscribed;
+ * - a shop leaving KERSIVO (ShopDeparture) → no new checkout; reactivation goes through support;
  * - SETUP / KERSIVO Starter (incl. CANCELED or ended subscriptions) → may buy.
  * Open / expired PENDING attempts are handled by the shared checkout core.
  */
@@ -36,9 +37,11 @@ export async function resolveFullUpgradeEligibility(
       shopPaidAt: true,
       smsRemindersEnabled: true,
       freeBookingActivatedAt: true,
+      departure: { select: { status: true } },
     },
   });
   if (!shop) return { ok: false, reason: 'shop_not_found' };
+  if (shop.departure) return { ok: false, reason: 'departure_in_progress' };
 
   const subscription = await db.saasSubscription.findFirst({
     where: { shopId: id, status: { not: 'PENDING' } },

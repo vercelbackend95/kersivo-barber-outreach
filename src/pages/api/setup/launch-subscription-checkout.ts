@@ -14,6 +14,7 @@ import {
 } from '../../../lib/setup/authenticatedSaasCheckout';
 import { parseCheckoutAttemptId } from '../../../lib/setup/saasCheckoutGuard';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { shopDepartureInProgressResponse } from '@/lib/shop/shopDeparture';
 
 type LaunchSubscriptionCheckoutInput = {
   termsAccepted?: boolean;
@@ -95,10 +96,13 @@ export const POST: APIRoute = async (context) => {
       checkEligibility: async (tx) => {
         const paidMarker = await tx.shopSettings.findUnique({
           where: { id: access.shopId },
-          select: { shopPaidAt: true },
+          select: { shopPaidAt: true, departure: { select: { status: true } } },
         });
         if (!paidMarker) {
           return jsonResponse({ error: 'Shop not found.' }, 404);
+        }
+        if (paidMarker.departure) {
+          return shopDepartureInProgressResponse();
         }
         if (paidMarker.shopPaidAt != null) {
           console.warn('[launch-subscription-checkout] shopPaidAt set; blocking checkout', {

@@ -25,6 +25,10 @@ import {
   resolveShopPurgeEligibility,
   type ShopPurgeBlockReason,
 } from '@/lib/setup/shopPurgeEligibility';
+import {
+  advanceWindingDownDepartures,
+  materializePostFullDepartures,
+} from '@/lib/shop/shopDeparture';
 
 export type SaasLifecycleSyncResult = {
   record: SaasSubscription | null;
@@ -298,50 +302,38 @@ class ShopPurgeNoLongerEligibleError extends Error {
 }
 
 /**
- * Cron: whole-shop purge once a canceled subscription's retention ends — only for shops that are
- * genuinely departed (see resolveShopPurgeEligibility). Re-checked inside the purge transaction.
+ * Cron: whole-shop purge once a shop's departure retention ends. Candidates come only from the
+ * ShopDeparture lifecycle — a canceled subscription or an old retention date is never purge
+ * authority on its own (see resolveShopPurgeEligibility). Re-checked inside the purge transaction.
  */
 export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Promise<{
   purged: number;
 }> {
-  const candidates = await prisma.saasSubscription.findMany({
+  const candidates = await prisma.shopDeparture.findMany({
     where: {
-      status: 'CANCELED',
+      status: 'RETENTION',
       retentionEndsAt: { lte: now },
-      shopId: { not: null },
     },
     select: {
-      id: true,
       shopId: true,
-      customerEmail: true,
+      origin: true,
+      requestedByEmail: true,
+      saasSubscriptionId: true,
       retentionEndsAt: true,
     },
   });
 
   let purged = 0;
   for (const row of candidates) {
-    const shopId = row.shopId?.trim();
+    const shopId = row.shopId.trim();
     if (!shopId) continue;
 
-    // A canceled row is never purge authority on its own: resolve the shop's current state first.
-    const eligibility = await resolveShopPurgeEligibility({
-      shopId,
-      saasSubscriptionId: row.id,
-      now,
-    });
+    const eligibility = await resolveShopPurgeEligibility({ shopId, now });
     if (!eligibility.ok) {
-      if (eligibility.reason === 'shop_not_found') {
-        await prisma.saasSubscription.update({
-          where: { id: row.id },
-          data: { shopId: null },
-        });
-      } else {
-        console.warn('[saas-lifecycle] retention purge skipped', {
-          shopId,
-          saasSubscriptionId: row.id,
-          reason: eligibility.reason,
-        });
-      }
+      console.warn('[saas-lifecycle] retention purge skipped', {
+        shopId,
+        reason: eligibility.reason,
+      });
       continue;
     }
 
@@ -353,16 +345,11 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
       privateBlobPaths = await listPrivateBlobPathsForShopPurge(shopId);
       publicBlobUrls = await listPublicBlobUrlsForShopPurge(shopId);
       await prisma.$transaction(async (tx) => {
-        const recheck = await resolveShopPurgeEligibility({
-          shopId,
-          saasSubscriptionId: row.id,
-          now,
-          db: tx,
-        });
+        const recheck = await resolveShopPurgeEligibility({ shopId, now, db: tx });
         if (!recheck.ok) throw new ShopPurgeNoLongerEligibleError(recheck.reason);
         await purgeShopData(tx, shopId);
-        await tx.saasSubscription.update({
-          where: { id: row.id },
+        await tx.saasSubscription.updateMany({
+          where: { shopId },
           data: { shopId: null },
         });
       });
@@ -370,7 +357,6 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
       if (error instanceof ShopPurgeNoLongerEligibleError) {
         console.warn('[saas-lifecycle] retention purge aborted: shop no longer eligible', {
           shopId,
-          saasSubscriptionId: row.id,
           reason: error.reason,
         });
         if (gateOpenedHere) {
@@ -400,10 +386,11 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
 
     await recordAccountLifecycleEvent({
       action: ACCOUNT_LIFECYCLE_ACTIONS.SHOP_PURGED_AFTER_RETENTION,
-      email: row.customerEmail,
+      email: row.requestedByEmail,
       shopId,
       meta: {
-        saasSubscriptionId: row.id,
+        departureOrigin: row.origin,
+        saasSubscriptionId: row.saasSubscriptionId,
         retentionEndsAt: row.retentionEndsAt?.toISOString() ?? null,
       },
     });
@@ -415,9 +402,18 @@ export async function purgeShopsAfterRetentionEnds(now: Date = new Date()): Prom
 
 export async function runSaasLifecycleCron(now: Date = new Date()): Promise<{
   suspended: number;
+  departuresCreated: number;
+  windDownsCompleted: number;
   purged: number;
 }> {
   const suspended = await suspendPastDueSubscriptionsPastGrace(now);
+  const departures = await materializePostFullDepartures(now);
+  const windDowns = await advanceWindingDownDepartures(now);
   const purged = await purgeShopsAfterRetentionEnds(now);
-  return { suspended: suspended.suspended, purged: purged.purged };
+  return {
+    suspended: suspended.suspended,
+    departuresCreated: departures.created,
+    windDownsCompleted: windDowns.advanced,
+    purged: purged.purged,
+  };
 }

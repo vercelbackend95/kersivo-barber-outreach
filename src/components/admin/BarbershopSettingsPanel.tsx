@@ -4,6 +4,7 @@ import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import AdminSectionHeader from './AdminSectionHeader';
 import QrKitSettingsCard from './QrKitSettingsCard';
+import LeaveKersivoCard from './LeaveKersivoCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
 import '@/styles/components/admin-barbershop-settings.css';
@@ -1385,6 +1386,7 @@ export default function BarbershopSettingsPanel({
             >
               {billingBusy ? 'Opening billing…' : 'Manage billing'}
             </button>
+            {hasSubscription ? (
             <button
               type="button"
               className="btn btn--secondary"
@@ -1398,6 +1400,7 @@ export default function BarbershopSettingsPanel({
             >
               {cancelAtPeriodEnd ? 'Cancellation scheduled' : 'Cancel subscription'}
             </button>
+            ) : null}
             {(showCancelChoices || postFullPlanChoiceRequired) ? (
               <div className="admin-barbershop-settings__cancel-choice" role="group" aria-label="After Full KERSIVO">
                 <p className="admin-barbershop-settings__card-copy">
@@ -1516,6 +1519,8 @@ export default function BarbershopSettingsPanel({
             </p>
           ) : null}
         </section>
+
+        <LeaveKersivoCard />
 
         <section
           className="admin-barbershop-settings__card admin-barbershop-settings__card--muted"

@@ -7,6 +7,7 @@ const requireVerifiedEmail = vi.fn();
 const transaction = vi.fn();
 const findFirst = vi.fn();
 const update = vi.fn();
+const findDeparture = vi.fn();
 const countActiveBookableBarbers = vi.fn();
 const recordTermsAcceptance = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
@@ -110,8 +111,22 @@ describe('POST /api/setup/post-full-plan', () => {
           findFirst: (...args: unknown[]) => findFirst(...args),
           update: (...args: unknown[]) => update(...args),
         },
+        shopDeparture: {
+          findUnique: (...args: unknown[]) => findDeparture(...args),
+        },
       }),
     );
+    findDeparture.mockResolvedValue(null);
+  });
+
+  it('refuses any post-Full choice once the shop is leaving KERSIVO (no silent Starter)', async () => {
+    findFirst.mockResolvedValue(subscription({ status: 'CANCELED', cancelAtPeriodEnd: false }));
+    findDeparture.mockResolvedValue({ id: 'dep-1' });
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+    expect(update).not.toHaveBeenCalled();
+    expect(recordTermsAcceptance).not.toHaveBeenCalled();
   });
 
   it('returns 401 without a signed-in session', async () => {

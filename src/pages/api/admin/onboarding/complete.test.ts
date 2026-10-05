@@ -341,6 +341,20 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       expect(res.body.code).toBe('POST_FULL_PLAN_CHOICE_REQUIRED');
     });
 
+    it('a departed Starter shop with a stale activation marker is never reactivated', async () => {
+      const marker = new Date('2026-05-01T00:00:00.000Z');
+      db.shop = {
+        ...freshShop({ freeBookingActivatedAt: marker }),
+        departure: { status: 'RETENTION' },
+      } as ShopRow;
+      const res = await complete({ termsAccepted: true, plan: 'STARTER' });
+
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+      expect(db.shop.freeBookingActivatedAt).toBe(marker);
+      expect(db.legal).toHaveLength(0);
+    });
+
     it('former Full shop that explicitly chose Starter (post-Full choice) replays as already_free', async () => {
       db.endedFullSubscriptions = 1;
       db.subscription = { status: 'CANCELED', currentPeriodEnd: null, postFullPlan: 'STARTER' };

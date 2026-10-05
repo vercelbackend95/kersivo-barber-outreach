@@ -21,6 +21,7 @@ import {
 import { parseCheckoutAttemptId } from '@/lib/setup/saasCheckoutGuard';
 import { SAAS_CHECKOUT_SOURCE_ADMIN_UPGRADE } from '@/lib/setup/saasSubscription';
 import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
+import { shopDepartureInProgressResponse } from '@/lib/shop/shopDeparture';
 
 type UpgradeCheckoutInput = {
   termsAccepted?: unknown;
@@ -146,6 +147,8 @@ export const POST: APIRoute = async (context) => {
             );
           case 'shop_not_found':
             return jsonResponse({ error: 'Shop not found.' }, 404);
+          case 'departure_in_progress':
+            return shopDepartureInProgressResponse();
           case 'not_purchasable':
           default:
             return jsonResponse(

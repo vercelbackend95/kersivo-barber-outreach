@@ -71,6 +71,15 @@ describe('shopAcceptsPublicBookings', () => {
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
   });
 
+  it('denies a departed Starter shop (wind-down or retention) despite its activation marker', async () => {
+    for (const status of ['WINDING_DOWN', 'RETENTION']) {
+      shopFindUnique.mockResolvedValue(
+        shopRow({ freeBookingActivatedAt: new Date(), departure: { status } }),
+      );
+      expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
+    }
+  });
+
   it('denies missing shops', async () => {
     shopFindUnique.mockResolvedValue(null);
     expect(await shopAcceptsPublicBookings('nope')).toBe(false);

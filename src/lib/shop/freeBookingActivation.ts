@@ -18,6 +18,7 @@ import {
   type FreeBookableBarberLimitError,
 } from './freeBookableBarbers';
 import { loadKersivoAccess } from './kersivoAccess';
+import { SHOP_DEPARTURE_IN_PROGRESS, SHOP_DEPARTURE_IN_PROGRESS_MESSAGE } from './shopDepartureCopy';
 import { ensureShopBookingSlug } from '../booking/bookingSlug';
 
 export const ONBOARDING_REQUIREMENTS_MESSAGE =
@@ -43,6 +44,7 @@ export type FreeBookingActivationFailure =
   | { ok: false; status: 400; code: 'ONBOARDING_INCOMPLETE'; error: string }
   | { ok: false; status: 400; code: 'PLAN_CHOICE_REQUIRED'; error: string }
   | { ok: false; status: 409; code: 'POST_FULL_PLAN_CHOICE_REQUIRED'; error: string }
+  | { ok: false; status: 409; code: typeof SHOP_DEPARTURE_IN_PROGRESS; error: string }
   | { ok: false; status: 400; code: 'TERMS_NOT_ACCEPTED'; error: string }
   | { ok: false; status: 400; code: 'ACCOUNT_EMAIL_REQUIRED'; error: string }
   | FreeBookableBarberLimitError;
@@ -113,10 +115,19 @@ export async function activateFreeBooking(params: {
     };
 
     // Authoritative decision: state resolved under the shop lock overrides the pre-lock read.
-    const { state } = await loadKersivoAccess(shopId, now, tx);
+    const { state, departure } = await loadKersivoAccess(shopId, now, tx);
     if (state === 'FULL_KERSIVO') {
       await completeOnboarding();
       return { ok: true, outcome: 'full_kersivo' };
+    }
+    if (departure) {
+      // A departed shop never reactivates through onboarding, even with a stale Starter marker.
+      return {
+        ok: false,
+        status: 409,
+        code: SHOP_DEPARTURE_IN_PROGRESS,
+        error: SHOP_DEPARTURE_IN_PROGRESS_MESSAGE,
+      };
     }
     if (state === 'SETUP') {
       // After Full, the legacy marker never grants Starter: only the post-Full choice can.
