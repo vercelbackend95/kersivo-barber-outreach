@@ -26,14 +26,18 @@ function parseBookingStatusFilter(
   return { ok: false };
 }
 
-function nextIsoCalendarDay(date: string): string {
+function addIsoCalendarDays(date: string, days: number): string {
   const [year, month, day] = date.split('-').map(Number);
-  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  const shifted = new Date(Date.UTC(year, month - 1, day + days));
   return [
-    next.getUTCFullYear(),
-    String(next.getUTCMonth() + 1).padStart(2, '0'),
-    String(next.getUTCDate()).padStart(2, '0'),
+    shifted.getUTCFullYear(),
+    String(shifted.getUTCMonth() + 1).padStart(2, '0'),
+    String(shifted.getUTCDate()).padStart(2, '0'),
   ].join('-');
+}
+
+function nextIsoCalendarDay(date: string): string {
+  return addIsoCalendarDays(date, 1);
 }
 
 function getLondonDayRange(date: string) {
@@ -241,16 +245,33 @@ export const GET: APIRoute = async (ctx) => {
   const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
 
-  // Today / upcoming day views and per-barber stats stay operational on Free. Past days, the
-  // history list/search and the unbounded all-bookings list are Full booking history.
+  // Today/upcoming views stay core. Starter receives bounded recent history; Full remains unbounded.
   const dateParam = ctx.url.searchParams.get('date');
   const londonToday = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const starterHistoryFloorDate = addIsoCalendarDays(londonToday, -90);
+  const starterHistoryFloorStart = getLondonDayRange(starterHistoryFloorDate).gte;
   const operationalDay =
     ctx.url.searchParams.get('range') === 'today'
     || (dateParam != null && ISO_DATE_PATTERN.test(dateParam) && dateParam >= londonToday);
+
+  let boundedRecentHistory = false;
   if (view === 'history' || (view !== 'stats' && !operationalDay)) {
-    const grant = await requireAdminProductCapability(access, 'FULL_BOOKING_HISTORY');
+    const grant = await requireAdminProductCapability(access, 'RECENT_BOOKING_HISTORY');
     if (grant instanceof Response) return grant;
+    const hasFullHistory =
+      grant.productAccess === null || grant.productAccess.capabilities.includes('FULL_BOOKING_HISTORY');
+    boundedRecentHistory = !hasFullHistory;
+
+    // Direct deep-links to an individual day older than Starter's 90-day window remain a Full gate.
+    if (
+      boundedRecentHistory &&
+      dateParam != null &&
+      ISO_DATE_PATTERN.test(dateParam) &&
+      dateParam < starterHistoryFloorDate
+    ) {
+      const fullGrant = await requireAdminProductCapability(access, 'FULL_BOOKING_HISTORY');
+      if (fullGrant instanceof Response) return fullGrant;
+    }
   }
 
   if (view === 'history') {
@@ -275,6 +296,8 @@ export const GET: APIRoute = async (ctx) => {
       : undefined;
 
     const andConditions: Prisma.BookingWhereInput[] = [{ barber: { shopId } }];
+    // Server-authoritative Starter boundary. This also protects search, pagination and crafted URLs.
+    if (boundedRecentHistory) andConditions.push({ startAt: { gte: starterHistoryFloorStart } });
     // Shop-wide for Barber (and Owner/Manager). Optional colleague filter via ?barberId=.
     if (barberId && barberId !== 'all') andConditions.push({ barberId });
     if (startAtFilter) andConditions.push({ startAt: startAtFilter });
@@ -364,8 +387,9 @@ export const GET: APIRoute = async (ctx) => {
     ? getTodayRangeInLondon()
     : date
       ? getLondonDayRange(date)
-
-      : undefined;
+      : boundedRecentHistory
+        ? { gte: starterHistoryFloorStart }
+        : undefined;
 
   const bookings = await findBookingsWithFallback({
     where: {
