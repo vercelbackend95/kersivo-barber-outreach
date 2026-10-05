@@ -32,6 +32,7 @@ import {
 import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
+import NewBookingPanel from './NewBookingPanel';
 import { Clock, ListOrdered, Lock, Plus } from '../lucide-react';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { isCapabilityLocked } from '@/lib/admin/productLocks';
@@ -689,6 +690,7 @@ export default function BookingsAdminPanel({
   const [loggedIn, setLoggedIn] = useState(true);
   const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
   const [canManageBookings, setCanManageBookings] = useState(true);
+  const [canCreateManualBooking, setCanCreateManualBooking] = useState(false);
   const [canEditTeam, setCanEditTeam] = useState(true);
   const urlBookingDate = readInitialBookingDateFromUrl();
   const urlBookingId = readInitialBookingIdFromUrl();
@@ -710,6 +712,8 @@ export default function BookingsAdminPanel({
   const [editingBarberAvatarPreviewUrl, setEditingBarberAvatarPreviewUrl] = useState<string | null>(null);
 
   const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+  const [manualBookingMessage, setManualBookingMessage] = useState('');
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'team' | 'reports' | null>(null);
@@ -755,6 +759,7 @@ export default function BookingsAdminPanel({
   const historyLocked = isCapabilityLocked(productGate, 'recentBookingHistory');
   const fullHistoryLocked = isCapabilityLocked(productGate, 'fullBookingHistory');
   const clientsLocked = isCapabilityLocked(productGate, 'clients');
+  const manualBookingsLocked = isCapabilityLocked(productGate, 'manualBookings');
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = getTodayLondonDate(clock.nowMs());
     const starterFloor = getStarterHistoryFloorLondonDate(clock.nowMs());
@@ -1098,7 +1103,12 @@ export default function BookingsAdminPanel({
         };
         setSessionBarberId(payload.barberId ?? null);
         const perms = payload.permissions ?? [];
-        setCanManageBookings(perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER');
+        const managesBookings =
+          perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER';
+        setCanManageBookings(managesBookings);
+        setCanCreateManualBooking(
+          managesBookings || perms.includes('bookings.self') || payload.role === 'BARBER',
+        );
         setCanEditTeam(
           perms.includes('catalog.manage') ||
             perms.includes('members.manage') ||
@@ -2747,6 +2757,7 @@ export default function BookingsAdminPanel({
       )}
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
+      {manualBookingMessage && <p className="admin-inline-success">{manualBookingMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {mode !== 'reports' && (
         <>
@@ -3042,6 +3053,39 @@ export default function BookingsAdminPanel({
         >
           {barberProfileView}
         </AdminErrorBoundary>
+      ) : null}
+
+      {canCreateManualBooking && !isPublicDemo && (mode === 'dashboard' || mode === 'history') ? (
+        <button
+          type="button"
+          className="admin-manual-booking-fab"
+          aria-label="Create booking"
+          title="Create booking"
+          onClick={() => {
+            setManualBookingMessage('');
+            if (manualBookingsLocked) {
+              openUpgrade('manual_bookings');
+              return;
+            }
+            setIsNewBookingOpen(true);
+          }}
+        >
+          <Plus aria-hidden />
+        </button>
+      ) : null}
+
+      {isNewBookingOpen ? (
+        <NewBookingPanel
+          fixedBarberId={!canManageBookings ? sessionBarberId : null}
+          onClose={() => setIsNewBookingOpen(false)}
+          onCreated={(created) => {
+            setIsNewBookingOpen(false);
+            setManualBookingMessage('Booking created.');
+            setSelectedDate(created.date);
+            setTimelineFocusBookingId(created.id);
+            if (mode === 'history') onBackToDashboard?.();
+          }}
+        />
       ) : null}
 
       <HistoryBookingStatusSheet
