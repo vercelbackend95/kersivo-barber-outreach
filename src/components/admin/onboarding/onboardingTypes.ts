@@ -62,8 +62,10 @@ export type OnboardingState = {
   };
   /** Signed-in SETUP shop that finished setup but has not activated Free Booking yet. */
   freeActivationRequired?: boolean;
-  /** Max barbers accepting online bookings, or null when unlimited. */
+  /** Current-plan enforced max barbers accepting online bookings, or null when not limited yet. */
   freeBookableBarberLimit?: number | null;
+  /** Starter plan cap shown before plan selection; does not constrain SETUP. */
+  starterBookableBarberLimit?: number | null;
   /** Real public booking page when the shop accepts public bookings. */
   bookingUrl?: string | null;
   /** Present on the /complete response only. */
