@@ -12,6 +12,7 @@ import {
   calculatePlatformFeePence,
   FULL_PAYMENT_RETAINED_CAP_PENCE,
   kersivoPlatformFeeBps,
+  STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
 } from '@/lib/booking/bookingPaymentPolicy';
 import {
   canStartBookingPaymentsOnboarding,
@@ -145,6 +146,17 @@ export const GET: APIRoute = async (ctx) => {
     paid: isPaidShop(shop),
     productState: kersivoAccess.state,
     bookingPaymentMode: shop.bookingPaymentMode,
+    effectiveBookingPaymentPolicy:
+      kersivoAccess.state === 'FREE_BOOKING' ? 'STARTER_FIXED' : shop.bookingPaymentMode,
+    paymentControlsEditable: kersivoAccess.state === 'FULL_KERSIVO',
+    starterPaymentPolicy:
+      kersivoAccess.state === 'FREE_BOOKING'
+        ? {
+            minimumOnlinePaymentPence: STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
+            payInFullAvailable: true,
+            publicPayAtShop: false,
+          }
+        : null,
     depositsEnabled: shop.depositsEnabled,
     depositAmountPence: BOOKING_DEPOSIT_PENCE,
     bookingPaymentsAvailable: canStartBookingPaymentsOnboarding({
@@ -154,7 +166,10 @@ export const GET: APIRoute = async (ctx) => {
     bookingPaymentsReady: gate.ok,
     bookingPaymentsGateReason: gate.reason,
     collectReady:
-      gate.ok && (shop.bookingPaymentMode === 'DEPOSIT' || shop.bookingPaymentMode === 'FULL'),
+      gate.ok &&
+      (kersivoAccess.state === 'FREE_BOOKING' ||
+        shop.bookingPaymentMode === 'DEPOSIT' ||
+        shop.bookingPaymentMode === 'FULL'),
     platformFeeBps,
     platformFeeExamplePence:
       platformFeeBps === null ? null : calculatePlatformFeePence(BOOKING_DEPOSIT_PENCE, platformFeeBps),
