@@ -8,6 +8,7 @@ import {
   withPrismaQuotaFallback,
 } from '../../lib/db/resilience';
 import { shopAcceptsPublicBookings } from '../../lib/setup/shopPublicBookingGate';
+import { loadKersivoAccess } from '../../lib/shop/kersivoAccess';
 import {
   publicBookingPageSeo,
   resolvePublicBookingIdentifier,
@@ -63,6 +64,7 @@ async function loadBookingPage() {
     return { kind: 'not_found' as const };
   }
 
+  const productAccess = await loadKersivoAccess(shopId);
   const acceptsPublic = await shopAcceptsPublicBookings(shopId);
   if (!acceptsPublic) {
     return {
@@ -71,6 +73,7 @@ async function loadBookingPage() {
       services: [],
       barbers: [],
       bookingPaymentMode: 'NONE' as const,
+      starterPaymentPolicy: productAccess.state === 'FREE_BOOKING',
       bookingUnavailable: true,
     };
   }
@@ -102,6 +105,7 @@ async function loadBookingPage() {
     services,
     barbers,
     bookingPaymentMode,
+    starterPaymentPolicy: productAccess.state === 'FREE_BOOKING',
     bookingUnavailable: false,
   };
 }
@@ -129,6 +133,7 @@ const shop = resolvedPage?.shop ?? null;
 const services = resolvedPage?.services ?? [];
 const barbers = resolvedPage?.barbers ?? [];
 const bookingPaymentMode = resolvedPage?.bookingPaymentMode ?? 'NONE';
+const starterPaymentPolicy = Boolean(resolvedPage?.starterPaymentPolicy);
 const bookingUnavailable = !resolvedPage || resolvedPage.bookingUnavailable;
 const seo = shop ? publicBookingPageSeo(shop) : null;
 const pageTitle = shop ? `Book — ${shop.name}` : 'Book — KERSIVO';
@@ -161,6 +166,7 @@ const createUrl = shop ? `/api/public/bookings/${shop.id}/create` : '';
           publicShopId={shop.id}
           publicCreateUrl={createUrl}
           bookingPaymentMode={bookingPaymentMode}
+          starterPaymentPolicy={starterPaymentPolicy}
           services={services.map((s) => ({
             id: s.id,
             name: s.name,
