@@ -64,8 +64,10 @@ export type OnboardingState = {
   freeActivationRequired?: boolean;
   /** SETUP shop with an unfinished (PENDING) Full KERSIVO checkout. */
   fullCheckoutPending?: boolean;
-  /** SETUP shop whose Full subscription ended: Starter is chosen via the post-Full plan choice. */
+  /** SETUP shop whose Full subscription ended/cancelled: Starter uses the post-Full plan choice. */
   postFullPlanChoiceRequired?: boolean;
+  /** Existing Full subscription has a billing problem and must be recovered/cancelled before a new plan choice. */
+  billingRecoveryRequired?: boolean;
   /** Max barbers accepting online bookings, or null when unlimited. */
   freeBookableBarberLimit?: number | null;
   /** Real public booking page when the shop accepts public bookings. */
@@ -175,6 +177,9 @@ export const FULL_PLAN_CARD = {
 } as const;
 
 export const PLAN_CHOICE_STRIPE_FEES_COPY = 'Stripe processing fees apply to online card payments.';
+
+export const BILLING_RECOVERY_COPY =
+  'Your existing Full KERSIVO subscription needs attention before you can choose another plan. Open billing to update payment details or cancel the subscription.';
 
 export const STARTER_PAY_AT_SHOP_COPY =
   'Starter works with Pay at shop — no Stripe account needed. Connect Stripe later in Settings if you want deposits or card payments.';
