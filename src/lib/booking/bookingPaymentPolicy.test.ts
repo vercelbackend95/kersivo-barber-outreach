@@ -3,6 +3,7 @@ import {
   BOOKING_DEPOSIT_CAP_PENCE,
   FULL_KERSIVO_PLATFORM_FEE_BPS,
   KERSIVO_STARTER_PLATFORM_FEE_BPS,
+  STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
   bookingPaymentModeForLegacyDepositToggle,
   buildBookingPaymentSnapshot,
   calculatePlatformFeePence,
@@ -12,6 +13,8 @@ import {
   requiresOnlineBookingPayment,
   resolveBookingPaymentSettlement,
   resolveRequiredBookingPayment,
+  resolveStarterPublicPaymentMode,
+  starterPublicServicePriceAllowed,
   resolveStoredBookingPayment,
 } from './bookingPaymentPolicy';
 import { BOOKING_DEPOSIT_PENCE, resolveBookingDepositPence } from './depositGate';
@@ -63,6 +66,45 @@ describe('bookingPaymentPolicy — required payment', () => {
   it('negative / fractional prices are clamped to whole non-negative pence', () => {
     expect(resolveRequiredBookingPayment({ mode: 'FULL', servicePricePence: -100 }).amountPence).toBe(0);
     expect(resolveRequiredBookingPayment({ mode: 'FULL', servicePricePence: 1250.9 }).amountPence).toBe(1250);
+  });
+});
+
+describe('bookingPaymentPolicy — v1.19 Starter public payment policy', () => {
+  it('locks the Starter public service floor at exactly £5', () => {
+    expect(STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE).toBe(500);
+    expect(starterPublicServicePriceAllowed(499)).toBe(false);
+    expect(starterPublicServicePriceAllowed(500)).toBe(true);
+    expect(starterPublicServicePriceAllowed(3000)).toBe(true);
+  });
+
+  it('rejects Starter public services below £5', () => {
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 499, requestedChoice: 'FULL' })).toMatchObject({
+      ok: false,
+      code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+    });
+  });
+
+  it('normalises an exactly £5 Starter service to one FULL £5 payment', () => {
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 500 })).toEqual({ ok: true, mode: 'FULL' });
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 500, requestedChoice: 'DEPOSIT' })).toEqual({
+      ok: true,
+      mode: 'FULL',
+    });
+  });
+
+  it('requires an explicit deposit/full choice above £5', () => {
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 3000 })).toMatchObject({
+      ok: false,
+      code: 'STARTER_PAYMENT_CHOICE_REQUIRED',
+    });
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 3000, requestedChoice: 'DEPOSIT' })).toEqual({
+      ok: true,
+      mode: 'DEPOSIT',
+    });
+    expect(resolveStarterPublicPaymentMode({ servicePricePence: 3000, requestedChoice: 'FULL' })).toEqual({
+      ok: true,
+      mode: 'FULL',
+    });
   });
 });
 
