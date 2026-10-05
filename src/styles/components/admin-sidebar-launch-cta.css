@@ -229,3 +229,20 @@
   height: 3.4rem;
   border-radius: 0.55rem;
 }
+
+
+.admin-sidebar-launch-cta__disclosure {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
+
+.admin-sidebar-launch-cta__error {
+  margin: 0.35rem 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--danger, #ff6b6b);
+}
