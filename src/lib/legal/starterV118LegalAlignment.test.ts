@@ -11,6 +11,10 @@ const read = (name: string) => readFileSync(join(here, '../../pages', name), 'ut
 const terms = read('terms.astro');
 const privacy = read('privacy.astro');
 const dpa = read('dpa.astro');
+const normalize = (value: string) => value.replace(/\s+/g, ' ');
+const termsText = normalize(terms);
+const privacyText = normalize(privacy);
+const dpaText = normalize(dpa);
 
 describe('v1.18 legal/product alignment', () => {
   it('preserves Full KERSIVO £39/month while adding genuine Starter £0/month', () => {
@@ -23,12 +27,12 @@ describe('v1.18 legal/product alignment', () => {
   });
 
   it('states 0% KERSIVO fee but keeps Stripe processing fees separate', () => {
-    expect(terms).toContain('0% KERSIVO commission / platform / application fee');
+    expect(termsText).toContain('0% KERSIVO commission / platform / application fee');
     expect(terms).toContain('Standard Stripe payment-processing fees still apply');
-    expect(privacy).toContain('0% KERSIVO application / platform fee');
-    expect(privacy).toContain('Stripe processing fees are separate');
-    expect(dpa).toContain('0% application / platform fee');
-    expect(dpa).toContain('Stripe processing fees are');
+    expect(privacyText).toContain('0% KERSIVO application / platform fee');
+    expect(privacyText).toContain('Stripe processing fees are separate');
+    expect(dpaText).toContain('0% application / platform fee');
+    expect(dpaText).toContain('Stripe processing fees are');
   });
 
   it('uses Standard for new Connect onboarding while retaining historical Express compatibility', () => {
@@ -42,12 +46,12 @@ describe('v1.18 legal/product alignment', () => {
   });
 
   it('distinguishes Full downgrade from complete KERSIVO departure', () => {
-    expect(terms).toContain('Ending a Full subscription does <strong>not</strong> automatically mean leaving KERSIVO');
+    expect(termsText).toContain('Ending a Full subscription does <strong>not</strong> automatically mean leaving KERSIVO');
     expect(terms).toContain('Existing future accepted');
     expect(terms).toContain('not silently deleted');
-    expect(privacy).toContain('Moving from Full KERSIVO to KERSIVO Starter does');
-    expect(privacy).toContain('not</strong> start the post-service retention window');
-    expect(dpa).toContain('moving from Full KERSIVO to KERSIVO Starter does <strong>not</strong> end the Services');
+    expect(privacyText).toContain('Moving from Full KERSIVO to KERSIVO Starter does');
+    expect(privacyText).toContain('not</strong> start the post-service retention window');
+    expect(dpaText).toContain('moving from Full KERSIVO to KERSIVO Starter does <strong>not</strong> end the Services');
     expect(SAAS_EXPORT_RETENTION_DAYS).toBe(30);
   });
 
@@ -64,12 +68,12 @@ describe('v1.18 legal/product alignment', () => {
   });
 
   it('keeps the free-plan liability floor above zero and separates Stripe-paid revenue share', () => {
-    expect(terms).toContain('greater of <strong>(a) £1,000</strong>');
-    expect(terms).toContain('total fees paid by the Client to KERSIVO');
-    expect(terms).toContain('compensation or revenue share from Stripe');
-    expect(terms).toContain('not a commission or fee deducted');
-    expect(privacy).toContain('partner compensation / revenue share');
-    expect(dpa).toContain('partner compensation / revenue share');
+    expect(termsText).toContain('greater of <strong>(a) £1,000</strong>');
+    expect(termsText).toContain('total fees paid by the Client to KERSIVO');
+    expect(termsText).toContain('compensation or revenue share from Stripe');
+    expect(termsText).toContain('not a commission or fee deducted');
+    expect(privacyText).toContain('partner compensation / revenue share');
+    expect(dpaText).toContain('partner compensation / revenue share');
   });
 
   it('bumps the material legal package versions together', () => {
