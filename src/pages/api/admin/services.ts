@@ -45,7 +45,7 @@ export const GET: APIRoute = async (ctx) => {
   const shopId = access.shopId;
 
   try {
-    const [services, categories] = await Promise.all([
+    const [services, categories, productAccess] = await Promise.all([
       prisma.service.findMany({
         where: { shopId },
         orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
@@ -68,10 +68,19 @@ export const GET: APIRoute = async (ctx) => {
           }
         }
       }),
-      loadMergedServiceCategories(shopId)
+      loadMergedServiceCategories(shopId),
+      loadKersivoAccess(shopId),
     ]);
 
-    return new Response(JSON.stringify({ services, categories }));
+    return new Response(
+      JSON.stringify({
+        services,
+        categories,
+        productState: productAccess.state,
+        starterMinActiveServicePricePence:
+          productAccess.state === 'FREE_BOOKING' ? STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE : null,
+      }),
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to load services.';
     return new Response(JSON.stringify({ error: message }), { status: 500 });
