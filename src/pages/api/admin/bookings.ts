@@ -3,7 +3,11 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdminContext } from '../../../lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { requireAdminProductCapability } from '@/lib/admin/productCapability';
+import {
+  adminProductCapabilityEnforced,
+  requireAdminProductCapability,
+} from '@/lib/admin/productCapability';
+import { hasKersivoCapability, loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { requireLinkedBarber, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
@@ -61,8 +65,13 @@ function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | n
 
 function withClientTags<
   T extends { client?: { tags?: string[] | null; avatarUrl?: string | null } | null }
->(booking: T): Omit<T, 'client'> & { clientTags: string[]; clientAvatarUrl: string | null } {
+>(
+  booking: T,
+  advancedClients = true,
+): Omit<T, 'client'> & { clientTags: string[]; clientAvatarUrl: string | null } {
   const { client, ...rest } = booking;
+  // Client tags and avatars are Advanced Clients (Full) data; Clients Core never receives them.
+  if (!advancedClients) return { ...rest, clientTags: [], clientAvatarUrl: null };
   return {
     ...rest,
     clientTags: Array.isArray(client?.tags)
@@ -245,6 +254,13 @@ export const GET: APIRoute = async (ctx) => {
   const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
 
+  for (const key of ['date', 'from', 'to'] as const) {
+    const value = ctx.url.searchParams.get(key);
+    if (value && !ISO_DATE_PATTERN.test(value)) {
+      return new Response(JSON.stringify({ error: 'Invalid date.' }), { status: 400 });
+    }
+  }
+
   // Today/upcoming views stay core. Starter receives bounded recent history; Full remains unbounded.
   const dateParam = ctx.url.searchParams.get('date');
   const londonToday = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
@@ -273,6 +289,11 @@ export const GET: APIRoute = async (ctx) => {
       if (fullGrant instanceof Response) return fullGrant;
     }
   }
+
+  const advancedClients =
+    view === 'stats' ||
+    !adminProductCapabilityEnforced(access) ||
+    hasKersivoCapability(await loadKersivoAccess(shopId), 'CLIENTS');
 
   if (view === 'history') {
     const barberId = ctx.url.searchParams.get('barberId');
@@ -347,7 +368,7 @@ export const GET: APIRoute = async (ctx) => {
       bookings: page
         .map(withHistoricalServiceName)
         .map(withEffectiveBookingStatus)
-        .map(withClientTags)
+        .map((b) => withClientTags(b, advancedClients))
         .map((b) => withClientEmailVisibility(b, showEmail)),
       hasMore,
       cursor: nextCursor,
@@ -383,13 +404,21 @@ export const GET: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Invalid booking status.' }), { status: 400 });
   }
 
-  const startAtRange = range === 'today'
+  const requestedRange = range === 'today'
     ? getTodayRangeInLondon()
     : date
       ? getLondonDayRange(date)
-      : boundedRecentHistory
-        ? { gte: starterHistoryFloorStart }
-        : undefined;
+      : undefined;
+  // Starter's rolling window is a hard floor for every list shape, not only the history view.
+  const startAtRange = boundedRecentHistory
+    ? {
+        ...requestedRange,
+        gte:
+          requestedRange && requestedRange.gte > starterHistoryFloorStart
+            ? requestedRange.gte
+            : starterHistoryFloorStart,
+      }
+    : requestedRange;
 
   const bookings = await findBookingsWithFallback({
     where: {
@@ -412,7 +441,7 @@ export const GET: APIRoute = async (ctx) => {
       bookings: bookings
         .map(withHistoricalServiceName)
         .map(withEffectiveBookingStatus)
-        .map(withClientTags)
+        .map((b) => withClientTags(b, advancedClients))
         .map((b) => withClientEmailVisibility(b, showEmail)),
       emailHidden: !showEmail,
     }),

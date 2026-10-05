@@ -287,6 +287,24 @@ describe('GET /api/admin/bookings', () => {
     expect(body.bookings[0]?.client).toBeUndefined();
   });
 
+  it('Starter (Clients Core) never receives Advanced Clients tags or avatars in booking lists', async () => {
+    loadKersivoAccessMock.mockResolvedValue(accessForState('FREE_BOOKING'));
+    bookingFindMany.mockResolvedValue([sampleBooking()]);
+
+    for (const url of [
+      'http://localhost/api/admin/bookings?range=today',
+      'http://localhost/api/admin/bookings?view=history&limit=25',
+    ]) {
+      const res = await GET(makeContext(url));
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        bookings: Array<{ clientTags: string[]; clientAvatarUrl: string | null; client?: unknown }>;
+      };
+      expect(body.bookings[0]).toMatchObject({ clientTags: [], clientAvatarUrl: null });
+      expect(body.bookings[0]).not.toHaveProperty('client');
+    }
+  });
+
   it('falls back to legacy select when historical columns are missing (P2022)', async () => {
     const missingColumn = new Prisma.PrismaClientKnownRequestError(
       'The column `Booking.serviceNameAtBooking` does not exist in the current database.',

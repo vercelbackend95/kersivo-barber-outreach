@@ -20,6 +20,7 @@ const state = vi.hoisted(() => ({
   access: null as unknown as TestAccess,
   product: 'FREE_BOOKING' as KersivoProductState,
   prismaCalls: [] as string[],
+  prismaArgs: [] as Array<{ call: string; args: unknown[] }>,
 }));
 
 const { loadKersivoAccessSpy, openaiCreate, checkDurableRateLimit } = vi.hoisted(() => ({
@@ -63,8 +64,9 @@ vi.mock('@/lib/db/client', () => {
     new Proxy(
       {},
       {
-        get: (_t, method) => (..._args: unknown[]) => {
+        get: (_t, method) => (...args: unknown[]) => {
           state.prismaCalls.push(`${name}.${String(method)}`);
+          state.prismaArgs.push({ call: `${name}.${String(method)}`, args });
           return Promise.resolve(emptyResult(String(method)));
         },
       },
@@ -179,25 +181,10 @@ const PAID_ROUTES: GatedRoute[] = [
     capability: 'REPORTS',
   },
   {
-    name: 'C GET /api/admin/clients',
-    load: () => import('@/pages/api/admin/clients'),
-    method: 'GET',
-    url: 'http://localhost/api/admin/clients',
-    capability: 'CLIENTS',
-  },
-  {
     name: 'D GET /api/admin/clients/[clientId]/notes (nested)',
     load: () => import('@/pages/api/admin/clients/[clientId]/notes'),
     method: 'GET',
     url: 'http://localhost/api/admin/clients/client-1/notes',
-    params: { clientId: 'client-1' },
-    capability: 'CLIENTS',
-  },
-  {
-    name: 'D GET /api/admin/clients/[clientId] (nested)',
-    load: () => import('@/pages/api/admin/clients/[clientId]/index'),
-    method: 'GET',
-    url: 'http://localhost/api/admin/clients/client-1',
     params: { clientId: 'client-1' },
     capability: 'CLIENTS',
   },
@@ -255,25 +242,44 @@ const PAID_ROUTES: GatedRoute[] = [
     capability: 'ASSISTANT',
   },
   {
-    name: 'J GET /api/admin/bookings?view=history',
-    load: () => import('@/pages/api/admin/bookings'),
-    method: 'GET',
-    url: 'http://localhost/api/admin/bookings?view=history&limit=25',
-    capability: 'FULL_BOOKING_HISTORY',
-  },
-  {
-    name: 'J GET /api/admin/bookings (unbounded list)',
-    load: () => import('@/pages/api/admin/bookings'),
-    method: 'GET',
-    url: 'http://localhost/api/admin/bookings',
-    capability: 'FULL_BOOKING_HISTORY',
-  },
-  {
     name: 'GET /api/admin/site-launch (branded site)',
     load: () => import('@/pages/api/admin/site-launch/index'),
     method: 'GET',
     url: 'http://localhost/api/admin/site-launch',
     capability: 'BRANDED_SITE',
+  },
+];
+
+/** v1.18 Starter core: allowed on FREE_BOOKING, still denied to SETUP. */
+const STARTER_CORE_ROUTES: GatedRoute[] = [
+  {
+    name: 'C GET /api/admin/clients (Clients Core)',
+    load: () => import('@/pages/api/admin/clients'),
+    method: 'GET',
+    url: 'http://localhost/api/admin/clients',
+    capability: 'CLIENTS_CORE',
+  },
+  {
+    name: 'D GET /api/admin/clients/[clientId] (Clients Core profile)',
+    load: () => import('@/pages/api/admin/clients/[clientId]/index'),
+    method: 'GET',
+    url: 'http://localhost/api/admin/clients/client-1',
+    params: { clientId: 'client-1' },
+    capability: 'CLIENTS_CORE',
+  },
+  {
+    name: 'J GET /api/admin/bookings?view=history (rolling 90-day History)',
+    load: () => import('@/pages/api/admin/bookings'),
+    method: 'GET',
+    url: 'http://localhost/api/admin/bookings?view=history&limit=25',
+    capability: 'RECENT_BOOKING_HISTORY',
+  },
+  {
+    name: 'J GET /api/admin/bookings (list without a day)',
+    load: () => import('@/pages/api/admin/bookings'),
+    method: 'GET',
+    url: 'http://localhost/api/admin/bookings',
+    capability: 'RECENT_BOOKING_HISTORY',
   },
 ];
 
@@ -326,6 +332,7 @@ const FREE_ROUTES: Omit<GatedRoute, 'capability'>[] = [
 beforeEach(() => {
   vi.clearAllMocks();
   state.prismaCalls.length = 0;
+  state.prismaArgs.length = 0;
   state.access = ownerAccess();
   state.product = 'FREE_BOOKING';
   checkDurableRateLimit.mockResolvedValue({ ok: true });
@@ -366,6 +373,29 @@ describe('Free Booking keeps its booking core (K–N)', () => {
       const { body } = await invoke(route);
       expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
       expect(state.prismaCalls.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe('v1.18 Starter core: Clients Core and rolling History are Starter features', () => {
+  describe.each(STARTER_CORE_ROUTES)('$name', (route) => {
+    it('Starter passes the product gate and reaches the business layer', async () => {
+      const { status, body } = await invoke(route);
+      expect(status).not.toBe(403);
+      expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+      expect(state.prismaCalls.length).toBeGreaterThan(0);
+    });
+
+    it('SETUP is denied before any business operation', async () => {
+      state.product = 'SETUP';
+      const { status, body } = await invoke(route);
+      expect(status).toBe(403);
+      expect(body).toEqual({
+        error: KERSIVO_UPGRADE_REQUIRED_MESSAGE,
+        code: KERSIVO_UPGRADE_REQUIRED,
+        requiredCapability: route.capability,
+      });
+      expect(state.prismaCalls).toEqual([]);
     });
   });
 });
@@ -496,12 +526,19 @@ describe('SETUP tenants get no paid capabilities (capability matrix is authorita
   });
 });
 
-describe('Free history cannot be recovered one day at a time (Europe/London)', () => {
+describe('Starter rolling 90-day History is enforced server-side (Europe/London)', () => {
   const bookingsAt = (query: string) => ({
     load: () => import('@/pages/api/admin/bookings'),
     method: 'GET' as const,
     url: `http://localhost/api/admin/bookings?${query}`,
   });
+  // London today 2026-10-04 → oldest Starter day 2026-07-06 (00:00 BST = 2026-07-05T23:00Z).
+  const FLOOR_START = new Date('2026-07-05T23:00:00.000Z');
+
+  const bookingFindManyWhere = () => {
+    const call = state.prismaArgs.find((entry) => entry.call === 'booking.findMany');
+    return (call?.args[0] as { where?: unknown } | undefined)?.where;
+  };
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -512,56 +549,82 @@ describe('Free history cannot be recovered one day at a time (Europe/London)', (
     vi.useRealTimers();
   });
 
-  it('K: Free + date=today is allowed', async () => {
-    const { body } = await invoke(bookingsAt('date=2026-10-04&mode=day'));
-    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+  it('K: Starter + today / upcoming days are allowed', async () => {
+    for (const day of ['2026-10-04', '2026-10-05']) {
+      const { body } = await invoke(bookingsAt(`date=${day}&mode=day`));
+      expect(body?.code, day).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    }
     expect(state.prismaCalls.length).toBeGreaterThan(0);
   });
 
-  it('L: Free + date=tomorrow (upcoming) is allowed', async () => {
-    const { body } = await invoke(bookingsAt('date=2026-10-05&mode=day'));
-    expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
-    expect(state.prismaCalls.length).toBeGreaterThan(0);
+  it('L: Starter + every day inside the rolling 90-day window is allowed', async () => {
+    for (let daysAgo = 1; daysAgo <= 90; daysAgo += 1) {
+      const day = new Date(Date.UTC(2026, 9, 4 - daysAgo)).toISOString().slice(0, 10);
+      const { status, body } = await invoke(bookingsAt(`date=${day}&mode=day`));
+      expect(status, day).not.toBe(403);
+      expect(body?.code, day).not.toBe(KERSIVO_UPGRADE_REQUIRED);
+    }
   });
 
-  it('M: Free + historical date is 403 KERSIVO_UPGRADE_REQUIRED', async () => {
-    const { status, body } = await invoke(bookingsAt('date=2026-10-03&mode=day'));
-    expect(status).toBe(403);
-    expect(body).toEqual({
-      error: KERSIVO_UPGRADE_REQUIRED_MESSAGE,
-      code: KERSIVO_UPGRADE_REQUIRED,
-      requiredCapability: 'FULL_BOOKING_HISTORY',
-    });
-    expect(state.prismaCalls).toEqual([]);
-  });
-
-  it('N: Free cannot enumerate historical dates one-by-one', async () => {
-    for (let daysAgo = 1; daysAgo <= 45; daysAgo += 1) {
+  it('M + N: Starter cannot open or enumerate any day older than the window (Full required)', async () => {
+    for (let daysAgo = 91; daysAgo <= 135; daysAgo += 1) {
       const day = new Date(Date.UTC(2026, 9, 4 - daysAgo)).toISOString().slice(0, 10);
       const { status, body } = await invoke(bookingsAt(`date=${day}&mode=day`));
       expect(status, day).toBe(403);
-      expect(body?.code, day).toBe(KERSIVO_UPGRADE_REQUIRED);
+      expect(body, day).toEqual({
+        error: KERSIVO_UPGRADE_REQUIRED_MESSAGE,
+        code: KERSIVO_UPGRADE_REQUIRED,
+        requiredCapability: 'FULL_BOOKING_HISTORY',
+      });
     }
-    for (const malformed of ['2026-10', 'yesterday', '9999-99']) {
-      const { status } = await invoke(bookingsAt(`date=${encodeURIComponent(malformed)}`));
-      expect(status, malformed).toBe(403);
+    expect(state.prismaCalls.filter((c) => c.startsWith('booking.'))).toEqual([]);
+  });
+
+  it('N: malformed / crafted dates are rejected before any query', async () => {
+    for (const query of ['date=2026-10', 'date=yesterday', 'date=9999-99', 'view=history&from=2020-1-1&to=2026-10-04']) {
+      const { status } = await invoke(bookingsAt(query));
+      expect(status, query).toBe(400);
     }
-    expect(state.prismaCalls).toEqual([]);
+    expect(state.prismaCalls.filter((c) => c.startsWith('booking.'))).toEqual([]);
   });
 
   it('N: "today" follows the London calendar, not UTC', async () => {
-    // 23:30 UTC on 4 Oct is 00:30 BST on 5 Oct in London: 4 Oct is already history.
+    // 23:30 UTC on 4 Oct is 00:30 BST on 5 Oct in London: the oldest Starter day becomes 7 Jul.
     vi.setSystemTime(new Date('2026-10-04T23:30:00.000Z'));
-    expect((await invoke(bookingsAt('date=2026-10-04'))).status).toBe(403);
-    const { body } = await invoke(bookingsAt('date=2026-10-05'));
+    expect((await invoke(bookingsAt('date=2026-07-06'))).status).toBe(403);
+    const { body } = await invoke(bookingsAt('date=2026-07-07'));
     expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
   });
 
-  it('O: Full keeps historical dates', async () => {
+  it('history view: search, date filters and pagination cursors are all floored for Starter', async () => {
+    await invoke(
+      bookingsAt('view=history&from=2020-01-01&to=2026-10-04&q=smith&cursor=2026-01-01T00:00:00.000Z|bk_1'),
+    );
+    const where = bookingFindManyWhere() as { AND: unknown[] };
+    expect(where.AND).toContainEqual({ startAt: { gte: FLOOR_START } });
+  });
+
+  it('list without a day is floored for Starter', async () => {
+    await invoke(bookingsAt(''));
+    const where = bookingFindManyWhere() as { startAt: { gte: Date } };
+    expect(where.startAt.gte).toEqual(FLOOR_START);
+  });
+
+  it('O: Full keeps unbounded historical dates and history', async () => {
     state.product = 'FULL_KERSIVO';
-    const { body } = await invoke(bookingsAt('date=2026-09-01&mode=day'));
+    const { body } = await invoke(bookingsAt('date=2026-01-01&mode=day'));
     expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
-    expect(state.prismaCalls.length).toBeGreaterThan(0);
+    state.prismaArgs.length = 0;
+    await invoke(bookingsAt('view=history&from=2020-01-01&to=2026-10-04'));
+    const where = bookingFindManyWhere() as { AND: unknown[] };
+    expect(where.AND).not.toContainEqual({ startAt: { gte: FLOOR_START } });
+  });
+
+  it('SETUP has no history at all', async () => {
+    state.product = 'SETUP';
+    const { status, body } = await invoke(bookingsAt('date=2026-10-03&mode=day'));
+    expect(status).toBe(403);
+    expect(body?.requiredCapability).toBe('RECENT_BOOKING_HISTORY');
   });
 
   it.each([
@@ -570,7 +633,7 @@ describe('Free history cannot be recovered one day at a time (Europe/London)', (
     ['public demo shop session', { shopId: DEMO_SHOP_ID }],
   ])('P: %s keeps historical dates unchanged', async (_label, overrides) => {
     state.access = ownerAccess(overrides);
-    const { body } = await invoke(bookingsAt('date=2026-09-01&mode=day'));
+    const { body } = await invoke(bookingsAt('date=2026-01-01&mode=day'));
     expect(body?.code).not.toBe(KERSIVO_UPGRADE_REQUIRED);
     expect(loadKersivoAccessSpy).not.toHaveBeenCalled();
   });
