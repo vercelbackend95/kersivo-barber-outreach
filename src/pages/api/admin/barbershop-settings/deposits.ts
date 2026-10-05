@@ -218,6 +218,17 @@ export const PATCH: APIRoute = async (ctx) => {
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
 
+  const productAccess = await loadKersivoAccess(access.shopId);
+  if (productAccess.state !== 'FULL_KERSIVO') {
+    return json(
+      {
+        error: 'Booking payment controls are available with Full KERSIVO.',
+        code: 'STARTER_PAYMENT_SETTINGS_READ_ONLY',
+      },
+      403,
+    );
+  }
+
   const body = (await ctx.request.json().catch(() => null)) as {
     bookingPaymentMode?: unknown;
     depositsEnabled?: unknown;
