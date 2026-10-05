@@ -36,7 +36,7 @@ describe('v1.18 legal/product alignment', () => {
   });
 
   it('uses Standard for new Connect onboarding while retaining historical Express compatibility', () => {
-    for (const source of [terms, privacy, dpa]) {
+    for (const source of [termsText, privacyText, dpaText]) {
       expect(source).toContain('Stripe Standard');
       expect(source).toMatch(/historical Express/i);
     }

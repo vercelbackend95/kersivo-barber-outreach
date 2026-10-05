@@ -52,12 +52,12 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-02');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-02');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-01');
-    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-09-25');
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
-    expect(CURRENT_DPA_VERSION).toBe('2026-09-24');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-09-23');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
 
     expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
     for (const loc of EXPECTED_LOCS.slice(1)) {
@@ -76,7 +76,8 @@ describe('marketing sitemap', () => {
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
-    expect(xml).toContain('<lastmod>2026-09-24</lastmod>');
+    expect(xml).toContain('<lastmod>2026-09-25</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-05</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');

@@ -12,8 +12,9 @@ function readRepoFile(...segments: string[]): string {
 
 const schedule = readRepoFile('../../../docs/compliance/retention-schedule.md');
 const ropa = readRepoFile('../../../docs/compliance/ropa.md');
-const privacy = readRepoFile('../../pages/privacy.astro');
-const dpa = readRepoFile('../../pages/dpa.astro');
+// Whitespace-normalized so prose reflows in the pages don't break wording assertions.
+const privacy = readRepoFile('../../pages/privacy.astro').replace(/\s+/g, ' ');
+const dpa = readRepoFile('../../pages/dpa.astro').replace(/\s+/g, ' ');
 
 describe('Retention schedule Phase 1 (docs)', () => {
   it('distinguishes approved policy from implemented enforcement', () => {

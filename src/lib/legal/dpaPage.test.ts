@@ -11,7 +11,8 @@ function readRepoFile(...segments: string[]): string {
   return readFileSync(join(here, ...segments), 'utf8');
 }
 
-const dpaSource = readRepoFile('../../pages/dpa.astro');
+// Whitespace-normalized so prose reflows in the page don't break wording assertions.
+const dpaSource = readRepoFile('../../pages/dpa.astro').replace(/\s+/g, ' ');
 const termsSource = readRepoFile('../../pages/terms.astro');
 const launchWizardSource = readRepoFile('../../components/admin/launch/LaunchWizard.tsx');
 const legalFooterSource = readRepoFile('../../components/LegalFooter.astro');

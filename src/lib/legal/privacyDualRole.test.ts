@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const privacySource = readFileSync(join(here, '../../pages/privacy.astro'), 'utf8');
+// Whitespace-normalized so prose reflows in the page don't break wording assertions.
+const privacySource = readFileSync(join(here, '../../pages/privacy.astro'), 'utf8').replace(/\s+/g, ' ');
 
 describe('Privacy Policy dual-role DPA wording', () => {
   it('states barbershop controller / KERSIVO processor for Customer Personal Data', () => {
@@ -41,7 +42,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
-    const subProcessorsHeading = privacySource.indexOf('may process Customer\n        Personal Data as <strong>sub-processors</strong>');
+    const subProcessorsHeading = privacySource.indexOf('may process Customer Personal Data as <strong>sub-processors</strong>');
     const otherProvidersHeading = privacySource.indexOf(
       'Other providers are used in specific functional contexts and are not listed above as general sub-processors',
     );
@@ -148,7 +149,8 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).not.toMatch(/UK GDPR requires six years/i);
     expect(privacySource).toContain('not</strong> a claim that UK GDPR itself imposes a single six-year');
     expect(privacySource).toContain('does <strong>not</strong> independently apply a blanket deletion period');
-    expect(privacySource).toContain('explicit account deletion');
+    expect(privacySource).toContain('Departure does <strong>not</strong> delete shop data instantly');
+    expect(privacySource).toContain('eligible for permanent purge');
     expect(privacySource).toContain('this right is not absolute');
     expect(privacySource).toContain('provider systems');
     expect(privacySource).toContain('Last updated: 5 October 2026');
