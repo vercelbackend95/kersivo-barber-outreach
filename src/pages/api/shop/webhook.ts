@@ -22,6 +22,10 @@ import {
   verifyStripeWebhookSignature,
 } from '../../../lib/shop/stripe';
 import { SHOP_ORDER_METADATA_TYPE } from '../../../lib/shop/cardPaymentsGate';
+import {
+  applyConnectAccountDeauthorized,
+  applyConnectAccountUpdated,
+} from '../../../lib/shop/stripeConnectAccountState';
 import { finalizeRetailOrderFromCheckout } from '../../../lib/shop/finalizeRetailOrder';
 import {
   EmailDeliveryError,
@@ -913,49 +917,60 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
       ? new Date(event.created * 1000)
       : new Date();
 
-  const result = await prisma.shopSettings.updateMany({
-    where: {
-      stripeConnectAccountId: accountId,
-      OR: [{ connectStatusEventAt: null }, { connectStatusEventAt: { lte: eventAt } }],
-    },
-    data: {
-      stripeConnectChargesEnabled: chargesEnabled,
-      stripeConnectDetailsSubmitted: detailsSubmitted,
-      connectStatusEventAt: eventAt,
-    },
+  const result = await applyConnectAccountUpdated({
+    accountId,
+    chargesEnabled,
+    detailsSubmitted,
+    eventAt,
   });
-
-  if (result.count === 0) {
-    const known = await prisma.shopSettings.count({
-      where: { stripeConnectAccountId: accountId },
-    });
-    console.info('[webhook] account.updated', {
-      accountId,
-      chargesEnabled,
-      detailsSubmitted,
-      shopsUpdated: 0,
-      reason: known > 0 ? 'stale_ignored' : 'unknown_account',
-    });
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        accountId,
-        shopsUpdated: 0,
-        ignored: known > 0 ? 'stale_event' : 'unknown_account',
-      }),
-      { status: 200 },
-    );
-  }
 
   console.info('[webhook] account.updated', {
     accountId,
     chargesEnabled,
     detailsSubmitted,
-    shopsUpdated: result.count,
+    shopsUpdated: result.shopsUpdated,
+    ignored: result.ignored,
   });
 
   return new Response(
-    JSON.stringify({ ok: true, accountId, shopsUpdated: result.count }),
+    JSON.stringify({
+      ok: true,
+      accountId,
+      shopsUpdated: result.shopsUpdated,
+      ...(result.ignored ? { ignored: result.ignored } : {}),
+    }),
+    { status: 200 },
+  );
+}
+
+async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Response> {
+  // Stripe documents the disconnected connected account on the top-level event.account.
+  // data.object is the Application object, not the connected Account.
+  const accountId = event.account?.trim() || '';
+  if (!accountId || !accountId.startsWith('acct_')) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+
+  const eventAt =
+    Number.isFinite(event.created) && event.created > 0
+      ? new Date(event.created * 1000)
+      : new Date();
+
+  const result = await applyConnectAccountDeauthorized({ accountId, eventAt });
+
+  console.info('[webhook] account.application.deauthorized', {
+    accountId,
+    shopsUpdated: result.shopsUpdated,
+    ignored: result.ignored,
+  });
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      accountId,
+      shopsUpdated: result.shopsUpdated,
+      ...(result.ignored ? { ignored: result.ignored } : {}),
+    }),
     { status: 200 },
   );
 }
@@ -1319,6 +1334,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     const finalize = (response: Response, opts?: { ignored?: boolean }) =>
       finalizeWebhookResponse(eventId, response, { ...opts, eventType: event.type });
+
+    if (event.type === 'account.application.deauthorized') {
+      return await finalize(await handleConnectAccountDeauthorized(event));
+    }
 
     if (event.type === 'account.updated') {
       return await finalize(await handleConnectAccountUpdated(event));
