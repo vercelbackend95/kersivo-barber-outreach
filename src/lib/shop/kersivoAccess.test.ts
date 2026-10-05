@@ -156,6 +156,7 @@ describe('capability matrix', () => {
       'SERVICES',
       'AUTOMATED_EMAIL_REMINDERS',
       'RECENT_BOOKING_HISTORY',
+      'CLIENTS_CORE',
     ];
     const fullOnly = [
       'REPORTS',
@@ -195,6 +196,7 @@ describe('capability matrix', () => {
         team: true,
         services: true,
         reports: false,
+        clientsCore: true,
         clients: false,
         recentBookingHistory: true,
         fullBookingHistory: false,
