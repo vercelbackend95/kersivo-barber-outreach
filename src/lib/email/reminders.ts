@@ -41,7 +41,6 @@ export type EmailReminderCandidate = {
   notes: string | null;
   emailReminderSentAt: Date | null;
   emailReminderForStartAt: Date | null;
-  shopPaidAt: Date | null;
   shopName: string;
   shopTimezone: string;
   serviceName: string;
@@ -52,7 +51,6 @@ export type EmailReminderEligibilityReason =
   | 'ok'
   | 'kill_switch'
   | 'demo_shop'
-  | 'shop_unpaid'
   | 'test_booking'
   | 'no_email'
   | 'invalid_email'
@@ -104,7 +102,6 @@ export function evaluateEmailReminderEligibility(
     | 'notes'
     | 'emailReminderSentAt'
     | 'emailReminderForStartAt'
-    | 'shopPaidAt'
   >,
   now: Date,
   options?: { enabled?: boolean },
@@ -112,7 +109,6 @@ export function evaluateEmailReminderEligibility(
   const enabled = options?.enabled ?? isEmailRemindersEnabled();
   if (!enabled) return { ok: false, reason: 'kill_switch' };
   if (candidate.shopId === DEMO_SHOP_ID) return { ok: false, reason: 'demo_shop' };
-  if (candidate.shopPaidAt == null) return { ok: false, reason: 'shop_unpaid' };
   if (isSandboxBookingNotes(candidate.notes)) return { ok: false, reason: 'test_booking' };
 
   const toEmail = candidate.email?.trim() ?? '';
@@ -153,7 +149,6 @@ export async function findDueEmailReminders(
       startAt: { gte: windowStart, lte: windowEnd },
       barber: {
         shopId: { not: DEMO_SHOP_ID },
-        shop: { shopPaidAt: { not: null } },
       },
       AND: [
         {
@@ -196,7 +191,7 @@ export async function findDueEmailReminders(
         select: {
           name: true,
           shopId: true,
-          shop: { select: { name: true, timezone: true, shopPaidAt: true } },
+          shop: { select: { name: true, timezone: true } },
         },
       },
       service: { select: { name: true } },
@@ -213,7 +208,6 @@ export async function findDueEmailReminders(
     notes: row.notes,
     emailReminderSentAt: row.emailReminderSentAt,
     emailReminderForStartAt: row.emailReminderForStartAt,
-    shopPaidAt: row.barber.shop.shopPaidAt,
     shopName: row.barber.shop.name,
     shopTimezone: row.barber.shop.timezone || 'Europe/London',
     serviceName: row.serviceNameAtBooking?.trim() || row.service.name,
