@@ -308,6 +308,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
       signedIn && freeBookableBarberLimitApplies(productAccess.state)
         ? FREE_BOOKABLE_BARBER_LIMIT
         : null,
+    starterBookableBarberLimit: signedIn ? FREE_BOOKABLE_BARBER_LIMIT : null,
     bookingUrl: hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
       ? preferredPublicBookingPath(shop)
       : null,
