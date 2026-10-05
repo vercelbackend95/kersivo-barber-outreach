@@ -634,7 +634,10 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           ? {}
           : {
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ termsAccepted: termsAccepted === true }),
+              body: JSON.stringify({
+                plan: selectedPlan === 'STARTER' ? 'STARTER' : undefined,
+                termsAccepted: termsAccepted === true,
+              }),
             }),
       });
       if (response.status === 401) {
