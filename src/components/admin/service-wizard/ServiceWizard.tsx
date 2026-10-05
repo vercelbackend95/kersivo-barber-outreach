@@ -30,6 +30,8 @@ type ServiceWizardProps = {
   categories: string[];
   barbers: ServiceWizardBarber[];
   isLoadingBarbers: boolean;
+  /** Starter-only floor for services that are published in public bookings. Null for Full/SETUP. */
+  minimumActivePricePence?: number | null;
   onAddCategory: (name: string) => Promise<void>;
   onCancel: () => void;
   onSaved: (result: { mode: ServiceWizardMode; categories?: string[] }) => void | Promise<void>;
@@ -149,6 +151,7 @@ export default function ServiceWizard({
   categories,
   barbers,
   isLoadingBarbers,
+  minimumActivePricePence = null,
   onAddCategory,
   onCancel,
   onSaved
@@ -244,13 +247,28 @@ export default function ServiceWizard({
       }
     }
 
+    const parsedPricePence = parseGbpToPence(form.priceGbp);
+    if (
+      minimumActivePricePence != null &&
+      form.isActive &&
+      parsedPricePence < minimumActivePricePence
+    ) {
+      setErrors({
+        priceGbp: `Starter services published in bookings must be £${(
+          minimumActivePricePence / 100
+        ).toFixed(2)} or more.`,
+      });
+      setStep(2);
+      return;
+    }
+
     const endpoint = mode === 'edit' && serviceId ? `/api/admin/services/${serviceId}` : '/api/admin/services';
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
       imageUrl: form.imageUrl.trim() || null,
       category: form.category.trim(),
-      pricePence: parseGbpToPence(form.priceGbp),
+      pricePence: parsedPricePence,
       durationMinutes: Number(form.durationMinutes),
       bufferMinutes: Number(form.bufferMinutes),
       displayOrder: Number(form.displayOrder),
@@ -529,6 +547,12 @@ export default function ServiceWizard({
                 />
               </div>
               <FieldError id="service-wizard-price-error">{errors.priceGbp}</FieldError>
+              {minimumActivePricePence != null ? (
+                <p className="field__hint" data-starter-service-price-floor>
+                  KERSIVO Starter: services published in bookings must be £
+                  {(minimumActivePricePence / 100).toFixed(2)} or more.
+                </p>
+              ) : null}
             </div>
 
             <div className={`field${errors.durationMinutes ? ' field--error' : ''}`}>
