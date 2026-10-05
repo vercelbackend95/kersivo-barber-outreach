@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { loadOnboardingState, requireOnboardingAccess } from '@/lib/admin/onboarding';
 import { parseTermsAccepted } from '@/lib/legal/requireTermsAcceptance';
 import { activateFreeBooking } from '@/lib/shop/freeBookingActivation';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 
 export const POST: APIRoute = async (ctx) => {
   const access = await requireOnboardingAccess(ctx);
@@ -16,7 +17,8 @@ export const POST: APIRoute = async (ctx) => {
       ? String((body as { plan?: unknown }).plan ?? '').trim().toUpperCase()
       : '';
 
-  if (plan !== 'STARTER') {
+  const currentAccess = await loadKersivoAccess(shopId);
+  if (currentAccess.state === 'SETUP' && plan !== 'STARTER') {
     return new Response(
       JSON.stringify({
         error: 'Choose KERSIVO Starter explicitly before activation.',
