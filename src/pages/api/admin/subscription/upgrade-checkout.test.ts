@@ -358,6 +358,19 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
       expect(args.successUrl).toBe(
         'https://kersivo.test/setup/success?session_id={CHECKOUT_SESSION_ID}',
       );
+      expect(args.cancelUrl).toBe('https://kersivo.test/setup/cancel');
+    });
+
+    it('returns an onboarding-started Full checkout to the plan choice if Stripe is cancelled', async () => {
+      await post({
+        termsAccepted: true,
+        checkoutAttemptId: ATTEMPT,
+        returnToOnboarding: true,
+      });
+
+      expect(createSubscriptionCheckoutSession).toHaveBeenCalledTimes(1);
+      const args = createSubscriptionCheckoutSession.mock.calls[0][0];
+      expect(args.cancelUrl).toBe('https://kersivo.test/admin/onboarding');
     });
 
     it('records SAAS_CHECKOUT Terms with user, email, shop, Stripe session and request', async () => {
