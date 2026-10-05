@@ -9,6 +9,8 @@ import {
   canTransitionQrKitStatus,
   qrKitTransitionTimestampData,
 } from '@/lib/qr/qrKitFulfilment';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
+import { resolveQrDestination } from '@/lib/qr/qrDestination';
 
 const transitionSchema = z.object({
   requestId: z.string().trim().min(1),
@@ -81,7 +83,12 @@ export const PATCH: APIRoute = async ({ request }) => {
 
   const current = await prisma.shopQrKitRequest.findUnique({
     where: { id: parsed.data.requestId },
-    select: { id: true, status: true },
+    select: {
+      id: true,
+      shopId: true,
+      status: true,
+      shop: { select: { id: true, bookingSlug: true } },
+    },
   });
   if (!current) return json({ error: 'QR Kit request not found.' }, 404);
 
@@ -94,6 +101,37 @@ export const PATCH: APIRoute = async ({ request }) => {
       },
       409,
     );
+  }
+
+  if (parsed.data.status === 'PRINT_QUEUED' || parsed.data.status === 'DISPATCHED') {
+    const access = await loadKersivoAccess(current.shopId);
+    const destination = resolveQrDestination({
+      state: access.state,
+      shop: current.shop,
+    });
+    if (
+      access.state === 'FULL_KERSIVO' &&
+      destination.kind === 'redirect' &&
+      destination.source === 'full_kersivo_temporary_slug_fallback'
+    ) {
+      return json(
+        {
+          error:
+            'Full KERSIVO QR fulfilment is blocked until the authoritative live Full booking destination is connected.',
+          code: 'QR_FULL_DESTINATION_NOT_READY',
+        },
+        409,
+      );
+    }
+    if (destination.kind !== 'redirect') {
+      return json(
+        {
+          error: 'QR destination is not currently available for this shop.',
+          code: 'QR_DESTINATION_NOT_READY',
+        },
+        409,
+      );
+    }
   }
 
   const now = new Date();
