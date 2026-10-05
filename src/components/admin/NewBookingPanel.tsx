@@ -89,9 +89,7 @@ export default function NewBookingPanel({
 
   const eligibleBarbers = useMemo(() => {
     if (!serviceId) return barbers;
-    return barbers.filter(
-      (barber) => !barber.serviceIds?.length || barber.serviceIds.includes(serviceId),
-    );
+    return barbers.filter((barber) => barber.serviceIds?.includes(serviceId));
   }, [barbers, serviceId]);
 
   useEffect(() => {
