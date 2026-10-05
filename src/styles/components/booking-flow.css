@@ -1894,3 +1894,78 @@
     display: none;
   }
 }
+
+
+/* v1.19 Starter payment choice */
+.booking-flow--wizard .booking-payment-choice {
+  display: grid;
+  gap: 0.65rem;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.booking-flow--wizard .booking-payment-choice > legend {
+  margin-bottom: 0.1rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.booking-flow--wizard .booking-payment-choice__options {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.booking-flow--wizard .booking-payment-choice__option,
+.booking-flow--wizard .booking-payment-choice__single {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--booking-choice-border) 82%, transparent);
+  border-radius: 14px;
+  background: var(--booking-choice-surface);
+}
+
+.booking-flow--wizard .booking-payment-choice__option {
+  cursor: pointer;
+}
+
+.booking-flow--wizard .booking-payment-choice__option.is-selected {
+  border-color: var(--booking-choice-accent);
+  background: var(--booking-choice-accent-soft);
+}
+
+.booking-flow--wizard .booking-payment-choice__option input {
+  margin-top: 0.2rem;
+  accent-color: var(--booking-choice-accent);
+}
+
+.booking-flow--wizard .booking-payment-choice__option > span,
+.booking-flow--wizard .booking-payment-choice__single {
+  min-width: 0;
+}
+
+.booking-flow--wizard .booking-payment-choice__option strong,
+.booking-flow--wizard .booking-payment-choice__single strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--fg);
+}
+
+.booking-flow--wizard .booking-payment-choice__option small,
+.booking-flow--wizard .booking-payment-choice__single span {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.booking-flow--wizard .booking-payment-choice__note {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
