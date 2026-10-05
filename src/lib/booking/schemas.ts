@@ -8,6 +8,8 @@ export const bookingCreateSchema = z.object({
   fullName: z.string().min(2),
   email: z.string().email(),
   phone: z.string().optional().or(z.literal('')),
+  /** v1.19 Starter public booking choice. Full ignores this and follows shop settings. */
+  paymentChoice: z.enum(['DEPOSIT', 'FULL']).optional(),
   /** Client-generated key; scoped server-side as `${shopId}:${key}`. */
   idempotencyKey: z.string().min(8).max(200).optional(),
 });
