@@ -59,24 +59,22 @@ export default function NewBookingPanel({
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      adminFetchJson<{ services?: ServiceOption[] }>('/api/admin/services', {
-        errorMessage: 'Could not load services.',
-      }),
-      adminFetchJson<{ barbers?: BarberOption[] }>('/api/admin/barbers', {
-        errorMessage: 'Could not load barbers.',
-      }),
-    ])
-      .then(([serviceData, barberData]) => {
+    adminFetchJson<{
+      services?: ServiceOption[];
+      barbers?: BarberOption[];
+      fixedBarberId?: string | null;
+    }>('/api/admin/bookings/manual-setup', {
+      errorMessage: 'Could not load booking setup.',
+    })
+      .then((setup) => {
         if (cancelled) return;
-        const nextServices = (serviceData.services ?? []).filter(
-          (service) => service.isActive !== false && service.active !== false,
-        );
-        const nextBarbers = (barberData.barbers ?? []).filter((barber) => barber.isActive !== false);
+        const nextServices = setup.services ?? [];
+        const nextBarbers = setup.barbers ?? [];
+        const serverFixedBarberId = setup.fixedBarberId ?? fixedBarberId ?? null;
         setServices(nextServices);
         setBarbers(nextBarbers);
         setServiceId((current) => current || nextServices[0]?.id || '');
-        setBarberId((current) => current || fixedBarberId || nextBarbers[0]?.id || '');
+        setBarberId((current) => current || serverFixedBarberId || nextBarbers[0]?.id || '');
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load booking setup.');
