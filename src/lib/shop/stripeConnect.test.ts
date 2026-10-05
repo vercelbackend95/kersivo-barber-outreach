@@ -12,6 +12,8 @@ import {
   createBookingDepositCheckoutSession,
   createBookingPaymentCheckoutSession,
   createRetailCheckoutSession,
+  createConnectStandardAccount,
+  retrieveConnectAccount,
   expireBookingDepositSession,
   refundPaymentIntent,
   resolveDepositSessionExpiresAt,
@@ -20,6 +22,58 @@ import {
 } from './stripeConnect';
 
 const BOOKING_CREATED_AT = new Date('2026-08-01T12:00:00.000Z');
+
+describe('Stripe Connect Standard onboarding', () => {
+  const prevKey = process.env.STRIPE_SECRET_KEY;
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    process.env.STRIPE_SECRET_KEY = 'sk_test_standard';
+  });
+
+  afterEach(() => {
+    process.env.STRIPE_SECRET_KEY = prevKey;
+  });
+
+  it('creates a GB Standard connected account for new KERSIVO onboarding', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'acct_standard_1' }),
+    });
+
+    await expect(
+      createConnectStandardAccount({ shopId: 'shop_1', email: 'owner@example.com' }),
+    ).resolves.toEqual({ id: 'acct_standard_1' });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/accounts');
+    const params = new URLSearchParams(String(init.body));
+    expect(params.get('type')).toBe('standard');
+    expect(params.get('country')).toBe('GB');
+    expect(params.get('email')).toBe('owner@example.com');
+    expect(params.get('capabilities[card_payments][requested]')).toBe('true');
+    expect(params.get('capabilities[transfers][requested]')).toBe('true');
+    expect(params.get('metadata[shopId]')).toBe('shop_1');
+  });
+
+  it('retrieves the connected-account readiness and account type', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 'acct_standard_1',
+        type: 'standard',
+        charges_enabled: true,
+        details_submitted: true,
+      }),
+    });
+
+    await expect(retrieveConnectAccount('acct_standard_1')).resolves.toEqual({
+      chargesEnabled: true,
+      detailsSubmitted: true,
+      accountType: 'STANDARD',
+    });
+  });
+});
 
 describe('stripeConnect direct charges', () => {
   const prevKey = process.env.STRIPE_SECRET_KEY;
@@ -60,7 +114,7 @@ describe('stripeConnect direct charges', () => {
     expect(headers['Stripe-Account']).toBe('acct_shop');
     const body = String(init.body);
     expect(body).not.toContain('transfer_data');
-    expect(body).toContain('payment_intent_data%5Bapplication_fee_amount%5D=0');
+    expect(body).not.toContain('application_fee_amount');
     expect(body).toContain('booking_deposit');
     expect(body).toContain('unit_amount');
     expect(body).toContain('300');
@@ -123,7 +177,7 @@ describe('stripeConnect direct charges', () => {
     expect(headers['Idempotency-Key']).toBe('shop_order_checkout_ord_9');
     const body = String(init.body);
     expect(body).toContain('shop_order');
-    expect(body).toContain('payment_intent_data%5Bapplication_fee_amount%5D=0');
+    expect(body).not.toContain('application_fee_amount');
     expect(body).not.toContain('transfer_data');
     expect(body).toContain('line_items%5B0%5D');
     expect(body).toContain('line_items%5B1%5D');
@@ -473,7 +527,7 @@ describe('createBookingPaymentCheckoutSession (generic booking payments)', () =>
     });
     const params = sentParams();
     expect(params.get('metadata[type]')).toBe('booking_deposit');
-    expect(params.get('payment_intent_data[application_fee_amount]')).toBe('0');
+    expect(params.has('payment_intent_data[application_fee_amount]')).toBe(false);
     expect(params.has('metadata[bookingPaymentType]')).toBe(false);
     const headers = (fetchMock.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>;
     expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_1');
