@@ -157,6 +157,7 @@ describe('capability matrix', () => {
       'AUTOMATED_EMAIL_REMINDERS',
       'RECENT_BOOKING_HISTORY',
       'CLIENTS_CORE',
+      'MANUAL_BOOKINGS',
     ];
     const fullOnly = [
       'REPORTS',
@@ -166,7 +167,6 @@ describe('capability matrix', () => {
       'ASSISTANT',
       'SMS_REMINDERS',
       'BRANDED_SITE',
-      'MANUAL_BOOKINGS',
     ];
     expect([...PRODUCT_STATE_CAPABILITIES.SETUP]).toEqual([]);
     expect([...PRODUCT_STATE_CAPABILITIES.FREE_BOOKING].sort()).toEqual([...free].sort());
@@ -205,7 +205,7 @@ describe('capability matrix', () => {
         smsReminders: false,
         automatedEmailReminders: true,
         brandedSite: false,
-        manualBookings: false,
+        manualBookings: true,
       },
     });
     const full = serializeKersivoAccess(resolveKersivoAccess(shop(), activeSub, now));
