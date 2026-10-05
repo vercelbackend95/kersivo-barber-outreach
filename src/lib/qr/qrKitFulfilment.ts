@@ -9,6 +9,7 @@ import { prisma } from '../db/client';
 import { ensureShopBookingSlug } from '../booking/bookingSlug';
 import { enqueueEmail } from '../email/outbox';
 import { buildQrKitRequestAcknowledgementEmail } from '../email/qrKitEmails';
+import { CURRENT_TERMS_VERSION, TERMS_ACCEPTANCE_PURPOSES } from '../legal/termsVersion';
 import { hasKersivoCapability, loadKersivoAccess, type KersivoProductState } from '../shop/kersivoAccess';
 import { ensureShopQrCodesInTx, type ShopQrCodeRow } from './shopQrCodes';
 
@@ -85,7 +86,18 @@ export async function loadQrKitShopFacts(
         where: { active: true, barber: { shopId, active: true } },
         select: { startMinutes: true, endMinutes: true },
       }),
-      db.legalAcceptance.count({ where: { shopId } }),
+      db.legalAcceptance.count({
+        where: {
+          shopId,
+          termsVersion: CURRENT_TERMS_VERSION,
+          purpose: {
+            in: [
+              TERMS_ACCEPTANCE_PURPOSES.FREE_BOOKING_ACTIVATION,
+              TERMS_ACCEPTANCE_PURPOSES.FULL_TO_STARTER,
+            ],
+          },
+        },
+      }),
     ]);
 
   return {
@@ -478,10 +490,19 @@ export const QR_KIT_POWERED_BY = 'Powered by KERSIVO';
 
 /** Requirements the print supplier/material must meet. Recorded only — not verified here. */
 export const QR_KIT_MATERIAL_REQUIREMENTS: readonly string[] = [
-  'WINDOW: inside-glass mounting; QR must scan through the glass in daylight and at night (untested).',
-  'REBOOK: durable, wipe-clean finish for the counter (untested).',
-  'Minimum QR module size and quiet zone to be confirmed with the supplier proof (untested).',
-  'Test-scan every printed sheet with iOS and Android cameras before dispatch (not yet performed).',
+  'WINDOW: use an inside-glass / face-adhesive or equivalent method that presents the artwork correctly from outside (untested).',
+  'WINDOW: confirm correct print orientation through the glass before supplier approval (untested).',
+  'WINDOW: determine whether white backing / white ink is required for contrast through real shop glass (untested).',
+  'Use durable removable self-adhesive vinyl or equivalent professional material; confirm removability without unnecessary residue or damage (untested).',
+  'Confirm UV/fade resistance suitable for prolonged window exposure (untested).',
+  'Confirm resistance to normal glass cleaning and condensation (untested).',
+  'Preserve a readable QR quiet zone and high contrast; do not sacrifice scanability for branding aesthetics (untested).',
+  'Confirm production bleed and cut tolerance with the print supplier (untested).',
+  'Test WINDOW scanning through representative glass in daylight and indoor/outdoor reflection conditions (untested).',
+  'Test WINDOW scanning at oblique viewing angles and realistic customer distances (untested).',
+  'Test on clean and lightly marked glass with representative modern iOS and Android devices before supplier approval (untested).',
+  'REBOOK: use durable removable professional self-adhesive material appropriate for mirror, station or reception placement (untested).',
+  'No acrylic stand or customer-assembled physical hardware is required for V1.',
 ];
 
 export type QrKitPrintManifest = {
