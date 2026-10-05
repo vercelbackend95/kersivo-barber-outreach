@@ -1304,7 +1304,7 @@ export default function BarbershopSettingsPanel({
 
               {googleBooking.destinationSource === 'full_hosted_fallback' ? (
                 <p className="muted" data-google-full-hosted-fallback>
-                  This is your current verified KERSIVO booking destination. When a verified live
+                  This is your current KERSIVO-hosted booking destination. When a verified live
                   Full KERSIVO own-domain booking destination becomes available, KERSIVO will flag
                   the Google link here for updating.
                 </p>
