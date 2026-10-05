@@ -23,6 +23,7 @@ import {
   createConnectAccountLink,
   createConnectStandardAccount,
   retrieveConnectAccount,
+  StripeConnectApiError,
 } from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -101,8 +102,30 @@ export const GET: APIRoute = async (ctx) => {
           disconnectedAt: null,
         };
       }
-    } catch {
-      // Keep stored flags if Stripe is temporarily unreachable.
+    } catch (error) {
+      // A revoked/missing account must fail closed. Transient Stripe/network failures keep the last
+      // known state, but authorization/resource failures mean KERSIVO can no longer use this account.
+      if (
+        error instanceof StripeConnectApiError &&
+        (error.status === 401 || error.status === 403 || error.status === 404)
+      ) {
+        const disconnectedAt = new Date();
+        await prisma.shopSettings.update({
+          where: { id: shop.id },
+          data: {
+            stripeConnectChargesEnabled: false,
+            stripeConnectDetailsSubmitted: false,
+            stripeConnectDisconnectedAt: disconnectedAt,
+          },
+        });
+        connect = {
+          ...connect,
+          chargesEnabled: false,
+          detailsSubmitted: false,
+          disconnectedAt,
+        };
+      }
+      // Other failures are treated as temporary Stripe/network unavailability.
     }
   }
 
