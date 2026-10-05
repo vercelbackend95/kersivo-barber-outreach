@@ -119,13 +119,15 @@ export const POST: APIRoute = async (ctx) => {
       bookingUrl,
       confirmed,
       confirmedAt: confirmed ? current.googleBookingLinkConfirmedAt?.toISOString() ?? null : null,
+      staleConfirmation:
+        Boolean(current.googleBookingLinkConfirmedAt) &&
+        current.googleBookingLinkConfirmedUrl !== bookingUrl,
     };
   });
 
   return json({
     ...result,
     needsPreparation: false,
-    staleConfirmation: false,
     googleBusinessProfileUrl: GOOGLE_BUSINESS_PROFILE_URL,
   });
 };
