@@ -658,3 +658,111 @@
     padding-bottom: 0;
   }
 }
+
+
+/* v1.18 explicit Starter vs Full plan choice */
+.admin-onboarding__plan-choice {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-onboarding__plan-card {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-16);
+  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
+  color: var(--fg);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-onboarding__plan-card:hover:not(:disabled),
+.admin-onboarding__plan-card:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+  outline: 2px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-onboarding__plan-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.admin-onboarding__plan-card.is-selected {
+  border-color: var(--accent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 13%, var(--surface-1)),
+      color-mix(in srgb, var(--surface-1) 92%, transparent)
+    );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.admin-onboarding__plan-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.admin-onboarding__plan-card--full {
+  border-color: color-mix(in srgb, var(--fg) 22%, var(--border));
+}
+
+.admin-onboarding__plan-kicker {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.admin-onboarding__plan-price {
+  font-size: clamp(1.35rem, 5vw, 1.7rem);
+  line-height: 1.1;
+}
+
+.admin-onboarding__plan-fee {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.admin-onboarding__plan-copy {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.admin-onboarding__plan-warning {
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius-8);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--fg);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.admin-onboarding__plan-stripe {
+  margin: 0.15rem 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .admin-onboarding__plan-choice {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-onboarding__plan-stripe {
+    grid-column: 1 / -1;
+  }
+}
