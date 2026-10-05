@@ -68,7 +68,27 @@ describe('POST /api/bookings/create', () => {
     product.state = 'FULL_KERSIVO';
   });
 
-  it.each(['FREE_BOOKING', 'SETUP'] as const)('denies %s manual booking creation before creating anything', async (state) => {
+  it('v1.18: Starter (FREE_BOOKING) may create manual bookings, gated again inside the create transaction', async () => {
+    product.state = 'FREE_BOOKING';
+    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
+    createInstantBooking.mockResolvedValue({
+      id: 'b-1',
+      status: 'BOOKED',
+      serviceNameAtBooking: 'Cut',
+      service: { name: 'Cut' },
+      barber: { name: 'Alex' },
+      startAt: new Date('2026-07-20T09:00:00.000Z'),
+    });
+
+    const res = await POST(makeContext(validPayload) as never);
+    expect(res.status).toBe(200);
+    expect(createInstantBooking).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ requiredShopId: 'owner-shop-1', requiredCapability: 'MANUAL_BOOKINGS' }),
+    );
+  });
+
+  it.each(['SETUP'] as const)('denies %s manual booking creation before creating anything', async (state) => {
     product.state = state;
     resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
 
