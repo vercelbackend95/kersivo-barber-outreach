@@ -90,6 +90,7 @@ export default function BarbershopSettingsPanel({
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
+  const [connectDisconnected, setConnectDisconnected] = useState(false);
   const [canManagePayouts, setCanManagePayouts] = useState(false);
   const [depositsBusy, setDepositsBusy] = useState(false);
   const [depositsError, setDepositsError] = useState('');
@@ -297,7 +298,9 @@ export default function BarbershopSettingsPanel({
         connect?: {
           accountId?: string | null;
           accountLinked?: boolean;
+          accountType?: string | null;
           chargesEnabled?: boolean;
+          disconnected?: boolean;
         };
         policy?: {
           cancellationWindowHours: number;
@@ -321,6 +324,7 @@ export default function BarbershopSettingsPanel({
       setDepositsCollectReady(Boolean(payload?.collectReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
       setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
+      setConnectDisconnected(Boolean(payload?.connect?.disconnected));
       setCanManagePayouts(Boolean(payload?.canManagePayouts));
       setPolicySummary(payload?.policy ?? null);
 
@@ -893,7 +897,11 @@ export default function BarbershopSettingsPanel({
                       }
                     }}
                   >
-                    {connectAccountLinked ? 'Continue Stripe Connect' : 'Connect Stripe'}
+                    {connectDisconnected
+                      ? 'Reconnect Stripe'
+                      : connectAccountLinked
+                        ? 'Continue Stripe Connect'
+                        : 'Connect Stripe'}
                   </button>
                 ) : (
                   <p className="admin-barbershop-settings__card-copy" role="status">
@@ -902,11 +910,13 @@ export default function BarbershopSettingsPanel({
                   </p>
                 )}
                 <span className="muted">
-                  {connectChargesEnabled
-                    ? 'Stripe ready for booking payments'
-                    : connectAccountLinked
-                      ? 'Finish Stripe onboarding'
-                      : 'Not connected'}
+                  {connectDisconnected
+                    ? 'Stripe disconnected — reconnect to take online payments'
+                    : connectChargesEnabled
+                      ? 'Stripe ready for booking payments'
+                      : connectAccountLinked
+                        ? 'Finish Stripe onboarding'
+                        : 'Not connected'}
                 </span>
               </div>
               <fieldset
