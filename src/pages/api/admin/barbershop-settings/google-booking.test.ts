@@ -4,6 +4,8 @@ import type { APIContext } from 'astro';
 const requireAdminPermissionAndCapability = vi.fn();
 const shopFindUnique = vi.fn();
 const shopUpdate = vi.fn();
+const prismaTransaction = vi.fn();
+const ensureShopBookingSlug = vi.fn();
 const loadKersivoAccess = vi.fn();
 
 vi.mock('@/lib/admin/productCapability', () => ({
@@ -17,7 +19,12 @@ vi.mock('@/lib/db/client', () => ({
       findUnique: (...args: unknown[]) => shopFindUnique(...args),
       update: (...args: unknown[]) => shopUpdate(...args),
     },
+    $transaction: (...args: unknown[]) => prismaTransaction(...args),
   },
+}));
+
+vi.mock('@/lib/booking/bookingSlug', () => ({
+  ensureShopBookingSlug: (...args: unknown[]) => ensureShopBookingSlug(...args),
 }));
 
 vi.mock('@/lib/shop/kersivoAccess', () => ({
@@ -107,6 +114,10 @@ describe('Google booking settings API', () => {
       capabilities: ['GOOGLE_BOOKING_SETUP'],
     });
     shopFindUnique.mockImplementation(async () => ({ ...shop }));
+    ensureShopBookingSlug.mockResolvedValue('allocated-slug');
+    prismaTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({ __tx: true }),
+    );
     shopUpdate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       shop = { ...shop, ...data } as typeof shop;
       return { ...shop };
@@ -136,6 +147,22 @@ describe('Google booking settings API', () => {
       requiresUpdate: false,
       googleBusinessProfileUrl: 'https://business.google.com/',
     });
+    expect(body.bookingUrl).not.toContain('/q/');
+  });
+
+  it('allocates a stable booking slug for an older active shop before exposing Google setup', async () => {
+    shop.bookingSlug = null;
+
+    const res = await GET(ctx());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(prismaTransaction).toHaveBeenCalledTimes(1);
+    expect(ensureShopBookingSlug).toHaveBeenCalledWith(
+      expect.objectContaining({ __tx: true }),
+      'shop-1',
+    );
+    expect(body.bookingUrl).toBe('https://kersivo.test/book/allocated-slug');
     expect(body.bookingUrl).not.toContain('/q/');
   });
 
