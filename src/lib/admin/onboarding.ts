@@ -277,13 +277,28 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
   // subscription that ended (Starter then goes through the post-Full choice, not the marker).
   let fullCheckoutPending = false;
   let postFullPlanChoiceRequired = false;
+  let billingRecoveryRequired = false;
   if (signedIn && productAccess.state === 'SETUP') {
-    const [pending, endedFull] = await Promise.all([
+    const [pending, latestSubscription] = await Promise.all([
       prisma.saasSubscription.count({ where: { shopId, status: 'PENDING' } }),
-      prisma.saasSubscription.count({ where: { shopId, status: { not: 'PENDING' } } }),
+      prisma.saasSubscription.findFirst({
+        where: { shopId, status: { not: 'PENDING' } },
+        orderBy: { createdAt: 'desc' },
+        select: { status: true, cancelAtPeriodEnd: true },
+      }),
     ]);
     fullCheckoutPending = pending > 0;
-    postFullPlanChoiceRequired = endedFull > 0;
+
+    if (latestSubscription) {
+      const status = String(latestSubscription.status);
+      billingRecoveryRequired =
+        (status === 'PAST_DUE' || status === 'SUSPENDED') &&
+        !latestSubscription.cancelAtPeriodEnd;
+      postFullPlanChoiceRequired =
+        status === 'CANCELED' ||
+        ((status === 'PAST_DUE' || status === 'SUSPENDED' || status === 'ACTIVE') &&
+          latestSubscription.cancelAtPeriodEnd);
+    }
   }
 
   return {
@@ -319,6 +334,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     freeActivationRequired: signedIn && gate === 'free_activation',
     fullCheckoutPending,
     postFullPlanChoiceRequired,
+    billingRecoveryRequired,
     freeBookableBarberLimit:
       signedIn && freeBookableBarberLimitApplies(productAccess.state)
         ? FREE_BOOKABLE_BARBER_LIMIT
