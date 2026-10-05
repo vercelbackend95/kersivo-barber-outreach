@@ -227,6 +227,8 @@ export type AuthenticatedSaasCheckoutInput = {
   checkoutAttemptId: string;
   request: Request;
   source?: SaasCheckoutSource;
+  /** Safe first-party path used when Stripe Checkout is cancelled. */
+  cancelPath?: '/setup/cancel' | '/admin/onboarding';
   /**
    * Runs first inside the shop checkout lock. Return a Response to stop (e.g. the shop is already
    * entitled), or null to continue. Must read through `tx` so the decision is race-safe.
@@ -421,7 +423,7 @@ export async function runAuthenticatedSaasCheckout(
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
       successUrl: `${baseUrl}/setup/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/setup/cancel`,
+      cancelUrl: `${baseUrl}${input.cancelPath ?? '/setup/cancel'}`,
       productId: 'saas-subscription',
       name: 'Kersivo — monthly subscription',
       unitAmount: SAAS_MONTHLY_PENCE,
