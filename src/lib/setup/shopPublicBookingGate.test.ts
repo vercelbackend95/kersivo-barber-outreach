@@ -28,6 +28,7 @@ function shopRow(overrides: Record<string, unknown> = {}) {
     freeBookingActivatedAt: null,
     stripeConnectAccountId: 'acct_ready',
     stripeConnectChargesEnabled: true,
+    stripeConnectDisconnectedAt: null,
     ...overrides,
   };
 }
@@ -67,6 +68,17 @@ describe('shopAcceptsPublicBookings', () => {
 
     shopFindUnique.mockResolvedValue(
       shopRow({ freeBookingActivatedAt: new Date(), stripeConnectChargesEnabled: false }),
+    );
+    expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
+  });
+
+  it('denies Starter after an explicit Stripe disconnect even if chargesEnabled is stale true', async () => {
+    shopFindUnique.mockResolvedValue(
+      shopRow({
+        freeBookingActivatedAt: new Date(),
+        stripeConnectDisconnectedAt: new Date(),
+        stripeConnectChargesEnabled: true,
+      }),
     );
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
   });
