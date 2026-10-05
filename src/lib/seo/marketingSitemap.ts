@@ -15,6 +15,7 @@ import {
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { buildAbsoluteUrl } from './meta';
 import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
+import { STARTER_PAGE_LAST_UPDATED_ISO, STARTER_PAGE_PATH } from './starterPage';
 
 /**
  * Marketing-domain sitemap for kersivo.co.uk only.
@@ -35,6 +36,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/' },
   /** Matches the visible "Last updated" date on src/pages/pricing.astro. */
   { path: PRICING_PAGE_PATH, lastmod: PRICING_PAGE_LAST_UPDATED_ISO },
+  /** KERSIVO Starter product-led acquisition page. */
+  { path: STARTER_PAGE_PATH, lastmod: STARTER_PAGE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/about.astro. */
   { path: ABOUT_PAGE_PATH, lastmod: ABOUT_PAGE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/booksy-alternative/index.astro. */
