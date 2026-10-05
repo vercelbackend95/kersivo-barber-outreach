@@ -36,6 +36,7 @@ const FREE_BOOKING_CAPABILITIES: readonly KersivoCapability[] = [
   'BOOKING_PAYMENTS',
   'TEAM',
   'SERVICES',
+  'AUTOMATED_EMAIL_REMINDERS',
 ];
 
 const FULL_KERSIVO_CAPABILITIES: readonly KersivoCapability[] = [
