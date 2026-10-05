@@ -233,6 +233,10 @@ model ShopSettings {
   /// Stable public booking URL segment (/book/{bookingSlug}). Allocated once by
   /// src/lib/booking/bookingSlug.ts; never derived from later name/town edits.
   bookingSlug                        String?                         @unique
+  /// Owner-confirmed Google Business Profile booking-link setup. URL snapshot prevents stale
+  /// "configured" status if KERSIVO later changes the authoritative public booking destination.
+  googleBookingLinkConfirmedAt        DateTime?
+  googleBookingLinkConfirmedUrl       String?
   /// Legacy owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
   /// Kept in sync with bookingPaymentMode (true ⇔ DEPOSIT) during the migration period.
   depositsEnabled                    Boolean                         @default(false)
