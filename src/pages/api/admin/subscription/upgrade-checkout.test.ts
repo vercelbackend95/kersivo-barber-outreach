@@ -6,6 +6,7 @@ import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 const resolveAdminAccess = vi.fn();
 const requirePermission = vi.fn();
 const shopMeetsOnboardingCompletionRequirements = vi.fn();
+const markOnboardingCompleted = vi.fn();
 const findUniqueShop = vi.fn();
 const globalShopCreate = vi.fn();
 const globalShopUpdate = vi.fn();
@@ -56,6 +57,7 @@ vi.mock('@/lib/admin/rbac/can', () => ({
 vi.mock('@/lib/admin/onboarding', () => ({
   shopMeetsOnboardingCompletionRequirements: (...args: unknown[]) =>
     shopMeetsOnboardingCompletionRequirements(...args),
+  markOnboardingCompleted: (...args: unknown[]) => markOnboardingCompleted(...args),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -186,6 +188,7 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
     resolveAdminAccess.mockResolvedValue(sessionAccess());
     requirePermission.mockReturnValue(null);
     shopMeetsOnboardingCompletionRequirements.mockResolvedValue(true);
+    markOnboardingCompleted.mockResolvedValue(undefined);
     findUniqueShop.mockResolvedValue({
       onboardingCompleted: true,
       name: 'Fade Studio',
@@ -226,7 +229,7 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
       expect(txSubCreate).toHaveBeenCalledTimes(1);
     });
 
-    it('B: SETUP owner may buy Full directly without Free activation', async () => {
+    it('B: SETUP owner may choose Full directly; setup completes without Starter activation', async () => {
       shopRow = setupShop();
       findUniqueShop.mockResolvedValue({
         onboardingCompleted: false,
@@ -236,9 +239,10 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
       const { res } = await post();
       expect(res.status).toBe(200);
       expect(shopMeetsOnboardingCompletionRequirements).toHaveBeenCalledWith('shop-1');
+      expect(markOnboardingCompleted).toHaveBeenCalledWith('shop-1');
       expect(txSubCreate).toHaveBeenCalledTimes(1);
-      // SETUP stays SETUP until Stripe entitlement: no Free marker / shop writes here.
       expect(globalShopUpdate).not.toHaveBeenCalled();
+      expect(shopRow?.freeBookingActivatedAt).toBeNull();
     });
 
     it('B: SETUP without finished shop/team/services/hours cannot start checkout', async () => {
@@ -252,6 +256,7 @@ describe('POST /api/admin/subscription/upgrade-checkout', () => {
       const { res, body } = await post();
       expect(res.status).toBe(400);
       expect(body.code).toBe('ONBOARDING_INCOMPLETE');
+      expect(markOnboardingCompleted).not.toHaveBeenCalled();
       expect(withLock).not.toHaveBeenCalled();
       expectNoCheckoutSideEffects();
     });
