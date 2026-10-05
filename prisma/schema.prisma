@@ -325,10 +325,8 @@ model ShopQrCode {
   @@unique([shopId, placement])
 }
 
-/**
- * One included initial physical Booking QR Kit request per ShopSettings location.
- * Customer-facing V1 only collects the request; verification/printing/dispatch remain operational.
- */
+/// One included initial physical Booking QR Kit request per ShopSettings location.
+/// Customer-facing V1 only collects the request; verification/printing/dispatch remain operational.
 model ShopQrKitRequest {
   id                  String                 @id @default(cuid())
   shopId              String                 @unique
