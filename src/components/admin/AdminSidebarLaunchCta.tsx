@@ -6,7 +6,9 @@ import {
   emptyLaunchProgress,
   OWNER_LAUNCH_HREF,
   resolveLaunchCtaPresentation,
+  resolveStarterLaunchCtaPresentation,
   type LaunchProgress,
+  type StarterLaunchState,
 } from '@/lib/admin/launchCtaProgress';
 import { parseAdminSpaHref } from '@/lib/admin/sectionUrl';
 import '@/styles/components/admin-sidebar-launch-cta.css';
@@ -16,6 +18,8 @@ type LaunchContextPayload = {
   paid?: boolean;
   paidHref?: string | null;
   progress?: LaunchProgress;
+  productState?: string;
+  starterLaunch?: StarterLaunchState | null;
 };
 
 type AdminSidebarLaunchCtaProps = {
@@ -37,6 +41,10 @@ export default function AdminSidebarLaunchCta({
   const [pending, setPending] = useState(false);
   const [paid, setPaid] = useState(false);
   const [paidHref, setPaidHref] = useState<string | null>(null);
+  const [productState, setProductState] = useState<string | null>(null);
+  const [starterLaunch, setStarterLaunch] = useState<StarterLaunchState | null>(null);
+  const [starterActionBusy, setStarterActionBusy] = useState(false);
+  const [starterActionError, setStarterActionError] = useState('');
 
   useEffect(() => {
     if (isPublicDemo) {
@@ -44,6 +52,8 @@ export default function AdminSidebarLaunchCta({
       setPending(false);
       setPaid(false);
       setPaidHref(null);
+      setProductState(null);
+      setStarterLaunch(null);
       setLoading(false);
       return;
     }
@@ -60,6 +70,8 @@ export default function AdminSidebarLaunchCta({
           setPending(false);
           setPaid(false);
           setPaidHref(null);
+          setProductState(null);
+          setStarterLaunch(null);
           return;
         }
 
@@ -72,12 +84,16 @@ export default function AdminSidebarLaunchCta({
         setPending(Boolean(data.pending));
         setPaid(Boolean(data.paid));
         setPaidHref(typeof data.paidHref === 'string' ? data.paidHref : null);
+        setProductState(typeof data.productState === 'string' ? data.productState : null);
+        setStarterLaunch(data.starterLaunch ?? null);
       } catch {
         if (!cancelled) {
           setProgress(emptyLaunchProgress());
           setPending(false);
           setPaid(false);
           setPaidHref(null);
+          setProductState(null);
+          setStarterLaunch(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -94,8 +110,16 @@ export default function AdminSidebarLaunchCta({
     [progress, pending, paid, paidHref],
   );
 
-  const handleClick = () => {
-    if (loading) return;
+  const starterPresentation = useMemo(
+    () =>
+      productState === 'FREE_BOOKING' && starterLaunch
+        ? resolveStarterLaunchCtaPresentation(progress, starterLaunch)
+        : null,
+    [productState, progress, starterLaunch],
+  );
+
+  const handleClick = async () => {
+    if (loading || starterActionBusy) return;
     if (isPublicDemo) {
       window.dispatchEvent(
         new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT, {
@@ -104,18 +128,49 @@ export default function AdminSidebarLaunchCta({
       );
       return;
     }
-    if (onUpgrade && presentation.href.startsWith(OWNER_LAUNCH_HREF)) {
+
+    if (starterPresentation?.action === 'stripe') {
+      setStarterActionBusy(true);
+      setStarterActionError('');
+      try {
+        const response = await fetch('/api/admin/barbershop-settings/deposits', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string;
+          url?: string;
+        } | null;
+        if (!response.ok || !payload?.url) {
+          throw new Error(payload?.error || 'Could not start Stripe setup.');
+        }
+        window.location.assign(payload.url);
+      } catch (error) {
+        setStarterActionError(
+          error instanceof Error ? error.message : 'Could not start Stripe setup.',
+        );
+        setStarterActionBusy(false);
+      }
+      return;
+    }
+
+    const targetHref =
+      starterPresentation?.action === 'navigate'
+        ? starterPresentation.href ?? '/admin'
+        : presentation.href;
+
+    if (onUpgrade && targetHref.startsWith(OWNER_LAUNCH_HREF)) {
       onUpgrade();
       return;
     }
-    const spaSection = parseAdminSpaHref(presentation.href);
+    const spaSection = parseAdminSpaHref(targetHref);
     const onAdminSpa =
       window.location.pathname === '/admin' || window.location.pathname === '/admin-demo';
     if (spaSection && onAdminSpa && onSpaSection) {
       onSpaSection(spaSection);
       return;
     }
-    window.location.assign(presentation.href);
+    window.location.assign(targetHref);
   };
 
   if (loading) {
@@ -132,9 +187,52 @@ export default function AdminSidebarLaunchCta({
     );
   }
 
+  if (starterPresentation?.action === 'none' && !isPublicDemo) {
+    return null;
+  }
+
   // Paying tenants (shopPaidAt / SaaS) — hide purchase / launch CTA entirely.
   if (paid && !isPublicDemo) {
     return null;
+  }
+
+  if (starterPresentation && !isPublicDemo) {
+    return (
+      <div>
+        <AdminLaunchCtaButton
+          title={starterActionBusy ? 'Opening Stripe…' : starterPresentation.title}
+          status={starterPresentation.status}
+          supporting={starterPresentation.supporting}
+          ariaLabel={`${starterPresentation.status}: ${starterPresentation.title}`}
+          onClick={() => void handleClick()}
+          conversion
+        >
+          <ul className="admin-sidebar-launch-cta__checklist">
+            {progress.steps.map((step) => (
+              <li
+                key={step.id}
+                className={`admin-sidebar-launch-cta__check${
+                  step.done ? ' admin-sidebar-launch-cta__check--done' : ' admin-sidebar-launch-cta__check--todo'
+                }`}
+              >
+                <span className="admin-sidebar-launch-cta__mark" aria-hidden="true">
+                  {step.done ? '✓' : '○'}
+                </span>
+                <span className="admin-sidebar-launch-cta__check-label">{step.label}</span>
+              </li>
+            ))}
+          </ul>
+          {starterPresentation.action === 'stripe' ? (
+            <span className="admin-sidebar-launch-cta__disclosure">
+              0% KERSIVO fee. Stripe processing fees apply.
+            </span>
+          ) : null}
+        </AdminLaunchCtaButton>
+        {starterActionError ? (
+          <p className="admin-sidebar-launch-cta__error" role="alert">{starterActionError}</p>
+        ) : null}
+      </div>
+    );
   }
 
   return (
@@ -142,7 +240,7 @@ export default function AdminSidebarLaunchCta({
       title={presentation.title}
       status={presentation.status}
       ariaLabel={`${presentation.status}: ${presentation.title}. ${presentation.doneCount} of ${presentation.totalCount} complete.`}
-      onClick={handleClick}
+      onClick={() => void handleClick()}
     >
       <ul className="admin-sidebar-launch-cta__checklist">
         {progress.steps.map((step) => (
