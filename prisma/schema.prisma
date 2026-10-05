@@ -71,6 +71,7 @@ enum EmailOutboundPurpose {
   DEPOSIT_REFUNDED_SLOT_LOST
   CLIENT_ONBOARDING_INTERNAL
   CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
+  QR_KIT_REQUESTED
 }
 
 enum EmailOutboundStatus {
@@ -291,11 +292,22 @@ model ShopSettings {
   recommendationSets                 RecommendationSet[]
   recommendationSetItems             RecommendationSetItem[]
   qrCodes                            ShopQrCode[]
+  qrKitRequest                        ShopQrKitRequest?
 }
 
 enum ShopQrPlacement {
   WINDOW
   REBOOK
+}
+
+enum QrKitFulfilmentStatus {
+  REQUESTED
+  VERIFYING
+  APPROVED
+  PRINT_QUEUED
+  DISPATCHED
+  NEEDS_REVIEW
+  REJECTED
 }
 
 /// Physical QR identity: belongs to shop + placement. The scan destination is resolved at
@@ -311,6 +323,36 @@ model ShopQrCode {
   shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@unique([shopId, placement])
+}
+
+/**
+ * One included initial physical Booking QR Kit request per ShopSettings location.
+ * Customer-facing V1 only collects the request; verification/printing/dispatch remain operational.
+ */
+model ShopQrKitRequest {
+  id                  String                 @id @default(cuid())
+  shopId              String                 @unique
+  status              QrKitFulfilmentStatus @default(REQUESTED)
+  deliveryContactName String
+  deliveryPhone       String
+  addressLine1        String
+  addressLine2        String?
+  townCity            String
+  postcode            String
+  countryCode         String                 @default("GB")
+  verificationNote    String?
+  requestedAt         DateTime               @default(now())
+  statusUpdatedAt     DateTime               @default(now())
+  approvedAt          DateTime?
+  printQueuedAt       DateTime?
+  dispatchedAt        DateTime?
+  rejectedAt          DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([status, requestedAt])
 }
 
 // Login membership for one shop — roles never keyed by shop name.
