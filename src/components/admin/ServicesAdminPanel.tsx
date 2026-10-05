@@ -123,6 +123,7 @@ export default function ServicesAdminPanel({
 }) {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [starterMinActiveServicePricePence, setStarterMinActiveServicePricePence] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [barbers, setBarbers] = useState<BarberListRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -197,7 +198,11 @@ export default function ServicesAdminPanel({
 
     try {
       const [servicesData, barbersData] = await Promise.all([
-        adminFetchJson<{ services?: ServiceRow[]; categories?: string[] }>('/api/admin/services', {
+        adminFetchJson<{
+          services?: ServiceRow[];
+          categories?: string[];
+          starterMinActiveServicePricePence?: number | null;
+        }>('/api/admin/services', {
           errorMessage: 'Unable to load services.',
         }),
         adminFetchJson<{ barbers?: BarberListRow[] }>('/api/admin/barbers', {
@@ -207,6 +212,11 @@ export default function ServicesAdminPanel({
 
       setServices(servicesData.services ?? []);
       setAvailableCategories(servicesData.categories ?? []);
+      setStarterMinActiveServicePricePence(
+        typeof servicesData.starterMinActiveServicePricePence === 'number'
+          ? servicesData.starterMinActiveServicePricePence
+          : null,
+      );
       setBarbers(barbersData.barbers ?? []);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Unable to load services.');
@@ -677,6 +687,7 @@ export default function ServicesAdminPanel({
             categories={availableCategories}
             barbers={barbers}
             isLoadingBarbers={loading}
+            minimumActivePricePence={starterMinActiveServicePricePence}
             onAddCategory={handleAddCategory}
             onCancel={resetServiceFormState}
             onSaved={async ({ categories }) => {
