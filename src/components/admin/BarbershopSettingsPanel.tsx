@@ -99,6 +99,7 @@ export default function BarbershopSettingsPanel({
   const [bookingPaymentMode, setBookingPaymentMode] = useState<'NONE' | 'DEPOSIT' | 'FULL'>('NONE');
   const [bookingPaymentsAvailable, setBookingPaymentsAvailable] = useState(false);
   const [bookingProductState, setBookingProductState] = useState<string | null>(null);
+  const [paymentControlsEditable, setPaymentControlsEditable] = useState(false);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
@@ -379,6 +380,12 @@ export default function BarbershopSettingsPanel({
         productState?: string;
         bookingPaymentMode?: string;
         bookingPaymentsAvailable?: boolean;
+        paymentControlsEditable?: boolean;
+        starterPaymentPolicy?: {
+          minimumOnlinePaymentPence?: number;
+          payInFullAvailable?: boolean;
+          publicPayAtShop?: boolean;
+        } | null;
         depositsEnabled?: boolean;
         collectReady?: boolean;
         canManagePayouts?: boolean;
@@ -399,6 +406,7 @@ export default function BarbershopSettingsPanel({
       setDepositsPaid(Boolean(payload?.paid));
       setBookingPaymentsAvailable(Boolean(payload?.bookingPaymentsAvailable));
       setBookingProductState(payload?.productState ?? null);
+      setPaymentControlsEditable(Boolean(payload?.paymentControlsEditable));
       setBookingPaymentMode(
         payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
           ? payload.bookingPaymentMode
@@ -932,12 +940,20 @@ export default function BarbershopSettingsPanel({
           <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
             Booking payments
           </h2>
-          <p className="admin-barbershop-settings__card-copy">
-            Choose whether clients pay at the shop, pay a £5 deposit online (services under £5 are
-            paid in full), or pay the full service price upfront when they book. Payments are
-            refunded if the client cancels inside your policy window or you cancel. On a late
-            cancel or no-show you keep the deposit, or up to £5 of a full upfront payment.
-          </p>
+          {bookingProductState === 'FREE_BOOKING' ? (
+            <p className="admin-barbershop-settings__card-copy">
+              Starter uses one fixed public-booking policy: clients pay a £5 online deposit or can
+              pay the full service price. Pay at shop is not available for customer-created Starter
+              bookings. Manual staff-created bookings may still be Pay at shop.
+            </p>
+          ) : (
+            <p className="admin-barbershop-settings__card-copy">
+              Choose whether clients pay at the shop, pay a £5 deposit online, or pay the full
+              service price upfront when they book. Payments are refunded if the client cancels
+              inside your policy window or you cancel. On a late cancel or no-show you keep the
+              deposit, or up to £5 of a full upfront payment.
+            </p>
+          )}
           {bookingProductState === 'FREE_BOOKING' ? (
             <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
               KERSIVO Starter: £0/month · 0% KERSIVO commission on booking payments. Stripe
@@ -1007,80 +1023,100 @@ export default function BarbershopSettingsPanel({
                         : 'Not connected'}
                 </span>
               </div>
-              <fieldset
-                className="field"
-                style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
-                disabled={depositsBusy || !canManagePayouts}
-              >
-                <legend className="sr-only">Booking payment option</legend>
-                {(
-                  [
-                    { mode: 'NONE', label: 'Pay at shop' },
-                    { mode: 'DEPOSIT', label: 'Require £5 deposit' },
-                    { mode: 'FULL', label: 'Require full payment upfront' },
-                  ] as const
-                ).map((option) => {
-                  const checked = option.mode === bookingPaymentMode;
-                  return (
-                    <label
-                      key={option.mode}
-                      style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-                    >
-                      <input
-                        type="radio"
-                        name="bbs-booking-payment-mode"
-                        value={option.mode}
-                        checked={checked}
-                        disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
-                        onChange={async () => {
-                          if (checked) return;
-                          setDepositsBusy(true);
-                          setDepositsError('');
-                          setDepositsMessage('');
-                          try {
-                            const response = await fetch('/api/admin/barbershop-settings/deposits', {
-                              method: 'PATCH',
-                              credentials: 'include',
-                              headers: { 'content-type': 'application/json' },
-                              body: JSON.stringify({ bookingPaymentMode: option.mode }),
-                            });
-                            const payload = (await response.json().catch(() => null)) as {
-                              error?: string;
-                              bookingPaymentMode?: string;
-                            } | null;
-                            if (!response.ok) {
-                              throw new Error(payload?.error || 'Could not update booking payments.');
+              {paymentControlsEditable ? (
+                <fieldset
+                  className="field"
+                  style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
+                  disabled={depositsBusy || !canManagePayouts}
+                >
+                  <legend className="sr-only">Booking payment option</legend>
+                  {(
+                    [
+                      { mode: 'NONE', label: 'Pay at shop' },
+                      { mode: 'DEPOSIT', label: 'Require £5 deposit' },
+                      { mode: 'FULL', label: 'Require full payment upfront' },
+                    ] as const
+                  ).map((option) => {
+                    const checked = option.mode === bookingPaymentMode;
+                    return (
+                      <label
+                        key={option.mode}
+                        style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                      >
+                        <input
+                          type="radio"
+                          name="bbs-booking-payment-mode"
+                          value={option.mode}
+                          checked={checked}
+                          disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
+                          onChange={async () => {
+                            if (checked) return;
+                            setDepositsBusy(true);
+                            setDepositsError('');
+                            setDepositsMessage('');
+                            try {
+                              const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                                method: 'PATCH',
+                                credentials: 'include',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({ bookingPaymentMode: option.mode }),
+                              });
+                              const payload = (await response.json().catch(() => null)) as {
+                                error?: string;
+                                bookingPaymentMode?: string;
+                              } | null;
+                              if (!response.ok) {
+                                throw new Error(payload?.error || 'Could not update booking payments.');
+                              }
+                              const nextMode =
+                                payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+                                  ? payload.bookingPaymentMode
+                                  : 'NONE';
+                              setBookingPaymentMode(nextMode);
+                              setDepositsMessage(
+                                nextMode === 'DEPOSIT'
+                                  ? '£5 deposit required on online bookings.'
+                                  : nextMode === 'FULL'
+                                    ? 'Full payment required upfront on online bookings.'
+                                    : 'Clients pay at the shop.',
+                              );
+                              await loadDeposits();
+                            } catch (error) {
+                              setDepositsError(
+                                error instanceof Error ? error.message : 'Could not update booking payments.',
+                              );
+                            } finally {
+                              setDepositsBusy(false);
                             }
-                            const nextMode =
-                              payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
-                                ? payload.bookingPaymentMode
-                                : 'NONE';
-                            setBookingPaymentMode(nextMode);
-                            setDepositsMessage(
-                              nextMode === 'DEPOSIT'
-                                ? '£5 deposit required on online bookings.'
-                                : nextMode === 'FULL'
-                                  ? 'Full payment required upfront on online bookings.'
-                                  : 'Clients pay at the shop.',
-                            );
-                            await loadDeposits();
-                          } catch (error) {
-                            setDepositsError(
-                              error instanceof Error ? error.message : 'Could not update booking payments.',
-                            );
-                          } finally {
-                            setDepositsBusy(false);
-                          }
-                        }}
-                      />
-                      <span>
-                        {option.label}
-                        {!canManagePayouts && checked ? ' (owner only)' : ''}
-                      </span>
-                    </label>
-                  );
-                })}
-              </fieldset>
+                          }}
+                        />
+                        <span>
+                          {option.label}
+                          {!canManagePayouts && checked ? ' (owner only)' : ''}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+  
+              ) : bookingProductState === 'FREE_BOOKING' ? (
+                <div className="admin-barbershop-settings__starter-payment-policy" data-starter-payment-policy>
+                  <p><strong>Starter payment setup</strong></p>
+                  <ul>
+                    <li>£5 online payment required</li>
+                    <li>Pay in full available</li>
+                    <li>Public Pay at shop unavailable</li>
+                    <li>0% KERSIVO commission</li>
+                  </ul>
+                  <p className="admin-barbershop-settings__card-copy">
+                    Want to choose how clients pay? Full KERSIVO unlocks Pay at shop, deposit and
+                    full-payment controls.
+                  </p>
+                  <a className="btn btn--primary" href="/admin/upgrade">
+                    Unlock payment controls — £39/month
+                  </a>
+                </div>
+              ) : null}
               {depositsPaid ? (
               <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input
