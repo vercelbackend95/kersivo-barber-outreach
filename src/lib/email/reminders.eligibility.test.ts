@@ -18,7 +18,6 @@ function baseCandidate(now: Date, overrides: Record<string, unknown> = {}) {
     notes: null as string | null,
     emailReminderSentAt: null as Date | null,
     emailReminderForStartAt: null as Date | null,
-    shopPaidAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
   };
 }
@@ -26,7 +25,7 @@ function baseCandidate(now: Date, overrides: Record<string, unknown> = {}) {
 describe('evaluateEmailReminderEligibility', () => {
   const now = new Date('2026-07-27T12:00:00.000Z');
 
-  it('accepts a booking ~24h out with email when shop is paid', () => {
+  it('accepts a booking ~24h out with email; product entitlement is checked separately', () => {
     const result = evaluateEmailReminderEligibility(baseCandidate(now), now, { enabled: true });
     expect(result).toEqual({ ok: true, toEmail: 'client@example.com' });
   });
@@ -45,14 +44,6 @@ describe('evaluateEmailReminderEligibility', () => {
     expect(result).toEqual({ ok: false, reason: 'demo_shop' });
   });
 
-  it('skips unpaid shops', () => {
-    const result = evaluateEmailReminderEligibility(
-      baseCandidate(now, { shopPaidAt: null }),
-      now,
-      { enabled: true },
-    );
-    expect(result).toEqual({ ok: false, reason: 'shop_unpaid' });
-  });
 
   it('skips sandbox test bookings', () => {
     const result = evaluateEmailReminderEligibility(
