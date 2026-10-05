@@ -201,7 +201,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
   });
 
   it('A: SETUP + termsAccepted=true + requirements met activates FREE_BOOKING', async () => {
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(200);
     expect(db.shop.freeBookingActivatedAt).toBeInstanceOf(Date);
@@ -217,15 +217,18 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('A: sets onboardingCompleted/At when the legacy flag was not yet set', async () => {
     db.shop = freshShop({ onboardingCompleted: false, onboardingCompletedAt: null });
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(200);
     expect(db.shop.onboardingCompleted).toBe(true);
     expect(db.shop.onboardingCompletedAt).toEqual(db.shop.freeBookingActivatedAt);
   });
 
-  it('B: missing or false termsAccepted is rejected with no Free marker', async () => {
-    for (const body of [undefined, {}, { termsAccepted: false }]) {
+  it('B: missing or false termsAccepted is rejected with no Starter marker', async () => {
+    for (const body of [
+      { plan: 'STARTER' },
+      { plan: 'STARTER', termsAccepted: false },
+    ]) {
       const res = await complete(body);
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -237,9 +240,22 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     expect(db.legal).toHaveLength(0);
   });
 
+  it('B: SETUP cannot activate Starter without an explicit Starter plan selection', async () => {
+    for (const body of [undefined, {}, { termsAccepted: true }, { plan: 'FULL', termsAccepted: true }]) {
+      const res = await complete(body);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        code: 'STARTER_PLAN_NOT_SELECTED',
+        error: 'Choose KERSIVO Starter explicitly before activation.',
+      });
+    }
+    expect(db.shop.freeBookingActivatedAt).toBeNull();
+    expect(db.legal).toHaveLength(0);
+  });
+
   it('Q: non-boolean "true" / 1 do not count as Terms acceptance', async () => {
     for (const termsAccepted of ['true', 1, 'yes']) {
-      const res = await complete({ termsAccepted });
+      const res = await complete({ plan: 'STARTER', termsAccepted });
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('TERMS_NOT_ACCEPTED');
     }
@@ -253,15 +269,15 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
   });
 
   it('N: activated Free shop passes the public booking gate', async () => {
-    await complete({ termsAccepted: true });
+    await complete({ plan: 'STARTER', termsAccepted: true });
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
   });
 
   it('D: replay after activation is idempotent with no duplicate side effects', async () => {
-    await complete({ termsAccepted: true });
+    await complete({ plan: 'STARTER', termsAccepted: true });
     const activatedAt = db.shop.freeBookingActivatedAt;
 
-    const replay = await complete({ termsAccepted: true });
+    const replay = await complete({ plan: 'STARTER', termsAccepted: true });
     const replayWithoutTerms = await complete();
 
     expect(replay.status).toBe(200);
@@ -278,7 +294,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       db.shop.freeBookingActivatedAt = winnerAt;
     };
 
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(200);
     expect(res.body.activation).toBe('already_free');
@@ -288,7 +304,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   describe('stable booking slug', () => {
     it('F: SETUP → Free allocates the slug in the activation transaction and returns /book/{slug}', async () => {
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.status).toBe(200);
       expect(db.shop.bookingSlug).toBe('fade-lab');
@@ -302,20 +318,20 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     it('F: a taken name slug uses the town suffix', async () => {
       db.otherSlugs = ['fade-lab'];
-      await complete({ termsAccepted: true });
+      await complete({ plan: 'STARTER', termsAccepted: true });
       expect(db.shop.bookingSlug).toBe('fade-lab-leeds');
     });
 
     it('F: a name slug equal to an existing shop id is skipped', async () => {
       db.otherShopIds = ['fade-lab'];
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
       expect(res.status).toBe(200);
       expect(db.shop.bookingSlug).toBe('fade-lab-leeds');
     });
 
     it('G: a failed legal write leaves no Free marker and no partially committed slug', async () => {
       vi.spyOn(tx.legalAcceptance, 'create').mockRejectedValueOnce(new Error('db down'));
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.status).toBe(500);
       expect(db.shop.freeBookingActivatedAt).toBeNull();
@@ -325,13 +341,13 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     it('G: the barber limit rejection allocates no slug', async () => {
       db.activeBookableBarbers = 5;
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
       expect(res.status).toBe(409);
       expect(db.shop.bookingSlug).toBeNull();
     });
 
     it('H: already-Free replay keeps the slug unchanged even after a shop rename', async () => {
-      await complete({ termsAccepted: true });
+      await complete({ plan: 'STARTER', termsAccepted: true });
       const activatedAt = db.shop.freeBookingActivatedAt;
       db.shop.name = 'Totally New Name';
       db.shop.townCity = 'York';
@@ -362,7 +378,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     it('J: Full completion writes no Free marker and allocates no slug', async () => {
       db.subscription = { status: 'ACTIVE', currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z') };
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.body.activation).toBe('full_kersivo');
       expect(db.shop.freeBookingActivatedAt).toBeNull();
@@ -374,7 +390,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       db.onLock = () => {
         db.subscription = { status: 'ACTIVE', currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z') };
       };
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.body.activation).toBe('full_kersivo');
       expect(db.shop.bookingSlug).toBeNull();
@@ -394,7 +410,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         db.subscription = activeSubscription;
       };
 
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.status).toBe(200);
       expect(res.body).toMatchObject({ activation: 'full_kersivo', productAccess: { state: 'FULL_KERSIVO' } });
@@ -426,7 +442,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         db.shop.freeBookingActivatedAt = existingActivation;
       };
 
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.status).toBe(200);
       expect(res.body).toMatchObject({ activation: 'already_free', productAccess: { state: 'FREE_BOOKING' } });
@@ -435,7 +451,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     });
 
     it('C: SETUP under the lock still activates, resolving state through the transaction', async () => {
-      const res = await complete({ termsAccepted: true });
+      const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
       expect(res.status).toBe(200);
       expect(res.body.activation).toBe('activated');
@@ -462,7 +478,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('E: legacy paid fallback shop is also not silently opted into Free', async () => {
     db.shop = freshShop({ shopPaidAt: new Date('2026-01-01T00:00:00.000Z') });
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.body.activation).toBe('full_kersivo');
     expect(db.shop.freeBookingActivatedAt).toBeNull();
@@ -470,7 +486,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('F: more than 4 active bookable barbers rejects Free activation', async () => {
     db.activeBookableBarbers = 5;
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(409);
     expect(res.body).toEqual({
@@ -484,7 +500,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('G: exactly 4 active bookable barbers is allowed', async () => {
     db.activeBookableBarbers = 4;
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(200);
     expect(res.body.productAccess.state).toBe('FREE_BOOKING');
@@ -492,7 +508,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('rejects activation when onboarding requirements are not met', async () => {
     shopMeetsOnboardingCompletionRequirements.mockResolvedValue(false);
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('ONBOARDING_INCOMPLETE');
@@ -501,7 +517,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('requires an account email for the legal record', async () => {
     requireOnboardingAccess.mockResolvedValue({ ...ownerAccess, userEmail: null });
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('ACCOUNT_EMAIL_REQUIRED');
@@ -509,7 +525,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
   });
 
   it('P: records a FREE_BOOKING_ACTIVATION legal acceptance with audit fields', async () => {
-    await complete({ termsAccepted: true });
+    await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(db.legal).toHaveLength(1);
     expect(db.legal[0]).toMatchObject({
@@ -530,7 +546,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
   it('fails closed inside the activation transaction when the legal record cannot be written', async () => {
     const createSpy = vi.spyOn(tx.legalAcceptance, 'create').mockRejectedValueOnce(new Error('db down'));
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(500);
     expect(createSpy).toHaveBeenCalled();
@@ -542,7 +558,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         status: 403,
       }),
     );
-    const res = await complete({ termsAccepted: true });
+    const res = await complete({ plan: 'STARTER', termsAccepted: true });
 
     expect(res.status).toBe(403);
     expect(db.shop.freeBookingActivatedAt).toBeNull();
