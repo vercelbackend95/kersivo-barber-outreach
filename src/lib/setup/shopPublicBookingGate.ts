@@ -28,6 +28,7 @@ export async function shopAcceptsPublicBookings(shopId: string): Promise<boolean
         id: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
+        stripeConnectDisconnectedAt: true,
       },
     }),
     prisma.service.findFirst({
