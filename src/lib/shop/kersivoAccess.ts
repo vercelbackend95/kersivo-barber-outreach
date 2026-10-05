@@ -41,6 +41,7 @@ const FREE_BOOKING_CAPABILITIES: readonly KersivoCapability[] = [
   'AUTOMATED_EMAIL_REMINDERS',
   'RECENT_BOOKING_HISTORY',
   'CLIENTS_CORE',
+  'MANUAL_BOOKINGS',
 ];
 
 const FULL_KERSIVO_CAPABILITIES: readonly KersivoCapability[] = [
