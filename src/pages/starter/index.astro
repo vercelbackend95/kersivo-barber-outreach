@@ -1,0 +1,351 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import {
+  STARTER_FAQ_ITEMS,
+  STARTER_PAGE_DESCRIPTION,
+  STARTER_PAGE_H1,
+  STARTER_PAGE_LAST_UPDATED_ISO,
+  STARTER_PAGE_LAST_UPDATED_LABEL,
+  STARTER_PAGE_PATH,
+  STARTER_PAGE_TITLE,
+  buildStarterFaqJsonLd,
+  buildStarterWebPageJsonLd,
+} from '@/lib/seo/starterPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/starter-landing.css';
+
+const currentYear = new Date().getFullYear();
+
+const starterFeatures = [
+  {
+    title: 'Hosted booking page',
+    body: 'Give clients a clean KERSIVO-hosted booking page without building a website first.',
+  },
+  {
+    title: 'Up to 4 bookable barbers',
+    body: 'Run the core diary for one physical shop with up to four active barbers taking bookings.',
+  },
+  {
+    title: 'Manual bookings',
+    body: 'Add walk-ins and phone bookings from the dashboard while keeping availability and overlap rules intact.',
+  },
+  {
+    title: '90-day booking history',
+    body: 'Keep recent booking context available for daily operations without exposing the full historical CRM layer.',
+  },
+  {
+    title: 'Clients Core',
+    body: 'Search client contacts and see the recent operational context you need to run the day.',
+  },
+  {
+    title: 'Email reminders',
+    body: 'Automated booking emails help clients remember appointments without requiring the Full plan.',
+  },
+] as const;
+
+const fullOnly = [
+  'Your own branded website and domain',
+  'More than 4 active bookable barbers',
+  'Full booking history',
+  'Advanced Clients / CRM',
+  'Reports',
+  'Retail, Products, Orders and Sales',
+  'SMS reminders',
+  'Live KERSIVO Assistant',
+] as const;
+---
+
+<LandingLayout
+  title={STARTER_PAGE_TITLE}
+  description={STARTER_PAGE_DESCRIPTION}
+  canonicalPath={STARTER_PAGE_PATH}
+  jsonLd={[buildStarterWebPageJsonLd(), buildStarterFaqJsonLd()]}
+>
+  <main class="starter-landing">
+    <section class="starter-hero" aria-labelledby="starter-hero-title">
+      <div class="starter-shell starter-hero__grid">
+        <div class="starter-hero__copy">
+          <p class="starter-kicker">
+            <span class="starter-kicker__dot" aria-hidden="true"></span>
+            KERSIVO STARTER · BUILT FOR UK BARBERSHOPS
+          </p>
+          <h1 id="starter-hero-title" class="starter-hero__title">{STARTER_PAGE_H1}</h1>
+          <p class="starter-hero__lead">
+            A real booking system for independent barbershops. Start with the tools you need to run
+            your diary, take bookings and build direct customer habits — without a monthly software fee.
+          </p>
+
+          <div class="starter-hero__price-row" aria-label="KERSIVO Starter pricing">
+            <strong>£0/month</strong>
+            <span>·</span>
+            <strong>0% KERSIVO commission</strong>
+          </div>
+
+          <div class="starter-hero__actions">
+            <a href="/admin" class="starter-btn starter-btn--primary" data-track="starter_signup_click">
+              Start KERSIVO Starter
+            </a>
+            <a href="/demo" class="starter-btn starter-btn--secondary">
+              See KERSIVO in action
+            </a>
+          </div>
+
+          <p class="starter-hero__fine">
+            No Stripe account is required for Pay at shop bookings. Standard Stripe processing fees
+            apply if you enable online card payments.
+          </p>
+
+          <p class="starter-updated">
+            Last updated <time datetime={STARTER_PAGE_LAST_UPDATED_ISO}>{STARTER_PAGE_LAST_UPDATED_LABEL}</time>
+          </p>
+        </div>
+
+        <aside class="starter-hero__card" aria-label="KERSIVO Starter quick facts">
+          <p class="starter-card__eyebrow">STARTER AT A GLANCE</p>
+          <dl class="starter-facts">
+            <div>
+              <dt>Monthly fee</dt>
+              <dd>£0</dd>
+            </div>
+            <div>
+              <dt>KERSIVO commission</dt>
+              <dd>0%</dd>
+            </div>
+            <div>
+              <dt>Bookable barbers</dt>
+              <dd>Up to 4</dd>
+            </div>
+            <div>
+              <dt>Booking page</dt>
+              <dd>KERSIVO hosted</dd>
+            </div>
+            <div>
+              <dt>Stripe required?</dt>
+              <dd>No, not for Pay at shop</dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="starter-section" aria-labelledby="starter-core-title">
+      <div class="starter-shell">
+        <header class="starter-section__header">
+          <p class="starter-section__eyebrow">RUN THE DIARY</p>
+          <h2 id="starter-core-title">The core tools to take bookings and run the day.</h2>
+          <p>
+            Starter is not a temporary trial. It is a real operating plan for independent shops that
+            want a straightforward booking setup before they need the wider Full KERSIVO toolkit.
+          </p>
+        </header>
+
+        <div class="starter-feature-grid">
+          {starterFeatures.map((feature) => (
+            <article class="starter-feature">
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="starter-section starter-section--distribution" aria-labelledby="starter-distribution-title">
+      <div class="starter-shell">
+        <header class="starter-section__header">
+          <p class="starter-section__eyebrow">GET FOUND. GET SCANNED. GET BOOKED.</p>
+          <h2 id="starter-distribution-title">Turn Google, your window and your shop into booking entry points.</h2>
+          <p>
+            Starter is built to help clients reach your booking page from places they already use.
+          </p>
+        </header>
+
+        <div class="starter-distribution-grid">
+          <article class="starter-distribution-card">
+            <span class="starter-distribution-card__number">01</span>
+            <h3>Google booking setup</h3>
+            <p>
+              KERSIVO gives you the correct booking URL and a guided setup for your Google Business
+              Profile. Google controls eligibility and where booking actions appear.
+            </p>
+          </article>
+
+          <article class="starter-distribution-card">
+            <span class="starter-distribution-card__number">02</span>
+            <h3>Included initial QR Kit</h3>
+            <p>
+              Eligible verified UK Starter locations can request one initial kit with separate
+              WINDOW and REBOOK dynamic booking QR assets.
+            </p>
+            <p class="starter-note">
+              Shop details are verified before print. Replacement and reorder handling is separate.
+            </p>
+          </article>
+
+          <article class="starter-distribution-card">
+            <span class="starter-distribution-card__number">03</span>
+            <h3>No customer app required</h3>
+            <p>
+              Clients book in the browser through your KERSIVO-hosted booking page. No customer app
+              download is required.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="starter-section" aria-labelledby="starter-payments-title">
+      <div class="starter-shell starter-split">
+        <div>
+          <p class="starter-section__eyebrow">PAYMENTS WHEN YOU WANT THEM</p>
+          <h2 id="starter-payments-title">Start with Pay at shop. Connect Stripe later if you need it.</h2>
+          <p class="starter-section__body">
+            You do not need a Stripe account to activate Starter. Keep bookings simple with Pay at
+            shop, or connect your own Stripe account later if you want required deposits or full
+            online card payments.
+          </p>
+        </div>
+        <div class="starter-payment-card">
+          <p><strong>Pay at shop</strong><span>Works without Stripe</span></p>
+          <p><strong>Required deposit</strong><span>Optional with Stripe</span></p>
+          <p><strong>Full payment upfront</strong><span>Optional with Stripe</span></p>
+          <p><strong>KERSIVO fee</strong><span>0%</span></p>
+          <small>Standard Stripe processing fees apply to online card payments.</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="starter-section starter-section--compare" aria-labelledby="starter-compare-title">
+      <div class="starter-shell">
+        <header class="starter-section__header">
+          <p class="starter-section__eyebrow">START SMALL. UPGRADE FOR OWNERSHIP.</p>
+          <h2 id="starter-compare-title">Starter runs the core booking operation. Full builds the complete brand.</h2>
+          <p>
+            Upgrade when your shop needs more capacity, deeper client tools or a complete branded
+            customer experience.
+          </p>
+        </header>
+
+        <div class="starter-plan-grid">
+          <article class="starter-plan-card starter-plan-card--active">
+            <p class="starter-plan-card__label">KERSIVO STARTER</p>
+            <p class="starter-plan-card__price">£0<span>/month</span></p>
+            <ul>
+              <li>KERSIVO-hosted booking page</li>
+              <li>Up to 4 active bookable barbers</li>
+              <li>Bookings, services and availability</li>
+              <li>Manual bookings</li>
+              <li>90-day booking history</li>
+              <li>Clients Core</li>
+              <li>Email reminders</li>
+              <li>Google booking setup</li>
+              <li>Included initial QR Kit for eligible verified UK shops</li>
+            </ul>
+            <a href="/admin" class="starter-btn starter-btn--primary">Start Starter</a>
+          </article>
+
+          <article class="starter-plan-card">
+            <p class="starter-plan-card__label">FULL KERSIVO</p>
+            <p class="starter-plan-card__price">£39<span>/month per location</span></p>
+            <p class="starter-plan-card__intro">Move up when you want the full KERSIVO ownership layer:</p>
+            <ul>
+              {fullOnly.map((item) => <li>{item}</li>)}
+            </ul>
+            <a href="/admin/launch" class="starter-btn starter-btn--secondary">Explore Full KERSIVO</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="starter-section starter-section--steps" aria-labelledby="starter-steps-title">
+      <div class="starter-shell">
+        <header class="starter-section__header">
+          <p class="starter-section__eyebrow">START IN THREE STEPS</p>
+          <h2 id="starter-steps-title">Build the booking setup first. Choose Starter when you are ready to go live.</h2>
+        </header>
+
+        <ol class="starter-steps">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>Create your KERSIVO account</h3>
+              <p>Add the basic shop information that powers your booking workspace.</p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Add your team, services and availability</h3>
+              <p>Set up who takes bookings, what they offer and when clients can book.</p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Choose KERSIVO Starter</h3>
+              <p>Activate at £0/month and publish your hosted booking page. Stripe remains optional.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about KERSIVO Starter?"
+      subHeading="Clear answers on pricing, Stripe, the QR Kit, Google booking and upgrading to Full."
+      supportHeading="Still have a question?"
+      supportText="Tell us about your barbershop and we’ll give you a clear answer."
+      supportLinkLabel="Email KERSIVO"
+      supportLinkHref={`mailto:${KERSIVO_CONTACT_EMAIL}`}
+      faqs={STARTER_FAQ_ITEMS}
+    />
+
+    <section class="starter-final" aria-labelledby="starter-final-title">
+      <div class="starter-shell starter-final__panel">
+        <div>
+          <p class="starter-section__eyebrow">KERSIVO STARTER</p>
+          <h2 id="starter-final-title">Start taking bookings without adding another monthly software bill.</h2>
+          <p>
+            £0/month. 0% KERSIVO commission. Build the core booking setup now and move to Full when
+            your business wants the complete branded experience.
+          </p>
+        </div>
+        <div class="starter-final__actions">
+          <a href="/admin" class="starter-btn starter-btn--primary">Start KERSIVO Starter</a>
+          <a href="/pricing" class="starter-text-link">Compare with Full KERSIVO →</a>
+        </div>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Starter', href: '/starter' },
+        { name: 'Full pricing', href: '/pricing' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Booksy comparison', href: '/booksy-alternative' },
+        { name: 'Fresha comparison', href: '/fresha-alternative' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
