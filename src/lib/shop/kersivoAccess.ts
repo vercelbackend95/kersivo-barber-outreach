@@ -28,6 +28,7 @@ export const KERSIVO_CAPABILITIES = [
   'AUTOMATED_EMAIL_REMINDERS',
   'BRANDED_SITE',
   'MANUAL_BOOKINGS',
+  'GOOGLE_BOOKING_SETUP',
 ] as const;
 
 export type KersivoCapability = (typeof KERSIVO_CAPABILITIES)[number];
@@ -42,6 +43,7 @@ const FREE_BOOKING_CAPABILITIES: readonly KersivoCapability[] = [
   'RECENT_BOOKING_HISTORY',
   'CLIENTS_CORE',
   'MANUAL_BOOKINGS',
+  'GOOGLE_BOOKING_SETUP',
 ];
 
 const FULL_KERSIVO_CAPABILITIES: readonly KersivoCapability[] = [
@@ -138,6 +140,7 @@ export type SerializedKersivoCapabilities = {
   automatedEmailReminders: boolean;
   brandedSite: boolean;
   manualBookings: boolean;
+  googleBookingSetup: boolean;
 };
 
 const CAPABILITY_KEYS: Readonly<Record<KersivoCapability, keyof SerializedKersivoCapabilities>> = {
@@ -157,6 +160,7 @@ const CAPABILITY_KEYS: Readonly<Record<KersivoCapability, keyof SerializedKersiv
   AUTOMATED_EMAIL_REMINDERS: 'automatedEmailReminders',
   BRANDED_SITE: 'brandedSite',
   MANUAL_BOOKINGS: 'manualBookings',
+  GOOGLE_BOOKING_SETUP: 'googleBookingSetup',
 };
 
 export type SerializedKersivoAccess = {
