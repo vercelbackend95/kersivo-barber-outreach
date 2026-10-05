@@ -40,7 +40,8 @@ function reviewState(overrides: Overrides = {}) {
     freeActivationRequired: true,
     fullCheckoutPending: false,
     postFullPlanChoiceRequired: false,
-    freeBookableBarberLimit: 4,
+    billingRecoveryRequired: false,
+    freeBookableBarberLimit: null,
     bookingUrl: null,
     user: { id: 'u-1', name: 'Owner', email: 'owner@example.com', image: null },
     ...overrides,
@@ -102,6 +103,9 @@ describe('OnboardingWizard — Phase 5F.1 explicit plan choice', () => {
       if (url === '/api/setup/post-full-plan') {
         getState = { ...starterLiveState, onboardingCompleted: true };
         return new Response(JSON.stringify({ ok: true, choice: 'STARTER' }), { status: 200 });
+      }
+      if (url === '/api/setup/billing-portal') {
+        return new Response(JSON.stringify({ url: 'https://billing.stripe.test/session' }), { status: 200 });
       }
       return new Response(JSON.stringify({ error: `unexpected ${url}` }), { status: 500 });
     });
@@ -246,6 +250,30 @@ describe('OnboardingWizard — Phase 5F.1 explicit plan choice', () => {
 
     await screen.findByRole('heading', { name: 'Your KERSIVO workspace is ready' });
     expect(document.querySelector('[data-onboarding-plan-choice]')).toBeNull();
+  });
+
+  it('billing recovery blocks new plan selection and opens the existing Stripe billing portal', async () => {
+    getState = reviewState({
+      billingRecoveryRequired: true,
+      postFullPlanChoiceRequired: false,
+    });
+    await renderReview();
+
+    expect(document.querySelector('[data-billing-recovery-required]')).toBeTruthy();
+    expect(document.querySelector('[data-plan-card="STARTER"]')).toBeNull();
+    expect(document.querySelector('[data-plan-card="FULL"]')).toBeNull();
+    expect(document.querySelector('#onboarding-terms-accepted')).toBeNull();
+    expect(primaryButton().textContent).toBe('Open billing');
+    expect(primaryButton().disabled).toBe(false);
+
+    fireEvent.click(primaryButton());
+
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith('https://billing.stripe.test/session'),
+    );
+    expect(callsTo('/api/setup/billing-portal')).toHaveLength(1);
+    expect(callsTo('/api/admin/onboarding/complete')).toHaveLength(0);
+    expect(callsTo('/api/setup/post-full-plan')).toHaveLength(0);
   });
 
   it('former Full shop: Starter goes through the existing post-Full plan choice, not the legacy marker', async () => {
