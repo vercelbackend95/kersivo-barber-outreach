@@ -5,6 +5,7 @@ const { db, createInstantBooking, createBookingDepositCheckoutSession } = vi.hoi
   db: {
     shop: null as null | Record<string, unknown>,
     subscription: null as null | Record<string, unknown>,
+    services: [] as Array<Record<string, unknown>>,
   },
   createInstantBooking: vi.fn(),
   createBookingDepositCheckoutSession: vi.fn(),
@@ -35,10 +36,7 @@ vi.mock('@/lib/db/client', () => ({
     },
     saasSubscription: { findFirst: async () => db.subscription },
     service: {
-      findFirst: async ({ where }: { where: Record<string, unknown> }) => {
-        if ('pricePence' in where) return null;
-        return { id: 'svc_1' };
-      },
+      findMany: async () => db.services,
     },
     booking: { update: vi.fn() },
   },
@@ -72,7 +70,7 @@ function freeShop(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function post() {
+function post(overrides: Record<string, unknown> = {}) {
   return POST({
     params: { shopId: 'shop_free' },
     request: new Request('https://kersivo.co.uk/api/public/bookings/shop_free/create', {
@@ -85,16 +83,25 @@ function post() {
         email: 'client@example.com',
         startAt: '2026-10-10T10:00:00.000Z',
         paymentChoice: 'DEPOSIT',
+        ...overrides,
       }),
     }),
   } as never);
 }
+
+const endedFullWithStarter = {
+  status: 'CANCELED',
+  currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+  cancelAtPeriodEnd: false,
+  postFullPlan: 'STARTER',
+};
 
 describe('public booking create — Free Booking shop (real entitlement gate)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     db.shop = freeShop();
     db.subscription = null;
+    db.services = [{ id: 'svc_1', name: 'Haircut', pricePence: 2500, isActive: true }];
     createInstantBooking.mockResolvedValue({
       id: 'book_1',
       status: BookingStatus.BOOKED,
@@ -128,6 +135,44 @@ describe('public booking create — Free Booking shop (real entitlement gate)', 
 
     expect(res.status).toBe(403);
     expect(createInstantBooking).not.toHaveBeenCalled();
+  });
+
+  describe('after Full → Starter becomes effective (crafted API calls cannot bypass readiness)', () => {
+    beforeEach(() => {
+      db.shop = freeShop({ freeBookingActivatedAt: null, shopPaidAt: null });
+      db.subscription = endedFullWithStarter;
+    });
+
+    it('accepts new public bookings once Stripe is ready and all services are at least £5', async () => {
+      const res = await post();
+      expect(res.status).toBe(200);
+      expect(createInstantBooking).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ allowDepositCollection: true, requiredCapability: 'PUBLIC_BOOKING' }),
+      );
+    });
+
+    it('refuses intake while any active service is below £5, even for a different, valid service', async () => {
+      db.services = [
+        { id: 'svc_1', name: 'Haircut', pricePence: 2500, isActive: true },
+        { id: 'svc_low', name: 'Line-up', pricePence: 300, isActive: true },
+      ];
+      const res = await post({ serviceId: 'svc_1' });
+      expect(res.status).toBe(403);
+      expect((await res.json()).error).toBe('Online booking is not available for this shop.');
+      expect(createInstantBooking).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['missing', { stripeConnectAccountId: null, stripeConnectChargesEnabled: false }],
+      ['disconnected', { stripeConnectDisconnectedAt: new Date(), stripeConnectChargesEnabled: true }],
+      ['charges disabled', { stripeConnectChargesEnabled: false }],
+    ])('refuses intake with Stripe %s — no Pay-at-shop fallback, even if requested', async (_l, overrides) => {
+      db.shop = { ...db.shop, ...overrides };
+      const res = await post({ paymentChoice: 'NONE' });
+      expect(res.status).toBe(403);
+      expect(createInstantBooking).not.toHaveBeenCalled();
+    });
   });
 
   it('rejects an unactivated SETUP shop even when onboarding is complete', async () => {

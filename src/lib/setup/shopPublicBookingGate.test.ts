@@ -1,22 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { shopFindUnique, subscriptionFindFirst, serviceFindFirst } = vi.hoisted(() => ({
+const { shopFindUnique, subscriptionFindFirst, serviceFindMany } = vi.hoisted(() => ({
   shopFindUnique: vi.fn(),
   subscriptionFindFirst: vi.fn(),
-  serviceFindFirst: vi.fn(),
+  serviceFindMany: vi.fn(),
 }));
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     shopSettings: { findUnique: (...a: unknown[]) => shopFindUnique(...a) },
     saasSubscription: { findFirst: (...a: unknown[]) => subscriptionFindFirst(...a) },
-    service: { findFirst: (...a: unknown[]) => serviceFindFirst(...a) },
+    service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
   },
 }));
 
 import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
-import { shopAcceptsPublicBookings } from './shopPublicBookingGate';
+import { loadPublicBookingIntakeStatus, shopAcceptsPublicBookings } from './shopPublicBookingGate';
 
 const farFuture = new Date('2999-01-01T00:00:00.000Z');
 
@@ -36,10 +36,11 @@ function shopRow(overrides: Record<string, unknown> = {}) {
 function starterServices(options: { active?: boolean; underpriced?: boolean } = {}) {
   const active = options.active ?? true;
   const underpriced = options.underpriced ?? false;
-  serviceFindFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
-    if (!active) return null;
-    if ('pricePence' in where) return underpriced ? { id: 'svc_low' } : null;
-    return { id: 'svc_1' };
+  serviceFindMany.mockImplementation(async () => {
+    if (!active) return [];
+    const services = [{ id: 'svc_1', name: 'Skin Fade', pricePence: 2500, isActive: true }];
+    if (underpriced) services.push({ id: 'svc_low', name: 'Line-up', pricePence: 300, isActive: true });
+    return services;
   });
 }
 
@@ -136,6 +137,80 @@ describe('shopAcceptsPublicBookings', () => {
   it('denies missing shops', async () => {
     shopFindUnique.mockResolvedValue(null);
     expect(await shopAcceptsPublicBookings('nope')).toBe(false);
+  });
+
+  describe('Full → Starter effective downgrade (postFullPlan = STARTER, Full ended)', () => {
+    const endedFullWithStarter = {
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+      cancelAtPeriodEnd: false,
+      postFullPlan: 'STARTER',
+    };
+
+    beforeEach(() => {
+      subscriptionFindFirst.mockResolvedValue(endedFullWithStarter);
+    });
+
+    it('goes live when Stripe is ready and every active service is at least £5', async () => {
+      shopFindUnique.mockResolvedValue(shopRow());
+      expect(await loadPublicBookingIntakeStatus('shop_1')).toMatchObject({
+        accepting: true,
+        reason: 'ok',
+      });
+    });
+
+    it('pauses intake for a service below £5 but keeps Starter entitlement and names the blocker', async () => {
+      shopFindUnique.mockResolvedValue(shopRow());
+      starterServices({ underpriced: true });
+      const status = await loadPublicBookingIntakeStatus('shop_1');
+      expect(status.accepting).toBe(false);
+      expect(status.reason).toBe('service_below_minimum');
+      expect(status.starterReadiness?.servicesBelowMinimum).toEqual([
+        { id: 'svc_low', name: 'Line-up', pricePence: 300 },
+      ]);
+      expect(status.reason).not.toBe('no_public_booking_entitlement');
+    });
+
+    it.each([
+      ['Stripe missing', { stripeConnectAccountId: null, stripeConnectChargesEnabled: false }, 'connect_missing'],
+      ['Stripe disconnected', { stripeConnectDisconnectedAt: new Date(), stripeConnectChargesEnabled: true }, 'connect_disconnected'],
+      ['charges disabled', { stripeConnectChargesEnabled: false }, 'connect_not_ready'],
+    ])('pauses intake (never Pay at shop) when %s', async (_label, overrides, blocker) => {
+      shopFindUnique.mockResolvedValue(shopRow(overrides));
+      const status = await loadPublicBookingIntakeStatus('shop_1');
+      expect(status).toMatchObject({ accepting: false, reason: 'stripe_not_ready' });
+      expect(status.starterReadiness?.stripe.blocker).toBe(blocker);
+    });
+
+    it('recovers after Stripe reconnect without any shop or slug change', async () => {
+      shopFindUnique.mockResolvedValue(shopRow({ stripeConnectDisconnectedAt: new Date() }));
+      expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
+
+      shopFindUnique.mockResolvedValue(shopRow({ stripeConnectAccountId: 'acct_standard_new' }));
+      expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
+    });
+
+    it('only reads services (never writes them) while evaluating readiness', async () => {
+      shopFindUnique.mockResolvedValue(shopRow());
+      starterServices({ underpriced: true });
+      await loadPublicBookingIntakeStatus('shop_1');
+      expect(serviceFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { shopId: 'shop_1', isActive: true } }),
+      );
+    });
+  });
+
+  it('reports no entitlement (not a Starter pause) for SETUP / LEAVE shops', async () => {
+    shopFindUnique.mockResolvedValue(shopRow());
+    subscriptionFindFirst.mockResolvedValue({
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+      postFullPlan: 'LEAVE',
+    });
+    expect(await loadPublicBookingIntakeStatus('shop_1')).toMatchObject({
+      accepting: false,
+      reason: 'no_public_booking_entitlement',
+    });
   });
 
   it('denies demo shops even with markers populated', async () => {

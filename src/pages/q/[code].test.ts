@@ -117,6 +117,25 @@ describe('GET /q/{code}', () => {
     expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
   });
 
+  it('a Full → Starter shop with paused intake keeps the stable /book/{slug} (the page enforces the pause)', async () => {
+    db.shops.set('cmshop1', {
+      ...shop(),
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: new Date(),
+    } as ShopRow);
+    db.subscription = {
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01'),
+      cancelAtPeriodEnd: false,
+      postFullPlan: 'STARTER',
+    };
+    db.destinations.set('cmshop1', verified());
+    const res = await scan(WINDOW_CODE);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
+  });
+
   it('Starter never uses a stored own-domain destination', async () => {
     db.shops.set('cmshop1', shop({ freeBookingActivatedAt: new Date('2026-10-01') }));
     db.destinations.set('cmshop1', verified());

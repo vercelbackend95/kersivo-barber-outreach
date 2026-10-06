@@ -123,13 +123,15 @@ vi.mock('@/lib/db/client', () => ({
     },
     barber: { findMany: async () => [] },
     service: {
-      findMany: async () => [],
-      findFirst: async ({ where }: { where: Record<string, unknown> }) => {
-        if ('pricePence' in where) {
-          return db.activeServicePrices.some((price) => price < 500) ? { id: 'svc_low' } : null;
-        }
-        return db.activeServicePrices.length > 0 ? { id: 'svc_1' } : null;
-      },
+      findMany: async (args?: { select?: Record<string, unknown> }) =>
+        args?.select?.pricePence
+          ? db.activeServicePrices.map((pricePence, index) => ({
+              id: `svc_${index + 1}`,
+              name: `Service ${index + 1}`,
+              pricePence,
+              isActive: true,
+            }))
+          : [],
     },
   },
 }));
