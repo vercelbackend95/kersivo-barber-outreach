@@ -56,6 +56,8 @@ vi.mock('@/lib/legal/termsVersion', () => ({
   TERMS_ACCEPTANCE_PURPOSES: {
     FULL_TO_STARTER: 'FULL_TO_STARTER',
   },
+  postFullStarterTermsAllowService: (version: string | null | undefined) =>
+    version === '2026-10-06' || version === 'LEGACY_EFFECTIVE_PRE_V119',
 }));
 
 vi.mock('@/lib/legal/requireTermsAcceptance', () => ({
@@ -431,30 +433,23 @@ describe('POST /api/setup/post-full-plan', () => {
     );
   });
 
-  it('allows a stale previously recorded Starter choice to refresh current Terms after Full ended if departure has not started', async () => {
-    const originalChoiceAt = new Date('2026-09-01T00:00:00.000Z');
+  it('does not resurrect a stale Starter choice after Full has already ended', async () => {
     findFirst.mockResolvedValue(
       subscription({
         status: 'CANCELED',
         cancelAtPeriodEnd: false,
         postFullPlan: 'STARTER',
-        postFullPlanChosenAt: originalChoiceAt,
+        postFullPlanChosenAt: new Date('2026-09-01T00:00:00.000Z'),
         postFullTermsVersion: '2026-10-05',
       }),
     );
 
     const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
 
-    expect(res.status).toBe(200);
-    expect((await res.json()).alreadyChosen).toBe(true);
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          postFullTermsVersion: '2026-10-06',
-          postFullPlanChosenAt: originalChoiceAt,
-        }),
-      }),
-    );
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('SHOP_DEPARTURE_IN_PROGRESS');
+    expect(update).not.toHaveBeenCalled();
+    expect(recordTermsAcceptance).not.toHaveBeenCalled();
   });
 
   it('refuses a late choice after the canceled retention window ended', async () => {
