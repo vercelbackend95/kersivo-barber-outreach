@@ -1,6 +1,6 @@
 ---
 import { RateCard1Offer } from '@/components/rateCard1';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import '@/styles/rateCard1.css';
 
@@ -22,7 +22,7 @@ const layout = getRateCard1LandingLayout();
       <p class="fresha-alt__lead">
         <strong>KERSIVO Starter</strong> is £0/month for up to 4 active bookable barbers: a hosted
         booking page, Team, Services, Clients Core, email reminders and Google booking setup. Every
-        public booking uses a £5 deposit or Pay in full through the shop’s connected Stripe account.
+        public booking uses a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or Pay in full through the shop’s connected Stripe account.
         <a href="/starter">See KERSIVO Starter</a>.
       </p>
       <p class="fresha-alt__lead">
