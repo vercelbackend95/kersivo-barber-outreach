@@ -18,7 +18,7 @@ describe('homepage SEO', () => {
   it('uses the approved title and meta description', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Manage bookings, deposits, clients, retail and admin on your own domain for £39/month.',
+      'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(DEFAULT_DESCRIPTION.length).toBeLessThanOrEqual(165);
@@ -76,17 +76,17 @@ describe('homepage hero markup', () => {
   it('shows the approved eyebrow, lead, CTAs and meta row', () => {
     expect(text(between(hero, '<p class="home-hero__eyebrow">', '</p>'))).toBe('Built for independent UK barbershops');
     expect(text(between(hero, '<p class="home-hero__lead">', '</p>'))).toBe(
-      'A barber booking system for independent UK barbershops — your branded website, bookings, deposits, clients, retail and admin on your own domain.',
+      'A barber booking system for independent UK barbershops. Start with payment-powered bookings for £0/month, or choose Full KERSIVO to put the complete customer journey on your own website and domain.',
     );
     expect(hero).toMatch(
-      /<a\s+href="\/admin\/launch"\s+class="home-hero__action home-hero__action--primary"\s+data-track="saas_subscribe_click"\s*>\s*Get started — £\{SAAS_MONTHLY_GBP\}\/month\s*<\/a>/,
+      /<a\s+href="\/admin"\s+class="home-hero__action home-hero__action--primary"\s+data-track="starter_signup_click"\s+data-track-placement="homepage_hero"\s*>\s*Start KERSIVO Starter — £0\/month\s*<\/a>/,
     );
     expect(hero).toMatch(
       /<a href="#live-demo" class="home-hero__action home-hero__action--secondary">\s*See KERSIVO in action\s*<\/a>/,
     );
     const meta = between(hero, '<div class="home-hero__meta"', '</div>');
     expect(meta).toContain('aria-label="KERSIVO commercial model"');
-    expect(text(meta)).toBe('£{SAAS_MONTHLY_GBP}/month · 0% KERSIVO commission · Your own domain');
+    expect(text(meta)).toBe('Starter £0/month · Full £{SAAS_MONTHLY_GBP}/month per location · 0% KERSIVO commission');
     expect(read('src/components/landingDemoPreview.astro')).toContain("sectionId = 'live-demo'");
   });
 
