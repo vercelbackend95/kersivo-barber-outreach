@@ -42,7 +42,10 @@ vi.mock('@/lib/db/client', () => ({
 }));
 
 vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
-  ACCOUNT_LIFECYCLE_ACTIONS: { STARTER_STRIPE_STANDARD_SWITCHED: 'STARTER_STRIPE_STANDARD_SWITCHED' },
+  ACCOUNT_LIFECYCLE_ACTIONS: {
+    STARTER_STRIPE_STANDARD_SWITCHED: 'STARTER_STRIPE_STANDARD_SWITCHED',
+    STARTER_STRIPE_ONBOARDING_STARTED: 'STARTER_STRIPE_ONBOARDING_STARTED',
+  },
   recordAccountLifecycleEvent: (...args: unknown[]) => recordAccountLifecycleEvent(...args),
 }));
 
@@ -195,6 +198,12 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect((await res.json()).accountId).toBe('acct_free');
       expect(loadKersivoAccess).toHaveBeenCalledWith('shop-1');
       expect(createConnectStandardAccount).toHaveBeenCalled();
+      expect(recordAccountLifecycleEvent).toHaveBeenCalledWith({
+        action: 'STARTER_STRIPE_ONBOARDING_STARTED',
+        userId: 'u1',
+        shopId: 'shop-1',
+        meta: { reason: 'first_connect', accountType: 'STANDARD' },
+      });
     });
 
     it('creates a fresh Standard account after the previous connection was deauthorized', async () => {
@@ -229,6 +238,12 @@ describe('barbershop-settings/deposits (booking payments)', () => {
           }),
         }),
       );
+      expect(recordAccountLifecycleEvent).toHaveBeenCalledWith({
+        action: 'STARTER_STRIPE_ONBOARDING_STARTED',
+        userId: 'u1',
+        shopId: 'shop-1',
+        meta: { reason: 'reconnect', accountType: 'STANDARD' },
+      });
     });
 
     it('Full: does not silently migrate an existing active Express account', async () => {
