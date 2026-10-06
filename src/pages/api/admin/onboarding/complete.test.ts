@@ -374,7 +374,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     it('former Full shop that explicitly chose Starter (post-Full choice) replays as already_free', async () => {
       db.endedFullSubscriptions = 1;
-      db.subscription = { status: 'CANCELED', currentPeriodEnd: null, postFullPlan: 'STARTER' };
+      db.subscription = { status: 'CANCELED', currentPeriodEnd: null, postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' };
       const res = await complete();
 
       expect(res.status).toBe(200);
