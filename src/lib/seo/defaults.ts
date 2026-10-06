@@ -16,7 +16,7 @@ export const ONGOING_CARE_MONTHLY_GBP = 39;
 export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
 
 export const DEFAULT_DESCRIPTION =
-  'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.';
+  'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.';
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 
