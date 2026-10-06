@@ -52,6 +52,7 @@ vi.mock('@/lib/shop/freeBookableBarbers', () => ({
 }));
 
 vi.mock('@/lib/legal/termsVersion', () => ({
+  CURRENT_TERMS_VERSION: '2026-10-06',
   TERMS_ACCEPTANCE_PURPOSES: {
     FULL_TO_STARTER: 'FULL_TO_STARTER',
   },
@@ -104,6 +105,7 @@ function subscription(overrides: Record<string, unknown> = {}) {
     retentionEndsAt: null,
     postFullPlan: 'UNDECIDED',
     postFullPlanChosenAt: null,
+    postFullTermsVersion: null,
     ...overrides,
   };
 }
@@ -122,6 +124,7 @@ describe('POST /api/setup/post-full-plan', () => {
       id: 'saas-1',
       postFullPlan: data.postFullPlan,
       postFullPlanChosenAt: data.postFullPlanChosenAt,
+      postFullTermsVersion: data.postFullTermsVersion,
       currentPeriodEnd: new Date('2026-11-01T00:00:00.000Z'),
     }));
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
@@ -221,6 +224,7 @@ describe('POST /api/setup/post-full-plan', () => {
         data: expect.objectContaining({
           postFullPlan: 'STARTER',
           postFullPlanChosenAt: expect.any(Date),
+          postFullTermsVersion: '2026-10-06',
         }),
       }),
     );
@@ -324,7 +328,7 @@ describe('POST /api/setup/post-full-plan', () => {
     expect(recordTermsAcceptance).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ postFullPlan: 'LEAVE' }),
+        data: expect.objectContaining({ postFullPlan: 'LEAVE', postFullTermsVersion: null }),
       }),
     );
   });
@@ -334,6 +338,7 @@ describe('POST /api/setup/post-full-plan', () => {
       subscription({
         postFullPlan: 'STARTER',
         postFullPlanChosenAt: new Date('2026-10-05T12:00:00.000Z'),
+        postFullTermsVersion: '2026-10-06',
       }),
     );
 
@@ -366,11 +371,90 @@ describe('POST /api/setup/post-full-plan', () => {
         cancelAtPeriodEnd: false,
         postFullPlan: 'STARTER',
         postFullPlanChosenAt: new Date('2026-09-01T00:00:00.000Z'),
+        postFullTermsVersion: '2026-10-06',
       }),
     );
     const res = await POST(ctx({ choice: 'STARTER' }) as never);
     expect(res.status).toBe(200);
     expect((await res.json()).alreadyChosen).toBe(true);
+  });
+
+  it('requires current Terms when a previously recorded Starter choice is on an older Terms version', async () => {
+    findFirst.mockResolvedValue(
+      subscription({
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: new Date('2026-10-05T12:00:00.000Z'),
+        postFullTermsVersion: '2026-10-05',
+      }),
+    );
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: false }) as never);
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe('TERMS_NOT_ACCEPTED');
+    expect(update).not.toHaveBeenCalled();
+    expect(recordTermsAcceptance).not.toHaveBeenCalled();
+  });
+
+  it('refreshes a previously recorded Starter choice onto the current Terms version without changing the original choice time', async () => {
+    const originalChoiceAt = new Date('2026-10-05T12:00:00.000Z');
+    findFirst.mockResolvedValue(
+      subscription({
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: originalChoiceAt,
+        postFullTermsVersion: '2026-10-05',
+      }),
+    );
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({ ok: true, choice: 'STARTER', alreadyChosen: true });
+    expect(recordTermsAcceptance).toHaveBeenCalledWith(
+      expect.objectContaining({
+        purpose: 'FULL_TO_STARTER',
+        meta: expect.objectContaining({
+          termsVersion: '2026-10-06',
+          refreshingRecordedStarterChoice: true,
+        }),
+      }),
+    );
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          postFullPlan: 'STARTER',
+          postFullPlanChosenAt: originalChoiceAt,
+          postFullTermsVersion: '2026-10-06',
+        }),
+      }),
+    );
+  });
+
+  it('allows a stale previously recorded Starter choice to refresh current Terms after Full ended if departure has not started', async () => {
+    const originalChoiceAt = new Date('2026-09-01T00:00:00.000Z');
+    findFirst.mockResolvedValue(
+      subscription({
+        status: 'CANCELED',
+        cancelAtPeriodEnd: false,
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: originalChoiceAt,
+        postFullTermsVersion: '2026-10-05',
+      }),
+    );
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).alreadyChosen).toBe(true);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          postFullTermsVersion: '2026-10-06',
+          postFullPlanChosenAt: originalChoiceAt,
+        }),
+      }),
+    );
   });
 
   it('refuses a late choice after the canceled retention window ended', async () => {
