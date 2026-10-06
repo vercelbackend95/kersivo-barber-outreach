@@ -46,11 +46,11 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-05');
-    expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-05');
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
-    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-05');
-    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-05');
+    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-01');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-05');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
@@ -78,6 +78,7 @@ describe('marketing sitemap', () => {
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
     expect(xml).toContain('<lastmod>2026-09-25</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-05</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-06</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
