@@ -15,7 +15,8 @@ export const ONGOING_CARE_MONTHLY_GBP = 39;
 /** Public SaaS monthly fee (same amount; preferred name in purchase UI). */
 export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
 
-export const DEFAULT_DESCRIPTION = `Barbershop software for independent UK barbershops. Manage bookings, deposits, clients, retail and admin on your own domain for £${SAAS_MONTHLY_GBP}/month.`;
+export const DEFAULT_DESCRIPTION =
+  'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.';
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 
