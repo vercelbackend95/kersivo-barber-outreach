@@ -386,6 +386,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       activatedAt: null,
       cancelAtPeriodEnd: false,
       postFullPlan: 'STARTER',
+      postFullTermsVersion: '2026-10-06',
     });
 
     const body = await (await GET(makeContext() as never)).json();
