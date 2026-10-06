@@ -997,9 +997,10 @@ export default function BarbershopSettingsPanel({
           </h2>
           {bookingProductState === 'FREE_BOOKING' ? (
             <p className="admin-barbershop-settings__card-copy">
-              Starter uses one fixed public-booking policy: clients pay a £5 online deposit or can
-              pay the full service price. Pay at shop is not available for customer-created Starter
-              bookings. Manual staff-created bookings may still be Pay at shop.
+              Starter keeps public booking payments simple: for services above £5, clients choose a
+              £5 deposit or Pay in full. A £5 service is paid in full. Pay at shop is not available
+              for customer-created Starter bookings; manual staff-created bookings may still be paid
+              at the shop.
             </p>
           ) : (
             <p className="admin-barbershop-settings__card-copy">
@@ -1164,8 +1165,8 @@ export default function BarbershopSettingsPanel({
                     <li>0% KERSIVO commission</li>
                   </ul>
                   <p className="admin-barbershop-settings__card-copy">
-                    Want to choose how clients pay? Full KERSIVO unlocks Pay at shop, deposit and
-                    full-payment controls.
+                    Want full control over how clients pay? Full KERSIVO unlocks Pay at shop, £5
+                    deposit and full-payment controls.
                   </p>
                   <a className="btn btn--primary" href="/admin/upgrade">
                     Unlock payment controls — £39/month
