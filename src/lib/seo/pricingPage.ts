@@ -12,17 +12,16 @@ export const PRICING_PAGE_PATH = '/pricing';
 
 export const PRICING_PAGE_TITLE = `KERSIVO Pricing | Starter £0 & Full £${SAAS_MONTHLY_GBP}/Month`;
 
-export const PRICING_PAGE_DESCRIPTION = `KERSIVO Starter is £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location with your branded website and own domain. 0% KERSIVO commission and no setup fee.`;
+export const PRICING_PAGE_DESCRIPTION = `KERSIVO Starter is £0/month with payment-powered booking. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location with your website, domain and payment control. 0% KERSIVO commission.`;
 
 export const PRICING_PAGE_H1 = 'KERSIVO pricing for independent barbershops';
 
-/** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const PRICING_PAGE_LAST_UPDATED_ISO = '2026-10-05';
-export const PRICING_PAGE_LAST_UPDATED_LABEL = '5 October 2026';
+export const PRICING_PAGE_LAST_UPDATED_ISO = '2026-10-06';
+export const PRICING_PAGE_LAST_UPDATED_LABEL = '6 October 2026';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
-export const PRICING_QUICK_ANSWER = `KERSIVO has two plans. KERSIVO Starter is £0/month for the core booking operation. Full KERSIVO is ${PRICE}/month per physical barbershop location for your branded website, own domain and the wider business toolkit. There is no setup fee and KERSIVO takes 0% commission on both plans. Standard Stripe processing fees apply to online card payments.`;
+export const PRICING_QUICK_ANSWER = `KERSIVO has two plans. Starter is £0/month for the core booking operation: connect Stripe to launch public bookings, then every customer-created booking is paid with a £5 deposit or in full. Full KERSIVO is ${PRICE}/month per physical location and adds your branded website, own domain and the wider business toolkit, including control over how clients pay. There is no setup fee and KERSIVO takes 0% commission on both plans. Standard Stripe processing fees apply to online card payments.`;
 
 export const PRICING_QUICK_FACTS = [
   { label: 'KERSIVO Starter', value: '£0/month' },
@@ -35,7 +34,6 @@ export type PricingFactGroup = {
   items: readonly string[];
 };
 
-/** Everything rendered as "included" on /pricing, per plan. Keep in line with the Commercial Offer. */
 export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
   {
     title: 'KERSIVO Starter — £0/month',
@@ -47,8 +45,8 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
       'Rolling 90-day booking history',
       'Clients Core',
       'Automated email confirmations and reminders',
-      'Pay at shop without connecting Stripe',
-      'Optional Stripe deposits or full upfront payments',
+      'Fixed public booking payments: £5 deposit or Pay in full',
+      'Connected Stripe account required before public bookings go live',
       'Guided Google Business Profile booking-link setup',
       'Included initial QR Kit for eligible verified UK Starter locations',
     ],
@@ -61,6 +59,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
       'Your own standard domain included',
       'Hosting, SSL and platform updates',
       'More than 4 bookable barbers and dashboard users at the same location, subject to reasonable fair use',
+      'Editable booking payment controls, including Pay at shop, £5 deposit or full payment',
       'Full booking history',
       'Advanced Clients / CRM',
       'Reports',
@@ -82,9 +81,9 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
 ] as const;
 
 export const PRICING_FEES_POINTS = [
-  'KERSIVO takes 0% commission on bookings with Starter, and on bookings and retail sales with Full KERSIVO.',
-  'Standard Stripe payment-processing fees apply to online card payments, such as deposits and retail orders.',
-  'KERSIVO Starter has no monthly fee and does not need Stripe for Pay at shop bookings.',
+  'KERSIVO takes 0% commission on booking payments with Starter and Full KERSIVO, and 0% on Full retail sales.',
+  'Standard Stripe payment-processing fees apply to online card payments. Starter public bookings require a connected Stripe account.',
+  'Starter public bookings use a fixed £5-deposit-or-Pay-in-full model. Full KERSIVO unlocks editable payment controls, including Pay at shop.',
   `Full KERSIVO is billed today, then monthly on the same billing-cycle day. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added to the ${PRICE} price.`,
 ] as const;
 
@@ -93,7 +92,6 @@ export type PricingFaqItem = {
   answer: string;
 };
 
-/** Visible FAQ and FAQPage JSON-LD both render from this list — never add schema-only items. */
 export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'How much does KERSIVO cost?',
@@ -102,11 +100,16 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'What is included in KERSIVO Starter?',
     answer:
-      'KERSIVO Starter is £0/month and includes a KERSIVO-hosted booking page, up to 4 active bookable barbers, bookings, team, services and availability, manual bookings, rolling 90-day booking history, Clients Core, automated email reminders, guided Google booking-link setup and, for eligible verified UK Starter locations, the included initial QR Kit. Stripe is optional for Pay at shop bookings.',
+      'KERSIVO Starter is £0/month and includes a KERSIVO-hosted booking page, up to 4 active bookable barbers, bookings, team, services and availability, manual bookings, rolling 90-day booking history, Clients Core, automated email reminders, guided Google booking-link setup and, for eligible verified UK Starter locations, the included initial QR Kit. Public bookings require a connected Stripe account and use the fixed £5-deposit-or-Pay-in-full payment flow.',
+  },
+  {
+    question: 'How do payments work on KERSIVO Starter?',
+    answer:
+      'For services above £5, the customer chooses a £5 deposit or Pay in full. A £5 service is paid £5 in full. Public Pay at shop is not available on Starter, although staff-created manual bookings may still be paid at the shop. Standard Stripe processing fees apply.',
   },
   {
     question: 'What does Full KERSIVO add?',
-    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders and the live KERSIVO Assistant.`,
+    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, editable booking-payment controls including Pay at shop, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders and the live KERSIVO Assistant.`,
   },
   {
     question: 'Is there a setup fee?',
@@ -125,7 +128,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'What fees still apply?',
     answer:
-      'KERSIVO takes 0% commission on both Starter and Full. Standard Stripe processing fees apply when clients pay online, for example required booking deposits or full upfront card payments. Payments go to your own Stripe account.',
+      'KERSIVO takes 0% commission on both Starter and Full. Standard Stripe processing fees apply when clients pay online. Payments are processed through the barbershop’s connected Stripe account.',
   },
   {
     question: 'Is VAT added to Full KERSIVO?',
@@ -134,7 +137,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'Can I upgrade from Starter to Full later?',
     answer:
-      'Yes. Starter is a real operating plan with a direct upgrade path to Full KERSIVO when the shop wants its own branded website and domain, a larger team or the wider business tools.',
+      'Yes. Starter is a real operating plan with a direct upgrade path to Full KERSIVO when the shop wants its own branded website and domain, a larger team, the wider business tools or control over how customers pay.',
   },
   {
     question: 'Can I cancel Full KERSIVO?',
