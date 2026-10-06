@@ -54,7 +54,7 @@ describe('homepage SEO phase 1: head', () => {
   it('keeps the approved title and uses the new meta description from the shared default', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Manage bookings, deposits, clients, retail and admin on your own domain for £39/month.',
+      'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('title={DEFAULT_TITLE}');
@@ -113,11 +113,11 @@ describe('homepage SEO phase 1: headings', () => {
       'Barbershop software for bookings, clients and daily management',
     );
     expect(text(between(valueCards, '<p class="landing-value-cards__lead">', '</p>'))).toBe(
-      'KERSIVO brings online booking, appointment scheduling, deposits, client management, barber and service management, retail pickup and admin into one system built around your own domain and brand.',
+      'Start with the core booking operation on KERSIVO Starter for £0/month. Move to Full when you want your own branded website and domain, wider client tools, Reports, Retail and more control over the customer experience.',
     );
     expect(valueCards).toContain("heading: 'Online booking for barbers, without the marketplace detour'");
     expect(valueCards).toMatch(/heading: 'Manage your barbershop from one clear(?: |\\u00a0)system'/);
-    expect(valueCards).toContain("heading: 'Deposits and reminders that protect your time'");
+    expect(valueCards).toContain("heading: 'Payments and reminders that protect your time'");
   });
 
   it('names the inside-the-system section as barbershop management software', () => {
@@ -202,14 +202,14 @@ describe('homepage SEO phase 1: FAQ', () => {
 
   it('qualifies the extra-barbers answer with fair use and the dynamic price, in both FAQ and JSON-LD', () => {
     const question = 'Does KERSIVO charge more when I add more barbers?';
-    const expected = `No. KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location. Within that location, additional barbers are included without a numerical cap, subject to reasonable fair use. Standard Stripe payment-processing fees still apply to online card payments.`;
+    const expected = `Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location rather than per barber; additional barbers within that location are included subject to reasonable fair use.`;
     expect(BARBERSHOP_BOOKING_FAQ_ITEMS.find((item) => item.question === question)?.answer).toBe(expected);
     const entity = (
       buildBarbershopBookingFaqJsonLd().mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>
     ).find((e) => e.name === question);
     expect(entity?.acceptedAnswer.text).toBe(expected);
     expect(read('src/lib/seo/barbershopBookingFaq.ts')).toContain(
-      'No. KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location. Within that location',
+      'Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location',
     );
   });
 });
