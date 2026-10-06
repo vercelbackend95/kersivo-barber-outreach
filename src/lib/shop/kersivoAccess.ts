@@ -1,5 +1,6 @@
 import type { Prisma, SaasPostFullPlan, ShopDepartureStatus } from '@prisma/client';
 import { prisma } from '../db/client';
+import { CURRENT_TERMS_VERSION } from '../legal/termsVersion';
 import type { SaasSubscriptionAccessFields } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
 import { isPaidShop, type PaidShopFields } from './paidShop';
@@ -90,6 +91,7 @@ export type KersivoAccessShopFields = PaidShopFields & {
 /** Latest non-PENDING SaaS subscription incl. its explicit post-Full plan choice. */
 export type KersivoSubscriptionFields = SaasSubscriptionAccessFields & {
   postFullPlan?: SaasPostFullPlan | string | null;
+  postFullTermsVersion?: string | null;
 };
 
 export type KersivoAccess = {
@@ -119,7 +121,10 @@ export function resolveKersivoProductState(
   if (isPaidShop(shop, subscription, now)) return 'FULL_KERSIVO';
   if (shop.departure) return 'SETUP';
   if (subscription && String(subscription.status) !== 'PENDING') {
-    return String(subscription.postFullPlan ?? '') === 'STARTER' ? 'FREE_BOOKING' : 'SETUP';
+    const starterChosen = String(subscription.postFullPlan ?? '') === 'STARTER';
+    const starterTermsCurrent =
+      subscription.postFullTermsVersion === CURRENT_TERMS_VERSION;
+    return starterChosen && starterTermsCurrent ? 'FREE_BOOKING' : 'SETUP';
   }
   if (shop.freeBookingActivatedAt != null) return 'FREE_BOOKING';
   return 'SETUP';
@@ -241,6 +246,7 @@ export async function loadKersivoAccess(
       pastDueSince: true,
       cancelAtPeriodEnd: true,
       postFullPlan: true,
+      postFullTermsVersion: true,
     },
   });
 
