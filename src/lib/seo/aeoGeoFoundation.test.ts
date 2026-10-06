@@ -153,7 +153,7 @@ describe('/pricing page', () => {
     expect(PRICING_PAGE_H1).toBe('KERSIVO pricing for independent barbershops');
     expect(PRICING_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(170);
     expect(PRICING_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month');
-    expect(PRICING_QUICK_ANSWER).toContain('Full KERSIVO is £39/month per physical barbershop location');
+    expect(PRICING_QUICK_ANSWER).toContain('Full KERSIVO is £39/month per physical location');
     expect(PRICING_QUICK_ANSWER).toContain('0% commission on both plans');
     expect(PRICING_QUICK_ANSWER).toContain('Standard Stripe processing fees');
     expect(page).toContain('canonicalPath={PRICING_PAGE_PATH}');
@@ -166,7 +166,9 @@ describe('/pricing page', () => {
       'Full KERSIVO — £39/month per location',
       'Up to 4 active bookable barbers',
       'Automated email confirmations and reminders',
-      'Pay at shop without connecting Stripe',
+      'Fixed public booking payments: £5 deposit or Pay in full',
+      'Connected Stripe account required before public bookings go live',
+      'Editable booking payment controls, including Pay at shop, £5 deposit or full payment',
       'No setup fee',
       'subject to reasonable fair use',
       'Your own standard domain included',
