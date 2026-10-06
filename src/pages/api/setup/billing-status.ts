@@ -112,7 +112,10 @@ export const GET: APIRoute = async (context) => {
     postFullPlan === 'STARTER' &&
     subscription.postFullTermsVersion !== CURRENT_TERMS_VERSION;
   const postFullPlanChoiceRequired =
-    staleStarterTerms ||
+    (
+      staleStarterTerms &&
+      (subscription.cancelAtPeriodEnd || phase === 'canceled')
+    ) ||
     (
       subscription.cancelAtPeriodEnd &&
       phase !== 'canceled' &&
