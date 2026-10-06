@@ -130,7 +130,7 @@ describe('homepage SEO phase 1: headings', () => {
     const layout = getRateCard1LandingLayout();
     expect(layout.eyebrow).toBe('BARBERSHOP SOFTWARE PRICING');
     expect(layout.lead).toBe(
-      'One flat monthly plan with your branded website, booking system, deposits, client management, admin, retail and support. Extra barbers are included.',
+      'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
     );
     expect(rateCard1Source).toMatch(
       /\{layout\.headingBeforePrice\}\s*\{SAAS_MONTHLY_GBP\}\s*\{layout\.headingAfterPrice\}/,
