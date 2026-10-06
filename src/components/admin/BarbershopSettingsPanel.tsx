@@ -184,6 +184,7 @@ export default function BarbershopSettingsPanel({
   const [canCancelSubscription, setCanCancelSubscription] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [postFullPlan, setPostFullPlan] = useState<string | null>(null);
+  const [postFullTermsCurrent, setPostFullTermsCurrent] = useState(true);
   const [postFullPlanChoiceRequired, setPostFullPlanChoiceRequired] = useState(false);
   const [starterPublicLaunch, setStarterPublicLaunch] = useState<StarterPublicLaunchPreview | null>(null);
   const [fullEndsOn, setFullEndsOn] = useState<string | null>(null);
@@ -276,6 +277,7 @@ export default function BarbershopSettingsPanel({
         setCanCancelSubscription(false);
         setCancelAtPeriodEnd(false);
         setPostFullPlan(null);
+        setPostFullTermsCurrent(true);
         setPostFullPlanChoiceRequired(false);
         setStarterPublicLaunch(null);
         setFullEndsOn(null);
@@ -297,6 +299,7 @@ export default function BarbershopSettingsPanel({
         canCancelSubscription?: boolean;
         postFullPlan?: string | null;
         postFullPlanChosenAt?: string | null;
+        postFullTermsCurrent?: boolean;
         postFullPlanChoiceRequired?: boolean;
         starterPublicLaunch?: StarterPublicLaunchPreview | null;
         error?: string;
@@ -313,6 +316,7 @@ export default function BarbershopSettingsPanel({
       setCanCancelSubscription(Boolean(data?.canCancelSubscription));
       setCancelAtPeriodEnd(Boolean(data?.cancelAtPeriodEnd));
       setPostFullPlan(data?.postFullPlan ?? null);
+      setPostFullTermsCurrent(data?.postFullTermsCurrent !== false);
       setPostFullPlanChoiceRequired(Boolean(data?.postFullPlanChoiceRequired));
       setBillingPhase(data?.phase ?? null);
 
@@ -1505,6 +1509,12 @@ export default function BarbershopSettingsPanel({
                   What should happen when your paid Full KERSIVO period ends
                   {fullEndsOn ? ` on ${fullEndsOn}` : ''}?
                 </p>
+                {postFullPlan === 'STARTER' && !postFullTermsCurrent ? (
+                  <p className="admin-barbershop-settings__card-copy" role="status" data-testid="starter-terms-refresh">
+                    <strong>KERSIVO Terms have been updated.</strong> Re-accept the current Terms to keep
+                    KERSIVO Starter as your post-Full plan.
+                  </p>
+                ) : null}
                 <div className="admin-barbershop-settings__card-copy" data-testid="starter-downgrade-summary">
                   <p>
                     <strong>KERSIVO Starter</strong> starts after your paid Full period: £0/month, 0% KERSIVO
