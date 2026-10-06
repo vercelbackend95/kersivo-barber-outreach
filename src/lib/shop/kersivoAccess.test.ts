@@ -13,7 +13,10 @@ vi.mock('../db/client', () => ({
 }));
 
 import { BLACKLINE_SHOP_ID } from '../demo/products';
-import { CURRENT_TERMS_VERSION } from '../legal/termsVersion';
+import {
+  CURRENT_TERMS_VERSION,
+  LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION,
+} from '../legal/termsVersion';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import {
   KERSIVO_CAPABILITIES,
@@ -127,6 +130,20 @@ describe('resolveKersivoProductState', () => {
         ),
       ).toBe('SETUP');
     }
+  });
+
+  it('E2c: an already-effective pre-v1.19 Full → Starter continuation remains Starter without pretending current Terms were accepted', () => {
+    expect(
+      resolveKersivoProductState(
+        shop(),
+        {
+          ...canceledSub,
+          postFullPlan: 'STARTER',
+          postFullTermsVersion: LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION,
+        },
+        now,
+      ),
+    ).toBe('FREE_BOOKING');
   });
 
   it('E3: active Full always wins over a recorded post-Full choice', () => {
