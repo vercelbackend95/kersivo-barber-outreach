@@ -136,6 +136,7 @@ export const GET: APIRoute = async (ctx) => {
       id: shop.id,
       stripeConnectAccountId: connect.accountId,
       stripeConnectChargesEnabled: connect.chargesEnabled,
+      stripeConnectDisconnectedAt: connect.disconnectedAt,
     },
     access: kersivoAccess,
   });

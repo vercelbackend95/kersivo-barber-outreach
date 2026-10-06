@@ -504,6 +504,24 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       );
     });
 
+    it('Starter: an explicitly disconnected account is never reported payment-ready (stale chargesEnabled)', async () => {
+      asState('FREE_BOOKING');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({
+        ...freeShop,
+        stripeConnectChargesEnabled: true,
+        stripeConnectDisconnectedAt: new Date('2026-09-01T00:00:00.000Z'),
+      });
+
+      const body = await (await GET(jsonCtx('GET'))).json();
+      expect(retrieveConnectAccount).not.toHaveBeenCalled();
+      expect(body).toMatchObject({
+        bookingPaymentsReady: false,
+        bookingPaymentsGateReason: 'connect_not_ready',
+        collectReady: false,
+      });
+    });
+
     it('SETUP: booking payments unavailable, no fee', async () => {
       asState('SETUP');
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
