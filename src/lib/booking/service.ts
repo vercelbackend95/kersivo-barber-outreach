@@ -533,8 +533,10 @@ export async function createInstantBooking(
     // setting. Full continues to follow ShopSettings.bookingPaymentMode. Everything below fails
     // BEFORE the booking row (and slot) is created.
     let paymentDecision: LiveBookingPaymentDecision = { outcome: 'none' };
+    let productStateAtBooking: string | null = null;
     if (options.allowDepositCollection && !isAdminSandbox) {
       const access = await loadKersivoAccess(service.shopId);
+      productStateAtBooking = access.state;
       let mode = shopForPayment.bookingPaymentMode ?? 'NONE';
 
       if (access.state === 'FREE_BOOKING') {
@@ -650,6 +652,7 @@ export async function createInstantBooking(
               ...paymentSnapshot,
               stripeConnectAccountIdAtPayment:
                 paymentDecision.outcome === 'collect' ? paymentDecision.stripeConnectAccountId : null,
+              kersivoProductStateAtBooking: productStateAtBooking,
               idempotencyKey: scopedIdempotencyKey,
             },
             include: { service: true, barber: true }
