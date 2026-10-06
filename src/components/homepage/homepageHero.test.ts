@@ -18,7 +18,7 @@ describe('homepage SEO', () => {
   it('uses the approved title and meta description', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.',
+      'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(DEFAULT_DESCRIPTION.length).toBeLessThanOrEqual(165);
