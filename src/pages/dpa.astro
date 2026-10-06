@@ -373,8 +373,9 @@ import '@/styles/legal-pages.css';
         Collection, recording, organisation, storage, retrieval, display to authorised Client users, booking creation,
         rescheduling and cancellation, Clients Core and (where included in the Client&rsquo;s service level) advanced
         CRM, notes, image and file storage, Full retail order processing, transactional email, optional Full SMS
-        reminders, deposit/full-payment status recording, migration/import, export, deletion, and security/operational
-        Processing necessary to provide the service.
+        reminders, Starter fixed public payment selection (£5 deposit or full payment) and Full owner-controlled payment
+        mode status recording, migration/import, export, deletion, and security/operational Processing necessary to
+        provide the service.
       </p>
 
       <h3>Purpose</h3>
@@ -522,12 +523,16 @@ import '@/styles/legal-pages.css';
         <li>
           <strong>B. Client connected-account payments.</strong> Live booking deposits / full upfront booking payments
           and Full retail card payments use Stripe Connect with direct charges on the Client&rsquo;s connected Stripe
-          account. New public connected-account onboarding uses <strong>Stripe Standard</strong>; historical Express
-          connections may remain supported where already established. The Client remains merchant / seller and
-          Controller for the End Customer payment. {TRADING_NAME} facilitates the technical flow, stores limited
-          payment/refund/account identifiers and statuses, and adds <strong>0% application / platform fee</strong> to
-          new Starter and Full booking payments; it does not store full card numbers or CVC. Stripe processing fees are
-          separate. Stripe may separately pay {TRADING_NAME} partner compensation / revenue share if
+          account. New public connected-account onboarding uses <strong>Stripe Standard</strong>. New public Starter
+          bookings require a payment-ready Standard account; a historical Express connection may remain supported for
+          Full KERSIVO and historical payment/refund continuity where already established, but it does not satisfy the
+          Starter public-launch requirement. Starter customer-created public bookings use the fixed payment-powered
+          model (a £5 deposit or full payment, with a £5 service paid in full); public Pay at shop is not a Starter
+          customer-booking mode. The Client remains merchant / seller and Controller for the End Customer payment.
+          {TRADING_NAME} facilitates the technical flow, stores limited payment/refund/account identifiers and statuses,
+          and adds <strong>0% application / platform fee</strong> to new Starter and Full booking payments; it does not
+          store full card numbers or CVC. Stripe processing fees are separate. Stripe may separately pay {TRADING_NAME}
+          partner compensation / revenue share if
           {TRADING_NAME} qualifies; that is not a fee deducted by {TRADING_NAME} from the Client&rsquo;s booking
           payment.
         </li>
