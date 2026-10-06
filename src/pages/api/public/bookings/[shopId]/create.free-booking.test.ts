@@ -95,6 +95,7 @@ const endedFullWithStarter = {
   currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
   cancelAtPeriodEnd: false,
   postFullPlan: 'STARTER',
+  postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
 };
 
 describe('public booking create — Free Booking shop (real entitlement gate)', () => {
