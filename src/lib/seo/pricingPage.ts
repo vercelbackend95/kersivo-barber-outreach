@@ -12,7 +12,7 @@ export const PRICING_PAGE_PATH = '/pricing';
 
 export const PRICING_PAGE_TITLE = `KERSIVO Pricing | Starter £0 & Full £${SAAS_MONTHLY_GBP}/Month`;
 
-export const PRICING_PAGE_DESCRIPTION = `KERSIVO Starter is £0/month with payment-powered booking. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location with your website, domain and payment control. 0% KERSIVO commission.`;
+export const PRICING_PAGE_DESCRIPTION = `KERSIVO pricing: Starter £0/month with £5 deposits or full payment. Full £${SAAS_MONTHLY_GBP}/month per location adds your website, domain and payment control. 0% commission.`;
 
 export const PRICING_PAGE_H1 = 'KERSIVO pricing for independent barbershops';
 
