@@ -65,6 +65,7 @@ function freeShop(overrides: Record<string, unknown> = {}) {
     depositsEnabled: false,
     stripeConnectAccountId: 'acct_ready',
     stripeConnectChargesEnabled: true,
+    stripeConnectAccountType: 'STANDARD',
     publicActivityPaused: false,
     ...overrides,
   };
@@ -164,6 +165,8 @@ describe('public booking create — Free Booking shop (real entitlement gate)', 
     });
 
     it.each([
+      ['legacy Express (charges enabled)', { stripeConnectAccountType: 'EXPRESS', stripeConnectChargesEnabled: true }],
+      ['of unknown type', { stripeConnectAccountType: null }],
       ['missing', { stripeConnectAccountId: null, stripeConnectChargesEnabled: false }],
       ['disconnected', { stripeConnectDisconnectedAt: new Date(), stripeConnectChargesEnabled: true }],
       ['charges disabled', { stripeConnectChargesEnabled: false }],

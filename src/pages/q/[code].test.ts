@@ -136,6 +136,18 @@ describe('GET /q/{code}', () => {
     expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
   });
 
+  it('a legacy-Express Starter keeps the stable /book/{slug}; the QR never opens a payment path itself', async () => {
+    db.shops.set('cmshop1', {
+      ...shop({ freeBookingActivatedAt: new Date('2026-10-01') }),
+      stripeConnectAccountId: 'acct_legacy_express',
+      stripeConnectAccountType: 'EXPRESS',
+      stripeConnectChargesEnabled: true,
+    } as ShopRow);
+    const res = await scan(WINDOW_CODE);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
+  });
+
   it('Starter never uses a stored own-domain destination', async () => {
     db.shops.set('cmshop1', shop({ freeBookingActivatedAt: new Date('2026-10-01') }));
     db.destinations.set('cmshop1', verified());

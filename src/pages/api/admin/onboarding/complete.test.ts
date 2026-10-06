@@ -17,6 +17,7 @@ type ShopRow = {
   onboardingCompletedAt: Date | null;
   stripeConnectAccountId?: string | null;
   stripeConnectChargesEnabled?: boolean;
+  stripeConnectAccountType?: 'STANDARD' | 'EXPRESS' | null;
 };
 
 const db = vi.hoisted(() => ({
@@ -392,6 +393,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     db.shop.stripeConnectAccountId = 'acct_ready';
     db.shop.stripeConnectChargesEnabled = true;
+    db.shop.stripeConnectAccountType = 'STANDARD';
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
   });
 
@@ -399,6 +401,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     await complete({ termsAccepted: true, plan: 'STARTER' });
     db.shop.stripeConnectAccountId = 'acct_ready';
     db.shop.stripeConnectChargesEnabled = true;
+    db.shop.stripeConnectAccountType = 'STANDARD';
     db.activeServicePrices = [2500, 499];
 
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);

@@ -23,7 +23,21 @@ export type StarterPublicLaunchPauseReason =
 export type StarterStripeLaunchBlocker =
   | 'connect_missing'
   | 'connect_disconnected'
+  | 'connect_requires_standard'
   | 'connect_not_ready';
+
+/**
+ * v1.19 Starter public bookings require a Stripe Connect STANDARD account. Legacy EXPRESS (and an
+ * unknown/null type) never count as Starter-ready; generic booking-payment readiness still accepts
+ * legacy Express for Full KERSIVO and historical payments/refunds.
+ */
+export function isStarterStripeAccountType(type: string | null | undefined): boolean {
+  return String(type ?? '') === 'STANDARD';
+}
+
+export type StarterReadinessShopFields = BookingPaymentsShopFields & {
+  stripeConnectAccountType: string | null;
+};
 
 export type StarterServiceBelowMinimum = {
   id: string;
@@ -38,6 +52,8 @@ export type StarterPublicLaunchReadiness = {
     ready: boolean;
     accountLinked: boolean;
     disconnected: boolean;
+    /** A current (non-disconnected) account exists but is not Standard (legacy Express / unknown). */
+    requiresStandard: boolean;
     blocker: StarterStripeLaunchBlocker | null;
   };
   activeServiceCount: number;
@@ -54,7 +70,7 @@ export type StarterReadinessService = {
 
 /** Pure evaluation under Starter rules, regardless of the shop's current plan (downgrade preview). */
 export function evaluateStarterPublicLaunchReadiness(input: {
-  shop: BookingPaymentsShopFields;
+  shop: StarterReadinessShopFields;
   services: readonly StarterReadinessService[];
 }): StarterPublicLaunchReadiness {
   const gate = evaluateBookingPayments({
@@ -62,14 +78,20 @@ export function evaluateStarterPublicLaunchReadiness(input: {
     access: accessForState('FREE_BOOKING'),
   });
   const disconnected = Boolean(input.shop.stripeConnectDisconnectedAt);
-  const accountLinked = Boolean(input.shop.stripeConnectAccountId?.trim()) && !disconnected;
-  const stripeBlocker: StarterStripeLaunchBlocker | null = gate.ok
+  const hasAccountId = Boolean(input.shop.stripeConnectAccountId?.trim());
+  const accountLinked = hasAccountId && !disconnected;
+  const requiresStandard =
+    accountLinked && !isStarterStripeAccountType(input.shop.stripeConnectAccountType);
+  const stripeReady = gate.ok && !requiresStandard;
+  const stripeBlocker: StarterStripeLaunchBlocker | null = stripeReady
     ? null
     : disconnected
       ? 'connect_disconnected'
-      : input.shop.stripeConnectAccountId?.trim()
-        ? 'connect_not_ready'
-        : 'connect_missing';
+      : !hasAccountId
+        ? 'connect_missing'
+        : requiresStandard
+          ? 'connect_requires_standard'
+          : 'connect_not_ready';
 
   const activeServices = input.services.filter((service) => service.isActive);
   const servicesBelowMinimum = activeServices
@@ -88,7 +110,7 @@ export function evaluateStarterPublicLaunchReadiness(input: {
   return {
     ready: reasons.length === 0,
     reasons,
-    stripe: { ready: gate.ok, accountLinked, disconnected, blocker: stripeBlocker },
+    stripe: { ready: stripeReady, accountLinked, disconnected, requiresStandard, blocker: stripeBlocker },
     activeServiceCount: activeServices.length,
     minimumServicePricePence: STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
     servicesBelowMinimum,
@@ -108,6 +130,7 @@ export async function loadStarterPublicLaunchReadiness(
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
         stripeConnectDisconnectedAt: true,
+        stripeConnectAccountType: true,
       },
     }),
     db.service.findMany({

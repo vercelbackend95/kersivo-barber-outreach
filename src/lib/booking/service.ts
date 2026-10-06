@@ -40,6 +40,7 @@ import {
 } from './bookingPaymentPolicy';
 import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bookingPaymentsGate';
 import { loadKersivoAccess, type KersivoCapability } from '../shop/kersivoAccess';
+import { isStarterStripeAccountType } from '../setup/starterPublicLaunchReadiness';
 import {
   SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
   lockShopAndCheckNewBookingCapability,
@@ -522,6 +523,7 @@ export async function createInstantBooking(
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
         stripeConnectDisconnectedAt: true,
+        stripeConnectAccountType: true,
         pendingConfirmationMins: true,
         name: true,
       },
@@ -550,7 +552,12 @@ export async function createInstantBooking(
         mode = starterPayment.mode;
       }
 
-      if (mode === 'DEPOSIT' || mode === 'FULL') {
+      if (
+        access.state === 'FREE_BOOKING' &&
+        !isStarterStripeAccountType(shopForPayment.stripeConnectAccountType)
+      ) {
+        paymentDecision = { outcome: 'not_ready', reason: 'connect_not_ready' };
+      } else if (mode === 'DEPOSIT' || mode === 'FULL') {
         paymentDecision = resolveLiveBookingPayment({
           mode,
           servicePricePence: service.pricePence,

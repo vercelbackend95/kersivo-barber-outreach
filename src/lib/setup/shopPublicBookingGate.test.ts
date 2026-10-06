@@ -29,6 +29,7 @@ function shopRow(overrides: Record<string, unknown> = {}) {
     stripeConnectAccountId: 'acct_ready',
     stripeConnectChargesEnabled: true,
     stripeConnectDisconnectedAt: null,
+    stripeConnectAccountType: 'STANDARD',
     ...overrides,
   };
 }
@@ -108,6 +109,12 @@ describe('shopAcceptsPublicBookings', () => {
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
   });
 
+  it('Full KERSIVO on a legacy Express account keeps accepting public bookings (unchanged)', async () => {
+    shopFindUnique.mockResolvedValue(shopRow({ stripeConnectAccountType: 'EXPRESS' }));
+    subscriptionFindFirst.mockResolvedValue({ status: 'ACTIVE', currentPeriodEnd: farFuture });
+    expect(await loadPublicBookingIntakeStatus('shop_1')).toMatchObject({ accepting: true, reason: 'ok' });
+  });
+
   it('allows PAST_DUE within grace and denies after grace without a Starter choice', async () => {
     shopFindUnique.mockResolvedValue(shopRow({ shopPaidAt: new Date() }));
     subscriptionFindFirst.mockResolvedValue({
@@ -180,6 +187,15 @@ describe('shopAcceptsPublicBookings', () => {
       const status = await loadPublicBookingIntakeStatus('shop_1');
       expect(status).toMatchObject({ accepting: false, reason: 'stripe_not_ready' });
       expect(status.starterReadiness?.stripe.blocker).toBe(blocker);
+    });
+
+    it('pauses intake for a legacy Express account even with stale chargesEnabled=true', async () => {
+      shopFindUnique.mockResolvedValue(
+        shopRow({ stripeConnectAccountType: 'EXPRESS', stripeConnectChargesEnabled: true }),
+      );
+      const status = await loadPublicBookingIntakeStatus('shop_1');
+      expect(status).toMatchObject({ accepting: false, reason: 'stripe_not_ready' });
+      expect(status.starterReadiness?.stripe.blocker).toBe('connect_requires_standard');
     });
 
     it('recovers after Stripe reconnect without any shop or slug change', async () => {

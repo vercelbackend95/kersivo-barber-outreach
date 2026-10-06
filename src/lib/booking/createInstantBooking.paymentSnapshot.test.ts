@@ -126,6 +126,7 @@ const baseShop = {
   bookingPaymentMode: 'DEPOSIT' as 'NONE' | 'DEPOSIT' | 'FULL',
   stripeConnectAccountId: 'acct_ready' as string | null,
   stripeConnectChargesEnabled: true,
+  stripeConnectAccountType: 'STANDARD' as 'STANDARD' | 'EXPRESS' | null,
   pendingConfirmationMins: 15,
   defaultBufferMinutes: 0,
   openingHours: null,
@@ -360,6 +361,42 @@ describe('createInstantBooking — live booking payment runtime', () => {
     }
     expect(transaction).not.toHaveBeenCalled();
     expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('v1.19: Starter on a legacy Express / unknown account fails closed before any booking (stale flags)', async () => {
+    for (const shop of [
+      { ...baseShop, stripeConnectAccountType: 'EXPRESS' as const, stripeConnectChargesEnabled: true },
+      { ...baseShop, stripeConnectAccountType: null },
+    ]) {
+      findUniqueOrThrowShop.mockResolvedValue(shop);
+      const error = await createInstantBooking(bookingInput('starter-express'), publicOptions).catch((e) => e);
+      expect(error).toMatchObject({ statusCode: 503, code: 'BOOKING_PAYMENT_NOT_READY' });
+    }
+    expect(transaction).not.toHaveBeenCalled();
+    expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('Full KERSIVO on a legacy Express account still collects on that account (unchanged)', async () => {
+    asState('FULL_KERSIVO');
+    findUniqueOrThrowShop.mockResolvedValue({
+      ...baseShop,
+      stripeConnectAccountId: 'acct_legacy_express',
+      stripeConnectAccountType: 'EXPRESS',
+    });
+
+    await createInstantBooking(bookingInput('full-express'), publicOptions);
+
+    expect(createdData()).toMatchObject({
+      status: BookingStatus.PENDING_PAYMENT,
+      bookingPaymentType: 'DEPOSIT',
+      stripeConnectAccountIdAtPayment: 'acct_legacy_express',
+    });
+  });
+
+  it('Starter manual / sandbox bookings stay Pay at shop on any account type', async () => {
+    findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, stripeConnectAccountType: 'EXPRESS' });
+    await createInstantBooking(bookingInput('manual-express'), { requiredShopId: 'shop_1' });
+    expect(createdData()).toMatchObject(NONE_SNAPSHOT);
   });
 
   it('F: demo shop never takes booking payments', async () => {

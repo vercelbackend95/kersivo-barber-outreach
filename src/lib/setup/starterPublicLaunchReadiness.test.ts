@@ -7,8 +7,11 @@ import { resolveBookingPaymentAccount } from '@/lib/booking/bookingPaymentAccoun
 import { resolveGoogleBookingDestination } from '@/lib/shop/googleBooking';
 import { hasKersivoCapability, resolveKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { resolvePublicBookingDestination } from '@/lib/shop/publicBookingDestination';
+import { evaluateBookingPayments } from '@/lib/booking/bookingPaymentsGate';
+import { accessForState } from '@/lib/shop/kersivoAccess';
 import {
   evaluateStarterPublicLaunchReadiness,
+  isStarterStripeAccountType,
   type StarterReadinessService,
 } from './starterPublicLaunchReadiness';
 
@@ -17,6 +20,7 @@ const readyShop = {
   stripeConnectAccountId: 'acct_standard',
   stripeConnectChargesEnabled: true,
   stripeConnectDisconnectedAt: null,
+  stripeConnectAccountType: 'STANDARD' as string | null,
 };
 
 const services: StarterReadinessService[] = [
@@ -107,6 +111,89 @@ describe('evaluateStarterPublicLaunchReadiness', () => {
     expect(readiness.stripe).toMatchObject({ ready: false, blocker });
   });
 
+  describe('v1.19 Starter requires Stripe Connect Standard', () => {
+    it('STANDARD + linked + charges enabled + not disconnected is Starter-ready', () => {
+      expect(evaluateStarterPublicLaunchReadiness({ shop: readyShop, services }).stripe).toEqual({
+        ready: true,
+        accountLinked: true,
+        disconnected: false,
+        requiresStandard: false,
+        blocker: null,
+      });
+    });
+
+    it('legacy EXPRESS with charges enabled is NOT Starter-ready', () => {
+      const readiness = evaluateStarterPublicLaunchReadiness({
+        shop: { ...readyShop, stripeConnectAccountId: 'acct_legacy_express', stripeConnectAccountType: 'EXPRESS' },
+        services,
+      });
+      expect(readiness.ready).toBe(false);
+      expect(readiness.reasons).toEqual(['stripe_not_ready']);
+      expect(readiness.stripe).toMatchObject({
+        ready: false,
+        accountLinked: true,
+        requiresStandard: true,
+        blocker: 'connect_requires_standard',
+      });
+    });
+
+    it('legacy EXPRESS with stale ready flags (charges + details) is still NOT Starter-ready', () => {
+      const readiness = evaluateStarterPublicLaunchReadiness({
+        shop: {
+          ...readyShop,
+          stripeConnectAccountType: 'EXPRESS',
+          stripeConnectChargesEnabled: true,
+          stripeConnectDetailsSubmitted: true,
+        } as typeof readyShop,
+        services,
+      });
+      expect(readiness.stripe.blocker).toBe('connect_requires_standard');
+      expect(readiness.ready).toBe(false);
+    });
+
+    it.each([null, 'UNKNOWN', 'CUSTOM'])('account type %s fails closed', (type) => {
+      const readiness = evaluateStarterPublicLaunchReadiness({
+        shop: { ...readyShop, stripeConnectAccountType: type },
+        services,
+      });
+      expect(readiness.ready).toBe(false);
+      expect(readiness.stripe.blocker).toBe('connect_requires_standard');
+    });
+
+    it('a disconnected Express account reports the disconnect (reconnect creates Standard)', () => {
+      const readiness = evaluateStarterPublicLaunchReadiness({
+        shop: { ...readyShop, stripeConnectAccountType: 'EXPRESS', stripeConnectDisconnectedAt: new Date() },
+        services,
+      });
+      expect(readiness.stripe).toMatchObject({ requiresStandard: false, blocker: 'connect_disconnected' });
+    });
+
+    it('becomes ready again once a new Standard connection is payment-ready', () => {
+      const express = { ...readyShop, stripeConnectAccountId: 'acct_legacy_express', stripeConnectAccountType: 'EXPRESS' };
+      expect(evaluateStarterPublicLaunchReadiness({ shop: express, services }).ready).toBe(false);
+
+      const onboarding = {
+        ...readyShop,
+        stripeConnectAccountId: 'acct_new_standard',
+        stripeConnectAccountType: 'STANDARD',
+        stripeConnectChargesEnabled: false,
+      };
+      expect(evaluateStarterPublicLaunchReadiness({ shop: onboarding, services }).stripe.blocker).toBe(
+        'connect_not_ready',
+      );
+
+      const ready = { ...onboarding, stripeConnectChargesEnabled: true };
+      expect(evaluateStarterPublicLaunchReadiness({ shop: ready, services }).ready).toBe(true);
+    });
+
+    it('isStarterStripeAccountType accepts only STANDARD', () => {
+      expect(isStarterStripeAccountType('STANDARD')).toBe(true);
+      for (const type of ['EXPRESS', 'UNKNOWN', 'CUSTOM', '', null, undefined]) {
+        expect(isStarterStripeAccountType(type)).toBe(false);
+      }
+    });
+  });
+
   it('reports Stripe and service blockers together so the owner sees every fix', () => {
     const readiness = evaluateStarterPublicLaunchReadiness({
       shop: { ...readyShop, stripeConnectAccountId: null },
@@ -178,6 +265,15 @@ describe('Full → Starter / v1.18 cutover lifecycle invariants', () => {
         resolveBookingPaymentSettlement({ bookingPaymentType: 'NONE', paymentAmountPence: 0, event }),
       ).toEqual({ refundPence: 0, retainedPence: 0 });
     }
+  });
+
+  it('Full KERSIVO keeps legacy Express booking-payment compatibility (generic gate unchanged)', () => {
+    expect(
+      evaluateBookingPayments({
+        shop: { id: 'shop_1', stripeConnectAccountId: 'acct_legacy_express', stripeConnectChargesEnabled: true },
+        access: accessForState('FULL_KERSIVO'),
+      }),
+    ).toEqual({ ok: true, reason: 'ok' });
   });
 
   it('historical Express payment snapshots keep refunding on their original account after reconnect', () => {
