@@ -54,7 +54,7 @@ describe('homepage SEO phase 1: head', () => {
   it('keeps the approved title and uses the new meta description from the shared default', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Start KERSIVO Starter at £0/month or choose Full for your own website and domain. 0% KERSIVO commission.',
+      'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('title={DEFAULT_TITLE}');
