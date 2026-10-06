@@ -96,7 +96,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   eyebrow: 'BARBERSHOP SOFTWARE PRICING',
   headingBeforePrice: 'Barbershop software pricing: £',
   headingAfterPrice: '/month per location',
-  lead: 'One flat monthly plan with your branded website, booking system, deposits, client management, admin, retail and support. Extra barbers are included.',
+  lead: 'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
   planLabel: 'MONTHLY SUBSCRIPTION',
   planValueLine: 'Everything included. No setup fee.',
   trustPoints: [
@@ -122,7 +122,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     {
       heading: 'Clients, deposits + reminders',
       description:
-        'Keep client records, take optional deposits and send email confirmations and SMS appointment reminders.',
+        'Keep client records and choose Pay at shop, a £5 deposit or full payment, with email confirmations and SMS appointment reminders.',
       icon: 'users',
     },
     {
