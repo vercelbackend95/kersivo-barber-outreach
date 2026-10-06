@@ -58,12 +58,13 @@ describe('KERSIVO Starter landing SEO', () => {
     expect(page).toContain('Start KERSIVO Starter');
     expect(page).toContain('Google booking setup');
     expect(page).toContain('QR Kit');
+    const pageAndFaq = `${page} ${STARTER_FAQ_ITEMS.map((item) => `${item.question} ${item.answer}`).join(' ')}`;
     expect(page.toLowerCase()).not.toContain('free barber booking system');
     expect(page).not.toContain('1%');
-    expect(allCopy).toContain('£5 deposit');
-    expect(allCopy).toContain('Pay in full');
-    expect(allCopy).toContain('connected Stripe');
-    expect(allCopy).not.toMatch(/Stripe is optional|no Stripe account needed|Pay at shop without connecting Stripe/i);
+    expect(pageAndFaq).toContain('£5 deposit');
+    expect(pageAndFaq).toContain('Pay in full');
+    expect(pageAndFaq).toContain('connected Stripe');
+    expect(pageAndFaq).not.toMatch(/Stripe is optional|no Stripe account needed|Pay at shop without connecting Stripe/i);
   });
 });
 
