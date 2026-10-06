@@ -38,7 +38,7 @@ function valueCardSrcset(image: string, imageWidth: number): string {
 const blocks: ValueBlock[] = [
   {
     heading: 'Online booking for barbers, without the marketplace detour',
-    body: 'Clients choose a service, barber and available time through your own branded website \u2014 no app download and no marketplace detour.',
+    body: 'Clients choose a service, barber and available time through a direct KERSIVO booking journey — hosted on Starter, or on your own branded website and domain with Full.',
     image: '/images/Ilustracje/8.webp',
     imageWidth: 1536,
     imageHeight: 1024,
@@ -53,8 +53,8 @@ const blocks: ValueBlock[] = [
     imageAlt: 'Barber in the chair on his laptop \u2014 running his shop online from the chair',
   },
   {
-    heading: 'Deposits and reminders that protect your time',
-    body: 'Take optional booking deposits, send booking confirmations by email and appointment reminders by SMS to help reduce missed appointments and protect valuable chair time.',
+    heading: 'Payments and reminders that protect your time',
+    body: 'Starter public bookings take a £5 deposit or full payment. Full unlocks the choice to use Pay at shop, require a £5 deposit or require full payment. Starter includes email reminders; Full adds SMS reminders.',
     image: '/images/Ilustracje/reminder.webp',
     imageWidth: 928,
     imageHeight: 1152,
@@ -63,11 +63,11 @@ const blocks: ValueBlock[] = [
 ];
 
 const includedItems = [
-  'Branded booking website',
-  'Your own domain included',
+  'Starter £0/month',
+  'Up to 4 bookable barbers on Starter',
+  'Hosted online booking',
   'Admin dashboard',
-  'Client management',
-  'Retail pickup shop',
+  'Clients Core',
   '0% KERSIVO commission',
 ];
 ---
@@ -83,9 +83,9 @@ const includedItems = [
         Barbershop software for bookings, clients and daily management
       </h2>
       <p class="landing-value-cards__lead">
-        KERSIVO brings online booking, appointment scheduling, deposits, client management, barber
-        and service management, retail pickup and admin into one system built around your own
-        domain and brand.
+        Start with the core booking operation on KERSIVO Starter for £0/month. Move to Full when
+        you want your own branded website and domain, wider client tools, Reports, Retail and more
+        control over the customer experience.
       </p>
     </header>
 
@@ -120,7 +120,7 @@ const includedItems = [
     </ul>
 
     <div class="landing-value-cards__included">
-      <p class="landing-value-cards__included-label">Included from day one</p>
+      <p class="landing-value-cards__included-label">START WITH KERSIVO STARTER</p>
       <ul class="landing-value-cards__included-items" role="list">
         {includedItems.map((item) => (
           <li class="landing-value-cards__included-chip">{item}</li>
