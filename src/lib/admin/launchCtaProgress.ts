@@ -98,7 +98,16 @@ export type StarterLaunchState = {
   activeServiceCount: number;
   activeBookableBarbers: number;
   publicBookingReady: boolean;
+  servicesBelowMinimum?: ReadonlyArray<{ id: string; name: string; pricePence: number }>;
 };
+
+function formatServicesBelowMinimum(state: StarterLaunchState): string {
+  const services = state.servicesBelowMinimum ?? [];
+  if (services.length === 0) return '';
+  const shown = services.slice(0, 3).map((service) => service.name);
+  const more = services.length > shown.length ? ` and ${services.length - shown.length} more` : '';
+  return ` Raise the price or make inactive: ${shown.join(', ')}${more}.`;
+}
 
 export type StarterLaunchCtaPresentation = {
   title: string;
@@ -140,7 +149,7 @@ export function resolveStarterLaunchCtaPresentation(
       supporting:
         state.activeServiceCount < 1
           ? 'Add an active service before launching online bookings.'
-          : 'Starter services must be priced at £5 or more before bookings can go live.',
+          : `Starter services must be priced at £5 or more before bookings can go live.${formatServicesBelowMinimum(state)}`,
       action: 'navigate',
       href: '/admin?section=services',
     };

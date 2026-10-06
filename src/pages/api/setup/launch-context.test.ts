@@ -320,6 +320,51 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
     expect(body.starterLaunch.publicBookingReady).toBe(false);
   });
 
+  it('after Full → Starter, exposes the recovery blockers (disconnected Stripe + named £5 services)', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: 'acct_old',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: new Date('2026-09-01T00:00:00.000Z'),
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: true,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', name: 'Skin Fade', isActive: true, pricePence: 2500 },
+        { id: 's-low', name: 'Line-up', isActive: true, pricePence: 300 },
+        { id: 's-old', name: 'Old promo', isActive: false, pricePence: 100 },
+      ],
+      _count: { services: 3 },
+    });
+    findFirstSaas.mockResolvedValue({
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+      pastDueSince: null,
+      activatedAt: null,
+      cancelAtPeriodEnd: false,
+      postFullPlan: 'STARTER',
+    });
+
+    const body = await (await GET(makeContext() as never)).json();
+    expect(body.productState).toBe('FREE_BOOKING');
+    expect(body.starterLaunch).toMatchObject({
+      stripeReady: false,
+      stripeDisconnected: true,
+      servicesMeetPriceFloor: false,
+      publicBookingReady: false,
+      pauseReasons: ['stripe_not_ready', 'service_below_minimum'],
+      servicesBelowMinimum: [{ id: 's-low', name: 'Line-up', pricePence: 300 }],
+    });
+  });
+
 describe('GET /api/setup/launch-context (setup fees on)', () => {
   beforeEach(() => {
     enableSetupFees = true;

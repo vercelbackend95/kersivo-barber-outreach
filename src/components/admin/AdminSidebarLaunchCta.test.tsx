@@ -159,4 +159,72 @@ describe('AdminSidebarLaunchCta', () => {
     await waitFor(() => expect(container.querySelector('.admin-sidebar-launch-cta--loading')).toBeNull());
     expect(container.querySelector('.admin-sidebar-launch-cta')).toBeNull();
   });
+
+  it('after Full → Starter, a stale paid flag never hides the Reconnect Stripe recovery CTA', async () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 3,
+      activeServiceCount: 2,
+      servicesMeetPriceFloor: true,
+      stripeReady: false,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          progress,
+          paid: true,
+          productState: 'FREE_BOOKING',
+          starterLaunch: {
+            stripeAccountLinked: false,
+            stripeReady: false,
+            stripeDisconnected: true,
+            servicesMeetPriceFloor: true,
+            activeServiceCount: 2,
+            activeBookableBarbers: 3,
+            publicBookingReady: false,
+          },
+        }),
+      }),
+    );
+
+    render(<AdminSidebarLaunchCta />);
+    expect(await screen.findByText('Reconnect Stripe')).toBeTruthy();
+  });
+
+  it('after Full → Starter, names the services below £5 that pause online bookings', async () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 2,
+      activeServiceCount: 3,
+      servicesMeetPriceFloor: false,
+      stripeReady: true,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          progress,
+          paid: false,
+          productState: 'FREE_BOOKING',
+          starterLaunch: {
+            stripeAccountLinked: true,
+            stripeReady: true,
+            stripeDisconnected: false,
+            servicesMeetPriceFloor: false,
+            activeServiceCount: 3,
+            activeBookableBarbers: 2,
+            publicBookingReady: false,
+            servicesBelowMinimum: [{ id: 'svc_low', name: 'Line-up', pricePence: 300 }],
+          },
+        }),
+      }),
+    );
+
+    render(<AdminSidebarLaunchCta />);
+    expect(await screen.findByText('Fix service prices')).toBeTruthy();
+    expect(screen.getByText(/Raise the price or make inactive: Line-up\./)).toBeTruthy();
+  });
 });

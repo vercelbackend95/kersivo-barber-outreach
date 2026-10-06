@@ -191,11 +191,8 @@ export default function AdminSidebarLaunchCta({
     return null;
   }
 
-  // Paying tenants (shopPaidAt / SaaS) — hide purchase / launch CTA entirely.
-  if (paid && !isPublicDemo) {
-    return null;
-  }
-
+  // Starter entitlement is authoritative: a stale paid marker after Full → Starter must not hide
+  // the Starter launch / recovery CTA.
   if (starterPresentation && !isPublicDemo) {
     return (
       <div>
@@ -233,6 +230,11 @@ export default function AdminSidebarLaunchCta({
         ) : null}
       </div>
     );
+  }
+
+  // Paying tenants (shopPaidAt / SaaS) — hide purchase / launch CTA entirely.
+  if (paid && !isPublicDemo) {
+    return null;
   }
 
   return (

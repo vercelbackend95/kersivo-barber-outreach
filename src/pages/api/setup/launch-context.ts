@@ -17,8 +17,7 @@ import {
 } from '../../../lib/setup/saasCheckoutGuard';
 import { isPaidShop } from '../../../lib/shop/paidShop';
 import { resolveKersivoAccess } from '../../../lib/shop/kersivoAccess';
-import { evaluateBookingPayments } from '../../../lib/booking/bookingPaymentsGate';
-import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '../../../lib/booking/bookingPaymentPolicy';
+import { evaluateStarterPublicLaunchReadiness } from '../../../lib/setup/starterPublicLaunchReadiness';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
 function resolveSaasOrLegacyPaidHref(shopPaid: boolean): string | null {
@@ -98,7 +97,7 @@ export const GET: APIRoute = async (context) => {
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       },
       services: {
-        select: { id: true, isActive: true, pricePence: true },
+        select: { id: true, name: true, isActive: true, pricePence: true },
       },
       _count: {
         select: {
@@ -188,47 +187,43 @@ export const GET: APIRoute = async (context) => {
       : null,
   );
 
-  const activeServices = (shop.services ?? []).filter((service) => service.isActive);
-  const servicesMeetStarterPriceFloor = activeServices.every(
-    (service) => service.pricePence >= STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
-  );
-  const stripeAccountLinked =
-    Boolean(shop.stripeConnectAccountId?.trim()) && !shop.stripeConnectDisconnectedAt;
-  const stripeReady =
-    productAccess.state === 'FREE_BOOKING' &&
-    evaluateBookingPayments({
-      shop: {
-        id: shop.id,
-        stripeConnectAccountId: shop.stripeConnectAccountId ?? null,
-        stripeConnectChargesEnabled: Boolean(shop.stripeConnectChargesEnabled),
-        stripeConnectDisconnectedAt: shop.stripeConnectDisconnectedAt ?? null,
-      },
-      access: productAccess,
-    }).ok;
-
-  const starterProgress =
+  const starterReadiness =
     productAccess.state === 'FREE_BOOKING'
-      ? buildStarterLaunchProgress({
-          onboardingCompleted: Boolean(shop.onboardingCompleted),
-          activeBookableBarbers: shop.barbers.length,
-          activeServiceCount: activeServices.length,
-          servicesMeetPriceFloor: servicesMeetStarterPriceFloor,
-          stripeReady,
+      ? evaluateStarterPublicLaunchReadiness({
+          shop: {
+            id: shop.id,
+            stripeConnectAccountId: shop.stripeConnectAccountId ?? null,
+            stripeConnectChargesEnabled: Boolean(shop.stripeConnectChargesEnabled),
+            stripeConnectDisconnectedAt: shop.stripeConnectDisconnectedAt ?? null,
+          },
+          services: shop.services ?? [],
         })
       : null;
 
-  const starterLaunch =
-    productAccess.state === 'FREE_BOOKING'
-      ? {
-          stripeAccountLinked,
-          stripeReady,
-          stripeDisconnected: Boolean(shop.stripeConnectDisconnectedAt),
-          servicesMeetPriceFloor: servicesMeetStarterPriceFloor,
-          activeServiceCount: activeServices.length,
-          activeBookableBarbers: shop.barbers.length,
-          publicBookingReady: Boolean(starterProgress?.complete),
-        }
-      : null;
+  const starterProgress = starterReadiness
+    ? buildStarterLaunchProgress({
+        onboardingCompleted: Boolean(shop.onboardingCompleted),
+        activeBookableBarbers: shop.barbers.length,
+        activeServiceCount: starterReadiness.activeServiceCount,
+        servicesMeetPriceFloor: starterReadiness.servicesBelowMinimum.length === 0,
+        stripeReady: starterReadiness.stripe.ready,
+      })
+    : null;
+
+  const starterLaunch = starterReadiness
+    ? {
+        stripeAccountLinked: starterReadiness.stripe.accountLinked,
+        stripeReady: starterReadiness.stripe.ready,
+        stripeDisconnected: starterReadiness.stripe.disconnected,
+        servicesMeetPriceFloor: starterReadiness.servicesBelowMinimum.length === 0,
+        activeServiceCount: starterReadiness.activeServiceCount,
+        activeBookableBarbers: shop.barbers.length,
+        publicBookingReady: Boolean(starterProgress?.complete) && starterReadiness.ready,
+        pauseReasons: starterReadiness.reasons,
+        servicesBelowMinimum: starterReadiness.servicesBelowMinimum,
+        minimumServicePricePence: starterReadiness.minimumServicePricePence,
+      }
+    : null;
 
   const retailComplete =
     Boolean(shop.retailOnboardingCompleted) ||
