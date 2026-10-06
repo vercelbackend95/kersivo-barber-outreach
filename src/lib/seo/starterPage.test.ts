@@ -18,7 +18,7 @@ describe('KERSIVO Starter landing SEO', () => {
     expect(STARTER_PAGE_PATH).toBe('/starter');
     expect(STARTER_PAGE_TITLE).toContain('KERSIVO Starter');
     expect(STARTER_PAGE_TITLE).toContain('£0/Month');
-    expect(STARTER_PAGE_H1).toBe('Start taking bookings with KERSIVO Starter.');
+    expect(STARTER_PAGE_H1).toBe('Run your barbershop bookings for £0/month.');
     expect(STARTER_PAGE_TITLE).not.toBe(DEFAULT_TITLE);
     expect(STARTER_PAGE_H1.toLowerCase()).not.toBe('barber booking system');
   });
@@ -60,6 +60,10 @@ describe('KERSIVO Starter landing SEO', () => {
     expect(page).toContain('QR Kit');
     expect(page.toLowerCase()).not.toContain('free barber booking system');
     expect(page).not.toContain('1%');
+    expect(allCopy).toContain('£5 deposit');
+    expect(allCopy).toContain('Pay in full');
+    expect(allCopy).toContain('connected Stripe');
+    expect(allCopy).not.toMatch(/Stripe is optional|no Stripe account needed|Pay at shop without connecting Stripe/i);
   });
 });
 
@@ -87,7 +91,7 @@ describe('KERSIVO Starter landing page structure and claims', () => {
   it('distinguishes the 0% KERSIVO fee from Stripe processing fees', () => {
     expect(page).toContain('Standard Stripe processing fees');
     expect(allCopy).not.toMatch(/0% (payment[- ])?processing|no processing fees|no stripe fees/i);
-    expect(allCopy).not.toMatch(/\b1%|application fee|platform fee/i);
+    expect(allCopy).not.toMatch(/\b1%|[1-9]\d*(?:\.\d+)?% KERSIVO (?:application|platform) fee/i);
   });
 
   it('uses the KERSIVO Starter name, not the old Free Booking naming', () => {
