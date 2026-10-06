@@ -142,7 +142,7 @@ describe('buildBarbershopBookingFaqJsonLd', () => {
       (entity) => entity.name === 'Does KERSIVO charge more when I add more barbers?',
     )!.acceptedAnswer.text;
     expect(barbersAnswer).toBe(
-      `No. KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location. Within that location, additional barbers are included without a numerical cap, subject to reasonable fair use. Standard Stripe payment-processing fees still apply to online card payments.`,
+      `Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location rather than per barber; additional barbers within that location are included subject to reasonable fair use.`,
     );
     expect(JSON.stringify(faq)).not.toMatch(/Review|AggregateRating|aggregateRating/);
   });
