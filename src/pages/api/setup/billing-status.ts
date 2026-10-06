@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
-import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
+import { postFullStarterTermsAllowService } from '@/lib/legal/termsVersion';
 import {
   graceEndsAt,
   resolveSaasBillingPhase,
@@ -110,7 +110,7 @@ export const GET: APIRoute = async (context) => {
   const postFullPlan = String(subscription.postFullPlan ?? 'UNDECIDED');
   const staleStarterTerms =
     postFullPlan === 'STARTER' &&
-    subscription.postFullTermsVersion !== CURRENT_TERMS_VERSION;
+    !postFullStarterTermsAllowService(subscription.postFullTermsVersion);
   const postFullPlanChoiceRequired =
     (
       staleStarterTerms &&
