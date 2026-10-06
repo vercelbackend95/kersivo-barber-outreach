@@ -11,6 +11,13 @@ const read = (name: string) => readFileSync(join(here, '../../pages', name), 'ut
 const terms = read('terms.astro');
 const privacy = read('privacy.astro');
 const dpa = read('dpa.astro');
+const postFullTermsMigration = readFileSync(
+  join(
+    here,
+    '../../../prisma/migrations/20261006123000_post_full_starter_terms_version/migration.sql',
+  ),
+  'utf8',
+);
 const normalize = (value: string) => value.replace(/\s+/g, ' ');
 const termsText = normalize(terms);
 const privacyText = normalize(privacy);
@@ -87,6 +94,19 @@ describe('v1.19 legal/product alignment', () => {
     expect(termsText).toContain('not a commission or fee deducted');
     expect(privacyText).toContain('partner compensation / revenue share');
     expect(dpaText).toContain('partner compensation / revenue share');
+  });
+
+  it('grandfathers only already-effective pre-v1.19 Full → Starter rows without pretending v1.19 Terms acceptance', () => {
+    const migration = normalize(postFullTermsMigration);
+    expect(migration).toContain('ADD COLUMN "postFullTermsVersion" TEXT');
+    expect(migration).toContain(
+      `SET "postFullTermsVersion" = 'LEGACY_EFFECTIVE_PRE_V119'`,
+    );
+    expect(migration).toContain(`WHERE "status" = 'CANCELED'`);
+    expect(migration).toContain(`AND "postFullPlan" = 'STARTER'`);
+    expect(migration).toContain(`AND "postFullTermsVersion" IS NULL`);
+    expect(migration).not.toMatch(/WHERE "status" = 'ACTIVE'/);
+    expect(migration).not.toMatch(/SET "postFullTermsVersion" = '2026-10-06'/);
   });
 
   it('bumps the material legal package versions together', () => {
