@@ -1,7 +1,7 @@
 ---
 import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
 import { BOOKSY_ALTERNATIVE_H1_LINES } from '@/lib/seo/booksyAlternativeFaq';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const [firstLine, secondLine, thirdLine] = BOOKSY_ALTERNATIVE_H1_LINES;
 ---
@@ -21,7 +21,7 @@ const [firstLine, secondLine, thirdLine] = BOOKSY_ALTERNATIVE_H1_LINES;
 
     <p class="fresha-alt-hero__lead">
       Booksy pairs booking software with its Marketplace and customer app. KERSIVO takes a more
-      direct route. Starter is £0/month, with a £5 deposit or full payment on every public booking.
+      direct route. Starter is £0/month, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking.
       Full KERSIVO moves the complete customer journey onto your own website and domain for
       £{SAAS_MONTHLY_GBP}/month per location.
     </p>
