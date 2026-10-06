@@ -13,6 +13,7 @@ vi.mock('../db/client', () => ({
 }));
 
 import { BLACKLINE_SHOP_ID } from '../demo/products';
+import { CURRENT_TERMS_VERSION } from '../legal/termsVersion';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import {
   KERSIVO_CAPABILITIES,
@@ -98,10 +99,33 @@ describe('resolveKersivoProductState', () => {
   it('E2: Full ended + explicit Starter choice => FREE_BOOKING (with or without the legacy marker)', () => {
     for (const s of [shop(), shop({ freeBookingActivatedAt: activatedAt, shopPaidAt: activatedAt })]) {
       for (const sub of [expiredGraceSub, suspendedSub, canceledSub]) {
-        expect(resolveKersivoProductState(s, { ...sub, postFullPlan: 'STARTER' }, now)).toBe(
-          'FREE_BOOKING',
-        );
+        expect(
+          resolveKersivoProductState(
+            s,
+            { ...sub, postFullPlan: 'STARTER', postFullTermsVersion: CURRENT_TERMS_VERSION },
+            now,
+          ),
+        ).toBe('FREE_BOOKING');
       }
+    }
+  });
+
+  it('E2b: Full ended + Starter choice on an older Terms version stays SETUP until current Terms are accepted', () => {
+    for (const sub of [expiredGraceSub, suspendedSub, canceledSub]) {
+      expect(
+        resolveKersivoProductState(
+          shop(),
+          { ...sub, postFullPlan: 'STARTER', postFullTermsVersion: '2026-10-05' },
+          now,
+        ),
+      ).toBe('SETUP');
+      expect(
+        resolveKersivoProductState(
+          shop(),
+          { ...sub, postFullPlan: 'STARTER', postFullTermsVersion: null },
+          now,
+        ),
+      ).toBe('SETUP');
     }
   });
 
@@ -242,7 +266,7 @@ describe('loadKersivoAccess', () => {
       expect.objectContaining({
         where: { shopId: 'shop_1', status: { not: 'PENDING' } },
         orderBy: { createdAt: 'desc' },
-        select: expect.objectContaining({ postFullPlan: true }),
+        select: expect.objectContaining({ postFullPlan: true, postFullTermsVersion: true }),
       }),
     );
   });
@@ -254,8 +278,19 @@ describe('loadKersivoAccess', () => {
     subscriptionFindFirst.mockResolvedValue({ ...canceledSub, postFullPlan: 'CHOICE_REQUIRED' });
     expect((await loadKersivoAccess('shop_1', now)).state).toBe('SETUP');
 
-    subscriptionFindFirst.mockResolvedValue({ ...canceledSub, postFullPlan: 'STARTER' });
+    subscriptionFindFirst.mockResolvedValue({
+      ...canceledSub,
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: CURRENT_TERMS_VERSION,
+    });
     expect((await loadKersivoAccess('shop_1', now)).state).toBe('FREE_BOOKING');
+
+    subscriptionFindFirst.mockResolvedValue({
+      ...canceledSub,
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: '2026-10-05',
+    });
+    expect((await loadKersivoAccess('shop_1', now)).state).toBe('SETUP');
   });
 
   it('reads through a provided transaction client instead of the global client', async () => {
