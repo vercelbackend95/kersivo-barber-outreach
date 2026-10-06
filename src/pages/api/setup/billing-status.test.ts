@@ -43,6 +43,7 @@ function subscription(overrides: Record<string, unknown> = {}) {
     currency: 'gbp',
     postFullPlan: 'UNDECIDED',
     postFullPlanChosenAt: null,
+    postFullTermsVersion: null,
     ...overrides,
   };
 }
@@ -74,9 +75,29 @@ describe('GET /api/setup/billing-status — Full → Starter readiness preview',
 
   it('keeps showing blockers after Starter was chosen', async () => {
     subscriptionFindFirst.mockResolvedValue(
-      subscription({ postFullPlan: 'STARTER', postFullPlanChosenAt: new Date() }),
+      subscription({
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: new Date(),
+        postFullTermsVersion: '2026-10-06',
+      }),
     );
     const body = await (await GET({} as APIContext)).json();
+    expect(body.starterPublicLaunch).toEqual(blocked);
+    expect(body.postFullTermsCurrent).toBe(true);
+    expect(body.postFullPlanChoiceRequired).toBe(false);
+  });
+
+  it('requires the choice panel again when a recorded Starter continuation uses an older Terms version', async () => {
+    subscriptionFindFirst.mockResolvedValue(
+      subscription({
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: new Date(),
+        postFullTermsVersion: '2026-10-05',
+      }),
+    );
+    const body = await (await GET({} as APIContext)).json();
+    expect(body.postFullTermsCurrent).toBe(false);
+    expect(body.postFullPlanChoiceRequired).toBe(true);
     expect(body.starterPublicLaunch).toEqual(blocked);
   });
 
