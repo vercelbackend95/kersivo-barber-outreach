@@ -12,6 +12,8 @@ export const FUNNEL_EVENTS = {
   plan_my_setup_click: 'plan_my_setup_click',
   /** KERSIVO Starter signup CTA (/starter, /pricing) — distinct from saas_subscribe_click (Full). */
   starter_signup_click: 'starter_signup_click',
+  starter_payment_settings_upgrade_viewed: 'starter_payment_settings_upgrade_viewed',
+  starter_payment_settings_upgrade_clicked: 'starter_payment_settings_upgrade_clicked',
   auth_started: 'auth_started',
   signup_completed: 'signup_completed',
   onboarding_started: 'onboarding_started',
@@ -75,6 +77,8 @@ export const MICRO_CONVERSION_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.view_live_demo_click,
   FUNNEL_EVENTS.plan_my_setup_click,
   FUNNEL_EVENTS.starter_signup_click,
+  FUNNEL_EVENTS.starter_payment_settings_upgrade_viewed,
+  FUNNEL_EVENTS.starter_payment_settings_upgrade_clicked,
   FUNNEL_EVENTS.auth_started,
   FUNNEL_EVENTS.onboarding_started,
   FUNNEL_EVENTS.launch_wizard_started,
