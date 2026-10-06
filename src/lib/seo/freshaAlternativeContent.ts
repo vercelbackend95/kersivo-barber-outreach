@@ -40,7 +40,7 @@ export const FRESHA_QUICK_ANSWER_KICKER = 'The short version';
 
 export const FRESHA_QUICK_ANSWER_TITLE = 'A Fresha alternative built around your own brand.';
 
-export const FRESHA_QUICK_ANSWER_LEAD = `KERSIVO is a Fresha alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted booking page where clients pay a £5 deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location and adds your own website and domain, wider business tools and control over how clients pay. KERSIVO takes 0% commission on booking payments. Stripe processing fees still apply.`;
+export const FRESHA_QUICK_ANSWER_LEAD = `KERSIVO is a Fresha alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted page where clients pay a £5 deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location, adding your website, domain and payment control. KERSIVO commission is 0%; Stripe processing fees apply.`;
 
 export const FRESHA_QUICK_ANSWER_DETAIL = `Fresha follows a different model: business software priced per bookable team member (${INDEPENDENT_PRICE} a month for one person, or ${TEAM_PRICE} per team member on its Team plan, plus VAT), alongside the Fresha Marketplace, which charges a one-time fee for brand-new clients it introduces.`;
 
