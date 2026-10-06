@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
@@ -7,6 +7,8 @@ import QrKitSettingsCard from './QrKitSettingsCard';
 import LeaveKersivoCard from './LeaveKersivoCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { trackConsentedEvent } from '@/lib/consent/events';
 import '@/styles/components/admin-barbershop-settings.css';
 
 const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -195,6 +197,24 @@ export default function BarbershopSettingsPanel({
   const [exportBusy, setExportBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [billingMessage, setBillingMessage] = useState('');
+  const starterPaymentUpgradeViewTracked = useRef(false);
+
+  useEffect(() => {
+    if (
+      starterPaymentUpgradeViewTracked.current ||
+      loading ||
+      bookingProductState !== 'FREE_BOOKING' ||
+      paymentControlsEditable
+    ) {
+      return;
+    }
+    starterPaymentUpgradeViewTracked.current = true;
+    trackConsentedEvent(
+      FUNNEL_EVENTS.starter_payment_settings_upgrade_viewed,
+      { placement: 'barbershop_settings_payments' },
+      'analytics',
+    );
+  }, [bookingProductState, loading, paymentControlsEditable]);
 
   const loadGoogleBooking = useCallback(async () => {
     setGoogleBookingLoading(true);
@@ -1172,7 +1192,17 @@ export default function BarbershopSettingsPanel({
                     Want full control over how clients pay? Full KERSIVO unlocks Pay at shop, £5
                     deposit and full-payment controls.
                   </p>
-                  <a className="btn btn--primary" href="/admin/upgrade">
+                  <a
+                    className="btn btn--primary"
+                    href="/admin/upgrade"
+                    onClick={() => {
+                      trackConsentedEvent(
+                        FUNNEL_EVENTS.starter_payment_settings_upgrade_clicked,
+                        { placement: 'barbershop_settings_payments' },
+                        'analytics',
+                      );
+                    }}
+                  >
                     Unlock payment controls — £39/month
                   </a>
                 </div>
