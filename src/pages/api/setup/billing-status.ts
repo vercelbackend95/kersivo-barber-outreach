@@ -11,6 +11,7 @@ import {
   saasSubscriptionGrantsAccess,
 } from '@/lib/setup/saasEntitlement';
 import { subscriptionBlocksAccountDeletion } from '@/lib/setup/accountDeletionGate';
+import { loadStarterPublicLaunchReadiness } from '@/lib/setup/starterPublicLaunchReadiness';
 
 const subscriptionSelect = {
   status: true,
@@ -110,6 +111,9 @@ export const GET: APIRoute = async (context) => {
     phase !== 'canceled' &&
     postFullPlan !== 'STARTER' &&
     postFullPlan !== 'LEAVE';
+  // Full → Starter review: what would pause new public bookings once Starter is effective.
+  const starterPublicLaunch =
+    postFullPlan !== 'LEAVE' ? await loadStarterPublicLaunchReadiness(access.shopId) : null;
 
   return new Response(
     JSON.stringify({
@@ -133,6 +137,7 @@ export const GET: APIRoute = async (context) => {
       postFullPlan,
       postFullPlanChosenAt: subscription.postFullPlanChosenAt?.toISOString() ?? null,
       postFullPlanChoiceRequired,
+      starterPublicLaunch,
     }),
     { status: 200 },
   );

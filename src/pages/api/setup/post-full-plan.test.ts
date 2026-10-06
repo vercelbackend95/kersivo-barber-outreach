@@ -12,6 +12,23 @@ const queryRaw = vi.fn(async (..._args: unknown[]) => []);
 const countActiveBookableBarbers = vi.fn();
 const recordTermsAcceptance = vi.fn();
 const recordAccountLifecycleEvent = vi.fn();
+const loadStarterPublicLaunchReadiness = vi.fn();
+
+vi.mock('@/lib/setup/starterPublicLaunchReadiness', () => ({
+  loadStarterPublicLaunchReadiness: (...args: unknown[]) => loadStarterPublicLaunchReadiness(...args),
+}));
+
+function readiness(overrides: Record<string, unknown> = {}) {
+  return {
+    ready: true,
+    reasons: [],
+    stripe: { ready: true, accountLinked: true, disconnected: false, blocker: null },
+    activeServiceCount: 3,
+    minimumServicePricePence: 500,
+    servicesBelowMinimum: [],
+    ...overrides,
+  };
+}
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
@@ -100,6 +117,7 @@ describe('POST /api/setup/post-full-plan', () => {
     countActiveBookableBarbers.mockResolvedValue(2);
     recordTermsAcceptance.mockResolvedValue(undefined);
     recordAccountLifecycleEvent.mockResolvedValue(undefined);
+    loadStarterPublicLaunchReadiness.mockResolvedValue(readiness());
     update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 'saas-1',
       postFullPlan: data.postFullPlan,
@@ -215,6 +233,84 @@ describe('POST /api/setup/post-full-plan', () => {
     );
   });
 
+  it('Full → Starter with Stripe ready and all services >= £5 reports Starter public launch ready', async () => {
+    findFirst.mockResolvedValue(subscription());
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.starterPublicLaunch).toMatchObject({ ready: true, reasons: [] });
+    expect(body.currentPeriodEnd).toBe('2026-11-01T00:00:00.000Z');
+  });
+
+  it('Full → Starter with a service below £5 stays a valid choice and surfaces the blocker', async () => {
+    findFirst.mockResolvedValue(subscription());
+    loadStarterPublicLaunchReadiness.mockResolvedValue(
+      readiness({
+        ready: false,
+        reasons: ['service_below_minimum'],
+        servicesBelowMinimum: [{ id: 'svc_low', name: 'Line-up', pricePence: 300 }],
+      }),
+    );
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({ ok: true, choice: 'STARTER' });
+    expect(body.starterPublicLaunch.servicesBelowMinimum).toEqual([
+      { id: 'svc_low', name: 'Line-up', pricePence: 300 },
+    ]);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ postFullPlan: 'STARTER' }) }),
+    );
+    expect(recordAccountLifecycleEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          starterPublicLaunchReady: false,
+          starterServicesBelowMinimum: ['svc_low'],
+        }),
+      }),
+    );
+  });
+
+  it.each([
+    ['missing', 'connect_missing'],
+    ['disconnected', 'connect_disconnected'],
+    ['not payment-ready', 'connect_not_ready'],
+  ])('Full → Starter with Stripe %s stays a valid choice and reports paused public intake', async (_l, blocker) => {
+    findFirst.mockResolvedValue(subscription());
+    loadStarterPublicLaunchReadiness.mockResolvedValue(
+      readiness({
+        ready: false,
+        reasons: ['stripe_not_ready'],
+        stripe: { ready: false, accountLinked: false, disconnected: blocker === 'connect_disconnected', blocker },
+      }),
+    );
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.choice).toBe('STARTER');
+    expect(body.starterPublicLaunch).toMatchObject({
+      ready: false,
+      reasons: ['stripe_not_ready'],
+      stripe: { blocker },
+    });
+  });
+
+  it('readiness never bypasses the 4-barber Starter limit', async () => {
+    findFirst.mockResolvedValue(subscription());
+    countActiveBookableBarbers.mockResolvedValue(6);
+
+    const res = await POST(ctx({ choice: 'STARTER', termsAccepted: true }) as never);
+
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe('FREE_BOOKABLE_BARBER_LIMIT');
+    expect(update).not.toHaveBeenCalled();
+    expect(loadStarterPublicLaunchReadiness).not.toHaveBeenCalled();
+  });
+
   it('records Leave without requiring Starter Terms acceptance', async () => {
     findFirst.mockResolvedValue(subscription());
 
@@ -223,6 +319,8 @@ describe('POST /api/setup/post-full-plan', () => {
 
     expect(res.status).toBe(200);
     expect(body.choice).toBe('LEAVE');
+    expect(body.starterPublicLaunch).toBeNull();
+    expect(loadStarterPublicLaunchReadiness).not.toHaveBeenCalled();
     expect(recordTermsAcceptance).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({

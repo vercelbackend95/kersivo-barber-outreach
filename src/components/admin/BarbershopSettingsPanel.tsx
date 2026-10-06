@@ -27,6 +27,46 @@ type GoogleBookingSetupState = {
   productState: string;
 };
 
+type StarterPublicLaunchPreview = {
+  ready: boolean;
+  stripe: { blocker: 'connect_missing' | 'connect_disconnected' | 'connect_not_ready' | null };
+  activeServiceCount: number;
+  servicesBelowMinimum: Array<{ id: string; name: string; pricePence: number }>;
+};
+
+function formatPence(pence: number): string {
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
+function StarterLaunchBlockers({ preview }: { preview: StarterPublicLaunchPreview | null }) {
+  if (!preview || preview.ready) return null;
+  const stripeCopy =
+    preview.stripe.blocker === 'connect_disconnected'
+      ? 'Reconnect Stripe — your Stripe account is disconnected.'
+      : preview.stripe.blocker === 'connect_not_ready'
+        ? 'Finish Stripe setup — your Stripe account cannot take payments yet.'
+        : preview.stripe.blocker === 'connect_missing'
+          ? 'Connect Stripe — Starter online bookings are paid through your own Stripe account.'
+          : null;
+  return (
+    <div className="admin-barbershop-settings__card-copy" role="note" data-testid="starter-launch-blockers">
+      <p>
+        <strong>New online bookings will be paused on Starter until you fix:</strong>
+      </p>
+      <ul>
+        {stripeCopy ? <li>{stripeCopy}</li> : null}
+        {preview.activeServiceCount === 0 ? <li>Add at least one active service.</li> : null}
+        {preview.servicesBelowMinimum.map((service) => (
+          <li key={service.id}>
+            {service.name} ({formatPence(service.pricePence)}) — raise to £5 or more, or make it inactive.
+          </li>
+        ))}
+      </ul>
+      <p>Prices are never changed automatically. Your account, data and accepted bookings stay.</p>
+    </div>
+  );
+}
+
 type PauseState = {
   paused: boolean;
   pausedNow: boolean;
@@ -137,6 +177,8 @@ export default function BarbershopSettingsPanel({
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [postFullPlan, setPostFullPlan] = useState<string | null>(null);
   const [postFullPlanChoiceRequired, setPostFullPlanChoiceRequired] = useState(false);
+  const [starterPublicLaunch, setStarterPublicLaunch] = useState<StarterPublicLaunchPreview | null>(null);
+  const [fullEndsOn, setFullEndsOn] = useState<string | null>(null);
   const [showCancelChoices, setShowCancelChoices] = useState(false);
   const [starterTermsAccepted, setStarterTermsAccepted] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -227,6 +269,8 @@ export default function BarbershopSettingsPanel({
         setCancelAtPeriodEnd(false);
         setPostFullPlan(null);
         setPostFullPlanChoiceRequired(false);
+        setStarterPublicLaunch(null);
+        setFullEndsOn(null);
         setBillingPhase(null);
         setBillingLabel(null);
         return;
@@ -246,11 +290,13 @@ export default function BarbershopSettingsPanel({
         postFullPlan?: string | null;
         postFullPlanChosenAt?: string | null;
         postFullPlanChoiceRequired?: boolean;
+        starterPublicLaunch?: StarterPublicLaunchPreview | null;
         error?: string;
       } | null;
       if (!response.ok) {
         throw new Error(data?.error || 'Could not load billing status.');
       }
+      setStarterPublicLaunch(data?.starterPublicLaunch ?? null);
 
       setHasSubscription(Boolean(data?.hasSubscription));
       setHasBillingPortal(Boolean(data?.hasPortalAccess));
@@ -271,6 +317,7 @@ export default function BarbershopSettingsPanel({
           year: 'numeric',
         });
       };
+      setFullEndsOn(data?.currentPeriodEnd ? formatDate(data.currentPeriodEnd) : null);
 
       if (!data?.hasSubscription) {
         setBillingLabel(null);
@@ -1446,8 +1493,26 @@ export default function BarbershopSettingsPanel({
             {(showCancelChoices || postFullPlanChoiceRequired) ? (
               <div className="admin-barbershop-settings__cancel-choice" role="group" aria-label="After Full KERSIVO">
                 <p className="admin-barbershop-settings__card-copy">
-                  What should happen when your paid Full KERSIVO period ends?
+                  What should happen when your paid Full KERSIVO period ends
+                  {fullEndsOn ? ` on ${fullEndsOn}` : ''}?
                 </p>
+                <div className="admin-barbershop-settings__card-copy" data-testid="starter-downgrade-summary">
+                  <p>
+                    <strong>KERSIVO Starter</strong> starts after your paid Full period: £0/month, 0% KERSIVO
+                    commission. Your account, team (up to 4 bookable barbers), services, clients and accepted
+                    bookings stay.
+                  </p>
+                  <p>
+                    Starter online bookings take a fixed £5 payment through your own Stripe account (clients
+                    may pay in full). Every active service must be £5 or more. No Pay at shop for online
+                    bookings.
+                  </p>
+                  <p>
+                    Reports, Retail, Advanced Clients, SMS, Assistant and your own domain lock. QR codes and
+                    your Google booking link use your KERSIVO-hosted booking page.
+                  </p>
+                </div>
+                <StarterLaunchBlockers preview={starterPublicLaunch} />
                 <label className="admin-barbershop-settings__card-copy">
                   <input
                     type="checkbox"
@@ -1484,9 +1549,12 @@ export default function BarbershopSettingsPanel({
                 ) : null}
               </div>
             ) : postFullPlan === 'STARTER' && cancelAtPeriodEnd ? (
-              <p className="admin-barbershop-settings__card-copy" role="status">
-                After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
-              </p>
+              <>
+                <p className="admin-barbershop-settings__card-copy" role="status">
+                  After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
+                </p>
+                <StarterLaunchBlockers preview={starterPublicLaunch} />
+              </>
             ) : postFullPlan === 'LEAVE' && cancelAtPeriodEnd ? (
               <p className="admin-barbershop-settings__card-copy" role="status">
                 After Full ends: <strong>Leave KERSIVO</strong>.

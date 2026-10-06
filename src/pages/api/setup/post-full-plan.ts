@@ -24,6 +24,7 @@ import {
   SHOP_DEPARTURE_IN_PROGRESS,
   SHOP_DEPARTURE_IN_PROGRESS_MESSAGE,
 } from '@/lib/shop/shopDepartureCopy';
+import { loadStarterPublicLaunchReadiness } from '@/lib/setup/starterPublicLaunchReadiness';
 
 type PostFullChoice = 'STARTER' | 'LEAVE';
 
@@ -238,6 +239,11 @@ export const POST: APIRoute = async (context) => {
 
   if (outcome.response) return outcome.response;
 
+  // Readiness never blocks the choice: Starter entitlement still begins when Full ends, and only
+  // new public booking intake pauses until Stripe / £5 service blockers are resolved.
+  const starterPublicLaunch =
+    outcome.choice === 'STARTER' ? await loadStarterPublicLaunchReadiness(access.shopId) : null;
+
   await recordAccountLifecycleEvent({
     action: ACCOUNT_LIFECYCLE_ACTIONS.POST_FULL_PLAN_CHOSEN,
     userId: access.userId,
@@ -248,6 +254,13 @@ export const POST: APIRoute = async (context) => {
       postFullPlan: outcome.choice,
       alreadyChosen: outcome.alreadyChosen,
       currentPeriodEnd: outcome.currentPeriodEnd?.toISOString() ?? null,
+      ...(starterPublicLaunch
+        ? {
+            starterPublicLaunchReady: starterPublicLaunch.ready,
+            starterPublicLaunchPauseReasons: starterPublicLaunch.reasons,
+            starterServicesBelowMinimum: starterPublicLaunch.servicesBelowMinimum.map((s) => s.id),
+          }
+        : {}),
     },
   });
 
@@ -256,5 +269,6 @@ export const POST: APIRoute = async (context) => {
     choice: outcome.choice,
     alreadyChosen: outcome.alreadyChosen,
     currentPeriodEnd: outcome.currentPeriodEnd?.toISOString() ?? null,
+    starterPublicLaunch,
   });
 };
