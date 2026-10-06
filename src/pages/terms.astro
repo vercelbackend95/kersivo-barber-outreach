@@ -99,7 +99,8 @@ import '@/styles/legal-pages.css';
         Feature lists and fees on our <a href="/pricing">pricing page</a> form part of these Terms by reference.
         KERSIVO takes <strong>0% KERSIVO commission / platform / application fee</strong> on new booking payments in
         both Starter and Full. <strong>Standard Stripe payment-processing fees still apply</strong> under the
-        barbershop&rsquo;s agreement with Stripe where online card payments are enabled.
+        barbershop&rsquo;s agreement with Stripe. KERSIVO Starter requires a payment-ready Stripe Connect Standard
+        account before new customer-created public bookings can go live.
       </p>
 
       <h2 id="website">Full KERSIVO website and domain</h2>
@@ -139,14 +140,27 @@ import '@/styles/legal-pages.css';
       <p>
         KERSIVO Starter is a genuine <strong>£0/month</strong> service level for one physical barbershop location. It is
         not a time-limited trial and KERSIVO adds <strong>0% commission / platform / application fee</strong> to new
-        booking payments. Starter may be used in Pay at shop mode without connecting Stripe.
+        booking payments. A payment-ready <strong>Stripe Connect Standard</strong> account is required before new
+        customer-created public Starter bookings can go live.
       </p>
       <p>Starter includes, subject to reasonable fair use:</p>
       <ul>
         <li>a KERSIVO-hosted booking page;</li>
         <li>bookings, team, services and availability;</li>
         <li>up to <strong>4 active bookable barbers</strong> at the location;</li>
-        <li>manual bookings;</li>
+        <li>manual bookings, which may be recorded as Pay at shop;</li>
+        <li>
+          a fixed public-booking payment model: for services priced above £5, the customer chooses a
+          <strong>£5 deposit</strong> or <strong>Pay in full</strong>; a service priced exactly at £5 is paid in full;
+        </li>
+        <li>
+          no customer-created public Pay at shop mode on Starter, and no editable public booking-payment settings;
+          those controls are Full KERSIVO features;
+        </li>
+        <li>
+          active public-bookable Starter services must be priced at <strong>£5 or more</strong>; KERSIVO does not
+          silently reprice a service that falls below that threshold;
+        </li>
         <li>a rolling <strong>90-day</strong> view of past booking history plus current and future bookings;</li>
         <li><strong>Clients Core</strong>, rather than the Full advanced CRM layer;</li>
         <li>automated email reminders;</li>
@@ -156,8 +170,8 @@ import '@/styles/legal-pages.css';
       </ul>
       <p>
         Starter does not include the Full branded website / own-domain service, more than 4 active bookable barbers,
-        full historical booking archive, Advanced Clients, Reports, Retail / Products / Orders / Sales, SMS reminders
-        or the live KERSIVO Assistant.
+        editable public booking-payment controls (including public Pay at shop), full historical booking archive,
+        Advanced Clients, Reports, Retail / Products / Orders / Sales, SMS reminders or the live KERSIVO Assistant.
       </p>
 
       <h2 id="subscription">Full KERSIVO monthly subscription</h2>
@@ -206,8 +220,12 @@ import '@/styles/legal-pages.css';
         Ending a Full subscription does <strong>not</strong> automatically mean leaving KERSIVO. When Full KERSIVO is
         scheduled to end, the Owner may explicitly choose to continue on KERSIVO Starter. Full remains active until the
         end of the already-paid period; after that, Full-only website/domain and premium modules cease and the shop
-        continues at the Starter entitlement. If more than 4 barbers are actively bookable, the Owner must choose which
-        maximum 4 remain bookable on Starter; KERSIVO does not choose for you.
+        continues at the Starter entitlement only where the applicable current Terms for that Starter continuation have
+        been accepted. If more than 4 barbers are actively bookable, the Owner must reduce the active booking team to a
+        maximum of 4; KERSIVO does not choose or delete barbers for you. If Stripe Standard is not payment-ready, or an
+        active public-bookable service is below £5, the Starter account and dashboard may remain available but new public
+        booking intake is paused until the relevant launch requirement is fixed. Existing accepted bookings are not
+        rewritten merely because Full ends.
       </p>
       <p>
         If the Owner chooses <strong>Leave KERSIVO</strong>, or Full ends without an explicit Starter choice, the shop
@@ -253,12 +271,21 @@ import '@/styles/legal-pages.css';
 
       <h2>Stripe, booking payments and retail</h2>
       <p>
-        Where online card payments are enabled, live booking payments use the barbershop&rsquo;s
-        <strong>connected Stripe account</strong> under a direct-charge model and the barbershop remains the merchant /
-        seller of record for its services. New public Stripe connections are onboarded using Stripe Standard; historical
-        Express connections may remain supported where already established. KERSIVO does not store full card numbers or
-        CVC and adds <strong>0% application / platform fee</strong> to new Starter and Full booking payments.
-        Standard Stripe processing fees are charged separately by Stripe under the barbershop&rsquo;s Stripe terms.
+        Live booking card payments use the barbershop&rsquo;s <strong>connected Stripe account</strong> under a
+        direct-charge model and the barbershop remains the merchant / seller of record for its services. New public
+        Stripe connections are onboarded using Stripe Standard. KERSIVO Starter requires a payment-ready
+        <strong>Stripe Connect Standard</strong> account before new public bookings can be live. A historical Express
+        connection may remain supported for Full KERSIVO and for historical payment / refund continuity where already
+        established, but a legacy Express account does <strong>not</strong> satisfy the Starter public-launch
+        requirement. KERSIVO does not store full card numbers or CVC and adds
+        <strong>0% application / platform fee</strong> to new Starter and Full booking payments. Standard Stripe
+        processing fees are charged separately by Stripe under the barbershop&rsquo;s Stripe terms.
+      </p>
+      <p>
+        On Starter, customer-created public bookings always require an online payment: for a service above £5 the
+        customer may choose a £5 deposit or Pay in full, while a £5 service is paid in full. Public Pay at shop is not
+        available on Starter. Full KERSIVO may offer owner-controlled Pay at shop, £5-deposit or full-payment modes.
+        Staff-created manual Starter bookings may still be recorded as Pay at shop.
       </p>
       <p>
         KERSIVO may separately receive compensation or revenue share from Stripe under Stripe&rsquo;s own partner
