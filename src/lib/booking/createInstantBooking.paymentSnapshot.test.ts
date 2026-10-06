@@ -216,6 +216,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
       paymentAmountPence: 500,
       kersivoPlatformFeeBps: 0,
       kersivoPlatformFeePence: 0,
+      kersivoProductStateAtBooking: 'FREE_BOOKING',
     });
     expect(data.paymentExpiresAt).toBeInstanceOf(Date);
     expect(result.depositRequired).toBe(true);
@@ -253,6 +254,7 @@ describe('createInstantBooking — live booking payment runtime', () => {
       expect(createdData()).toMatchObject({
         kersivoPlatformFeePence: 0,
         stripeConnectAccountIdAtPayment: 'acct_full_exact',
+        kersivoProductStateAtBooking: 'FULL_KERSIVO',
       });
     });
 
@@ -262,7 +264,10 @@ describe('createInstantBooking — live booking payment runtime', () => {
 
       await createInstantBooking(bookingInput('none-acct'), publicOptions);
 
-      expect(createdData()).toMatchObject({ stripeConnectAccountIdAtPayment: null });
+      expect(createdData()).toMatchObject({
+        stripeConnectAccountIdAtPayment: null,
+        kersivoProductStateAtBooking: 'FULL_KERSIVO',
+      });
     });
   });
 
