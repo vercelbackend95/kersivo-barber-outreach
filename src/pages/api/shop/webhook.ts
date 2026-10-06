@@ -909,6 +909,34 @@ async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
   );
 }
 
+/**
+ * Starter Stripe analytics enrichment. Runs only after the Connect state has been persisted and
+ * must never fail the webhook: a 500 here would make Stripe retry an already-applied transition,
+ * which then looks like ready → ready and the transition event would be lost for good.
+ */
+async function recordStarterStripeTransition(
+  eventType: string,
+  shopId: string,
+  transition: {
+    action:
+      | typeof ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY
+      | typeof ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED;
+    meta: Record<string, string>;
+  },
+): Promise<void> {
+  try {
+    const access = await loadKersivoAccess(shopId);
+    if (access.state !== 'FREE_BOOKING') return;
+    await recordAccountLifecycleEvent({ action: transition.action, shopId, meta: transition.meta });
+  } catch (error) {
+    opsLogError('stripe.webhook', 'starter_stripe_analytics_failed', error, {
+      eventType,
+      shopId,
+      action: transition.action,
+    });
+  }
+}
+
 async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response> {
   const accountId = (event.account?.trim() || event.data.object.id?.trim() || '').trim();
   if (!accountId || !accountId.startsWith('acct_')) {
@@ -944,26 +972,21 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     before?.id &&
     before.stripeConnectAccountType === 'STANDARD'
   ) {
-    const access = await loadKersivoAccess(before.id);
-    if (access.state === 'FREE_BOOKING') {
-      const wasReady =
-        Boolean(before.stripeConnectChargesEnabled) &&
-        !before.stripeConnectDisconnectedAt;
-      const isReady = chargesEnabled;
+    const wasReady =
+      Boolean(before.stripeConnectChargesEnabled) &&
+      !before.stripeConnectDisconnectedAt;
+    const isReady = chargesEnabled;
 
-      if (!wasReady && isReady) {
-        await recordAccountLifecycleEvent({
-          action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY,
-          shopId: before.id,
-          meta: { accountType: 'STANDARD' },
-        });
-      } else if (wasReady && !isReady) {
-        await recordAccountLifecycleEvent({
-          action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
-          shopId: before.id,
-          meta: { reason: 'not_payment_ready', accountType: 'STANDARD' },
-        });
-      }
+    if (!wasReady && isReady) {
+      await recordStarterStripeTransition(event.type, before.id, {
+        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY,
+        meta: { accountType: 'STANDARD' },
+      });
+    } else if (wasReady && !isReady) {
+      await recordStarterStripeTransition(event.type, before.id, {
+        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
+        meta: { reason: 'not_payment_ready', accountType: 'STANDARD' },
+      });
     }
   }
 
@@ -1018,14 +1041,10 @@ async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Res
     before.stripeConnectChargesEnabled &&
     !before.stripeConnectDisconnectedAt
   ) {
-    const access = await loadKersivoAccess(before.id);
-    if (access.state === 'FREE_BOOKING') {
-      await recordAccountLifecycleEvent({
-        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
-        shopId: before.id,
-        meta: { reason: 'disconnected', accountType: 'STANDARD' },
-      });
-    }
+    await recordStarterStripeTransition(event.type, before.id, {
+      action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
+      meta: { reason: 'disconnected', accountType: 'STANDARD' },
+    });
   }
 
   console.info('[webhook] account.application.deauthorized', {
