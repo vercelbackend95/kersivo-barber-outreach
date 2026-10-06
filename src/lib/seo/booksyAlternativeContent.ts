@@ -34,7 +34,7 @@ export const BOOKSY_QUICK_ANSWER_KICKER = 'The short version';
 
 export const BOOKSY_QUICK_ANSWER_TITLE = 'A Booksy alternative built around your own brand.';
 
-export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted booking page where clients pay a £5 deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location and adds your own website and domain, wider business tools and control over how clients pay. KERSIVO takes 0% commission on booking payments. Stripe processing fees still apply.`;
+export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted page where clients pay a £5 deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location, adding your website, domain and payment control. KERSIVO commission is 0%; Stripe processing fees apply.`;
 
 export const BOOKSY_QUICK_ANSWER_DETAIL = `Booksy combines booking software with its Marketplace and customer app. It lists ${BASE_PRICE} a month plus VAT, and ${USER_PRICE} a month plus VAT for each additional user. Standard Marketplace bookings are free when Boost is off; optional Boost adds a one-time fee for qualifying new clients it brings in.`;
 
