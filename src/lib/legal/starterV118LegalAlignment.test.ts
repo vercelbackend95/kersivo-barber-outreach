@@ -16,7 +16,7 @@ const termsText = normalize(terms);
 const privacyText = normalize(privacy);
 const dpaText = normalize(dpa);
 
-describe('v1.18 legal/product alignment', () => {
+describe('v1.19 legal/product alignment', () => {
   it('preserves Full KERSIVO £39/month while adding genuine Starter £0/month', () => {
     expect(terms).toContain('KERSIVO Starter — £0/month');
     expect(terms).toContain('Full KERSIVO — £{SAAS_MONTHLY_GBP}/month per physical location');
@@ -35,14 +35,27 @@ describe('v1.18 legal/product alignment', () => {
     expect(dpaText).toContain('Stripe processing fees are');
   });
 
-  it('uses Standard for new Connect onboarding while retaining historical Express compatibility', () => {
+  it('requires Stripe Standard for Starter public launch while retaining historical Express compatibility', () => {
     for (const source of [termsText, privacyText, dpaText]) {
       expect(source).toContain('Stripe Standard');
       expect(source).toMatch(/historical Express/i);
+      expect(source).toMatch(/Starter public-launch requirement|Starter public bookings can go live|public Starter bookings can go live/i);
     }
+    expect(termsText).toContain('does <strong>not</strong> satisfy the Starter public-launch requirement');
+    expect(terms).not.toContain('Starter may be used in Pay at shop mode without connecting Stripe');
     expect(terms).not.toContain('Stripe Connect Express with direct charges');
     expect(privacy).not.toContain('Stripe Connect Express / direct charges');
     expect(dpa).not.toContain('Stripe Connect Express with direct charges');
+  });
+
+  it('documents the fixed Starter public payment contract and Full payment-control boundary', () => {
+    expect(termsText).toContain('<strong>£5 deposit</strong>');
+    expect(termsText).toContain('<strong>Pay in full</strong>');
+    expect(termsText).toContain('service priced exactly at £5 is paid in full');
+    expect(termsText).toContain('no customer-created public Pay at shop mode on Starter');
+    expect(termsText).toContain('active public-bookable Starter services must be priced at <strong>£5 or more</strong>');
+    expect(privacyText).toContain('Public Pay at shop is not available on Starter');
+    expect(dpaText).toContain('public Pay at shop is not a Starter customer-booking mode');
   });
 
   it('distinguishes Full downgrade from complete KERSIVO departure', () => {
@@ -77,8 +90,8 @@ describe('v1.18 legal/product alignment', () => {
   });
 
   it('bumps the material legal package versions together', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
-    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
-    expect(privacy).toContain('Last updated: 5 October 2026');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
+    expect(privacy).toContain('Last updated: 6 October 2026');
   });
 });
