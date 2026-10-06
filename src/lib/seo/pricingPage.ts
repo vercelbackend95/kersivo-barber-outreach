@@ -21,7 +21,7 @@ export const PRICING_PAGE_LAST_UPDATED_LABEL = '6 October 2026';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
-export const PRICING_QUICK_ANSWER = `KERSIVO has two plans. Starter is £0/month for the core booking operation: connect Stripe to launch public bookings, then every customer-created booking is paid with a £5 deposit or in full. Full KERSIVO is ${PRICE}/month per physical location and adds your branded website, own domain and the wider business toolkit, including control over how clients pay. There is no setup fee and KERSIVO takes 0% commission on both plans. Standard Stripe processing fees apply to online card payments.`;
+export const PRICING_QUICK_ANSWER = `KERSIVO Starter is £0/month for the core booking operation: connect Stripe to launch public bookings, then every customer-created booking is paid with a £5 deposit or in full. Full KERSIVO is ${PRICE}/month per physical location and adds your branded website, own domain and the wider business toolkit, including control over how clients pay. There is no setup fee and KERSIVO takes 0% commission on both plans. Standard Stripe processing fees apply to online card payments.`;
 
 export const PRICING_QUICK_FACTS = [
   { label: 'KERSIVO Starter', value: '£0/month' },
