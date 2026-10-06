@@ -77,7 +77,7 @@ describe('marketing sitemap', () => {
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
     expect(xml).toContain('<lastmod>2026-09-25</lastmod>');
-    expect(xml).toContain('<lastmod>2026-10-05</lastmod>');
+    expect(xml).not.toContain('<lastmod>2026-10-05</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-06</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
