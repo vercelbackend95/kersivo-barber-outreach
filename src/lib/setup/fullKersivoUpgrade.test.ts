@@ -108,7 +108,12 @@ describe('resolveFullUpgradeEligibility', () => {
       resolveFullUpgradeEligibility(
         'shop-1',
         NOW,
-        dbWith(stale, { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' }),
+        dbWith(stale, {
+          status: 'CANCELED',
+          currentPeriodEnd: PAST,
+          postFullPlan: 'STARTER',
+          postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+        }),
       ),
     ).resolves.toEqual({ ok: true, state: 'FREE_BOOKING' });
   });
@@ -131,9 +136,24 @@ describe('resolveFullUpgradeEligibility', () => {
       resolveFullUpgradeEligibility(
         'shop-1',
         NOW,
-        dbWith(freeShop, { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' }),
+        dbWith(freeShop, {
+          status: 'CANCELED',
+          currentPeriodEnd: PAST,
+          postFullPlan: 'STARTER',
+          postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+        }),
       ),
     ).resolves.toEqual({ ok: true, state: 'FREE_BOOKING' });
+  });
+
+  it('selects postFullTermsVersion so legacy-effective Starter resolves correctly', async () => {
+    const db = dbWith(freeShop, null) as unknown as {
+      saasSubscription: { findFirst: ReturnType<typeof vi.fn> };
+    };
+    await resolveFullUpgradeEligibility('shop-1', NOW, db as never);
+    expect(db.saasSubscription.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ postFullTermsVersion: true }) }),
+    );
   });
 
   it('active paid Full with LEAVE scheduled stays already_full (not departure logic)', async () => {

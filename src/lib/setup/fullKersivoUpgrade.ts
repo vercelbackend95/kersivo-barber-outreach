@@ -54,6 +54,7 @@ export async function resolveFullUpgradeEligibility(
       pastDueSince: true,
       cancelAtPeriodEnd: true,
       postFullPlan: true,
+      postFullTermsVersion: true,
     },
   });
 
