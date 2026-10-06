@@ -178,7 +178,7 @@ export const FRESHA_WORKED_EXAMPLES_NOTE = `Subscription cost only — not a tot
 
 export const KERSIVO_MODEL_POINTS: readonly string[] = [
   `KERSIVO Starter: ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers, with a hosted booking page`,
-  'Starter public bookings: ${STARTER_DEPOSIT_PRICE} deposit or Pay in full through a connected Stripe account',
+  `Starter public bookings: ${STARTER_DEPOSIT_PRICE} deposit or Pay in full through a connected Stripe account`,
   `Full KERSIVO: ${KERSIVO_PRICE}/month per physical location`,
   'Full: editable payment controls including Pay at shop, plus unlimited barbers within one location subject to reasonable fair use',
   'No setup fee on either plan',
@@ -230,7 +230,7 @@ export const FRESHA_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonIte
       'You want a direct booking journey under your own brand, with your own website and domain on Full KERSIVO',
       'Your clients already find you through Google, Instagram, referrals or walk-ins',
       `You prefer ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers on Starter, or a flat ${KERSIVO_PRICE}/month per location on Full, however many barbers take bookings`,
-      'You want Starter bookings secured by a ${STARTER_DEPOSIT_PRICE} deposit or full payment, with Full unlocking Pay at shop and wider payment control — all with 0% KERSIVO commission',
+      `You want Starter bookings secured by a ${STARTER_DEPOSIT_PRICE} deposit or full payment, with Full unlocking Pay at shop and wider payment control — all with 0% KERSIVO commission`,
     ],
   },
 ];
