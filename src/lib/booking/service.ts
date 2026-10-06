@@ -42,6 +42,7 @@ import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bo
 import { loadKersivoAccess, type KersivoCapability } from '../shop/kersivoAccess';
 import { isStarterStripeAccountType } from '../setup/starterPublicLaunchReadiness';
 import {
+  BOOKING_PRODUCT_STATE_CHANGED,
   SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
   lockShopAndCheckNewBookingCapability,
 } from './bookingCreationGate';
@@ -608,6 +609,15 @@ export async function createInstantBooking(
                   : 'New bookings are not available for this shop.',
                 403,
                 SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
+              );
+            }
+            // The payment policy and kersivoProductStateAtBooking were derived from the
+            // pre-transaction state; never insert them under a different locked state.
+            if (productStateAtBooking !== null && gate.state !== productStateAtBooking) {
+              throw new BookingActionError(
+                'Booking options for this shop just changed. Please try again.',
+                409,
+                BOOKING_PRODUCT_STATE_CHANGED,
               );
             }
           }
