@@ -12,6 +12,8 @@ const findFirstShop = vi.fn();
 const applyInvoicePaymentFailed = vi.fn();
 const applyInvoicePaid = vi.fn();
 const applyStripeSubscriptionToSaasRecord = vi.fn();
+const loadKersivoAccess = vi.fn();
+const recordAccountLifecycleEvent = vi.fn();
 
 vi.mock('../../../lib/shop/stripe', () => ({
   verifyStripeWebhookSignature: (...args: unknown[]) => verifyStripeWebhookSignature(...args),
@@ -54,6 +56,18 @@ vi.mock('../../../lib/db/client', () => ({
     setupDeposit: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
   },
+}));
+
+vi.mock('../../../lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...args: unknown[]) => loadKersivoAccess(...args),
+}));
+
+vi.mock('../../../lib/setup/accountLifecycleAudit', () => ({
+  ACCOUNT_LIFECYCLE_ACTIONS: {
+    STARTER_STRIPE_READY: 'STARTER_STRIPE_READY',
+    STARTER_STRIPE_PAUSED: 'STARTER_STRIPE_PAUSED',
+  },
+  recordAccountLifecycleEvent: (...args: unknown[]) => recordAccountLifecycleEvent(...args),
 }));
 
 vi.mock('../../../lib/setup/saasSubscriptionLifecycle', () => ({
@@ -171,6 +185,8 @@ describe('POST /api/shop/webhook replay hardening', () => {
     });
     updateMany.mockResolvedValue({ count: 1 });
     countShops.mockResolvedValue(1);
+    loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING', capabilities: [] });
+    recordAccountLifecycleEvent.mockResolvedValue(undefined);
   });
 
   it('returns 400 with generic body when signature is out of tolerance', async () => {
@@ -214,6 +230,92 @@ describe('POST /api/shop/webhook replay hardening', () => {
     expect(body).toEqual({ ok: true, duplicate: true });
     expect(applyInvoicePaymentFailed).not.toHaveBeenCalled();
     expect(markStripeWebhookStatus).not.toHaveBeenCalled();
+  });
+
+  it('records Starter Stripe ready exactly on a Standard not-ready -> ready transition', async () => {
+    findFirstShop.mockResolvedValue({
+      id: 'shop_1',
+      stripeConnectAccountType: 'STANDARD',
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+    });
+
+    const res = await POST(
+      signedRequest({
+        id: 'evt_acct_ready',
+        type: 'account.updated',
+        created: Math.floor(Date.now() / 1000),
+        account: 'acct_shop',
+        data: {
+          object: {
+            id: 'acct_shop',
+            charges_enabled: true,
+            details_submitted: true,
+          },
+        },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(recordAccountLifecycleEvent).toHaveBeenCalledWith({
+      action: 'STARTER_STRIPE_READY',
+      shopId: 'shop_1',
+      meta: { accountType: 'STANDARD' },
+    });
+  });
+
+  it('does not double-count Starter Stripe ready on a repeated ready snapshot', async () => {
+    findFirstShop.mockResolvedValue({
+      id: 'shop_1',
+      stripeConnectAccountType: 'STANDARD',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+    });
+
+    const res = await POST(
+      signedRequest({
+        id: 'evt_acct_still_ready',
+        type: 'account.updated',
+        created: Math.floor(Date.now() / 1000),
+        account: 'acct_shop',
+        data: {
+          object: {
+            id: 'acct_shop',
+            charges_enabled: true,
+            details_submitted: true,
+          },
+        },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(recordAccountLifecycleEvent).not.toHaveBeenCalled();
+  });
+
+  it('records a Starter pause when a ready Standard account is deauthorized', async () => {
+    findFirstShop.mockResolvedValue({
+      id: 'shop_1',
+      stripeConnectAccountType: 'STANDARD',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+    });
+
+    const res = await POST(
+      signedRequest({
+        id: 'evt_acct_deauth',
+        type: 'account.application.deauthorized',
+        created: Math.floor(Date.now() / 1000),
+        account: 'acct_shop',
+        data: { object: { id: 'ca_app' } },
+      }) as never,
+    );
+
+    expect(res.status).toBe(200);
+    expect(recordAccountLifecycleEvent).toHaveBeenCalledWith({
+      action: 'STARTER_STRIPE_PAUSED',
+      shopId: 'shop_1',
+      meta: { reason: 'disconnected', accountType: 'STANDARD' },
+    });
   });
 
   it('ignores stale account.updated without writing Connect flags', async () => {
