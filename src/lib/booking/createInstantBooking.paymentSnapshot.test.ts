@@ -518,4 +518,137 @@ describe('createInstantBooking — live booking payment runtime', () => {
     expect(createdData()).toMatchObject(NONE_SNAPSHOT);
     expect(loadKersivoAccess).not.toHaveBeenCalled();
   });
+
+  describe('product-state snapshot is bound to the locked transaction state', () => {
+    const lockedPublic = { ...publicOptions, requiredCapability: 'PUBLIC_BOOKING' as const };
+    const lockedManual = { requiredShopId: 'shop_1', requiredCapability: 'MANUAL_BOOKINGS' as const };
+    const queryRaw = vi.fn();
+
+    /** Pre-transaction read → `before`; the read under the ShopSettings lock (gets tx) → `locked`. */
+    function statesAround(before: KersivoProductState, locked: KersivoProductState) {
+      loadKersivoAccess.mockImplementation(async (...args: unknown[]) =>
+        accessForState(args.length >= 3 ? locked : before),
+      );
+    }
+
+    function lockedReads() {
+      return loadKersivoAccess.mock.calls.filter((args) => args.length >= 3);
+    }
+
+    beforeEach(() => {
+      queryRaw.mockResolvedValue([]);
+      transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+        fn({
+          $queryRaw: queryRaw,
+          booking: { findFirst: vi.fn().mockResolvedValue(null), create: bookingCreate },
+          barberTimeOff: { findFirst: vi.fn().mockResolvedValue(null) },
+          client: { upsert: vi.fn().mockResolvedValue({ id: 'client_1' }) },
+        }),
+      );
+    });
+
+    it('A: stable Starter public booking → FREE_BOOKING snapshot with the Starter payment', async () => {
+      statesAround('FREE_BOOKING', 'FREE_BOOKING');
+
+      await createInstantBooking(bookingInput('stable-starter'), lockedPublic);
+
+      expect(queryRaw).toHaveBeenCalledTimes(1);
+      expect(lockedReads()).toHaveLength(1);
+      expect(createdData()).toMatchObject({
+        kersivoProductStateAtBooking: 'FREE_BOOKING',
+        bookingPaymentType: 'DEPOSIT',
+        paymentAmountPence: 500,
+        kersivoPlatformFeePence: 0,
+      });
+    });
+
+    it('B: stable Full public booking → FULL_KERSIVO snapshot with the Full payment setting', async () => {
+      statesAround('FULL_KERSIVO', 'FULL_KERSIVO');
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'FULL' });
+
+      await createInstantBooking(bookingInput('stable-full'), lockedPublic);
+
+      expect(createdData()).toMatchObject({
+        kersivoProductStateAtBooking: 'FULL_KERSIVO',
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        kersivoPlatformFeePence: 0,
+      });
+    });
+
+    it('C: manual booking stays Pay at shop with a null product snapshot, whatever the locked state', async () => {
+      statesAround('FREE_BOOKING', 'FULL_KERSIVO');
+
+      await createInstantBooking(bookingInput('manual-locked'), lockedManual);
+
+      expect(lockedReads()).toHaveLength(1);
+      expect(createdData()).toMatchObject({ ...NONE_SNAPSHOT, kersivoProductStateAtBooking: null });
+    });
+
+    it('D: idempotent replay returns the original snapshot even after the shop changed plan', async () => {
+      statesAround('FREE_BOOKING', 'FREE_BOOKING');
+      findUniqueBooking.mockResolvedValue({
+        id: 'book_original',
+        status: BookingStatus.PENDING_PAYMENT,
+        paymentRequired: true,
+        bookingPaymentType: 'FULL',
+        paymentAmountPence: 3000,
+        kersivoProductStateAtBooking: 'FULL_KERSIVO',
+        service: { name: 'Cut' },
+        barber: { name: 'Alex', shopId: 'shop_1' },
+      });
+
+      const result = await createInstantBooking(bookingInput('replayed-key'), lockedPublic);
+
+      expect(result.replayed).toBe(true);
+      expect(result).toMatchObject({
+        id: 'book_original',
+        kersivoProductStateAtBooking: 'FULL_KERSIVO',
+        bookingPaymentType: 'FULL',
+      });
+      expect(loadKersivoAccess).not.toHaveBeenCalled();
+      expect(transaction).not.toHaveBeenCalled();
+      expect(bookingCreate).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['Full → Starter', 'FULL_KERSIVO', 'FREE_BOOKING'],
+      ['Starter → Full', 'FREE_BOOKING', 'FULL_KERSIVO'],
+    ] as const)(
+      'E: %s between the payment decision and the locked insert → 409, no booking row',
+      async (_label, before, locked) => {
+        statesAround(before, locked);
+
+        const error = await createInstantBooking(bookingInput(`race-${before}`), lockedPublic).catch(
+          (e) => e,
+        );
+
+        expect(error).toBeInstanceOf(BookingActionError);
+        expect(error).toMatchObject({ statusCode: 409, code: 'BOOKING_PRODUCT_STATE_CHANGED' });
+        expect(queryRaw).toHaveBeenCalledTimes(1);
+        expect(bookingCreate).not.toHaveBeenCalled();
+        expect(enqueueEmail).not.toHaveBeenCalled();
+      },
+    );
+
+    it('E2: the client retry after a Full → Starter race books with one coherent Starter state', async () => {
+      statesAround('FULL_KERSIVO', 'FREE_BOOKING');
+      findUniqueOrThrowShop.mockResolvedValue({ ...baseShop, bookingPaymentMode: 'NONE' });
+      await expect(createInstantBooking(bookingInput('race-retry'), lockedPublic)).rejects.toMatchObject({
+        code: 'BOOKING_PRODUCT_STATE_CHANGED',
+      });
+      expect(bookingCreate).not.toHaveBeenCalled();
+
+      statesAround('FREE_BOOKING', 'FREE_BOOKING');
+      await createInstantBooking(bookingInput('race-retry'), lockedPublic);
+
+      // Full's stored NONE (Pay at shop) never leaks into the Starter booking.
+      expect(createdData()).toMatchObject({
+        kersivoProductStateAtBooking: 'FREE_BOOKING',
+        status: BookingStatus.PENDING_PAYMENT,
+        bookingPaymentType: 'DEPOSIT',
+        paymentAmountPence: 500,
+      });
+    });
+  });
 });
