@@ -1,6 +1,6 @@
 import type { Prisma, SaasPostFullPlan, ShopDepartureStatus } from '@prisma/client';
 import { prisma } from '../db/client';
-import { CURRENT_TERMS_VERSION } from '../legal/termsVersion';
+import { postFullStarterTermsAllowService } from '../legal/termsVersion';
 import type { SaasSubscriptionAccessFields } from '../setup/saasEntitlement';
 import { isDemoShopId } from './cardPaymentsGate';
 import { isPaidShop, type PaidShopFields } from './paidShop';
@@ -122,9 +122,9 @@ export function resolveKersivoProductState(
   if (shop.departure) return 'SETUP';
   if (subscription && String(subscription.status) !== 'PENDING') {
     const starterChosen = String(subscription.postFullPlan ?? '') === 'STARTER';
-    const starterTermsCurrent =
-      subscription.postFullTermsVersion === CURRENT_TERMS_VERSION;
-    return starterChosen && starterTermsCurrent ? 'FREE_BOOKING' : 'SETUP';
+    const starterTermsAllowService =
+      postFullStarterTermsAllowService(subscription.postFullTermsVersion);
+    return starterChosen && starterTermsAllowService ? 'FREE_BOOKING' : 'SETUP';
   }
   if (shop.freeBookingActivatedAt != null) return 'FREE_BOOKING';
   return 'SETUP';
