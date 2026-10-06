@@ -94,6 +94,8 @@ export type StarterLaunchState = {
   stripeAccountLinked: boolean;
   stripeReady: boolean;
   stripeDisconnected: boolean;
+  /** Legacy Express (or unknown) account: Starter needs a new Stripe Standard connection. */
+  stripeRequiresStandard?: boolean;
   servicesMeetPriceFloor: boolean;
   activeServiceCount: number;
   activeBookableBarbers: number;
@@ -152,6 +154,17 @@ export function resolveStarterLaunchCtaPresentation(
           : `Starter services must be priced at £5 or more before bookings can go live.${formatServicesBelowMinimum(state)}`,
       action: 'navigate',
       href: '/admin?section=services',
+    };
+  }
+
+  if (!state.stripeReady && state.stripeRequiresStandard) {
+    return {
+      title: 'Connect Stripe Standard',
+      status: 'READY TO LAUNCH',
+      supporting:
+        'Starter online bookings need a Stripe Standard account. Your existing Stripe account stays in place for past payments and refunds.',
+      action: 'stripe',
+      href: null,
     };
   }
 

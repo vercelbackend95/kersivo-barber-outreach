@@ -193,6 +193,50 @@ describe('AdminSidebarLaunchCta', () => {
     expect(await screen.findByText('Reconnect Stripe')).toBeTruthy();
   });
 
+  it('a legacy-Express Starter is sent to the Standard onboarding flow', async () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 2,
+      activeServiceCount: 2,
+      servicesMeetPriceFloor: true,
+      stripeReady: false,
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          progress,
+          paid: false,
+          productState: 'FREE_BOOKING',
+          starterLaunch: {
+            stripeAccountLinked: true,
+            stripeReady: false,
+            stripeDisconnected: false,
+            stripeRequiresStandard: true,
+            servicesMeetPriceFloor: true,
+            activeServiceCount: 2,
+            activeBookableBarbers: 2,
+            publicBookingReady: false,
+          },
+        }),
+      })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Stripe setup unavailable in test.' }) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<AdminSidebarLaunchCta />);
+    const button = await screen.findByRole('button', { name: /Connect Stripe Standard/i });
+    expect(screen.getByText(/existing Stripe account stays in place for past payments and refunds/i)).toBeTruthy();
+
+    fireEvent.click(button);
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/admin/barbershop-settings/deposits', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    });
+  });
+
   it('after Full → Starter, names the services below £5 that pause online bookings', async () => {
     const progress = buildStarterLaunchProgress({
       onboardingCompleted: true,

@@ -84,6 +84,7 @@ export const GET: APIRoute = async (context) => {
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       stripeConnectDisconnectedAt: true,
+      stripeConnectAccountType: true,
       departure: { select: { status: true } },
       onboardingCompleted: true,
       retailOnboardingCompleted: true,
@@ -195,6 +196,7 @@ export const GET: APIRoute = async (context) => {
             stripeConnectAccountId: shop.stripeConnectAccountId ?? null,
             stripeConnectChargesEnabled: Boolean(shop.stripeConnectChargesEnabled),
             stripeConnectDisconnectedAt: shop.stripeConnectDisconnectedAt ?? null,
+            stripeConnectAccountType: shop.stripeConnectAccountType ?? null,
           },
           services: shop.services ?? [],
         })
@@ -215,6 +217,7 @@ export const GET: APIRoute = async (context) => {
         stripeAccountLinked: starterReadiness.stripe.accountLinked,
         stripeReady: starterReadiness.stripe.ready,
         stripeDisconnected: starterReadiness.stripe.disconnected,
+        stripeRequiresStandard: starterReadiness.stripe.requiresStandard,
         servicesMeetPriceFloor: starterReadiness.servicesBelowMinimum.length === 0,
         activeServiceCount: starterReadiness.activeServiceCount,
         activeBookableBarbers: shop.barbers.length,

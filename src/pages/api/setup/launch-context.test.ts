@@ -256,6 +256,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       stripeConnectAccountId: 'acct_ready',
       stripeConnectChargesEnabled: true,
       stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'STANDARD',
       departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
@@ -300,6 +301,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       stripeConnectAccountId: 'acct_ready',
       stripeConnectChargesEnabled: true,
       stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'STANDARD',
       departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
@@ -318,6 +320,39 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
     expect(body.progress.nextHref).toBe('/admin?section=services');
     expect(body.starterLaunch.servicesMeetPriceFloor).toBe(false);
     expect(body.starterLaunch.publicBookingReady).toBe(false);
+  });
+
+  it('v1.19 Starter on a legacy Express account is not launch-ready and flags Standard as required', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: new Date('2026-10-05T12:00:00.000Z'),
+      stripeConnectAccountId: 'acct_legacy_express',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'EXPRESS',
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: false,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [{ id: 's1', name: 'Skin Fade', isActive: true, pricePence: 2500 }],
+      _count: { services: 1 },
+    });
+    findFirstSaas.mockResolvedValue(null);
+
+    const body = await (await GET(makeContext() as never)).json();
+    expect(body.starterLaunch).toMatchObject({
+      stripeAccountLinked: true,
+      stripeReady: false,
+      stripeRequiresStandard: true,
+      publicBookingReady: false,
+      pauseReasons: ['stripe_not_ready'],
+    });
   });
 
   it('after Full → Starter, exposes the recovery blockers (disconnected Stripe + named £5 services)', async () => {

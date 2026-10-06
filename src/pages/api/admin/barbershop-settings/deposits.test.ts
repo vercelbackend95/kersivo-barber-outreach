@@ -12,6 +12,11 @@ const createConnectStandardAccount = vi.fn();
 const createConnectAccountLink = vi.fn();
 const retrieveConnectAccount = vi.fn();
 const loadKersivoAccess = vi.fn();
+const txShopFindUnique = vi.fn();
+const txShopUpdate = vi.fn();
+const txBookingUpdateMany = vi.fn();
+const txQueryRaw = vi.fn(async (..._args: unknown[]) => []);
+const recordAccountLifecycleEvent = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   requireAdminContext: (...args: unknown[]) => requireAdminContext(...args),
@@ -24,7 +29,21 @@ vi.mock('@/lib/db/client', () => ({
       update: (...args: unknown[]) => shopSettingsUpdate(...args),
       updateMany: (...args: unknown[]) => shopSettingsUpdateMany(...args),
     },
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        $queryRaw: (...args: unknown[]) => txQueryRaw(...args),
+        shopSettings: {
+          findUnique: (...args: unknown[]) => txShopFindUnique(...args),
+          update: (...args: unknown[]) => txShopUpdate(...args),
+        },
+        booking: { updateMany: (...args: unknown[]) => txBookingUpdateMany(...args) },
+      }),
   },
+}));
+
+vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
+  ACCOUNT_LIFECYCLE_ACTIONS: { STARTER_STRIPE_STANDARD_SWITCHED: 'STARTER_STRIPE_STANDARD_SWITCHED' },
+  recordAccountLifecycleEvent: (...args: unknown[]) => recordAccountLifecycleEvent(...args),
 }));
 
 vi.mock('@/lib/shop/kersivoAccess', async (importOriginal) => ({
@@ -212,7 +231,7 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       );
     });
 
-    it('does not silently migrate an existing active Express account', async () => {
+    it('Full: does not silently migrate an existing active Express account', async () => {
       requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       shopSettingsFindUnique.mockResolvedValue({
         ...paidShop,
@@ -232,6 +251,111 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(createConnectAccountLink).toHaveBeenCalledWith(
         expect.objectContaining({ accountId: 'acct_legacy_express' }),
       );
+    });
+
+    describe('Starter on a legacy Express account → new Standard account', () => {
+      const expressStarter = {
+        ...freeShop,
+        stripeConnectAccountId: 'acct_legacy_express',
+        stripeConnectAccountType: 'EXPRESS' as const,
+        stripeConnectDisconnectedAt: null,
+      };
+
+      beforeEach(() => {
+        asState('FREE_BOOKING');
+        requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+        shopSettingsFindUnique.mockResolvedValue(expressStarter);
+        createConnectStandardAccount.mockResolvedValue({ id: 'acct_new_standard' });
+        txShopFindUnique.mockResolvedValue({
+          stripeConnectAccountId: 'acct_legacy_express',
+          stripeConnectDisconnectedAt: null,
+        });
+        txBookingUpdateMany.mockResolvedValue({ count: 2 });
+        txShopUpdate.mockResolvedValue({});
+      });
+
+      it('creates Standard, pins pre-snapshot paid bookings to Express, then switches the shop', async () => {
+        const res = await POST(jsonCtx('POST'));
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body).toMatchObject({ accountId: 'acct_new_standard', accountType: 'STANDARD', legacyExpress: false });
+        expect(createConnectStandardAccount).toHaveBeenCalledWith({ shopId: 'shop-1', email: 'owner@example.com' });
+        expect(createConnectAccountLink).toHaveBeenCalledWith(
+          expect.objectContaining({ accountId: 'acct_new_standard' }),
+        );
+        expect(txQueryRaw).toHaveBeenCalled();
+
+        // Only MISSING snapshots on rows that touched Stripe with no KERSIVO fee are filled, with
+        // the exact account they resolve to today — existing snapshots are never overwritten.
+        expect(txBookingUpdateMany).toHaveBeenCalledWith({
+          where: {
+            barber: { is: { shopId: 'shop-1' } },
+            stripeConnectAccountIdAtPayment: null,
+            OR: [{ stripePaymentIntentId: { not: null } }, { stripeCheckoutSessionId: { not: null } }],
+            AND: [{ OR: [{ kersivoPlatformFeePence: null }, { kersivoPlatformFeePence: 0 }] }],
+          },
+          data: { stripeConnectAccountIdAtPayment: 'acct_legacy_express' },
+        });
+        const pinOrder = txBookingUpdateMany.mock.invocationCallOrder[0];
+        const switchOrder = txShopUpdate.mock.invocationCallOrder[0];
+        expect(pinOrder).toBeLessThan(switchOrder);
+
+        expect(txShopUpdate).toHaveBeenCalledWith({
+          where: { id: 'shop-1' },
+          data: {
+            stripeConnectAccountId: 'acct_new_standard',
+            stripeConnectAccountType: 'STANDARD',
+            stripeConnectChargesEnabled: false,
+            stripeConnectDetailsSubmitted: false,
+            stripeConnectDisconnectedAt: null,
+            connectStatusEventAt: null,
+          },
+        });
+        expect(shopSettingsUpdate).not.toHaveBeenCalled();
+        expect(recordAccountLifecycleEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            action: 'STARTER_STRIPE_STANDARD_SWITCHED',
+            shopId: 'shop-1',
+            meta: expect.objectContaining({
+              legacyAccountId: 'acct_legacy_express',
+              legacyAccountType: 'EXPRESS',
+              standardAccountId: 'acct_new_standard',
+              pinnedLegacyBookings: 2,
+            }),
+          }),
+        );
+      });
+
+      it('aborts without touching bookings or the shop if the account changed concurrently', async () => {
+        txShopFindUnique.mockResolvedValue({
+          stripeConnectAccountId: 'acct_someone_else',
+          stripeConnectDisconnectedAt: null,
+        });
+
+        const res = await POST(jsonCtx('POST'));
+
+        expect(res.status).toBe(409);
+        expect(txBookingUpdateMany).not.toHaveBeenCalled();
+        expect(txShopUpdate).not.toHaveBeenCalled();
+        expect(createConnectAccountLink).not.toHaveBeenCalled();
+        expect(recordAccountLifecycleEvent).not.toHaveBeenCalled();
+      });
+
+      it('a Starter already on Standard just continues onboarding (no new account, no booking writes)', async () => {
+        shopSettingsFindUnique.mockResolvedValue({
+          ...expressStarter,
+          stripeConnectAccountId: 'acct_standard',
+          stripeConnectAccountType: 'STANDARD',
+        });
+
+        const res = await POST(jsonCtx('POST'));
+
+        expect(res.status).toBe(200);
+        expect((await res.json()).accountId).toBe('acct_standard');
+        expect(createConnectStandardAccount).not.toHaveBeenCalled();
+        expect(txBookingUpdateMany).not.toHaveBeenCalled();
+      });
     });
 
     it('X: SETUP shop cannot start onboarding', async () => {
@@ -519,6 +643,45 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         bookingPaymentsReady: false,
         bookingPaymentsGateReason: 'connect_not_ready',
         collectReady: false,
+      });
+    });
+
+    it('Starter on a legacy Express account is not payment-ready and asks for Stripe Standard', async () => {
+      asState('FREE_BOOKING');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...freeShop, stripeConnectAccountType: 'EXPRESS' });
+      retrieveConnectAccount.mockResolvedValue({
+        chargesEnabled: true,
+        detailsSubmitted: true,
+        accountType: 'EXPRESS',
+      });
+
+      const body = await (await GET(jsonCtx('GET'))).json();
+      expect(body).toMatchObject({
+        bookingPaymentsReady: false,
+        bookingPaymentsGateReason: 'connect_requires_standard',
+        starterRequiresStandard: true,
+        collectReady: false,
+        connect: { accountLinked: true, accountType: 'EXPRESS', chargesEnabled: true },
+      });
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    it('Full on a legacy Express account keeps its existing payment readiness', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({ ...paidShop, bookingPaymentMode: 'DEPOSIT' });
+      retrieveConnectAccount.mockResolvedValue({
+        chargesEnabled: true,
+        detailsSubmitted: true,
+        accountType: 'EXPRESS',
+      });
+
+      const body = await (await GET(jsonCtx('GET'))).json();
+      expect(body).toMatchObject({
+        bookingPaymentsReady: true,
+        bookingPaymentsGateReason: 'ok',
+        starterRequiresStandard: false,
+        collectReady: true,
       });
     });
 

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import type { BookingPaymentMode } from '@prisma/client';
+import { Prisma, type BookingPaymentMode } from '@prisma/client';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
@@ -27,6 +27,11 @@ import {
   StripeConnectApiError,
 } from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { isStarterStripeAccountType } from '@/lib/setup/starterPublicLaunchReadiness';
+import {
+  ACCOUNT_LIFECYCLE_ACTIONS,
+  recordAccountLifecycleEvent,
+} from '@/lib/setup/accountLifecycleAudit';
 
 const BOOKING_PAYMENTS_NOT_AVAILABLE = 'BOOKING_PAYMENTS_NOT_AVAILABLE';
 
@@ -141,6 +146,12 @@ export const GET: APIRoute = async (ctx) => {
     access: kersivoAccess,
   });
   const platformFeeBps = kersivoPlatformFeeBps(kersivoAccess.state);
+  const starterRequiresStandard =
+    kersivoAccess.state === 'FREE_BOOKING' &&
+    Boolean(connect.accountId) &&
+    !connect.disconnectedAt &&
+    !isStarterStripeAccountType(connect.accountType);
+  const bookingPaymentsReady = gate.ok && !starterRequiresStandard;
 
   return json({
     /** Paid (FULL_KERSIVO) entitlement — Retail stays Full-only. */
@@ -164,10 +175,11 @@ export const GET: APIRoute = async (ctx) => {
       shopId: shop.id,
       access: kersivoAccess,
     }),
-    bookingPaymentsReady: gate.ok,
-    bookingPaymentsGateReason: gate.reason,
+    bookingPaymentsReady,
+    bookingPaymentsGateReason: starterRequiresStandard ? 'connect_requires_standard' : gate.reason,
+    starterRequiresStandard,
     collectReady:
-      gate.ok &&
+      bookingPaymentsReady &&
       (kersivoAccess.state === 'FREE_BOOKING' ||
         shop.bookingPaymentMode === 'DEPOSIT' ||
         shop.bookingPaymentMode === 'FULL'),
@@ -309,9 +321,61 @@ export const PATCH: APIRoute = async (ctx) => {
 };
 
 /**
+ * Moves a Starter shop off a still-connected legacy (non-Standard) account onto a new Standard
+ * account. Paid bookings created before payment-account snapshots existed resolve their Stripe
+ * account from the shop's CURRENT account, so they are pinned to the legacy account first: only
+ * missing snapshots are filled (never overwritten), and only on rows that touched Stripe and carry
+ * no KERSIVO fee — exactly the rows whose refunds would otherwise follow the new account.
+ * Returns null when the shop's account changed concurrently.
+ */
+async function switchStarterToStandardAccount(input: {
+  shopId: string;
+  legacyAccountId: string;
+  standardAccountId: string;
+}): Promise<{ pinnedLegacyBookings: number } | null> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw(Prisma.sql`SELECT id FROM "ShopSettings" WHERE id = ${input.shopId} FOR UPDATE`);
+    const current = await tx.shopSettings.findUnique({
+      where: { id: input.shopId },
+      select: { stripeConnectAccountId: true, stripeConnectDisconnectedAt: true },
+    });
+    if (
+      current?.stripeConnectAccountId?.trim() !== input.legacyAccountId ||
+      current.stripeConnectDisconnectedAt
+    ) {
+      return null;
+    }
+
+    const pinned = await tx.booking.updateMany({
+      where: {
+        barber: { is: { shopId: input.shopId } },
+        stripeConnectAccountIdAtPayment: null,
+        OR: [{ stripePaymentIntentId: { not: null } }, { stripeCheckoutSessionId: { not: null } }],
+        AND: [{ OR: [{ kersivoPlatformFeePence: null }, { kersivoPlatformFeePence: 0 }] }],
+      },
+      data: { stripeConnectAccountIdAtPayment: input.legacyAccountId },
+    });
+
+    await tx.shopSettings.update({
+      where: { id: input.shopId },
+      data: {
+        stripeConnectAccountId: input.standardAccountId,
+        stripeConnectAccountType: 'STANDARD',
+        stripeConnectChargesEnabled: false,
+        stripeConnectDetailsSubmitted: false,
+        stripeConnectDisconnectedAt: null,
+        connectStatusEventAt: null,
+      },
+    });
+    return { pinnedLegacyBookings: pinned.count };
+  });
+}
+
+/**
  * Start or continue Stripe Connect onboarding for booking payments.
- * New connections use Standard accounts; an existing legacy Express account remains supported
- * until an explicit migration/cutover is performed. Owner / billing.manage only.
+ * New connections use Standard accounts. Full KERSIVO keeps an existing legacy Express account;
+ * a Starter shop on a legacy (non-Standard) account is moved to a new Standard account because
+ * v1.19 Starter public bookings require Standard. Owner / billing.manage only.
  */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
@@ -343,7 +407,14 @@ export const POST: APIRoute = async (ctx) => {
 
   let accountId = shop.stripeConnectAccountId;
   let accountType = shop.stripeConnectAccountType;
-  const mustCreateStandard = !accountId || Boolean(shop.stripeConnectDisconnectedAt);
+  const legacyStarterAccountId =
+    kersivoAccess.state === 'FREE_BOOKING' &&
+    !shop.stripeConnectDisconnectedAt &&
+    !isStarterStripeAccountType(accountType)
+      ? accountId?.trim() || null
+      : null;
+  const mustCreateStandard =
+    !accountId || Boolean(shop.stripeConnectDisconnectedAt) || Boolean(legacyStarterAccountId);
 
   if (mustCreateStandard) {
     const created = await createConnectStandardAccount({
@@ -351,18 +422,41 @@ export const POST: APIRoute = async (ctx) => {
       email: shop.owner?.email ?? undefined,
     });
     accountId = created.id;
+
+    if (legacyStarterAccountId) {
+      const switched = await switchStarterToStandardAccount({
+        shopId: shop.id,
+        legacyAccountId: legacyStarterAccountId,
+        standardAccountId: created.id,
+      });
+      if (!switched) {
+        return json({ error: 'Your Stripe connection changed. Refresh and try again.' }, 409);
+      }
+      await recordAccountLifecycleEvent({
+        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_STANDARD_SWITCHED,
+        userId: access.userId,
+        shopId: shop.id,
+        meta: {
+          legacyAccountId: legacyStarterAccountId,
+          legacyAccountType: accountType ?? null,
+          standardAccountId: created.id,
+          pinnedLegacyBookings: switched.pinnedLegacyBookings,
+        },
+      });
+    } else {
+      await prisma.shopSettings.update({
+        where: { id: shop.id },
+        data: {
+          stripeConnectAccountId: accountId,
+          stripeConnectAccountType: 'STANDARD',
+          stripeConnectChargesEnabled: false,
+          stripeConnectDetailsSubmitted: false,
+          stripeConnectDisconnectedAt: null,
+          connectStatusEventAt: null,
+        },
+      });
+    }
     accountType = 'STANDARD';
-    await prisma.shopSettings.update({
-      where: { id: shop.id },
-      data: {
-        stripeConnectAccountId: accountId,
-        stripeConnectAccountType: 'STANDARD',
-        stripeConnectChargesEnabled: false,
-        stripeConnectDetailsSubmitted: false,
-        stripeConnectDisconnectedAt: null,
-        connectStatusEventAt: null,
-      },
-    });
   }
 
   const resolvedAccountId = accountId?.trim();

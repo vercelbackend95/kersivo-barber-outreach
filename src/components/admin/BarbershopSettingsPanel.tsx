@@ -29,7 +29,14 @@ type GoogleBookingSetupState = {
 
 type StarterPublicLaunchPreview = {
   ready: boolean;
-  stripe: { blocker: 'connect_missing' | 'connect_disconnected' | 'connect_not_ready' | null };
+  stripe: {
+    blocker:
+      | 'connect_missing'
+      | 'connect_disconnected'
+      | 'connect_requires_standard'
+      | 'connect_not_ready'
+      | null;
+  };
   activeServiceCount: number;
   servicesBelowMinimum: Array<{ id: string; name: string; pricePence: number }>;
 };
@@ -38,16 +45,17 @@ function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
+const STARTER_STRIPE_BLOCKER_COPY: Record<NonNullable<StarterPublicLaunchPreview['stripe']['blocker']>, string> = {
+  connect_missing: 'Connect Stripe — Starter online bookings are paid through your own Stripe account.',
+  connect_disconnected: 'Reconnect Stripe — your Stripe account is disconnected.',
+  connect_requires_standard:
+    'Connect Stripe Standard — Starter online bookings need a Stripe Standard account.',
+  connect_not_ready: 'Finish Stripe setup — your Stripe account cannot take payments yet.',
+};
+
 function StarterLaunchBlockers({ preview }: { preview: StarterPublicLaunchPreview | null }) {
   if (!preview || preview.ready) return null;
-  const stripeCopy =
-    preview.stripe.blocker === 'connect_disconnected'
-      ? 'Reconnect Stripe — your Stripe account is disconnected.'
-      : preview.stripe.blocker === 'connect_not_ready'
-        ? 'Finish Stripe setup — your Stripe account cannot take payments yet.'
-        : preview.stripe.blocker === 'connect_missing'
-          ? 'Connect Stripe — Starter online bookings are paid through your own Stripe account.'
-          : null;
+  const stripeCopy = preview.stripe.blocker ? STARTER_STRIPE_BLOCKER_COPY[preview.stripe.blocker] : null;
   return (
     <div className="admin-barbershop-settings__card-copy" role="note" data-testid="starter-launch-blockers">
       <p>
