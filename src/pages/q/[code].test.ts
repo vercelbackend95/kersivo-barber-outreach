@@ -129,6 +129,7 @@ describe('GET /q/{code}', () => {
       currentPeriodEnd: new Date('2026-01-01'),
       cancelAtPeriodEnd: false,
       postFullPlan: 'STARTER',
+      postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
     };
     db.destinations.set('cmshop1', verified());
     const res = await scan(WINDOW_CODE);
@@ -238,7 +239,7 @@ describe('GET /q/{code}', () => {
     expect((await scan(REBOOK_CODE)).headers.get('Location')).toBe(OWN_DOMAIN);
 
     // Full → Starter: the record stays for audit but is ignored.
-    db.subscription = { status: 'CANCELED', currentPeriodEnd: new Date('2000-01-01'), postFullPlan: 'STARTER' };
+    db.subscription = { status: 'CANCELED', currentPeriodEnd: new Date('2000-01-01'), postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' };
     expect((await scan(WINDOW_CODE)).headers.get('Location')).toBe('/book/blackline-barbers');
     expect((await scan(REBOOK_CODE)).headers.get('Location')).toBe('/book/blackline-barbers');
     expect(db.destinations.get('cmshop1')).toEqual(verified());
