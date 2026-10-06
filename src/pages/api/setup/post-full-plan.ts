@@ -5,7 +5,11 @@ import { Prisma } from '@prisma/client';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
-import { CURRENT_TERMS_VERSION, TERMS_ACCEPTANCE_PURPOSES } from '@/lib/legal/termsVersion';
+import {
+  CURRENT_TERMS_VERSION,
+  TERMS_ACCEPTANCE_PURPOSES,
+  postFullStarterTermsAllowService,
+} from '@/lib/legal/termsVersion';
 import {
   parseTermsAccepted,
   recordTermsAcceptance,
@@ -143,10 +147,10 @@ export const POST: APIRoute = async (context) => {
     const sameRecordedChoice =
       String(subscription.postFullPlan) === choice &&
       Boolean(subscription.postFullPlanChosenAt);
-    const starterTermsCurrent =
-      subscription.postFullTermsVersion === CURRENT_TERMS_VERSION;
+    const starterTermsAllowService =
+      postFullStarterTermsAllowService(subscription.postFullTermsVersion);
 
-    if (sameRecordedChoice && (choice !== 'STARTER' || starterTermsCurrent)) {
+    if (sameRecordedChoice && (choice !== 'STARTER' || starterTermsAllowService)) {
       return {
         response: null,
         subscriptionId: subscription.id,
@@ -156,10 +160,9 @@ export const POST: APIRoute = async (context) => {
       } as const;
     }
 
-    if (choice === 'STARTER' && alreadyCanceled && !sameRecordedChoice) {
-      // An ended Full without a previously recorded Starter choice is already a departure path.
-      // A previously recorded Starter choice with stale Terms may be refreshed after Full ends
-      // because it never becomes active until the current Terms version is accepted.
+    if (choice === 'STARTER' && alreadyCanceled) {
+      // A valid current/legacy-effective Starter choice returned above. Any remaining ended-Full
+      // case is already a departure path and cannot be converted into Starter after the fact.
       return {
         response: json(
           { error: SHOP_DEPARTURE_IN_PROGRESS_MESSAGE, code: SHOP_DEPARTURE_IN_PROGRESS },
