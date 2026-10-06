@@ -122,6 +122,7 @@ export const GET: APIRoute = async (context) => {
       activatedAt: true,
       cancelAtPeriodEnd: true,
       postFullPlan: true,
+      postFullTermsVersion: true,
     },
   });
 
@@ -184,6 +185,7 @@ export const GET: APIRoute = async (context) => {
           pastDueSince: saasSub.pastDueSince,
           cancelAtPeriodEnd: saasSub.cancelAtPeriodEnd,
           postFullPlan: saasSub.postFullPlan,
+          postFullTermsVersion: saasSub.postFullTermsVersion,
         }
       : null,
   );
