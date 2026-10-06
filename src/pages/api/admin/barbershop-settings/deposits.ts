@@ -415,6 +415,16 @@ export const POST: APIRoute = async (ctx) => {
       : null;
   const mustCreateStandard =
     !accountId || Boolean(shop.stripeConnectDisconnectedAt) || Boolean(legacyStarterAccountId);
+  const starterOnboardingReason =
+    kersivoAccess.state === 'FREE_BOOKING'
+      ? legacyStarterAccountId
+        ? 'standard_switch'
+        : shop.stripeConnectDisconnectedAt
+          ? 'reconnect'
+          : !shop.stripeConnectAccountId
+            ? 'first_connect'
+            : 'continue'
+      : null;
 
   if (mustCreateStandard) {
     const created = await createConnectStandardAccount({
@@ -471,6 +481,18 @@ export const POST: APIRoute = async (ctx) => {
     refreshUrl: `${base}/admin?section=barbershop_settings&connect=refresh`,
     returnUrl: `${base}/admin?section=barbershop_settings&connect=return`,
   });
+
+  if (starterOnboardingReason) {
+    await recordAccountLifecycleEvent({
+      action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_ONBOARDING_STARTED,
+      userId: access.userId,
+      shopId: shop.id,
+      meta: {
+        reason: starterOnboardingReason,
+        accountType: accountType ?? null,
+      },
+    });
+  }
 
   return json({
     url: link.url,
