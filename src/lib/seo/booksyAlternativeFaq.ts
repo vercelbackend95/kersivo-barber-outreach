@@ -1,4 +1,4 @@
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   BOOKSY_FACTS_CHECKED_DATE,
   estimateBooksyMonthlySubscription,
@@ -36,6 +36,7 @@ export const BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL = '6 October 2026';
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const STARTER_PRICE = formatGbp(0);
 const STARTER_MAX_BARBERS = 4;
+const STARTER_DEPOSIT_PRICE = formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP);
 const base = requireVerifiedBooksyFact('baseSubscription');
 const additionalUser = requireVerifiedBooksyFact('additionalUser');
 const boostFee = requireVerifiedBooksyFact('boostNewClientFee');
@@ -51,7 +52,7 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
   {
     question: 'What is a good Booksy alternative for UK barbers?',
     answer:
-      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want a more direct booking relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you a hosted booking page where public bookings use a £5 deposit or Pay in full, plus Clients Core and email reminders. Full KERSIVO adds your branded website and domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS and the live Assistant. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
+      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want a more direct booking relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you a hosted booking page where public bookings use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full, plus Clients Core and email reminders. Full KERSIVO adds your branded website and domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS and the live Assistant. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
   },
   {
     question: 'How much does Booksy cost in the UK?',
@@ -72,7 +73,7 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
   {
     question: 'Does KERSIVO charge commission on bookings?',
     answer:
-      `No. KERSIVO takes 0% commission on booking payments on both KERSIVO Starter (${STARTER_PRICE}/month) and Full KERSIVO (${KERSIVO_PRICE}/month per location), and 0% on Full retail sales. Starter public bookings require a connected Stripe account and use a £5 deposit or Pay in full; standard Stripe processing fees still apply.`,
+      `No. KERSIVO takes 0% commission on booking payments on both KERSIVO Starter (${STARTER_PRICE}/month) and Full KERSIVO (${KERSIVO_PRICE}/month per location), and 0% on Full retail sales. Starter public bookings require a connected Stripe account and use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full; standard Stripe processing fees still apply.`,
   },
   {
     question: 'Can I move my clients from Booksy to KERSIVO?',
