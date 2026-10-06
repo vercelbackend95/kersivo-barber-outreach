@@ -101,6 +101,20 @@ describe('GET /api/setup/billing-status — Full → Starter readiness preview',
     expect(body.starterPublicLaunch).toEqual(blocked);
   });
 
+  it('does not force a stale Starter Terms prompt when Full cancellation was reversed', async () => {
+    subscriptionFindFirst.mockResolvedValue(
+      subscription({
+        cancelAtPeriodEnd: false,
+        postFullPlan: 'STARTER',
+        postFullPlanChosenAt: new Date(),
+        postFullTermsVersion: '2026-10-05',
+      }),
+    );
+    const body = await (await GET({} as APIContext)).json();
+    expect(body.postFullTermsCurrent).toBe(false);
+    expect(body.postFullPlanChoiceRequired).toBe(false);
+  });
+
   it('does not evaluate Starter readiness for a Leave choice', async () => {
     subscriptionFindFirst.mockResolvedValue(
       subscription({ postFullPlan: 'LEAVE', postFullPlanChosenAt: new Date() }),
