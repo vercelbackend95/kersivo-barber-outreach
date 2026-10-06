@@ -58,7 +58,7 @@ describe('Full KERSIVO entitlement after upgrade (central resolver)', () => {
   it('S2: ended Full + explicit Starter choice → FREE_BOOKING', () => {
     const access = resolveKersivoAccess(
       freeShop,
-      { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER' },
+      { status: 'CANCELED', currentPeriodEnd: PAST, postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' },
       NOW,
     );
     expect(access.state).toBe('FREE_BOOKING');
