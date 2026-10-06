@@ -62,6 +62,11 @@ import {
   recordStripeWebhookReceived,
 } from '../../../lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '../../../lib/ops/opsLog';
+import { loadKersivoAccess } from '../../../lib/shop/kersivoAccess';
+import {
+  ACCOUNT_LIFECYCLE_ACTIONS,
+  recordAccountLifecycleEvent,
+} from '../../../lib/setup/accountLifecycleAudit';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 
@@ -910,6 +915,16 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
 
+  const before = await prisma.shopSettings.findFirst({
+    where: { stripeConnectAccountId: accountId },
+    select: {
+      id: true,
+      stripeConnectAccountType: true,
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: true,
+    },
+  });
+
   const chargesEnabled = Boolean(event.data.object.charges_enabled);
   const detailsSubmitted = Boolean(event.data.object.details_submitted);
   const eventAt =
@@ -923,6 +938,34 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     detailsSubmitted,
     eventAt,
   });
+
+  if (
+    result.shopsUpdated > 0 &&
+    before?.id &&
+    before.stripeConnectAccountType === 'STANDARD'
+  ) {
+    const access = await loadKersivoAccess(before.id);
+    if (access.state === 'FREE_BOOKING') {
+      const wasReady =
+        Boolean(before.stripeConnectChargesEnabled) &&
+        !before.stripeConnectDisconnectedAt;
+      const isReady = chargesEnabled;
+
+      if (!wasReady && isReady) {
+        await recordAccountLifecycleEvent({
+          action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY,
+          shopId: before.id,
+          meta: { accountType: 'STANDARD' },
+        });
+      } else if (wasReady && !isReady) {
+        await recordAccountLifecycleEvent({
+          action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
+          shopId: before.id,
+          meta: { reason: 'not_payment_ready', accountType: 'STANDARD' },
+        });
+      }
+    }
+  }
 
   console.info('[webhook] account.updated', {
     accountId,
@@ -951,12 +994,39 @@ async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Res
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
 
+  const before = await prisma.shopSettings.findFirst({
+    where: { stripeConnectAccountId: accountId },
+    select: {
+      id: true,
+      stripeConnectAccountType: true,
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: true,
+    },
+  });
+
   const eventAt =
     Number.isFinite(event.created) && event.created > 0
       ? new Date(event.created * 1000)
       : new Date();
 
   const result = await applyConnectAccountDeauthorized({ accountId, eventAt });
+
+  if (
+    result.shopsUpdated > 0 &&
+    before?.id &&
+    before.stripeConnectAccountType === 'STANDARD' &&
+    before.stripeConnectChargesEnabled &&
+    !before.stripeConnectDisconnectedAt
+  ) {
+    const access = await loadKersivoAccess(before.id);
+    if (access.state === 'FREE_BOOKING') {
+      await recordAccountLifecycleEvent({
+        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
+        shopId: before.id,
+        meta: { reason: 'disconnected', accountType: 'STANDARD' },
+      });
+    }
+  }
 
   console.info('[webhook] account.application.deauthorized', {
     accountId,
