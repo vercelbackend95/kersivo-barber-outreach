@@ -97,8 +97,8 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   headingBeforePrice: 'Barbershop software pricing: £',
   headingAfterPrice: '/month per location',
   lead: 'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
-  planLabel: 'MONTHLY SUBSCRIPTION',
-  planValueLine: 'Everything included. No setup fee.',
+  planLabel: 'FULL KERSIVO',
+  planValueLine: 'Your branded website and wider business toolkit. No setup fee.',
   trustPoints: [
     'One physical location',
     'Cancel anytime',
