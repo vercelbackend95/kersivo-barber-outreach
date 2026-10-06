@@ -34,6 +34,7 @@ const endedFullWithStarter = {
   pastDueSince: null,
   cancelAtPeriodEnd: false,
   postFullPlan: 'STARTER',
+  postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
 };
 
 const shopEntitlement = {
