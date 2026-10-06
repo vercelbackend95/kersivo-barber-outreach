@@ -79,7 +79,7 @@ const DEFAULT_COPY: RateCard1Copy = {
   ongoingCareBullets: [...PLAN_SCOPE_HIGHLIGHTS],
   planPills: [...PLAN_SCOPE_PILLS],
   planSubtext: PLAN_SUBTEXT,
-  ctaLabel: `Get started — £${SAAS_MONTHLY_GBP}/mo`,
+  ctaLabel: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
   leadCommissionLabel: KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''),
   bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   alwaysOnDescription:
@@ -104,7 +104,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     'Cancel anytime',
     'Your own domain included',
   ],
-  ctaLabel: 'Start my KERSIVO subscription',
+  ctaLabel: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
   checkoutNote: 'Secure checkout through Stripe',
   billingNote: BILLING_CYCLE_SHORT,
   includedHeading: 'WHAT’S INCLUDED',
