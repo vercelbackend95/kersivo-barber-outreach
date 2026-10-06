@@ -1045,6 +1045,8 @@ model SaasSubscription {
   dataExportDownloadedAt DateTime?
   postFullPlan           SaasPostFullPlan       @default(UNDECIDED)
   postFullPlanChosenAt   DateTime?
+  /// Terms version accepted for the post-Full STARTER choice. Audit proof remains in LegalAcceptance.
+  postFullTermsVersion   String?
   customerName           String
   customerEmail          String
   shopName               String
