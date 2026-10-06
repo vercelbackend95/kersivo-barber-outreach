@@ -148,7 +148,7 @@ const renderedCorpus = [visibleCopy, ...bodySources].join('\n');
 describe('booksy-alternative: metadata and URL', () => {
   it('keeps the existing URL, title and H1 and uses the new SERP-length meta description', () => {
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
-    expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbers | KERSIVO');
+    expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbershops | KERSIVO');
     expect(BOOKSY_ALTERNATIVE_H1).toBe('A Booksy Alternative Built Around Your Barbershop');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(
       'Looking for a Booksy alternative in the UK? Compare KERSIVO and Booksy pricing, Boost fees, branding, bookings and switching for independent barbershops.',
@@ -249,8 +249,8 @@ describe('booksy-alternative: Fresha template structure', () => {
     expect(components.BooksyPricing).toContain('href="/starter"');
     expect(components.BooksyPricing).toContain('{layout.conditionsLine1}');
     expect(components.BooksyPricing).not.toContain('barber-software-cost-calculator');
-    expect(components.BooksyFinalCta).toContain('See KERSIVO in Action');
-    expect(components.BooksyFinalCta).toContain('View the £{SAAS_MONTHLY_GBP} Plan');
+    expect(components.BooksyFinalCta).toContain('Start KERSIVO Starter');
+    expect(components.BooksyFinalCta).toContain('Compare Starter and Full');
     expect(pageSource).toContain('title="Still comparing KERSIVO and Booksy?"');
     expect(pageSource).not.toMatch(/id=["']contact["']/);
   });
@@ -265,7 +265,7 @@ describe('booksy-alternative: Quick Answer', () => {
     expect(words).toBeLessThanOrEqual(110);
     expect(BOOKSY_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month for up to 4 barbers');
     expect(BOOKSY_QUICK_ANSWER).toContain(`Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location`);
-    expect(BOOKSY_QUICK_ANSWER).toContain('0% KERSIVO commission on booking payments');
+    expect(BOOKSY_QUICK_ANSWER).toContain('KERSIVO commission is 0%');
     expect(BOOKSY_QUICK_ANSWER).toContain('Stripe processing fees still apply');
     expect(BOOKSY_QUICK_ANSWER).toContain(`£${BOOKSY_BASE_PRICE_GBP} a month plus VAT`);
     expect(BOOKSY_QUICK_ANSWER).toContain(`£${BOOKSY_ADDITIONAL_USER_GBP} a month plus VAT for each additional user`);
@@ -438,6 +438,9 @@ describe('booksy-alternative: comparison, fit, switching', () => {
     expect(booksy.points.join(' ')).toMatch(/additional user/);
     expect(kersivo.descriptor).toBe('Own-brand booking model');
     expect(kersivo.points.join(' ')).toContain('0% KERSIVO commission');
+    const paymentSection = BOOKSY_COMPARE_SECTIONS.find((section) => section.id === 'payments');
+    expect(paymentSection?.kersivoPoints.join(' ')).toContain('Starter: public bookings use a £5 deposit or Pay in full');
+    expect(paymentSection?.kersivoPoints.join(' ')).toContain('Full: choose Pay at shop');
     expect(BOOKSY_FIT_CLOSING).toContain('Neither model is right for every barbershop');
   });
 
@@ -513,8 +516,8 @@ describe('booksy-alternative: freshness, sources and sitemap', () => {
   it('uses the real verification and update dates, never build time', () => {
     expect(BOOKSY_FACTS_CHECKED_DATE).toBe('2 October 2026');
     expect(BOOKSY_FACTS_CHECKED_ISO).toBe('2026-10-02');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-05');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('5 October 2026');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-06');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('6 October 2026');
     for (const source of [faqSource, factsSource, ...bodySources]) {
       expect(source).not.toMatch(/new Date\(\)\.toISOString|Date\.now\(\)/);
     }
