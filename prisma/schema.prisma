@@ -768,6 +768,9 @@ model Booking {
   /// Snapshot: Stripe Connect account the online payment was created on.
   /// Null = no online payment, or a legacy row created before the snapshot existed.
   stripeConnectAccountIdAtPayment String?
+  /// Analytics snapshot: KERSIVO product state when this public booking was created.
+  /// Nullable for historical rows and staff-created manual bookings.
+  kersivoProductStateAtBooking    String?
   /// Total confirmed refunded amount against the online payment, in pence.
   refundedAmountPence             Int                 @default(0)
   clientRescheduleCount           Int                 @default(0)
@@ -808,6 +811,7 @@ model Booking {
   @@index([clientId])
   @@index([status, startAt])
   @@index([status, paymentExpiresAt])
+  @@index([kersivoProductStateAtBooking, paidAt])
 }
 
 /// Durable ledger for booking-deposit refunds (retry, webhook confirm, ops repair).
