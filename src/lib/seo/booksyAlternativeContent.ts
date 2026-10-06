@@ -34,7 +34,7 @@ export const BOOKSY_QUICK_ANSWER_KICKER = 'The short version';
 
 export const BOOKSY_QUICK_ANSWER_TITLE = 'A Booksy alternative built around your own brand.';
 
-export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want bookings under their own brand. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted booking page. Full KERSIVO is ${KERSIVO_PRICE}/month per location and adds your own website and domain, Reports, Retail, SMS and more. Both take 0% KERSIVO commission on booking payments. Stripe processing fees still apply.`;
+export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted booking page where clients pay a £5 deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location and adds your own website and domain, wider business tools and control over how clients pay. KERSIVO takes 0% commission on booking payments. Stripe processing fees still apply.`;
 
 export const BOOKSY_QUICK_ANSWER_DETAIL = `Booksy combines booking software with its Marketplace and customer app. It lists ${BASE_PRICE} a month plus VAT, and ${USER_PRICE} a month plus VAT for each additional user. Standard Marketplace bookings are free when Boost is off; optional Boost adds a one-time fee for qualifying new clients it brings in.`;
 
@@ -172,9 +172,10 @@ export const BOOKSY_WORKED_EXAMPLES_NOTE = `Subscription cost only — not a tot
 
 export const KERSIVO_MODEL_POINTS: readonly string[] = [
   `KERSIVO Starter: ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers, with a hosted booking page`,
+  'Starter public bookings: £5 deposit or Pay in full through a connected Stripe account',
   `Full KERSIVO: ${KERSIVO_PRICE}/month per physical location`,
+  'Full: editable payment controls including Pay at shop, plus unlimited barbers within one location subject to reasonable fair use',
   'No setup fee on either plan',
-  'Full: unlimited barbers within one location, subject to reasonable fair use',
   '0% KERSIVO commission on booking payments',
   '0% KERSIVO commission on Full retail sales',
   'Stripe payment-processing fees still apply',
@@ -224,7 +225,7 @@ export const BOOKSY_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonIte
       'You want a direct booking journey under your own brand, with your own website and domain on Full KERSIVO',
       'Your clients already find you through Google, Instagram, referrals or walk-ins',
       `You prefer ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers on Starter, or a flat ${KERSIVO_PRICE}/month per location on Full, however many barbers take bookings`,
-      'You want 0% KERSIVO commission on booking payments, and on retail sales with Full',
+      'You want Starter bookings secured by a £5 deposit or full payment, with Full unlocking Pay at shop and wider payment control — all with 0% KERSIVO commission',
     ],
   },
 ];
