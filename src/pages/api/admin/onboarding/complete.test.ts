@@ -122,7 +122,7 @@ vi.mock('@/lib/db/client', () => ({
       count: async ({ where }: { where: { status: unknown } }) =>
         where.status === 'PENDING' ? db.pendingFullCheckouts : db.endedFullSubscriptions,
     },
-    barber: { findMany: async () => [] },
+    barber: { findMany: async () => [], count: async () => 1 },
     service: {
       findMany: async (args?: { select?: Record<string, unknown> }) =>
         args?.select?.pricePence

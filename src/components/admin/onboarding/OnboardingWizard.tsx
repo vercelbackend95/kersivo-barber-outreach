@@ -5,6 +5,7 @@ import {
   redirectToStripe,
   startFullKersivoUpgradeCheckout,
 } from '@/lib/setup/fullKersivoUpgrade.client';
+import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '@/lib/booking/bookingPaymentPolicy';
 import {
   BILLING_RECOVERY_COPY,
   countBookableBarberCards,
@@ -1481,6 +1482,9 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 What can clients book?
               </h1>
               <p className="admin-onboarding__description">Select services and adjust price or duration as needed.</p>
+              <p className="admin-onboarding__description">
+                KERSIVO Starter: each online-bookable service must be priced at £5 or more.
+              </p>
             </div>
             {servicesError ? (
               <p className="admin-onboarding__error" role="alert">
@@ -1564,6 +1568,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           });
                         }}
                       />
+                      {service.pricePence < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE ? (
+                        <p className="field__hint" role="note">
+                          Below the £5 Starter minimum — Starter online bookings stay paused until this is £5 or more.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="field">
                       <label className="field__label" htmlFor={`service-duration-${service.key}`}>
