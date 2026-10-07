@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { dispatchLaunchContextRefresh } from '@/lib/admin/launchContextRefresh';
 
 type Blocker = { code: string; message: string };
 
@@ -96,6 +97,7 @@ export default function QrKitSettingsCard() {
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.requestReceived) {
         setView({ requestReceived: true, message: data.message });
+        dispatchLaunchContextRefresh();
         return;
       }
       if (Array.isArray(data.fields)) setFieldErrors(data.fields);
@@ -112,6 +114,7 @@ export default function QrKitSettingsCard() {
 
   return (
     <section
+      id="qr-kit"
       className="admin-barbershop-settings__card"
       aria-labelledby="bbs-qr-kit-title"
       data-qr-kit-card
