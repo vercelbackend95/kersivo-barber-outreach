@@ -38,6 +38,7 @@ vi.mock('@/lib/db/client', () => ({
     service: {
       findMany: async () => db.services,
     },
+    barber: { count: async () => 1 },
     booking: { update: vi.fn() },
   },
 }));
