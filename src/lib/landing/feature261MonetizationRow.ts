@@ -1,7 +1,7 @@
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 
 export const FEATURE261_MONETIZATION_ROW = {
-  kicker: 'REPORTS & PERFORMANCE',
+  kicker: 'FULL KERSIVO — REPORTS & PERFORMANCE',
   heading: 'See bookings, service value and barber performance in one place.',
   description:
     'Track booked and completed service value, deposits, booking trends and shop performance.',

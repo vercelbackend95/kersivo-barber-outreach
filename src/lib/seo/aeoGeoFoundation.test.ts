@@ -267,7 +267,7 @@ describe('claim consistency', () => {
 
   it('does not call service-booking value revenue on the homepage reports row', () => {
     const copy = Object.values(FEATURE261_MONETIZATION_ROW).join(' ');
-    expect(FEATURE261_MONETIZATION_ROW.kicker).toBe('REPORTS & PERFORMANCE');
+    expect(FEATURE261_MONETIZATION_ROW.kicker).toBe('FULL KERSIVO — REPORTS & PERFORMANCE');
     expect(FEATURE261_MONETIZATION_ROW.description).toBe(
       'Track booked and completed service value, deposits, booking trends and shop performance.',
     );
