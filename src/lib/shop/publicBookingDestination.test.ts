@@ -105,7 +105,7 @@ describe('resolvePublicBookingDestination (authoritative source)', () => {
   });
 
   it('46: Full → Starter keeps the record but the resolver ignores it', () => {
-    const starterAgain = resolveFor({}, { status: 'CANCELED', currentPeriodEnd: new Date('2026-09-01'), postFullPlan: 'STARTER' }, verified);
+    const starterAgain = resolveFor({}, { status: 'CANCELED', currentPeriodEnd: new Date('2026-09-01'), postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' }, verified);
     expect(starterAgain).toEqual(hosted('starter_hosted'));
   });
 

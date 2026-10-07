@@ -3,7 +3,22 @@
  * Bump this when Terms content changes in a material way.
  * Material DPA updates also require a Terms bump because /dpa is incorporated by reference.
  */
-export const CURRENT_TERMS_VERSION = '2026-10-05';
+export const CURRENT_TERMS_VERSION = '2026-10-06';
+
+/**
+ * Migration-only marker for a Full -> Starter continuation that was already EFFECTIVE before
+ * the v1.19 Terms package shipped. It is not a claim that the v1.19 Terms were accepted.
+ * New/future post-Full Starter choices must always store CURRENT_TERMS_VERSION instead.
+ */
+export const LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION =
+  'LEGACY_EFFECTIVE_PRE_V119';
+
+export function postFullStarterTermsAllowService(version: string | null | undefined): boolean {
+  return (
+    version === CURRENT_TERMS_VERSION ||
+    version === LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION
+  );
+}
 
 export const TERMS_ACCEPTANCE_PURPOSES = {
   SAAS_CHECKOUT: 'SAAS_CHECKOUT',

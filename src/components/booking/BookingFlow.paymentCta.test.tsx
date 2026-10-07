@@ -22,7 +22,7 @@ describe('BookingFlow deposit CTA matches the amount actually charged', () => {
   it('final CTA uses the shop payment mode and selected service price instead of a hard-coded £5', () => {
     const here = dirname(fileURLToPath(import.meta.url));
     const source = readFileSync(join(here, 'BookingFlow.tsx'), 'utf8');
-    expect(source).toContain('bookingPaymentSubmitLabel(bookingPaymentMode, selectedService.pricePence)');
+    expect(source).toContain('bookingPaymentSubmitLabel(effectiveBookingPaymentMode, selectedService.pricePence)');
     expect(source).not.toContain("return 'Pay £5 deposit & book'");
   });
 });
@@ -54,11 +54,11 @@ describe('book/[shopId].astro payment intent (static)', () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const page = readFileSync(join(here, '../../pages/book/[shopId].astro'), 'utf8');
 
-  it('U: payment intent follows bookingPaymentMode (DEPOSIT and FULL), not current Stripe readiness', () => {
+  it('v1.19: Starter public booking UI derives the fixed policy from product entitlement', () => {
+    expect(page).toContain('loadKersivoAccess(shopId)');
+    expect(page).toContain("productAccess.state === 'FREE_BOOKING'");
+    expect(page).toContain('starterPaymentPolicy={starterPaymentPolicy}');
     expect(page).toContain("const bookingPaymentMode = shop.bookingPaymentMode ?? 'NONE';");
-    expect(page).toContain('bookingPaymentMode={bookingPaymentMode}');
-    expect(page).not.toContain('shopRequiresOnlineDeposit');
-    expect(page).not.toContain('stripeConnectChargesEnabled');
   });
 });
 
@@ -66,10 +66,33 @@ describe('BarbershopSettingsPanel booking payment choices (static)', () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const panel = readFileSync(join(here, '../admin/BarbershopSettingsPanel.tsx'), 'utf8');
 
-  it('4C-N: offers Pay at shop / Require £5 deposit / Require full payment upfront', () => {
+  it('v1.19: Full keeps editable choices while Starter shows a fixed read-only payment policy', () => {
     expect(panel).toContain("{ mode: 'NONE', label: 'Pay at shop' }");
     expect(panel).toContain("{ mode: 'DEPOSIT', label: 'Require £5 deposit' }");
     expect(panel).toContain("{ mode: 'FULL', label: 'Require full payment upfront' }");
-    expect(panel).toContain('bookingPaymentMode: option.mode');
+    expect(panel).toContain('paymentControlsEditable ?');
+    expect(panel).toContain('Starter payment setup');
+    expect(panel).toContain('£5 online payment required');
+    expect(panel).toContain('Public Pay at shop unavailable');
+    expect(panel).toContain('Unlock payment controls — £39/month');
+  });
+});
+
+
+describe('BookingFlow v1.19 Starter payment choice (static)', () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const source = readFileSync(join(here, 'BookingFlow.tsx'), 'utf8');
+
+  it('renders one £5 full-payment option for an exactly £5 service', () => {
+    expect(source).toContain("selectedService.pricePence === 500");
+    expect(source).toContain('Pay £5 now');
+    expect(source).toContain('This pays the service in full.');
+  });
+
+  it('offers £5 deposit or Pay in full above £5 and sends the choice to the API', () => {
+    expect(source).toContain('Pay £5 deposit');
+    expect(source).toContain('Pay in full');
+    expect(source).toContain('paymentChoice: effectiveStarterPaymentChoice');
+    expect(source).toContain('0% KERSIVO commission. Stripe processing fees apply.');
   });
 });

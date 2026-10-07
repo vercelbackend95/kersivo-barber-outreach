@@ -1,5 +1,6 @@
 import type { SaasSubscription, SaasSubscriptionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { postFullStarterTermsAllowService } from '@/lib/legal/termsVersion';
 import { markShopPaid, markShopUnpaid } from '@/lib/shop/markShopPaid';
 import { getSubscriptionCurrentPeriodEnd, type StripeSubscription } from '@/lib/shop/stripe';
 import {
@@ -158,6 +159,11 @@ export async function applyStripeSubscriptionToSaasRecord(
       ? existing.retentionEndsAt ?? retentionEndsAtFrom(canceledAt)
       : existing.retentionEndsAt;
 
+  const staleStarterChoiceAtEnd =
+    status === 'CANCELED' &&
+    String(existing.postFullPlan) === 'STARTER' &&
+    !postFullStarterTermsAllowService(existing.postFullTermsVersion);
+
   const record = await prisma.saasSubscription.update({
     where: { id: existing.id },
     data: {
@@ -169,7 +175,8 @@ export async function applyStripeSubscriptionToSaasRecord(
       currentPeriodEnd: currentPeriodEnd ?? existing.currentPeriodEnd,
       canceledAt,
       retentionEndsAt,
-      ...(status === 'CANCELED' && existing.postFullPlan === 'UNDECIDED'
+      ...(status === 'CANCELED' &&
+      (existing.postFullPlan === 'UNDECIDED' || staleStarterChoiceAtEnd)
         ? { postFullPlan: 'CHOICE_REQUIRED' as const }
         : {}),
       pastDueSince:

@@ -9,7 +9,7 @@ import { prisma } from '../db/client';
 import { ensureShopBookingSlug } from '../booking/bookingSlug';
 import { enqueueEmail } from '../email/outbox';
 import { buildQrKitRequestAcknowledgementEmail } from '../email/qrKitEmails';
-import { CURRENT_TERMS_VERSION, TERMS_ACCEPTANCE_PURPOSES } from '../legal/termsVersion';
+import { TERMS_ACCEPTANCE_PURPOSES } from '../legal/termsVersion';
 import { hasKersivoCapability, loadKersivoAccess, type KersivoProductState } from '../shop/kersivoAccess';
 import { ensureShopQrCodesInTx, type ShopQrCodeRow } from './shopQrCodes';
 
@@ -86,10 +86,11 @@ export async function loadQrKitShopFacts(
         where: { active: true, barber: { shopId, active: true } },
         select: { startMinutes: true, endMinutes: true },
       }),
+      // Any recorded Starter acceptance qualifies: a later Terms bump must not strand existing
+      // Starter shops, which have no re-accept path. Shops that never accepted stay blocked.
       db.legalAcceptance.count({
         where: {
           shopId,
-          termsVersion: CURRENT_TERMS_VERSION,
           purpose: {
             in: [
               TERMS_ACCEPTANCE_PURPOSES.FREE_BOOKING_ACTIVATION,

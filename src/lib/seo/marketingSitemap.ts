@@ -47,7 +47,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
-  { path: '/privacy', lastmod: '2026-10-05' },
+  { path: '/privacy', lastmod: '2026-10-06' },
   /** Matches "Last updated" on src/pages/cookies.astro. */
   { path: '/cookies', lastmod: '2026-09-25' },
   /** Canonical DPA version = "Last updated" on /dpa. */

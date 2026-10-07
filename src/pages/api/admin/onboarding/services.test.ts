@@ -7,6 +7,11 @@ const loadOnboardingState = vi.fn();
 const scheduleCatalogueRebuild = vi.fn();
 const prismaTransaction = vi.fn();
 const prismaServiceFindMany = vi.fn();
+const loadKersivoAccess = vi.fn();
+
+vi.mock('@/lib/shop/kersivoAccess', () => ({
+  loadKersivoAccess: (...args: unknown[]) => loadKersivoAccess(...args),
+}));
 
 vi.mock('@/lib/admin/onboarding', () => ({
   requireOnboardingAccess: (...args: unknown[]) => requireOnboardingAccess(...args),
@@ -60,6 +65,7 @@ describe('admin onboarding services recommendation rebuild', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireOnboardingAccess.mockResolvedValue({ shopId: 'shop-1' });
+    loadKersivoAccess.mockResolvedValue({ state: 'SETUP' });
     loadOnboardingState.mockResolvedValue({ step: 'hours' });
     linkAllServicesToAllBarbers.mockResolvedValue(undefined);
     advanceOnboardingStep.mockResolvedValue(undefined);
@@ -166,6 +172,63 @@ describe('admin onboarding services recommendation rebuild', () => {
 
     expect(res.status).toBe(500);
     expect(scheduleCatalogueRebuild).not.toHaveBeenCalled();
+  });
+});
+
+describe('admin onboarding services Starter £5 floor', () => {
+  function txWithServices() {
+    const tx = {
+      service: {
+        create: vi.fn().mockResolvedValue({ id: 'svc-new' }),
+        update: vi.fn(),
+        updateMany: vi.fn(),
+      },
+    };
+    prismaTransaction.mockImplementation(async (fn: (client: typeof tx) => Promise<void>) => fn(tx));
+    return tx;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireOnboardingAccess.mockResolvedValue({ shopId: 'shop-1' });
+    loadOnboardingState.mockResolvedValue({ step: 'hours' });
+    prismaServiceFindMany.mockResolvedValue([]);
+  });
+
+  it('rejects an active Starter service at £4.99 without writing or repricing it', async () => {
+    loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING' });
+    const tx = txWithServices();
+    const res = await adminPut(
+      ctx({ services: [{ name: 'Line-up', pricePence: 499, durationMinutes: 15, selected: true }] }),
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ code: 'STARTER_SERVICE_PRICE_TOO_LOW' });
+    expect(tx.service.create).not.toHaveBeenCalled();
+    expect(tx.service.update).not.toHaveBeenCalled();
+  });
+
+  it('allows an active Starter service at exactly £5 with the price unchanged', async () => {
+    loadKersivoAccess.mockResolvedValue({ state: 'FREE_BOOKING' });
+    const tx = txWithServices();
+    const res = await adminPut(
+      ctx({ services: [{ name: 'Line-up', pricePence: 500, durationMinutes: 15, selected: true }] }),
+    );
+    expect(res.status).toBe(200);
+    expect(tx.service.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ pricePence: 500 }) }),
+    );
+  });
+
+  it('keeps Full services below £5 unchanged', async () => {
+    loadKersivoAccess.mockResolvedValue({ state: 'FULL_KERSIVO' });
+    const tx = txWithServices();
+    const res = await adminPut(
+      ctx({ services: [{ name: 'Line-up', pricePence: 300, durationMinutes: 15, selected: true }] }),
+    );
+    expect(res.status).toBe(200);
+    expect(tx.service.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ pricePence: 300 }) }),
+    );
   });
 });
 

@@ -1,4 +1,5 @@
 ---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingSwitcherReassurance.css';
 
 interface Props {
@@ -116,7 +117,7 @@ const trustPoints = [
         class="btn btn--primary btn--lg landing-switcher-reassurance__cta"
         data-track="saas_subscribe_click"
       >
-        Start my KERSIVO subscription
+        Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
       </a>
       {
         showBooksyCompareLink ? (

@@ -5,15 +5,15 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const STARTER_PAGE_PATH = '/starter';
 
 export const STARTER_PAGE_TITLE =
-  'KERSIVO Starter for UK Barbers | £0/Month & 0% Commission';
+  'KERSIVO Starter | £0/Month for UK Barbershops';
 
 export const STARTER_PAGE_DESCRIPTION =
-  'KERSIVO Starter for UK barbershops: £0/month, 0% KERSIVO commission. Hosted booking page, up to 4 barbers, email reminders, Google booking setup and a QR Kit.';
+  'KERSIVO Starter for UK barbershops: £0/month, 0% KERSIVO commission, hosted online booking, up to 4 barbers, £5 deposits or full payment, reminders and QR Kit.';
 
-export const STARTER_PAGE_H1 = 'Start taking bookings with KERSIVO Starter.';
+export const STARTER_PAGE_H1 = 'Run your barbershop bookings for £0/month.';
 
-export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-05';
-export const STARTER_PAGE_LAST_UPDATED_LABEL = '5 October 2026';
+export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-06';
+export const STARTER_PAGE_LAST_UPDATED_LABEL = '6 October 2026';
 
 export type StarterFaqItem = {
   question: string;
@@ -24,17 +24,27 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   {
     question: 'Is KERSIVO Starter really £0 a month?',
     answer:
-      'Yes. KERSIVO Starter has no monthly subscription fee and no setup fee. It is a real operating plan, not a time-limited trial.',
+      'Yes. KERSIVO Starter has no monthly software subscription fee and no setup fee. It is a real operating plan, not a time-limited trial. KERSIVO also takes 0% commission on Starter booking payments.',
   },
   {
     question: 'Does KERSIVO charge commission on Starter bookings?',
     answer:
-      'No. KERSIVO takes 0% commission on Starter bookings. Standard Stripe processing fees apply only if you connect Stripe to take deposits or full payments online, and that money goes to your own Stripe account.',
+      'No. KERSIVO takes 0% commission and adds 0% platform fee to Starter booking payments. Standard Stripe processing fees still apply to card payments, and the booking payment is processed through your connected Stripe account.',
   },
   {
     question: 'Do I need Stripe to use KERSIVO Starter?',
     answer:
-      'No. You can activate Starter and take bookings in Pay at shop mode without connecting Stripe. If you later want required deposits or full online card payments, you can connect your own Stripe account from Settings.',
+      'You can create and configure your Starter workspace before Stripe is connected, but a connected Stripe account must be ready before new public bookings can go live. KERSIVO guides the owner through the Stripe connection from the dashboard.',
+  },
+  {
+    question: 'How do customers pay when they book on KERSIVO Starter?',
+    answer:
+      'For services above £5, the customer chooses either a £5 deposit or Pay in full. A service priced at exactly £5 is paid £5 in full with one clear payment option. Every customer-created public Starter booking therefore includes at least £5 paid online.',
+  },
+  {
+    question: 'Can customers choose Pay at shop on KERSIVO Starter?',
+    answer:
+      'Not for customer-created public Starter bookings. Starter uses a fixed payment-powered booking flow. Staff can still add manual bookings that are paid at the shop. Full KERSIVO unlocks editable booking-payment controls, including Pay at shop.',
   },
   {
     question: 'How many barbers can use KERSIVO Starter?',
@@ -57,13 +67,8 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
       'KERSIVO provides a guided setup that gives you the correct booking URL to add to your Google Business Profile. Google controls Business Profile eligibility and where booking actions appear, so KERSIVO cannot guarantee a particular Book button placement.',
   },
   {
-    question: 'Do customers need an app to book?',
-    answer:
-      'No. Customers book through your KERSIVO-hosted booking page in their browser. They do not need to install a customer app.',
-  },
-  {
     question: 'Can I upgrade from Starter to Full KERSIVO later?',
-    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders and the live KERSIVO Assistant.`,
+    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders, the live KERSIVO Assistant and control over how customers pay when they book.`,
   },
 ];
 

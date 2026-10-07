@@ -731,14 +731,15 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>Preview the admin:<br/><a href="${adminDemoUrl}">${adminDemoUrl}</a></p>
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
 
-  <p><strong>Pricing:</strong></p>
-  <p><strong>£${SAAS_MONTHLY_GBP}/month subscription</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop. ${NO_SETUP_FEE_SHORT} ${PLAN_SCOPE_SHORT}</p>
+  <p><strong>Pricing — two plans, 0% KERSIVO commission on both:</strong></p>
+  <p><strong>KERSIVO Starter — £0/month</strong><br/>Online bookings paid through your own Stripe account (£5 deposit or Pay in full), for up to 4 bookable barbers.</p>
+  <p><strong>Full KERSIVO — £${SAAS_MONTHLY_GBP}/month subscription</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop. ${NO_SETUP_FEE_SHORT} ${PLAN_SCOPE_SHORT}</p>
   <p>${INCLUDED_SETUP_SHORT}</p>
   <p>${OWNER_SELF_CONFIG_SHORT}</p>
   <p>${PRICE_VAT_DISCLAIMER}</p>
   <p>${BILLING_CYCLE_SHORT}</p>
 
-  <p><strong>Your subscription includes:</strong></p>
+  <p><strong>Full KERSIVO includes:</strong></p>
   <ul>
     <li>branded booking website</li>
     <li>admin dashboard</li>
@@ -748,7 +749,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
     <li>0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</li>
   </ul>
 
-  <p>Subscribe securely for £${SAAS_MONTHLY_GBP}/month. ${NO_PAUSE_SHORT}</p>
+  <p>Start KERSIVO Starter for £0/month, or subscribe securely to Full KERSIVO for £${SAAS_MONTHLY_GBP}/month. ${NO_PAUSE_SHORT}</p>
 
   <p><strong>Ready to get started?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
 

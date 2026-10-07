@@ -117,6 +117,38 @@ describe('GET /q/{code}', () => {
     expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
   });
 
+  it('a Full → Starter shop with paused intake keeps the stable /book/{slug} (the page enforces the pause)', async () => {
+    db.shops.set('cmshop1', {
+      ...shop(),
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: new Date(),
+    } as ShopRow);
+    db.subscription = {
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01'),
+      cancelAtPeriodEnd: false,
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+    };
+    db.destinations.set('cmshop1', verified());
+    const res = await scan(WINDOW_CODE);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
+  });
+
+  it('a legacy-Express Starter keeps the stable /book/{slug}; the QR never opens a payment path itself', async () => {
+    db.shops.set('cmshop1', {
+      ...shop({ freeBookingActivatedAt: new Date('2026-10-01') }),
+      stripeConnectAccountId: 'acct_legacy_express',
+      stripeConnectAccountType: 'EXPRESS',
+      stripeConnectChargesEnabled: true,
+    } as ShopRow);
+    const res = await scan(WINDOW_CODE);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toBe('/book/blackline-barbers');
+  });
+
   it('Starter never uses a stored own-domain destination', async () => {
     db.shops.set('cmshop1', shop({ freeBookingActivatedAt: new Date('2026-10-01') }));
     db.destinations.set('cmshop1', verified());
@@ -207,7 +239,7 @@ describe('GET /q/{code}', () => {
     expect((await scan(REBOOK_CODE)).headers.get('Location')).toBe(OWN_DOMAIN);
 
     // Full → Starter: the record stays for audit but is ignored.
-    db.subscription = { status: 'CANCELED', currentPeriodEnd: new Date('2000-01-01'), postFullPlan: 'STARTER' };
+    db.subscription = { status: 'CANCELED', currentPeriodEnd: new Date('2000-01-01'), postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' };
     expect((await scan(WINDOW_CODE)).headers.get('Location')).toBe('/book/blackline-barbers');
     expect((await scan(REBOOK_CODE)).headers.get('Location')).toBe('/book/blackline-barbers');
     expect(db.destinations.get('cmshop1')).toEqual(verified());

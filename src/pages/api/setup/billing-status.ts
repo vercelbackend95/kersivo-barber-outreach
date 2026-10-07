@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
+import { postFullStarterTermsAllowService } from '@/lib/legal/termsVersion';
 import {
   graceEndsAt,
   resolveSaasBillingPhase,
@@ -11,6 +12,7 @@ import {
   saasSubscriptionGrantsAccess,
 } from '@/lib/setup/saasEntitlement';
 import { subscriptionBlocksAccountDeletion } from '@/lib/setup/accountDeletionGate';
+import { loadStarterPublicLaunchReadiness } from '@/lib/setup/starterPublicLaunchReadiness';
 
 const subscriptionSelect = {
   status: true,
@@ -27,6 +29,7 @@ const subscriptionSelect = {
   currency: true,
   postFullPlan: true,
   postFullPlanChosenAt: true,
+  postFullTermsVersion: true,
 } as const;
 
 export const GET: APIRoute = async (context) => {
@@ -87,6 +90,7 @@ export const GET: APIRoute = async (context) => {
         canCancelSubscription: false,
         postFullPlan: null,
         postFullPlanChosenAt: null,
+        postFullTermsCurrent: true,
         postFullPlanChoiceRequired: false,
       }),
       { status: 200 },
@@ -104,12 +108,23 @@ export const GET: APIRoute = async (context) => {
     Boolean(subscription.stripeSubscriptionId) &&
     !subscription.cancelAtPeriodEnd;
   const postFullPlan = String(subscription.postFullPlan ?? 'UNDECIDED');
+  const staleStarterTerms =
+    postFullPlan === 'STARTER' &&
+    !postFullStarterTermsAllowService(subscription.postFullTermsVersion);
   const postFullPlanChoiceRequired =
-    // Starter must be chosen before Full ends; an ended Full without it becomes a departure.
-    subscription.cancelAtPeriodEnd &&
-    phase !== 'canceled' &&
-    postFullPlan !== 'STARTER' &&
-    postFullPlan !== 'LEAVE';
+    (
+      staleStarterTerms &&
+      (subscription.cancelAtPeriodEnd || phase === 'canceled')
+    ) ||
+    (
+      subscription.cancelAtPeriodEnd &&
+      phase !== 'canceled' &&
+      postFullPlan !== 'STARTER' &&
+      postFullPlan !== 'LEAVE'
+    );
+  // Full → Starter review: what would pause new public bookings once Starter is effective.
+  const starterPublicLaunch =
+    postFullPlan !== 'LEAVE' ? await loadStarterPublicLaunchReadiness(access.shopId) : null;
 
   return new Response(
     JSON.stringify({
@@ -132,7 +147,9 @@ export const GET: APIRoute = async (context) => {
       currency: subscription.currency,
       postFullPlan,
       postFullPlanChosenAt: subscription.postFullPlanChosenAt?.toISOString() ?? null,
+      postFullTermsCurrent: !staleStarterTerms,
       postFullPlanChoiceRequired,
+      starterPublicLaunch,
     }),
     { status: 200 },
   );

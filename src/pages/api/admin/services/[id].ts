@@ -16,6 +16,8 @@ import {
   assertUserSuppliedPublicMediaUrlAllowed,
   isUserSuppliedPublicMediaUrlRejectedError,
 } from '@/lib/storage/publicBlobSafety';
+import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '@/lib/booking/bookingPaymentPolicy';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
   isShopMediaMutationBlockedError,
   lockShopForPublicMediaAssociation,
@@ -64,10 +66,28 @@ export const PATCH: APIRoute = async (ctx) => {
       name: true,
       description: true,
       isActive: true,
+      pricePence: true,
       imageUrl: true,
     },
   });
   if (!owned) return new Response(JSON.stringify({ error: 'Service not found.' }), { status: 404 });
+
+  const productAccess = await loadKersivoAccess(shopId);
+  const nextIsActive = data.isActive ?? owned.isActive;
+  const nextPricePence = data.pricePence ?? owned.pricePence;
+  if (
+    productAccess.state === 'FREE_BOOKING' &&
+    nextIsActive &&
+    nextPricePence < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE
+  ) {
+    return new Response(
+      JSON.stringify({
+        error: 'Starter services must be priced at £5 or more to be available for online booking.',
+        code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+      }),
+      { status: 400 },
+    );
+  }
 
   if (data.imageUrl !== undefined && data.imageUrl?.trim()) {
     try {

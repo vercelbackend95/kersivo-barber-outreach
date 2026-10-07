@@ -89,6 +89,11 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       id: 'shop-1',
       shopPaidAt: null,
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
@@ -96,6 +101,10 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       name: 'Fade Studio',
       townCity: 'London',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
     findManyMembers.mockResolvedValue([{ id: 'm1', barberId: 'b1' }]);
@@ -159,6 +168,11 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       id: 'shop-1',
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
@@ -166,6 +180,10 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       name: 'Fade Studio',
       townCity: 'London',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
     findFirstSaas.mockResolvedValue(null);
@@ -196,6 +214,11 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       id: 'shop-1',
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
@@ -203,6 +226,10 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       name: 'Fade Studio',
       townCity: 'London',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
     findFirstSaas.mockResolvedValue({
@@ -219,6 +246,160 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
     expect(body.pending).toBeNull();
   });
 });
+
+  it('v1.19 Starter progress uses Stripe instead of Retail and reports launch readiness', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: new Date('2026-10-05T12:00:00.000Z'),
+      stripeConnectAccountId: 'acct_ready',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'STANDARD',
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: false,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [{ id: 's1', isActive: true, pricePence: 2500 }],
+      _count: { services: 1 },
+    });
+    findFirstSaas.mockResolvedValue(null);
+
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.productState).toBe('FREE_BOOKING');
+    expect(body.progress.steps.map((step: { id: string }) => step.id)).toEqual([
+      'barbershop',
+      'team',
+      'services',
+      'stripe',
+    ]);
+    expect(body.progress.complete).toBe(true);
+    expect(body.starterLaunch).toMatchObject({
+      stripeAccountLinked: true,
+      stripeReady: true,
+      servicesMeetPriceFloor: true,
+      activeServiceCount: 1,
+      activeBookableBarbers: 1,
+      publicBookingReady: true,
+    });
+  });
+
+  it('v1.19 Starter reports services incomplete when an active service is below £5', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: new Date('2026-10-05T12:00:00.000Z'),
+      stripeConnectAccountId: 'acct_ready',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'STANDARD',
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: false,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [{ id: 's-low', isActive: true, pricePence: 499 }],
+      _count: { services: 1 },
+    });
+    findFirstSaas.mockResolvedValue(null);
+
+    const body = await (await GET(makeContext() as never)).json();
+    expect(body.progress.complete).toBe(false);
+    expect(body.progress.nextHref).toBe('/admin?section=services');
+    expect(body.starterLaunch.servicesMeetPriceFloor).toBe(false);
+    expect(body.starterLaunch.publicBookingReady).toBe(false);
+  });
+
+  it('v1.19 Starter on a legacy Express account is not launch-ready and flags Standard as required', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: new Date('2026-10-05T12:00:00.000Z'),
+      stripeConnectAccountId: 'acct_legacy_express',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: null,
+      stripeConnectAccountType: 'EXPRESS',
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: false,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [{ id: 's1', name: 'Skin Fade', isActive: true, pricePence: 2500 }],
+      _count: { services: 1 },
+    });
+    findFirstSaas.mockResolvedValue(null);
+
+    const body = await (await GET(makeContext() as never)).json();
+    expect(body.starterLaunch).toMatchObject({
+      stripeAccountLinked: true,
+      stripeReady: false,
+      stripeRequiresStandard: true,
+      publicBookingReady: false,
+      pauseReasons: ['stripe_not_ready'],
+    });
+  });
+
+  it('after Full → Starter, exposes the recovery blockers (disconnected Stripe + named £5 services)', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: 'acct_old',
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: new Date('2026-09-01T00:00:00.000Z'),
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: true,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Studio',
+      townCity: 'London',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', name: 'Skin Fade', isActive: true, pricePence: 2500 },
+        { id: 's-low', name: 'Line-up', isActive: true, pricePence: 300 },
+        { id: 's-old', name: 'Old promo', isActive: false, pricePence: 100 },
+      ],
+      _count: { services: 3 },
+    });
+    findFirstSaas.mockResolvedValue({
+      status: 'CANCELED',
+      currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+      pastDueSince: null,
+      activatedAt: null,
+      cancelAtPeriodEnd: false,
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: '2026-10-06',
+    });
+
+    const body = await (await GET(makeContext() as never)).json();
+    expect(body.productState).toBe('FREE_BOOKING');
+    expect(body.starterLaunch).toMatchObject({
+      stripeReady: false,
+      stripeDisconnected: true,
+      servicesMeetPriceFloor: false,
+      publicBookingReady: false,
+      pauseReasons: ['stripe_not_ready', 'service_below_minimum'],
+      servicesBelowMinimum: [{ id: 's-low', name: 'Line-up', pricePence: 300 }],
+    });
+  });
 
 describe('GET /api/setup/launch-context (setup fees on)', () => {
   beforeEach(() => {
@@ -244,6 +425,11 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
       id: 'shop-1',
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
@@ -251,6 +437,10 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
       name: 'Fade Studio',
       townCity: 'London',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
     findFirstSaas.mockResolvedValue(null);
@@ -294,6 +484,11 @@ describe('GET /api/setup/launch-context preview via', () => {
       id: 'shop-preview',
       shopPaidAt: null,
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: false,
       retailOnboardingSkipped: false,
@@ -301,6 +496,10 @@ describe('GET /api/setup/launch-context preview via', () => {
       name: 'Fade Lab',
       townCity: 'Leeds',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
     findFirstSaas.mockResolvedValue(null);
@@ -325,6 +524,11 @@ describe('GET /api/setup/launch-context preview via', () => {
       id: 'shop-preview',
       shopPaidAt: null,
       smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
       onboardingCompleted: true,
       retailOnboardingCompleted: true,
       retailOnboardingSkipped: false,
@@ -332,6 +536,10 @@ describe('GET /api/setup/launch-context preview via', () => {
       name: 'Fade Lab',
       townCity: 'Leeds',
       barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [
+        { id: 's1', isActive: true, pricePence: 2500 },
+        { id: 's2', isActive: true, pricePence: 3000 },
+      ],
       _count: { services: 2 },
     });
 

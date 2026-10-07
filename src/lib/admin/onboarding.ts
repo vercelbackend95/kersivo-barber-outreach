@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin/shopOpeningHours';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 import { preferredPublicBookingPath } from '@/lib/booking/publicBookingPath';
+import { loadPublicBookingIntakeStatus } from '@/lib/setup/shopPublicBookingGate';
 import {
   hasKersivoCapability,
   loadKersivoAccess,
@@ -301,6 +302,11 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     }
   }
 
+  const publicBookingsLive =
+    signedIn && hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
+      ? (await loadPublicBookingIntakeStatus(shopId)).accepting
+      : false;
+
   return {
     shop: {
       id: shop.id,
@@ -342,6 +348,7 @@ export async function loadOnboardingState(shopId: string, access: OnboardingStat
     bookingUrl: hasKersivoCapability(productAccess, 'PUBLIC_BOOKING')
       ? preferredPublicBookingPath(shop)
       : null,
+    publicBookingsLive,
     user: access.userId
       ? {
           id: access.userId,

@@ -8,6 +8,58 @@ import type { KersivoProductState } from '../shop/kersivoAccess';
 /** DEPOSIT mode charges £5, or the full service price when the service costs less. */
 export const BOOKING_DEPOSIT_CAP_PENCE = 500;
 
+/** v1.19 Starter: every active public-bookable service must be at least £5. */
+export const STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE = 500;
+
+export const STARTER_SERVICE_PRICE_TOO_LOW = 'STARTER_SERVICE_PRICE_TOO_LOW';
+export const STARTER_PAYMENT_CHOICE_REQUIRED = 'STARTER_PAYMENT_CHOICE_REQUIRED';
+
+export type StarterPublicPaymentChoice = 'DEPOSIT' | 'FULL';
+
+export type StarterPublicPaymentDecision =
+  | { ok: true; mode: StarterPublicPaymentChoice }
+  | {
+      ok: false;
+      code: typeof STARTER_SERVICE_PRICE_TOO_LOW | typeof STARTER_PAYMENT_CHOICE_REQUIRED;
+      message: string;
+    };
+
+/**
+ * v1.19 fixed Starter public-booking policy.
+ * - below £5: never publicly bookable on Starter;
+ * - exactly £5: one £5 FULL payment (DEPOSIT is normalised to FULL so the durable snapshot
+ *   correctly records that the entire service price was paid);
+ * - above £5: customer must explicitly choose £5 DEPOSIT or FULL.
+ */
+export function resolveStarterPublicPaymentMode(params: {
+  servicePricePence: number;
+  requestedChoice?: StarterPublicPaymentChoice | null;
+}): StarterPublicPaymentDecision {
+  const price = Math.max(0, Math.trunc(params.servicePricePence));
+  if (price < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE) {
+    return {
+      ok: false,
+      code: STARTER_SERVICE_PRICE_TOO_LOW,
+      message: 'Starter services must be priced at £5 or more for online booking.',
+    };
+  }
+  if (price === STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE) {
+    return { ok: true, mode: 'FULL' };
+  }
+  if (params.requestedChoice !== 'DEPOSIT' && params.requestedChoice !== 'FULL') {
+    return {
+      ok: false,
+      code: STARTER_PAYMENT_CHOICE_REQUIRED,
+      message: 'Choose Pay £5 deposit or Pay in full to continue.',
+    };
+  }
+  return { ok: true, mode: params.requestedChoice };
+}
+
+export function starterPublicServicePriceAllowed(pricePence: number): boolean {
+  return Number.isFinite(pricePence) && Math.trunc(pricePence) >= STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE;
+}
+
 /** Checkout Session metadata.type for booking payments created from Phase 4B onward. */
 export const BOOKING_PAYMENT_METADATA_TYPE = 'booking_payment';
 /** Pre-4B deposit sessions; still honoured so open sessions keep working after deploy. */

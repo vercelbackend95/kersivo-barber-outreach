@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
@@ -7,6 +7,8 @@ import QrKitSettingsCard from './QrKitSettingsCard';
 import LeaveKersivoCard from './LeaveKersivoCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { trackConsentedEvent } from '@/lib/consent/events';
 import '@/styles/components/admin-barbershop-settings.css';
 
 const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -26,6 +28,74 @@ type GoogleBookingSetupState = {
   googleBusinessProfileUrl: string;
   productState: string;
 };
+
+type StarterPublicLaunchPreview = {
+  ready: boolean;
+  stripe: {
+    blocker:
+      | 'connect_missing'
+      | 'connect_disconnected'
+      | 'connect_requires_standard'
+      | 'connect_not_ready'
+      | null;
+  };
+  activeServiceCount: number;
+  servicesBelowMinimum: Array<{ id: string; name: string; pricePence: number }>;
+  activeBookableBarberCount?: number | null;
+  bookableBarberLimit?: number;
+};
+
+function recordStarterUpgradeEvent(event: 'viewed' | 'clicked'): void {
+  void fetch('/api/admin/analytics/starter-upgrade-event', {
+    method: 'POST',
+    credentials: 'include',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event, placement: 'barbershop_settings_payments' }),
+  }).catch(() => {});
+}
+
+function formatPence(pence: number): string {
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
+const STARTER_STRIPE_BLOCKER_COPY: Record<NonNullable<StarterPublicLaunchPreview['stripe']['blocker']>, string> = {
+  connect_missing: 'Connect Stripe — Starter online bookings are paid through your own Stripe account.',
+  connect_disconnected: 'Reconnect Stripe — your Stripe account is disconnected.',
+  connect_requires_standard:
+    'Connect Stripe Standard — Starter online bookings need a Stripe Standard account.',
+  connect_not_ready: 'Finish Stripe setup — your Stripe account cannot take payments yet.',
+};
+
+function StarterLaunchBlockers({ preview }: { preview: StarterPublicLaunchPreview | null }) {
+  if (!preview || preview.ready) return null;
+  const stripeCopy = preview.stripe.blocker ? STARTER_STRIPE_BLOCKER_COPY[preview.stripe.blocker] : null;
+  return (
+    <div className="admin-barbershop-settings__card-copy" role="note" data-testid="starter-launch-blockers">
+      <p>
+        <strong>New online bookings will be paused on Starter until you fix:</strong>
+      </p>
+      <ul>
+        {stripeCopy ? <li>{stripeCopy}</li> : null}
+        {preview.activeServiceCount === 0 ? <li>Add at least one active service.</li> : null}
+        {preview.servicesBelowMinimum.map((service) => (
+          <li key={service.id}>
+            {service.name} ({formatPence(service.pricePence)}) — raise to £5 or more, or make it inactive.
+          </li>
+        ))}
+        {preview.bookableBarberLimit != null &&
+        preview.activeBookableBarberCount != null &&
+        preview.activeBookableBarberCount > preview.bookableBarberLimit ? (
+          <li>
+            {preview.activeBookableBarberCount} barbers take online bookings — Starter allows up to{' '}
+            {preview.bookableBarberLimit}. Choose which {preview.bookableBarberLimit} stay bookable in Team.
+          </li>
+        ) : null}
+      </ul>
+      <p>Prices are never changed automatically. Your account, data and accepted bookings stay.</p>
+    </div>
+  );
+}
 
 type PauseState = {
   paused: boolean;
@@ -99,6 +169,7 @@ export default function BarbershopSettingsPanel({
   const [bookingPaymentMode, setBookingPaymentMode] = useState<'NONE' | 'DEPOSIT' | 'FULL'>('NONE');
   const [bookingPaymentsAvailable, setBookingPaymentsAvailable] = useState(false);
   const [bookingProductState, setBookingProductState] = useState<string | null>(null);
+  const [paymentControlsEditable, setPaymentControlsEditable] = useState(false);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
@@ -135,7 +206,10 @@ export default function BarbershopSettingsPanel({
   const [canCancelSubscription, setCanCancelSubscription] = useState(false);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [postFullPlan, setPostFullPlan] = useState<string | null>(null);
+  const [postFullTermsCurrent, setPostFullTermsCurrent] = useState(true);
   const [postFullPlanChoiceRequired, setPostFullPlanChoiceRequired] = useState(false);
+  const [starterPublicLaunch, setStarterPublicLaunch] = useState<StarterPublicLaunchPreview | null>(null);
+  const [fullEndsOn, setFullEndsOn] = useState<string | null>(null);
   const [showCancelChoices, setShowCancelChoices] = useState(false);
   const [starterTermsAccepted, setStarterTermsAccepted] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -143,6 +217,25 @@ export default function BarbershopSettingsPanel({
   const [exportBusy, setExportBusy] = useState(false);
   const [billingError, setBillingError] = useState('');
   const [billingMessage, setBillingMessage] = useState('');
+  const starterPaymentUpgradeViewTracked = useRef(false);
+
+  useEffect(() => {
+    if (
+      starterPaymentUpgradeViewTracked.current ||
+      loading ||
+      bookingProductState !== 'FREE_BOOKING' ||
+      paymentControlsEditable
+    ) {
+      return;
+    }
+    starterPaymentUpgradeViewTracked.current = true;
+    trackConsentedEvent(
+      FUNNEL_EVENTS.starter_payment_settings_upgrade_viewed,
+      { placement: 'barbershop_settings_payments' },
+      'analytics',
+    );
+    recordStarterUpgradeEvent('viewed');
+  }, [bookingProductState, loading, paymentControlsEditable]);
 
   const loadGoogleBooking = useCallback(async () => {
     setGoogleBookingLoading(true);
@@ -225,7 +318,10 @@ export default function BarbershopSettingsPanel({
         setCanCancelSubscription(false);
         setCancelAtPeriodEnd(false);
         setPostFullPlan(null);
+        setPostFullTermsCurrent(true);
         setPostFullPlanChoiceRequired(false);
+        setStarterPublicLaunch(null);
+        setFullEndsOn(null);
         setBillingPhase(null);
         setBillingLabel(null);
         return;
@@ -244,12 +340,15 @@ export default function BarbershopSettingsPanel({
         canCancelSubscription?: boolean;
         postFullPlan?: string | null;
         postFullPlanChosenAt?: string | null;
+        postFullTermsCurrent?: boolean;
         postFullPlanChoiceRequired?: boolean;
+        starterPublicLaunch?: StarterPublicLaunchPreview | null;
         error?: string;
       } | null;
       if (!response.ok) {
         throw new Error(data?.error || 'Could not load billing status.');
       }
+      setStarterPublicLaunch(data?.starterPublicLaunch ?? null);
 
       setHasSubscription(Boolean(data?.hasSubscription));
       setHasBillingPortal(Boolean(data?.hasPortalAccess));
@@ -258,6 +357,7 @@ export default function BarbershopSettingsPanel({
       setCanCancelSubscription(Boolean(data?.canCancelSubscription));
       setCancelAtPeriodEnd(Boolean(data?.cancelAtPeriodEnd));
       setPostFullPlan(data?.postFullPlan ?? null);
+      setPostFullTermsCurrent(data?.postFullTermsCurrent !== false);
       setPostFullPlanChoiceRequired(Boolean(data?.postFullPlanChoiceRequired));
       setBillingPhase(data?.phase ?? null);
 
@@ -270,6 +370,7 @@ export default function BarbershopSettingsPanel({
           year: 'numeric',
         });
       };
+      setFullEndsOn(data?.currentPeriodEnd ? formatDate(data.currentPeriodEnd) : null);
 
       if (!data?.hasSubscription) {
         setBillingLabel(null);
@@ -379,6 +480,12 @@ export default function BarbershopSettingsPanel({
         productState?: string;
         bookingPaymentMode?: string;
         bookingPaymentsAvailable?: boolean;
+        paymentControlsEditable?: boolean;
+        starterPaymentPolicy?: {
+          minimumOnlinePaymentPence?: number;
+          payInFullAvailable?: boolean;
+          publicPayAtShop?: boolean;
+        } | null;
         depositsEnabled?: boolean;
         collectReady?: boolean;
         canManagePayouts?: boolean;
@@ -399,6 +506,7 @@ export default function BarbershopSettingsPanel({
       setDepositsPaid(Boolean(payload?.paid));
       setBookingPaymentsAvailable(Boolean(payload?.bookingPaymentsAvailable));
       setBookingProductState(payload?.productState ?? null);
+      setPaymentControlsEditable(Boolean(payload?.paymentControlsEditable));
       setBookingPaymentMode(
         payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
           ? payload.bookingPaymentMode
@@ -932,12 +1040,21 @@ export default function BarbershopSettingsPanel({
           <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
             Booking payments
           </h2>
-          <p className="admin-barbershop-settings__card-copy">
-            Choose whether clients pay at the shop, pay a £5 deposit online (services under £5 are
-            paid in full), or pay the full service price upfront when they book. Payments are
-            refunded if the client cancels inside your policy window or you cancel. On a late
-            cancel or no-show you keep the deposit, or up to £5 of a full upfront payment.
-          </p>
+          {bookingProductState === 'FREE_BOOKING' ? (
+            <p className="admin-barbershop-settings__card-copy">
+              Starter keeps public booking payments simple: for services above £5, clients choose a
+              £5 deposit or Pay in full. A £5 service is paid in full. Pay at shop is not available
+              for customer-created Starter bookings; manual staff-created bookings may still be paid
+              at the shop.
+            </p>
+          ) : (
+            <p className="admin-barbershop-settings__card-copy">
+              Choose whether clients pay at the shop, pay a £5 deposit online, or pay the full
+              service price upfront when they book. Payments are refunded if the client cancels
+              inside your policy window or you cancel. On a late cancel or no-show you keep the
+              deposit, or up to £5 of a full upfront payment.
+            </p>
+          )}
           {bookingProductState === 'FREE_BOOKING' ? (
             <p className="admin-barbershop-settings__card-copy" data-booking-payments-fee-copy>
               KERSIVO Starter: £0/month · 0% KERSIVO commission on booking payments. Stripe
@@ -1007,80 +1124,111 @@ export default function BarbershopSettingsPanel({
                         : 'Not connected'}
                 </span>
               </div>
-              <fieldset
-                className="field"
-                style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
-                disabled={depositsBusy || !canManagePayouts}
-              >
-                <legend className="sr-only">Booking payment option</legend>
-                {(
-                  [
-                    { mode: 'NONE', label: 'Pay at shop' },
-                    { mode: 'DEPOSIT', label: 'Require £5 deposit' },
-                    { mode: 'FULL', label: 'Require full payment upfront' },
-                  ] as const
-                ).map((option) => {
-                  const checked = option.mode === bookingPaymentMode;
-                  return (
-                    <label
-                      key={option.mode}
-                      style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-                    >
-                      <input
-                        type="radio"
-                        name="bbs-booking-payment-mode"
-                        value={option.mode}
-                        checked={checked}
-                        disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
-                        onChange={async () => {
-                          if (checked) return;
-                          setDepositsBusy(true);
-                          setDepositsError('');
-                          setDepositsMessage('');
-                          try {
-                            const response = await fetch('/api/admin/barbershop-settings/deposits', {
-                              method: 'PATCH',
-                              credentials: 'include',
-                              headers: { 'content-type': 'application/json' },
-                              body: JSON.stringify({ bookingPaymentMode: option.mode }),
-                            });
-                            const payload = (await response.json().catch(() => null)) as {
-                              error?: string;
-                              bookingPaymentMode?: string;
-                            } | null;
-                            if (!response.ok) {
-                              throw new Error(payload?.error || 'Could not update booking payments.');
+              {paymentControlsEditable ? (
+                <fieldset
+                  className="field"
+                  style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: '0.35rem' }}
+                  disabled={depositsBusy || !canManagePayouts}
+                >
+                  <legend className="sr-only">Booking payment option</legend>
+                  {(
+                    [
+                      { mode: 'NONE', label: 'Pay at shop' },
+                      { mode: 'DEPOSIT', label: 'Require £5 deposit' },
+                      { mode: 'FULL', label: 'Require full payment upfront' },
+                    ] as const
+                  ).map((option) => {
+                    const checked = option.mode === bookingPaymentMode;
+                    return (
+                      <label
+                        key={option.mode}
+                        style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                      >
+                        <input
+                          type="radio"
+                          name="bbs-booking-payment-mode"
+                          value={option.mode}
+                          checked={checked}
+                          disabled={option.mode !== 'NONE' && !connectChargesEnabled && !checked}
+                          onChange={async () => {
+                            if (checked) return;
+                            setDepositsBusy(true);
+                            setDepositsError('');
+                            setDepositsMessage('');
+                            try {
+                              const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                                method: 'PATCH',
+                                credentials: 'include',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({ bookingPaymentMode: option.mode }),
+                              });
+                              const payload = (await response.json().catch(() => null)) as {
+                                error?: string;
+                                bookingPaymentMode?: string;
+                              } | null;
+                              if (!response.ok) {
+                                throw new Error(payload?.error || 'Could not update booking payments.');
+                              }
+                              const nextMode =
+                                payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
+                                  ? payload.bookingPaymentMode
+                                  : 'NONE';
+                              setBookingPaymentMode(nextMode);
+                              setDepositsMessage(
+                                nextMode === 'DEPOSIT'
+                                  ? '£5 deposit required on online bookings.'
+                                  : nextMode === 'FULL'
+                                    ? 'Full payment required upfront on online bookings.'
+                                    : 'Clients pay at the shop.',
+                              );
+                              await loadDeposits();
+                            } catch (error) {
+                              setDepositsError(
+                                error instanceof Error ? error.message : 'Could not update booking payments.',
+                              );
+                            } finally {
+                              setDepositsBusy(false);
                             }
-                            const nextMode =
-                              payload?.bookingPaymentMode === 'DEPOSIT' || payload?.bookingPaymentMode === 'FULL'
-                                ? payload.bookingPaymentMode
-                                : 'NONE';
-                            setBookingPaymentMode(nextMode);
-                            setDepositsMessage(
-                              nextMode === 'DEPOSIT'
-                                ? '£5 deposit required on online bookings.'
-                                : nextMode === 'FULL'
-                                  ? 'Full payment required upfront on online bookings.'
-                                  : 'Clients pay at the shop.',
-                            );
-                            await loadDeposits();
-                          } catch (error) {
-                            setDepositsError(
-                              error instanceof Error ? error.message : 'Could not update booking payments.',
-                            );
-                          } finally {
-                            setDepositsBusy(false);
-                          }
-                        }}
-                      />
-                      <span>
-                        {option.label}
-                        {!canManagePayouts && checked ? ' (owner only)' : ''}
-                      </span>
-                    </label>
-                  );
-                })}
-              </fieldset>
+                          }}
+                        />
+                        <span>
+                          {option.label}
+                          {!canManagePayouts && checked ? ' (owner only)' : ''}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+  
+              ) : bookingProductState === 'FREE_BOOKING' ? (
+                <div className="admin-barbershop-settings__starter-payment-policy" data-starter-payment-policy>
+                  <p><strong>Starter payment setup</strong></p>
+                  <ul>
+                    <li>£5 online payment required</li>
+                    <li>Pay in full available</li>
+                    <li>Public Pay at shop unavailable</li>
+                    <li>0% KERSIVO commission</li>
+                  </ul>
+                  <p className="admin-barbershop-settings__card-copy">
+                    Want full control over how clients pay? Full KERSIVO unlocks Pay at shop, £5
+                    deposit and full-payment controls.
+                  </p>
+                  <a
+                    className="btn btn--primary"
+                    href="/admin/upgrade"
+                    onClick={() => {
+                      trackConsentedEvent(
+                        FUNNEL_EVENTS.starter_payment_settings_upgrade_clicked,
+                        { placement: 'barbershop_settings_payments' },
+                        'analytics',
+                      );
+                      recordStarterUpgradeEvent('clicked');
+                    }}
+                  >
+                    Unlock payment controls — £39/month
+                  </a>
+                </div>
+              ) : null}
               {depositsPaid ? (
               <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input
@@ -1410,8 +1558,32 @@ export default function BarbershopSettingsPanel({
             {(showCancelChoices || postFullPlanChoiceRequired) ? (
               <div className="admin-barbershop-settings__cancel-choice" role="group" aria-label="After Full KERSIVO">
                 <p className="admin-barbershop-settings__card-copy">
-                  What should happen when your paid Full KERSIVO period ends?
+                  What should happen when your paid Full KERSIVO period ends
+                  {fullEndsOn ? ` on ${fullEndsOn}` : ''}?
                 </p>
+                {postFullPlan === 'STARTER' && !postFullTermsCurrent ? (
+                  <p className="admin-barbershop-settings__card-copy" role="status" data-testid="starter-terms-refresh">
+                    <strong>KERSIVO Terms have been updated.</strong> Re-accept the current Terms to keep
+                    KERSIVO Starter as your post-Full plan.
+                  </p>
+                ) : null}
+                <div className="admin-barbershop-settings__card-copy" data-testid="starter-downgrade-summary">
+                  <p>
+                    <strong>KERSIVO Starter</strong> starts after your paid Full period: £0/month, 0% KERSIVO
+                    commission. Your account, team (up to 4 bookable barbers), services, clients and accepted
+                    bookings stay.
+                  </p>
+                  <p>
+                    Starter online bookings take a fixed £5 payment through your own Stripe account (clients
+                    may pay in full). Every active service must be £5 or more. No Pay at shop for online
+                    bookings.
+                  </p>
+                  <p>
+                    Reports, Retail, Advanced Clients, SMS, Assistant and your own domain lock. QR codes and
+                    your Google booking link use your KERSIVO-hosted booking page.
+                  </p>
+                </div>
+                <StarterLaunchBlockers preview={starterPublicLaunch} />
                 <label className="admin-barbershop-settings__card-copy">
                   <input
                     type="checkbox"
@@ -1448,9 +1620,12 @@ export default function BarbershopSettingsPanel({
                 ) : null}
               </div>
             ) : postFullPlan === 'STARTER' && cancelAtPeriodEnd ? (
-              <p className="admin-barbershop-settings__card-copy" role="status">
-                After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
-              </p>
+              <>
+                <p className="admin-barbershop-settings__card-copy" role="status">
+                  After Full ends: <strong>KERSIVO Starter — £0/month</strong>.
+                </p>
+                <StarterLaunchBlockers preview={starterPublicLaunch} />
+              </>
             ) : postFullPlan === 'LEAVE' && cancelAtPeriodEnd ? (
               <p className="admin-barbershop-settings__card-copy" role="status">
                 After Full ends: <strong>Leave KERSIVO</strong>.

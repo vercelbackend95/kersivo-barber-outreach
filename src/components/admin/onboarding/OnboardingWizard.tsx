@@ -5,6 +5,7 @@ import {
   redirectToStripe,
   startFullKersivoUpgradeCheckout,
 } from '@/lib/setup/fullKersivoUpgrade.client';
+import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '@/lib/booking/bookingPaymentPolicy';
 import {
   BILLING_RECOVERY_COPY,
   countBookableBarberCards,
@@ -21,7 +22,7 @@ import {
   PLAN_CHOICE_STRIPE_FEES_COPY,
   readJsonError,
   SERVICE_PRESETS,
-  STARTER_PAY_AT_SHOP_COPY,
+  STARTER_PAYMENT_POLICY_COPY,
   STARTER_PLAN_CARD,
   type OnboardingBarber,
   type OnboardingHoursRow,
@@ -904,6 +905,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
   }
 
   if (finished && !isGuest && state?.productAccess?.state === 'FREE_BOOKING') {
+    const bookingsLive = state.publicBookingsLive === true;
     return (
       <div className="admin-onboarding">
         <header className="admin-onboarding__header">
@@ -913,15 +915,31 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           </div>
         </header>
         <main className="admin-onboarding__main admin-onboarding__success">
-          <h1 className="admin-onboarding__title">Your booking page is live.</h1>
-          <p className="admin-onboarding__description">
-            Clients can now book online with {state.shop.name || 'your barbershop'}.
-          </p>
+          {bookingsLive ? (
+            <>
+              <h1 className="admin-onboarding__title">Your booking page is live.</h1>
+              <p className="admin-onboarding__description">
+                Clients can now book online with {state.shop.name || 'your barbershop'}.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="admin-onboarding__title">Your Starter workspace is ready.</h1>
+              <p className="admin-onboarding__description">
+                Connect Stripe to launch online bookings.
+              </p>
+            </>
+          )}
           <div
             className="admin-onboarding__footer-row"
             style={{ position: 'static', background: 'none', flexWrap: 'wrap' }}
           >
-            {liveBookingUrl ? (
+            {!bookingsLive ? (
+              <a className="btn btn--primary btn--lg" href="/admin?section=barbershop_settings">
+                Connect Stripe
+              </a>
+            ) : null}
+            {bookingsLive && liveBookingUrl ? (
               <a
                 className="btn btn--primary btn--lg"
                 href={liveBookingUrl}
@@ -1464,6 +1482,9 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                 What can clients book?
               </h1>
               <p className="admin-onboarding__description">Select services and adjust price or duration as needed.</p>
+              <p className="admin-onboarding__description">
+                KERSIVO Starter: each online-bookable service must be priced at £5 or more.
+              </p>
             </div>
             {servicesError ? (
               <p className="admin-onboarding__error" role="alert">
@@ -1547,6 +1568,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                           });
                         }}
                       />
+                      {service.pricePence < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE ? (
+                        <p className="field__hint" role="note">
+                          Below the £5 Starter minimum — Starter online bookings stay paused until this is £5 or more.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="field">
                       <label className="field__label" htmlFor={`service-duration-${service.key}`}>
@@ -1895,7 +1921,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                       })}
                     </div>
                     <p className="admin-onboarding__plan-footnote">
-                      {planChoice === 'STARTER' ? `${STARTER_PAY_AT_SHOP_COPY} ` : ''}
+                      {planChoice === 'STARTER' ? `${STARTER_PAYMENT_POLICY_COPY} ` : ''}
                       {PLAN_CHOICE_STRIPE_FEES_COPY}
                     </p>
                   </>

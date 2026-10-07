@@ -16,6 +16,8 @@ import {
   assertUserSuppliedPublicMediaUrlAllowed,
   isUserSuppliedPublicMediaUrlRejectedError,
 } from '@/lib/storage/publicBlobSafety';
+import { STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE } from '@/lib/booking/bookingPaymentPolicy';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import {
   isShopMediaMutationBlockedError,
   lockShopForPublicMediaAssociation,
@@ -43,7 +45,7 @@ export const GET: APIRoute = async (ctx) => {
   const shopId = access.shopId;
 
   try {
-    const [services, categories] = await Promise.all([
+    const [services, categories, productAccess] = await Promise.all([
       prisma.service.findMany({
         where: { shopId },
         orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
@@ -66,10 +68,19 @@ export const GET: APIRoute = async (ctx) => {
           }
         }
       }),
-      loadMergedServiceCategories(shopId)
+      loadMergedServiceCategories(shopId),
+      loadKersivoAccess(shopId),
     ]);
 
-    return new Response(JSON.stringify({ services, categories }));
+    return new Response(
+      JSON.stringify({
+        services,
+        categories,
+        productState: productAccess.state,
+        starterMinActiveServicePricePence:
+          productAccess.state === 'FREE_BOOKING' ? STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE : null,
+      }),
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to load services.';
     return new Response(JSON.stringify({ error: message }), { status: 500 });
@@ -87,6 +98,21 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const payload = parsed.data;
+  const productAccess = await loadKersivoAccess(shopId);
+  if (
+    productAccess.state === 'FREE_BOOKING' &&
+    payload.isActive &&
+    payload.pricePence < STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE
+  ) {
+    return new Response(
+      JSON.stringify({
+        error: 'Starter services must be priced at £5 or more to be available for online booking.',
+        code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+      }),
+      { status: 400 },
+    );
+  }
+
   const category = normalizeServiceCategory(payload.category);
   if (!category) {
     return new Response(JSON.stringify({ error: 'Category is required.' }), { status: 400 });

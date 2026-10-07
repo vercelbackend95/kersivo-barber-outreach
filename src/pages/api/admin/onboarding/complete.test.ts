@@ -15,6 +15,9 @@ type ShopRow = {
   onboardingCompleted: boolean;
   onboardingCurrentStep: number;
   onboardingCompletedAt: Date | null;
+  stripeConnectAccountId?: string | null;
+  stripeConnectChargesEnabled?: boolean;
+  stripeConnectAccountType?: 'STANDARD' | 'EXPRESS' | null;
 };
 
 const db = vi.hoisted(() => ({
@@ -24,6 +27,7 @@ const db = vi.hoisted(() => ({
   endedFullSubscriptions: 0,
   pendingFullCheckouts: 0,
   activeBookableBarbers: 1,
+  activeServicePrices: [2500] as number[],
   legal: [] as Array<Record<string, unknown>>,
   onLock: null as null | (() => void),
   /** Slugs held by other shops (for collision checks). */
@@ -118,8 +122,18 @@ vi.mock('@/lib/db/client', () => ({
       count: async ({ where }: { where: { status: unknown } }) =>
         where.status === 'PENDING' ? db.pendingFullCheckouts : db.endedFullSubscriptions,
     },
-    barber: { findMany: async () => [] },
-    service: { findMany: async () => [] },
+    barber: { findMany: async () => [], count: async () => 1 },
+    service: {
+      findMany: async (args?: { select?: Record<string, unknown> }) =>
+        args?.select?.pricePence
+          ? db.activeServicePrices.map((pricePence, index) => ({
+              id: `svc_${index + 1}`,
+              name: `Service ${index + 1}`,
+              pricePence,
+              isActive: true,
+            }))
+          : [],
+    },
   },
 }));
 
@@ -171,6 +185,8 @@ function freshShop(overrides: Partial<ShopRow> = {}): ShopRow {
     onboardingCompleted: true,
     onboardingCurrentStep: 6,
     onboardingCompletedAt: new Date('2026-10-01T10:00:00.000Z'),
+    stripeConnectAccountId: null,
+    stripeConnectChargesEnabled: false,
     ...overrides,
   };
 }
@@ -197,6 +213,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     db.endedFullSubscriptions = 0;
     db.pendingFullCheckouts = 0;
     db.activeBookableBarbers = 1;
+    db.activeServicePrices = [2500];
     db.legal = [];
     db.onLock = null;
     db.otherSlugs = [];
@@ -283,7 +300,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
       expect(db.legal).toHaveLength(0);
     });
 
-    it('1–4: explicit Starter activates Starter with Pay at shop, no Stripe and no SaaS subscription', async () => {
+    it('v1.19: explicit Starter configures the workspace without Stripe, but public intake stays paused', async () => {
       const res = await complete({ termsAccepted: true, plan: 'STARTER' });
 
       expect(res.status).toBe(200);
@@ -291,12 +308,13 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         activation: 'activated',
         productAccess: { state: 'FREE_BOOKING', capabilities: { publicBooking: true } },
         bookingUrl: '/book/fade-lab',
+        publicBookingsLive: false,
       });
       expect(tx.saasSubscription.create).not.toHaveBeenCalled();
-      expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
+      expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
     });
 
-    it('3: the Starter activation path has no Stripe, Connect, Checkout or payment-mode dependency', () => {
+    it('v1.19: workspace activation itself remains Stripe-independent; public-live readiness is a separate gate', () => {
       for (const file of ['src/lib/shop/freeBookingActivation.ts', 'src/pages/api/admin/onboarding/complete.ts']) {
         const source = readFileSync(resolve(process.cwd(), file), 'utf8');
         expect(source, file).not.toMatch(/stripe/i);
@@ -357,7 +375,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
 
     it('former Full shop that explicitly chose Starter (post-Full choice) replays as already_free', async () => {
       db.endedFullSubscriptions = 1;
-      db.subscription = { status: 'CANCELED', currentPeriodEnd: null, postFullPlan: 'STARTER' };
+      db.subscription = { status: 'CANCELED', currentPeriodEnd: null, postFullPlan: 'STARTER', postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119' };
       const res = await complete();
 
       expect(res.status).toBe(200);
@@ -370,9 +388,24 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
   });
 
-  it('N: activated Free shop passes the public booking gate', async () => {
+  it('v1.19: activated Starter passes the public gate only after Stripe becomes payment-ready', async () => {
     await complete({ termsAccepted: true, plan: 'STARTER' });
+    expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
+
+    db.shop.stripeConnectAccountId = 'acct_ready';
+    db.shop.stripeConnectChargesEnabled = true;
+    db.shop.stripeConnectAccountType = 'STANDARD';
     expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
+  });
+
+  it('v1.19: activated Starter remains paused if any active service is below £5', async () => {
+    await complete({ termsAccepted: true, plan: 'STARTER' });
+    db.shop.stripeConnectAccountId = 'acct_ready';
+    db.shop.stripeConnectChargesEnabled = true;
+    db.shop.stripeConnectAccountType = 'STANDARD';
+    db.activeServicePrices = [2500, 499];
+
+    expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
   });
 
   it('D: replay after activation is idempotent with no duplicate side effects', async () => {

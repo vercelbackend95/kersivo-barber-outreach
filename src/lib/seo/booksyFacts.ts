@@ -358,12 +358,12 @@ export const BOOKSY_COMPARE_SECTIONS: readonly BooksyCompareSection[] = [
       'Integrated checkout with tips, discounts and gift card balances',
     ],
     booksySourceIds: ['noShowProtection', 'payments', 'tapToPay'],
-    kersivoLead: 'Payment protection inside your own branded booking journey.',
+    kersivoLead: 'Payment protection built into the KERSIVO booking journey.',
     kersivoPoints: [
-      'Optional booking deposits for online appointments',
-      'Deposit status visible in the KERSIVO admin',
-      'Client payment steps stay connected to your booking flow',
-      '0% KERSIVO commission on booking payments, on Starter and Full',
+      'Starter: public bookings use a £5 deposit or Pay in full',
+      'Full: choose Pay at shop, require a £5 deposit or require full payment',
+      'Payment status stays visible in the KERSIVO admin',
+      '0% KERSIVO commission on booking payments; Stripe processing fees still apply',
     ],
   },
   {

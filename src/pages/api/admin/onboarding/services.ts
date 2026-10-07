@@ -9,7 +9,9 @@ import {
   ONBOARDING_STEP_HOURS,
   requireOnboardingAccess,
 } from '@/lib/admin/onboarding';
+import { starterPublicServicePriceAllowed } from '@/lib/booking/bookingPaymentPolicy';
 import { prisma } from '@/lib/db/client';
+import { loadKersivoAccess } from '@/lib/shop/kersivoAccess';
 import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 
 const serviceSchema = z.object({
@@ -38,6 +40,20 @@ export const PUT: APIRoute = async (ctx) => {
     const selected = parsed.data.services.filter((service) => service.selected !== false);
     if (selected.length === 0) {
       return new Response(JSON.stringify({ error: 'Select at least one service.' }), { status: 400 });
+    }
+
+    const productAccess = await loadKersivoAccess(shopId);
+    if (
+      productAccess.state === 'FREE_BOOKING' &&
+      selected.some((service) => !starterPublicServicePriceAllowed(service.pricePence))
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: 'Starter services must be priced at £5 or more to be available for online booking.',
+          code: 'STARTER_SERVICE_PRICE_TOO_LOW',
+        }),
+        { status: 400 },
+      );
     }
 
     const existing = await prisma.service.findMany({

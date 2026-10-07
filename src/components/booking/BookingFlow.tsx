@@ -65,6 +65,7 @@ type BookingCreatePayload = BookingPayload & {
   email: string;
   phone?: string;
   idempotencyKey?: string;
+  paymentChoice?: 'DEPOSIT' | 'FULL';
 };
 
 function makeBookingIdempotencyKey() {
@@ -117,8 +118,10 @@ type Props = {
   publicCreateUrl?: string;
   /** Live tenant book: scopes availability to this shop (no admin session / demo fallback). */
   publicShopId?: string;
-  /** Shop booking payment mode; DEPOSIT / FULL confirm CTAs redirect to Stripe Checkout. */
+  /** Full KERSIVO booking payment mode. Starter ignores this and uses the fixed v1.19 policy. */
   bookingPaymentMode?: BookingPaymentMode;
+  /** v1.19 Starter: fixed £5-minimum online-payment policy with customer deposit/full choice. */
+  starterPaymentPolicy?: boolean;
   onComplete?: () => void;
   postConfirmCta?: PostConfirmCtaConfig | null;
   /** Preselect a service from the provided catalogue. Ignored if it does not match. */
@@ -356,6 +359,7 @@ export default function BookingFlow({
   publicCreateUrl,
   publicShopId,
   bookingPaymentMode = 'NONE',
+  starterPaymentPolicy = false,
   onComplete,
   postConfirmCta = null,
   initialServiceId,
@@ -376,6 +380,7 @@ export default function BookingFlow({
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [starterPaymentChoice, setStarterPaymentChoice] = useState<'DEPOSIT' | 'FULL'>('DEPOSIT');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
@@ -427,6 +432,10 @@ export default function BookingFlow({
   }, [availableBarbers]);
 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
+  const effectiveStarterPaymentChoice: 'DEPOSIT' | 'FULL' =
+    starterPaymentPolicy && selectedService?.pricePence === 500 ? 'FULL' : starterPaymentChoice;
+  const effectiveBookingPaymentMode: BookingPaymentMode =
+    starterPaymentPolicy && selectedService ? effectiveStarterPaymentChoice : bookingPaymentMode;
   const serviceGroups = useMemo(
     () => groupServicesByCategory(services, categoryOrder?.length ? { categoryOrder } : undefined),
     [services, categoryOrder],
@@ -488,6 +497,7 @@ export default function BookingFlow({
 
   const selectService = useCallback((id: string) => {
     setServiceId(id);
+    setStarterPaymentChoice('DEPOSIT');
     setTime('');
     setSlots([]);
     const keepBarber = Boolean(
@@ -931,6 +941,7 @@ export default function BookingFlow({
         email: normalizedEmail,
         idempotencyKey: idempotencyKeyRef.current,
         ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+        ...(starterPaymentPolicy ? { paymentChoice: effectiveStarterPaymentChoice } : {}),
       };
 
       const createEndpoint = publicCreateUrl?.trim() || '/api/bookings/create';
@@ -1010,8 +1021,8 @@ export default function BookingFlow({
     }
     if (wizardStep < maxStep) return 'Continue';
     if (publicDemoMode) return 'Complete demo booking';
-    if (bookingPaymentMode !== 'NONE' && publicCreateUrl && selectedService) {
-      const paymentLabel = bookingPaymentSubmitLabel(bookingPaymentMode, selectedService.pricePence);
+    if (effectiveBookingPaymentMode !== 'NONE' && publicCreateUrl && selectedService) {
+      const paymentLabel = bookingPaymentSubmitLabel(effectiveBookingPaymentMode, selectedService.pricePence);
       if (paymentLabel) return paymentLabel;
     }
     return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
@@ -1382,6 +1393,59 @@ export default function BookingFlow({
                         placeholder="Mobile number"
                       />
                     </label>
+                    {starterPaymentPolicy && selectedService ? (
+                      <fieldset className="booking-payment-choice">
+                        <legend>Payment</legend>
+                        {selectedService.pricePence === 500 ? (
+                          <div className="booking-payment-choice__single" data-starter-payment="full-5">
+                            <strong>Pay £5 now</strong>
+                            <span>This pays the service in full.</span>
+                          </div>
+                        ) : (
+                          <div
+                            className="booking-payment-choice__options"
+                            role="radiogroup"
+                            aria-label="Choose how to pay"
+                          >
+                            <label
+                              className={`booking-payment-choice__option${starterPaymentChoice === 'DEPOSIT' ? ' is-selected' : ''}`}
+                            >
+                              <input
+                                type="radio"
+                                name="starter-booking-payment-choice"
+                                value="DEPOSIT"
+                                checked={starterPaymentChoice === 'DEPOSIT'}
+                                onChange={() => setStarterPaymentChoice('DEPOSIT')}
+                              />
+                              <span>
+                                <strong>Pay £5 deposit</strong>
+                                <small>
+                                  £5 now · {formatPrice(Math.max(0, selectedService.pricePence - 500), presentation?.wholePoundPrices)} at the shop
+                                </small>
+                              </span>
+                            </label>
+                            <label
+                              className={`booking-payment-choice__option${starterPaymentChoice === 'FULL' ? ' is-selected' : ''}`}
+                            >
+                              <input
+                                type="radio"
+                                name="starter-booking-payment-choice"
+                                value="FULL"
+                                checked={starterPaymentChoice === 'FULL'}
+                                onChange={() => setStarterPaymentChoice('FULL')}
+                              />
+                              <span>
+                                <strong>Pay in full</strong>
+                                <small>{formatPrice(selectedService.pricePence, presentation?.wholePoundPrices)} now · nothing to pay at the shop</small>
+                              </span>
+                            </label>
+                          </div>
+                        )}
+                        <p className="booking-payment-choice__note">
+                          0% KERSIVO commission. Stripe processing fees apply.
+                        </p>
+                      </fieldset>
+                    ) : null}
                   </form>
                 ) : null}
               </div>

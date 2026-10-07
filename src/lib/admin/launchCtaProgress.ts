@@ -1,6 +1,6 @@
 export const OWNER_LAUNCH_HREF = '/admin/launch';
 
-export type LaunchProgressStepId = 'barbershop' | 'team' | 'services' | 'retail';
+export type LaunchProgressStepId = 'barbershop' | 'team' | 'services' | 'retail' | 'stripe';
 
 export type LaunchProgressStep = {
   id: LaunchProgressStepId;
@@ -19,6 +19,7 @@ export const LAUNCH_PROGRESS_STEP_LABELS: Record<LaunchProgressStepId, string> =
   team: 'First barber added',
   services: 'Services added',
   retail: 'Set up your retail shop',
+  stripe: 'Stripe connected',
 };
 
 const STEP_HREFS: Record<LaunchProgressStepId, string> = {
@@ -26,6 +27,7 @@ const STEP_HREFS: Record<LaunchProgressStepId, string> = {
   team: '/admin?section=bookings_blocks',
   services: '/admin?section=services',
   retail: '/admin/retail-onboarding',
+  stripe: '/admin?section=barbershop_settings',
 };
 
 export type BuildLaunchProgressInput = {
@@ -57,6 +59,136 @@ export function buildLaunchProgress(input: BuildLaunchProgressInput): LaunchProg
     steps,
     complete,
     nextHref,
+  };
+}
+
+export type BuildStarterLaunchProgressInput = {
+  onboardingCompleted: boolean;
+  activeBookableBarbers: number;
+  activeServiceCount: number;
+  servicesMeetPriceFloor: boolean;
+  stripeReady: boolean;
+};
+
+/** v1.19 Starter launch checklist: Retail is never a Starter launch requirement. */
+export function buildStarterLaunchProgress(input: BuildStarterLaunchProgressInput): LaunchProgress {
+  const barbershop = Boolean(input.onboardingCompleted);
+  const team = input.activeBookableBarbers >= 1 && input.activeBookableBarbers <= 4;
+  const services = input.activeServiceCount >= 1 && input.servicesMeetPriceFloor;
+  const stripe = Boolean(input.stripeReady);
+  const steps: LaunchProgressStep[] = [
+    { id: 'barbershop', label: LAUNCH_PROGRESS_STEP_LABELS.barbershop, done: barbershop },
+    { id: 'team', label: LAUNCH_PROGRESS_STEP_LABELS.team, done: team },
+    { id: 'services', label: LAUNCH_PROGRESS_STEP_LABELS.services, done: services },
+    { id: 'stripe', label: LAUNCH_PROGRESS_STEP_LABELS.stripe, done: stripe },
+  ];
+  const firstIncomplete = steps.find((step) => !step.done);
+  return {
+    steps,
+    complete: steps.every((step) => step.done),
+    nextHref: firstIncomplete ? STEP_HREFS[firstIncomplete.id] : null,
+  };
+}
+
+export type StarterLaunchState = {
+  stripeAccountLinked: boolean;
+  stripeReady: boolean;
+  stripeDisconnected: boolean;
+  /** Legacy Express (or unknown) account: Starter needs a new Stripe Standard connection. */
+  stripeRequiresStandard?: boolean;
+  servicesMeetPriceFloor: boolean;
+  activeServiceCount: number;
+  activeBookableBarbers: number;
+  publicBookingReady: boolean;
+  servicesBelowMinimum?: ReadonlyArray<{ id: string; name: string; pricePence: number }>;
+};
+
+function formatServicesBelowMinimum(state: StarterLaunchState): string {
+  const services = state.servicesBelowMinimum ?? [];
+  if (services.length === 0) return '';
+  const shown = services.slice(0, 3).map((service) => service.name);
+  const more = services.length > shown.length ? ` and ${services.length - shown.length} more` : '';
+  return ` Raise the price or make inactive: ${shown.join(', ')}${more}.`;
+}
+
+export type StarterLaunchCtaPresentation = {
+  title: string;
+  status: 'IN PROGRESS' | 'READY TO LAUNCH';
+  supporting: string;
+  action: 'stripe' | 'navigate' | 'none';
+  href: string | null;
+};
+
+export function resolveStarterLaunchCtaPresentation(
+  progress: LaunchProgress,
+  state: StarterLaunchState,
+): StarterLaunchCtaPresentation {
+  if (state.publicBookingReady && progress.complete) {
+    return {
+      title: 'Bookings live ✓',
+      status: 'READY TO LAUNCH',
+      supporting: 'Your Starter booking page is accepting online bookings.',
+      action: 'none',
+      href: null,
+    };
+  }
+
+  const firstIncomplete = progress.steps.find((step) => !step.done);
+  if (firstIncomplete?.id === 'barbershop' || firstIncomplete?.id === 'team') {
+    return {
+      title: 'Continue setup',
+      status: 'IN PROGRESS',
+      supporting: 'Finish your shop and team setup before launching online bookings.',
+      action: 'navigate',
+      href: progress.nextHref,
+    };
+  }
+
+  if (firstIncomplete?.id === 'services') {
+    return {
+      title: state.activeServiceCount < 1 ? 'Add your first service' : 'Fix service prices',
+      status: 'IN PROGRESS',
+      supporting:
+        state.activeServiceCount < 1
+          ? 'Add an active service before launching online bookings.'
+          : `Starter services must be priced at £5 or more before bookings can go live.${formatServicesBelowMinimum(state)}`,
+      action: 'navigate',
+      href: '/admin?section=services',
+    };
+  }
+
+  if (!state.stripeReady && state.stripeRequiresStandard) {
+    return {
+      title: 'Connect Stripe Standard',
+      status: 'READY TO LAUNCH',
+      supporting:
+        'Starter online bookings need a Stripe Standard account. Your existing Stripe account stays in place for past payments and refunds.',
+      action: 'stripe',
+      href: null,
+    };
+  }
+
+  if (!state.stripeReady) {
+    return {
+      title: state.stripeDisconnected
+        ? 'Reconnect Stripe'
+        : state.stripeAccountLinked
+          ? 'Finish Stripe setup'
+          : 'Launch your bookings',
+      status: 'READY TO LAUNCH',
+      supporting:
+        'Connect Stripe to start accepting bookings. Starter bookings use a £5 online payment, and clients can choose to pay in full.',
+      action: 'stripe',
+      href: null,
+    };
+  }
+
+  return {
+    title: 'Continue setup',
+    status: 'IN PROGRESS',
+    supporting: 'Finish the remaining Starter launch requirements.',
+    action: 'navigate',
+    href: progress.nextHref,
   };
 }
 

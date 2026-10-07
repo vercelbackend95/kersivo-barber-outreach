@@ -32,6 +32,7 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 import {
   BOOKING_PAYMENT_NOT_READY,
   buildBookingPaymentSnapshot,
+  resolveStarterPublicPaymentMode,
   FULL_PAYMENT_SERVICE_PRICE_CHANGE_NOT_SUPPORTED,
   fullPaymentBlocksServicePrice,
   resolveBookingPaymentSettlement,
@@ -39,7 +40,9 @@ import {
 } from './bookingPaymentPolicy';
 import { resolveLiveBookingPayment, type LiveBookingPaymentDecision } from './bookingPaymentsGate';
 import { loadKersivoAccess, type KersivoCapability } from '../shop/kersivoAccess';
+import { isStarterStripeAccountType } from '../setup/starterPublicLaunchReadiness';
 import {
+  BOOKING_PRODUCT_STATE_CHANGED,
   SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
   lockShopAndCheckNewBookingCapability,
 } from './bookingCreationGate';
@@ -416,6 +419,8 @@ export async function createInstantBooking(
     email: string;
     phone?: string;
     idempotencyKey?: string;
+    /** v1.19 Starter public booking: explicit DEPOSIT or FULL customer choice. */
+    paymentChoice?: 'DEPOSIT' | 'FULL';
   },
   options: {
     /** When set, service must belong to this shop. */
@@ -518,18 +523,44 @@ export async function createInstantBooking(
         bookingPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
+        stripeConnectDisconnectedAt: true,
+        stripeConnectAccountType: true,
         pendingConfirmationMins: true,
         name: true,
       },
     });
 
-    // ShopSettings.bookingPaymentMode is authoritative for live public bookings.
-    // Everything below fails BEFORE the booking row (and slot) is created.
+    // v1.19: Starter public booking is payment-powered and ignores the editable Full payment
+    // setting. Full continues to follow ShopSettings.bookingPaymentMode. Everything below fails
+    // BEFORE the booking row (and slot) is created.
     let paymentDecision: LiveBookingPaymentDecision = { outcome: 'none' };
+    let productStateAtBooking: string | null = null;
     if (options.allowDepositCollection && !isAdminSandbox) {
-      const mode = shopForPayment.bookingPaymentMode ?? 'NONE';
-      if (mode === 'DEPOSIT' || mode === 'FULL') {
-        const access = await loadKersivoAccess(service.shopId);
+      const access = await loadKersivoAccess(service.shopId);
+      productStateAtBooking = access.state;
+      let mode = shopForPayment.bookingPaymentMode ?? 'NONE';
+
+      if (access.state === 'FREE_BOOKING') {
+        const starterPayment = resolveStarterPublicPaymentMode({
+          servicePricePence: service.pricePence,
+          requestedChoice: input.paymentChoice ?? null,
+        });
+        if (!starterPayment.ok) {
+          throw new BookingActionError(
+            starterPayment.message,
+            starterPayment.code === 'STARTER_SERVICE_PRICE_TOO_LOW' ? 422 : 400,
+            starterPayment.code,
+          );
+        }
+        mode = starterPayment.mode;
+      }
+
+      if (
+        access.state === 'FREE_BOOKING' &&
+        !isStarterStripeAccountType(shopForPayment.stripeConnectAccountType)
+      ) {
+        paymentDecision = { outcome: 'not_ready', reason: 'connect_not_ready' };
+      } else if (mode === 'DEPOSIT' || mode === 'FULL') {
         paymentDecision = resolveLiveBookingPayment({
           mode,
           servicePricePence: service.pricePence,
@@ -580,6 +611,15 @@ export async function createInstantBooking(
                 SHOP_NOT_ACCEPTING_NEW_BOOKINGS,
               );
             }
+            // The payment policy and kersivoProductStateAtBooking were derived from the
+            // pre-transaction state; never insert them under a different locked state.
+            if (productStateAtBooking !== null && gate.state !== productStateAtBooking) {
+              throw new BookingActionError(
+                'Booking options for this shop just changed. Please try again.',
+                409,
+                BOOKING_PRODUCT_STATE_CHANGED,
+              );
+            }
           }
 
           await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
@@ -622,6 +662,7 @@ export async function createInstantBooking(
               ...paymentSnapshot,
               stripeConnectAccountIdAtPayment:
                 paymentDecision.outcome === 'collect' ? paymentDecision.stripeConnectAccountId : null,
+              kersivoProductStateAtBooking: productStateAtBooking,
               idempotencyKey: scopedIdempotencyKey,
             },
             include: { service: true, barber: true }

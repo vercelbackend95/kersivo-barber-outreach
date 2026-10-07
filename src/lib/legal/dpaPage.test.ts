@@ -25,13 +25,13 @@ const FALSE_CORPORATE = [
 ] as const;
 
 describe('dpaVersion', () => {
-  it('exports CURRENT_DPA_VERSION 2026-10-05 and formats Last updated', () => {
-    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
-    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('5 October 2026');
+  it('exports CURRENT_DPA_VERSION 2026-10-06 and formats Last updated', () => {
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
+    expect(formatDpaLastUpdated(CURRENT_DPA_VERSION)).toBe('6 October 2026');
   });
 
-  it('keeps Terms and DPA on the same v1.18 material legal-package version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
+  it('keeps Terms and DPA on the same v1.19 material legal-package version', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
   });
 
   it('documents that material DPA updates require a Terms bump', () => {
@@ -110,8 +110,8 @@ describe('Data Processing Agreement page', () => {
     const notListedBlock = dpaSource.slice(notListedStart, notListedEnd);
     expect(notListedBlock).toMatch(/Google OAuth/);
     expect(notListedBlock).toMatch(/account\/auth/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
   });
 
   it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
@@ -137,8 +137,8 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).toContain('Only where SMS functionality is enabled');
     expect(dpaSource).not.toMatch(/End User Messaging/i);
     expect(dpaSource).not.toMatch(/\bAWS\b/);
-    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
@@ -164,7 +164,7 @@ describe('Data Processing Agreement page', () => {
 
 describe('Terms / checkout / footer DPA integration', () => {
   it('Terms incorporate /dpa and share the bumped Terms version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
     expect(termsSource).toContain('href="/dpa"');
     expect(termsSource).toContain('forms part of these Terms');
     expect(termsSource).toContain('Client is the Controller');

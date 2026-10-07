@@ -114,6 +114,7 @@ const baseRecord = {
   lastStripeEventId: null as string | null,
   postFullPlan: 'UNDECIDED' as const,
   postFullPlanChosenAt: null,
+  postFullTermsVersion: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -499,11 +500,14 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     );
   });
 
-  it('webhook: an explicit choice (STARTER / LEAVE) is never overwritten on cancel', async () => {
-    for (const postFullPlan of ['STARTER', 'LEAVE'] as const) {
+  it('webhook: a current-Terms STARTER choice and LEAVE are never overwritten on cancel', async () => {
+    for (const row of [
+      { postFullPlan: 'STARTER' as const, postFullTermsVersion: '2026-10-06' },
+      { postFullPlan: 'LEAVE' as const, postFullTermsVersion: null },
+    ]) {
       update.mockReset();
-      findFirst.mockResolvedValue({ ...baseRecord, postFullPlan });
-      update.mockResolvedValue({ ...baseRecord, status: 'CANCELED', postFullPlan });
+      findFirst.mockResolvedValue({ ...baseRecord, ...row });
+      update.mockResolvedValue({ ...baseRecord, ...row, status: 'CANCELED' });
       await applyStripeSubscriptionToSaasRecord({
         id: 'sub_1',
         status: 'canceled',
@@ -515,6 +519,62 @@ describe('saasSubscriptionLifecycle WP-I', () => {
         expect.objectContaining({ data: expect.not.objectContaining({ postFullPlan: expect.anything() }) }),
       );
     }
+  });
+
+  it('webhook: an already-effective pre-v1.19 Starter marker remains valid on replay', async () => {
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      status: 'CANCELED',
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+    });
+    update.mockResolvedValue({
+      ...baseRecord,
+      status: 'CANCELED',
+      postFullPlan: 'STARTER',
+      postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+    });
+
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'canceled',
+      cancel_at_period_end: false,
+      canceled_at: Math.floor(new Date('2026-07-20T00:00:00.000Z').getTime() / 1000),
+      customer: 'cus_1',
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.not.objectContaining({ postFullPlan: expect.anything() }) }),
+    );
+  });
+
+  it('webhook: stale scheduled STARTER choice becomes CHOICE_REQUIRED when Full actually ends', async () => {
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      postFullPlan: 'STARTER',
+      postFullPlanChosenAt: new Date('2026-10-05T12:00:00.000Z'),
+      postFullTermsVersion: '2026-10-05',
+    });
+    update.mockResolvedValue({
+      ...baseRecord,
+      status: 'CANCELED',
+      postFullPlan: 'CHOICE_REQUIRED',
+      postFullTermsVersion: '2026-10-05',
+    });
+
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'canceled',
+      cancel_at_period_end: false,
+      canceled_at: Math.floor(new Date('2026-10-20T00:00:00.000Z').getTime() / 1000),
+      customer: 'cus_1',
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ postFullPlan: 'CHOICE_REQUIRED' }),
+      }),
+    );
   });
 
   it('webhook: Full actually ending materializes the departure promptly (cron is only the backstop)', async () => {

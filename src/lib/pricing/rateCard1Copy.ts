@@ -79,7 +79,7 @@ const DEFAULT_COPY: RateCard1Copy = {
   ongoingCareBullets: [...PLAN_SCOPE_HIGHLIGHTS],
   planPills: [...PLAN_SCOPE_PILLS],
   planSubtext: PLAN_SUBTEXT,
-  ctaLabel: `Get started — £${SAAS_MONTHLY_GBP}/mo`,
+  ctaLabel: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
   leadCommissionLabel: KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''),
   bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   alwaysOnDescription:
@@ -96,15 +96,15 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   eyebrow: 'BARBERSHOP SOFTWARE PRICING',
   headingBeforePrice: 'Barbershop software pricing: £',
   headingAfterPrice: '/month per location',
-  lead: 'One flat monthly plan with your branded website, booking system, deposits, client management, admin, retail and support. Extra barbers are included.',
-  planLabel: 'MONTHLY SUBSCRIPTION',
-  planValueLine: 'Everything included. No setup fee.',
+  lead: 'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
+  planLabel: 'FULL KERSIVO',
+  planValueLine: 'Your branded website and wider business toolkit. No setup fee.',
   trustPoints: [
     'One physical location',
     'Cancel anytime',
     'Your own domain included',
   ],
-  ctaLabel: 'Start my KERSIVO subscription',
+  ctaLabel: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
   checkoutNote: 'Secure checkout through Stripe',
   billingNote: BILLING_CYCLE_SHORT,
   includedHeading: 'WHAT’S INCLUDED',
@@ -122,7 +122,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     {
       heading: 'Clients, deposits + reminders',
       description:
-        'Keep client records, take optional deposits and send email confirmations and SMS appointment reminders.',
+        'Keep client records and choose Pay at shop, a £5 deposit or full payment, with email confirmations and SMS appointment reminders.',
       icon: 'users',
     },
     {

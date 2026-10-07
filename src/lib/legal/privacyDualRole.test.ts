@@ -38,7 +38,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(normalized).toContain('Free-text prompts submitted by authorised Client users may contain Customer Personal Data');
     expect(normalized).toContain('does not automatically export Client tenant databases to OpenAI');
     expect(privacySource).toContain('not listed above as general sub-processors');
-    expect(privacySource).toContain('Last updated: 5 October 2026');
+    expect(privacySource).toContain('Last updated: 6 October 2026');
     expect(privacySource).not.toMatch(/End User Messaging/i);
     expect(privacySource).not.toMatch(/\bAWS\b/);
 
@@ -153,7 +153,7 @@ describe('Privacy Policy dual-role DPA wording', () => {
     expect(privacySource).toContain('eligible for permanent purge');
     expect(privacySource).toContain('this right is not absolute');
     expect(privacySource).toContain('provider systems');
-    expect(privacySource).toContain('Last updated: 5 October 2026');
+    expect(privacySource).toContain('Last updated: 6 October 2026');
     expect(privacySource).not.toMatch(/individual client erasure (is|feature) (now |currently )?live/i);
     expect(privacySource).not.toMatch(/self-service control that permanently erases an individual/i);
     expect(privacySource).toMatch(/does <strong>not<\/strong> separately persist those checkout\s+campaign identifiers into Stripe Checkout metadata/);

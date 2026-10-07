@@ -5,7 +5,11 @@ import { Prisma } from '@prisma/client';
 import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
-import { TERMS_ACCEPTANCE_PURPOSES } from '@/lib/legal/termsVersion';
+import {
+  CURRENT_TERMS_VERSION,
+  TERMS_ACCEPTANCE_PURPOSES,
+  postFullStarterTermsAllowService,
+} from '@/lib/legal/termsVersion';
 import {
   parseTermsAccepted,
   recordTermsAcceptance,
@@ -24,6 +28,7 @@ import {
   SHOP_DEPARTURE_IN_PROGRESS,
   SHOP_DEPARTURE_IN_PROGRESS_MESSAGE,
 } from '@/lib/shop/shopDepartureCopy';
+import { loadStarterPublicLaunchReadiness } from '@/lib/setup/starterPublicLaunchReadiness';
 
 type PostFullChoice = 'STARTER' | 'LEAVE';
 
@@ -84,6 +89,7 @@ export const POST: APIRoute = async (context) => {
         retentionEndsAt: true,
         postFullPlan: true,
         postFullPlanChosenAt: true,
+        postFullTermsVersion: true,
       },
     });
 
@@ -138,10 +144,13 @@ export const POST: APIRoute = async (context) => {
       } as const;
     }
 
-    if (
+    const sameRecordedChoice =
       String(subscription.postFullPlan) === choice &&
-      subscription.postFullPlanChosenAt
-    ) {
+      Boolean(subscription.postFullPlanChosenAt);
+    const starterTermsAllowService =
+      postFullStarterTermsAllowService(subscription.postFullTermsVersion);
+
+    if (sameRecordedChoice && (choice !== 'STARTER' || starterTermsAllowService)) {
       return {
         response: null,
         subscriptionId: subscription.id,
@@ -152,7 +161,8 @@ export const POST: APIRoute = async (context) => {
     }
 
     if (choice === 'STARTER' && alreadyCanceled) {
-      // Starter must be chosen before Full ends; an ended Full without it is a departure.
+      // A valid current/legacy-effective Starter choice returned above. Any remaining ended-Full
+      // case is already a departure path and cannot be converted into Starter after the fact.
       return {
         response: json(
           { error: SHOP_DEPARTURE_IN_PROGRESS_MESSAGE, code: SHOP_DEPARTURE_IN_PROGRESS },
@@ -208,6 +218,8 @@ export const POST: APIRoute = async (context) => {
           postFullPlan: 'STARTER',
           activeBookableBarbers,
           starterBookableBarberLimit: FREE_BOOKABLE_BARBER_LIMIT,
+          termsVersion: CURRENT_TERMS_VERSION,
+          refreshingRecordedStarterChoice: sameRecordedChoice,
         },
         db: tx,
       });
@@ -217,12 +229,17 @@ export const POST: APIRoute = async (context) => {
       where: { id: subscription.id },
       data: {
         postFullPlan: choice,
-        postFullPlanChosenAt: now,
+        postFullPlanChosenAt:
+          sameRecordedChoice && subscription.postFullPlanChosenAt
+            ? subscription.postFullPlanChosenAt
+            : now,
+        postFullTermsVersion: choice === 'STARTER' ? CURRENT_TERMS_VERSION : null,
       },
       select: {
         id: true,
         postFullPlan: true,
         postFullPlanChosenAt: true,
+        postFullTermsVersion: true,
         currentPeriodEnd: true,
       },
     });
@@ -232,11 +249,16 @@ export const POST: APIRoute = async (context) => {
       subscriptionId: updated.id,
       choice,
       currentPeriodEnd: updated.currentPeriodEnd,
-      alreadyChosen: false,
+      alreadyChosen: sameRecordedChoice,
     } as const;
   });
 
   if (outcome.response) return outcome.response;
+
+  // Readiness never blocks the choice: once the current Terms version is recorded, Starter
+  // entitlement begins when Full ends; Stripe / £5 blockers pause only new public booking intake.
+  const starterPublicLaunch =
+    outcome.choice === 'STARTER' ? await loadStarterPublicLaunchReadiness(access.shopId) : null;
 
   await recordAccountLifecycleEvent({
     action: ACCOUNT_LIFECYCLE_ACTIONS.POST_FULL_PLAN_CHOSEN,
@@ -248,6 +270,13 @@ export const POST: APIRoute = async (context) => {
       postFullPlan: outcome.choice,
       alreadyChosen: outcome.alreadyChosen,
       currentPeriodEnd: outcome.currentPeriodEnd?.toISOString() ?? null,
+      ...(starterPublicLaunch
+        ? {
+            starterPublicLaunchReady: starterPublicLaunch.ready,
+            starterPublicLaunchPauseReasons: starterPublicLaunch.reasons,
+            starterServicesBelowMinimum: starterPublicLaunch.servicesBelowMinimum.map((s) => s.id),
+          }
+        : {}),
     },
   });
 
@@ -256,5 +285,6 @@ export const POST: APIRoute = async (context) => {
     choice: outcome.choice,
     alreadyChosen: outcome.alreadyChosen,
     currentPeriodEnd: outcome.currentPeriodEnd?.toISOString() ?? null,
+    starterPublicLaunch,
   });
 };

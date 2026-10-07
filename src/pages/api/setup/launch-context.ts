@@ -6,6 +6,7 @@ import { isTenantAdminAccess, resolveAdminAccess } from '../../../lib/admin/auth
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import {
   buildLaunchProgress,
+  buildStarterLaunchProgress,
   resolveLaunchBillingFlags,
 } from '../../../lib/admin/launchCtaProgress';
 import { prisma } from '../../../lib/db/client';
@@ -15,6 +16,8 @@ import {
   isBlockingSaasStatus,
 } from '../../../lib/setup/saasCheckoutGuard';
 import { isPaidShop } from '../../../lib/shop/paidShop';
+import { resolveKersivoAccess } from '../../../lib/shop/kersivoAccess';
+import { evaluateStarterPublicLaunchReadiness } from '../../../lib/setup/starterPublicLaunchReadiness';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
 function resolveSaasOrLegacyPaidHref(shopPaid: boolean): string | null {
@@ -77,6 +80,12 @@ export const GET: APIRoute = async (context) => {
       id: true,
       shopPaidAt: true,
       smsRemindersEnabled: true,
+      freeBookingActivatedAt: true,
+      stripeConnectAccountId: true,
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: true,
+      stripeConnectAccountType: true,
+      departure: { select: { status: true } },
       onboardingCompleted: true,
       retailOnboardingCompleted: true,
       retailOnboardingSkipped: true,
@@ -87,6 +96,9 @@ export const GET: APIRoute = async (context) => {
         where: { active: true },
         select: { id: true, name: true },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      },
+      services: {
+        select: { id: true, name: true, isActive: true, pricePence: true },
       },
       _count: {
         select: {
@@ -108,6 +120,9 @@ export const GET: APIRoute = async (context) => {
       currentPeriodEnd: true,
       pastDueSince: true,
       activatedAt: true,
+      cancelAtPeriodEnd: true,
+      postFullPlan: true,
+      postFullTermsVersion: true,
     },
   });
 
@@ -155,17 +170,80 @@ export const GET: APIRoute = async (context) => {
   const orphanBarberCount = allBarbers.filter((b) => !linkedBarberIds.has(b.id) && !b.userId).length;
   const teamProfileCount = members.length + orphanBarberCount;
 
+  const productAccess = resolveKersivoAccess(
+    {
+      id: shop.id,
+      shopPaidAt: shop.shopPaidAt,
+      smsRemindersEnabled: shop.smsRemindersEnabled,
+      freeBookingActivatedAt: shop.freeBookingActivatedAt ?? null,
+      departure: shop.departure ?? null,
+    },
+    saasSub
+      ? {
+          status: saasSub.status,
+          currentPeriodEnd: saasSub.currentPeriodEnd,
+          pastDueSince: saasSub.pastDueSince,
+          cancelAtPeriodEnd: saasSub.cancelAtPeriodEnd,
+          postFullPlan: saasSub.postFullPlan,
+          postFullTermsVersion: saasSub.postFullTermsVersion,
+        }
+      : null,
+  );
+
+  const starterReadiness =
+    productAccess.state === 'FREE_BOOKING'
+      ? evaluateStarterPublicLaunchReadiness({
+          shop: {
+            id: shop.id,
+            stripeConnectAccountId: shop.stripeConnectAccountId ?? null,
+            stripeConnectChargesEnabled: Boolean(shop.stripeConnectChargesEnabled),
+            stripeConnectDisconnectedAt: shop.stripeConnectDisconnectedAt ?? null,
+            stripeConnectAccountType: shop.stripeConnectAccountType ?? null,
+          },
+          services: shop.services ?? [],
+          activeBookableBarberCount: shop.barbers.length,
+        })
+      : null;
+
+  const starterProgress = starterReadiness
+    ? buildStarterLaunchProgress({
+        onboardingCompleted: Boolean(shop.onboardingCompleted),
+        activeBookableBarbers: shop.barbers.length,
+        activeServiceCount: starterReadiness.activeServiceCount,
+        servicesMeetPriceFloor: starterReadiness.servicesBelowMinimum.length === 0,
+        stripeReady: starterReadiness.stripe.ready,
+      })
+    : null;
+
+  const starterLaunch = starterReadiness
+    ? {
+        stripeAccountLinked: starterReadiness.stripe.accountLinked,
+        stripeReady: starterReadiness.stripe.ready,
+        stripeDisconnected: starterReadiness.stripe.disconnected,
+        stripeRequiresStandard: starterReadiness.stripe.requiresStandard,
+        servicesMeetPriceFloor: starterReadiness.servicesBelowMinimum.length === 0,
+        activeServiceCount: starterReadiness.activeServiceCount,
+        activeBookableBarbers: shop.barbers.length,
+        publicBookingReady: Boolean(starterProgress?.complete) && starterReadiness.ready,
+        pauseReasons: starterReadiness.reasons,
+        servicesBelowMinimum: starterReadiness.servicesBelowMinimum,
+        minimumServicePricePence: starterReadiness.minimumServicePricePence,
+      }
+    : null;
+
   const retailComplete =
     Boolean(shop.retailOnboardingCompleted) ||
     Boolean(shop.retailPickupWalkthroughCompletedAt) ||
     Boolean(shop.retailOnboardingSkipped);
 
-  const progress = buildLaunchProgress({
-    onboardingCompleted: Boolean(shop.onboardingCompleted),
-    teamProfileCount,
-    serviceCount: shop._count.services,
-    retailComplete,
-  });
+  const progress =
+    starterProgress ??
+    buildLaunchProgress({
+      onboardingCompleted: Boolean(shop.onboardingCompleted),
+      teamProfileCount,
+      serviceCount: shop._count.services,
+      retailComplete,
+    });
 
   if (!shop.onboardingCompleted) {
     const paidHref = resolveSaasOrLegacyPaidHref(shopPaid);
@@ -178,6 +256,8 @@ export const GET: APIRoute = async (context) => {
         paid: shopPaid,
         paidHref,
         progress,
+        productState: productAccess.state,
+        starterLaunch,
         shop: shopPayload,
         user: userPayload,
         subscriptionState,
@@ -259,6 +339,8 @@ export const GET: APIRoute = async (context) => {
       paid,
       paidHref,
       progress,
+      productState: productAccess.state,
+      starterLaunch,
       shop: shopPayload,
       user: userPayload,
       subscriptionState,

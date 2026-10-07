@@ -62,6 +62,10 @@ import {
   recordStripeWebhookReceived,
 } from '../../../lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '../../../lib/ops/opsLog';
+import {
+  recordStarterStripeTransition,
+  resolveStarterStripeTransition,
+} from '../../../lib/setup/starterStripeTransitions';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 
@@ -910,6 +914,16 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
 
+  const before = await prisma.shopSettings.findFirst({
+    where: { stripeConnectAccountId: accountId },
+    select: {
+      id: true,
+      stripeConnectAccountType: true,
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: true,
+    },
+  });
+
   const chargesEnabled = Boolean(event.data.object.charges_enabled);
   const detailsSubmitted = Boolean(event.data.object.details_submitted);
   const eventAt =
@@ -923,6 +937,19 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     detailsSubmitted,
     eventAt,
   });
+
+  if (result.shopsUpdated > 0 && before?.id) {
+    const transition = resolveStarterStripeTransition({
+      accountType: before.stripeConnectAccountType,
+      before: {
+        chargesEnabled: Boolean(before.stripeConnectChargesEnabled),
+        disconnected: Boolean(before.stripeConnectDisconnectedAt),
+      },
+      after: { chargesEnabled, disconnected: false },
+      pausedReason: 'not_payment_ready',
+    });
+    if (transition) await recordStarterStripeTransition(event.type, before.id, transition);
+  }
 
   console.info('[webhook] account.updated', {
     accountId,
@@ -951,12 +978,35 @@ async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Res
     return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
   }
 
+  const before = await prisma.shopSettings.findFirst({
+    where: { stripeConnectAccountId: accountId },
+    select: {
+      id: true,
+      stripeConnectAccountType: true,
+      stripeConnectChargesEnabled: true,
+      stripeConnectDisconnectedAt: true,
+    },
+  });
+
   const eventAt =
     Number.isFinite(event.created) && event.created > 0
       ? new Date(event.created * 1000)
       : new Date();
 
   const result = await applyConnectAccountDeauthorized({ accountId, eventAt });
+
+  if (result.shopsUpdated > 0 && before?.id) {
+    const transition = resolveStarterStripeTransition({
+      accountType: before.stripeConnectAccountType,
+      before: {
+        chargesEnabled: Boolean(before.stripeConnectChargesEnabled),
+        disconnected: Boolean(before.stripeConnectDisconnectedAt),
+      },
+      after: { chargesEnabled: false, disconnected: true },
+      pausedReason: 'disconnected',
+    });
+    if (transition) await recordStarterStripeTransition(event.type, before.id, transition);
+  }
 
   console.info('[webhook] account.application.deauthorized', {
     accountId,

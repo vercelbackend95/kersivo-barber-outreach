@@ -19,7 +19,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 5 October 2026</p>
+      <p class="legal-page__updated">Last updated: 6 October 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
@@ -187,14 +187,19 @@ import '@/styles/legal-pages.css';
           Private owner test orders in admin may create marked test records without payment.
         </li>
         <li>
-          <strong>Booking card payments (live barbershop)</strong> — where enabled, required deposits or full upfront
-          payments are taken through the barbershop&rsquo;s connected Stripe account under the same direct-charge
-          Connect model (barbershop seller/controller; {TRADING_NAME} facilitator; <strong>0% KERSIVO application /
-          platform fee</strong>). Stripe processing fees are separate. {TRADING_NAME} may store limited payment,
-          refund and connected-account identifiers/statuses needed to operate the booking software, not full card
-          details. {TRADING_NAME} may separately receive compensation or revenue share from Stripe under Stripe&rsquo;s
-          partner arrangements if it qualifies; that Stripe-paid compensation is not a fee deducted by {TRADING_NAME}
-          from the barbershop&rsquo;s booking payment.
+          <strong>Booking card payments (live barbershop)</strong> — KERSIVO Starter is payment-powered: before new
+          customer-created public Starter bookings can go live, the shop must have a payment-ready
+          <strong>Stripe Connect Standard</strong> account. For a Starter service priced above £5, the customer chooses
+          a £5 deposit or Pay in full; a £5 service is paid in full. Public Pay at shop is not available on Starter,
+          although staff-created manual bookings may still be recorded as Pay at shop. Full KERSIVO may use
+          owner-controlled Pay at shop, £5-deposit or full-payment modes. Online booking payments are taken through the
+          barbershop&rsquo;s connected Stripe account under the direct-charge Connect model (barbershop
+          seller/controller; {TRADING_NAME} facilitator; <strong>0% KERSIVO application / platform fee</strong>).
+          Stripe processing fees are separate. {TRADING_NAME} may store limited payment, refund and connected-account
+          identifiers/statuses needed to operate the booking software, not full card details. {TRADING_NAME} may
+          separately receive compensation or revenue share from Stripe under Stripe&rsquo;s partner arrangements if it
+          qualifies; that Stripe-paid compensation is not a fee deducted by {TRADING_NAME} from the barbershop&rsquo;s
+          booking payment.
         </li>
         <li>
           <strong>KERSIVO setup and onboarding</strong> — information you submit in the authenticated KERSIVO
@@ -300,9 +305,11 @@ import '@/styles/legal-pages.css';
           <strong>Stripe</strong> — payment services for (a) Full KERSIVO <strong>£39/month per-location</strong>
           subscription billing on {TRADING_NAME}&rsquo;s platform Stripe account, and (b) live barbershop booking card
           payments and Full retail payments through the barbershop&rsquo;s connected Stripe account using direct
-          charges. New public connected-account onboarding uses <strong>Stripe Standard</strong>; historical Express
-          connections may remain supported where already established. Merchants collect customer payments directly and
-          {TRADING_NAME} adds <strong>0% application / platform fee</strong> to new Starter and Full booking payments.
+          charges. New public connected-account onboarding uses <strong>Stripe Standard</strong>. Starter public
+          booking launch requires a payment-ready Standard account; a historical Express account may remain supported
+          for Full KERSIVO and historical payment/refund continuity where already established, but does not satisfy the
+          Starter public-launch requirement. Merchants collect customer payments directly and {TRADING_NAME} adds
+          <strong>0% application / platform fee</strong> to new Starter and Full booking payments.
           Stripe processes card payments; {TRADING_NAME} does not store full card numbers or CVC. Stripe may pay
           {TRADING_NAME} separate partner compensation / revenue share if {TRADING_NAME} qualifies; that is not a fee
           deducted by {TRADING_NAME} from the barbershop&rsquo;s booking payment. Under Stripe&rsquo;s terms, Stripe may

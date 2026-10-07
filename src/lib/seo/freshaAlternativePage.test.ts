@@ -378,9 +378,9 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-10-05');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-05');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('5 October 2026');
+    expect(matches[0].lastmod).toBe('2026-10-06');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-06');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('6 October 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');
     expect(sourcesSource).toContain('datetime={FRESHA_ALTERNATIVE_LAST_UPDATED_ISO}');
   });

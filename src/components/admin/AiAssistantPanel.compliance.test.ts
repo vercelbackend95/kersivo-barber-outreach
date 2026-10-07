@@ -50,9 +50,9 @@ describe('Admin AI assistant compliance surfaces', () => {
     expect(panel).not.toMatch(/I consent to AI/i);
   });
 
-  it('keeps explicit Terms and DPA versions for the v1.18 legal package', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-05');
-    expect(CURRENT_DPA_VERSION).toBe('2026-10-05');
+  it('keeps explicit Terms and DPA versions for the v1.19 legal package', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
   });
 
   it('keeps a single LaunchWizard Terms acceptance checkbox', () => {
