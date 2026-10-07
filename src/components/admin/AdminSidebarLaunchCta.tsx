@@ -7,9 +7,11 @@ import {
   OWNER_LAUNCH_HREF,
   resolveLaunchCtaPresentation,
   resolveStarterLaunchCtaPresentation,
+  STARTER_QR_KIT_SETTINGS_HREF,
   type LaunchProgress,
   type StarterLaunchState,
 } from '@/lib/admin/launchCtaProgress';
+import { LAUNCH_CONTEXT_REFRESH_EVENT } from '@/lib/admin/launchContextRefresh';
 import { parseAdminSpaHref } from '@/lib/admin/sectionUrl';
 import '@/styles/components/admin-sidebar-launch-cta.css';
 
@@ -45,6 +47,15 @@ export default function AdminSidebarLaunchCta({
   const [starterLaunch, setStarterLaunch] = useState<StarterLaunchState | null>(null);
   const [starterActionBusy, setStarterActionBusy] = useState(false);
   const [starterActionError, setStarterActionError] = useState('');
+
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  useEffect(() => {
+    if (isPublicDemo) return;
+    const onRefresh = () => setRefreshToken((token) => token + 1);
+    window.addEventListener(LAUNCH_CONTEXT_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(LAUNCH_CONTEXT_REFRESH_EVENT, onRefresh);
+  }, [isPublicDemo]);
 
   useEffect(() => {
     if (isPublicDemo) {
@@ -103,7 +114,7 @@ export default function AdminSidebarLaunchCta({
     return () => {
       cancelled = true;
     };
-  }, [isPublicDemo]);
+  }, [isPublicDemo, refreshToken]);
 
   const presentation = useMemo(
     () => resolveLaunchCtaPresentation({ progress, pending, paid, paidHref }),
@@ -154,6 +165,12 @@ export default function AdminSidebarLaunchCta({
       return;
     }
 
+    if (starterPresentation?.action === 'upgrade') {
+      if (onUpgrade) onUpgrade();
+      else window.location.assign('/admin/upgrade');
+      return;
+    }
+
     const targetHref =
       starterPresentation?.action === 'navigate'
         ? starterPresentation.href ?? '/admin'
@@ -187,25 +204,24 @@ export default function AdminSidebarLaunchCta({
     );
   }
 
-  if (starterPresentation?.action === 'none' && !isPublicDemo) {
-    return null;
-  }
-
   // Starter entitlement is authoritative: a stale paid marker after Full → Starter must not hide
-  // the Starter launch / recovery CTA.
+  // the Starter launch / recovery CTA. Once live, the same card becomes the Full upgrade surface.
   if (starterPresentation && !isPublicDemo) {
+    const checklist = starterPresentation.liveChecklist ?? progress.steps;
+    const showQrAction =
+      starterPresentation.action === 'upgrade' && !starterLaunch?.qrKitRequested;
     return (
       <div>
         <AdminLaunchCtaButton
           title={starterActionBusy ? 'Opening Stripe…' : starterPresentation.title}
           status={starterPresentation.status}
-          supporting={starterPresentation.supporting}
+          supporting={starterPresentation.supporting || undefined}
           ariaLabel={`${starterPresentation.status}: ${starterPresentation.title}`}
           onClick={() => void handleClick()}
           conversion
         >
           <ul className="admin-sidebar-launch-cta__checklist">
-            {progress.steps.map((step) => (
+            {checklist.map((step) => (
               <li
                 key={step.id}
                 className={`admin-sidebar-launch-cta__check${
@@ -219,12 +235,26 @@ export default function AdminSidebarLaunchCta({
               </li>
             ))}
           </ul>
-          {starterPresentation.action === 'stripe' ? (
-            <span className="admin-sidebar-launch-cta__disclosure">
-              0% KERSIVO fee. Stripe processing fees apply.
-            </span>
-          ) : null}
         </AdminLaunchCtaButton>
+        {showQrAction ? (
+          <button
+            type="button"
+            className="admin-sidebar-launch-cta__secondary"
+            onClick={() => {
+              const onAdminSpa = window.location.pathname === '/admin';
+              if (onAdminSpa && onSpaSection) {
+                onSpaSection('barbershop_settings');
+                window.setTimeout(() => {
+                  document.getElementById('qr-kit')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+                return;
+              }
+              window.location.assign(STARTER_QR_KIT_SETTINGS_HREF);
+            }}
+          >
+            Order QR Kit
+          </button>
+        ) : null}
         {starterActionError ? (
           <p className="admin-sidebar-launch-cta__error" role="alert">{starterActionError}</p>
         ) : null}

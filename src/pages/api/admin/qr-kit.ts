@@ -104,8 +104,9 @@ export const POST: APIRoute = async (context) => {
     );
   }
 
-  if (result.created && result.outboxId) {
-    await deliverOutboxEmail(result.outboxId).catch(() => undefined);
+  if (result.created) {
+    const outboxIds = [result.outboxId, result.internalOutboxId].filter((id): id is string => Boolean(id));
+    await Promise.all(outboxIds.map((id) => deliverOutboxEmail(id).catch(() => undefined)));
   }
 
   return json({ requestReceived: true, message: QR_KIT_REQUEST_RECEIVED_MESSAGE });

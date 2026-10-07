@@ -8,7 +8,10 @@ import {
 import { prisma } from '../db/client';
 import { ensureShopBookingSlug } from '../booking/bookingSlug';
 import { enqueueEmail } from '../email/outbox';
-import { buildQrKitRequestAcknowledgementEmail } from '../email/qrKitEmails';
+import {
+  buildQrKitRequestAcknowledgementEmail,
+  buildQrKitRequestInternalEmail,
+} from '../email/qrKitEmails';
 import { TERMS_ACCEPTANCE_PURPOSES } from '../legal/termsVersion';
 import { hasKersivoCapability, loadKersivoAccess, type KersivoProductState } from '../shop/kersivoAccess';
 import { ensureShopQrCodesInTx, type ShopQrCodeRow } from './shopQrCodes';
@@ -196,7 +199,7 @@ export function validateQrKitRequestDetails(
 // ---------------------------------------------------------------------------
 
 export type RequestQrKitResult =
-  | { ok: true; created: boolean; fulfilmentId: string; outboxId: string | null }
+  | { ok: true; created: boolean; fulfilmentId: string; outboxId: string | null; internalOutboxId: string | null }
   | { ok: false; reason: 'INELIGIBLE'; blockers: QrKitShopBlocker[] }
   | { ok: false; reason: 'INVALID_DETAILS'; errors: QrKitDetailsError[] };
 
@@ -212,7 +215,7 @@ export async function requestInitialQrKit(
   const { shopId } = params;
 
   const existing = await db.qrKitFulfilment.findUnique({ where: { shopId }, select: { id: true } });
-  if (existing) return { ok: true, created: false, fulfilmentId: existing.id, outboxId: null };
+  if (existing) return { ok: true, created: false, fulfilmentId: existing.id, outboxId: null, internalOutboxId: null };
 
   const blockers = evaluateQrKitShopEligibility(params.facts);
   if (blockers.length > 0) return { ok: false, reason: 'INELIGIBLE', blockers };
@@ -226,7 +229,7 @@ export async function requestInitialQrKit(
       await tx.$queryRaw(Prisma.sql`SELECT id FROM "ShopSettings" WHERE id = ${shopId} FOR UPDATE`);
       const raced = await tx.qrKitFulfilment.findUnique({ where: { shopId }, select: { id: true } });
       if (raced) {
-        return { ok: true as const, created: false, fulfilmentId: raced.id, outboxId: null };
+        return { ok: true as const, created: false, fulfilmentId: raced.id, outboxId: null, internalOutboxId: null };
       }
       if (!params.facts.bookingSlug) await ensureShopBookingSlug(tx, shopId);
 
@@ -260,13 +263,35 @@ export async function requestInitialQrKit(
         replyTo: email.replyTo,
         dedupeKey: `qr-kit:ack:${shopId}`,
       });
-      return { ok: true as const, created: true, fulfilmentId: row.id, outboxId: outbox.id };
+      const internal = buildQrKitRequestInternalEmail({
+        ...details,
+        shopName: params.facts.shopName.trim(),
+        shopId,
+        fulfilmentId: row.id,
+        requestedAt: new Date(),
+      });
+      const internalOutbox = await enqueueEmail(tx, {
+        shopId,
+        purpose: EmailOutboundPurpose.QR_KIT_REQUEST_INTERNAL,
+        to: internal.to,
+        subject: internal.subject,
+        html: internal.html,
+        replyTo: internal.replyTo,
+        dedupeKey: `qr-kit:internal:${shopId}`,
+      });
+      return {
+        ok: true as const,
+        created: true,
+        fulfilmentId: row.id,
+        outboxId: outbox.id,
+        internalOutboxId: internalOutbox.id,
+      };
     });
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;
     const winner = await db.qrKitFulfilment.findUnique({ where: { shopId }, select: { id: true } });
     if (!winner) throw error;
-    return { ok: true, created: false, fulfilmentId: winner.id, outboxId: null };
+    return { ok: true, created: false, fulfilmentId: winner.id, outboxId: null, internalOutboxId: null };
   }
 }
 

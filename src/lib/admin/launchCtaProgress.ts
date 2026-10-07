@@ -1,3 +1,5 @@
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
 export const OWNER_LAUNCH_HREF = '/admin/launch';
 
 export type LaunchProgressStepId = 'barbershop' | 'team' | 'services' | 'retail' | 'stripe';
@@ -101,6 +103,8 @@ export type StarterLaunchState = {
   activeBookableBarbers: number;
   publicBookingReady: boolean;
   servicesBelowMinimum?: ReadonlyArray<{ id: string; name: string; pricePence: number }>;
+  /** Optional Starter benefit; never part of launch completeness. */
+  qrKitRequested?: boolean;
 };
 
 function formatServicesBelowMinimum(state: StarterLaunchState): string {
@@ -111,13 +115,35 @@ function formatServicesBelowMinimum(state: StarterLaunchState): string {
   return ` Raise the price or make inactive: ${shown.join(', ')}${more}.`;
 }
 
+export type StarterLiveChecklistItem = {
+  id: 'bookings_live' | 'qr_kit' | 'website' | 'retail';
+  label: string;
+  done: boolean;
+};
+
 export type StarterLaunchCtaPresentation = {
   title: string;
-  status: 'IN PROGRESS' | 'READY TO LAUNCH';
+  status: 'IN PROGRESS' | 'READY TO LAUNCH' | 'STARTER LIVE';
   supporting: string;
-  action: 'stripe' | 'navigate' | 'none';
+  /** `upgrade` opens the existing Full KERSIVO upgrade flow. */
+  action: 'stripe' | 'navigate' | 'upgrade';
   href: string | null;
+  /** Live Starter only: replaces the launch checklist with growth items. */
+  liveChecklist?: StarterLiveChecklistItem[];
 };
+
+export const STARTER_QR_KIT_SETTINGS_HREF = '/admin?section=barbershop_settings#qr-kit';
+
+export function buildStarterLiveChecklist(state: StarterLaunchState): StarterLiveChecklistItem[] {
+  return [
+    { id: 'bookings_live', label: 'Online bookings live', done: true },
+    state.qrKitRequested
+      ? { id: 'qr_kit', label: 'QR Kit requested', done: true }
+      : { id: 'qr_kit', label: 'Order your QR Kit (optional)', done: false },
+    { id: 'website', label: 'Get your branded website', done: false },
+    { id: 'retail', label: 'Add your retail shop', done: false },
+  ];
+}
 
 export function resolveStarterLaunchCtaPresentation(
   progress: LaunchProgress,
@@ -125,11 +151,12 @@ export function resolveStarterLaunchCtaPresentation(
 ): StarterLaunchCtaPresentation {
   if (state.publicBookingReady && progress.complete) {
     return {
-      title: 'Bookings live ✓',
-      status: 'READY TO LAUNCH',
-      supporting: 'Your Starter booking page is accepting online bookings.',
-      action: 'none',
+      title: 'Unlock Full KERSIVO',
+      status: 'STARTER LIVE',
+      supporting: `£${SAAS_MONTHLY_GBP}/month`,
+      action: 'upgrade',
       href: null,
+      liveChecklist: buildStarterLiveChecklist(state),
     };
   }
 
@@ -176,8 +203,7 @@ export function resolveStarterLaunchCtaPresentation(
           ? 'Finish Stripe setup'
           : 'Launch your bookings',
       status: 'READY TO LAUNCH',
-      supporting:
-        'Connect Stripe to start accepting bookings. Starter bookings use a £5 online payment, and clients can choose to pay in full.',
+      supporting: '',
       action: 'stripe',
       href: null,
     };

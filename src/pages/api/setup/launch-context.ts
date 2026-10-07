@@ -86,6 +86,7 @@ export const GET: APIRoute = async (context) => {
       stripeConnectDisconnectedAt: true,
       stripeConnectAccountType: true,
       departure: { select: { status: true } },
+      qrKitFulfilment: { select: { id: true } },
       onboardingCompleted: true,
       retailOnboardingCompleted: true,
       retailOnboardingSkipped: true,
@@ -228,6 +229,7 @@ export const GET: APIRoute = async (context) => {
         pauseReasons: starterReadiness.reasons,
         servicesBelowMinimum: starterReadiness.servicesBelowMinimum,
         minimumServicePricePence: starterReadiness.minimumServicePricePence,
+        qrKitRequested: Boolean(shop.qrKitFulfilment),
       }
     : null;
 

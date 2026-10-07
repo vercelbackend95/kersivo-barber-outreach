@@ -234,7 +234,7 @@ describe('v1.19 Starter launch progress', () => {
     ).toBe('Reconnect Stripe');
   });
 
-  it('returns no-action success once Starter bookings are live', () => {
+  it('turns a live Starter into the Full upgrade card (with optional QR Kit item)', () => {
     const progress = buildStarterLaunchProgress({
       onboardingCompleted: true,
       activeBookableBarbers: 1,
@@ -242,16 +242,63 @@ describe('v1.19 Starter launch progress', () => {
       servicesMeetPriceFloor: true,
       stripeReady: true,
     });
+    const live = {
+      stripeAccountLinked: true,
+      stripeReady: true,
+      stripeDisconnected: false,
+      servicesMeetPriceFloor: true,
+      activeServiceCount: 1,
+      activeBookableBarbers: 1,
+      publicBookingReady: true,
+    };
+    const presentation = resolveStarterLaunchCtaPresentation(progress, live);
+    expect(presentation).toMatchObject({
+      action: 'upgrade',
+      status: 'STARTER LIVE',
+      title: 'Unlock Full KERSIVO',
+      supporting: '£39/month',
+    });
+    expect(presentation.liveChecklist?.map((item) => [item.label, item.done])).toEqual([
+      ['Online bookings live', true],
+      ['Order your QR Kit (optional)', false],
+      ['Get your branded website', false],
+      ['Add your retail shop', false],
+    ]);
     expect(
-      resolveStarterLaunchCtaPresentation(progress, {
-        stripeAccountLinked: true,
-        stripeReady: true,
-        stripeDisconnected: false,
-        servicesMeetPriceFloor: true,
-        activeServiceCount: 1,
-        activeBookableBarbers: 1,
-        publicBookingReady: true,
-      }),
-    ).toMatchObject({ action: 'none', title: 'Bookings live ✓' });
+      resolveStarterLaunchCtaPresentation(progress, { ...live, qrKitRequested: true }).liveChecklist?.[1],
+    ).toEqual({ id: 'qr_kit', label: 'QR Kit requested', done: true });
+  });
+
+  it('QR Kit is never a launch requirement', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 1,
+      activeServiceCount: 1,
+      servicesMeetPriceFloor: true,
+      stripeReady: true,
+    });
+    expect(progress.complete).toBe(true);
+    expect(progress.steps.map((step) => step.id)).not.toContain('qr_kit');
+  });
+
+  it('keeps Stripe launch states free of payment-policy copy', () => {
+    const progress = buildStarterLaunchProgress({
+      onboardingCompleted: true,
+      activeBookableBarbers: 1,
+      activeServiceCount: 1,
+      servicesMeetPriceFloor: true,
+      stripeReady: false,
+    });
+    const presentation = resolveStarterLaunchCtaPresentation(progress, {
+      stripeAccountLinked: false,
+      stripeReady: false,
+      stripeDisconnected: false,
+      servicesMeetPriceFloor: true,
+      activeServiceCount: 1,
+      activeBookableBarbers: 1,
+      publicBookingReady: false,
+    });
+    expect(presentation.action).toBe('stripe');
+    expect(presentation.supporting).not.toMatch(/£5|pay in full|0%/i);
   });
 });

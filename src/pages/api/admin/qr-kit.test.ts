@@ -137,23 +137,42 @@ describe('/api/admin/qr-kit', () => {
       created: true,
       fulfilmentId: 'kit_1',
       outboxId: 'email_1',
+      internalOutboxId: 'email_2',
     });
     const first = await POST(ctx('POST', { contactName: 'Sam' }));
     const firstBody = await first.json();
     expect(first.status).toBe(200);
     expect(firstBody.requestReceived).toBe(true);
     expectNoInternalState(firstBody);
-    expect(deliverOutboxEmail).toHaveBeenCalledTimes(1);
+    expect(deliverOutboxEmail).toHaveBeenCalledTimes(2);
+    expect(deliverOutboxEmail).toHaveBeenCalledWith('email_1');
+    expect(deliverOutboxEmail).toHaveBeenCalledWith('email_2');
 
     requestInitialQrKit.mockResolvedValueOnce({
       ok: true,
       created: false,
       fulfilmentId: 'kit_1',
       outboxId: null,
+      internalOutboxId: null,
     });
     const retry = await POST(ctx('POST', { contactName: 'Sam' }));
     expect(retry.status).toBe(200);
-    expect(deliverOutboxEmail).toHaveBeenCalledTimes(1);
+    expect(deliverOutboxEmail).toHaveBeenCalledTimes(2);
+  });
+
+  it('POST still confirms the durable request when email delivery fails', async () => {
+    requestInitialQrKit.mockResolvedValueOnce({
+      ok: true,
+      created: true,
+      fulfilmentId: 'kit_1',
+      outboxId: 'email_1',
+      internalOutboxId: 'email_2',
+    });
+    deliverOutboxEmail.mockRejectedValue(new Error('smtp down'));
+    const res = await POST(ctx('POST', { contactName: 'Sam' }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).requestReceived).toBe(true);
+    expect(deliverOutboxEmail).toHaveBeenCalledTimes(2);
   });
 
   it('POST passes server-loaded facts; guest preview access is never email-verified', async () => {
