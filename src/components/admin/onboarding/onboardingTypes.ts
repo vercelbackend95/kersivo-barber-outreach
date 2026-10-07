@@ -72,6 +72,8 @@ export type OnboardingState = {
   freeBookableBarberLimit?: number | null;
   /** Real public booking page when the shop accepts public bookings. */
   bookingUrl?: string | null;
+  /** Server public-intake gate: true only when NEW public bookings are actually accepted. */
+  publicBookingsLive?: boolean;
   /** Present on the /complete response only. */
   activation?: 'activated' | 'already_free' | 'full_kersivo';
   user: {
@@ -181,8 +183,8 @@ export const PLAN_CHOICE_STRIPE_FEES_COPY = 'Stripe processing fees apply to onl
 export const BILLING_RECOVERY_COPY =
   'Your existing Full KERSIVO subscription needs attention before you can choose another plan. Open billing to update payment details or cancel the subscription.';
 
-export const STARTER_PAY_AT_SHOP_COPY =
-  'Starter works with Pay at shop — no Stripe account needed. Connect Stripe later in Settings if you want deposits or card payments.';
+export const STARTER_PAYMENT_POLICY_COPY =
+  'Starter is £0/month. Connect Stripe Standard before online bookings go live — every online booking is paid online: a £5 deposit or Pay in full (a £5 service is paid £5 in full). No Pay at shop for online bookings.';
 
 export const FULL_CHECKOUT_CANCELLED_COPY =
   'Full KERSIVO checkout was not completed and you have not been charged. Choose a plan to continue.';

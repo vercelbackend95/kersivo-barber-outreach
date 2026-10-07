@@ -52,10 +52,14 @@ const starterLiveState = reviewState({
   productAccess: { state: 'FREE_BOOKING', capabilities: { publicBooking: true } },
   freeActivationRequired: false,
   bookingUrl: '/book/fade-room',
+  publicBookingsLive: true,
   activation: 'activated',
 });
 
+const starterPausedState = { ...starterLiveState, publicBookingsLive: false };
+
 let getState: Overrides;
+let completeState: Overrides;
 const fetchMock = vi.fn();
 const assign = vi.fn();
 const originalLocation = window.location;
@@ -92,13 +96,14 @@ describe('OnboardingWizard — Phase 5F.1 explicit plan choice', () => {
     startFullKersivoUpgradeCheckout.mockReset();
     redirectToStripe.mockReset();
     getState = reviewState();
+    completeState = starterPausedState;
     fetchMock.mockReset();
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === '/api/admin/onboarding' && (!init || !init.method || init.method === 'GET')) {
         return new Response(JSON.stringify(getState), { status: 200 });
       }
       if (url === '/api/admin/onboarding/complete') {
-        return new Response(JSON.stringify(starterLiveState), { status: 200 });
+        return new Response(JSON.stringify(completeState), { status: 200 });
       }
       if (url === '/api/setup/post-full-plan') {
         getState = { ...starterLiveState, onboardingCompleted: true };
@@ -156,19 +161,46 @@ describe('OnboardingWizard — Phase 5F.1 explicit plan choice', () => {
     expect(primaryButton().disabled).toBe(true);
   });
 
-  it('1/3: explicit Starter + Terms activates Starter with plan=STARTER and never starts Stripe', async () => {
+  it('Starter plan copy states the v1.19 payment policy (Stripe Standard, £5, no public Pay at shop)', async () => {
     await renderReview();
     fireEvent.click(document.querySelector('[data-plan-card="STARTER"]')!);
-    expect(document.body.textContent).toContain('no Stripe account needed');
+    const text = document.body.textContent ?? '';
+    expect(text).toContain('Starter is £0/month');
+    expect(text).toContain('Connect Stripe Standard before online bookings go live');
+    expect(text).toContain('£5 deposit or Pay in full');
+    expect(text).toContain('a £5 service is paid £5 in full');
+    expect(text).toContain('No Pay at shop for online bookings');
+    expect(text).not.toMatch(/no Stripe account needed|Starter works with Pay at shop/i);
+  });
+
+  it('1/3: explicit Starter + Terms activates Starter; paused intake is never presented as live', async () => {
+    await renderReview();
+    fireEvent.click(document.querySelector('[data-plan-card="STARTER"]')!);
     acceptTerms();
     fireEvent.click(primaryButton());
 
-    await screen.findByRole('heading', { name: 'Your booking page is live.' });
+    await screen.findByRole('heading', { name: 'Your Starter workspace is ready.' });
+    expect(document.body.textContent).toContain('Connect Stripe to launch online bookings.');
+    expect(document.body.textContent).not.toMatch(/booking page is live|Clients can now book online/);
+    expect(screen.queryByRole('link', { name: 'View my booking page' })).toBeNull();
     const [, init] = callsTo('/api/admin/onboarding/complete')[0]!;
     expect(JSON.parse(String((init as RequestInit).body))).toEqual({ termsAccepted: true, plan: 'STARTER' });
     expect(startFullKersivoUpgradeCheckout).not.toHaveBeenCalled();
     expect(redirectToStripe).not.toHaveBeenCalled();
     expect(sessionStorage.getItem(ONBOARDING_PLAN_STORAGE_KEY)).toBeNull();
+  });
+
+  it('Starter whose server intake gate is live may be told the booking page is live', async () => {
+    completeState = starterLiveState;
+    await renderReview();
+    fireEvent.click(document.querySelector('[data-plan-card="STARTER"]')!);
+    acceptTerms();
+    fireEvent.click(primaryButton());
+
+    await screen.findByRole('heading', { name: 'Your booking page is live.' });
+    expect(screen.getByRole('link', { name: 'View my booking page' }).getAttribute('href')).toBe(
+      '/book/fade-room',
+    );
   });
 
   it('7/8: explicit Full + Terms opens the authenticated Full checkout and does not activate anything', async () => {

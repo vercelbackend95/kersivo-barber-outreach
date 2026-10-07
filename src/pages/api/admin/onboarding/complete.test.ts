@@ -308,6 +308,7 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         activation: 'activated',
         productAccess: { state: 'FREE_BOOKING', capabilities: { publicBooking: true } },
         bookingUrl: '/book/fade-lab',
+        publicBookingsLive: false,
       });
       expect(tx.saasSubscription.create).not.toHaveBeenCalled();
       expect(await shopAcceptsPublicBookings('shop_1')).toBe(false);
