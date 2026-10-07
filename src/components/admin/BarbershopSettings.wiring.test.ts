@@ -48,6 +48,9 @@ describe('Barbershop settings UI wiring', () => {
     expect(src).toMatch(/starter_payment_settings_upgrade_clicked/);
     expect(src).toMatch(/barbershop_settings_payments/);
     expect(src).toMatch(/trackConsentedEvent/);
+    expect(src).toMatch(/\/api\/admin\/analytics\/starter-upgrade-event/);
+    expect(src).toMatch(/starterPaymentUpgradeViewTracked\.current = true;[\s\S]{0,300}recordStarterUpgradeEvent\('viewed'\)/);
+    expect(src).toMatch(/recordStarterUpgradeEvent\('clicked'\)/);
   });
 
   it('AdminPanel mounts SiteLaunchHubPanel on site_launch section', () => {

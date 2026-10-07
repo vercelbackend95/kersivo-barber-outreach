@@ -41,7 +41,19 @@ type StarterPublicLaunchPreview = {
   };
   activeServiceCount: number;
   servicesBelowMinimum: Array<{ id: string; name: string; pricePence: number }>;
+  activeBookableBarberCount?: number | null;
+  bookableBarberLimit?: number;
 };
+
+function recordStarterUpgradeEvent(event: 'viewed' | 'clicked'): void {
+  void fetch('/api/admin/analytics/starter-upgrade-event', {
+    method: 'POST',
+    credentials: 'include',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event, placement: 'barbershop_settings_payments' }),
+  }).catch(() => {});
+}
 
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
@@ -71,6 +83,14 @@ function StarterLaunchBlockers({ preview }: { preview: StarterPublicLaunchPrevie
             {service.name} ({formatPence(service.pricePence)}) — raise to £5 or more, or make it inactive.
           </li>
         ))}
+        {preview.bookableBarberLimit != null &&
+        preview.activeBookableBarberCount != null &&
+        preview.activeBookableBarberCount > preview.bookableBarberLimit ? (
+          <li>
+            {preview.activeBookableBarberCount} barbers take online bookings — Starter allows up to{' '}
+            {preview.bookableBarberLimit}. Choose which {preview.bookableBarberLimit} stay bookable in Team.
+          </li>
+        ) : null}
       </ul>
       <p>Prices are never changed automatically. Your account, data and accepted bookings stay.</p>
     </div>
@@ -214,6 +234,7 @@ export default function BarbershopSettingsPanel({
       { placement: 'barbershop_settings_payments' },
       'analytics',
     );
+    recordStarterUpgradeEvent('viewed');
   }, [bookingProductState, loading, paymentControlsEditable]);
 
   const loadGoogleBooking = useCallback(async () => {
@@ -1201,6 +1222,7 @@ export default function BarbershopSettingsPanel({
                         { placement: 'barbershop_settings_payments' },
                         'analytics',
                       );
+                      recordStarterUpgradeEvent('clicked');
                     }}
                   >
                     Unlock payment controls — £39/month
