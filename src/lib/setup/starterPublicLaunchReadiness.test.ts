@@ -57,6 +57,19 @@ describe('evaluateStarterPublicLaunchReadiness', () => {
     });
   });
 
+  it('blocks with too_many_bookable_barbers above 4 bookable barbers; 4 is allowed', () => {
+    const over = evaluateStarterPublicLaunchReadiness({ shop: readyShop, services, activeBookableBarberCount: 5 });
+    expect(over).toMatchObject({
+      ready: false,
+      reasons: ['too_many_bookable_barbers'],
+      activeBookableBarberCount: 5,
+      bookableBarberLimit: 4,
+    });
+    expect(
+      evaluateStarterPublicLaunchReadiness({ shop: readyShop, services, activeBookableBarberCount: 4 }).ready,
+    ).toBe(true);
+  });
+
   it('names every active service below £5 and never mutates the service input', () => {
     const input: StarterReadinessService[] = [
       ...services,

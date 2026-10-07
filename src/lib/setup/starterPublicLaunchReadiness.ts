@@ -5,6 +5,11 @@ import {
   type BookingPaymentsShopFields,
 } from '@/lib/booking/bookingPaymentsGate';
 import { accessForState, type KersivoAccessDb } from '@/lib/shop/kersivoAccess';
+import {
+  FREE_BOOKABLE_BARBER_LIMIT,
+  countActiveBookableBarbers,
+  exceedsFreeBookableBarberLimit,
+} from '@/lib/shop/freeBookableBarbers';
 
 /**
  * v1.19 Starter public-launch readiness: whether NEW public bookings may be taken under the
@@ -18,7 +23,8 @@ import { accessForState, type KersivoAccessDb } from '@/lib/shop/kersivoAccess';
 export type StarterPublicLaunchPauseReason =
   | 'stripe_not_ready'
   | 'no_active_services'
-  | 'service_below_minimum';
+  | 'service_below_minimum'
+  | 'too_many_bookable_barbers';
 
 export type StarterStripeLaunchBlocker =
   | 'connect_missing'
@@ -59,6 +65,9 @@ export type StarterPublicLaunchReadiness = {
   activeServiceCount: number;
   minimumServicePricePence: number;
   servicesBelowMinimum: StarterServiceBelowMinimum[];
+  /** Null when the caller did not supply a count (barber limit not evaluated). */
+  activeBookableBarberCount: number | null;
+  bookableBarberLimit: number;
 };
 
 export type StarterReadinessService = {
@@ -72,6 +81,7 @@ export type StarterReadinessService = {
 export function evaluateStarterPublicLaunchReadiness(input: {
   shop: StarterReadinessShopFields;
   services: readonly StarterReadinessService[];
+  activeBookableBarberCount?: number | null;
 }): StarterPublicLaunchReadiness {
   const gate = evaluateBookingPayments({
     shop: input.shop,
@@ -106,6 +116,10 @@ export function evaluateStarterPublicLaunchReadiness(input: {
   if (stripeBlocker) reasons.push('stripe_not_ready');
   if (activeServices.length === 0) reasons.push('no_active_services');
   if (servicesBelowMinimum.length > 0) reasons.push('service_below_minimum');
+  const activeBookableBarberCount = input.activeBookableBarberCount ?? null;
+  if (activeBookableBarberCount !== null && exceedsFreeBookableBarberLimit(activeBookableBarberCount)) {
+    reasons.push('too_many_bookable_barbers');
+  }
 
   return {
     ready: reasons.length === 0,
@@ -114,6 +128,8 @@ export function evaluateStarterPublicLaunchReadiness(input: {
     activeServiceCount: activeServices.length,
     minimumServicePricePence: STARTER_MIN_PUBLIC_SERVICE_PRICE_PENCE,
     servicesBelowMinimum,
+    activeBookableBarberCount,
+    bookableBarberLimit: FREE_BOOKABLE_BARBER_LIMIT,
   };
 }
 
@@ -122,7 +138,7 @@ export async function loadStarterPublicLaunchReadiness(
   shopId: string,
   db: KersivoAccessDb = prisma,
 ): Promise<StarterPublicLaunchReadiness | null> {
-  const [shop, services] = await Promise.all([
+  const [shop, services, activeBookableBarberCount] = await Promise.all([
     db.shopSettings.findUnique({
       where: { id: shopId },
       select: {
@@ -137,7 +153,8 @@ export async function loadStarterPublicLaunchReadiness(
       where: { shopId, isActive: true },
       select: { id: true, name: true, pricePence: true, isActive: true },
     }),
+    countActiveBookableBarbers(shopId, db),
   ]);
   if (!shop) return null;
-  return evaluateStarterPublicLaunchReadiness({ shop, services });
+  return evaluateStarterPublicLaunchReadiness({ shop, services, activeBookableBarberCount });
 }

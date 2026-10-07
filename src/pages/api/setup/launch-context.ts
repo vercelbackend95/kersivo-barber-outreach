@@ -201,6 +201,7 @@ export const GET: APIRoute = async (context) => {
             stripeConnectAccountType: shop.stripeConnectAccountType ?? null,
           },
           services: shop.services ?? [],
+          activeBookableBarberCount: shop.barbers.length,
         })
       : null;
 

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { shopFindUnique, subscriptionFindFirst, serviceFindMany } = vi.hoisted(() => ({
+const { shopFindUnique, subscriptionFindFirst, serviceFindMany, barberCount } = vi.hoisted(() => ({
   shopFindUnique: vi.fn(),
   subscriptionFindFirst: vi.fn(),
   serviceFindMany: vi.fn(),
+  barberCount: vi.fn(),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -11,11 +12,14 @@ vi.mock('@/lib/db/client', () => ({
     shopSettings: { findUnique: (...a: unknown[]) => shopFindUnique(...a) },
     saasSubscription: { findFirst: (...a: unknown[]) => subscriptionFindFirst(...a) },
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
+    barber: { count: (...a: unknown[]) => barberCount(...a) },
   },
 }));
 
 import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import { prisma } from '@/lib/db/client';
+import { checkFreeBookableBarberActivation } from '@/lib/shop/freeBookableBarbers';
 import { loadPublicBookingIntakeStatus, shopAcceptsPublicBookings } from './shopPublicBookingGate';
 
 const farFuture = new Date('2999-01-01T00:00:00.000Z');
@@ -49,6 +53,7 @@ describe('shopAcceptsPublicBookings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     subscriptionFindFirst.mockResolvedValue(null);
+    barberCount.mockResolvedValue(1);
     starterServices();
   });
 
@@ -214,6 +219,39 @@ describe('shopAcceptsPublicBookings', () => {
       expect(serviceFindMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { shopId: 'shop_1', isActive: true } }),
       );
+    });
+
+    it('pauses intake when more than 4 barbers are bookable and resumes at 4 (never deactivates)', async () => {
+      shopFindUnique.mockResolvedValue(shopRow());
+      barberCount.mockResolvedValue(5);
+      const status = await loadPublicBookingIntakeStatus('shop_1');
+      expect(status).toMatchObject({ accepting: false, reason: 'too_many_bookable_barbers' });
+      expect(status.starterReadiness).toMatchObject({ activeBookableBarberCount: 5, bookableBarberLimit: 4 });
+
+      barberCount.mockResolvedValue(4);
+      expect(await shopAcceptsPublicBookings('shop_1')).toBe(true);
+    });
+
+    it('a fifth barber enabled while still Full keeps the scheduled Starter paused once Full ends', async () => {
+      shopFindUnique.mockResolvedValue(shopRow());
+      subscriptionFindFirst.mockResolvedValue({
+        status: 'ACTIVE',
+        currentPeriodEnd: farFuture,
+        cancelAtPeriodEnd: true,
+        postFullPlan: 'STARTER',
+        postFullTermsVersion: 'LEGACY_EFFECTIVE_PRE_V119',
+      });
+      barberCount.mockResolvedValue(4);
+      expect(
+        await checkFreeBookableBarberActivation(prisma as never, { shopId: 'shop_1', barberId: 'barber_5' }),
+      ).toBeNull();
+
+      barberCount.mockResolvedValue(5);
+      subscriptionFindFirst.mockResolvedValue(endedFullWithStarter);
+      expect(await loadPublicBookingIntakeStatus('shop_1')).toMatchObject({
+        accepting: false,
+        reason: 'too_many_bookable_barbers',
+      });
     });
   });
 
