@@ -9,7 +9,7 @@ export const ABOUT_PAGE_PATH = '/about';
 export const ABOUT_PAGE_TITLE = 'About KERSIVO | Booking Software for UK Barbershops';
 
 export const ABOUT_PAGE_DESCRIPTION =
-  'KERSIVO is booking and management software built for independent UK barbershops: a branded website on your own domain with bookings, deposits, clients and retail pickup.';
+  'Booking software for independent UK barbershops. Starter is £0/month; Full KERSIVO is £39/month with your own website, domain and retail. 0% commission.';
 
 export const ABOUT_PAGE_H1 = 'About KERSIVO';
 
@@ -21,18 +21,18 @@ const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
 /** Opening entity definition — must stay the first paragraph under the H1. */
 export const ABOUT_ENTITY_DEFINITION =
-  'KERSIVO is booking and management software built specifically for independent UK barbershops. It combines a branded barbershop website on the shop’s own domain with online bookings, deposits, client management, team and service management, appointment reminders and retail pickup.';
+  'KERSIVO is booking and management software built specifically for independent UK barbershops. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders. Full KERSIVO (£39/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders, reports and retail pickup.';
 
 export const ABOUT_WHAT_IT_IS_LEAD =
-  'KERSIVO is one system for the public side and the daily running of a barbershop. Clients find the shop’s own website, choose a service and barber, and book directly. The shop manages bookings, clients, barbers, services, working hours and retail orders from one admin dashboard.';
+  'KERSIVO is one system for the public side and the daily running of a barbershop. Clients find the shop online, choose a service and barber, and book directly. The shop manages bookings, clients, barbers, services and working hours from one admin dashboard; Full KERSIVO adds retail orders.';
 
 export const ABOUT_WHAT_IT_IS_DETAIL =
-  'It is a subscription platform, not a consumer marketplace or a customer app. Each shop’s website and booking journey carry the shop’s own name, branding and domain.';
+  'It is a booking platform, not a consumer marketplace or a customer app. Each shop’s booking journey carries the shop’s own name and branding; on Full KERSIVO the website also runs on the shop’s own domain.';
 
 export const ABOUT_FACTS: readonly { label: string; value: string }[] = [
   { label: 'Built for', value: 'Independent UK barbershops' },
-  { label: 'Plan', value: `${PRICE}/month per location` },
-  { label: 'Commission', value: '0% on bookings and retail' },
+  { label: 'Plans', value: `Starter £0/month · Full ${PRICE}/month per location` },
+  { label: 'Commission', value: '0% KERSIVO commission on both plans' },
 ];
 
 export const ABOUT_AUDIENCE_INTRO =
@@ -51,12 +51,12 @@ export const ABOUT_AUDIENCE: readonly InsightCardItem[] = [
   },
   {
     title: 'Shops with a growing team',
-    body: 'Barbershops with several barbers at one location that want one monthly plan, with additional barbers included rather than charged per seat, subject to reasonable fair use.',
+    body: 'Barbershops with several barbers at one location that want flat pricing: Starter covers up to 4 bookable barbers, and Full KERSIVO includes additional barbers rather than charging per seat, subject to reasonable fair use.',
     icon: 'seats',
   },
   {
     title: 'Shops launching online booking',
-    body: 'Barbershops without a booking system yet that want a professional website, online bookings and deposits set up in one plan.',
+    body: 'Barbershops without a booking system yet that want online bookings live quickly on Starter, or a professional website with bookings and deposits on Full KERSIVO.',
     icon: 'stack',
   },
 ];
@@ -65,36 +65,37 @@ export const ABOUT_WHY_TITLE = 'Own your brand. Own your bookings.';
 
 export const ABOUT_WHY_PARAGRAPHS = [
   'Many booking platforms place a barbershop inside a wider marketplace or customer app, where the platform’s brand sits between the shop and its clients.',
-  'KERSIVO exists to keep that relationship with the barbershop. The website, the domain, the booking journey and the client relationship stay under the shop’s own name, on one simple monthly plan with 0% KERSIVO commission on bookings and retail sales.',
+  'KERSIVO exists to keep that relationship with the barbershop. The booking journey and the client relationship stay under the shop’s own name — on Full KERSIVO, so do the website and the domain — with 0% KERSIVO commission on both plans.',
 ] as const;
 
 export const ABOUT_INCLUDED_ITEMS = [
-  'A branded barbershop website on your own standard domain',
-  'Online bookings with optional booking deposits',
-  'Client management with booking history and notes',
+  'Online bookings paid through your own Stripe account (both plans)',
+  'Client list with booking history',
   'Team, service and working-hours management',
-  'Email confirmations and reminders, plus SMS appointment reminders',
-  'A retail pickup shop for products paid online and collected in store',
-  'Booking reports and product sales reports',
-  'Hosting, SSL, platform updates, support and migration assistance',
+  'Email confirmations and reminders',
+  'Full KERSIVO: a branded barbershop website on your own standard domain',
+  'Full KERSIVO: editable booking payment controls, including Pay at shop',
+  'Full KERSIVO: SMS appointment reminders, booking and product sales reports',
+  'Full KERSIVO: a retail pickup shop for products paid online and collected in store',
+  'Hosting, SSL, platform updates and support; Full KERSIVO adds migration assistance',
 ] as const;
 
 export const ABOUT_MODEL_POINTS: readonly { title: string; body: string }[] = [
   {
     title: 'Your own brand',
-    body: 'Your website is tailored to your shop’s name, logo, photos, team and contact details, with a subtle “Powered by KERSIVO” mark.',
+    body: 'On Full KERSIVO, your website is tailored to your shop’s name, logo, photos, team and contact details, with a subtle “Powered by KERSIVO” mark.',
   },
   {
-    title: 'Your own domain',
-    body: 'Each location includes one standard domain. If you already own a domain, you keep ownership of it.',
+    title: 'Your own domain (Full KERSIVO)',
+    body: 'Full KERSIVO includes one standard domain per location. If you already own a domain, you keep ownership of it.',
   },
   {
     title: 'Direct booking',
-    body: 'Clients book through your website without downloading an app, and booking deposits are paid into your own Stripe account.',
+    body: 'Clients book through your website without downloading an app, and booking payments are paid into your own Stripe account.',
   },
 ];
 
-export const ABOUT_PRICING_SUMMARY = `KERSIVO is ${PRICE} per month per physical barbershop location, with no setup fee and 0% KERSIVO commission on bookings and retail sales. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
+export const ABOUT_PRICING_SUMMARY = `KERSIVO Starter is £0/month and Full KERSIVO is ${PRICE} per month per physical barbershop location, with no setup fee and 0% KERSIVO commission on both plans. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
 
 export function buildAboutPageJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();

@@ -8,7 +8,7 @@ export const DEFAULT_OG_IMAGE_PATH = '/images/og/kersivo-og.jpg';
 export const DEFAULT_OG_IMAGE_WIDTH = 1200;
 export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 export const DEFAULT_OG_IMAGE_ALT =
-  'Kersivo — UK barbershop booking on your own domain with 0% KERSIVO commission';
+  'Kersivo — UK barbershop booking software. Starter £0/month, Full £39/month. 0% KERSIVO commission';
 
 export const ONGOING_CARE_MONTHLY_GBP = 39;
 
@@ -61,7 +61,7 @@ export const PAGE_DESCRIPTIONS = {
   shopCancelled:
     'Your Kersivo shop checkout was cancelled. No payment was taken.',
   barbershopBookingSystem:
-    'Booking, retail pickup and admin for independent UK barbershops. Built on your own domain with 0% KERSIVO commission on bookings and retail.',
+    'Booking and admin for independent UK barbershops. Starter £0/month; Full £39/month adds your own domain and retail pickup. 0% KERSIVO commission.',
   booksyAlternative:
     'Looking for a Booksy alternative for your barbershop? Compare KERSIVO and Booksy across branding, pricing, bookings, marketplace discovery and client experience.',
 } as const;

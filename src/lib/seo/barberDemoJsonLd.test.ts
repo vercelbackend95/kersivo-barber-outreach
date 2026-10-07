@@ -95,13 +95,17 @@ describe('buildBarberDemoJsonLd', () => {
     );
     expect(software.provider).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
     expect(software.featureList).toEqual([...KERSIVO_SOFTWARE_FEATURE_LIST]);
-    expect(software.offers).toEqual({
-      '@type': 'Offer',
-      price: String(SAAS_MONTHLY_GBP),
-      priceCurrency: 'GBP',
-      url: `${siteUrl}/`,
-    });
-    expect(software.offers).toMatchObject({ price: '39', priceCurrency: 'GBP' });
+    expect(software.offers).toEqual([
+      { '@type': 'Offer', name: 'KERSIVO Starter', price: '0', priceCurrency: 'GBP', url: `${siteUrl}/starter` },
+      {
+        '@type': 'Offer',
+        name: 'Full KERSIVO',
+        price: String(SAAS_MONTHLY_GBP),
+        priceCurrency: 'GBP',
+        url: `${siteUrl}/`,
+      },
+    ]);
+    expect(software.offers).toMatchObject([{ price: '0' }, { price: '39', priceCurrency: 'GBP' }]);
 
     const serialized = JSON.stringify(jsonLd);
     expect(serialized).not.toContain('legalName');

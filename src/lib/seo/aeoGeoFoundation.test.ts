@@ -110,8 +110,10 @@ describe('/about page', () => {
     expect(ABOUT_PAGE_DESCRIPTION.length).toBeGreaterThan(70);
     expect(ABOUT_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(170);
     expect(ABOUT_ENTITY_DEFINITION).toBe(
-      'KERSIVO is booking and management software built specifically for independent UK barbershops. It combines a branded barbershop website on the shop’s own domain with online bookings, deposits, client management, team and service management, appointment reminders and retail pickup.',
+      'KERSIVO is booking and management software built specifically for independent UK barbershops. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders. Full KERSIVO (£39/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders, reports and retail pickup.',
     );
+    expect(page).not.toContain('One plan.');
+    expect(ABOUT_PAGE_DESCRIPTION).toContain('Starter is £0/month');
     expect(page).toContain('canonicalPath={ABOUT_PAGE_PATH}');
     expect(page.match(/<h1\b/g)).toHaveLength(1);
     expect(page.indexOf('{ABOUT_ENTITY_DEFINITION}')).toBeGreaterThan(page.indexOf('<h1'));

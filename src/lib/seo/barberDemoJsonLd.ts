@@ -20,9 +20,9 @@ export const KERSIVO_SOFTWARE_FEATURE_LIST = [
   'Client management',
   'Barber and service management',
   'Appointment reminders',
-  'Retail pickup',
-  'Branded barbershop website',
-  'Own domain',
+  'Retail pickup (Full KERSIVO)',
+  'Branded barbershop website (Full KERSIVO)',
+  'Own domain (Full KERSIVO)',
 ] as const;
 
 export function getKersivoSoftwareId(siteUrl: string): string {
@@ -53,12 +53,22 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         description: SOFTWARE_DESCRIPTION,
         provider: { '@id': organizationId },
         featureList: [...KERSIVO_SOFTWARE_FEATURE_LIST],
-        offers: {
-          '@type': 'Offer',
-          price: String(SAAS_MONTHLY_GBP),
-          priceCurrency: 'GBP',
-          url: `${siteUrl}/`,
-        },
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'KERSIVO Starter',
+            price: '0',
+            priceCurrency: 'GBP',
+            url: `${siteUrl}/starter`,
+          },
+          {
+            '@type': 'Offer',
+            name: 'Full KERSIVO',
+            price: String(SAAS_MONTHLY_GBP),
+            priceCurrency: 'GBP',
+            url: `${siteUrl}/`,
+          },
+        ],
       },
     ],
   };

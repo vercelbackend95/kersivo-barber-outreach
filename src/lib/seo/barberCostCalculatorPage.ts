@@ -126,7 +126,7 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     ],
   },
   {
-    name: 'KERSIVO',
+    name: 'Full KERSIVO',
     descriptor: 'Flat per location',
     price: `${KERSIVO_PRICE}/month per location`,
     priceNote: 'Additional barbers included',
@@ -135,6 +135,7 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       'Additional barbers within that location included',
       'No KERSIVO commission on bookings or retail sales',
       'Stripe payment-processing fees when payments are taken',
+      `KERSIVO Starter is ${formatGbp(0)}/month for up to 4 bookable barbers`,
     ],
   },
 ];
