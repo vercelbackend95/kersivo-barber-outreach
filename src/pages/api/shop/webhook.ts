@@ -62,11 +62,10 @@ import {
   recordStripeWebhookReceived,
 } from '../../../lib/ops/stripeWebhookLedger';
 import { opsLog, opsLogError } from '../../../lib/ops/opsLog';
-import { loadKersivoAccess } from '../../../lib/shop/kersivoAccess';
 import {
-  ACCOUNT_LIFECYCLE_ACTIONS,
-  recordAccountLifecycleEvent,
-} from '../../../lib/setup/accountLifecycleAudit';
+  recordStarterStripeTransition,
+  resolveStarterStripeTransition,
+} from '../../../lib/setup/starterStripeTransitions';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 
@@ -909,34 +908,6 @@ async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
   );
 }
 
-/**
- * Starter Stripe analytics enrichment. Runs only after the Connect state has been persisted and
- * must never fail the webhook: a 500 here would make Stripe retry an already-applied transition,
- * which then looks like ready → ready and the transition event would be lost for good.
- */
-async function recordStarterStripeTransition(
-  eventType: string,
-  shopId: string,
-  transition: {
-    action:
-      | typeof ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY
-      | typeof ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED;
-    meta: Record<string, string>;
-  },
-): Promise<void> {
-  try {
-    const access = await loadKersivoAccess(shopId);
-    if (access.state !== 'FREE_BOOKING') return;
-    await recordAccountLifecycleEvent({ action: transition.action, shopId, meta: transition.meta });
-  } catch (error) {
-    opsLogError('stripe.webhook', 'starter_stripe_analytics_failed', error, {
-      eventType,
-      shopId,
-      action: transition.action,
-    });
-  }
-}
-
 async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response> {
   const accountId = (event.account?.trim() || event.data.object.id?.trim() || '').trim();
   if (!accountId || !accountId.startsWith('acct_')) {
@@ -967,27 +938,17 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
     eventAt,
   });
 
-  if (
-    result.shopsUpdated > 0 &&
-    before?.id &&
-    before.stripeConnectAccountType === 'STANDARD'
-  ) {
-    const wasReady =
-      Boolean(before.stripeConnectChargesEnabled) &&
-      !before.stripeConnectDisconnectedAt;
-    const isReady = chargesEnabled;
-
-    if (!wasReady && isReady) {
-      await recordStarterStripeTransition(event.type, before.id, {
-        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_READY,
-        meta: { accountType: 'STANDARD' },
-      });
-    } else if (wasReady && !isReady) {
-      await recordStarterStripeTransition(event.type, before.id, {
-        action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
-        meta: { reason: 'not_payment_ready', accountType: 'STANDARD' },
-      });
-    }
+  if (result.shopsUpdated > 0 && before?.id) {
+    const transition = resolveStarterStripeTransition({
+      accountType: before.stripeConnectAccountType,
+      before: {
+        chargesEnabled: Boolean(before.stripeConnectChargesEnabled),
+        disconnected: Boolean(before.stripeConnectDisconnectedAt),
+      },
+      after: { chargesEnabled, disconnected: false },
+      pausedReason: 'not_payment_ready',
+    });
+    if (transition) await recordStarterStripeTransition(event.type, before.id, transition);
   }
 
   console.info('[webhook] account.updated', {
@@ -1034,17 +995,17 @@ async function handleConnectAccountDeauthorized(event: StripeEvent): Promise<Res
 
   const result = await applyConnectAccountDeauthorized({ accountId, eventAt });
 
-  if (
-    result.shopsUpdated > 0 &&
-    before?.id &&
-    before.stripeConnectAccountType === 'STANDARD' &&
-    before.stripeConnectChargesEnabled &&
-    !before.stripeConnectDisconnectedAt
-  ) {
-    await recordStarterStripeTransition(event.type, before.id, {
-      action: ACCOUNT_LIFECYCLE_ACTIONS.STARTER_STRIPE_PAUSED,
-      meta: { reason: 'disconnected', accountType: 'STANDARD' },
+  if (result.shopsUpdated > 0 && before?.id) {
+    const transition = resolveStarterStripeTransition({
+      accountType: before.stripeConnectAccountType,
+      before: {
+        chargesEnabled: Boolean(before.stripeConnectChargesEnabled),
+        disconnected: Boolean(before.stripeConnectDisconnectedAt),
+      },
+      after: { chargesEnabled: false, disconnected: true },
+      pausedReason: 'disconnected',
     });
+    if (transition) await recordStarterStripeTransition(event.type, before.id, transition);
   }
 
   console.info('[webhook] account.application.deauthorized', {

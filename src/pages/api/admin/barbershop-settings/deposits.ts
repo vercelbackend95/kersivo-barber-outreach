@@ -29,6 +29,10 @@ import {
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { isStarterStripeAccountType } from '@/lib/setup/starterPublicLaunchReadiness';
 import {
+  recordStarterStripeTransition,
+  resolveStarterStripeTransition,
+} from '@/lib/setup/starterStripeTransitions';
+import {
   ACCOUNT_LIFECYCLE_ACTIONS,
   recordAccountLifecycleEvent,
 } from '@/lib/setup/accountLifecycleAudit';
@@ -107,6 +111,13 @@ export const GET: APIRoute = async (ctx) => {
           detailsSubmitted: live.detailsSubmitted,
           disconnectedAt: null,
         };
+        const transition = resolveStarterStripeTransition({
+          accountType: connect.accountType,
+          before: { chargesEnabled: Boolean(shop.stripeConnectChargesEnabled), disconnected: false },
+          after: { chargesEnabled: live.chargesEnabled, disconnected: false },
+          pausedReason: 'not_payment_ready',
+        });
+        if (transition) await recordStarterStripeTransition('settings_refresh', shop.id, transition);
       }
     } catch (error) {
       // A revoked/missing account must fail closed. Transient Stripe/network failures keep the last
@@ -130,6 +141,13 @@ export const GET: APIRoute = async (ctx) => {
           detailsSubmitted: false,
           disconnectedAt,
         };
+        const transition = resolveStarterStripeTransition({
+          accountType: shop.stripeConnectAccountType,
+          before: { chargesEnabled: Boolean(shop.stripeConnectChargesEnabled), disconnected: false },
+          after: { chargesEnabled: false, disconnected: true },
+          pausedReason: 'disconnected',
+        });
+        if (transition) await recordStarterStripeTransition('settings_refresh', shop.id, transition);
       }
       // Other failures are treated as temporary Stripe/network unavailability.
     }

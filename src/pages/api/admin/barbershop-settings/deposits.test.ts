@@ -45,6 +45,8 @@ vi.mock('@/lib/setup/accountLifecycleAudit', () => ({
   ACCOUNT_LIFECYCLE_ACTIONS: {
     STARTER_STRIPE_STANDARD_SWITCHED: 'STARTER_STRIPE_STANDARD_SWITCHED',
     STARTER_STRIPE_ONBOARDING_STARTED: 'STARTER_STRIPE_ONBOARDING_STARTED',
+    STARTER_STRIPE_READY: 'STARTER_STRIPE_READY',
+    STARTER_STRIPE_PAUSED: 'STARTER_STRIPE_PAUSED',
   },
   recordAccountLifecycleEvent: (...args: unknown[]) => recordAccountLifecycleEvent(...args),
 }));
@@ -680,6 +682,81 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         connect: { accountLinked: true, accountType: 'EXPRESS', chargesEnabled: true },
       });
       expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    describe('Starter Stripe READY / PAUSED analytics when the settings refresh applies the change first', () => {
+      const standardStarter = { ...freeShop, stripeConnectAccountType: 'STANDARD' as const };
+      const starterEvents = () =>
+        recordAccountLifecycleEvent.mock.calls
+          .map(([event]) => event as { action: string; meta: Record<string, string> })
+          .filter((event) => event.action.startsWith('STARTER_STRIPE_'));
+
+      beforeEach(() => {
+        asState('FREE_BOOKING');
+        requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      });
+
+      it('records READY once on not-ready -> ready, and not again once the state is persisted', async () => {
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...standardStarter, stripeConnectChargesEnabled: false });
+        retrieveConnectAccount.mockResolvedValue({ chargesEnabled: true, detailsSubmitted: true, accountType: 'STANDARD' });
+        await GET(jsonCtx('GET'));
+
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...standardStarter, stripeConnectChargesEnabled: true });
+        await GET(jsonCtx('GET'));
+
+        expect(starterEvents()).toEqual([
+          { action: 'STARTER_STRIPE_READY', shopId: 'shop-1', meta: { accountType: 'STANDARD' } },
+        ]);
+      });
+
+      it('records PAUSED once on ready -> not ready', async () => {
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...standardStarter, stripeConnectChargesEnabled: true });
+        retrieveConnectAccount.mockResolvedValue({ chargesEnabled: false, detailsSubmitted: true, accountType: 'STANDARD' });
+        await GET(jsonCtx('GET'));
+
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...standardStarter, stripeConnectChargesEnabled: false });
+        await GET(jsonCtx('GET'));
+
+        expect(starterEvents()).toEqual([
+          {
+            action: 'STARTER_STRIPE_PAUSED',
+            shopId: 'shop-1',
+            meta: { reason: 'not_payment_ready', accountType: 'STANDARD' },
+          },
+        ]);
+      });
+
+      it('records PAUSED (disconnected) when Stripe revokes access to a ready Standard account', async () => {
+        shopSettingsFindUnique.mockResolvedValueOnce(standardStarter);
+        const { StripeConnectApiError } = await import('@/lib/shop/stripeConnect');
+        retrieveConnectAccount.mockRejectedValue(new StripeConnectApiError('revoked', 403, 'account_invalid'));
+        await GET(jsonCtx('GET'));
+        expect(starterEvents()).toEqual([
+          {
+            action: 'STARTER_STRIPE_PAUSED',
+            shopId: 'shop-1',
+            meta: { reason: 'disconnected', accountType: 'STANDARD' },
+          },
+        ]);
+      });
+
+      it('never records for Full or for a legacy Express account, and an analytics failure is non-fatal', async () => {
+        asState('FULL_KERSIVO');
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...paidShop, stripeConnectAccountType: 'STANDARD', stripeConnectChargesEnabled: false });
+        retrieveConnectAccount.mockResolvedValue({ chargesEnabled: true, detailsSubmitted: true, accountType: 'STANDARD' });
+        await GET(jsonCtx('GET'));
+
+        asState('FREE_BOOKING');
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...freeShop, stripeConnectAccountType: 'EXPRESS', stripeConnectChargesEnabled: false });
+        retrieveConnectAccount.mockResolvedValue({ chargesEnabled: true, detailsSubmitted: true, accountType: 'EXPRESS' });
+        await GET(jsonCtx('GET'));
+        expect(starterEvents()).toEqual([]);
+
+        recordAccountLifecycleEvent.mockRejectedValueOnce(new Error('db down'));
+        shopSettingsFindUnique.mockResolvedValueOnce({ ...standardStarter, stripeConnectChargesEnabled: false });
+        retrieveConnectAccount.mockResolvedValue({ chargesEnabled: true, detailsSubmitted: true, accountType: 'STANDARD' });
+        expect((await GET(jsonCtx('GET'))).status).toBe(200);
+      });
     });
 
     it('Full on a legacy Express account keeps its existing payment readiness', async () => {
