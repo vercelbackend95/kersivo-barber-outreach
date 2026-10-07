@@ -7,6 +7,10 @@ import QrKitSettingsCard from './QrKitSettingsCard';
 import LeaveKersivoCard from './LeaveKersivoCard';
 import { ImagePlus, X } from '../lucide-react';
 import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
+import {
+  dispatchLaunchContextRefresh,
+  STRIPE_RETURN_REFRESH_DELAYS_MS,
+} from '@/lib/admin/launchContextRefresh';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import '@/styles/components/admin-barbershop-settings.css';
@@ -172,6 +176,10 @@ export default function BarbershopSettingsPanel({
   const [paymentControlsEditable, setPaymentControlsEditable] = useState(false);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
+  const [stripePaymentsReady, setStripePaymentsReady] = useState(false);
+  const [stripeReturnParam] = useState(() =>
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('connect'),
+  );
   const [connectAccountLinked, setConnectAccountLinked] = useState(false);
   const [connectDisconnected, setConnectDisconnected] = useState(false);
   const [canManagePayouts, setCanManagePayouts] = useState(false);
@@ -466,7 +474,7 @@ export default function BarbershopSettingsPanel({
     [billingPhase, cancelAtPeriodEnd, cancelSubBusy, loadBilling, starterTermsAccepted],
   );
 
-  const loadDeposits = useCallback(async () => {
+  const loadDeposits = useCallback(async (): Promise<boolean> => {
     setDepositsError('');
     setRetailError('');
     try {
@@ -487,6 +495,7 @@ export default function BarbershopSettingsPanel({
           publicPayAtShop?: boolean;
         } | null;
         depositsEnabled?: boolean;
+        bookingPaymentsReady?: boolean;
         collectReady?: boolean;
         canManagePayouts?: boolean;
         connect?: {
@@ -517,6 +526,7 @@ export default function BarbershopSettingsPanel({
               : 'NONE',
       );
       setDepositsCollectReady(Boolean(payload?.collectReady));
+      setStripePaymentsReady(Boolean(payload?.bookingPaymentsReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
       setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
       setConnectDisconnected(Boolean(payload?.connect?.disconnected));
@@ -540,8 +550,10 @@ export default function BarbershopSettingsPanel({
           retailPayload?.gate?.ok ? null : retailPayload?.gate?.reason ?? null,
         );
       }
+      return Boolean(payload?.bookingPaymentsReady);
     } catch (error) {
       setDepositsError(error instanceof Error ? error.message : 'Could not load booking payment settings.');
+      return false;
     }
   }, []);
 
@@ -579,7 +591,8 @@ export default function BarbershopSettingsPanel({
       setPauseReason(nextPause.reason ?? '');
       onPauseChanged?.(nextPause.pausedNow);
       // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
-      void loadDeposits();
+      // The deposits GET may persist fresher Connect state, so the sidebar re-reads afterwards.
+      void loadDeposits().then(() => dispatchLaunchContextRefresh());
       void loadBilling();
       void loadGoogleBooking();
     } catch (error) {
@@ -596,23 +609,55 @@ export default function BarbershopSettingsPanel({
   }, [load]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connect = params.get('connect');
+    const connect = stripeReturnParam;
     if (connect !== 'return' && connect !== 'refresh') return;
-    if (connect === 'return') {
-      setDepositsMessage('Returned from Stripe — checking Connect status…');
-      void loadDeposits();
-    } else {
-      setDepositsError('Stripe onboarding was interrupted. Click Connect Stripe to continue.');
-    }
+    const params = new URLSearchParams(window.location.search);
     params.delete('connect');
     const next = params.toString();
     window.history.replaceState(
-      {},
+      window.history.state,
       '',
-      `${window.location.pathname}${next ? `?${next}` : ''}`,
+      `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`,
     );
-  }, [loadDeposits]);
+
+    let cancelled = false;
+    const timers: number[] = [];
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        timers.push(window.setTimeout(resolve, ms));
+      });
+
+    void (async () => {
+      if (connect === 'refresh') {
+        await loadDeposits();
+        if (cancelled) return;
+        dispatchLaunchContextRefresh();
+        setDepositsError('Stripe onboarding was interrupted. Click the Stripe button to continue.');
+        return;
+      }
+      setDepositsMessage('Returned from Stripe — checking Connect status…');
+      // Stripe readiness can lag the redirect slightly: bounded retries, never an endless poll.
+      let previousDelay = 0;
+      for (const delay of STRIPE_RETURN_REFRESH_DELAYS_MS) {
+        if (delay > previousDelay) await wait(delay - previousDelay);
+        previousDelay = delay;
+        if (cancelled) return;
+        const ready = await loadDeposits();
+        if (cancelled) return;
+        dispatchLaunchContextRefresh();
+        if (ready) {
+          setDepositsMessage('Stripe connected — ready for booking payments.');
+          return;
+        }
+      }
+      setDepositsMessage('Stripe is still finishing your account setup. Check back in a moment.');
+    })();
+
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [loadDeposits, stripeReturnParam]);
 
   useEffect(() => {
     return () => {
@@ -1072,10 +1117,11 @@ export default function BarbershopSettingsPanel({
           ) : (
             <>
               <div className="admin-barbershop-settings__actions">
-                {canManagePayouts ? (
+                {stripePaymentsReady ? null : canManagePayouts ? (
                   <button
                     type="button"
                     className="btn btn--secondary"
+                    data-stripe-connect-action
                     disabled={depositsBusy}
                     onClick={async () => {
                       setDepositsBusy(true);
@@ -1102,11 +1148,13 @@ export default function BarbershopSettingsPanel({
                       }
                     }}
                   >
-                    {connectDisconnected
-                      ? 'Reconnect Stripe'
-                      : connectAccountLinked
-                        ? 'Continue Stripe Connect'
-                        : 'Connect Stripe'}
+                    {depositsBusy
+                      ? 'Opening Stripe…'
+                      : connectDisconnected
+                        ? 'Reconnect Stripe'
+                        : connectAccountLinked
+                          ? 'Finish Stripe setup'
+                          : 'Connect Stripe'}
                   </button>
                 ) : (
                   <p className="admin-barbershop-settings__card-copy" role="status">
@@ -1114,13 +1162,13 @@ export default function BarbershopSettingsPanel({
                     see the current status below.
                   </p>
                 )}
-                <span className="muted">
-                  {connectDisconnected
-                    ? 'Stripe disconnected — reconnect to take online payments'
-                    : connectChargesEnabled
-                      ? 'Stripe ready for booking payments'
+                <span className="muted" data-stripe-connect-status>
+                  {stripePaymentsReady
+                    ? '✓ Stripe connected — ready for booking payments'
+                    : connectDisconnected
+                      ? 'Stripe disconnected — reconnect to take online payments'
                       : connectAccountLinked
-                        ? 'Finish Stripe onboarding'
+                        ? 'Stripe setup not finished yet'
                         : 'Not connected'}
                 </span>
               </div>

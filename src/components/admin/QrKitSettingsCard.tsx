@@ -74,6 +74,11 @@ export default function QrKitSettingsCard() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (loading || !view || window.location.hash !== '#qr-kit') return;
+    document.getElementById('qr-kit')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [loading, view]);
+
   if (loading || !view) {
     return null;
   }
