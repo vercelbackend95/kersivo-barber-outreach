@@ -75,6 +75,7 @@ vi.mock('@/lib/setup/siteUrl', () => ({
   getPublicSiteUrl: () => 'https://kersivo.co.uk',
 }));
 
+import { resolveBookingPaymentAccount } from '@/lib/booking/bookingPaymentAccount';
 import { GET, PATCH, POST } from './deposits';
 
 function accessFor(role: ShopRole, shopId = 'shop-1') {
@@ -220,6 +221,12 @@ describe('barbershop-settings/deposits (booking payments)', () => {
         stripeConnectDetailsSubmitted: false,
       });
       createConnectStandardAccount.mockResolvedValue({ id: 'acct_reconnected' });
+      txShopFindUnique.mockResolvedValue({
+        stripeConnectAccountId: 'acct_old_standard',
+        stripeConnectDisconnectedAt: new Date('2026-10-05T10:00:00.000Z'),
+      });
+      txBookingUpdateMany.mockResolvedValue({ count: 1 });
+      txShopUpdate.mockResolvedValue({});
 
       const res = await POST(jsonCtx('POST'));
       const body = await res.json();
@@ -228,24 +235,65 @@ describe('barbershop-settings/deposits (booking payments)', () => {
       expect(body.accountId).toBe('acct_reconnected');
       expect(body.accountType).toBe('STANDARD');
       expect(createConnectStandardAccount).toHaveBeenCalled();
-      expect(shopSettingsUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            stripeConnectAccountId: 'acct_reconnected',
-            stripeConnectAccountType: 'STANDARD',
-            stripeConnectChargesEnabled: false,
-            stripeConnectDetailsSubmitted: false,
-            stripeConnectDisconnectedAt: null,
-            connectStatusEventAt: null,
-          }),
-        }),
+      // Pre-snapshot paid bookings are pinned to the OLD account before the shop moves on.
+      expect(txBookingUpdateMany).toHaveBeenCalledWith({
+        where: {
+          barber: { is: { shopId: 'shop-1' } },
+          stripeConnectAccountIdAtPayment: null,
+          OR: [{ stripePaymentIntentId: { not: null } }, { stripeCheckoutSessionId: { not: null } }],
+          AND: [{ OR: [{ kersivoPlatformFeePence: null }, { kersivoPlatformFeePence: 0 }] }],
+        },
+        data: { stripeConnectAccountIdAtPayment: 'acct_old_standard' },
+      });
+      expect(txBookingUpdateMany.mock.invocationCallOrder[0]).toBeLessThan(
+        txShopUpdate.mock.invocationCallOrder[0],
       );
+      expect(txShopUpdate).toHaveBeenCalledWith({
+        where: { id: 'shop-1' },
+        data: {
+          stripeConnectAccountId: 'acct_reconnected',
+          stripeConnectAccountType: 'STANDARD',
+          stripeConnectChargesEnabled: false,
+          stripeConnectDetailsSubmitted: false,
+          stripeConnectDisconnectedAt: null,
+          connectStatusEventAt: null,
+        },
+      });
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+
+      // The old paid booking now refunds on the old account even though the shop moved on.
+      const pinnedBooking = {
+        stripeConnectAccountIdAtPayment: 'acct_old_standard',
+        kersivoPlatformFeePence: null,
+      };
+      expect(
+        resolveBookingPaymentAccount({ booking: pinnedBooking, currentShopAccountId: 'acct_reconnected' }),
+      ).toEqual({ ok: true, accountId: 'acct_old_standard', source: 'snapshot' });
       expect(recordAccountLifecycleEvent).toHaveBeenCalledWith({
         action: 'STARTER_STRIPE_ONBOARDING_STARTED',
         userId: 'u1',
         shopId: 'shop-1',
         meta: { reason: 'reconnect', accountType: 'STANDARD' },
       });
+    });
+
+    it('reconnect aborts without booking or shop writes if the account changed concurrently', async () => {
+      asState('FULL_KERSIVO');
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
+      shopSettingsFindUnique.mockResolvedValue({
+        ...paidShop,
+        stripeConnectAccountId: 'acct_old_express',
+        stripeConnectDisconnectedAt: new Date('2026-10-05T10:00:00.000Z'),
+      });
+      createConnectStandardAccount.mockResolvedValue({ id: 'acct_reconnected' });
+      txShopFindUnique.mockResolvedValue({ stripeConnectAccountId: 'acct_other', stripeConnectDisconnectedAt: null });
+
+      const res = await POST(jsonCtx('POST'));
+
+      expect(res.status).toBe(409);
+      expect(txBookingUpdateMany).not.toHaveBeenCalled();
+      expect(txShopUpdate).not.toHaveBeenCalled();
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
     });
 
     it('Full: does not silently migrate an existing active Express account', async () => {

@@ -339,17 +339,20 @@ export const PATCH: APIRoute = async (ctx) => {
 };
 
 /**
- * Moves a Starter shop off a still-connected legacy (non-Standard) account onto a new Standard
- * account. Paid bookings created before payment-account snapshots existed resolve their Stripe
- * account from the shop's CURRENT account, so they are pinned to the legacy account first: only
- * missing snapshots are filled (never overwritten), and only on rows that touched Stripe and carry
- * no KERSIVO fee — exactly the rows whose refunds would otherwise follow the new account.
+ * Replaces the shop's Connect account with a new Standard account (Starter legacy → Standard
+ * switch, or a reconnect after the previous account was disconnected). Paid bookings created
+ * before payment-account snapshots existed resolve their Stripe account from the shop's CURRENT
+ * account, so they are pinned to the previous account first: only missing snapshots are filled
+ * (never overwritten), and only on rows that touched Stripe and carry no KERSIVO fee — exactly the
+ * rows whose refunds would otherwise follow the new account.
  * Returns null when the shop's account changed concurrently.
  */
-async function switchStarterToStandardAccount(input: {
+async function replaceConnectAccountPinningPriorBookings(input: {
   shopId: string;
   legacyAccountId: string;
   standardAccountId: string;
+  /** Reconnect: the previous account is expected to be marked disconnected. */
+  previousDisconnected: boolean;
 }): Promise<{ pinnedLegacyBookings: number } | null> {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT id FROM "ShopSettings" WHERE id = ${input.shopId} FOR UPDATE`);
@@ -359,7 +362,7 @@ async function switchStarterToStandardAccount(input: {
     });
     if (
       current?.stripeConnectAccountId?.trim() !== input.legacyAccountId ||
-      current.stripeConnectDisconnectedAt
+      Boolean(current.stripeConnectDisconnectedAt) !== input.previousDisconnected
     ) {
       return null;
     }
@@ -451,11 +454,16 @@ export const POST: APIRoute = async (ctx) => {
     });
     accountId = created.id;
 
+    const disconnectedAccountId = shop.stripeConnectDisconnectedAt
+      ? shop.stripeConnectAccountId?.trim() || null
+      : null;
+
     if (legacyStarterAccountId) {
-      const switched = await switchStarterToStandardAccount({
+      const switched = await replaceConnectAccountPinningPriorBookings({
         shopId: shop.id,
         legacyAccountId: legacyStarterAccountId,
         standardAccountId: created.id,
+        previousDisconnected: false,
       });
       if (!switched) {
         return json({ error: 'Your Stripe connection changed. Refresh and try again.' }, 409);
@@ -471,6 +479,16 @@ export const POST: APIRoute = async (ctx) => {
           pinnedLegacyBookings: switched.pinnedLegacyBookings,
         },
       });
+    } else if (disconnectedAccountId) {
+      const reconnected = await replaceConnectAccountPinningPriorBookings({
+        shopId: shop.id,
+        legacyAccountId: disconnectedAccountId,
+        standardAccountId: created.id,
+        previousDisconnected: true,
+      });
+      if (!reconnected) {
+        return json({ error: 'Your Stripe connection changed. Refresh and try again.' }, 409);
+      }
     } else {
       await prisma.shopSettings.update({
         where: { id: shop.id },
