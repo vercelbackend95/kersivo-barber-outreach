@@ -191,6 +191,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
 ];
 
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
+  { id: 'starter', label: 'Starter', href: '/starter' },
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
   { id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' },
 ];

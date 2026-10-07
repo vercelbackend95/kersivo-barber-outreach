@@ -10,7 +10,7 @@ export const STARTER_PAGE_TITLE =
 export const STARTER_PAGE_DESCRIPTION =
   'KERSIVO Starter for UK barbershops: £0/month, 0% KERSIVO commission, hosted online booking, up to 4 barbers, £5 deposits or full payment, reminders and QR Kit.';
 
-export const STARTER_PAGE_H1 = 'Run your barbershop bookings for £0/month.';
+export const STARTER_PAGE_H1 = 'A free booking system for UK barbershops — £0/month.';
 
 export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-06';
 export const STARTER_PAGE_LAST_UPDATED_LABEL = '6 October 2026';

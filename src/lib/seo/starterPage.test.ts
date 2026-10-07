@@ -18,7 +18,7 @@ describe('KERSIVO Starter landing SEO', () => {
     expect(STARTER_PAGE_PATH).toBe('/starter');
     expect(STARTER_PAGE_TITLE).toContain('KERSIVO Starter');
     expect(STARTER_PAGE_TITLE).toContain('£0/Month');
-    expect(STARTER_PAGE_H1).toBe('Run your barbershop bookings for £0/month.');
+    expect(STARTER_PAGE_H1).toBe('A free booking system for UK barbershops — £0/month.');
     expect(STARTER_PAGE_TITLE).not.toBe(DEFAULT_TITLE);
     expect(STARTER_PAGE_H1.toLowerCase()).not.toBe('barber booking system');
   });
