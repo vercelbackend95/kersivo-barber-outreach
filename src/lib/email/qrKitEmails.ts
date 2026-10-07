@@ -23,3 +23,49 @@ export function buildQrKitRequestAcknowledgementEmail(input: {
 <p>KERSIVO</p>`,
   };
 }
+
+export type QrKitInternalEmailInput = {
+  shopName: string;
+  shopId: string;
+  fulfilmentId: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  townCity: string;
+  postcode: string;
+  countryCode: string;
+  requestedAt: Date;
+};
+
+export function buildQrKitRequestInternalEmail(input: QrKitInternalEmailInput): {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo: string;
+} {
+  const rows: Array<[string, string]> = [
+    ['Shop', input.shopName],
+    ['Shop ID', input.shopId],
+    ['Fulfilment ID', input.fulfilmentId],
+    ['Contact name', input.contactName],
+    ['Contact email', input.contactEmail],
+    ['Contact phone', input.contactPhone],
+    ['Address line 1', input.addressLine1],
+    ['Address line 2', input.addressLine2 ?? '—'],
+    ['Town / city', input.townCity],
+    ['Postcode', input.postcode],
+    ['Country', input.countryCode],
+    ['Requested at', input.requestedAt.toISOString()],
+  ];
+  return {
+    to: getClientOnboardingContactInboxEmail(),
+    subject: `New QR Kit request — ${input.shopName}`,
+    replyTo: input.contactEmail,
+    html: `<p>A new QR Kit request has been received.</p>
+<table>${rows
+      .map(([label, value]) => `<tr><th align="left">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`)
+      .join('')}</table>`,
+  };
+}

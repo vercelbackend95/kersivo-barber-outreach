@@ -209,19 +209,19 @@ describe('QR Kit eligibility', () => {
 });
 
 describe('requestInitialQrKit', () => {
-  it('creates one canonical kit and enqueues the acknowledgement once', async () => {
+  it('creates one canonical kit and enqueues the acknowledgement and internal email once', async () => {
     const { db, kits, emails, events } = fakeDb();
     const params = { shopId: 'shop-1', userId: 'u1', facts: eligibleFacts, input: validInput };
 
     const first = await requestInitialQrKit(params, { db });
     const retry = await requestInitialQrKit(params, { db });
 
-    expect(first).toMatchObject({ ok: true, created: true });
-    expect(retry).toMatchObject({ ok: true, created: false, outboxId: null });
+    expect(first).toMatchObject({ ok: true, created: true, outboxId: 'email_1', internalOutboxId: 'email_2' });
+    expect(retry).toMatchObject({ ok: true, created: false, outboxId: null, internalOutboxId: null });
     expect(retry.ok && first.ok && retry.fulfilmentId).toBe(first.ok && first.fulfilmentId);
     expect(kits).toHaveLength(1);
     expect(events).toHaveLength(1);
-    expect(emails).toHaveLength(1);
+    expect(emails).toHaveLength(2);
     expect(emails[0]).toMatchObject({
       purpose: 'QR_KIT_REQUEST_ACKNOWLEDGEMENT',
       subject: 'Your KERSIVO QR Kit request',
@@ -233,13 +233,59 @@ describe('requestInitialQrKit', () => {
     expect(html).not.toMatch(/deliver(ed|y) (by|within|in)|working days/i);
   });
 
+  it('the internal KERSIVO email carries contact and delivery details, escaped, with reply-to the contact', async () => {
+    const { db, emails } = fakeDb();
+    const result = await requestInitialQrKit(
+      {
+        shopId: 'shop-1',
+        userId: 'u1',
+        facts: { ...eligibleFacts, shopName: 'Fade <Room> & Co' },
+        input: { ...validInput, addressLine2: 'Unit 2' },
+      },
+      { db },
+    );
+    expect(result.ok).toBe(true);
+    const internal = emails.find((e) => e.purpose === 'QR_KIT_REQUEST_INTERNAL')!;
+    expect(internal).toMatchObject({
+      dedupeKey: 'qr-kit:internal:shop-1',
+      toEmail: 'hello@kersivo.co.uk',
+      subject: 'New QR Kit request — Fade <Room> & Co',
+    });
+    const payload = internal.payload as { html: string; replyTo?: string };
+    expect(JSON.stringify(internal)).toContain('sam@example.co.uk');
+    const html = String(payload.html);
+    for (const value of [
+      'Fade &lt;Room&gt; &amp; Co',
+      'shop-1',
+      result.ok ? result.fulfilmentId : '',
+      'Sam Owner',
+      'sam@example.co.uk',
+      '07700900123',
+      '1 High Street',
+      'Unit 2',
+      'Leeds',
+      'LS1 4AP',
+      'GB',
+    ]) {
+      expect(html).toContain(value);
+    }
+    expect(html).not.toContain('<Room>');
+    expect(html).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
+  });
+
   it('a concurrent duplicate (UNIQUE on shopId) returns the winner without a second kit or email', async () => {
     const { db, kits, emails } = fakeDb({ raceOnCreate: true });
     const result = await requestInitialQrKit(
       { shopId: 'shop-1', userId: 'u1', facts: eligibleFacts, input: validInput },
       { db },
     );
-    expect(result).toEqual({ ok: true, created: false, fulfilmentId: 'kit_winner', outboxId: null });
+    expect(result).toEqual({
+      ok: true,
+      created: false,
+      fulfilmentId: 'kit_winner',
+      outboxId: null,
+      internalOutboxId: null,
+    });
     expect(kits).toHaveLength(1);
     expect(emails).toHaveLength(0);
   });
