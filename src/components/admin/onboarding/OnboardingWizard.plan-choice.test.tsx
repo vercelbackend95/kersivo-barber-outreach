@@ -190,6 +190,54 @@ describe('OnboardingWizard — Phase 5F.1 explicit plan choice', () => {
     expect(sessionStorage.getItem(ONBOARDING_PLAN_STORAGE_KEY)).toBeNull();
   });
 
+  async function renderPausedStarterSuccess() {
+    await renderReview();
+    fireEvent.click(document.querySelector('[data-plan-card="STARTER"]')!);
+    acceptTerms();
+    fireEvent.click(primaryButton());
+    await screen.findByRole('heading', { name: 'Your Starter workspace is ready.' });
+  }
+
+  it('paused Starter "Connect Stripe" starts Stripe Connect directly and keeps the dashboard option', async () => {
+    let resolveConnect: (r: Response) => void = () => {};
+    const baseImpl = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((url: string, init?: RequestInit) =>
+      url === '/api/admin/barbershop-settings/deposits'
+        ? new Promise<Response>((resolve) => {
+            resolveConnect = resolve;
+          })
+        : baseImpl(url, init),
+    );
+    await renderPausedStarterSuccess();
+
+    expect(screen.getByRole('button', { name: 'Go to dashboard' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Connect Stripe' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Stripe' }));
+
+    await screen.findByRole('button', { name: 'Opening Stripe…' });
+    const [, init] = callsTo('/api/admin/barbershop-settings/deposits')[0]!;
+    expect((init as RequestInit).method).toBe('POST');
+    resolveConnect(new Response(JSON.stringify({ url: 'https://connect.stripe.test/onboard' }), { status: 200 }));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('https://connect.stripe.test/onboard'));
+    expect(assign).not.toHaveBeenCalledWith('/admin?section=barbershop_settings');
+  });
+
+  it('paused Starter "Connect Stripe" shows an inline error when Stripe cannot be opened', async () => {
+    const baseImpl = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      url === '/api/admin/barbershop-settings/deposits'
+        ? new Response(JSON.stringify({ error: 'Stripe is unavailable right now.' }), { status: 503 })
+        : baseImpl(url, init),
+    );
+    await renderPausedStarterSuccess();
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Stripe' }));
+
+    expect((await screen.findByRole('alert')).textContent).toBe('Stripe is unavailable right now.');
+    expect(assign).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Connect Stripe' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Go to dashboard' })).toBeTruthy();
+  });
+
   it('Starter whose server intake gate is live may be told the booking page is live', async () => {
     completeState = starterLiveState;
     await renderReview();

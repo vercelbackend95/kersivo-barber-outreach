@@ -152,6 +152,50 @@ function buildServicesFromState(state: OnboardingState | null): OnboardingServic
   return [...presets, ...customs];
 }
 
+function StarterConnectStripeButton() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const startConnect = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/deposits', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string; url?: string } | null;
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error || 'Could not open Stripe. Please try again.');
+      }
+      window.location.assign(payload.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open Stripe. Please try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className="btn btn--primary btn--lg"
+        disabled={busy}
+        aria-busy={busy}
+        data-onboarding-connect-stripe
+        onClick={() => void startConnect()}
+      >
+        {busy ? 'Opening Stripe…' : 'Connect Stripe'}
+      </button>
+      {error ? (
+        <p className="admin-inline-error" role="alert" style={{ flexBasis: '100%', order: 10 }}>
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 type OnboardingWizardProps = {
   /** `guest` = no Better Auth; cookie-bound `/api/preview/onboarding/*`. */
   mode?: 'session' | 'guest';
@@ -934,11 +978,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
             className="admin-onboarding__footer-row"
             style={{ position: 'static', background: 'none', flexWrap: 'wrap' }}
           >
-            {!bookingsLive ? (
-              <a className="btn btn--primary btn--lg" href="/admin?section=barbershop_settings">
-                Connect Stripe
-              </a>
-            ) : null}
+            {!bookingsLive ? <StarterConnectStripeButton /> : null}
             {bookingsLive && liveBookingUrl ? (
               <a
                 className="btn btn--primary btn--lg"
