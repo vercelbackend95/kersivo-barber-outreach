@@ -33,6 +33,7 @@ import { describeCostInsight, determineCostInsight } from './costInsight';
 import type { CostPeriod } from './costPeriod';
 import { projectCostCalculation, type ProjectedCostCalculation } from './costProjection';
 import { formatMoneyGbp } from './money';
+import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 
 export type ProviderViewState = 'calculated' | 'custom-pricing' | 'unavailable';
 
@@ -78,6 +79,7 @@ const SHARED_ASSUMPTIONS: ReadonlySet<AssumptionCode> = new Set([
 ]);
 
 const LONG_TOTAL_LENGTH = 10;
+const NEARCUT_BOOKING_ILLUSTRATION = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
@@ -176,7 +178,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
     id: result.provider,
     clientFeeNote: result.provider !== 'nearcut' ? null : nearcutSubscription
       ? 'Nearcut Subscription removes the client booking charge. Any extras or online processing depend on your quote.'
-      : 'Nearcut Free for You: clients pay an additional booking charge. Nearcut shows £1.50 on a £20 haircut as an example, NOT a universal rate. This client cost is excluded from shop totals.',
+      : `Nearcut Free for You: clients pay an additional booking charge. Nearcut shows ${formatMoneyGbp(NEARCUT_BOOKING_ILLUSTRATION.amountGbp)} on a ${formatMoneyGbp(NEARCUT_BOOKING_ILLUSTRATION.exampleServicePriceGbp)} haircut as an example, NOT a universal rate. This client cost is excluded from shop totals.`,
     warnings: result.warnings.map((entry) => entry.message),
     assumptions: result.assumptions
       .filter((entry) => !SHARED_ASSUMPTIONS.has(entry.code))
