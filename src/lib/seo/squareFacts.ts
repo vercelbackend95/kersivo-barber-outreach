@@ -8,6 +8,7 @@ export const SQUARE_SOURCES = [
   {label:'Square cancellations and no-show policies',url:'https://squareup.com/help/gb/en/article/5493-set-a-custom-cancellation-policy-with-square-appointments',supports:'Plus/Premium cancellation and no-show rules'},
   {label:'Square Help Centre: customer CSV export and separate card-on-file procedure',url:'https://squareup.com/help/gb/en/article/7871-export-card-on-file-to-third-party-payment-processors',supports:'Customer Directory CSV export instructions (Export customer data section); the separate PCI-compliant card-data export is NOT a KERSIVO migration promise'},
   {label:'Square UK payment fee schedule',url:'https://squareup.com/gb/en/legal/general/fees',supports:'UK and non-UK online rates, in-person, card on file, manually keyed, invoices and international-card fee disclosure'},
+  {label:'Square for UK barbershops',url:'https://squareup.com/gb/en/solutions/barbershop',supports:'Square explicitly supports barbershop-specific booking and scheduling workflows'},
   {label:'Square online booking websites',url:'https://squareup.com/help/gb/en/article/5355-set-up-online-booking-with-square-appointments',supports:'Simple booking site and a full Square Online website (including a free option)'},
   {label:'Square reports export',url:'https://squareup.com/help/gb/en/article/8362-print-export-or-email-your-reports',supports:'CSV report export'},
 ] as const;
