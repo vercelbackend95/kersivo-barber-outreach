@@ -1,7 +1,7 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const TREATWELL_ALTERNATIVE_PAGE_PATH = '/treatwell-alternative';
 export const TREATWELL_ALTERNATIVE_TITLE = 'Treatwell Alternative UK | Pricing & Fees | KERSIVO';
-export const TREATWELL_ALTERNATIVE_DESCRIPTION = 'Compare Treatwell vs KERSIVO for UK barbers: 35% first marketplace booking commission, direct bookings, deposits, websites and pricing.';
+export const TREATWELL_ALTERNATIVE_DESCRIPTION = 'Compare Treatwell Connect vs KERSIVO for UK barbers: 35% + VAT on eligible new marketplace bookings, 2.5% + VAT prepayments and £39/month Full.';
 export const TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-08';
 export const TREATWELL_ALTERNATIVE_LAST_UPDATED_LABEL = '8 October 2026';
 export const TREATWELL_ALTERNATIVE_FAQ_ITEMS = [
