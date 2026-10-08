@@ -12,6 +12,10 @@
  *   split   separate marketplace counts      1 | 0
  *   bc      Booksy Boost clients             integer
  *   fc      Fresha Marketplace clients       integer
+ *   vc      Vagaro Marketplace new clients   integer
+ *   vo      Vagaro displayed offer           1 | 0
+ *   vm      Vagaro MySite                    1 | 0
+ *   vv      Add assumed Vagaro VAT           1 | 0
  *   sw      Fresha Smart Website             1 | 0
  *   loyalty Fresha Client Loyalty            1 | 0
  *   nc      Nearcut Subscription             1 | 0
@@ -39,6 +43,10 @@ export const SCENARIO_PARAMS = {
   splitMarketplaceAssumptions: 'split',
   booksyBoostClients: 'bc',
   freshaMarketplaceClients: 'fc',
+  vagaroMarketplaceClients: 'vc',
+  vagaroDisplayedOffer: 'vo',
+  vagaroMySite: 'vm',
+  vagaroAssumeVat: 'vv',
   freshaSmartWebsite: 'sw',
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
@@ -61,6 +69,9 @@ export const ADVANCED_SCENARIO_KEYS = [
   'vatRegistered',
   'freshaSmartWebsite',
   'freshaClientLoyalty',
+  'vagaroDisplayedOffer',
+  'vagaroMySite',
+  'vagaroAssumeVat',
   'nearcutSubscription',
   'includeDepositProcessing',
 ] as const satisfies readonly BooleanKey[];
