@@ -12,6 +12,7 @@ const CURRENT_STACK_VALUES = new Set([
   'booksy',
   'fresha',
   'nearcut',
+  'setora',
   'other-platform',
   'mixed-manual',
   'none',
