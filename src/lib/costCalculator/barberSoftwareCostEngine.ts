@@ -316,9 +316,9 @@ export type EngineNotice<Code extends string> = { code: Code; message: string };
 export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'single-location': 'Costs are for a single barbershop location.',
   'shared-marketplace-clients':
-    'The same qualifying new marketplace client count is used for Booksy Boost and Fresha Marketplace.',
+    'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha and Treatwell. These providers do not necessarily generate equal new-client volumes.',
   'split-marketplace-clients':
-    'Separate qualifying new client counts are used for Booksy Boost and Fresha Marketplace.',
+    'Separate qualifying new marketplace client counts are used for Booksy Boost, Fresha and Treatwell. Treatwell eligibility depends on partner terms.',
   'booksy-users-equal-bookable-barbers':
     'Each bookable barber is treated as one Booksy user: the first is covered by the base subscription and the rest are additional users. Real Booksy accounts may be configured differently.',
   'booksy-boost-first-visit-equals-average-appointment-value':
