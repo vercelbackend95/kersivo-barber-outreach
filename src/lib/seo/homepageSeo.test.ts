@@ -177,7 +177,7 @@ describe('homepage SEO phase 1: internal links', () => {
   });
 
   it('keeps the Booksy and Fresha comparison links in the body', () => {
-    expect(homepage).toContain('<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />');
+    expect(homepage).toContain('<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink showSquireCompareLink />');
     expect(switcher).toContain('href="/booksy-alternative"');
     expect(switcher).toContain('href="/fresha-alternative"');
     expect(switcher).toContain('Compare KERSIVO and Booksy');
