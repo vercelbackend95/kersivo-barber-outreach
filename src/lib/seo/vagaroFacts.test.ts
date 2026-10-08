@@ -36,6 +36,8 @@ describe('Vagaro UK commercial source of truth', () => {
     expect(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value).toBe(10);
     expect(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value).toBe(15);
     expect(VAGARO_UK_COMMERCIAL_FACTS.paymentProcessingFees.status).toBe('unresolved');
+    expect(requireVerifiedVagaroFact('standardOnlineProcessingPercent').value).toBe(1.4);
+    expect(requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value).toBe(0.25);
     expect(VAGARO_UK_COMMERCIAL_FACTS.vatOnSubscriptionPercent.status).toBe('unresolved');
     expect(() => requireVerifiedVagaroFact('paymentProcessingFees')).toThrow(/unresolved/);
   });
