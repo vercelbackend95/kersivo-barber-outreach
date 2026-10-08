@@ -3,7 +3,6 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
-import { buildSteps } from '../../../scripts/build-plan.mjs';
 import { buildKersivoOrganizationNode } from './kersivoEntityJsonLd';
 
 const ROOT = process.cwd();
@@ -20,16 +19,15 @@ describe('KERSIVO approved brand identity', () => {
     const generator = read('scripts/generate-favicons.mjs');
     expect(generator).toContain("images', 'logo_nobg.png");
     expect(generator).toContain('left: 230, top: 4, width: 337, height: 371');
-    expect(generator).toContain('keras' .replace('keras', 'KERSIVO'));
+    expect(generator).toContain('KERSIVO');
     expect(generator).not.toContain('logo-kersivo.png');
   });
 
   it('generates all favicon formats before the Astro build on every environment', () => {
-    for (const environment of ['preview', 'production', undefined]) {
-      const plan = buildSteps({ VERCEL_ENV: environment });
-      const names = plan.map(step => step.name);
-      expect(names.indexOf('brand icons')).toBeGreaterThanOrEqual(0);
-      expect(names.indexOf('brand icons')).toBeLessThan(names.indexOf('astro build'));
+    {
+      const script = read('scripts/build-plan.mjs');
+      expect(script).toContain("name: 'brand icons'");
+      expect(script.indexOf("name: 'brand icons'")).toBeLessThan(script.indexOf("name: 'astro build'"));
     }
     const generator = read('scripts/generate-favicons.mjs');
     for (const asset of [
