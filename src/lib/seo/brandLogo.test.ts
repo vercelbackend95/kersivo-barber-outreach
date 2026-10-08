@@ -20,7 +20,7 @@ describe('KERSIVO approved brand identity', () => {
     expect(generator).toContain("images', 'logo_nobg.png");
     expect(generator).toContain('left: 230, top: 4, width: 337, height: 371');
     expect(generator).toContain('KERSIVO');
-    expect(generator).not.toContain('logo-kersivo.png');
+    expect(generator).toContain("fs.writeFile(path.join(publicDir, 'images', 'logo-kersivo.png'), original)");
   });
 
   it('generates all favicon formats before the Astro build on every environment', () => {
