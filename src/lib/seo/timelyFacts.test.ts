@@ -34,7 +34,7 @@ describe('Timely commercial source of truth: calculator safety',()=>{
   it('uses only a real UK monthly shop quote for optional later cost calculations',()=>{
     expect(resolveTimelyMonthlyShopQuoteGbp(undefined)).toBeNull();
     expect(resolveTimelyMonthlyShopQuoteGbp(null)).toBeNull();
-    expect(resolveTimelyMonthlyShopQuoteGbp(0)).toBe(0);
+    expect(resolveTimelyMonthlyShopQuoteGbp(0)).toBeNull(); // default/blank quote must not imply a free Timely plan
     expect(resolveTimelyMonthlyShopQuoteGbp(39.999)).toBe(40);
     for(const invalid of [-1,Infinity,Number.NaN]){
       expect(()=>resolveTimelyMonthlyShopQuoteGbp(invalid)).toThrow();
