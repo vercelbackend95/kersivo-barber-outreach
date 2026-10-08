@@ -1,0 +1,81 @@
+---
+import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+---
+
+<section class="fresha-alt-hero" aria-labelledby="phorest-alt-hero-title">
+  <div class="fresha-alt-hero__content">
+    <nav class="phorest-alt-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Phorest alternative</span>
+    </nav>
+    <p class="fresha-alt-hero__eyebrow">
+      <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
+      Phorest alternative for UK barbershops
+    </p>
+
+    <h1 id="phorest-alt-hero-title" class="fresha-alt-hero__title">
+      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Phorest alternative</span>
+      <span class="fresha-alt-hero__title-line">built around your</span>
+      <span class="fresha-alt-hero__title-line">barbershop.</span>
+    </h1>
+
+    <p class="fresha-alt-hero__lead">
+      Phorest offers a broad salon software suite with online bookings, deposits and marketing tools, with UK pricing available by quote. KERSIVO Starter is £0/month, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through Stripe. Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location and includes your branded website and standard domain.
+    </p>
+
+    <div class="fresha-alt-hero__actions">
+      <a
+        href="/demo"
+        class="fresha-alt-hero__action fresha-alt-hero__action--primary"
+        data-track="view_live_demo_click"
+      >
+        Open the full demo
+      </a>
+      <a
+        href="#comparison"
+        class="fresha-alt-hero__action fresha-alt-hero__action--secondary"
+      >
+        Compare KERSIVO and Phorest
+      </a>
+    </div>
+
+    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
+      <span><strong>Starter £0/month</strong></span>
+      <span aria-hidden="true">·</span>
+      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span>
+      <span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission on booking payments</span>
+      <span aria-hidden="true">·</span>
+      <span>Built for independent UK barbershops</span>
+    </div>
+  </div>
+
+  <HeroDashboardShowcase />
+</section>
+
+
+<style>
+  .phorest-alt-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .phorest-alt-breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .phorest-alt-breadcrumb a:hover,
+  .phorest-alt-breadcrumb a:focus-visible {
+    color: #f9fafb;
+    text-decoration: underline;
+  }
+</style>
