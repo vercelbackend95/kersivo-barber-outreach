@@ -152,6 +152,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-nearcut',
+    label: 'Nearcut Alternative',
+    description: 'Compare Nearcut pricing, booking charges and KERSIVO for UK barbershops.',
+    href: '/nearcut-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-cost-calculator',
     label: 'Barber Software Cost Calculator',
     description: 'Estimate Booksy, Fresha and KERSIVO costs using your own shop numbers.',
