@@ -1,9 +1,11 @@
 /**
- * Build the KERSIVO icon set from the ORIGINAL approved transparent logo.
+ * Build the KERSIVO icon set only from user-approved artwork.
  *
- * SOURCE: public/images/logo_nobg.png (796×555, exact user-supplied asset)
- * No AI artwork, redraw, colour replacement, stylisation or tracing.
- * Only crop the existing K (above the wordmark), resize, centre and export.
+ * COMPARISON SOURCE: public/images/logo_nobg.png (existing full brand logo)
+ * FAVICON SOURCE: public/images/favicon.png (new transparent standalone K)
+ *
+ * The two sources serve different purposes. Favicon pixels are never drawn,
+ * recoloured or placed on an opaque background.
  *
  * Invoked in the Vercel build plan before Astro, and manually via:
  *   npm run generate:favicons
@@ -18,12 +20,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicDir = path.join(root, 'public');
 const source = path.join(publicDir, 'images', 'logo_nobg.png');
 const markPath = path.join(publicDir, 'images', 'brand', 'kersivo-mark.png');
+const faviconSource = path.join(publicDir, 'images', 'favicon.png');
 
 // Pixel-aligned crop of the K only. Original wordmark begins at y≈442.
 const K_CROP = { left: 230, top: 4, width: 337, height: 371 };
 const CANVAS = 512;
 const MARK_SIZE = 456; // comfortable margin at favicon sizes
-const BACKGROUND = { r: 11, g: 13, b: 16, alpha: 1 };
+// Transparent canvas throughout. Do not add a dark square behind the K.
 
 const resizeOptions = {
   fit: 'contain',
@@ -69,10 +72,46 @@ export async function generateKersivoBrandIcons() {
     create: { width: CANVAS, height: CANVAS, channels: 4, background: '#00000000' },
   }).composite([{ input: paddedK, left: pad, top: pad }]).png().toBuffer();
 
-  // The dark field aids contrast at 16px. It does not change the logo itself.
-  const faviconMaster = await sharp({
-    create: { width: CANVAS, height: CANVAS, channels: 4, background: BACKGROUND },
-  }).composite([{ input: transparentMark, left: 0, top: 0 }]).png().toBuffer();
+  // The new favicon source was approved separately by the founder: it is an
+  // isolated K with alpha, already supplied at public/images/favicon.png.
+  // Never regenerate it from the older wordmark or place it in a dark box.
+  let sourcePixels;
+  try {
+    sourcePixels = await fs.readFile(faviconSource);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      throw new Error(
+        'Missing public/images/favicon.png. Add and commit the approved transparent K asset before building.',
+      );
+    }
+    throw error;
+  }
+
+  const iconMeta = await sharp(sourcePixels).metadata();
+  if (
+    iconMeta.format !== 'png' ||
+    !iconMeta.hasAlpha ||
+    Math.min(iconMeta.width ?? 0, iconMeta.height ?? 0) < 96
+  ) {
+    throw new Error(
+      'public/images/favicon.png must be a transparent PNG with both dimensions at least 96px.',
+    );
+  }
+
+  // Prevent accidentally publishing a square background again.
+  const corner = await sharp(sourcePixels)
+    .ensureAlpha()
+    .extract({ left: 0, top: 0, width: 1, height: 1 })
+    .raw()
+    .toBuffer();
+  if (corner[3] !== 0) {
+    throw new Error('public/images/favicon.png has an opaque top-left corner; remove its background.');
+  }
+
+  const faviconMaster = await sharp(sourcePixels)
+    .resize(CANVAS, CANVAS, resizeOptions)
+    .png()
+    .toBuffer();
 
   const sizes = [16, 32, 48, 96, 180, 192, 512];
   const icons = new Map(await Promise.all(sizes.map(async size => [
@@ -100,7 +139,7 @@ export async function generateKersivoBrandIcons() {
     fs.writeFile(path.join(publicDir, 'apple-touch-icon.png'), icons.get(180)),
   ]);
 
-  console.log(`[brand] Generated official colour K favicon/icon set from logo_nobg.png (sha256:${fingerprint.slice(0, 12)}…)`);
+  console.log(`[brand] Generated transparent K favicon from public/images/favicon.png; comparison remains based on logo_nobg.png (sha256:${fingerprint.slice(0, 12)}…)`);
 }
 
 const calledDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
