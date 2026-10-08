@@ -13,6 +13,7 @@ import {
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
 import { SQUARE_ALTERNATIVE_LAST_UPDATED_ISO, SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
+import { TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO, TREATWELL_ALTERNATIVE_PAGE_PATH } from './treatwellAlternativeFaq';
 import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
 import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
 import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
@@ -52,6 +53,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: SQUARE_ALTERNATIVE_PAGE_PATH, lastmod: SQUARE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Nearcut Alternative editorial last updated date. */
   { path: NEARCUT_ALTERNATIVE_PAGE_PATH, lastmod: NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO },
+  /** Treatwell comparison editorial facts checked 8 October 2026. */
+  { path: TREATWELL_ALTERNATIVE_PAGE_PATH, lastmod: TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO },
   /** SQUIRE comparison editorial facts checked 8 October 2026. */
   { path: SQUIRE_ALTERNATIVE_PAGE_PATH, lastmod: SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Setora UK comparison editorial update. */
