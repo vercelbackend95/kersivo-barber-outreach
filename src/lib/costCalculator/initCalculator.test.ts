@@ -195,6 +195,36 @@ describe('initial calculation', () => {
   });
 });
 
+describe('Vagaro browser integration', () => {
+  it('renders the sixth provider from the same engine and recalculates price, marketplace, MySite and VAT controls', () => {
+    expect(total('vagaro')).toBe('£40.00');
+    expect(cell('vagaro','vagaro-subscription')).toBe('£40.00');
+    setNumber('calc-marketplace-clients','3');
+    expect(total('vagaro')).toBe('£55.00');
+    expect(cell('vagaro','vagaro-marketplace-fees')).toBe('£15.00');
+    toggle(VAGARO_OPTIONS[1].id, true);
+    expect(total('vagaro')).toBe('£70.00');
+    toggle(VAGARO_OPTIONS[2].id, true);
+    expect(total('vagaro')).toBe('£84.00');
+    expect(summary('vagaro','vat')).toBe('£14.00');
+    toggle(VAGARO_OPTIONS[0].id, false);
+    expect(total('vagaro')).toBe('£96.00');
+    choosePeriod('annual');
+    expect(total('vagaro')).toBe('£1,152.00');
+    expect(cardEl('vagaro').dataset.state).toBe('calculated');
+    expect(warnings('vagaro').some(x => x?.includes('promotional'))).toBe(true);
+  });
+
+  it('models online deposits only when enabled, separate from acquisition fees', () => {
+    expect(summary('vagaro','payments')).toBe('Not included');
+    toggle(DEPOSIT_PROCESSING_TOGGLE.id, true);
+    setNumber(DEPOSIT_BOOKINGS_FIELD.id,'100');
+    expect(cell('vagaro','vagaro-deposit-processing')).toBe('£32.00');
+    expect(total('vagaro')).toBe('£72.00');
+    expect(detail('vagaro','vagaro-deposit-processing')).toContain('published Vagaro UK online/keyed-in rate');
+  });
+});
+
 describe('Nearcut browser integration', () => {
   it('defaults to Free for You, £0 shop subscription and visibly separates client booking fees', () => {
     expect(total('nearcut')).toBe('£0.00');
