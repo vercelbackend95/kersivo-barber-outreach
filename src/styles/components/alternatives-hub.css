@@ -1257,6 +1257,12 @@ html:has(.alt-hub) {
 }
 
 /* Clean editorial toolbar rather than a separate bordered sorting card. */
+.alt-hub-panel__intro {
+  display: block;
+}
+.alt-hub-panel__intro .alt-hub-panel__helper {
+  margin-top: 0.35rem;
+}
 .alt-hub-panel__eyebrow {
   margin: 0 0 0.45rem;
   color: var(--hub-red);
