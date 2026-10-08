@@ -13,6 +13,10 @@
  *   bc      Booksy Boost clients             integer
  *   fc      Fresha Marketplace clients       integer
  *   tc      Eligible Treatwell marketplace bookings integer
+ *   vc      Vagaro Marketplace new clients   integer
+ *   vo      Vagaro displayed offer           1 | 0
+ *   vm      Vagaro MySite                    1 | 0
+ *   vv      Vagaro VAT modelling assumption  1 | 0
  *   sw      Fresha Smart Website             1 | 0
  *   loyalty Fresha Client Loyalty            1 | 0
  *   nc      Nearcut Subscription             1 | 0
@@ -44,6 +48,10 @@ export const SCENARIO_PARAMS = {
   booksyBoostClients: 'bc',
   freshaMarketplaceClients: 'fc',
   treatwellMarketplaceClients: 'tc',
+  vagaroMarketplaceClients: 'vc',
+  vagaroDisplayedOffer: 'vo',
+  vagaroMySite: 'vm',
+  vagaroAssumeVat: 'vv',
   freshaSmartWebsite: 'sw',
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
@@ -71,6 +79,9 @@ export const ADVANCED_SCENARIO_KEYS = [
   'vatRegistered',
   'freshaSmartWebsite',
   'freshaClientLoyalty',
+  'vagaroDisplayedOffer',
+  'vagaroMySite',
+  'vagaroAssumeVat',
   'nearcutSubscription',
   'includeDepositProcessing',
 ] as const satisfies readonly BooleanKey[];
