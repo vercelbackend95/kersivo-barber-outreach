@@ -93,8 +93,8 @@ describe('projectCostCalculation', () => {
   it('projects the default scenario to the expected totals', () => {
     const cash = (period: 'monthly' | 'annual' | 'threeYear') =>
       providers({}, period).map((result) => amounts(result).cashTotalGbp);
-    expect(cash('monthly')).toEqual([60, 35.82, 0, 39]);
-    expect(cash('annual')).toEqual([720, 429.84, 0, 468]);
+    expect(cash('monthly')).toEqual([60, 35.82, 0, 59, 39]);
+    expect(cash('annual')).toEqual([720, 429.84, 0, 708, 468]);
     expect(cash('threeYear')).toEqual([2160, 1289.52, 0, 2124, 1404]);
   });
 
@@ -174,11 +174,11 @@ describe('projectCostCalculation', () => {
     const processing = (period: (typeof COST_PERIODS)[number]) =>
       providers(deposits, period).map((result) => result.lineItems.find((line) => line.category === 'payment-processing')!);
     expect(processing('monthly').map((line) => line.exVatGbp)).toEqual([26, 32, 0, 28, 28]);
-    expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 0, 336]);
-    expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 0, 1008]);
+    expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 0, 336, 336]);
+    expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 0, 1008, 1008]);
     for (const period of COST_PERIODS) {
       expect(processing(period).map((line) => line.unitExVatGbp)).toEqual([0.26, 0.32, 0, 0.28, 0.28]);
-      expect(processing(period).map((line) => line.quantity)).toEqual([100, 100, 100, 100]);
+      expect(processing(period).map((line) => line.quantity)).toEqual([100, 100, 100, 100, 100]);
       expect(providers(deposits, period).map((result) => amounts(result).paymentProcessingExVatGbp)).toEqual(
         processing(period).map((line) => line.exVatGbp),
       );
