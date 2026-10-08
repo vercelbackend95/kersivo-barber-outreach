@@ -8,6 +8,8 @@
  */
 export const PHOREST_FACTS_CHECKED_ISO = '2026-10-08';
 export const PHOREST_FACTS_CHECKED_DATE = '8 October 2026';
+/** Sentinel for a quote where VAT treatment has not been confirmed, not a tax rate. */
+export const PHOREST_QUOTE_VAT_UNKNOWN = 99;
 
 export type PhorestSourceId = 'pricing' | 'features' | 'booking' | 'dataExport' | 'transactionsExport';
 export type PhorestSource = {
