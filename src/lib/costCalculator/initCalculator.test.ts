@@ -977,3 +977,30 @@ describe('architecture guards', () => {
     expect(engine).not.toMatch(/\b(document|window|HTMLElement)\b/);
   });
 });
+
+
+describe('Timely UK calculator browser integration', () => {
+  it('starts as Custom pricing rather than inventing a UK plan price', () => {
+    expect(total('timely')).toBe('Custom pricing');
+    expect(summary('timely', 'before-vat')).toBe('Not estimated');
+  });
+
+  it('updates a Timely invoice and models the TimelyPay domestic online deposit fee', () => {
+    setNumber('calc-timely-invoice', '60');
+    expect(total('timely')).toBe('£60.00');
+    expect(summary('timely', 'before-vat')).toBe('Not separated from invoice');
+    expect(summary('timely', 'vat')).toContain('Included');
+    enableDeposits('100');
+    expect(cell('timely', 'timely-deposit-processing')).toBe('£39.00');
+    expect(total('timely')).toBe('£99.00');
+    choosePeriod('annual');
+    expect(total('timely')).toBe('£1,188.00');
+  });
+
+  it('round-trips a Timely shop invoice from a shareable link and opens advanced settings', () => {
+    mountAt('?tq=72.5');
+    expect($<HTMLInputElement>('#calc-timely-invoice').value).toBe('72.5');
+    expect($<HTMLDetailsElement>('details.calc-advanced').open).toBe(true);
+    expect(total('timely')).toBe('£72.50');
+  });
+});
