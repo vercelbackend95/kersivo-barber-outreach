@@ -135,7 +135,7 @@ export function resolveVagaroUkAcquisitionPercent(context:VagaroFeeContext): num
  if (context.channel==='marketplace' && context.marketplaceListingActive) return newRate;
  if (context.channel==='partner-network' && context.marketplaceListingActive) return newRate;
  if (context.channel==='own-channel' && context.fillMyBooksEnabled) return newRate;
- if (context.promotedBooking && context.fillMyBooksEnabled && context.marketplaceListingActive) return newRate;
+ // Daily Deals can apply to a promoted new-client booking even without Fill My Books.\n if (context.promotedBooking && context.marketplaceListingActive) return newRate;
  return 0;
 }
 
