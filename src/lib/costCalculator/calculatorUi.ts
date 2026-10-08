@@ -24,7 +24,8 @@ type NumericScenarioKey =
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
   | 'depositBookingsPerMonth'
-  | 'nearcutMonthlyQuoteGbp';
+  | 'nearcutMonthlyQuoteGbp'
+  | 'timelyMonthlyInvoiceGbp';
 
 type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey>;
 
@@ -180,6 +181,14 @@ export const NEARCUT_QUOTE_FIELD: NumberFieldConfig = {
   min: 0, max: 20000, step: 0.01,
 };
 
+export const TIMELY_INVOICE_FIELD: NumberFieldConfig = {
+  id: 'calc-timely-invoice',
+  name: 'timelyMonthlyInvoiceGbp',
+  label: 'Your Timely UK monthly invoice total (£)',
+  helper: 'Enter the ACTUAL monthly Timely subscription amount paid, including any VAT shown on the invoice. 0 = unknown (Custom pricing). Do not use USD list prices. Processing and add-ons are separate.',
+  defaultValue: 0, min: 0, max: 20000, step: 0.01,
+};
+
 export const NEARCUT_EXAMPLE = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 export const DEPOSIT_PROCESSING_TOGGLE = {
@@ -215,6 +224,7 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
   nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
+  timelyMonthlyInvoiceGbp: TIMELY_INVOICE_FIELD.defaultValue,
   vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
   includeDepositProcessing: DEPOSIT_PROCESSING_TOGGLE.defaultOn,
   depositBookingsPerMonth: DEPOSIT_BOOKINGS_FIELD.defaultValue,
@@ -260,6 +270,7 @@ export const NOT_INCLUDED = 'Not included';
 export const NOT_ESTIMATED = 'Not estimated';
 export const CUSTOM_PRICING = 'Custom pricing';
 export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
+export const TIMELY_CUSTOM_PRICING_NOTE = 'Timely has no verified public UK GBP subscription rate. Enter the real monthly Timely invoice total (including any VAT) to calculate. Standard domestic UK deposit processing can be estimated separately.';
 export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
@@ -311,6 +322,15 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'nearcut-subscription', label: 'Subscription / shop cost' },
       { id: 'vat', label: 'VAT' },
       { id: 'nearcut-deposit-processing', label: 'Online deposit processing' },
+    ],
+  },
+  {
+    id: 'timely',
+    name: 'Timely',
+    breakdown: [
+      { id: 'timely-subscription', label: 'Your UK monthly invoice (incl. any VAT)' },
+      { id: 'vat', label: 'VAT included in invoice (not itemised)' },
+      { id: 'timely-deposit-processing', label: 'TimelyPay UK online deposits' },
     ],
   },
   {
@@ -386,4 +406,5 @@ export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
   ...SPLIT_FIELDS,
   DEPOSIT_BOOKINGS_FIELD,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
 ];
