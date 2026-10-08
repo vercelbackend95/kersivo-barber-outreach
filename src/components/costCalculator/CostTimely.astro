@@ -1,7 +1,12 @@
 ---
 import { TIMELY_FACTS_CHECKED_DATE, TIMELY_FACTS_CHECKED_ISO, getTimelySource, requireVerifiedTimelyFact } from '@/lib/seo/timelyFacts';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import { gbpToPence, transactionFeePence } from '@/lib/costCalculator/money';
 
 const payment = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+const international = requireVerifiedTimelyFact('ukInternationalOnlinePaymentProcessing');
+if (!('percent' in payment && 'fixedGbp' in payment && 'percent' in international && 'fixedGbp' in international)) throw new Error('TimelyPay facts missing');
+const exampleDepositFeePence = transactionFeePence(gbpToPence(KERSIVO_BOOKING_DEPOSIT_GBP), payment.percent, gbpToPence(payment.fixedGbp));
 const pricing = getTimelySource('pricing');
 const fees = getTimelySource('ukPayments');
 ---
@@ -23,10 +28,10 @@ const fees = getTimelySource('ukPayments');
         <div class="cost-calc-facts__row"><dt>UK subscription price</dt><dd>Your real monthly invoice quote (incl. any VAT)</dd></div>
         <div class="cost-calc-facts__row"><dt>Team pricing</dt><dd>Timely bills by active bookable staff; no verified GBP amount is assumed</dd></div>
         <div class="cost-calc-facts__row"><dt>TimelyPay UK domestic online cards</dt><dd>{payment.percent}% + {Math.round(payment.fixedGbp * 100)}p per transaction (published standard rate)</dd></div>
-        <div class="cost-calc-facts__row"><dt>Payment example</dt><dd>£5 deposit: 39p fee for a domestic UK card</dd></div>
+        <div class="cost-calc-facts__row"><dt>Payment example</dt><dd>£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit: {exampleDepositFeePence}p fee for a domestic UK card</dd></div>
       </dl>
       <ul class="cost-calc__list cost-calc-platform__notes">
-        <li>Timely UK online payment rates changed on 5 August 2026. International and Amex are 3% + 30p; customer-specific pricing can vary.</li>
+        <li>Timely UK online payment rates changed in August 2026. International and Amex are {international.percent}% + {Math.round(international.fixedGbp * 100)}p; customer-specific pricing can vary.</li>
         <li>The invoice input is already VAT-inclusive where applicable; the calculator cannot separate deductible VAT without your invoice breakdown.</li>
         <li>Deposit processing uses only the domestic UK online card benchmark. Optional Timely products, in-person payment fees and refunds are not estimated.</li>
         <li>Confirm your own charges in TimelyPay and invoice. <a href={fees.url} target="_blank" rel="noopener noreferrer">Timely official processing rates</a>.</li>
