@@ -1,0 +1,97 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import HubHero from '@/components/alternativesHub/HubHero.astro';
+import HubComparison from '@/components/alternativesHub/HubComparison.astro';
+import HubMethodology from '@/components/alternativesHub/HubMethodology.astro';
+import HubGuide from '@/components/alternativesHub/HubGuide.astro';
+import HubFinalCta from '@/components/alternativesHub/HubFinalCta.astro';
+import HubSources from '@/components/alternativesHub/HubSources.astro';
+import {
+  ALTERNATIVES_HUB_DESCRIPTION,
+  ALTERNATIVES_HUB_FAQ_ITEMS,
+  ALTERNATIVES_HUB_PAGE_PATH,
+  ALTERNATIVES_HUB_TITLE,
+} from '@/lib/seo/alternativesHubSeo';
+import {
+  buildAlternativesHubBreadcrumbJsonLd,
+  buildAlternativesHubCollectionPageJsonLd,
+  buildAlternativesHubFaqJsonLd,
+  buildAlternativesHubItemListJsonLd,
+} from '@/lib/seo/alternativesHubJsonLd';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/alternatives-hub.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={ALTERNATIVES_HUB_TITLE}
+  description={ALTERNATIVES_HUB_DESCRIPTION}
+  canonicalPath={ALTERNATIVES_HUB_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), buildAlternativesHubCollectionPageJsonLd(), buildAlternativesHubBreadcrumbJsonLd(), buildAlternativesHubItemListJsonLd(), buildAlternativesHubFaqJsonLd()]}
+>
+  <main class="alt-hub landing-overflow-guard">
+    <HubHero />
+    <HubComparison />
+    <HubMethodology />
+    <HubGuide />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about choosing barber booking software"
+      subHeading="Straight answers on commission, payment fees, domains, team size, switching and client data."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="See KERSIVO pricing"
+      supportLinkHref="/pricing"
+      faqs={ALTERNATIVES_HUB_FAQ_ITEMS}
+    />
+
+    <HubFinalCta />
+    <HubSources />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Cost calculator', href: '/barber-software-cost-calculator' },
+        { name: 'About', href: '/about' },
+        { name: 'Start KERSIVO Starter', href: '/admin' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initAlternativesHub } from '@/lib/compare/initAlternativesHub';
+
+  initAlternativesHub(document);
+  document.addEventListener('astro:page-load', () => initAlternativesHub(document));
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

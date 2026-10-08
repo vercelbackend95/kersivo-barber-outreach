@@ -14,6 +14,7 @@ import SquareCosts from '@/components/squareAlternative/SquareCosts.astro';
 import SquareFit from '@/components/squareAlternative/SquareFit.astro';
 import SquareSwitching from '@/components/squareAlternative/SquareSwitching.astro';
 import SquareSources from '@/components/squareAlternative/SquareSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   SQUARE_ALTERNATIVE_DESCRIPTION,
   SQUARE_ALTERNATIVE_FAQ_ITEMS,
@@ -71,6 +72,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: Square Appointments plans, moving customer records or launching your own branded booking website."
     />
 
+    <CompareHubLink />
     <SquareSources />
 
     <Footer50

@@ -14,6 +14,7 @@ import FreshaCosts from '@/components/freshaAlternative/FreshaCosts.astro';
 import FreshaFit from '@/components/freshaAlternative/FreshaFit.astro';
 import FreshaSwitching from '@/components/freshaAlternative/FreshaSwitching.astro';
 import FreshaSources from '@/components/freshaAlternative/FreshaSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   FRESHA_ALTERNATIVE_DESCRIPTION,
   FRESHA_ALTERNATIVE_FAQ_ITEMS,
@@ -74,6 +75,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: switching from Fresha, setting up deposits, moving client data or launching a new booking website."
     />
 
+    <CompareHubLink />
     <FreshaSources />
 
     <Footer50

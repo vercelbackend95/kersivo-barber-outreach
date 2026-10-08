@@ -1,0 +1,21 @@
+---
+import { ALTERNATIVES_HUB_PAGE_PATH } from '@/lib/seo/alternativesHubSeo';
+import '@/styles/components/compare-hub-link.css';
+
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+---
+
+<aside class={`compare-hub-link ${className}`.trim()} aria-label="More booking software comparisons">
+  <div class="compare-hub-link__inner">
+    <p class="compare-hub-link__text">
+      Weighing up more than one platform? See KERSIVO, Booksy, Fresha, Nearcut and other UK options side by side.
+    </p>
+    <a class="compare-hub-link__cta" href={ALTERNATIVES_HUB_PAGE_PATH} data-track="compare_hub_click">
+      Compare all barber booking systems <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</aside>

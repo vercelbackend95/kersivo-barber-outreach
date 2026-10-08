@@ -14,6 +14,7 @@ import PhorestCosts from '@/components/phorestAlternative/PhorestCosts.astro';
 import PhorestFit from '@/components/phorestAlternative/PhorestFit.astro';
 import PhorestSwitching from '@/components/phorestAlternative/PhorestSwitching.astro';
 import PhorestSources from '@/components/phorestAlternative/PhorestSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   PHOREST_ALTERNATIVE_DESCRIPTION,
   PHOREST_ALTERNATIVE_FAQ_ITEMS,
@@ -74,6 +75,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: Phorest pricing quotes, plan features, deposits, client exports or an own-domain website."
     />
 
+    <CompareHubLink />
     <PhorestSources />
 
     <Footer50

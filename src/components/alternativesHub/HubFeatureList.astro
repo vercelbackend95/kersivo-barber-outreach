@@ -1,0 +1,36 @@
+---
+import HubStatusIcon from '@/components/alternativesHub/HubStatusIcon.astro';
+import { HUB_CRITERIA, type HubCriterionId } from '@/lib/compare/alternativesHubCriteria';
+import { HUB_STATUS_LABELS, type HubPlatform } from '@/lib/compare/alternativesHubData';
+
+interface Props {
+  platform: HubPlatform;
+  selected: readonly HubCriterionId[];
+}
+
+const { platform, selected } = Astro.props as Props;
+---
+
+<ul class="alt-hub-features" aria-label={`${platform.name} features`}>
+  {
+    HUB_CRITERIA.map((criterion) => {
+      const attribute = platform.attributes[criterion.id];
+      const isSelected = selected.includes(criterion.id);
+      return (
+        <li
+          class="alt-hub-features__item"
+          data-criterion={criterion.id}
+          data-selected={isSelected ? 'true' : 'false'}
+          data-status={attribute.status}
+          title={`${HUB_STATUS_LABELS[attribute.status]}: ${attribute.note}`}
+        >
+          <HubStatusIcon status={attribute.status} />
+          <span class="alt-hub-features__label">{criterion.shortLabel}</span>
+          <span class="sr-only">
+            : {HUB_STATUS_LABELS[attribute.status]}. {attribute.note}
+          </span>
+        </li>
+      );
+    })
+  }
+</ul>

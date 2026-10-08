@@ -1,0 +1,55 @@
+---
+import HubFeatureList from '@/components/alternativesHub/HubFeatureList.astro';
+import HubScoreRing from '@/components/alternativesHub/HubScoreRing.astro';
+import type { HubCriterionId } from '@/lib/compare/alternativesHubCriteria';
+import type { HubPlatform } from '@/lib/compare/alternativesHubData';
+import type { HubScore } from '@/lib/compare/alternativesHubScoring';
+
+interface Props {
+  platform: HubPlatform;
+  score: HubScore;
+  selected: readonly HubCriterionId[];
+  order: number;
+  collapsed: boolean;
+}
+
+const { platform, score, selected, order, collapsed } = Astro.props as Props;
+const statuses = Object.fromEntries(Object.entries(platform.attributes).map(([k, v]) => [k, v.status]));
+const titleId = `alt-hub-card-${platform.id}-title`;
+---
+
+<article
+  class="alt-hub-card"
+  aria-labelledby={titleId}
+  data-hub-card
+  data-platform-id={platform.id}
+  data-platform-name={platform.name}
+  data-order={order}
+  data-first-party="false"
+  data-collapsed={collapsed ? 'true' : 'false'}
+  data-statuses={JSON.stringify(statuses)}
+>
+  <header class="alt-hub-card__head">
+    <div class="alt-hub-card__identity">
+      <h3 id={titleId} class="alt-hub-card__name">{platform.name}</h3>
+      <p class="alt-hub-card__tagline">{platform.tagline}</p>
+    </div>
+    <HubScoreRing score={score} />
+  </header>
+
+  <p class="alt-hub-card__description">{platform.description}</p>
+
+  <p class="alt-hub-card__price">
+    <span class="alt-hub-card__price-label">Pricing</span>
+    {platform.pricingSummary ?? 'UK GBP pricing not verified'}
+  </p>
+
+  <HubFeatureList platform={platform} selected={selected} />
+
+  <div class="alt-hub-card__actions">
+    <a class="alt-hub-card__cta" href={platform.href} data-track="compare_hub_card_click" data-track-placement={platform.id}>
+      {platform.ctaLabel}<span class="sr-only">: KERSIVO vs {platform.name}</span>
+      <span aria-hidden="true" class="alt-hub-card__arrow">→</span>
+    </a>
+  </div>
+</article>

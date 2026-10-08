@@ -134,6 +134,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'retail',
   },
   {
+    id: 'compare-hub',
+    label: 'Compare All Booking Systems',
+    description: 'KERSIVO, Booksy, Fresha, Nearcut and more side by side for UK barbershops.',
+    href: '/compare',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-booksy',
     label: 'Booksy Alternative',
     description: 'Compare Booksy and KERSIVO for an independent UK barbershop.',

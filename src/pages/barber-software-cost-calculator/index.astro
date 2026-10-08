@@ -21,6 +21,7 @@ import CostPayments from '@/components/costCalculator/CostPayments.astro';
 import CostScenarios from '@/components/costCalculator/CostScenarios.astro';
 import CostMethodology from '@/components/costCalculator/CostMethodology.astro';
 import CostSources from '@/components/costCalculator/CostSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   BARBER_COST_CALCULATOR_DESCRIPTION,
   BARBER_COST_CALCULATOR_PAGE_PATH,
@@ -64,6 +65,7 @@ const currentYear = new Date().getFullYear();
     <CostPayments />
     <CostScenarios />
     <CostMethodology />
+    <CompareHubLink />
     <CostSources />
 
     <Faq4

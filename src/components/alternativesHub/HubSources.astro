@@ -1,0 +1,65 @@
+---
+import { COMPETITOR_HUB_PLATFORMS, KERSIVO_HUB_PLATFORM } from '@/lib/compare/alternativesHubData';
+import { ALTERNATIVES_HUB_LAST_UPDATED_LABEL } from '@/lib/seo/alternativesHubSeo';
+
+function formatIsoDate(iso: string): string {
+  if (!iso) return 'date not recorded';
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+const competitorNames = COMPETITOR_HUB_PLATFORMS.map((p) => p.name);
+const trademarkList = `${competitorNames.slice(0, -1).join(', ')} and ${competitorNames.at(-1)}`;
+---
+
+<section id="sources" class="alt-hub-section alt-hub-sources" aria-labelledby="alt-hub-sources-title">
+  <div class="alt-hub__container">
+    <h2 id="alt-hub-sources-title" class="alt-hub-section__title">Sources & comparison notes</h2>
+    <p class="alt-hub-sources__intro">
+      Prices and features change. Each platform below was checked against its official public sources on the date
+      shown. Confirm current terms with each provider before you decide. Page last updated
+      {ALTERNATIVES_HUB_LAST_UPDATED_LABEL}.
+    </p>
+
+    <div class="alt-hub-sources__grid">
+      <div class="alt-hub-sources__group">
+        <h3>
+          {KERSIVO_HUB_PLATFORM.name}
+          <span>Terms as of {formatIsoDate(KERSIVO_HUB_PLATFORM.checkedIso)}</span>
+        </h3>
+        <ul>
+          {KERSIVO_HUB_PLATFORM.sources.map((source) => <li><a href={source.url}>{source.label}</a></li>)}
+        </ul>
+      </div>
+      {
+        COMPETITOR_HUB_PLATFORMS.map((platform) => (
+          <div class="alt-hub-sources__group">
+            <h3>
+              {platform.name}
+              <span>Checked {formatIsoDate(platform.checkedIso)}</span>
+            </h3>
+            <ul>
+              {platform.sources.map((source) => (
+                <li>
+                  <a href={source.url} rel="nofollow noopener" target="_blank">
+                    {source.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="alt-hub-sources__trademark">
+      {trademarkList} are trademarks of their respective owners. KERSIVO is not affiliated with, endorsed by or
+      sponsored by any of these platforms. This comparison is published by KERSIVO and reflects publicly available
+      information; it is not an independent review or rating.
+    </p>
+  </div>
+</section>

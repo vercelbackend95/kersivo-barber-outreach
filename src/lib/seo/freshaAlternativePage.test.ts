@@ -637,7 +637,9 @@ describe('comparison cluster internal links', () => {
     }
   });
 
-  it('does not link to a /compare hub before it exists', () => {
+  it('links to the /compare hub only through the shared CompareHubLink component', () => {
+    expect(pageSource).toContain('<CompareHubLink />');
+    expect(pageSource.indexOf('<CompareHubLink />')).toBeLessThan(pageSource.indexOf('<FreshaSources />'));
     for (const source of [pageSource, ...newComponentSources, booksyFitSource, switcherSource]) {
       expect(source).not.toMatch(/href="\/compare/);
     }

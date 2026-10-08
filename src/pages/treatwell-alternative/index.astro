@@ -15,6 +15,7 @@ import TreatwellCosts from '@/components/treatwellAlternative/TreatwellCosts.ast
 import TreatwellFit from '@/components/treatwellAlternative/TreatwellFit.astro';
 import TreatwellSwitching from '@/components/treatwellAlternative/TreatwellSwitching.astro';
 import TreatwellSources from '@/components/treatwellAlternative/TreatwellSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   TREATWELL_ALTERNATIVE_DESCRIPTION,
   TREATWELL_ALTERNATIVE_FAQ_ITEMS,
@@ -75,6 +76,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: Treatwell marketplace commission, prepayment fees, data exports or an own-domain booking website."
     />
 
+    <CompareHubLink />
     <TreatwellSources />
 
     <Footer50

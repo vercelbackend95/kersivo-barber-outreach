@@ -14,6 +14,7 @@ import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astr
 import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
 import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
 import BooksySources from '@/components/booksyAlternative/BooksySources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   BOOKSY_ALTERNATIVE_DESCRIPTION,
   BOOKSY_ALTERNATIVE_FAQ_ITEMS,
@@ -74,6 +75,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: switching from Booksy, setting up deposits, moving client data or launching a new booking website."
     />
 
+    <CompareHubLink />
     <BooksySources />
 
     <Footer50

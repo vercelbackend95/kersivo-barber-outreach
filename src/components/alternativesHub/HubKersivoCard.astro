@@ -1,0 +1,61 @@
+---
+import HubFeatureList from '@/components/alternativesHub/HubFeatureList.astro';
+import HubScoreRing from '@/components/alternativesHub/HubScoreRing.astro';
+import type { HubCriterionId } from '@/lib/compare/alternativesHubCriteria';
+import type { HubPlatform } from '@/lib/compare/alternativesHubData';
+import type { HubScore } from '@/lib/compare/alternativesHubScoring';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+
+interface Props {
+  platform: HubPlatform;
+  score: HubScore;
+  selected: readonly HubCriterionId[];
+}
+
+const { platform, score, selected } = Astro.props as Props;
+const statuses = Object.fromEntries(Object.entries(platform.attributes).map(([k, v]) => [k, v.status]));
+---
+
+<article
+  class="alt-hub-card alt-hub-card--featured"
+  aria-labelledby="alt-hub-card-kersivo-title"
+  data-hub-card
+  data-platform-id={platform.id}
+  data-platform-name={platform.name}
+  data-order="0"
+  data-first-party="true"
+  data-collapsed="false"
+  data-statuses={JSON.stringify(statuses)}
+>
+  <header class="alt-hub-card__head">
+    <div class="alt-hub-card__identity">
+      <div class="alt-hub-card__brand-row">
+        <h3 id="alt-hub-card-kersivo-title" class="alt-hub-card__wordmark">{platform.name}</h3>
+        <span class="alt-hub-card__badge">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1.8l1.8 3.9 4.2.5-3.1 2.9.8 4.2L8 11.2l-3.7 2.1.8-4.2L2 6.2l4.2-.5z" /></svg>
+          Our platform
+        </span>
+      </div>
+      <p class="alt-hub-card__headline">{platform.tagline}</p>
+    </div>
+    <HubScoreRing score={score} featured />
+  </header>
+
+  <p class="alt-hub-card__description">{platform.description}</p>
+
+  <p class="alt-hub-card__price alt-hub-card__price--featured">
+    <span class="alt-hub-card__price-label">Benchmark</span>
+    {platform.pricingSummary} 0% KERSIVO commission. {STRIPE_FEES_NOTE}
+  </p>
+
+  <HubFeatureList platform={platform} selected={selected} />
+
+  <div class="alt-hub-card__actions alt-hub-card__actions--featured">
+    <a class="alt-hub-card__cta alt-hub-card__cta--primary" href={platform.href} data-track="compare_hub_kersivo_click">
+      {platform.ctaLabel}<span aria-hidden="true" class="alt-hub-card__arrow">→</span>
+    </a>
+    <p class="alt-hub-card__starter">
+      Just need bookings? <a href="/starter">KERSIVO Starter is £0/month</a> (hosted booking page, up to 4 barbers).
+    </p>
+  </div>
+</article>

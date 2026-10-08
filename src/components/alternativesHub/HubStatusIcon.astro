@@ -1,0 +1,24 @@
+---
+import type { HubStatus } from '@/lib/compare/alternativesHubData';
+
+interface Props {
+  status: HubStatus;
+}
+
+const { status } = Astro.props as Props;
+---
+
+<span class={`alt-hub-status alt-hub-status--${status}`} aria-hidden="true" data-hub-status-icon>
+  {status === 'yes' && (
+    <svg viewBox="0 0 16 16" focusable="false"><path d="M4 8.4 6.7 11 12 5.2" /></svg>
+  )}
+  {status === 'no' && (
+    <svg viewBox="0 0 16 16" focusable="false"><path d="M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6" /></svg>
+  )}
+  {status === 'limited' && (
+    <svg viewBox="0 0 16 16" focusable="false"><path d="M4.6 8h6.8" /></svg>
+  )}
+  {status === 'unverified' && (
+    <svg viewBox="0 0 16 16" focusable="false"><path d="M6.1 6.1a1.95 1.95 0 1 1 2.6 1.85c-.45.2-.7.55-.7 1.05v.4M8 11.4v.05" /></svg>
+  )}
+</span>

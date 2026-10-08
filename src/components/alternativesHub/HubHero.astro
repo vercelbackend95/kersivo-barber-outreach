@@ -1,0 +1,40 @@
+---
+import {
+  ALTERNATIVES_HUB_H1_ACCENT,
+  ALTERNATIVES_HUB_H1_LEAD,
+  ALTERNATIVES_HUB_LAST_UPDATED_ISO,
+  ALTERNATIVES_HUB_LAST_UPDATED_LABEL,
+} from '@/lib/seo/alternativesHubSeo';
+---
+
+<section class="alt-hub-hero" aria-labelledby="alt-hub-title">
+  <div class="alt-hub__container alt-hub-hero__inner">
+    <div class="alt-hub-hero__copy">
+      <nav class="alt-hub-hero__breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-current="page">Compare booking systems</li>
+        </ol>
+      </nav>
+      <p class="alt-hub-hero__eyebrow">Alternatives Hub</p>
+      <h1 id="alt-hub-title" class="alt-hub-hero__title">
+        {ALTERNATIVES_HUB_H1_LEAD} <span class="alt-hub-hero__accent">{ALTERNATIVES_HUB_H1_ACCENT}</span>
+      </h1>
+      <p class="alt-hub-hero__lead">
+        Compare the leading barber booking platforms by what matters most to your business.
+      </p>
+      <p class="alt-hub-hero__sub">
+        Built for independent UK barbershops that want more control, clearer costs and a stronger brand.
+      </p>
+      <p class="alt-hub-hero__meta">
+        Published by KERSIVO · Last updated <time datetime={ALTERNATIVES_HUB_LAST_UPDATED_ISO}>{ALTERNATIVES_HUB_LAST_UPDATED_LABEL}</time>
+      </p>
+    </div>
+    <div class="alt-hub-hero__statement" aria-hidden="true">
+      <span>Same tools.</span>
+      <span>More control.</span>
+      <span>A better business.</span>
+      <span class="alt-hub-hero__rule"></span>
+    </div>
+  </div>
+</section>

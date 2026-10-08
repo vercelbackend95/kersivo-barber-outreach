@@ -21,6 +21,7 @@ export function isLiveTenantShopPath(pathname: string): boolean {
 
 /** Public SEO, comparison and tool pages rendered with LandingLayout and the marketing navigation. */
 export const MARKETING_CONTENT_PATHS: readonly string[] = [
+  '/compare',
   '/booksy-alternative',
   '/fresha-alternative',
   '/vagaro-alternative',

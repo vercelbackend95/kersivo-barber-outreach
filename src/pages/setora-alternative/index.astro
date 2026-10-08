@@ -14,6 +14,7 @@ import SetoraCosts from '@/components/setoraAlternative/SetoraCosts.astro';
 import SetoraFit from '@/components/setoraAlternative/SetoraFit.astro';
 import SetoraSwitching from '@/components/setoraAlternative/SetoraSwitching.astro';
 import SetoraSources from '@/components/setoraAlternative/SetoraSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   SETORA_ALTERNATIVE_DESCRIPTION,
   SETORA_ALTERNATIVE_FAQ_ITEMS,
@@ -74,6 +75,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: Setora pricing and VAT, custom domains, booking exports or retail pickup."
     />
 
+    <CompareHubLink />
     <SetoraSources />
 
     <Footer50

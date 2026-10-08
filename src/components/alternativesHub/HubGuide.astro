@@ -1,0 +1,80 @@
+---
+import { COMPETITOR_HUB_PLATFORMS } from '@/lib/compare/alternativesHubData';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+---
+
+<section class="alt-hub-section alt-hub-guide" aria-labelledby="alt-hub-guide-title">
+  <div class="alt-hub__container alt-hub-guide__grid">
+    <article class="alt-hub-guide__block">
+      <h2 id="alt-hub-guide-title" class="alt-hub-section__title">How to choose booking software for your barbershop</h2>
+      <ul class="alt-hub-guide__list">
+        <li>
+          <strong>Total monthly cost.</strong> Price the plan for your real team size. Some platforms charge per
+          barber or calendar, others per location, and VAT may be added on top.
+        </li>
+        <li>
+          <strong>Commissions and processing fees.</strong> Check whether the platform takes a commission on any
+          bookings, especially new clients from a marketplace, and compare card-processing rates separately.
+        </li>
+        <li>
+          <strong>Booking experience.</strong> Clients should be able to book in a few taps, see real availability and
+          get confirmations and reminders.
+        </li>
+        <li>
+          <strong>Team size.</strong> Make sure the plan supports every bookable barber and the staff permissions you
+          need.
+        </li>
+        <li>
+          <strong>Brand control.</strong> Decide whether clients should book on your own website and domain or inside a
+          third-party app.
+        </li>
+        <li>
+          <strong>Client data.</strong> Confirm how you can export your client list and booking history, and in what
+          format.
+        </li>
+        <li>
+          <strong>Deposits.</strong> Deposits and card-on-file policies reduce no-shows; check what each plan allows.
+        </li>
+        <li>
+          <strong>Switching.</strong> Ask what help is included to move clients, services and future appointments.
+        </li>
+      </ul>
+    </article>
+
+    <article class="alt-hub-guide__block">
+      <h2 class="alt-hub-section__title">Marketplace bookings vs your own branded website</h2>
+      <p>
+        Marketplace apps can put your shop in front of people searching nearby, which can help a new or quiet shop
+        fill gaps. The trade-off is that clients book inside someone else’s platform, next to other shops, and some
+        marketplaces charge a commission when they introduce a new client.
+      </p>
+      <p>
+        A branded website on your own domain keeps the booking journey, your reviews and your regulars under your
+        name, and there is no marketplace commission to pay. You rely more on your own channels — Google, Instagram,
+        QR codes and word of mouth — to bring clients in.
+      </p>
+      <p>
+        Many shops use both: a marketplace for discovery and their own site for regulars. Full KERSIVO
+        (£{SAAS_MONTHLY_GBP}/month per location) is built for the own-brand approach, with your website and standard
+        domain included.
+      </p>
+    </article>
+  </div>
+
+  <div class="alt-hub__container">
+    <nav class="alt-hub-guide__links" aria-labelledby="alt-hub-all-comparisons">
+      <h2 id="alt-hub-all-comparisons" class="alt-hub-guide__links-title">Every KERSIVO comparison</h2>
+      <ul>
+        {
+          COMPETITOR_HUB_PLATFORMS.map((platform) => (
+            <li>
+              <a href={platform.href}>KERSIVO vs {platform.name}</a>
+            </li>
+          ))
+        }
+        <li><a href="/barber-software-cost-calculator">Barber software cost calculator</a></li>
+        <li><a href="/pricing">KERSIVO pricing</a></li>
+      </ul>
+    </nav>
+  </div>
+</section>

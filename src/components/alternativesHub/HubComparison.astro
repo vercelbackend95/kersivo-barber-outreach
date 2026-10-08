@@ -1,0 +1,156 @@
+---
+import HubKersivoCard from '@/components/alternativesHub/HubKersivoCard.astro';
+import HubPlatformCard from '@/components/alternativesHub/HubPlatformCard.astro';
+import {
+  HUB_CRITERIA,
+  HUB_SUGGESTED_CRITERIA,
+} from '@/lib/compare/alternativesHubCriteria';
+import {
+  HUB_INITIAL_VISIBLE_CARDS,
+  HUB_PLATFORMS,
+  buildHubScoreInputs,
+} from '@/lib/compare/alternativesHubData';
+import { HUB_SORT_MODES, rankPlatforms } from '@/lib/compare/alternativesHubScoring';
+
+const selected = HUB_SUGGESTED_CRITERIA;
+const ranked = rankPlatforms(buildHubScoreInputs(), selected, 'best');
+const byId = new Map(HUB_PLATFORMS.map((p) => [p.id, p]));
+const total = HUB_PLATFORMS.length;
+const hiddenCount = Math.max(0, total - HUB_INITIAL_VISIBLE_CARDS);
+const PRIMARY_PILLS = 6;
+---
+
+<section
+  class="alt-hub-compare"
+  aria-labelledby="alt-hub-filters-title"
+  data-hub-root
+  data-initial-visible={HUB_INITIAL_VISIBLE_CARDS}
+  data-suggested={selected.join(',')}
+>
+  <div class="alt-hub__container">
+    <div class="alt-hub-panel" data-filters-expanded="false">
+      <div class="alt-hub-panel__head">
+        <div class="alt-hub-panel__intro">
+          <h2 id="alt-hub-filters-title" class="alt-hub-panel__title">What matters to you?</h2>
+          <p class="alt-hub-panel__helper" id="alt-hub-filters-helper">
+            Select the features that matter most to your barbershop.
+          </p>
+        </div>
+        <div class="alt-hub-panel__meta">
+          <p class="alt-hub-panel__counts">
+            <span data-hub-selected-count>{selected.length}</span> of {HUB_CRITERIA.length} selected
+            <span class="alt-hub-panel__dot" aria-hidden="true">·</span>
+            <span>{total} systems</span>
+          </p>
+          <button type="button" class="alt-hub-panel__reset" data-hub-reset>
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.2h2.2" /></svg>
+            Reset filters
+          </button>
+        </div>
+      </div>
+
+      <p class="alt-hub-panel__suggested" data-hub-suggested-note>
+        Suggested priorities for independent barbershops are preselected. Change or clear them at any time.
+      </p>
+
+      <div
+        class="alt-hub-pills"
+        role="group"
+        aria-labelledby="alt-hub-filters-title"
+        aria-describedby="alt-hub-filters-helper"
+        id="alt-hub-pills"
+      >
+        {
+          HUB_CRITERIA.map((criterion, index) => {
+            const pressed = selected.includes(criterion.id);
+            return (
+              <button
+                type="button"
+                class={`alt-hub-pill${index >= PRIMARY_PILLS ? ' alt-hub-pill--extra' : ''}`}
+                aria-pressed={pressed ? 'true' : 'false'}
+                data-hub-filter={criterion.id}
+                title={criterion.definition}
+              >
+                <span class="alt-hub-pill__icon" aria-hidden="true">
+                  <svg class="alt-hub-pill__check" viewBox="0 0 16 16" focusable="false"><path d="M4 8.4 6.7 11 12 5.2" /></svg>
+                  <svg class="alt-hub-pill__plus" viewBox="0 0 16 16" focusable="false"><path d="M8 4v8M4 8h8" /></svg>
+                </span>
+                {criterion.label}
+              </button>
+            );
+          })
+        }
+      </div>
+
+      <div class="alt-hub-panel__foot">
+        <p class="alt-hub-panel__explainer">
+          Scores count only features confirmed in official sources for the priorities you select. Partial and
+          not-verified features are shown but never counted as matches. <a href="#methodology">How matching works</a>
+        </p>
+        <div class="alt-hub-panel__controls">
+          <button
+            type="button"
+            class="alt-hub-panel__more"
+            aria-expanded="false"
+            aria-controls="alt-hub-pills"
+            data-hub-more-filters
+          >
+            <span data-hub-more-label>More filters ({HUB_CRITERIA.length - PRIMARY_PILLS})</span>
+          </button>
+          <div class="alt-hub-sort">
+            <label for="alt-hub-sort" class="alt-hub-sort__label">Sort by:</label>
+            <select id="alt-hub-sort" class="alt-hub-sort__select" data-hub-sort>
+              {HUB_SORT_MODES.map((mode) => <option value={mode.value}>{mode.label}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="alt-hub-status-line" aria-live="polite" data-hub-live>
+      {total} systems shown, sorted by best match for {selected.length} selected priorities.
+    </p>
+
+    <div class="alt-hub-grid" id="alt-hub-grid" data-hub-grid data-expanded="false">
+      {
+        ranked.map(({ platform: input, score }, index) => {
+          const platform = byId.get(input.id)!;
+          return platform.isFirstParty ? (
+            <HubKersivoCard platform={platform} score={score} selected={selected} />
+          ) : (
+            <HubPlatformCard
+              platform={platform}
+              score={score}
+              selected={selected}
+              order={input.order}
+              collapsed={index >= HUB_INITIAL_VISIBLE_CARDS}
+            />
+          );
+        })
+      }
+    </div>
+
+    {
+      hiddenCount > 0 && (
+        <div class="alt-hub-showall">
+          <button
+            type="button"
+            class="alt-hub-showall__button"
+            aria-expanded="false"
+            aria-controls="alt-hub-grid"
+            data-hub-show-all
+          >
+            <span data-hub-show-all-label>Show all systems ({total})</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" /></svg>
+          </button>
+        </div>
+      )
+    }
+    <noscript>
+      <style>
+        .alt-hub-grid .alt-hub-card[data-collapsed='true'] { display: flex !important; }
+        .alt-hub-showall, .alt-hub-panel__more, .alt-hub-panel__reset, .alt-hub-sort { display: none !important; }
+      </style>
+    </noscript>
+  </div>
+</section>

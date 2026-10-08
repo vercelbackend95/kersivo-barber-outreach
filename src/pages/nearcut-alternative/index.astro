@@ -14,6 +14,7 @@ import NearcutCosts from '@/components/nearcutAlternative/NearcutCosts.astro';
 import NearcutFit from '@/components/nearcutAlternative/NearcutFit.astro';
 import NearcutSwitching from '@/components/nearcutAlternative/NearcutSwitching.astro';
 import NearcutSources from '@/components/nearcutAlternative/NearcutSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   NEARCUT_ALTERNATIVE_DESCRIPTION,
   NEARCUT_ALTERNATIVE_FAQ_ITEMS,
@@ -74,6 +75,7 @@ const currentYear = new Date().getFullYear();
       messagePlaceholder="For example: Nearcut booking charges, deposits, client data exports or an own-domain booking website."
     />
 
+    <CompareHubLink />
     <NearcutSources />
 
     <Footer50

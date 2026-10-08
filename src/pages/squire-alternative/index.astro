@@ -11,6 +11,7 @@ import SquireFit from '@/components/squireAlternative/SquireFit.astro';
 import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
 import SquireFinalCta from '@/components/squireAlternative/SquireFinalCta.astro';
 import SquireSources from '@/components/squireAlternative/SquireSources.astro';
+import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   SQUIRE_ALTERNATIVE_DESCRIPTION,
   SQUIRE_ALTERNATIVE_FAQ_ITEMS,
@@ -47,6 +48,7 @@ const currentYear = new Date().getFullYear();
       note="We’ll reply by email — no sales call required."
       submitLabel="Send my question"
       messagePlaceholder="For example: switching from SQUIRE, migrating bookings, own website and domain, or choosing the right KERSIVO plan." />
+    <CompareHubLink />
     <SquireSources />
     <Footer50 showIntro={false} brandLine="Own your brand. Own your bookings."
       contactEmail={KERSIVO_CONTACT_EMAIL} brandName="KERSIVO"

@@ -1,0 +1,42 @@
+---
+import {
+  HUB_RING_CIRCUMFERENCE,
+  HUB_RING_RADIUS,
+  describeScore,
+  formatScoreLabel,
+  ringDashOffset,
+  type HubScore,
+} from '@/lib/compare/alternativesHubScoring';
+
+interface Props {
+  score: HubScore;
+  featured?: boolean;
+}
+
+const { score, featured = false } = Astro.props as Props;
+const circumference = HUB_RING_CIRCUMFERENCE.toFixed(3);
+---
+
+<div
+  class={`alt-hub-ring${featured ? ' alt-hub-ring--featured' : ''}`}
+  data-hub-ring
+  data-empty={score.selected === 0 ? 'true' : 'false'}
+>
+  <svg class="alt-hub-ring__svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+    <circle class="alt-hub-ring__track" cx="32" cy="32" r={HUB_RING_RADIUS} />
+    <circle
+      class="alt-hub-ring__value"
+      cx="32"
+      cy="32"
+      r={HUB_RING_RADIUS}
+      stroke-dasharray={circumference}
+      stroke-dashoffset={ringDashOffset(score.ratio)}
+      data-hub-ring-value
+    />
+  </svg>
+  <span class="alt-hub-ring__label" aria-hidden="true">
+    <span class="alt-hub-ring__score" data-hub-score-label>{formatScoreLabel(score)}</span>
+    <span class="alt-hub-ring__caption">match</span>
+  </span>
+  <span class="sr-only" data-hub-score-description>{describeScore(score)}</span>
+</div>

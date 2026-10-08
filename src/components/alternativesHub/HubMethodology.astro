@@ -1,0 +1,47 @@
+---
+import HubStatusIcon from '@/components/alternativesHub/HubStatusIcon.astro';
+import { HUB_CRITERIA } from '@/lib/compare/alternativesHubCriteria';
+---
+
+<section id="methodology" class="alt-hub-section alt-hub-method" aria-labelledby="alt-hub-method-title">
+  <div class="alt-hub__container">
+    <h2 id="alt-hub-method-title" class="alt-hub-section__title">How this comparison works</h2>
+    <div class="alt-hub-method__grid">
+      <div class="alt-hub-method__copy">
+        <p>
+          This comparison is published by KERSIVO, which is one of the platforms compared. It is not an independent
+          ranking. Each competitor fact comes from that provider’s official public pages, checked on the date shown in
+          the sources below. KERSIVO facts come from our current pricing and product terms.
+        </p>
+        <p>
+          The match score counts how many of your selected priorities a platform meets with a confirmed “Yes”.
+          Partial or conditional features and features we could not verify are shown on every card but never counted
+          as matches, and an unverified feature is never treated as a “No”. KERSIVO is always shown first because it
+          is our platform; competitors are ordered by match score, then partial matches, then unverified features.
+        </p>
+        <ul class="alt-hub-legend" aria-label="Status key">
+          <li><HubStatusIcon status="yes" /> Yes — confirmed in official sources</li>
+          <li><HubStatusIcon status="limited" /> Partial — conditional, add-on or plan-dependent</li>
+          <li><HubStatusIcon status="no" /> No — confirmed not to meet the definition</li>
+          <li><HubStatusIcon status="unverified" /> Not verified — not established from sources we checked</li>
+        </ul>
+      </div>
+      <details class="alt-hub-method__details">
+        <summary>Criteria definitions</summary>
+        <dl>
+          {
+            HUB_CRITERIA.map((criterion) => (
+              <div class="alt-hub-method__def">
+                <dt>{criterion.label}</dt>
+                <dd>
+                  {criterion.definition} <strong>Yes:</strong> {criterion.yes} <strong>Partial:</strong>{' '}
+                  {criterion.limited}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </details>
+    </div>
+  </div>
+</section>
