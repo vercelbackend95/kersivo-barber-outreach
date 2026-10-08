@@ -43,7 +43,7 @@ function largest(results: readonly CalculatedProviderResult[], pick: (r: Calcula
 
 export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
   if (!monthly.ok) return null;
-  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing');
+  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing' && result.provider !== 'phorest');
   if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : 'fresha' };
 
   const calculated = monthly.providers.filter(
