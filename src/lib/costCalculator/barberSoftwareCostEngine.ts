@@ -946,10 +946,10 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
     providers: [
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
-      calculateVagaro(scenario, effectiveMarketplaceClients.vagaroMarketplace),
       calculateNearcut(scenario),
       calculateSetora(scenario),
       calculateKersivo(scenario),
+      calculateVagaro(scenario, effectiveMarketplaceClients.vagaroMarketplace),
     ],
   };
 }
