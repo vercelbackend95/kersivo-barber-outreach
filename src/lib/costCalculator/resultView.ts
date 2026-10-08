@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  TREATWELL_CUSTOM_PRICING_NOTE,
   PHOREST_CUSTOM_PRICING_NOTE,
   SQUARE_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
@@ -109,6 +110,10 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'treatwell-subscription':
+      return unit ? `${unit}/month from your Treatwell quote` : 'Own quote required';
+    case 'treatwell-new-client-commission':
+      return `${plural(line.quantity, 'eligible new marketplace booking', 'eligible new marketplace bookings')}/month · published 35% + VAT · 365-day eligibility rule`;
     case 'phorest-subscription':
       return unit ? `${unit}/month from your Phorest quote` : 'Own quote required';
     case 'square-subscription':
@@ -124,6 +129,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
     case 'phorest-deposit-processing':
     case 'square-deposit-processing':
     case 'nearcut-deposit-processing':
+    case 'treatwell-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
@@ -134,6 +140,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
+  'treatwell-online-prepayment': 'Treatwell published 2.5% + VAT online prepayment',
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
 };
 
@@ -207,7 +214,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'treatwell' ? TREATWELL_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
@@ -226,7 +233,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       amounts.estimatedNetCostIfVatRecoverableGbp === null
         ? null
         : `${NET_IF_VAT_RECOVERABLE_LABEL} ${formatMoneyGbp(amounts.estimatedNetCostIfVatRecoverableGbp)}`,
-    customNote: result.provider === 'phorest'
+    customNote: result.provider === 'treatwell' ? 'Treatwell published marketplace and deposit costs are estimates under the eligibility and payment assumptions. Other agreement-specific fees are excluded.' : result.provider === 'phorest'
       ? 'Subscription and confirmed VAT only — not the full Phorest bill. SMS, optional tools, setup and PhorestPay charges are excluded.'
       : null,
     summary: {
