@@ -82,8 +82,7 @@ const NUMBER_RULES: Record<
   | 'averageAppointmentValueGbp'
   | 'marketplaceClients'
   | 'booksyBoostClients'
-  | 'freshaMarketplaceClients'
-  | 'nearcutMonthlyQuoteGbp',
+  | 'freshaMarketplaceClients',
   NumberRule
 > = {
   bookableBarbers: { integer: true, min: 1 },
@@ -92,7 +91,6 @@ const NUMBER_RULES: Record<
   marketplaceClients: { integer: true, min: 0 },
   booksyBoostClients: { integer: true, min: 0 },
   freshaMarketplaceClients: { integer: true, min: 0 },
-  nearcutMonthlyQuoteGbp: { integer: false, min: 0 },
 };
 
 const BOOLEAN_FIELDS = [
@@ -129,6 +127,10 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
 
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
+  if (input.nearcutSubscription === true) {
+    const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
+    if (quoteIssue) issues.push(quoteIssue);
+  }
   return issues;
 }
 
