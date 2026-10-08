@@ -426,7 +426,7 @@ const DEPOSIT_LINE = {
   setora: 'setora-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo', 'vagaro'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
