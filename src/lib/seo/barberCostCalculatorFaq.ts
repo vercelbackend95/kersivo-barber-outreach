@@ -86,6 +86,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
     answer: `Setora’s barbershop page currently states that no VAT is added to its ${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)} subscription, while main pricing notes VAT where applicable. It says Stripe processing is charged at Stripe rates without markup. The calculator models standard UK cards as an illustrative benchmark, not a guaranteed merchant rate; optional SMS credits are excluded.`,
   },
   {
+    question: 'How much does Phorest cost per month in the UK?',
+    answer: 'Phorest offers Starter, Grow, Ultimate and Elite plans but does not publish one standard UK monthly price. You need a personalised quote. The calculator accepts a real monthly subscription quote before VAT and asks you to confirm the VAT treatment before calculating a Phorest subscription estimate.',
+  },
+  {
+    question: 'Can the calculator estimate PhorestPay fees?',
+    answer: 'Not without your actual PhorestPay merchant rates. The calculator will not copy Stripe, Booksy or Fresha card fees onto Phorest. If deposit processing is enabled and deposits are modelled, the Phorest total remains Custom pricing until those fees can be verified. SMS, setup and optional add-ons are excluded.',
+  },
+  {
     question: 'Is Booksy or Fresha cheaper for a barbershop?',
     answer: `There is no single answer. ${DEPENDS_ON} Booksy adds a charge per additional user, Fresha charges per bookable team member, and their marketplace fees work differently. Comparing both with your own numbers is the most reliable way to decide.`,
   },
