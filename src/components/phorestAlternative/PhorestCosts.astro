@@ -1,20 +1,29 @@
 ---
-import { PHOREST_FACTS_CHECKED_DATE, PHOREST_SOURCES } from '@/lib/seo/phorestFacts';
+import { PHOREST_FACTS_CHECKED_DATE, PHOREST_SOURCES, PHOREST_UK_PLANS } from '@/lib/seo/phorestFacts';
 ---
 <section id="phorest-pricing" class="fresha-alt__section" aria-labelledby="phorest-alt-costs-title">
 <div class="container">
 <header class="fresha-alt__intro">
 <p class="fresha-alt__eyebrow">PHOREST PRICING EXPLAINED</p>
-<h2 id="phorest-alt-costs-title" class="fresha-alt__h2">Phorest pricing and costs in the UK</h2>
-<p class="fresha-alt__lead">Phorest offers several salon software plans and asks UK businesses to request a personalised quote. There is no reliable single published GBP monthly subscription we can put against your shop. Compare the total written quote with what KERSIVO includes, rather than treating different plans as directly equivalent.</p>
+<h2 id="phorest-alt-costs-title" class="fresha-alt__h2">Phorest pricing UK: plans, SMS rates and quote requirements</h2>
+<p class="fresha-alt__lead">Phorest has four UK salon software plans: Starter, Grow, Ultimate and Elite. It asks UK businesses to request a personalised quote. There is no reliable single published GBP monthly subscription we can put against your shop. Compare the total written quote with what KERSIVO includes, rather than treating different plans as directly equivalent.</p>
 <p class="fresha-alt-costs__checked">Official Phorest pages checked {PHOREST_FACTS_CHECKED_DATE} · <a href={PHOREST_SOURCES[0].url} target="_blank" rel="noopener noreferrer">Phorest UK pricing</a></p>
 </header>
 <ul class="fresha-alt-costs__grid">
-<li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">PHOREST UK</p><p class="fresha-alt-costs__figure">Quote</p><p class="fresha-alt-costs__unit">Request a shop-specific price</p><ul class="fresha-alt-costs__notes"><li>Plans include salon scheduling, online bookings and client tools.</li><li>Check which marketing, loyalty, POS, app and stock features your quote covers.</li><li>Confirm fees, onboarding terms and extras directly with Phorest.</li></ul></li>
+<li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">PHOREST UK</p><p class="fresha-alt-costs__figure">Quote</p><p class="fresha-alt-costs__unit">per shop · individual quotation</p><ul class="fresha-alt-costs__notes"><li>Plans include salon scheduling, online bookings and client tools.</li><li>Phorest advertises unlimited staff across its plans; confirm the scope and conditions of your quote.</li><li>Check which marketing, loyalty, POS, branded app and stock features your quote covers.</li><li>Confirm fees, onboarding terms and extras directly with Phorest.</li></ul></li>
 <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">PHOREST CAPABILITIES</p><p class="fresha-alt-costs__figure">Broad</p><p class="fresha-alt-costs__unit">Salon management ecosystem</p><ul class="fresha-alt-costs__notes"><li>Integrated bookings and deposits.</li><li>Email/SMS and retention marketing.</li><li>POS, inventory and branded client-app options.</li><li>Plan inclusion varies; verify the quotation.</li></ul></li>
 <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">KERSIVO STARTER</p><p class="fresha-alt-costs__figure">£0</p><p class="fresha-alt-costs__unit">per month · up to four barbers</p><ul class="fresha-alt-costs__notes"><li>Unlimited bookings after Stripe payment setup.</li><li>Every public booking takes a £5 deposit or full online payment.</li><li>0% KERSIVO commission; standard Stripe processing fees apply.</li></ul></li>
 <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">FULL KERSIVO</p><p class="fresha-alt-costs__figure">£39</p><p class="fresha-alt-costs__unit">per physical location / month</p><ul class="fresha-alt-costs__notes"><li>Own branded website and standard domain included.</li><li>No per-barber subscription charge, subject to fair use.</li><li>Reports, client tools, flexible payment modes and retail pickup.</li></ul></li>
 </ul>
+<div class="fresha-alt-card fresha-alt-costs__marketplace" aria-labelledby="phorest-plan-overview-title">
+<div class="fresha-alt-costs__marketplace-body">
+<h3 id="phorest-plan-overview-title" class="fresha-alt-costs__h3">Phorest UK plans compared: Starter, Grow, Ultimate and Elite</h3>
+<ul class="fresha-alt-list">
+{PHOREST_UK_PLANS.map(plan => <li><strong>{plan.label}:</strong> {plan.notes}. {plan.smsPence !== null ? `Published SMS rate: ${plan.smsPence}p per SMS.` : `Phorest lists ${plan.includedSmsMonthly} free SMS/month; check additional SMS pricing.`} Monthly software price: quote required.</li>)}
+</ul>
+</div>
+<div class="fresha-alt-costs__marketplace-aside"><p class="fresha-alt-costs__example">These SMS figures are taken from Phorest’s published UK pricing table. VAT and exact messaging terms are not established by the table; confirm with Phorest. This is not a total monthly estimate.</p></div>
+</div>
 <div class="fresha-alt-card fresha-alt-costs__marketplace"><div class="fresha-alt-costs__marketplace-body">
 <h3 class="fresha-alt-costs__h3">How to compare your real Phorest quote</h3>
 <ul class="fresha-alt-list"><li>Ask for the monthly price and any VAT treatment.</li><li>Check staff/location limits, setup, contract, cancellation and upgrade terms.</li><li>Ask which booking app, marketing, messaging and payment services cost extra.</li><li>Compare the specific functions your shop uses, not just the headline price.</li></ul>
