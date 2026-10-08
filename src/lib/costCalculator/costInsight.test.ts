@@ -59,10 +59,10 @@ describe('determineCostInsight', () => {
   });
 
   it('detects selected add-ons as the largest optional cost', () => {
-    expect(insightFor({ freshaSmartWebsite: true })).toEqual({ kind: 'add-ons', freshaAddOnsGbp: 12.95 });
+    expect(insightFor({ freshaSmartWebsite: true })).toEqual({ kind: 'add-ons', freshaAddOnsGbp: 12.95, vagaroAddOnsGbp: 0 });
     expect(insightFor({ bookableBarbers: 1, freshaSmartWebsite: true, freshaClientLoyalty: true })).toEqual({
       kind: 'add-ons',
-      freshaAddOnsGbp: 62.9,
+      freshaAddOnsGbp: 62.9, vagaroAddOnsGbp: 0,
     });
   });
 
@@ -126,7 +126,7 @@ describe('describeCostInsight', () => {
   });
 
   it('describes Booksy Boost alone when only Boost applies', () => {
-    const boostOnly: CostInsight = { kind: 'acquisition', booksyBoostGbp: 15, freshaMarketplaceGbp: 0 };
+    const boostOnly: CostInsight = { kind: 'acquisition', booksyBoostGbp: 15, freshaMarketplaceGbp: 0, vagaroMarketplaceGbp: 0 };
     expect(describeCostInsight(boostOnly)).toBe(
       'Booksy Boost is the largest modelled variable cost in this scenario at £15.00/month before VAT, under the assumptions entered.',
     );
