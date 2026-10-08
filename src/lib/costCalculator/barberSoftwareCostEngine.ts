@@ -34,6 +34,7 @@ import {
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -53,6 +54,10 @@ export type CostScenarioInput = {
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Actual shop-provided Phorest monthly subscription quote, before VAT. 0 = unknown. */
+  phorestMonthlyQuoteGbp: number;
+  /** VAT treatment confirmed from the actual quote: 99 unknown, 0 no VAT, 20 UK standard VAT. */
+  phorestQuoteVatPercent: number;
   vatRegistered: boolean;
   includeDepositProcessing: boolean;
   /** Only read and validated when `includeDepositProcessing` is true. */
@@ -69,7 +74,8 @@ export type ValidationIssueCode =
   | 'below-minimum'
   | 'not-boolean'
   | 'exceeds-monthly-appointments'
-  | 'deposit-bookings-exceed-monthly-appointments';
+  | 'deposit-bookings-exceed-monthly-appointments'
+  | 'invalid-phorest-vat';
 
 export type ValidationIssue = {
   field: keyof CostScenarioInput;
@@ -129,6 +135,9 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
 
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
+  const phorestQuoteIssue = numberIssue('phorestMonthlyQuoteGbp', input.phorestMonthlyQuoteGbp, { integer: false, min: 0 });
+  if (phorestQuoteIssue) issues.push(phorestQuoteIssue);
+  if (![99, 0, 20].includes(input.phorestQuoteVatPercent)) issues.push({ field: 'phorestQuoteVatPercent', code: 'invalid-phorest-vat' });
   if (input.nearcutSubscription === true) {
     const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
     if (quoteIssue) issues.push(quoteIssue);
@@ -176,7 +185,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo' | 'phorest';
 
 export type CostCategory =
   | 'subscription'
@@ -200,6 +209,8 @@ export type LineItemId =
   | 'setora-additional-staff'
   | 'setora-commission'
   | 'setora-deposit-processing'
+  | 'phorest-subscription'
+  | 'phorest-deposit-processing'
   | 'kersivo-subscription'
   | 'kersivo-additional-barbers'
   | 'kersivo-commission'
@@ -262,11 +273,14 @@ export type AssumptionCode =
   | 'setora-current-vat'
   | 'setora-standard-stripe-benchmark'
   | 'setora-sms-excluded'
+  | 'phorest-shop-quote'
+  | 'phorest-sms-addons-excluded'
+  | 'phorest-payments-unverified'
   | 'kersivo-stripe-standard-uk-card'
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -298,6 +312,9 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
+  'phorest-shop-quote': 'Phorest has Starter, Grow, Ultimate and Elite plans, but no universal published GBP subscription price. Only your own pre-VAT monthly quote is modelled. Staff, locations, add-ons and contract conditions must be checked against that quote.',
+  'phorest-sms-addons-excluded': 'Phorest SMS usage, payment processing, setup, add-ons and retail fees are not included. Published SMS rates vary by plan; the monthly quote alone is not a full cost of ownership.',
+  'phorest-payments-unverified': 'PhorestPay online deposit-processing fees are not publicly confirmed for your shop. They are not replaced with Stripe or other providers’ rates.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
   'kersivo-stripe-standard-uk-card': STRIPE_CARD_CAVEAT,
@@ -314,6 +331,9 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
+  'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
+  'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
+  'phorest-processing-unknown': 'PhorestPay deposit-processing rates for this shop are unverified. A complete total cannot be shown when deposit processing is selected.',
 };
 
 type ProviderResultBase = {
@@ -343,7 +363,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -818,6 +838,53 @@ function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
   };
 }
 
+/* --------------------------------- Phorest --------------------------------- */
+
+/**
+ * Phorest UK publishes quote-based subscription plans, not a universal GBP price.
+ * Never create a false "£0" cost when a quote, VAT treatment or card fee is missing.
+ * A confirmed quote is an owner-provided scenario, not an official Phorest rate.
+ */
+function calculatePhorest(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const quote = useUserProvidedPhorestMonthlyQuoteGbp(scenario.phorestMonthlyQuoteGbp);
+  const quoteKnown = quote !== null && quote > 0;
+  const vatKnown = scenario.phorestQuoteVatPercent !== 99;
+  const paymentUnknown = scenario.includeDepositProcessing && scenario.depositBookingsPerMonth > 0;
+  const quotePence = quoteKnown ? gbpToPence(quote) : null;
+  const lines: PenceLine[] = [
+    {
+      id: 'phorest-subscription', category: 'subscription',
+      status: quoteKnown ? 'calculated' : 'custom-pricing',
+      pence: quotePence, unitPence: quotePence, quantity: 1,
+      vatApplies: vatKnown && scenario.phorestQuoteVatPercent === 20,
+    },
+    {
+      id: 'phorest-deposit-processing', category: 'payment-processing',
+      status: paymentUnknown ? 'custom-pricing' : 'not-included',
+      pence: paymentUnknown ? null : 0, unitPence: null,
+      quantity: scenario.includeDepositProcessing ? scenario.depositBookingsPerMonth : 0,
+      vatApplies: false,
+    },
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (!quoteKnown) warnings.push(warning('phorest-quote-required'));
+  if (!vatKnown) warnings.push(warning('phorest-vat-unknown'));
+  if (paymentUnknown) warnings.push(warning('phorest-processing-unknown'));
+  const assumptions = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('phorest-shop-quote'),
+    assumption('phorest-sms-addons-excluded'),
+    ...(paymentUnknown ? [assumption('phorest-payments-unverified')] : []),
+  ];
+  const base = {
+    provider: 'phorest' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (!quoteKnown || !vatKnown || paymentUnknown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
 /* ---------------------------------- Entry ---------------------------------- */
 
 export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalculation {
@@ -843,6 +910,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateNearcut(scenario),
       calculateSetora(scenario),
       calculateKersivo(scenario),
+      calculatePhorest(scenario),
     ],
   };
 }
