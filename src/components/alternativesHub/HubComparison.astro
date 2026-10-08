@@ -111,7 +111,7 @@ const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']
     </div>
 
     <p class="alt-hub-status-line" aria-live="polite" data-hub-live>
-      {total} systems available. Select priorities to see match scores.
+      {Math.min(total, HUB_INITIAL_VISIBLE_CARDS)} of {total} systems shown. Select priorities to see match scores.
     </p>
 
     <div class="alt-hub-grid" id="alt-hub-grid" data-hub-grid data-expanded="false">
