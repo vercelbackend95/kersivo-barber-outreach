@@ -1,0 +1,11 @@
+---
+import { NEARCUT_FACTS_CHECKED_DATE, NEARCUT_FACTS_CHECKED_ISO, NEARCUT_SOURCES, NEARCUT_TRADEMARK_DISCLAIMER } from '@/lib/seo/nearcutFacts';
+import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_LAST_UPDATED_LABEL } from '@/lib/seo/nearcutAlternativeFaq';
+---
+<section id="sources" class="fresha-alt-sources" aria-labelledby="nearcut-alt-sources-title"><div class="container">
+<header class="fresha-alt-sources__header"><h2 id="nearcut-alt-sources-title" class="fresha-alt-sources__title">Sources &amp; comparison notes</h2>
+<p class="fresha-alt-sources__meta">Nearcut facts checked <time datetime={NEARCUT_FACTS_CHECKED_ISO}>{NEARCUT_FACTS_CHECKED_DATE}</time><span aria-hidden="true">·</span>Last updated <time datetime={NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO}>{NEARCUT_ALTERNATIVE_LAST_UPDATED_LABEL}</time></p></header>
+<p>This comparison draws on Nearcut's published UK pricing and its Help Centre. Nearcut's example client booking charge is not a guaranteed fee for every shop. Subscription pricing depends on the individual quotation. Pricing and features can change; confirm current terms with Nearcut before choosing a platform.</p>
+<ul class="fresha-alt-sources__list">{NEARCUT_SOURCES.map(source=><li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a><span class="fresha-alt-sources__supports">{source.supports}</span></li>)}</ul>
+<p class="fresha-alt-sources__trademark">{NEARCUT_TRADEMARK_DISCLAIMER}</p>
+</div></section>

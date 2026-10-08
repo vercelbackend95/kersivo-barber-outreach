@@ -1,0 +1,43 @@
+---
+import {
+  NEARCUT_FACTS_CHECKED_DATE,
+  getNearcutSource,
+  requireIllustrativeNearcutFact,
+  requireVerifiedNearcutFact,
+} from '@/lib/seo/nearcutFacts';
+
+const pricingSource = getNearcutSource('pricingUk').url;
+const paymentsSource = getNearcutSource('onlinePayments').url;
+const freeMonthly = requireVerifiedNearcutFact('freeForYouMonthlySubscription');
+const feeExample = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
+const subscriptionFee = requireVerifiedNearcutFact('subscriptionCustomerBookingFee');
+const trial = requireVerifiedNearcutFact('subscriptionFreeTrialDays');
+const setup = requireVerifiedNearcutFact('setupFee');
+const standardPayment = requireVerifiedNearcutFact('standardOnlinePaymentProcessing');
+const gbp = (amount: number) => Number.isInteger(amount) ? `£${amount}` : `£${amount.toFixed(2)}`;
+const percent = (amount: number) => Number.isInteger(amount) ? `${amount}%` : `${amount.toFixed(2)}%`;
+---
+<section id="nearcut-pricing" class="fresha-alt__section" aria-labelledby="nearcut-alt-costs-title">
+ <div class="container">
+  <header class="fresha-alt__intro">
+   <p class="fresha-alt__eyebrow">NEARCUT PRICING EXPLAINED</p>
+   <h2 id="nearcut-alt-costs-title" class="fresha-alt__h2">Nearcut pricing and booking fees in the UK</h2>
+   <p class="fresha-alt__lead">Nearcut offers two different ways to pay for booking software. Free for You has no monthly barbershop subscription, but customers pay an extra booking charge. The Subscription plan has a shop-specific monthly quote and no client booking charge. Compare both with KERSIVO's free Starter and flat-price Full plan.</p>
+   <p class="fresha-alt-costs__checked">Official Nearcut pricing checked {NEARCUT_FACTS_CHECKED_DATE} · <a href={pricingSource} target="_blank" rel="noopener noreferrer">Nearcut UK pricing</a></p>
+  </header>
+  <ul class="fresha-alt-costs__grid">
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">NEARCUT FREE FOR YOU</p><p class="fresha-alt-costs__figure">{gbp(freeMonthly.amountGbp!)}</p><p class="fresha-alt-costs__unit">per month for the shop</p><ul class="fresha-alt-costs__notes"><li>Customers pay a small booking charge on top of the service price.</li><li>Nearcut illustrates {gbp(feeExample.amountGbp)} on a {gbp(feeExample.exampleServicePriceGbp)} haircut; confirm your actual charge with Nearcut.</li><li>Nearcut says the client booking charge is refunded when they cancel.</li><li>Includes a personalised booking site and unlimited SMS reminders for online bookings.</li></ul></li>
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">NEARCUT SUBSCRIPTION</p><p class="fresha-alt-costs__figure">Quote</p><p class="fresha-alt-costs__unit">per month + VAT</p><ul class="fresha-alt-costs__notes"><li>Pricing depends on your locations and barbers.</li><li>No additional client booking charge under Subscription ({gbp(subscriptionFee.amountGbp!)}).</li><li>Optional Business Boosters may add cost.</li><li>Nearcut offers a {trial.value}-day Subscription trial and says there is no setup fee ({gbp(setup.amountGbp!)}).</li></ul></li>
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">KERSIVO STARTER</p><p class="fresha-alt-costs__figure">£0</p><p class="fresha-alt-costs__unit">per month for up to four barbers</p><ul class="fresha-alt-costs__notes"><li>Unlimited public bookings after required Stripe setup.</li><li>Clients pay a £5 deposit towards the service or pay in full.</li><li>0% KERSIVO commission; standard Stripe processing fees apply.</li></ul></li>
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">FULL KERSIVO</p><p class="fresha-alt-costs__figure">£39</p><p class="fresha-alt-costs__unit">per physical location / month</p><ul class="fresha-alt-costs__notes"><li>Full branded website and standard domain included.</li><li>No per-barber subscription fee, subject to fair use.</li><li>Payment modes, reports, client CRM and retail pickup.</li></ul></li>
+  </ul>
+  <div class="fresha-alt-card fresha-alt-costs__marketplace">
+   <div class="fresha-alt-costs__marketplace-body">
+    <h3 class="fresha-alt-costs__h3">Nearcut booking charges vs KERSIVO deposits</h3>
+    <ul class="fresha-alt-list"><li>Nearcut Free for You: a separate booking charge is added to the customer's service price. Nearcut keeps the shop's service earnings intact.</li><li>KERSIVO Starter: the £5 deposit counts towards the final service price; it is not an additional KERSIVO service charge.</li><li>KERSIVO Starter online booking requires Stripe, and Stripe processing fees still apply.</li><li>Nearcut Subscription: customer booking charge is removed; request your exact shop quote.</li></ul>
+   </div>
+   <div class="fresha-alt-costs__marketplace-aside"><p class="fresha-alt-costs__example">Illustration: Nearcut shows a {gbp(feeExample.exampleServicePriceGbp)} haircut plus a {gbp(feeExample.amountGbp)} booking charge, while KERSIVO Starter uses a £5 deposit towards the haircut (or full payment). This is not a like-for-like card-processing fee calculation.</p><p class="fresha-alt-costs__checked">Source: <a href={pricingSource} target="_blank" rel="noopener noreferrer">Official Nearcut pricing</a></p></div>
+  </div>
+  <p class="fresha-alt-costs__note">Nearcut’s Free for You pricing page advertises optional online payments and deposits with zero transaction fees. Its separate <a href={paymentsSource} target="_blank" rel="noopener noreferrer">online payments guide</a> lists standard processing rates starting at {percent(standardPayment.percent!)} + {gbp(standardPayment.amountGbp!)}, falling at higher monthly volumes. Ask Nearcut which terms apply to your shop and plan. The separate client booking charge is not a commission on the haircut.</p>
+ </div>
+</section>
