@@ -13,7 +13,7 @@ import {
 } from './squireFacts';
 
 describe('SQUIRE shared commercial facts: UK calculator readiness', () => {
-  it('records SQUIRE's verified official UK GBP list prices without inventing VAT treatment', () => {
+  it('records SQUIRE’s verified official UK GBP list prices without inventing VAT treatment', () => {
     expect(SQUIRE_US_LIST_PLANS.map(plan => plan.usdMonthly)).toEqual([30, 50, 150, 250]);
     expect(SQUIRE_UK_LIST_PLANS.map(plan => plan.gbpMonthly)).toEqual([20, 30, 60, 90]);
     expect(SQUIRE_UK_LIST_PLANS.map(plan => plan.id)).toEqual(SQUIRE_US_LIST_PLANS.map(plan => plan.id));
