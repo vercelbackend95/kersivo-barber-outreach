@@ -33,7 +33,7 @@ import {
   STRIPE_UK_STANDARD_CARD_PERCENT,
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
-import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
+import { TREATWELL_QUOTE_VAT_UNKNOWN, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
@@ -151,7 +151,7 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
   issues.push(...validateDepositBookings(input, issues));
   const treatwellQuoteIssue = numberIssue('treatwellMonthlyQuoteGbp', input.treatwellMonthlyQuoteGbp, { integer: false, min: 0 });
   if (treatwellQuoteIssue) issues.push(treatwellQuoteIssue);
-  if (![99, 0, UK_STANDARD_VAT_PERCENT].includes(input.treatwellQuoteVatPercent)) issues.push({ field: 'treatwellQuoteVatPercent', code: 'invalid-treatwell-vat' });
+  if (![TREATWELL_QUOTE_VAT_UNKNOWN, 0, UK_STANDARD_VAT_PERCENT].includes(input.treatwellQuoteVatPercent)) issues.push({ field: 'treatwellQuoteVatPercent', code: 'invalid-treatwell-vat' });
   const phorestQuoteIssue = numberIssue('phorestMonthlyQuoteGbp', input.phorestMonthlyQuoteGbp, { integer: false, min: 0 });
   if (phorestQuoteIssue) issues.push(phorestQuoteIssue);
   if (![PHOREST_QUOTE_VAT_UNKNOWN, 0, UK_STANDARD_VAT_PERCENT].includes(input.phorestQuoteVatPercent)) issues.push({ field: 'phorestQuoteVatPercent', code: 'invalid-phorest-vat' });
@@ -338,9 +338,9 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
-  'treatwell-eligibility-365-days': 'Treatwell new-client marketplace commission is estimated only on the manually entered eligible appointment count; eligibility depends on booking channel and September 2026 partner terms, including a 365-day successful-appointment history rule. Published 35% + VAT may differ from your special cooperation agreement.',
-  'treatwell-quote-required': 'Treatwell advertises Start for free, but does not publish one ongoing subscription amount. Use your actual monthly quote (before VAT). Zero in this field means unknown, not a free plan.',
-  'treatwell-processing-deposits-only': 'Treatwell online prepayment processing is modelled at the published 2.5% + VAT on the £5 benchmark deposit per selected booking, rounded per transaction. Other prepaid balances, in-person payments and other fees are excluded.',
+  'treatwell-eligibility-365-days': `Treatwell new-client marketplace commission is estimated only on the manually entered eligible appointment count; eligibility depends on booking channel and partner terms, including an inactivity-related successful-appointment history rule. The published ${formatPercent(requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent!)} + VAT may differ from your special cooperation agreement.`,
+  'treatwell-quote-required': 'Treatwell advertises Start for free, but does not publish one ongoing subscription amount. Use your actual monthly quote (before VAT). A zero input means unknown, not a free plan.',
+  'treatwell-processing-deposits-only': `Treatwell online prepayment processing is modelled at the published ${formatPercent(requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent!)} + VAT on the ${formatGbp(DEPOSIT_BENCHMARK_GBP)} benchmark deposit per selected booking, rounded per transaction. Other prepaid balances, in-person payments and other fees are excluded.`,
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -765,7 +765,7 @@ function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
  */
 function calculateTreatwell(scenario: CostScenarioInput, eligibleClients: number): ProviderMonthlyResult {
   const quoteKnown = scenario.treatwellMonthlyQuoteGbp > 0;
-  const vatKnown = scenario.treatwellQuoteVatPercent !== 99;
+  const vatKnown = scenario.treatwellQuoteVatPercent !== TREATWELL_QUOTE_VAT_UNKNOWN;
   const quotePence = quoteKnown ? gbpToPence(scenario.treatwellMonthlyQuoteGbp) : null;
   const commission = requireVerifiedTreatwellFact('newMarketplaceClientCommission');
   const prepayment = requireVerifiedTreatwellFact('onlinePrepaymentProcessing');
