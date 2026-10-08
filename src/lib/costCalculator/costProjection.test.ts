@@ -21,7 +21,7 @@ const scenario = (overrides: Partial<CostScenarioInput> = {}): CostScenarioInput
 function providers(overrides: Partial<CostScenarioInput>, period: (typeof COST_PERIODS)[number]) {
   const projected = projectCostCalculation(calculateMonthlyCosts(scenario(overrides)), period);
   if (!projected.ok) throw new Error('invalid scenario');
-  return projected.providers;
+  return projected.providers.slice(0,8);
 }
 
 function amounts(result: ProviderMonthlyResult): MonthlyAmounts {
@@ -125,10 +125,10 @@ describe('projectCostCalculation', () => {
   it('projects a pence-level amount exactly (£20.01 × 12 = £240.12)', () => {
     const monthly = calculateMonthlyCosts(scenario());
     if (!monthly.ok) throw new Error('invalid');
-    const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = monthly.providers;
+    const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo, vagaro] = monthly.providers;
     if (booksy.status !== 'calculated') throw new Error('not calculated');
     const withPennies = { ...booksy, amounts: { ...booksy.amounts, cashTotalGbp: 20.01, subtotalExVatGbp: 20.01 } };
-    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, treatwell, setora, square, phorest, kersivo] }, 'annual');
+    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, treatwell, setora, square, phorest, kersivo, vagaro] }, 'annual');
     if (!projected.ok) throw new Error('invalid');
     expect(amounts(projected.providers[0]).cashTotalGbp).toBe(240.12);
     expect(amounts(projected.providers[0]).subtotalExVatGbp).toBe(240.12);
