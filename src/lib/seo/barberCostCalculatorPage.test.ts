@@ -406,6 +406,7 @@ describe('booking deposit payment processing copy', () => {
     expect(PAYMENTS_POINTS.map((point) => point.title)).toEqual([
       'Booksy Mobile Payments',
       'Fresha Online Payments',
+      'Vagaro UK online payments',
       'Setora via Stripe',
       'PhorestPay · quote required',
       'KERSIVO via Stripe Checkout',
