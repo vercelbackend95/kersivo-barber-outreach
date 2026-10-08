@@ -12,6 +12,7 @@ import {
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
+import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } from './vagaroAlternativeFaq';
 import { SQUARE_ALTERNATIVE_LAST_UPDATED_ISO, SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
 import { TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO, TREATWELL_ALTERNATIVE_PAGE_PATH } from './treatwellAlternativeFaq';
 import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
@@ -50,6 +51,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: BOOKSY_ALTERNATIVE_PAGE_PATH, lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
   { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
+  { path: VAGARO_ALTERNATIVE_PAGE_PATH, lastmod: VAGARO_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Square Appointments alternative editorial last updated date. */
   { path: SQUARE_ALTERNATIVE_PAGE_PATH, lastmod: SQUARE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Nearcut Alternative editorial last updated date. */

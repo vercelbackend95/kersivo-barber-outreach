@@ -103,7 +103,7 @@ describe('barber software cost calculator SEO foundation', () => {
   it('includes every key SEO H2', () => {
     const corpus = componentSources.join('\n');
     for (const heading of [
-      'Booksy, Fresha, Nearcut, Setora, Square & Phorest vs KERSIVO: cost at a glance',
+      'Booksy, Fresha, Vagaro & more vs KERSIVO: cost at a glance',
       'How much does Booksy cost in the UK?',
       'How much does Fresha cost in the UK?',
       'How much does Nearcut cost in the UK?',
@@ -112,7 +112,7 @@ describe('barber software cost calculator SEO foundation', () => {
       'How much does Phorest cost in the UK?',
       'How much does Square Appointments cost in the UK?',
       'How team size changes your booking software cost',
-      'Booksy Boost and Fresha Marketplace fees explained',
+      'Booksy Boost, Fresha & Vagaro Marketplace fees explained',
       'How VAT changes the real cost',
       'Payment processing costs',
       'Cost examples for different UK barbershops',
@@ -197,7 +197,7 @@ describe('barber software cost calculator structured data', () => {
       '@id': `${PAGE_URL}#calculator`,
       name: 'Barber Booking Software Cost Calculator',
       url: PAGE_URL,
-      description: expect.stringContaining('Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO'),
+      description: expect.stringContaining('Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO'),
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Any',
       inLanguage: 'en-GB',
@@ -277,6 +277,9 @@ describe('barber software cost calculator content safety', () => {
       'How much does Nearcut Subscription cost in the UK?',
       'How much commission does Treatwell charge in the UK?',
       'Can this calculator estimate Treatwell monthly costs?',
+      'How much is Vagaro per month for UK barbers?',
+      'Does Vagaro charge commission on every booking?',
+      'Does the Vagaro estimate include VAT and online deposits?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
       'How much does Phorest cost per month in the UK?',
@@ -403,6 +406,7 @@ describe('booking deposit payment processing copy', () => {
     expect(PAYMENTS_POINTS.map((point) => point.title)).toEqual([
       'Booksy Mobile Payments',
       'Fresha Online Payments',
+      'Vagaro UK online payments',
       'Setora via Stripe',
       'PhorestPay · quote required',
       'KERSIVO via Stripe Checkout',
@@ -424,12 +428,12 @@ describe('booking deposit payment processing copy', () => {
 });
 
 describe('cost at a glance base pricing', () => {
-  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, vagaro, kersivo] = COST_AT_A_GLANCE_MODELS;
   const independent = requireVerifiedFreshaFact('independentPlan');
   const team = requireVerifiedFreshaFact('teamPlanPerMember');
 
   it('shows the headline base price for each platform from central facts', () => {
-    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Full KERSIVO']);
+    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'Full KERSIVO']);
 
     expect(booksy.price).toBe(BOOKSY_BASE_PRICE_LABEL);
     expect(booksy.price).toBe(`£${BOOKSY_BASE_PRICE_GBP}/month + VAT`);
@@ -448,6 +452,7 @@ describe('cost at a glance base pricing', () => {
     expect(treatwell.priceNote).toContain('eligible');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
+    expect(vagaro.price).toContain('/month displayed');
     expect(phorest.price).toBe('Custom pricing');
     expect(phorest.priceNote).toContain('individual quotation');
     expect(square.price).toBe('£0/month');

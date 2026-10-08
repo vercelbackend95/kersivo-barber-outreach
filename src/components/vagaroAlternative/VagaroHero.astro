@@ -1,0 +1,31 @@
+---
+import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+---
+<section class="fresha-alt-hero" aria-labelledby="vagaro-alt-hero-title">
+ <div class="fresha-alt-hero__content">
+  <nav class="vagaro-alt-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Vagaro alternative</span></nav>
+  <p class="fresha-alt-hero__eyebrow"><span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>Vagaro alternative for UK barbershops</p>
+  <h1 id="vagaro-alt-hero-title" class="fresha-alt-hero__title">
+   <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Vagaro alternative</span>
+   <span class="fresha-alt-hero__title-line">built around your</span>
+   <span class="fresha-alt-hero__title-line">barbershop.</span>
+  </h1>
+  <p class="fresha-alt-hero__lead">Vagaro combines appointments, a consumer marketplace and broader salon tools. KERSIVO focuses on independent UK barbers: Starter is £0/month, while Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location with your own branded website and standard domain. Compare pricing, booking fees and how to switch.</p>
+  <div class="fresha-alt-hero__actions">
+   <a href="/demo" class="fresha-alt-hero__action fresha-alt-hero__action--primary" data-track="view_live_demo_click">Open the full demo</a>
+   <a href="#comparison" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">Compare KERSIVO and Vagaro</a>
+  </div>
+  <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
+   <span><strong>Starter £0/month</strong></span><span aria-hidden="true">·</span>
+   <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span><span aria-hidden="true">·</span>
+   <span>0% KERSIVO commission on booking payments</span><span aria-hidden="true">·</span>
+   <span>Built for UK barbershops</span>
+  </div>
+ </div><HeroDashboardShowcase />
+</section>
+<style>
+.vagaro-alt-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-bottom:1rem;color:#9ca3af;font-size:.75rem;line-height:1.5}
+.vagaro-alt-breadcrumb a{color:inherit;text-decoration:none}
+.vagaro-alt-breadcrumb a:hover,.vagaro-alt-breadcrumb a:focus-visible{color:#f9fafb;text-decoration:underline}
+</style>

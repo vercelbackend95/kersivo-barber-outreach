@@ -20,6 +20,8 @@ export type CostInsight =
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
   | { kind: 'add-ons'; freshaAddOnsGbp: number }
   | { kind: 'deposit-processing'; booksyGbp: number; freshaGbp: number; setoraGbp: number; kersivoGbp: number }
+  | { kind: 'vagaro-acquisition'; vagaroMarketplaceGbp: number }
+  | { kind: 'vagaro-add-ons'; vagaroAddOnsGbp: number }
   | { kind: 'base' };
 
 type DriverKind = 'acquisition' | 'team' | 'add-ons' | 'deposit-processing';
@@ -67,6 +69,12 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
 
   switch (driver) {
     case 'acquisition':
+      if (amountFor(calculated, 'vagaro', r=>r.amounts.acquisitionFeesExVatGbp) > 0 &&
+        amountFor(calculated, 'booksy', r=>r.amounts.acquisitionFeesExVatGbp) === 0 &&
+        amountFor(calculated, 'fresha', r=>r.amounts.acquisitionFeesExVatGbp) === 0 &&
+        amountFor(calculated, 'treatwell', r=>r.amounts.acquisitionFeesExVatGbp) === 0) {
+        return {kind:'vagaro-acquisition',vagaroMarketplaceGbp:amountFor(calculated,'vagaro',r=>r.amounts.acquisitionFeesExVatGbp)};
+      }
       return {
         kind: 'acquisition',
         booksyBoostGbp: amountFor(calculated, 'booksy', (r) => r.amounts.acquisitionFeesExVatGbp),
@@ -87,6 +95,8 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
       };
     }
     case 'add-ons':
+      if (amountFor(calculated,'fresha',r=>r.amounts.addOnsExVatGbp) === 0 && amountFor(calculated,'vagaro',r=>r.amounts.addOnsExVatGbp) > 0)
+        return {kind:'vagaro-add-ons',vagaroAddOnsGbp:amountFor(calculated,'vagaro',r=>r.amounts.addOnsExVatGbp)};
       return { kind: 'add-ons', freshaAddOnsGbp: amountFor(calculated, 'fresha', (r) => r.amounts.addOnsExVatGbp) };
     case 'deposit-processing': {
       const processing = (provider: ProviderId) =>
@@ -147,6 +157,10 @@ export function describeCostInsight(insight: CostInsight): string {
       const month = (gbp: number) => `${formatMoneyGbp(gbp)}/month`;
       return `Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are ${month(insight.booksyGbp)} for Booksy, ${month(insight.freshaGbp)} for Fresha, ${month(insight.setoraGbp)} for Setora/Stripe and ${month(insight.kersivoGbp)} for KERSIVO/Stripe before provider VAT where applicable.`;
     }
+    case 'vagaro-acquisition':
+      return `Vagaro Marketplace qualifying new-client first appointments are the largest modelled variable cost in this scenario at ${perMonth(insight.vagaroMarketplaceGbp)}. Direct and returning bookings are excluded.`;
+    case 'vagaro-add-ons':
+      return `Optional Vagaro MySite is the largest modelled add-on in this scenario at ${perMonth(insight.vagaroAddOnsGbp)}.`;
     case 'base':
       return 'Base subscription pricing is the main modelled cost in this scenario.';
   }

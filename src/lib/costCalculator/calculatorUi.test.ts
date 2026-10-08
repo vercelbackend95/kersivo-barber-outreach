@@ -37,6 +37,8 @@ import {
   SHARE_SCENARIO,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
+  VAGARO_OPTIONS,
+  VAGARO_ADDONS_LEGEND,
   SUMMARY_ROWS,
   THREE_YEAR_NOTE,
   VAT_OPTIONS,
@@ -72,6 +74,7 @@ describe('calculator panel inputs', () => {
       SPLIT_ASSUMPTIONS_TOGGLE.name,
       VAT_OPTIONS.name,
       ...FRESHA_ADD_ONS.map((addOn) => addOn.name),
+      ...VAGARO_OPTIONS.map((opt)=>opt.name),
       DEPOSIT_PROCESSING_TOGGLE.name,
       NEARCUT_SUBSCRIPTION_TOGGLE.name,
       'phorestQuoteVatPercent',
@@ -103,6 +106,7 @@ describe('calculator panel inputs', () => {
       'Booksy Boost clients / month',
       'Fresha Marketplace clients / month',
       'Eligible Treatwell new marketplace bookings / month',
+      'Vagaro Marketplace new clients / month',
     ]);
     expect(panelSource).toContain('<div id="calc-split-fields" class="calc-split__fields" hidden>');
   });
@@ -114,6 +118,7 @@ describe('calculator panel inputs', () => {
     for (const binding of [
       '{VAT_OPTIONS.legend}',
       '{FRESHA_ADD_ONS_LEGEND}',
+      '{VAGARO_ADDONS_LEGEND}',
       '{DEPOSIT_PROCESSING_TOGGLE.label}',
       '{DEPOSIT_BOOKINGS_FIELD.label}',
     ]) {
@@ -211,7 +216,7 @@ describe('calculator results structure', () => {
   });
 
   it('renders seven peer cards including Square and Phorest without winner language without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'KERSIVO']);
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -319,7 +324,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(34);
+    expect(ids.length).toBe(39);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

@@ -1,0 +1,26 @@
+---
+import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
+import {
+  VAGARO_SWITCHING_LIMITS,
+  VAGARO_SWITCHING_REASSURANCE,
+  VAGARO_SWITCHING_STEPS,
+} from '@/lib/seo/vagaroAlternativeContent';
+---
+
+<section id="switching" class="fresha-alt__section" aria-labelledby="fresha-alt-switching-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">MIGRATION</p>
+      <h2 id="fresha-alt-switching-title" class="fresha-alt__h2">Switching from Vagaro to KERSIVO</h2>
+      <p class="fresha-alt-switching__reassurance">{VAGARO_SWITCHING_REASSURANCE}</p>
+    </header>
+
+    <ProcessTimeline
+      steps={VAGARO_SWITCHING_STEPS}
+      noteTitle="Good to know"
+      notePoints={VAGARO_SWITCHING_LIMITS}
+    >
+      <a href="#contact">Ask about your Vagaro migration <span aria-hidden="true">→</span></a>
+    </ProcessTimeline>
+  </div>
+</section>

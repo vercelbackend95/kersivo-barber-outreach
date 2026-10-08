@@ -1,5 +1,6 @@
 import { SQUARE_FACTS_CHECKED_DATE, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } from '@/lib/seo/squareFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { TREATWELL_FACTS_CHECKED_DATE, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
@@ -101,7 +102,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -190,6 +191,19 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       'Enter your own pre-VAT quote and confirm its VAT treatment',
       'SMS and PhorestPay processing depend on plan and contract',
       'PhorestPay deposit fees cannot be assumed from another platform',
+    ],
+  },
+  {
+    name: 'Vagaro',
+    descriptor: 'Per bookable calendar',
+    price: `${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)}/month displayed`,
+    priceNote: `One calendar · displayed price alongside ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed out`,
+    secondaryPrice: `+${formatGbp(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value)}/additional calendar up to 7 calendars`,
+    points: [
+      `Published ${formatGbp(requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value)}/month cap for seven or more bookable calendars`,
+      `${requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value}% of a qualifying new UK Marketplace client’s first visit; not all bookings`,
+      `MySite optional at ${formatGbp(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value)}/month; published rate checked ${VAGARO_FACTS_CHECKED_DATE}`,
+      'Published online/card processing fee and VAT assumption modelled separately',
     ],
   },
   {
@@ -370,7 +384,7 @@ export type MarketplacePoint = {
 };
 
 export const MARKETPLACE_INTRO =
-  'Booksy and Fresha both run consumer marketplaces where clients can discover new barbershops. Each charges differently for clients who arrive that way, and both separate them from clients who book you directly.';
+  'Booksy, Fresha and Vagaro offer consumer marketplaces. Qualifying first bookings may carry acquisition fees, but direct and returning bookings must not all be counted as marketplace-acquired.';
 
 export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
   {
@@ -384,6 +398,10 @@ export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Marketplace new-client fee',
     body: `Fresha charges a one-time fee of ${FRESHA_MARKETPLACE_PERCENT} of a brand-new client’s first appointment, minimum ${FRESHA_MARKETPLACE_MINIMUM}, when that client first discovers you on the Fresha Marketplace.`,
+  },
+  {
+    title: 'Vagaro Marketplace UK new-client fee',
+    body: `Vagaro charges ${requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value}% of qualifying new Marketplace clients' first appointment when the Marketplace listing is active; own-channel and promoted-booking rules are different. Fill My Books / Daily Deals fees for existing clients are excluded from the calculator.`,
   },
   {
     title: 'A one-time acquisition fee',
@@ -448,6 +466,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Online Payments',
     body: `Fresha applies its standard online payment rate of ${FRESHA_ONLINE_PAYMENTS_FEE} per transaction plus VAT to online deposits.`,
+  },
+  {
+    title: 'Vagaro UK online payments',
+    body: `The calculator uses Vagaro’s published keyed-in/online rate of ${feeLabel(requireVerifiedVagaroFact('standardOnlineProcessingPercent').value, requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} per transaction. Legacy merchant rates may differ.`,
   },
   {
     title: 'Setora via Stripe',

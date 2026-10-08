@@ -1,0 +1,21 @@
+---
+import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
+import {
+  VAGARO_QUICK_ANSWER_DETAIL,
+  VAGARO_QUICK_ANSWER_FACTS,
+  VAGARO_QUICK_ANSWER_KICKER,
+  VAGARO_QUICK_ANSWER_LEAD,
+  VAGARO_QUICK_ANSWER_TITLE,
+} from '@/lib/seo/vagaroAlternativeContent';
+---
+
+<EditorialIntro
+  id="quick-answer"
+  titleId="fresha-alt-quick-title"
+  class="fresha-alt-quick"
+  kicker={VAGARO_QUICK_ANSWER_KICKER}
+  title={VAGARO_QUICK_ANSWER_TITLE}
+  lead={VAGARO_QUICK_ANSWER_LEAD}
+  detail={VAGARO_QUICK_ANSWER_DETAIL}
+  facts={VAGARO_QUICK_ANSWER_FACTS}
+/>

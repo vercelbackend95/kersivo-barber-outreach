@@ -1,0 +1,38 @@
+---
+import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact, getVagaroSource } from '@/lib/seo/vagaroFacts';
+import { formatGbp } from '@/lib/seo/freshaFacts';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+const base = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
+const extra = requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value;
+const cap = requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value;
+const fee = requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value;
+const mySite = requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value;
+const processing = requireVerifiedVagaroFact('standardOnlineProcessingPercent').value;
+const fixed = requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value;
+---
+<section id="vagaro-cost" class="cost-calc__section" aria-labelledby="cost-calc-vagaro-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">VAGARO UK COSTS</p>
+      <h2 id="cost-calc-vagaro-title" class="cost-calc__h2">How much does Vagaro cost for a UK barbershop?</h2>
+      <p class="cost-calc__lead">
+        Vagaro charges by bookable calendar: its current UK site displays {formatGbp(base)}/month for one calendar,
+        with {formatGbp(extra)}/month per additional calendar and a published {formatGbp(cap)}/month rate for seven or more.
+        The first-calendar price is displayed alongside a crossed-out higher price — it is not guaranteed for future years.
+      </p>
+    </header>
+    <ul class="cost-calc__list">
+      <li><strong>Subscription:</strong> the interactive model starts from the currently displayed Vagaro price, with an optional crossed-out reference scenario under Advanced costs.</li>
+      <li><strong>New Marketplace clients:</strong> a {fee}% first-booking fee is modelled only for qualifying new clients coming through an active Vagaro Marketplace listing — not every direct booking.</li>
+      <li><strong>Optional MySite:</strong> {formatGbp(mySite)}/month when selected; other premium features are excluded.</li>
+      <li><strong>Booking deposits:</strong> optional {formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online payments use Vagaro's standard published UK keyed-in/online rate of {processing}% + {formatGbp(fixed)} per transaction. Older merchant agreements can differ.</li>
+      <li><strong>VAT:</strong> the public UK subscription VAT treatment is not verified. Advanced costs lets you explicitly model VAT on or off; neither setting asserts your actual invoice.</li>
+      <li><strong>Promotion fees:</strong> optional Fill My Books / Daily Deals existing-client charges are excluded. Enablement and qualifying booking counts cannot be inferred from shop-wide appointments.</li>
+    </ul>
+    <p class="cost-calc__lead">
+      Comparison checked {VAGARO_FACTS_CHECKED_DATE}. <a href="/vagaro-alternative">Read the full Vagaro vs KERSIVO comparison</a>,
+      <a href={getVagaroSource('pricingUk').url} target="_blank" rel="noopener noreferrer">review Vagaro's UK pricing</a>
+      and <a href={getVagaroSource('ukParticipation').url} target="_blank" rel="noopener noreferrer">check the UK fee conditions</a>.
+    </p>
+  </div>
+</section>

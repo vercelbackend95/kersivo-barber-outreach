@@ -50,6 +50,10 @@ const BASE: CostScenarioInput = {
   booksyBoostClients: 0,
   freshaMarketplaceClients: 0,
   treatwellMarketplaceClients: 0,
+  vagaroMarketplaceClients: 0,
+  vagaroDisplayedOffer: true,
+  vagaroMySite: false,
+  vagaroAssumeVat: false,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   nearcutSubscription: false,
@@ -308,7 +312,7 @@ describe('shared behaviour', () => {
       booksyBoostClients: 10,
       freshaMarketplaceClients: 20,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3, treatwellMarketplace: 3 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3, treatwellMarketplace: 3, vagaroMarketplace: 3 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['shared-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').quantity).toBe(3);
     expect(line(result.providers[1], 'fresha-marketplace-fees').quantity).toBe(3);
@@ -322,14 +326,14 @@ describe('shared behaviour', () => {
       booksyBoostClients: 2,
       freshaMarketplaceClients: 5,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5, treatwellMarketplace: 0 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5, treatwellMarketplace: 0, vagaroMarketplace: 0 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['split-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').exVatGbp).toBe(15);
     expect(line(result.providers[1], 'fresha-marketplace-fees').exVatGbp).toBe(25);
   });
 
   it('returns providers in Booksy, Fresha, Nearcut, KERSIVO order', () => {
-    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'treatwell', 'setora', 'square', 'phorest', 'kersivo']);
+    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'treatwell', 'setora', 'square', 'phorest', 'kersivo', 'vagaro']);
   });
 
   it.each<[Partial<CostScenarioInput>, keyof CostScenarioInput, string]>([
@@ -514,6 +518,7 @@ describe('booking deposit processing', () => {
     square: 'square-deposit-processing',
     kersivo: 'kersivo-deposit-processing',
     phorest: 'phorest-deposit-processing',
+    vagaro: 'vagaro-deposit-processing',
   };
   const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
   const on = (deposits: number, extra: Partial<CostScenarioInput> = {}) =>
@@ -580,8 +585,8 @@ describe('booking deposit processing', () => {
 
   it('multiplies the rounded unit fee by the monthly deposit count', () => {
     const result = on(100);
-    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 13, 28, null, null, 28]);
-    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100, 100, 100, 100]);
+    expect(result.providers.slice(0, 8).map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 13, 28, null, null, 28]);
+    expect(result.providers.slice(0, 8).map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100, 100, 100, 100]);
     for (const entry of result.providers) {
       expect(entry.depositProcessingIncluded).toBe(true);
       expect(depositLine(entry).category).toBe('payment-processing');
@@ -634,7 +639,7 @@ describe('booking deposit processing', () => {
   });
 
   it('stays independent of barbers, Boost, marketplace and add-ons', () => {
-    const plain = on(50).providers.map((entry) => depositLine(entry).exVatGbp);
+    const plain = on(50).providers.slice(0, 8).map((entry) => depositLine(entry).exVatGbp);
     const busy = on(50, {
       bookableBarbers: 8,
       booksyBoostEnabled: true,
@@ -642,7 +647,7 @@ describe('booking deposit processing', () => {
       freshaSmartWebsite: true,
       freshaClientLoyalty: true,
       averageAppointmentValueGbp: 80,
-    }).providers.map((entry) => depositLine(entry).exVatGbp);
+    }).providers.slice(0, 8).map((entry) => depositLine(entry).exVatGbp);
     expect(busy).toEqual(plain);
   });
 
@@ -691,7 +696,7 @@ describe('booking deposit processing', () => {
 
 describe('KERSIVO / Stripe fee-payer assumption', () => {
   const codesFor = (on: boolean) =>
-    run({ includeDepositProcessing: on, depositBookingsPerMonth: 100 }).providers.map(assumptionCodes);
+    run({ includeDepositProcessing: on, depositBookingsPerMonth: 100 }).providers.slice(0,8).map(assumptionCodes);
 
   it('is attached to KERSIVO only, and only when deposit processing is on', () => {
     const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = codesFor(true);
@@ -713,10 +718,10 @@ describe('KERSIVO / Stripe fee-payer assumption', () => {
 
   it('changes no payment amounts', () => {
     const result = run({ includeDepositProcessing: true, depositBookingsPerMonth: 100 });
-    expect(result.providers.map((entry) => entry.lineItems.find((item) => item.category === 'payment-processing')!.exVatGbp)).toEqual([
+    expect(result.providers.slice(0, 8).map((entry) => entry.lineItems.find((item) => item.category === 'payment-processing')!.exVatGbp)).toEqual([
       26, 32, 0, 13, 28, null, null, 28,
     ]);
-    expect(result.providers.map((entry) => entry.amounts?.cashTotalGbp ?? null)).toEqual([79.2, 56.34, 0, null, 87, null, null, 67]);
+    expect(result.providers.slice(0, 8).map((entry) => entry.amounts?.cashTotalGbp ?? null)).toEqual([79.2, 56.34, 0, null, 87, null, null, 67]);
   });
 });
 
