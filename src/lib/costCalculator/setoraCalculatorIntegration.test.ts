@@ -34,6 +34,7 @@ describe('Setora cost calculator: documented UK commercial facts', () => {
     expect(requireVerifiedSetoraFact('barberLandingMonthlyGbp').value).toBe(59);
     expect(requireVerifiedSetoraFact('vatCurrentlyAdded').value).toBe(false);
     expect(requireVerifiedSetoraFact('platformBookingCommissionPercent').value).toBe(0);
+    expect(requireVerifiedSetoraFact('platformSetupFeeGbp').value).toBe(0);
     expect(SETORA_SOURCES.find((s) => s.id === 'pricing')?.url).toBe('https://www.setora.co.uk/pricing');
   });
 
