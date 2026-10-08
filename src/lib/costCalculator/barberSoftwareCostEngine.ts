@@ -189,7 +189,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo' | 'phorest';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'square' | 'phorest' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -290,7 +290,7 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -976,8 +976,8 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateNearcut(scenario),
       calculateSetora(scenario),
       calculateSquare(scenario),
-      calculateKersivo(scenario),
       calculatePhorest(scenario),
+      calculateKersivo(scenario),
     ],
   };
 }
