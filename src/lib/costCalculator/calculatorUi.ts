@@ -184,7 +184,7 @@ export const NEARCUT_QUOTE_FIELD: NumberFieldConfig = {
 export const PHOREST_QUOTE_FIELD: NumberFieldConfig = {
   id: 'calc-phorest-quote', name: 'phorestMonthlyQuoteGbp',
   label: 'Your Phorest monthly subscription quote (ex VAT)',
-  helper: 'Enter only the subscription amount shown in your own Phorest quote, before VAT. Leave £0 if unknown — no price is assumed.',
+  helper: 'Enter only the subscription amount shown in your own Phorest quote, before VAT. Leave zero if unknown — no price is assumed.',
   defaultValue: 0, min: 0, max: 20000, step: 0.01,
 };
 
@@ -194,7 +194,7 @@ export const PHOREST_QUOTE_VAT = {
   legend: 'Does your Phorest quote add VAT?',
   options: [
     { value: 99, label: 'Not sure' },
-    { value: 20, label: 'Yes · UK 20%' },
+    { value: 20, label: 'Yes · standard UK VAT' },
     { value: 0, label: 'No VAT added' },
   ],
   defaultValue: 99,
