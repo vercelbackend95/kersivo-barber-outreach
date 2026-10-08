@@ -16,7 +16,7 @@ const item = (result: ProviderMonthlyResult, id: string) => result.lineItems.fin
 
 describe('Nearcut integration: commercial truth over marketing estimates', () => {
   it('remains the third provider, alongside Booksy, Fresha, Setora and KERSIVO', () => {
-    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','treatwell','setora','square','phorest','kersivo']);
+    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','treatwell','setora','square','phorest','kersivo','vagaro']);
     expect(calc().providers[7].provider).toBe('kersivo');
   });
 
