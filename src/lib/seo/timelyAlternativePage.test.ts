@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
+import { GET as getRobots } from '../../pages/robots.txt';
+import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import {
   TIMELY_ALTERNATIVE_PAGE_PATH,
   TIMELY_ALTERNATIVE_TITLE,
@@ -56,15 +58,18 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(page).toContain('href="/barber-software-cost-calculator"');
   });
 
-  it('is discoverable via the live marketing sitemap and navigation',()=>{
+  it('is discoverable via the sitemap, menu and crawlable robots policy', async()=>{
     const entries=buildMarketingSitemapEntries().filter(x=>x.loc===pageUrl);
     expect(entries).toHaveLength(1);
     expect(entries[0].lastmod).toBe(TIMELY_ALTERNATIVE_LAST_UPDATED_ISO);
     expect(page).toContain('datetime="2026-10-08"');
     expect(MARKETING_NAV_ITEMS.filter(x=>x.href===TIMELY_ALTERNATIVE_PAGE_PATH)).toHaveLength(1);
-    const robots=read('../../pages/robots.txt.ts');
-    expect(robots).toContain("'Allow: /'");
-    expect(robots).not.toMatch(/Disallow:\s*\/timely-alternative/);
+    expect(getRouteFamily('/timely-alternative')).toBe('marketing');
+    const robots=await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
+    expect(robots).toContain('User-agent: *');
+    expect(robots).toContain('User-agent: OAI-SearchBot');
+    expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
+    expect(robots).not.toContain('Disallow: /timely-alternative');
   });
 
   it('emits WebPage, BreadcrumbList and FAQPage without fabricated ratings or pricing',()=>{
