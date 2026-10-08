@@ -123,7 +123,7 @@ export function requireVerifiedTimelyFact(key: TimelyCommercialFactKey): Extract
  * VAT, processing and extras must be calculated separately only when verified.
  */
 export function resolveTimelyMonthlyShopQuoteGbp(quotedGbp: number | null | undefined): number | null {
-  if (quotedGbp == null) return null;
+  if (quotedGbp == null || quotedGbp === 0) return null; // 0 means no confirmed quote, never a free UK plan
   if (!Number.isFinite(quotedGbp) || quotedGbp < 0) throw new Error('Timely UK monthly quote must be a non-negative finite GBP amount');
   return Math.round(quotedGbp * 100) / 100;
 }
