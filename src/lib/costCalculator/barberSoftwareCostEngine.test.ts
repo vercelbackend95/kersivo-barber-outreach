@@ -669,10 +669,10 @@ describe('booking deposit processing', () => {
     expect(result.assumptions.map((entry) => entry.code)).toEqual(
       expect.arrayContaining(['deposit-processing-scope', 'deposit-benchmark', 'deposit-fee-rounding', 'deposit-refunds-not-modelled']),
     );
-    expect(assumptionCodes(result.providers[4])).toEqual(
+    expect(assumptionCodes(result.providers[5])).toEqual(
       expect.arrayContaining(['kersivo-stripe-standard-uk-card', 'stripe-fees-no-vat']),
     );
-    expect(assumptionCodes(run().providers[4])).not.toContain('kersivo-stripe-standard-uk-card');
+    expect(assumptionCodes(run().providers[5])).not.toContain('kersivo-stripe-standard-uk-card');
     expect(ASSUMPTION_MESSAGES['deposit-benchmark']).toBe(
       'The comparison uses a £5 online deposit benchmark where comparable processing terms are published.',
     );
