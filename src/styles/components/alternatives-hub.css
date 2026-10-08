@@ -1150,7 +1150,7 @@
 /* Mobile compact filters: quick choices + accessible modal-style sheet.
    Desktop comparison panel is deliberately unchanged. */
 @media (max-width: 45rem) {
-  .alt-hub-panel:not([data-filters-expanded='true']) .alt-hub-pill:nth-child(n + 4) {
+  .alt-hub-panel:not([data-filters-expanded='true']) .alt-hub-pill[data-quick-filter='false'] {
     display: none;
   }
 
@@ -1216,5 +1216,22 @@
 
   .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__counts {
     white-space: normal;
+  }
+}
+
+/* Confirmed-match summary makes unknowns visible, not implicitly scored as failures. */
+.alt-hub-card__score-summary {
+  margin: 0.65rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #c6c9d0;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 45rem) {
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-pills {
+    padding-bottom: 0.5rem;
+  }
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__suggested[hidden] {
+    display: none;
   }
 }
