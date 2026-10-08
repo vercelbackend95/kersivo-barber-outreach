@@ -18,8 +18,8 @@ const square = (changes: Partial<CostScenarioInput> = {}) =>
 describe('Square Appointments UK cost-calculator integration', () => {
   it('uses one audited pricing source and puts Square in both engine and visible cards', () => {
     expect(SQUARE_UK_PLANS.map(p => p.monthlyGbp)).toEqual([0,29,69]);
-    expect(calculate().providers.map(p=>p.provider)).toEqual(['booksy','fresha','nearcut','treatwell','setora','square','phorest','kersivo','vagaro']);
-    expect(PROVIDER_RESULTS.map(p=>p.id)).toEqual(['booksy','fresha','nearcut','treatwell','setora','square','phorest','vagaro','kersivo']);
+    expect(calculate().providers.map(p=>p.provider)).toEqual(['booksy','fresha','nearcut','timely','treatwell','setora','square','phorest','kersivo','vagaro']);
+    expect(PROVIDER_RESULTS.map(p=>p.id)).toEqual(['booksy','fresha','nearcut','timely','treatwell','setora','square','phorest','vagaro','kersivo']);
     expect(squareBaseMonthlyPriceGbp('plus')).toBe(29);
     expect(squareBaseMonthlyPriceGbp('premium')).toBe(69);
     expect(COST_CALCULATOR_SOURCES.filter(s=>s.provider==='Square Appointments').length).toBeGreaterThanOrEqual(2);
