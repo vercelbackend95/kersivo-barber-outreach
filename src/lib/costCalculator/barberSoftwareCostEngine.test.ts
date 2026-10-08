@@ -53,6 +53,8 @@ const BASE: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  phorestMonthlyQuoteGbp: 0,
+  phorestQuoteVatPercent: 99,
   vatRegistered: false,
   includeDepositProcessing: false,
   depositBookingsPerMonth: 0,
@@ -323,7 +325,7 @@ describe('shared behaviour', () => {
   });
 
   it('returns providers in Booksy, Fresha, Nearcut, KERSIVO order', () => {
-    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'kersivo']);
+    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'kersivo', 'phorest']);
   });
 
   it.each<[Partial<CostScenarioInput>, keyof CostScenarioInput, string]>([
@@ -500,6 +502,7 @@ describe('booking deposit processing', () => {
     nearcut: 'nearcut-deposit-processing',
     setora: 'setora-deposit-processing',
     kersivo: 'kersivo-deposit-processing',
+    phorest: 'phorest-deposit-processing',
   };
   const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
   const on = (deposits: number, extra: Partial<CostScenarioInput> = {}) =>
@@ -566,17 +569,18 @@ describe('booking deposit processing', () => {
 
   it('multiplies the rounded unit fee by the monthly deposit count', () => {
     const result = on(100);
-    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 28, 28]);
-    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100]);
+    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 28, 28, null]);
+    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100, 100]);
     for (const entry of result.providers) {
       expect(entry.depositProcessingIncluded).toBe(true);
       expect(depositLine(entry).category).toBe('payment-processing');
-      expect(entry.amounts!.paymentProcessingExVatGbp).toBe(depositLine(entry).exVatGbp);
+      if (entry.provider !== 'phorest') expect(entry.amounts!.paymentProcessingExVatGbp).toBe(depositLine(entry).exVatGbp);
+      else expect(entry.amounts).toBeNull();
     }
   });
 
   it('shows £0.00 as calculated, not as not included, with zero deposits', () => {
-    for (const entry of on(0).providers) {
+    for (const entry of on(0).providers.filter(entry=>entry.provider!=='phorest')) {
       expect(depositLine(entry)).toMatchObject({ status: 'calculated', exVatGbp: 0, quantity: 0 });
       if (entry.provider === 'nearcut') expect(depositLine(entry).unitExVatGbp).toBe(0);
       else expect(depositLine(entry).unitExVatGbp).toBeGreaterThan(0);
