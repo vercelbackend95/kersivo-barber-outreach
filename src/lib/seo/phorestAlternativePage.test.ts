@@ -7,6 +7,7 @@ import { buildPhorestAlternativeWebPageJsonLd, buildPhorestAlternativeBreadcrumb
 import { PHOREST_COMPARE_SECTIONS, PHOREST_SOURCES, getPublishedPhorestSubscriptionGbp } from './phorestFacts';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
+import { GET as getRobots } from '../../pages/robots.txt';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=(path:string)=>readFileSync(join(dir,path),'utf8');
 describe('Phorest alternative page',()=>{
@@ -21,6 +22,19 @@ expect(buildPhorestAlternativeWebPageJsonLd()).toMatchObject({'@type':'WebPage',
 expect(buildPhorestAlternativeBreadcrumbJsonLd()['@type']).toBe('BreadcrumbList');
 expect(buildPhorestAlternativeWebPageJsonLd().breadcrumb).toEqual({'@id':'https://kersivo.co.uk/phorest-alternative#breadcrumb'});
 expect((buildPhorestAlternativeBreadcrumbJsonLd().itemListElement as unknown[]).length).toBe(2);
+it('is not blocked by robots and uses standard canonical/OG metadata',async()=>{
+const robots=await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
+expect(robots).toContain('User-agent: *');
+expect(robots).toContain('User-agent: OAI-SearchBot');
+expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
+expect(robots).not.toMatch(/Disallow:\\s*\\/phorest/);
+const layout=read('../../layouts/LandingLayout.astro');
+const seoHead=read('../../components/seo/SeoHead.astro');
+expect(layout).toContain('type="application/ld+json"');
+expect(seoHead).toContain('rel="canonical"');
+expect(seoHead).toContain('property="og:url"');
+expect(seoHead).toContain('name="twitter:card"');
+});
 });
 it('uses the existing visual page structure and a single H1',()=>{
 const page=read('../../pages/phorest-alternative/index.astro');
@@ -45,5 +59,7 @@ expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/phorest-alternative')).toMatchObje
 expect(read('../../components/nearcutAlternative/NearcutFit.astro')).toContain('/phorest-alternative');
 expect(read('../../components/phorestAlternative/PhorestFit.astro')).toContain('/nearcut-alternative');
 expect(read('../../pages/phorest-alternative/index.astro')).not.toContain('noindex');
+expect(read('../../components/booksyAlternative/BooksyFit.astro')).toContain('/phorest-alternative');
+expect(read('../../components/freshaAlternative/FreshaFit.astro')).toContain('/phorest-alternative');
 });
 });
