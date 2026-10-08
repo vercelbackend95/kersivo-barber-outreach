@@ -185,7 +185,7 @@ export const SQUARE_PLAN_FIELD = {
   id: 'calc-square-plan',
   name: 'squarePlan' as const,
   label: 'Square Appointments plan',
-  helper: 'Square Free £0, Plus £29 or Premium £69/month per location. VAT basis for Plus/Premium is not confirmed; incomplete totals stay unestimated.',
+  helper: `Square Free ${formatGbp(SQUARE_UK_PLANS[0].monthlyGbp)}, Plus ${formatGbp(SQUARE_UK_PLANS[1].monthlyGbp)} or Premium ${formatGbp(SQUARE_UK_PLANS[2].monthlyGbp)}/month per location. VAT basis for Plus/Premium is not confirmed; incomplete totals stay unestimated.`,
   options: SQUARE_UK_PLANS.map((plan) => ({value: plan.id as SquarePlanId,label: plan.name, priceLabel: '£' + plan.monthlyGbp + '/mo'})),
   defaultValue: 'free' as SquarePlanId,
 } as const;
