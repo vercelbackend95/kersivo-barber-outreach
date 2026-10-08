@@ -102,11 +102,11 @@ export type VagaroFeeContext = {
 export function resolveVagaroUkAcquisitionPercent(context:VagaroFeeContext): number {
  const newRate = requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value;
  const existingRate = requireVerifiedVagaroFact('fillMyBooksExistingClientPercent').value;
- if (!context.isNewClient) return context.promotedBooking ? existingRate : 0;
+ if (!context.isNewClient) return context.promotedBooking && context.marketplaceListingActive ? existingRate : 0;
  if (context.channel==='marketplace' && context.marketplaceListingActive) return newRate;
  if (context.channel==='partner-network' && context.marketplaceListingActive) return newRate;
  if (context.channel==='own-channel' && context.fillMyBooksEnabled) return newRate;
- if (context.promotedBooking && context.fillMyBooksEnabled) return newRate;
+ if (context.promotedBooking && context.fillMyBooksEnabled && context.marketplaceListingActive) return newRate;
  return 0;
 }
 
