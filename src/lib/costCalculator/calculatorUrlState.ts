@@ -16,6 +16,7 @@
  *   loyalty Fresha Client Loyalty            1 | 0
  *   nc      Nearcut Subscription             1 | 0
  *   nq      Nearcut monthly quote (ex VAT)    decimal, 0 if unknown
+ *   tq      Timely UK invoice (incl VAT)      decimal, 0 if unknown
  *   vat     VAT registered                   1 | 0
  *   dp      booking deposit processing       1 | 0
  *   db      deposit bookings per month       integer
@@ -43,6 +44,7 @@ export const SCENARIO_PARAMS = {
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
   nearcutMonthlyQuoteGbp: 'nq',
+  timelyMonthlyInvoiceGbp: 'tq',
   vatRegistered: 'vat',
   includeDepositProcessing: 'dp',
   depositBookingsPerMonth: 'db',
