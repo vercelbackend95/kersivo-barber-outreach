@@ -15,9 +15,9 @@ const nearcut = (override: Partial<CostScenarioInput> = {}): ProviderMonthlyResu
 const item = (result: ProviderMonthlyResult, id: string) => result.lineItems.find((x) => x.id === id)!;
 
 describe('Nearcut integration: commercial truth over marketing estimates', () => {
-  it('is the fourth competitor alongside Booksy, Fresha and KERSIVO', () => {
-    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','kersivo']);
-    expect(calc().providers[3].provider).toBe('kersivo');
+  it('remains the third provider, alongside Booksy, Fresha, Setora and KERSIVO', () => {
+    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','setora','kersivo']);
+    expect(calc().providers[4].provider).toBe('kersivo');
   });
 
   it('Free for You costs the shop £0 in this base model and DOES NOT charge the shop the customer fee', () => {
