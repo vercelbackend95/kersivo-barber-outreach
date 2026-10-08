@@ -18,7 +18,17 @@ const byId = new Map(HUB_PLATFORMS.map((p) => [p.id, p]));
 const total = HUB_PLATFORMS.length;
 const hiddenCount = Math.max(0, total - HUB_INITIAL_VISIBLE_CARDS);
 const PRIMARY_PILLS = 6;
-const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']);
+const MOBILE_QUICK_FILTERS = new Set([
+  'zeroCommission', 'ownDomain', 'deposits', 'biggerTeams', 'brandedBooking', 'affordable',
+]);
+const MOBILE_LABELS: Record<string, string> = {
+  zeroCommission: '0% commission',
+  ownDomain: 'Own website',
+  deposits: 'Deposits',
+  biggerTeams: '5+ barbers',
+  brandedBooking: 'Own branding',
+  affordable: 'Under £40/mo',
+};
 ---
 
 <section
@@ -32,11 +42,15 @@ const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']
     <div class="alt-hub-panel" data-filters-expanded="false">
       <div class="alt-hub-panel__head">
         <div class="alt-hub-panel__intro">
+          <p class="alt-hub-panel__eyebrow">PERSONALISE YOUR COMPARISON</p>
           <h2 id="alt-hub-filters-title" class="alt-hub-panel__title">What matters to you?</h2>
           <p class="alt-hub-panel__helper" id="alt-hub-filters-helper">
             Choose your priorities to see which platforms match your barbershop.
           </p>
         </div>
+        <button type="button" class="alt-hub-panel__close" data-hub-close aria-label="Close filters">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 5l10 10M15 5L5 15" /></svg>
+        </button>
         <div class="alt-hub-panel__meta">
           <p class="alt-hub-panel__counts">
             <span data-hub-selected-count>{selected.length}</span> of {HUB_CRITERIA.length} selected
@@ -70,6 +84,7 @@ const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']
                 class={`alt-hub-pill${index >= PRIMARY_PILLS ? ' alt-hub-pill--extra' : ''}`}
                 data-quick-filter={MOBILE_QUICK_FILTERS.has(criterion.id) ? 'true' : 'false'}
                 aria-pressed={pressed ? 'true' : 'false'}
+                aria-label={criterion.label}
                 data-hub-filter={criterion.id}
                 title={criterion.definition}
               >
@@ -77,11 +92,26 @@ const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']
                   <svg class="alt-hub-pill__check" viewBox="0 0 16 16" focusable="false"><path d="M4 8.4 6.7 11 12 5.2" /></svg>
                   <svg class="alt-hub-pill__plus" viewBox="0 0 16 16" focusable="false"><path d="M8 4v8M4 8h8" /></svg>
                 </span>
-                {criterion.label}
+                <span class="alt-hub-pill__label alt-hub-pill__label--full">{criterion.label}</span>
+                <span class="alt-hub-pill__label alt-hub-pill__label--mobile" aria-hidden="true">{MOBILE_LABELS[criterion.id] ?? criterion.shortLabel}</span>
               </button>
             );
           })
         }
+        <button
+          type="button"
+          class="alt-hub-panel__more"
+          aria-expanded="false"
+          aria-controls="alt-hub-pills"
+          aria-label="Open all comparison filters"
+          data-hub-more-filters
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M3 5h14M6 10h8M8 15h4" />
+          </svg>
+          <span data-hub-more-label>All filters</span>
+          <svg class="alt-hub-panel__more-arrow" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="m7 5 5 5-5 5" /></svg>
+        </button>
       </div>
 
       <div class="alt-hub-panel__foot">
@@ -89,30 +119,26 @@ const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']
           Scores count only features confirmed in official sources for the priorities you select. Partial and
           not-verified features are shown but never counted as matches. <a href="#methodology">How matching works</a>
         </p>
-        <div class="alt-hub-panel__controls">
-          <button
-            type="button"
-            class="alt-hub-panel__more"
-            aria-expanded="false"
-            aria-controls="alt-hub-pills"
-            aria-label="Open all comparison filters"
-            data-hub-more-filters
-          >
-            <span data-hub-more-label>All filters ({HUB_CRITERIA.length})</span>
-          </button>
-          <div class="alt-hub-sort">
-            <label for="alt-hub-sort" class="alt-hub-sort__label">Sort by:</label>
-            <select id="alt-hub-sort" class="alt-hub-sort__select" data-hub-sort>
-              {HUB_SORT_MODES.map((mode) => <option value={mode.value}>{mode.label}</option>)}
-            </select>
-          </div>
-        </div>
+      </div>
+      <div class="alt-hub-panel__sheet-actions">
+        <button type="button" class="alt-hub-panel__apply" data-hub-apply>Show matching systems <span aria-hidden="true">↗</span></button>
       </div>
     </div>
 
-    <p class="alt-hub-status-line" aria-live="polite" data-hub-live>
-      {Math.min(total, HUB_INITIAL_VISIBLE_CARDS)} of {total} systems shown. Select priorities to see match scores.
-    </p>
+    <div class="alt-hub-toolbar">
+      <p class="alt-hub-status-line" aria-live="polite" data-hub-live>
+        {Math.min(total, HUB_INITIAL_VISIBLE_CARDS)} of {total} systems shown. Select priorities to see match scores.
+      </p>
+      <p class="alt-hub-toolbar__count" aria-hidden="true">
+        <span data-hub-visible-count>{Math.min(total, HUB_INITIAL_VISIBLE_CARDS)}</span> / {total} SYSTEMS
+      </p>
+      <div class="alt-hub-sort">
+        <label for="alt-hub-sort" class="alt-hub-sort__label">Sort by</label>
+        <select id="alt-hub-sort" class="alt-hub-sort__select" data-hub-sort>
+          {HUB_SORT_MODES.map((mode) => <option value={mode.value}>{mode.label}</option>)}
+        </select>
+      </div>
+    </div>
 
     <div class="alt-hub-grid" id="alt-hub-grid" data-hub-grid data-expanded="false">
       {

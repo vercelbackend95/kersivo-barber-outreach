@@ -51,12 +51,14 @@ export function initAlternativesHub(doc: Document = document): void {
   const showAll = root.querySelector<HTMLButtonElement>('[data-hub-show-all]');
   const showAllLabel = root.querySelector<HTMLElement>('[data-hub-show-all-label]');
   const moreFilters = root.querySelector<HTMLButtonElement>('[data-hub-more-filters]');
+  const closeFilters = root.querySelector<HTMLButtonElement>('[data-hub-close]');
+  const applyFilters = root.querySelector<HTMLButtonElement>('[data-hub-apply]');
+  const visibleCount = root.querySelector<HTMLElement>('[data-hub-visible-count]');
   const moreFiltersLabel = root.querySelector<HTMLElement>('[data-hub-more-label]');
   const panel = root.querySelector<HTMLElement>('.alt-hub-panel');
 
   const cards = readCards(grid);
   const initialVisible = Number(root.dataset.initialVisible ?? cards.length);
-  const filterCount = pills.length;
 
   const selected = new Set<HubCriterionId>(
     pills
@@ -110,6 +112,7 @@ export function initAlternativesHub(doc: Document = document): void {
     if (live) {
       const sortText = mode === 'name' ? 'sorted by name' : 'sorted by best match';
       const shown = grid!.dataset.expanded === 'true' ? cards.length : Math.min(initialVisible, cards.length);
+      if (visibleCount) visibleCount.textContent = String(shown);
       live.textContent =
         selection.length === 0
           ? `${shown} of ${cards.length} systems shown. Select priorities to see match scores.`
@@ -162,7 +165,7 @@ export function initAlternativesHub(doc: Document = document): void {
     }
     moreFilters?.setAttribute('aria-expanded', 'false');
     moreFilters?.setAttribute('aria-label', 'Open all comparison filters');
-    if (moreFiltersLabel) moreFiltersLabel.textContent = `All filters (${filterCount})`;
+    if (moreFiltersLabel) moreFiltersLabel.textContent = 'All filters';
     if (mobileSheetQuery?.matches) doc.documentElement.style.overflow = previousOverflow;
     if (restoreFocus) lastFocus?.focus();
     lastFocus = null;
@@ -186,7 +189,7 @@ export function initAlternativesHub(doc: Document = document): void {
     }
     moreFilters.setAttribute('aria-expanded', 'true');
     moreFilters.setAttribute('aria-label', 'Apply comparison filters and close');
-    if (moreFiltersLabel) moreFiltersLabel.textContent = mobileSheetQuery?.matches ? 'Apply filters' : 'Fewer filters';
+    if (moreFiltersLabel) moreFiltersLabel.textContent = mobileSheetQuery?.matches ? 'Close' : 'Fewer filters';
 
     if (mobileSheetQuery?.matches) {
       previousOverflow = doc.documentElement.style.overflow;
@@ -194,6 +197,9 @@ export function initAlternativesHub(doc: Document = document): void {
       pills[0]?.focus();
     }
   });
+
+  closeFilters?.addEventListener('click', () => closeSheet());
+  applyFilters?.addEventListener('click', () => closeSheet());
 
   doc.addEventListener('keydown', (event) => {
     if (panel?.dataset.filtersExpanded !== 'true') return;
