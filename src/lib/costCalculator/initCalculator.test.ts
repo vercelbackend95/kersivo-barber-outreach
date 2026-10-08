@@ -578,7 +578,7 @@ describe('period selector', () => {
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -592,14 +592,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {
