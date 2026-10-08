@@ -88,7 +88,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'How much does Square Appointments cost in the UK?',
-    answer: `Square Appointments offers Free (£${SQUARE_UK_PLANS[0].monthlyGbp}/month for one location), Plus (£${SQUARE_UK_PLANS[1].monthlyGbp}/month per location) and Premium (£${SQUARE_UK_PLANS[2].monthlyGbp}/month per location). Published headline prices are displayed by the calculator; VAT treatment for Plus/Premium is not confirmed, so it will not guess their final cash totals.`,
+    answer: `Square Appointments lists Free (£${SQUARE_UK_PLANS[0].monthlyGbp}/month for one location), Plus (£${SQUARE_UK_PLANS[1].monthlyGbp}/month per location) and Premium (£${SQUARE_UK_PLANS[2].monthlyGbp}/month per location). Published headline prices are displayed by the calculator; VAT treatment for Plus/Premium is not confirmed, so it will not guess their final cash totals.`,
   },
   {
     question: 'Does Square Appointments charge fees on deposits?',
