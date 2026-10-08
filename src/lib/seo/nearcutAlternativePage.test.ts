@@ -6,7 +6,7 @@ import { NEARCUT_ALTERNATIVE_PAGE_PATH, NEARCUT_ALTERNATIVE_TITLE, NEARCUT_ALTER
 import { buildNearcutAlternativeWebPageJsonLd, buildNearcutAlternativeBreadcrumbJsonLd } from './nearcutAlternativeJsonLd';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { GET as getRobots } from '../../pages/robots.txt';
-import { NEARCUT_COMPARE_SECTIONS, NEARCUT_SOURCES } from './nearcutFacts';
+import { NEARCUT_COMPARE_SECTIONS, NEARCUT_SOURCES, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from './nearcutFacts';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=(path:string)=>readFileSync(join(dir,path),'utf8');
@@ -90,9 +90,13 @@ describe('Nearcut Alternative marketing page',()=>{
  it('reflects verified UK Nearcut commercial specifics',()=>{
   const costs=read('../../components/nearcutAlternative/NearcutCosts.astro');
   const faqs=NEARCUT_ALTERNATIVE_FAQ_ITEMS.map(x=>x.question+' '+x.answer).join(' ');
-  expect(costs).toContain('30-day Subscription trial');
+  expect(costs).toContain('trial.value');
   expect(costs).toContain('zero transaction fees');
-  expect(costs).toContain('2.9% + £0.20');
+  expect(costs).toContain('standardPayment.percent');
+  expect(costs).toContain('feeExample.amountGbp');
+  expect(requireVerifiedNearcutFact('subscriptionFreeTrialDays').value).toBe(30);
+  expect(requireVerifiedNearcutFact('standardOnlinePaymentProcessing').percent).toBe(2.9);
+  expect(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp).toBe(1.5);
   expect(faqs).toContain('Nearcut Free for You');
   expect(faqs).toContain('30-day free trial');
  });
