@@ -392,7 +392,7 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'treatwell-subscription', label: 'Your quoted monthly subscription' },
       { id: 'treatwell-new-client-commission', label: 'Qualifying marketplace new-client commission' },
       { id: 'vat', label: 'VAT (confirmed portions only)' },
-      { id: 'treatwell-deposit-processing', label: 'Online prepayment processing · 2.5% + VAT' },
+      { id: 'treatwell-deposit-processing', label: `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT` },
     ],
   },
   {
