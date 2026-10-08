@@ -15,6 +15,7 @@ import {
   FRESHA_TEAM_PRICE,
 } from '@/lib/seo/barberCostCalculatorPage';
 import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
 import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
@@ -85,7 +86,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'Can this calculator estimate Treatwell monthly costs?',
-    answer: `Yes, conditionally. Enter eligible new marketplace bookings and your actual Treatwell subscription quote excluding VAT, then confirm its VAT treatment. It also models ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected £5 online deposits. If the subscription price is unknown, it shows calculated booking charges but leaves the total at Custom pricing rather than guessing £0.`,
+    answer: `Yes, conditionally. Enter eligible new marketplace bookings and your actual Treatwell subscription quote excluding VAT, then confirm its VAT treatment. It also models ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected ${formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online deposits. If the subscription price is unknown, it shows calculated booking charges but leaves the total at Custom pricing rather than guessing that a monthly subscription is free.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
