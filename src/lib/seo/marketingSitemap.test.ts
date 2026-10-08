@@ -93,7 +93,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(14);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(15);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');
