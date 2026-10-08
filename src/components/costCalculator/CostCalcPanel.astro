@@ -8,6 +8,8 @@ import {
   CALC_PANEL_LABEL,
   FRESHA_ADD_ONS,
   FRESHA_ADD_ONS_LEGEND,
+  NEARCUT_SUBSCRIPTION_TOGGLE,
+  NEARCUT_QUOTE_FIELD,
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
   DEPOSIT_BOOKINGS_FIELD,
@@ -32,7 +34,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -205,7 +207,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Fresha add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Nearcut plan, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -244,6 +246,50 @@ const describedBy = (id: string, withHelper: boolean) =>
           }
         </div>
       </fieldset>
+
+      <div class="calc-fieldset">
+        <div class="calc-field calc-field--inline">
+          <div>
+            <label class="calc-field__label" for={NEARCUT_SUBSCRIPTION_TOGGLE.id}>{NEARCUT_SUBSCRIPTION_TOGGLE.label}</label>
+            <p class="calc-field__helper">{NEARCUT_SUBSCRIPTION_TOGGLE.helper}</p>
+          </div>
+          <span class="calc-switch">
+            <input
+              id={NEARCUT_SUBSCRIPTION_TOGGLE.id}
+              class="calc-switch__input"
+              type="checkbox"
+              role="switch"
+              name={NEARCUT_SUBSCRIPTION_TOGGLE.name}
+              checked={NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn}
+              aria-controls={NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}
+              data-calc-reveal
+            />
+            <span class="calc-switch__track" aria-hidden="true"><span class="calc-switch__thumb"></span></span>
+            <span class="calc-switch__state" aria-hidden="true">
+              <span class="calc-switch__off">Off</span><span class="calc-switch__on">On</span>
+            </span>
+          </span>
+        </div>
+        <div id={NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId} class="calc-deposit__fields" hidden={!NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn}>
+          <div class="calc-field">
+            <label class="calc-field__label" for={NEARCUT_QUOTE_FIELD.id}>{NEARCUT_QUOTE_FIELD.label}</label>
+            <input
+              id={NEARCUT_QUOTE_FIELD.id}
+              class="calc-input"
+              type="number"
+              inputmode="decimal"
+              name={NEARCUT_QUOTE_FIELD.name}
+              value={NEARCUT_QUOTE_FIELD.defaultValue}
+              min={NEARCUT_QUOTE_FIELD.min}
+              max={NEARCUT_QUOTE_FIELD.max}
+              step={NEARCUT_QUOTE_FIELD.step}
+              aria-describedby={describedBy(NEARCUT_QUOTE_FIELD.id, true)}
+            />
+            <p id={helperId(NEARCUT_QUOTE_FIELD.id)} class="calc-field__helper">{NEARCUT_QUOTE_FIELD.helper}</p>
+            <p id={errorId(NEARCUT_QUOTE_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
+          </div>
+        </div>
+      </div>
 
       <div class="calc-fieldset">
         <div class="calc-field calc-field--inline">
