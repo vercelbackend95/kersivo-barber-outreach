@@ -103,7 +103,7 @@ describe('barber software cost calculator SEO foundation', () => {
   it('includes every key SEO H2', () => {
     const corpus = componentSources.join('\n');
     for (const heading of [
-      'Booksy, Fresha, Nearcut, Setora, Square & Phorest vs KERSIVO: cost at a glance',
+      'Booksy, Fresha, Vagaro & more vs KERSIVO: cost at a glance',
       'How much does Booksy cost in the UK?',
       'How much does Fresha cost in the UK?',
       'How much does Nearcut cost in the UK?',
