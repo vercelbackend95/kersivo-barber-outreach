@@ -110,6 +110,10 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'vagaro-subscription':
+      return unit ? `${unit}/month for bookable calendars` : null;
+    case 'vagaro-marketplace-fees':
+      return line.quantity > 0 && unit ? `${plural(line.quantity, 'first booking', 'first bookings')}/month · ${unit} each` : null;
     case 'treatwell-subscription':
       return unit ? `${unit}/month from your Treatwell quote` : 'Own quote required';
     case 'treatwell-new-client-commission':
@@ -130,6 +134,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
     case 'square-deposit-processing':
     case 'nearcut-deposit-processing':
     case 'treatwell-deposit-processing':
+    case 'vagaro-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
@@ -140,6 +145,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
+  'vagaro-standard-uk-online': 'published Vagaro UK online/keyed-in rate',
   'treatwell-online-prepayment': 'Treatwell published 2.5% + VAT online prepayment',
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
 };
