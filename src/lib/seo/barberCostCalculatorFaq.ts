@@ -19,6 +19,7 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
 import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { requireVerifiedVagaroFact, estimateVagaroDisplayedSubscriptionGbp } from '@/lib/seo/vagaroFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export type BarberCostCalculatorFaqItem = {
@@ -87,6 +88,18 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'Can this calculator estimate Treatwell monthly costs?',
     answer: `Yes, conditionally. Enter eligible new marketplace bookings and your actual Treatwell subscription quote excluding VAT, then confirm its VAT treatment. It also models ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected ${formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online deposits. If the subscription price is unknown, it shows calculated booking charges but leaves the total at Custom pricing rather than guessing that a monthly subscription is free.`,
+  },
+  {
+    question:'How much is Vagaro per month for UK barbers?',
+    answer:`Vagaro currently displays ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)} per month for one calendar, alongside a crossed-out reference rate. Extra calendars cost ${formatGbp(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value)} each per month up to seven calendars, capped at ${formatGbp(requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value)}. The displayed offer is not guaranteed long-term.`,
+  },
+  {
+    question:'Does Vagaro charge commission on every booking?',
+    answer:`No. Vagaro's published UK new-client fee is ${requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value}% of a qualifying first visit under specific channels and conditions. Direct and returning bookings are not automatically subject to the Marketplace new-client charge. Optional promoted existing-client programmes have other fees.`,
+  },
+  {
+    question:'Does the Vagaro estimate include VAT and online deposits?',
+    answer:`Vagaro's subscription VAT basis has not been verified for every UK shop. The calculator allows an explicit VAT assumption. Its optional online deposit estimate uses published UK keyed-in/online rates of ${requireVerifiedVagaroFact('standardOnlineProcessingPercent').value}% plus ${formatGbp(requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} per transaction. Actual merchant terms may differ.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
