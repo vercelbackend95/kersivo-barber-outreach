@@ -497,6 +497,7 @@ describe('booking deposit processing', () => {
   const DEPOSIT_LINES: Record<ProviderId, LineItemId> = {
     booksy: 'booksy-deposit-processing',
     fresha: 'fresha-deposit-processing',
+    nearcut: 'nearcut-deposit-processing',
     kersivo: 'kersivo-deposit-processing',
   };
   const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
