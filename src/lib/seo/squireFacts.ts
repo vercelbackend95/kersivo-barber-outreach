@@ -235,6 +235,11 @@ export type SquireUkCalculatorReadiness =
  * Scope matches the calculator's existing subscription + online £5 deposit
  * model; marketplace and add-on totals require their own verified decisions.
  */
+/** Expose the discriminated union to downstream models; all current entries are unresolved. */
+export function getSquireUkCommercialFact(key: SquireUkCommercialFactKey): SquireUkCommercialFact {
+  return SQUIRE_UK_COMMERCIAL_FACTS[key];
+}
+
 export function getSquireUkCalculatorReadiness(plan: SquirePlanId): SquireUkCalculatorReadiness {
   const requiredKeys: readonly SquireUkCommercialFactKey[] = [
     SQUIRE_UK_PLAN_SUBSCRIPTION_KEYS[plan],
@@ -245,7 +250,7 @@ export function getSquireUkCalculatorReadiness(plan: SquirePlanId): SquireUkCalc
   ];
   const missingFacts = requiredKeys.filter(
     (key) => {
-      const fact: SquireUkCommercialFact = SQUIRE_UK_COMMERCIAL_FACTS[key];
+      const fact = getSquireUkCommercialFact(key);
       if (!isVerifiedSquireUkFact(fact)) return true;
       if (key === 'onlineDepositProcessing') return fact.percent === undefined || fact.amountGbp === undefined;
       return fact.amountGbp === undefined && fact.percent === undefined;
