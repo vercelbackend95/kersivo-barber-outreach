@@ -1,6 +1,7 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { TIMELY_FACTS_CHECKED_DATE } from '@/lib/seo/timelyFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -35,10 +36,10 @@ import {
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Booksy, Fresha, Nearcut & Setora Costs UK | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Booksy, Fresha, Timely & More: UK Costs | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.';
+  'Compare Booksy, Fresha, Nearcut, Timely, Setora and KERSIVO costs in the UK. Model subscriptions, TimelyPay fees, VAT, deposits and 3-year totals.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -69,7 +70,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Timely, Setora and KERSIVO with your UK barbershop numbers. Enter a real Timely UK invoice for its custom-priced subscription.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -98,7 +99,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Setora and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Nearcut, Timely, Setora and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -137,6 +138,18 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; that is not a universal price`,
       'Subscription removes the customer booking charge; actual price varies by shop',
       'Online payment rates and optional Business Boosters depend on the plan',
+    ],
+  },
+  {
+    name: 'Timely',
+    descriptor: 'Per bookable staff · real UK invoice needed',
+    price: 'Custom pricing',
+    priceNote: 'Enter your actual UK subscription invoice including VAT',
+    points: [
+      'Public UK GBP subscription rate not independently verified',
+      'Standard TimelyPay domestic UK online cards: 1.85% + 30p',
+      'International and Amex cards: 3% + 30p',
+      'VAT component of your invoice is not separated or guessed',
     ],
   },
   {
@@ -405,7 +418,7 @@ export const SCENARIOS_NOTE =
 /* ------------------------------- Methodology ------------------------------- */
 
 export const METHODOLOGY_INTRO =
-  'The calculator compares estimated costs using your own inputs and each platform’s published UK pricing. These are the factors it uses.';
+  'The calculator compares published UK costs and your own inputs. Timely’s UK subscription requires your real invoice amount; no public USD plan price is converted into GBP.';
 
 export const METHODOLOGY_FACTORS: readonly string[] = [
   'Number of bookable barbers',
@@ -415,6 +428,7 @@ export const METHODOLOGY_FACTORS: readonly string[] = [
   'Optional Booksy Boost',
   'VAT status',
   'Optional add-ons',
+  'Actual Timely UK invoice total including any VAT',
   'Optional booking deposit processing',
 ];
 
