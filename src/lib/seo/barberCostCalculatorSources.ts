@@ -14,10 +14,11 @@ import {
   type FreshaSourceId,
   getFreshaSource,
 } from '@/lib/seo/freshaFacts';
+import { NEARCUT_FACTS_CHECKED_DATE, NEARCUT_FACTS_CHECKED_ISO, NEARCUT_SOURCES } from '@/lib/seo/nearcutFacts';
 import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'Stripe' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
@@ -86,6 +87,15 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
       checkedLabel: checked?.checkedLabel ?? FRESHA_FACTS_CHECKED_DATE ?? undefined,
     };
   }),
+  ...NEARCUT_SOURCES.map((source) => ({
+    provider: 'Nearcut' as const,
+    label: source.label,
+    supports: source.supports,
+    url: source.url,
+    external: true,
+    checkedIso: NEARCUT_FACTS_CHECKED_ISO,
+    checkedLabel: NEARCUT_FACTS_CHECKED_DATE,
+  })),
   {
     provider: 'Stripe',
     label: 'Stripe UK pricing',
