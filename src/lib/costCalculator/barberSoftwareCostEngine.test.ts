@@ -518,6 +518,7 @@ describe('booking deposit processing', () => {
     square: 'square-deposit-processing',
     kersivo: 'kersivo-deposit-processing',
     phorest: 'phorest-deposit-processing',
+    vagaro: 'vagaro-deposit-processing',
   };
   const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
   const on = (deposits: number, extra: Partial<CostScenarioInput> = {}) =>
