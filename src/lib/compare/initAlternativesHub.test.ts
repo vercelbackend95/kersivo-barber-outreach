@@ -177,7 +177,8 @@ describe('initAlternativesHub', () => {
     expect(pill('retail').getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('hides the suggested note after the selection changes and reports it when restored', () => {
+  it('hides the neutral helper after the selection changes and restores it when cleared', () => {
+    mount([]);
     initAlternativesHub(document);
     const note = document.querySelector<HTMLElement>('[data-hub-suggested-note]')!;
     expect(note.hidden).toBe(false);
