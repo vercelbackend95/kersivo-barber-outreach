@@ -25,5 +25,22 @@ export function buildFreshaAlternativeWebPageJsonLd(): Record<string, unknown> {
     dateModified: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+  };
+}
+
+/** Mirrors the visible Home / Fresha alternative navigation in FreshaHero. */
+export function buildFreshaAlternativeBreadcrumbJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = `${siteUrl}${FRESHA_ALTERNATIVE_PAGE_PATH}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    '@id': `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Fresha alternative', item: pageUrl },
+    ],
   };
 }
