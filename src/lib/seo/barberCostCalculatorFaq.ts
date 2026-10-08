@@ -14,6 +14,7 @@ import {
   FRESHA_TEAM_PRICE,
 } from '@/lib/seo/barberCostCalculatorPage';
 import { FRESHA_UK_VAT_PERCENT } from '@/lib/seo/freshaFacts';
+import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export type BarberCostCalculatorFaqItem = {
@@ -66,6 +67,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'What is the Fresha Marketplace fee?',
     answer: `It is a one-time fee of ${FRESHA_MARKETPLACE_PERCENT} of the first appointment value, minimum ${FRESHA_MARKETPLACE_MINIMUM}, for a brand-new client who first discovers your business on the Fresha Marketplace. Returning clients don’t trigger it, and Fresha applies a maximum cap for higher-value services.`,
+  },
+  {
+    question: 'Is Nearcut free for barbershops?',
+    answer: `Nearcut Free for You is listed at ${requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp === 0 ? '£0/month' : 'a monthly price'} for the shop, but customers pay a separate online booking charge. Nearcut shows £${requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp.toFixed(2)} on a £20 haircut as an example, not as a universal fee.`,
+  },
+  {
+    question: 'How much does Nearcut Subscription cost in the UK?',
+    answer: 'Nearcut Subscription has a quote-based monthly price depending on your shop and removes the client booking charge. The calculator lets you enter a real quote excluding VAT; unknown subscription fees or unconfirmed online payment processing are shown as Custom pricing.',
   },
   {
     question: 'Is Booksy or Fresha cheaper for a barbershop?',
