@@ -1071,7 +1071,16 @@ describe('ClientOnboardingWizard hardening', () => {
     );
     render(<ClientOnboardingWizard />);
     await screen.findByRole('heading', { name: /Opening hours/i });
-    fireEvent.click(screen.getByRole('switch', { name: /Thu/i }));
+    // Ensure the initial canonical hours have hydrated before editing them.
+    await act(async () => { await Promise.resolve(); });
+    const thursday = screen.getByRole('switch', { name: /Thu/i });
+    const wasChecked = thursday.getAttribute('aria-checked') ?? String((thursday as HTMLInputElement).checked);
+    fireEvent.click(thursday);
+    await waitFor(() => {
+      const changed = screen.getByRole('switch', { name: /Thu/i });
+      const checked = changed.getAttribute('aria-checked') ?? String((changed as HTMLInputElement).checked);
+      expect(checked).not.toBe(wasChecked);
+    });
     fireEvent.click(screen.getByRole('button', { name: /Back/i }));
     await waitFor(() => {
       expect(
