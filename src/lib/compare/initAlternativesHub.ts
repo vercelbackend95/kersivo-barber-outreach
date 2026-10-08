@@ -109,10 +109,11 @@ export function initAlternativesHub(doc: Document = document): void {
     if (suggestedNote) suggestedNote.hidden = selection.length !== 0;
     if (live) {
       const sortText = mode === 'name' ? 'sorted by name' : 'sorted by best match';
+      const shown = grid!.dataset.expanded === 'true' ? cards.length : Math.min(initialVisible, cards.length);
       live.textContent =
         selection.length === 0
-          ? `${cards.length} systems available. Select priorities to see match scores.`
-          : `${cards.length} systems available, ${sortText} for ${selection.length} selected ${selection.length === 1 ? 'priority' : 'priorities'}. All systems displayed.`;
+          ? `${shown} of ${cards.length} systems shown. Select priorities to see match scores.`
+          : `${shown} of ${cards.length} systems shown, ${sortText} for ${selection.length} selected ${selection.length === 1 ? 'priority' : 'priorities'}.`;
     }
   }
 
@@ -144,6 +145,7 @@ export function initAlternativesHub(doc: Document = document): void {
 
   showAll?.addEventListener('click', () => {
     setShowAll(grid.dataset.expanded !== 'true');
+    render();
   });
 
   // Mobile filter sheet reuses the server-rendered criteria; no duplicate state.
