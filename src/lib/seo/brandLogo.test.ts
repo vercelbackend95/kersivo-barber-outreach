@@ -46,6 +46,9 @@ describe('KERSIVO approved brand identity', () => {
     expect(favicon).toContain('favicon-48x48.png?v=2');
     expect(favicon).toContain('favicon-96x96.png?v=2');
     expect(favicon).toContain('apple-touch-icon.png?v=2');
+    for (const layout of ['MainLayout', 'LandingLayout', 'MinimalLayout', 'DemoLayout']) {
+      expect(read(`src/layouts/${layout}.astro`)).toContain('<FaviconLinks />');
+    }
     const manifest = JSON.parse(read('public/site.webmanifest'));
     expect(manifest.icons.map((x: { sizes: string }) => x.sizes)).toEqual(['192x192', '512x512']);
   });
