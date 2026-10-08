@@ -1,7 +1,7 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
-import { TIMELY_FACTS_CHECKED_DATE } from '@/lib/seo/timelyFacts';
+import { TIMELY_FACTS_CHECKED_DATE, TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -363,6 +363,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Online Payments',
     body: `Fresha applies its standard online payment rate of ${FRESHA_ONLINE_PAYMENTS_FEE} per transaction plus VAT to online deposits.`,
+  },
+  {
+    title: 'Timely via TimelyPay',
+    body: `TimelyPay's current standard domestic UK online card processing rate is ${feeLabel(TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)} per transaction, checked on ${TIMELY_FACTS_CHECKED_DATE}. The actual subscription invoice must be provided by the shop, including any VAT shown on it.`,
   },
   {
     title: 'Setora via Stripe',
