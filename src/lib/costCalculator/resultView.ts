@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  TIMELY_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
   NOT_CALCULATED_SR,
@@ -107,6 +108,8 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'timely-subscription':
+      return unit ? 'Actual monthly invoice total including any VAT (tax component not separated)' : 'Enter your Timely UK invoice total';
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'setora-additional-staff':
@@ -116,6 +119,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
     case 'nearcut-deposit-processing':
+    case 'timely-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
@@ -127,6 +131,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
+  'timelypay-domestic-uk-online': 'TimelyPay domestic UK card · 1.85% + 30p',
 };
 
 function depositDetail(line: CostLineItem, unit: string | null): string | null {
@@ -198,7 +203,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'timely' ? TIMELY_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
@@ -206,7 +211,9 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
 
   const { amounts } = result;
   const total = formatMoneyGbp(amounts.cashTotalGbp);
-  breakdown.vat = { value: formatMoneyGbp(amounts.vatChargedGbp), detail: null };
+  breakdown.vat = result.provider === 'timely'
+    ? { value: 'Included in quote · not separated', detail: null }
+    : { value: formatMoneyGbp(amounts.vatChargedGbp), detail: null };
   return {
     ...shared,
     state: 'calculated',
@@ -219,8 +226,8 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
         : `${NET_IF_VAT_RECOVERABLE_LABEL} ${formatMoneyGbp(amounts.estimatedNetCostIfVatRecoverableGbp)}`,
     customNote: null,
     summary: {
-      'before-vat': formatMoneyGbp(amounts.subtotalExVatGbp),
-      vat: formatMoneyGbp(amounts.vatChargedGbp),
+      'before-vat': result.provider === 'timely' ? 'Not separated from invoice' : formatMoneyGbp(amounts.subtotalExVatGbp),
+      vat: result.provider === 'timely' ? 'Included in invoice (unknown)' : formatMoneyGbp(amounts.vatChargedGbp),
       payments: paymentsSummary(result),
     },
     breakdown,
