@@ -65,6 +65,7 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     nearcutSubscription: readChecked(form, 'nearcutSubscription'),
     nearcutMonthlyQuoteGbp: readNumber(form, 'nearcutMonthlyQuoteGbp'),
+    timelyMonthlyInvoiceGbp: readNumber(form, 'timelyMonthlyInvoiceGbp'),
     vatRegistered: readYesNo(form, 'vatRegistered'),
     includeDepositProcessing: readChecked(form, 'includeDepositProcessing'),
     depositBookingsPerMonth: readNumber(form, 'depositBookingsPerMonth'),
