@@ -18,6 +18,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/about',
   'https://kersivo.co.uk/booksy-alternative',
   'https://kersivo.co.uk/fresha-alternative',
+  'https://kersivo.co.uk/vagaro-alternative',
   'https://kersivo.co.uk/square-appointments-alternative',
   'https://kersivo.co.uk/nearcut-alternative',
   'https://kersivo.co.uk/treatwell-alternative',
@@ -46,9 +47,9 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(17);
+    expect(entries).toHaveLength(18);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(17);
+    expect(new Set(locs).size).toBe(18);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
@@ -57,6 +58,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-10-08');
