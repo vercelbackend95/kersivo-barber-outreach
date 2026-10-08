@@ -54,7 +54,7 @@ export function projectCostCalculation(
   const months = PERIOD_MONTHS[period];
   if (!monthly.ok) return { ...monthly, period, months };
 
-  const [booksy, fresha, nearcut, setora, square, phorest, kersivo] = monthly.providers;
+  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = monthly.providers;
   return {
     ...monthly,
     period,
