@@ -115,7 +115,7 @@ describe('initAlternativesHub', () => {
     expect(document.querySelector('.alt-hub-panel')?.getAttribute('data-filters-expanded')).toBe('true');
     expect(more.getAttribute('aria-expanded')).toBe('true');
     more.click();
-    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('More filters (6)');
+    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('All filters (12)');
   });
 
   it('binds only once when initialised repeatedly', () => {
