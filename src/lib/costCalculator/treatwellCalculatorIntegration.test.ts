@@ -92,6 +92,6 @@ describe('Treatwell UK calculator integration', () => {
     expect(decoded.scenario).toEqual(scenario);
     expect(decoded.period).toBe('annual');
     expect(PROVIDER_RESULTS.map(x=>x.id)).toContain('treatwell');
-    expect(PROVIDER_RESULTS.length).toBe(9);
+    expect(PROVIDER_RESULTS.length).toBe(10);
   });
 });
