@@ -26,7 +26,7 @@ type NumericScenarioKey =
   | 'depositBookingsPerMonth'
   | 'nearcutMonthlyQuoteGbp';
 
-type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey>;
+type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestMonthlyQuoteGbp' | 'phorestQuoteVatPercent'>;
 
 export type NumberFieldConfig = {
   id: string;
@@ -180,6 +180,25 @@ export const NEARCUT_QUOTE_FIELD: NumberFieldConfig = {
   min: 0, max: 20000, step: 0.01,
 };
 
+export const PHOREST_QUOTE_FIELD: NumberFieldConfig = {
+  id: 'calc-phorest-quote', name: 'phorestMonthlyQuoteGbp',
+  label: 'Your Phorest monthly subscription quote (ex VAT)',
+  helper: 'Enter only the subscription amount shown in your own Phorest quote, before VAT. Leave £0 if unknown — no price is assumed.',
+  defaultValue: 0, min: 0, max: 20000, step: 0.01,
+};
+
+/** 99 means unknown, so no Phorest cash total can be calculated yet. */
+export const PHOREST_QUOTE_VAT = {
+  name: 'phorestQuoteVatPercent',
+  legend: 'Does your Phorest quote add VAT?',
+  options: [
+    { value: 99, label: 'Not sure' },
+    { value: 20, label: 'Yes · UK 20%' },
+    { value: 0, label: 'No VAT added' },
+  ],
+  defaultValue: 99,
+} as const;
+
 export const NEARCUT_EXAMPLE = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 export const DEPOSIT_PROCESSING_TOGGLE = {
@@ -215,6 +234,8 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
   nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
+  phorestMonthlyQuoteGbp: PHOREST_QUOTE_FIELD.defaultValue,
+  phorestQuoteVatPercent: PHOREST_QUOTE_VAT.defaultValue,
   vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
   includeDepositProcessing: DEPOSIT_PROCESSING_TOGGLE.defaultOn,
   depositBookingsPerMonth: DEPOSIT_BOOKINGS_FIELD.defaultValue,
@@ -260,6 +281,7 @@ export const NOT_INCLUDED = 'Not included';
 export const NOT_ESTIMATED = 'Not estimated';
 export const CUSTOM_PRICING = 'Custom pricing';
 export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
+export const PHOREST_CUSTOM_PRICING_NOTE = 'Phorest subscription pricing requires your own monthly quote and confirmed VAT treatment. Extra SMS, add-ons and PhorestPay fees are excluded. When deposit processing is selected for paid deposits, a complete total cannot be estimated without PhorestPay rates.';
 export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
@@ -325,6 +347,15 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
     ],
   },
   {
+    id: 'phorest',
+    name: 'Phorest',
+    breakdown: [
+      { id: 'phorest-subscription', label: 'Your quoted subscription (ex VAT)' },
+      { id: 'vat', label: 'VAT if confirmed' },
+      { id: 'phorest-deposit-processing', label: 'PhorestPay deposit processing' },
+    ],
+  },
+  {
     id: 'kersivo',
     name: 'KERSIVO',
     breakdown: [
@@ -369,6 +400,8 @@ export function validationMessage(code: ValidationIssueCode, field: NumberFieldC
       return 'Enter a whole number.';
     case 'below-minimum':
       return field ? `Enter ${field.min} or more.` : 'Enter a larger number.';
+    case 'invalid-phorest-vat':
+      return 'Choose the VAT treatment shown in your Phorest quote.';
     case 'not-boolean':
       return 'Choose an option.';
     case 'exceeds-monthly-appointments':
@@ -386,4 +419,5 @@ export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
   ...SPLIT_FIELDS,
   DEPOSIT_BOOKINGS_FIELD,
   NEARCUT_QUOTE_FIELD,
+  PHOREST_QUOTE_FIELD,
 ];
