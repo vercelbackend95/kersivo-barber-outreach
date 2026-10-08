@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  PHOREST_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
   NOT_CALCULATED_SR,
@@ -107,6 +108,8 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'phorest-subscription':
+      return unit ? `${unit}/month from your Phorest quote` : 'Own quote required';
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'setora-additional-staff':
@@ -115,6 +118,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 ? `${line.quantity} included` : null;
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
+    case 'phorest-deposit-processing':
     case 'nearcut-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
@@ -198,7 +202,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
