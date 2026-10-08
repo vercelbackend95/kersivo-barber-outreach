@@ -23,6 +23,7 @@ type NumericScenarioKey =
   | 'marketplaceClients'
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
+  | 'vagaroMarketplaceClients'
   | 'depositBookingsPerMonth'
   | 'nearcutMonthlyQuoteGbp';
 
@@ -98,7 +99,7 @@ export const BOOST_TOGGLE = {
 export const SPLIT_ASSUMPTIONS_TOGGLE = {
   id: 'calc-split-assumptions',
   name: 'splitMarketplaceAssumptions',
-  label: 'Use different assumptions for Booksy and Fresha',
+  label: 'Use separate marketplace counts for each platform',
   defaultOn: false,
 } as const satisfies ToggleConfig;
 
@@ -116,6 +117,15 @@ export const SPLIT_FIELDS: readonly NumberFieldConfig[] = [
     id: 'calc-fresha-marketplace-clients',
     name: 'freshaMarketplaceClients',
     label: 'Fresha Marketplace clients / month',
+    defaultValue: 0,
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  {
+    id: 'calc-vagaro-marketplace-clients',
+    name: 'vagaroMarketplaceClients',
+    label: 'Vagaro Marketplace new clients / month',
     defaultValue: 0,
     min: 0,
     max: 1000,
@@ -161,6 +171,28 @@ export const FRESHA_ADD_ONS: readonly AddOnOption[] = [
     priceLabel: `${formatGbp(clientLoyalty.amountGbp!)}/location/month + VAT`,
   },
 ];
+
+export const VAGARO_ADDONS_LEGEND = 'Vagaro assumptions & add-ons';
+export const VAGARO_OPTIONS = [
+  {
+    id:'calc-vagaro-displayed-offer', name:'vagaroDisplayedOffer',
+    label:'Use current £20 displayed one-calendar rate',
+    helper:'On = displayed offer; Off = £30 crossed-out reference. Neither rate is a guaranteed multi-year quote.',
+    defaultOn:true,
+  },
+  {
+    id:'calc-vagaro-mysite', name:'vagaroMySite',
+    label:'Add Vagaro MySite',
+    helper:'Optional website builder at £15/month.',
+    defaultOn:false,
+  },
+  {
+    id:'calc-vagaro-vat', name:'vagaroAssumeVat',
+    label:'Assume 20% UK VAT is added to Vagaro subscription, MySite and client-acquisition fees',
+    helper:'Tax is not confirmed for your individual invoice. Off assumes no extra VAT; on models 20%.',
+    defaultOn:false,
+  },
+] as const;
 
 export const NEARCUT_SUBSCRIPTION_TOGGLE = {
   id: 'calc-nearcut-subscription',
@@ -211,6 +243,10 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   splitMarketplaceAssumptions: SPLIT_ASSUMPTIONS_TOGGLE.defaultOn,
   booksyBoostClients: SPLIT_FIELDS[0].defaultValue,
   freshaMarketplaceClients: SPLIT_FIELDS[1].defaultValue,
+  vagaroMarketplaceClients: SPLIT_FIELDS[2].defaultValue,
+  vagaroDisplayedOffer: VAGARO_OPTIONS[0].defaultOn,
+  vagaroMySite: VAGARO_OPTIONS[1].defaultOn,
+  vagaroAssumeVat: VAGARO_OPTIONS[2].defaultOn,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
@@ -302,6 +338,17 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'fresha-client-loyalty', label: 'Client Loyalty' },
       { id: 'vat', label: 'VAT' },
       { id: 'fresha-deposit-processing', label: 'Booking deposit processing' },
+    ],
+  },
+  {
+    id: 'vagaro',
+    name: 'Vagaro',
+    breakdown: [
+      { id: 'vagaro-subscription', label: 'Calendars / subscription' },
+      { id: 'vagaro-marketplace-fees', label: 'Qualifying new Marketplace clients' },
+      { id: 'vagaro-mysite', label: 'MySite (optional)' },
+      { id: 'vat', label: 'VAT (modelled assumption)' },
+      { id: 'vagaro-deposit-processing', label: 'Online deposit processing' },
     ],
   },
   {
