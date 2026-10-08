@@ -43,7 +43,7 @@ describe('marketing sitemap', () => {
 
     expect(entries).toHaveLength(12);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(11);
+    expect(new Set(locs).size).toBe(12);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
