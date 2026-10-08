@@ -1,7 +1,7 @@
 /**
  * Source-backed SQUIRE comparison facts for the UK /squire-alternative landing page.
  * Keep SQUIRE's explicit UK GBP list prices separate from USD prices and unresolved UK VAT / payment fees.
- * SQUIRE has an operating UK presence, independently of GBP pricing availability.
+ * SQUIRE operates in the UK and explicitly publishes GBP subscription list prices.
  */
 export const SQUIRE_FACTS_CHECKED_DATE = '8 October 2026';
 export const SQUIRE_FACTS_CHECKED_ISO = '2026-10-08';
