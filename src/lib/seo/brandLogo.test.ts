@@ -18,6 +18,9 @@ describe('KERSIVO approved brand identity', () => {
     expect([image.width, image.height, image.hasAlpha]).toEqual([796, 555, true]);
     const generator = read('scripts/generate-favicons.mjs');
     expect(generator).toContain("images', 'logo_nobg.png");
+    expect(generator).toContain("images', 'favicon.png");
+    expect(generator).toContain('faviconMaster = await sharp(sourcePixels)');
+    expect(generator).not.toContain('background: BACKGROUND');
     expect(generator).toContain('left: 230, top: 4, width: 337, height: 371');
     expect(generator).toContain('KERSIVO');
     expect(generator).toContain("fs.writeFile(path.join(publicDir, 'images', 'logo-kersivo.png'), original)");
@@ -41,11 +44,11 @@ describe('KERSIVO approved brand identity', () => {
 
   it('selects versioned real-colour icons for browser, Google and Apple', () => {
     const favicon = read('src/components/seo/FaviconLinks.astro');
-    expect(favicon).toContain('favicon.ico?v=2');
-    expect(favicon).toContain('favicon.svg?v=2');
-    expect(favicon).toContain('favicon-48x48.png?v=2');
-    expect(favicon).toContain('favicon-96x96.png?v=2');
-    expect(favicon).toContain('apple-touch-icon.png?v=2');
+    expect(favicon).toContain('favicon.ico?v=3');
+    expect(favicon).toContain('favicon.svg?v=3');
+    expect(favicon).toContain('favicon-48x48.png?v=3');
+    expect(favicon).toContain('favicon-96x96.png?v=3');
+    expect(favicon).toContain('apple-touch-icon.png?v=3');
     for (const layout of ['MainLayout', 'LandingLayout', 'MinimalLayout', 'DemoLayout']) {
       expect(read(`src/layouts/${layout}.astro`)).toContain('<FaviconLinks />');
     }
