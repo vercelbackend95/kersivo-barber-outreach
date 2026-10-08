@@ -225,7 +225,7 @@ export type SquireUkCalculatorReadiness =
  * Scope matches the calculator's existing subscription + online £5 deposit
  * model; marketplace and add-on totals require their own verified decisions.
  */
-export function getSquireUkCalculatorReadiness(plan: SquirePlanId = 'pro'): SquireUkCalculatorReadiness {
+export function getSquireUkCalculatorReadiness(plan: SquirePlanId): SquireUkCalculatorReadiness {
   const requiredKeys: readonly SquireUkCommercialFactKey[] = [
     SQUIRE_UK_PLAN_SUBSCRIPTION_KEYS[plan],
     'additionalBarberFee',
@@ -234,7 +234,12 @@ export function getSquireUkCalculatorReadiness(plan: SquirePlanId = 'pro'): Squi
     'acquisitionFee',
   ];
   const missingFacts = requiredKeys.filter(
-    (key) => !isVerifiedSquireUkFact(SQUIRE_UK_COMMERCIAL_FACTS[key]),
+    (key) => {
+      const fact: SquireUkCommercialFact = SQUIRE_UK_COMMERCIAL_FACTS[key];
+      if (!isVerifiedSquireUkFact(fact)) return true;
+      if (key === 'onlineDepositProcessing') return fact.percent === undefined || fact.amountGbp === undefined;
+      return fact.amountGbp === undefined && fact.percent === undefined;
+    },
   );
   return missingFacts.length === 0
     ? { status: 'ready', currency: 'GBP', plan, missingFacts: [] }
