@@ -53,7 +53,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-01');
+    expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
@@ -84,7 +84,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
-    expect(xml).toContain('<lastmod>2026-10-01</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
     expect(xml.match(/<lastmod>/g)?.length).toBe(11);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
