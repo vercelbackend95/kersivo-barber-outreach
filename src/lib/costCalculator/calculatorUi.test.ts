@@ -206,8 +206,8 @@ describe('calculator results structure', () => {
     expect(resultsSource).toContain('data-calc-three-year-note hidden={!view.showThreeYearNote}');
   });
 
-  it('renders six peer cards including Phorest without winner language without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Phorest', 'KERSIVO']);
+  it('renders seven peer cards including Square and Phorest without winner language without winner language', () => {
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Square Appointments', 'Phorest', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -246,6 +246,7 @@ describe('calculator results structure', () => {
       ['vat', 'VAT currently charged'],
       ['setora-deposit-processing', 'Stripe deposit processing'],
     ]);
+    expect(rows('square')).toEqual([['square-subscription', 'Plan subscription (published)'], ['vat', 'VAT (unverified for paid plans)'], ['square-deposit-processing', 'Appointments deposit processing']]);
     expect(rows('phorest')).toEqual([['phorest-subscription', 'Your quoted subscription (ex VAT)'], ['vat', 'VAT if confirmed'], ['phorest-deposit-processing', 'PhorestPay deposit processing']]);
     expect(rows('square')).toEqual([
       ['square-subscription', 'Plan subscription (published)'],
@@ -308,7 +309,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(27);
+    expect(ids.length).toBe(30);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });
