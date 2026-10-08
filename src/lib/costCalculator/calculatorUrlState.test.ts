@@ -29,6 +29,8 @@ const FULL: CostScenarioInput = {
   freshaClientLoyalty: true,
   nearcutSubscription: true,
   nearcutMonthlyQuoteGbp: 73.5,
+  phorestMonthlyQuoteGbp: 145.75,
+  phorestQuoteVatPercent: 20,
   squarePlan: 'premium',
   vatRegistered: true,
   includeDepositProcessing: true,
@@ -53,6 +55,8 @@ describe('scenario query parameters', () => {
       freshaClientLoyalty: 'loyalty',
       nearcutSubscription: 'nc',
       nearcutMonthlyQuoteGbp: 'nq',
+      phorestMonthlyQuoteGbp: 'pq',
+      phorestQuoteVatPercent: 'pv',
       squarePlan: 'sq',
       vatRegistered: 'vat',
       includeDepositProcessing: 'dp',
@@ -66,7 +70,7 @@ describe('scenario query parameters', () => {
 describe('encodeScenarioQuery', () => {
   it('encodes the default scenario deterministically and round-trips it', () => {
     const query = encodeScenarioQuery(DEFAULT_SCENARIO, 'monthly');
-    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&sw=0&loyalty=0&nc=0&nq=0&sq=free&vat=0&dp=0&db=0&period=m');
+    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&sw=0&loyalty=0&nc=0&nq=0&pq=0&pv=99&sq=free&vat=0&dp=0&db=0&period=m');
     expect(decode(query)).toEqual({ scenario: DEFAULT_SCENARIO, period: 'monthly', hasScenarioParams: true });
   });
 

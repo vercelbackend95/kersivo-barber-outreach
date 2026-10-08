@@ -53,6 +53,8 @@ const BASE: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  phorestMonthlyQuoteGbp: 0,
+  phorestQuoteVatPercent: 99,
   squarePlan: 'free',
   vatRegistered: false,
   includeDepositProcessing: false,
@@ -324,7 +326,7 @@ describe('shared behaviour', () => {
   });
 
   it('returns providers in Booksy, Fresha, Nearcut, KERSIVO order', () => {
-    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'square', 'kersivo']);
+    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'square', 'phorest', 'kersivo']);
   });
 
   it.each<[Partial<CostScenarioInput>, keyof CostScenarioInput, string]>([
@@ -437,6 +439,11 @@ describe('shared behaviour', () => {
     const notRegistered = run({ bookableBarbers: 3 });
     const registered = run({ bookableBarbers: 3, vatRegistered: true });
     registered.providers.forEach((entry, index) => {
+      if (entry.provider === 'phorest') {
+        expect(entry.status).toBe('custom-pricing');
+        expect(entry.amounts).toBeNull();
+        return;
+      }
       const amounts = (entry as CalculatedProviderResult).amounts;
       const baseline = (notRegistered.providers[index] as CalculatedProviderResult).amounts;
       expect(amounts.cashTotalGbp).toBe(baseline.cashTotalGbp);
@@ -502,6 +509,7 @@ describe('booking deposit processing', () => {
     setora: 'setora-deposit-processing',
     square: 'square-deposit-processing',
     kersivo: 'kersivo-deposit-processing',
+    phorest: 'phorest-deposit-processing',
   };
   const depositLine = (result: ProviderMonthlyResult) => line(result, DEPOSIT_LINES[result.provider]);
   const on = (deposits: number, extra: Partial<CostScenarioInput> = {}) =>
@@ -555,7 +563,7 @@ describe('booking deposit processing', () => {
   });
 
   it('calculates the exact £5 unit fee for each provider from the facts', () => {
-    const [booksy, fresha, nearcut, setora, square, kersivo] = on(1).providers;
+    const [booksy, fresha, nearcut, setora, square, phorest, kersivo] = on(1).providers;
     expect(depositLine(booksy).unitExVatGbp).toBe(
       penceToGbp(expectedUnitPence(BOOKSY_MOBILE_PAYMENTS_PERCENT, BOOKSY_MOBILE_PAYMENTS_FIXED_GBP)),
     );
@@ -563,27 +571,23 @@ describe('booking deposit processing', () => {
     expect(depositLine(kersivo).unitExVatGbp).toBe(
       penceToGbp(expectedUnitPence(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)),
     );
-    expect([booksy, fresha, nearcut, setora, square, kersivo].map((entry) => depositLine(entry).unitExVatGbp)).toEqual([0.26, 0.32, 0, 0.28, null, 0.28]);
+    expect([booksy, fresha, nearcut, setora, square, phorest, kersivo].map((entry) => depositLine(entry).unitExVatGbp)).toEqual([0.26, 0.32, 0, 0.28, null, null, 0.28]);
   });
 
   it('multiplies the rounded unit fee by the monthly deposit count', () => {
     const result = on(100);
-    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 28, null, 28]);
-    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100, 100]);
+    expect(result.providers.map((entry) => depositLine(entry).exVatGbp)).toEqual([26, 32, 0, 28, null, null, 28]);
+    expect(result.providers.map((entry) => depositLine(entry).quantity)).toEqual([100, 100, 100, 100, 100, 100, 100]);
     for (const entry of result.providers) {
       expect(entry.depositProcessingIncluded).toBe(true);
       expect(depositLine(entry).category).toBe('payment-processing');
-      if (entry.provider === 'square') {
-        expect(entry.status).toBe('custom-pricing');
-        expect(entry.amounts).toBeNull();
-      } else {
-        expect(entry.amounts!.paymentProcessingExVatGbp).toBe(depositLine(entry).exVatGbp);
-      }
+      if (entry.provider !== 'phorest' && entry.provider !== 'square') expect(entry.amounts!.paymentProcessingExVatGbp).toBe(depositLine(entry).exVatGbp);
+      else expect(entry.amounts).toBeNull();
     }
   });
 
   it('shows £0.00 as calculated, not as not included, with zero deposits', () => {
-    for (const entry of on(0).providers) {
+    for (const entry of on(0).providers.filter(entry=>entry.provider!=='phorest')) {
       expect(depositLine(entry)).toMatchObject({ status: 'calculated', exVatGbp: 0, quantity: 0 });
       if (entry.provider === 'nearcut' || entry.provider === 'square') expect(depositLine(entry).unitExVatGbp).toBe(0);
       else expect(depositLine(entry).unitExVatGbp).toBeGreaterThan(0);
@@ -592,8 +596,8 @@ describe('booking deposit processing', () => {
   });
 
   it('adds provider VAT to Booksy and Fresha fees but not to Stripe fees', () => {
-    const [booksy, fresha, , setora, , kersivo] = on(100).providers as readonly CalculatedProviderResult[];
-    const [booksyOff, freshaOff, , setoraOff, , kersivoOff] = run().providers as readonly CalculatedProviderResult[];
+    const [booksy, fresha, , setora, , , kersivo] = on(100).providers as readonly CalculatedProviderResult[];
+    const [booksyOff, freshaOff, , setoraOff, , , kersivoOff] = run().providers as readonly CalculatedProviderResult[];
     expect(depositLine(booksy).vatApplies).toBe(true);
     expect(depositLine(fresha).vatApplies).toBe(true);
     expect(depositLine(kersivo).vatApplies).toBe(false);
@@ -609,13 +613,13 @@ describe('booking deposit processing', () => {
   });
 
   it('feeds the VAT-registered net figure', () => {
-    const [booksy, , , , , kersivo] = on(100, { vatRegistered: true }).providers as readonly CalculatedProviderResult[];
+    const [booksy, , , , , , kersivo] = on(100, { vatRegistered: true }).providers as readonly CalculatedProviderResult[];
     expect(booksy.amounts.estimatedNetCostIfVatRecoverableGbp).toBe(booksy.amounts.subtotalExVatGbp);
     expect(kersivo.amounts.estimatedNetCostIfVatRecoverableGbp).toBe(roundGbp(SAAS_MONTHLY_GBP + 28));
   });
 
   it('keeps the KERSIVO commission line at £0.00 and separate from Stripe processing', () => {
-    const kersivo = on(100).providers[5];
+    const kersivo = on(100).providers[6];
     expect(line(kersivo, 'kersivo-commission')).toMatchObject({ category: 'commission', exVatGbp: 0 });
     expect(depositLine(kersivo)).toMatchObject({
       category: 'payment-processing',
@@ -669,10 +673,10 @@ describe('booking deposit processing', () => {
     expect(result.assumptions.map((entry) => entry.code)).toEqual(
       expect.arrayContaining(['deposit-processing-scope', 'deposit-benchmark', 'deposit-fee-rounding', 'deposit-refunds-not-modelled']),
     );
-    expect(assumptionCodes(result.providers[5])).toEqual(
+    expect(assumptionCodes(result.providers[6])).toEqual(
       expect.arrayContaining(['kersivo-stripe-standard-uk-card', 'stripe-fees-no-vat']),
     );
-    expect(assumptionCodes(run().providers[5])).not.toContain('kersivo-stripe-standard-uk-card');
+    expect(assumptionCodes(run().providers[6])).not.toContain('kersivo-stripe-standard-uk-card');
     expect(ASSUMPTION_MESSAGES['deposit-benchmark']).toBe(
       'The comparison uses a £5 online deposit benchmark where comparable processing terms are published.',
     );
@@ -686,14 +690,14 @@ describe('KERSIVO / Stripe fee-payer assumption', () => {
     run({ includeDepositProcessing: on, depositBookingsPerMonth: 100 }).providers.map(assumptionCodes);
 
   it('is attached to KERSIVO only, and only when deposit processing is on', () => {
-    const [booksy, fresha, nearcut, setora, square, kersivo] = codesFor(true);
+    const [booksy, fresha, nearcut, setora, square, phorest, kersivo] = codesFor(true);
     expect(kersivo).toContain('kersivo-stripe-fee-payer');
     expect(nearcut).not.toContain('kersivo-stripe-fee-payer');
     expect(setora).not.toContain('kersivo-stripe-fee-payer');
     expect(booksy).not.toContain('kersivo-stripe-fee-payer');
     expect(fresha).not.toContain('kersivo-stripe-fee-payer');
     expect(square).not.toContain('kersivo-stripe-fee-payer');
-    expect(codesFor(false)[5]).not.toContain('kersivo-stripe-fee-payer');
+    expect(codesFor(false)[6]).not.toContain('kersivo-stripe-fee-payer');
   });
 
   it('uses the central Stripe facts caveat', () => {
@@ -706,9 +710,9 @@ describe('KERSIVO / Stripe fee-payer assumption', () => {
   it('changes no payment amounts', () => {
     const result = run({ includeDepositProcessing: true, depositBookingsPerMonth: 100 });
     expect(result.providers.map((entry) => entry.lineItems.find((item) => item.category === 'payment-processing')!.exVatGbp)).toEqual([
-      26, 32, 0, 28, null, 28,
+      26, 32, 0, 28, null, null, 28,
     ]);
-    expect(result.providers.map((entry) => entry.amounts?.cashTotalGbp ?? null)).toEqual([79.2, 56.34, 0, 87, null, 67]);
+    expect(result.providers.map((entry) => entry.amounts?.cashTotalGbp ?? null)).toEqual([79.2, 56.34, 0, 87, null, null, 67]);
   });
 });
 

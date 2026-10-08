@@ -2,6 +2,7 @@ import { SQUARE_FACTS_CHECKED_DATE, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } f
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { PHOREST_FACTS_CHECKED_DATE } from '@/lib/seo/phorestFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -39,7 +40,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments and KERSIVO booking software costs for UK barbers. Compare plans, deposits, VAT and fees.';
+  'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Include your Phorest quote, plans and VAT.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -70,7 +71,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -99,7 +100,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Setora, Square Appointments and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -166,6 +167,18 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     ],
   },
   {
+    name: 'Phorest',
+    descriptor: 'Quote-based salon plans',
+    price: 'Custom pricing',
+    priceNote: 'Starter, Grow, Ultimate and Elite · individual quotation',
+    points: [
+      'No universal published GBP monthly subscription',
+      'Enter your own pre-VAT quote and confirm its VAT treatment',
+      'SMS and PhorestPay processing depend on plan and contract',
+      'PhorestPay deposit fees cannot be assumed from another platform',
+    ],
+  },
+  {
     name: 'Full KERSIVO',
     descriptor: 'Flat per location',
     price: `${KERSIVO_PRICE}/month per location`,
@@ -178,6 +191,24 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       `KERSIVO Starter is ${formatGbp(0)}/month for up to 4 bookable barbers`,
     ],
   },
+];
+
+/* --------------------------------- Phorest --------------------------------- */
+
+export const PHOREST_COST_INTRO =
+  'Phorest offers Starter, Grow, Ultimate and Elite UK salon software plans, with prices supplied by individual quotation. The calculator needs your own monthly quote before VAT. When online deposit processing is selected, a complete Phorest total remains unavailable because your PhorestPay fee is unverified.';
+
+export const PHOREST_COST_FACTS: readonly { label: string; value: string }[] = [
+  { label: 'UK monthly subscription', value: 'Quote required' },
+  { label: 'Plans', value: 'Starter, Grow, Ultimate, Elite' },
+  { label: 'VAT', value: 'Confirm VAT from your actual invoice or quotation' },
+  { label: 'Online card fees', value: 'PhorestPay rate needs individual confirmation' },
+];
+
+export const PHOREST_COST_NOTES: readonly string[] = [
+  `Checked against Phorest UK pricing on ${PHOREST_FACTS_CHECKED_DATE}. No universal GBP monthly subscription amount is published.`,
+  'Supply only a real Phorest quote excluding VAT; until VAT treatment is confirmed, the calculator does not display a complete Phorest cost.',
+  'SMS, marketing extras, setup, POS and payment charges are excluded unless separately quantified; this is not a full cost-of-ownership quote.',
 ];
 
 /* ---------------------------------- Booksy --------------------------------- */
@@ -390,6 +421,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
     body: `Setora says it adds no markup to Stripe payments. The calculator estimates the same ${DEPOSIT_BENCHMARK} deposit using Stripe’s public standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked ${STRIPE_FACTS_CHECKED_DATE}. Actual Stripe fees may vary.`,
   },
   {
+    title: 'PhorestPay · quote required',
+    body: 'Phorest supports online booking deposits, but the applicable PhorestPay merchant processing rate is not verified for your shop. The calculator leaves the Phorest total at Custom pricing when deposit processing is enabled for paid deposits; it never substitutes a competitor card fee.',
+  },
+  {
     title: 'KERSIVO via Stripe Checkout',
     body: `KERSIVO deposits are processed by Stripe Checkout, with no KERSIVO fee on top. The KERSIVO estimate assumes the connected barbershop pays Stripe’s standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked on ${STRIPE_FACTS_CHECKED_DATE}. Premium UK and international cards cost more.`,
   },
@@ -439,7 +474,7 @@ export const SCENARIOS_NOTE =
 /* ------------------------------- Methodology ------------------------------- */
 
 export const METHODOLOGY_INTRO =
-  'The calculator compares estimated costs using your own inputs and each platform’s published UK pricing. These are the factors it uses.';
+  'The calculator uses official UK sources and your own inputs; Phorest has no public standard monthly quote. Unknown Phorest charges are not guessed. These are the factors it uses.';
 
 export const METHODOLOGY_FACTORS: readonly string[] = [
   'Number of bookable barbers',
@@ -450,6 +485,7 @@ export const METHODOLOGY_FACTORS: readonly string[] = [
   'VAT status',
   'Optional add-ons',
   'Optional booking deposit processing',
+  'Your Phorest quote and confirmed VAT treatment',
 ];
 
 export const METHODOLOGY_PRINCIPLES: readonly MarketplacePoint[] = [

@@ -18,6 +18,8 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  PHOREST_QUOTE_FIELD,
+  PHOREST_QUOTE_VAT,
   SQUARE_PLAN_FIELD,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
@@ -80,6 +82,8 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(PHOREST_QUOTE_FIELD)}
+      ${PHOREST_QUOTE_VAT.options.map(option => `<input type="radio" name="phorestQuoteVatPercent" value="${option.value}" ${option.value === PHOREST_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
@@ -132,6 +136,12 @@ function chooseVat(value: 'yes' | 'no') {
   radio.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+function choosePhorestVat(value: number) {
+  const radio = $<HTMLInputElement>(`input[name="phorestQuoteVatPercent"][value="${value}"]`);
+  radio.checked = true;
+  radio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 function engineCash(overrides: Partial<typeof DEFAULT_SCENARIO>, index: number) {
   const result = calculateMonthlyCosts({ ...DEFAULT_SCENARIO, ...overrides });
   if (!result.ok) throw new Error('invalid');
@@ -153,6 +163,8 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  phorestMonthlyQuoteGbp: 0,
+  phorestQuoteVatPercent: 99,
   squarePlan: 'premium',
   vatRegistered: true,
   includeDepositProcessing: true,
@@ -166,9 +178,9 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 5));
+    expect(total('kersivo')).toBe(engineCash({}, 6));
     expect(total('setora')).toBe(engineCash({}, 3));
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£0.00', '£39.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£0.00', 'Custom pricing', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
@@ -179,6 +191,7 @@ describe('initial calculation', () => {
       'nearcut',
       'setora',
       'square',
+      'phorest',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -421,9 +434,10 @@ const DEPOSIT_LINE = {
   nearcut: 'nearcut-deposit-processing',
   setora: 'setora-deposit-processing',
   square: 'square-deposit-processing',
+  phorest: 'phorest-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'square', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'square', 'phorest', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -431,6 +445,30 @@ function enableDeposits(count: string) {
   toggle(depositToggleId, true);
   setNumber(depositFieldId, count);
 }
+
+describe('Phorest client form integration', () => {
+  it('requires an actual quote and a confirmed VAT treatment', () => {
+    expect(total('phorest')).toBe('Custom pricing');
+    setNumber(PHOREST_QUOTE_FIELD.id, '125.50');
+    expect(total('phorest')).toBe('Custom pricing');
+    choosePhorestVat(20);
+    expect(total('phorest')).toBe('£150.60');
+    expect(cell('phorest', 'phorest-subscription')).toBe('£125.50');
+    expect(cell('phorest', 'phorest-deposit-processing')).toBe('Not included');
+    choosePhorestVat(0);
+    expect(total('phorest')).toBe('£125.50');
+    expect(summary('phorest', 'vat')).toBe('£0.00');
+  });
+  it('never guesses merchant processing for deposit payments', () => {
+    setNumber(PHOREST_QUOTE_FIELD.id, '125.50');
+    choosePhorestVat(20);
+    toggle(DEPOSIT_PROCESSING_TOGGLE.id, true);
+    setNumber(DEPOSIT_BOOKINGS_FIELD.id, '100');
+    expect(total('phorest')).toBe('Custom pricing');
+    expect(cell('phorest', 'phorest-deposit-processing')).toBe('Custom pricing');
+    expect(warnings('phorest').join(' ')).toContain('PhorestPay');
+  });
+});
 
 describe('booking deposit processing', () => {
   it('hides the Stripe fee-payer assumption while deposit processing is off', () => {
@@ -456,31 +494,31 @@ describe('booking deposit processing', () => {
     expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(false);
     expect($<HTMLInputElement>(`#${depositFieldId}`).value).toBe('0');
     for (const id of PROVIDER_IDS) {
-      expect(summary(id, 'payments')).toBe('£0.00');
-      expect(cell(id, DEPOSIT_LINE[id])).toBe('£0.00');
+      expect(summary(id, 'payments')).toBe(id === 'phorest' ? 'Not included' : '£0.00');
+      expect(cell(id, DEPOSIT_LINE[id])).toBe(id === 'phorest' ? 'Not included' : '£0.00');
     }
   });
 
   it('updates all five cards with 100 deposits, keeping commission separate', () => {
     enableDeposits('100');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', 'Custom pricing', '£28.00']);
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', 'Custom pricing', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', 'Custom pricing', 'Custom pricing', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', 'Custom pricing', 'Custom pricing', '£28.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
     expect(detail('setora', DEPOSIT_LINE.setora)).toContain('illustrative Stripe rate, no Setora markup');
     expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', 'Not estimated', '£67.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', 'Not estimated', 'Custom pricing', '£67.00']);
     expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
   });
 
   it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
     enableDeposits('100');
     choosePeriod('annual');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00', 'Custom pricing', '£336.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00', 'Custom pricing', 'Custom pricing', '£336.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     choosePeriod('threeYear');
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00', 'Custom pricing', '£1,008.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00', 'Custom pricing', 'Custom pricing', '£1,008.00']);
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
   });
 
@@ -579,13 +617,13 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(6).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(7).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(6).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(7).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -599,14 +637,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(6).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(7).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(6).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(7).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {
@@ -779,6 +817,10 @@ describe('scenario URLs', () => {
     const projected = projectCostCalculation(calculateMonthlyCosts(URL_SCENARIO), 'threeYear');
     if (!projected.ok) throw new Error('invalid');
     projected.providers.forEach((provider) => {
+      if (provider.provider === 'phorest') {
+        expect(total('phorest')).toBe('Custom pricing');
+        return;
+      }
       if (provider.status === 'custom-pricing') {
         expect(total(provider.provider)).toBe(provider.provider === 'square' ? 'Not estimated' : 'Custom pricing');
         return;
@@ -913,7 +955,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'sq', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'pq', 'pv', 'sq', 'vat', 'dp', 'db', 'period',
     ]);
   });
 

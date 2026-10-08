@@ -87,6 +87,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
     answer: `Setora’s barbershop page currently states that no VAT is added to its ${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)} subscription, while main pricing notes VAT where applicable. It says Stripe processing is charged at Stripe rates without markup. The calculator models standard UK cards as an illustrative benchmark, not a guaranteed merchant rate; optional SMS credits are excluded.`,
   },
   {
+    question: 'How much does Phorest cost per month in the UK?',
+    answer: 'Phorest offers Starter, Grow, Ultimate and Elite plans but does not publish one standard UK monthly price. You need a personalised quote. The calculator accepts a real monthly subscription quote before VAT and asks you to confirm the VAT treatment before calculating a Phorest subscription estimate.',
+  },
+  {
+    question: 'Can the calculator estimate PhorestPay fees?',
+    answer: 'Not without your actual PhorestPay merchant rates. The calculator will not copy Stripe, Booksy or Fresha card fees onto Phorest. If deposit processing is enabled and deposits are modelled, the Phorest total remains Custom pricing until those fees can be verified. SMS, setup and optional add-ons are excluded.',
+  },
+  {
     question: 'How much does Square Appointments cost in the UK?',
     answer: `Square Appointments lists Free (£${SQUARE_UK_PLANS[0].monthlyGbp}/month for one location), Plus (£${SQUARE_UK_PLANS[1].monthlyGbp}/month per location) and Premium (£${SQUARE_UK_PLANS[2].monthlyGbp}/month per location). Published headline prices are displayed by the calculator; VAT treatment for Plus/Premium is not confirmed, so it will not guess their final cash totals.`,
   },

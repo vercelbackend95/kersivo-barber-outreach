@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  PHOREST_CUSTOM_PRICING_NOTE,
   SQUARE_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
@@ -108,6 +109,8 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'phorest-subscription':
+      return unit ? `${unit}/month from your Phorest quote` : 'Own quote required';
     case 'square-subscription':
       return line.publishedHeadlineGbp !== undefined ? `Square ${line.plan} · published headline, VAT basis unverified` : `Square ${line.plan} · published monthly plan`;
     case 'nearcut-subscription':
@@ -118,6 +121,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 ? `${line.quantity} included` : null;
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
+    case 'phorest-deposit-processing':
     case 'square-deposit-processing':
     case 'nearcut-deposit-processing':
     case 'setora-deposit-processing':
@@ -203,7 +207,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
@@ -222,7 +226,9 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       amounts.estimatedNetCostIfVatRecoverableGbp === null
         ? null
         : `${NET_IF_VAT_RECOVERABLE_LABEL} ${formatMoneyGbp(amounts.estimatedNetCostIfVatRecoverableGbp)}`,
-    customNote: null,
+    customNote: result.provider === 'phorest'
+      ? 'Subscription and confirmed VAT only — not the full Phorest bill. SMS, optional tools, setup and PhorestPay charges are excluded.'
+      : null,
     summary: {
       'before-vat': formatMoneyGbp(amounts.subtotalExVatGbp),
       vat: formatMoneyGbp(amounts.vatChargedGbp),

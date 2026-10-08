@@ -40,10 +40,10 @@ describe('Setora cost calculator: documented UK commercial facts', () => {
 
   it('adds Setora before KERSIVO in engine, cards and source list', () => {
     expect(calculate().providers.map((x) => x.provider)).toEqual([
-      'booksy', 'fresha', 'nearcut', 'setora', 'square', 'kersivo',
+      'booksy', 'fresha', 'nearcut', 'setora', 'square', 'phorest', 'kersivo',
     ]);
     expect(PROVIDER_RESULTS.map((x) => x.id)).toEqual([
-      'booksy', 'fresha', 'nearcut', 'setora', 'square', 'kersivo',
+      'booksy', 'fresha', 'nearcut', 'setora', 'square', 'phorest', 'kersivo',
     ]);
     expect(COST_CALCULATOR_SOURCES.filter((s) => s.provider === 'Setora')).toHaveLength(2);
     expect(COST_CALCULATOR_SOURCES.some((s) => s.provider === 'Stripe' && s.url === 'https://stripe.com/gb/pricing')).toBe(true);

@@ -1,0 +1,45 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/landingFinalCta.css';
+---
+
+<section
+  class="landing-final-cta fresha-alt-final"
+  aria-labelledby="fresha-alt-final-cta-title"
+>
+  <div class="container">
+    <div class="landing-final-cta__panel">
+      <div class="landing-final-cta__content">
+        <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
+        <h2 id="fresha-alt-final-cta-title" class="landing-final-cta__heading">
+          Your barbershop. A booking platform that fits.
+        </h2>
+        <p class="landing-final-cta__subheadline">
+          KERSIVO Starter is £0/month for up to four barbers. Public bookings require a £5 online deposit towards the service or full payment through Stripe.
+          Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location with your own website and
+          flexible payment controls. Standard Stripe processing fees apply.
+        </p>
+      </div>
+
+      <div class="landing-final-cta__conversion">
+        <div class="fresha-alt-final__actions">
+          <a
+            href="/admin"
+            class="btn btn--primary btn--lg landing-final-cta__button"
+            data-track="starter_signup_click"
+            data-track-placement="phorest_final"
+          >
+            Start KERSIVO Starter
+          </a>
+          <a
+            href="/pricing"
+            class="btn btn--secondary btn--lg landing-final-cta__button"
+            data-track="view_pricing_click"
+          >
+            Compare Starter and Full
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

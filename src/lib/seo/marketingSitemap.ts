@@ -14,6 +14,7 @@ import {
 } from './freshaAlternativeFaq';
 import { SQUARE_ALTERNATIVE_LAST_UPDATED_ISO, SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
 import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
+import { PHOREST_ALTERNATIVE_LAST_UPDATED_ISO, PHOREST_ALTERNATIVE_PAGE_PATH } from './phorestAlternativeFaq';
 import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
 import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
@@ -52,6 +53,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: SQUARE_ALTERNATIVE_PAGE_PATH, lastmod: SQUARE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Nearcut Alternative editorial last updated date. */
   { path: NEARCUT_ALTERNATIVE_PAGE_PATH, lastmod: NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO },
+  /** Phorest UK comparison updated 8 October 2026. */
+  { path: PHOREST_ALTERNATIVE_PAGE_PATH, lastmod: PHOREST_ALTERNATIVE_LAST_UPDATED_ISO },
   /** SQUIRE comparison editorial facts checked 8 October 2026. */
   { path: SQUIRE_ALTERNATIVE_PAGE_PATH, lastmod: SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Setora UK comparison editorial update. */

@@ -52,6 +52,12 @@ function readYesNo(form: HTMLFormElement, name: string): boolean {
   return element instanceof RadioNodeList ? element.value === 'yes' : false;
 }
 
+function readRadioNumber(form: HTMLFormElement, name: string): number {
+  const element = form.elements.namedItem(name);
+  if (!(element instanceof RadioNodeList) || element.value === '') return Number.NaN;
+  return Number(element.value);
+}
+
 function readSquarePlan(form: HTMLFormElement): CostScenarioInput['squarePlan'] {
   const radios = form.elements.namedItem(SQUARE_PLAN_FIELD.name);
   const value = radios instanceof RadioNodeList ? radios.value : '';
@@ -72,6 +78,8 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     nearcutSubscription: readChecked(form, 'nearcutSubscription'),
     nearcutMonthlyQuoteGbp: readNumber(form, 'nearcutMonthlyQuoteGbp'),
+    phorestMonthlyQuoteGbp: readNumber(form, 'phorestMonthlyQuoteGbp'),
+    phorestQuoteVatPercent: readRadioNumber(form, 'phorestQuoteVatPercent'),
     squarePlan: readSquarePlan(form),
     vatRegistered: readYesNo(form, 'vatRegistered'),
     includeDepositProcessing: readChecked(form, 'includeDepositProcessing'),
@@ -151,6 +159,10 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   );
   if (squareRadio) squareRadio.checked = true;
   setChecked(form, 'includeDepositProcessing', scenario.includeDepositProcessing);
+  const phorestVat = form.querySelector<HTMLInputElement>(
+    `input[name="phorestQuoteVatPercent"][value="${scenario.phorestQuoteVatPercent}"]`,
+  );
+  if (phorestVat) phorestVat.checked = true;
   const vat = form.querySelector<HTMLInputElement>(
     `input[name="vatRegistered"][value="${scenario.vatRegistered ? 'yes' : 'no'}"]`,
   );
@@ -168,7 +180,7 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   if (periodInput) periodInput.checked = true;
 
   const advanced = form.querySelector<HTMLDetailsElement>('details.calc-advanced');
-  if (advanced && (ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key]) || scenario.squarePlan !== DEFAULT_SCENARIO.squarePlan)) advanced.open = true;
+  if (advanced && (ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key]) || scenario.phorestMonthlyQuoteGbp > 0 || scenario.phorestQuoteVatPercent !== DEFAULT_SCENARIO.phorestQuoteVatPercent || scenario.squarePlan !== DEFAULT_SCENARIO.squarePlan)) advanced.open = true;
 }
 
 async function copyText(doc: Document, text: string): Promise<boolean> {
