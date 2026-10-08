@@ -326,7 +326,7 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
-  'square-subscription-vat-unverified': 'Square publishes Plus at £29 and Premium at £69 per month per location, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
+  'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
   'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
 };
 
