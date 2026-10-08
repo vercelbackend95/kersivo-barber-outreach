@@ -1,6 +1,8 @@
 ---
 import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact, getVagaroSource } from '@/lib/seo/vagaroFacts';
 import { formatGbp } from '@/lib/seo/freshaFacts';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import { UK_STANDARD_VAT_PERCENT } from '@/lib/costCalculator/vat';
 const base = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
 const extra = requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value;
 const cap = requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value;
@@ -24,7 +26,7 @@ const fixed = requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').valu
       <li><strong>Subscription:</strong> the interactive model starts from the currently displayed Vagaro price, with an optional crossed-out reference scenario under Advanced costs.</li>
       <li><strong>New Marketplace clients:</strong> a {fee}% first-booking fee is modelled only for qualifying new clients coming through an active Vagaro Marketplace listing — not every direct booking.</li>
       <li><strong>Optional MySite:</strong> {formatGbp(mySite)}/month when selected; other premium features are excluded.</li>
-      <li><strong>Booking deposits:</strong> optional {formatGbp(5)} online payments use Vagaro's standard published UK keyed-in/online rate of {processing}% + {formatGbp(fixed)} per transaction. Older merchant agreements can differ.</li>
+      <li><strong>Booking deposits:</strong> optional {formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online payments use Vagaro's standard published UK keyed-in/online rate of {processing}% + {formatGbp(fixed)} per transaction. Older merchant agreements can differ.</li>
       <li><strong>VAT:</strong> the public UK subscription VAT treatment is not verified. Advanced costs lets you explicitly model VAT on or off; neither setting asserts your actual invoice.</li>
       <li><strong>Promotion fees:</strong> optional Fill My Books / Daily Deals existing-client charges are excluded. Enablement and qualifying booking counts cannot be inferred from shop-wide appointments.</li>
     </ul>
