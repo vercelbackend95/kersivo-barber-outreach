@@ -163,7 +163,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   {
     id: 'compare-cost-calculator',
     label: 'Barber Software Cost Calculator',
-    description: 'Estimate Booksy, Fresha and KERSIVO costs using your own shop numbers.',
+    description: 'Estimate Booksy, Fresha, Nearcut and KERSIVO costs using your shop numbers.',
     href: '/barber-software-cost-calculator',
     group: 'compare',
     section: 'alternatives',
