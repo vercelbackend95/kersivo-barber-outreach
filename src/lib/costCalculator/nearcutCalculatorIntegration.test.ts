@@ -16,8 +16,8 @@ const item = (result: ProviderMonthlyResult, id: string) => result.lineItems.fin
 
 describe('Nearcut integration: commercial truth over marketing estimates', () => {
   it('remains the third provider, alongside Booksy, Fresha, Setora and KERSIVO', () => {
-    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','setora','kersivo']);
-    expect(calc().providers[4].provider).toBe('kersivo');
+    expect(calc().providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','setora','square','kersivo']);
+    expect(calc().providers[5].provider).toBe('kersivo');
   });
 
   it('Free for You costs the shop £0 in this base model and DOES NOT charge the shop the customer fee', () => {
