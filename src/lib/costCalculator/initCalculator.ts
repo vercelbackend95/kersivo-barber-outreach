@@ -61,6 +61,10 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     splitMarketplaceAssumptions: readChecked(form, 'splitMarketplaceAssumptions'),
     booksyBoostClients: readNumber(form, 'booksyBoostClients'),
     freshaMarketplaceClients: readNumber(form, 'freshaMarketplaceClients'),
+    vagaroMarketplaceClients: readNumber(form, 'vagaroMarketplaceClients'),
+    vagaroDisplayedOffer: readChecked(form, 'vagaroDisplayedOffer'),
+    vagaroMySite: readChecked(form, 'vagaroMySite'),
+    vagaroAssumeVat: readChecked(form, 'vagaroAssumeVat'),
     freshaSmartWebsite: readChecked(form, 'freshaSmartWebsite'),
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     nearcutSubscription: readChecked(form, 'nearcutSubscription'),
@@ -137,6 +141,9 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   setChecked(form, 'splitMarketplaceAssumptions', scenario.splitMarketplaceAssumptions);
   setChecked(form, 'freshaSmartWebsite', scenario.freshaSmartWebsite);
   setChecked(form, 'freshaClientLoyalty', scenario.freshaClientLoyalty);
+  setChecked(form, 'vagaroDisplayedOffer', scenario.vagaroDisplayedOffer);
+  setChecked(form, 'vagaroMySite', scenario.vagaroMySite);
+  setChecked(form, 'vagaroAssumeVat', scenario.vagaroAssumeVat);
   setChecked(form, 'nearcutSubscription', scenario.nearcutSubscription);
   setChecked(form, 'includeDepositProcessing', scenario.includeDepositProcessing);
   const vat = form.querySelector<HTMLInputElement>(
