@@ -22,9 +22,15 @@ export const TIMELY_SOURCES = [
   },
   {
     id: 'ukPayments',
-    label: 'Timely Help Centre: UK payments',
-    url: 'https://help.gettimely.com/hc/en-gb/articles/4406148282391-Updated-payment-providers-in-the-UK',
-    supports: 'TimelyPay, deposit support and UK payment-provider restrictions; no universal present-day UK processing rate inferred',
+    label: 'TimelyPay fees (UK, 2026)',
+    url: 'https://help.gettimely.com/hc/en-gb/articles/4404189908503-TimelyPay-Fees',
+    supports: 'UK online card rates after 5 August 2026: domestic 1.85% + 30p; international and Amex 3% + 30p',
+  },
+  {
+    id: 'rateUpdate',
+    label: 'TimelyPay rate changes effective 5 August 2026',
+    url: 'https://help.gettimely.com/hc/en-gb/articles/41624400479767-Payment-rate-updates-for-Australia-and-UK-2026',
+    supports: 'UK 2026 processing rate change and customer-specific exceptions; check Timely account for personalised fees',
   },
   {
     id: 'exports',
@@ -44,6 +50,7 @@ export const getTimelySource = (id: TimelySourceId) => {
 export type TimelyFact =
   | { status: 'verified'; amount: number; currency: 'USD'; market: 'US'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
   | { status: 'verified'; value: number | boolean; market: 'public-plans'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
+  | { status: 'verified'; percent: number; fixedGbp: number; market: 'UK'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
   | { status: 'unresolved'; market: 'UK'; sourceId: TimelySourceId; checkedIso: string; note: string };
 
 const checkedIso = TIMELY_FACTS_CHECKED_ISO;
@@ -95,8 +102,16 @@ export const TIMELY_COMMERCIAL_FACTS = {
     note: 'UK VAT inclusion, VAT charge and invoice basis require verification for the individual quote.',
   },
   ukOnlinePaymentProcessing: {
-    status: 'unresolved', market: 'UK', sourceId: 'ukPayments', checkedIso,
-    note: 'USD pricing-page processing fees must NOT be reused as GBP TimelyPay UK rates.',
+    status: 'verified', percent: 1.85, fixedGbp: 0.30, market: 'UK',
+    unit: 'domestic UK online card transaction',
+    sourceId: 'ukPayments', checkedIso,
+    note: 'Published standard TimelyPay domestic UK online rate effective 5 August 2026; custom/legacy rates may differ. Fee VAT treatment is not established.',
+  },
+  ukInternationalOnlinePaymentProcessing: {
+    status: 'verified', percent: 3, fixedGbp: 0.30, market: 'UK',
+    unit: 'international or American Express online card transaction',
+    sourceId: 'ukPayments', checkedIso,
+    note: 'Published TimelyPay UK online rate effective 5 August 2026; actual card mix must be confirmed.',
   },
   ukInPersonPaymentProcessing: {
     status: 'unresolved', market: 'UK', sourceId: 'ukPayments', checkedIso,
@@ -119,8 +134,9 @@ export function requireVerifiedTimelyFact(key: TimelyCommercialFactKey): Extract
 
 /**
  * Conservative future-calculator adapter: returns null without a real shop-specific UK quote.
- * Monthly quote is the TOTAL for the selected shop/team, not a US price converted to GBP.
- * VAT, processing and extras must be calculated separately only when verified.
+ * Monthly quote is the shop's real MONTHLY INVOICE AMOUNT INCLUDING ANY VAT CHARGED,
+ * not a US price converted to GBP. Its VAT component cannot be inferred without an invoice.
+ * TimelyPay standard UK card processing can be estimated separately from the published UK rate.
  */
 export function resolveTimelyMonthlyShopQuoteGbp(quotedGbp: number | null | undefined): number | null {
   if (quotedGbp == null || quotedGbp === 0) return null; // 0 means no confirmed quote, never a free UK plan
