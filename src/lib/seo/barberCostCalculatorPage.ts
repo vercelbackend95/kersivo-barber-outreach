@@ -1,4 +1,4 @@
-import { SQUARE_FACTS_CHECKED_DATE, SQUARE_FACTS_CHECKED_ISO, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } from '@/lib/seo/squareFacts';
+import { SQUARE_FACTS_CHECKED_DATE, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } from '@/lib/seo/squareFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
@@ -249,7 +249,7 @@ export const NEARCUT_COST_NOTES: readonly string[] = [
 /* ------------------------------ Square Appointments ------------------------------ */
 
 export const SQUARE_COST_INTRO =
-  'Square Appointments offers Free, Plus and Premium UK subscriptions per location. The plan selector in the calculator uses Square’s published prices. The paid plan VAT basis and the specific fee for Square Appointments booking deposits were not verified, so the tool shows the headline and marks an unconfirmed total rather than inventing fees.';
+  'Square Appointments lists Free, Plus and Premium UK subscriptions per location. The plan selector in the calculator uses Square’s published prices. The paid plan VAT basis and the specific fee for Square Appointments booking deposits were not verified, so the tool shows the headline and marks an unconfirmed total rather than inventing fees.';
 
 export const SQUARE_COST_FACTS: readonly { label: string; value: string }[] = [
   { label: 'Free plan', value: '£' + SQUARE_UK_PLANS[0].monthlyGbp + '/month at one location' },
