@@ -1,0 +1,21 @@
+---
+import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
+import {
+  SETORA_QUICK_ANSWER_DETAIL,
+  SETORA_QUICK_ANSWER_FACTS,
+  SETORA_QUICK_ANSWER_KICKER,
+  SETORA_QUICK_ANSWER_LEAD,
+  SETORA_QUICK_ANSWER_TITLE,
+} from '@/lib/seo/setoraAlternativeContent';
+---
+
+<EditorialIntro
+  id="quick-answer"
+  titleId="setora-alt-quick-title"
+  class="fresha-alt-quick"
+  kicker={SETORA_QUICK_ANSWER_KICKER}
+  title={SETORA_QUICK_ANSWER_TITLE}
+  lead={SETORA_QUICK_ANSWER_LEAD}
+  detail={SETORA_QUICK_ANSWER_DETAIL}
+  facts={SETORA_QUICK_ANSWER_FACTS}
+/>

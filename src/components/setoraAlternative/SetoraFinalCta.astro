@@ -1,0 +1,46 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/landingFinalCta.css';
+---
+
+<section
+  class="landing-final-cta fresha-alt-final"
+  aria-labelledby="setora-alt-final-cta-title"
+>
+  <div class="container">
+    <div class="landing-final-cta__panel">
+      <div class="landing-final-cta__content">
+        <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
+        <h2 id="setora-alt-final-cta-title" class="landing-final-cta__heading">
+          Your shop. Your booking experience. A clear monthly choice.
+        </h2>
+        <p class="landing-final-cta__subheadline">
+          Compare the official Setora subscription with KERSIVO Starter at £0/month for up to
+          four bookable barbers, or Full KERSIVO at £{SAAS_MONTHLY_GBP}/month per location
+          with a branded website and standard domain. Starter public bookings require a £5
+          deposit or full payment; Stripe processing fees apply.
+        </p>
+      </div>
+
+      <div class="landing-final-cta__conversion">
+        <div class="fresha-alt-final__actions">
+          <a
+            href="/admin"
+            class="btn btn--primary btn--lg landing-final-cta__button"
+            data-track="starter_signup_click"
+            data-track-placement="setora_final"
+          >
+            Start KERSIVO Starter
+          </a>
+          <a
+            href="/pricing"
+            class="btn btn--secondary btn--lg landing-final-cta__button"
+            data-track="view_pricing_click"
+          >
+            Compare Starter and Full
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

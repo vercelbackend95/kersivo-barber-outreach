@@ -1,0 +1,142 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import SetoraHero from '@/components/setoraAlternative/SetoraHero.astro';
+import SetoraCompare from '@/components/setoraAlternative/SetoraCompare.astro';
+import SetoraProof from '@/components/setoraAlternative/SetoraProof.astro';
+import SetoraPricing from '@/components/setoraAlternative/SetoraPricing.astro';
+import SetoraFinalCta from '@/components/setoraAlternative/SetoraFinalCta.astro';
+import SetoraQuickAnswer from '@/components/setoraAlternative/SetoraQuickAnswer.astro';
+import SetoraWhy from '@/components/setoraAlternative/SetoraWhy.astro';
+import SetoraCosts from '@/components/setoraAlternative/SetoraCosts.astro';
+import SetoraFit from '@/components/setoraAlternative/SetoraFit.astro';
+import SetoraSwitching from '@/components/setoraAlternative/SetoraSwitching.astro';
+import SetoraSources from '@/components/setoraAlternative/SetoraSources.astro';
+import {
+  SETORA_ALTERNATIVE_DESCRIPTION,
+  SETORA_ALTERNATIVE_FAQ_ITEMS,
+  SETORA_ALTERNATIVE_PAGE_PATH,
+  SETORA_ALTERNATIVE_TITLE,
+  buildSetoraAlternativeFaqJsonLd,
+} from '@/lib/seo/setoraAlternativeFaq';
+import {
+  buildSetoraAlternativeBreadcrumbJsonLd,
+  buildSetoraAlternativeWebPageJsonLd,
+} from '@/lib/seo/setoraAlternativeJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={SETORA_ALTERNATIVE_TITLE}
+  description={SETORA_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={SETORA_ALTERNATIVE_PAGE_PATH}
+  jsonLd={[buildSetoraAlternativeWebPageJsonLd(), buildSetoraAlternativeBreadcrumbJsonLd(), buildSetoraAlternativeFaqJsonLd()]}
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <SetoraHero />
+    <SetoraQuickAnswer />
+    <SetoraWhy />
+    <SetoraCosts />
+    <SetoraCompare />
+    <SetoraProof />
+    <SetoraFit />
+    <SetoraSwitching />
+    <SetoraPricing />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Setora vs KERSIVO: common questions"
+      subHeading="Clear answers on Setora pricing, the conflicting £39 and £59 listings, websites, features and switching."
+      supportHeading="Still comparing options?"
+      supportText="Tell us your shop size, needs and the plan you are comparing."
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
+      faqs={SETORA_ALTERNATIVE_FAQ_ITEMS}
+    />
+
+    <SetoraFinalCta />
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still choosing between Setora and KERSIVO?"
+      description="Tell us which tools your barbershop needs and what Setora quoted you. We’ll reply with a practical answer."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+      messagePlaceholder="For example: Setora £59 vs £39 pricing, custom domains, bookings export or retail pickup."
+    />
+
+    <SetoraSources />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'About', href: '/about' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start KERSIVO Starter', href: '/admin' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => {
+      const section = document.querySelector('.feature261');
+      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
+      const cleanup = initFeature261StaggerReveal(section);
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+  document.addEventListener('astro:page-load', scheduleInit);
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

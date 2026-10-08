@@ -1,0 +1,18 @@
+---
+import InsightCards from '@/components/editorial/InsightCards.astro';
+import { SETORA_WHY_INTRO, SETORA_WHY_THEMES } from '@/lib/seo/setoraAlternativeContent';
+---
+
+<section id="why-switch" class="fresha-alt__section" aria-labelledby="setora-alt-why-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">WHY BARBERS COMPARE</p>
+      <h2 id="setora-alt-why-title" class="fresha-alt__h2">
+        Why UK barbers look for a Setora alternative
+      </h2>
+      <p class="fresha-alt__lead">{SETORA_WHY_INTRO}</p>
+    </header>
+
+    <InsightCards items={SETORA_WHY_THEMES} />
+  </div>
+</section>
