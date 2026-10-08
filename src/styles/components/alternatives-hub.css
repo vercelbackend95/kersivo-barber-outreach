@@ -1214,6 +1214,18 @@
     flex-basis: 100%;
   }
 
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__explainer {
+    display: none;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__controls {
+    gap: 0.5rem;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__more {
+    min-width: min(10rem, 45%);
+  }
+
   .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__counts {
     white-space: normal;
   }
