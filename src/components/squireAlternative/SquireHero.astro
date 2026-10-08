@@ -1,0 +1,35 @@
+---
+import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+---
+<section class="fresha-alt-hero" aria-labelledby="squire-alt-hero-title">
+  <div class="fresha-alt-hero__content">
+    <nav class="squire-alt-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">SQUIRE alternative</span>
+    </nav>
+    <p class="fresha-alt-hero__eyebrow"><span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>SQUIRE alternative for UK barbershops</p>
+    <h1 id="squire-alt-hero-title" class="fresha-alt-hero__title">
+      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A SQUIRE alternative</span>
+      <span class="fresha-alt-hero__title-line">built around your</span>
+      <span class="fresha-alt-hero__title-line">barbershop.</span>
+    </h1>
+    <p class="fresha-alt-hero__lead">SQUIRE offers barbershop booking, payments and business management. KERSIVO takes a focused approach for independent UK barbers: start with £0/month booking software, or choose Full KERSIVO for your own branded website, domain and customer journey.</p>
+    <div class="fresha-alt-hero__actions">
+      <a href="/demo" class="fresha-alt-hero__action fresha-alt-hero__action--primary" data-track="view_live_demo_click">Open the full demo</a>
+      <a href="#comparison" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">Compare KERSIVO and SQUIRE</a>
+    </div>
+    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
+      <span><strong>Starter £0/month</strong></span><span aria-hidden="true">·</span>
+      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span><span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission</span><span aria-hidden="true">·</span>
+      <span>Independent UK barbershops</span>
+    </div>
+  </div>
+  <HeroDashboardShowcase />
+</section>
+
+<style>
+  .squire-alt-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-bottom:1rem;color:#9ca3af;font-size:.75rem;line-height:1.5}
+  .squire-alt-breadcrumb a{color:inherit;text-decoration:none}
+  .squire-alt-breadcrumb a:hover,.squire-alt-breadcrumb a:focus-visible{color:#f9fafb;text-decoration:underline}
+</style>

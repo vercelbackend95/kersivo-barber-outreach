@@ -161,6 +161,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-squire',
+    label: 'SQUIRE Alternative',
+    description: 'Compare SQUIRE UK prices, POS, deposits and own-brand bookings with KERSIVO.',
+    href: '/squire-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-setora',
     label: 'Setora Alternative',
     description: 'Compare Setora UK pricing, websites and booking features with KERSIVO.',
