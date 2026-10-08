@@ -1,0 +1,142 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import PhorestHero from '@/components/phorestAlternative/PhorestHero.astro';
+import PhorestCompare from '@/components/phorestAlternative/PhorestCompare.astro';
+import PhorestProof from '@/components/phorestAlternative/PhorestProof.astro';
+import PhorestPricing from '@/components/phorestAlternative/PhorestPricing.astro';
+import PhorestFinalCta from '@/components/phorestAlternative/PhorestFinalCta.astro';
+import PhorestQuickAnswer from '@/components/phorestAlternative/PhorestQuickAnswer.astro';
+import PhorestWhy from '@/components/phorestAlternative/PhorestWhy.astro';
+import PhorestCosts from '@/components/phorestAlternative/PhorestCosts.astro';
+import PhorestFit from '@/components/phorestAlternative/PhorestFit.astro';
+import PhorestSwitching from '@/components/phorestAlternative/PhorestSwitching.astro';
+import PhorestSources from '@/components/phorestAlternative/PhorestSources.astro';
+import {
+  PHOREST_ALTERNATIVE_DESCRIPTION,
+  PHOREST_ALTERNATIVE_FAQ_ITEMS,
+  PHOREST_ALTERNATIVE_PAGE_PATH,
+  PHOREST_ALTERNATIVE_TITLE,
+  buildPhorestAlternativeFaqJsonLd,
+} from '@/lib/seo/phorestAlternativeFaq';
+import {
+  buildPhorestAlternativeBreadcrumbJsonLd,
+  buildPhorestAlternativeWebPageJsonLd,
+} from '@/lib/seo/phorestAlternativeJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={PHOREST_ALTERNATIVE_TITLE}
+  description={PHOREST_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={PHOREST_ALTERNATIVE_PAGE_PATH}
+  jsonLd={[buildPhorestAlternativeWebPageJsonLd(), buildPhorestAlternativeBreadcrumbJsonLd(), buildPhorestAlternativeFaqJsonLd()]}
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <PhorestHero />
+    <PhorestQuickAnswer />
+    <PhorestWhy />
+    <PhorestCosts />
+    <PhorestCompare />
+    <PhorestProof />
+    <PhorestFit />
+    <PhorestSwitching />
+    <PhorestPricing />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about Phorest and KERSIVO?"
+      subHeading="Clear answers on booking charges, pricing, switching, websites and the live demo."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
+      faqs={PHOREST_ALTERNATIVE_FAQ_ITEMS}
+    />
+
+    <PhorestFinalCta />
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still comparing KERSIVO and Phorest?"
+      description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+      messagePlaceholder="For example: Phorest pricing quotes, plan features, deposits, client exports or an own-domain website."
+    />
+
+    <PhorestSources />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'About', href: '/about' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start KERSIVO Starter', href: '/admin' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => {
+      const section = document.querySelector('.feature261');
+      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
+      const cleanup = initFeature261StaggerReveal(section);
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+  document.addEventListener('astro:page-load', scheduleInit);
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>
