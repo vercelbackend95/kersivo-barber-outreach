@@ -1,6 +1,8 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SQUARE_UK_PLANS, type SquarePlanId } from '@/lib/seo/squareFacts';
+import { PHOREST_QUOTE_VAT_UNKNOWN } from '@/lib/seo/phorestFacts';
+import { UK_STANDARD_VAT_PERCENT } from './vat';
 import {
   DEPOSIT_BENCHMARK_GBP,
   type CostScenarioInput,
@@ -194,11 +196,11 @@ export const PHOREST_QUOTE_VAT = {
   name: 'phorestQuoteVatPercent',
   legend: 'Does your Phorest quote add VAT?',
   options: [
-    { value: 99, label: 'Not sure' },
-    { value: 20, label: 'Yes · standard UK VAT' },
+    { value: PHOREST_QUOTE_VAT_UNKNOWN, label: 'Not sure' },
+    { value: UK_STANDARD_VAT_PERCENT, label: 'Yes · standard UK VAT' },
     { value: 0, label: 'No VAT added' },
   ],
-  defaultValue: 99,
+  defaultValue: PHOREST_QUOTE_VAT_UNKNOWN,
 } as const;
 
 export const SQUARE_PLAN_FIELD = {
