@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -63,8 +63,9 @@ describe('Setora Alternative landing page', () => {
     expect(costs).toContain('no VAT currently added');
     expect(facts).toContain('vatCurrentlyAdded');
     expect(compare).toContain('data-setora-comparison');
-    expect(compare).toContain('src="/images/logo_nobg.png"');
-    expect(existsSync(join(dir, '../../../public/images/logo_nobg.png'))).toBe(true);
+    expect(compare).toContain('src="/images/brand/kersivo-mark.png"');
+    const iconGenerator = read('../../../scripts/generate-favicons.mjs');
+    expect(iconGenerator).toContain('kersivo-mark.png');
     expect(compare).not.toMatch(/>\s*fresha\s*<\/span>/i);
     expect(SETORA_SOURCES.some(x=>x.url.includes('setora.co.uk'))).toBe(true);
   });
