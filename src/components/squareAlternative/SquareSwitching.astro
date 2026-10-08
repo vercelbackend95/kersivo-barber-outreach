@@ -1,0 +1,26 @@
+---
+import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
+import {
+  SQUARE_SWITCHING_LIMITS,
+  SQUARE_SWITCHING_REASSURANCE,
+  SQUARE_SWITCHING_STEPS,
+} from '@/lib/seo/squareAlternativeContent';
+---
+
+<section id="switching" class="square-alt__section" aria-labelledby="square-alt-switching-title">
+  <div class="container">
+    <header class="square-alt__intro">
+      <p class="square-alt__eyebrow">MIGRATION</p>
+      <h2 id="square-alt-switching-title" class="square-alt__h2">Switching from Square Appointments to KERSIVO</h2>
+      <p class="square-alt-switching__reassurance">{SQUARE_SWITCHING_REASSURANCE}</p>
+    </header>
+
+    <ProcessTimeline
+      steps={SQUARE_SWITCHING_STEPS}
+      noteTitle="Good to know"
+      notePoints={SQUARE_SWITCHING_LIMITS}
+    >
+      <a href="#contact">Ask about moving your Square data <span aria-hidden="true">→</span></a>
+    </ProcessTimeline>
+  </div>
+</section>
