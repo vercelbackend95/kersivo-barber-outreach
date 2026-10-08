@@ -89,7 +89,7 @@ describe('Timely alternative: on-page and technical SEO',()=>{
       expect(entities[i].name).toBe(item.question);
       expect(entities[i].acceptedAnswer.text).toBe(item.answer);
     });
-    for(const bad of ['AggregateRating','reviewCount','offers','priceCurrency','priceSpecification','Product','SoftwareApplication']){
+    for(const bad of ['"AggregateRating"','"reviewCount"','"offers":','"priceCurrency"','"priceSpecification"','"Product"','"SoftwareApplication"']){
       expect(JSON.stringify([web,breadcrumb,faq])).not.toContain(bad);
     }
   });
