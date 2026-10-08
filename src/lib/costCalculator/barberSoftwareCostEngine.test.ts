@@ -597,7 +597,7 @@ describe('booking deposit processing', () => {
 
   it('adds provider VAT to Booksy and Fresha fees but not to Stripe fees', () => {
     const [booksy, fresha, , setora, , , kersivo] = on(100).providers as readonly CalculatedProviderResult[];
-    const [booksyOff, freshaOff, , setoraOff, , kersivoOff] = run().providers as readonly CalculatedProviderResult[];
+    const [booksyOff, freshaOff, , setoraOff, , , kersivoOff] = run().providers as readonly CalculatedProviderResult[];
     expect(depositLine(booksy).vatApplies).toBe(true);
     expect(depositLine(fresha).vatApplies).toBe(true);
     expect(depositLine(kersivo).vatApplies).toBe(false);
