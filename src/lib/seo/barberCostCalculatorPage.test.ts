@@ -273,6 +273,8 @@ describe('barber software cost calculator content safety', () => {
       'How much does Nearcut Subscription cost in the UK?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
+      'How much does Square Appointments cost in the UK?',
+      'Does Square Appointments charge fees on deposits?',
       'Is Booksy or Fresha cheaper for a barbershop?',
       'Which booking system costs less for a larger barber team?',
     ]);
@@ -432,6 +434,8 @@ describe('cost at a glance base pricing', () => {
     expect(nearcut.priceNote).toContain('customers pay');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
+    expect(square.price).toBe('£0/month');
+    expect(square.secondaryPrice).toContain('Premium £69/month');
     expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
     expect(kersivo.priceNote).toBe('Additional barbers included');
   });
