@@ -314,6 +314,17 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
     ],
   },
   {
+    id: 'setora',
+    name: 'Setora',
+    breakdown: [
+      { id: 'setora-subscription', label: 'Subscription / location' },
+      { id: 'setora-additional-staff', label: 'Additional staff' },
+      { id: 'setora-commission', label: 'Setora commission' },
+      { id: 'vat', label: 'VAT currently charged' },
+      { id: 'setora-deposit-processing', label: 'Stripe deposit processing' },
+    ],
+  },
+  {
     id: 'kersivo',
     name: 'KERSIVO',
     breakdown: [
