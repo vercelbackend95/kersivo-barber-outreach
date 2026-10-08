@@ -86,7 +86,7 @@ describe('marketing navigation config', () => {
 
   it('keeps every page destination in the marketing route family or an intentional reload', () => {
     const pages = MARKETING_NAV_ITEMS.map((item) => new URL(item.href, 'https://kersivo.co.uk').pathname);
-    for (const pathname of ['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative', '/barber-software-cost-calculator']) {
+    for (const pathname of ['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/timely-alternative', '/setora-alternative', '/barber-software-cost-calculator']) {
       expect(pages).toContain(pathname);
       expect(getRouteFamily(pathname)).toBe('marketing');
     }
