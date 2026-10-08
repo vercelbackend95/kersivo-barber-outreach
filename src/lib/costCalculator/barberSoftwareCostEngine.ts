@@ -320,13 +320,13 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
-  'vagaro-marketplace-scope': 'Vagaro Marketplace new-client fees are only estimated for qualifying first appointments booked while a shop has an active Marketplace listing. No 20% fee is charged in this model for ordinary direct, returning, or own-channel bookings.',
+  'vagaro-marketplace-scope': 'Vagaro Marketplace acquisition fees are only estimated for qualifying first appointments booked while a shop has an active Marketplace listing. Ordinary direct, returning and own-channel bookings are excluded.',
   'vagaro-first-visit-average': 'The average appointment value is used for the first appointment of each modelled new Vagaro Marketplace customer.',
-  'vagaro-displayed-promotion': 'Vagaro currently displays £20 for one calendar (against £30 crossed out). This calculator assumes the displayed rate remains constant for projections; the offer duration is not guaranteed.',
-  'vagaro-crossed-out-reference': 'The £30 crossed-out one-calendar reference is illustrative only, not a verified current checkout quote.',
-  'vagaro-optional-mysite': 'Vagaro MySite is an optional £15/month website add-on, charged only when selected.',
-  'vagaro-vat-assumption': 'Vagaro subscription/add-on VAT treatment could not be verified from the public UK sources. The VAT toggle is YOUR modelling assumption (off = no VAT added, on = UK 20% applied to subscription, MySite and acquisition fees). Verify the real invoice.',
-  'vagaro-online-payments': 'Optional £5 deposit processing uses the published standard Vagaro UK keyed-in/online rate, including the fixed fee. Legacy merchant agreements may differ.',
+  'vagaro-displayed-promotion': `Vagaro currently displays ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)} for one calendar (against ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed out). Projections assume the displayed rate stays unchanged; the promotion duration is not guaranteed.`,
+  'vagaro-crossed-out-reference': `The ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed-out one-calendar reference is an illustrative alternate scenario, not a verified current checkout quote.`,
+  'vagaro-optional-mysite': `Vagaro MySite is an optional ${formatGbp(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value)}/month website add-on, charged only when selected.`,
+  'vagaro-vat-assumption': `Vagaro subscription/add-on VAT treatment could not be verified from the public UK sources. The toggle is an explicit assumption (off = no VAT added; on = ${UK_STANDARD_VAT_PERCENT}% applied to subscription, MySite and acquisition fees). Verify the real invoice.`,
+  'vagaro-online-payments': `Optional ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit processing uses the published standard Vagaro UK keyed-in/online rate, including the fixed fee. Legacy merchant agreements may differ.`,
   'vagaro-promoted-existing-excluded': 'Existing-client fees for optional Fill My Books or Daily Deals are not included. This model does not assume promotional participation; those fees could increase the actual bill.',
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
@@ -340,7 +340,7 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
 };
 
 export const WARNING_MESSAGES: Record<WarningCode, string> = {
-  'vagaro-promotion-duration-unverified': 'The displayed Vagaro price may be promotional. Monthly, 12-month and 3-year totals are hypothetical if the promotion expires or changes.',
+  'vagaro-promotion-duration-unverified': 'The displayed Vagaro price may be promotional. Longer-term totals are hypothetical if the promotion expires or changes.',
   'vagaro-vat-unknown': 'The Vagaro UK subscription and add-on VAT status is unconfirmed. Totals use the VAT assumption selected in Advanced costs, NOT a verified VAT-inclusive quote.',
   'vagaro-other-fees-excluded': 'The calculator does not model Fill My Books / Daily Deals existing-client promotion fees, third-party marketing services or optional premium features beyond MySite.',
 
