@@ -43,7 +43,9 @@ function largest(results: readonly CalculatedProviderResult[], pick: (r: Calcula
 
 export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
   if (!monthly.ok) return null;
-  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing');
+  // Square's incomplete total is explained on its own card; it must not obscure
+  // the cost-driver analysis for the other models in the comparison.
+  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing' && result.provider !== 'square');
   if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : unpriced.provider === 'square' ? 'square' : 'fresha' };
 
   const calculated = monthly.providers.filter(
