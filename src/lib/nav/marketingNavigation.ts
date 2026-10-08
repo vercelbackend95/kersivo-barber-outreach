@@ -161,6 +161,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-setora',
+    label: 'Setora Alternative',
+    description: 'Compare Setora UK pricing, websites and booking features with KERSIVO.',
+    href: '/setora-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-cost-calculator',
     label: 'Barber Software Cost Calculator',
     description: 'Estimate Booksy, Fresha, Nearcut and KERSIVO costs using your shop numbers.',
