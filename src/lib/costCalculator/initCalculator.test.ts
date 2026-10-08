@@ -206,8 +206,8 @@ describe('initial calculation', () => {
       'setora',
       'square',
       'phorest',
-      'kersivo',
       'vagaro',
+      'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
   });
