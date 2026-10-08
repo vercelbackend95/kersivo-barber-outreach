@@ -188,6 +188,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-vagaro',
+    label: 'Vagaro Alternative',
+    description: 'Compare Vagaro UK prices, per-calendar charges and marketplace fees.',
+    href: '/vagaro-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-cost-calculator',
     label: 'Barber Software Cost Calculator',
     description: 'Estimate Booksy, Fresha, Nearcut and KERSIVO costs using your shop numbers.',
