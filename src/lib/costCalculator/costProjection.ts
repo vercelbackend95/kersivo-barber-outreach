@@ -63,6 +63,7 @@ export function projectCostCalculation(
       projectProvider(booksy, months),
       projectProvider(fresha, months),
       projectProvider(nearcut, months),
+      projectProvider(treatwell, months),
       projectProvider(setora, months),
       projectProvider(square, months),
       projectProvider(phorest, months),
