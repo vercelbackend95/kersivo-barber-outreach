@@ -438,6 +438,11 @@ describe('shared behaviour', () => {
     const notRegistered = run({ bookableBarbers: 3 });
     const registered = run({ bookableBarbers: 3, vatRegistered: true });
     registered.providers.forEach((entry, index) => {
+      if (entry.provider === 'phorest') {
+        expect(entry.status).toBe('custom-pricing');
+        expect(entry.amounts).toBeNull();
+        return;
+      }
       const amounts = (entry as CalculatedProviderResult).amounts;
       const baseline = (notRegistered.providers[index] as CalculatedProviderResult).amounts;
       expect(amounts.cashTotalGbp).toBe(baseline.cashTotalGbp);
