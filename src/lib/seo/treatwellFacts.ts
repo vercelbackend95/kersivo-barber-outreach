@@ -41,7 +41,7 @@ export const TREATWELL_SOURCES: readonly TreatwellSource[] = [
 
 export function getTreatwellSource(id: TreatwellSourceId): TreatwellSource {
   const source = TREATWELL_SOURCES.find((item) => item.id === id);
-  if (!source) throw new Error(\`Unknown Treatwell source: \${id}\`);
+  if (!source) throw new Error('Unknown Treatwell source: ' + id);
   return source;
 }
 
@@ -138,7 +138,7 @@ export type VerifiedTreatwellFact = Extract<TreatwellFact, { status: 'verified' 
 export function requireVerifiedTreatwellFact(key: TreatwellCommercialFactKey): VerifiedTreatwellFact {
   const fact: TreatwellFact = TREATWELL_UK_COMMERCIAL_FACTS[key];
   if (fact.status !== 'verified') {
-    throw new Error(\`Treatwell fact "\${key}" is unresolved: cannot be used as a guaranteed rate.\`);
+    throw new Error('Treatwell fact "' + key + '" is unresolved: cannot be used as a guaranteed rate.');
   }
   return fact;
 }
