@@ -1,0 +1,19 @@
+---
+import ModelComparison from '@/components/editorial/ModelComparison.astro';
+import { TREATWELL_FIT_CLOSING, TREATWELL_FIT_PATHS } from '@/lib/seo/treatwellAlternativeContent';
+---
+
+<section id="which-model" class="fresha-alt__section" aria-labelledby="fresha-alt-fit-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">TWO MODELS</p>
+      <h2 id="fresha-alt-fit-title" class="fresha-alt__h2">Which model fits your barbershop?</h2>
+    </header>
+
+    <ModelComparison idPrefix="fresha-alt-fit" models={TREATWELL_FIT_PATHS} conclusion={TREATWELL_FIT_CLOSING}>
+      Also comparing other software? <a href="/booksy-alternative">Booksy comparison <span aria-hidden="true">→</span></a> <span> · </span> <a href="/fresha-alternative">Fresha comparison <span aria-hidden="true">→</span></a> <span> · </span><a href="/square-appointments-alternative">Square Appointments alternative <span aria-hidden="true">→</span></a>
+      <span> · </span><a href="/squire-alternative">Compare KERSIVO and SQUIRE <span aria-hidden="true">→</span></a>
+      <span> · </span><a href="/setora-alternative">Setora comparison <span aria-hidden="true">→</span></a>
+    </ModelComparison>
+  </div>
+</section>
