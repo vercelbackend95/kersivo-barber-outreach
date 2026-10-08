@@ -30,7 +30,7 @@ import {
   FRESHA_WORKED_EXAMPLES_NOTE,
   KERSIVO_MODEL_POINTS,
 } from './freshaAlternativeContent';
-import { buildFreshaAlternativeWebPageJsonLd } from './freshaAlternativeJsonLd';
+import { buildFreshaAlternativeWebPageJsonLd, buildFreshaAlternativeBreadcrumbJsonLd } from './freshaAlternativeJsonLd';
 import {
   FRESHA_COMPARE_SECTIONS,
   FRESHA_COMPARISON_FOOTNOTE,
@@ -135,7 +135,7 @@ describe('fresha-alternative page SEO foundation', () => {
     expect(pageSource).toContain('description={FRESHA_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={FRESHA_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain(
-      'jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeFaqJsonLd()]}',
+      'jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeBreadcrumbJsonLd(), buildFreshaAlternativeFaqJsonLd()]}',
     );
     expect(pageSource).not.toContain('noindex');
     expect(FRESHA_ALTERNATIVE_PAGE_PATH).toBe('/fresha-alternative');
@@ -371,6 +371,25 @@ describe('fresha-alternative page SEO foundation', () => {
     for (const banned of ['aggregateRating', 'AggregateRating', 'reviewCount', '"Review"', 'SoftwareApplication']) {
       expect(serialized).not.toContain(banned);
     }
+  });
+
+  it('adds a BreadcrumbList that exactly mirrors visible Home / Fresha alternative navigation', () => {
+    expect(heroSource).toContain('aria-label="Breadcrumb"');
+    expect(heroSource).toContain('<a href="/">Home</a>');
+    expect(heroSource).toContain('aria-current="page">Fresha alternative</span>');
+    expect((heroSource.match(/aria-label="Breadcrumb"/g) ?? [])).toHaveLength(1);
+    expect(pageSource).toContain('buildFreshaAlternativeBreadcrumbJsonLd()');
+
+    const breadcrumb = buildFreshaAlternativeBreadcrumbJsonLd();
+    const pageUrl = resolveCanonicalUrl(FRESHA_ALTERNATIVE_PAGE_PATH);
+    expect(breadcrumb['@context']).toBe('https://schema.org');
+    expect(breadcrumb['@type']).toBe('BreadcrumbList');
+    expect(breadcrumb['@id']).toBe(`${pageUrl}#breadcrumb`);
+    expect(breadcrumb.itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kersivo.co.uk/' },
+      { '@type': 'ListItem', position: 2, name: 'Fresha alternative', item: pageUrl },
+    ]);
+    expect(buildFreshaAlternativeWebPageJsonLd().breadcrumb).toEqual({ '@id': breadcrumb['@id'] });
   });
 
   it('lists /fresha-alternative exactly once in the sitemap with the visible last-updated date', () => {
