@@ -19,6 +19,7 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_ADDS_VAT, SAAS_MONTHLY_GBP } from '@/
 import {
   FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS,
   formatGbp,
+  formatPercent,
   requireVerifiedFreshaFact,
   type FreshaCommercialFactKey,
   type VerifiedCommercialFact,
@@ -295,7 +296,7 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
-  'setora-standard-stripe-benchmark': 'Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published 1.5% + 20p. Premium, international, negotiated and other payment methods may cost more or less.',
+  'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
