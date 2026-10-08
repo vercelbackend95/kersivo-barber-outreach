@@ -153,6 +153,7 @@ describe('barber software cost calculator SEO foundation', () => {
       '<a href="/booksy-alternative">See the full KERSIVO vs Booksy comparison</a>',
     );
     expect(components['CostNearcut.astro']).toContain('<a href="/nearcut-alternative">See the full KERSIVO vs Nearcut comparison</a>');
+    expect(components['CostTimely.astro']).toContain('/timely-alternative');
     expect(components['CostSetora.astro']).toContain('<a href="/setora-alternative">See the full KERSIVO vs Setora comparison</a>');
   });
 
@@ -270,6 +271,9 @@ describe('barber software cost calculator content safety', () => {
       'What is the Fresha Marketplace fee?',
       'Is Nearcut free for barbershops?',
       'How much does Nearcut Subscription cost in the UK?',
+      'How much does Timely cost per month in the UK?',
+      'What is the TimelyPay fee for UK online bookings?',
+      'Does the calculator include Timely VAT and extra add-ons?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
       'Is Booksy or Fresha cheaper for a barbershop?',
