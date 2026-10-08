@@ -431,6 +431,13 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
     ],
   },
   {
+    id: 'timely', name: 'Timely', breakdown: [
+      { id: 'timely-subscription', label: 'Your UK invoice (incl. any VAT)' },
+      { id: 'vat', label: 'VAT included in invoice, not itemised' },
+      { id: 'timely-deposit-processing', label: 'UK TimelyPay online deposit fee' },
+    ],
+  },
+  {
     id: 'treatwell',
     name: 'Treatwell',
     breakdown: [
@@ -438,13 +445,6 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'treatwell-new-client-commission', label: 'Qualifying marketplace new-client commission' },
       { id: 'vat', label: 'VAT (confirmed portions only)' },
       { id: 'treatwell-deposit-processing', label: `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT` },
-    ],
-  },
-  {
-    id: 'timely', name: 'Timely', breakdown: [
-      { id: 'timely-subscription', label: 'Your UK invoice (incl. any VAT)' },
-      { id: 'vat', label: 'VAT included in invoice, not itemised' },
-      { id: 'timely-deposit-processing', label: 'UK TimelyPay online deposit fee' },
     ],
   },
   {
