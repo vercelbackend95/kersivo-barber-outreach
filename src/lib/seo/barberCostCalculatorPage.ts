@@ -1,5 +1,6 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
@@ -35,10 +36,10 @@ import {
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Booksy, Fresha, Nearcut & Setora Costs UK | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Booksy, Fresha, Vagaro & More: UK Costs | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.';
+  'Compare Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -69,7 +70,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -98,7 +99,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Setora and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -137,6 +138,19 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; that is not a universal price`,
       'Subscription removes the customer booking charge; actual price varies by shop',
       'Online payment rates and optional Business Boosters depend on the plan',
+    ],
+  },
+  {
+    name: 'Vagaro',
+    descriptor: 'Per bookable calendar',
+    price: `${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)}/month displayed`,
+    priceNote: 'One calendar · promotional price displayed alongside £30 crossed out',
+    secondaryPrice: `+${formatGbp(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value)}/additional calendar up to 7 calendars`,
+    points: [
+      'Published £80/month cap for seven or more bookable calendars',
+      '20% of a qualifying new UK Marketplace client’s first visit; not all bookings',
+      'MySite optional at £15/month; published rate checked ' + VAGARO_FACTS_CHECKED_DATE,
+      'Published online/card processing fee and VAT assumption modelled separately',
     ],
   },
   {
@@ -272,7 +286,7 @@ export type MarketplacePoint = {
 };
 
 export const MARKETPLACE_INTRO =
-  'Booksy and Fresha both run consumer marketplaces where clients can discover new barbershops. Each charges differently for clients who arrive that way, and both separate them from clients who book you directly.';
+  'Booksy, Fresha and Vagaro run consumer marketplaces where clients can discover new barbershops. Each charges differently for clients who arrive that way, and both separate them from clients who book you directly.';
 
 export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
   {
@@ -286,6 +300,10 @@ export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Marketplace new-client fee',
     body: `Fresha charges a one-time fee of ${FRESHA_MARKETPLACE_PERCENT} of a brand-new client’s first appointment, minimum ${FRESHA_MARKETPLACE_MINIMUM}, when that client first discovers you on the Fresha Marketplace.`,
+  },
+  {
+    title: 'Vagaro Marketplace UK new-client fee',
+    body: `Vagaro charges ${requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value}% of qualifying new Marketplace clients' first appointment when the Marketplace listing is active; own-channel and promoted-booking rules are different. Fill My Books / Daily Deals fees for existing clients are excluded from the calculator.`,
   },
   {
     title: 'A one-time acquisition fee',
@@ -350,6 +368,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Online Payments',
     body: `Fresha applies its standard online payment rate of ${FRESHA_ONLINE_PAYMENTS_FEE} per transaction plus VAT to online deposits.`,
+  },
+  {
+    title: 'Vagaro UK online payments',
+    body: `The calculator uses Vagaro’s published keyed-in/online rate of ${feeLabel(requireVerifiedVagaroFact('standardOnlineProcessingPercent').value, requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} per transaction. Legacy merchant rates may differ.`,
   },
   {
     title: 'Setora via Stripe',
