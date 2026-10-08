@@ -745,7 +745,7 @@ function calculateVagaro(scenario: CostScenarioInput, marketplaceClients: number
   const displayedFirst = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
   const subscription = scenario.vagaroDisplayedOffer
     ? discounted
-    : discounted + (firstCalendarReference - displayedFirst);
+    : Math.min(discounted + (firstCalendarReference - displayedFirst), requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value);
   const acquisitionPercent = requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value;
   const firstVisitPence = gbpToPence(scenario.averageAppointmentValueGbp);
   const feePerNewClient = percentOfPence(firstVisitPence, acquisitionPercent);
