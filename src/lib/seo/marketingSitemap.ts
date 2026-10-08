@@ -12,6 +12,7 @@ import {
   FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
   FRESHA_ALTERNATIVE_PAGE_PATH,
 } from './freshaAlternativeFaq';
+import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { buildAbsoluteUrl } from './meta';
 import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
@@ -44,6 +45,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: BOOKSY_ALTERNATIVE_PAGE_PATH, lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
   { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
+  /** SQUIRE comparison: factual editorial update. */
+  { path: SQUIRE_ALTERNATIVE_PAGE_PATH, lastmod: SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
