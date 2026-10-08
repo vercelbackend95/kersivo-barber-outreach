@@ -1146,3 +1146,75 @@
     transition: none;
   }
 }
+
+/* Mobile compact filters: quick choices + accessible modal-style sheet.
+   Desktop comparison panel is deliberately unchanged. */
+@media (max-width: 45rem) {
+  .alt-hub-panel:not([data-filters-expanded='true']) .alt-hub-pill:nth-child(n + 4) {
+    display: none;
+  }
+
+  .alt-hub-panel__suggested,
+  .alt-hub-panel__explainer {
+    line-height: 1.4;
+  }
+
+  .alt-hub-panel:not([data-filters-expanded='true']) .alt-hub-panel__explainer {
+    display: none;
+  }
+
+  .alt-hub-panel__more {
+    background: var(--hub-red-fill);
+    color: #fff;
+    border-color: var(--hub-red);
+    min-height: 44px;
+  }
+
+  .alt-hub-compare:has(.alt-hub-panel[data-filters-expanded='true'])::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 0.78);
+    z-index: 90;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 91;
+    max-height: min(90dvh, 850px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.25rem max(1rem, env(safe-area-inset-right))
+      calc(1.5rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    border-radius: 20px 20px 0 0;
+    border-color: rgb(255 255 255 / 0.2);
+    background: #111216;
+    box-shadow: 0 -20px 80px rgb(0 0 0 / 0.7);
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-pill--extra {
+    display: inline-flex;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__foot {
+    position: sticky;
+    bottom: -1px;
+    z-index: 1;
+    padding: 0.75rem 0 0;
+    background: #111216;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__more {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__helper {
+    flex-basis: 100%;
+  }
+
+  .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__counts {
+    white-space: normal;
+  }
+}
