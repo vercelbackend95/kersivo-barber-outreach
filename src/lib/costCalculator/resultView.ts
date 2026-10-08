@@ -207,7 +207,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
