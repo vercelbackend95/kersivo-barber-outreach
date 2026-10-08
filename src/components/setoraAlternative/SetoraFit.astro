@@ -1,0 +1,17 @@
+---
+import ModelComparison from '@/components/editorial/ModelComparison.astro';
+import { SETORA_FIT_CLOSING, SETORA_FIT_PATHS } from '@/lib/seo/setoraAlternativeContent';
+---
+
+<section id="which-model" class="fresha-alt__section" aria-labelledby="setora-alt-fit-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">TWO APPROACHES</p>
+      <h2 id="setora-alt-fit-title" class="fresha-alt__h2">Which platform fits your barbershop?</h2>
+    </header>
+
+    <ModelComparison idPrefix="setora-alt-fit" models={SETORA_FIT_PATHS} conclusion={SETORA_FIT_CLOSING}>
+      Also comparing other software? <a href="/booksy-alternative">Booksy comparison <span aria-hidden="true">→</span></a> <span> · </span> <a href="/fresha-alternative">Fresha comparison <span aria-hidden="true">→</span></a> <span> · </span> <a href="/nearcut-alternative">Nearcut comparison <span aria-hidden="true">→</span></a>
+    </ModelComparison>
+  </div>
+</section>
