@@ -1,7 +1,7 @@
 import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
 export const TREATWELL_QUICK_ANSWER_KICKER='The short version';
 export const TREATWELL_QUICK_ANSWER_TITLE='Treatwell vs KERSIVO: the short answer for UK barbers.';
-export const TREATWELL_QUICK_ANSWER_LEAD='Looking for a Treatwell alternative in the UK? Treatwell offers salon software and a marketplace that may introduce new customers. Its published 35% commission applies to qualifying first appointments from new marketplace customers, not all appointments. KERSIVO offers direct bookings with Starter at £0/month or Full at £39/month per location. Standard Stripe fees apply to KERSIVO card payments.';
+export const TREATWELL_QUICK_ANSWER_LEAD='Looking for a Treatwell alternative in the UK? Treatwell offers salon software and a marketplace that may introduce new customers. Its published 35% + VAT commission applies to eligible new-client marketplace bookings, not all appointments; its September 2026 terms include a 365-day repeat-booking test. KERSIVO offers direct bookings with Starter at £0/month or Full at £39/month per location. Standard Stripe fees apply to KERSIVO card payments.';
 export const TREATWELL_QUICK_ANSWER_DETAIL='Treatwell advertises 0% marketplace commission on repeat and directly booked clients, plus a separate fee for online prepayments. KERSIVO does not supply a customer discovery marketplace. Compare how you get new customers, what your shop pays, and which features you use.';
 export const TREATWELL_QUICK_ANSWER_FACTS=[{label:'KERSIVO Starter',value:'£0/month · up to 4 barbers'},{label:'Full KERSIVO',value:'£39/month per location'},{label:'Treatwell first marketplace visit',value:'35% published commission'},{label:'Treatwell repeat/direct bookings',value:'0% marketplace commission'}];
 export const TREATWELL_WHY_INTRO='Treatwell combines booking software with salon marketplace visibility. Barbershops comparing alternatives should separate marketing acquisition costs from software and card processing fees.';
@@ -16,13 +16,13 @@ export const TREATWELL_FIT_PATHS: readonly [ModelComparisonItem,ModelComparisonI
 {label:'KERSIVO',descriptor:'Own-brand direct booking for barbers',icon:'direct',summary:[{label:'Pricing',value:'£0 Starter or £39/month Full'},{label:'Commission',value:'0% KERSIVO commission'}],heading:'KERSIVO may suit your shop if…',points:['Your customers find you through Google, Instagram or personal referrals','You want a £0 core booking plan with mandatory online deposit/full payment','You want a branded website and standard domain on a flat £39/month Full plan','You want retail pickup, reports, advanced clients and flexible Full payment settings']},
 ];
 export const TREATWELL_FIT_CLOSING='Marketplace reach can be valuable. Choose based on new-client acquisition, total charges and the customer journey, rather than commission headlines alone.';
-export const TREATWELL_SWITCHING_REASSURANCE='Keep Treatwell live while preparing your new KERSIVO setup.';
+export const TREATWELL_SWITCHING_REASSURANCE='Prepare KERSIVO while keeping Treatwell appointments accessible. Check your Treatwell agreement before taking live bookings in two systems.';
 export const TREATWELL_SWITCHING_STEPS=[
-{title:'Keep your bookings running',body:'Continue using Treatwell until the new booking flow is ready.'},
+{title:'Keep your bookings running',body:'Continue using Treatwell for public bookings while preparing KERSIVO privately. Check your contract for any restrictions on parallel booking software.'},
 {title:'Check the available data export',body:'Ask Treatwell which customer, service and appointment fields your account can export.'},
 {title:'Review compatible data',body:'KERSIVO can help assess migration of usable compatible exports, including supported CSV files.'},
 {title:'Configure KERSIVO',body:'Set up barbers, services and availability. Full includes your branded website and standard domain.'},
 {title:'Verify future bookings',body:'Cross-check upcoming appointments and client records before announcing a switch.'},
-{title:'Switch public links when ready',body:'Update Google, website and social booking links after approving the new journey.'},
+{title:'Switch public links when ready',body:'Update Google, website and social booking links only after approving the new journey and checking Treatwell contractual obligations.'},
 ];
-export const TREATWELL_SWITCHING_LIMITS=['Treatwell export availability and data fields must be verified; no complete automatic migration is guaranteed.','Keep existing future appointments accessible during the transition.'];
+export const TREATWELL_SWITCHING_LIMITS=['Treatwell export availability and data fields must be verified; no complete automatic migration is guaranteed.','Keep existing future appointments accessible during the transition. Treatwell terms restrict using another booking provider simultaneously; consult your signed agreement before enabling dual public bookings.'];
