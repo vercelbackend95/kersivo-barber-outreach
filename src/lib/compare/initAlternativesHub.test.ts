@@ -36,6 +36,9 @@ function mount(pressed: string[] = ['zeroCommission', 'deposits']): void {
         <p data-hub-suggested-note></p>
         <div>${pills}</div>
         <button type="button" data-hub-more-filters aria-expanded="false"><span data-hub-more-label></span></button>
+        <button type="button" data-hub-close></button>
+        <button type="button" data-hub-apply></button>
+        <span data-hub-visible-count></span>
         <select data-hub-sort><option value="best">Best match</option><option value="name">Name</option></select>
       </div>
       <p data-hub-live></p>
@@ -115,7 +118,7 @@ describe('initAlternativesHub', () => {
     expect(document.querySelector('.alt-hub-panel')?.getAttribute('data-filters-expanded')).toBe('true');
     expect(more.getAttribute('aria-expanded')).toBe('true');
     more.click();
-    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('All filters (12)');
+    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('All filters');
   });
 
 
@@ -140,6 +143,40 @@ describe('initAlternativesHub', () => {
     document.querySelector<HTMLButtonElement>('[data-hub-reset]')!.click();
     expect(document.querySelector('[data-hub-grid]')?.getAttribute('data-expanded')).toBe('false');
     expect(document.querySelector('[data-hub-live]')?.textContent).toContain('3 of 4 systems shown');
+  });
+
+  it('keeps the compact toolbar result count in sync with expansion', () => {
+    initAlternativesHub(document);
+    expect(document.querySelector('[data-hub-visible-count]')?.textContent).toBe('3');
+    pill('deposits').click();
+    expect(document.querySelector('[data-hub-visible-count]')?.textContent).toBe('4');
+    document.querySelector<HTMLButtonElement>('[data-hub-reset]')!.click();
+    expect(document.querySelector('[data-hub-visible-count]')?.textContent).toBe('3');
+  });
+
+  it('applies selected filters from the mobile sheet and closes via the action button', () => {
+    const original = window.matchMedia;
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }),
+    });
+    try {
+      initAlternativesHub(document);
+      const panel = document.querySelector<HTMLElement>('.alt-hub-panel')!;
+      const more = document.querySelector<HTMLButtonElement>('[data-hub-more-filters]')!;
+      more.click();
+      pill('retail').click();
+      document.querySelector<HTMLButtonElement>('[data-hub-apply]')!.click();
+      expect(panel.dataset.filtersExpanded).toBe('false');
+      expect(pill('retail').getAttribute('aria-pressed')).toBe('true');
+      expect(document.documentElement.style.overflow).toBe('');
+      more.click();
+      document.querySelector<HTMLButtonElement>('[data-hub-close]')!.click();
+      expect(panel.dataset.filtersExpanded).toBe('false');
+    } finally {
+      Object.defineProperty(window, 'matchMedia', { configurable: true, value: original });
+      document.documentElement.style.removeProperty('overflow');
+    }
   });
 
   it('opens and dismisses the mobile dialog with Escape and restores scrolling', () => {
