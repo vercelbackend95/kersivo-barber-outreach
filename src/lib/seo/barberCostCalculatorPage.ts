@@ -286,7 +286,7 @@ export type MarketplacePoint = {
 };
 
 export const MARKETPLACE_INTRO =
-  'Booksy, Fresha and Vagaro run consumer marketplaces where clients can discover new barbershops. Each charges differently for clients who arrive that way, and both separate them from clients who book you directly.';
+  'Booksy, Fresha and Vagaro run consumer marketplaces where clients can discover new barbershops. Each charges differently for clients who arrive that way; only qualifying acquisition bookings should be counted against the relevant fee.';
 
 export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
   {
