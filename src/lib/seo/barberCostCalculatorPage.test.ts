@@ -65,7 +65,7 @@ const visibleCopy = [
 describe('barber software cost calculator SEO foundation', () => {
   it('uses the evergreen route, exact title, description and canonical', () => {
     expect(BARBER_COST_CALCULATOR_PAGE_PATH).toBe('/barber-software-cost-calculator');
-    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Booksy, Fresha, Nearcut & Setora Costs UK | KERSIVO');
+    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Barber Software Cost Calculator UK | KERSIVO');
     expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
     expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
