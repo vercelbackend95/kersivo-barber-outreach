@@ -11,11 +11,6 @@ export const SQUARE_SOURCES = [
   {label:'Square online booking websites',url:'https://squareup.com/help/gb/en/article/5355-set-up-online-booking-with-square-appointments',supports:'Simple booking site and a full Square Online website (including a free option)'},
   {label:'Square reports export',url:'https://squareup.com/help/gb/en/article/8362-print-export-or-email-your-reports',supports:'CSV report export'},
 ] as const;
-export const SQUARE_UK_PLANS = [
- { name:'Free',monthlyGbp:0,description:'Single-location free scheduling plan; processing fees still apply.' },
- { name:'Plus',monthlyGbp:29,description:'Additional scheduling tools, waitlist, reports and cancellation policies.' },
- { name:'Premium',monthlyGbp:69,description:'Advanced access and staff/resource management capabilities.' }
-] as const;
 export const SQUARE_UK_PAYMENT_FACTS = {
  inPersonFreePercent:1.75,
  inPersonPaidPercent:1.6,
@@ -89,6 +84,18 @@ export const SQUARE_SUBSCRIPTION_FACTS: Record<SquarePlanId, SquareFact> = {
   },
 };
 
+/** Plan display metadata; headline prices always come from SQUARE_SUBSCRIPTION_FACTS. */
+const SQUARE_PLAN_METADATA = [
+  { id: 'free', name: 'Free', description: 'Single-location free scheduling plan; processing fees still apply.' },
+  { id: 'plus', name: 'Plus', description: 'Additional scheduling tools, waitlist, reports and cancellation policies.' },
+  { id: 'premium', name: 'Premium', description: 'Advanced access and staff/resource management capabilities.' },
+] as const;
+
+export const SQUARE_UK_PLANS = SQUARE_PLAN_METADATA.map((plan) => ({
+  ...plan,
+  monthlyGbp: squareBaseMonthlyPriceGbp(plan.id),
+}));
+
 export const SQUARE_PAYMENT_CHANNEL_FACTS: Record<SquarePaymentChannel, SquareFact> = {
   'in-person-uk': {
     status: 'verified',sourceUrl:SQUARE_SOURCES[0].url,checkedIso:SQUARE_FACTS_CHECKED_ISO,
@@ -98,12 +105,12 @@ export const SQUARE_PAYMENT_CHANNEL_FACTS: Record<SquarePaymentChannel, SquareFa
   'square-online-uk': {
     status:'verified',sourceUrl:'https://squareup.com/gb/en/legal/general/fees',checkedIso:SQUARE_FACTS_CHECKED_ISO,
     note:'Applies to listed Square Online/Online Checkout/eCommerce products; not automatically to Appointments deposits.',
-    vatBasis:'unverified',percentage:1.4,fixedPence:25,per:'UK-card transaction on listed Square online products',
+    vatBasis:'unverified',percentage:SQUARE_UK_PAYMENT_FACTS.onlineUkPercent,fixedPence:SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence,per:'UK-card transaction on listed Square online products',
   },
   'square-online-non-uk': {
     status:'verified',sourceUrl:'https://squareup.com/gb/en/legal/general/fees',checkedIso:SQUARE_FACTS_CHECKED_ISO,
     note:'Published non-UK online rate; any further international surcharge must be confirmed for the payment scenario.',
-    vatBasis:'unverified',percentage:2.5,fixedPence:25,per:'non-UK-card transaction on listed Square online products',
+    vatBasis:'unverified',percentage:SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent,fixedPence:SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence,per:'non-UK-card transaction on listed Square online products',
   },
   'manual-or-card-on-file-uk': {
     status:'verified',sourceUrl:'https://squareup.com/gb/en/legal/general/fees',checkedIso:SQUARE_FACTS_CHECKED_ISO,
