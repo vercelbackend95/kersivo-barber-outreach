@@ -362,6 +362,7 @@ describe('barber software cost calculator content safety', () => {
     expect(urls).toContain('https://www.setora.co.uk/barbershop-booking-software');
     const setora = COST_CALCULATOR_SOURCES.filter((source) => source.provider === 'Setora');
     expect(setora).toHaveLength(2);
+    expect(COST_CALCULATOR_SOURCES.filter(source=>source.provider==='Phorest')).toHaveLength(1);
     expect(setora.every((source) => source.checkedIso === '2026-10-08')).toBe(true);
     const stripe = COST_CALCULATOR_SOURCES.find((source) => source.provider === 'Stripe')!;
     expect(stripe).toMatchObject({ checkedIso: '2026-10-01', checkedLabel: '1 October 2026', external: true });
@@ -375,6 +376,7 @@ describe('barber software cost calculator content safety', () => {
     expect(sourcesComponent).toContain('BOOKSY_TRADEMARK_DISCLAIMER');
     expect(sourcesComponent).toContain('FRESHA_TRADEMARK_DISCLAIMER');
     expect(sourcesComponent).toContain('SETORA_TRADEMARK_DISCLAIMER');
+    expect(sourcesComponent).toContain('PHOREST_TRADEMARK_DISCLAIMER');
   });
 });
 
@@ -407,12 +409,12 @@ describe('booking deposit payment processing copy', () => {
 });
 
 describe('cost at a glance base pricing', () => {
-  const [booksy, fresha, nearcut, setora, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const [booksy, fresha, nearcut, setora, phorest, kersivo] = COST_AT_A_GLANCE_MODELS;
   const independent = requireVerifiedFreshaFact('independentPlan');
   const team = requireVerifiedFreshaFact('teamPlanPerMember');
 
   it('shows the headline base price for each platform from central facts', () => {
-    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Full KERSIVO']);
+    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Phorest', 'Full KERSIVO']);
 
     expect(booksy.price).toBe(BOOKSY_BASE_PRICE_LABEL);
     expect(booksy.price).toBe(`£${BOOKSY_BASE_PRICE_GBP}/month + VAT`);
@@ -429,6 +431,8 @@ describe('cost at a glance base pricing', () => {
     expect(nearcut.priceNote).toContain('customers pay');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
+    expect(phorest.price).toBe('Custom pricing');
+    expect(phorest.priceNote).toContain('individual quotation');
     expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
     expect(kersivo.priceNote).toBe('Additional barbers included');
   });
