@@ -447,6 +447,11 @@ describe('shared behaviour', () => {
     const notRegistered = run({ bookableBarbers: 3 });
     const registered = run({ bookableBarbers: 3, vatRegistered: true });
     registered.providers.forEach((entry, index) => {
+      if (entry.provider === 'timely') {
+        expect(entry.status).toBe('calculated');
+        if (entry.status === 'calculated') expect(entry.amounts.estimatedNetCostIfVatRecoverableGbp).toBeNull();
+        return;
+      }
       if (entry.provider === 'phorest' || entry.provider === 'treatwell') {
         expect(entry.status).toBe('custom-pricing');
         expect(entry.amounts).toBeNull();
@@ -701,14 +706,14 @@ describe('KERSIVO / Stripe fee-payer assumption', () => {
     run({ includeDepositProcessing: on, depositBookingsPerMonth: 100 }).providers.filter(entry=>entry.provider !== 'timely').slice(0,8).map(assumptionCodes);
 
   it('is attached to KERSIVO only, and only when deposit processing is on', () => {
-    const [booksy, fresha, nearcut, timely, treatwell, setora, square, phorest, kersivo] = codesFor(true);
+    const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = codesFor(true);
     expect(kersivo).toContain('kersivo-stripe-fee-payer');
     expect(nearcut).not.toContain('kersivo-stripe-fee-payer');
     expect(setora).not.toContain('kersivo-stripe-fee-payer');
     expect(booksy).not.toContain('kersivo-stripe-fee-payer');
     expect(fresha).not.toContain('kersivo-stripe-fee-payer');
     expect(square).not.toContain('kersivo-stripe-fee-payer');
-    expect(codesFor(false)[8]).not.toContain('kersivo-stripe-fee-payer');
+    expect(codesFor(false)[7]).not.toContain('kersivo-stripe-fee-payer');
   });
 
   it('uses the central Stripe facts caveat', () => {
