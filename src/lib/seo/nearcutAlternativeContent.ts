@@ -1,0 +1,28 @@
+import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
+export const NEARCUT_QUICK_ANSWER_KICKER='The short version';
+export const NEARCUT_QUICK_ANSWER_TITLE='A Nearcut alternative for independent UK barbershops.';
+export const NEARCUT_QUICK_ANSWER_LEAD='KERSIVO is a Nearcut alternative for UK barbershops that want a different way to manage bookings and client payments. KERSIVO Starter is £0/month for up to four bookable barbers, with a hosted booking page and a required £5 deposit or full payment on public bookings. Full KERSIVO is £39/month per location, adding your branded website and standard domain. KERSIVO adds no booking commission; Stripe processing fees apply.';
+export const NEARCUT_QUICK_ANSWER_DETAIL='Nearcut also has a £0/month plan, called Free for You, but customers pay a separate booking charge at checkout. Nearcut Subscription removes that charge in exchange for a monthly price quoted for the shop. Both platforms offer real online booking, and Nearcut also offers personalised websites.';
+export const NEARCUT_QUICK_ANSWER_FACTS=[{label:'KERSIVO Starter',value:'£0/month · up to 4 barbers'},{label:'Full KERSIVO',value:'£39/month per location'},{label:'Nearcut Free for You',value:'£0/month · client-paid booking charge'},{label:'Nearcut Subscription',value:'Quote-based monthly price'}];
+export const NEARCUT_WHY_INTRO='Nearcut is built for barbers and already offers many useful booking tools. The decision comes down to which payment model, business experience and included features suit your shop.';
+export const NEARCUT_WHY_THEMES: readonly InsightCardItem[]=[
+{icon:'seats',title:'Who pays for the booking system?',body:'Nearcut Free for You removes the monthly software bill but adds a separate booking charge for customers. KERSIVO Starter has no monthly fee or KERSIVO booking charge, but requires a deposit or full online payment through Stripe.'},
+{icon:'storefront',title:'How your shop appears online',body:'Nearcut includes a personalised website, so this is not a choice between having a website and having none. Full KERSIVO centres your own branded website, domain and booking experience in one £39/month plan.'},
+{icon:'discovery',title:'What the customer pays',body:'Nearcut illustrates a £1.50 client booking charge on its Free for You pricing page. KERSIVO Starter instead requires a £5 deposit towards the service or full prepayment, with normal Stripe processing fees.'},
+{icon:'stack',title:'What your monthly plan covers',body:'Nearcut offers optional Business Boosters such as memberships, retail and loyalty. Full KERSIVO includes a retail pickup shop, reports and advanced client tools; compare the specific capabilities you need rather than assuming they are identical.'},
+];
+export const NEARCUT_FIT_PATHS: readonly [ModelComparisonItem,ModelComparisonItem]=[
+{label:'Nearcut',descriptor:'Barber-focused software with two payment models',icon:'network',summary:[{label:'Pricing',value:'Free for You or quoted Subscription'},{label:'Booking charges',value:'Client charge on Free for You'}],heading:'Nearcut may suit your shop if…',points:['You value Nearcut’s existing barber-specific workflow and personal account management','You are comfortable with customers covering a small booking charge on Free for You','You want Nearcut’s optional memberships, loyalty or other Business Boosters','Nearcut already fits your business and switching would not deliver a clear benefit']},
+{label:'KERSIVO',descriptor:'Core free bookings or the full branded platform',icon:'direct',summary:[{label:'Pricing',value:'£0 Starter or £39/month Full'},{label:'Booking charges',value:'0% KERSIVO commission; Stripe fees apply'}],heading:'KERSIVO may suit your shop if…',points:['You want free core bookings without an additional KERSIVO customer booking charge','You want every Starter public booking backed by a £5 deposit or full online payment','You want a flat £39/month Full platform with branded website and standard domain','You value Full retail pickup, reports, advanced clients and flexible payment rules']},
+];
+export const NEARCUT_FIT_CLOSING='Both are designed for barbers. Compare what your customers pay, what the shop pays, and which services you actually need.';
+export const NEARCUT_SWITCHING_REASSURANCE='Keep Nearcut live while your KERSIVO setup is prepared.';
+export const NEARCUT_SWITCHING_STEPS=[
+{title:'Keep your Nearcut bookings live',body:'Continue taking bookings in your existing system while your KERSIVO setup is prepared.'},
+{title:'Check which data you can export',body:'Ask Nearcut what client, service and booking data is available for export. We do not assume an unverified export format.'},
+{title:'Review the compatible data',body:'KERSIVO can help migrate usable compatible data, including supported CSV exports, after reviewing what is actually available.'},
+{title:'Set up your KERSIVO experience',body:'Configure barbers, services and availability. On Full, prepare the branded website and standard domain.'},
+{title:'Approve the preview',body:'On Full, review the private preview and confirm that your details and booking flow are correct.'},
+{title:'Switch public booking links when ready',body:'Change your public booking links only when your new setup is ready and approved.'},
+];
+export const NEARCUT_SWITCHING_LIMITS=['Nearcut export availability, formats and individual data fields must be confirmed with Nearcut; migration completeness cannot be guaranteed.','Keep existing future bookings accessible until the cutover plan has been reviewed; do not assume a full automatic transfer.'];
