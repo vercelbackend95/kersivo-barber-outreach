@@ -1,0 +1,57 @@
+---
+import {SQUARE_FACTS_CHECKED_DATE,SQUARE_SOURCES,SQUARE_UK_PLANS,SQUARE_UK_PAYMENT_FACTS} from '@/lib/seo/squareFacts';
+---
+<section id="square-pricing" class="fresha-alt__section" aria-labelledby="square-alt-costs-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">SQUARE APPOINTMENTS UK PRICING</p>
+      <h2 id="square-alt-costs-title" class="fresha-alt__h2">Square Appointments pricing and fees in the UK</h2>
+      <p class="fresha-alt__lead">Square has a genuinely free appointment plan. Its paid subscriptions add scheduling, reporting and team-management tools. Payments have separate processing fees, so compare the plan and the way your shop accepts money.</p>
+      <p class="fresha-alt-costs__checked">Checked {SQUARE_FACTS_CHECKED_DATE} · <a href={SQUARE_SOURCES[0].url} target="_blank" rel="noopener noreferrer">Official Square Appointments UK pricing</a></p>
+    </header>
+    <ul class="fresha-alt-costs__grid">
+      {SQUARE_UK_PLANS.map(plan=>(<li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">SQUARE APPOINTMENTS {plan.name.toUpperCase()}</p><p class="fresha-alt-costs__figure">£{plan.monthlyGbp}</p><p class="fresha-alt-costs__unit">per month per location</p><ul class="fresha-alt-costs__notes"><li>{plan.description}</li></ul></li>))}
+    </ul>
+    <div class="fresha-alt-costs__examples">
+      <div class="fresha-alt-costs__table-wrap">
+        <h3 id="square-fees-table-title" class="fresha-alt-costs__h3">Square Appointments UK card payment fees</h3>
+        <table class="fresha-alt-costs__table" aria-labelledby="square-fees-table-title">
+          <thead><tr><th scope="col">Payment method</th><th scope="col">Square Free</th><th scope="col">Square Plus</th><th scope="col">Square Premium</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">In-person card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.inPersonFreePercent}%</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.inPersonPaidPercent}%</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.inPersonPaidPercent}%</td></tr>
+            <tr><th scope="row">Online UK card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td></tr>
+            <tr><th scope="row">Online non-UK card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td></tr>
+          </tbody>
+        </table>
+        <p class="fresha-alt-costs__note">Square’s published standard rates are shown above. Other payment types and custom arrangements may differ. The subscription figures are as displayed on Square’s UK page; confirm applicable taxes and billing terms with Square.</p>
+        <p class="fresha-alt-costs__calculator">Want to compare software costs? <a href="/barber-software-cost-calculator">Explore the KERSIVO barber software cost calculator</a>. The calculator does not yet model Square Appointments and must not be treated as a Square quote.</p>
+      </div>
+      <aside class="fresha-alt-card fresha-alt-costs__kersivo" aria-labelledby="square-kersivo-costs-title">
+        <p class="fresha-alt-costs__kicker">KERSIVO</p>
+        <h3 id="square-kersivo-costs-title" class="fresha-alt-costs__h3">Two paths for independent barbers</h3>
+        <ul class="fresha-alt-list">
+          <li>Starter: £0/month; hosted booking page for up to four active bookable barbers.</li>
+          <li>Starter public bookings require a connected Stripe account and £5 deposit or full payment.</li>
+          <li>Full: £39/month per location, with a branded website and standard domain.</li>
+          <li>0% KERSIVO commission on bookings; Stripe fees still apply.</li>
+          <li>Full includes SMS reminders, reports, advanced clients and retail pickup.</li>
+        </ul>
+      </aside>
+    </div>
+    <div class="fresha-alt-card fresha-alt-costs__marketplace">
+      <div class="fresha-alt-costs__marketplace-body">
+        <h3 class="fresha-alt-costs__h3">What Square Appointments already does well</h3>
+        <ul class="fresha-alt-list">
+          <li>Unlimited staff calendars on Free, Plus and Premium.</li>
+          <li>Online booking website, text and email reminders on its Free plan.</li>
+          <li>Fixed and percentage-based deposits on all three plans.</li>
+          <li>Integrated POS and in-person card processing, useful when you rely on Square hardware.</li>
+        </ul>
+      </div>
+      <div class="fresha-alt-costs__marketplace-aside">
+        <p class="fresha-alt-costs__example">Square Free costs £0/month, so KERSIVO is not always the cheaper option. The choice is about what you need beyond appointments.</p>
+        <p class="fresha-alt-costs__checked"><a href="https://squareup.com/help/gb/en/article/8096-deposits-on-square-appointments" target="_blank" rel="noopener noreferrer">Square deposits documentation</a></p>
+      </div>
+    </div>
+  </div>
+</section>
