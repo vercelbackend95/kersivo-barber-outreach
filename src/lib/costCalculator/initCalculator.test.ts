@@ -16,6 +16,8 @@ import {
   NUMBER_FIELDS,
   DEPOSIT_BOOKINGS_FIELD,
   DEPOSIT_PROCESSING_TOGGLE,
+  NEARCUT_SUBSCRIPTION_TOGGLE,
+  NEARCUT_QUOTE_FIELD,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
@@ -42,6 +44,7 @@ function mount({ prePaint = false } = {}) {
       <p data-calc-period-label>${PERIOD_OPTIONS[0].resultLabel}</p>
       <p><span data-slot="total" aria-hidden="true">£—</span><span data-slot="total-sr"></span></p>
       <p data-slot="custom-note" hidden></p>
+      <p data-slot="client-fee-note" hidden></p>
       <p data-slot="net"></p>
       <dl>${SUMMARY_ROWS.map((row) => `<div><dt>${row.label}</dt><dd data-summary="${row.id}">—</dd></div>`).join('')}</dl>
       <details class="calc-card__breakdown"><summary>View breakdown</summary><dl>${provider.breakdown
@@ -73,6 +76,8 @@ function mount({ prePaint = false } = {}) {
       <input type="radio" name="vatRegistered" value="yes" />
       <details class="calc-advanced"><summary>Advanced costs</summary></details>
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
+      <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
+      <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
@@ -144,6 +149,8 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaMarketplaceClients: 15,
   freshaSmartWebsite: true,
   freshaClientLoyalty: false,
+  nearcutSubscription: false,
+  nearcutMonthlyQuoteGbp: 0,
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -156,8 +163,8 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 2));
-    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
+    expect(total('kersivo')).toBe(engineCash({}, 3));
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
@@ -165,6 +172,7 @@ describe('initial calculation', () => {
     expect([...document.querySelectorAll('[data-provider]')].map((el) => (el as HTMLElement).dataset.provider)).toEqual([
       'booksy',
       'fresha',
+      'nearcut',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -372,7 +380,7 @@ const DEPOSIT_LINE = {
   fresha: 'fresha-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -472,7 +480,7 @@ describe('booking deposit processing', () => {
     expect(shared).toEqual(
       expect.arrayContaining([
         'Payment processing compares online booking deposits only. It does not include the remaining appointment balance, in-person card payments or retail payments.',
-        'The comparison uses a £5 deposit benchmark for all three providers.',
+        'The comparison uses a £5 online deposit benchmark where comparable processing terms are published.',
         'Refund-related processing costs are not modelled.',
       ]),
     );
