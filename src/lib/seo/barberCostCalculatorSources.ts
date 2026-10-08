@@ -21,7 +21,7 @@ import { PHOREST_FACTS_CHECKED_DATE, PHOREST_FACTS_CHECKED_ISO, PHOREST_SOURCES 
 import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Setora' | 'Phorest' | 'Stripe' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Setora' | 'Square Appointments' | 'Phorest' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
