@@ -238,7 +238,7 @@ describe('barber software cost calculator structured data', () => {
       'reviewCount',
       '"review"',
       '"Review"',
-      'offers',
+      '"offers":',
       'installUrl',
       'downloadUrl',
       'InstallAction',
