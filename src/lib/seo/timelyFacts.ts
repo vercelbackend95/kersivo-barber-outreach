@@ -123,6 +123,9 @@ export const TIMELY_COMMERCIAL_FACTS = {
   },
 } as const satisfies Record<string, TimelyFact>;
 
+export const TIMELY_UK_DOMESTIC_ONLINE_PERCENT = TIMELY_COMMERCIAL_FACTS.ukOnlinePaymentProcessing.percent;
+export const TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP = TIMELY_COMMERCIAL_FACTS.ukOnlinePaymentProcessing.fixedGbp;
+
 export type TimelyCommercialFactKey = keyof typeof TIMELY_COMMERCIAL_FACTS;
 
 /** Guards a future calculator against treating a missing UK fact as a confirmed amount. */
