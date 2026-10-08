@@ -35,6 +35,7 @@ import {
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { TREATWELL_QUOTE_VAT_UNKNOWN, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { estimateVagaroDisplayedSubscriptionGbp, requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
@@ -51,6 +52,10 @@ export type CostScenarioInput = {
   splitMarketplaceAssumptions: boolean;
   booksyBoostClients: number;
   freshaMarketplaceClients: number;
+  vagaroMarketplaceClients: number;
+  vagaroMySite: boolean;
+  vagaroDisplayedOffer: boolean;
+  vagaroAssumeVat: boolean;
   /** Eligible Treatwell new-marketplace appointments, not all first-time clients; September 2026 eligibility terms apply. */
   treatwellMarketplaceClients: number;
   freshaSmartWebsite: boolean;
@@ -102,6 +107,7 @@ const NUMBER_RULES: Record<
   | 'marketplaceClients'
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
+  | 'vagaroMarketplaceClients'
   | 'treatwellMarketplaceClients',
   NumberRule
 > = {
@@ -111,6 +117,7 @@ const NUMBER_RULES: Record<
   marketplaceClients: { integer: true, min: 0 },
   booksyBoostClients: { integer: true, min: 0 },
   freshaMarketplaceClients: { integer: true, min: 0 },
+  vagaroMarketplaceClients: { integer: true, min: 0 },
   treatwellMarketplaceClients: { integer: true, min: 0 },
 };
 
@@ -119,6 +126,9 @@ const BOOLEAN_FIELDS = [
   'splitMarketplaceAssumptions',
   'freshaSmartWebsite',
   'freshaClientLoyalty',
+  'vagaroMySite',
+  'vagaroDisplayedOffer',
+  'vagaroAssumeVat',
   'nearcutSubscription',
   'vatRegistered',
   'includeDepositProcessing',
@@ -189,7 +199,7 @@ function validateMarketplaceAgainstAppointments(
   if (invalid.has('monthlyAppointments') || invalid.has('splitMarketplaceAssumptions')) return [];
 
   const active: (keyof typeof NUMBER_RULES)[] = input.splitMarketplaceAssumptions
-    ? ['freshaMarketplaceClients', 'treatwellMarketplaceClients']
+    ? ['freshaMarketplaceClients', 'treatwellMarketplaceClients', 'vagaroMarketplaceClients']
     : ['marketplaceClients'];
   if (input.splitMarketplaceAssumptions && input.booksyBoostEnabled === true) {
     active.unshift('booksyBoostClients');
@@ -202,7 +212,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo' | 'vagaro';
 
 export type CostCategory =
   | 'subscription'
@@ -222,6 +232,10 @@ export type LineItemId =
   | 'fresha-client-loyalty'
   | 'nearcut-subscription'
   | 'nearcut-deposit-processing'
+  | 'vagaro-subscription'
+  | 'vagaro-marketplace-fees'
+  | 'vagaro-mysite'
+  | 'vagaro-deposit-processing'
   | 'treatwell-subscription'
   | 'treatwell-new-client-commission'
   | 'treatwell-deposit-processing'
@@ -242,7 +256,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment' | 'vagaro-standard-uk-online';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -297,6 +311,14 @@ export type AssumptionCode =
   | 'treatwell-eligibility-365-days'
   | 'treatwell-quote-required'
   | 'treatwell-processing-deposits-only'
+  | 'vagaro-marketplace-scope'
+  | 'vagaro-first-visit-average'
+  | 'vagaro-displayed-promotion'
+  | 'vagaro-crossed-out-reference'
+  | 'vagaro-optional-mysite'
+  | 'vagaro-vat-assumption'
+  | 'vagaro-online-payments'
+  | 'vagaro-promoted-existing-excluded'
   | 'setora-current-vat'
   | 'setora-standard-stripe-benchmark'
   | 'setora-sms-excluded'
@@ -309,16 +331,16 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown';
+export type WarningCode = 'vagaro-promotion-duration-unverified' | 'vagaro-vat-unknown' | 'vagaro-other-fees-excluded' | 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
 export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'single-location': 'Costs are for a single barbershop location.',
   'shared-marketplace-clients':
-    'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha and Treatwell. These providers do not necessarily generate equal new-client volumes.',
+    'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha, Treatwell and Vagaro. These providers do not necessarily generate equal new-client volumes.',
   'split-marketplace-clients':
-    'Separate qualifying new marketplace client counts are used for Booksy Boost, Fresha and Treatwell. Treatwell eligibility depends on partner terms.',
+    'Separate qualifying new marketplace client counts are used for Booksy Boost, Fresha, Treatwell and Vagaro. Treatwell eligibility depends on partner terms.',
   'booksy-users-equal-bookable-barbers':
     'Each bookable barber is treated as one Booksy user: the first is covered by the base subscription and the rest are additional users. Real Booksy accounts may be configured differently.',
   'booksy-boost-first-visit-equals-average-appointment-value':
@@ -341,6 +363,14 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'treatwell-eligibility-365-days': `Treatwell new-client marketplace commission is estimated only on the manually entered eligible appointment count; eligibility depends on booking channel and partner terms, including an inactivity-related successful-appointment history rule. The published ${formatPercent(requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent!)} + VAT may differ from your special cooperation agreement.`,
   'treatwell-quote-required': 'Treatwell advertises Start for free, but does not publish one ongoing subscription amount. Use your actual monthly quote (before VAT). A zero input means unknown, not a free plan.',
   'treatwell-processing-deposits-only': `Treatwell online prepayment processing is modelled at the published ${formatPercent(requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent!)} + VAT on the ${formatGbp(DEPOSIT_BENCHMARK_GBP)} benchmark deposit per selected booking, rounded per transaction. Other prepaid balances, in-person payments and other fees are excluded.`,
+  'vagaro-marketplace-scope': 'Vagaro Marketplace acquisition fees are only estimated for qualifying first appointments booked while a shop has an active Marketplace listing. Ordinary direct, returning and own-channel bookings are excluded.',
+  'vagaro-first-visit-average': 'The average appointment value is used for the first appointment of each modelled new Vagaro Marketplace customer.',
+  'vagaro-displayed-promotion': `Vagaro currently displays ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)} for one calendar (against ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed out). Projections assume the displayed rate stays unchanged; the promotion duration is not guaranteed.`,
+  'vagaro-crossed-out-reference': `The ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed-out one-calendar reference is an illustrative alternate scenario, not a verified current checkout quote.`,
+  'vagaro-optional-mysite': `Vagaro MySite is an optional ${formatGbp(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value)}/month website add-on, charged only when selected.`,
+  'vagaro-vat-assumption': `Vagaro subscription/add-on VAT treatment could not be verified from the public UK sources. The toggle is an explicit assumption (off = no VAT added; on = ${UK_STANDARD_VAT_PERCENT}% applied to subscription, MySite and acquisition fees). Verify the real invoice.`,
+  'vagaro-online-payments': `Optional ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit processing uses the published standard Vagaro UK keyed-in/online rate, including the fixed fee. Legacy merchant agreements may differ.`,
+  'vagaro-promoted-existing-excluded': 'Existing-client fees for optional Fill My Books or Daily Deals are not included. This model does not assume promotional participation; those fees could increase the actual bill.',
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -358,6 +388,10 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
 };
 
 export const WARNING_MESSAGES: Record<WarningCode, string> = {
+  'vagaro-promotion-duration-unverified': 'The displayed Vagaro price may be promotional. Longer-term totals are hypothetical if the promotion expires or changes.',
+  'vagaro-vat-unknown': 'The Vagaro UK subscription and add-on VAT status is unconfirmed. Totals use the VAT assumption selected in Advanced costs, NOT a verified VAT-inclusive quote.',
+  'vagaro-other-fees-excluded': 'The calculator does not model Fill My Books / Daily Deals existing-client promotion fees, third-party marketing services or optional premium features beyond MySite.',
+
   'fresha-marketplace-cap-unresolved':
     'Fresha states that a maximum Marketplace new-client fee cap applies to higher-value services, but the cap amount is not published in the verified UK source. The estimate therefore applies the published percentage and minimum before any maximum cap and may overstate Marketplace fees for higher-value first visits.',
   'fresha-custom-pricing-above-team-limit':
@@ -399,9 +433,9 @@ export type MonthlyCostCalculation =
   | {
       ok: true;
       scenario: CostScenarioInput;
-      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number };
+      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number; vagaroMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -433,7 +467,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing' | 'vagaro-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -696,6 +730,75 @@ function calculateFresha(scenario: CostScenarioInput, marketplaceClients: number
   }
 
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered), warnings };
+}
+
+/* --------------------------------- Vagaro --------------------------------- */
+/**
+ * A one-location UK pricing scenario, not a contract quote. A shared marketplace
+ * count means only qualifying new Marketplace first bookings (not all appointments).
+ * VAT is user-selected because subscription VAT could not be verified publicly.
+ * The 5% promotional existing-client programme remains excluded and disclosed.
+ */
+function calculateVagaro(scenario: CostScenarioInput, marketplaceClients: number): ProviderMonthlyResult {
+  const discounted = estimateVagaroDisplayedSubscriptionGbp(scenario.bookableBarbers);
+  const firstCalendarReference = requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value;
+  const displayedFirst = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
+  const subscription = scenario.vagaroDisplayedOffer
+    ? discounted
+    : discounted + (firstCalendarReference - displayedFirst);
+  const acquisitionPercent = requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value;
+  const firstVisitPence = gbpToPence(scenario.averageAppointmentValueGbp);
+  const feePerNewClient = percentOfPence(firstVisitPence, acquisitionPercent);
+  const monthlyMySite = requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value;
+  const lines: PenceLine[] = [
+    {
+      id:'vagaro-subscription', category:'subscription', status:'calculated',
+      pence:gbpToPence(subscription), unitPence:gbpToPence(subscription),
+      quantity:1, vatApplies:scenario.vagaroAssumeVat,
+    },
+    {
+      id:'vagaro-marketplace-fees', category:'acquisition', status:'calculated',
+      pence:feePerNewClient * marketplaceClients, unitPence:feePerNewClient,
+      quantity:marketplaceClients, vatApplies:scenario.vagaroAssumeVat,
+    },
+    {
+      id:'vagaro-mysite', category:'add-ons',
+      status:scenario.vagaroMySite ? 'calculated' : 'not-included',
+      pence:scenario.vagaroMySite ? gbpToPence(monthlyMySite) : 0,
+      unitPence:gbpToPence(monthlyMySite),
+      quantity:scenario.vagaroMySite ? 1 : 0,
+      vatApplies:scenario.vagaroAssumeVat,
+    },
+    depositProcessingLine(scenario, {
+      id:'vagaro-deposit-processing',
+      paymentMethod:'vagaro-standard-uk-online',
+      percent:requireVerifiedVagaroFact('standardOnlineProcessingPercent').value,
+      fixedPence:gbpToPence(requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value),
+      vatApplies:false,
+    }),
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('vagaro-marketplace-scope'),
+    assumption(scenario.vagaroDisplayedOffer ? 'vagaro-displayed-promotion' : 'vagaro-crossed-out-reference'),
+    assumption('vagaro-vat-assumption'),
+    assumption('vagaro-promoted-existing-excluded'),
+  ];
+  if (scenario.vagaroMySite) assumptions.push(assumption('vagaro-optional-mysite'));
+  if (marketplaceClients > 0) assumptions.push(assumption('vagaro-first-visit-average'));
+  if (scenario.includeDepositProcessing) assumptions.push(assumption('vagaro-online-payments'));
+  return {
+    provider:'vagaro', status:'calculated', currency:'GBP',
+    depositProcessingIncluded:scenario.includeDepositProcessing,
+    lineItems:lines.map(toLineItem),
+    amounts:summarise(lines,scenario.vatRegistered),
+    assumptions,
+    warnings:[
+      warning('vagaro-promotion-duration-unverified'),
+      warning('vagaro-vat-unknown'),
+      warning('vagaro-other-fees-excluded'),
+    ],
+  };
 }
 
 /* --------------------------------- Nearcut --------------------------------- */
@@ -1037,8 +1140,8 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
 
   const scenario: CostScenarioInput = { ...input };
   const effectiveMarketplaceClients = scenario.splitMarketplaceAssumptions
-    ? { booksyBoost: scenario.booksyBoostClients, freshaMarketplace: scenario.freshaMarketplaceClients, treatwellMarketplace: scenario.treatwellMarketplaceClients }
-    : { booksyBoost: scenario.marketplaceClients, freshaMarketplace: scenario.marketplaceClients, treatwellMarketplace: scenario.marketplaceClients };
+    ? { booksyBoost: scenario.booksyBoostClients, freshaMarketplace: scenario.freshaMarketplaceClients, treatwellMarketplace: scenario.treatwellMarketplaceClients, vagaroMarketplace: scenario.vagaroMarketplaceClients }
+    : { booksyBoost: scenario.marketplaceClients, freshaMarketplace: scenario.marketplaceClients, treatwellMarketplace: scenario.marketplaceClients, vagaroMarketplace: scenario.marketplaceClients };
 
   return {
     ok: true,
@@ -1057,6 +1160,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateSquare(scenario),
       calculatePhorest(scenario),
       calculateKersivo(scenario),
+      calculateVagaro(scenario, effectiveMarketplaceClients.vagaroMarketplace),
     ],
   };
 }
