@@ -4,8 +4,13 @@ import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import SquireHero from '@/components/squireAlternative/SquireHero.astro';
-import SquireSections from '@/components/squireAlternative/SquireSections.astro';
-import FreshaFinalCta from '@/components/freshaAlternative/FreshaFinalCta.astro';
+import SquireIntro from '@/components/squireAlternative/SquireIntro.astro';
+import SquireCompare from '@/components/squireAlternative/SquireCompare.astro';
+import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
+import SquireFit from '@/components/squireAlternative/SquireFit.astro';
+import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
+import SquireFinalCta from '@/components/squireAlternative/SquireFinalCta.astro';
+import SquireSources from '@/components/squireAlternative/SquireSources.astro';
 import {
   SQUIRE_ALTERNATIVE_DESCRIPTION,
   SQUIRE_ALTERNATIVE_FAQ_ITEMS,
@@ -21,9 +26,13 @@ const currentYear = new Date().getFullYear();
 <LandingLayout title={SQUIRE_ALTERNATIVE_TITLE} description={SQUIRE_ALTERNATIVE_DESCRIPTION}
   canonicalPath={SQUIRE_ALTERNATIVE_PAGE_PATH}
   jsonLd={[buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
-  <main class="fresha-alt landing-overflow-guard">
+  <main class="fresha-alt squire-alt landing-overflow-guard">
     <SquireHero />
-    <SquireSections />
+    <SquireIntro />
+    <SquireCompare />
+    <FreshaProof />
+    <SquireFit />
+    <FreshaPricing />
     <Faq4 className="faq4--landing"
       heading="Questions about comparing SQUIRE and KERSIVO?"
       subHeading="Straight answers on UK availability, published prices, bookings, payments, branding and switching."
@@ -32,12 +41,13 @@ const currentYear = new Date().getFullYear();
       supportLinkLabel="Ask KERSIVO a question"
       supportLinkHref="#contact"
       faqs={SQUIRE_ALTERNATIVE_FAQ_ITEMS} />
-    <FreshaFinalCta />
+    <SquireFinalCta />
     <Contact16 eyebrow="CONTACT KERSIVO" title="Still comparing KERSIVO and SQUIRE?"
       description="Tell us what you use today and what you want to change. We’ll reply with a practical answer for your barbershop."
       note="We’ll reply by email — no sales call required."
       submitLabel="Send my question"
       messagePlaceholder="For example: switching from SQUIRE, migrating bookings, own website and domain, or choosing the right KERSIVO plan." />
+    <SquireSources />
     <Footer50 showIntro={false} brandLine="Own your brand. Own your bookings."
       contactEmail={KERSIVO_CONTACT_EMAIL} brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
@@ -70,4 +80,4 @@ const currentYear = new Date().getFullYear();
   bootProductRails();
   document.addEventListener('astro:page-load',bootProductRails);
 </script>
-<style is:global>.landing-overflow-guard {overflow-x:clip;}</style>
+<style is:global>.landing-overflow-guard {overflow-x:clip;} .squire-alt .fresha-alt-compare__brand-mark--booksy { text-transform: uppercase; font-size: .92rem; letter-spacing: -.04em; }</style>
