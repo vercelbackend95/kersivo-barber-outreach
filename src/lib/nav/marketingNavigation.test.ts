@@ -117,6 +117,7 @@ describe('marketing navigation config', () => {
     );
     const tools = resources.sections.find((section) => section.id === 'tools');
     expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
+    expect(tools?.items.map((item) => item.href)).toContain('/compare');
     expect(resources.sections.map((section) => section.id)).not.toContain('guides');
   });
 });

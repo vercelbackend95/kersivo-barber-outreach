@@ -36,7 +36,7 @@ const circumference = HUB_RING_CIRCUMFERENCE.toFixed(3);
   </svg>
   <span class="alt-hub-ring__label" aria-hidden="true">
     <span class="alt-hub-ring__score" data-hub-score-label>{formatScoreLabel(score)}</span>
-    <span class="alt-hub-ring__caption">match</span>
+    <span class="alt-hub-ring__caption" data-hub-score-caption>{score.selected === 0 ? 'choose' : 'match'}</span>
   </span>
   <span class="sr-only" data-hub-score-description>{describeScore(score)}</span>
 </div>

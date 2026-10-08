@@ -18,6 +18,7 @@ const byId = new Map(HUB_PLATFORMS.map((p) => [p.id, p]));
 const total = HUB_PLATFORMS.length;
 const hiddenCount = Math.max(0, total - HUB_INITIAL_VISIBLE_CARDS);
 const PRIMARY_PILLS = 6;
+const MOBILE_QUICK_FILTERS = new Set(['zeroCommission', 'ownDomain', 'deposits']);
 ---
 
 <section
@@ -33,7 +34,7 @@ const PRIMARY_PILLS = 6;
         <div class="alt-hub-panel__intro">
           <h2 id="alt-hub-filters-title" class="alt-hub-panel__title">What matters to you?</h2>
           <p class="alt-hub-panel__helper" id="alt-hub-filters-helper">
-            Select the features that matter most to your barbershop.
+            Choose your priorities to see which platforms match your barbershop.
           </p>
         </div>
         <div class="alt-hub-panel__meta">
@@ -50,7 +51,7 @@ const PRIMARY_PILLS = 6;
       </div>
 
       <p class="alt-hub-panel__suggested" data-hub-suggested-note>
-        Suggested priorities for independent barbershops are preselected. Change or clear them at any time.
+        Start by choosing what matters to you. No priorities are preselected.
       </p>
 
       <div
@@ -67,6 +68,7 @@ const PRIMARY_PILLS = 6;
               <button
                 type="button"
                 class={`alt-hub-pill${index >= PRIMARY_PILLS ? ' alt-hub-pill--extra' : ''}`}
+                data-quick-filter={MOBILE_QUICK_FILTERS.has(criterion.id) ? 'true' : 'false'}
                 aria-pressed={pressed ? 'true' : 'false'}
                 data-hub-filter={criterion.id}
                 title={criterion.definition}
@@ -93,9 +95,10 @@ const PRIMARY_PILLS = 6;
             class="alt-hub-panel__more"
             aria-expanded="false"
             aria-controls="alt-hub-pills"
+            aria-label="Open all comparison filters"
             data-hub-more-filters
           >
-            <span data-hub-more-label>More filters ({HUB_CRITERIA.length - PRIMARY_PILLS})</span>
+            <span data-hub-more-label>All filters ({HUB_CRITERIA.length})</span>
           </button>
           <div class="alt-hub-sort">
             <label for="alt-hub-sort" class="alt-hub-sort__label">Sort by:</label>
@@ -108,7 +111,7 @@ const PRIMARY_PILLS = 6;
     </div>
 
     <p class="alt-hub-status-line" aria-live="polite" data-hub-live>
-      {total} systems shown, sorted by best match for {selected.length} selected priorities.
+      {Math.min(total, HUB_INITIAL_VISIBLE_CARDS)} of {total} systems shown. Select priorities to see match scores.
     </p>
 
     <div class="alt-hub-grid" id="alt-hub-grid" data-hub-grid data-expanded="false">

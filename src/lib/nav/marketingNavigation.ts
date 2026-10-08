@@ -243,6 +243,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     featured: true,
   },
   {
+    id: 'resources-compare-hub',
+    label: 'Compare Booking Systems',
+    description: 'Filter and compare KERSIVO with ten booking platforms for UK barbershops.',
+    href: '/compare',
+    group: 'resources',
+    section: 'tools',
+    icon: 'compare',
+  },
+  {
     id: 'resources-cost-calculator',
     label: 'Barber Software Cost Calculator',
     description: 'Model subscriptions, team fees, marketplace costs, VAT and booking deposits.',

@@ -19,7 +19,7 @@ function card(c: CardFixture): string {
   return `<article data-hub-card data-platform-id="${c.id}" data-platform-name="${c.name}" data-order="${c.order}"
     data-first-party="${c.firstParty ? 'true' : 'false'}" data-collapsed="false" data-statuses='${JSON.stringify(c.statuses)}'>
     <div data-hub-ring data-empty="false"><svg><circle data-hub-ring-value stroke-dashoffset="0"></circle></svg>
-    <span data-hub-score-label></span><span data-hub-score-description></span></div>
+    <span data-hub-score-label></span><span data-hub-score-description></span><span data-hub-score-caption></span></div><p data-hub-score-summary></p>
     <ul>${features}</ul></article>`;
 }
 
@@ -83,7 +83,7 @@ describe('initAlternativesHub', () => {
     expect(document.querySelector('[data-platform-id="bbb"] [data-hub-ring]')?.getAttribute('data-empty')).toBe('true');
     expect(order()).toEqual(['kersivo', 'aaa', 'bbb', 'ccc']);
     expect(document.querySelector('[data-hub-live]')?.textContent).toContain('Select priorities');
-    expect(document.querySelector<HTMLElement>('[data-hub-suggested-note]')!.hidden).toBe(true);
+    expect(document.querySelector<HTMLElement>('[data-hub-suggested-note]')!.hidden).toBe(false);
   });
 
   it('sorts alphabetically while keeping the first-party card first', () => {
@@ -115,7 +115,59 @@ describe('initAlternativesHub', () => {
     expect(document.querySelector('.alt-hub-panel')?.getAttribute('data-filters-expanded')).toBe('true');
     expect(more.getAttribute('aria-expanded')).toBe('true');
     more.click();
-    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('More filters (6)');
+    expect(document.querySelector('[data-hub-more-label]')?.textContent).toBe('All filters (12)');
+  });
+
+
+  it('starts neutral when no criteria are preselected', () => {
+    mount([]);
+    initAlternativesHub(document);
+    expect(order()).toEqual(['kersivo', 'aaa', 'bbb', 'ccc']);
+    expect(label('kersivo')).toBe('–');
+    expect(document.querySelector('[data-hub-selected-count]')?.textContent).toBe('0');
+    expect(document.querySelector('[data-platform-id="bbb"] [data-hub-score-caption]')?.textContent).toBe('choose');
+    expect(document.querySelector('[data-hub-live]')?.textContent).toContain('3 of 4 systems shown');
+  });
+
+  it('reveals all ranked competitors after changing priorities and resets to six-or-fewer', () => {
+    initAlternativesHub(document);
+    expect(document.querySelector('[data-hub-grid]')?.getAttribute('data-expanded')).toBe('false');
+    pill('retail').click();
+    expect(document.querySelector('[data-hub-grid]')?.getAttribute('data-expanded')).toBe('true');
+    expect(document.querySelector('[data-hub-live]')?.textContent).toContain('4 of 4 systems shown');
+    expect(document.querySelector('[data-platform-id="bbb"] [data-hub-score-summary]')?.textContent)
+      .toContain('not verified');
+    document.querySelector<HTMLButtonElement>('[data-hub-reset]')!.click();
+    expect(document.querySelector('[data-hub-grid]')?.getAttribute('data-expanded')).toBe('false');
+    expect(document.querySelector('[data-hub-live]')?.textContent).toContain('3 of 4 systems shown');
+  });
+
+  it('opens and dismisses the mobile dialog with Escape and restores scrolling', () => {
+    const original = window.matchMedia;
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: () => ({
+        matches: true,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+    });
+    try {
+      initAlternativesHub(document);
+      const more = document.querySelector<HTMLButtonElement>('[data-hub-more-filters]')!;
+      more.click();
+      const panel = document.querySelector<HTMLElement>('.alt-hub-panel')!;
+      expect(panel.getAttribute('role')).toBe('dialog');
+      expect(panel.getAttribute('aria-modal')).toBe('true');
+      expect(document.documentElement.style.overflow).toBe('hidden');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(panel.getAttribute('role')).toBeNull();
+      expect(more.getAttribute('aria-expanded')).toBe('false');
+      expect(document.documentElement.style.overflow).toBe('');
+    } finally {
+      Object.defineProperty(window, 'matchMedia', { configurable: true, value: original });
+      document.documentElement.style.removeProperty('overflow');
+    }
   });
 
   it('binds only once when initialised repeatedly', () => {
@@ -125,7 +177,8 @@ describe('initAlternativesHub', () => {
     expect(pill('retail').getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('hides the suggested note after the selection changes and reports it when restored', () => {
+  it('hides the neutral helper after the selection changes and restores it when cleared', () => {
+    mount([]);
     initAlternativesHub(document);
     const note = document.querySelector<HTMLElement>('[data-hub-suggested-note]')!;
     expect(note.hidden).toBe(false);
