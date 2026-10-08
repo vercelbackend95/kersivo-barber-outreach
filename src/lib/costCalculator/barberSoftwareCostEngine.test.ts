@@ -49,6 +49,10 @@ const BASE: CostScenarioInput = {
   splitMarketplaceAssumptions: false,
   booksyBoostClients: 0,
   freshaMarketplaceClients: 0,
+  vagaroMarketplaceClients: 0,
+  vagaroDisplayedOffer: true,
+  vagaroMySite: false,
+  vagaroAssumeVat: false,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   nearcutSubscription: false,
@@ -302,7 +306,7 @@ describe('shared behaviour', () => {
       booksyBoostClients: 10,
       freshaMarketplaceClients: 20,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3, vagaroMarketplace: 3 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['shared-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').quantity).toBe(3);
     expect(line(result.providers[1], 'fresha-marketplace-fees').quantity).toBe(3);
@@ -316,14 +320,14 @@ describe('shared behaviour', () => {
       booksyBoostClients: 2,
       freshaMarketplaceClients: 5,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5, vagaroMarketplace: 0 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['split-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').exVatGbp).toBe(15);
     expect(line(result.providers[1], 'fresha-marketplace-fees').exVatGbp).toBe(25);
   });
 
   it('returns providers in Booksy, Fresha, Nearcut, KERSIVO order', () => {
-    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'kersivo']);
+    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'setora', 'kersivo', 'vagaro']);
   });
 
   it.each<[Partial<CostScenarioInput>, keyof CostScenarioInput, string]>([
