@@ -83,6 +83,7 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     nearcutSubscription: readChecked(form, 'nearcutSubscription'),
     nearcutMonthlyQuoteGbp: readNumber(form, 'nearcutMonthlyQuoteGbp'),
+    timelyMonthlyInvoiceGbp: readNumber(form, 'timelyMonthlyInvoiceGbp'),
     treatwellMonthlyQuoteGbp: readNumber(form, 'treatwellMonthlyQuoteGbp'),
     treatwellQuoteVatPercent: readRadioNumber(form, 'treatwellQuoteVatPercent'),
     phorestMonthlyQuoteGbp: readNumber(form, 'phorestMonthlyQuoteGbp'),
@@ -194,7 +195,7 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   if (periodInput) periodInput.checked = true;
 
   const advanced = form.querySelector<HTMLDetailsElement>('details.calc-advanced');
-  if (advanced && (ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key]) || scenario.treatwellMonthlyQuoteGbp > 0 || scenario.treatwellQuoteVatPercent !== DEFAULT_SCENARIO.treatwellQuoteVatPercent || scenario.phorestMonthlyQuoteGbp > 0 || scenario.phorestQuoteVatPercent !== DEFAULT_SCENARIO.phorestQuoteVatPercent || scenario.squarePlan !== DEFAULT_SCENARIO.squarePlan)) advanced.open = true;
+  if (advanced && (ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key]) || scenario.timelyMonthlyInvoiceGbp > 0 || scenario.treatwellMonthlyQuoteGbp > 0 || scenario.treatwellQuoteVatPercent !== DEFAULT_SCENARIO.treatwellQuoteVatPercent || scenario.phorestMonthlyQuoteGbp > 0 || scenario.phorestQuoteVatPercent !== DEFAULT_SCENARIO.phorestQuoteVatPercent || scenario.squarePlan !== DEFAULT_SCENARIO.squarePlan)) advanced.open = true;
 }
 
 async function copyText(doc: Document, text: string): Promise<boolean> {
