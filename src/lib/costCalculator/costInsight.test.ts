@@ -36,6 +36,7 @@ describe('determineCostInsight', () => {
       kind: 'acquisition',
       booksyBoostGbp: 0,
       freshaMarketplaceGbp: 20,
+      treatwellMarketplaceGbp: 0,
     });
   });
 
@@ -44,6 +45,7 @@ describe('determineCostInsight', () => {
       kind: 'acquisition',
       booksyBoostGbp: 22.5,
       freshaMarketplaceGbp: 15,
+      treatwellMarketplaceGbp: 0,
     });
   });
 
@@ -126,7 +128,7 @@ describe('describeCostInsight', () => {
   });
 
   it('describes Booksy Boost alone when only Boost applies', () => {
-    const boostOnly: CostInsight = { kind: 'acquisition', booksyBoostGbp: 15, freshaMarketplaceGbp: 0 };
+    const boostOnly: CostInsight = { kind: 'acquisition', booksyBoostGbp: 15, freshaMarketplaceGbp: 0, treatwellMarketplaceGbp: 0 };
     expect(describeCostInsight(boostOnly)).toBe(
       'Booksy Boost is the largest modelled variable cost in this scenario at £15.00/month before VAT, under the assumptions entered.',
     );
