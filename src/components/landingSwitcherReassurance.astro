@@ -8,12 +8,15 @@ interface Props {
   showBooksyCompareLink?: boolean;
   /** Homepage-only link to the Fresha comparison landing page. */
   showFreshaCompareLink?: boolean;
+  /** Homepage-only link to the SQUIRE comparison page. */
+  showSquireCompareLink?: boolean;
 }
 
 const {
   className = '',
   showBooksyCompareLink = false,
   showFreshaCompareLink = false,
+  showSquireCompareLink = false,
 } = Astro.props as Props;
 
 const trustPoints = [
@@ -137,6 +140,11 @@ const trustPoints = [
           >
             Compare KERSIVO and Fresha
           </a>
+        ) : null
+      }
+      {
+        showSquireCompareLink ? (
+          <a href="/squire-alternative" class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare">Compare KERSIVO and SQUIRE</a>
         ) : null
       }
     </div>
