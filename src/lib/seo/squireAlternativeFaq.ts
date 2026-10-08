@@ -22,7 +22,7 @@ export const SQUIRE_ALTERNATIVE_FAQ_ITEMS = [
   { question: 'Can I move client data from SQUIRE to KERSIVO?', answer: 'KERSIVO can help review and import usable business data available from your existing booking platform, including supported CSV exports. The availability and completeness of SQUIRE exports must be checked before promising a migration. Keep SQUIRE running while your new setup is prepared.' },
   { question: 'Can clients book without downloading an app?', answer: 'Yes. Clients use a browser-based KERSIVO booking flow: a hosted booking page on Starter or your branded website on Full KERSIVO.' },
   { question: 'Can I try KERSIVO before switching?', answer: 'Yes. You can explore the KERSIVO live demo. Starter costs £0/month, subject to its public booking payment rules, while Full KERSIVO is £39/month per location.' },
-] as const;
+];
 export function buildSquireAlternativeFaqJsonLd(): Record<string, unknown> {
   const url = getPublicSiteUrl() + SQUIRE_ALTERNATIVE_PAGE_PATH;
   return { '@context':'https://schema.org', '@type':'FAQPage', '@id': url + '#faq', mainEntity: SQUIRE_ALTERNATIVE_FAQ_ITEMS.map(({question, answer}) => ({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}})) };
