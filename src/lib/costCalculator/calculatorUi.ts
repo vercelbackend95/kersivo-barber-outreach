@@ -1,4 +1,5 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
+import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import {
   DEPOSIT_BENCHMARK_GBP,
   type CostScenarioInput,
@@ -22,7 +23,8 @@ type NumericScenarioKey =
   | 'marketplaceClients'
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
-  | 'depositBookingsPerMonth';
+  | 'depositBookingsPerMonth'
+  | 'nearcutMonthlyQuoteGbp';
 
 type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey>;
 
@@ -160,6 +162,26 @@ export const FRESHA_ADD_ONS: readonly AddOnOption[] = [
   },
 ];
 
+export const NEARCUT_SUBSCRIPTION_TOGGLE = {
+  id: 'calc-nearcut-subscription',
+  name: 'nearcutSubscription',
+  label: 'Nearcut Subscription (instead of Free for You)',
+  helper: 'Subscription removes the client booking charge. Pricing is quoted by Nearcut for your shop, plus VAT.',
+  defaultOn: false,
+  fieldsId: 'calc-nearcut-quote-fields',
+} as const satisfies ToggleConfig & { helper: string; fieldsId: string };
+
+export const NEARCUT_QUOTE_FIELD: NumberFieldConfig = {
+  id: 'calc-nearcut-quote',
+  name: 'nearcutMonthlyQuoteGbp',
+  label: 'Your Nearcut monthly quote (ex VAT)',
+  helper: 'Enter the monthly figure Nearcut quoted to your shop, excluding VAT. Leave 0 if unknown; the result will say Custom pricing.',
+  defaultValue: 0,
+  min: 0, max: 20000, step: 0.01,
+};
+
+export const NEARCUT_EXAMPLE = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
+
 export const DEPOSIT_PROCESSING_TOGGLE = {
   id: 'calc-deposit-processing',
   name: 'includeDepositProcessing',
@@ -172,7 +194,7 @@ export const DEPOSIT_BOOKINGS_FIELD: NumberFieldConfig = {
   id: 'calc-deposit-bookings',
   name: 'depositBookingsPerMonth',
   label: 'Online bookings taking a deposit / month',
-  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark across all three providers. This compares deposit processing only, not the remaining appointment balance or in-person card payments.`,
+  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.`,
   defaultValue: 0,
   min: 0,
   max: APPOINTMENTS_FIELD.max,
@@ -191,6 +213,8 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   freshaMarketplaceClients: SPLIT_FIELDS[1].defaultValue,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
+  nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
+  nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
   vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
   includeDepositProcessing: DEPOSIT_PROCESSING_TOGGLE.defaultOn,
   depositBookingsPerMonth: DEPOSIT_BOOKINGS_FIELD.defaultValue,
@@ -236,6 +260,7 @@ export const NOT_INCLUDED = 'Not included';
 export const NOT_ESTIMATED = 'Not estimated';
 export const CUSTOM_PRICING = 'Custom pricing';
 export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
+export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
 export type SummaryRowId = 'before-vat' | 'vat' | 'payments';
@@ -280,6 +305,15 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
     ],
   },
   {
+    id: 'nearcut',
+    name: 'Nearcut',
+    breakdown: [
+      { id: 'nearcut-subscription', label: 'Subscription / shop cost' },
+      { id: 'vat', label: 'VAT' },
+      { id: 'nearcut-deposit-processing', label: 'Online deposit processing' },
+    ],
+  },
+  {
     id: 'kersivo',
     name: 'KERSIVO',
     breakdown: [
@@ -301,7 +335,7 @@ export const SHARE_SCENARIO = {
 
 export const NOTES_LABEL = 'Assumptions & notes';
 export const caveatLabel = (count: number) => (count === 1 ? '1 caveat' : `${count} caveats`);
-export const SHARED_NOTES_LABEL = 'Assumptions used for all three';
+export const SHARED_NOTES_LABEL = 'Shared assumptions';
 
 export const INSIGHT_EYEBROW = 'BIGGEST COST DRIVER';
 export const INSIGHT_INVALID = 'The cost driver will appear once the highlighted inputs are valid.';
