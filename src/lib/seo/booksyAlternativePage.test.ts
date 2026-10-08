@@ -33,7 +33,7 @@ import {
   BOOKSY_WORKED_EXAMPLES_NOTE,
   KERSIVO_MODEL_POINTS,
 } from './booksyAlternativeContent';
-import { buildBooksyAlternativeWebPageJsonLd } from './booksyAlternativeJsonLd';
+import { buildBooksyAlternativeWebPageJsonLd, buildBooksyAlternativeBreadcrumbJsonLd } from './booksyAlternativeJsonLd';
 import {
   BOOKSY_ADDITIONAL_USER_GBP,
   BOOKSY_BASE_PRICE_GBP,
@@ -163,7 +163,7 @@ describe('booksy-alternative: metadata and URL', () => {
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain(
-      'jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
+      'jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
     );
     expect(pageSource).not.toMatch(/noindex|Astro\.redirect/);
     expect(resolveCanonicalUrl(BOOKSY_ALTERNATIVE_PAGE_PATH)).toBe(
@@ -509,6 +509,27 @@ describe('booksy-alternative: FAQ and schema', () => {
     for (const banned of ['Review', 'AggregateRating', 'aggregateRating', 'LocalBusiness', 'Product', 'SoftwareApplication']) {
       expect(serialized).not.toContain(banned);
     }
+  });
+});
+
+describe('booksy-alternative: visible breadcrumb and BreadcrumbList JSON-LD', () => {
+  it('links the WebPage breadcrumb to a canonical two-step list matching the visible navigation', () => {
+    expect(components.BooksyHero).toContain('aria-label="Breadcrumb"');
+    expect(components.BooksyHero).toContain('<a href="/">Home</a>');
+    expect(components.BooksyHero).toContain('aria-current="page">Booksy alternative</span>');
+    expect((components.BooksyHero.match(/aria-label="Breadcrumb"/g) ?? [])).toHaveLength(1);
+    expect(pageSource).toContain('buildBooksyAlternativeBreadcrumbJsonLd()');
+
+    const breadcrumb = buildBooksyAlternativeBreadcrumbJsonLd();
+    const pageUrl = resolveCanonicalUrl(BOOKSY_ALTERNATIVE_PAGE_PATH);
+    expect(breadcrumb['@context']).toBe('https://schema.org');
+    expect(breadcrumb['@type']).toBe('BreadcrumbList');
+    expect(breadcrumb['@id']).toBe(`${pageUrl}#breadcrumb`);
+    expect(breadcrumb.itemListElement).toEqual([
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kersivo.co.uk/' },
+      { '@type': 'ListItem', position: 2, name: 'Booksy alternative', item: pageUrl },
+    ]);
+    expect(buildBooksyAlternativeWebPageJsonLd().breadcrumb).toEqual({ '@id': breadcrumb['@id'] });
   });
 });
 
