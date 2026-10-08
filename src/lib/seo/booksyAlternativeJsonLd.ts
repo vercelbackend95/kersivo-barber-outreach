@@ -25,5 +25,22 @@ export function buildBooksyAlternativeWebPageJsonLd(): Record<string, unknown> {
     dateModified: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+  };
+}
+
+/** Mirrors the visible Home / Booksy alternative navigation in BooksyHero. */
+export function buildBooksyAlternativeBreadcrumbJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = `${siteUrl}${BOOKSY_ALTERNATIVE_PAGE_PATH}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    '@id': `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Booksy alternative', item: pageUrl },
+    ],
   };
 }
