@@ -662,6 +662,7 @@ function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
     },
   ];
   const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
     assumption(subscription ? 'nearcut-subscription-quote' : 'nearcut-free-client-charge'),
   ];
   const warnings: EngineNotice<WarningCode>[] = [];
