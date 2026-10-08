@@ -27,6 +27,7 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  SQUARE_PLAN_FIELD,
   PERIOD_OPTIONS,
   PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
@@ -72,6 +73,7 @@ describe('calculator panel inputs', () => {
       ...FRESHA_ADD_ONS.map((addOn) => addOn.name),
       DEPOSIT_PROCESSING_TOGGLE.name,
       NEARCUT_SUBSCRIPTION_TOGGLE.name,
+      SQUARE_PLAN_FIELD.name,
     ].sort();
     expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
   });
@@ -143,7 +145,7 @@ describe('calculator panel inputs', () => {
     expect(DEPOSIT_BOOKINGS_FIELD.max).toBe(20000);
     expect(DEFAULT_SCENARIO.depositBookingsPerMonth).toBe(0);
     expect(DEPOSIT_BOOKINGS_FIELD.helper).toBe(
-      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
+      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
     );
     expect(configSource).toContain('formatGbp(DEPOSIT_BENCHMARK_GBP)');
   });
@@ -202,8 +204,8 @@ describe('calculator results structure', () => {
     expect(resultsSource).toContain('data-calc-three-year-note hidden={!view.showThreeYearNote}');
   });
 
-  it('renders five peer cards in Booksy, Fresha, Nearcut, Setora, KERSIVO order without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'KERSIVO']);
+  it('renders six peer cards in Booksy, Fresha, Nearcut, Setora, Square, KERSIVO order without winner language', () => {
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Square Appointments', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -241,6 +243,11 @@ describe('calculator results structure', () => {
       ['setora-commission', 'Setora commission'],
       ['vat', 'VAT currently charged'],
       ['setora-deposit-processing', 'Stripe deposit processing'],
+    ]);
+    expect(rows('square')).toEqual([
+      ['square-subscription', 'Plan subscription (published)'],
+      ['vat', 'VAT (unverified for paid plans)'],
+      ['square-deposit-processing', 'Appointments deposit processing'],
     ]);
     expect(rows('kersivo')).toEqual([
       ['kersivo-subscription', 'Subscription'],
@@ -298,7 +305,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(24);
+    expect(ids.length).toBe(27);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

@@ -10,6 +10,7 @@ import {
   FRESHA_ADD_ONS_LEGEND,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  SQUARE_PLAN_FIELD,
   MARKETPLACE_CLIENTS_FIELD,
   MARKETPLACE_HEADING,
   DEPOSIT_BOOKINGS_FIELD,
@@ -34,7 +35,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Setora · Square · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -207,7 +208,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Nearcut plan, add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Nearcut & Square plans, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -290,6 +291,20 @@ const describedBy = (id: string, withHelper: boolean) =>
           </div>
         </div>
       </div>
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">{SQUARE_PLAN_FIELD.label}</legend>
+        <div class="calc-segmented calc-segmented--small">
+          {SQUARE_PLAN_FIELD.options.map((option) => (
+            <label class="calc-segmented__option">
+              <input type="radio" name={SQUARE_PLAN_FIELD.name} value={option.value}
+                checked={option.value === SQUARE_PLAN_FIELD.defaultValue} />
+              <span>{option.label} · {option.priceLabel}</span>
+            </label>
+          ))}
+        </div>
+        <p class="calc-field__helper">{SQUARE_PLAN_FIELD.helper}</p>
+      </fieldset>
 
       <div class="calc-fieldset">
         <div class="calc-field calc-field--inline">

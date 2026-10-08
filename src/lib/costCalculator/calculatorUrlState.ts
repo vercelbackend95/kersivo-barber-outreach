@@ -16,6 +16,7 @@
  *   loyalty Fresha Client Loyalty            1 | 0
  *   nc      Nearcut Subscription             1 | 0
  *   nq      Nearcut monthly quote (ex VAT)    decimal, 0 if unknown
+ *   sq      Square plan                       free | plus | premium
  *   vat     VAT registered                   1 | 0
  *   dp      booking deposit processing       1 | 0
  *   db      deposit bookings per month       integer
@@ -28,7 +29,7 @@ import type { CostPeriod } from './costPeriod';
 
 type ScenarioKey = keyof CostScenarioInput;
 type NumberKey = { [K in ScenarioKey]: CostScenarioInput[K] extends number ? K : never }[ScenarioKey];
-type BooleanKey = Exclude<ScenarioKey, NumberKey>;
+type BooleanKey = Exclude<ScenarioKey, NumberKey | 'squarePlan'>;
 
 export const SCENARIO_PARAMS = {
   bookableBarbers: 'b',
@@ -43,6 +44,7 @@ export const SCENARIO_PARAMS = {
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
   nearcutMonthlyQuoteGbp: 'nq',
+  squarePlan: 'sq',
   vatRegistered: 'vat',
   includeDepositProcessing: 'dp',
   depositBookingsPerMonth: 'db',
@@ -122,7 +124,9 @@ export function decodeScenarioQuery(search: string | URLSearchParams): DecodedUr
     const raw = params.get(SCENARIO_PARAMS[key]);
     if (raw === null) continue;
     hasScenarioParams = true;
-    if (isNumberKey(key)) {
+    if (key === 'squarePlan') {
+      if (raw === 'free' || raw === 'plus' || raw === 'premium') candidate.squarePlan = raw;
+    } else if (isNumberKey(key)) {
       const value = parseNumber(raw.trim());
       if (value !== null && withinFieldBounds(key, value)) candidate[key] = value;
     } else {
@@ -145,7 +149,8 @@ export function encodeScenarioQuery(scenario: CostScenarioInput, period: CostPer
   const params = new URLSearchParams();
   for (const key of SCENARIO_KEYS) {
     const value = scenario[key];
-    if (typeof value === 'boolean') params.set(SCENARIO_PARAMS[key], value ? '1' : '0');
+    if (key === 'squarePlan') params.set(SCENARIO_PARAMS[key], scenario.squarePlan);
+    else if (typeof value === 'boolean') params.set(SCENARIO_PARAMS[key], value ? '1' : '0');
     else if (Number.isFinite(value)) params.set(SCENARIO_PARAMS[key], String(value));
   }
   params.set(PERIOD_PARAM, PERIOD_PARAM_VALUES[period]);

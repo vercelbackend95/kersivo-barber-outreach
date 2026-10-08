@@ -17,9 +17,11 @@ type PrePaintConfig = {
   advanced: readonly (readonly [string, boolean])[];
   /** [query param, toggle id] for reveal toggles whose controlled fields change height when shown. */
   reveals: readonly (readonly [string, string])[];
+  squarePlan: readonly [string, string];
 };
 
 const CONFIG: PrePaintConfig = {
+  squarePlan: [SCENARIO_PARAMS.squarePlan, DEFAULT_SCENARIO.squarePlan],
   advanced: ADVANCED_SCENARIO_KEYS.map((key) => [SCENARIO_PARAMS[key], DEFAULT_SCENARIO[key]] as const),
   reveals: [
     [SCENARIO_PARAMS.splitMarketplaceAssumptions, SPLIT_ASSUMPTIONS_TOGGLE.id],
@@ -40,6 +42,8 @@ const SOURCE = `(function (c) {
     var v = flag(a[0]);
     return v !== null && v !== a[1];
   });
+  var selectedPlan = q.get(c.squarePlan[0]);
+  if (selectedPlan && /^(free|plus|premium)$/.test(selectedPlan) && selectedPlan !== c.squarePlan[1]) open = true;
   var reveals = c.reveals
     .map(function (r) {
       return [flag(r[0]), r[1]];

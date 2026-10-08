@@ -1,0 +1,32 @@
+---
+import { SQUARE_COST_FACTS, SQUARE_COST_INTRO, SQUARE_COST_NOTES } from '@/lib/seo/barberCostCalculatorPage';
+import { SQUARE_FACTS_CHECKED_DATE, SQUARE_FACTS_CHECKED_ISO, SQUARE_SOURCES } from '@/lib/seo/squareFacts';
+
+const pricing = SQUARE_SOURCES[0];
+---
+<section id="square-cost" class="cost-calc__section" aria-labelledby="cost-calc-square-title">
+  <div class="container cost-calc-platform">
+    <header class="cost-calc__intro cost-calc-platform__intro">
+      <p class="cost-calc__eyebrow">Square Appointments pricing</p>
+      <h2 id="cost-calc-square-title" class="cost-calc__h2">How much does Square Appointments cost in the UK?</h2>
+      <p class="cost-calc__lead">{SQUARE_COST_INTRO}</p>
+      <p class="cost-calc__checked">
+        Checked <time datetime={SQUARE_FACTS_CHECKED_ISO}>{SQUARE_FACTS_CHECKED_DATE}</time> ·
+        <a href={pricing.url} target="_blank" rel="noopener noreferrer">{pricing.label}</a>
+      </p>
+    </header>
+    <div class="cost-calc-platform__detail">
+      <dl class="cost-calc-facts">
+        {SQUARE_COST_FACTS.map((fact) => (
+          <div class="cost-calc-facts__row">
+            <dt>{fact.label}</dt><dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <ul class="cost-calc__list cost-calc-platform__notes">
+        {SQUARE_COST_NOTES.map((note) => <li>{note}</li>)}
+      </ul>
+      <p class="cost-calc__crosslink"><a href="/square-appointments-alternative">See the full KERSIVO vs Square Appointments comparison</a></p>
+    </div>
+  </div>
+</section>

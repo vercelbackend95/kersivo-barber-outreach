@@ -15,7 +15,7 @@ import { formatMoneyGbp } from './money';
 type ProviderAmount = { provider: ProviderId; monthlyExVatGbp: number };
 
 export type CostInsight =
-  | { kind: 'custom-pricing'; provider: 'fresha' | 'nearcut' }
+  | { kind: 'custom-pricing'; provider: 'fresha' | 'nearcut' | 'square' }
   | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
   | { kind: 'add-ons'; freshaAddOnsGbp: number }
@@ -43,8 +43,10 @@ function largest(results: readonly CalculatedProviderResult[], pick: (r: Calcula
 
 export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
   if (!monthly.ok) return null;
-  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing');
-  if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : 'fresha' };
+  // Square's incomplete total is explained on its own card; it must not obscure
+  // the cost-driver analysis for the other models in the comparison.
+  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing' && result.provider !== 'square');
+  if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : unpriced.provider === 'square' ? 'square' : 'fresha' };
 
   const calculated = monthly.providers.filter(
     (result): result is CalculatedProviderResult => result.status === 'calculated',
@@ -108,8 +110,10 @@ const perMonth = (gbp: number) => `${formatMoneyGbp(gbp)}/month before VAT`;
 export function describeCostInsight(insight: CostInsight): string {
   switch (insight.kind) {
     case 'custom-pricing':
-      return insight.provider === 'nearcut'
-        ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete five-provider total is not available.'
+      return insight.provider === 'square'
+        ? 'Square Appointments publishes Free, Plus and Premium subscriptions, but VAT on paid subscriptions or appointment-deposit processing is not fully verified in this scenario. Its headline plan price is displayed, without inventing a complete total.'
+        : insight.provider === 'nearcut'
+        ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete provider total is not available.'
         : `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete cost comparison is not available.`;
     case 'acquisition': {
       const { booksyBoostGbp, freshaMarketplaceGbp } = insight;

@@ -34,6 +34,7 @@ import {
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -53,6 +54,8 @@ export type CostScenarioInput = {
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Square Appointments UK subscription, chosen independently from the other providers. */
+  squarePlan: SquarePlanId;
   vatRegistered: boolean;
   includeDepositProcessing: boolean;
   /** Only read and validated when `includeDepositProcessing` is true. */
@@ -127,6 +130,7 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     if (typeof input[field] !== 'boolean') issues.push({ field, code: 'not-boolean' });
   }
 
+  if (!['free', 'plus', 'premium'].includes(input.squarePlan)) issues.push({ field: 'squarePlan', code: 'not-a-number' });
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
   if (input.nearcutSubscription === true) {
@@ -176,7 +180,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'square' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -200,6 +204,8 @@ export type LineItemId =
   | 'setora-additional-staff'
   | 'setora-commission'
   | 'setora-deposit-processing'
+  | 'square-subscription'
+  | 'square-deposit-processing'
   | 'kersivo-subscription'
   | 'kersivo-additional-barbers'
   | 'kersivo-commission'
@@ -220,7 +226,9 @@ export type CostLineItem = {
   vatApplies: boolean;
   quantity: number;
   unitExVatGbp: number | null;
-  plan?: 'independent' | 'team' | 'enterprise';
+  plan?: 'independent' | 'team' | 'enterprise' | SquarePlanId;
+  /** Source headline shown only where its VAT basis is unresolved (NOT an ex-VAT amount). */
+  publishedHeadlineGbp?: number;
   /** Deposit processing lines only. */
   paymentMethod?: PaymentMethod;
 };
@@ -262,11 +270,13 @@ export type AssumptionCode =
   | 'setora-current-vat'
   | 'setora-standard-stripe-benchmark'
   | 'setora-sms-excluded'
+  | 'square-unlimited-staff'
+  | 'square-fees-excluded'
   | 'kersivo-stripe-standard-uk-card'
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -298,6 +308,8 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
+  'square-unlimited-staff': 'Square Appointments lists unlimited staff calendars for its Free, Plus and Premium plans and prices subscriptions per location. This assumes a single location.',
+  'square-fees-excluded': 'Only the selected Square Appointments software subscription is modelled when deposit processing is off. In-person and retail card fees, hardware, optional add-ons, international fees, negotiated pricing and other transaction costs are excluded.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
   'kersivo-stripe-standard-uk-card': STRIPE_CARD_CAVEAT,
@@ -314,6 +326,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
+  'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
+  'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
 };
 
 type ProviderResultBase = {
@@ -343,7 +357,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -755,6 +769,58 @@ function calculateSetora(scenario: CostScenarioInput): ProviderMonthlyResult {
   };
 }
 
+/* ----------------------------- Square Appointments ------------------------------ */
+
+/**
+ * Plans are published at £0 / £29 / £69 per location.
+ * Do not invent VAT treatment for paid subscriptions or silently reuse Square Online's
+ * card rate as the fee for Square Appointments deposits. Unknown totals are explicit.
+ */
+function calculateSquare(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const plan = scenario.squarePlan;
+  const publishedHeadline = squareBaseMonthlyPriceGbp(plan);
+  const paidVatUnknown = plan !== 'free' && !SQUARE_CALCULATOR_LIMITS.paidSubscriptionVatVerified;
+  const processingUnknown =
+    scenario.includeDepositProcessing &&
+    scenario.depositBookingsPerMonth > 0 &&
+    SQUARE_PAYMENT_CHANNEL_FACTS['appointments-online-deposit'].status !== 'verified';
+  const subscriptionPence = paidVatUnknown ? null : gbpToPence(publishedHeadline);
+
+  const lines: PenceLine[] = [
+    {
+      id: 'square-subscription', category: 'subscription',
+      status: paidVatUnknown ? 'custom-pricing' : 'calculated',
+      pence: subscriptionPence, unitPence: subscriptionPence,
+      ...(paidVatUnknown ? { publishedHeadlineGbp: publishedHeadline } : {}),
+      plan, quantity: 1, vatApplies: false,
+    },
+    {
+      id: 'square-deposit-processing', category: 'payment-processing',
+      status: processingUnknown ? 'custom-pricing' : scenario.includeDepositProcessing ? 'calculated' : 'not-included',
+      pence: processingUnknown ? null : 0,
+      unitPence: processingUnknown ? null : scenario.includeDepositProcessing ? 0 : null,
+      quantity: scenario.includeDepositProcessing ? scenario.depositBookingsPerMonth : 0,
+      vatApplies: false,
+    },
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (paidVatUnknown) warnings.push(warning('square-subscription-vat-unverified'));
+  if (processingUnknown) warnings.push(warning('square-deposit-processing-unverified'));
+  const base = {
+    provider: 'square' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    assumptions: [
+      ...sharedNotices(scenario).assumptions,
+      assumption('square-unlimited-staff'),
+      assumption('square-fees-excluded'),
+    ],
+    warnings,
+  };
+  if (paidVatUnknown || processingUnknown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
 /* --------------------------------- KERSIVO --------------------------------- */
 
 function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
@@ -842,6 +908,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
       calculateSetora(scenario),
+      calculateSquare(scenario),
       calculateKersivo(scenario),
     ],
   };

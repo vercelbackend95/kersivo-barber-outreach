@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  SQUARE_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
   NOT_CALCULATED_SR,
@@ -107,6 +108,8 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'square-subscription':
+      return line.publishedHeadlineGbp !== undefined ? `Square ${line.plan} · published headline, VAT basis unverified` : `Square ${line.plan} · published monthly plan`;
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'setora-additional-staff':
@@ -115,6 +118,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 ? `${line.quantity} included` : null;
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
+    case 'square-deposit-processing':
     case 'nearcut-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
@@ -148,6 +152,7 @@ function paymentsSummary(result: ProviderMonthlyResult): string {
 
 function lineValue(line: CostLineItem): string {
   if (line.status === 'not-included') return NOT_INCLUDED;
+  if (line.id === 'square-subscription' && line.publishedHeadlineGbp !== undefined) return `${formatMoneyGbp(line.publishedHeadlineGbp)}/mo (VAT unverified)`;
   if (line.status === 'custom-pricing' || line.exVatGbp === null) return CUSTOM_PRICING;
   return formatMoneyGbp(line.exVatGbp);
 }
@@ -194,11 +199,11 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
     return {
       ...shared,
       state: 'custom-pricing',
-      total: CUSTOM_PRICING,
+      total: result.provider === 'square' ? NOT_ESTIMATED : CUSTOM_PRICING,
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
