@@ -1,5 +1,5 @@
 /**
- * Pure monthly cost engine for Booksy, Fresha, Nearcut, Setora and KERSIVO.
+ * Pure monthly cost engine for Booksy, Fresha, Nearcut, Setora, Square, Phorest and KERSIVO.
  *
  * No DOM, browser or Astro dependencies. Every price comes from the central facts modules.
  * Payment processing covers online booking deposits only; multi-period projections live elsewhere.
@@ -34,7 +34,7 @@ import {
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
-import { useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
+import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
@@ -141,7 +141,7 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
   issues.push(...validateDepositBookings(input, issues));
   const phorestQuoteIssue = numberIssue('phorestMonthlyQuoteGbp', input.phorestMonthlyQuoteGbp, { integer: false, min: 0 });
   if (phorestQuoteIssue) issues.push(phorestQuoteIssue);
-  if (![99, 0, 20].includes(input.phorestQuoteVatPercent)) issues.push({ field: 'phorestQuoteVatPercent', code: 'invalid-phorest-vat' });
+  if (![PHOREST_QUOTE_VAT_UNKNOWN, 0, UK_STANDARD_VAT_PERCENT].includes(input.phorestQuoteVatPercent)) issues.push({ field: 'phorestQuoteVatPercent', code: 'invalid-phorest-vat' });
   if (input.nearcutSubscription === true) {
     const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
     if (quoteIssue) issues.push(quoteIssue);
@@ -914,7 +914,7 @@ function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
 function calculatePhorest(scenario: CostScenarioInput): ProviderMonthlyResult {
   const quote = useUserProvidedPhorestMonthlyQuoteGbp(scenario.phorestMonthlyQuoteGbp);
   const quoteKnown = quote !== null && quote > 0;
-  const vatKnown = scenario.phorestQuoteVatPercent !== 99;
+  const vatKnown = scenario.phorestQuoteVatPercent !== PHOREST_QUOTE_VAT_UNKNOWN;
   const paymentUnknown = scenario.includeDepositProcessing && scenario.depositBookingsPerMonth > 0;
   const quotePence = quoteKnown ? gbpToPence(quote) : null;
   const lines: PenceLine[] = [
@@ -922,7 +922,7 @@ function calculatePhorest(scenario: CostScenarioInput): ProviderMonthlyResult {
       id: 'phorest-subscription', category: 'subscription',
       status: quoteKnown ? 'calculated' : 'custom-pricing',
       pence: quotePence, unitPence: quotePence, quantity: 1,
-      vatApplies: vatKnown && scenario.phorestQuoteVatPercent === 20,
+      vatApplies: vatKnown && scenario.phorestQuoteVatPercent === UK_STANDARD_VAT_PERCENT,
     },
     {
       id: 'phorest-deposit-processing', category: 'payment-processing',
