@@ -29,6 +29,7 @@ const FULL: CostScenarioInput = {
   freshaClientLoyalty: true,
   nearcutSubscription: true,
   nearcutMonthlyQuoteGbp: 73.5,
+  squarePlan: 'premium',
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -52,6 +53,7 @@ describe('scenario query parameters', () => {
       freshaClientLoyalty: 'loyalty',
       nearcutSubscription: 'nc',
       nearcutMonthlyQuoteGbp: 'nq',
+      squarePlan: 'sq',
       vatRegistered: 'vat',
       includeDepositProcessing: 'dp',
       depositBookingsPerMonth: 'db',
@@ -64,7 +66,7 @@ describe('scenario query parameters', () => {
 describe('encodeScenarioQuery', () => {
   it('encodes the default scenario deterministically and round-trips it', () => {
     const query = encodeScenarioQuery(DEFAULT_SCENARIO, 'monthly');
-    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&sw=0&loyalty=0&nc=0&nq=0&vat=0&dp=0&db=0&period=m');
+    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&sw=0&loyalty=0&nc=0&nq=0&sq=free&vat=0&dp=0&db=0&period=m');
     expect(decode(query)).toEqual({ scenario: DEFAULT_SCENARIO, period: 'monthly', hasScenarioParams: true });
   });
 
@@ -75,6 +77,7 @@ describe('encodeScenarioQuery', () => {
       expect(decoded.period).toBe(period);
     }
     expect(encodeScenarioQuery(FULL, 'annual')).toContain('period=12');
+    expect(encodeScenarioQuery(FULL, 'annual')).toContain('sq=premium');
     expect(encodeScenarioQuery(FULL, 'threeYear')).toContain('period=36');
   });
 
