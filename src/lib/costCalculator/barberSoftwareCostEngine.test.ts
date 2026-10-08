@@ -333,7 +333,7 @@ describe('shared behaviour', () => {
   });
 
   it('returns providers in Booksy, Fresha, Nearcut, KERSIVO order', () => {
-    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'treatwell', 'setora', 'square', 'phorest', 'kersivo']);
+    expect(run().providers.map((entry) => entry.provider)).toEqual(['booksy', 'fresha', 'nearcut', 'treatwell', 'setora', 'square', 'phorest', 'kersivo', 'vagaro']);
   });
 
   it.each<[Partial<CostScenarioInput>, keyof CostScenarioInput, string]>([
