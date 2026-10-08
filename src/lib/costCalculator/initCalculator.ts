@@ -15,6 +15,7 @@ import {
   MARKETPLACE_CLIENTS_FIELD,
   NUMBER_FIELDS,
   SHARE_SCENARIO,
+  SQUARE_PLAN_FIELD,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   validationMessage,
@@ -51,6 +52,12 @@ function readYesNo(form: HTMLFormElement, name: string): boolean {
   return element instanceof RadioNodeList ? element.value === 'yes' : false;
 }
 
+function readSquarePlan(form: HTMLFormElement): CostScenarioInput['squarePlan'] {
+  const radios = form.elements.namedItem(SQUARE_PLAN_FIELD.name);
+  const value = radios instanceof RadioNodeList ? radios.value : '';
+  return value === 'plus' || value === 'premium' ? value : 'free';
+}
+
 export function readScenario(form: HTMLFormElement): CostScenarioInput {
   return {
     bookableBarbers: readNumber(form, 'bookableBarbers'),
@@ -65,6 +72,7 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     freshaClientLoyalty: readChecked(form, 'freshaClientLoyalty'),
     nearcutSubscription: readChecked(form, 'nearcutSubscription'),
     nearcutMonthlyQuoteGbp: readNumber(form, 'nearcutMonthlyQuoteGbp'),
+    squarePlan: readSquarePlan(form),
     vatRegistered: readYesNo(form, 'vatRegistered'),
     includeDepositProcessing: readChecked(form, 'includeDepositProcessing'),
     depositBookingsPerMonth: readNumber(form, 'depositBookingsPerMonth'),
@@ -138,6 +146,10 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   setChecked(form, 'freshaSmartWebsite', scenario.freshaSmartWebsite);
   setChecked(form, 'freshaClientLoyalty', scenario.freshaClientLoyalty);
   setChecked(form, 'nearcutSubscription', scenario.nearcutSubscription);
+  const squareRadio = form.querySelector<HTMLInputElement>(
+    `input[name="squarePlan"][value="${scenario.squarePlan}"]`,
+  );
+  if (squareRadio) squareRadio.checked = true;
   setChecked(form, 'includeDepositProcessing', scenario.includeDepositProcessing);
   const vat = form.querySelector<HTMLInputElement>(
     `input[name="vatRegistered"][value="${scenario.vatRegistered ? 'yes' : 'no'}"]`,
