@@ -31,6 +31,7 @@ type NumericScenarioKey =
   | 'vagaroMarketplaceClients'
   | 'treatwellMarketplaceClients'
   | 'depositBookingsPerMonth'
+  | 'timelyMonthlyInvoiceGbp'
   | 'nearcutMonthlyQuoteGbp'
   | 'treatwellMonthlyQuoteGbp'
   | 'phorestMonthlyQuoteGbp';
@@ -274,6 +275,13 @@ export const SQUARE_PLAN_FIELD = {
   defaultValue: 'free' as SquarePlanId,
 } as const;
 
+export const TIMELY_INVOICE_FIELD: NumberFieldConfig = {
+  id: 'calc-timely-invoice', name: 'timelyMonthlyInvoiceGbp',
+  label: 'Your Timely UK monthly invoice (£)',
+  helper: 'Enter the full monthly subscription invoice INCLUDING any VAT. 0 means unknown; card processing is calculated separately.',
+  defaultValue: 0, min: 0, max: 20000, step: 0.01,
+};
+
 export const NEARCUT_EXAMPLE = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 export const DEPOSIT_PROCESSING_TOGGLE = {
@@ -314,6 +322,7 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
   nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
+  timelyMonthlyInvoiceGbp: TIMELY_INVOICE_FIELD.defaultValue,
   treatwellMonthlyQuoteGbp: TREATWELL_QUOTE_FIELD.defaultValue,
   treatwellQuoteVatPercent: TREATWELL_QUOTE_VAT.defaultValue,
   phorestMonthlyQuoteGbp: PHOREST_QUOTE_FIELD.defaultValue,
@@ -367,6 +376,7 @@ export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above
 export const PHOREST_CUSTOM_PRICING_NOTE = 'Phorest subscription pricing requires your own monthly quote and confirmed VAT treatment. Extra SMS, add-ons and PhorestPay fees are excluded. When deposit processing is selected for paid deposits, a complete total cannot be estimated without PhorestPay rates.';
 export const SQUARE_CUSTOM_PRICING_NOTE = 'Square publishes the selected plan price per location, but its VAT treatment for Plus/Premium and the processing rate for Appointments deposits are not fully verified. The known subscription headline is shown in the breakdown; a full cash cost is intentionally not estimated.';
 export const TREATWELL_CUSTOM_PRICING_NOTE = `Treatwell commission (${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT on entered eligible new-marketplace bookings) and online prepayment fees (${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposits) are shown as estimated known components. A complete total requires your actual recurring subscription quote and confirmed quote VAT. The marketplace client count must be checked against the terms, including the 365-day successful-appointment rule. Other fees and contract variations are excluded.`;
+export const TIMELY_CUSTOM_PRICING_NOTE = 'Timely UK subscription pricing needs your actual monthly invoice (including VAT). UK domestic TimelyPay online deposits can be estimated separately.';
 export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
@@ -428,6 +438,13 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'treatwell-new-client-commission', label: 'Qualifying marketplace new-client commission' },
       { id: 'vat', label: 'VAT (confirmed portions only)' },
       { id: 'treatwell-deposit-processing', label: `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT` },
+    ],
+  },
+  {
+    id: 'timely', name: 'Timely', breakdown: [
+      { id: 'timely-subscription', label: 'Your UK invoice (incl. any VAT)' },
+      { id: 'vat', label: 'VAT included in invoice, not itemised' },
+      { id: 'timely-deposit-processing', label: 'UK TimelyPay online deposit fee' },
     ],
   },
   {
@@ -536,6 +553,7 @@ export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
   ...SPLIT_FIELDS,
   DEPOSIT_BOOKINGS_FIELD,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
   PHOREST_QUOTE_FIELD,
   TREATWELL_QUOTE_FIELD,
 ];
