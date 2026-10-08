@@ -16,6 +16,7 @@ import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
   NEARCUT_CUSTOM_PRICING_NOTE,
+  TIMELY_CUSTOM_PRICING_NOTE,
   TREATWELL_CUSTOM_PRICING_NOTE,
   PHOREST_CUSTOM_PRICING_NOTE,
   SQUARE_CUSTOM_PRICING_NOTE,
@@ -37,6 +38,7 @@ import type { CostPeriod } from './costPeriod';
 import { projectCostCalculation, type ProjectedCostCalculation } from './costProjection';
 import { formatMoneyGbp } from './money';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 
 export type ProviderViewState = 'calculated' | 'custom-pricing' | 'unavailable';
 
@@ -122,6 +124,8 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return unit ? `${unit}/month from your Phorest quote` : 'Own quote required';
     case 'square-subscription':
       return line.publishedHeadlineGbp !== undefined ? `Square ${line.plan} · published headline, VAT basis unverified` : `Square ${line.plan} · published monthly plan`;
+    case 'timely-subscription':
+      return unit ? 'Monthly invoice amount including any VAT (tax not separated)' : 'Actual Timely UK invoice required';
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'setora-additional-staff':
@@ -132,6 +136,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
     case 'fresha-deposit-processing':
     case 'phorest-deposit-processing':
     case 'square-deposit-processing':
+    case 'timely-deposit-processing':
     case 'nearcut-deposit-processing':
     case 'treatwell-deposit-processing':
     case 'vagaro-deposit-processing':
@@ -147,6 +152,7 @@ const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMetho
   'stripe-checkout-standard-uk-card': 'standard UK card',
   'vagaro-standard-uk-online': 'published Vagaro UK online/keyed-in rate',
   'treatwell-online-prepayment': 'Treatwell published 2.5% + VAT online prepayment',
+  'timelypay-domestic-uk-online': `TimelyPay UK card · ${TIMELY_UK_DOMESTIC_ONLINE_PERCENT}% + ${Math.round(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP * 100)}p`,
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
 };
 
@@ -220,7 +226,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'treatwell' ? TREATWELL_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'timely' ? TIMELY_CUSTOM_PRICING_NOTE : result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : result.provider === 'treatwell' ? TREATWELL_CUSTOM_PRICING_NOTE : result.provider === 'phorest' ? PHOREST_CUSTOM_PRICING_NOTE : result.provider === 'square' ? SQUARE_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
@@ -243,8 +249,8 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       ? 'Subscription and confirmed VAT only — not the full Phorest bill. SMS, optional tools, setup and PhorestPay charges are excluded.'
       : null,
     summary: {
-      'before-vat': formatMoneyGbp(amounts.subtotalExVatGbp),
-      vat: formatMoneyGbp(amounts.vatChargedGbp),
+      'before-vat': result.provider === 'timely' ? 'Invoice VAT not separated' : formatMoneyGbp(amounts.subtotalExVatGbp),
+      vat: result.provider === 'timely' ? 'Included in invoice (unknown)' : formatMoneyGbp(amounts.vatChargedGbp),
       payments: paymentsSummary(result),
     },
     breakdown,
