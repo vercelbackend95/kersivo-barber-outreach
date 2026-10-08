@@ -24,9 +24,10 @@ type NumericScenarioKey =
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
   | 'depositBookingsPerMonth'
-  | 'nearcutMonthlyQuoteGbp';
+  | 'nearcutMonthlyQuoteGbp'
+  | 'phorestMonthlyQuoteGbp';
 
-type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestMonthlyQuoteGbp' | 'phorestQuoteVatPercent'>;
+type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestQuoteVatPercent'>;
 
 export type NumberFieldConfig = {
   id: string;
