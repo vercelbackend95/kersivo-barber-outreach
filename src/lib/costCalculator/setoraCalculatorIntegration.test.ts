@@ -122,6 +122,6 @@ describe('Setora cost calculator: documented UK commercial facts', () => {
     expect(card?.breakdown['setora-deposit-processing']?.value).toBe('£28.00');
     expect(card?.assumptions.join(' ')).toContain('SMS credits');
     expect(card?.assumptions.join(' ')).toContain('standard UK online cards');
-    expect(card?.assumptions.join(' ')).toContain('no VAT');
+    expect(card?.assumptions.join(' ')).toContain('does not add VAT');
   });
 });
