@@ -221,7 +221,9 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       amounts.estimatedNetCostIfVatRecoverableGbp === null
         ? null
         : `${NET_IF_VAT_RECOVERABLE_LABEL} ${formatMoneyGbp(amounts.estimatedNetCostIfVatRecoverableGbp)}`,
-    customNote: null,
+    customNote: result.provider === 'phorest'
+      ? 'Subscription and confirmed VAT only — not the full Phorest bill. SMS, optional tools, setup and PhorestPay charges are excluded.'
+      : null,
     summary: {
       'before-vat': formatMoneyGbp(amounts.subtotalExVatGbp),
       vat: formatMoneyGbp(amounts.vatChargedGbp),
