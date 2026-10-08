@@ -41,7 +41,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Include your Phorest quote, plans and VAT.';
+  'Compare Booksy, Fresha, Treatwell, Nearcut, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Model fees, VAT and quotes.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
