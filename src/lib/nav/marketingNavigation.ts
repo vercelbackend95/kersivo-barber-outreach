@@ -161,6 +161,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-treatwell',
+    label: 'Treatwell Alternative',
+    description: 'Compare Treatwell marketplace commission, payment fees and KERSIVO for UK barbershops.',
+    href: '/treatwell-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-square',
     label: 'Square Appointments Alternative',
     description: 'Compare Square Appointments UK pricing, card fees, bookings and websites.',
