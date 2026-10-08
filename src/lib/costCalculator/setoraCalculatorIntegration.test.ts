@@ -43,7 +43,7 @@ describe('Setora cost calculator: documented UK commercial facts', () => {
       'booksy', 'fresha', 'nearcut', 'timely', 'treatwell', 'setora', 'square', 'phorest', 'kersivo', 'vagaro',
     ]);
     expect(PROVIDER_RESULTS.map((x) => x.id)).toEqual([
-      'booksy', 'fresha', 'nearcut', 'treatwell', 'setora', 'square', 'phorest', 'vagaro', 'kersivo',
+      'booksy', 'fresha', 'nearcut', 'timely', 'treatwell', 'setora', 'square', 'phorest', 'vagaro', 'kersivo',
     ]);
     expect(COST_CALCULATOR_SOURCES.filter((s) => s.provider === 'Setora')).toHaveLength(2);
     expect(COST_CALCULATOR_SOURCES.some((s) => s.provider === 'Stripe' && s.url === 'https://stripe.com/gb/pricing')).toBe(true);
