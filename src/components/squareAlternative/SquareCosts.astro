@@ -1,5 +1,5 @@
 ---
-import {SQUARE_FACTS_CHECKED_DATE,SQUARE_SOURCES,SQUARE_UK_PLANS,SQUARE_UK_PAYMENT_FACTS} from '@/lib/seo/squareFacts';
+import {SQUARE_FACTS_CHECKED_DATE,SQUARE_SOURCES,SQUARE_UK_PLANS,SQUARE_UK_PAYMENT_FACTS,SQUARE_CALCULATOR_LIMITS} from '@/lib/seo/squareFacts';
 ---
 <section id="square-pricing" class="fresha-alt__section" aria-labelledby="square-alt-costs-title">
   <div class="container">
@@ -14,17 +14,19 @@ import {SQUARE_FACTS_CHECKED_DATE,SQUARE_SOURCES,SQUARE_UK_PLANS,SQUARE_UK_PAYME
     </ul>
     <div class="fresha-alt-costs__examples">
       <div class="fresha-alt-costs__table-wrap">
-        <h3 id="square-fees-table-title" class="fresha-alt-costs__h3">Square Appointments UK card payment fees</h3>
+        <h3 id="square-fees-table-title" class="fresha-alt-costs__h3">Square payment processing fees: in-person, online and card on file</h3>
         <table class="fresha-alt-costs__table" aria-labelledby="square-fees-table-title">
           <thead><tr><th scope="col">Payment method</th><th scope="col">Square Free</th><th scope="col">Square Plus</th><th scope="col">Square Premium</th></tr></thead>
           <tbody>
             <tr><th scope="row">In-person card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.inPersonFreePercent}%</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.inPersonPaidPercent}%</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.inPersonPaidPercent}%</td></tr>
             <tr><th scope="row">Online UK card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.onlineUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence}p</td></tr>
+            <tr><th scope="row">Manually entered / Card on File (UK)</th><td data-label="Square Free">2.5%</td><td data-label="Square Plus">2.5%</td><td data-label="Square Premium">2.5%</td></tr>
             <tr><th scope="row">Online non-UK card</th><td data-label="Square Free">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td><td data-label="Square Plus">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td><td data-label="Square Premium">{SQUARE_UK_PAYMENT_FACTS.onlineNonUkPercent}% + {SQUARE_UK_PAYMENT_FACTS.onlineNonUkFixedPence}p</td></tr>
           </tbody>
         </table>
-        <p class="fresha-alt-costs__note">Square’s published standard rates are shown above. Other payment types and custom arrangements may differ. The subscription figures are as displayed on Square’s UK page; confirm applicable taxes and billing terms with Square.</p>
-        <p class="fresha-alt-costs__calculator">Want to compare software costs? <a href="/barber-software-cost-calculator">Explore the KERSIVO barber software cost calculator</a>. The calculator does not yet model Square Appointments and must not be treated as a Square quote.</p>
+        <p class="fresha-alt-costs__note"><strong>Important:</strong> Square Online transaction rates and Square Appointments deposit rates are not interchangeable.</p>
+        <p class="fresha-alt-costs__note">These are Square's published headline fees by transaction type, not a guaranteed rate for every appointment deposit. The online rates apply to specified Square Online, Online Checkout and eCommerce transactions; Card on File and manual payments use a different rate. Square's appointment-deposit processing classification has not been verified, so no deposit fee comparison is claimed. Non-UK and custom charges may differ. Square's pricing page does not establish whether £29/£69 includes VAT, so confirm the tax treatment with Square.</p>
+        <p class="fresha-alt-costs__calculator">Want to compare software costs? <a href="/barber-software-cost-calculator">Explore the KERSIVO barber software cost calculator</a>. Square is not yet included in the live calculator. Its source-of-truth facts are ready for a separate integration after deposit processing and VAT treatment are confirmed.</p>
       </div>
       <aside class="fresha-alt-card fresha-alt-costs__kersivo" aria-labelledby="square-kersivo-costs-title">
         <p class="fresha-alt-costs__kicker">KERSIVO</p>
@@ -40,12 +42,14 @@ import {SQUARE_FACTS_CHECKED_DATE,SQUARE_SOURCES,SQUARE_UK_PLANS,SQUARE_UK_PAYME
     </div>
     <div class="fresha-alt-card fresha-alt-costs__marketplace">
       <div class="fresha-alt-costs__marketplace-body">
-        <h3 class="fresha-alt-costs__h3">What Square Appointments already does well</h3>
+        <h3 class="fresha-alt-costs__h3">Square Appointments Free vs Plus vs Premium: what's included?</h3>
         <ul class="fresha-alt-list">
           <li>Unlimited staff calendars on Free, Plus and Premium.</li>
           <li>Online booking website, text and email reminders on its Free plan.</li>
           <li>Fixed and percentage-based deposits on all three plans.</li>
-          <li>Integrated POS and in-person card processing, useful when you rely on Square hardware.</li>
+          <li>Plus adds waitlists, appointment reports and cancellation/no-show rules; Premium adds advanced staff and resource tools.</li>
+          <li>Square Online can also provide a full-service website, even on a free option; paid themes or extra services may cost more.</li>
+          <li>Square POS and in-person card hardware are a major advantage for shops already in its ecosystem.</li>
         </ul>
       </div>
       <div class="fresha-alt-costs__marketplace-aside">
