@@ -21,7 +21,10 @@ import {
   NEARCUT_ALTERNATIVE_TITLE,
   buildNearcutAlternativeFaqJsonLd,
 } from '@/lib/seo/nearcutAlternativeFaq';
-import { buildNearcutAlternativeWebPageJsonLd } from '@/lib/seo/nearcutAlternativeJsonLd';
+import {
+  buildNearcutAlternativeBreadcrumbJsonLd,
+  buildNearcutAlternativeWebPageJsonLd,
+} from '@/lib/seo/nearcutAlternativeJsonLd';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
@@ -36,7 +39,7 @@ const currentYear = new Date().getFullYear();
   title={NEARCUT_ALTERNATIVE_TITLE}
   description={NEARCUT_ALTERNATIVE_DESCRIPTION}
   canonicalPath={NEARCUT_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildNearcutAlternativeWebPageJsonLd(), buildNearcutAlternativeFaqJsonLd()]}
+  jsonLd={[buildNearcutAlternativeWebPageJsonLd(), buildNearcutAlternativeBreadcrumbJsonLd(), buildNearcutAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <NearcutHero />
