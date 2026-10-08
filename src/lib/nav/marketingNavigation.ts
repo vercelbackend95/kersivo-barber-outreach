@@ -161,6 +161,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-timely',
+    label: 'Timely Alternative',
+    description: 'Compare Timely pricing, salon tools and bookings with KERSIVO for UK barbers.',
+    href: '/timely-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-square',
     label: 'Square Appointments Alternative',
     description: 'Compare Square Appointments UK pricing, card fees, bookings and websites.',

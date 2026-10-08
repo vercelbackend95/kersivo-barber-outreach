@@ -1,0 +1,105 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
+import InsightCards from '@/components/editorial/InsightCards.astro';
+import ModelComparison from '@/components/editorial/ModelComparison.astro';
+import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
+import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import TimelyCompare from '@/components/timelyAlternative/TimelyCompare.astro';
+import NearcutProof from '@/components/nearcutAlternative/NearcutProof.astro';
+import NearcutPricing from '@/components/nearcutAlternative/NearcutPricing.astro';
+import TimelyFinalCta from '@/components/timelyAlternative/TimelyFinalCta.astro';
+import { SAAS_MONTHLY_GBP, KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import { TIMELY_SOURCES, TIMELY_FACTS_CHECKED_DATE, TIMELY_COMMERCIAL_FACTS, getTimelySource, TIMELY_TRADEMARK_DISCLAIMER } from '@/lib/seo/timelyFacts';
+import { TIMELY_ALTERNATIVE_PAGE_PATH, TIMELY_ALTERNATIVE_TITLE, TIMELY_ALTERNATIVE_DESCRIPTION, TIMELY_ALTERNATIVE_FAQ_ITEMS, buildTimelyAlternativeFaqJsonLd } from '@/lib/seo/timelyAlternativeFaq';
+import { buildTimelyAlternativeWebPageJsonLd, buildTimelyAlternativeBreadcrumbJsonLd } from '@/lib/seo/timelyAlternativeJsonLd';
+import { FOOTER_LEGAL_LINKS, KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const path=TIMELY_ALTERNATIVE_PAGE_PATH;
+const title=TIMELY_ALTERNATIVE_TITLE;
+const description=TIMELY_ALTERNATIVE_DESCRIPTION;
+const checked=TIMELY_FACTS_CHECKED_DATE;
+const faqs=TIMELY_ALTERNATIVE_FAQ_ITEMS;
+const sources=[...TIMELY_SOURCES.map(source => ({name:source.label,url:source.url,note:source.supports})),{name:'KERSIVO pricing',url:'/pricing',note:'Official Starter and Full KERSIVO plans'}];
+const insights=[
+ {icon:'seats',title:'Compare the true team cost',body:'Timely plans and eligibility depend on the configuration you choose. KERSIVO Starter supports four bookable barbers and Full charges £39 per location rather than a separate per-barber subscription.'},
+ {icon:'storefront',title:'Think beyond the booking widget',body:'Timely already supports online booking and website integration. Full KERSIVO bundles a branded barbershop website, standard domain and booking journey into one subscription.'},
+ {icon:'discovery',title:'Keep payment charges separate',body:'A subscription, optional product add-ons and card processing are different costs. Check your real Timely quote and compare it with KERSIVO’s zero platform commission plus Stripe processing.'},
+ {icon:'stack',title:'Keep features you genuinely need',body:'Timely is built for a wider salon and beauty market. For advanced stock and specialist salon workflows it may be the better fit; KERSIVO focuses on independent UK barbershops.'}
+] as const;
+const models=[
+ {label:'Timely',descriptor:'Broader salon and beauty appointment platform',icon:'network',summary:[{label:'Pricing',value:'Check plan and UK quote'},{label:'Focus',value:'Salon and beauty workflows'}],heading:'Timely may fit better if…',points:['You need salon-specific stock or advanced retail workflows','Your team uses Timely’s marketing and operational toolset','You have complex needs beyond barber booking and pickup retail','Your existing Timely setup already works well']},
+ {label:'KERSIVO',descriptor:'Purpose-built for independent UK barbers',icon:'direct',summary:[{label:'Starter',value:'£0/month · up to 4 barbers'},{label:'Full',value:'£39/month per location'}],heading:'KERSIVO may fit better if…',points:['You want a free hosted booking page for your core team','You want your own branded barbershop website and domain with Full','You prefer direct appointments with 0% KERSIVO platform commission','You need deposits, straightforward reports and retail pickup']}
+] as const;
+const steps=[
+ {title:'Keep Timely running',body:'Leave existing bookings and reminders active while you build your KERSIVO setup.'},
+ {title:'Check exports with Timely',body:'Timely documents exports for clients, appointments, services, notes, products and product purchases. Request files through Timely support and confirm their formats.'},
+ {title:'Review data compatibility',body:'KERSIVO can review supported CSV files. Not every Timely field or appointment will necessarily transfer.'},
+ {title:'Configure your team and services',body:'Create bookable barbers, opening hours, services and payment rules; prepare your Full website if needed.'},
+ {title:'Test the public booking journey',body:'Make test bookings and check payments, notifications and existing future appointments.'},
+ {title:'Change links only when ready',body:'Switch your website and social booking links after reviewing the cutover plan.'},
+];
+const ld=[buildTimelyAlternativeWebPageJsonLd(),buildTimelyAlternativeBreadcrumbJsonLd(),buildTimelyAlternativeFaqJsonLd()];
+const currentYear=new Date().getFullYear();
+---
+<LandingLayout title={title} description={description} canonicalPath={path} jsonLd={ld}>
+<main class="fresha-alt landing-overflow-guard">
+ <section class="fresha-alt-hero" aria-labelledby="timely-alt-title">
+  <div class="fresha-alt-hero__content">
+   <nav class="timely-breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Timely alternative</span></nav>
+   <p class="fresha-alt-hero__eyebrow"><span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span> Timely alternative for UK barbershops</p>
+   <h1 id="timely-alt-title" class="fresha-alt-hero__title"><span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Timely alternative</span><span class="fresha-alt-hero__title-line">built around your</span><span class="fresha-alt-hero__title-line">barbershop.</span></h1>
+   <p class="fresha-alt-hero__lead">Comparing Timely salon software with a barber-first booking platform? KERSIVO Starter is £0/month for up to four bookable barbers. Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location with your branded website and standard domain. Explore bookings, deposits, pricing and what you gain — or give up — by switching.</p>
+   <div class="fresha-alt-hero__actions"><a href="/demo" class="fresha-alt-hero__action fresha-alt-hero__action--primary" data-track="view_live_demo_click">Open the full demo</a><a href="#comparison" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">Compare Timely and KERSIVO</a></div>
+   <div class="fresha-alt-hero__meta"><span><strong>Starter £0/month</strong></span><span aria-hidden="true">·</span><span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span><span aria-hidden="true">·</span><span>0% KERSIVO commission</span><span aria-hidden="true">·</span><span>Independent UK barbershops</span></div>
+  </div><HeroDashboardShowcase />
+ </section>
+ <EditorialIntro id="quick-answer" titleId="timely-quick-title" class="fresha-alt-quick" kicker="THE SHORT VERSION" title="Timely vs KERSIVO: which is right for your barbershop?" lead="Timely is established salon and beauty appointment software with online bookings, business tools and payment options. KERSIVO is built for independent UK barbers: choose £0/month Starter for core online bookings or £39/month Full for your own branded website, domain, reports, retail pickup and more." detail="Timely may be more suitable if you need broader salon stock and business workflows. KERSIVO may suit you if a simpler barber-first platform and a direct booking experience matter more. Compare current Timely UK plan terms rather than relying on a single headline price." facts={[{label:'KERSIVO Starter',value:'£0/month · up to 4 barbers'},{label:'Full KERSIVO',value:'£39/month per location'},{label:'Timely pricing',value:'Plan and market dependent'},{label:'KERSIVO commission',value:'0% · Stripe fees apply'}]}/>
+ <section class="fresha-alt__section" aria-labelledby="timely-why-title"><div class="container"><header class="fresha-alt__intro"><p class="fresha-alt__eyebrow">WHY BARBERS COMPARE</p><h2 id="timely-why-title" class="fresha-alt__h2">Why consider a Timely alternative in the UK?</h2><p class="fresha-alt__lead">Timely offers real advantages for salons. These are the practical questions worth asking before choosing a different setup.</p></header><InsightCards items={insights}/></div></section>
+ <section id="timely-pricing" class="fresha-alt__section" aria-labelledby="timely-cost-title"><div class="container"><header class="fresha-alt__intro"><p class="fresha-alt__eyebrow">PRICING EXPLAINED</p><h2 id="timely-cost-title" class="fresha-alt__h2">Timely pricing vs KERSIVO in the UK</h2><p class="fresha-alt__lead">Timely offers Build, Elevate and Innovate plans. Its public pricing view shows per-staff USD prices for the USA, not a confirmed UK GBP subscription. Check your exact UK quote, VAT, plan and payment fees before comparing. KERSIVO publishes two clear options.</p><p class="fresha-alt-costs__checked">Comparison checked {checked} · <a href={getTimelySource("pricing").url} target="_blank" rel="noopener noreferrer">Official Timely pricing</a></p></header>
+  <ul class="fresha-alt-costs__grid">
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">TIMELY</p><p class="fresha-alt-costs__figure">Check plan</p><p class="fresha-alt-costs__unit">Confirm UK billing and options</p><ul class="fresha-alt-costs__notes"><li>Subscription and feature access depend on your selected plan.</li><li>Check team size, marketing features, online payment fees and VAT.</li><li>Request the actual total for your barbershop.</li></ul></li>
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">KERSIVO STARTER</p><p class="fresha-alt-costs__figure">£0</p><p class="fresha-alt-costs__unit">per month, up to 4 bookable barbers</p><ul class="fresha-alt-costs__notes"><li>Hosted booking page and essential calendar management.</li><li>Public bookings require a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full prepayment through Stripe.</li><li>No KERSIVO platform commission; Stripe fees apply.</li></ul></li>
+   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">FULL KERSIVO</p><p class="fresha-alt-costs__figure">£{SAAS_MONTHLY_GBP}</p><p class="fresha-alt-costs__unit">per physical location / month</p><ul class="fresha-alt-costs__notes"><li>Branded website and standard domain included.</li><li>Reports, advanced client tools, SMS and retail pickup.</li><li>No per-barber subscription fee, subject to fair use.</li></ul></li>
+  </ul>
+  <div class="fresha-alt-card fresha-alt-costs__marketplace">
+   <div class="fresha-alt-costs__marketplace-body">
+    <h3 class="fresha-alt-costs__h3">Timely Build, Elevate and Innovate plans</h3>
+    <p class="fresha-alt__lead">The official US pricing view displays Build at ${TIMELY_COMMERCIAL_FACTS.buildUsMonthlyPerStaff.amount}, Elevate at ${TIMELY_COMMERCIAL_FACTS.elevateUsMonthlyPerStaff.amount} and Innovate at ${TIMELY_COMMERCIAL_FACTS.innovateUsMonthlyPerStaff.amount} <strong>USD per staff member per month</strong> (USA market). These are not verified UK GBP prices; do not convert them into a UK quote. The published plans advertise no new-client fees and a 14-day trial.</p>
+    <p class="fresha-alt-costs__checked">Source: <a href={getTimelySource('pricing').url} target="_blank" rel="noopener noreferrer">Timely official pricing</a>. Confirm the actual UK staff rate, VAT and TimelyPay charges directly with Timely.</p>
+   </div>
+  </div>
+  <div class="fresha-alt-card fresha-alt-costs__marketplace"><div class="fresha-alt-costs__marketplace-body"><h3 class="fresha-alt-costs__h3">Compare the full cost — not just the subscription</h3><ul class="fresha-alt-list"><li>Ask Timely for the UK quote for your current staff, plan, payment configuration and optional tools.</li><li>KERSIVO Starter: the £5 deposit is deducted from the appointment price, not an added platform booking fee.</li><li>KERSIVO Full: £39 per location per month, plus applicable third-party payment processing.</li><li>Neither platform's advanced features should be assumed identical.</li></ul></div><div class="fresha-alt-costs__marketplace-aside"><p class="fresha-alt-costs__example">A £20 haircut with a £5 KERSIVO Starter deposit leaves £15 due for the haircut. The deposit is part of the price — standard Stripe fees still apply.</p><p class="fresha-alt-costs__checked"><a href="/pricing">See KERSIVO plan details</a></p></div></div>
+ <p class="fresha-alt-costs__calculator">Want to model UK software costs? <a href="/barber-software-cost-calculator">Try the barber booking software cost calculator</a>. Timely is not yet a calculated provider because its UK GBP rate is not independently confirmed.</p>
+ </div></section>
+ <TimelyCompare />
+ <NearcutProof />
+ <section id="which-model" class="fresha-alt__section" aria-labelledby="timely-fit-title"><div class="container"><header class="fresha-alt__intro"><p class="fresha-alt__eyebrow">TWO MODELS</p><h2 id="timely-fit-title" class="fresha-alt__h2">Which system fits your barbershop?</h2></header><ModelComparison idPrefix="timely-fit" models={models} conclusion="A feature you rely on is worth more than a low headline price. Compare your actual requirements before changing systems.">Also comparing other software? <a href="/nearcut-alternative">Nearcut</a> · <a href="/fresha-alternative">Fresha</a> · <a href="/booksy-alternative">Booksy</a></ModelComparison></div></section>
+ <section id="switching" class="fresha-alt__section" aria-labelledby="timely-switch-title"><div class="container"><header class="fresha-alt__intro"><p class="fresha-alt__eyebrow">MIGRATION</p><h2 id="timely-switch-title" class="fresha-alt__h2">Switching from Timely to KERSIVO</h2><p class="fresha-alt-switching__reassurance">Keep your Timely bookings live while your new setup is prepared.</p></header><ProcessTimeline steps={steps} noteTitle="Before you switch" notePoints={['Check Timely’s export formats and any current contract or billing obligations.','A complete transfer of future appointments, client history or automations is not guaranteed.']}><a href="#contact">Ask about a Timely migration →</a></ProcessTimeline></div></section>
+ <NearcutPricing />
+ <Faq4 className="faq4--landing" heading="Questions about Timely and KERSIVO?" subHeading="Answers about Timely alternatives, UK pricing, bookings, deposits and moving your barbershop." supportHeading="Still comparing options?" supportText="Tell us which Timely features you use and we’ll help you evaluate the differences." supportLinkLabel="Ask KERSIVO a question" supportLinkHref="#contact" faqs={faqs}/>
+ <TimelyFinalCta />
+ <Contact16 eyebrow="CONTACT KERSIVO" title="Still comparing Timely and KERSIVO?" description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop." note="We’ll reply by email — no sales call required." submitLabel="Send my question" messagePlaceholder="For example: Timely pricing, client exports, booking deposits or a branded website."/>
+ <section id="sources" class="fresha-alt-sources" aria-labelledby="timely-sources-title"><div class="container"><header class="fresha-alt-sources__header"><h2 id="timely-sources-title" class="fresha-alt-sources__title">Sources &amp; comparison notes</h2><p class="fresha-alt-sources__meta">Reviewed <time datetime="2026-10-08">{checked}</time></p></header><p>This independent comparison relies on Timely’s official product, pricing and support resources. Availability, charges, terms and functionality can vary by market and plan; verify current UK terms directly before making a decision.</p><ul class="fresha-alt-sources__list">{sources.map(s=><li><a href={s.url} target={s.url.startsWith('https')?'_blank':undefined} rel={s.url.startsWith('https')?'noopener noreferrer':undefined}>{s.name}</a><span class="fresha-alt-sources__supports">{s.note}</span></li>)}</ul><p class="fresha-alt-sources__trademark">{TIMELY_TRADEMARK_DISCLAIMER}</p></div></section>
+ <Footer50 showIntro={false} brandLine="Own your brand. Own your bookings." contactEmail={KERSIVO_CONTACT_EMAIL} brandName="KERSIVO" copyright={`© ${currentYear} KERSIVO`} navigation={[{name:'Home',href:'/'},{name:'Live demo',href:'/demo'},{name:'Pricing',href:'/pricing'},{name:'FAQ',href:'#faq'},{name:'About',href:'/about'},{name:'Contact',href:'#contact'},{name:'Start KERSIVO Starter',href:'/admin'}]} social={getFooterSocialLinks()} legal={[FOOTER_LEGAL_LINKS.privacy,FOOTER_LEGAL_LINKS.cookies,FOOTER_LEGAL_LINKS.cookieSettings,FOOTER_LEGAL_LINKS.dpa,FOOTER_LEGAL_LINKS.termsAndCancellation]}/>
+</main>
+</LandingLayout>
+<script>
+ import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+ const scheduleInit=()=>{requestAnimationFrame(()=>{const section=document.querySelector('.feature261');if(!(section instanceof HTMLElement)||section.dataset.feature261Enhanced==='true')return;const cleanup=initFeature261StaggerReveal(section);document.addEventListener('astro:before-swap',cleanup,{once:true});});};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleInit,{once:true});else scheduleInit();
+ document.addEventListener('astro:page-load',scheduleInit);
+</script>
+<script>
+ import { destroyProductRails,initProductRails } from '@/lib/shop/initProductRail';
+ const boot=()=>{destroyProductRails();initProductRails();};boot();document.addEventListener('astro:page-load',boot);
+</script>
+<style is:global>
+ .landing-overflow-guard{overflow-x:clip}
+ .timely-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-bottom:1rem;color:#9ca3af;font-size:.75rem;line-height:1.5}
+ .timely-breadcrumb a{color:inherit;text-decoration:none}.timely-breadcrumb a:hover{text-decoration:underline}
+</style>
