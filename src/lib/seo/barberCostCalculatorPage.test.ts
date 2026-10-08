@@ -393,6 +393,7 @@ describe('booking deposit payment processing copy', () => {
     expect(PAYMENTS_POINTS.map((point) => point.title)).toEqual([
       'Booksy Mobile Payments',
       'Fresha Online Payments',
+      'Timely via TimelyPay',
       'Setora via Stripe',
       'KERSIVO via Stripe Checkout',
       'What is not modelled',
