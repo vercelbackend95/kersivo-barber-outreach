@@ -234,7 +234,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
 
   const { amounts } = result;
   const total = formatMoneyGbp(amounts.cashTotalGbp);
-  breakdown.vat = { value: formatMoneyGbp(amounts.vatChargedGbp), detail: null };
+  breakdown.vat = result.provider === 'timely' ? { value: 'Included in invoice (not separated)', detail: null } : { value: formatMoneyGbp(amounts.vatChargedGbp), detail: null };
   return {
     ...shared,
     state: 'calculated',
