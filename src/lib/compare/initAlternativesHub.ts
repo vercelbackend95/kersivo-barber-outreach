@@ -61,7 +61,7 @@ export function initAlternativesHub(doc: Document = document): void {
   const cards = readCards(grid);
   const initialVisible = Number(root.dataset.initialVisible ?? cards.length);
   const suggested = parseSuggested(root.dataset.suggested);
-  const extraPillCount = pills.filter((p) => p.classList.contains('alt-hub-pill--extra')).length;
+  const extraPillCount = pills.length;
 
   const selected = new Set<HubCriterionId>(
     pills
@@ -141,11 +141,42 @@ export function initAlternativesHub(doc: Document = document): void {
     if (showAllLabel) showAllLabel.textContent = expanded ? 'Show fewer systems' : `Show all systems (${cards.length})`;
   });
 
+  // The desktop control remains a progressive disclosure; on mobile it becomes
+  // a compact bottom sheet without introducing a second, unsynchronised filter set.
+  const mobileSheetQuery = doc.defaultView?.matchMedia('(max-width: 720px)');
+  let lastFocus: HTMLElement | null = null;
+  function closeSheet(): void {
+    if (panel) panel.dataset.filtersExpanded = 'false';
+    moreFilters?.setAttribute('aria-expanded', 'false');
+    moreFilters?.setAttribute('aria-label', 'Open all comparison filters');
+    if (moreFiltersLabel) moreFiltersLabel.textContent = `All filters (${extraPillCount})`;
+    doc.documentElement.style.removeProperty('overflow');
+    lastFocus?.focus();
+    lastFocus = null;
+  }
   moreFilters?.addEventListener('click', () => {
     const expanded = panel?.dataset.filtersExpanded !== 'true';
-    if (panel) panel.dataset.filtersExpanded = expanded ? 'true' : 'false';
-    moreFilters.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-    if (moreFiltersLabel) moreFiltersLabel.textContent = expanded ? 'Fewer filters' : `More filters (${extraPillCount})`;
+    if (!expanded) {
+      closeSheet();
+      return;
+    }
+    lastFocus = doc.activeElement instanceof HTMLElement ? doc.activeElement : null;
+    if (panel) panel.dataset.filtersExpanded = 'true';
+    moreFilters.setAttribute('aria-expanded', 'true');
+    moreFilters.setAttribute('aria-label', 'Close comparison filters');
+    if (moreFiltersLabel) moreFiltersLabel.textContent = 'Apply filters';
+    if (mobileSheetQuery?.matches) doc.documentElement.style.overflow = 'hidden';
+  });
+  doc.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel?.dataset.filtersExpanded === 'true') closeSheet();
+  });
+  doc.addEventListener('click', (event) => {
+    if (!mobileSheetQuery?.matches || panel?.dataset.filtersExpanded !== 'true') return;
+    const target = event.target;
+    if (target instanceof Node && !panel.contains(target)) closeSheet();
+  });
+  mobileSheetQuery?.addEventListener('change', () => {
+    if (!mobileSheetQuery.matches && panel?.dataset.filtersExpanded === 'true') closeSheet();
   });
 
   render();
