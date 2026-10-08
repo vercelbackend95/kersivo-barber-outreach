@@ -1,0 +1,20 @@
+---
+import ModelComparison from '@/components/editorial/ModelComparison.astro';
+import { SQUARE_FIT_CLOSING, SQUARE_FIT_PATHS } from '@/lib/seo/squareAlternativeContent';
+---
+
+<section id="which-model" class="square-alt__section" aria-labelledby="square-alt-fit-title">
+  <div class="container">
+    <header class="square-alt__intro">
+      <p class="square-alt__eyebrow">TWO MODELS</p>
+      <h2 id="square-alt-fit-title" class="square-alt__h2">Which model fits your barbershop?</h2>
+    </header>
+
+    <ModelComparison idPrefix="square-alt-fit" models={SQUARE_FIT_PATHS} conclusion={SQUARE_FIT_CLOSING}>
+      Also comparing Booksy? <a href="/booksy-alternative">Compare KERSIVO and Booksy <span aria-hidden="true">→</span></a>
+      <span> · </span><a href="/square appointments-alternative">Compare KERSIVO and Square Appointments <span aria-hidden="true">→</span></a>
+      <span> · </span><a href="/squire-alternative">Compare KERSIVO and SQUIRE <span aria-hidden="true">→</span></a>
+      <span> · </span><a href="/setora-alternative">Setora comparison <span aria-hidden="true">→</span></a>
+    </ModelComparison>
+  </div>
+</section>
