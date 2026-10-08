@@ -15,6 +15,7 @@ import {
   FRESHA_TEAM_PRICE,
 } from '@/lib/seo/barberCostCalculatorPage';
 import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -77,6 +78,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'How much does Nearcut Subscription cost in the UK?',
     answer: 'Nearcut Subscription has a quote-based monthly price depending on your shop and removes the client booking charge. The calculator lets you enter a real quote excluding VAT; unknown subscription fees or unconfirmed online payment processing are shown as Custom pricing.',
+  },
+  {
+    question: 'How much commission does Treatwell charge in the UK?',
+    answer: `Treatwell publicly lists ${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT on eligible new-client marketplace bookings. It lists 0% marketplace commission for qualifying repeat and direct bookings. The 365-day successful-appointment history rule and your partner contract affect eligibility.`,
+  },
+  {
+    question: 'Can this calculator estimate Treatwell monthly costs?',
+    answer: `Yes, conditionally. Enter eligible new marketplace bookings and your actual Treatwell subscription quote excluding VAT, then confirm its VAT treatment. It also models ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected £5 online deposits. If the subscription price is unknown, it shows calculated booking charges but leaves the total at Custom pricing rather than guessing £0.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
