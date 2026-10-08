@@ -80,6 +80,7 @@ describe('determineCostInsight', () => {
       kind: 'deposit-processing',
       booksyGbp: 26,
       freshaGbp: 32,
+      setoraGbp: 28,
       kersivoGbp: 28,
     });
     expect(insightFor({ includeDepositProcessing: true, depositBookingsPerMonth: 10 })?.kind).toBe('team');
@@ -99,9 +100,9 @@ describe('determineCostInsight', () => {
 });
 
 describe('describeCostInsight', () => {
-  it('describes deposit processing with all three monthly estimates', () => {
+  it('describes deposit processing with each relevant provider estimate', () => {
     expect(textFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100 })).toBe(
-      'Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are £26.00/month for Booksy, £32.00/month for Fresha and £28.00/month for KERSIVO/Stripe before provider VAT where applicable.',
+      'Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are £26.00/month for Booksy, £32.00/month for Fresha, £28.00/month for Setora/Stripe and £28.00/month for KERSIVO/Stripe before provider VAT where applicable.',
     );
   });
 
