@@ -18,6 +18,7 @@ export const SQUARE_ALTERNATIVE_FAQ_ITEMS: {question:string;answer:string}[] = [
 {question:'Is KERSIVO cheaper than Square Appointments?',answer:'Not always. Square Free is also £0/month, and Square Plus is £29/month compared with Full KERSIVO at £39/month. Price alone is not the key difference: compare website/domain scope, POS needs, plan features, card fees and the total booking experience.'},
 {question:'Do clients need an app to book through KERSIVO?',answer:'No. Starter provides a browser-based hosted booking page, and Full includes browser-based booking on your own branded website.'},
 {question:'Does Square Appointments have a marketplace?',answer:'Square Appointments offers online booking websites, including a free Square Online website option, and integrates with POS and payments. KERSIVO likewise does not operate a consumer appointment-discovery marketplace.'},
+{question:'Does Square Appointments work for barbershops?',answer:'Yes. Square markets a dedicated barbershop solution with appointments, staff scheduling, walk-in workflows and integrated point-of-sale tools. KERSIVO differs mainly in its dedicated UK independent-barber focus and its Full own-domain website offering, not because Square cannot serve barbers.'},
 {question:'Can I try KERSIVO before switching?',answer:'Yes. Explore the live KERSIVO demo to see a booking flow, dashboard and Full retail pickup experience before choosing a plan.'}
 ];
 export function buildSquareAlternativeFaqJsonLd():Record<string,unknown>{
