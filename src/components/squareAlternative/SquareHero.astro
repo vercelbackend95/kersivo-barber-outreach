@@ -3,7 +3,7 @@ import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 ---
 
-<section class="fresha-alt-hero" aria-labelledby="square-alt-hero-title">
+<section class="fresha-alt-hero square-appointments-hero" aria-labelledby="square-alt-hero-title">
   <div class="fresha-alt-hero__content">
     <nav class="nearcut-alt-breadcrumb" aria-label="Breadcrumb">
       <a href="/">Home</a>
@@ -16,8 +16,8 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
     </p>
 
     <h1 id="square-alt-hero-title" class="fresha-alt-hero__title">
-      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Square Appointments</span>
-      <span class="fresha-alt-hero__title-line">alternative built for</span>
+      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">Square Appointments</span>
+      <span class="fresha-alt-hero__title-line">alternative for</span>
       <span class="fresha-alt-hero__title-line">UK barbershops.</span>
     </h1>
 
@@ -57,6 +57,9 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
 
 
 <style>
+  @media (max-width: 680px) {
+    .square-appointments-hero .fresha-alt-hero__title { font-size: clamp(2.15rem, 7vw, 2.75rem); letter-spacing: -0.052em; line-height: 0.98; }
+  }
   .nearcut-alt-breadcrumb {
     display: flex;
     align-items: center;
