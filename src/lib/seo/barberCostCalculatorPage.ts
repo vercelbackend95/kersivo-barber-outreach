@@ -146,8 +146,8 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     name: 'Treatwell',
     descriptor: 'Marketplace commission + personalised software quote',
     price: 'Custom monthly quote',
-    priceNote: '35% + VAT on eligible new marketplace client bookings',
-    secondaryPrice: 'Online prepayment processing: 2.5% + VAT',
+    priceNote: `${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT on eligible new marketplace client bookings`,
+    secondaryPrice: `Online prepayment processing: ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT`,
     points: [
       '0% marketplace commission on qualifying repeat and direct bookings',
       'Monthly software cost requires your actual agreement, not an assumed free tier',
@@ -287,7 +287,7 @@ export const TREATWELL_COST_FACTS: readonly { label: string; value: string }[] =
 ];
 export const TREATWELL_COST_NOTES: readonly string[] = [
   'Select qualifying new marketplace bookings explicitly; Treatwell terms include a 365-day completed-appointment rule and other conditions. Not all new clients trigger the commission.',
-  'The calculator models the published online prepayment rate only on selected £5 benchmark deposits, not full prepaid service values or POS transactions.',
+  `The calculator models the published online prepayment rate only on selected ${formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} benchmark deposits, not full prepaid service values or POS transactions.`,
   'Without a confirmed monthly Treatwell subscription quote and VAT treatment, known booking charges are shown but the complete provider total remains Custom pricing.',
   'Compare the signed partner agreement before using another live booking system in parallel.',
 ];
