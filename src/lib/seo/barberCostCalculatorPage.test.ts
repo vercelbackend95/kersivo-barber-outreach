@@ -277,6 +277,9 @@ describe('barber software cost calculator content safety', () => {
       'How much does Nearcut Subscription cost in the UK?',
       'How much commission does Treatwell charge in the UK?',
       'Can this calculator estimate Treatwell monthly costs?',
+      'How much is Vagaro per month for UK barbers?',
+      'Does Vagaro charge commission on every booking?',
+      'Does the Vagaro estimate include VAT and online deposits?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
       'How much does Phorest cost per month in the UK?',
@@ -424,12 +427,12 @@ describe('booking deposit payment processing copy', () => {
 });
 
 describe('cost at a glance base pricing', () => {
-  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, vagaro, kersivo] = COST_AT_A_GLANCE_MODELS;
   const independent = requireVerifiedFreshaFact('independentPlan');
   const team = requireVerifiedFreshaFact('teamPlanPerMember');
 
   it('shows the headline base price for each platform from central facts', () => {
-    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Full KERSIVO']);
+    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'Full KERSIVO']);
 
     expect(booksy.price).toBe(BOOKSY_BASE_PRICE_LABEL);
     expect(booksy.price).toBe(`£${BOOKSY_BASE_PRICE_GBP}/month + VAT`);
@@ -448,6 +451,7 @@ describe('cost at a glance base pricing', () => {
     expect(treatwell.priceNote).toContain('eligible');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
+    expect(vagaro.price).toContain('/month displayed');
     expect(phorest.price).toBe('Custom pricing');
     expect(phorest.priceNote).toContain('individual quotation');
     expect(square.price).toBe('£0/month');
