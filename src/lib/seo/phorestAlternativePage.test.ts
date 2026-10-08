@@ -25,7 +25,7 @@ const page=read('../../pages/phorest-alternative/index.astro');
 const order=['<PhorestHero','<PhorestQuickAnswer','<PhorestWhy','<PhorestCosts','<PhorestCompare','<PhorestProof','<PhorestFit','<PhorestSwitching','<PhorestPricing','<Faq4','<PhorestFinalCta','<PhorestSources'].map(x=>page.indexOf(x));
 expect(order.every(x=>x>=0)).toBe(true);
 expect(order).toEqual([...order].sort((a,b)=>a-b));
-expect((read('../../components/phorestAlternative/PhorestHero.astro').match(/<h1\\b/g)||[]).length).toBe(1);
+expect((read('../../components/phorestAlternative/PhorestHero.astro').match(/<h1\b/g)||[]).length).toBe(1);
 });
 it('has accurate visible FAQs and no invented Phorest price',()=>{
 expect(PHOREST_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(10);
