@@ -470,7 +470,7 @@ describe('booking deposit processing', () => {
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
     expect(detail('setora', DEPOSIT_LINE.setora)).toContain('illustrative Stripe rate, no Setora markup');
     expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', '£67.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', 'Not estimated', '£67.00']);
     expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
   });
 
