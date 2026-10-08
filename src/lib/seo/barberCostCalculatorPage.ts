@@ -1,4 +1,5 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -28,22 +29,21 @@ import {
 
 /**
  * Visible copy and SEO metadata for /barber-software-cost-calculator.
- * Competitor figures are interpolated from booksyFacts.ts and verified freshaFacts.ts entries only.
- * Phase 1 is static: no calculated totals are published until the calculation engine exists.
+ * Competitor figures are drawn from verified Booksy, Fresha and Nearcut facts; Nearcut illustrative pricing is always labelled.
  */
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Booksy vs Fresha Pricing Calculator UK (2026) | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Booksy vs Fresha vs Nearcut Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare the real cost of Booksy, Fresha and KERSIVO for your UK barbershop. Calculate staff fees, marketplace charges, VAT, payments and 3-year costs.';
+  'Compare Booksy, Fresha, Nearcut and KERSIVO costs for UK barbershops. Model subscriptions, client booking charges, deposits, VAT and 3-year totals.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const BARBER_COST_CALCULATOR_LAST_UPDATED_ISO = '2026-10-01';
-export const BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL = '1 October 2026';
+export const BARBER_COST_CALCULATOR_LAST_UPDATED_ISO = '2026-10-08';
+export const BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL = '8 October 2026';
 
 const independent = requireVerifiedFreshaFact('independentPlan');
 const teamPlan = requireVerifiedFreshaFact('teamPlanPerMember');
@@ -68,7 +68,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare the real cost of Booksy, Fresha and KERSIVO using your own barbershop numbers.',
+  lead: 'Compare Booksy, Fresha, Nearcut and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -97,7 +97,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha and KERSIVO charge in different ways, so the headline monthly price rarely tells the whole story. Before comparing totals, it helps to understand what each pricing model is built around.';
+  'Booksy, Fresha, Nearcut and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -123,6 +123,19 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       'A one-time Marketplace fee for brand-new Marketplace clients',
       'Optional paid add-ons',
       'Payment-processing fees when payments run through Fresha',
+    ],
+  },
+  {
+    name: 'Nearcut',
+    descriptor: 'Free for You or shop-quoted Subscription',
+    price: `${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)}/month`,
+    priceNote: 'Free for You — customers pay a separate booking charge',
+    secondaryPrice: 'Subscription: individual monthly quote + VAT',
+    points: [
+      'Free for You is free to the shop, but customers pay a booking charge',
+      `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a £20 haircut; that is not a universal price`,
+      'Subscription removes the customer booking charge; actual price varies by shop',
+      'Online payment rates and optional Business Boosters depend on the plan',
     ],
   },
   {
@@ -186,6 +199,24 @@ export const FRESHA_COST_NOTES: readonly string[] = [
   `Fresha defines a bookable team member as ${FRESHA_BOOKABLE_TEAM_MEMBER_DEFINITION}. Custom Enterprise rates apply above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} team members.`,
   'Returning clients never trigger the Marketplace fee, and Fresha applies a maximum cap to the fee for higher-value services.',
   'Fresha Payments is optional, but Fresha’s deposits and no-show protection run through it.',
+];
+
+/* --------------------------------- Nearcut --------------------------------- */
+
+export const NEARCUT_COST_INTRO = `Nearcut offers two UK payment models: Free for You at £0/month for the shop, where customers pay a separate booking charge, or Subscription with a shop-specific monthly quote plus VAT and no customer booking charge. Its UK pricing page shows an example £1.50 client charge on a £20 haircut, not a universal fee. Checked against official Nearcut sources on ${NEARCUT_FACTS_CHECKED_DATE}.`;
+
+export const NEARCUT_COST_FACTS: readonly { label: string; value: string }[] = [
+  { label: 'Free for You subscription', value: `${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)}/month for the shop` },
+  { label: 'Free for You client booking fee', value: `Illustration: ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} extra on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; actual charge varies` },
+  { label: 'Subscription', value: 'Monthly shop-specific quote + VAT; no separate client booking charge' },
+  { label: 'Online deposits', value: 'Free for You advertises zero transaction fees; standard Help Centre rates differ and must be checked for your plan' },
+  { label: 'Setup', value: `${formatGbp(requireVerifiedNearcutFact('setupFee').amountGbp!)} listed for the booking system and website` },
+];
+export const NEARCUT_COST_NOTES: readonly string[] = [
+  'This calculator separates shop costs from charges that customers pay. The example £1.50 Nearcut client booking fee is never multiplied by your appointment count because it is not a verified universal rate.',
+  'Free for You shop cost is shown before any add-ons. The shop-paid software amount can be £0 even though individual customers pay an extra fee.',
+  'Select Nearcut Subscription under Advanced costs to enter your real monthly quote. Without it, the result is Custom pricing, not an invented estimate.',
+  'Nearcut Subscription online processing and optional Business Boosters are not estimated without confirmed plan-specific terms.',
 ];
 
 /* -------------------------------- Team size -------------------------------- */
