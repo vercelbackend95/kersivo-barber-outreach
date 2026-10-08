@@ -109,7 +109,7 @@ export function describeCostInsight(insight: CostInsight): string {
   switch (insight.kind) {
     case 'custom-pricing':
       return insight.provider === 'nearcut'
-        ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete five-provider total is not available.'
+        ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete provider comparison is not available.'
         : `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete cost comparison is not available.`;
     case 'acquisition': {
       const { booksyBoostGbp, freshaMarketplaceGbp } = insight;
