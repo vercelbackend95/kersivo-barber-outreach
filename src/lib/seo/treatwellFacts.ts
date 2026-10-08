@@ -10,7 +10,7 @@
 export const TREATWELL_FACTS_CHECKED_ISO = '2026-10-08';
 export const TREATWELL_FACTS_CHECKED_DATE = '8 October 2026';
 
-export type TreatwellSourceId = 'pricingUk' | 'partnerTerms' | 'paymentSolutions';
+export type TreatwellSourceId = 'pricingUk' | 'partnerTerms' | 'paymentSolutions' | 'salonSoftware';
 export type TreatwellSource = {
   id: TreatwellSourceId;
   label: string;
@@ -30,6 +30,12 @@ export const TREATWELL_SOURCES: readonly TreatwellSource[] = [
     label: 'Treatwell Partner Terms of Business (September 2026)',
     url: 'https://www.treatwell.co.uk/info/supplier-terms-and-conditions/',
     supports: 'new versus repeat client conditions (including the 365-day rule), contract-specific fees, cancellation and other booking software restrictions',
+  },
+  {
+    id: 'salonSoftware',
+    label: 'Treatwell Connect salon software',
+    url: 'https://www.treatwell.co.uk/partners/solutions/salon-software/',
+    supports: 'Treatwell Connect booking, client, team, reporting and product sales features',
   },
   {
     id: 'paymentSolutions',
