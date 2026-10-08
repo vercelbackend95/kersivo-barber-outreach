@@ -147,7 +147,7 @@ export function resolveTimelyMonthlyShopQuoteGbp(quotedGbp: number | null | unde
 export const TIMELY_TRADEMARK_DISCLAIMER =
   'Timely is a trademark of its respective owner. KERSIVO is not affiliated with, endorsed by or sponsored by Timely.';
 export const TIMELY_COMPARISON_FOOTNOTE =
-  'Timely feature and plan information checked 8 October 2026. Public pricing view showed USD for the USA. UK GBP subscriptions, tax and TimelyPay processing require a current UK quote.';
+  'Timely feature and plan information checked 8 October 2026. Public pricing view showed USD for the USA. UK GBP subscription prices and tax treatment require a current UK invoice; published standard TimelyPay domestic online processing is 1.85% + 30p from 5 August 2026.';
 
 export const TIMELY_COMPARE_SECTIONS = [
  {id:'bookings',title:'Online bookings',subtitle:'Appointment scheduling and the customer journey',timelyLead:'Timely combines 24/7 self-service booking with appointment and team diaries.',timelyPoints:['Online appointment calendar and client self-booking','Tools designed for salon, beauty and wellness operations','Booking links and integrations for existing websites'],kersivoLead:'Starter bookings and an own-domain Full booking experience.',kersivoPoints:['Starter: free hosted booking page for up to four barbers','Full: branded website and booking flow on your domain','Service, barber, availability and appointment management']},
