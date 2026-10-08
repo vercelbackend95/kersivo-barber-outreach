@@ -84,6 +84,8 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(TREATWELL_QUOTE_FIELD)}
+      ${TREATWELL_QUOTE_VAT.options.map(option => `<input type="radio" name="treatwellQuoteVatPercent" value="${option.value}" ${option.value === TREATWELL_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       ${numberField(PHOREST_QUOTE_FIELD)}
       ${PHOREST_QUOTE_VAT.options.map(option => `<input type="radio" name="phorestQuoteVatPercent" value="${option.value}" ${option.value === PHOREST_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
