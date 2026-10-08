@@ -21,7 +21,10 @@ import {
   FRESHA_ALTERNATIVE_TITLE,
   buildFreshaAlternativeFaqJsonLd,
 } from '@/lib/seo/freshaAlternativeFaq';
-import { buildFreshaAlternativeWebPageJsonLd } from '@/lib/seo/freshaAlternativeJsonLd';
+import {
+  buildFreshaAlternativeBreadcrumbJsonLd,
+  buildFreshaAlternativeWebPageJsonLd,
+} from '@/lib/seo/freshaAlternativeJsonLd';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
@@ -36,7 +39,7 @@ const currentYear = new Date().getFullYear();
   title={FRESHA_ALTERNATIVE_TITLE}
   description={FRESHA_ALTERNATIVE_DESCRIPTION}
   canonicalPath={FRESHA_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeFaqJsonLd()]}
+  jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeBreadcrumbJsonLd(), buildFreshaAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <FreshaHero />
