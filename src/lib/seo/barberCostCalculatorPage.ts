@@ -1,6 +1,7 @@
 import { SQUARE_FACTS_CHECKED_DATE, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } from '@/lib/seo/squareFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { TREATWELL_FACTS_CHECKED_DATE, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { PHOREST_FACTS_CHECKED_DATE } from '@/lib/seo/phorestFacts';
 import {
@@ -40,7 +41,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Include your Phorest quote, plans and VAT.';
+  'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Include your Phorest quote, plans and VAT.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -71,7 +72,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -100,7 +101,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -139,6 +140,19 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; that is not a universal price`,
       'Subscription removes the customer booking charge; actual price varies by shop',
       'Online payment rates and optional Business Boosters depend on the plan',
+    ],
+  },
+  {
+    name: 'Treatwell',
+    descriptor: 'Marketplace commission + personalised software quote',
+    price: 'Custom monthly quote',
+    priceNote: '35% + VAT on eligible new marketplace client bookings',
+    secondaryPrice: 'Online prepayment processing: 2.5% + VAT',
+    points: [
+      '0% marketplace commission on qualifying repeat and direct bookings',
+      'Monthly software cost requires your actual agreement, not an assumed free tier',
+      'Eligible booking status depends on the terms, including the 365-day rule',
+      'Enter your quote and VAT treatment to calculate a full estimate',
     ],
   },
   {
@@ -257,6 +271,25 @@ export const FRESHA_COST_NOTES: readonly string[] = [
   `Fresha defines a bookable team member as ${FRESHA_BOOKABLE_TEAM_MEMBER_DEFINITION}. Custom Enterprise rates apply above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} team members.`,
   'Returning clients never trigger the Marketplace fee, and Fresha applies a maximum cap to the fee for higher-value services.',
   'Fresha Payments is optional, but Fresha’s deposits and no-show protection run through it.',
+];
+
+
+/* -------------------------------- Treatwell -------------------------------- */
+
+export const TREATWELL_COST_INTRO =
+  `Treatwell Connect combines salon booking software and marketplace acquisition. Its published ${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT commission applies only to qualifying new-client marketplace bookings, while repeat and direct bookings have 0% marketplace commission. Online prepayments carry ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT processing. Monthly subscription is shop-specific. Checked ${TREATWELL_FACTS_CHECKED_DATE}.`;
+
+export const TREATWELL_COST_FACTS: readonly { label: string; value: string }[] = [
+  { label: 'Eligible new marketplace clients', value: `${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT` },
+  { label: 'Qualifying repeat and direct bookings', value: '0% marketplace commission' },
+  { label: 'Online prepayment processing', value: `${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT` },
+  { label: 'Software subscription', value: 'Individual monthly quote; not assumed free' },
+];
+export const TREATWELL_COST_NOTES: readonly string[] = [
+  'Select qualifying new marketplace bookings explicitly; Treatwell terms include a 365-day completed-appointment rule and other conditions. Not all new clients trigger the commission.',
+  'The calculator models the published online prepayment rate only on selected £5 benchmark deposits, not full prepaid service values or POS transactions.',
+  'Without a confirmed monthly Treatwell subscription quote and VAT treatment, known booking charges are shown but the complete provider total remains Custom pricing.',
+  'Compare the signed partner agreement before using another live booking system in parallel.',
 ];
 
 /* --------------------------------- Nearcut --------------------------------- */
