@@ -37,7 +37,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Setora · Phorest · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Setora · Square · Phorest · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -210,7 +210,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Nearcut, Phorest quote, add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Nearcut, Square plan, Phorest quote, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -294,6 +294,20 @@ const describedBy = (id: string, withHelper: boolean) =>
         </div>
       </div>
 
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">{SQUARE_PLAN_FIELD.label}</legend>
+        <div class="calc-segmented calc-segmented--small">
+          {SQUARE_PLAN_FIELD.options.map((option) => (
+            <label class="calc-segmented__option">
+              <input type="radio" name={SQUARE_PLAN_FIELD.name} value={option.value}
+                checked={option.value === SQUARE_PLAN_FIELD.defaultValue} />
+              <span>{option.label} · {option.priceLabel}</span>
+            </label>
+          ))}
+        </div>
+        <p class="calc-field__helper">{SQUARE_PLAN_FIELD.helper}</p>
+      </fieldset>
 
       <fieldset class="calc-fieldset" aria-labelledby="calc-phorest-quote-title">
         <legend id="calc-phorest-quote-title" class="calc-field__label">Phorest · your confirmed quote</legend>
