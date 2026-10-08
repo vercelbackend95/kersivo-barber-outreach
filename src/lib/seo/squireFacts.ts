@@ -1,13 +1,13 @@
 /**
  * Source-backed SQUIRE comparison facts for the UK /squire-alternative landing page.
- * Keep US-dollar prices labelled as public USD list prices. Do not infer UK GBP pricing.
+ * Keep SQUIRE's explicit UK GBP list prices separate from USD prices and unresolved UK VAT / payment fees.
  * SQUIRE has an operating UK presence, independently of GBP pricing availability.
  */
 export const SQUIRE_FACTS_CHECKED_DATE = '8 October 2026';
 export const SQUIRE_FACTS_CHECKED_ISO = '2026-10-08';
 
 export const SQUIRE_OFFICIAL_SOURCES = [
-  {id:'pricing', label:'SQUIRE official pricing', url:'https://www.getsquire.com/pricing', supports:'Public USD subscription tiers, plan features and add-on prices'},
+  {id:'pricing', label:'SQUIRE official pricing', url:'https://www.getsquire.com/pricing', supports:'Official published GBP (UK£20/£30/£60/£90) and USD list prices, plan features and add-on prices'},
   {id:'payments', label:'SQUIRE payments overview', url:'https://getsquire.com/features/payments', supports:'Online and in-shop payment options, POS, Auto Payout and Rent Collect'},
   {id:'ukShop', label:'SQUIRE: Envy Barbers, Covent Garden', url:'https://getsquire.com/discover/barbershop/envy-barbers-covent-garden-covent-garden', supports:'Example of a live publicly listed UK barbershop on SQUIRE'},
   {id:'ukEntity', label:'SQUIRE data processing agreement', url:'https://getsquire.com/data-processing-agreement', supports:'Squire Europe Limited as a UK service provider'},
@@ -21,8 +21,17 @@ export const SQUIRE_US_LIST_PLANS = [
   {id:'titan',label:'TITAN',usdMonthly:250,audience:'Multi-location brands · per shop',notes:['Multi-location tools and branded app','Gift cards, loyalty, inventory tracking and client chat']},
 ] as const;
 
+/** GBP subscription prices explicitly displayed by SQUIRE, not currency conversions. Tax basis was not stated on the public pricing page. */
+export const SQUIRE_UK_LIST_PLANS = [
+  {id:'independent', label:'INDEPENDENT', gbpMonthly:20, audience:'Individual barbers'},
+  {id:'pro',label:'PRO',gbpMonthly:30,audience:'Single-location shops'},
+  {id:'executive',label:'EXECUTIVE',gbpMonthly:60,audience:'High-growth shops · per shop'},
+  {id:'titan',label:'TITAN',gbpMonthly:90,audience:'Multi-location brands · per shop'},
+] as const;
+export type SquireUkListPlan = (typeof SQUIRE_UK_LIST_PLANS)[number];
+
 export const SQUIRE_COMPARISON_FOOTNOTE =
-  'SQUIRE features and publicly listed USD subscription prices were checked against its official website on 8 October 2026. UK barbershops use SQUIRE, but a complete UK-specific GBP price list, local transaction charges and plan eligibility were not verified. Some functions are tier-specific or paid add-ons. Confirm terms directly with SQUIRE.';
+  'SQUIRE features and publicly listed USD subscription prices were checked against its official website on 8 October 2026. SQUIRE publishes UK list prices for its four main subscriptions: £20, £30, £60 and £90/month respectively. VAT treatment, UK card transaction charges, optional add-ons and plan eligibility still require confirmation. Some functions are tier-specific or paid add-ons. Confirm terms directly with SQUIRE.';
 
 export type SquireCompareSectionId='bookings'|'payments'|'brand'|'retail'|'clients'|'reports';
 export type SquireCompareSection={
@@ -67,12 +76,12 @@ export const SQUIRE_COMPARE_SECTIONS:readonly SquireCompareSection[]=[
 // ---------------------------------------------------------------------------
 // UK COMMERCIAL FACTS — calculator contract
 // ---------------------------------------------------------------------------
-// This is intentionally separate from the verified US-dollar list-price table.
+// The official GBP list prices are in SQUIRE_UK_LIST_PLANS above; the taxable invoice total is not yet verified.
 // No USD-to-GBP conversion, assumed VAT, invented UK transaction percentage,
 // or implied zero-fee defaults are permissible.
 //
 // A SQUIRE plan can only become a numerical GBP calculator result after its
-// UK-specific plan fee, tax basis and deposit-processing terms are verified.
+// UK subscription VAT basis and deposit-processing terms are verified.
 
 export type SquireSourceId = (typeof SQUIRE_OFFICIAL_SOURCES)[number]['id'];
 export type SquirePlanId = (typeof SQUIRE_US_LIST_PLANS)[number]['id'];
@@ -106,30 +115,30 @@ export type SquireUkCommercialFact =
 /**
  * UK pricing facts needed for future calculator integration.
  * IMPORTANT: "unresolved" is not a £0 charge, a missing fee or a free service.
- * Published USD plans are separately recorded in SQUIRE_US_LIST_PLANS.
+ * Published GBP plan prices are separately recorded in SQUIRE_UK_LIST_PLANS.
  */
 export const SQUIRE_UK_COMMERCIAL_FACTS = {
   independentSubscription: {
     status: 'unresolved',
-    reason: 'No verified UK GBP monthly subscription and VAT treatment for Independent.',
+    reason: 'SQUIRE officially publishes a UK GBP list price for Independent; the VAT basis and full invoiced UK amount are not verified.',
     sourceId: 'pricing',
     checkedIso: SQUIRE_FACTS_CHECKED_ISO,
   },
   proSubscription: {
     status: 'unresolved',
-    reason: 'No verified UK GBP monthly subscription and VAT treatment for Pro.',
+    reason: 'SQUIRE officially publishes a UK GBP list price for Pro; the VAT basis and full invoiced UK amount are not verified.',
     sourceId: 'pricing',
     checkedIso: SQUIRE_FACTS_CHECKED_ISO,
   },
   executiveSubscription: {
     status: 'unresolved',
-    reason: 'No verified UK GBP monthly subscription and VAT treatment for Executive.',
+    reason: 'SQUIRE officially publishes a UK GBP list price for Executive; the VAT basis and full invoiced UK amount are not verified.',
     sourceId: 'pricing',
     checkedIso: SQUIRE_FACTS_CHECKED_ISO,
   },
   titanSubscription: {
     status: 'unresolved',
-    reason: 'No verified UK GBP monthly subscription and VAT treatment for Titan.',
+    reason: 'SQUIRE officially publishes a UK GBP list price for Titan; the VAT basis and full invoiced UK amount are not verified.',
     sourceId: 'pricing',
     checkedIso: SQUIRE_FACTS_CHECKED_ISO,
   },
@@ -219,8 +228,9 @@ export type SquireUkCalculatorReadiness =
 
 /**
  * Side-effect-free adapter for a future fourth calculator provider.
- * Check readiness BEFORE building a numerical result. The optional SQUIRE
- * USD marketing prices must never be used in GBP cost-engine arithmetic.
+ * Check readiness BEFORE building a numerical result. SQUIRE's
+ * officially published UK GBP list price may be displayed but cannot be silently
+ * treated as a VAT-inclusive total or combined with unknown fees.
  *
  * Scope matches the calculator's existing subscription + online £5 deposit
  * model; marketplace and add-on totals require their own verified decisions.
