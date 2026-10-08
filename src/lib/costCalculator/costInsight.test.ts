@@ -120,7 +120,7 @@ describe('describeCostInsight', () => {
     );
     expect(textFor({ bookableBarbers: 1 })).toBe('Base subscription pricing is the main modelled cost in this scenario.');
     expect(textFor({ bookableBarbers: 21 })).toBe(
-      'Fresha moves to custom Enterprise pricing above 20 bookable team members, so a complete three-way cost comparison is not available.',
+      'Fresha moves to custom Enterprise pricing above 20 bookable team members, so a complete cost comparison is not available.',
     );
   });
 

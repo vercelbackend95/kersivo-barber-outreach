@@ -9,7 +9,7 @@
  * fully decoded, engine-validated scenario on hydration.
  */
 
-import { DEFAULT_SCENARIO, DEPOSIT_PROCESSING_TOGGLE, SPLIT_ASSUMPTIONS_TOGGLE } from './calculatorUi';
+import { DEFAULT_SCENARIO, DEPOSIT_PROCESSING_TOGGLE, SPLIT_ASSUMPTIONS_TOGGLE, NEARCUT_SUBSCRIPTION_TOGGLE } from './calculatorUi';
 import { ADVANCED_SCENARIO_KEYS, SCENARIO_PARAMS } from './calculatorUrlState';
 
 type PrePaintConfig = {
@@ -24,6 +24,7 @@ const CONFIG: PrePaintConfig = {
   reveals: [
     [SCENARIO_PARAMS.splitMarketplaceAssumptions, SPLIT_ASSUMPTIONS_TOGGLE.id],
     [SCENARIO_PARAMS.includeDepositProcessing, DEPOSIT_PROCESSING_TOGGLE.id],
+    [SCENARIO_PARAMS.nearcutSubscription, NEARCUT_SUBSCRIPTION_TOGGLE.id],
   ],
 };
 

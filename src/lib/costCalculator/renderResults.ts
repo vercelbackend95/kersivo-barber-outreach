@@ -44,6 +44,9 @@ function renderProvider(card: HTMLElement, view: ProviderView, periodLabel: stri
   setText(customNote, view.customNote);
   setHidden(customNote, !view.customNote);
   setText(card.querySelector('[data-slot="net"]'), view.net);
+  const clientNote = card.querySelector<HTMLElement>('[data-slot="client-fee-note"]');
+  setText(clientNote, view.clientFeeNote);
+  setHidden(clientNote, !view.clientFeeNote);
 
   for (const cell of card.querySelectorAll<HTMLElement>('[data-summary]')) {
     setText(cell, view.summary[cell.dataset.summary as keyof ProviderView['summary']] ?? null);

@@ -1,5 +1,5 @@
 /**
- * Pure monthly cost engine for Booksy, Fresha and KERSIVO.
+ * Pure monthly cost engine for Booksy, Fresha, Nearcut and KERSIVO.
  *
  * No DOM, browser or Astro dependencies. Every price comes from the central facts modules.
  * Payment processing covers online booking deposits only; multi-period projections live elsewhere.
@@ -31,6 +31,7 @@ import {
   STRIPE_UK_STANDARD_CARD_FIXED_GBP,
   STRIPE_UK_STANDARD_CARD_PERCENT,
 } from '@/lib/seo/stripeFacts';
+import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -47,6 +48,9 @@ export type CostScenarioInput = {
   freshaMarketplaceClients: number;
   freshaSmartWebsite: boolean;
   freshaClientLoyalty: boolean;
+  nearcutSubscription: boolean;
+  /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
+  nearcutMonthlyQuoteGbp: number;
   vatRegistered: boolean;
   includeDepositProcessing: boolean;
   /** Only read and validated when `includeDepositProcessing` is true. */
@@ -94,6 +98,7 @@ const BOOLEAN_FIELDS = [
   'splitMarketplaceAssumptions',
   'freshaSmartWebsite',
   'freshaClientLoyalty',
+  'nearcutSubscription',
   'vatRegistered',
   'includeDepositProcessing',
 ] as const satisfies readonly (keyof CostScenarioInput)[];
@@ -122,6 +127,10 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
 
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
+  if (input.nearcutSubscription === true) {
+    const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
+    if (quoteIssue) issues.push(quoteIssue);
+  }
   return issues;
 }
 
@@ -165,7 +174,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -183,6 +192,8 @@ export type LineItemId =
   | 'fresha-marketplace-fees'
   | 'fresha-smart-website'
   | 'fresha-client-loyalty'
+  | 'nearcut-subscription'
+  | 'nearcut-deposit-processing'
   | 'kersivo-subscription'
   | 'kersivo-additional-barbers'
   | 'kersivo-commission'
@@ -192,7 +203,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'stripe-checkout-standard-uk-card';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-checkout-standard-uk-card';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -238,11 +249,15 @@ export type AssumptionCode =
   | 'deposit-benchmark'
   | 'deposit-fee-rounding'
   | 'deposit-refunds-not-modelled'
+  | 'nearcut-free-client-charge'
+  | 'nearcut-free-online-payments'
+  | 'nearcut-subscription-quote'
+  | 'nearcut-subscription-unknown-payments'
   | 'kersivo-stripe-standard-uk-card'
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -266,7 +281,11 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
     'VAT recovery depends on your business circumstances. The net figure is an estimate, not tax advice.',
   'deposit-processing-scope':
     'Payment processing compares online booking deposits only. It does not include the remaining appointment balance, in-person card payments or retail payments.',
-  'deposit-benchmark': `The comparison uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit benchmark for all three providers.`,
+  'deposit-benchmark': `The comparison uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark where comparable processing terms are published.`,
+  'nearcut-free-client-charge': 'Nearcut Free for You has a separate booking charge paid by the customer, not deducted from the barbershop. This customer charge is excluded from shop totals.',
+  'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
+  'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
+  'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
   'kersivo-stripe-standard-uk-card': STRIPE_CARD_CAVEAT,
@@ -280,6 +299,9 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
     'Fresha states that a maximum Marketplace new-client fee cap applies to higher-value services, but the cap amount is not published in the verified UK source. The estimate therefore applies the published percentage and minimum before any maximum cap and may overstate Marketplace fees for higher-value first visits.',
   'fresha-custom-pricing-above-team-limit':
     'Fresha lists custom Enterprise pricing above its published team size, so no subscription estimate is shown.',
+  'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
+  'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
+  'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
 };
 
 type ProviderResultBase = {
@@ -309,7 +331,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -341,7 +363,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'kersivo-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'kersivo-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -606,6 +628,62 @@ function calculateFresha(scenario: CostScenarioInput, marketplaceClients: number
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered), warnings };
 }
 
+/* --------------------------------- Nearcut --------------------------------- */
+
+/**
+ * Free for You: £0 for the shop; the customer's extra booking charge is
+ * deliberately never guessed or added to the shop cost.
+ * Subscription: customer fee is removed, but subscription needs a shop quote.
+ */
+function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const subscription = scenario.nearcutSubscription;
+  const quotePence = subscription ? gbpToPence(scenario.nearcutMonthlyQuoteGbp) : 0;
+  const freeMonthly = requireVerifiedNearcutFact('freeForYouMonthlySubscription');
+  const freePayments = requireVerifiedNearcutFact('freeForYouOnlinePayments');
+  const quoteMissing = subscription && quotePence === 0;
+  const paymentUnknown = subscription && scenario.includeDepositProcessing && scenario.depositBookingsPerMonth > 0;
+
+  const lines: PenceLine[] = [
+    {
+      id: 'nearcut-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: quoteMissing ? null : subscription ? quotePence : gbpToPence(freeMonthly.amountGbp!),
+      unitPence: quoteMissing ? null : subscription ? quotePence : gbpToPence(freeMonthly.amountGbp!),
+      vatApplies: subscription, quantity: 1,
+    },
+    {
+      id: 'nearcut-deposit-processing', category: 'payment-processing',
+      status: paymentUnknown ? 'custom-pricing' : scenario.includeDepositProcessing ? 'calculated' : 'not-included',
+      pence: paymentUnknown ? null : 0,
+      unitPence: paymentUnknown ? null : scenario.includeDepositProcessing && !subscription ? gbpToPence(freePayments.amountGbp!) : null,
+      vatApplies: false,
+      quantity: scenario.includeDepositProcessing ? scenario.depositBookingsPerMonth : 0,
+      ...(scenario.includeDepositProcessing && !subscription ? { paymentMethod: 'nearcut-free-online-payments' as const } : {}),
+    },
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption(subscription ? 'nearcut-subscription-quote' : 'nearcut-free-client-charge'),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (quoteMissing) warnings.push(warning('nearcut-quoted-cost-unknown'));
+  if (paymentUnknown) {
+    assumptions.push(assumption('nearcut-subscription-unknown-payments'));
+    warnings.push(warning('nearcut-processing-unresolved'));
+  }
+  if (!subscription) {
+    warnings.push(warning('nearcut-client-charge-not-universal'));
+    if (scenario.includeDepositProcessing) assumptions.push(assumption('nearcut-free-online-payments'));
+  }
+  const base = {
+    provider: 'nearcut' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing || paymentUnknown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
 /* --------------------------------- KERSIVO --------------------------------- */
 
 function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
@@ -691,6 +769,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
     providers: [
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
+      calculateNearcut(scenario),
       calculateKersivo(scenario),
     ],
   };
