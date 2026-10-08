@@ -19,6 +19,7 @@ import {
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
   SPLIT_FIELDS,
+  VAGARO_OPTIONS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
   INSIGHT_INVALID,
@@ -75,6 +76,7 @@ function mount({ prePaint = false } = {}) {
       <input type="radio" name="vatRegistered" value="no" checked />
       <input type="radio" name="vatRegistered" value="yes" />
       <details class="calc-advanced"><summary>Advanced costs</summary></details>
+      ${VAGARO_OPTIONS.map((option) => `<input id="${option.id}" name="${option.name}" type="checkbox" ${option.defaultOn ? 'checked' : ''} />`).join('')}
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
@@ -147,6 +149,10 @@ const URL_SCENARIO: CostScenarioInput = {
   splitMarketplaceAssumptions: true,
   booksyBoostClients: 8,
   freshaMarketplaceClients: 15,
+  vagaroMarketplaceClients: 7,
+  vagaroDisplayedOffer: true,
+  vagaroMySite: false,
+  vagaroAssumeVat: false,
   freshaSmartWebsite: true,
   freshaClientLoyalty: false,
   nearcutSubscription: false,
@@ -176,6 +182,7 @@ describe('initial calculation', () => {
       'nearcut',
       'setora',
       'kersivo',
+      'vagaro',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
   });
@@ -413,12 +420,13 @@ describe('split marketplace mode', () => {
 
 const DEPOSIT_LINE = {
   booksy: 'booksy-deposit-processing',
+  vagaro: 'vagaro-deposit-processing',
   fresha: 'fresha-deposit-processing',
   nearcut: 'nearcut-deposit-processing',
   setora: 'setora-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo', 'vagaro'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -574,7 +582,7 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(5).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(6).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
