@@ -109,11 +109,14 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
         : null;
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
+    case 'setora-additional-staff':
+      return line.quantity > 0 ? `${line.quantity} included without an extra fee` : null;
     case 'kersivo-additional-barbers':
       return line.quantity > 0 ? `${line.quantity} included` : null;
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
     case 'nearcut-deposit-processing':
+    case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
     default:
@@ -123,6 +126,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
+  'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
 };
 
 function depositDetail(line: CostLineItem, unit: string | null): string | null {
