@@ -19,11 +19,12 @@ import { VAGARO_FACTS_CHECKED_DATE, VAGARO_FACTS_CHECKED_ISO, VAGARO_SOURCES } f
 import { TREATWELL_FACTS_CHECKED_DATE, TREATWELL_FACTS_CHECKED_ISO, TREATWELL_SOURCES } from '@/lib/seo/treatwellFacts';
 import { NEARCUT_FACTS_CHECKED_DATE, NEARCUT_FACTS_CHECKED_ISO, NEARCUT_SOURCES } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, SETORA_FACTS_CHECKED_ISO, getSetoraSource } from '@/lib/seo/setoraFacts';
+import { TIMELY_FACTS_CHECKED_DATE, TIMELY_FACTS_CHECKED_ISO, getTimelySource } from '@/lib/seo/timelyFacts';
 import { PHOREST_FACTS_CHECKED_DATE, PHOREST_FACTS_CHECKED_ISO, PHOREST_SOURCES } from '@/lib/seo/phorestFacts';
 import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Treatwell' | 'Vagaro' | 'Setora' | 'Square Appointments' | 'Phorest' | 'Stripe' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Timely' | 'Treatwell' | 'Vagaro' | 'Setora' | 'Square Appointments' | 'Phorest' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
@@ -115,6 +116,10 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
     checkedIso: NEARCUT_FACTS_CHECKED_ISO,
     checkedLabel: NEARCUT_FACTS_CHECKED_DATE,
   })),
+  ...(['pricing', 'ukPayments', 'rateUpdate'] as const).map((id) => {
+    const source = getTimelySource(id);
+    return { provider: 'Timely' as const, label: source.label, supports: source.supports, url: source.url, external: true, checkedIso: TIMELY_FACTS_CHECKED_ISO, checkedLabel: TIMELY_FACTS_CHECKED_DATE };
+  }),
   ...(['pricing', 'barbers'] as const).map((id) => {
     const source = getSetoraSource(id);
     return {

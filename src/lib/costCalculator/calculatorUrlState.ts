@@ -56,6 +56,7 @@ export const SCENARIO_PARAMS = {
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
   nearcutMonthlyQuoteGbp: 'nq',
+  timelyMonthlyInvoiceGbp: 'ti',
   treatwellMonthlyQuoteGbp: 'tq',
   treatwellQuoteVatPercent: 'tv',
   phorestMonthlyQuoteGbp: 'pq',

@@ -4,6 +4,7 @@ import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact } from '@/lib/seo/
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { TREATWELL_FACTS_CHECKED_DATE, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { TIMELY_FACTS_CHECKED_DATE, TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 import { PHOREST_FACTS_CHECKED_DATE } from '@/lib/seo/phorestFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
@@ -42,7 +43,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Treatwell, Nearcut, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Model fees, VAT and quotes.';
+  'Compare Booksy, Fresha, Treatwell, Nearcut, Setora, Square Appointments, Phorest, Timely and KERSIVO costs for UK barbershops. Model fees, VAT and quotes.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -73,7 +74,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest, Timely and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -102,7 +103,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest, Timely and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -155,6 +156,11 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       'Eligible booking status depends on the terms, including the 365-day rule',
       'Enter your quote and VAT treatment to calculate a full estimate',
     ],
+  },
+  {
+    name: 'Timely', descriptor: 'UK invoice quote + per-staff plans',
+    price: 'Custom pricing', priceNote: 'Enter your actual UK invoice including any VAT',
+    points: ['Build, Elevate and Innovate plans', 'UK subscription rate varies by quote', `TimelyPay domestic UK online cards: ${feeLabel(TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)}`, 'VAT in invoice not separately claimed'],
   },
   {
     name: 'Setora',
@@ -472,6 +478,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
     body: `The calculator uses Vagaro’s published keyed-in/online rate of ${feeLabel(requireVerifiedVagaroFact('standardOnlineProcessingPercent').value, requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} per transaction. Legacy merchant rates may differ.`,
   },
   {
+    title: 'Timely via TimelyPay',
+    body: `Standard TimelyPay domestic UK online cards are ${feeLabel(TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)} per transaction, checked ${TIMELY_FACTS_CHECKED_DATE}. Your shop must provide its actual GBP monthly Timely invoice, including any VAT shown.`,
+  },
+  {
     title: 'Setora via Stripe',
     body: `Setora says it adds no markup to Stripe payments. The calculator estimates the same ${DEPOSIT_BENCHMARK} deposit using Stripe’s public standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked ${STRIPE_FACTS_CHECKED_DATE}. Actual Stripe fees may vary.`,
   },
@@ -539,6 +549,7 @@ export const METHODOLOGY_FACTORS: readonly string[] = [
   'Optional Booksy Boost',
   'VAT status',
   'Optional add-ons',
+  'Actual Timely UK monthly invoice total including VAT',
   'Optional booking deposit processing',
   'Your Phorest quote and confirmed VAT treatment',
 ];

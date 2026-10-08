@@ -12,6 +12,7 @@ import {
   VAGARO_ADDONS_LEGEND,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
   PHOREST_QUOTE_FIELD,
   TREATWELL_QUOTE_FIELD,
   TREATWELL_QUOTE_VAT,
@@ -42,7 +43,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Treatwell · Setora · Square · Phorest · Vagaro · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Timely · Treatwell · Setora · Square · Phorest · Vagaro · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -216,7 +217,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Vagaro, Nearcut, Treatwell quote, Square plan, Phorest quote, add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Vagaro, Nearcut, Timely invoice, Treatwell quote, Square plan, Phorest quote, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -411,6 +412,18 @@ const describedBy = (id: string, withHelper: boolean) =>
         </fieldset>
         <p class="calc-field__helper">If you enable booking deposit processing, the Phorest total becomes Custom pricing because a verified PhorestPay rate is not available.</p>
       </fieldset>
+      <div class="calc-fieldset">
+        <div class="calc-field">
+          <label class="calc-field__label" for={TIMELY_INVOICE_FIELD.id}>{TIMELY_INVOICE_FIELD.label}</label>
+          <input id={TIMELY_INVOICE_FIELD.id} class="calc-input" type="number" inputmode="decimal"
+            name={TIMELY_INVOICE_FIELD.name} value={TIMELY_INVOICE_FIELD.defaultValue}
+            min={TIMELY_INVOICE_FIELD.min} max={TIMELY_INVOICE_FIELD.max} step={TIMELY_INVOICE_FIELD.step}
+            aria-describedby={describedBy(TIMELY_INVOICE_FIELD.id, true)} />
+          <p id={helperId(TIMELY_INVOICE_FIELD.id)} class="calc-field__helper">{TIMELY_INVOICE_FIELD.helper}</p>
+          <p id={errorId(TIMELY_INVOICE_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
+        </div>
+      </div>
+
       <div class="calc-fieldset">
         <div class="calc-field calc-field--inline">
           <label class="calc-field__label" for={DEPOSIT_PROCESSING_TOGGLE.id}>{DEPOSIT_PROCESSING_TOGGLE.label}</label>

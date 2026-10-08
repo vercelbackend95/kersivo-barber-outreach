@@ -173,7 +173,7 @@ describe('calculator panel inputs', () => {
       expect(panelSource).toContain(`id={errorId(${binding}.id)}`);
     }
     expect(panelSource).toContain('id={errorId(field.id)}');
-    expect(panelSource.match(/data-calc-error/g)).toHaveLength(9);
+    expect(panelSource.match(/data-calc-error/g)).toHaveLength(10);
   });
 
   it('sources Fresha add-on prices from verified facts, unticked by default', () => {
@@ -216,7 +216,7 @@ describe('calculator results structure', () => {
   });
 
   it('renders seven peer cards including Square and Phorest without winner language without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'KERSIVO']);
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Timely', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -324,7 +324,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(39);
+    expect(ids.length).toBe(42);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

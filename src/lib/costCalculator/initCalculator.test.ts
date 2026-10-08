@@ -18,6 +18,7 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
   PHOREST_QUOTE_FIELD,
   PHOREST_QUOTE_VAT,
   TREATWELL_QUOTE_FIELD,
@@ -86,6 +87,7 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(TIMELY_INVOICE_FIELD)}
       ${numberField(TREATWELL_QUOTE_FIELD)}
       ${TREATWELL_QUOTE_VAT.options.map(option => `<input type="radio" name="treatwellQuoteVatPercent" value="${option.value}" ${option.value === TREATWELL_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       ${numberField(PHOREST_QUOTE_FIELD)}
@@ -174,6 +176,7 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  timelyMonthlyInvoiceGbp: 0,
   treatwellMonthlyQuoteGbp: 0,
   treatwellQuoteVatPercent: 99,
   phorestMonthlyQuoteGbp: 0,
@@ -191,8 +194,8 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 7));
-    expect(total('setora')).toBe(engineCash({}, 4));
+    expect(total('kersivo')).toBe(engineCash({}, 8));
+    expect(total('setora')).toBe(engineCash({}, 5));
     expect([total('booksy'), total('fresha'), total('nearcut'), total('treatwell'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', 'Custom pricing', '£59.00', '£0.00', 'Custom pricing', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
@@ -202,6 +205,7 @@ describe('initial calculation', () => {
       'booksy',
       'fresha',
       'nearcut',
+      'timely',
       'treatwell',
       'setora',
       'square',
@@ -652,13 +656,13 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(9).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(10).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(9).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(10).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -672,14 +676,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(9).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(10).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(9).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(10).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {
@@ -990,7 +994,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'tc', 'vc', 'vo', 'vm', 'vv', 'sw', 'loyalty', 'nc', 'nq', 'tq', 'tv', 'pq', 'pv', 'sq', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'tc', 'vc', 'vo', 'vm', 'vv', 'sw', 'loyalty', 'nc', 'nq', 'ti', 'tq', 'tv', 'pq', 'pv', 'sq', 'vat', 'dp', 'db', 'period',
     ]);
   });
 

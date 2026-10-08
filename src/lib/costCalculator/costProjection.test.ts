@@ -15,13 +15,14 @@ import { gbpToPence } from './money';
 
 const scenario = (overrides: Partial<CostScenarioInput> = {}): CostScenarioInput => ({
   ...DEFAULT_SCENARIO,
+  timelyMonthlyInvoiceGbp: 40,
   ...overrides,
 });
 
 function providers(overrides: Partial<CostScenarioInput>, period: (typeof COST_PERIODS)[number]) {
   const projected = projectCostCalculation(calculateMonthlyCosts(scenario(overrides)), period);
   if (!projected.ok) throw new Error('invalid scenario');
-  return projected.providers.slice(0,8);
+  return projected.providers.filter(x=>x.provider!=='timely').slice(0,8);
 }
 
 function amounts(result: ProviderMonthlyResult): MonthlyAmounts {
@@ -125,10 +126,10 @@ describe('projectCostCalculation', () => {
   it('projects a pence-level amount exactly (£20.01 × 12 = £240.12)', () => {
     const monthly = calculateMonthlyCosts(scenario());
     if (!monthly.ok) throw new Error('invalid');
-    const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo, vagaro] = monthly.providers;
+    const [booksy, fresha, nearcut, timely, treatwell, setora, square, phorest, kersivo, vagaro] = monthly.providers;
     if (booksy.status !== 'calculated') throw new Error('not calculated');
     const withPennies = { ...booksy, amounts: { ...booksy.amounts, cashTotalGbp: 20.01, subtotalExVatGbp: 20.01 } };
-    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, treatwell, setora, square, phorest, kersivo, vagaro] }, 'annual');
+    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, timely, treatwell, setora, square, phorest, kersivo, vagaro] }, 'annual');
     if (!projected.ok) throw new Error('invalid');
     expect(amounts(projected.providers[0]).cashTotalGbp).toBe(240.12);
     expect(amounts(projected.providers[0]).subtotalExVatGbp).toBe(240.12);
@@ -139,7 +140,9 @@ describe('projectCostCalculation', () => {
     expect(amounts(booksyNoVat).vatChargedGbp).toBe(120);
     expect(amounts(booksyNoVat).estimatedNetCostIfVatRecoverableGbp).toBeNull();
 
-    const [booksy, fresha, , , , , , kersivo] = providers({ vatRegistered: true }, 'threeYear');
+    const vatProviders = providers({ vatRegistered: true }, 'threeYear');
+    const [booksy, fresha] = vatProviders;
+    const kersivo = vatProviders.find(x=>x.provider==='kersivo')!;
     expect(amounts(booksy).estimatedNetCostIfVatRecoverableGbp).toBe(1800);
     expect(amounts(fresha).estimatedNetCostIfVatRecoverableGbp).toBe(1074.6);
     expect(amounts(kersivo).estimatedNetCostIfVatRecoverableGbp).toBe(1404);
@@ -176,7 +179,7 @@ describe('projectCostCalculation', () => {
   it('projects 100 monthly deposits to 12-month and 3-year totals, keeping unit and quantity monthly', () => {
     const deposits = { includeDepositProcessing: true, depositBookingsPerMonth: 100 };
     const processing = (period: (typeof COST_PERIODS)[number]) =>
-      providers(deposits, period).map((result) => result.lineItems.find((line) => line.category === 'payment-processing')!);
+      providers(deposits, period).filter(result=>result.provider !== 'timely').map((result) => result.lineItems.find((line) => line.category === 'payment-processing')!);
     expect(processing('monthly').map((line) => line.exVatGbp)).toEqual([26, 32, 0, 13, 28, null, null, 28]);
     expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 0, 156, 336, null, null, 336]);
     expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 0, 468, 1008, null, null, 1008]);

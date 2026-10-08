@@ -93,9 +93,13 @@ describe('AdminTodayBookingsLiveProvider BLACKLINE session overlay', () => {
     cleanup();
     vi.unstubAllGlobals();
     window.sessionStorage.clear();
+    vi.useRealTimers();
   });
 
   it('merges a session booking into upcoming rows without duplicating on re-render', async () => {
+    // Keep demo-session booking within today's opening hours regardless of CI's clock time.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-08T10:00:00.000Z'));
     const { addBlacklineSessionBooking, mergeBlacklineSessionBookings } = await import(
       '@/lib/demo/blacklineSessionBookings'
     );

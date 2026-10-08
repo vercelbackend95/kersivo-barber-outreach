@@ -25,6 +25,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/fresha-alternative',
   '/vagaro-alternative',
   '/nearcut-alternative',
+  '/timely-alternative',
   '/treatwell-alternative',
   '/setora-alternative',
   '/barber-software-cost-calculator',

@@ -35,6 +35,7 @@ import {
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { TREATWELL_QUOTE_VAT_UNKNOWN, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP, requireVerifiedTimelyFact, resolveTimelyMonthlyShopQuoteGbp } from '@/lib/seo/timelyFacts';
 import { estimateVagaroDisplayedSubscriptionGbp, requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
@@ -63,6 +64,8 @@ export type CostScenarioInput = {
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Real UK monthly Timely invoice INCLUDING any VAT; 0 means unknown. */
+  timelyMonthlyInvoiceGbp: number;
   /** Real Treatwell monthly software quote (ex VAT); 0 means unknown, not a free subscription. */
   treatwellMonthlyQuoteGbp: number;
   /** Treatwell quote VAT treatment: 99 unknown; 0 no VAT; 20 standard UK VAT. */
@@ -169,6 +172,8 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
     if (quoteIssue) issues.push(quoteIssue);
   }
+  const timelyIssue = numberIssue('timelyMonthlyInvoiceGbp', input.timelyMonthlyInvoiceGbp, { integer: false, min: 0 });
+  if (timelyIssue) issues.push(timelyIssue);
   return issues;
 }
 
@@ -212,7 +217,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo' | 'vagaro';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo' | 'vagaro' | 'timely';
 
 export type CostCategory =
   | 'subscription'
@@ -239,6 +244,8 @@ export type LineItemId =
   | 'treatwell-subscription'
   | 'treatwell-new-client-commission'
   | 'treatwell-deposit-processing'
+  | 'timely-subscription'
+  | 'timely-deposit-processing'
   | 'setora-subscription'
   | 'setora-additional-staff'
   | 'setora-commission'
@@ -256,7 +263,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment' | 'vagaro-standard-uk-online';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment' | 'vagaro-standard-uk-online' | 'timelypay-domestic-uk-online';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -308,6 +315,8 @@ export type AssumptionCode =
   | 'nearcut-free-online-payments'
   | 'nearcut-subscription-quote'
   | 'nearcut-subscription-unknown-payments'
+  | 'timely-actual-invoice-including-vat'
+  | 'timely-domestic-uk-processing'
   | 'treatwell-eligibility-365-days'
   | 'treatwell-quote-required'
   | 'treatwell-processing-deposits-only'
@@ -331,7 +340,7 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'vagaro-promotion-duration-unverified' | 'vagaro-vat-unknown' | 'vagaro-other-fees-excluded' | 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown';
+export type WarningCode = 'vagaro-promotion-duration-unverified' | 'vagaro-vat-unknown' | 'vagaro-other-fees-excluded' | 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown' | 'timely-quote-unknown' | 'timely-vat-not-separated';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -371,6 +380,8 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'vagaro-vat-assumption': `Vagaro subscription/add-on VAT treatment could not be verified from the public UK sources. The toggle is an explicit assumption (off = no VAT added; on = ${UK_STANDARD_VAT_PERCENT}% applied to subscription, MySite and acquisition fees). Verify the real invoice.`,
   'vagaro-online-payments': `Optional ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit processing uses the published standard Vagaro UK keyed-in/online rate, including the fixed fee. Legacy merchant agreements may differ.`,
   'vagaro-promoted-existing-excluded': 'Existing-client fees for optional Fill My Books or Daily Deals are not included. This model does not assume promotional participation; those fees could increase the actual bill.',
+  'timely-actual-invoice-including-vat': 'Enter the ACTUAL Timely UK monthly subscription invoice total, including VAT if Timely charged it. This amount is treated as cash paid; VAT is not separated because the invoice tax breakdown is unknown. Unquoted optional tools and extras are excluded.',
+  'timely-domestic-uk-processing': `TimelyPay domestic UK online card fees are benchmarked at the published ${formatPercent(TIMELY_UK_DOMESTIC_ONLINE_PERCENT)} + ${formatGbp(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)} per ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit, from current official TimelyPay UK terms. International/Amex cards and individually negotiated rates can differ; payment-processing VAT is not separately verified.`,
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -403,6 +414,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'treatwell-quote-vat-unknown': 'Confirm the VAT treatment of your Treatwell subscription quote. No complete cash total is estimated until the quote VAT basis is selected.',
   'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
   'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
+  'timely-quote-unknown': 'Enter your real Timely UK monthly invoice total including any VAT; public USD per-staff prices are not used for UK cost estimates.',
+  'timely-vat-not-separated': 'Timely invoice VAT is included in the amount you enter, but is not separately estimated or treated as recoverable. Extra processing VAT, if charged, and undisclosed add-ons are excluded.',
   'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
   'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
   'phorest-processing-unknown': 'PhorestPay deposit-processing rates for this shop are unverified. A complete total cannot be shown when deposit processing is selected.',
@@ -435,7 +448,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number; vagaroMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -467,7 +480,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing' | 'vagaro-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'timely-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing' | 'vagaro-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -911,6 +924,52 @@ function calculateTreatwell(scenario: CostScenarioInput, eligibleClients: number
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
 }
 
+/* ---------------------------------- Timely --------------------------------- */
+
+/**
+ * Public Timely UK subscription price is unverified: only use the customer's
+ * actual full monthly invoice total (including any VAT). No currency conversion.
+ * The amount is cash paid and the embedded VAT is NOT split or reclaim-estimated.
+ * Deposit fees use TimelyPay's confirmed UK domestic online rate (5 Aug 2026).
+ */
+function calculateTimely(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const invoiceGbp = resolveTimelyMonthlyShopQuoteGbp(scenario.timelyMonthlyInvoiceGbp);
+  const quoteMissing = invoiceGbp === null;
+  const domestic = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+  if (!('percent' in domestic && 'fixedGbp' in domestic)) throw new Error('Missing UK TimelyPay online processing rate');
+  const invoicePence = quoteMissing ? null : gbpToPence(invoiceGbp);
+  const lines: PenceLine[] = [
+    {
+      id: 'timely-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: invoicePence, unitPence: invoicePence, quantity: 1,
+      vatApplies: false, // VAT already IN the invoice quote: do not add it a second time.
+    },
+    depositProcessingLine(scenario, {
+      id: 'timely-deposit-processing',
+      paymentMethod: 'timelypay-domestic-uk-online',
+      percent: domestic.percent,
+      fixedPence: gbpToPence(domestic.fixedGbp),
+      vatApplies: false, // published processing rate; unknown tax handled in caveat.
+    }),
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('timely-actual-invoice-including-vat'),
+    ...(scenario.includeDepositProcessing ? [assumption('timely-domestic-uk-processing')] : []),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [warning('timely-vat-not-separated')];
+  if (quoteMissing) warnings.push(warning('timely-quote-unknown'));
+  const base = {
+    provider: 'timely' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing) return { ...base, status: 'custom-pricing', amounts: null };
+  const computed = summarise(lines, false);
+  return { ...base, status: 'calculated', amounts: { ...computed, estimatedNetCostIfVatRecoverableGbp: null } };
+}
+
 /* ---------------------------------- Setora --------------------------------- */
 
 /**
@@ -1155,6 +1214,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
+      calculateTimely(scenario),
       calculateTreatwell(scenario, effectiveMarketplaceClients.treatwellMarketplace),
       calculateSetora(scenario),
       calculateSquare(scenario),

@@ -19,6 +19,7 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
 import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 import { requireVerifiedVagaroFact, estimateVagaroDisplayedSubscriptionGbp } from '@/lib/seo/vagaroFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -100,6 +101,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question:'Does the Vagaro estimate include VAT and online deposits?',
     answer:`Vagaro's subscription VAT basis has not been verified for every UK shop. The calculator allows an explicit VAT assumption. Its optional online deposit estimate uses published UK keyed-in/online rates of ${requireVerifiedVagaroFact('standardOnlineProcessingPercent').value}% plus ${formatGbp(requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} per transaction. Actual merchant terms may differ.`,
+  },
+  {
+    question: 'What does Timely cost per month in the UK?',
+    answer: 'Timely uses Build, Elevate and Innovate subscriptions based on staff. Current UK GBP monthly prices need a shop-specific invoice or quote. Enter your true monthly invoice INCLUDING any VAT in Advanced costs. The calculator shows Custom pricing instead of making up a fee.',
+  },
+  {
+    question: 'How much does TimelyPay charge for online deposits?',
+    answer: `Timely publishes a standard UK domestic online card processing rate of ${TIMELY_UK_DOMESTIC_ONLINE_PERCENT}% plus ${Math.round(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP * 100)}p per payment. Individual terms and other card types differ. The calculator models the standard domestic card rate on the selected booking-deposit benchmark only.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
