@@ -35,10 +35,6 @@ function readCards(grid: HTMLElement): CardInput[] {
   });
 }
 
-function parseSuggested(value: string | undefined): HubCriterionId[] {
-  return (value ?? '').split(',').filter(isHubCriterionId);
-}
-
 export function initAlternativesHub(doc: Document = document): void {
   const root = doc.querySelector<HTMLElement>('[data-hub-root]');
   if (!root || root.dataset.hubReady === 'true') return;
@@ -60,8 +56,7 @@ export function initAlternativesHub(doc: Document = document): void {
 
   const cards = readCards(grid);
   const initialVisible = Number(root.dataset.initialVisible ?? cards.length);
-  const suggested = parseSuggested(root.dataset.suggested);
-  const extraPillCount = pills.length;
+  const filterCount = pills.length;
 
   const selected = new Set<HubCriterionId>(
     pills
@@ -90,6 +85,14 @@ export function initAlternativesHub(doc: Document = document): void {
       if (label) label.textContent = formatScoreLabel(score);
       const description = card.querySelector<HTMLElement>('[data-hub-score-description]');
       if (description) description.textContent = describeScore(score);
+      const caption = card.querySelector<HTMLElement>('[data-hub-score-caption]');
+      if (caption) caption.textContent = score.selected === 0 ? 'choose' : 'match';
+      const summary = card.querySelector<HTMLElement>('[data-hub-score-summary]');
+      if (summary) {
+        summary.textContent = score.selected === 0
+          ? 'Choose priorities to see confirmed matches and unknowns.'
+          : `${score.matches}/${score.selected} confirmed · ${score.partial} partial · ${score.unverified} not verified`;
+      }
 
       card.querySelectorAll<HTMLElement>('[data-criterion]').forEach((item) => {
         const id = item.dataset.criterion ?? '';
@@ -103,17 +106,13 @@ export function initAlternativesHub(doc: Document = document): void {
     });
 
     if (selectedCount) selectedCount.textContent = String(selection.length);
-    if (suggestedNote) {
-      const isSuggested =
-        selection.length === suggested.length && suggested.every((id) => selected.has(id));
-      suggestedNote.hidden = !isSuggested;
-    }
+    if (suggestedNote) suggestedNote.hidden = selection.length !== 0;
     if (live) {
       const sortText = mode === 'name' ? 'sorted by name' : 'sorted by best match';
       live.textContent =
         selection.length === 0
-          ? `${cards.length} systems shown. Select priorities to see a match score.`
-          : `${cards.length} systems shown, ${sortText} for ${selection.length} selected ${selection.length === 1 ? 'priority' : 'priorities'}.`;
+          ? `${cards.length} systems available. Select priorities to see match scores.`
+          : `${cards.length} systems available, ${sortText} for ${selection.length} selected ${selection.length === 1 ? 'priority' : 'priorities'}. All systems displayed.`;
     }
   }
 
@@ -123,6 +122,8 @@ export function initAlternativesHub(doc: Document = document): void {
       if (!isHubCriterionId(id)) return;
       if (selected.has(id)) selected.delete(id);
       else selected.add(id);
+      // Changing priorities always reveals the complete ranked list, including Booksy.
+      if (selected.size > 0) setShowAll(true);
       render();
     });
   });
@@ -131,52 +132,106 @@ export function initAlternativesHub(doc: Document = document): void {
 
   resetButton?.addEventListener('click', () => {
     selected.clear();
+    setShowAll(false);
     render();
   });
 
-  showAll?.addEventListener('click', () => {
-    const expanded = grid.dataset.expanded !== 'true';
-    grid.dataset.expanded = expanded ? 'true' : 'false';
-    showAll.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  function setShowAll(expanded: boolean): void {
+    grid!.dataset.expanded = expanded ? 'true' : 'false';
+    showAll?.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     if (showAllLabel) showAllLabel.textContent = expanded ? 'Show fewer systems' : `Show all systems (${cards.length})`;
+  }
+
+  showAll?.addEventListener('click', () => {
+    setShowAll(grid.dataset.expanded !== 'true');
   });
 
-  // The desktop control remains a progressive disclosure; on mobile it becomes
-  // a compact bottom sheet without introducing a second, unsynchronised filter set.
-  const mobileSheetQuery = doc.defaultView?.matchMedia('(max-width: 720px)');
+  // Mobile filter sheet reuses the server-rendered criteria; no duplicate state.
+  const mobileSheetQuery = doc.defaultView?.matchMedia?.('(max-width: 720px)');
   let lastFocus: HTMLElement | null = null;
-  function closeSheet(): void {
-    if (panel) panel.dataset.filtersExpanded = 'false';
+  let previousOverflow = '';
+
+  function closeSheet(restoreFocus = true): void {
+    if (panel) {
+      panel.dataset.filtersExpanded = 'false';
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-modal');
+      panel.removeAttribute('aria-label');
+    }
     moreFilters?.setAttribute('aria-expanded', 'false');
     moreFilters?.setAttribute('aria-label', 'Open all comparison filters');
-    if (moreFiltersLabel) moreFiltersLabel.textContent = `All filters (${extraPillCount})`;
-    doc.documentElement.style.removeProperty('overflow');
-    lastFocus?.focus();
+    if (moreFiltersLabel) moreFiltersLabel.textContent = `All filters (${filterCount})`;
+    if (mobileSheetQuery?.matches) doc.documentElement.style.overflow = previousOverflow;
+    if (restoreFocus) lastFocus?.focus();
     lastFocus = null;
   }
+
   moreFilters?.addEventListener('click', () => {
     const expanded = panel?.dataset.filtersExpanded !== 'true';
     if (!expanded) {
       closeSheet();
       return;
     }
+
     lastFocus = doc.activeElement instanceof HTMLElement ? doc.activeElement : null;
-    if (panel) panel.dataset.filtersExpanded = 'true';
+    if (panel) {
+      panel.dataset.filtersExpanded = 'true';
+      if (mobileSheetQuery?.matches) {
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
+        panel.setAttribute('aria-label', 'Compare booking software filters');
+      }
+    }
     moreFilters.setAttribute('aria-expanded', 'true');
-    moreFilters.setAttribute('aria-label', 'Close comparison filters');
-    if (moreFiltersLabel) moreFiltersLabel.textContent = 'Apply filters';
-    if (mobileSheetQuery?.matches) doc.documentElement.style.overflow = 'hidden';
+    moreFilters.setAttribute('aria-label', 'Apply comparison filters and close');
+    if (moreFiltersLabel) moreFiltersLabel.textContent = mobileSheetQuery?.matches ? 'Apply filters' : 'Fewer filters';
+
+    if (mobileSheetQuery?.matches) {
+      previousOverflow = doc.documentElement.style.overflow;
+      doc.documentElement.style.overflow = 'hidden';
+      pills[0]?.focus();
+    }
   });
+
   doc.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && panel?.dataset.filtersExpanded === 'true') closeSheet();
+    if (panel?.dataset.filtersExpanded !== 'true') return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeSheet();
+    }
+    if (event.key !== 'Tab' || !mobileSheetQuery?.matches) return;
+    const focusable = Array.from(
+      panel.querySelectorAll<HTMLElement>('button:not([disabled]), select:not([disabled]), a[href]'),
+    ).filter((el) => el.getClientRects().length > 0);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && doc.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && doc.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
+
   doc.addEventListener('click', (event) => {
     if (!mobileSheetQuery?.matches || panel?.dataset.filtersExpanded !== 'true') return;
-    const target = event.target;
-    if (target instanceof Node && !panel.contains(target)) closeSheet();
+    if (event.target instanceof Node && !panel.contains(event.target)) closeSheet();
   });
-  mobileSheetQuery?.addEventListener('change', () => {
-    if (!mobileSheetQuery.matches && panel?.dataset.filtersExpanded === 'true') closeSheet();
+
+  mobileSheetQuery?.addEventListener?.('change', () => {
+    if (!mobileSheetQuery.matches && panel?.dataset.filtersExpanded === 'true') {
+      previousOverflow = '';
+      closeSheet(false);
+      doc.documentElement.style.removeProperty('overflow');
+    }
+  });
+  doc.addEventListener('astro:before-swap', () => {
+    if (panel?.dataset.filtersExpanded === 'true') closeSheet(false);
   });
 
   render();
