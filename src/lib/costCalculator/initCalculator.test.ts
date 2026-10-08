@@ -779,7 +779,10 @@ describe('scenario URLs', () => {
     const projected = projectCostCalculation(calculateMonthlyCosts(URL_SCENARIO), 'threeYear');
     if (!projected.ok) throw new Error('invalid');
     projected.providers.forEach((provider) => {
-      if (provider.status !== 'calculated') throw new Error('not calculated');
+      if (provider.status === 'custom-pricing') {
+        expect(total(provider.provider)).toBe(provider.provider === 'square' ? 'Not estimated' : 'Custom pricing');
+        return;
+      }
       expect(total(provider.provider)).toBe(formatMoneyGbp(provider.amounts.cashTotalGbp));
     });
     expect($(`#${DEPOSIT_PROCESSING_TOGGLE.fieldsId}`).hidden).toBe(false);
@@ -910,7 +913,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'sq', 'vat', 'dp', 'db', 'period',
     ]);
   });
 
