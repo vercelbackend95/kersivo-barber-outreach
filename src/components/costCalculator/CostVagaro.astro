@@ -2,7 +2,6 @@
 import { VAGARO_FACTS_CHECKED_DATE, requireVerifiedVagaroFact, getVagaroSource } from '@/lib/seo/vagaroFacts';
 import { formatGbp } from '@/lib/seo/freshaFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
-import { UK_STANDARD_VAT_PERCENT } from '@/lib/costCalculator/vat';
 const base = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
 const extra = requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value;
 const cap = requireVerifiedVagaroFact('sevenOrMoreCalendarsDisplayedMonthlyGbp').value;
