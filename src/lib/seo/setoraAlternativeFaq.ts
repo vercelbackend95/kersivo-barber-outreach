@@ -10,7 +10,7 @@ export const SETORA_ALTERNATIVE_DESCRIPTION = `Compare Setora vs KERSIVO for UK 
 export const SETORA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-08';
 export const SETORA_ALTERNATIVE_LAST_UPDATED_LABEL = '8 October 2026';
 
-export const SETORA_ALTERNATIVE_FAQ_ITEMS = [
+export const SETORA_ALTERNATIVE_FAQ_ITEMS: { question: string; answer: string }[] = [
   {question:'Is KERSIVO a Setora alternative for UK barbershops?',answer:'Yes. Both Setora and KERSIVO offer online bookings and staff scheduling for UK barbershops. KERSIVO offers a free Starter plan for up to four active bookable barbers and a £39/month Full plan per location with a branded website and standard domain.'},
   {question:'How much does Setora cost per month in the UK?',answer:`Setora's main UK pricing page lists £${monthly}/month per location, before VAT where applicable, including unlimited staff. Some Setora industry pages still display £39, which conflicts with its main pricing page; ask Setora to confirm the exact amount on your invoice before switching.`},
   {question:'Why does Setora show both £39 and £59?',answer:`As checked ${SETORA_FACTS_CHECKED_DATE}, Setora's official /pricing page and homepage show £59/month per location while its barbershop-specific page still says £39. We use the canonical £59 figure and disclose the discrepancy instead of silently treating £39 as a current universal offer.`},
@@ -25,7 +25,7 @@ export const SETORA_ALTERNATIVE_FAQ_ITEMS = [
   {question:'Can I keep Setora active while preparing KERSIVO?',answer:'Yes. Keep existing booking links live during setup. Test the KERSIVO booking flow and confirm the handling of future appointments before changing your public links.'},
   {question:'Do Setora or KERSIVO operate a consumer booking marketplace?',answer:'Neither is positioned as a consumer marketplace. Both prioritise direct bookings between the shop and its customers. Choose based on platform cost, required functionality, domain setup and payment terms.'},
   {question:'Can I try KERSIVO before replacing Setora?',answer:'Yes. You can try the public KERSIVO demo or start KERSIVO Starter at £0/month. Review your shop requirements and the exact commercial terms before switching.'},
-] as const;
+];
 
 export function buildSetoraAlternativeFaqJsonLd(): Record<string,unknown> {
   const pageUrl = `${getPublicSiteUrl()}${SETORA_ALTERNATIVE_PAGE_PATH}`;
