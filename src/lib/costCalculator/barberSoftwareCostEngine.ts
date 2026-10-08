@@ -637,7 +637,7 @@ function calculateFresha(scenario: CostScenarioInput, marketplaceClients: number
  */
 function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
   const subscription = scenario.nearcutSubscription;
-  const quotePence = gbpToPence(scenario.nearcutMonthlyQuoteGbp);
+  const quotePence = subscription ? gbpToPence(scenario.nearcutMonthlyQuoteGbp) : 0;
   const freeMonthly = requireVerifiedNearcutFact('freeForYouMonthlySubscription');
   const freePayments = requireVerifiedNearcutFact('freeForYouOnlinePayments');
   const quoteMissing = subscription && quotePence === 0;
