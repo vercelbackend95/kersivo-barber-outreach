@@ -393,6 +393,7 @@ describe('booking deposit payment processing copy', () => {
       'Booksy Mobile Payments',
       'Fresha Online Payments',
       'Setora via Stripe',
+      'PhorestPay · quote required',
       'KERSIVO via Stripe Checkout',
       'What is not modelled',
     ]);
