@@ -134,6 +134,12 @@ function chooseVat(value: 'yes' | 'no') {
   radio.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+function choosePhorestVat(value: number) {
+  const radio = $<HTMLInputElement>(`input[name="phorestQuoteVatPercent"][value="${value}"]`);
+  radio.checked = true;
+  radio.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 function engineCash(overrides: Partial<typeof DEFAULT_SCENARIO>, index: number) {
   const result = calculateMonthlyCosts({ ...DEFAULT_SCENARIO, ...overrides });
   if (!result.ok) throw new Error('invalid');
@@ -433,6 +439,30 @@ function enableDeposits(count: string) {
   toggle(depositToggleId, true);
   setNumber(depositFieldId, count);
 }
+
+describe('Phorest client form integration', () => {
+  it('requires an actual quote and a confirmed VAT treatment', () => {
+    expect(total('phorest')).toBe('Custom pricing');
+    setNumber(PHOREST_QUOTE_FIELD.id, '125.50');
+    expect(total('phorest')).toBe('Custom pricing');
+    choosePhorestVat(20);
+    expect(total('phorest')).toBe('£150.60');
+    expect(cell('phorest', 'phorest-subscription')).toBe('£125.50');
+    expect(cell('phorest', 'phorest-deposit-processing')).toBe('Not included');
+    choosePhorestVat(0);
+    expect(total('phorest')).toBe('£125.50');
+    expect(summary('phorest', 'vat')).toBe('£0.00');
+  });
+  it('never guesses merchant processing for deposit payments', () => {
+    setNumber(PHOREST_QUOTE_FIELD.id, '125.50');
+    choosePhorestVat(20);
+    toggle(DEPOSIT_PROCESSING_TOGGLE.id, true);
+    setNumber(DEPOSIT_BOOKINGS_FIELD.id, '100');
+    expect(total('phorest')).toBe('Custom pricing');
+    expect(cell('phorest', 'phorest-deposit-processing')).toBe('Custom pricing');
+    expect(warnings('phorest').join(' ')).toContain('PhorestPay');
+  });
+});
 
 describe('booking deposit processing', () => {
   it('hides the Stripe fee-payer assumption while deposit processing is off', () => {
