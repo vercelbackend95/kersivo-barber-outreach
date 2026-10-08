@@ -15,7 +15,7 @@ import { formatMoneyGbp } from './money';
 type ProviderAmount = { provider: ProviderId; monthlyExVatGbp: number };
 
 export type CostInsight =
-  | { kind: 'custom-pricing'; provider: 'fresha' }
+  | { kind: 'custom-pricing'; provider: 'fresha' | 'nearcut' }
   | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
   | { kind: 'add-ons'; freshaAddOnsGbp: number }
@@ -43,9 +43,8 @@ function largest(results: readonly CalculatedProviderResult[], pick: (r: Calcula
 
 export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
   if (!monthly.ok) return null;
-  if (monthly.providers.some((result) => result.status === 'custom-pricing')) {
-    return { kind: 'custom-pricing', provider: 'fresha' };
-  }
+  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing');
+  if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : 'fresha' };
 
   const calculated = monthly.providers.filter(
     (result): result is CalculatedProviderResult => result.status === 'calculated',
@@ -108,7 +107,9 @@ const perMonth = (gbp: number) => `${formatMoneyGbp(gbp)}/month before VAT`;
 export function describeCostInsight(insight: CostInsight): string {
   switch (insight.kind) {
     case 'custom-pricing':
-      return `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete three-way cost comparison is not available.`;
+      return insight.provider === 'nearcut'
+        ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete four-provider total is not available.'
+        : `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete cost comparison is not available.`;
     case 'acquisition': {
       const { booksyBoostGbp, freshaMarketplaceGbp } = insight;
       if (booksyBoostGbp > 0 && freshaMarketplaceGbp > 0) {

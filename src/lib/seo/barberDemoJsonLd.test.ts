@@ -71,9 +71,11 @@ describe('buildBarberDemoJsonLd', () => {
     }
     expect(organization.logo).toEqual({
       '@type': 'ImageObject',
-      url: `${siteUrl}/images/logo.jpg`,
+      url: `${siteUrl}/images/logo_nobg.png`,
+      width: 796,
+      height: 555,
     });
-    expect(JSON.stringify(organization.logo)).not.toContain('logo_nobg');
+    expect(JSON.stringify(organization.logo)).not.toContain('logo.jpg');
     expect(organization.sameAs).toEqual(getFooterSocialLinks().map((link) => link.href));
     expect(organization).not.toHaveProperty('contactPoint');
     expect(organization).not.toHaveProperty('legalName');

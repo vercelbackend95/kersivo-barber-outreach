@@ -32,7 +32,7 @@ export function buildBarberCostCalculatorWebPageJsonLd(): Record<string, unknown
 export const BARBER_COST_CALCULATOR_APP_NAME = 'Barber Booking Software Cost Calculator';
 
 export const BARBER_COST_CALCULATOR_APP_DESCRIPTION =
-  'Interactive calculator that estimates monthly, 12-month and 3-year booking software costs for a UK barbershop on Booksy, Fresha and KERSIVO, using each provider’s published UK pricing and the shop’s own inputs.';
+  'Interactive calculator that estimates monthly, 12-month and 3-year booking software costs for a UK barbershop on Booksy, Fresha, Nearcut and KERSIVO, using official UK pricing facts where available, transparent estimates and shop-entered Nearcut quotes.';
 
 /** Static description of the tool only: never scenario values, ratings, offers or install claims. */
 export function buildBarberCostCalculatorWebApplicationJsonLd(): Record<string, unknown> {

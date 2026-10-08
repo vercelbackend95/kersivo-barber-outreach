@@ -18,14 +18,14 @@ import {
   SQUIRE_ALTERNATIVE_TITLE,
   buildSquireAlternativeFaqJsonLd,
 } from '@/lib/seo/squireAlternativeFaq';
-import { buildSquireAlternativeWebPageJsonLd } from '@/lib/seo/squireAlternativeJsonLd';
+import { buildSquireAlternativeWebPageJsonLd, buildSquireAlternativeBreadcrumbJsonLd } from '@/lib/seo/squireAlternativeJsonLd';
 import { FOOTER_LEGAL_LINKS, KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fresha-alternative.css';
 const currentYear = new Date().getFullYear();
 ---
 <LandingLayout title={SQUIRE_ALTERNATIVE_TITLE} description={SQUIRE_ALTERNATIVE_DESCRIPTION}
   canonicalPath={SQUIRE_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
+  jsonLd={[buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
   <main class="fresha-alt squire-alt landing-overflow-guard">
     <SquireHero />
     <SquireIntro />

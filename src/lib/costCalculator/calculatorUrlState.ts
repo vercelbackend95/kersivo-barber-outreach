@@ -14,6 +14,8 @@
  *   fc      Fresha Marketplace clients       integer
  *   sw      Fresha Smart Website             1 | 0
  *   loyalty Fresha Client Loyalty            1 | 0
+ *   nc      Nearcut Subscription             1 | 0
+ *   nq      Nearcut monthly quote (ex VAT)    decimal, 0 if unknown
  *   vat     VAT registered                   1 | 0
  *   dp      booking deposit processing       1 | 0
  *   db      deposit bookings per month       integer
@@ -39,6 +41,8 @@ export const SCENARIO_PARAMS = {
   freshaMarketplaceClients: 'fc',
   freshaSmartWebsite: 'sw',
   freshaClientLoyalty: 'loyalty',
+  nearcutSubscription: 'nc',
+  nearcutMonthlyQuoteGbp: 'nq',
   vatRegistered: 'vat',
   includeDepositProcessing: 'dp',
   depositBookingsPerMonth: 'db',
@@ -57,6 +61,7 @@ export const ADVANCED_SCENARIO_KEYS = [
   'vatRegistered',
   'freshaSmartWebsite',
   'freshaClientLoyalty',
+  'nearcutSubscription',
   'includeDepositProcessing',
 ] as const satisfies readonly BooleanKey[];
 

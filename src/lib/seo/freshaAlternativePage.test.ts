@@ -551,7 +551,7 @@ describe('comparison cluster internal links', () => {
 
   it('links the homepage switching section to /fresha-alternative with a crawlable anchor', () => {
     expect(homepageSource).toContain(
-      '<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink showSquireCompareLink />',
+      '<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />',
     );
     expect(switcherSource).toContain('showFreshaCompareLink');
     expect(countLinks(switcherSource, '/fresha-alternative')).toBe(1);

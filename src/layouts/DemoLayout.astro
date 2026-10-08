@@ -6,6 +6,7 @@ import DemoFooter from '@/components/demo/DemoFooter.astro';
 import DemoNav from '@/components/demo/DemoNav.astro';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import { BLACKLINE_SHOP_ID, DEMO_PRODUCT_IDS } from '@/lib/demo/products';
 import { DEMO_DEFAULT_DESCRIPTION, DEMO_SHOP_NAME } from '@/lib/demo/site';
@@ -45,6 +46,7 @@ const currentPath = Astro.url.pathname;
   <head>
     <GoogleAnalytics siteSection="demo" />
     <meta charset="utf-8" />
+    <FaviconLinks />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />

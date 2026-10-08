@@ -25,6 +25,8 @@ import {
   DEPOSIT_BOOKINGS_FIELD,
   DEPOSIT_EXCEEDS_APPOINTMENTS_MESSAGE,
   DEPOSIT_PROCESSING_TOGGLE,
+  NEARCUT_SUBSCRIPTION_TOGGLE,
+  NEARCUT_QUOTE_FIELD,
   PERIOD_OPTIONS,
   PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
@@ -69,6 +71,7 @@ describe('calculator panel inputs', () => {
       VAT_OPTIONS.name,
       ...FRESHA_ADD_ONS.map((addOn) => addOn.name),
       DEPOSIT_PROCESSING_TOGGLE.name,
+      NEARCUT_SUBSCRIPTION_TOGGLE.name,
     ].sort();
     expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
   });
@@ -140,7 +143,7 @@ describe('calculator panel inputs', () => {
     expect(DEPOSIT_BOOKINGS_FIELD.max).toBe(20000);
     expect(DEFAULT_SCENARIO.depositBookingsPerMonth).toBe(0);
     expect(DEPOSIT_BOOKINGS_FIELD.helper).toBe(
-      'Uses a £5 online deposit benchmark across all three providers. This compares deposit processing only, not the remaining appointment balance or in-person card payments.',
+      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
     );
     expect(configSource).toContain('formatGbp(DEPOSIT_BENCHMARK_GBP)');
   });
@@ -152,11 +155,12 @@ describe('calculator panel inputs', () => {
       'APPOINTMENT_VALUE_FIELD',
       'MARKETPLACE_CLIENTS_FIELD',
       'DEPOSIT_BOOKINGS_FIELD',
+      'NEARCUT_QUOTE_FIELD',
     ]) {
       expect(panelSource).toContain(`id={errorId(${binding}.id)}`);
     }
     expect(panelSource).toContain('id={errorId(field.id)}');
-    expect(panelSource.match(/data-calc-error/g)).toHaveLength(6);
+    expect(panelSource.match(/data-calc-error/g)).toHaveLength(7);
   });
 
   it('sources Fresha add-on prices from verified facts, unticked by default', () => {
@@ -198,8 +202,8 @@ describe('calculator results structure', () => {
     expect(resultsSource).toContain('data-calc-three-year-note hidden={!view.showThreeYearNote}');
   });
 
-  it('renders three peer cards in Booksy, Fresha, KERSIVO order without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'KERSIVO']);
+  it('renders four peer cards in Booksy, Fresha, Nearcut, KERSIVO order without winner language', () => {
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -225,6 +229,11 @@ describe('calculator results structure', () => {
       ['fresha-client-loyalty', 'Client Loyalty'],
       ['vat', 'VAT'],
       ['fresha-deposit-processing', 'Booking deposit processing'],
+    ]);
+    expect(rows('nearcut')).toEqual([
+      ['nearcut-subscription', 'Subscription / shop cost'],
+      ['vat', 'VAT'],
+      ['nearcut-deposit-processing', 'Online deposit processing'],
     ]);
     expect(rows('kersivo')).toEqual([
       ['kersivo-subscription', 'Subscription'],
@@ -282,7 +291,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(16);
+    expect(ids.length).toBe(19);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

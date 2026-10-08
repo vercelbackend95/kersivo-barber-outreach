@@ -80,6 +80,7 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
                 <p class="calc-card__custom" data-slot="custom-note" hidden={!result.customNote}>
                   {result.customNote}
                 </p>
+                <p class="calc-card__client-note" data-slot="client-fee-note" hidden={!result.clientFeeNote}>{result.clientFeeNote}</p>
                 <p class="calc-card__net" data-slot="net">
                   {result.net}
                 </p>

@@ -4,6 +4,9 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 ---
 <section class="fresha-alt-hero" aria-labelledby="squire-alt-hero-title">
   <div class="fresha-alt-hero__content">
+    <nav class="squire-alt-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">SQUIRE alternative</span>
+    </nav>
     <p class="fresha-alt-hero__eyebrow"><span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>SQUIRE alternative for UK barbershops</p>
     <h1 id="squire-alt-hero-title" class="fresha-alt-hero__title">
       <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A SQUIRE alternative</span>
@@ -24,3 +27,9 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
   </div>
   <HeroDashboardShowcase />
 </section>
+
+<style>
+  .squire-alt-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-bottom:1rem;color:#9ca3af;font-size:.75rem;line-height:1.5}
+  .squire-alt-breadcrumb a{color:inherit;text-decoration:none}
+  .squire-alt-breadcrumb a:hover,.squire-alt-breadcrumb a:focus-visible{color:#f9fafb;text-decoration:underline}
+</style>

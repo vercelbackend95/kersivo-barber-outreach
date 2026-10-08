@@ -13,7 +13,8 @@ import {
  SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO,
  buildSquireAlternativeFaqJsonLd,
 } from './squireAlternativeFaq';
-import { buildSquireAlternativeWebPageJsonLd } from './squireAlternativeJsonLd';
+import { buildSquireAlternativeWebPageJsonLd, buildSquireAlternativeBreadcrumbJsonLd } from './squireAlternativeJsonLd';
+import { MARKETING_NAV_ITEMS, buildMarketingNavigation } from '@/lib/nav/marketingNavigation';
 import {
  SQUIRE_OFFICIAL_SOURCES,
  SQUIRE_COMPARE_SECTIONS,
@@ -30,8 +31,7 @@ const intro = read('../../components/squireAlternative/SquireIntro.astro');
 const compare = read('../../components/squireAlternative/SquireCompare.astro');
 const fit = read('../../components/squireAlternative/SquireFit.astro');
 const sources = read('../../components/squireAlternative/SquireSources.astro');
-const homepage = read('../../pages/index.astro');
-const switcher = read('../../components/landingSwitcherReassurance.astro');
+const nearcutFit = read('../../components/nearcutAlternative/NearcutFit.astro');
 const booksyFit = read('../../components/booksyAlternative/BooksyFit.astro');
 const freshaFit = read('../../components/freshaAlternative/FreshaFit.astro');
 
@@ -59,7 +59,7 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect(web.dateModified).toBe(SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO);
    expect(sitemap).toEqual({loc:canonical,lastmod:SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO});
    expect(buildMarketingSitemapXml()).toContain('<loc>'+canonical+'</loc>');
-   expect(page).toContain('buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeFaqJsonLd()');
+   expect(page).toContain('buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()');
  });
  it('keeps FAQ schema exactly aligned with visible answers, without fake ratings',()=>{
    const faq = buildSquireAlternativeFaqJsonLd();
@@ -122,12 +122,23 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect(robots).toContain('User-agent: *');
    expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
    expect(robots).not.toMatch(/Disallow: \/squire-alternative/);
-   expect(homepage).toContain('<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink showSquireCompareLink />');
-   expect(switcher).toContain('href="/squire-alternative"');
+   expect(MARKETING_NAV_ITEMS.find(item=>item.href==='/squire-alternative')).toMatchObject({id:'compare-squire',group:'compare',section:'alternatives',label:'SQUIRE Alternative'});
+   expect(buildMarketingNavigation().find(group=>group.id==='compare')?.sections[0].items.some(item=>item.href==='/squire-alternative')).toBe(true);
    expect(booksyFit).toContain('href="/squire-alternative"');
    expect(freshaFit).toContain('href="/squire-alternative"');
+   expect(nearcutFit).toContain('href="/squire-alternative"');
    expect(fit).toContain('href="/booksy-alternative"');
    expect(fit).toContain('href="/fresha-alternative"');
+ });
+ it('has visible breadcrumb and matching BreadcrumbList structured data',()=>{
+   expect(hero).toContain('aria-label="Breadcrumb"');
+   expect(hero).toContain('aria-current="page">SQUIRE alternative');
+   expect(page).toContain('buildSquireAlternativeBreadcrumbJsonLd()');
+   const breadcrumb=buildSquireAlternativeBreadcrumbJsonLd();
+   expect(breadcrumb['@type']).toBe('BreadcrumbList');
+   expect(breadcrumb['@id']).toBe('https://kersivo.co.uk/squire-alternative#breadcrumb');
+   expect((breadcrumb.itemListElement as Array<Record<string,unknown>>).map(x=>x.item)).toEqual(['https://kersivo.co.uk/','https://kersivo.co.uk/squire-alternative']);
+   expect(buildSquireAlternativeWebPageJsonLd().breadcrumb).toEqual({'@id':breadcrumb['@id']});
  });
  it('has no placeholders, unverifiable bargain promises or artificial review markup',()=>{
    const text=[page,hero,intro,compare,fit,sources,...SQUIRE_ALTERNATIVE_FAQ_ITEMS.map(x=>x.answer)].join('\n').toLowerCase();

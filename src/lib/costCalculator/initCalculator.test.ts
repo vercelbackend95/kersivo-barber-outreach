@@ -16,6 +16,8 @@ import {
   NUMBER_FIELDS,
   DEPOSIT_BOOKINGS_FIELD,
   DEPOSIT_PROCESSING_TOGGLE,
+  NEARCUT_SUBSCRIPTION_TOGGLE,
+  NEARCUT_QUOTE_FIELD,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
@@ -42,6 +44,7 @@ function mount({ prePaint = false } = {}) {
       <p data-calc-period-label>${PERIOD_OPTIONS[0].resultLabel}</p>
       <p><span data-slot="total" aria-hidden="true">£—</span><span data-slot="total-sr"></span></p>
       <p data-slot="custom-note" hidden></p>
+      <p data-slot="client-fee-note" hidden></p>
       <p data-slot="net"></p>
       <dl>${SUMMARY_ROWS.map((row) => `<div><dt>${row.label}</dt><dd data-summary="${row.id}">—</dd></div>`).join('')}</dl>
       <details class="calc-card__breakdown"><summary>View breakdown</summary><dl>${provider.breakdown
@@ -73,6 +76,8 @@ function mount({ prePaint = false } = {}) {
       <input type="radio" name="vatRegistered" value="yes" />
       <details class="calc-advanced"><summary>Advanced costs</summary></details>
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
+      <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
+      <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
@@ -144,6 +149,8 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaMarketplaceClients: 15,
   freshaSmartWebsite: true,
   freshaClientLoyalty: false,
+  nearcutSubscription: false,
+  nearcutMonthlyQuoteGbp: 0,
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -156,8 +163,8 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 2));
-    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
+    expect(total('kersivo')).toBe(engineCash({}, 3));
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
@@ -165,6 +172,7 @@ describe('initial calculation', () => {
     expect([...document.querySelectorAll('[data-provider]')].map((el) => (el as HTMLElement).dataset.provider)).toEqual([
       'booksy',
       'fresha',
+      'nearcut',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -175,6 +183,40 @@ describe('initial calculation', () => {
     $<HTMLButtonElement>('[data-step="1"]').click();
     expect($<HTMLInputElement>('#calc-barbers').value).toBe('4');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£15.00');
+  });
+});
+
+describe('Nearcut browser integration', () => {
+  it('defaults to Free for You, £0 shop subscription and visibly separates client booking fees', () => {
+    expect(total('nearcut')).toBe('£0.00');
+    expect(cardEl('nearcut').querySelector('[data-slot="client-fee-note"]')!.textContent).toContain('NOT a universal rate');
+    expect(cardEl('nearcut').dataset.state).toBe('calculated');
+    expect(cell('nearcut', 'nearcut-subscription')).toBe('£0.00');
+  });
+
+  it('supports an actual Subscription quote and shows VAT in the cash total', () => {
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, true);
+    expect($(`#${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}`).hidden).toBe(false);
+    expect(total('nearcut')).toBe('Custom pricing');
+    setNumber(NEARCUT_QUOTE_FIELD.id, '80');
+    expect(total('nearcut')).toBe('£96.00');
+    expect(cardEl('nearcut').querySelector('[data-slot="client-fee-note"]')!.textContent).toContain('removes the client booking charge');
+    choosePeriod('annual');
+    expect(total('nearcut')).toBe('£1,152.00');
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, false);
+    expect(total('nearcut')).toBe('£0.00');
+  });
+
+  it('will not invent Nearcut Subscription payment fees when deposit processing is enabled', () => {
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, true);
+    setNumber(NEARCUT_QUOTE_FIELD.id, '80');
+    enableDeposits('100');
+    expect(total('nearcut')).toBe('Custom pricing');
+    expect(cell('nearcut', 'nearcut-deposit-processing')).toBe('Custom pricing');
+    expect(warnings('nearcut').join(' ')).toContain('plan-specific confirmation');
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, false);
+    expect(total('nearcut')).toBe('£0.00');
+    expect(summary('nearcut','payments')).toBe('£0.00');
   });
 });
 
@@ -370,9 +412,10 @@ describe('split marketplace mode', () => {
 const DEPOSIT_LINE = {
   booksy: 'booksy-deposit-processing',
   fresha: 'fresha-deposit-processing',
+  nearcut: 'nearcut-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -410,25 +453,25 @@ describe('booking deposit processing', () => {
     }
   });
 
-  it('updates all three cards with 100 deposits, keeping commission separate', () => {
+  it('updates all four cards with 100 deposits, keeping commission separate', () => {
     enableDeposits('100');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£28.00']);
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
     expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
-    expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£67.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£67.00']);
     expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
   });
 
   it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
     enableDeposits('100');
     choosePeriod('annual');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£336.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     choosePeriod('threeYear');
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£1,008.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00']);
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
   });
 
@@ -472,7 +515,7 @@ describe('booking deposit processing', () => {
     expect(shared).toEqual(
       expect.arrayContaining([
         'Payment processing compares online booking deposits only. It does not include the remaining appointment balance, in-person card payments or retail payments.',
-        'The comparison uses a £5 deposit benchmark for all three providers.',
+        'The comparison uses a £5 online deposit benchmark where comparable processing terms are published.',
         'Refund-related processing costs are not modelled.',
       ]),
     );
@@ -527,13 +570,13 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(3).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(3).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(4).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -547,14 +590,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(3).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(4).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(3).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {
@@ -858,7 +901,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'vat', 'dp', 'db', 'period',
     ]);
   });
 

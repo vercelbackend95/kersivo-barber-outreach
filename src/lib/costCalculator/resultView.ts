@@ -15,6 +15,7 @@ import {
 import {
   CUSTOM_PRICING,
   CUSTOM_PRICING_NOTE,
+  NEARCUT_CUSTOM_PRICING_NOTE,
   INSIGHT_INVALID,
   NET_IF_VAT_RECOVERABLE_LABEL,
   NOT_CALCULATED_SR,
@@ -32,6 +33,7 @@ import { describeCostInsight, determineCostInsight } from './costInsight';
 import type { CostPeriod } from './costPeriod';
 import { projectCostCalculation, type ProjectedCostCalculation } from './costProjection';
 import { formatMoneyGbp } from './money';
+import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 
 export type ProviderViewState = 'calculated' | 'custom-pricing' | 'unavailable';
 
@@ -46,6 +48,8 @@ export type ProviderView = {
   totalSr: string | null;
   net: string | null;
   customNote: string | null;
+  /** Nearcut's client-paid booking charges are intentionally outside barbershop totals. */
+  clientFeeNote: string | null;
   summary: Record<SummaryRowId, string>;
   breakdown: Partial<Record<BreakdownRowId, CellView>>;
   warnings: readonly string[];
@@ -75,6 +79,7 @@ const SHARED_ASSUMPTIONS: ReadonlySet<AssumptionCode> = new Set([
 ]);
 
 const LONG_TOTAL_LENGTH = 10;
+const NEARCUT_BOOKING_ILLUSTRATION = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
@@ -102,10 +107,13 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'nearcut-subscription':
+      return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'kersivo-additional-barbers':
       return line.quantity > 0 ? `${line.quantity} included` : null;
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
+    case 'nearcut-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
     default:
@@ -150,6 +158,7 @@ function unavailableProvider(id: ProviderId): ProviderView {
     totalSr: NOT_CALCULATED_SR,
     net: null,
     customNote: null,
+    clientFeeNote: null,
     summary: { 'before-vat': PLACEHOLDER_VALUE, vat: PLACEHOLDER_VALUE, payments: PLACEHOLDER_VALUE },
     breakdown: Object.fromEntries(
       config.breakdown.map((row) => [row.id, { value: PLACEHOLDER_VALUE, detail: null }]),
@@ -159,7 +168,7 @@ function unavailableProvider(id: ProviderId): ProviderView {
   };
 }
 
-function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): ProviderView {
+function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, nearcutSubscription: boolean): ProviderView {
   const breakdown: Partial<Record<BreakdownRowId, CellView>> = {};
   for (const line of result.lineItems) {
     breakdown[line.id] = { value: lineValue(line), detail: lineDetail(line, boostEnabled) };
@@ -167,6 +176,9 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
 
   const shared = {
     id: result.provider,
+    clientFeeNote: result.provider !== 'nearcut' ? null : nearcutSubscription
+      ? 'Nearcut Subscription removes the client booking charge. Any extras or online processing depend on your quote.'
+      : `Nearcut Free for You: clients pay an additional booking charge. Nearcut shows ${formatMoneyGbp(NEARCUT_BOOKING_ILLUSTRATION.amountGbp)} on a ${formatMoneyGbp(NEARCUT_BOOKING_ILLUSTRATION.exampleServicePriceGbp)} haircut as an example, NOT a universal rate. This client cost is excluded from shop totals.`,
     warnings: result.warnings.map((entry) => entry.message),
     assumptions: result.assumptions
       .filter((entry) => !SHARED_ASSUMPTIONS.has(entry.code))
@@ -182,7 +194,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean): Pro
       totalSize: 'regular',
       totalSr: null,
       net: null,
-      customNote: CUSTOM_PRICING_NOTE,
+      customNote: result.provider === 'nearcut' ? NEARCUT_CUSTOM_PRICING_NOTE : CUSTOM_PRICING_NOTE,
       summary: { 'before-vat': NOT_ESTIMATED, vat: NOT_ESTIMATED, payments: paymentsSummary(result) },
       breakdown,
     };
@@ -237,7 +249,7 @@ export function buildResultsView(projected: ProjectedCostCalculation, insight: s
   return {
     ...period,
     ok: true,
-    providers: projected.providers.map((result) => providerView(result, projected.scenario.booksyBoostEnabled)),
+    providers: projected.providers.map((result) => providerView(result, projected.scenario.booksyBoostEnabled, projected.scenario.nearcutSubscription)),
     sharedAssumptions: [...sharedAssumptions.values()],
   };
 }

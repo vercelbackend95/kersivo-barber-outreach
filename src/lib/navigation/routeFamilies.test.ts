@@ -49,6 +49,7 @@ describe('route families', () => {
       expect(isSameRouteFamily(path, '/shop')).toBe(true);
     }
     expect(isSameRouteFamily('/booksy-alternative', '/fresha-alternative')).toBe(true);
+    expect(isSameRouteFamily('/nearcut-alternative', '/fresha-alternative')).toBe(true);
     for (const path of [
       '/admin',
       '/admin/launch',
