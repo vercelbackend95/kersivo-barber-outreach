@@ -69,7 +69,7 @@ describe('barber software cost calculator SEO foundation', () => {
     expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
     expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
-      'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.',
+      'Compare Booksy, Fresha, Nearcut, Setora, Phorest and KERSIVO costs for UK barbershops. Enter your Phorest quote to model its subscription and VAT.',
     );
     expect(resolveCanonicalUrl(BARBER_COST_CALCULATOR_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/barber-software-cost-calculator',
