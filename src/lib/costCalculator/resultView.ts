@@ -107,6 +107,10 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
       return line.quantity > 0 && unit
         ? `${plural(line.quantity, 'new client', 'new clients')}/month · ${unit} each`
         : null;
+    case 'vagaro-subscription':
+      return unit ? `${unit}/month · ${line.quantity} location` : null;
+    case 'vagaro-marketplace-fees':
+      return line.quantity > 0 && unit ? `${plural(line.quantity, 'first booking', 'first bookings')}/month · ${unit} each` : null;
     case 'nearcut-subscription':
       return unit ? `${unit}/month ${line.vatApplies ? 'before VAT' : 'for the shop'}` : 'Shop-specific quote required';
     case 'setora-additional-staff':
@@ -116,6 +120,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
     case 'booksy-deposit-processing':
     case 'fresha-deposit-processing':
     case 'nearcut-deposit-processing':
+    case 'vagaro-deposit-processing':
     case 'setora-deposit-processing':
     case 'kersivo-deposit-processing':
       return depositDetail(line, unit);
@@ -127,6 +132,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
+  'vagaro-standard-uk-online': 'published Vagaro UK online/keyed-in rate',
 };
 
 function depositDetail(line: CostLineItem, unit: string | null): string | null {
