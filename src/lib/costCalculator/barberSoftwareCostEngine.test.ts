@@ -738,3 +738,45 @@ describe('engine source guards', () => {
     expect(code).not.toMatch(/annual|threeYear|yearly/i);
   });
 });
+
+
+describe('Timely UK invoice quote and verified TimelyPay fees', () => {
+  it('never invents a Timely GBP subscription from USD list prices', () => {
+    const result = provider({ timelyMonthlyInvoiceGbp: 0 }, 'timely');
+    expect(result.status).toBe('custom-pricing');
+    expect(result.amounts).toBeNull();
+    expect(warningCodes(result)).toContain('timely-quote-unknown');
+    expect(line(result, 'timely-subscription').exVatGbp).toBeNull();
+  });
+
+  it('accepts only a valid monthly shop invoice amount', () => {
+    for (const value of [-1, Number.NaN, Infinity]) {
+      expect(calculateMonthlyCosts({ ...BASE, timelyMonthlyInvoiceGbp: value }).ok).toBe(false);
+    }
+    expect(calculated({ timelyMonthlyInvoiceGbp: 60 }, 'timely').amounts.cashTotalGbp).toBe(60);
+  });
+
+  it('uses current TimelyPay UK domestic card rate with exact per-transaction rounding', () => {
+    const result = calculated({ timelyMonthlyInvoiceGbp: 60, includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 'timely');
+    const fee = line(result, 'timely-deposit-processing');
+    expect(fee.unitExVatGbp).toBe(0.39);
+    expect(fee.exVatGbp).toBe(39);
+    expect(fee.quantity).toBe(100);
+    expect(result.amounts.cashTotalGbp).toBe(99);
+  });
+
+  it('does not double-add VAT or fabricate deductible VAT for the entered invoice', () => {
+    const result = calculated({ timelyMonthlyInvoiceGbp: 60, vatRegistered: true }, 'timely');
+    expect(result.amounts.cashTotalGbp).toBe(60);
+    expect(result.amounts.vatChargedGbp).toBe(0);
+    expect(result.amounts.estimatedNetCostIfVatRecoverableGbp).toBeNull();
+    expect(warningCodes(result)).toContain('timely-vat-not-separated');
+  });
+
+  it('shows the TimelyPay deposit fee even without a subscription quote, without a false full total', () => {
+    const result = provider({ timelyMonthlyInvoiceGbp: 0, includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 'timely');
+    expect(result.status).toBe('custom-pricing');
+    expect(line(result, 'timely-deposit-processing').exVatGbp).toBe(39);
+    expect(result.amounts).toBeNull();
+  });
+});
