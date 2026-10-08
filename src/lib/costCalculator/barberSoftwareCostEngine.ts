@@ -301,7 +301,7 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
     'Fresha lists custom Enterprise pricing above its published team size, so no subscription estimate is shown.',
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
-  'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing terms require confirmation. The total is not estimated when deposit processing is selected.',
+  'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
 };
 
 type ProviderResultBase = {
