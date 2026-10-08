@@ -58,6 +58,8 @@ describe('Vagaro UK commercial source of truth', () => {
     expect(resolveVagaroUkAcquisitionPercent({...context,channel:'own-channel'})).toBe(0);
     expect(resolveVagaroUkAcquisitionPercent({...context,channel:'own-channel',fillMyBooksEnabled:true})).toBe(20);
     expect(resolveVagaroUkAcquisitionPercent({...context,channel:'direct-other'})).toBe(0);
+    expect(resolveVagaroUkAcquisitionPercent({...context,channel:'direct-other',promotedBooking:true})).toBe(20);
+    expect(resolveVagaroUkAcquisitionPercent({...context,channel:'direct-other',promotedBooking:true,marketplaceListingActive:false})).toBe(0);
   });
 
   it('does not apply an existing-client fee to ordinary return bookings', () => {
