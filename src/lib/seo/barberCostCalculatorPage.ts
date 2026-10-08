@@ -203,7 +203,7 @@ export const FRESHA_COST_NOTES: readonly string[] = [
 
 /* --------------------------------- Nearcut --------------------------------- */
 
-export const NEARCUT_COST_INTRO = `Nearcut offers two UK payment models: Free for You at £0/month for the shop, where customers pay a separate booking charge, or Subscription with a shop-specific monthly quote plus VAT and no customer booking charge. Its UK pricing page shows an example £1.50 client charge on a £20 haircut, not a universal fee. Checked against official Nearcut sources on ${NEARCUT_FACTS_CHECKED_DATE}.`;
+export const NEARCUT_COST_INTRO = `Nearcut offers two UK payment models: Free for You at ${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)}/month for the shop, where customers pay a separate booking charge, or Subscription with a shop-specific monthly quote plus VAT and no customer booking charge. Its UK pricing page shows an example ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} client charge on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut, not a universal fee. Checked against official Nearcut sources on ${NEARCUT_FACTS_CHECKED_DATE}.`;
 
 export const NEARCUT_COST_FACTS: readonly { label: string; value: string }[] = [
   { label: 'Free for You subscription', value: `${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)}/month for the shop` },
@@ -213,7 +213,7 @@ export const NEARCUT_COST_FACTS: readonly { label: string; value: string }[] = [
   { label: 'Setup', value: `${formatGbp(requireVerifiedNearcutFact('setupFee').amountGbp!)} listed for the booking system and website` },
 ];
 export const NEARCUT_COST_NOTES: readonly string[] = [
-  'This calculator separates shop costs from charges that customers pay. The example £1.50 Nearcut client booking fee is never multiplied by your appointment count because it is not a verified universal rate.',
+  `This calculator separates shop costs from charges that customers pay. The example ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} Nearcut client booking fee is never multiplied by your appointment count because it is not a verified universal rate.`,
   'Free for You shop cost is shown before any add-ons. The shop-paid software amount can be £0 even though individual customers pay an extra fee.',
   'Select Nearcut Subscription under Advanced costs to enter your real monthly quote. Without it, the result is Custom pricing, not an invented estimate.',
   'Nearcut Subscription online processing and optional Business Boosters are not estimated without confirmed plan-specific terms.',
