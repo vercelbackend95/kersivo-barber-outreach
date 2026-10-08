@@ -4,18 +4,18 @@ import { formatGbp } from '@/lib/seo/freshaFacts';
 
 export const ALTERNATIVES_HUB_PAGE_PATH = '/compare';
 
-export const ALTERNATIVES_HUB_TITLE = 'Compare Barber Booking Software UK | KERSIVO';
+export const ALTERNATIVES_HUB_TITLE = 'Compare 11 Barber Booking Systems in the UK | KERSIVO';
 
 export const ALTERNATIVES_HUB_DESCRIPTION =
-  'Compare booking software for UK barbershops, including KERSIVO, Booksy, Fresha and Nearcut. Explore pricing, commissions, websites, deposits and more.';
+  'Compare 11 barber booking systems for UK barbershops, including Booksy, Fresha, Nearcut and KERSIVO. Explore pricing, deposits, own websites and booking fees.';
 
 export const ALTERNATIVES_HUB_H1_LEAD = 'Find the right';
 export const ALTERNATIVES_HUB_H1_ACCENT = 'barber booking system';
 export const ALTERNATIVES_HUB_H1 = `${ALTERNATIVES_HUB_H1_LEAD} ${ALTERNATIVES_HUB_H1_ACCENT}`;
 
 /** Genuine content date for the hub; never derived from build time. */
-export const ALTERNATIVES_HUB_LAST_UPDATED_ISO = '2026-10-08';
-export const ALTERNATIVES_HUB_LAST_UPDATED_LABEL = '8 October 2026';
+export const ALTERNATIVES_HUB_LAST_UPDATED_ISO = '2026-10-09';
+export const ALTERNATIVES_HUB_LAST_UPDATED_LABEL = '9 October 2026';
 
 export type AlternativesHubFaqItem = { question: string; answer: string };
 
