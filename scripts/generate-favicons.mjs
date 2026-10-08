@@ -87,6 +87,9 @@ export async function generateKersivoBrandIcons() {
   await fs.mkdir(path.dirname(markPath), { recursive: true });
   await Promise.all([
     fs.writeFile(markPath, transparentMark),
+    // Backward-compatible URLs: replace the retired white artwork, not the approved source.
+    fs.writeFile(path.join(publicDir, 'images', 'logo-kersivo.png'), original),
+    fs.writeFile(path.join(publicDir, 'reel-assets', 'logo.png'), original),
     fs.writeFile(path.join(publicDir, 'favicon.ico'), ico),
     fs.writeFile(path.join(publicDir, 'favicon.svg'), faviconSvg),
     fs.writeFile(path.join(publicDir, 'favicon-32x32.png'), icons.get(32)),
