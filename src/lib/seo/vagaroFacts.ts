@@ -12,11 +12,13 @@
 export const VAGARO_FACTS_CHECKED_ISO = '2026-10-08';
 export const VAGARO_FACTS_CHECKED_DATE = '8 October 2026';
 
-export type VagaroSourceId = 'pricingUk' | 'ukHome' | 'ukParticipation' | 'fillMyBooks' | 'customerExport';
+export type VagaroSourceId = 'pricingUk' | 'ukHome' | 'ukPlansHelp' | 'ukCardFees' | 'ukParticipation' | 'fillMyBooks' | 'customerExport';
 export type VagaroSource = { id: VagaroSourceId; label: string; url: string; supports: string };
 export const VAGARO_SOURCES: readonly VagaroSource[] = [
   { id:'pricingUk', label:'Vagaro UK pricing', url:'https://www.vagaro.com/en-gb/pro/pricing', supports:'Displayed £20/month for one bookable calendar, £30 struck-through, included features, free trial and Marketplace headline' },
   { id:'ukHome', label:'Vagaro UK: plans and calendars', url:'https://www.vagaro.com/en-gb/pro', supports:'An additional £10 per calendar; published £80/month for seven or more calendars' },
+  { id:'ukPlansHelp', label:'Vagaro Support: Plans, Pricing and Premium Features', url:'https://support.vagaro.com/hc/en-us/articles/22781768988187-Vagaro-Plans-Pricing-and-Premium-Features', supports:'UK £20 base and £10 each additional calendar, capped at seven licences; UK payment and SMS information' },
+  { id:'ukCardFees', label:'Vagaro Support: UK card-processing rates', url:'https://support.vagaro.com/hc/en-us/articles/4402393890459-United-Kingdom-Credit-Card-Processing-Rates-and-Fees', supports:'UK card-present, keyed-in and Tap to Pay processing rates and legacy merchant caveat' },
   { id:'ukParticipation', label:'Vagaro UK Customer Participation Agreement, section 10(p)', url:'https://www.vagaro.com/en-gb/pro/vagaro-customer-participation-agreement', supports:'UK channel-based 20% first-appointment acquisition fee and applicable conditions, VAT wording, Fill My Books existing-client terms' },
   { id:'fillMyBooks', label:'Vagaro: Fill My Books', url:'https://www.vagaro.com/en-gb/pro/updates/fill-my-books', supports:'Optional 5% existing-client / 20% new-client promotional booking charges' },
   { id:'customerExport', label:'Vagaro Support: Export Your Customer List', url:'https://support.vagaro.com/hc/en-us/articles/360006371094-Export-Your-Customer-List', supports:'Business owner can export the customer list as an Excel or PDF file' },
@@ -43,7 +45,7 @@ export const VAGARO_UK_COMMERCIAL_FACTS = {
     note:'Not an asserted live checkout price; shown struck-through on Vagaro UK pricing.',
   },
   additionalCalendarMonthlyGbp: {
-    status:'verified', value:10, pricingStatus:'published', unit:'GBP/month per additional bookable calendar', sourceId:'ukHome', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+    status:'verified', value:10, pricingStatus:'published', unit:'GBP/month per additional bookable calendar', sourceId:'ukPlansHelp', checkedIso:VAGARO_FACTS_CHECKED_ISO,
   },
   sevenOrMoreCalendarsDisplayedMonthlyGbp: {
     status:'verified', value:80, pricingStatus:'published', unit:'GBP/month for seven or more bookable calendars, per published UK FAQ', sourceId:'ukHome', checkedIso:VAGARO_FACTS_CHECKED_ISO,
@@ -67,9 +69,32 @@ export const VAGARO_UK_COMMERCIAL_FACTS = {
     status:'unresolved', unit:'percent on subscription', sourceId:'pricingUk', checkedIso:VAGARO_FACTS_CHECKED_ISO,
     note:'The public UK pricing page does not clearly establish the final VAT treatment for every business. Do not automatically add or omit VAT.',
   },
+  ukCardPresentPercent: {
+    status:'verified', value:1.15, pricingStatus:'published', unit:'percent for UK in-person swipe, dip or tap', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+    note:'Standard published UK card-present rate; older merchant accounts may have different terms.',
+  },
+  ukCardPresentFixedGbp: {
+    status:'verified', value:0.20, pricingStatus:'published', unit:'GBP fixed per UK in-person swipe, dip or tap', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+  },
+  ukKeyedInPercent: {
+    status:'verified', value:1.40, pricingStatus:'published', unit:'percent for UK manually keyed-in transactions', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+  },
+  ukKeyedInFixedGbp: {
+    status:'verified', value:0.25, pricingStatus:'published', unit:'GBP fixed per UK manually keyed-in transaction', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+  },
+  ukTapToPayPercent: {
+    status:'verified', value:1.15, pricingStatus:'published', unit:'percent for UK Tap to Pay', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+  },
+  ukTapToPayFixedGbp: {
+    status:'verified', value:0.27, pricingStatus:'published', unit:'GBP fixed per UK Tap to Pay transaction', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+  },
+  onlinePaymentProcessingFees: {
+    status:'unresolved', unit:'GBP/online transaction', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+    note:'The official rates describe in-person, keyed-in and Tap to Pay channels, not necessarily the online booking/deposit rate. Do not use any of these as a universal online payment rate.',
+  },
   paymentProcessingFees: {
-    status:'unresolved', unit:'GBP/transaction', sourceId:'pricingUk', checkedIso:VAGARO_FACTS_CHECKED_ISO,
-    note:'Plan-specific UK acquiring rates must be separately verified. Never substitute Stripe rates.',
+    status:'unresolved', unit:'GBP/transaction across all channels', sourceId:'ukCardFees', checkedIso:VAGARO_FACTS_CHECKED_ISO,
+    note:'No one universal payment rate applies to every channel. Use channel-specific published fees and confirm applicable terms.',
   },
   bookingWidgetAsSeparateAddOnPrice: {
     status:'unresolved', unit:'GBP/month', sourceId:'pricingUk', checkedIso:VAGARO_FACTS_CHECKED_ISO,
