@@ -216,7 +216,7 @@ describe('calculator results structure', () => {
   });
 
   it('renders seven peer cards including Square and Phorest without winner language without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Timely', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'KERSIVO']);
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Timely', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'Vagaro', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
