@@ -50,6 +50,7 @@ describe('route families', () => {
     }
     expect(isSameRouteFamily('/booksy-alternative', '/fresha-alternative')).toBe(true);
     expect(isSameRouteFamily('/nearcut-alternative', '/fresha-alternative')).toBe(true);
+    expect(isSameRouteFamily('/setora-alternative', '/nearcut-alternative')).toBe(true);
     for (const path of [
       '/admin',
       '/admin/launch',
