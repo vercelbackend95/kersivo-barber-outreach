@@ -58,7 +58,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
-    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-09');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');
