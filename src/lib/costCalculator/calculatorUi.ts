@@ -1,5 +1,6 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { SQUARE_UK_PLANS, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN } from '@/lib/seo/phorestFacts';
@@ -27,6 +28,7 @@ type NumericScenarioKey =
   | 'marketplaceClients'
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
+  | 'vagaroMarketplaceClients'
   | 'treatwellMarketplaceClients'
   | 'depositBookingsPerMonth'
   | 'nearcutMonthlyQuoteGbp'
@@ -105,7 +107,7 @@ export const BOOST_TOGGLE = {
 export const SPLIT_ASSUMPTIONS_TOGGLE = {
   id: 'calc-split-assumptions',
   name: 'splitMarketplaceAssumptions',
-  label: 'Use different marketplace client counts for Booksy, Fresha and Treatwell',
+  label: 'Use different marketplace client counts for Booksy, Fresha, Treatwell and Vagaro',
   defaultOn: false,
 } as const satisfies ToggleConfig;
 
@@ -137,6 +139,13 @@ export const SPLIT_FIELDS: readonly NumberFieldConfig[] = [
     min: 0,
     max: 1000,
     step: 1,
+  },
+  {
+    id: 'calc-vagaro-marketplace-clients',
+    name: 'vagaroMarketplaceClients',
+    label: 'Vagaro Marketplace new clients / month',
+    helper: 'Qualifying new clients from an active Vagaro Marketplace listing; exclude direct and returning bookings.',
+    defaultValue: 0, min: 0, max: 1000, step: 1,
   },
 ];
 
@@ -178,6 +187,28 @@ export const FRESHA_ADD_ONS: readonly AddOnOption[] = [
     priceLabel: `${formatGbp(clientLoyalty.amountGbp!)}/location/month + VAT`,
   },
 ];
+
+export const VAGARO_ADDONS_LEGEND = 'Vagaro assumptions & add-ons';
+export const VAGARO_OPTIONS = [
+  {
+    id:'calc-vagaro-displayed-offer', name:'vagaroDisplayedOffer',
+    label:`Use current ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)} displayed one-calendar rate`,
+    helper:`On = displayed offer; Off = ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed-out reference. Neither rate is a guaranteed multi-year quote.`,
+    defaultOn:true,
+  },
+  {
+    id:'calc-vagaro-mysite', name:'vagaroMySite',
+    label:'Add Vagaro MySite',
+    helper:`Optional website builder at ${formatGbp(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value)}/month.`,
+    defaultOn:false,
+  },
+  {
+    id:'calc-vagaro-vat', name:'vagaroAssumeVat',
+    label:'Assume 20% UK VAT is added to Vagaro subscription, MySite and client-acquisition fees',
+    helper:'Tax is not confirmed for your individual invoice. Off assumes no extra VAT; on models 20%.',
+    defaultOn:false,
+  },
+] as const;
 
 export const NEARCUT_SUBSCRIPTION_TOGGLE = {
   id: 'calc-nearcut-subscription',
@@ -275,6 +306,10 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   booksyBoostClients: SPLIT_FIELDS[0].defaultValue,
   freshaMarketplaceClients: SPLIT_FIELDS[1].defaultValue,
   treatwellMarketplaceClients: SPLIT_FIELDS[2].defaultValue,
+  vagaroMarketplaceClients: SPLIT_FIELDS[3].defaultValue,
+  vagaroDisplayedOffer: VAGARO_OPTIONS[0].defaultOn,
+  vagaroMySite: VAGARO_OPTIONS[1].defaultOn,
+  vagaroAssumeVat: VAGARO_OPTIONS[2].defaultOn,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
@@ -422,6 +457,17 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'phorest-subscription', label: 'Your quoted subscription (ex VAT)' },
       { id: 'vat', label: 'VAT if confirmed' },
       { id: 'phorest-deposit-processing', label: 'PhorestPay deposit processing' },
+    ],
+  },
+  {
+    id: 'vagaro',
+    name: 'Vagaro',
+    breakdown: [
+      { id: 'vagaro-subscription', label: 'Calendars / subscription' },
+      { id: 'vagaro-marketplace-fees', label: 'Qualifying new Marketplace clients' },
+      { id: 'vagaro-mysite', label: 'MySite (optional)' },
+      { id: 'vat', label: 'VAT (modelled assumption)' },
+      { id: 'vagaro-deposit-processing', label: 'Online deposit processing' },
     ],
   },
   {
