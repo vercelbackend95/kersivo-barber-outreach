@@ -4,7 +4,7 @@ import {
   SQUIRE_UK_COMMERCIAL_FACTS,
   SQUIRE_UK_PLAN_SUBSCRIPTION_KEYS,
   SQUIRE_US_LIST_PLANS,
-  SQUIRE_UK_LIST_PLANS,
+  SQUIRE_UNVERIFIED_GBP_REPORTS,
   SQUIRE_OFFICIAL_SOURCES,
   getSquireSource,
   isVerifiedSquireUkFact,
@@ -13,10 +13,11 @@ import {
 } from './squireFacts';
 
 describe('SQUIRE shared commercial facts: UK calculator readiness', () => {
-  it('records SQUIRE’s verified official UK GBP list prices without inventing VAT treatment', () => {
+  it('does not promote unconfirmed third-party GBP reports as verified UK prices', () => {
     expect(SQUIRE_US_LIST_PLANS.map(plan => plan.usdMonthly)).toEqual([30, 50, 150, 250]);
-    expect(SQUIRE_UK_LIST_PLANS.map(plan => plan.gbpMonthly)).toEqual([20, 30, 60, 90]);
-    expect(SQUIRE_UK_LIST_PLANS.map(plan => plan.id)).toEqual(SQUIRE_US_LIST_PLANS.map(plan => plan.id));
+    expect(SQUIRE_UNVERIFIED_GBP_REPORTS.map(plan => plan.reportedMonthlyGbp)).toEqual([20, 30, 60, 90]);
+    expect(SQUIRE_UNVERIFIED_GBP_REPORTS.map(plan => plan.status)).toEqual(['unverified','unverified','unverified','unverified']);
+    expect(SQUIRE_UNVERIFIED_GBP_REPORTS.map(plan => plan.id)).toEqual(SQUIRE_US_LIST_PLANS.map(plan => plan.id));
     for (const fact of Object.values(SQUIRE_UK_COMMERCIAL_FACTS)) {
       expect(fact.checkedIso).toBe(SQUIRE_FACTS_CHECKED_ISO);
       expect(getSquireSource(fact.sourceId).url).toMatch(/^https:\/\/(www\.)?getsquire\.com\//);
@@ -39,7 +40,7 @@ describe('SQUIRE shared commercial facts: UK calculator readiness', () => {
     }
   });
 
-  it('does not treat verified UK list prices as complete VAT-inclusive prices', () => {
+  it('does not treat unverified UK prices as a calculated subscription or VAT-inclusive bill', () => {
     for (const plan of SQUIRE_US_LIST_PLANS) {
       const status = getSquireUkCalculatorReadiness(plan.id);
       expect(status.status).toBe('unresolved-uk-pricing');
