@@ -1,21 +1,113 @@
 ---
-import { TREATWELL_FACTS_CHECKED_DATE, TREATWELL_SOURCES } from '@/lib/seo/treatwellFacts';
+import {
+  TREATWELL_FACTS_CHECKED_DATE,
+  getTreatwellSource,
+  requireVerifiedTreatwellFact,
+  TREATWELL_UK_COMMERCIAL_FACTS,
+  estimateTreatwellPublishedBookingFees,
+} from '@/lib/seo/treatwellFacts';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const pricingUrl = getTreatwellSource('pricingUk').url;
+const termsUrl = getTreatwellSource('partnerTerms').url;
+const payUrl = getTreatwellSource('paymentSolutions').url;
+const acquisition = requireVerifiedTreatwellFact('newMarketplaceClientCommission');
+const repeat = requireVerifiedTreatwellFact('repeatBookingMarketplaceCommission');
+const direct = requireVerifiedTreatwellFact('directBookingMarketplaceCommission');
+const online = requireVerifiedTreatwellFact('onlinePrepaymentProcessing');
+const example = estimateTreatwellPublishedBookingFees({
+  servicePriceGbp: 30,
+  eligibility: 'eligible-new-marketplace',
+  onlinePrepaid: 'no',
+});
+const percent = (n: number) => `${n}%`;
+const gbp = (n: number) => `£${n.toFixed(2)}`;
 ---
 <section id="treatwell-pricing" class="fresha-alt__section" aria-labelledby="treatwell-costs-title">
- <div class="container">
-  <header class="fresha-alt__intro">
-   <p class="fresha-alt__eyebrow">TREATWELL PRICING EXPLAINED</p>
-   <h2 id="treatwell-costs-title" class="fresha-alt__h2">Treatwell UK commission, pricing and payment fees</h2>
-   <p class="fresha-alt__lead">Treatwell is both a marketplace and salon management software. A commission for a new marketplace customer is different from fees for processing online payments. Repeat and direct bookings have a different commission model.</p>
-   <p class="fresha-alt-costs__checked">Published UK terms checked {TREATWELL_FACTS_CHECKED_DATE} · <a href={TREATWELL_SOURCES[0].url} target="_blank" rel="noopener noreferrer">Treatwell UK pricing</a></p>
-  </header>
-  <ul class="fresha-alt-costs__grid">
-   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">TREATWELL MARKETPLACE</p><p class="fresha-alt-costs__figure">35%</p><p class="fresha-alt-costs__unit">published first-appointment commission</p><ul class="fresha-alt-costs__notes"><li>Applies to qualifying first appointments from new clients acquired through Treatwell marketplace.</li><li>Not a universal percentage charged on every appointment.</li><li>Confirm eligible clients, VAT and contractual terms with Treatwell.</li></ul></li>
-   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">DIRECT &amp; REPEAT BOOKINGS</p><p class="fresha-alt-costs__figure">0%</p><p class="fresha-alt-costs__unit">Treatwell marketplace commission</p><ul class="fresha-alt-costs__notes"><li>Treatwell advertises no marketplace commission on repeat clients.</li><li>Bookings made directly via the shop website/social integrations are commission-free.</li><li>Online prepayment processing remains a separate charge.</li></ul></li>
-   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">ONLINE PREPAYMENTS</p><p class="fresha-alt-costs__figure">2.5%</p><p class="fresha-alt-costs__unit">+ VAT processing on published UK pricing</p><ul class="fresha-alt-costs__notes"><li>Published Treatwell processing fee for online prepayments.</li><li>Distinct from first-time marketplace client acquisition commission.</li><li>Actual plan pricing is subject to your contract; the site advertises “Start for free”.</li></ul></li>
-   <li class="fresha-alt-card fresha-alt-costs__item"><p class="fresha-alt-costs__kicker">FULL KERSIVO</p><p class="fresha-alt-costs__figure">£39</p><p class="fresha-alt-costs__unit">per location / month</p><ul class="fresha-alt-costs__notes"><li>Starter also available at £0/month for up to four bookable barbers.</li><li>Full includes your own branded website and standard domain.</li><li>0% KERSIVO platform commission; Stripe processing fees apply.</li></ul></li>
-  </ul>
-  <div class="fresha-alt-card fresha-alt-costs__marketplace"><div class="fresha-alt-costs__marketplace-body"><h3 class="fresha-alt-costs__h3">New marketplace clients are different from direct bookings</h3><ul class="fresha-alt-list"><li>Treatwell’s marketplace can introduce customers your shop may not otherwise reach.</li><li>Its published acquisition commission applies to qualifying new marketplace appointments, not all future repeat visits.</li><li>KERSIVO does not include a consumer marketplace. It is built around your direct booking links and owned brand.</li><li>Under both KERSIVO plans, payments incur standard Stripe processing fees, but no KERSIVO commission.</li></ul></div><div class="fresha-alt-costs__marketplace-aside"><p class="fresha-alt-costs__example">Example: for an eligible £30 first marketplace service, a 35% commission equals £10.50 before any applicable VAT or other contractual adjustments. This is a marketplace acquisition fee, not a KERSIVO-equivalent processing charge.</p></div></div>
-  <p class="fresha-alt-costs__note">Treatwell offers marketplace reach and broader salon management capabilities; individual plan offers and agreements may differ. <a href={TREATWELL_SOURCES[0].url} target="_blank" rel="noopener noreferrer">Check published Treatwell pricing and confirm your quotation.</a></p>
- </div>
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">TREATWELL PRICING EXPLAINED</p>
+      <h2 id="treatwell-costs-title" class="fresha-alt__h2">Treatwell commission and pricing in the UK</h2>
+      <p class="fresha-alt__lead">
+        Treatwell combines marketplace discovery with booking and salon-management software.
+        New-client marketplace commission is not the same as payment processing or a monthly
+        software subscription. Here is what the official UK pricing actually says.
+      </p>
+      <p class="fresha-alt-costs__checked">
+        Published terms checked {TREATWELL_FACTS_CHECKED_DATE} ·
+        <a href={pricingUrl} target="_blank" rel="noopener noreferrer">Official Treatwell pricing</a>
+      </p>
+    </header>
+
+    <ul class="fresha-alt-costs__grid">
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">NEW MARKETPLACE CLIENT</p>
+        <p class="fresha-alt-costs__figure">{percent(acquisition.percent!)}</p>
+        <p class="fresha-alt-costs__unit">+ VAT · eligible new-client marketplace booking</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Treatwell's published rate applies to qualifying bookings introduced through its marketplace, subject to location and signed terms.</li>
+          <li>It does not apply to every booking or every new customer who finds you independently.</li>
+          <li>Its September 2026 terms include a 365-day rule when determining new versus repeat status.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">REPEAT &amp; DIRECT BOOKINGS</p>
+        <p class="fresha-alt-costs__figure">{percent(repeat.percent!)}</p>
+        <p class="fresha-alt-costs__unit">marketplace commission for qualifying repeat and direct bookings</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Repeat bookings that satisfy Treatwell's contract definition are commission-free.</li>
+          <li>Direct customer bookings, including its website and social booking widgets, have {percent(direct.percent!)} marketplace commission.</li>
+          <li>Online payment processing may still be charged separately.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">ONLINE PREPAYMENTS</p>
+        <p class="fresha-alt-costs__figure">{percent(online.percent!)}</p>
+        <p class="fresha-alt-costs__unit">+ VAT · online payment processing</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Separate from any eligible new marketplace booking commission.</li>
+          <li>Applies to online prepaid transactions under published terms.</li>
+          <li>In-salon card machine or Tap to Pay transactions use different published rates.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">FULL KERSIVO</p>
+        <p class="fresha-alt-costs__figure">£{SAAS_MONTHLY_GBP}</p>
+        <p class="fresha-alt-costs__unit">per location / month</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Starter is also available at £0/month for up to four bookable barbers.</li>
+          <li>Full includes a branded barbershop website and standard domain.</li>
+          <li>0% KERSIVO commission on bookings; Stripe processing fees apply.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="fresha-alt-card fresha-alt-costs__marketplace">
+      <div class="fresha-alt-costs__marketplace-body">
+        <h3 class="fresha-alt-costs__h3">How Treatwell's booking fees work</h3>
+        <ul class="fresha-alt-list">
+          <li><strong>Marketplace acquisition:</strong> published {percent(acquisition.percent!)} + VAT for an eligible booking that Treatwell brings to your shop.</li>
+          <li><strong>Existing and direct clients:</strong> {percent(repeat.percent!)} marketplace commission when they meet Treatwell's repeat/direct rules.</li>
+          <li><strong>Online prepayments:</strong> {percent(online.percent!)} + VAT processing, whether or not a marketplace commission also applies.</li>
+          <li><strong>Freelancer vs Advanced:</strong> Treatwell lists both as “Start for free”, but does not publish one reliable ongoing UK subscription price for every venue. {TREATWELL_UK_COMMERCIAL_FACTS.softwareMonthlySubscription.note}</li>
+        </ul>
+      </div>
+      <div class="fresha-alt-costs__marketplace-aside">
+        <p class="fresha-alt-costs__example">
+          Example: an eligible £30 new-client marketplace booking generates a published {gbp(example.commissionExVatGbp!)} commission before VAT, not including any online payment processing or monthly software cost.
+          Actual charges depend on your Treatwell agreement and booking eligibility.
+        </p>
+        <p class="fresha-alt-costs__checked">
+          <a href={termsUrl} target="_blank" rel="noopener noreferrer">Read partner terms</a>
+          <span aria-hidden="true"> · </span>
+          <a href={payUrl} target="_blank" rel="noopener noreferrer">Payment rates</a>
+        </p>
+      </div>
+    </div>
+
+    <p class="fresha-alt-costs__note">
+      Treatwell's partner terms also define when a client is considered new after periods without a successful appointment, and contain cancellation and exclusivity-related restrictions. Compare your specific contract before running a second live public booking system or migrating away.
+      KERSIVO is direct-booking software without a consumer acquisition marketplace, so its 0% commission is not a like-for-like replacement for Treatwell's customer acquisition service.
+    </p>
+  </div>
 </section>
