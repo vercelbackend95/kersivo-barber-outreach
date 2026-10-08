@@ -35,6 +35,7 @@ import type { CostPeriod } from './costPeriod';
 import { projectCostCalculation, type ProjectedCostCalculation } from './costProjection';
 import { formatMoneyGbp } from './money';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 
 export type ProviderViewState = 'calculated' | 'custom-pricing' | 'unavailable';
 
@@ -131,7 +132,7 @@ function lineDetail(line: CostLineItem, boostEnabled: boolean): string | null {
 const PAYMENT_METHOD_NOTE: Partial<Record<NonNullable<CostLineItem['paymentMethod']>, string>> = {
   'stripe-checkout-standard-uk-card': 'standard UK card',
   'stripe-setora-standard-uk-card': 'standard UK card · illustrative Stripe rate, no Setora markup',
-  'timelypay-domestic-uk-online': 'TimelyPay domestic UK card · 1.85% + 30p',
+  'timelypay-domestic-uk-online': `TimelyPay domestic UK card · ${TIMELY_UK_DOMESTIC_ONLINE_PERCENT}% + ${Math.round(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP * 100)}p`,
 };
 
 function depositDetail(line: CostLineItem, unit: string | null): string | null {
