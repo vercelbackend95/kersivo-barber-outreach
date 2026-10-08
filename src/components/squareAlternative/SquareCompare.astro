@@ -1,0 +1,200 @@
+---
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronDown,
+  CircleCheck,
+  CircleDot,
+  CreditCard,
+  Globe2,
+  ShoppingBag,
+  UsersRound,
+} from 'lucide-react';
+import {
+  SQUARE_COMPARE_SECTIONS,
+  SQUARE_COMPARISON_FOOTNOTE,
+  type SquareCompareSectionId,
+} from '@/lib/seo/squareFacts';
+
+const sectionIcons: Record<SquareCompareSectionId, typeof CalendarDays> = {
+  bookings: CalendarDays,
+  payments: CreditCard,
+  brand: Globe2,
+  retail: ShoppingBag,
+  clients: UsersRound,
+  reports: BarChart3,
+};
+
+const sections = SQUARE_COMPARE_SECTIONS.map((section) => ({
+  ...section,
+  icon: sectionIcons[section.id],
+}));
+const sectionCountLabel = String(sections.length).padStart(2, '0');
+---
+
+<section
+  id="comparison"
+  class="square-alt-compare scroll-mt-24"
+  aria-labelledby="square-alt-compare-title"
+  data-square-comparison
+>
+  <div class="square-alt-compare__container">
+    <header class="square-alt-compare__header">
+      <p class="square-alt-compare__eyebrow">COMPARISON</p>
+      <h2 id="square-alt-compare-title" class="square-alt-compare__title">
+        <span class="square-alt-compare__title-line">KERSIVO</span>
+        <span class="square-alt-compare__title-line square-alt-compare__title-line--vs">VS</span>
+        <span class="square-alt-compare__title-line">Square Appointments</span>
+      </h2>
+      <p class="square-alt-compare__lead">
+        Two different ways to run a barbershop. Open each category and compare the parts that
+        matter to your brand, bookings and client journey.
+      </p>
+    </header>
+
+    <div class="square-alt-compare__accordion">
+      {sections.map((section, index) => {
+        const Icon = section.icon;
+
+        return (
+          <article
+            class="square-alt-compare__item"
+            data-comparison-item
+            data-open={index === 0 ? 'true' : 'false'}
+          >
+            <button
+              id={`square-compare-trigger-${section.id}`}
+              type="button"
+              class="square-alt-compare__summary"
+              aria-expanded={index === 0 ? 'true' : 'false'}
+              aria-controls={`square-compare-panel-${section.id}`}
+              data-comparison-trigger
+            >
+              <span class="square-alt-compare__summary-icon" aria-hidden="true">
+                <Icon size={19} strokeWidth={1.8} />
+              </span>
+
+              <span class="square-alt-compare__summary-copy">
+                <span class="square-alt-compare__summary-kicker">
+                  {String(index + 1).padStart(2, '0')} / {sectionCountLabel}
+                </span>
+                <strong>{section.title}</strong>
+                <span>{section.subtitle}</span>
+              </span>
+
+              <ChevronDown
+                className="square-alt-compare__chevron"
+                size={20}
+                strokeWidth={1.8}
+                aria-hidden="true"
+              />
+            </button>
+
+            <div
+              class="square-alt-compare__reveal"
+              data-comparison-reveal
+              aria-hidden={index === 0 ? 'false' : 'true'}
+            >
+              <div
+                id={`square-compare-panel-${section.id}`}
+                class="square-alt-compare__reveal-inner"
+                role="region"
+                aria-labelledby={`square-compare-trigger-${section.id}`}
+                data-comparison-reveal-inner
+                inert={index !== 0}
+              >
+                <div class="square-alt-compare__panel">
+              <article class="square-alt-compare__provider square-alt-compare__provider--square">
+                <div class="square-alt-compare__provider-label">FRESHA ECOSYSTEM</div>
+                <div class="square-alt-compare__provider-head">
+                  <span class="square-alt-compare__brand-mark square-alt-compare__brand-mark--square" aria-hidden="true">
+                    square
+                  </span>
+                  <div>
+                    <p class="square-alt-compare__provider-name">Square Appointments</p>
+                    <p class="square-alt-compare__provider-lead">{section.squareLead}</p>
+                  </div>
+                </div>
+
+                <ul class="square-alt-compare__points">
+                  {section.squarePoints.map((point) => (
+                    <li>
+                      <CircleDot
+                        className="square-alt-compare__point-icon square-alt-compare__point-icon--neutral"
+                        size={15}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <div class="square-alt-compare__vs" aria-hidden="true">VS</div>
+
+              <article class="square-alt-compare__provider square-alt-compare__provider--kersivo">
+                <div class="square-alt-compare__provider-label square-alt-compare__provider-label--kersivo">
+                  YOUR OWN BRAND
+                </div>
+                <div class="square-alt-compare__provider-head">
+                  <span class="square-alt-compare__brand-mark square-alt-compare__brand-mark--kersivo" aria-hidden="true">
+                    <img src="/images/brand/kersivo-mark.png" alt="" width="72" height="72" loading="lazy" decoding="async" />
+                  </span>
+                  <div>
+                    <p class="square-alt-compare__provider-name">KERSIVO</p>
+                    <p class="square-alt-compare__provider-lead">{section.kersivoLead}</p>
+                  </div>
+                </div>
+
+                <ul class="square-alt-compare__points">
+                  {section.kersivoPoints.map((point) => (
+                    <li>
+                      <CircleCheck
+                        className="square-alt-compare__point-icon square-alt-compare__point-icon--yes"
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+                </div>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <a
+      href="/demo"
+      class="square-alt-compare__demo-cta"
+      data-track="view_live_demo_click"
+    >
+      <span class="square-alt-compare__demo-play" aria-hidden="true">▶</span>
+      See KERSIVO demo
+      <span aria-hidden="true">→</span>
+    </a>
+
+    <p class="square-alt-compare__footnote">
+      {SQUARE_COMPARISON_FOOTNOTE} <a href="#sources">See sources</a>
+    </p>
+  </div>
+</section>
+
+<script>
+  import { bindComparisonAccordions } from '@/lib/landing/comparisonAccordion';
+
+  const bind = () => bindComparisonAccordions('[data-square-comparison]');
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
+  } else {
+    bind();
+  }
+
+  document.addEventListener('astro:page-load', bind);
+</script>
