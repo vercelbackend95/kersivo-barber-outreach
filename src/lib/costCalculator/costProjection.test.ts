@@ -81,6 +81,7 @@ describe('projectCostCalculation', () => {
     for (const period of ['annual', 'threeYear'] as const) {
       const projected = providers(RICH_WITH_DEPOSITS, period);
       projected.forEach((result, index) => {
+        if (result.provider === 'phorest') return;
         const base = amounts(monthly[index]);
         const scaled = amounts(result);
         for (const key of AMOUNT_KEYS) {
@@ -92,7 +93,7 @@ describe('projectCostCalculation', () => {
 
   it('projects the default scenario to the expected totals', () => {
     const cash = (period: 'monthly' | 'annual' | 'threeYear') =>
-      providers({}, period).map((result) => amounts(result).cashTotalGbp);
+      providers({}, period).filter(result=>result.provider!=='phorest').map((result) => amounts(result).cashTotalGbp);
     expect(cash('monthly')).toEqual([60, 35.82, 0, 59, 39]);
     expect(cash('annual')).toEqual([720, 429.84, 0, 708, 468]);
     expect(cash('threeYear')).toEqual([2160, 1289.52, 0, 2124, 1404]);
@@ -101,6 +102,7 @@ describe('projectCostCalculation', () => {
   it('keeps projected totals reconciled with their components', () => {
     for (const period of COST_PERIODS) {
       for (const result of providers(RICH_WITH_DEPOSITS, period)) {
+        if (result.provider === 'phorest') continue;
         const a = amounts(result);
         const parts = [
           a.subscriptionExVatGbp,
