@@ -642,9 +642,9 @@ details[open] > summary .calc-advanced__chevron {
   list-style: none;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 700px) {
   .calc-results__cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -866,6 +866,17 @@ details[open] > summary .calc-advanced__chevron {
   font-size: clamp(1.6rem, 2.6vw, 2.1rem);
   line-height: 1.4;
 }
+
+.calc-card__client-note {
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border-left: 2px solid var(--border);
+  background: #141619;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.calc-card__client-note[hidden] { display: none; }
 
 .calc-card__custom,
 .calc-card__net {
