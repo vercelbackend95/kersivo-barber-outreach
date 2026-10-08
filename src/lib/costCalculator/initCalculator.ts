@@ -53,7 +53,7 @@ function readYesNo(form: HTMLFormElement, name: string): boolean {
 
 function readRadioNumber(form: HTMLFormElement, name: string): number {
   const element = form.elements.namedItem(name);
-  if (!(element instanceof RadioNodeList)) return Number.NaN;
+  if (!(element instanceof RadioNodeList) || element.value === '') return Number.NaN;
   return Number(element.value);
 }
 
