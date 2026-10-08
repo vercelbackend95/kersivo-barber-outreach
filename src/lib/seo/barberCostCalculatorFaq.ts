@@ -13,7 +13,7 @@ import {
   FRESHA_MARKETPLACE_PERCENT,
   FRESHA_TEAM_PRICE,
 } from '@/lib/seo/barberCostCalculatorPage';
-import { FRESHA_UK_VAT_PERCENT } from '@/lib/seo/freshaFacts';
+import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -70,7 +70,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'Is Nearcut free for barbershops?',
-    answer: `Nearcut Free for You is listed at ${requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp === 0 ? '£0/month' : 'a monthly price'} for the shop, but customers pay a separate online booking charge. Nearcut shows £${requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp.toFixed(2)} on a £20 haircut as an example, not as a universal fee.`,
+    answer: `Nearcut Free for You is listed at ${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)}/month for the shop, but customers pay a separate online booking charge. Nearcut shows ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut as an example, not as a universal fee.`,
   },
   {
     question: 'How much does Nearcut Subscription cost in the UK?',
