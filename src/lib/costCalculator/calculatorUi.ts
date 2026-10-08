@@ -28,7 +28,7 @@ type NumericScenarioKey =
   | 'nearcutMonthlyQuoteGbp'
   | 'phorestMonthlyQuoteGbp';
 
-type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestQuoteVatPercent'>;
+type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestQuoteVatPercent' | 'squarePlan'>;
 
 export type NumberFieldConfig = {
   id: string;
@@ -360,21 +360,21 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
     ],
   },
   {
-    id: 'phorest',
-    name: 'Phorest',
-    breakdown: [
-      { id: 'phorest-subscription', label: 'Your quoted subscription (ex VAT)' },
-      { id: 'vat', label: 'VAT if confirmed' },
-      { id: 'phorest-deposit-processing', label: 'PhorestPay deposit processing' },
-    ],
-  },
-  {
     id: 'square',
     name: 'Square Appointments',
     breakdown: [
       { id: 'square-subscription', label: 'Plan subscription (published)' },
       { id: 'vat', label: 'VAT (unverified for paid plans)' },
       { id: 'square-deposit-processing', label: 'Appointments deposit processing' },
+    ],
+  },
+  {
+    id: 'phorest',
+    name: 'Phorest',
+    breakdown: [
+      { id: 'phorest-subscription', label: 'Your quoted subscription (ex VAT)' },
+      { id: 'vat', label: 'VAT if confirmed' },
+      { id: 'phorest-deposit-processing', label: 'PhorestPay deposit processing' },
     ],
   },
   {
