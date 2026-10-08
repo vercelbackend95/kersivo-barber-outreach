@@ -34,6 +34,7 @@ import {
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { requireVerifiedTimelyFact, resolveTimelyMonthlyShopQuoteGbp } from '@/lib/seo/timelyFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -53,6 +54,8 @@ export type CostScenarioInput = {
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Actual Timely monthly shop invoice amount in GBP including any VAT; 0 = unknown. */
+  timelyMonthlyInvoiceGbp: number;
   vatRegistered: boolean;
   includeDepositProcessing: boolean;
   /** Only read and validated when `includeDepositProcessing` is true. */
@@ -133,6 +136,8 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
     if (quoteIssue) issues.push(quoteIssue);
   }
+  const timelyIssue = numberIssue('timelyMonthlyInvoiceGbp', input.timelyMonthlyInvoiceGbp, { integer: false, min: 0 });
+  if (timelyIssue) issues.push(timelyIssue);
   return issues;
 }
 
@@ -176,7 +181,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'timely' | 'setora' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -196,6 +201,8 @@ export type LineItemId =
   | 'fresha-client-loyalty'
   | 'nearcut-subscription'
   | 'nearcut-deposit-processing'
+  | 'timely-subscription'
+  | 'timely-deposit-processing'
   | 'setora-subscription'
   | 'setora-additional-staff'
   | 'setora-commission'
@@ -209,7 +216,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'timelypay-domestic-uk-online';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -259,6 +266,8 @@ export type AssumptionCode =
   | 'nearcut-free-online-payments'
   | 'nearcut-subscription-quote'
   | 'nearcut-subscription-unknown-payments'
+  | 'timely-actual-invoice-including-vat'
+  | 'timely-domestic-uk-processing'
   | 'setora-current-vat'
   | 'setora-standard-stripe-benchmark'
   | 'setora-sms-excluded'
@@ -266,7 +275,7 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'timely-quote-unknown' | 'timely-vat-not-separated';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -295,6 +304,8 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
+  'timely-actual-invoice-including-vat': 'Enter the ACTUAL Timely UK monthly subscription invoice total, including VAT if Timely charged it. This amount is treated as cash paid; VAT is not separated because the invoice tax breakdown is unknown. Unquoted optional tools and extras are excluded.',
+  'timely-domestic-uk-processing': 'TimelyPay domestic UK online card fees are benchmarked at the published 1.85% + 30p per £5 deposit, effective 5 August 2026. International/Amex cards and individually negotiated rates can differ; payment-processing VAT is not separately verified.',
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -314,6 +325,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
+  'timely-quote-unknown': 'Enter your real Timely UK monthly invoice total including any VAT; public USD per-staff prices are not used for UK cost estimates.',
+  'timely-vat-not-separated': 'Timely invoice VAT is included in the amount you enter, but is not separately estimated or treated as recoverable. Extra processing VAT, if charged, and undisclosed add-ons are excluded.',
 };
 
 type ProviderResultBase = {
@@ -343,7 +356,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -375,7 +388,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'timely-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -696,6 +709,53 @@ function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
 }
 
+
+/* ---------------------------------- Timely --------------------------------- */
+
+/**
+ * Public Timely UK subscription price is unverified: only use the customer's
+ * actual full monthly invoice total (including any VAT). No currency conversion.
+ * The amount is cash paid and the embedded VAT is NOT split or reclaim-estimated.
+ * Deposit fees use TimelyPay's confirmed UK domestic online rate (5 Aug 2026).
+ */
+function calculateTimely(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const invoiceGbp = resolveTimelyMonthlyShopQuoteGbp(scenario.timelyMonthlyInvoiceGbp);
+  const quoteMissing = invoiceGbp === null;
+  const domestic = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+  if (!('percent' in domestic && 'fixedGbp' in domestic)) throw new Error('Missing UK TimelyPay online processing rate');
+  const invoicePence = quoteMissing ? null : gbpToPence(invoiceGbp);
+  const lines: PenceLine[] = [
+    {
+      id: 'timely-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: invoicePence, unitPence: invoicePence, quantity: 1,
+      vatApplies: false, // VAT already IN the invoice quote: do not add it a second time.
+    },
+    depositProcessingLine(scenario, {
+      id: 'timely-deposit-processing',
+      paymentMethod: 'timelypay-domestic-uk-online',
+      percent: domestic.percent,
+      fixedPence: gbpToPence(domestic.fixedGbp),
+      vatApplies: false, // published processing rate; unknown tax handled in caveat.
+    }),
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('timely-actual-invoice-including-vat'),
+    ...(scenario.includeDepositProcessing ? [assumption('timely-domestic-uk-processing')] : []),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [warning('timely-vat-not-separated')];
+  if (quoteMissing) warnings.push(warning('timely-quote-unknown'));
+  const base = {
+    provider: 'timely' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing) return { ...base, status: 'custom-pricing', amounts: null };
+  const computed = summarise(lines, false);
+  return { ...base, status: 'calculated', amounts: { ...computed, estimatedNetCostIfVatRecoverableGbp: null } };
+}
+
 /* ---------------------------------- Setora --------------------------------- */
 
 /**
@@ -841,6 +901,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
+      calculateTimely(scenario),
       calculateSetora(scenario),
       calculateKersivo(scenario),
     ],
