@@ -1,3 +1,4 @@
+import { SQUARE_FACTS_CHECKED_DATE, SQUARE_UK_PLANS, SQUARE_UK_PAYMENT_FACTS } from '@/lib/seo/squareFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
@@ -165,6 +166,19 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     ],
   },
   {
+    name: 'Square Appointments',
+    descriptor: 'Free, Plus or Premium per location',
+    price: '£' + SQUARE_UK_PLANS[0].monthlyGbp + '/month',
+    priceNote: 'Free plan at one location',
+    secondaryPrice: 'Plus £' + SQUARE_UK_PLANS[1].monthlyGbp + '/month; Premium £' + SQUARE_UK_PLANS[2].monthlyGbp + '/month (VAT treatment unverified)',
+    points: [
+      'Unlimited staff calendars on all three plans',
+      'Square Payments and POS tools are available',
+      'Separate rates apply to online payments and Card on File',
+      'Appointment-deposit processing rates are not assumed',
+    ],
+  },
+  {
     name: 'Full KERSIVO',
     descriptor: 'Flat per location',
     price: `${KERSIVO_PRICE}/month per location`,
@@ -261,6 +275,26 @@ export const NEARCUT_COST_NOTES: readonly string[] = [
   `Free for You shop cost is shown before any add-ons. The shop-paid software amount can be ${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)} even though individual customers pay an extra fee.`,
   'Select Nearcut Subscription under Advanced costs to enter your real monthly quote. Without it, the result is Custom pricing, not an invented estimate.',
   'Nearcut Subscription online processing and optional Business Boosters are not estimated without confirmed plan-specific terms.',
+];
+
+/* ------------------------------ Square Appointments ------------------------------ */
+
+export const SQUARE_COST_INTRO =
+  'Square Appointments lists Free, Plus and Premium UK subscriptions per location. The plan selector in the calculator uses Square’s published prices. The paid plan VAT basis and the specific fee for Square Appointments booking deposits were not verified, so the tool shows the headline and marks an unconfirmed total rather than inventing fees.';
+
+export const SQUARE_COST_FACTS: readonly { label: string; value: string }[] = [
+  { label: 'Free plan', value: '£' + SQUARE_UK_PLANS[0].monthlyGbp + '/month at one location' },
+  { label: 'Plus plan', value: '£' + SQUARE_UK_PLANS[1].monthlyGbp + '/month per location (VAT not verified)' },
+  { label: 'Premium plan', value: '£' + SQUARE_UK_PLANS[2].monthlyGbp + '/month per location (VAT not verified)' },
+  { label: 'Staff calendars', value: 'Unlimited on Free, Plus and Premium' },
+  { label: 'In-person UK cards', value: SQUARE_UK_PAYMENT_FACTS.inPersonFreePercent + '% Free; ' + SQUARE_UK_PAYMENT_FACTS.inPersonPaidPercent + '% Plus/Premium, processed separately' },
+  { label: 'Online UK cards (specific Square Online products)', value: SQUARE_UK_PAYMENT_FACTS.onlineUkPercent + '% + ' + SQUARE_UK_PAYMENT_FACTS.onlineUkFixedPence + 'p, not a universal Appointments deposit fee' },
+];
+
+export const SQUARE_COST_NOTES: readonly string[] = [
+  'Prices checked ' + SQUARE_FACTS_CHECKED_DATE + '. These are published subscriptions, not guaranteed final invoices with VAT.',
+  'A plan with unverified subscription VAT, or bookings with an unverified Appointments deposit rate, shows a known headline price but no fabricated final cash total.',
+  'This tool compares software costs for one physical location and does not model Square POS hardware, other Square payment volumes, international cards or additional services.',
 ];
 
 /* -------------------------------- Team size -------------------------------- */

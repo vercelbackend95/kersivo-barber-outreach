@@ -82,6 +82,7 @@ describe('projectCostCalculation', () => {
       const projected = providers(RICH_WITH_DEPOSITS, period);
       projected.forEach((result, index) => {
         if (result.provider === 'phorest') return;
+        if (result.status !== 'calculated' || monthly[index].status !== 'calculated') return;
         const base = amounts(monthly[index]);
         const scaled = amounts(result);
         for (const key of AMOUNT_KEYS) {
@@ -94,15 +95,16 @@ describe('projectCostCalculation', () => {
   it('projects the default scenario to the expected totals', () => {
     const cash = (period: 'monthly' | 'annual' | 'threeYear') =>
       providers({}, period).filter(result=>result.provider!=='phorest').map((result) => amounts(result).cashTotalGbp);
-    expect(cash('monthly')).toEqual([60, 35.82, 0, 59, 39]);
-    expect(cash('annual')).toEqual([720, 429.84, 0, 708, 468]);
-    expect(cash('threeYear')).toEqual([2160, 1289.52, 0, 2124, 1404]);
+    expect(cash('monthly')).toEqual([60, 35.82, 0, 59, 0, 39]);
+    expect(cash('annual')).toEqual([720, 429.84, 0, 708, 0, 468]);
+    expect(cash('threeYear')).toEqual([2160, 1289.52, 0, 2124, 0, 1404]);
   });
 
   it('keeps projected totals reconciled with their components', () => {
     for (const period of COST_PERIODS) {
       for (const result of providers(RICH_WITH_DEPOSITS, period)) {
         if (result.provider === 'phorest') continue;
+        if (result.status !== 'calculated') continue;
         const a = amounts(result);
         const parts = [
           a.subscriptionExVatGbp,
@@ -137,7 +139,7 @@ describe('projectCostCalculation', () => {
     expect(amounts(booksyNoVat).vatChargedGbp).toBe(120);
     expect(amounts(booksyNoVat).estimatedNetCostIfVatRecoverableGbp).toBeNull();
 
-    const [booksy, fresha, , , kersivo] = providers({ vatRegistered: true }, 'threeYear');
+    const [booksy, fresha, , , , kersivo] = providers({ vatRegistered: true }, 'threeYear');
     expect(amounts(booksy).estimatedNetCostIfVatRecoverableGbp).toBe(1800);
     expect(amounts(fresha).estimatedNetCostIfVatRecoverableGbp).toBe(1074.6);
     expect(amounts(kersivo).estimatedNetCostIfVatRecoverableGbp).toBe(1404);

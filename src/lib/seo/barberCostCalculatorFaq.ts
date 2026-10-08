@@ -1,3 +1,4 @@
+import { SQUARE_UK_PLANS } from '@/lib/seo/squareFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -92,6 +93,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'Can the calculator estimate PhorestPay fees?',
     answer: 'Not without your actual PhorestPay merchant rates. The calculator will not copy Stripe, Booksy or Fresha card fees onto Phorest. If deposit processing is enabled and deposits are modelled, the Phorest total remains Custom pricing until those fees can be verified. SMS, setup and optional add-ons are excluded.',
+  },
+  {
+    question: 'How much does Square Appointments cost in the UK?',
+    answer: `Square Appointments lists Free (£${SQUARE_UK_PLANS[0].monthlyGbp}/month for one location), Plus (£${SQUARE_UK_PLANS[1].monthlyGbp}/month per location) and Premium (£${SQUARE_UK_PLANS[2].monthlyGbp}/month per location). Published headline prices are displayed by the calculator; VAT treatment for Plus/Premium is not confirmed, so it will not guess their final cash totals.`,
+  },
+  {
+    question: 'Does Square Appointments charge fees on deposits?',
+    answer: 'Square supports deposits, but online Square payments, manually entered payments and saved cards can have different processing rates. The calculator marks Square Appointments deposit fees as unverified rather than treating the published Square Online rate as universal. Confirm the payment flow and rate with Square.',
   },
   {
     question: 'Is Booksy or Fresha cheaper for a barbershop?',

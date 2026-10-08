@@ -1,5 +1,6 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { SQUARE_UK_PLANS, type SquarePlanId } from '@/lib/seo/squareFacts';
 import {
   DEPOSIT_BENCHMARK_GBP,
   type CostScenarioInput,
@@ -200,6 +201,15 @@ export const PHOREST_QUOTE_VAT = {
   defaultValue: 99,
 } as const;
 
+export const SQUARE_PLAN_FIELD = {
+  id: 'calc-square-plan',
+  name: 'squarePlan' as const,
+  label: 'Square Appointments plan',
+  helper: `Square Free ${formatGbp(SQUARE_UK_PLANS[0].monthlyGbp)}, Plus ${formatGbp(SQUARE_UK_PLANS[1].monthlyGbp)} or Premium ${formatGbp(SQUARE_UK_PLANS[2].monthlyGbp)}/month per location. VAT basis for Plus/Premium is not confirmed; incomplete totals stay unestimated.`,
+  options: SQUARE_UK_PLANS.map((plan) => ({value: plan.id as SquarePlanId,label: plan.name, priceLabel: '£' + plan.monthlyGbp + '/mo'})),
+  defaultValue: 'free' as SquarePlanId,
+} as const;
+
 export const NEARCUT_EXAMPLE = requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample');
 
 export const DEPOSIT_PROCESSING_TOGGLE = {
@@ -214,7 +224,7 @@ export const DEPOSIT_BOOKINGS_FIELD: NumberFieldConfig = {
   id: 'calc-deposit-bookings',
   name: 'depositBookingsPerMonth',
   label: 'Online bookings taking a deposit / month',
-  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.`,
+  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.`,
   defaultValue: 0,
   min: 0,
   max: APPOINTMENTS_FIELD.max,
@@ -237,6 +247,7 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
   phorestMonthlyQuoteGbp: PHOREST_QUOTE_FIELD.defaultValue,
   phorestQuoteVatPercent: PHOREST_QUOTE_VAT.defaultValue,
+  squarePlan: SQUARE_PLAN_FIELD.defaultValue,
   vatRegistered: VAT_OPTIONS.defaultValue === 'yes',
   includeDepositProcessing: DEPOSIT_PROCESSING_TOGGLE.defaultOn,
   depositBookingsPerMonth: DEPOSIT_BOOKINGS_FIELD.defaultValue,
@@ -283,6 +294,7 @@ export const NOT_ESTIMATED = 'Not estimated';
 export const CUSTOM_PRICING = 'Custom pricing';
 export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
 export const PHOREST_CUSTOM_PRICING_NOTE = 'Phorest subscription pricing requires your own monthly quote and confirmed VAT treatment. Extra SMS, add-ons and PhorestPay fees are excluded. When deposit processing is selected for paid deposits, a complete total cannot be estimated without PhorestPay rates.';
+export const SQUARE_CUSTOM_PRICING_NOTE = 'Square publishes the selected plan price per location, but its VAT treatment for Plus/Premium and the processing rate for Appointments deposits are not fully verified. The known subscription headline is shown in the breakdown; a full cash cost is intentionally not estimated.';
 export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
@@ -354,6 +366,15 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'phorest-subscription', label: 'Your quoted subscription (ex VAT)' },
       { id: 'vat', label: 'VAT if confirmed' },
       { id: 'phorest-deposit-processing', label: 'PhorestPay deposit processing' },
+    ],
+  },
+  {
+    id: 'square',
+    name: 'Square Appointments',
+    breakdown: [
+      { id: 'square-subscription', label: 'Plan subscription (published)' },
+      { id: 'vat', label: 'VAT (unverified for paid plans)' },
+      { id: 'square-deposit-processing', label: 'Appointments deposit processing' },
     ],
   },
   {

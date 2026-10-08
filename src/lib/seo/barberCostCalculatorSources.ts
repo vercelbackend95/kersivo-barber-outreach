@@ -1,3 +1,4 @@
+import { SQUARE_FACTS_CHECKED_DATE, SQUARE_FACTS_CHECKED_ISO, SQUARE_SOURCES } from '@/lib/seo/squareFacts';
 import {
   BOOKSY_FACTS_CHECKED_DATE,
   BOOKSY_FACTS_CHECKED_ISO,
@@ -118,6 +119,17 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
     external: true,
     checkedIso: PHOREST_FACTS_CHECKED_ISO,
     checkedLabel: PHOREST_FACTS_CHECKED_DATE,
+  })),
+  ...SQUARE_SOURCES.filter((source) =>
+    source.url.includes('/appointments/pricing') || source.url.includes('/legal/general/fees') || source.url.includes('/8096-deposits'),
+  ).map((source) => ({
+    provider: 'Square Appointments' as const,
+    label: source.label,
+    supports: source.supports,
+    url: source.url,
+    external: true,
+    checkedIso: SQUARE_FACTS_CHECKED_ISO,
+    checkedLabel: SQUARE_FACTS_CHECKED_DATE,
   })),
   {
     provider: 'Stripe',

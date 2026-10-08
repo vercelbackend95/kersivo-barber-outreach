@@ -35,6 +35,7 @@ import {
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
+import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -58,6 +59,8 @@ export type CostScenarioInput = {
   phorestMonthlyQuoteGbp: number;
   /** VAT treatment confirmed from the actual quote: 99 unknown, 0 no VAT, 20 UK standard VAT. */
   phorestQuoteVatPercent: number;
+  /** Square Appointments UK subscription, chosen independently from the other providers. */
+  squarePlan: SquarePlanId;
   vatRegistered: boolean;
   includeDepositProcessing: boolean;
   /** Only read and validated when `includeDepositProcessing` is true. */
@@ -133,6 +136,7 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     if (typeof input[field] !== 'boolean') issues.push({ field, code: 'not-boolean' });
   }
 
+  if (!['free', 'plus', 'premium'].includes(input.squarePlan)) issues.push({ field: 'squarePlan', code: 'not-a-number' });
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
   const phorestQuoteIssue = numberIssue('phorestMonthlyQuoteGbp', input.phorestMonthlyQuoteGbp, { integer: false, min: 0 });
@@ -211,6 +215,8 @@ export type LineItemId =
   | 'setora-deposit-processing'
   | 'phorest-subscription'
   | 'phorest-deposit-processing'
+  | 'square-subscription'
+  | 'square-deposit-processing'
   | 'kersivo-subscription'
   | 'kersivo-additional-barbers'
   | 'kersivo-commission'
@@ -231,7 +237,9 @@ export type CostLineItem = {
   vatApplies: boolean;
   quantity: number;
   unitExVatGbp: number | null;
-  plan?: 'independent' | 'team' | 'enterprise';
+  plan?: 'independent' | 'team' | 'enterprise' | SquarePlanId;
+  /** Source headline shown only where its VAT basis is unresolved (NOT an ex-VAT amount). */
+  publishedHeadlineGbp?: number;
   /** Deposit processing lines only. */
   paymentMethod?: PaymentMethod;
 };
@@ -276,6 +284,8 @@ export type AssumptionCode =
   | 'phorest-shop-quote'
   | 'phorest-sms-addons-excluded'
   | 'phorest-payments-unverified'
+  | 'square-unlimited-staff'
+  | 'square-fees-excluded'
   | 'kersivo-stripe-standard-uk-card'
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
@@ -315,6 +325,8 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'phorest-shop-quote': 'Phorest has Starter, Grow, Ultimate and Elite plans, but no universal published GBP subscription price. Only your own pre-VAT monthly quote is modelled. Staff, locations, add-ons and contract conditions must be checked against that quote.',
   'phorest-sms-addons-excluded': 'Phorest SMS usage, payment processing, setup, add-ons and retail fees are not included. Published SMS rates vary by plan; the monthly quote alone is not a full cost of ownership.',
   'phorest-payments-unverified': 'PhorestPay online deposit-processing fees are not publicly confirmed for your shop. They are not replaced with Stripe or other providers’ rates.',
+  'square-unlimited-staff': 'Square Appointments lists unlimited staff calendars for its Free, Plus and Premium plans and prices subscriptions per location. This assumes a single location.',
+  'square-fees-excluded': 'Only the selected Square Appointments software subscription is modelled when deposit processing is off. In-person and retail card fees, hardware, optional add-ons, international fees, negotiated pricing and other transaction costs are excluded.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
   'kersivo-stripe-standard-uk-card': STRIPE_CARD_CAVEAT,
@@ -331,6 +343,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
+  'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
+  'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
   'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
   'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
   'phorest-processing-unknown': 'PhorestPay deposit-processing rates for this shop are unverified. A complete total cannot be shown when deposit processing is selected.',
@@ -775,6 +789,58 @@ function calculateSetora(scenario: CostScenarioInput): ProviderMonthlyResult {
   };
 }
 
+/* ----------------------------- Square Appointments ------------------------------ */
+
+/**
+ * Plans are published at £0 / £29 / £69 per location.
+ * Do not invent VAT treatment for paid subscriptions or silently reuse Square Online's
+ * card rate as the fee for Square Appointments deposits. Unknown totals are explicit.
+ */
+function calculateSquare(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const plan = scenario.squarePlan;
+  const publishedHeadline = squareBaseMonthlyPriceGbp(plan);
+  const paidVatUnknown = plan !== 'free' && !SQUARE_CALCULATOR_LIMITS.paidSubscriptionVatVerified;
+  const processingUnknown =
+    scenario.includeDepositProcessing &&
+    scenario.depositBookingsPerMonth > 0 &&
+    SQUARE_PAYMENT_CHANNEL_FACTS['appointments-online-deposit'].status !== 'verified';
+  const subscriptionPence = paidVatUnknown ? null : gbpToPence(publishedHeadline);
+
+  const lines: PenceLine[] = [
+    {
+      id: 'square-subscription', category: 'subscription',
+      status: paidVatUnknown ? 'custom-pricing' : 'calculated',
+      pence: subscriptionPence, unitPence: subscriptionPence,
+      ...(paidVatUnknown ? { publishedHeadlineGbp: publishedHeadline } : {}),
+      plan, quantity: 1, vatApplies: false,
+    },
+    {
+      id: 'square-deposit-processing', category: 'payment-processing',
+      status: processingUnknown ? 'custom-pricing' : scenario.includeDepositProcessing ? 'calculated' : 'not-included',
+      pence: processingUnknown ? null : 0,
+      unitPence: processingUnknown ? null : scenario.includeDepositProcessing ? 0 : null,
+      quantity: scenario.includeDepositProcessing ? scenario.depositBookingsPerMonth : 0,
+      vatApplies: false,
+    },
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (paidVatUnknown) warnings.push(warning('square-subscription-vat-unverified'));
+  if (processingUnknown) warnings.push(warning('square-deposit-processing-unverified'));
+  const base = {
+    provider: 'square' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    assumptions: [
+      ...sharedNotices(scenario).assumptions,
+      assumption('square-unlimited-staff'),
+      assumption('square-fees-excluded'),
+    ],
+    warnings,
+  };
+  if (paidVatUnknown || processingUnknown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
 /* --------------------------------- KERSIVO --------------------------------- */
 
 function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
@@ -909,6 +975,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
       calculateSetora(scenario),
+      calculateSquare(scenario),
       calculateKersivo(scenario),
       calculatePhorest(scenario),
     ],

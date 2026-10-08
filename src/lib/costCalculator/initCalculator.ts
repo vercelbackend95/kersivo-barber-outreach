@@ -15,6 +15,7 @@ import {
   MARKETPLACE_CLIENTS_FIELD,
   NUMBER_FIELDS,
   SHARE_SCENARIO,
+  SQUARE_PLAN_FIELD,
   SPLIT_ASSUMPTIONS_TOGGLE,
   SPLIT_FIELDS,
   validationMessage,
@@ -57,6 +58,12 @@ function readRadioNumber(form: HTMLFormElement, name: string): number {
   return Number(element.value);
 }
 
+function readSquarePlan(form: HTMLFormElement): CostScenarioInput['squarePlan'] {
+  const radios = form.elements.namedItem(SQUARE_PLAN_FIELD.name);
+  const value = radios instanceof RadioNodeList ? radios.value : '';
+  return value === 'plus' || value === 'premium' ? value : 'free';
+}
+
 export function readScenario(form: HTMLFormElement): CostScenarioInput {
   return {
     bookableBarbers: readNumber(form, 'bookableBarbers'),
@@ -73,6 +80,7 @@ export function readScenario(form: HTMLFormElement): CostScenarioInput {
     nearcutMonthlyQuoteGbp: readNumber(form, 'nearcutMonthlyQuoteGbp'),
     phorestMonthlyQuoteGbp: readNumber(form, 'phorestMonthlyQuoteGbp'),
     phorestQuoteVatPercent: readRadioNumber(form, 'phorestQuoteVatPercent'),
+    squarePlan: readSquarePlan(form),
     vatRegistered: readYesNo(form, 'vatRegistered'),
     includeDepositProcessing: readChecked(form, 'includeDepositProcessing'),
     depositBookingsPerMonth: readNumber(form, 'depositBookingsPerMonth'),
@@ -146,6 +154,10 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   setChecked(form, 'freshaSmartWebsite', scenario.freshaSmartWebsite);
   setChecked(form, 'freshaClientLoyalty', scenario.freshaClientLoyalty);
   setChecked(form, 'nearcutSubscription', scenario.nearcutSubscription);
+  const squareRadio = form.querySelector<HTMLInputElement>(
+    `input[name="squarePlan"][value="${scenario.squarePlan}"]`,
+  );
+  if (squareRadio) squareRadio.checked = true;
   setChecked(form, 'includeDepositProcessing', scenario.includeDepositProcessing);
   const phorestVat = form.querySelector<HTMLInputElement>(
     `input[name="phorestQuoteVatPercent"][value="${scenario.phorestQuoteVatPercent}"]`,

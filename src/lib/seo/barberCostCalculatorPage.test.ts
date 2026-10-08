@@ -109,6 +109,7 @@ describe('barber software cost calculator SEO foundation', () => {
       'How much does Nearcut cost in the UK?',
       'How much does Setora cost in the UK?',
       'How much does Phorest cost in the UK?',
+      'How much does Square Appointments cost in the UK?',
       'How team size changes your booking software cost',
       'Booksy Boost and Fresha Marketplace fees explained',
       'How VAT changes the real cost',
@@ -130,6 +131,7 @@ describe('barber software cost calculator SEO foundation', () => {
       '<CostFresha',
       '<CostNearcut',
       '<CostSetora',
+      '<CostSquare',
       '<CostTeamSize',
       '<CostMarketplaceFees',
       '<CostVat',
@@ -144,7 +146,7 @@ describe('barber software cost calculator SEO foundation', () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it('links to all four comparison pages with natural anchor text', () => {
+  it('links to all comparison pages with natural anchor text', () => {
     expect(components['CostFresha.astro']).toContain(
       '<a href="/fresha-alternative">See the full KERSIVO vs Fresha comparison</a>',
     );
@@ -153,6 +155,7 @@ describe('barber software cost calculator SEO foundation', () => {
     );
     expect(components['CostNearcut.astro']).toContain('<a href="/nearcut-alternative">See the full KERSIVO vs Nearcut comparison</a>');
     expect(components['CostSetora.astro']).toContain('<a href="/setora-alternative">See the full KERSIVO vs Setora comparison</a>');
+    expect(components['CostSquare.astro']).toContain('<a href="/square-appointments-alternative">See the full KERSIVO vs Square Appointments comparison</a>');
   });
 
   it('lists the page once in the sitemap with the visible last-updated date', () => {
@@ -271,6 +274,8 @@ describe('barber software cost calculator content safety', () => {
       'How much does Nearcut Subscription cost in the UK?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
+      'How much does Square Appointments cost in the UK?',
+      'Does Square Appointments charge fees on deposits?',
       'How much does Phorest cost per month in the UK?',
       'Can the calculator estimate PhorestPay fees?',
       'Is Booksy or Fresha cheaper for a barbershop?',
@@ -437,6 +442,8 @@ describe('cost at a glance base pricing', () => {
     expect(setora.priceNote).toContain('Unlimited staff');
     expect(phorest.price).toBe('Custom pricing');
     expect(phorest.priceNote).toContain('individual quotation');
+    expect(square.price).toBe('£0/month');
+    expect(square.secondaryPrice).toContain('Premium £69/month');
     expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
     expect(kersivo.priceNote).toBe('Additional barbers included');
   });

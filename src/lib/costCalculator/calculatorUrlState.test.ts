@@ -31,6 +31,7 @@ const FULL: CostScenarioInput = {
   nearcutMonthlyQuoteGbp: 73.5,
   phorestMonthlyQuoteGbp: 145.75,
   phorestQuoteVatPercent: 20,
+  squarePlan: 'premium',
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -56,6 +57,7 @@ describe('scenario query parameters', () => {
       nearcutMonthlyQuoteGbp: 'nq',
       phorestMonthlyQuoteGbp: 'pq',
       phorestQuoteVatPercent: 'pv',
+      squarePlan: 'sq',
       vatRegistered: 'vat',
       includeDepositProcessing: 'dp',
       depositBookingsPerMonth: 'db',
@@ -79,6 +81,7 @@ describe('encodeScenarioQuery', () => {
       expect(decoded.period).toBe(period);
     }
     expect(encodeScenarioQuery(FULL, 'annual')).toContain('period=12');
+    expect(encodeScenarioQuery(FULL, 'annual')).toContain('sq=premium');
     expect(encodeScenarioQuery(FULL, 'threeYear')).toContain('period=36');
   });
 

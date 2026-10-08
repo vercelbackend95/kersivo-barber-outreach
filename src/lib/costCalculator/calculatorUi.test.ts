@@ -27,6 +27,7 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  SQUARE_PLAN_FIELD,
   PERIOD_OPTIONS,
   PROJECTION_ASSUMPTION,
   PROVIDER_RESULTS,
@@ -73,6 +74,7 @@ describe('calculator panel inputs', () => {
       DEPOSIT_PROCESSING_TOGGLE.name,
       NEARCUT_SUBSCRIPTION_TOGGLE.name,
       'phorestQuoteVatPercent',
+      SQUARE_PLAN_FIELD.name,
     ].sort();
     expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
   });
@@ -144,7 +146,7 @@ describe('calculator panel inputs', () => {
     expect(DEPOSIT_BOOKINGS_FIELD.max).toBe(20000);
     expect(DEFAULT_SCENARIO.depositBookingsPerMonth).toBe(0);
     expect(DEPOSIT_BOOKINGS_FIELD.helper).toBe(
-      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
+      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
     );
     expect(configSource).toContain('formatGbp(DEPOSIT_BENCHMARK_GBP)');
   });
@@ -245,6 +247,11 @@ describe('calculator results structure', () => {
       ['setora-deposit-processing', 'Stripe deposit processing'],
     ]);
     expect(rows('phorest')).toEqual([['phorest-subscription', 'Your quoted subscription (ex VAT)'], ['vat', 'VAT if confirmed'], ['phorest-deposit-processing', 'PhorestPay deposit processing']]);
+    expect(rows('square')).toEqual([
+      ['square-subscription', 'Plan subscription (published)'],
+      ['vat', 'VAT (unverified for paid plans)'],
+      ['square-deposit-processing', 'Appointments deposit processing'],
+    ]);
     expect(rows('kersivo')).toEqual([
       ['kersivo-subscription', 'Subscription'],
       ['kersivo-additional-barbers', 'Additional barbers'],
