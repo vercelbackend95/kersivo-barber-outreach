@@ -11,6 +11,8 @@ import {
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
   PHOREST_QUOTE_FIELD,
+  TREATWELL_QUOTE_FIELD,
+  TREATWELL_QUOTE_VAT,
   PHOREST_QUOTE_VAT,
   SQUARE_PLAN_FIELD,
   MARKETPLACE_CLIENTS_FIELD,
@@ -21,6 +23,7 @@ import {
   SPLIT_FIELDS,
   VAT_OPTIONS,
 } from '@/lib/costCalculator/calculatorUi';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 
 const helperId = (id: string) => `${id}-helper`;
 const errorId = (id: string) => `${id}-error`;
@@ -37,7 +40,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Setora · Square · Phorest · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Treatwell · Setora · Square · Phorest · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -199,6 +202,7 @@ const describedBy = (id: string, withHelper: boolean) =>
                 step={field.step}
                 aria-describedby={describedBy(field.id, false)}
               />
+              {field.helper ? <p id={helperId(field.id)} class="calc-field__helper">{field.helper}</p> : null}
               <p id={errorId(field.id)} class="calc-field__error" data-calc-error hidden />
             </div>
           ))
@@ -210,7 +214,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Nearcut, Square plan, Phorest quote, add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Nearcut, Treatwell quote, Square plan, Phorest quote, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -294,6 +298,44 @@ const describedBy = (id: string, withHelper: boolean) =>
         </div>
       </div>
 
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">Treatwell · your confirmed quote</legend>
+        <p class="calc-field__helper">
+          The published {requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT is an eligible new-marketplace booking commission, not an all-bookings charge.
+          Under the September 2026 terms a customer may count as new after 365 days without a successful appointment.
+          Enter only eligible bookings above. Treatwell also lists {requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT online prepayment processing.
+        </p>
+        <div class="calc-field">
+          <label class="calc-field__label" for={TREATWELL_QUOTE_FIELD.id}>{TREATWELL_QUOTE_FIELD.label}</label>
+          <div class="calc-input calc-input--currency">
+            <span class="calc-input__prefix" aria-hidden="true">£</span>
+            <input
+              id={TREATWELL_QUOTE_FIELD.id} type="number" inputmode="decimal"
+              name={TREATWELL_QUOTE_FIELD.name} value={TREATWELL_QUOTE_FIELD.defaultValue}
+              min={TREATWELL_QUOTE_FIELD.min} max={TREATWELL_QUOTE_FIELD.max}
+              step={TREATWELL_QUOTE_FIELD.step}
+              aria-describedby={describedBy(TREATWELL_QUOTE_FIELD.id, true)}
+            />
+          </div>
+          <p id={helperId(TREATWELL_QUOTE_FIELD.id)} class="calc-field__helper">{TREATWELL_QUOTE_FIELD.helper}</p>
+          <p id={errorId(TREATWELL_QUOTE_FIELD.id)} class="calc-field__error" data-calc-error hidden></p>
+        </div>
+        <fieldset class="calc-fieldset">
+          <legend class="calc-field__label">{TREATWELL_QUOTE_VAT.legend}</legend>
+          <div class="calc-segmented calc-segmented--small">
+            {TREATWELL_QUOTE_VAT.options.map(option => (
+              <label class="calc-segmented__option">
+                <input type="radio" name={TREATWELL_QUOTE_VAT.name} value={option.value}
+                  checked={option.value === TREATWELL_QUOTE_VAT.defaultValue} />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+          <p class="calc-field__helper">Select the VAT basis only if confirmed by your invoice or agreement. An unknown subscription remains Custom pricing.</p>
+        </fieldset>
+        <p class="calc-field__helper">Treatwell may have other contract-specific charges; the published rates are illustrations, not a guaranteed quotation.</p>
+      </fieldset>
 
       <fieldset class="calc-fieldset">
         <legend class="calc-field__label">{SQUARE_PLAN_FIELD.label}</legend>

@@ -15,13 +15,14 @@ import {
   type FreshaSourceId,
   getFreshaSource,
 } from '@/lib/seo/freshaFacts';
+import { TREATWELL_FACTS_CHECKED_DATE, TREATWELL_FACTS_CHECKED_ISO, TREATWELL_SOURCES } from '@/lib/seo/treatwellFacts';
 import { NEARCUT_FACTS_CHECKED_DATE, NEARCUT_FACTS_CHECKED_ISO, NEARCUT_SOURCES } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, SETORA_FACTS_CHECKED_ISO, getSetoraSource } from '@/lib/seo/setoraFacts';
 import { PHOREST_FACTS_CHECKED_DATE, PHOREST_FACTS_CHECKED_ISO, PHOREST_SOURCES } from '@/lib/seo/phorestFacts';
 import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Setora' | 'Square Appointments' | 'Phorest' | 'Stripe' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Treatwell' | 'Setora' | 'Square Appointments' | 'Phorest' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
@@ -90,6 +91,15 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
       checkedLabel: checked?.checkedLabel ?? FRESHA_FACTS_CHECKED_DATE ?? undefined,
     };
   }),
+  ...TREATWELL_SOURCES.map((source) => ({
+    provider: 'Treatwell' as const,
+    label: source.label,
+    supports: source.supports,
+    url: source.url,
+    external: true,
+    checkedIso: TREATWELL_FACTS_CHECKED_ISO,
+    checkedLabel: TREATWELL_FACTS_CHECKED_DATE,
+  })),
   ...NEARCUT_SOURCES.map((source) => ({
     provider: 'Nearcut' as const,
     label: source.label,

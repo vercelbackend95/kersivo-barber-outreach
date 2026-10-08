@@ -1,5 +1,6 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { SQUARE_UK_PLANS, type SquarePlanId } from '@/lib/seo/squareFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN } from '@/lib/seo/phorestFacts';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
@@ -26,11 +27,13 @@ type NumericScenarioKey =
   | 'marketplaceClients'
   | 'booksyBoostClients'
   | 'freshaMarketplaceClients'
+  | 'treatwellMarketplaceClients'
   | 'depositBookingsPerMonth'
   | 'nearcutMonthlyQuoteGbp'
+  | 'treatwellMonthlyQuoteGbp'
   | 'phorestMonthlyQuoteGbp';
 
-type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestQuoteVatPercent' | 'squarePlan'>;
+type BooleanScenarioKey = Exclude<keyof CostScenarioInput, NumericScenarioKey | 'phorestQuoteVatPercent' | 'treatwellQuoteVatPercent' | 'squarePlan'>;
 
 export type NumberFieldConfig = {
   id: string;
@@ -102,7 +105,7 @@ export const BOOST_TOGGLE = {
 export const SPLIT_ASSUMPTIONS_TOGGLE = {
   id: 'calc-split-assumptions',
   name: 'splitMarketplaceAssumptions',
-  label: 'Use different assumptions for Booksy and Fresha',
+  label: 'Use different marketplace client counts for Booksy, Fresha and Treatwell',
   defaultOn: false,
 } as const satisfies ToggleConfig;
 
@@ -120,6 +123,16 @@ export const SPLIT_FIELDS: readonly NumberFieldConfig[] = [
     id: 'calc-fresha-marketplace-clients',
     name: 'freshaMarketplaceClients',
     label: 'Fresha Marketplace clients / month',
+    defaultValue: 0,
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  {
+    id: 'calc-treatwell-marketplace-clients',
+    name: 'treatwellMarketplaceClients',
+    label: 'Eligible Treatwell new marketplace bookings / month',
+    helper: 'Count only bookings eligible under your agreement. A returning customer may qualify after 365 days without a successful appointment.',
     defaultValue: 0,
     min: 0,
     max: 1000,
@@ -184,6 +197,24 @@ export const NEARCUT_QUOTE_FIELD: NumberFieldConfig = {
   min: 0, max: 20000, step: 0.01,
 };
 
+export const TREATWELL_QUOTE_FIELD: NumberFieldConfig = {
+  id: 'calc-treatwell-quote', name: 'treatwellMonthlyQuoteGbp',
+  label: 'Your Treatwell monthly subscription quote (ex VAT)',
+  helper: 'Treatwell says “Start for free”, but does not publish a universal ongoing monthly rate. Leave 0 if unknown; no total is guessed.',
+  defaultValue: 0, min: 0, max: 20000, step: 0.01,
+};
+
+export const TREATWELL_QUOTE_VAT = {
+  name: 'treatwellQuoteVatPercent',
+  legend: 'Does your Treatwell subscription quote add VAT?',
+  options: [
+    { value: 99, label: 'Not sure' },
+    { value: UK_STANDARD_VAT_PERCENT, label: 'Yes · standard UK VAT' },
+    { value: 0, label: 'No VAT added' },
+  ],
+  defaultValue: 99,
+} as const;
+
 export const PHOREST_QUOTE_FIELD: NumberFieldConfig = {
   id: 'calc-phorest-quote', name: 'phorestMonthlyQuoteGbp',
   label: 'Your Phorest monthly subscription quote (ex VAT)',
@@ -226,7 +257,7 @@ export const DEPOSIT_BOOKINGS_FIELD: NumberFieldConfig = {
   id: 'calc-deposit-bookings',
   name: 'depositBookingsPerMonth',
   label: 'Online bookings taking a deposit / month',
-  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.`,
+  helper: `Uses a ${formatGbp(DEPOSIT_BENCHMARK_GBP)} online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. Treatwell uses its published ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT online prepayment fee on each modelled deposit. The remaining appointment balance and in-person card payments are not modelled.`,
   defaultValue: 0,
   min: 0,
   max: APPOINTMENTS_FIELD.max,
@@ -243,10 +274,13 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
   splitMarketplaceAssumptions: SPLIT_ASSUMPTIONS_TOGGLE.defaultOn,
   booksyBoostClients: SPLIT_FIELDS[0].defaultValue,
   freshaMarketplaceClients: SPLIT_FIELDS[1].defaultValue,
+  treatwellMarketplaceClients: SPLIT_FIELDS[2].defaultValue,
   freshaSmartWebsite: false,
   freshaClientLoyalty: false,
   nearcutSubscription: NEARCUT_SUBSCRIPTION_TOGGLE.defaultOn,
   nearcutMonthlyQuoteGbp: NEARCUT_QUOTE_FIELD.defaultValue,
+  treatwellMonthlyQuoteGbp: TREATWELL_QUOTE_FIELD.defaultValue,
+  treatwellQuoteVatPercent: TREATWELL_QUOTE_VAT.defaultValue,
   phorestMonthlyQuoteGbp: PHOREST_QUOTE_FIELD.defaultValue,
   phorestQuoteVatPercent: PHOREST_QUOTE_VAT.defaultValue,
   squarePlan: SQUARE_PLAN_FIELD.defaultValue,
@@ -297,6 +331,7 @@ export const CUSTOM_PRICING = 'Custom pricing';
 export const CUSTOM_PRICING_NOTE = `Fresha lists custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete total cannot be estimated.`;
 export const PHOREST_CUSTOM_PRICING_NOTE = 'Phorest subscription pricing requires your own monthly quote and confirmed VAT treatment. Extra SMS, add-ons and PhorestPay fees are excluded. When deposit processing is selected for paid deposits, a complete total cannot be estimated without PhorestPay rates.';
 export const SQUARE_CUSTOM_PRICING_NOTE = 'Square publishes the selected plan price per location, but its VAT treatment for Plus/Premium and the processing rate for Appointments deposits are not fully verified. The known subscription headline is shown in the breakdown; a full cash cost is intentionally not estimated.';
+export const TREATWELL_CUSTOM_PRICING_NOTE = `Treatwell commission (${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT on entered eligible new-marketplace bookings) and online prepayment fees (${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT on selected ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposits) are shown as estimated known components. A complete total requires your actual recurring subscription quote and confirmed quote VAT. The marketplace client count must be checked against the terms, including the 365-day successful-appointment rule. Other fees and contract variations are excluded.`;
 export const NEARCUT_CUSTOM_PRICING_NOTE = 'Nearcut Subscription is quote-based. Enter your monthly quote excluding VAT. When online deposit processing is included, confirm your plan-specific processing rates with Nearcut; no full total is estimated without them.';
 export const NET_IF_VAT_RECOVERABLE_LABEL = 'Estimated net if VAT is fully recoverable:';
 
@@ -348,6 +383,16 @@ export const PROVIDER_RESULTS: readonly ProviderResultConfig[] = [
       { id: 'nearcut-subscription', label: 'Subscription / shop cost' },
       { id: 'vat', label: 'VAT' },
       { id: 'nearcut-deposit-processing', label: 'Online deposit processing' },
+    ],
+  },
+  {
+    id: 'treatwell',
+    name: 'Treatwell',
+    breakdown: [
+      { id: 'treatwell-subscription', label: 'Your quoted monthly subscription' },
+      { id: 'treatwell-new-client-commission', label: 'Qualifying marketplace new-client commission' },
+      { id: 'vat', label: 'VAT (confirmed portions only)' },
+      { id: 'treatwell-deposit-processing', label: `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT` },
     ],
   },
   {
@@ -424,6 +469,8 @@ export function validationMessage(code: ValidationIssueCode, field: NumberFieldC
       return 'Enter a whole number.';
     case 'below-minimum':
       return field ? `Enter ${field.min} or more.` : 'Enter a larger number.';
+    case 'invalid-treatwell-vat':
+      return 'Choose the VAT treatment shown in your Treatwell quote.';
     case 'invalid-phorest-vat':
       return 'Choose the VAT treatment shown in your Phorest quote.';
     case 'not-boolean':
@@ -444,4 +491,5 @@ export const NUMBER_FIELDS: readonly NumberFieldConfig[] = [
   DEPOSIT_BOOKINGS_FIELD,
   NEARCUT_QUOTE_FIELD,
   PHOREST_QUOTE_FIELD,
+  TREATWELL_QUOTE_FIELD,
 ];

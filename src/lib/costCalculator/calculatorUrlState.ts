@@ -12,10 +12,13 @@
  *   split   separate marketplace counts      1 | 0
  *   bc      Booksy Boost clients             integer
  *   fc      Fresha Marketplace clients       integer
+ *   tc      Eligible Treatwell marketplace bookings integer
  *   sw      Fresha Smart Website             1 | 0
  *   loyalty Fresha Client Loyalty            1 | 0
  *   nc      Nearcut Subscription             1 | 0
  *   nq      Nearcut monthly quote (ex VAT)    decimal, 0 if unknown
+ *   tq      Treatwell monthly quote (ex VAT)  decimal, 0 if unknown
+ *   tv      Treatwell quote VAT rate          99 unknown | 0 | 20
  *   sq      Square plan                       free | plus | premium
  *   vat     VAT registered                   1 | 0
  *   dp      booking deposit processing       1 | 0
@@ -40,10 +43,13 @@ export const SCENARIO_PARAMS = {
   splitMarketplaceAssumptions: 'split',
   booksyBoostClients: 'bc',
   freshaMarketplaceClients: 'fc',
+  treatwellMarketplaceClients: 'tc',
   freshaSmartWebsite: 'sw',
   freshaClientLoyalty: 'loyalty',
   nearcutSubscription: 'nc',
   nearcutMonthlyQuoteGbp: 'nq',
+  treatwellMonthlyQuoteGbp: 'tq',
+  treatwellQuoteVatPercent: 'tv',
   phorestMonthlyQuoteGbp: 'pq',
   phorestQuoteVatPercent: 'pv',
   squarePlan: 'sq',

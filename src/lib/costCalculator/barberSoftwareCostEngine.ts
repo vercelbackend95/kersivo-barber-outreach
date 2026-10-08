@@ -1,5 +1,5 @@
 /**
- * Pure monthly cost engine for Booksy, Fresha, Nearcut, Setora, Square, Phorest and KERSIVO.
+ * Pure monthly cost engine for Booksy, Fresha, Nearcut, Treatwell, Setora, Square, Phorest and KERSIVO.
  *
  * No DOM, browser or Astro dependencies. Every price comes from the central facts modules.
  * Payment processing covers online booking deposits only; multi-period projections live elsewhere.
@@ -33,6 +33,7 @@ import {
   STRIPE_UK_STANDARD_CARD_PERCENT,
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
+import { TREATWELL_QUOTE_VAT_UNKNOWN, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
@@ -50,11 +51,17 @@ export type CostScenarioInput = {
   splitMarketplaceAssumptions: boolean;
   booksyBoostClients: number;
   freshaMarketplaceClients: number;
+  /** Eligible Treatwell new-marketplace appointments, not all first-time clients; September 2026 eligibility terms apply. */
+  treatwellMarketplaceClients: number;
   freshaSmartWebsite: boolean;
   freshaClientLoyalty: boolean;
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Real Treatwell monthly software quote (ex VAT); 0 means unknown, not a free subscription. */
+  treatwellMonthlyQuoteGbp: number;
+  /** Treatwell quote VAT treatment: 99 unknown; 0 no VAT; 20 standard UK VAT. */
+  treatwellQuoteVatPercent: number;
   /** Actual shop-provided Phorest monthly subscription quote, before VAT. 0 = unknown. */
   phorestMonthlyQuoteGbp: number;
   /** VAT treatment confirmed from the actual quote: 99 unknown, 0 no VAT, 20 UK standard VAT. */
@@ -78,7 +85,8 @@ export type ValidationIssueCode =
   | 'not-boolean'
   | 'exceeds-monthly-appointments'
   | 'deposit-bookings-exceed-monthly-appointments'
-  | 'invalid-phorest-vat';
+  | 'invalid-phorest-vat'
+  | 'invalid-treatwell-vat';
 
 export type ValidationIssue = {
   field: keyof CostScenarioInput;
@@ -93,7 +101,8 @@ const NUMBER_RULES: Record<
   | 'averageAppointmentValueGbp'
   | 'marketplaceClients'
   | 'booksyBoostClients'
-  | 'freshaMarketplaceClients',
+  | 'freshaMarketplaceClients'
+  | 'treatwellMarketplaceClients',
   NumberRule
 > = {
   bookableBarbers: { integer: true, min: 1 },
@@ -102,6 +111,7 @@ const NUMBER_RULES: Record<
   marketplaceClients: { integer: true, min: 0 },
   booksyBoostClients: { integer: true, min: 0 },
   freshaMarketplaceClients: { integer: true, min: 0 },
+  treatwellMarketplaceClients: { integer: true, min: 0 },
 };
 
 const BOOLEAN_FIELDS = [
@@ -139,6 +149,9 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
   if (!['free', 'plus', 'premium'].includes(input.squarePlan)) issues.push({ field: 'squarePlan', code: 'not-a-number' });
   issues.push(...validateMarketplaceAgainstAppointments(input, issues));
   issues.push(...validateDepositBookings(input, issues));
+  const treatwellQuoteIssue = numberIssue('treatwellMonthlyQuoteGbp', input.treatwellMonthlyQuoteGbp, { integer: false, min: 0 });
+  if (treatwellQuoteIssue) issues.push(treatwellQuoteIssue);
+  if (![TREATWELL_QUOTE_VAT_UNKNOWN, 0, UK_STANDARD_VAT_PERCENT].includes(input.treatwellQuoteVatPercent)) issues.push({ field: 'treatwellQuoteVatPercent', code: 'invalid-treatwell-vat' });
   const phorestQuoteIssue = numberIssue('phorestMonthlyQuoteGbp', input.phorestMonthlyQuoteGbp, { integer: false, min: 0 });
   if (phorestQuoteIssue) issues.push(phorestQuoteIssue);
   if (![PHOREST_QUOTE_VAT_UNKNOWN, 0, UK_STANDARD_VAT_PERCENT].includes(input.phorestQuoteVatPercent)) issues.push({ field: 'phorestQuoteVatPercent', code: 'invalid-phorest-vat' });
@@ -176,7 +189,7 @@ function validateMarketplaceAgainstAppointments(
   if (invalid.has('monthlyAppointments') || invalid.has('splitMarketplaceAssumptions')) return [];
 
   const active: (keyof typeof NUMBER_RULES)[] = input.splitMarketplaceAssumptions
-    ? ['freshaMarketplaceClients']
+    ? ['freshaMarketplaceClients', 'treatwellMarketplaceClients']
     : ['marketplaceClients'];
   if (input.splitMarketplaceAssumptions && input.booksyBoostEnabled === true) {
     active.unshift('booksyBoostClients');
@@ -189,7 +202,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'square' | 'phorest' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -209,6 +222,9 @@ export type LineItemId =
   | 'fresha-client-loyalty'
   | 'nearcut-subscription'
   | 'nearcut-deposit-processing'
+  | 'treatwell-subscription'
+  | 'treatwell-new-client-commission'
+  | 'treatwell-deposit-processing'
   | 'setora-subscription'
   | 'setora-additional-staff'
   | 'setora-commission'
@@ -226,7 +242,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -278,6 +294,9 @@ export type AssumptionCode =
   | 'nearcut-free-online-payments'
   | 'nearcut-subscription-quote'
   | 'nearcut-subscription-unknown-payments'
+  | 'treatwell-eligibility-365-days'
+  | 'treatwell-quote-required'
+  | 'treatwell-processing-deposits-only'
   | 'setora-current-vat'
   | 'setora-standard-stripe-benchmark'
   | 'setora-sms-excluded'
@@ -290,16 +309,16 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified';
+export type WarningCode = 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
 export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'single-location': 'Costs are for a single barbershop location.',
   'shared-marketplace-clients':
-    'The same qualifying new marketplace client count is used for Booksy Boost and Fresha Marketplace.',
+    'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha and Treatwell. These providers do not necessarily generate equal new-client volumes.',
   'split-marketplace-clients':
-    'Separate qualifying new client counts are used for Booksy Boost and Fresha Marketplace.',
+    'Separate qualifying new marketplace client counts are used for Booksy Boost, Fresha and Treatwell. Treatwell eligibility depends on partner terms.',
   'booksy-users-equal-bookable-barbers':
     'Each bookable barber is treated as one Booksy user: the first is covered by the base subscription and the rest are additional users. Real Booksy accounts may be configured differently.',
   'booksy-boost-first-visit-equals-average-appointment-value':
@@ -319,6 +338,9 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
+  'treatwell-eligibility-365-days': `Treatwell new-client marketplace commission is estimated only on the manually entered eligible appointment count; eligibility depends on booking channel and partner terms, including an inactivity-related successful-appointment history rule. The published ${formatPercent(requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent!)} + VAT may differ from your special cooperation agreement.`,
+  'treatwell-quote-required': 'Treatwell advertises Start for free, but does not publish one ongoing subscription amount. Use your actual monthly quote (before VAT). A zero input means unknown, not a free plan.',
+  'treatwell-processing-deposits-only': `Treatwell online prepayment processing is modelled at the published ${formatPercent(requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent!)} + VAT on the ${formatGbp(DEPOSIT_BENCHMARK_GBP)} benchmark deposit per selected booking, rounded per transaction. Other prepaid balances, in-person payments and other fees are excluded.`,
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -343,6 +365,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'nearcut-client-charge-not-universal': 'Nearcut illustrates a client booking charge but does not publish a universal per-booking rate. Client-paid costs are not included in barbershop totals.',
   'nearcut-quoted-cost-unknown': 'Nearcut Subscription requires a monthly quote for your shop. Without it the total is not estimated.',
   'nearcut-processing-unresolved': 'Nearcut Subscription deposit-processing fees require plan-specific confirmation. The total is not estimated when deposit processing is selected.',
+  'treatwell-monthly-quote-required': 'Treatwell ongoing monthly subscription costs are not published as a universal figure. Enter the amount in your partner agreement; no complete total is guessed.',
+  'treatwell-quote-vat-unknown': 'Confirm the VAT treatment of your Treatwell subscription quote. No complete cash total is estimated until the quote VAT basis is selected.',
   'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
   'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
   'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
@@ -375,9 +399,9 @@ export type MonthlyCostCalculation =
   | {
       ok: true;
       scenario: CostScenarioInput;
-      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
+      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -409,7 +433,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -730,6 +754,60 @@ function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
 }
 
+
+/* -------------------------------- Treatwell -------------------------------- */
+
+/**
+ * 35% marketplace commission applies only to manually-entered eligible new-client
+ * marketplace bookings, NOT every new or repeat booking. Subscription has no
+ * universal price. Verified 2.5% + VAT online processing is limited to the
+ * same £5 benchmark deposits as the other providers.
+ */
+function calculateTreatwell(scenario: CostScenarioInput, eligibleClients: number): ProviderMonthlyResult {
+  const quoteKnown = scenario.treatwellMonthlyQuoteGbp > 0;
+  const vatKnown = scenario.treatwellQuoteVatPercent !== TREATWELL_QUOTE_VAT_UNKNOWN;
+  const quotePence = quoteKnown ? gbpToPence(scenario.treatwellMonthlyQuoteGbp) : null;
+  const commission = requireVerifiedTreatwellFact('newMarketplaceClientCommission');
+  const prepayment = requireVerifiedTreatwellFact('onlinePrepaymentProcessing');
+  const commissionUnitPence = percentOfPence(gbpToPence(scenario.averageAppointmentValueGbp), commission.percent!);
+  const lines: PenceLine[] = [
+    {
+      id: 'treatwell-subscription', category: 'subscription',
+      status: quoteKnown ? 'calculated' : 'custom-pricing',
+      pence: quotePence, unitPence: quotePence, quantity: 1,
+      vatApplies: scenario.treatwellQuoteVatPercent === UK_STANDARD_VAT_PERCENT,
+    },
+    {
+      id: 'treatwell-new-client-commission', category: 'acquisition',
+      status: 'calculated', quantity: eligibleClients,
+      pence: eligibleClients * commissionUnitPence,
+      unitPence: commissionUnitPence, vatApplies: commission.vat === 'exclusive',
+    },
+    depositProcessingLine(scenario, {
+      id: 'treatwell-deposit-processing',
+      paymentMethod: 'treatwell-online-prepayment',
+      percent: prepayment.percent!, fixedPence: 0,
+      vatApplies: prepayment.vat === 'exclusive',
+    }),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (!quoteKnown) warnings.push(warning('treatwell-monthly-quote-required'));
+  if (!vatKnown) warnings.push(warning('treatwell-quote-vat-unknown'));
+  const assumptions = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('treatwell-eligibility-365-days'),
+    assumption('treatwell-quote-required'),
+    ...(scenario.includeDepositProcessing ? [assumption('treatwell-processing-deposits-only')] : []),
+  ];
+  const base = {
+    provider: 'treatwell' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), warnings, assumptions,
+  };
+  if (!quoteKnown || !vatKnown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
 /* ---------------------------------- Setora --------------------------------- */
 
 /**
@@ -959,8 +1037,8 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
 
   const scenario: CostScenarioInput = { ...input };
   const effectiveMarketplaceClients = scenario.splitMarketplaceAssumptions
-    ? { booksyBoost: scenario.booksyBoostClients, freshaMarketplace: scenario.freshaMarketplaceClients }
-    : { booksyBoost: scenario.marketplaceClients, freshaMarketplace: scenario.marketplaceClients };
+    ? { booksyBoost: scenario.booksyBoostClients, freshaMarketplace: scenario.freshaMarketplaceClients, treatwellMarketplace: scenario.treatwellMarketplaceClients }
+    : { booksyBoost: scenario.marketplaceClients, freshaMarketplace: scenario.marketplaceClients, treatwellMarketplace: scenario.marketplaceClients };
 
   return {
     ok: true,
@@ -974,6 +1052,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
+      calculateTreatwell(scenario, effectiveMarketplaceClients.treatwellMarketplace),
       calculateSetora(scenario),
       calculateSquare(scenario),
       calculatePhorest(scenario),

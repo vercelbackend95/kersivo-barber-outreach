@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { formatGbp, requireVerifiedFreshaFact } from '@/lib/seo/freshaFacts';
 import { buildBarberCostCalculatorJsonLd } from '@/lib/seo/barberCostCalculatorJsonLd';
 import type { CostScenarioInput, LineItemId } from './barberSoftwareCostEngine';
@@ -74,6 +75,7 @@ describe('calculator panel inputs', () => {
       DEPOSIT_PROCESSING_TOGGLE.name,
       NEARCUT_SUBSCRIPTION_TOGGLE.name,
       'phorestQuoteVatPercent',
+      'treatwellQuoteVatPercent',
       SQUARE_PLAN_FIELD.name,
     ].sort();
     expect(names).toEqual(Object.keys(DEFAULT_SCENARIO).sort());
@@ -100,6 +102,7 @@ describe('calculator panel inputs', () => {
     expect(SPLIT_FIELDS.map((field) => field.label)).toEqual([
       'Booksy Boost clients / month',
       'Fresha Marketplace clients / month',
+      'Eligible Treatwell new marketplace bookings / month',
     ]);
     expect(panelSource).toContain('<div id="calc-split-fields" class="calc-split__fields" hidden>');
   });
@@ -146,7 +149,7 @@ describe('calculator panel inputs', () => {
     expect(DEPOSIT_BOOKINGS_FIELD.max).toBe(20000);
     expect(DEFAULT_SCENARIO.depositBookingsPerMonth).toBe(0);
     expect(DEPOSIT_BOOKINGS_FIELD.helper).toBe(
-      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. The remaining appointment balance and in-person card payments are not modelled.',
+      'Uses a £5 online deposit benchmark. Nearcut Free for You advertises zero transaction fees; Nearcut Subscription and Square Appointments deposit rates require confirmation. Treatwell uses its published 2.5% + VAT online prepayment fee on each modelled deposit. The remaining appointment balance and in-person card payments are not modelled.',
     );
     expect(configSource).toContain('formatGbp(DEPOSIT_BENCHMARK_GBP)');
   });
@@ -160,11 +163,12 @@ describe('calculator panel inputs', () => {
       'DEPOSIT_BOOKINGS_FIELD',
       'NEARCUT_QUOTE_FIELD',
       'PHOREST_QUOTE_FIELD',
+      'TREATWELL_QUOTE_FIELD',
     ]) {
       expect(panelSource).toContain(`id={errorId(${binding}.id)}`);
     }
     expect(panelSource).toContain('id={errorId(field.id)}');
-    expect(panelSource.match(/data-calc-error/g)).toHaveLength(8);
+    expect(panelSource.match(/data-calc-error/g)).toHaveLength(9);
   });
 
   it('sources Fresha add-on prices from verified facts, unticked by default', () => {
@@ -207,7 +211,7 @@ describe('calculator results structure', () => {
   });
 
   it('renders seven peer cards including Square and Phorest without winner language without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Square Appointments', 'Phorest', 'KERSIVO']);
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Treatwell', 'Setora', 'Square Appointments', 'Phorest', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -238,6 +242,12 @@ describe('calculator results structure', () => {
       ['nearcut-subscription', 'Subscription / shop cost'],
       ['vat', 'VAT'],
       ['nearcut-deposit-processing', 'Online deposit processing'],
+    ]);
+    expect(rows('treatwell')).toEqual([
+      ['treatwell-subscription', 'Your quoted monthly subscription'],
+      ['treatwell-new-client-commission', 'Qualifying marketplace new-client commission'],
+      ['vat', 'VAT (confirmed portions only)'],
+      ['treatwell-deposit-processing', `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT`],
     ]);
     expect(rows('setora')).toEqual([
       ['setora-subscription', 'Subscription / location'],
@@ -309,7 +319,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(30);
+    expect(ids.length).toBe(34);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

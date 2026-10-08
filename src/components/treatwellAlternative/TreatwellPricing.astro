@@ -1,0 +1,47 @@
+---
+import { RateCard1Offer } from '@/components/rateCard1';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
+import '@/styles/rateCard1.css';
+
+const layout = getRateCard1LandingLayout();
+---
+
+<section
+  id="pricing"
+  class="fresha-alt__section scroll-mt-24"
+  aria-labelledby="fresha-alt-pricing-title"
+>
+  <div class="fresha-alt__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">SIMPLE PRICING</p>
+      <h2 id="fresha-alt-pricing-title" class="fresha-alt__h2">
+        Start free. Upgrade per location when you need more.
+      </h2>
+      <p class="fresha-alt__lead">
+        <strong>KERSIVO Starter</strong> is £0/month for up to 4 active bookable barbers: a hosted
+        booking page, Team, Services, Clients Core, email reminders and Google booking setup. Every
+        public booking uses a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or Pay in full through the shop’s connected Stripe account.
+        <a href="/starter">See KERSIVO Starter</a>.
+      </p>
+      <p class="fresha-alt__lead">
+        <strong>Full KERSIVO</strong> is £{SAAS_MONTHLY_GBP}/month per physical location and adds your
+        branded barbershop website and standard domain, larger teams, editable booking-payment
+        controls including Pay at shop, Advanced Clients, Reports, Retail pickup, SMS reminders and
+        the live KERSIVO Assistant.
+      </p>
+      <p class="fresha-alt__lead">
+        0% KERSIVO commission on booking payments on both plans, and on Full retail sales.
+      </p>
+    </header>
+
+    <div class="rate-card1--landing fresha-alt-pricing__offer-host">
+      <RateCard1Offer />
+      <div class="rate-card1__landing-conditions">
+        <p>{layout.conditionsLine1}</p>
+        <p>{layout.conditionsLine2}</p>
+      </div>
+    </div>
+  </div>
+</section>

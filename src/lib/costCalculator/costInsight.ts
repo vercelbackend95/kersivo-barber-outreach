@@ -16,7 +16,7 @@ type ProviderAmount = { provider: ProviderId; monthlyExVatGbp: number };
 
 export type CostInsight =
   | { kind: 'custom-pricing'; provider: 'fresha' | 'nearcut' | 'square' }
-  | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
+  | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number; treatwellMarketplaceGbp: number }
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
   | { kind: 'add-ons'; freshaAddOnsGbp: number }
   | { kind: 'deposit-processing'; booksyGbp: number; freshaGbp: number; setoraGbp: number; kersivoGbp: number }
@@ -43,7 +43,7 @@ function largest(results: readonly CalculatedProviderResult[], pick: (r: Calcula
 
 export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsight | null {
   if (!monthly.ok) return null;
-  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing' && result.provider !== 'phorest' && result.provider !== 'square');
+  const unpriced = monthly.providers.find((result) => result.status === 'custom-pricing' && result.provider !== 'phorest' && result.provider !== 'square' && result.provider !== 'treatwell');
   if (unpriced) return { kind: 'custom-pricing', provider: unpriced.provider === 'nearcut' ? 'nearcut' : 'fresha' };
 
   const calculated = monthly.providers.filter(
@@ -71,6 +71,7 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
         kind: 'acquisition',
         booksyBoostGbp: amountFor(calculated, 'booksy', (r) => r.amounts.acquisitionFeesExVatGbp),
         freshaMarketplaceGbp: amountFor(calculated, 'fresha', (r) => r.amounts.acquisitionFeesExVatGbp),
+        treatwellMarketplaceGbp: amountFor(calculated, 'treatwell', (r) => r.amounts.acquisitionFeesExVatGbp),
       };
     case 'team': {
       const fresha = calculated.find((entry) => entry.provider === 'fresha');
@@ -114,7 +115,15 @@ export function describeCostInsight(insight: CostInsight): string {
         ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete provider total is not available.'
         : `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete cost comparison is not available.`;
     case 'acquisition': {
-      const { booksyBoostGbp, freshaMarketplaceGbp } = insight;
+      const { booksyBoostGbp, freshaMarketplaceGbp, treatwellMarketplaceGbp } = insight;
+      if (treatwellMarketplaceGbp > 0) {
+        const parts = [
+          ...(booksyBoostGbp > 0 ? [`Booksy Boost ${perMonth(booksyBoostGbp)}`] : []),
+          ...(freshaMarketplaceGbp > 0 ? [`Fresha Marketplace ${perMonth(freshaMarketplaceGbp)}`] : []),
+          `Treatwell eligible marketplace bookings ${perMonth(treatwellMarketplaceGbp)}`,
+        ];
+        return `Marketplace acquisition is the largest modelled variable cost. ${parts.join('; ')}. Treatwell uses the published 35% + VAT rate for the entered eligible bookings only.`;
+      }
       if (booksyBoostGbp > 0 && freshaMarketplaceGbp > 0) {
         return `Marketplace acquisition is the largest modelled variable cost in this scenario. Booksy Boost is estimated at ${perMonth(booksyBoostGbp)} and Fresha Marketplace fees at ${perMonth(freshaMarketplaceGbp)}, under the assumptions entered.`;
       }

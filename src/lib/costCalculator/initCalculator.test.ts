@@ -20,6 +20,8 @@ import {
   NEARCUT_QUOTE_FIELD,
   PHOREST_QUOTE_FIELD,
   PHOREST_QUOTE_VAT,
+  TREATWELL_QUOTE_FIELD,
+  TREATWELL_QUOTE_VAT,
   SQUARE_PLAN_FIELD,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
@@ -82,6 +84,8 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(TREATWELL_QUOTE_FIELD)}
+      ${TREATWELL_QUOTE_VAT.options.map(option => `<input type="radio" name="treatwellQuoteVatPercent" value="${option.value}" ${option.value === TREATWELL_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       ${numberField(PHOREST_QUOTE_FIELD)}
       ${PHOREST_QUOTE_VAT.options.map(option => `<input type="radio" name="phorestQuoteVatPercent" value="${option.value}" ${option.value === PHOREST_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
@@ -159,10 +163,13 @@ const URL_SCENARIO: CostScenarioInput = {
   splitMarketplaceAssumptions: true,
   booksyBoostClients: 8,
   freshaMarketplaceClients: 15,
+  treatwellMarketplaceClients: 6,
   freshaSmartWebsite: true,
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  treatwellMonthlyQuoteGbp: 0,
+  treatwellQuoteVatPercent: 99,
   phorestMonthlyQuoteGbp: 0,
   phorestQuoteVatPercent: 99,
   squarePlan: 'premium',
@@ -178,9 +185,9 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 6));
-    expect(total('setora')).toBe(engineCash({}, 3));
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£0.00', 'Custom pricing', '£39.00']);
+    expect(total('kersivo')).toBe(engineCash({}, 7));
+    expect(total('setora')).toBe(engineCash({}, 4));
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('treatwell'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', 'Custom pricing', '£59.00', '£0.00', 'Custom pricing', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
@@ -189,6 +196,7 @@ describe('initial calculation', () => {
       'booksy',
       'fresha',
       'nearcut',
+      'treatwell',
       'setora',
       'square',
       'phorest',
@@ -587,7 +595,7 @@ describe('payments and period', () => {
   it('shows shared assumptions once', () => {
     const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
     expect(shared).toEqual([
-      'The same qualifying new marketplace client count is used for Booksy Boost and Fresha Marketplace.',
+      'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha and Treatwell. These providers do not necessarily generate equal new-client volumes.',
       'Costs are for a single barbershop location.',
     ]);
     for (const id of ['booksy', 'fresha', 'kersivo']) {
@@ -617,13 +625,13 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(7).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(8).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(7).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(8).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -637,14 +645,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(7).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(8).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(7).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(8).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {
@@ -955,7 +963,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'pq', 'pv', 'sq', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'tc', 'sw', 'loyalty', 'nc', 'nq', 'tq', 'tv', 'pq', 'pv', 'sq', 'vat', 'dp', 'db', 'period',
     ]);
   });
 

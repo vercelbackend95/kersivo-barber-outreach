@@ -94,7 +94,7 @@ describe('projectCostCalculation', () => {
 
   it('projects the default scenario to the expected totals', () => {
     const cash = (period: 'monthly' | 'annual' | 'threeYear') =>
-      providers({}, period).filter(result=>result.provider!=='phorest').map((result) => amounts(result).cashTotalGbp);
+      providers({}, period).filter(result=>result.provider!=='phorest' && result.provider!=='treatwell').map((result) => amounts(result).cashTotalGbp);
     expect(cash('monthly')).toEqual([60, 35.82, 0, 59, 0, 39]);
     expect(cash('annual')).toEqual([720, 429.84, 0, 708, 0, 468]);
     expect(cash('threeYear')).toEqual([2160, 1289.52, 0, 2124, 0, 1404]);
@@ -125,10 +125,10 @@ describe('projectCostCalculation', () => {
   it('projects a pence-level amount exactly (£20.01 × 12 = £240.12)', () => {
     const monthly = calculateMonthlyCosts(scenario());
     if (!monthly.ok) throw new Error('invalid');
-    const [booksy, fresha, nearcut, setora, square, phorest, kersivo] = monthly.providers;
+    const [booksy, fresha, nearcut, treatwell, setora, square, phorest, kersivo] = monthly.providers;
     if (booksy.status !== 'calculated') throw new Error('not calculated');
     const withPennies = { ...booksy, amounts: { ...booksy.amounts, cashTotalGbp: 20.01, subtotalExVatGbp: 20.01 } };
-    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, setora, square, phorest, kersivo] }, 'annual');
+    const projected = projectCostCalculation({ ...monthly, providers: [withPennies, fresha, nearcut, treatwell, setora, square, phorest, kersivo] }, 'annual');
     if (!projected.ok) throw new Error('invalid');
     expect(amounts(projected.providers[0]).cashTotalGbp).toBe(240.12);
     expect(amounts(projected.providers[0]).subtotalExVatGbp).toBe(240.12);
@@ -139,7 +139,7 @@ describe('projectCostCalculation', () => {
     expect(amounts(booksyNoVat).vatChargedGbp).toBe(120);
     expect(amounts(booksyNoVat).estimatedNetCostIfVatRecoverableGbp).toBeNull();
 
-    const [booksy, fresha, , , , , kersivo] = providers({ vatRegistered: true }, 'threeYear');
+    const [booksy, fresha, , , , , , kersivo] = providers({ vatRegistered: true }, 'threeYear');
     expect(amounts(booksy).estimatedNetCostIfVatRecoverableGbp).toBe(1800);
     expect(amounts(fresha).estimatedNetCostIfVatRecoverableGbp).toBe(1074.6);
     expect(amounts(kersivo).estimatedNetCostIfVatRecoverableGbp).toBe(1404);
@@ -177,14 +177,14 @@ describe('projectCostCalculation', () => {
     const deposits = { includeDepositProcessing: true, depositBookingsPerMonth: 100 };
     const processing = (period: (typeof COST_PERIODS)[number]) =>
       providers(deposits, period).map((result) => result.lineItems.find((line) => line.category === 'payment-processing')!);
-    expect(processing('monthly').map((line) => line.exVatGbp)).toEqual([26, 32, 0, 28, null, null, 28]);
-    expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 0, 336, null, null, 336]);
-    expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 0, 1008, null, null, 1008]);
+    expect(processing('monthly').map((line) => line.exVatGbp)).toEqual([26, 32, 0, 13, 28, null, null, 28]);
+    expect(processing('annual').map((line) => line.exVatGbp)).toEqual([312, 384, 0, 156, 336, null, null, 336]);
+    expect(processing('threeYear').map((line) => line.exVatGbp)).toEqual([936, 1152, 0, 468, 1008, null, null, 1008]);
     for (const period of COST_PERIODS) {
-      expect(processing(period).map((line) => line.unitExVatGbp)).toEqual([0.26, 0.32, 0, 0.28, null, null, 0.28]);
-      expect(processing(period).map((line) => line.quantity)).toEqual([100, 100, 100, 100, 100, 100, 100]);
+      expect(processing(period).map((line) => line.unitExVatGbp)).toEqual([0.26, 0.32, 0, 0.13, 0.28, null, null, 0.28]);
+      expect(processing(period).map((line) => line.quantity)).toEqual([100, 100, 100, 100, 100, 100, 100, 100]);
       expect(providers(deposits, period).filter(result=>result.status==='calculated').map((result) => amounts(result).paymentProcessingExVatGbp)).toEqual(
-        processing(period).filter(line=>line.exVatGbp!==null).map((line) => line.exVatGbp),
+        processing(period).filter((line,index)=>line.exVatGbp!==null && index!==3).map((line) => line.exVatGbp),
       );
     }
   });
