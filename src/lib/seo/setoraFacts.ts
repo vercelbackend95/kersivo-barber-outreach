@@ -46,10 +46,10 @@ export const SETORA_UK_COMMERCIAL_FACTS = {
 } as const satisfies Record<string, SetoraFact>;
 
 export type SetoraCommercialFactKey = keyof typeof SETORA_UK_COMMERCIAL_FACTS;
-export function requireVerifiedSetoraFact(key: SetoraCommercialFactKey): SetoraVerifiedFact {
+export function requireVerifiedSetoraFact<K extends SetoraCommercialFactKey>(key: K): Extract<(typeof SETORA_UK_COMMERCIAL_FACTS)[K], { status: 'verified' }> {
   const fact: SetoraFact = SETORA_UK_COMMERCIAL_FACTS[key];
   if (fact.status !== 'verified') throw new Error(`Setora fact "${key}" is ${fact.status}; do not use as a guaranteed current price.`);
-  return fact;
+  return fact as Extract<(typeof SETORA_UK_COMMERCIAL_FACTS)[K], { status: 'verified' }>;
 }
 export const SETORA_COMPARISON_FOOTNOTE = 'Comparison uses official Setora UK sources checked 8 October 2026. Setora has inconsistent prices across its own pages; £59 is taken from its main current pricing page. Fees, features and VAT treatment may change. KERSIVO and Setora are independent businesses.';
 
