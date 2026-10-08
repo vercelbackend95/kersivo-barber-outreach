@@ -107,6 +107,7 @@ describe('barber software cost calculator SEO foundation', () => {
       'How much does Booksy cost in the UK?',
       'How much does Fresha cost in the UK?',
       'How much does Nearcut cost in the UK?',
+      'How much does Timely cost for UK barbershops?',
       'How much does Treatwell Connect cost for UK barbers?',
       'How much does Setora cost in the UK?',
       'How much does Phorest cost in the UK?',
