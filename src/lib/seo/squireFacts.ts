@@ -63,3 +63,180 @@ export const SQUIRE_COMPARE_SECTIONS:readonly SquireCompareSection[]=[
    kersivoLead:'Focused management for independent UK barbershops.',
    kersivoPoints:['Bookings, services, team and limited clients on Starter','Full reports, advanced clients and retail orders','Full includes larger teams subject to fair use','£39/month per location, not per barber']},
 ];
+
+// ---------------------------------------------------------------------------
+// UK COMMERCIAL FACTS — calculator contract
+// ---------------------------------------------------------------------------
+// This is intentionally separate from the verified US-dollar list-price table.
+// No USD-to-GBP conversion, assumed VAT, invented UK transaction percentage,
+// or implied zero-fee defaults are permissible.
+//
+// A SQUIRE plan can only become a numerical GBP calculator result after its
+// UK-specific plan fee, tax basis and deposit-processing terms are verified.
+
+export type SquireSourceId = (typeof SQUIRE_OFFICIAL_SOURCES)[number]['id'];
+export type SquirePlanId = (typeof SQUIRE_US_LIST_PLANS)[number]['id'];
+
+export type SquireUnresolvedCommercialFact = {
+  status: 'unresolved';
+  reason: string;
+  sourceId: SquireSourceId;
+  checkedIso: string;
+};
+
+export type SquireVerifiedUkCommercialFact = {
+  status: 'verified';
+  currency: 'GBP';
+  /** Subscription amount, optional add-on amount, or fixed component of a transaction fee. */
+  amountGbp?: number;
+  /** A percentage such as the variable component of an online payment fee. */
+  percent?: number;
+  /** Minimum fee, if published. */
+  minimumGbp?: number;
+  vat: 'inclusive' | 'exclusive' | 'not-applicable';
+  per: string;
+  sourceId: SquireSourceId;
+  checkedIso: string;
+};
+
+export type SquireUkCommercialFact =
+  | SquireUnresolvedCommercialFact
+  | SquireVerifiedUkCommercialFact;
+
+/**
+ * UK pricing facts needed for future calculator integration.
+ * IMPORTANT: "unresolved" is not a £0 charge, a missing fee or a free service.
+ * Published USD plans are separately recorded in SQUIRE_US_LIST_PLANS.
+ */
+export const SQUIRE_UK_COMMERCIAL_FACTS = {
+  independentSubscription: {
+    status: 'unresolved',
+    reason: 'No verified UK GBP monthly subscription and VAT treatment for Independent.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  proSubscription: {
+    status: 'unresolved',
+    reason: 'No verified UK GBP monthly subscription and VAT treatment for Pro.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  executiveSubscription: {
+    status: 'unresolved',
+    reason: 'No verified UK GBP monthly subscription and VAT treatment for Executive.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  titanSubscription: {
+    status: 'unresolved',
+    reason: 'No verified UK GBP monthly subscription and VAT treatment for Titan.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  additionalBarberFee: {
+    status: 'unresolved',
+    reason: 'UK plan rules and any applicable additional-barber charges require confirmation.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  onlineDepositProcessing: {
+    status: 'unresolved',
+    reason: 'Verified UK percentage, fixed-per-transaction charge and VAT treatment for online deposit payments are unavailable.',
+    sourceId: 'payments',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  inPersonProcessing: {
+    status: 'unresolved',
+    reason: 'A complete UK in-person card-processing rate and tax treatment have not been verified.',
+    sourceId: 'payments',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  bookingOrPlatformFee: {
+    status: 'unresolved',
+    reason: 'Whether, when and how UK customer-facing booking/platform fees are charged needs plan-specific confirmation.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  acquisitionFee: {
+    status: 'unresolved',
+    reason: 'No verified statement establishing the complete UK new-client acquisition fee policy; do not assume a zero charge.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+  brandedLandingPageAddOn: {
+    status: 'unresolved',
+    reason: 'The public US-dollar landing-page add-on price does not establish its UK GBP price or VAT treatment.',
+    sourceId: 'pricing',
+    checkedIso: SQUIRE_FACTS_CHECKED_ISO,
+  },
+} as const satisfies Record<string, SquireUkCommercialFact>;
+
+export type SquireUkCommercialFactKey = keyof typeof SQUIRE_UK_COMMERCIAL_FACTS;
+
+export const SQUIRE_UK_PLAN_SUBSCRIPTION_KEYS = {
+  independent: 'independentSubscription',
+  pro: 'proSubscription',
+  executive: 'executiveSubscription',
+  titan: 'titanSubscription',
+} as const satisfies Record<SquirePlanId, SquireUkCommercialFactKey>;
+
+export function getSquireSource(id: SquireSourceId): (typeof SQUIRE_OFFICIAL_SOURCES)[number] {
+  const entry = SQUIRE_OFFICIAL_SOURCES.find((source) => source.id === id);
+  if (!entry) throw new Error('Unknown SQUIRE source: ' + id);
+  return entry;
+}
+
+export function isVerifiedSquireUkFact(
+  fact: SquireUkCommercialFact,
+): fact is SquireVerifiedUkCommercialFact {
+  return fact.status === 'verified' && fact.currency === 'GBP';
+}
+
+/** Fail closed: unresolved SQUIRE UK amounts can never quietly enter the calculator as zero. */
+export function requireVerifiedSquireUkFact(
+  key: SquireUkCommercialFactKey,
+): SquireVerifiedUkCommercialFact {
+  const fact: SquireUkCommercialFact = SQUIRE_UK_COMMERCIAL_FACTS[key];
+  if (!isVerifiedSquireUkFact(fact)) {
+    throw new Error('SQUIRE UK commercial fact "' + key + '" has not been verified; a GBP total cannot be calculated.');
+  }
+  return fact;
+}
+
+export type SquireUkCalculatorReadiness =
+  | {
+      status: 'ready';
+      currency: 'GBP';
+      plan: SquirePlanId;
+      missingFacts: readonly [];
+    }
+  | {
+      status: 'unresolved-uk-pricing';
+      currency: 'GBP';
+      plan: SquirePlanId;
+      missingFacts: readonly SquireUkCommercialFactKey[];
+    };
+
+/**
+ * Side-effect-free adapter for a future fourth calculator provider.
+ * Check readiness BEFORE building a numerical result. The optional SQUIRE
+ * USD marketing prices must never be used in GBP cost-engine arithmetic.
+ *
+ * Scope matches the calculator's existing subscription + online £5 deposit
+ * model; marketplace and add-on totals require their own verified decisions.
+ */
+export function getSquireUkCalculatorReadiness(plan: SquirePlanId = 'pro'): SquireUkCalculatorReadiness {
+  const requiredKeys: readonly SquireUkCommercialFactKey[] = [
+    SQUIRE_UK_PLAN_SUBSCRIPTION_KEYS[plan],
+    'additionalBarberFee',
+    'onlineDepositProcessing',
+    'bookingOrPlatformFee',
+    'acquisitionFee',
+  ];
+  const missingFacts = requiredKeys.filter(
+    (key) => !isVerifiedSquireUkFact(SQUIRE_UK_COMMERCIAL_FACTS[key]),
+  );
+  return missingFacts.length === 0
+    ? { status: 'ready', currency: 'GBP', plan, missingFacts: [] }
+    : { status: 'unresolved-uk-pricing', currency: 'GBP', plan, missingFacts };
+}
