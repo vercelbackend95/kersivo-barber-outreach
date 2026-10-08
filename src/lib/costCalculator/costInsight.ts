@@ -16,10 +16,10 @@ type ProviderAmount = { provider: ProviderId; monthlyExVatGbp: number };
 
 export type CostInsight =
   | { kind: 'custom-pricing'; provider: 'fresha' | 'nearcut' }
-  | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number }
+  | { kind: 'acquisition'; booksyBoostGbp: number; freshaMarketplaceGbp: number; vagaroMarketplaceGbp: number }
   | { kind: 'team'; booksyUserFeesGbp: number; freshaTeamPlan: boolean; kersivoFlat: boolean }
-  | { kind: 'add-ons'; freshaAddOnsGbp: number }
-  | { kind: 'deposit-processing'; booksyGbp: number; freshaGbp: number; setoraGbp: number; kersivoGbp: number }
+  | { kind: 'add-ons'; freshaAddOnsGbp: number; vagaroAddOnsGbp: number }
+  | { kind: 'deposit-processing'; booksyGbp: number; freshaGbp: number; vagaroGbp: number; setoraGbp: number; kersivoGbp: number }
   | { kind: 'base' };
 
 type DriverKind = 'acquisition' | 'team' | 'add-ons' | 'deposit-processing';
@@ -71,6 +71,7 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
         kind: 'acquisition',
         booksyBoostGbp: amountFor(calculated, 'booksy', (r) => r.amounts.acquisitionFeesExVatGbp),
         freshaMarketplaceGbp: amountFor(calculated, 'fresha', (r) => r.amounts.acquisitionFeesExVatGbp),
+        vagaroMarketplaceGbp: amountFor(calculated, 'vagaro', (r) => r.amounts.acquisitionFeesExVatGbp),
       };
     case 'team': {
       const fresha = calculated.find((entry) => entry.provider === 'fresha');
@@ -86,7 +87,7 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
       };
     }
     case 'add-ons':
-      return { kind: 'add-ons', freshaAddOnsGbp: amountFor(calculated, 'fresha', (r) => r.amounts.addOnsExVatGbp) };
+      return { kind: 'add-ons', freshaAddOnsGbp: amountFor(calculated, 'fresha', (r) => r.amounts.addOnsExVatGbp), vagaroAddOnsGbp: amountFor(calculated, 'vagaro', (r) => r.amounts.addOnsExVatGbp) };
     case 'deposit-processing': {
       const processing = (provider: ProviderId) =>
         amountFor(calculated, provider, (r) => r.amounts.paymentProcessingExVatGbp);
@@ -94,6 +95,7 @@ export function determineCostInsight(monthly: MonthlyCostCalculation): CostInsig
         kind: 'deposit-processing',
         booksyGbp: processing('booksy'),
         freshaGbp: processing('fresha'),
+        vagaroGbp: processing('vagaro'),
         setoraGbp: processing('setora'),
         kersivoGbp: processing('kersivo'),
       };
@@ -112,14 +114,12 @@ export function describeCostInsight(insight: CostInsight): string {
         ? 'Nearcut Subscription requires a shop-specific quote or confirmed processing terms. The calculator does not guess missing fees, so a complete five-provider total is not available.'
         : `Fresha moves to custom Enterprise pricing above ${FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS} bookable team members, so a complete cost comparison is not available.`;
     case 'acquisition': {
-      const { booksyBoostGbp, freshaMarketplaceGbp } = insight;
-      if (booksyBoostGbp > 0 && freshaMarketplaceGbp > 0) {
-        return `Marketplace acquisition is the largest modelled variable cost in this scenario. Booksy Boost is estimated at ${perMonth(booksyBoostGbp)} and Fresha Marketplace fees at ${perMonth(freshaMarketplaceGbp)}, under the assumptions entered.`;
-      }
-      if (booksyBoostGbp > 0) {
-        return `Booksy Boost is the largest modelled variable cost in this scenario at ${perMonth(booksyBoostGbp)}, under the assumptions entered.`;
-      }
-      return `Marketplace acquisition is the largest modelled variable cost in this scenario. Fresha Marketplace fees are estimated at ${perMonth(freshaMarketplaceGbp)}, under the assumptions entered.`;
+      const parts = [
+        insight.booksyBoostGbp > 0 ? `Booksy Boost ${perMonth(insight.booksyBoostGbp)}` : '',
+        insight.freshaMarketplaceGbp > 0 ? `Fresha Marketplace ${perMonth(insight.freshaMarketplaceGbp)}` : '',
+        insight.vagaroMarketplaceGbp > 0 ? `Vagaro Marketplace ${perMonth(insight.vagaroMarketplaceGbp)}` : '',
+      ].filter(Boolean);
+      return `New-client acquisition is the largest modelled variable cost in this scenario. Estimated fees: ${parts.join('; ')}. Each provider’s actual acquired-client count can differ; Vagaro excludes direct and returning clients.`;
     }
     case 'team': {
       const parts = [`Booksy adds ${perMonth(insight.booksyUserFeesGbp)} in additional-user fees`];
@@ -130,11 +130,16 @@ export function describeCostInsight(insight: CostInsight): string {
         : '';
       return `Team size is the largest modelled variable cost in this scenario. ${list}.${kersivo}`;
     }
-    case 'add-ons':
-      return `Selected Fresha add-ons are the largest optional cost in this scenario at ${perMonth(insight.freshaAddOnsGbp)}.`;
+    case 'add-ons': {
+      const parts = [
+        insight.freshaAddOnsGbp > 0 ? `Fresha ${perMonth(insight.freshaAddOnsGbp)}` : '',
+        insight.vagaroAddOnsGbp > 0 ? `Vagaro MySite ${perMonth(insight.vagaroAddOnsGbp)}` : '',
+      ].filter(Boolean);
+      return `Optional add-ons are the largest modelled variable cost in this scenario: ${parts.join('; ')}.`;
+    }
     case 'deposit-processing': {
       const month = (gbp: number) => `${formatMoneyGbp(gbp)}/month`;
-      return `Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are ${month(insight.booksyGbp)} for Booksy, ${month(insight.freshaGbp)} for Fresha, ${month(insight.setoraGbp)} for Setora/Stripe and ${month(insight.kersivoGbp)} for KERSIVO/Stripe before provider VAT where applicable.`;
+      return `Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are ${month(insight.booksyGbp)} for Booksy, ${month(insight.freshaGbp)} for Fresha, ${month(insight.vagaroGbp)} for Vagaro, ${month(insight.setoraGbp)} for Setora/Stripe and ${month(insight.kersivoGbp)} for KERSIVO/Stripe before provider VAT where applicable.`;
     }
     case 'base':
       return 'Base subscription pricing is the main modelled cost in this scenario.';
