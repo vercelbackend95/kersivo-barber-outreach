@@ -387,6 +387,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
     body: `Setora says it adds no markup to Stripe payments. The calculator estimates the same ${DEPOSIT_BENCHMARK} deposit using Stripe’s public standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked ${STRIPE_FACTS_CHECKED_DATE}. Actual Stripe fees may vary.`,
   },
   {
+    title: 'PhorestPay · quote required',
+    body: 'Phorest supports online booking deposits, but the applicable PhorestPay merchant processing rate is not verified for your shop. The calculator leaves the Phorest total at Custom pricing when deposit processing is enabled for paid deposits; it never substitutes a competitor card fee.',
+  },
+  {
     title: 'KERSIVO via Stripe Checkout',
     body: `KERSIVO deposits are processed by Stripe Checkout, with no KERSIVO fee on top. The KERSIVO estimate assumes the connected barbershop pays Stripe’s standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked on ${STRIPE_FACTS_CHECKED_DATE}. Premium UK and international cards cost more.`,
   },
