@@ -50,7 +50,7 @@ export function requireVerifiedSetoraFact<K extends SetoraCommercialFactKey>(key
   if (fact.status !== 'verified') throw new Error(`Setora fact "${key}" is ${fact.status}; do not use as a guaranteed current price.`);
   return fact as Extract<(typeof SETORA_UK_COMMERCIAL_FACTS)[K], { status: 'verified' }>;
 }
-export const SETORA_COMPARISON_FOOTNOTE = 'Comparison uses official Setora UK sources checked 8 October 2026. Setora's pricing and barber pages both show £59; its barber page currently says no VAT is added. Fees, features and VAT treatment may change. KERSIVO and Setora are independent businesses.';
+export const SETORA_COMPARISON_FOOTNOTE = 'Comparison uses official Setora UK sources checked 8 October 2026. Both official Setora pages show £59; its barbershop page says no VAT is currently added. Fees, features and VAT treatment may change. KERSIVO and Setora are independent businesses.';
 
 export const SETORA_COMPARE_SECTIONS = [
   { id:'bookings', title:'Online Bookings & Diary', subtitle:'Both offer direct booking — compare the everyday workflow.', setoraLead:'Shared diary and online Booking Pages for shops and salons.', setoraPoints:['Customer self-service Booking Page with staff and service selection','Day, lanes, three-day and week diary views','Walk-in kiosk and waitlist tools','Mobile management apps for iOS and Android'], kersivoLead:'Direct bookings, with Starter and Full capabilities separated.', kersivoPoints:['Hosted booking page with up to four barbers on Starter','Full branded website and booking flow','Bookings, Team, Services and Clients Core on Starter','Full Reports and Advanced Clients'] },
