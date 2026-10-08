@@ -152,6 +152,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-vagaro',
+    label: 'Vagaro Alternative',
+    description: 'Compare Vagaro UK fees, calendars and independent branded booking.',
+    href: '/vagaro-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-treatwell',
     label: 'Treatwell Alternative',
     description: 'Treatwell UK commission, Treatwell Connect pricing and direct bookings compared.',
