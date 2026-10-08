@@ -1,0 +1,26 @@
+---
+import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
+import {
+  SETORA_SWITCHING_LIMITS,
+  SETORA_SWITCHING_REASSURANCE,
+  SETORA_SWITCHING_STEPS,
+} from '@/lib/seo/setoraAlternativeContent';
+---
+
+<section id="switching" class="fresha-alt__section" aria-labelledby="setora-alt-switching-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">MIGRATION</p>
+      <h2 id="setora-alt-switching-title" class="fresha-alt__h2">Switching from Setora to KERSIVO</h2>
+      <p class="fresha-alt-switching__reassurance">{SETORA_SWITCHING_REASSURANCE}</p>
+    </header>
+
+    <ProcessTimeline
+      steps={SETORA_SWITCHING_STEPS}
+      noteTitle="Good to know"
+      notePoints={SETORA_SWITCHING_LIMITS}
+    >
+      <a href="#contact">Ask about your Setora migration <span aria-hidden="true">→</span></a>
+    </ProcessTimeline>
+  </div>
+</section>
