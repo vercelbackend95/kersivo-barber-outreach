@@ -226,7 +226,7 @@ export function initAlternativesHub(doc: Document = document): void {
   });
 
   mobileSheetQuery?.addEventListener?.('change', () => {
-    if (!mobileSheetQuery.matches && panel?.dataset.filtersExpanded === 'true') {
+    if (!mobileSheetQuery?.matches && panel?.dataset.filtersExpanded === 'true') {
       previousOverflow = '';
       closeSheet(false);
       doc.documentElement.style.removeProperty('overflow');
