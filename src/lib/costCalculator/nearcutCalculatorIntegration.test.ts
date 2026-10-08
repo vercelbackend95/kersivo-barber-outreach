@@ -67,8 +67,10 @@ describe('Nearcut integration: commercial truth over marketing estimates', () =>
     expect(shop.amounts.vatChargedGbp).toBe(15.9);
     expect(shop.amounts.cashTotalGbp).toBe(95.4);
     expect(shop.amounts.estimatedNetCostIfVatRecoverableGbp).toBe(79.5);
-    expect(projectCostCalculation(month,'annual').providers[2].status).toBe('calculated');
-    const annual=projectCostCalculation(month,'annual').providers[2];
+    const projected = projectCostCalculation(month,'annual');
+    if (!projected.ok) throw Error('Projected Nearcut scenario should be valid');
+    expect(projected.providers[2].status).toBe('calculated');
+    const annual = projected.providers[2];
     if (annual.status === 'calculated') expect(annual.amounts.cashTotalGbp).toBe(1144.8);
     expect(buildCalculatorView(scenario,'threeYear').providers[2].clientFeeNote).toContain('removes the client booking charge');
   });
