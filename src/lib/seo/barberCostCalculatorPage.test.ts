@@ -432,7 +432,7 @@ describe('booking deposit payment processing copy', () => {
 });
 
 describe('cost at a glance base pricing', () => {
-  const [booksy, fresha, nearcut, treatwell, setora, square, phorest, vagaro, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const [booksy, fresha, nearcut, treatwell, timely, setora, square, phorest, vagaro, kersivo] = COST_AT_A_GLANCE_MODELS;
   const independent = requireVerifiedFreshaFact('independentPlan');
   const team = requireVerifiedFreshaFact('teamPlanPerMember');
 
@@ -454,6 +454,7 @@ describe('cost at a glance base pricing', () => {
     expect(nearcut.priceNote).toContain('customers pay');
     expect(treatwell.price).toBe('Custom monthly quote');
     expect(treatwell.priceNote).toContain('eligible');
+    expect(timely.price).toBe('Custom pricing');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
     expect(vagaro.price).toContain('/month displayed');
