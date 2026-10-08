@@ -204,8 +204,8 @@ export const VAGARO_OPTIONS = [
   },
   {
     id:'calc-vagaro-vat', name:'vagaroAssumeVat',
-    label:'Assume 20% UK VAT is added to Vagaro subscription, MySite and client-acquisition fees',
-    helper:'Tax is not confirmed for your individual invoice. Off assumes no extra VAT; on models 20%.',
+    label:`Assume ${UK_STANDARD_VAT_PERCENT}% UK VAT is added to Vagaro subscription, MySite and client-acquisition fees`,
+    helper:`Tax is not confirmed for your individual invoice. Off assumes no extra VAT; on models ${UK_STANDARD_VAT_PERCENT}%.`,
     defaultOn:false,
   },
 ] as const;
