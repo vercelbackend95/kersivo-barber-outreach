@@ -163,16 +163,18 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 3));
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£39.00']);
+    expect(total('kersivo')).toBe(engineCash({}, 4));
+    expect(total('setora')).toBe(engineCash({}, 3));
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
-  it('keeps providers in Booksy, Fresha, KERSIVO order with no winner state', () => {
+  it('keeps providers in Booksy, Fresha, Nearcut, Setora, KERSIVO order with no winner state', () => {
     expect([...document.querySelectorAll('[data-provider]')].map((el) => (el as HTMLElement).dataset.provider)).toEqual([
       'booksy',
       'fresha',
       'nearcut',
+      'setora',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -570,7 +572,7 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
