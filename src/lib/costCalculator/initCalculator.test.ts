@@ -622,7 +622,7 @@ describe('payments and period', () => {
   it('shows shared assumptions once', () => {
     const shared = [...document.querySelectorAll('[data-slot="shared-assumptions"] li')].map((li) => li.textContent);
     expect(shared).toEqual([
-      'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha and Treatwell. These providers do not necessarily generate equal new-client volumes.',
+      'The same hypothetical eligible marketplace booking count is used for Booksy Boost, Fresha, Treatwell and Vagaro. These providers do not necessarily generate equal new-client volumes.',
       'Costs are for a single barbershop location.',
     ]);
     for (const id of ['booksy', 'fresha', 'kersivo']) {
