@@ -313,12 +313,13 @@ export const SETORA_COST_FACTS: readonly { label: string; value: string }[] = [
   { label: 'VAT currently added', value: requireVerifiedSetoraFact('vatCurrentlyAdded').value ? 'Yes' : 'No, per its current barbershop page' },
   { label: 'Payment processing', value: 'Stripe rate, without Setora markup; varies by card type' },
   { label: 'SMS', value: 'Optional paid credits; excluded from calculated total' },
+  { label: 'Standard setup fee', value: `${formatGbp(requireVerifiedSetoraFact('platformSetupFeeGbp').value)} advertised` },
 ];
 
 export const SETORA_COST_NOTES: readonly string[] = [
   'The calculator uses the published ongoing subscription, not a temporary NHBF discount or the 14-day free trial.',
   `For optional ${formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online deposits, the estimate applies Stripe’s ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)} standard UK card rate with no Setora markup, not a guaranteed rate for every shop or card.`,
-  'SMS credits, any unconfirmed setup charges and any custom-domain purchase are excluded: they are not assumed to be free.',
+  'Setora advertises no standard setup fee. SMS credits and unconfirmed custom-domain registration costs are excluded rather than assumed free.',
   'The price and VAT statement reflect official Setora pages at the checked date. Confirm your own invoice and Stripe rates.',
 ];
 
