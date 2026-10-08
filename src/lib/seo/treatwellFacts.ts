@@ -9,6 +9,8 @@
  */
 export const TREATWELL_FACTS_CHECKED_ISO = '2026-10-08';
 export const TREATWELL_FACTS_CHECKED_DATE = '8 October 2026';
+/** Sentinel: monthly quote VAT has not been confirmed. */
+export const TREATWELL_QUOTE_VAT_UNKNOWN = 99;
 
 export type TreatwellSourceId = 'pricingUk' | 'partnerTerms' | 'paymentSolutions' | 'salonSoftware';
 export type TreatwellSource = {
