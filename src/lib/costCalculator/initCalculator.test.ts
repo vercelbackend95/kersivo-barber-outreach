@@ -18,6 +18,7 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
   PHOREST_QUOTE_FIELD,
   PHOREST_QUOTE_VAT,
   TREATWELL_QUOTE_FIELD,
@@ -86,6 +87,7 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(TIMELY_INVOICE_FIELD)}
       ${numberField(TREATWELL_QUOTE_FIELD)}
       ${TREATWELL_QUOTE_VAT.options.map(option => `<input type="radio" name="treatwellQuoteVatPercent" value="${option.value}" ${option.value === TREATWELL_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       ${numberField(PHOREST_QUOTE_FIELD)}
@@ -174,6 +176,7 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  timelyMonthlyInvoiceGbp: 0,
   treatwellMonthlyQuoteGbp: 0,
   treatwellQuoteVatPercent: 99,
   phorestMonthlyQuoteGbp: 0,
@@ -191,8 +194,8 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 7));
-    expect(total('setora')).toBe(engineCash({}, 4));
+    expect(total('kersivo')).toBe(engineCash({}, 8));
+    expect(total('setora')).toBe(engineCash({}, 5));
     expect([total('booksy'), total('fresha'), total('nearcut'), total('treatwell'), total('setora'), total('square'), total('phorest'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', 'Custom pricing', '£59.00', '£0.00', 'Custom pricing', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
@@ -203,6 +206,7 @@ describe('initial calculation', () => {
       'fresha',
       'nearcut',
       'treatwell',
+      'timely',
       'setora',
       'square',
       'phorest',
