@@ -36,6 +36,7 @@ describe('determineCostInsight', () => {
       kind: 'acquisition',
       booksyBoostGbp: 0,
       freshaMarketplaceGbp: 20,
+      vagaroMarketplaceGbp: 20,
     });
   });
 
@@ -44,6 +45,7 @@ describe('determineCostInsight', () => {
       kind: 'acquisition',
       booksyBoostGbp: 22.5,
       freshaMarketplaceGbp: 15,
+      vagaroMarketplaceGbp: 15,
     });
   });
 
@@ -80,6 +82,7 @@ describe('determineCostInsight', () => {
       kind: 'deposit-processing',
       booksyGbp: 26,
       freshaGbp: 32,
+      vagaroGbp: 32,
       setoraGbp: 28,
       kersivoGbp: 28,
     });
@@ -102,7 +105,7 @@ describe('determineCostInsight', () => {
 describe('describeCostInsight', () => {
   it('describes deposit processing with each relevant provider estimate', () => {
     expect(textFor({ includeDepositProcessing: true, depositBookingsPerMonth: 100 })).toBe(
-      'Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are £26.00/month for Booksy, £32.00/month for Fresha, £28.00/month for Setora/Stripe and £28.00/month for KERSIVO/Stripe before provider VAT where applicable.',
+      'Booking deposit processing is the largest modelled variable cost in this scenario. Under the entered deposit volume, the processing estimates are £26.00/month for Booksy, £32.00/month for Fresha, £32.00/month for Vagaro, £28.00/month for Setora/Stripe and £28.00/month for KERSIVO/Stripe before provider VAT where applicable.',
     );
   });
 
@@ -111,13 +114,13 @@ describe('describeCostInsight', () => {
       'Team size is the largest modelled variable cost in this scenario. Booksy adds £10.00/month before VAT in additional-user fees, and Fresha prices its Team plan per bookable team member. KERSIVO stays flat per location in this single-location model.',
     );
     expect(textFor({ marketplaceClients: 3, booksyBoostEnabled: true })).toBe(
-      'Marketplace acquisition is the largest modelled variable cost in this scenario. Booksy Boost is estimated at £22.50/month before VAT and Fresha Marketplace fees at £15.00/month before VAT, under the assumptions entered.',
+      'New-client acquisition is the largest modelled variable cost in this scenario. Estimated fees: Booksy Boost £22.50/month before VAT; Fresha Marketplace £15.00/month before VAT; Vagaro Marketplace £15.00/month before VAT. Each provider’s actual acquired-client count can differ; Vagaro excludes direct and returning clients.',
     );
     expect(textFor({ marketplaceClients: 4 })).toBe(
-      'Marketplace acquisition is the largest modelled variable cost in this scenario. Fresha Marketplace fees are estimated at £20.00/month before VAT, under the assumptions entered.',
+      'New-client acquisition is the largest modelled variable cost in this scenario. Estimated fees: Fresha Marketplace £20.00/month before VAT; Vagaro Marketplace £20.00/month before VAT. Each provider’s actual acquired-client count can differ; Vagaro excludes direct and returning clients.',
     );
     expect(textFor({ freshaSmartWebsite: true })).toBe(
-      'Selected Fresha add-ons are the largest optional cost in this scenario at £12.95/month before VAT.',
+      'Optional add-ons are the largest modelled variable cost in this scenario: Fresha £12.95/month before VAT.',
     );
     expect(textFor({ bookableBarbers: 1 })).toBe('Base subscription pricing is the main modelled cost in this scenario.');
     expect(textFor({ bookableBarbers: 21 })).toBe(
@@ -128,7 +131,7 @@ describe('describeCostInsight', () => {
   it('describes Booksy Boost alone when only Boost applies', () => {
     const boostOnly: CostInsight = { kind: 'acquisition', booksyBoostGbp: 15, freshaMarketplaceGbp: 0, vagaroMarketplaceGbp: 0 };
     expect(describeCostInsight(boostOnly)).toBe(
-      'Booksy Boost is the largest modelled variable cost in this scenario at £15.00/month before VAT, under the assumptions entered.',
+      'New-client acquisition is the largest modelled variable cost in this scenario. Estimated fees: Booksy Boost £15.00/month before VAT. Each provider’s actual acquired-client count can differ; Vagaro excludes direct and returning clients.',
     );
   });
 
