@@ -21,6 +21,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/vagaro-alternative',
   'https://kersivo.co.uk/square-appointments-alternative',
   'https://kersivo.co.uk/nearcut-alternative',
+  'https://kersivo.co.uk/timely-alternative',
   'https://kersivo.co.uk/treatwell-alternative',
   'https://kersivo.co.uk/phorest-alternative',
   'https://kersivo.co.uk/squire-alternative',
@@ -61,6 +62,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
