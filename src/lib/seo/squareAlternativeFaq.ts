@@ -4,7 +4,7 @@ export const SQUARE_ALTERNATIVE_TITLE='Square Appointments Alternative for UK Ba
 export const SQUARE_ALTERNATIVE_DESCRIPTION='Looking for a Square Appointments alternative in the UK? Compare Free, Plus and Premium pricing, card fees, websites, deposits and KERSIVO for barbers.';
 export const SQUARE_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const SQUARE_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';
-export const SQUARE_ALTERNATIVE_FAQ_ITEMS=[
+export const SQUARE_ALTERNATIVE_FAQ_ITEMS: {question:string;answer:string}[] = [
 {question:'Is KERSIVO a Square Appointments alternative for UK barbers?',answer:'Yes. KERSIVO Starter provides a hosted booking page for up to four active bookable barbers at £0/month. Full KERSIVO is £39/month per physical location and includes a full branded barbershop website, standard domain, advanced clients, reports, retail pickup and SMS reminders.'},
 {question:'Is Square Appointments free in the UK?',answer:'Yes. Square Appointments Free has a £0 monthly subscription for a single location, with unlimited staff calendars and booking features. Square card-processing charges still apply when you take payments.'},
 {question:'How much does Square Appointments cost in the UK?',answer:'Square Appointments currently lists Free at £0, Plus at £29/month per location and Premium at £69/month per location. Card-processing charges are separate. Check Square’s UK pricing page for the latest terms and any taxes or additions.'},
@@ -19,7 +19,7 @@ export const SQUARE_ALTERNATIVE_FAQ_ITEMS=[
 {question:'Do clients need an app to book through KERSIVO?',answer:'No. Starter provides a browser-based hosted booking page, and Full includes browser-based booking on your own branded website.'},
 {question:'Does Square Appointments have a marketplace?',answer:'Square Appointments offers online booking websites, including a free Square Online website option, and integrates with POS and payments. KERSIVO likewise does not operate a consumer appointment-discovery marketplace.'},
 {question:'Can I try KERSIVO before switching?',answer:'Yes. Explore the live KERSIVO demo to see a booking flow, dashboard and Full retail pickup experience before choosing a plan.'}
-] as const;
+];
 export function buildSquareAlternativeFaqJsonLd():Record<string,unknown>{
  const pageUrl=getPublicSiteUrl()+SQUARE_ALTERNATIVE_PAGE_PATH;
  return {'@context':'https://schema.org','@type':'FAQPage','@id':pageUrl+'#faq',mainEntity:SQUARE_ALTERNATIVE_FAQ_ITEMS.map(i=>({'@type':'Question',name:i.question,acceptedAnswer:{'@type':'Answer',text:i.answer}}))};
