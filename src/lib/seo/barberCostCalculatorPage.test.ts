@@ -65,11 +65,11 @@ const visibleCopy = [
 describe('barber software cost calculator SEO foundation', () => {
   it('uses the evergreen route, exact title, description and canonical', () => {
     expect(BARBER_COST_CALCULATOR_PAGE_PATH).toBe('/barber-software-cost-calculator');
-    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Booksy, Fresha, Nearcut & Setora Costs UK | KERSIVO');
+    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Booksy, Fresha, Vagaro & More: UK Costs | KERSIVO');
     expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
     expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
-      'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.',
+      'Compare Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.',
     );
     expect(resolveCanonicalUrl(BARBER_COST_CALCULATOR_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/barber-software-cost-calculator',
@@ -92,7 +92,7 @@ describe('barber software cost calculator SEO foundation', () => {
     expect(COST_CALC_HERO.title).toBe('Barber Booking Software Cost Calculator');
     expect(COST_CALC_HERO.eyebrow).toBe('UK BARBER SOFTWARE COST CALCULATOR');
     expect(COST_CALC_HERO.lead).toBe(
-      'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+      'Compare Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
     );
     for (const [file, source] of Object.entries(components)) {
       if (file !== 'CostCalcHero.astro') expect(source).not.toMatch(/<h1\b/);
@@ -103,11 +103,12 @@ describe('barber software cost calculator SEO foundation', () => {
   it('includes every key SEO H2', () => {
     const corpus = componentSources.join('\n');
     for (const heading of [
-      'Booksy, Fresha, Nearcut & Setora vs KERSIVO: cost at a glance',
+      'Booksy, Fresha, Nearcut, Setora & Vagaro vs KERSIVO: cost at a glance',
       'How much does Booksy cost in the UK?',
       'How much does Fresha cost in the UK?',
       'How much does Nearcut cost in the UK?',
       'How much does Setora cost in the UK?',
+      'How much does Vagaro cost for a UK barbershop?',
       'How team size changes your booking software cost',
       'Booksy Boost and Fresha Marketplace fees explained',
       'How VAT changes the real cost',
@@ -129,6 +130,7 @@ describe('barber software cost calculator SEO foundation', () => {
       '<CostFresha',
       '<CostNearcut',
       '<CostSetora',
+      '<CostVagaro',
       '<CostTeamSize',
       '<CostMarketplaceFees',
       '<CostVat',
@@ -190,7 +192,7 @@ describe('barber software cost calculator structured data', () => {
       '@id': `${PAGE_URL}#calculator`,
       name: 'Barber Booking Software Cost Calculator',
       url: PAGE_URL,
-      description: expect.stringContaining('Booksy, Fresha, Nearcut, Setora and KERSIVO'),
+      description: expect.stringContaining('Booksy, Fresha, Vagaro, Nearcut, Setora and KERSIVO'),
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Any',
       inLanguage: 'en-GB',
@@ -268,6 +270,9 @@ describe('barber software cost calculator content safety', () => {
       'What is the Fresha Marketplace fee?',
       'Is Nearcut free for barbershops?',
       'How much does Nearcut Subscription cost in the UK?',
+      'How much is Vagaro per month for UK barbers?',
+      'Does Vagaro charge commission on every booking?',
+      'Does the Vagaro estimate include VAT and card payments?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
       'Is Booksy or Fresha cheaper for a barbershop?',
@@ -387,6 +392,7 @@ describe('booking deposit payment processing copy', () => {
     expect(PAYMENTS_POINTS.map((point) => point.title)).toEqual([
       'Booksy Mobile Payments',
       'Fresha Online Payments',
+      'Vagaro UK online payments',
       'Setora via Stripe',
       'KERSIVO via Stripe Checkout',
       'What is not modelled',
@@ -407,12 +413,12 @@ describe('booking deposit payment processing copy', () => {
 });
 
 describe('cost at a glance base pricing', () => {
-  const [booksy, fresha, nearcut, setora, kersivo] = COST_AT_A_GLANCE_MODELS;
+  const [booksy, fresha, nearcut, vagaro, setora, kersivo] = COST_AT_A_GLANCE_MODELS;
   const independent = requireVerifiedFreshaFact('independentPlan');
   const team = requireVerifiedFreshaFact('teamPlanPerMember');
 
   it('shows the headline base price for each platform from central facts', () => {
-    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'Full KERSIVO']);
+    expect(COST_AT_A_GLANCE_MODELS.map((model) => model.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Vagaro', 'Setora', 'Full KERSIVO']);
 
     expect(booksy.price).toBe(BOOKSY_BASE_PRICE_LABEL);
     expect(booksy.price).toBe(`£${BOOKSY_BASE_PRICE_GBP}/month + VAT`);
@@ -427,6 +433,7 @@ describe('cost at a glance base pricing', () => {
 
     expect(nearcut.price).toBe(formatGbp(0)+'/month');
     expect(nearcut.priceNote).toContain('customers pay');
+    expect(vagaro.price).toContain('/month displayed');
     expect(setora.price).toBe(`${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`);
     expect(setora.priceNote).toContain('Unlimited staff');
     expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
