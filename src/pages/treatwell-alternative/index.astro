@@ -1,5 +1,6 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
@@ -39,7 +40,7 @@ const currentYear = new Date().getFullYear();
   title={TREATWELL_ALTERNATIVE_TITLE}
   description={TREATWELL_ALTERNATIVE_DESCRIPTION}
   canonicalPath={TREATWELL_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildTreatwellAlternativeWebPageJsonLd(), buildTreatwellAlternativeBreadcrumbJsonLd(), buildTreatwellAlternativeFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildTreatwellAlternativeWebPageJsonLd(), buildTreatwellAlternativeBreadcrumbJsonLd(), buildTreatwellAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <TreatwellHero />
