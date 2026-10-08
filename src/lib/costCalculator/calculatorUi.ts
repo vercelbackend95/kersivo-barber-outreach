@@ -1,5 +1,6 @@
 import { formatGbp, requireVerifiedFreshaFact, FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import {
   DEPOSIT_BENCHMARK_GBP,
   type CostScenarioInput,
@@ -176,14 +177,14 @@ export const VAGARO_ADDONS_LEGEND = 'Vagaro assumptions & add-ons';
 export const VAGARO_OPTIONS = [
   {
     id:'calc-vagaro-displayed-offer', name:'vagaroDisplayedOffer',
-    label:'Use current £20 displayed one-calendar rate',
-    helper:'On = displayed offer; Off = £30 crossed-out reference. Neither rate is a guaranteed multi-year quote.',
+    label:`Use current ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)} displayed one-calendar rate`,
+    helper:`On = displayed offer; Off = ${formatGbp(requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value)} crossed-out reference. Neither rate is a guaranteed multi-year quote.`,
     defaultOn:true,
   },
   {
     id:'calc-vagaro-mysite', name:'vagaroMySite',
     label:'Add Vagaro MySite',
-    helper:'Optional website builder at £15/month.',
+    helper:`Optional website builder at ${formatGbp(requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value)}/month.`,
     defaultOn:false,
   },
   {
