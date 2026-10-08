@@ -133,7 +133,7 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     secondaryPrice: 'Subscription: individual monthly quote + VAT',
     points: [
       'Free for You is free to the shop, but customers pay a booking charge',
-      `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a £20 haircut; that is not a universal price`,
+      `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; that is not a universal price`,
       'Subscription removes the customer booking charge; actual price varies by shop',
       'Online payment rates and optional Business Boosters depend on the plan',
     ],
@@ -214,7 +214,7 @@ export const NEARCUT_COST_FACTS: readonly { label: string; value: string }[] = [
 ];
 export const NEARCUT_COST_NOTES: readonly string[] = [
   `This calculator separates shop costs from charges that customers pay. The example ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} Nearcut client booking fee is never multiplied by your appointment count because it is not a verified universal rate.`,
-  'Free for You shop cost is shown before any add-ons. The shop-paid software amount can be £0 even though individual customers pay an extra fee.',
+  `Free for You shop cost is shown before any add-ons. The shop-paid software amount can be ${formatGbp(requireVerifiedNearcutFact('freeForYouMonthlySubscription').amountGbp!)} even though individual customers pay an extra fee.`,
   'Select Nearcut Subscription under Advanced costs to enter your real monthly quote. Without it, the result is Custom pricing, not an invented estimate.',
   'Nearcut Subscription online processing and optional Business Boosters are not estimated without confirmed plan-specific terms.',
 ];
