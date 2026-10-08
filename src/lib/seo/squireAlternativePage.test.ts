@@ -19,7 +19,7 @@ import {
  SQUIRE_OFFICIAL_SOURCES,
  SQUIRE_COMPARE_SECTIONS,
  SQUIRE_US_LIST_PLANS,
- SQUIRE_UK_LIST_PLANS,
+ SQUIRE_UNVERIFIED_GBP_REPORTS,
  SQUIRE_FACTS_CHECKED_ISO,
 } from './squireFacts';
 
@@ -75,16 +75,20 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect(page).toContain('faqs={SQUIRE_ALTERNATIVE_FAQ_ITEMS}');
    expect(JSON.stringify([faq,buildSquireAlternativeWebPageJsonLd()])).not.toMatch(/aggregateRating|reviewCount|"Review"/);
  });
- it('keeps official GBP pricing central while identifying the unresolved UK tax and payment fees',()=>{
+ it('distinguishes official USD plan prices from unconfirmed UK GBP pricing',()=>{
    expect(SQUIRE_US_LIST_PLANS.map(plan=>plan.usdMonthly)).toEqual([30,50,150,250]);
-   expect(SQUIRE_UK_LIST_PLANS.map(plan=>plan.gbpMonthly)).toEqual([20,30,60,90]);
+   expect(SQUIRE_UNVERIFIED_GBP_REPORTS.every(plan=>plan.status==='unverified')).toBe(true);
    expect(intro).toContain('SQUIRE_US_LIST_PLANS.map');
    expect(intro).toContain('Official SQUIRE pricing');
-   expect(intro).toContain('not verified VAT-inclusive totals');
-   expect(intro).toContain('£{SQUIRE_UK_LIST_PLANS.find');
+   expect(intro).toContain('not confirmed UK prices');
+   expect(intro).toContain('plan.usdMonthly');
+   expect(intro).not.toContain('SQUIRE_UK_LIST_PLANS');
+   expect(sources).toContain('could not independently confirm a current GBP price list');
    expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.map(item=>item.question)).toContain('Is SQUIRE available in the UK?');
    expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.some(item=>item.answer.includes('publicly lists UK barbershops'))).toBe(true);
    expect(SQUIRE_FACTS_CHECKED_ISO).toBe('2026-10-08');
+   expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.find(item=>item.question==='How much does SQUIRE cost per month in the UK?')?.answer).toContain('not a verified UK quotation');
+   expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.find(item=>item.question==='How much does SQUIRE cost per month in the UK?')?.answer).not.toContain('UK GBP list prices');
  });
  it('backs comparative facts with official SQUIRE first-party sources',()=>{
    expect(SQUIRE_OFFICIAL_SOURCES.length).toBeGreaterThanOrEqual(4);
