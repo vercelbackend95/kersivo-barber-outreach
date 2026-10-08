@@ -170,6 +170,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-timely',
+    label: 'Timely Alternative',
+    description: 'Compare Timely costs, online booking and KERSIVO for UK barbershops.',
+    href: '/timely-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-nearcut',
     label: 'Nearcut Alternative',
     description: 'Compare Nearcut pricing, booking charges and KERSIVO for UK barbershops.',
