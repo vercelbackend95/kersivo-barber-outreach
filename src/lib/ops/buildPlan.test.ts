@@ -4,9 +4,9 @@ import { buildSteps, shouldDeployMigrations } from '../../../scripts/build-plan.
 const stepNames = (env: Record<string, string | undefined>) => buildSteps(env).map((step) => step.name);
 
 describe('build plan - migrations only on Vercel production', () => {
-  it('production: generate -> migrate deploy -> astro build', () => {
+  it('production: generate -> migrate deploy -> brand icons -> astro build', () => {
     expect(shouldDeployMigrations({ VERCEL_ENV: 'production' })).toBe(true);
-    expect(stepNames({ VERCEL_ENV: 'production' })).toEqual(['prisma generate', 'prisma migrate deploy', 'astro build']);
+    expect(stepNames({ VERCEL_ENV: 'production' })).toEqual(['prisma generate', 'prisma migrate deploy', 'brand icons', 'astro build']);
     expect(buildSteps({ VERCEL_ENV: 'production' })[1]).toEqual({
       name: 'prisma migrate deploy',
       command: 'prisma',
@@ -20,9 +20,9 @@ describe('build plan - migrations only on Vercel production', () => {
     ['local (unset)', {}],
     ['empty', { VERCEL_ENV: '' }],
     ['near-miss casing', { VERCEL_ENV: 'Production' }],
-  ])('%s: generate -> astro build, never migrate deploy', (_label, env: Record<string, string | undefined>) => {
+  ])('%s: generate -> brand icons -> astro build, never migrate deploy', (_label, env: Record<string, string | undefined>) => {
     expect(shouldDeployMigrations(env)).toBe(false);
-    expect(stepNames(env)).toEqual(['prisma generate', 'astro build']);
+    expect(stepNames(env)).toEqual(['prisma generate', 'brand icons', 'astro build']);
   });
 
   it('a production DATABASE_URL alone does not enable migrations outside Vercel production', () => {

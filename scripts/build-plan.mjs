@@ -22,6 +22,7 @@ export function buildSteps(env) {
     ...(shouldDeployMigrations(env)
       ? [{ name: 'prisma migrate deploy', command: 'prisma', args: ['migrate', 'deploy', '--schema', PRISMA_SCHEMA] }]
       : []),
+    { name: 'brand icons', command: 'node', args: ['scripts/generate-favicons.mjs'] },
     { name: 'astro build', command: 'astro', args: ['build'] },
   ];
 }

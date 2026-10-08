@@ -29,7 +29,9 @@ export function buildKersivoOrganizationNode(siteUrl = getPublicSiteUrl()): Reco
     description: KERSIVO_ORGANIZATION_DESCRIPTION,
     logo: {
       '@type': 'ImageObject',
-      url: `${siteUrl}/images/logo.jpg`,
+      url: `${siteUrl}/images/logo_nobg.png`,
+      width: 796,
+      height: 555,
     },
     email: KERSIVO_CONTACT_EMAIL,
     areaServed: { '@type': 'Country', name: 'United Kingdom', identifier: 'GB' },
