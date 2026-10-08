@@ -143,16 +143,8 @@ export const HUB_CRITERIA: readonly HubCriterion[] = [
   },
 ] as const;
 
-/** Suggested priorities preselected on first load (labelled transparently in the UI). */
-export const HUB_SUGGESTED_CRITERIA: readonly HubCriterionId[] = [
-  'zeroCommission',
-  'ownDomain',
-  'clientDataExport',
-  'builtForBarbers',
-  'deposits',
-  'migration',
-  'brandedBooking',
-];
+/** Begin without editorially-selected criteria; the visitor chooses their priorities. */
+export const HUB_SUGGESTED_CRITERIA: readonly HubCriterionId[] = [];
 
 export function getHubCriterion(id: HubCriterionId): HubCriterion {
   const criterion = HUB_CRITERIA.find((c) => c.id === id);
