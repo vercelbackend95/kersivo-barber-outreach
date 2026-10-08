@@ -15,6 +15,7 @@ import { gbpToPence } from './money';
 
 const scenario = (overrides: Partial<CostScenarioInput> = {}): CostScenarioInput => ({
   ...DEFAULT_SCENARIO,
+  timelyMonthlyInvoiceGbp: 40,
   ...overrides,
 });
 
