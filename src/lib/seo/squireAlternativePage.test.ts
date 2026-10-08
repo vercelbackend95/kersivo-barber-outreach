@@ -140,6 +140,13 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect((breadcrumb.itemListElement as Array<Record<string,unknown>>).map(x=>x.item)).toEqual(['https://kersivo.co.uk/','https://kersivo.co.uk/squire-alternative']);
    expect(buildSquireAlternativeWebPageJsonLd().breadcrumb).toEqual({'@id':breadcrumb['@id']});
  });
+ it('uses the exact same KERSIVO comparison logo as Booksy',()=>{
+   const booksyComparison = read('../../components/booksyAlternative/BooksyCompare.astro');
+   const logo = '<img src="/images/brand/kersivo-mark.png" alt="" width="72" height="72" loading="lazy" decoding="async" />';
+   expect(compare).toContain(logo);
+   expect(booksyComparison).toContain(logo);
+   expect(compare).not.toContain('src="/images/logo-kersivo.png"');
+ });
  it('has no placeholders, unverifiable bargain promises or artificial review markup',()=>{
    const text=[page,hero,intro,compare,fit,sources,...SQUIRE_ALTERNATIVE_FAQ_ITEMS.map(x=>x.answer)].join('\n').toLowerCase();
    for(const banned of [
