@@ -270,6 +270,8 @@ describe('barber software cost calculator content safety', () => {
       'How much does Nearcut Subscription cost in the UK?',
       'How much does Setora cost for a UK barbershop?',
       'Does Setora charge VAT or payment processing fees?',
+      'How much does Phorest cost per month in the UK?',
+      'Can the calculator estimate PhorestPay fees?',
       'Is Booksy or Fresha cheaper for a barbershop?',
       'Which booking system costs less for a larger barber team?',
     ]);
