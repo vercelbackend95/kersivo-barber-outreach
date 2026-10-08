@@ -16,6 +16,7 @@ import {
 import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { requireVerifiedVagaroFact, estimateVagaroDisplayedSubscriptionGbp } from '@/lib/seo/vagaroFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export type BarberCostCalculatorFaqItem = {
@@ -76,6 +77,18 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'How much does Nearcut Subscription cost in the UK?',
     answer: 'Nearcut Subscription has a quote-based monthly price depending on your shop and removes the client booking charge. The calculator lets you enter a real quote excluding VAT; unknown subscription fees or unconfirmed online payment processing are shown as Custom pricing.',
+  },
+  {
+    question: 'How much is Vagaro per month for UK barbers?',
+    answer: `Vagaro currently displays ${formatGbp(requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value)}/month for one bookable calendar (alongside a crossed-out higher reference), plus ${formatGbp(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value)} for each additional calendar up to seven. For three bookable calendars, the displayed-price illustration is ${formatGbp(estimateVagaroDisplayedSubscriptionGbp(3))}/month. The offer is not guaranteed to continue.`,
+  },
+  {
+    question: 'Does Vagaro charge commission on every booking?',
+    answer: `No. Vagaro UK describes a conditional ${requireVerifiedVagaroFact('marketplaceNewClientFirstBookingPercent').value}% connection fee on qualifying new-client first appointments through the Marketplace while your listing is active. Partner and own-channel rules differ and promotional existing-client bookings may have other charges. Direct and returning bookings must not all be counted as new Marketplace customers.`,
+  },
+  {
+    question: 'Does the Vagaro estimate include VAT and card payments?',
+    answer: `You can explicitly choose whether to model UK VAT for Vagaro subscription, MySite and acquisition charges because the actual VAT treatment has not been verified. Optional online deposit processing uses the published ${requireVerifiedVagaroFact('standardOnlineProcessingPercent').value}% + ${formatGbp(requireVerifiedVagaroFact('standardOnlineProcessingFixedGbp').value)} UK keyed-in/online rate; older merchant accounts may have different terms. Fill My Books existing-client programme fees are excluded.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
