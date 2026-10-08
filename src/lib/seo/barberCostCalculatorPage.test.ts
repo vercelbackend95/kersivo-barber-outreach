@@ -92,7 +92,7 @@ describe('barber software cost calculator SEO foundation', () => {
     expect(COST_CALC_HERO.title).toBe('Barber Booking Software Cost Calculator');
     expect(COST_CALC_HERO.eyebrow).toBe('UK BARBER SOFTWARE COST CALCULATOR');
     expect(COST_CALC_HERO.lead).toBe(
-      'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+      'Compare Booksy, Fresha, Nearcut, Setora, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
     );
     for (const [file, source] of Object.entries(components)) {
       if (file !== 'CostCalcHero.astro') expect(source).not.toMatch(/<h1\b/);
@@ -103,11 +103,12 @@ describe('barber software cost calculator SEO foundation', () => {
   it('includes every key SEO H2', () => {
     const corpus = componentSources.join('\n');
     for (const heading of [
-      'Booksy, Fresha, Nearcut & Setora vs KERSIVO: cost at a glance',
+      'Booksy, Fresha, Nearcut, Setora, Phorest vs KERSIVO: cost at a glance',
       'How much does Booksy cost in the UK?',
       'How much does Fresha cost in the UK?',
       'How much does Nearcut cost in the UK?',
       'How much does Setora cost in the UK?',
+      'How much does Phorest cost in the UK?',
       'How team size changes your booking software cost',
       'Booksy Boost and Fresha Marketplace fees explained',
       'How VAT changes the real cost',
