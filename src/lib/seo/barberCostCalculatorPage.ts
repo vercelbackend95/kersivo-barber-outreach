@@ -40,7 +40,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut, Setora, Phorest and KERSIVO costs for UK barbershops. Enter your Phorest quote to model its subscription and VAT.';
+  'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO costs for UK barbershops. Include your Phorest quote, plans and VAT.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -71,7 +71,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Setora, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -100,7 +100,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut, Setora, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Nearcut, Setora, Square Appointments, Phorest and KERSIVO charge in different ways. Phorest subscriptions require an individual quote; the calculator never invents one. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -154,18 +154,6 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
     ],
   },
   {
-    name: 'Phorest',
-    descriptor: 'Quote-based salon plans',
-    price: 'Custom pricing',
-    priceNote: 'Starter, Grow, Ultimate and Elite · individual quotation',
-    points: [
-      'No universal published GBP monthly subscription',
-      'Enter your own pre-VAT quote and confirm its VAT treatment',
-      'SMS and PhorestPay processing depend on plan and contract',
-      'PhorestPay deposit fees cannot be assumed from another platform',
-    ],
-  },
-  {
     name: 'Square Appointments',
     descriptor: 'Free, Plus or Premium per location',
     price: '£' + SQUARE_UK_PLANS[0].monthlyGbp + '/month',
@@ -176,6 +164,18 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       'Square Payments and POS tools are available',
       'Separate rates apply to online payments and Card on File',
       'Appointment-deposit processing rates are not assumed',
+    ],
+  },
+  {
+    name: 'Phorest',
+    descriptor: 'Quote-based salon plans',
+    price: 'Custom pricing',
+    priceNote: 'Starter, Grow, Ultimate and Elite · individual quotation',
+    points: [
+      'No universal published GBP monthly subscription',
+      'Enter your own pre-VAT quote and confirm its VAT treatment',
+      'SMS and PhorestPay processing depend on plan and contract',
+      'PhorestPay deposit fees cannot be assumed from another platform',
     ],
   },
   {
