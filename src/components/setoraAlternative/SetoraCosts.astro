@@ -1,0 +1,99 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { SETORA_FACTS_CHECKED_DATE, getSetoraSource, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+
+const canonical = requireVerifiedSetoraFact('canonicalMonthlyGbp').value;
+const trial = requireVerifiedSetoraFact('trialDays').value;
+const pricing = getSetoraSource('pricing').url;
+const barbers = getSetoraSource('barbers').url;
+const websiteGuide = getSetoraSource('websites').url;
+const savings = canonical - SAAS_MONTHLY_GBP;
+---
+
+<section id="setora-pricing" class="fresha-alt__section" aria-labelledby="setora-alt-costs-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">SETORA PRICING EXPLAINED</p>
+      <h2 id="setora-alt-costs-title" class="fresha-alt__h2">Setora pricing vs KERSIVO in the UK</h2>
+      <p class="fresha-alt__lead">
+        Both are subscription-led, direct-booking systems. Setora has one published paid plan,
+        while KERSIVO offers a free Starter tier and Full software at a fixed per-location rate.
+        Compare what is included and any separate Stripe, SMS or VAT costs.
+      </p>
+      <p class="fresha-alt-costs__checked">
+        Setora pricing checked {SETORA_FACTS_CHECKED_DATE} ·
+        <a href={pricing} target="_blank" rel="noopener noreferrer">Official Setora pricing</a>
+      </p>
+    </header>
+    <ul class="fresha-alt-costs__grid">
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">SETORA STANDARD PLAN</p>
+        <p class="fresha-alt-costs__figure">£{canonical}</p>
+        <p class="fresha-alt-costs__unit">per location / month · ex VAT where applicable</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Unlimited staff, with no additional seat subscription fee.</li>
+          <li>No Setora commission or additional client booking fee.</li>
+          <li>Booking Page, Shop Website, diary, waitlist and kiosk workflow.</li>
+          <li>SMS credits and Stripe payment processing are separate.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">SETORA FREE TRIAL</p>
+        <p class="fresha-alt-costs__figure">{trial} days</p>
+        <p class="fresha-alt-costs__unit">no card required to begin</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>A temporary trial of the full Setora product, not an ongoing free tier.</li>
+          <li>Month-to-month if you choose to continue.</li>
+          <li>Shop Website and Booking Page are separate.</li>
+          <li>Custom domain is available with Setora's assistance.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">KERSIVO STARTER</p>
+        <p class="fresha-alt-costs__figure">£0</p>
+        <p class="fresha-alt-costs__unit">per month · up to four bookable barbers</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Hosted booking page, staff, services and core customer tools.</li>
+          <li>Public bookings require £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit towards the service or payment in full.</li>
+          <li>No KERSIVO commission. Stripe card-processing fees still apply.</li>
+        </ul>
+      </li>
+      <li class="fresha-alt-card fresha-alt-costs__item">
+        <p class="fresha-alt-costs__kicker">FULL KERSIVO</p>
+        <p class="fresha-alt-costs__figure">£{SAAS_MONTHLY_GBP}</p>
+        <p class="fresha-alt-costs__unit">per location / month</p>
+        <ul class="fresha-alt-costs__notes">
+          <li>Branded website and standard domain included.</li>
+          <li>Advanced Clients, Reports and retail pickup on Full.</li>
+          <li>No per-barber subscription fee, subject to fair use.</li>
+          <li>Flexible payment rules; Stripe processing remains separate.</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="fresha-alt-card fresha-alt-costs__marketplace">
+      <div class="fresha-alt-costs__marketplace-body">
+        <h3 class="fresha-alt-costs__h3">A fair subscription comparison</h3>
+        <ul class="fresha-alt-list">
+          <li>Based on the public standard rates, Full KERSIVO's software subscription is £{savings}/month less per location than Setora's main listed price, before any tax or usage fees.</li>
+          <li>Setora provides a waitlist, staff-operated walk-in kiosk and management apps — valuable tools you should evaluate separately.</li>
+          <li>Setora offers an assisted custom domain, while Full KERSIVO includes a standard domain as part of the plan.</li>
+          <li>Neither claims to bring customers through a consumer marketplace; both focus on direct booking.</li>
+        </ul>
+      </div>
+      <div class="fresha-alt-costs__marketplace-aside">
+        <p class="fresha-alt-costs__example">
+          <strong>Important pricing discrepancy.</strong> Setora's <a href={pricing} target="_blank" rel="noopener noreferrer">main pricing page</a>
+          lists £{canonical}/month, but its <a href={barbers} target="_blank" rel="noopener noreferrer">barbershop page</a>
+          still shows £39. We use the main price, not the lower figure, and recommend confirming a current written quote.
+        </p>
+        <p class="fresha-alt-costs__checked">Website details: <a href={websiteGuide} target="_blank" rel="noopener noreferrer">Setora Help Centre</a></p>
+      </div>
+    </div>
+    <p class="fresha-alt-costs__note">
+      Setora prices exclude VAT where applicable. It offers an NHBF member promotional rate according to
+      its pricing page, which is not the standard public rate. KERSIVO and Setora feature sets differ;
+      this illustration compares the published platform subscriptions only and is not a prediction
+      of total processing, messaging or operational costs.
+    </p>
+  </div>
+</section>
