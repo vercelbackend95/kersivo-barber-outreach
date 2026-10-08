@@ -1,0 +1,18 @@
+---
+import InsightCards from '@/components/editorial/InsightCards.astro';
+import { TREATWELL_WHY_INTRO, TREATWELL_WHY_THEMES } from '@/lib/seo/treatwellAlternativeContent';
+---
+
+<section id="why-switch" class="fresha-alt__section" aria-labelledby="fresha-alt-why-title">
+  <div class="container">
+    <header class="fresha-alt__intro">
+      <p class="fresha-alt__eyebrow">WHY BARBERS COMPARE</p>
+      <h2 id="fresha-alt-why-title" class="fresha-alt__h2">
+        Why UK barbers look for a Treatwell alternative
+      </h2>
+      <p class="fresha-alt__lead">{TREATWELL_WHY_INTRO}</p>
+    </header>
+
+    <InsightCards items={TREATWELL_WHY_THEMES} />
+  </div>
+</section>
