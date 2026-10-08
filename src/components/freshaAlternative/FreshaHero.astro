@@ -5,6 +5,11 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
 
 <section class="fresha-alt-hero" aria-labelledby="fresha-alt-hero-title">
   <div class="fresha-alt-hero__content">
+    <nav class="fresha-alt-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Fresha alternative</span>
+    </nav>
     <p class="fresha-alt-hero__eyebrow">
       <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
       Fresha alternative for UK barbershops
@@ -52,3 +57,26 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
   <HeroDashboardShowcase />
 </section>
 
+<style>
+  .fresha-alt-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .fresha-alt-breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fresha-alt-breadcrumb a:hover,
+  .fresha-alt-breadcrumb a:focus-visible {
+    color: #f9fafb;
+    text-decoration: underline;
+  }
+</style>
