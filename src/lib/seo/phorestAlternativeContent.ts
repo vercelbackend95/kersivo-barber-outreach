@@ -1,7 +1,7 @@
 import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
 export const PHOREST_QUICK_ANSWER_KICKER='The short version';
 export const PHOREST_QUICK_ANSWER_TITLE='Phorest vs KERSIVO: the short answer for UK barbers.';
-export const PHOREST_QUICK_ANSWER_LEAD='KERSIVO is a Phorest alternative for independent UK barbershops. Phorest offers extensive salon management, bookings, marketing, POS and branded-app tools, with UK pricing supplied by quote. KERSIVO Starter costs £0/month for up to four bookable barbers, while Full KERSIVO costs £39/month per location and includes a branded website and standard domain. Both KERSIVO plans take 0% KERSIVO commission; Stripe processing fees apply.';
+export const PHOREST_QUICK_ANSWER_LEAD='KERSIVO is a Phorest alternative for independent UK barbershops. Phorest has four quote-based UK plans (Starter, Grow, Ultimate and Elite) covering salon bookings, marketing and POS, with a branded app included at higher plan levels or available as an add-on. KERSIVO Starter costs £0/month for up to four bookable barbers, while Full KERSIVO costs £39/month per location and includes a branded website and standard domain. Both KERSIVO plans take 0% KERSIVO commission; Stripe processing fees apply.';
 export const PHOREST_QUICK_ANSWER_DETAIL='Phorest may suit a salon needing broad marketing, loyalty and POS tools. KERSIVO may suit a barber wanting a simpler UK barber-focused subscription and, with Full, bookings centred on their own site.';
 export const PHOREST_QUICK_ANSWER_FACTS=[{label:'KERSIVO Starter',value:'£0/month · up to 4 barbers'},{label:'Full KERSIVO',value:'£39/month per location'},{label:'Phorest UK',value:'Pricing by quotation'},{label:'Phorest product',value:'Salon management suite'}];
 export const PHOREST_WHY_INTRO='Phorest already has serious capabilities. The meaningful question is whether its wider salon platform or a more focused barber booking experience better matches your business.';
@@ -19,10 +19,10 @@ export const PHOREST_FIT_CLOSING='Choose on the features you genuinely need, the
 export const PHOREST_SWITCHING_REASSURANCE='Keep Phorest live while your KERSIVO setup is prepared.';
 export const PHOREST_SWITCHING_STEPS=[
 {title:'Keep your current calendar running',body:'Do not switch off Phorest just because you are reviewing another platform.'},
-{title:'Confirm which data can be exported',body:'Ask Phorest about usable client, service and upcoming appointment exports and applicable privacy/contract terms.'},
-{title:'Review compatible files',body:'KERSIVO can assist with compatible data such as supported CSV exports; no complete transfer is guaranteed.'},
+{title:'Confirm which data can be exported',body:'Phorest documents client-data exports, future-appointment reports and a Manager > Services > Export all services option. Download available records and check the allowed use and format.'},
+{title:'Review compatible files',body:'KERSIVO can review usable, lawfully exported records, including compatible CSV files, and help set up supported data. Not every Phorest field or report is importable.'},
 {title:'Prepare your KERSIVO setup',body:'Set up the barbers, services and availability. Full adds your own branded site and domain.'},
 {title:'Review and approve',body:'Check the private Full website preview, prices and booking journey before launch.'},
 {title:'Change public booking links',body:'Move public links when ready, with a checked plan for future appointments.'},
 ];
-export const PHOREST_SWITCHING_LIMITS=['Phorest export fields, access and format must be confirmed before migration; do not assume every record can move.','Reviews, loyalty points and historical marketing data may not transfer; keep the original records accessible as permitted by your contract.'];
+export const PHOREST_SWITCHING_LIMITS=['Phorest provides documented export methods for clients, future appointment reports, services and transactions. The KERSIVO importer must still check format, quality and compatibility.','Reviews, loyalty points and historical marketing data may not transfer; keep the original records accessible as permitted by your contract.'];
