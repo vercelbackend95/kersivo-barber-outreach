@@ -160,7 +160,7 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
     name: 'Timely', descriptor: 'UK invoice quote + per-staff plans',
     price: 'Custom pricing', priceNote: 'Enter your actual UK invoice including any VAT',
-    points: ['Build, Elevate and Innovate plans', 'UK subscription rate varies by quote', 'TimelyPay domestic UK online cards 1.85% + 30p', 'VAT in invoice not separately claimed'],
+    points: ['Build, Elevate and Innovate plans', 'UK subscription rate varies by quote', `TimelyPay domestic UK online cards: ${feeLabel(TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)}`, 'VAT in invoice not separately claimed'],
   },
   {
     name: 'Setora',
