@@ -760,7 +760,7 @@ describe('cost-driver insight', () => {
 
   it('follows the inputs', () => {
     setNumber('calc-marketplace-clients', '4');
-    expect(insight()).toContain('Fresha Marketplace fees are estimated at £20.00/month before VAT');
+    expect(insight()).toContain('Fresha Marketplace £20.00/month before VAT');
     setNumber('calc-barbers', '21');
     expect(insight()).toContain('custom Enterprise pricing above 20 bookable team members');
   });
