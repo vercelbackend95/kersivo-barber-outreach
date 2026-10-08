@@ -81,7 +81,9 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect(intro).toContain('SQUIRE_US_LIST_PLANS.map');
    expect(intro).toContain('Official SQUIRE pricing');
    expect(intro).toContain('not confirmed UK prices');
-   expect(intro).toContain('
+   expect(intro).toContain('plan.usdMonthly');
+   expect(intro).not.toContain('SQUIRE_UK_LIST_PLANS');
+   expect(sources).toContain('could not independently confirm a current GBP price list');
    expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.map(item=>item.question)).toContain('Is SQUIRE available in the UK?');
    expect(SQUIRE_ALTERNATIVE_FAQ_ITEMS.some(item=>item.answer.includes('publicly lists UK barbershops'))).toBe(true);
    expect(SQUIRE_FACTS_CHECKED_ISO).toBe('2026-10-08');
