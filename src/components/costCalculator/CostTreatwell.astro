@@ -1,0 +1,31 @@
+---
+import { TREATWELL_COST_FACTS, TREATWELL_COST_INTRO, TREATWELL_COST_NOTES } from '@/lib/seo/barberCostCalculatorPage';
+import { TREATWELL_FACTS_CHECKED_DATE, TREATWELL_FACTS_CHECKED_ISO, getTreatwellSource } from '@/lib/seo/treatwellFacts';
+const pricing = getTreatwellSource('pricingUk');
+---
+<section id="treatwell-cost" class="cost-calc__section" aria-labelledby="cost-calc-treatwell-title">
+  <div class="container cost-calc-platform">
+    <header class="cost-calc__intro cost-calc-platform__intro">
+      <p class="cost-calc__eyebrow">Treatwell UK pricing</p>
+      <h2 id="cost-calc-treatwell-title" class="cost-calc__h2">How much does Treatwell Connect cost for UK barbers?</h2>
+      <p class="cost-calc__lead">{TREATWELL_COST_INTRO}</p>
+      <p class="cost-calc__checked">
+        Checked <time datetime={TREATWELL_FACTS_CHECKED_ISO}>{TREATWELL_FACTS_CHECKED_DATE}</time> ·
+        <a href={pricing.url} target="_blank" rel="noopener noreferrer">{pricing.label}</a>
+      </p>
+    </header>
+    <div class="cost-calc-platform__detail">
+      <dl class="cost-calc-facts">
+        {TREATWELL_COST_FACTS.map((fact) => (
+          <div class="cost-calc-facts__row">
+            <dt>{fact.label}</dt><dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <ul class="cost-calc__list cost-calc-platform__notes">
+        {TREATWELL_COST_NOTES.map((note) => <li>{note}</li>)}
+      </ul>
+      <p class="cost-calc__crosslink"><a href="/treatwell-alternative">See the full KERSIVO vs Treatwell comparison</a></p>
+    </div>
+  </div>
+</section>
