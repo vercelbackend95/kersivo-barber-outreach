@@ -104,11 +104,11 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'What does Timely cost per month in the UK?',
-    answer: 'Timely uses Build, Elevate and Innovate subscriptions based on staff. Current UK GBP monthly prices need a shop-specific invoice or quote. Enter your true monthly invoice INCLUDING any VAT in Advanced costs. The calculator will show Custom pricing instead of making up a fee.',
+    answer: 'Timely uses Build, Elevate and Innovate subscriptions based on staff. Current UK GBP monthly prices need a shop-specific invoice or quote. Enter your true monthly invoice INCLUDING any VAT in Advanced costs. The calculator shows Custom pricing instead of making up a fee.',
   },
   {
     question: 'How much does TimelyPay charge for online deposits?',
-    answer: `Timely publishes a standard UK domestic online card processing rate of ${TIMELY_UK_DOMESTIC_ONLINE_PERCENT}% plus ${Math.round(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP * 100)}p per payment. Individual terms and other card types differ. The calculator models the standard domestic card rate on £5 deposits only.`,
+    answer: `Timely publishes a standard UK domestic online card processing rate of ${TIMELY_UK_DOMESTIC_ONLINE_PERCENT}% plus ${Math.round(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP * 100)}p per payment. Individual terms and other card types differ. The calculator models the standard domestic card rate on the selected booking-deposit benchmark only.`,
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
