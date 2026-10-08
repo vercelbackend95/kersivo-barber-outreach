@@ -27,7 +27,7 @@ describe('Timely commercial source of truth: calculator safety',()=>{
     expect(tiers.map(x=>('amount' in x?x.amount:null))).toEqual([26,39,47]);
     expect(tiers.every(x=>'currency' in x&&x.currency==='USD'&&x.market==='US')).toBe(true);
     expect(TIMELY_COMMERCIAL_FACTS.ukMonthlyPerStaffGbp.status).toBe('unresolved');
-    for(const unknown of ['ukMonthlyPerStaffGbp','ukVatTreatment','ukOnlinePaymentProcessing','ukInPersonPaymentProcessing','ukAddOnsAndOverages'] as const){
+    for(const unknown of ['ukMonthlyPerStaffGbp','ukVatTreatment','ukInPersonPaymentProcessing','ukAddOnsAndOverages'] as const){
       expect(()=>requireVerifiedTimelyFact(unknown)).toThrow(/unresolved/);
     }
   });
@@ -42,7 +42,9 @@ describe('Timely commercial source of truth: calculator safety',()=>{
   });
   it('distinguishes no new-client fees from card-processing fees',()=>{
     expect(requireVerifiedTimelyFact('noNewClientFees').status).toBe('verified');
-    expect(TIMELY_COMMERCIAL_FACTS.ukOnlinePaymentProcessing.status).toBe('unresolved');
+    expect(TIMELY_COMMERCIAL_FACTS.ukOnlinePaymentProcessing.status).toBe('verified');
+    expect(requireVerifiedTimelyFact('ukOnlinePaymentProcessing')).toMatchObject({percent:1.85,fixedGbp:0.30,market:'UK'});
+    expect(requireVerifiedTimelyFact('ukInternationalOnlinePaymentProcessing')).toMatchObject({percent:3,fixedGbp:0.30,market:'UK'});
     expect(TIMELY_COMMERCIAL_FACTS.ukInPersonPaymentProcessing.status).toBe('unresolved');
     expect(TIMELY_COMPARE_SECTIONS.map(x=>x.id)).toEqual(['bookings','payments','brand','retail','clients','reports']);
   });
