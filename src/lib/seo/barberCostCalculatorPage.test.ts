@@ -198,7 +198,7 @@ describe('barber software cost calculator structured data', () => {
       '@id': `${PAGE_URL}#calculator`,
       name: 'Barber Booking Software Cost Calculator',
       url: PAGE_URL,
-      description: expect.stringContaining('Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest and KERSIVO'),
+      description: expect.stringContaining('Booksy, Fresha, Vagaro, Nearcut, Treatwell, Setora, Square Appointments, Phorest, Timely and KERSIVO'),
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Any',
       inLanguage: 'en-GB',
