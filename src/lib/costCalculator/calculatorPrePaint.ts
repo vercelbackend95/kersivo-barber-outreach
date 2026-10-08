@@ -17,10 +17,12 @@ type PrePaintConfig = {
   advanced: readonly (readonly [string, boolean])[];
   /** [query param, toggle id] for reveal toggles whose controlled fields change height when shown. */
   reveals: readonly (readonly [string, string])[];
+  timelyInvoiceParam: string;
 };
 
 const CONFIG: PrePaintConfig = {
   advanced: ADVANCED_SCENARIO_KEYS.map((key) => [SCENARIO_PARAMS[key], DEFAULT_SCENARIO[key]] as const),
+  timelyInvoiceParam: SCENARIO_PARAMS.timelyMonthlyInvoiceGbp,
   reveals: [
     [SCENARIO_PARAMS.splitMarketplaceAssumptions, SPLIT_ASSUMPTIONS_TOGGLE.id],
     [SCENARIO_PARAMS.includeDepositProcessing, DEPOSIT_PROCESSING_TOGGLE.id],
@@ -39,7 +41,7 @@ const SOURCE = `(function (c) {
   var open = c.advanced.some(function (a) {
     var v = flag(a[0]);
     return v !== null && v !== a[1];
-  });
+  }) || (Number(q.get(c.timelyInvoiceParam)) > 0 && Number.isFinite(Number(q.get(c.timelyInvoiceParam))));
   var reveals = c.reveals
     .map(function (r) {
       return [flag(r[0]), r[1]];
