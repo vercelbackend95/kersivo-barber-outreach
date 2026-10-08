@@ -1,5 +1,6 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { NEARCUT_FACTS_CHECKED_DATE, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import {
   BOOKSY_ADDITIONAL_USER_LABEL,
   BOOKSY_BASE_PRICE_LABEL,
@@ -29,15 +30,15 @@ import {
 
 /**
  * Visible copy and SEO metadata for /barber-software-cost-calculator.
- * Competitor figures are drawn from verified Booksy, Fresha and Nearcut facts; Nearcut illustrative pricing is always labelled.
+ * Competitor figures are drawn from verified Booksy, Fresha, Nearcut and Setora facts; illustrative rates are always labelled.
  */
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Booksy vs Fresha vs Nearcut Cost Calculator UK | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Booksy, Fresha, Nearcut & Setora Costs UK | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Nearcut and KERSIVO costs for UK barbershops. Model subscriptions, client booking charges, deposits, VAT and 3-year totals.';
+  'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO costs for UK barbershops. Estimate subscriptions, booking fees, VAT, deposits and 3-year costs.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
@@ -68,7 +69,7 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 export const COST_CALC_HERO = {
   eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
   title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+  lead: 'Compare Booksy, Fresha, Nearcut, Setora and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
   supporting:
     'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
   builtBy:
@@ -97,7 +98,7 @@ export type PricingModelSummary = {
 };
 
 export const COST_AT_A_GLANCE_INTRO =
-  'Booksy, Fresha, Nearcut and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
+  'Booksy, Fresha, Nearcut, Setora and KERSIVO charge in different ways. Nearcut Free for You has no monthly shop subscription but adds a separate client booking charge. Compare who actually pays, not just the headline price.';
 
 export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
   {
@@ -136,6 +137,18 @@ export const COST_AT_A_GLANCE_MODELS: readonly PricingModelSummary[] = [
       `Nearcut illustrates ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp)} on a ${formatGbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').exampleServicePriceGbp)} haircut; that is not a universal price`,
       'Subscription removes the customer booking charge; actual price varies by shop',
       'Online payment rates and optional Business Boosters depend on the plan',
+    ],
+  },
+  {
+    name: 'Setora',
+    descriptor: 'Flat rate per UK location',
+    price: `${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location`,
+    priceNote: 'Unlimited staff, no additional seat fees',
+    points: [
+      'One public monthly price per location following its 14-day trial',
+      'No Setora booking commission or added customer booking charge',
+      'Setora currently says it does not add VAT; tax status may change',
+      'Stripe processing and optional SMS credits are charged separately',
     ],
   },
   {
@@ -287,12 +300,35 @@ export const MARKETPLACE_POINTS: readonly MarketplacePoint[] = [
 export const MARKETPLACE_KERSIVO_NOTE =
   'KERSIVO does not run a consumer marketplace and does not provide marketplace client acquisition. It uses a direct, branded booking model: clients book through your own website and booking journey, found through your own channels such as Google, Instagram, referrals and walk-ins.';
 
+/* ---------------------------------- Setora --------------------------------- */
+
+const SETORA_MONTHLY_GBP = requireVerifiedSetoraFact('canonicalMonthlyGbp').value;
+
+export const SETORA_COST_INTRO = `Setora publishes ${formatGbp(SETORA_MONTHLY_GBP)}/month per UK location for its standard subscription, with unlimited staff, no Setora booking commission and a 14-day trial. The Setora barbershop page currently says no VAT is added. The main pricing page says VAT applies where applicable; check your invoice. Checked ${SETORA_FACTS_CHECKED_DATE}.`;
+
+export const SETORA_COST_FACTS: readonly { label: string; value: string }[] = [
+  { label: 'Standard subscription', value: `${formatGbp(SETORA_MONTHLY_GBP)}/month per location` },
+  { label: 'Extra team members', value: `${formatGbp(requireVerifiedSetoraFact('additionalStaffSubscriptionGbp').value)} extra per staff member` },
+  { label: 'Booking commission', value: `${requireVerifiedSetoraFact('platformBookingCommissionPercent').value}% Setora commission` },
+  { label: 'VAT currently added', value: requireVerifiedSetoraFact('vatCurrentlyAdded').value ? 'Yes' : 'No, per its current barbershop page' },
+  { label: 'Payment processing', value: 'Stripe rate, without Setora markup; varies by card type' },
+  { label: 'SMS', value: 'Optional paid credits; excluded from calculated total' },
+  { label: 'Standard setup fee', value: `${formatGbp(requireVerifiedSetoraFact('platformSetupFeeGbp').value)} advertised` },
+];
+
+export const SETORA_COST_NOTES: readonly string[] = [
+  'The calculator uses the published ongoing subscription, not a temporary NHBF discount or the 14-day free trial.',
+  `For optional ${formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP)} online deposits, the estimate applies Stripe’s ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)} standard UK card rate with no Setora markup, not a guaranteed rate for every shop or card.`,
+  'Setora advertises no standard setup fee. SMS credits and unconfirmed custom-domain registration costs are excluded rather than assumed free.',
+  'The price and VAT statement reflect official Setora pages at the checked date. Confirm your own invoice and Stripe rates.',
+];
+
 /* ----------------------------------- VAT ----------------------------------- */
 
 export const VAT_PARAGRAPHS: readonly string[] = [
   `Competitor prices are often listed before VAT. Booksy shows its UK prices plus VAT, and Fresha lists UK rates exclusive of ${FRESHA_VAT}. The amount that leaves your bank account is therefore higher than the headline price.`,
   'For a VAT-registered barbershop, the effective net cost can differ from that cash cost, depending on your own tax position and whether you can reclaim input VAT.',
-  'KERSIVO is not currently VAT registered, so no VAT is added to the KERSIVO subscription.',
+  'Setora currently says no VAT is added to its subscription, although its main pricing page notes VAT where applicable. KERSIVO is not currently VAT registered either. Actual VAT treatment may change.',
   'The calculator shows cash cost and estimated net cost separately, so you can see both views side by side.',
 ];
 
@@ -314,6 +350,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
   {
     title: 'Fresha Online Payments',
     body: `Fresha applies its standard online payment rate of ${FRESHA_ONLINE_PAYMENTS_FEE} per transaction plus VAT to online deposits.`,
+  },
+  {
+    title: 'Setora via Stripe',
+    body: `Setora says it adds no markup to Stripe payments. The calculator estimates the same ${DEPOSIT_BENCHMARK} deposit using Stripe’s public standard UK card rate of ${feeLabel(STRIPE_UK_STANDARD_CARD_PERCENT, STRIPE_UK_STANDARD_CARD_FIXED_GBP)}, checked ${STRIPE_FACTS_CHECKED_DATE}. Actual Stripe fees may vary.`,
   },
   {
     title: 'KERSIVO via Stripe Checkout',

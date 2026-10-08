@@ -10,7 +10,7 @@ export type SetoraSource = { id: SetoraSourceId; label: string; url: string; sup
 export const SETORA_SOURCES: readonly SetoraSource[] = [
   { id:'pricing', label:'Setora official UK pricing', url:'https://www.setora.co.uk/pricing', supports:'£59 monthly rate per location, unlimited staff, VAT basis, trial, SMS, Stripe and billing' },
   { id:'homepage', label:'Setora main website', url:'https://www.setora.co.uk/', supports:'£59 monthly subscription, core functionality and direct-booking positioning' },
-  { id:'barbers', label:'Setora barber booking software', url:'https://www.setora.co.uk/barbershop-booking-software', supports:'Barbershop-specific tools, mobile apps and £59 price and current VAT statement' },
+  { id:'barbers', label:'Setora barber booking software', url:'https://www.setora.co.uk/barbershop-booking-software', supports:'Barbershop-specific tools, mobile apps, £59 price, current VAT statement and no standard setup fee' },
   { id:'features', label:'Setora product features', url:'https://www.setora.co.uk/features', supports:'Booking page, calendar, reminders, walk-in kiosk, reports and customer exports' },
   { id:'websites', label:'Setora Help Centre: Shop Website', url:'https://www.setora.co.uk/help/websites/shop-website', supports:'Separate Shop Website and Booking Page, default Setora-hosted address and assisted custom domains' },
   { id:'help', label:'Setora Help Centre', url:'https://www.setora.co.uk/help', supports:'Payments, migration, data export, daily operations and setup guides' },
@@ -37,7 +37,7 @@ export const SETORA_UK_COMMERCIAL_FACTS = {
   additionalStaffSubscriptionGbp: { status:'verified', value:0, unit:'GBP per additional staff member', sourceId:'pricing', checkedIso },
   platformBookingCommissionPercent: { status:'verified', value:0, unit:'percent of service price', sourceId:'pricing', checkedIso },
   addedCustomerBookingChargeGbp: { status:'verified', value:0, unit:'GBP separate Setora booking fee', sourceId:'barbers', checkedIso },
-  platformSetupFeeGbp: { status:'unresolved', sourceId:'pricing', checkedIso, note:'No universal independent set-up fee confirmed here; avoid a hardcoded comparison until clearly verified.' },
+  platformSetupFeeGbp: { status:'verified', value:0, unit:'GBP standard setup fee advertised for barber shops', sourceId:'barbers', checkedIso },
   smsCredits: { status:'verified', value:true, unit:'charged separately if used', sourceId:'pricing', checkedIso },
   stripeProcessing: { status:'verified', value:true, unit:'separately at applicable Stripe rates', sourceId:'pricing', checkedIso },
   ownDomainIncluded: { status:'unresolved', sourceId:'websites', checkedIso, note:'Setora offers assisted custom domains, but whether the domain purchase itself is included in the £59 subscription is not established.' },

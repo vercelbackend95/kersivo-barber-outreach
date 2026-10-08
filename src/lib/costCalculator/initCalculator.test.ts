@@ -163,16 +163,18 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 3));
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£39.00']);
+    expect(total('kersivo')).toBe(engineCash({}, 4));
+    expect(total('setora')).toBe(engineCash({}, 3));
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
 
-  it('keeps providers in Booksy, Fresha, KERSIVO order with no winner state', () => {
+  it('keeps providers in Booksy, Fresha, Nearcut, Setora, KERSIVO order with no winner state', () => {
     expect([...document.querySelectorAll('[data-provider]')].map((el) => (el as HTMLElement).dataset.provider)).toEqual([
       'booksy',
       'fresha',
       'nearcut',
+      'setora',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -413,9 +415,10 @@ const DEPOSIT_LINE = {
   booksy: 'booksy-deposit-processing',
   fresha: 'fresha-deposit-processing',
   nearcut: 'nearcut-deposit-processing',
+  setora: 'setora-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -453,25 +456,26 @@ describe('booking deposit processing', () => {
     }
   });
 
-  it('updates all four cards with 100 deposits, keeping commission separate', () => {
+  it('updates all five cards with 100 deposits, keeping commission separate', () => {
     enableDeposits('100');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', '£28.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
+    expect(detail('setora', DEPOSIT_LINE.setora)).toContain('illustrative Stripe rate, no Setora markup');
     expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£67.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', '£67.00']);
     expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
   });
 
   it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
     enableDeposits('100');
     choosePeriod('annual');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00', '£336.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     choosePeriod('threeYear');
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00', '£1,008.00']);
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
   });
 
@@ -570,13 +574,13 @@ describe('period selector', () => {
       ['threeYear', false, false],
     ]);
     expect(readPeriod($('[data-calc-results]'))).toBe('monthly');
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated monthly cash cost'));
   });
 
   it('reprojects cards, summaries and breakdowns for 12 months', () => {
     choosePeriod('annual');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£720.00', '£429.84', '£468.00']);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated 12-month cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated 12-month cash cost'));
     expect(summary('booksy', 'before-vat')).toBe('£600.00');
     expect(summary('booksy', 'vat')).toBe('£120.00');
     expect(cell('booksy', 'booksy-additional-users')).toBe('£120.00');
@@ -590,14 +594,14 @@ describe('period selector', () => {
   it('shows 3-year totals and the price-change note, then restores Monthly', () => {
     choosePeriod('threeYear');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£2,160.00', '£1,289.52', '£1,404.00']);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated 3-year cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated 3-year cash cost'));
     expect($('[data-calc-three-year-note]').hidden).toBe(false);
     expect($('[data-calc-three-year-note]').textContent).toBe(THREE_YEAR_NOTE);
 
     choosePeriod('monthly');
     expect([total('booksy'), total('fresha'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£39.00']);
     expect($('[data-calc-three-year-note]').hidden).toBe(true);
-    expect(periodLabels()).toEqual(Array(4).fill('Estimated monthly cash cost'));
+    expect(periodLabels()).toEqual(Array(5).fill('Estimated monthly cash cost'));
   });
 
   it('lists the projection assumption only for projected periods', () => {

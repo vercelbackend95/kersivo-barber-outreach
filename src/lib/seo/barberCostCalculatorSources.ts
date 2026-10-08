@@ -15,10 +15,11 @@ import {
   getFreshaSource,
 } from '@/lib/seo/freshaFacts';
 import { NEARCUT_FACTS_CHECKED_DATE, NEARCUT_FACTS_CHECKED_ISO, NEARCUT_SOURCES } from '@/lib/seo/nearcutFacts';
+import { SETORA_FACTS_CHECKED_DATE, SETORA_FACTS_CHECKED_ISO, getSetoraSource } from '@/lib/seo/setoraFacts';
 import { STRIPE_FACTS_CHECKED_DATE, STRIPE_FACTS_CHECKED_ISO, STRIPE_SOURCE_UK_PRICING } from '@/lib/seo/stripeFacts';
 
 export type CostCalculatorSource = {
-  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Stripe' | 'KERSIVO';
+  provider: 'Booksy' | 'Fresha' | 'Nearcut' | 'Setora' | 'Stripe' | 'KERSIVO';
   label: string;
   supports: string;
   url: string;
@@ -96,10 +97,22 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
     checkedIso: NEARCUT_FACTS_CHECKED_ISO,
     checkedLabel: NEARCUT_FACTS_CHECKED_DATE,
   })),
+  ...(['pricing', 'barbers'] as const).map((id) => {
+    const source = getSetoraSource(id);
+    return {
+      provider: 'Setora' as const,
+      label: source.label,
+      supports: source.supports,
+      url: source.url,
+      external: true,
+      checkedIso: SETORA_FACTS_CHECKED_ISO,
+      checkedLabel: SETORA_FACTS_CHECKED_DATE,
+    };
+  }),
   {
     provider: 'Stripe',
     label: 'Stripe UK pricing',
-    supports: 'the standard UK card rate used for KERSIVO deposits through Stripe Checkout',
+    supports: 'the illustrative standard UK card rate for Setora deposits (no Setora markup) and KERSIVO deposits through Stripe Checkout',
     url: STRIPE_SOURCE_UK_PRICING,
     external: true,
     checkedIso: STRIPE_FACTS_CHECKED_ISO,

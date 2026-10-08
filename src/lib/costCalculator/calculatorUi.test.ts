@@ -202,8 +202,8 @@ describe('calculator results structure', () => {
     expect(resultsSource).toContain('data-calc-three-year-note hidden={!view.showThreeYearNote}');
   });
 
-  it('renders four peer cards in Booksy, Fresha, Nearcut, KERSIVO order without winner language', () => {
-    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'KERSIVO']);
+  it('renders five peer cards in Booksy, Fresha, Nearcut, Setora, KERSIVO order without winner language', () => {
+    expect(PROVIDER_RESULTS.map((provider) => provider.name)).toEqual(['Booksy', 'Fresha', 'Nearcut', 'Setora', 'KERSIVO']);
     expect(resultsSource.match(/PROVIDER_RESULTS\.map/g)).toHaveLength(1);
     expect(resultsSource).not.toMatch(/winner|cheapest|best value|recommended|saving/i);
   });
@@ -234,6 +234,13 @@ describe('calculator results structure', () => {
       ['nearcut-subscription', 'Subscription / shop cost'],
       ['vat', 'VAT'],
       ['nearcut-deposit-processing', 'Online deposit processing'],
+    ]);
+    expect(rows('setora')).toEqual([
+      ['setora-subscription', 'Subscription / location'],
+      ['setora-additional-staff', 'Additional staff'],
+      ['setora-commission', 'Setora commission'],
+      ['vat', 'VAT currently charged'],
+      ['setora-deposit-processing', 'Stripe deposit processing'],
     ]);
     expect(rows('kersivo')).toEqual([
       ['kersivo-subscription', 'Subscription'],
@@ -291,7 +298,7 @@ describe('scope guard', () => {
 
   it('types breakdown ids against the engine', () => {
     const ids: (LineItemId | 'vat')[] = PROVIDER_RESULTS.flatMap((provider) => provider.breakdown.map((row) => row.id));
-    expect(ids.length).toBe(19);
+    expect(ids.length).toBe(24);
     const scenario: CostScenarioInput = DEFAULT_SCENARIO;
     expect(scenario.bookableBarbers).toBe(BARBERS_FIELD.defaultValue);
   });

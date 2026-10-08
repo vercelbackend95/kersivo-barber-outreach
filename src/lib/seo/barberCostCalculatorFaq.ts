@@ -15,6 +15,7 @@ import {
 } from '@/lib/seo/barberCostCalculatorPage';
 import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
+import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export type BarberCostCalculatorFaqItem = {
@@ -75,6 +76,14 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'How much does Nearcut Subscription cost in the UK?',
     answer: 'Nearcut Subscription has a quote-based monthly price depending on your shop and removes the client booking charge. The calculator lets you enter a real quote excluding VAT; unknown subscription fees or unconfirmed online payment processing are shown as Custom pricing.',
+  },
+  {
+    question: 'How much does Setora cost for a UK barbershop?',
+    answer: `Setora’s published standard price is ${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location, with unlimited staff and no Setora booking commission. Its 14-day trial and NHBF promotional offer are separate from the standard monthly rate. SMS credits and Stripe processing are extra. Checked ${SETORA_FACTS_CHECKED_DATE}.`,
+  },
+  {
+    question: 'Does Setora charge VAT or payment processing fees?',
+    answer: `Setora’s barbershop page currently states that no VAT is added to its ${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)} subscription, while main pricing notes VAT where applicable. It says Stripe processing is charged at Stripe rates without markup. The calculator models standard UK cards as an illustrative benchmark, not a guaranteed merchant rate; optional SMS credits are excluded.`,
   },
   {
     question: 'Is Booksy or Fresha cheaper for a barbershop?',

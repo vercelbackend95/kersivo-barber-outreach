@@ -1,5 +1,5 @@
 /**
- * Pure monthly cost engine for Booksy, Fresha, Nearcut and KERSIVO.
+ * Pure monthly cost engine for Booksy, Fresha, Nearcut, Setora and KERSIVO.
  *
  * No DOM, browser or Astro dependencies. Every price comes from the central facts modules.
  * Payment processing covers online booking deposits only; multi-period projections live elsewhere.
@@ -19,6 +19,7 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_ADDS_VAT, SAAS_MONTHLY_GBP } from '@/
 import {
   FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS,
   formatGbp,
+  formatPercent,
   requireVerifiedFreshaFact,
   type FreshaCommercialFactKey,
   type VerifiedCommercialFact,
@@ -32,6 +33,7 @@ import {
   STRIPE_UK_STANDARD_CARD_PERCENT,
 } from '@/lib/seo/stripeFacts';
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
+import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
 import { gbpToPence, penceToGbp, percentOfPence, transactionFeePence } from './money';
 import { UK_STANDARD_VAT_PERCENT } from './vat';
 
@@ -174,7 +176,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'kersivo';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'setora' | 'kersivo';
 
 export type CostCategory =
   | 'subscription'
@@ -194,6 +196,10 @@ export type LineItemId =
   | 'fresha-client-loyalty'
   | 'nearcut-subscription'
   | 'nearcut-deposit-processing'
+  | 'setora-subscription'
+  | 'setora-additional-staff'
+  | 'setora-commission'
+  | 'setora-deposit-processing'
   | 'kersivo-subscription'
   | 'kersivo-additional-barbers'
   | 'kersivo-commission'
@@ -203,7 +209,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-checkout-standard-uk-card';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -253,6 +259,9 @@ export type AssumptionCode =
   | 'nearcut-free-online-payments'
   | 'nearcut-subscription-quote'
   | 'nearcut-subscription-unknown-payments'
+  | 'setora-current-vat'
+  | 'setora-standard-stripe-benchmark'
+  | 'setora-sms-excluded'
   | 'kersivo-stripe-standard-uk-card'
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
@@ -286,6 +295,9 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'nearcut-free-online-payments': 'Nearcut advertises zero online payment transaction fees on Free for You. Its separate Help Centre lists standard payment rates; confirm which terms apply to your shop.',
   'nearcut-subscription-quote': 'Nearcut Subscription has shop-specific pricing. Enter your actual monthly quote excluding VAT to model it. Optional Business Boosters are excluded.',
   'nearcut-subscription-unknown-payments': 'Nearcut Subscription online processing rates cannot be estimated reliably without confirmation of the plan-specific terms.',
+  'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
+  'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
+  'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
   'deposit-fee-rounding': `Payment-processing estimates round each modelled ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit transaction to the nearest penny before multiplying by the monthly deposit count. Provider invoice rounding may differ slightly.`,
   'deposit-refunds-not-modelled': 'Refund-related processing costs are not modelled.',
   'kersivo-stripe-standard-uk-card': STRIPE_CARD_CAVEAT,
@@ -331,7 +343,7 @@ export type MonthlyCostCalculation =
       scenario: CostScenarioInput;
       effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -363,7 +375,7 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'kersivo-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -684,6 +696,65 @@ function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
   return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
 }
 
+/* ---------------------------------- Setora --------------------------------- */
+
+/**
+ * One location, standard non-promotional subscription. Setora explicitly says
+ * no per-staff charge, no booking commission and no Stripe markup. Its current
+ * barber pricing page says no VAT is added; that statement can change.
+ * Optional SMS credits and unknown domain/setup costs are excluded, never
+ * silently modelled as being free.
+ */
+function calculateSetora(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const subscriptionPence = gbpToPence(requireVerifiedSetoraFact('canonicalMonthlyGbp').value);
+  const staffPence = gbpToPence(requireVerifiedSetoraFact('additionalStaffSubscriptionGbp').value);
+  const commissionPercent = requireVerifiedSetoraFact('platformBookingCommissionPercent').value;
+  const vatApplies = requireVerifiedSetoraFact('vatCurrentlyAdded').value;
+  const extraStaff = Math.max(0, scenario.bookableBarbers - 1);
+  const lines: PenceLine[] = [
+    {
+      id: 'setora-subscription', category: 'subscription', status: 'calculated',
+      pence: subscriptionPence, unitPence: subscriptionPence,
+      quantity: 1, vatApplies,
+    },
+    {
+      id: 'setora-additional-staff', category: 'team-or-users', status: 'calculated',
+      pence: extraStaff * staffPence, unitPence: staffPence,
+      quantity: extraStaff, vatApplies,
+    },
+    {
+      id: 'setora-commission', category: 'commission', status: 'calculated',
+      pence: percentOfPence(gbpToPence(scenario.averageAppointmentValueGbp) * scenario.monthlyAppointments, commissionPercent),
+      unitPence: 0, quantity: 0, vatApplies,
+    },
+    depositProcessingLine(scenario, {
+      id: 'setora-deposit-processing',
+      paymentMethod: 'stripe-setora-standard-uk-card',
+      percent: STRIPE_UK_STANDARD_CARD_PERCENT,
+      fixedPence: gbpToPence(STRIPE_UK_STANDARD_CARD_FIXED_GBP),
+      vatApplies: STRIPE_FEE_VAT_CHARGED,
+    }),
+  ];
+  const assumptions = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('setora-current-vat'),
+    assumption('setora-sms-excluded'),
+  ];
+  if (scenario.includeDepositProcessing) {
+    assumptions.push(assumption('setora-standard-stripe-benchmark'));
+  }
+  return {
+    provider: 'setora',
+    status: 'calculated',
+    currency: 'GBP',
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    amounts: summarise(lines, scenario.vatRegistered),
+    assumptions,
+    warnings: [],
+  };
+}
+
 /* --------------------------------- KERSIVO --------------------------------- */
 
 function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
@@ -770,6 +841,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
+      calculateSetora(scenario),
       calculateKersivo(scenario),
     ],
   };

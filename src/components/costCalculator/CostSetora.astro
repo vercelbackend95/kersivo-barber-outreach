@@ -1,0 +1,32 @@
+---
+import { SETORA_COST_FACTS, SETORA_COST_INTRO, SETORA_COST_NOTES } from '@/lib/seo/barberCostCalculatorPage';
+import { SETORA_FACTS_CHECKED_DATE, SETORA_FACTS_CHECKED_ISO, getSetoraSource } from '@/lib/seo/setoraFacts';
+
+const pricing = getSetoraSource('pricing');
+---
+<section id="setora-cost" class="cost-calc__section" aria-labelledby="cost-calc-setora-title">
+  <div class="container cost-calc-platform">
+    <header class="cost-calc__intro cost-calc-platform__intro">
+      <p class="cost-calc__eyebrow">Setora pricing</p>
+      <h2 id="cost-calc-setora-title" class="cost-calc__h2">How much does Setora cost in the UK?</h2>
+      <p class="cost-calc__lead">{SETORA_COST_INTRO}</p>
+      <p class="cost-calc__checked">
+        Checked <time datetime={SETORA_FACTS_CHECKED_ISO}>{SETORA_FACTS_CHECKED_DATE}</time> ·
+        <a href={pricing.url} target="_blank" rel="noopener noreferrer">{pricing.label}</a>
+      </p>
+    </header>
+    <div class="cost-calc-platform__detail">
+      <dl class="cost-calc-facts">
+        {SETORA_COST_FACTS.map((fact) => (
+          <div class="cost-calc-facts__row">
+            <dt>{fact.label}</dt><dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <ul class="cost-calc__list cost-calc-platform__notes">
+        {SETORA_COST_NOTES.map((note) => <li>{note}</li>)}
+      </ul>
+      <p class="cost-calc__crosslink"><a href="/setora-alternative">See the full KERSIVO vs Setora comparison</a></p>
+    </div>
+  </div>
+</section>
