@@ -161,6 +161,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'compare',
   },
   {
+    id: 'compare-square',
+    label: 'Square Appointments Alternative',
+    description: 'Compare Square Appointments UK pricing, card fees, bookings and websites.',
+    href: '/square-appointments-alternative',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+  },
+  {
     id: 'compare-squire',
     label: 'SQUIRE Alternative',
     description: 'Compare SQUIRE UK prices, POS, deposits and own-brand bookings with KERSIVO.',

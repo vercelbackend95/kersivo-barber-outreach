@@ -1,0 +1,45 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/landingFinalCta.css';
+---
+
+<section
+  class="landing-final-cta fresha-alt-final"
+  aria-labelledby="fresha-alt-final-cta-title"
+>
+  <div class="container">
+    <div class="landing-final-cta__panel">
+      <div class="landing-final-cta__content">
+        <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
+        <h2 id="fresha-alt-final-cta-title" class="landing-final-cta__heading">
+          Ready for a more direct booking relationship?
+        </h2>
+        <p class="landing-final-cta__subheadline">
+          Start KERSIVO Starter at £0/month, or choose Full KERSIVO for
+          £{SAAS_MONTHLY_GBP}/month per location when you want your own website, domain and payment
+          control.
+        </p>
+      </div>
+
+      <div class="landing-final-cta__conversion">
+        <div class="fresha-alt-final__actions">
+          <a
+            href="/admin"
+            class="btn btn--primary btn--lg landing-final-cta__button"
+            data-track="starter_signup_click"
+            data-track-placement="square_final"
+          >
+            Start KERSIVO Starter
+          </a>
+          <a
+            href="/pricing"
+            class="btn btn--secondary btn--lg landing-final-cta__button"
+            data-track="view_pricing_click"
+          >
+            Compare Starter and Full
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
