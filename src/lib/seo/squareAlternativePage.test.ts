@@ -25,12 +25,17 @@ describe('Square Appointments alternative', () => {
    const bc=buildSquareAlternativeBreadcrumbJsonLd();
    expect(bc['@type']).toBe('BreadcrumbList');
    expect((bc.itemListElement as unknown[]).length).toBe(2);
+   expect(web.breadcrumb).toEqual({'@id': bc['@id']});
+   expect(web.dateModified).toBe('2026-10-08');
  });
  it('keeps FAQPage schema exactly aligned with the visible FAQ', () => {
    expect(SQUARE_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(10);
    const schema=buildSquareAlternativeFaqJsonLd();
    expect((schema.mainEntity as unknown[]).length).toBe(SQUARE_ALTERNATIVE_FAQ_ITEMS.length);
    expect(page).toContain('faqs={SQUARE_ALTERNATIVE_FAQ_ITEMS}');
+   const structured = schema.mainEntity as Array<{name: string;acceptedAnswer:{text:string}}>;
+   expect(structured.map(x=>x.name)).toEqual(SQUARE_ALTERNATIVE_FAQ_ITEMS.map(x=>x.question));
+   expect(structured.map(x=>x.acceptedAnswer.text)).toEqual(SQUARE_ALTERNATIVE_FAQ_ITEMS.map(x=>x.answer));
  });
  it('reuses the same design sections in the right order', () => {
    const order=['<SquareHero','<SquareQuickAnswer','<SquareWhy','<SquareCosts','<SquareCompare','<SquareProof','<SquareFit','<SquareSwitching','<SquarePricing','<Faq4','<SquareFinalCta','<SquareSources'].map(token=>page.indexOf(token));
@@ -59,6 +64,8 @@ describe('Square Appointments alternative', () => {
    expect(buildMarketingSitemapEntries().some(e=>e.loc==='https://kersivo.co.uk/square-appointments-alternative')).toBe(true);
    expect(MARKETING_NAV_ITEMS.some(x=>x.href==='/square-appointments-alternative')).toBe(true);
    expect(read('../../components/freshaAlternative/FreshaFit.astro')).toContain('/square-appointments-alternative');
+   expect(read('../../components/booksyAlternative/BooksyFit.astro')).toContain('/square-appointments-alternative');
+   expect(read('../../components/nearcutAlternative/NearcutFit.astro')).toContain('/square-appointments-alternative');
  });
  it('does not include draft or fake-review markup', () => {
    expect(page).not.toContain('noindex');
