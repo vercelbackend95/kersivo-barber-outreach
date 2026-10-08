@@ -1,0 +1,142 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import Contact16 from '@/components/contact16.astro';
+import VagaroHero from '@/components/vagaroAlternative/VagaroHero.astro';
+import VagaroCompare from '@/components/vagaroAlternative/VagaroCompare.astro';
+import VagaroProof from '@/components/vagaroAlternative/VagaroProof.astro';
+import VagaroPricing from '@/components/vagaroAlternative/VagaroPricing.astro';
+import VagaroFinalCta from '@/components/vagaroAlternative/VagaroFinalCta.astro';
+import VagaroQuickAnswer from '@/components/vagaroAlternative/VagaroQuickAnswer.astro';
+import VagaroWhy from '@/components/vagaroAlternative/VagaroWhy.astro';
+import VagaroCosts from '@/components/vagaroAlternative/VagaroCosts.astro';
+import VagaroFit from '@/components/vagaroAlternative/VagaroFit.astro';
+import VagaroSwitching from '@/components/vagaroAlternative/VagaroSwitching.astro';
+import VagaroSources from '@/components/vagaroAlternative/VagaroSources.astro';
+import {
+  VAGARO_ALTERNATIVE_DESCRIPTION,
+  VAGARO_ALTERNATIVE_FAQ_ITEMS,
+  VAGARO_ALTERNATIVE_PAGE_PATH,
+  VAGARO_ALTERNATIVE_TITLE,
+  buildVagaroAlternativeFaqJsonLd,
+} from '@/lib/seo/vagaroAlternativeFaq';
+import {
+  buildVagaroAlternativeBreadcrumbJsonLd,
+  buildVagaroAlternativeWebPageJsonLd,
+} from '@/lib/seo/vagaroAlternativeJsonLd';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={VAGARO_ALTERNATIVE_TITLE}
+  description={VAGARO_ALTERNATIVE_DESCRIPTION}
+  canonicalPath={VAGARO_ALTERNATIVE_PAGE_PATH}
+  jsonLd={[buildVagaroAlternativeWebPageJsonLd(), buildVagaroAlternativeBreadcrumbJsonLd(), buildVagaroAlternativeFaqJsonLd()]}
+>
+  <main class="fresha-alt landing-overflow-guard">
+    <VagaroHero />
+    <VagaroQuickAnswer />
+    <VagaroWhy />
+    <VagaroCosts />
+    <VagaroCompare />
+    <VagaroProof />
+    <VagaroFit />
+    <VagaroSwitching />
+    <VagaroPricing />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about Vagaro and KERSIVO?"
+      subHeading="Clear answers on booking charges, pricing, switching, websites and the live demo."
+      supportHeading="Still comparing options?"
+      supportText="Tell us what you use today and what you want your booking journey to look like."
+      supportLinkLabel="Ask KERSIVO a question"
+      supportLinkHref="#contact"
+      faqs={VAGARO_ALTERNATIVE_FAQ_ITEMS}
+    />
+
+    <VagaroFinalCta />
+
+    <Contact16
+      eyebrow="CONTACT KERSIVO"
+      title="Still comparing KERSIVO and Vagaro?"
+      description="Tell us what you use today and what you want to change. We’ll reply with a clear, practical answer for your barbershop."
+      note="We’ll reply by email — no sales call required."
+      submitLabel="Send my question"
+      messagePlaceholder="For example: Vagaro UK pricing, marketplace fees, customer exports or your own-domain booking website."
+    />
+
+    <VagaroSources />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'FAQ', href: '#faq' },
+        { name: 'About', href: '/about' },
+        { name: 'Contact', href: '#contact' },
+        { name: 'Start KERSIVO Starter', href: '/admin' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => {
+      const section = document.querySelector('.feature261');
+      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
+      const cleanup = initFeature261StaggerReveal(section);
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+  document.addEventListener('astro:page-load', scheduleInit);
+</script>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>
