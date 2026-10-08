@@ -113,7 +113,7 @@ describe('marketing navigation config', () => {
       (item) => item.href,
     );
     expect(compareHrefs).toEqual(
-      expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/barber-software-cost-calculator']),
+      expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative', '/barber-software-cost-calculator']),
     );
     const tools = resources.sections.find((section) => section.id === 'tools');
     expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
