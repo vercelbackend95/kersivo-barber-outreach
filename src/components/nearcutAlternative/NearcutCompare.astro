@@ -35,13 +35,13 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
 <section
   id="comparison"
   class="fresha-alt-compare scroll-mt-24"
-  aria-labelledby="fresha-alt-compare-title"
+  aria-labelledby="nearcut-alt-compare-title"
   data-nearcut-comparison
 >
   <div class="fresha-alt-compare__container">
     <header class="fresha-alt-compare__header">
       <p class="fresha-alt-compare__eyebrow">COMPARISON</p>
-      <h2 id="fresha-alt-compare-title" class="fresha-alt-compare__title">
+      <h2 id="nearcut-alt-compare-title" class="fresha-alt-compare__title">
         <span class="fresha-alt-compare__title-line">KERSIVO</span>
         <span class="fresha-alt-compare__title-line fresha-alt-compare__title-line--vs">VS</span>
         <span class="fresha-alt-compare__title-line">Nearcut</span>
@@ -63,11 +63,11 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
             data-open={index === 0 ? 'true' : 'false'}
           >
             <button
-              id={`fresha-compare-trigger-${section.id}`}
+              id={`nearcut-compare-trigger-${section.id}`}
               type="button"
               class="fresha-alt-compare__summary"
               aria-expanded={index === 0 ? 'true' : 'false'}
-              aria-controls={`fresha-compare-panel-${section.id}`}
+              aria-controls={`nearcut-compare-panel-${section.id}`}
               data-comparison-trigger
             >
               <span class="fresha-alt-compare__summary-icon" aria-hidden="true">
@@ -96,10 +96,10 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
               aria-hidden={index === 0 ? 'false' : 'true'}
             >
               <div
-                id={`fresha-compare-panel-${section.id}`}
+                id={`nearcut-compare-panel-${section.id}`}
                 class="fresha-alt-compare__reveal-inner"
                 role="region"
-                aria-labelledby={`fresha-compare-trigger-${section.id}`}
+                aria-labelledby={`nearcut-compare-trigger-${section.id}`}
                 data-comparison-reveal-inner
                 inert={index !== 0}
               >
@@ -108,7 +108,7 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
                 <div class="fresha-alt-compare__provider-label">NEARCUT BOOKING SYSTEM</div>
                 <div class="fresha-alt-compare__provider-head">
                   <span class="fresha-alt-compare__brand-mark fresha-alt-compare__brand-mark--fresha" aria-hidden="true">
-                    fresha
+                    nearcut
                   </span>
                   <div>
                     <p class="fresha-alt-compare__provider-name">Nearcut</p>
