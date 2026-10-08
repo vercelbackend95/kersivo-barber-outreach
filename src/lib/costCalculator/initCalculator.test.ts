@@ -18,6 +18,8 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  PHOREST_QUOTE_FIELD,
+  PHOREST_QUOTE_VAT,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
@@ -78,6 +80,8 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(PHOREST_QUOTE_FIELD)}
+      ${PHOREST_QUOTE_VAT.options.map(option => `<input type="radio" name="phorestQuoteVatPercent" value="${option.value}" ${option.value === PHOREST_QUOTE_VAT.defaultValue ? 'checked' : ''} />`).join('')}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
@@ -151,6 +155,8 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  phorestMonthlyQuoteGbp: 0,
+  phorestQuoteVatPercent: 99,
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -175,6 +181,7 @@ describe('initial calculation', () => {
       'fresha',
       'nearcut',
       'setora',
+      'phorest',
       'kersivo',
     ]);
     expect(document.body.innerHTML).not.toMatch(/winner|cheapest|saving/i);
@@ -774,6 +781,10 @@ describe('scenario URLs', () => {
     const projected = projectCostCalculation(calculateMonthlyCosts(URL_SCENARIO), 'threeYear');
     if (!projected.ok) throw new Error('invalid');
     projected.providers.forEach((provider) => {
+      if (provider.provider === 'phorest') {
+        expect(total('phorest')).toBe('Custom pricing');
+        return;
+      }
       if (provider.status !== 'calculated') throw new Error('not calculated');
       expect(total(provider.provider)).toBe(formatMoneyGbp(provider.amounts.cashTotalGbp));
     });
@@ -905,7 +916,7 @@ describe('copy scenario link', () => {
     const url = writes[0];
     expect(url).not.toMatch(/£|%C2%A3|total|price|60\.00|35\.82|39\.00/i);
     expect([...new URL(url).searchParams.keys()]).toEqual([
-      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'vat', 'dp', 'db', 'period',
+      'b', 'a', 'v', 'm', 'boost', 'split', 'bc', 'fc', 'sw', 'loyalty', 'nc', 'nq', 'pq', 'pv', 'vat', 'dp', 'db', 'period',
     ]);
   });
 
