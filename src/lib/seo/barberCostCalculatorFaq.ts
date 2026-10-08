@@ -16,6 +16,7 @@ import {
 import { FRESHA_UK_VAT_PERCENT, formatGbp } from '@/lib/seo/freshaFacts';
 import { requireIllustrativeNearcutFact, requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { requireVerifiedTimelyFact } from '@/lib/seo/timelyFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export type BarberCostCalculatorFaqItem = {
@@ -23,6 +24,8 @@ export type BarberCostCalculatorFaqItem = {
   answer: string;
 };
 
+const TIMELY_UK_PAYMENT = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+if (!('percent' in TIMELY_UK_PAYMENT && 'fixedGbp' in TIMELY_UK_PAYMENT)) throw new Error('Missing Timely UK payment rate');
 const FRESHA_VAT = `${FRESHA_UK_VAT_PERCENT}% VAT`;
 const DEPENDS_ON =
   'It depends on your team size, how many new clients come through each marketplace, which add-ons you use and how you take payments.';
@@ -76,6 +79,18 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   {
     question: 'How much does Nearcut Subscription cost in the UK?',
     answer: 'Nearcut Subscription has a quote-based monthly price depending on your shop and removes the client booking charge. The calculator lets you enter a real quote excluding VAT; unknown subscription fees or unconfirmed online payment processing are shown as Custom pricing.',
+  },
+  {
+    question: 'How much does Timely cost per month in the UK?',
+    answer: 'Timely Build, Elevate and Innovate subscriptions are based on bookable staff, but a verified universal UK GBP list price is unavailable. Enter your real Timely monthly shop invoice including any VAT in Advanced costs; without it, the Timely result reads Custom pricing.',
+  },
+  {
+    question: 'What is the TimelyPay fee for UK online bookings?',
+    answer: `Timely publishes a standard domestic UK online card rate of ${TIMELY_UK_PAYMENT.percent}% plus ${Math.round(TIMELY_UK_PAYMENT.fixedGbp * 100)}p per transaction. International and Amex cards have different rates. The calculator estimates fees for domestic cards on an online deposit benchmark only.`,
+  },
+  {
+    question: 'Does the calculator include Timely VAT and extra add-ons?',
+    answer: 'Your Timely quote should be the full subscription invoice amount including any VAT charged. The calculator does not extract the VAT amount without an invoice breakdown and does not estimate optional Timely extras, personalised in-person rates or refunds.',
   },
   {
     question: 'How much does Setora cost for a UK barbershop?',
