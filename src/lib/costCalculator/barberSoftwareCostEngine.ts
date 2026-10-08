@@ -35,6 +35,7 @@ import {
 import { requireVerifiedNearcutFact } from '@/lib/seo/nearcutFacts';
 import { TREATWELL_QUOTE_VAT_UNKNOWN, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
+import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP, requireVerifiedTimelyFact, resolveTimelyMonthlyShopQuoteGbp } from '@/lib/seo/timelyFacts';
 import { estimateVagaroDisplayedSubscriptionGbp, requireVerifiedVagaroFact } from '@/lib/seo/vagaroFacts';
 import { PHOREST_QUOTE_VAT_UNKNOWN, useUserProvidedPhorestMonthlyQuoteGbp } from '@/lib/seo/phorestFacts';
 import { SQUARE_CALCULATOR_LIMITS, SQUARE_PAYMENT_CHANNEL_FACTS, squareBaseMonthlyPriceGbp, type SquarePlanId } from '@/lib/seo/squareFacts';
@@ -63,6 +64,8 @@ export type CostScenarioInput = {
   nearcutSubscription: boolean;
   /** Shop-provided Nearcut Subscription quote before VAT; 0 means not known. */
   nearcutMonthlyQuoteGbp: number;
+  /** Real UK monthly Timely invoice INCLUDING any VAT; 0 means unknown. */
+  timelyMonthlyInvoiceGbp: number;
   /** Real Treatwell monthly software quote (ex VAT); 0 means unknown, not a free subscription. */
   treatwellMonthlyQuoteGbp: number;
   /** Treatwell quote VAT treatment: 99 unknown; 0 no VAT; 20 standard UK VAT. */
@@ -169,6 +172,8 @@ export function validateCostScenario(input: CostScenarioInput): ValidationIssue[
     const quoteIssue = numberIssue('nearcutMonthlyQuoteGbp', input.nearcutMonthlyQuoteGbp, { integer: false, min: 0 });
     if (quoteIssue) issues.push(quoteIssue);
   }
+  const timelyIssue = numberIssue('timelyMonthlyInvoiceGbp', input.timelyMonthlyInvoiceGbp, { integer: false, min: 0 });
+  if (timelyIssue) issues.push(timelyIssue);
   return issues;
 }
 
@@ -212,7 +217,7 @@ function validateMarketplaceAgainstAppointments(
 
 /* --------------------------------- Results --------------------------------- */
 
-export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo' | 'vagaro';
+export type ProviderId = 'booksy' | 'fresha' | 'nearcut' | 'treatwell' | 'setora' | 'square' | 'phorest' | 'kersivo' | 'vagaro' | 'timely';
 
 export type CostCategory =
   | 'subscription'
@@ -239,6 +244,8 @@ export type LineItemId =
   | 'treatwell-subscription'
   | 'treatwell-new-client-commission'
   | 'treatwell-deposit-processing'
+  | 'timely-subscription'
+  | 'timely-deposit-processing'
   | 'setora-subscription'
   | 'setora-additional-staff'
   | 'setora-commission'
@@ -256,7 +263,7 @@ export type LineItemId =
 
 export type LineItemStatus = 'calculated' | 'custom-pricing' | 'not-included';
 
-export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment' | 'vagaro-standard-uk-online';
+export type PaymentMethod = 'booksy-mobile-payments' | 'fresha-online-payments' | 'nearcut-free-online-payments' | 'stripe-setora-standard-uk-card' | 'stripe-checkout-standard-uk-card' | 'treatwell-online-prepayment' | 'vagaro-standard-uk-online' | 'timelypay-domestic-uk-online';
 
 export type CostLineItem = {
   id: LineItemId;
@@ -308,6 +315,8 @@ export type AssumptionCode =
   | 'nearcut-free-online-payments'
   | 'nearcut-subscription-quote'
   | 'nearcut-subscription-unknown-payments'
+  | 'timely-actual-invoice-including-vat'
+  | 'timely-domestic-uk-processing'
   | 'treatwell-eligibility-365-days'
   | 'treatwell-quote-required'
   | 'treatwell-processing-deposits-only'
@@ -331,7 +340,7 @@ export type AssumptionCode =
   | 'kersivo-stripe-fee-payer'
   | 'stripe-fees-no-vat';
 
-export type WarningCode = 'vagaro-promotion-duration-unverified' | 'vagaro-vat-unknown' | 'vagaro-other-fees-excluded' | 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown';
+export type WarningCode = 'vagaro-promotion-duration-unverified' | 'vagaro-vat-unknown' | 'vagaro-other-fees-excluded' | 'fresha-marketplace-cap-unresolved' | 'fresha-custom-pricing-above-team-limit' | 'nearcut-client-charge-not-universal' | 'nearcut-quoted-cost-unknown' | 'nearcut-processing-unresolved' | 'phorest-quote-required' | 'phorest-vat-unknown' | 'phorest-processing-unknown' | 'square-subscription-vat-unverified' | 'square-deposit-processing-unverified' | 'treatwell-monthly-quote-required' | 'treatwell-quote-vat-unknown' | 'timely-quote-unknown' | 'timely-vat-not-separated';
 
 export type EngineNotice<Code extends string> = { code: Code; message: string };
 
@@ -371,6 +380,8 @@ export const ASSUMPTION_MESSAGES: Record<AssumptionCode, string> = {
   'vagaro-vat-assumption': `Vagaro subscription/add-on VAT treatment could not be verified from the public UK sources. The toggle is an explicit assumption (off = no VAT added; on = ${UK_STANDARD_VAT_PERCENT}% applied to subscription, MySite and acquisition fees). Verify the real invoice.`,
   'vagaro-online-payments': `Optional ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit processing uses the published standard Vagaro UK keyed-in/online rate, including the fixed fee. Legacy merchant agreements may differ.`,
   'vagaro-promoted-existing-excluded': 'Existing-client fees for optional Fill My Books or Daily Deals are not included. This model does not assume promotional participation; those fees could increase the actual bill.',
+  'timely-actual-invoice-including-vat': 'Enter the ACTUAL Timely UK monthly subscription invoice total, including VAT if Timely charged it. This amount is treated as cash paid; VAT is not separated because the invoice tax breakdown is unknown. Unquoted optional tools and extras are excluded.',
+  'timely-domestic-uk-processing': `TimelyPay domestic UK online card fees are benchmarked at the published ${formatPercent(TIMELY_UK_DOMESTIC_ONLINE_PERCENT)} + ${formatGbp(TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP)} per ${formatGbp(DEPOSIT_BENCHMARK_GBP)} deposit, from current official TimelyPay UK terms. International/Amex cards and individually negotiated rates can differ; payment-processing VAT is not separately verified.`,
   'setora-current-vat': 'Setora currently states it does not add VAT to its UK subscription; its main pricing page says VAT applies where applicable. This estimate uses the present stated VAT treatment, not a guarantee about future invoices.',
   'setora-standard-stripe-benchmark': `Setora says Stripe processing is billed at Stripe rates without a Setora markup. The estimate assumes standard UK online cards at Stripe published ${formatPercent(STRIPE_UK_STANDARD_CARD_PERCENT)} + ${formatGbp(STRIPE_UK_STANDARD_CARD_FIXED_GBP)}. Premium, international, negotiated and other payment methods may cost more or less.`,
   'setora-sms-excluded': 'Setora SMS credits and optional messaging plans are not included because the shop-specific usage and rate are not provided. Its standard setup fee is advertised as zero; custom-domain registration costs are not confirmed and are excluded.',
@@ -403,9 +414,8 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'treatwell-quote-vat-unknown': 'Confirm the VAT treatment of your Treatwell subscription quote. No complete cash total is estimated until the quote VAT basis is selected.',
   'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
   'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
-  'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
-  'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
-  'phorest-processing-unknown': 'PhorestPay deposit-processing rates for this shop are unverified. A complete total cannot be shown when deposit processing is selected.',
+  'timely-quote-unknown': 'Enter your real Timely UK monthly invoice total including any VAT; public USD per-staff prices are not used for UK cost estimates.',
+  'timely-vat-not-separated': 'Timely invoice VAT is included in the amount you enter, but is not separately estimated or treated as recoverable. Extra processing VAT, if charged, and undisclosed add-ons are excluded.',
 };
 
 type ProviderResultBase = {
@@ -433,9 +443,9 @@ export type MonthlyCostCalculation =
   | {
       ok: true;
       scenario: CostScenarioInput;
-      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number; vagaroMarketplace: number };
+      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number };
       assumptions: readonly EngineNotice<AssumptionCode>[];
-      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
     }
   | { ok: false; errors: readonly ValidationIssue[] };
 
@@ -467,7 +477,635 @@ function toLineItem(line: PenceLine): CostLineItem {
 }
 
 type DepositFee = {
-  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing' | 'vagaro-deposit-processing';
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'timely-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing';
+  paymentMethod: PaymentMethod;
+  percent: number;
+  fixedPence: number;
+  vatApplies: boolean;
+};
+
+/** Same benchmark deposit for every provider, so fees differ only by each provider's rate. */
+function depositProcessingLine(scenario: CostScenarioInput, fee: DepositFee): PenceLine {
+  const base = { id: fee.id, category: 'payment-processing' as const, vatApplies: fee.vatApplies, paymentMethod: fee.paymentMethod };
+  if (!scenario.includeDepositProcessing) {
+    return { ...base, status: 'not-included', pence: 0, quantity: 0, unitPence: null };
+  }
+  const unitPence = transactionFeePence(gbpToPence(DEPOSIT_BENCHMARK_GBP), fee.percent, fee.fixedPence);
+  const quantity = scenario.depositBookingsPerMonth;
+  return { ...base, status: 'calculated', pence: unitPence * quantity, quantity, unitPence };
+}
+
+function summarise(lines: readonly PenceLine[], vatRegistered: boolean): MonthlyAmounts {
+  const byCategory = (category: CostCategory) =>
+    lines.filter((line) => line.category === category).reduce((sum, line) => sum + (line.pence ?? 0), 0);
+
+  const subtotal = lines.reduce((sum, line) => sum + (line.pence ?? 0), 0);
+  const vatable = lines.filter((line) => line.vatApplies).reduce((sum, line) => sum + (line.pence ?? 0), 0);
+  const vat = percentOfPence(vatable, UK_STANDARD_VAT_PERCENT);
+
+  return {
+    subscriptionExVatGbp: penceToGbp(byCategory('subscription')),
+    teamOrUserFeesExVatGbp: penceToGbp(byCategory('team-or-users')),
+    acquisitionFeesExVatGbp: penceToGbp(byCategory('acquisition')),
+    addOnsExVatGbp: penceToGbp(byCategory('add-ons')),
+    commissionExVatGbp: penceToGbp(byCategory('commission')),
+    paymentProcessingExVatGbp: penceToGbp(byCategory('payment-processing')),
+    subtotalExVatGbp: penceToGbp(subtotal),
+    vatChargedGbp: penceToGbp(vat),
+    cashTotalGbp: penceToGbp(subtotal + vat),
+    estimatedNetCostIfVatRecoverableGbp: vatRegistered ? penceToGbp(subtotal) : null,
+  };
+}
+
+/** One-time acquisition fee per qualifying client: max(value × percent, minimum). */
+function acquisitionFeePence(firstVisitPence: number, percent: number, minimumPence: number): number {
+  return Math.max(percentOfPence(firstVisitPence, percent), minimumPence);
+}
+
+function freshaFact(key: FreshaCommercialFactKey): VerifiedCommercialFact & { vatApplies: boolean } {
+  const fact = requireVerifiedFreshaFact(key);
+  if (fact.vat === 'inclusive') {
+    throw new Error(`Fresha fact "${key}" is VAT-inclusive; the engine only supports exclusive pricing.`);
+  }
+  return { ...fact, vatApplies: fact.vat === 'exclusive' };
+}
+
+function requireAmountPence(fact: VerifiedCommercialFact, key: string): number {
+  if (fact.amountGbp === undefined) throw new Error(`Fresha fact "${key}" has no amount.`);
+  return gbpToPence(fact.amountGbp);
+}
+
+function sharedNotices(scenario: CostScenarioInput) {
+  const assumptions = [assumption('single-location')];
+  if (scenario.vatRegistered) assumptions.push(assumption('vat-recovery-depends-on-circumstances'));
+  return { assumptions, warnings: [] as EngineNotice<WarningCode>[] };
+}
+
+const DEPOSIT_SCENARIO_ASSUMPTIONS = [
+  'deposit-processing-scope',
+  'deposit-benchmark',
+  'deposit-fee-rounding',
+  'deposit-refunds-not-modelled',
+] as const satisfies readonly AssumptionCode[];
+
+/* --------------------------------- Booksy ---------------------------------- */
+
+function calculateBooksy(scenario: CostScenarioInput, boostClients: number): ProviderMonthlyResult {
+  const vatApplies = BOOKSY_PRICES_VAT === 'exclusive';
+  const basePence = gbpToPence(BOOKSY_BASE_PRICE_GBP);
+  const userPence = gbpToPence(BOOKSY_ADDITIONAL_USER_GBP);
+  const additionalUsers = Math.max(scenario.bookableBarbers - 1, 0);
+
+  const boostQuantity = scenario.booksyBoostEnabled ? boostClients : 0;
+  const boostUnitPence = scenario.booksyBoostEnabled
+    ? acquisitionFeePence(
+        gbpToPence(scenario.averageAppointmentValueGbp),
+        BOOKSY_BOOST_COMMISSION_PERCENT,
+        gbpToPence(BOOKSY_BOOST_MINIMUM_GBP),
+      )
+    : null;
+
+  const lines: PenceLine[] = [
+    {
+      id: 'booksy-base-subscription',
+      category: 'subscription',
+      status: 'calculated',
+      pence: basePence,
+      vatApplies,
+      quantity: 1,
+      unitPence: basePence,
+    },
+    {
+      id: 'booksy-additional-users',
+      category: 'team-or-users',
+      status: 'calculated',
+      pence: userPence * additionalUsers,
+      vatApplies,
+      quantity: additionalUsers,
+      unitPence: userPence,
+    },
+    {
+      id: 'booksy-boost',
+      category: 'acquisition',
+      status: 'calculated',
+      pence: (boostUnitPence ?? 0) * boostQuantity,
+      vatApplies,
+      quantity: boostQuantity,
+      unitPence: boostUnitPence,
+    },
+    depositProcessingLine(scenario, {
+      id: 'booksy-deposit-processing',
+      paymentMethod: 'booksy-mobile-payments',
+      percent: BOOKSY_MOBILE_PAYMENTS_PERCENT,
+      fixedPence: gbpToPence(BOOKSY_MOBILE_PAYMENTS_FIXED_GBP),
+      vatApplies: BOOKSY_MOBILE_PAYMENTS_VAT === 'exclusive',
+    }),
+  ];
+
+  const shared = sharedNotices(scenario);
+  const assumptions = [...shared.assumptions, assumption('booksy-users-equal-bookable-barbers')];
+  if (scenario.booksyBoostEnabled) {
+    assumptions.push(assumption('booksy-boost-first-visit-equals-average-appointment-value'));
+  }
+
+  return {
+    provider: 'booksy',
+    status: 'calculated',
+    currency: 'GBP',
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    amounts: summarise(lines, scenario.vatRegistered),
+    assumptions,
+    warnings: shared.warnings,
+  };
+}
+
+/* --------------------------------- Fresha ---------------------------------- */
+
+function freshaDepositFee(): DepositFee {
+  const key = 'onlinePayments';
+  const fact = freshaFact(key);
+  if (fact.percent === undefined) throw new Error('Fresha online payments fee requires a percentage.');
+  return {
+    id: 'fresha-deposit-processing',
+    paymentMethod: 'fresha-online-payments',
+    percent: fact.percent,
+    fixedPence: requireAmountPence(fact, key),
+    vatApplies: fact.vatApplies,
+  };
+}
+
+function freshaSubscriptionLine(teamMembers: number): PenceLine {
+  if (teamMembers > FRESHA_ENTERPRISE_ABOVE_TEAM_MEMBERS) {
+    return {
+      id: 'fresha-subscription',
+      category: 'subscription',
+      status: 'custom-pricing',
+      pence: null,
+      vatApplies: freshaFact('teamPlanPerMember').vatApplies,
+      quantity: teamMembers,
+      unitPence: null,
+      plan: 'enterprise',
+    };
+  }
+
+  const isIndependent = teamMembers === 1;
+  const key: FreshaCommercialFactKey = isIndependent ? 'independentPlan' : 'teamPlanPerMember';
+  const fact = freshaFact(key);
+  const unitPence = requireAmountPence(fact, key);
+
+  return {
+    id: 'fresha-subscription',
+    category: 'subscription',
+    status: 'calculated',
+    pence: isIndependent ? unitPence : unitPence * teamMembers,
+    vatApplies: fact.vatApplies,
+    quantity: isIndependent ? 1 : teamMembers,
+    unitPence,
+    plan: isIndependent ? 'independent' : 'team',
+  };
+}
+
+function freshaAddOnLine(
+  id: 'fresha-smart-website' | 'fresha-client-loyalty',
+  key: 'smartWebsiteAddOn' | 'clientLoyaltyAddOn',
+  enabled: boolean,
+): PenceLine {
+  const fact = freshaFact(key);
+  const unitPence = requireAmountPence(fact, key);
+  const quantity = enabled ? 1 : 0;
+  return {
+    id,
+    category: 'add-ons',
+    status: 'calculated',
+    pence: unitPence * quantity,
+    vatApplies: fact.vatApplies,
+    quantity,
+    unitPence,
+  };
+}
+
+function calculateFresha(scenario: CostScenarioInput, marketplaceClients: number): ProviderMonthlyResult {
+  const marketplace = freshaFact('marketplaceNewClientFee');
+  if (marketplace.percent === undefined || marketplace.minimumGbp === undefined) {
+    throw new Error('Fresha Marketplace fee requires a percentage and a minimum.');
+  }
+  const marketplaceUnitPence = acquisitionFeePence(
+    gbpToPence(scenario.averageAppointmentValueGbp),
+    marketplace.percent,
+    gbpToPence(marketplace.minimumGbp),
+  );
+
+  const subscription = freshaSubscriptionLine(scenario.bookableBarbers);
+  const lines: PenceLine[] = [
+    subscription,
+    {
+      id: 'fresha-marketplace-fees',
+      category: 'acquisition',
+      status: 'calculated',
+      pence: marketplaceUnitPence * marketplaceClients,
+      vatApplies: marketplace.vatApplies,
+      quantity: marketplaceClients,
+      unitPence: marketplaceUnitPence,
+    },
+    freshaAddOnLine('fresha-smart-website', 'smartWebsiteAddOn', scenario.freshaSmartWebsite),
+    freshaAddOnLine('fresha-client-loyalty', 'clientLoyaltyAddOn', scenario.freshaClientLoyalty),
+    depositProcessingLine(scenario, freshaDepositFee()),
+  ];
+
+  const shared = sharedNotices(scenario);
+  const assumptions = [...shared.assumptions, assumption('fresha-plan-from-bookable-team-members')];
+  const warnings = [...shared.warnings];
+
+  if (marketplaceClients > 0) {
+    assumptions.push(assumption('fresha-first-appointment-equals-average-appointment-value'));
+    warnings.push(warning('fresha-marketplace-cap-unresolved'));
+  }
+
+  const base = {
+    provider: 'fresha' as const,
+    currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    assumptions,
+  };
+
+  if (subscription.status === 'custom-pricing') {
+    return {
+      ...base,
+      status: 'custom-pricing',
+      amounts: null,
+      warnings: [warning('fresha-custom-pricing-above-team-limit'), ...warnings],
+    };
+  }
+
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered), warnings };
+}
+
+/* --------------------------------- Nearcut --------------------------------- */
+
+/**
+ * Free for You: £0 for the shop; the customer's extra booking charge is
+ * deliberately never guessed or added to the shop cost.
+ * Subscription: customer fee is removed, but subscription needs a shop quote.
+ */
+function calculateNearcut(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const subscription = scenario.nearcutSubscription;
+  const quotePence = subscription ? gbpToPence(scenario.nearcutMonthlyQuoteGbp) : 0;
+  const freeMonthly = requireVerifiedNearcutFact('freeForYouMonthlySubscription');
+  const freePayments = requireVerifiedNearcutFact('freeForYouOnlinePayments');
+  const quoteMissing = subscription && quotePence === 0;
+  const paymentUnknown = subscription && scenario.includeDepositProcessing && scenario.depositBookingsPerMonth > 0;
+
+  const lines: PenceLine[] = [
+    {
+      id: 'nearcut-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: quoteMissing ? null : subscription ? quotePence : gbpToPence(freeMonthly.amountGbp!),
+      unitPence: quoteMissing ? null : subscription ? quotePence : gbpToPence(freeMonthly.amountGbp!),
+      vatApplies: subscription, quantity: 1,
+    },
+    {
+      id: 'nearcut-deposit-processing', category: 'payment-processing',
+      status: paymentUnknown ? 'custom-pricing' : scenario.includeDepositProcessing ? 'calculated' : 'not-included',
+      pence: paymentUnknown ? null : 0,
+      unitPence: paymentUnknown ? null : scenario.includeDepositProcessing && !subscription ? gbpToPence(freePayments.amountGbp!) : null,
+      vatApplies: false,
+      quantity: scenario.includeDepositProcessing ? scenario.depositBookingsPerMonth : 0,
+      ...(scenario.includeDepositProcessing && !subscription ? { paymentMethod: 'nearcut-free-online-payments' as const } : {}),
+    },
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption(subscription ? 'nearcut-subscription-quote' : 'nearcut-free-client-charge'),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [];
+  if (quoteMissing) warnings.push(warning('nearcut-quoted-cost-unknown'));
+  if (paymentUnknown) {
+    assumptions.push(assumption('nearcut-subscription-unknown-payments'));
+    warnings.push(warning('nearcut-processing-unresolved'));
+  }
+  if (!subscription) {
+    warnings.push(warning('nearcut-client-charge-not-universal'));
+    if (scenario.includeDepositProcessing) assumptions.push(assumption('nearcut-free-online-payments'));
+  }
+  const base = {
+    provider: 'nearcut' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing || paymentUnknown) return { ...base, status: 'custom-pricing', amounts: null };
+  return { ...base, status: 'calculated', amounts: summarise(lines, scenario.vatRegistered) };
+}
+
+
+/* ---------------------------------- Timely --------------------------------- */
+
+/**
+ * Public Timely UK subscription price is unverified: only use the customer's
+ * actual full monthly invoice total (including any VAT). No currency conversion.
+ * The amount is cash paid and the embedded VAT is NOT split or reclaim-estimated.
+ * Deposit fees use TimelyPay's confirmed UK domestic online rate (5 Aug 2026).
+ */
+function calculateTimely(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const invoiceGbp = resolveTimelyMonthlyShopQuoteGbp(scenario.timelyMonthlyInvoiceGbp);
+  const quoteMissing = invoiceGbp === null;
+  const domestic = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+  if (!('percent' in domestic && 'fixedGbp' in domestic)) throw new Error('Missing UK TimelyPay online processing rate');
+  const invoicePence = quoteMissing ? null : gbpToPence(invoiceGbp);
+  const lines: PenceLine[] = [
+    {
+      id: 'timely-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: invoicePence, unitPence: invoicePence, quantity: 1,
+      vatApplies: false, // VAT already IN the invoice quote: do not add it a second time.
+    },
+    depositProcessingLine(scenario, {
+      id: 'timely-deposit-processing',
+      paymentMethod: 'timelypay-domestic-uk-online',
+      percent: domestic.percent,
+      fixedPence: gbpToPence(domestic.fixedGbp),
+      vatApplies: false, // published processing rate; unknown tax handled in caveat.
+    }),
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('timely-actual-invoice-including-vat'),
+    ...(scenario.includeDepositProcessing ? [assumption('timely-domestic-uk-processing')] : []),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [warning('timely-vat-not-separated')];
+  if (quoteMissing) warnings.push(warning('timely-quote-unknown'));
+  const base = {
+    provider: 'timely' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing) return { ...base, status: 'custom-pricing', amounts: null };
+  const computed = summarise(lines, false);
+  return { ...base, status: 'calculated', amounts: { ...computed, estimatedNetCostIfVatRecoverableGbp: null } };
+}
+
+/* ---------------------------------- Timely --------------------------------- */
+
+/**
+ * Public Timely UK subscription price is unverified: only use the customer's
+ * actual full monthly invoice total (including any VAT). No currency conversion.
+ * The amount is cash paid and the embedded VAT is NOT split or reclaim-estimated.
+ * Deposit fees use TimelyPay's confirmed UK domestic online rate (5 Aug 2026).
+ */
+function calculateTimely(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const invoiceGbp = resolveTimelyMonthlyShopQuoteGbp(scenario.timelyMonthlyInvoiceGbp);
+  const quoteMissing = invoiceGbp === null;
+  const domestic = requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
+  if (!('percent' in domestic && 'fixedGbp' in domestic)) throw new Error('Missing UK TimelyPay online processing rate');
+  const invoicePence = quoteMissing ? null : gbpToPence(invoiceGbp);
+  const lines: PenceLine[] = [
+    {
+      id: 'timely-subscription', category: 'subscription',
+      status: quoteMissing ? 'custom-pricing' : 'calculated',
+      pence: invoicePence, unitPence: invoicePence, quantity: 1,
+      vatApplies: false, // VAT already IN the invoice quote: do not add it a second time.
+    },
+    depositProcessingLine(scenario, {
+      id: 'timely-deposit-processing',
+      paymentMethod: 'timelypay-domestic-uk-online',
+      percent: domestic.percent,
+      fixedPence: gbpToPence(domestic.fixedGbp),
+      vatApplies: false, // published processing rate; unknown tax handled in caveat.
+    }),
+  ];
+  const assumptions: EngineNotice<AssumptionCode>[] = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('timely-actual-invoice-including-vat'),
+    ...(scenario.includeDepositProcessing ? [assumption('timely-domestic-uk-processing')] : []),
+  ];
+  const warnings: EngineNotice<WarningCode>[] = [warning('timely-vat-not-separated')];
+  if (quoteMissing) warnings.push(warning('timely-quote-unknown'));
+  const base = {
+    provider: 'timely' as const, currency: 'GBP' as const,
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem), assumptions, warnings,
+  };
+  if (quoteMissing) return { ...base, status: 'custom-pricing', amounts: null };
+  const computed = summarise(lines, false);
+  return { ...base, status: 'calculated', amounts: { ...computed, estimatedNetCostIfVatRecoverableGbp: null } };
+}
+
+/* ---------------------------------- Setora --------------------------------- */
+
+/**
+ * One location, standard non-promotional subscription. Setora explicitly says
+ * no per-staff charge, no booking commission and no Stripe markup. Its current
+ * barber pricing page says no VAT is added; that statement can change.
+ * Optional SMS credits and unknown domain/setup costs are excluded, never
+ * silently modelled as being free.
+ */
+function calculateSetora(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const subscriptionPence = gbpToPence(requireVerifiedSetoraFact('canonicalMonthlyGbp').value);
+  const staffPence = gbpToPence(requireVerifiedSetoraFact('additionalStaffSubscriptionGbp').value);
+  const commissionPercent = requireVerifiedSetoraFact('platformBookingCommissionPercent').value;
+  const vatApplies = requireVerifiedSetoraFact('vatCurrentlyAdded').value;
+  const extraStaff = Math.max(0, scenario.bookableBarbers - 1);
+  const lines: PenceLine[] = [
+    {
+      id: 'setora-subscription', category: 'subscription', status: 'calculated',
+      pence: subscriptionPence, unitPence: subscriptionPence,
+      quantity: 1, vatApplies,
+    },
+    {
+      id: 'setora-additional-staff', category: 'team-or-users', status: 'calculated',
+      pence: extraStaff * staffPence, unitPence: staffPence,
+      quantity: extraStaff, vatApplies,
+    },
+    {
+      id: 'setora-commission', category: 'commission', status: 'calculated',
+      pence: percentOfPence(gbpToPence(scenario.averageAppointmentValueGbp) * scenario.monthlyAppointments, commissionPercent),
+      unitPence: 0, quantity: 0, vatApplies,
+    },
+    depositProcessingLine(scenario, {
+      id: 'setora-deposit-processing',
+      paymentMethod: 'stripe-setora-standard-uk-card',
+      percent: STRIPE_UK_STANDARD_CARD_PERCENT,
+      fixedPence: gbpToPence(STRIPE_UK_STANDARD_CARD_FIXED_GBP),
+      vatApplies: STRIPE_FEE_VAT_CHARGED,
+    }),
+  ];
+  const assumptions = [
+    ...sharedNotices(scenario).assumptions,
+    assumption('setora-current-vat'),
+    assumption('setora-sms-excluded'),
+  ];
+  if (scenario.includeDepositProcessing) {
+    assumptions.push(assumption('setora-standard-stripe-benchmark'));
+  }
+  return {
+    provider: 'setora',
+    status: 'calculated',
+    currency: 'GBP',
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    amounts: summarise(lines, scenario.vatRegistered),
+    assumptions,
+    warnings: [],
+  };
+}
+
+/* --------------------------------- KERSIVO --------------------------------- */
+
+function calculateKersivo(scenario: CostScenarioInput): ProviderMonthlyResult {
+  const subscriptionPence = gbpToPence(SAAS_MONTHLY_GBP);
+  const additionalBarbers = Math.max(scenario.bookableBarbers - 1, 0);
+
+  const lines: PenceLine[] = [
+    {
+      id: 'kersivo-subscription',
+      category: 'subscription',
+      status: 'calculated',
+      pence: subscriptionPence,
+      vatApplies: SAAS_ADDS_VAT,
+      quantity: 1,
+      unitPence: subscriptionPence,
+    },
+    {
+      id: 'kersivo-additional-barbers',
+      category: 'team-or-users',
+      status: 'calculated',
+      pence: 0,
+      vatApplies: SAAS_ADDS_VAT,
+      quantity: additionalBarbers,
+      unitPence: 0,
+    },
+    {
+      id: 'kersivo-commission',
+      category: 'commission',
+      status: 'calculated',
+      pence: 0,
+      vatApplies: SAAS_ADDS_VAT,
+      quantity: 0,
+      unitPence: 0,
+    },
+    depositProcessingLine(scenario, {
+      id: 'kersivo-deposit-processing',
+      paymentMethod: 'stripe-checkout-standard-uk-card',
+      percent: STRIPE_UK_STANDARD_CARD_PERCENT,
+      fixedPence: gbpToPence(STRIPE_UK_STANDARD_CARD_FIXED_GBP) + gbpToPence(KERSIVO_DEPOSIT_APPLICATION_FEE_GBP),
+      vatApplies: STRIPE_FEE_VAT_CHARGED,
+    }),
+  ];
+
+  const shared = sharedNotices(scenario);
+  const assumptions = [...shared.assumptions, assumption('kersivo-additional-barbers-included')];
+  if (!SAAS_ADDS_VAT) assumptions.push(assumption('kersivo-no-vat-added'));
+  if (scenario.includeDepositProcessing) {
+    assumptions.push(assumption('kersivo-stripe-standard-uk-card'), assumption('kersivo-stripe-fee-payer'));
+    if (!STRIPE_FEE_VAT_CHARGED) assumptions.push(assumption('stripe-fees-no-vat'));
+  }
+
+  return {
+    provider: 'kersivo',
+    status: 'calculated',
+    currency: 'GBP',
+    depositProcessingIncluded: scenario.includeDepositProcessing,
+    lineItems: lines.map(toLineItem),
+    amounts: summarise(lines, scenario.vatRegistered),
+    assumptions,
+    warnings: shared.warnings,
+  };
+}
+
+/* ---------------------------------- Entry ---------------------------------- */
+
+export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalculation {
+  const errors = validateCostScenario(input);
+  if (errors.length > 0) return { ok: false, errors };
+
+  const scenario: CostScenarioInput = { ...input };
+  const effectiveMarketplaceClients = scenario.splitMarketplaceAssumptions
+    ? { booksyBoost: scenario.booksyBoostClients, freshaMarketplace: scenario.freshaMarketplaceClients }
+    : { booksyBoost: scenario.marketplaceClients, freshaMarketplace: scenario.marketplaceClients };
+
+  return {
+    ok: true,
+    scenario,
+    effectiveMarketplaceClients,
+    assumptions: [
+      assumption(scenario.splitMarketplaceAssumptions ? 'split-marketplace-clients' : 'shared-marketplace-clients'),
+      ...(scenario.includeDepositProcessing ? DEPOSIT_SCENARIO_ASSUMPTIONS.map(assumption) : []),
+    ],
+    providers: [
+      calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
+      calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
+      calculateNearcut(scenario),
+      calculateTimely(scenario),
+      calculateSetora(scenario),
+      calculateKersivo(scenario),
+    ],
+  };
+}  'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
+  'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
+  'phorest-processing-unknown': 'PhorestPay deposit-processing rates for this shop are unverified. A complete total cannot be shown when deposit processing is selected.',
+};
+
+type ProviderResultBase = {
+  provider: ProviderId;
+  currency: 'GBP';
+  depositProcessingIncluded: boolean;
+  lineItems: readonly CostLineItem[];
+  assumptions: readonly EngineNotice<AssumptionCode>[];
+  warnings: readonly EngineNotice<WarningCode>[];
+};
+
+export type CalculatedProviderResult = ProviderResultBase & {
+  status: 'calculated';
+  amounts: MonthlyAmounts;
+};
+
+export type CustomPricingProviderResult = ProviderResultBase & {
+  status: 'custom-pricing';
+  amounts: null;
+};
+
+export type ProviderMonthlyResult = CalculatedProviderResult | CustomPricingProviderResult;
+
+export type MonthlyCostCalculation =
+  | {
+      ok: true;
+      scenario: CostScenarioInput;
+      effectiveMarketplaceClients: { booksyBoost: number; freshaMarketplace: number; treatwellMarketplace: number; vagaroMarketplace: number };
+      assumptions: readonly EngineNotice<AssumptionCode>[];
+      providers: readonly [ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult, ProviderMonthlyResult];
+    }
+  | { ok: false; errors: readonly ValidationIssue[] };
+
+/* --------------------------------- Helpers --------------------------------- */
+
+const assumption = (code: AssumptionCode): EngineNotice<AssumptionCode> => ({
+  code,
+  message: ASSUMPTION_MESSAGES[code],
+});
+
+const warning = (code: WarningCode): EngineNotice<WarningCode> => ({
+  code,
+  message: WARNING_MESSAGES[code],
+});
+
+/** Internal line representation in integer pence. */
+type PenceLine = Omit<CostLineItem, 'exVatGbp' | 'unitExVatGbp'> & {
+  pence: number | null;
+  unitPence: number | null;
+};
+
+function toLineItem(line: PenceLine): CostLineItem {
+  const { pence, unitPence, ...rest } = line;
+  return {
+    ...rest,
+    exVatGbp: pence === null ? null : penceToGbp(pence),
+    unitExVatGbp: unitPence === null ? null : penceToGbp(unitPence),
+  };
+}
+
+type DepositFee = {
+  id: 'booksy-deposit-processing' | 'fresha-deposit-processing' | 'nearcut-deposit-processing' | 'timely-deposit-processing' | 'setora-deposit-processing' | 'kersivo-deposit-processing' | 'treatwell-deposit-processing' | 'vagaro-deposit-processing';
   paymentMethod: PaymentMethod;
   percent: number;
   fixedPence: number;
@@ -1155,6 +1793,7 @@ export function calculateMonthlyCosts(input: CostScenarioInput): MonthlyCostCalc
       calculateBooksy(scenario, effectiveMarketplaceClients.booksyBoost),
       calculateFresha(scenario, effectiveMarketplaceClients.freshaMarketplace),
       calculateNearcut(scenario),
+      calculateTimely(scenario),
       calculateTreatwell(scenario, effectiveMarketplaceClients.treatwellMarketplace),
       calculateSetora(scenario),
       calculateSquare(scenario),
