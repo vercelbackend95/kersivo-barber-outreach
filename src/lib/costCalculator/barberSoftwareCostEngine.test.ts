@@ -312,7 +312,7 @@ describe('shared behaviour', () => {
       booksyBoostClients: 10,
       freshaMarketplaceClients: 20,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3, treatwellMarketplace: 3 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 3, freshaMarketplace: 3, treatwellMarketplace: 3, vagaroMarketplace: 3 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['shared-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').quantity).toBe(3);
     expect(line(result.providers[1], 'fresha-marketplace-fees').quantity).toBe(3);
@@ -326,7 +326,7 @@ describe('shared behaviour', () => {
       booksyBoostClients: 2,
       freshaMarketplaceClients: 5,
     });
-    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5, treatwellMarketplace: 0 });
+    expect(result.effectiveMarketplaceClients).toEqual({ booksyBoost: 2, freshaMarketplace: 5, treatwellMarketplace: 0, vagaroMarketplace: 0 });
     expect(result.assumptions.map((entry) => entry.code)).toEqual(['split-marketplace-clients']);
     expect(line(result.providers[0], 'booksy-boost').exVatGbp).toBe(15);
     expect(line(result.providers[1], 'fresha-marketplace-fees').exVatGbp).toBe(25);
