@@ -112,7 +112,7 @@ describe('barber software cost calculator SEO foundation', () => {
       'How much does Phorest cost in the UK?',
       'How much does Square Appointments cost in the UK?',
       'How team size changes your booking software cost',
-      'Booksy Boost and Fresha Marketplace fees explained',
+      'Booksy Boost, Fresha & Vagaro Marketplace fees explained',
       'How VAT changes the real cost',
       'Payment processing costs',
       'Cost examples for different UK barbershops',
