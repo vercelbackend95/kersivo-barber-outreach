@@ -412,7 +412,7 @@ describe('cost at a glance base pricing', () => {
       `Team: ${formatGbp(team.amountGbp!)} per bookable team member/month + VAT`,
     );
 
-    expect(nearcut.price).toBe('£0.00/month');
+    expect(nearcut.price).toBe(formatGbp(0)+'/month');
     expect(nearcut.priceNote).toContain('customers pay');
     expect(kersivo.price).toBe(`${formatGbp(SAAS_MONTHLY_GBP)}/month per location`);
     expect(kersivo.priceNote).toBe('Additional barbers included');
