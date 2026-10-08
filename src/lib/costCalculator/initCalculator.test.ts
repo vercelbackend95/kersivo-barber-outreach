@@ -186,6 +186,40 @@ describe('initial calculation', () => {
   });
 });
 
+describe('Nearcut browser integration', () => {
+  it('defaults to Free for You, £0 shop subscription and visibly separates client booking fees', () => {
+    expect(total('nearcut')).toBe('£0.00');
+    expect(cardEl('nearcut').querySelector('[data-slot="client-fee-note"]')!.textContent).toContain('NOT a universal rate');
+    expect(cardEl('nearcut').dataset.state).toBe('calculated');
+    expect(cell('nearcut', 'nearcut-subscription')).toBe('£0.00');
+  });
+
+  it('supports an actual Subscription quote and shows VAT in the cash total', () => {
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, true);
+    expect($(`#${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}`).hidden).toBe(false);
+    expect(total('nearcut')).toBe('Custom pricing');
+    setNumber(NEARCUT_QUOTE_FIELD.id, '80');
+    expect(total('nearcut')).toBe('£96.00');
+    expect(cardEl('nearcut').querySelector('[data-slot="client-fee-note"]')!.textContent).toContain('removes the client booking charge');
+    choosePeriod('annual');
+    expect(total('nearcut')).toBe('£1,152.00');
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, false);
+    expect(total('nearcut')).toBe('£0.00');
+  });
+
+  it('will not invent Nearcut Subscription payment fees when deposit processing is enabled', () => {
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, true);
+    setNumber(NEARCUT_QUOTE_FIELD.id, '80');
+    enableDeposits('100');
+    expect(total('nearcut')).toBe('Custom pricing');
+    expect(cell('nearcut', 'nearcut-deposit-processing')).toBe('Custom pricing');
+    expect(warnings('nearcut').join(' ')).toContain('plan-specific confirmation');
+    toggle(NEARCUT_SUBSCRIPTION_TOGGLE.id, false);
+    expect(total('nearcut')).toBe('£0.00');
+    expect(summary('nearcut','payments')).toBe('£0.00');
+  });
+});
+
 describe('Booksy', () => {
   it('reacts to barber count and shows additional-user quantity', () => {
     setNumber('calc-barbers', '5');
