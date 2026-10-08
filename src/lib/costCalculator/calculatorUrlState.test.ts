@@ -25,6 +25,10 @@ const FULL: CostScenarioInput = {
   splitMarketplaceAssumptions: true,
   booksyBoostClients: 8,
   freshaMarketplaceClients: 15,
+  vagaroMarketplaceClients: 7,
+  vagaroDisplayedOffer: true,
+  vagaroMySite: false,
+  vagaroAssumeVat: false,
   freshaSmartWebsite: true,
   freshaClientLoyalty: true,
   nearcutSubscription: true,
@@ -48,6 +52,10 @@ describe('scenario query parameters', () => {
       splitMarketplaceAssumptions: 'split',
       booksyBoostClients: 'bc',
       freshaMarketplaceClients: 'fc',
+      vagaroMarketplaceClients: 'vc',
+      vagaroDisplayedOffer: 'vo',
+      vagaroMySite: 'vm',
+      vagaroAssumeVat: 'vv',
       freshaSmartWebsite: 'sw',
       freshaClientLoyalty: 'loyalty',
       nearcutSubscription: 'nc',
@@ -64,7 +72,7 @@ describe('scenario query parameters', () => {
 describe('encodeScenarioQuery', () => {
   it('encodes the default scenario deterministically and round-trips it', () => {
     const query = encodeScenarioQuery(DEFAULT_SCENARIO, 'monthly');
-    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&sw=0&loyalty=0&nc=0&nq=0&vat=0&dp=0&db=0&period=m');
+    expect(query).toBe('b=3&a=400&v=25&m=0&boost=0&split=0&bc=0&fc=0&vc=0&vo=1&vm=0&vv=0&sw=0&loyalty=0&nc=0&nq=0&vat=0&dp=0&db=0&period=m');
     expect(decode(query)).toEqual({ scenario: DEFAULT_SCENARIO, period: 'monthly', hasScenarioParams: true });
   });
 
