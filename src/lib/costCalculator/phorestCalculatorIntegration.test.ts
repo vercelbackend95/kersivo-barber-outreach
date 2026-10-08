@@ -89,5 +89,6 @@ describe('Phorest: safely integrated into the cost calculator', () => {
     expect(defaultView.providers.find(x=>x.id==='phorest')?.total).toBe('Custom pricing');
     const view=buildCalculatorView(scenario,'monthly');
     expect(view.providers.find(x=>x.id==='phorest')?.total).toContain('150.60');
+    expect(view.providers.find(x=>x.id==='phorest')?.customNote).toContain('not the full Phorest bill');
   });
 });
