@@ -8,6 +8,8 @@ import {
   CALC_PANEL_LABEL,
   FRESHA_ADD_ONS,
   FRESHA_ADD_ONS_LEGEND,
+  VAGARO_OPTIONS,
+  VAGARO_ADDONS_LEGEND,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
   PHOREST_QUOTE_FIELD,
@@ -40,7 +42,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 >
   <div class="calc-panel__head">
     <h2 id="calc-panel-title" class="calc-panel__label">{CALC_PANEL_LABEL}</h2>
-    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Treatwell · Setora · Square · Phorest · KERSIVO</span>
+    <span class="calc-panel__models" aria-hidden="true">Booksy · Fresha · Nearcut · Treatwell · Setora · Square · Phorest · Vagaro · KERSIVO</span>
   </div>
 
   <div class="calc-panel__core">
@@ -214,7 +216,7 @@ const describedBy = (id: string, withHelper: boolean) =>
   <details class="calc-advanced">
     <summary class="calc-advanced__summary">
       <span>{ADVANCED_COSTS_LABEL}</span>
-      <span class="calc-advanced__hint">VAT, Nearcut, Treatwell quote, Square plan, Phorest quote, add-ons, deposits</span>
+      <span class="calc-advanced__hint">VAT, Vagaro, Nearcut, Treatwell quote, Square plan, Phorest quote, add-ons, deposits</span>
       <span class="calc-advanced__chevron" aria-hidden="true"></span>
     </summary>
 
@@ -235,6 +237,20 @@ const describedBy = (id: string, withHelper: boolean) =>
               </label>
             ))
           }
+        </div>
+      </fieldset>
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">{VAGARO_ADDONS_LEGEND}</legend>
+        <div class="calc-addons">
+          {VAGARO_OPTIONS.map((option) => (
+            <label class="calc-check calc-check--row" for={option.id}>
+              <input id={option.id} class="calc-check__input" type="checkbox" name={option.name} checked={option.defaultOn} aria-describedby={`${option.id}-helper`} />
+              <span class="calc-check__box" aria-hidden="true" />
+              <span class="calc-check__label">{option.label}</span>
+              <span id={`${option.id}-helper`} class="calc-check__meta">{option.helper}</span>
+            </label>
+          ))}
         </div>
       </fieldset>
 
