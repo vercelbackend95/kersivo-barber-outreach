@@ -150,7 +150,7 @@ describe('homepage SEO phase 1: headings', () => {
       'Switch barber booking platforms without interrupting bookings',
     );
     expect(text(between(switcher, '<p class="landing-switcher-reassurance__lead">', '</p>'))).toBe(
-      'Already using Booksy, Fresha or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
+      'Already using Booksy, Fresha, Setora or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
     );
   });
 });

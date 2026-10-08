@@ -19,7 +19,7 @@ const prefix = '../../components/setoraAlternative/';
 describe('Setora Alternative landing page', () => {
   it('uses unique canonical and indexable UK-focused metadata', () => {
     expect(SETORA_ALTERNATIVE_PAGE_PATH).toBe('/setora-alternative');
-    expect(SETORA_ALTERNATIVE_TITLE).toContain('Setora Alternative UK');
+    expect(SETORA_ALTERNATIVE_TITLE).toContain('Setora Alternative for UK Barbershops');
     expect(SETORA_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(65);
     expect(SETORA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(page).toContain('canonicalPath={SETORA_ALTERNATIVE_PAGE_PATH}');
@@ -53,17 +53,19 @@ describe('Setora Alternative landing page', () => {
     expect((schema.mainEntity as unknown[]).length).toBe(SETORA_ALTERNATIVE_FAQ_ITEMS.length);
     expect(page).toContain('faqs={SETORA_ALTERNATIVE_FAQ_ITEMS}');
   });
-  it('does not hide Setora strengths, pricing conflict, or fabricate £39 standard pricing', () => {
+  it('preserves current Setora pricing and evidence', () => {
     const costs=read(prefix+'SetoraCosts.astro');
     const facts=read('setoraFacts.ts');
     const compare=read(prefix+'SetoraCompare.astro');
     const pricing=requireVerifiedSetoraFact('canonicalMonthlyGbp');
     expect(pricing.value).toBe(59);
     expect(costs).toContain('canonical');
-    expect(costs).toContain('pricing discrepancy');
-    expect(facts).toContain('legacyBarberLandingMonthlyGbp');
+    expect(costs).toContain('no VAT currently added');
+    expect(facts).toContain('vatCurrentlyAdded');
     expect(compare).toContain('data-setora-comparison');
     expect(compare).toContain('src="/images/brand/kersivo-mark.png"');
+    const iconGenerator = read('../../../scripts/generate-favicons.mjs');
+    expect(iconGenerator).toContain('kersivo-mark.png');
     expect(compare).not.toMatch(/>\s*fresha\s*<\/span>/i);
     expect(SETORA_SOURCES.some(x=>x.url.includes('setora.co.uk'))).toBe(true);
   });
@@ -74,5 +76,8 @@ describe('Setora Alternative landing page', () => {
     expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
     expect(robots).not.toContain('Disallow: /setora');
     expect(read(prefix+'SetoraFit.astro')).toContain('/nearcut-alternative');
+    expect(read('../../components/landingSwitcherReassurance.astro')).toContain('<a href="/setora-alternative">Setora</a>');
+    expect(read('../../components/contact16.astro')).toContain('<option value="setora">Setora</option>');
+    expect(read('../../pages/api/contact.ts')).toContain("'setora'");
   });
 });

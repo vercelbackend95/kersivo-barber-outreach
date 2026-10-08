@@ -18,12 +18,10 @@ describe('Setora UK commercial source of truth', () => {
     expect(getSetoraSource('pricing').url).toBe('https://www.setora.co.uk/pricing');
   });
 
-  it('does NOT silently use obsolete/conflicting £39 barber-page price', () => {
-    const conflict=SETORA_UK_COMMERCIAL_FACTS.legacyBarberLandingMonthlyGbp;
-    expect(conflict.status).toBe('conflicting');
-    expect(conflict.value).toBe(39);
-    expect(conflict.note).toMatch(/contradict/i);
-    expect(()=>requireVerifiedSetoraFact('legacyBarberLandingMonthlyGbp')).toThrow(/conflicting/);
+  it('checks matching official prices and current VAT statement', () => {
+    expect(requireVerifiedSetoraFact('barberLandingMonthlyGbp').value).toBe(59);
+    expect(requireVerifiedSetoraFact('vatCurrentlyAdded').value).toBe(false);
+    expect(getSetoraSource('barbers').url).toBe('https://www.setora.co.uk/barbershop-booking-software');
   });
 
   it('does NOT assert that an own domain purchase is included in Setora', () => {
