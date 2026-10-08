@@ -18,6 +18,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/about',
   'https://kersivo.co.uk/booksy-alternative',
   'https://kersivo.co.uk/fresha-alternative',
+  'https://kersivo.co.uk/squire-alternative',
   'https://kersivo.co.uk/barber-software-cost-calculator',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
@@ -40,9 +41,9 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(11);
+    expect(entries).toHaveLength(12);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(11);
+    expect(new Set(locs).size).toBe(12);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
@@ -51,6 +52,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-01');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
@@ -72,7 +74,7 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(11);
+    expect(urlMatches).toHaveLength(12);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
@@ -83,7 +85,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-01</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(10);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(11);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');
