@@ -168,7 +168,7 @@ export function applyScenarioToForm(form: HTMLFormElement, results: HTMLElement,
   if (periodInput) periodInput.checked = true;
 
   const advanced = form.querySelector<HTMLDetailsElement>('details.calc-advanced');
-  if (advanced && ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key])) advanced.open = true;
+  if (advanced && (ADVANCED_SCENARIO_KEYS.some((key) => scenario[key] !== DEFAULT_SCENARIO[key]) || scenario.squarePlan !== DEFAULT_SCENARIO.squarePlan)) advanced.open = true;
 }
 
 async function copyText(doc: Document, text: string): Promise<boolean> {
