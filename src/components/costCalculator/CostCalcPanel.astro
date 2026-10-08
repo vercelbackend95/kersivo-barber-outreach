@@ -23,6 +23,7 @@ import {
   SPLIT_FIELDS,
   VAT_OPTIONS,
 } from '@/lib/costCalculator/calculatorUi';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 
 const helperId = (id: string) => `${id}-helper`;
 const errorId = (id: string) => `${id}-error`;
@@ -301,9 +302,9 @@ const describedBy = (id: string, withHelper: boolean) =>
       <fieldset class="calc-fieldset">
         <legend class="calc-field__label">Treatwell · your confirmed quote</legend>
         <p class="calc-field__helper">
-          The published 35% + VAT is an eligible new-marketplace booking commission, not an all-bookings charge.
+          The published {requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT is an eligible new-marketplace booking commission, not an all-bookings charge.
           Under the September 2026 terms a customer may count as new after 365 days without a successful appointment.
-          Enter only eligible bookings above. Treatwell also lists 2.5% + VAT online prepayment processing.
+          Enter only eligible bookings above. Treatwell also lists {requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT online prepayment processing.
         </p>
         <div class="calc-field">
           <label class="calc-field__label" for={TREATWELL_QUOTE_FIELD.id}>{TREATWELL_QUOTE_FIELD.label}</label>
