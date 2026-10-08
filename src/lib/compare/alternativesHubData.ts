@@ -7,7 +7,7 @@
  * Absence of evidence is 'unverified', never 'no'.
  */
 import { HUB_CRITERION_IDS, type HubCriterionId } from '@/lib/compare/alternativesHubCriteria';
-import { SMS_INCLUDED_WITH_ALLOWANCE_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { DATA_EXPORT_RETENTION_CLAIM, SMS_INCLUDED_WITH_ALLOWANCE_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { BOOKSY_ADDITIONAL_USER_GBP, BOOKSY_BASE_PRICE_GBP, BOOKSY_FACTS_CHECKED_ISO, BOOKSY_SOURCES } from '@/lib/seo/booksyFacts';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { FRESHA_FACTS_CHECKED_ISO, FRESHA_SOURCES, formatGbp, requireVerifiedFreshaFact } from '@/lib/seo/freshaFacts';
@@ -116,7 +116,7 @@ export const KERSIVO_HUB_PLATFORM: HubPlatform = {
   attributes: {
     zeroCommission: yes('0% KERSIVO commission. Standard Stripe processing fees apply separately.', 'pricing'),
     ownDomain: yes('Full KERSIVO includes your own branded website and one standard domain per location.', 'pricing'),
-    clientDataExport: yes('A free CSV export of available business data can be requested from KERSIVO support during the 60-day post-subscription retention period. This is not a self-service dashboard export.', 'pricing'),
+    clientDataExport: yes(`${DATA_EXPORT_RETENTION_CLAIM} This export is requested through support, not downloaded from a self-service dashboard.`, 'pricing'),
     builtForBarbers: yes('Built specifically for independent UK barbershops.', 'pricing'),
     biggerTeams: yes('Full KERSIVO supports more than 4 bookable barbers per location, subject to fair use.', 'pricing'),
     deposits: yes('£5 deposit or Pay in full; Full KERSIVO adds editable payment controls.', 'pricing'),
