@@ -72,8 +72,8 @@ describe('Phorest: safely integrated into the cost calculator', () => {
       .toContainEqual({field:'phorestQuoteVatPercent',code:'invalid-phorest-vat'});
     const result=calculateMonthlyCosts(DEFAULT_SCENARIO);
     if(!result.ok) throw new Error('invalid');
-    expect(result.providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','setora','square','phorest','kersivo']);
-    expect(result.providers[6].status).toBe('calculated');
+    expect(result.providers.map(x=>x.provider)).toEqual(['booksy','fresha','nearcut','treatwell','setora','square','phorest','kersivo']);
+    expect(result.providers[7].status).toBe('calculated');
   });
   it('quotes round-trip through shareable URL and project only confirmed values',()=>{
     const scenario={...DEFAULT_SCENARIO,phorestMonthlyQuoteGbp:125.5,phorestQuoteVatPercent:20};
