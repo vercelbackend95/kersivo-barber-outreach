@@ -46,7 +46,7 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(16);
+    expect(entries).toHaveLength(17);
     expect(locs).toEqual([...EXPECTED_LOCS]);
     expect(new Set(locs).size).toBe(17);
 
@@ -84,7 +84,7 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(16);
+    expect(urlMatches).toHaveLength(17);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
@@ -95,7 +95,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(15);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(16);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');
