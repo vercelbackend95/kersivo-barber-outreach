@@ -18,6 +18,7 @@ import {
   DEPOSIT_PROCESSING_TOGGLE,
   NEARCUT_SUBSCRIPTION_TOGGLE,
   NEARCUT_QUOTE_FIELD,
+  TIMELY_INVOICE_FIELD,
   SPLIT_FIELDS,
   PERIOD_OPTIONS,
   PROVIDER_RESULTS,
@@ -78,6 +79,7 @@ function mount({ prePaint = false } = {}) {
       ${FRESHA_ADD_ONS.map((addOn) => `<input id="${addOn.id}" name="${addOn.name}" type="checkbox" />`).join('')}
       <input id="${NEARCUT_SUBSCRIPTION_TOGGLE.id}" name="${NEARCUT_SUBSCRIPTION_TOGGLE.name}" type="checkbox" role="switch" aria-controls="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${NEARCUT_SUBSCRIPTION_TOGGLE.fieldsId}" hidden>${numberField(NEARCUT_QUOTE_FIELD)}</div>
+      ${numberField(TIMELY_INVOICE_FIELD)}
       <input id="${DEPOSIT_PROCESSING_TOGGLE.id}" name="${DEPOSIT_PROCESSING_TOGGLE.name}" type="checkbox" role="switch"
         aria-controls="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" data-calc-reveal />
       <div id="${DEPOSIT_PROCESSING_TOGGLE.fieldsId}" hidden>${numberField(DEPOSIT_BOOKINGS_FIELD)}</div>
@@ -151,6 +153,7 @@ const URL_SCENARIO: CostScenarioInput = {
   freshaClientLoyalty: false,
   nearcutSubscription: false,
   nearcutMonthlyQuoteGbp: 0,
+  timelyMonthlyInvoiceGbp: 0,
   vatRegistered: true,
   includeDepositProcessing: true,
   depositBookingsPerMonth: 300,
@@ -163,8 +166,8 @@ describe('initial calculation', () => {
     expect(readScenario($<HTMLFormElement>('[data-calc-form]'))).toEqual(DEFAULT_SCENARIO);
     expect(total('booksy')).toBe(engineCash({}, 0));
     expect(total('fresha')).toBe(engineCash({}, 1));
-    expect(total('kersivo')).toBe(engineCash({}, 4));
-    expect(total('setora')).toBe(engineCash({}, 3));
+    expect(total('kersivo')).toBe(engineCash({}, 5));
+    expect(total('setora')).toBe(engineCash({}, 4));
     expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('kersivo')]).toEqual(['£60.00', '£35.82', '£0.00', '£59.00', '£39.00']);
     expect(document.body.innerHTML).not.toContain('£—');
   });
@@ -174,6 +177,7 @@ describe('initial calculation', () => {
       'booksy',
       'fresha',
       'nearcut',
+      'timely',
       'setora',
       'kersivo',
     ]);
@@ -415,10 +419,11 @@ const DEPOSIT_LINE = {
   booksy: 'booksy-deposit-processing',
   fresha: 'fresha-deposit-processing',
   nearcut: 'nearcut-deposit-processing',
+  timely: 'timely-deposit-processing',
   setora: 'setora-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'timely', 'setora', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -456,10 +461,10 @@ describe('booking deposit processing', () => {
     }
   });
 
-  it('updates all five cards with 100 deposits, keeping commission separate', () => {
+  it('updates all six cards with 100 deposits, keeping commission separate', () => {
     enableDeposits('100');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', '£28.00']);
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£39.00', '£28.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£39.00', '£28.00', '£28.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
@@ -472,10 +477,10 @@ describe('booking deposit processing', () => {
   it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
     enableDeposits('100');
     choosePeriod('annual');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00', '£336.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£468.00', '£336.00', '£336.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     choosePeriod('threeYear');
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00', '£1,008.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,404.00', '£1,008.00', '£1,008.00']);
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
   });
 
