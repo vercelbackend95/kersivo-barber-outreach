@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { formatGbp, requireVerifiedFreshaFact } from '@/lib/seo/freshaFacts';
 import { buildBarberCostCalculatorJsonLd } from '@/lib/seo/barberCostCalculatorJsonLd';
 import type { CostScenarioInput, LineItemId } from './barberSoftwareCostEngine';
@@ -246,7 +247,7 @@ describe('calculator results structure', () => {
       ['treatwell-subscription', 'Your quoted monthly subscription'],
       ['treatwell-new-client-commission', 'Qualifying marketplace new-client commission'],
       ['vat', 'VAT (confirmed portions only)'],
-      ['treatwell-deposit-processing', 'Online prepayment processing · 2.5% + VAT'],
+      ['treatwell-deposit-processing', `Online prepayment processing · ${requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent}% + VAT`],
     ]);
     expect(rows('setora')).toEqual([
       ['setora-subscription', 'Subscription / location'],
