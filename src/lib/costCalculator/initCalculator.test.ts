@@ -415,9 +415,10 @@ const DEPOSIT_LINE = {
   booksy: 'booksy-deposit-processing',
   fresha: 'fresha-deposit-processing',
   nearcut: 'nearcut-deposit-processing',
+  setora: 'setora-deposit-processing',
   kersivo: 'kersivo-deposit-processing',
 } as const;
-const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'kersivo'] as const;
+const PROVIDER_IDS = ['booksy', 'fresha', 'nearcut', 'setora', 'kersivo'] as const;
 const depositToggleId = DEPOSIT_PROCESSING_TOGGLE.id;
 const depositFieldId = DEPOSIT_BOOKINGS_FIELD.id;
 
@@ -455,25 +456,26 @@ describe('booking deposit processing', () => {
     }
   });
 
-  it('updates all four cards with 100 deposits, keeping commission separate', () => {
+  it('updates all five cards with 100 deposits, keeping commission separate', () => {
     enableDeposits('100');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00', '£28.00']);
     expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£26.00', '£32.00', '£0.00', '£28.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     expect(detail('fresha', DEPOSIT_LINE.fresha)).toBe('100 deposits/month · estimated £0.32 each before VAT');
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
+    expect(detail('setora', DEPOSIT_LINE.setora)).toContain('illustrative Stripe rate, no Setora markup');
     expect(cell('kersivo', 'kersivo-commission')).toBe('£0.00');
-    expect([total('booksy'), total('fresha'), total('nearcut'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£67.00']);
+    expect([total('booksy'), total('fresha'), total('nearcut'), total('setora'), total('kersivo')]).toEqual(['£91.20', '£74.22', '£0.00', '£87.00', '£67.00']);
     expect(total('booksy')).toBe(engineCash({ includeDepositProcessing: true, depositBookingsPerMonth: 100 }, 0));
   });
 
   it('projects line totals for 12 months and 3 years, keeping unit and quantity monthly', () => {
     enableDeposits('100');
     choosePeriod('annual');
-    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00']);
+    expect(PROVIDER_IDS.map((id) => summary(id, 'payments'))).toEqual(['£312.00', '£384.00', '£0.00', '£336.00', '£336.00']);
     expect(detail('booksy', DEPOSIT_LINE.booksy)).toBe('100 deposits/month · estimated £0.26 each before VAT');
     choosePeriod('threeYear');
-    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00']);
+    expect(PROVIDER_IDS.map((id) => cell(id, DEPOSIT_LINE[id]))).toEqual(['£936.00', '£1,152.00', '£0.00', '£1,008.00', '£1,008.00']);
     expect(detail('kersivo', DEPOSIT_LINE.kersivo)).toBe('100 deposits/month · estimated £0.28 each · standard UK card');
   });
 
