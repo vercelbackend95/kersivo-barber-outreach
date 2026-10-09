@@ -1,0 +1,47 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+const barbers = DEMO_BARBERS.slice(0, 3);
+---
+
+<aside class="bw-panel bw-panel--features" aria-label="Explore the BLACKLINE website sections">
+  <p class="bw-panel__eyebrow">Your website. Your style.</p>
+  <nav class="bw-feature-list" aria-label="BLACKLINE website sections">
+    <a class="bw-feature" href="/demo">
+      <span class="bw-feature__thumb bw-feature__thumb--hero">
+        <img src="/demo/heroimg.webp" width="1800" height="2700" alt="" loading="lazy" />
+        <span class="bw-feature__mini-copy" aria-hidden="true">LOOK<br />SHARPER.</span>
+      </span>
+      <span class="bw-feature__copy"><strong>Hero sections</strong><small>Make a strong first impression.</small></span>
+      <span class="bw-feature__arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="bw-feature" href="/demo/services">
+      <span class="bw-feature__thumb">
+        <img src="/demo/gallery/scissor-cut.webp" width="1333" height="2000" alt="" loading="lazy" />
+      </span>
+      <span class="bw-feature__copy"><strong>Services</strong><small>Show what you offer.</small></span>
+      <span class="bw-feature__arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="bw-feature" href="/demo/barbers">
+      <span class="bw-feature__thumb bw-feature__thumb--team">
+        {barbers.map((barber) => (
+          <img src={barber.image.src} width={barber.image.width} height={barber.image.height} alt="" loading="lazy" />
+        ))}
+      </span>
+      <span class="bw-feature__copy"><strong>Team</strong><small>Introduce your barbers.</small></span>
+      <span class="bw-feature__arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="bw-feature" href="/demo/gallery">
+      <span class="bw-feature__thumb bw-feature__thumb--gallery">
+        <img src="/demo/gallery/fade.webp" width="1333" height="2000" alt="" loading="lazy" />
+        <img src="/demo/gallery/hairline.webp" width="1333" height="2000" alt="" loading="lazy" />
+      </span>
+      <span class="bw-feature__copy"><strong>Gallery</strong><small>Show your work.</small></span>
+      <span class="bw-feature__arrow" aria-hidden="true">›</span>
+    </a>
+    <a class="bw-feature" href="/demo">
+      <span class="bw-feature__thumb bw-feature__thumb--palette" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="bw-feature__copy"><strong>Branding</strong><small>Colours, fonts, your identity.</small></span>
+      <span class="bw-feature__arrow" aria-hidden="true">›</span>
+    </a>
+  </nav>
+</aside>
