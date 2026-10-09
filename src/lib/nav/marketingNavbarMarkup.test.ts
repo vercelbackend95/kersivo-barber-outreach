@@ -25,7 +25,7 @@ describe('marketing navbar markup', () => {
     expect(compareCss).toContain('--hub-red-text: var(--accent-text);');
     expect(compareCss).toContain('--hub-red-fill-hover: var(--accent-hover);');
     expect(compareCss).not.toContain('html:has(.alt-hub)');
-    expect(compareCss).not.toMatch(/#ff1717|rgb\\(255 23 23\\s*\\//i);
+    expect(compareCss).not.toMatch(new RegExp(String.raw`#ff1717|rgb\(255 23 23\s*/`, 'i'));
   });
 
   it('drives desktop and mobile from the same resolved config', () => {
