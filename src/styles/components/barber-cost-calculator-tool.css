@@ -574,6 +574,38 @@ details[open] > summary .calc-advanced__chevron {
   display: grid;
 }
 
+/* Vagaro descriptions are explanatory sentences, not compact right-aligned prices.
+   Keep each option's title and helper in a readable two-line flow at every width. */
+.calc-addons--vagaro .calc-check--row {
+  grid-template-columns: 1.15rem minmax(0, 1fr);
+  column-gap: 0.7rem;
+  row-gap: 0.2rem;
+  align-items: start;
+  padding-block: 0.7rem;
+}
+
+.calc-addons--vagaro .calc-check__box {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin-top: 0.1rem;
+}
+
+.calc-addons--vagaro .calc-check__label {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.calc-addons--vagaro .calc-check__meta {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+}
+
 /* ---------------------------------- Results ---------------------------------- */
 
 .calc-results {

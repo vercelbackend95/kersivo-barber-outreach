@@ -243,7 +243,7 @@ const describedBy = (id: string, withHelper: boolean) =>
 
       <fieldset class="calc-fieldset">
         <legend class="calc-field__label">{VAGARO_ADDONS_LEGEND}</legend>
-        <div class="calc-addons">
+        <div class="calc-addons calc-addons--vagaro">
           {VAGARO_OPTIONS.map((option) => (
             <label class="calc-check calc-check--row" for={option.id}>
               <input id={option.id} class="calc-check__input" type="checkbox" name={option.name} checked={option.defaultOn} aria-describedby={`${option.id}-helper`} />

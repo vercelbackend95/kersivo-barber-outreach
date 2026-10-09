@@ -127,6 +127,17 @@ describe('calculator panel inputs', () => {
     expect(VAT_OPTIONS.defaultValue).toBe('no');
   });
 
+  it('keeps long Vagaro explanations readable and scoped without changing Fresha add-on rows', () => {
+    const css = read('../../styles/components/barber-cost-calculator-tool.css');
+    const vagaro = panelSource.slice(panelSource.indexOf('{VAGARO_ADDONS_LEGEND}'));
+    const fresha = panelSource.slice(panelSource.indexOf('{FRESHA_ADD_ONS_LEGEND}'));
+    expect(vagaro).toContain('<div class="calc-addons calc-addons--vagaro">');
+    expect(fresha).toContain('<div class="calc-addons">');
+    expect(css).toMatch(/\\.calc-addons--vagaro \\.calc-check--row \\{[^}]*grid-template-columns: 1\\.15rem minmax\\(0, 1fr\\)/);
+    expect(css).toMatch(/\\.calc-addons--vagaro \\.calc-check__meta \\{[^}]*grid-column: 2;[^}]*grid-row: 2;[^}]*white-space: normal;/);
+    expect(css).toContain('.calc-addons--vagaro .calc-check__box');
+  });
+
   it('offers an enabled booking deposit processing toggle, off by default, revealing the deposit count', () => {
     expect(DEPOSIT_PROCESSING_TOGGLE.label).toBe('Include booking deposit processing');
     expect(DEPOSIT_PROCESSING_TOGGLE.defaultOn).toBe(false);
