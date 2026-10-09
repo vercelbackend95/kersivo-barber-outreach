@@ -61,17 +61,6 @@
   text-align: center;
 }
 
-.bsw-hero__eyebrow {
-  margin: 0 0 0.85rem;
-  color: var(--accent-text);
-  font-family: var(--font-body);
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
 .bsw-hero__title {
   max-width: 100%;
   margin: 0;
