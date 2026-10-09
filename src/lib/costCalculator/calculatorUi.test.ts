@@ -133,8 +133,12 @@ describe('calculator panel inputs', () => {
     const fresha = panelSource.slice(panelSource.indexOf('{FRESHA_ADD_ONS_LEGEND}'));
     expect(vagaro).toContain('<div class="calc-addons calc-addons--vagaro">');
     expect(fresha).toContain('<div class="calc-addons">');
-    expect(css).toMatch(/\\.calc-addons--vagaro \\.calc-check--row \\{[^}]*grid-template-columns: 1\\.15rem minmax\\(0, 1fr\\)/);
-    expect(css).toMatch(/\\.calc-addons--vagaro \\.calc-check__meta \\{[^}]*grid-column: 2;[^}]*grid-row: 2;[^}]*white-space: normal;/);
+    const rowCss = css.split('.calc-addons--vagaro .calc-check--row {')[1]?.split('}')[0] ?? '';
+    const metaCss = css.split('.calc-addons--vagaro .calc-check__meta {')[1]?.split('}')[0] ?? '';
+    expect(rowCss).toContain('grid-template-columns: 1.15rem minmax(0, 1fr);');
+    expect(metaCss).toContain('grid-column: 2;');
+    expect(metaCss).toContain('grid-row: 2;');
+    expect(metaCss).toContain('white-space: normal;');
     expect(css).toContain('.calc-addons--vagaro .calc-check__box');
   });
 
