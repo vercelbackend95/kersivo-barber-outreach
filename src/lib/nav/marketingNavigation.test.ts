@@ -115,6 +115,8 @@ describe('marketing navigation config', () => {
     expect(compareHrefs).toEqual(
       expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative', '/barber-software-cost-calculator']),
     );
+    expect(compare.featured.map((item) => item.id)).toEqual(['compare-cost-calculator', 'compare-hub']);
+    expect(compare.sections.flatMap((section) => section.items).map((item) => item.id)).not.toContain('compare-hub');
     const tools = resources.sections.find((section) => section.id === 'tools');
     expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
     expect(tools?.items.map((item) => item.href)).toContain('/compare');

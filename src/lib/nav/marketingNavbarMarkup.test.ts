@@ -17,8 +17,17 @@ const allMarkup = [navbar, mobile, panel, link, actions];
 const landingLayout = read('layouts', 'LandingLayout.astro');
 const mainLayout = read('layouts', 'MainLayout.astro');
 const css = read('styles', 'components', 'marketing-navbar.css');
+const compareCss = read('styles', 'components', 'alternatives-hub.css');
 
 describe('marketing navbar markup', () => {
+  it('keeps /compare on the shared marketing red tokens without recolouring the navbar', () => {
+    expect(compareCss).toContain('--hub-red: var(--accent);');
+    expect(compareCss).toContain('--hub-red-text: var(--accent-text);');
+    expect(compareCss).toContain('--hub-red-fill-hover: var(--accent-hover);');
+    expect(compareCss).not.toContain('html:has(.alt-hub)');
+    expect(compareCss).not.toMatch(/#ff1717|rgb\\(255 23 23\\s*\\//i);
+  });
+
   it('drives desktop and mobile from the same resolved config', () => {
     expect(navbar).toContain('const groups = buildMarketingNavigation();');
     expect(navbar).toMatch(/<MarketingMobileNav[\s\S]*groups=\{groups\}/);

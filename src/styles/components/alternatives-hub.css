@@ -1,10 +1,11 @@
 /* KERSIVO Alternatives Hub (/compare) */
 
 .alt-hub {
-  --hub-red: #ff1717;
-  /* Brand red: use the exact KERSIVO colour for all active/primary fills. */
-  --hub-red-fill: #ff1717;
-  --hub-red-fill-hover: #ff1717;
+  --hub-red: var(--accent);
+  --hub-red-text: var(--accent-text);
+  /* Reuse the same brand tokens as the rest of the marketing site. */
+  --hub-red-fill: var(--accent);
+  --hub-red-fill-hover: var(--accent-hover);
   --hub-bg: #050506;
   --hub-surface: #0d0e11;
   --hub-surface-2: #14161a;
@@ -36,8 +37,8 @@
   overflow: hidden;
   padding: clamp(2.5rem, 5vw, 4rem) 0 clamp(1.75rem, 3vw, 2.5rem);
   background:
-    radial-gradient(60% 90% at 92% 10%, rgb(255 23 23 / 0.16), transparent 62%),
-    radial-gradient(40% 60% at 75% 100%, rgb(255 23 23 / 0.06), transparent 70%),
+    radial-gradient(60% 90% at 92% 10%, color-mix(in srgb, var(--hub-red) 16%, transparent), transparent 62%),
+    radial-gradient(40% 60% at 75% 100%, color-mix(in srgb, var(--hub-red) 6%, transparent), transparent 70%),
     linear-gradient(90deg, var(--hub-bg) 0%, var(--hub-bg) 45%, #0b0b0d 100%);
 }
 
@@ -49,7 +50,7 @@
   height: 3px;
   transform: translateX(-50%);
   background: var(--hub-red);
-  box-shadow: 0 0 24px rgb(255 23 23 / 0.7);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--hub-red) 70%, transparent);
   z-index: -1;
 }
 
@@ -88,7 +89,7 @@
 
 .alt-hub-hero__eyebrow {
   margin: 0 0 0.55rem;
-  color: var(--hub-red);
+  color: var(--hub-red-text);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -107,7 +108,7 @@
 }
 
 .alt-hub-hero__accent {
-  color: var(--hub-red);
+  color: var(--hub-red-text);
 }
 
 .alt-hub-hero__lead {
@@ -153,7 +154,7 @@
   height: 2px;
   margin-top: 0.7rem;
   background: var(--hub-red);
-  box-shadow: 0 0 12px rgb(255 23 23 / 0.6);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hub-red) 60%, transparent);
 }
 
 /* ---------- Filter panel ---------- */
@@ -293,10 +294,10 @@
 }
 
 .alt-hub-pill[aria-pressed='true'] {
-  border-color: var(--hub-red);
+  border-color: var(--hub-red-text);
   background: var(--hub-red-fill);
   color: #090a0c;
-  box-shadow: 0 6px 22px rgb(255 23 23 / 0.28);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--hub-red) 28%, transparent);
 }
 
 .alt-hub-pill[aria-pressed='true']:hover {
@@ -441,13 +442,13 @@
 }
 
 .alt-hub-card--featured {
-  border-color: var(--hub-red);
+  border-color: var(--hub-red-text);
   background:
-    radial-gradient(120% 70% at 0% 0%, rgb(255 23 23 / 0.12), transparent 55%),
-    linear-gradient(180deg, #160809, #0d0e11 55%);
+    radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--hub-red) 12%, transparent), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--hub-red) 9%, var(--hub-surface)), var(--hub-surface) 55%);
   box-shadow:
-    0 0 0 1px rgb(255 23 23 / 0.35),
-    0 0 34px rgb(255 23 23 / 0.28),
+    0 0 0 1px color-mix(in srgb, var(--hub-red) 35%, transparent),
+    0 0 34px color-mix(in srgb, var(--hub-red) 28%, transparent),
     0 18px 50px rgb(0 0 0 / 0.5);
 }
 
@@ -550,8 +551,8 @@
 }
 
 .alt-hub-card__price--featured .alt-hub-card__price-label {
-  border-color: rgb(255 23 23 / 0.6);
-  color: #ffb3b3;
+  border-color: color-mix(in srgb, var(--hub-red) 60%, transparent);
+  color: var(--hub-red-text);
 }
 
 /* Score ring */
@@ -592,7 +593,7 @@
 
 .alt-hub-ring--featured .alt-hub-ring__value {
   stroke: var(--hub-red);
-  filter: drop-shadow(0 0 4px rgb(255 23 23 / 0.65));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--hub-red) 65%, transparent));
 }
 
 .alt-hub-ring[data-empty='true'] .alt-hub-ring__value {
@@ -734,14 +735,14 @@
 }
 
 .alt-hub-card__cta--primary {
-  border-color: var(--hub-red);
+  border-color: var(--hub-red-text);
   background: var(--hub-red-fill);
   color: #090a0c;
-  box-shadow: 0 8px 26px rgb(255 23 23 / 0.35);
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--hub-red) 35%, transparent);
 }
 
 .alt-hub-card__cta--primary:hover {
-  border-color: var(--hub-red);
+  border-color: var(--hub-red-text);
   background: var(--hub-red-fill-hover);
 }
 
@@ -792,7 +793,7 @@
 }
 
 .alt-hub-showall__button:hover {
-  border-color: rgb(255 23 23 / 0.7);
+  border-color: color-mix(in srgb, var(--hub-red) 70%, transparent);
   background: #1b1d22;
 }
 
@@ -917,7 +918,7 @@
 }
 
 .alt-hub-guide__list li::marker {
-  color: var(--hub-red);
+  color: var(--hub-red-text);
 }
 
 .alt-hub-guide__links {
@@ -956,7 +957,7 @@
 }
 
 .alt-hub-guide__links a:hover {
-  border-bottom-color: var(--hub-red);
+  border-bottom-color: var(--hub-red-text);
 }
 
 .alt-hub-final__actions {
@@ -1024,7 +1025,7 @@
 .alt-hub summary:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgb(255 23 23 / 0.55);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--hub-red) 55%, transparent);
 }
 
 /* ---------- Responsive ---------- */
@@ -1166,7 +1167,7 @@
   .alt-hub-panel__more {
     background: var(--hub-red-fill);
     color: #fff;
-    border-color: var(--hub-red);
+    border-color: var(--hub-red-text);
     min-height: 44px;
   }
 
@@ -1248,14 +1249,6 @@
   }
 }
 
-/* The marketing navbar shares site-wide tokens. On /compare only, match its
-   accents to the exact KERSIVO red instead of the older muted global red. */
-html:has(.alt-hub) {
-  --accent: #ff1717;
-  --accent-hover: #ff1717;
-  --accent-text: #ff5050;
-}
-
 /* Clean editorial toolbar rather than a separate bordered sorting card. */
 .alt-hub-panel__intro {
   display: block;
@@ -1265,7 +1258,7 @@ html:has(.alt-hub) {
 }
 .alt-hub-panel__eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--hub-red);
+  color: var(--hub-red-text);
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.15em;
@@ -1564,9 +1557,9 @@ html:has(.alt-hub) {
     gap: 0.7rem;
     min-height: 48px;
     width: 100%;
-    border: 1px solid #ff1717;
+    border: 1px solid var(--hub-red);
     border-radius: 12px;
-    background: #ff1717;
+    background: var(--hub-red);
     color: #090a0c;
     font: inherit;
     font-size: 0.92rem;
@@ -1574,8 +1567,7 @@ html:has(.alt-hub) {
     cursor: pointer;
   }
   .alt-hub-panel__apply:hover {
-    background: #ff1717;
-    filter: brightness(1.05);
+    background: var(--hub-red-fill-hover);
   }
   .alt-hub-panel[data-filters-expanded='true'] .alt-hub-panel__meta {
     margin-top: 0.45rem;
