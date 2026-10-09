@@ -1,34 +1,36 @@
 ---
-import { ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronRight, MapPin } from 'lucide-react';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
+import {
+  DEMO_BOOK_HREF,
+  DEMO_CONTACT_HREF,
+  DEMO_HOME_HREF,
+  DEMO_SHOP_HREF,
+} from '@/lib/demo/nav';
 
 const IMG = '/images/barbershop-websites';
 
+// Purposeful navigation to existing BLACKLINE demo pages.
+// Dedicated SEO pages may follow after keyword validation; do not create thin duplicates.
 const rows = [
-  { key: 'hero', label: 'Hero sections', body: 'Make a strong first impression.', href: DEMO_HOME_HREF },
-  { key: 'services', label: 'Services', body: 'Show what you offer.', href: '/demo/services' },
-  { key: 'team', label: 'Team', body: 'Introduce your barbers.', href: '/demo/barbers' },
-  { key: 'gallery', label: 'Gallery', body: 'Show your work.', href: DEMO_GALLERY_HREF },
-  { key: 'branding', label: 'Branding', body: 'Colours, fonts, your identity.', href: DEMO_HOME_HREF },
+  { key: 'branding', label: 'Branding', body: 'Make your website feel like your shop.', href: DEMO_HOME_HREF },
+  { key: 'services', label: 'Services', body: 'Show your cuts, prices and services.', href: '/demo/services' },
+  { key: 'team', label: 'Your Team', body: 'Introduce the people behind the chairs.', href: '/demo/barbers' },
+  { key: 'retail', label: 'Retail Shop', body: 'Sell products for in-shop collection.', href: DEMO_SHOP_HREF },
+  { key: 'booking', label: 'Online Booking', body: 'Let clients book directly on your site.', href: DEMO_BOOK_HREF },
+  { key: 'contact', label: 'Contact & Location', body: 'Make your shop easy to find.', href: DEMO_CONTACT_HREF },
 ] as const;
 ---
 
 <aside class="bsw-panel bsw-features" aria-labelledby="bsw-features-title">
-  <p id="bsw-features-title" class="bsw-features__title">Your website. Your style.</p>
+  <p id="bsw-features-title" class="bsw-features__title">Your website. Your business.</p>
   <ul class="bsw-features__list" role="list">
     {rows.map((row) => (
       <li>
         <a class="bsw-feature" href={row.href}>
           <span class:list={['bsw-thumb', `bsw-thumb--${row.key}`]} aria-hidden="true">
-            {row.key === 'hero' && (
-              <>
-                <img src={`${IMG}/thumb-hero.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
-                <span class="bsw-thumb__mini">
-                  <span class="bsw-thumb__mini-brand">BLACKLINE</span>
-                  <span class="bsw-thumb__mini-head">More than<br />a haircut<span class="bsw-accent">.</span></span>
-                </span>
-              </>
+            {row.key === 'branding' && (
+              <span class="bsw-swatches"><i></i><i></i><i></i></span>
             )}
             {row.key === 'services' && (
               <img src={`${IMG}/thumb-services.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
@@ -37,14 +39,20 @@ const rows = [
               DEMO_BARBERS.map((barber) => (
                 <img src={`${IMG}/team-${barber.slug}.webp`} alt="" width="96" height="150" loading="lazy" decoding="async" />
               ))}
-            {row.key === 'gallery' && (
-              <>
-                <img src={`${IMG}/thumb-gallery-a.webp`} alt="" width="120" height="150" loading="lazy" decoding="async" />
-                <img src={`${IMG}/thumb-gallery-b.webp`} alt="" width="120" height="150" loading="lazy" decoding="async" />
-              </>
+            {row.key === 'retail' && (
+              <img src="/demo/products/matte-clay.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
             )}
-            {row.key === 'branding' && (
-              <span class="bsw-swatches"><i></i><i></i><i></i></span>
+            {row.key === 'booking' && (
+              <span class="bsw-thumb__booking-ui">
+                <CalendarDays size={13} strokeWidth={1.7} />
+                <span class="bsw-thumb__booking-slots"><i>10:00</i><i>11:00</i></span>
+              </span>
+            )}
+            {row.key === 'contact' && (
+              <>
+                <img src="/demo/gallery/interior-detail.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+                <span class="bsw-thumb__location-marker"><MapPin size={16} strokeWidth={2} /></span>
+              </>
             )}
           </span>
           <span class="bsw-feature__text">
