@@ -1,4 +1,5 @@
 import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
+import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import {
   BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
@@ -72,9 +73,9 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
-  { path: '/privacy', lastmod: '2026-10-06' },
+  { path: '/privacy', lastmod: PRIVACY_POLICY_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/cookies.astro. */
-  { path: '/cookies', lastmod: '2026-09-25' },
+  { path: '/cookies', lastmod: COOKIE_POLICY_LAST_UPDATED_ISO },
   /** Canonical DPA version = "Last updated" on /dpa. */
   { path: '/dpa', lastmod: CURRENT_DPA_VERSION },
   /** Canonical Terms version = "Last updated" on /terms. */

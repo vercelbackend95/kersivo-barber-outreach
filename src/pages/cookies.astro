@@ -4,6 +4,7 @@ import LegalFooter from '@/components/LegalFooter.astro';
 import { LEGAL_OPERATOR_NAME, TRADING_NAME } from '@/lib/legal/businessIdentity';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { CONSENT_COOKIE_NAME, CONSENT_MAX_AGE_SECONDS, CONSENT_VERSION } from '@/lib/consent/config';
+import { COOKIE_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from '@/lib/legal/legalPageDates';
 import '@/styles/legal-pages.css';
 
 const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
@@ -17,7 +18,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Cookie Policy</h1>
-      <p class="legal-page__updated">Last updated: 25 September 2026</p>
+      <p class="legal-page__updated">Last updated: {formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)}</p>
 
       <p>
         This Cookie Policy explains how KERSIVO uses cookies and similar technologies on

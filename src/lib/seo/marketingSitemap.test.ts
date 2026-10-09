@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
+import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from '@/lib/legal/legalPageDates';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import {
   buildMarketingSitemapEntries,
@@ -70,8 +71,8 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/privacy']).toBe('2026-10-06');
-    expect(byLoc['https://kersivo.co.uk/cookies']).toBe('2026-09-25');
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
+    expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
@@ -81,6 +82,19 @@ describe('marketing sitemap', () => {
     for (const loc of EXPECTED_LOCS.slice(1)) {
       expect(loc.endsWith('/')).toBe(false);
     }
+  });
+
+  it('uses the same lastmod dates as the visible legal documents', () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const privacy = readFileSync(join(here, '../../pages/privacy.astro'), 'utf8');
+    const cookies = readFileSync(join(here, '../../pages/cookies.astro'), 'utf8');
+    expect(privacy).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
+    expect(cookies).toContain('Last updated: {formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)}');
+    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('6 October 2026');
+    expect(formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)).toBe('25 September 2026');
+    const byLoc = Object.fromEntries(buildMarketingSitemapEntries().map(({loc,lastmod})=>[loc,lastmod]));
+    expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
+    expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
   });
 
   it('emits valid urlset XML without product, admin, or API paths and without stale global lastmod', () => {
