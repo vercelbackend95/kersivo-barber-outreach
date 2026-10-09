@@ -1,0 +1,22 @@
+---
+import BarbershopFeaturePanel from './BarbershopFeaturePanel.astro';
+import BarbershopWebsitePreview from './BarbershopWebsitePreview.astro';
+import BarbershopBookingPreview from './BarbershopBookingPreview.astro';
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+---
+
+<div class="bw-showcase" aria-label="BLACKLINE BARBERS website presentation and booking illustration">
+  <div class="bw-showcase__badge bw-showcase__badge--left">
+    <svg class="bw-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.overview} /></svg>
+    <span>Built for independent<br />UK barbers</span>
+  </div>
+  <div class="bw-showcase__badge bw-showcase__badge--right">
+    <svg class="bw-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.booking} /></svg>
+    <span>Own your brand.<br />Own your bookings.</span>
+  </div>
+  <BarbershopFeaturePanel />
+  <BarbershopWebsitePreview />
+  <BarbershopBookingPreview />
+</div>
