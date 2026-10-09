@@ -212,25 +212,6 @@ function formatDateForSummary(isoDate: string, timezone: string): string {
   });
 }
 
-function formatDateForBookingTab(isoDate: string, timezone: string): string {
-  const normalizedDate = normalizeToIsoDate(isoDate);
-  if (!normalizedDate) {
-    return 'Select date';
-  }
-
-  const parsed = new Date(`${normalizedDate}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) {
-    return 'Select date';
-  }
-
-  return parsed.toLocaleDateString('en-GB', {
-    timeZone: timezone,
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-  });
-}
-
 function getCurrentIsoDateInTimezone(timezone: string, now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
