@@ -232,9 +232,9 @@
 .bsw-features__title {
   margin: 0.15rem 0.2rem 0.85rem;
   color: color-mix(in srgb, var(--fg) 90%, transparent);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 650;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -1320,7 +1320,7 @@
   }
 
   .bsw-features__title {
-    letter-spacing: 0.13em;
+    letter-spacing: 0.1em;
   }
 
   .bsw-booking__steps {
