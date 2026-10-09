@@ -1,0 +1,99 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/barbershop-websites-hero.css';
+
+const title = 'Barbershop Websites UK | Design & Booking | KERSIVO';
+const description = 'Professional barbershop websites on your own domain, with online booking and business tools. Full KERSIVO costs £39/month with no setup fee.';
+---
+
+<LandingLayout
+  title={title}
+  description={description}
+  canonicalPath="/barbershop-websites"
+  noindex={true}
+  robotsFollow={false}
+>
+  <!-- STAGE 1 ONLY: non-indexed design review. Publish sitemap/schema + the remaining
+       10 approved pillar sections together when the complete page passes QA. -->
+  <main class="bw-page">
+    <section class="bw-hero" aria-labelledby="bw-hero-heading">
+      <div class="bw-hero__ambient" aria-hidden="true"></div>
+      <div class="bw-container">
+        <div class="bw-hero__intro">
+          <p class="bw-eyebrow">Barbershop websites</p>
+          <h1 id="bw-hero-heading">Websites for barbershops<br class="bw-desktop-break" /> that are built to book<span class="bw-red-stop">.</span></h1>
+          <p class="bw-hero__lead">
+            A professional website for your barbershop, with your own domain,
+            online booking and the tools behind Full KERSIVO.
+          </p>
+          <p class="bw-hero__price">
+            <strong>£{SAAS_MONTHLY_GBP}/month</strong>
+            <span aria-hidden="true">·</span>
+            <span>No setup fee</span>
+            <span aria-hidden="true">·</span>
+            <span>0% KERSIVO commission</span>
+          </p>
+          <div class="bw-hero__actions">
+            <a class="bw-button bw-button--primary" href="/demo" data-track="view_live_demo_click" data-track-placement="barbershop_websites_hero">
+              See a real working demo <span aria-hidden="true">↗</span>
+            </a>
+            <a class="bw-button bw-button--outline" href="/pricing" data-track="barbershop_websites_full_click" data-track-placement="hero">
+              Explore Full KERSIVO
+            </a>
+          </div>
+        </div>
+
+        <div class="bw-showcase" aria-label="Reserved spaces for the BLACKLINE BARBERS website and booking previews">
+          <div class="bw-showcase__badge bw-showcase__badge--left">
+            <span class="bw-badge-icon" aria-hidden="true">✂</span>
+            <span>Built for independent<br />UK barbers</span>
+          </div>
+          <div class="bw-showcase__badge bw-showcase__badge--right">
+            <span class="bw-badge-icon" aria-hidden="true">♛</span>
+            <span>Own your brand.<br />Own your bookings.</span>
+          </div>
+
+          <aside class="bw-panel bw-panel--features" aria-label="Website presentation areas">
+            <p class="bw-panel__eyebrow">Your website. Your style.</p>
+            <div class="bw-panel__feature"><span class="bw-panel__thumbnail" aria-hidden="true"></span><span><strong>Brand identity</strong><small>Make it yours</small></span></div>
+            <div class="bw-panel__feature"><span class="bw-panel__thumbnail" aria-hidden="true"></span><span><strong>Services</strong><small>Show what you offer</small></span></div>
+            <div class="bw-panel__feature"><span class="bw-panel__thumbnail" aria-hidden="true"></span><span><strong>Your team</strong><small>Introduce your barbers</small></span></div>
+            <div class="bw-panel__feature"><span class="bw-panel__thumbnail" aria-hidden="true"></span><span><strong>Gallery</strong><small>Show your work</small></span></div>
+          </aside>
+
+          <div class="bw-browser">
+            <div class="bw-browser__chrome" aria-hidden="true"><span class="bw-browser__dots"><i></i><i></i><i></i></span><span class="bw-browser__address">BLACKLINE BARBERS · DEMO PREVIEW</span></div>
+            <div class="bw-browser__canvas">
+              <div class="bw-browser__brand">BLACKLINE <span>BARBERS</span></div>
+              <div class="bw-browser__placeholder" role="img" aria-label="Reserved space for a genuine BLACKLINE BARBERS website preview; no screenshot is embedded yet">
+                <span class="bw-placeholder__mark" aria-hidden="true">K</span>
+                <strong>Website preview</strong>
+                <span>Reserved for the genuine BLACKLINE BARBERS demo</span>
+              </div>
+              <div class="bw-browser__tiles" aria-hidden="true"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+
+          <aside class="bw-panel bw-panel--booking" aria-label="Booking demonstration placeholder">
+            <div class="bw-booking__heading"><span class="bw-booking__calendar" aria-hidden="true">▦</span><span><strong>Online booking</strong><small>Booking flow preview</small></span></div>
+            <div class="bw-booking__placeholder">
+              <span class="bw-placeholder__mark bw-placeholder__mark--small" aria-hidden="true">K</span>
+              <strong>Booking preview</strong>
+              <span>Space for the real KERSIVO booking journey</span>
+            </div>
+            <a href="/demo/book" class="bw-booking__demo-link">Try the booking demo <span aria-hidden="true">↗</span></a>
+          </aside>
+        </div>
+
+        <ul class="bw-benefits" aria-label="Full KERSIVO website highlights">
+          <li><span class="bw-benefits__icon" aria-hidden="true">◎</span><span><strong>Own domain</strong><small>Your brand. Your domain.</small></span></li>
+          <li><span class="bw-benefits__icon" aria-hidden="true">▦</span><span><strong>Online booking</strong><small>A connected booking journey.</small></span></li>
+          <li><span class="bw-benefits__icon" aria-hidden="true">▥</span><span><strong>Business tools</strong><small>Bookings, clients and more.</small></span></li>
+        </ul>
+        <p class="bw-hero__footnote">BLACKLINE BARBERS is a fictional demonstration, not a customer barbershop. Standard Stripe processing fees apply to online payments.</p>
+      </div>
+    </section>
+    <!-- SECTION 02–11 will be added sequentially following the approved master specification. -->
+  </main>
+</LandingLayout>
