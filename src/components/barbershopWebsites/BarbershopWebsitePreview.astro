@@ -1,0 +1,59 @@
+---
+import { DEMO_SERVICES, demoBookingHref, formatDemoPriceGbp } from '@/lib/demo/services';
+const tiles = [
+  { id: 'bl-svc-haircut-finish', photo: '/demo/gallery/scissor-cut.webp', alt: 'Barber scissor-cut demonstration', label: 'Classic cut' },
+  { id: 'bl-svc-beard-trim', photo: '/demo/gallery/beard.webp', alt: 'Beard trim demonstration', label: 'Beard trim' },
+  { id: 'bl-svc-skin-fade', photo: '/demo/gallery/hairline.webp', alt: 'Skin fade demonstration', label: 'Skin fade' },
+  { id: 'bl-svc-wash-style-finish', photo: '/demo/products/matte-clay.webp', alt: 'Hair styling product', label: 'Style & finish' },
+].flatMap((item) => {
+  const service = DEMO_SERVICES.find((s) => s.id === item.id);
+  return service ? [{ ...item, service }] : [];
+});
+---
+
+<div class="bw-browser" aria-label="Illustrative BLACKLINE BARBERS website design using real demo photography">
+  <div class="bw-browser__chrome" aria-hidden="true">
+    <span class="bw-browser__dots"><i></i><i></i><i></i></span>
+    <span class="bw-browser__address"><span class="bw-browser__lock">●</span> kersivo.co.uk/demo</span>
+    <span class="bw-browser__reload">↻</span>
+  </div>
+
+  <div class="bw-browser__canvas">
+    <header class="bw-demo-nav">
+      <span class="bw-demo-logo">BLACKLINE<small>BARBERS</small></span>
+      <nav aria-label="Illustrative website navigation">
+        <a href="/demo" aria-current="page">Home</a>
+        <a href="/demo/services">Services</a>
+        <a href="/demo/barbers">Barbers</a>
+        <a href="/demo/gallery">Gallery</a>
+      </nav>
+      <a href="/demo/book" class="bw-demo-nav__book">Book now <span aria-hidden="true">→</span></a>
+    </header>
+
+    <div class="bw-demo-visual">
+      <img class="bw-demo-visual__image" src="/demo/heroimg.webp" width="1800" height="2700"
+        alt="BLACKLINE demo barber shaping a client's haircut" loading="eager" decoding="async" />
+      <span class="bw-demo-visual__shade" aria-hidden="true"></span>
+      <div class="bw-demo-visual__copy">
+        <p class="bw-demo-visual__eyebrow">Precision × Style × Community</p>
+        <p class="bw-demo-visual__title">More than<br />a haircut<span>.</span></p>
+        <p class="bw-demo-visual__description">Modern cuts. Real people. A barbershop built around the details.</p>
+        <a class="bw-demo-visual__cta" href="/demo/book">Book an appointment <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <div class="bw-demo-services" aria-label="Example BLACKLINE barber services">
+      {tiles.map(({ photo, alt, label, service }) => (
+        <a class="bw-demo-service" href={demoBookingHref(service.slug)}
+          aria-label={'Book ' + service.name + ' in the BLACKLINE demo'}>
+          <img src={photo} alt={alt} width="600" height="700" loading="lazy" decoding="async" />
+          <span class="bw-demo-service__shade" aria-hidden="true"></span>
+          <span class="bw-demo-service__content">
+            <strong>{label}</strong>
+            <span>{formatDemoPriceGbp(service.pricePence)} <span aria-hidden="true">↗</span></span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
