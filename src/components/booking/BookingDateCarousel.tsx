@@ -8,7 +8,7 @@ type Props = {
   onDateChange: (date: string) => void;
 };
 
-const DAYS_VISIBLE = 42;
+const DAYS_VISIBLE = 180;
 function labelForDay(iso: string, timezone: string) {
   return new Intl.DateTimeFormat('en-GB', { timeZone: timezone, weekday: 'short' }).format(new Date(`${iso}T12:00:00Z`));
 }
@@ -74,9 +74,6 @@ export default function BookingDateCarousel({ date, minDate, timezone, onDateCha
           return element.offsetLeft - rail.offsetLeft <= centre && element.offsetLeft - rail.offsetLeft + element.offsetWidth > centre;
         }) as HTMLElement | undefined;
         if (item?.dataset.date) setMonthAnchor(item.dataset.date);
-        if (rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 60) {
-          setVisibleStart((current) => shiftIsoDate(current, 14));
-        }
       }}>
         {dates.map((day) => (
           <button
