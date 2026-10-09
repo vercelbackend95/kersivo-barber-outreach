@@ -35,12 +35,14 @@ export default function BookingDateCarousel({ date, minDate, timezone, onDateCha
   useEffect(() => {
     const rail = railRef.current;
     const button = rail?.querySelector<HTMLButtonElement>('[data-selected="true"]');
-    if (rail && button) rail.scrollTo({ left: Math.max(0, button.offsetLeft - rail.offsetLeft - 8), behavior: 'instant' });
+    if (rail && button && typeof rail.scrollTo === 'function') {
+      rail.scrollTo({ left: Math.max(0, button.offsetLeft - rail.offsetLeft - 8), behavior: 'instant' });
+    }
   }, [date, visibleStart]);
 
   const move = (direction: -1 | 1) => {
     const rail = railRef.current;
-    if (!rail) return;
+    if (!rail || typeof rail.scrollBy !== 'function') return;
     rail.scrollBy({ left: direction * rail.clientWidth * 0.8, behavior: 'smooth' });
   };
   const openCalendar = () => {
