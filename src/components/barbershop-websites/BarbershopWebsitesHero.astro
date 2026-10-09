@@ -1,5 +1,4 @@
 ---
-import { MapPin, ShieldCheck } from 'lucide-react';
 import BlacklineWebsitePreview from './BlacklineWebsitePreview.astro';
 import BookingPreview from './BookingPreview.astro';
 import WebsiteFeaturesPanel from './WebsiteFeaturesPanel.astro';
@@ -49,16 +48,7 @@ const [lineOne, lineTwo] = splitAt > 0 ? [headline.slice(0, splitAt), headline.s
       </a>
     </div>
 
-    <ul class="bsw-badges" role="list">
-      <li class="bsw-badge bsw-badge--left">
-        <span class="bsw-badge__icon" aria-hidden="true"><MapPin size={15} strokeWidth={1.6} /></span>
-        <span>Built for independent<br class="bsw-badge__br" /> UK barbers.</span>
-      </li>
-      <li class="bsw-badge bsw-badge--right">
-        <span class="bsw-badge__icon" aria-hidden="true"><ShieldCheck size={15} strokeWidth={1.6} /></span>
-        <span>Own your brand.<br class="bsw-badge__br" /> Own your bookings.</span>
-      </li>
-    </ul>
+
   </div>
 
   <div class="bsw-stage">
