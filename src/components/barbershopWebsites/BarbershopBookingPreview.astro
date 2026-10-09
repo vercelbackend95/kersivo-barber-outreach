@@ -1,0 +1,70 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+const barbers = DEMO_BARBERS.slice(0, 3);
+const service = DEMO_SERVICES.find((item) => item.slug === 'skin-fade');
+---
+
+<aside class="bw-panel bw-panel--booking" aria-label="Illustrative BLACKLINE booking preview, not live availability">
+  <div class="bw-booking__heading">
+    <span class="bw-booking__calendar" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+        stroke-linecap="round" stroke-linejoin="round"><path d={MARKETING_NAV_ICONS.booking} /></svg>
+    </span>
+    <span><strong>Book an Appointment</strong><small>BLACKLINE demo booking preview</small></span>
+  </div>
+
+  <div class="bw-booking__step">
+    <span class="bw-booking__number bw-booking__number--active" aria-hidden="true">1</span>
+    <div class="bw-booking__step-content">
+      <p class="bw-booking__label">Select a service</p>
+      <div class="bw-booking__service">
+        <span><strong>{service?.name ?? 'Skin Fade'}</strong><small>{service?.durationMinutes ?? 45} min · {formatDemoPriceGbp(service?.pricePence ?? 2800)}</small></span>
+        <span class="bw-booking__chevron" aria-hidden="true">⌄</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bw-booking__step">
+    <span class="bw-booking__number" aria-hidden="true">2</span>
+    <div class="bw-booking__step-content">
+      <p class="bw-booking__label">Choose your barber</p>
+      <div class="bw-booking__barbers">
+        {barbers.map((barber, index) => (
+          <div class="bw-booking__barber">
+            <img src={barber.image.src} alt="" width={barber.image.width} height={barber.image.height} loading="lazy" />
+            <span><strong>{barber.name.split(' ')[0]}</strong><small>Barber</small></span>
+            <i class:list={['bw-booking__radio', { 'bw-booking__radio--selected': index === 0 }]} aria-hidden="true"></i>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="bw-booking__step">
+    <span class="bw-booking__number" aria-hidden="true">3</span>
+    <div class="bw-booking__step-content">
+      <p class="bw-booking__label">Pick a date</p>
+      <p class="bw-booking__input">
+        <span aria-hidden="true">▦</span> Choose in demo
+        <span class="bw-booking__chevron" aria-hidden="true">⌄</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="bw-booking__step">
+    <span class="bw-booking__number" aria-hidden="true">4</span>
+    <div class="bw-booking__step-content">
+      <p class="bw-booking__label">Choose a time</p>
+      <div class="bw-booking__times" aria-label="Illustrative time slots, not real-time availability">
+        <span>10:00</span><span class="bw-booking__time--selected">11:00</span><span>12:00</span><span>13:00</span>
+      </div>
+    </div>
+  </div>
+
+  <a href="/demo/book?service=skin-fade" class="bw-booking__demo-link"
+    data-track="view_live_demo_click" data-track-placement="barbershop_websites_booking_card">
+    Try the booking demo <span aria-hidden="true">→</span>
+  </a>
+</aside>
