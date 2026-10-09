@@ -8,6 +8,7 @@ import {
 } from '@/lib/legal/businessIdentity';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { formatLegalPageDate, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
 import '@/styles/legal-pages.css';
 ---
 
@@ -19,7 +20,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 6 October 2026</p>
+      <p class="legal-page__updated">Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
