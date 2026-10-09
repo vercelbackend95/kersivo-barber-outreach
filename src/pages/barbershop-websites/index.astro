@@ -1,6 +1,9 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+// Reuse the same hero typography and button styles as the KERSIVO homepage.
+import '@/styles/components/homepage-hero.css';
 import '@/styles/components/barbershop-websites-hero.css';
 
 const title = 'Barbershop Websites UK | Design & Booking | KERSIVO';
@@ -21,24 +24,24 @@ const description = 'Professional barbershop websites on your own domain, with o
       <div class="bw-hero__ambient" aria-hidden="true"></div>
       <div class="bw-container">
         <div class="bw-hero__intro">
-          <p class="bw-eyebrow">Barbershop websites</p>
-          <h1 id="bw-hero-heading">Websites for barbershops<br class="bw-desktop-break" /> that are built to book<span class="bw-red-stop">.</span></h1>
-          <p class="bw-hero__lead">
+          <p class="home-hero__eyebrow bw-hero__eyebrow"><span class="home-hero__eyebrow-dot" aria-hidden="true"></span>Barbershop websites</p>
+          <h1 id="bw-hero-heading" class="home-hero__title bw-hero__title">Websites for barbershops<br class="bw-desktop-break" /> that are built to book.</h1>
+          <p class="home-hero__lead bw-hero__lead">
             A professional website for your barbershop, with your own domain,
             online booking and the tools behind Full KERSIVO.
           </p>
-          <p class="bw-hero__price">
+          <p class="home-hero__meta bw-hero__price">
             <strong>£{SAAS_MONTHLY_GBP}/month</strong>
             <span aria-hidden="true">·</span>
             <span>No setup fee</span>
             <span aria-hidden="true">·</span>
             <span>0% KERSIVO commission</span>
           </p>
-          <div class="bw-hero__actions">
-            <a class="bw-button bw-button--primary" href="/demo" data-track="view_live_demo_click" data-track-placement="barbershop_websites_hero">
+          <div class="home-hero__actions bw-hero__actions">
+            <a class="home-hero__action home-hero__action--primary" href="/demo" data-track="view_live_demo_click" data-track-placement="barbershop_websites_hero">
               See a real working demo <span aria-hidden="true">↗</span>
             </a>
-            <a class="bw-button bw-button--outline" href="/pricing" data-track="barbershop_websites_full_click" data-track-placement="hero">
+            <a class="home-hero__action home-hero__action--secondary" href="/pricing" data-track="barbershop_websites_full_click" data-track-placement="hero">
               Explore Full KERSIVO
             </a>
           </div>
@@ -46,11 +49,11 @@ const description = 'Professional barbershop websites on your own domain, with o
 
         <div class="bw-showcase" aria-label="Reserved spaces for the BLACKLINE BARBERS website and booking previews">
           <div class="bw-showcase__badge bw-showcase__badge--left">
-            <span class="bw-badge-icon" aria-hidden="true">✂</span>
+            <svg class="bw-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.overview} /></svg>
             <span>Built for independent<br />UK barbers</span>
           </div>
           <div class="bw-showcase__badge bw-showcase__badge--right">
-            <span class="bw-badge-icon" aria-hidden="true">♛</span>
+            <svg class="bw-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.booking} /></svg>
             <span>Own your brand.<br />Own your bookings.</span>
           </div>
 
@@ -76,7 +79,7 @@ const description = 'Professional barbershop websites on your own domain, with o
           </div>
 
           <aside class="bw-panel bw-panel--booking" aria-label="Booking demonstration placeholder">
-            <div class="bw-booking__heading"><span class="bw-booking__calendar" aria-hidden="true">▦</span><span><strong>Online booking</strong><small>Booking flow preview</small></span></div>
+            <div class="bw-booking__heading"><svg class="bw-booking__calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.booking} /></svg><span><strong>Online booking</strong><small>Booking flow preview</small></span></div>
             <div class="bw-booking__placeholder">
               <span class="bw-placeholder__mark bw-placeholder__mark--small" aria-hidden="true">K</span>
               <strong>Booking preview</strong>
@@ -87,9 +90,9 @@ const description = 'Professional barbershop websites on your own domain, with o
         </div>
 
         <ul class="bw-benefits" aria-label="Full KERSIVO website highlights">
-          <li><span class="bw-benefits__icon" aria-hidden="true">◎</span><span><strong>Own domain</strong><small>Your brand. Your domain.</small></span></li>
-          <li><span class="bw-benefits__icon" aria-hidden="true">▦</span><span><strong>Online booking</strong><small>A connected booking journey.</small></span></li>
-          <li><span class="bw-benefits__icon" aria-hidden="true">▥</span><span><strong>Business tools</strong><small>Bookings, clients and more.</small></span></li>
+          <li><svg class="bw-benefits__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.overview} /></svg><span><strong>Own domain</strong><small>Your brand. Your domain.</small></span></li>
+          <li><svg class="bw-benefits__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.booking} /></svg><span><strong>Online booking</strong><small>A connected booking journey.</small></span></li>
+          <li><svg class="bw-benefits__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={MARKETING_NAV_ICONS.system} /></svg><span><strong>Business tools</strong><small>Bookings, clients and more.</small></span></li>
         </ul>
         <p class="bw-hero__footnote">BLACKLINE BARBERS is a fictional demonstration, not a customer barbershop. Standard Stripe processing fees apply to online payments.</p>
       </div>
