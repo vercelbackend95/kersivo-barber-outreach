@@ -9,6 +9,7 @@ import {
 } from './bookingPresentation';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
+import BookingDateCarousel from './BookingDateCarousel';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
@@ -208,25 +209,6 @@ function formatDateForSummary(isoDate: string, timezone: string): string {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  });
-}
-
-function formatDateForBookingTab(isoDate: string, timezone: string): string {
-  const normalizedDate = normalizeToIsoDate(isoDate);
-  if (!normalizedDate) {
-    return 'Select date';
-  }
-
-  const parsed = new Date(`${normalizedDate}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) {
-    return 'Select date';
-  }
-
-  return parsed.toLocaleDateString('en-GB', {
-    timeZone: timezone,
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
   });
 }
 
@@ -443,7 +425,6 @@ export default function BookingFlow({
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
   const normalizedDate = normalizeToIsoDate(date);
-  const bookingDateLabel = formatDateForBookingTab(date, bookingTimezone);
   const bookingDateSummary = normalizedDate ? formatDateForSummary(normalizedDate, bookingTimezone) : 'Select date';
   const minBookingDate = getCurrentIsoDateInTimezone(bookingTimezone);
   const estimatedEndTime = selectedService && time ? calculateEndTime(time, selectedService.durationMinutes) : null;
@@ -716,31 +697,35 @@ export default function BookingFlow({
       return;
     }
 
+    const controller = new AbortController();
     setIsSlotsLoading(true);
     const availabilityUrl = publicShopId?.trim()
       ? `/api/public/bookings/${encodeURIComponent(publicShopId.trim())}/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`
       : `/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`;
-    fetch(availabilityUrl)
+    fetch(availabilityUrl, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
+        if (controller.signal.aborted) return;
         setShopPaused(Boolean(data.paused));
         setShopPauseReason(
           typeof data.pauseReason === 'string' && data.pauseReason.trim()
             ? data.pauseReason.trim()
             : null,
         );
-        setSlots(data.slots ?? []);
+        setSlots(Array.isArray(data.slots) ? data.slots : []);
         setTime('');
       })
       .catch(() => {
+        if (controller.signal.aborted) return;
         setShopPaused(false);
         setShopPauseReason(null);
         setSlots([]);
         setTime('');
       })
       .finally(() => {
-        setIsSlotsLoading(false);
+        if (!controller.signal.aborted) setIsSlotsLoading(false);
       });
+    return () => controller.abort();
   }, [serviceId, barberId, date, useStaticSlots, useBlacklineSessionSlots, publicShopId, services]);
 
   async function submit() {
@@ -1275,31 +1260,17 @@ export default function BookingFlow({
 
                 {activeStepId === 'schedule' ? (
                   <>
-                    <div className="booking-date-panel">
-                      <div className="booking-flow__field booking-flow__field--date">
-                        <label
-                          className="booking-date-tab"
-                          htmlFor="booking-date"
-                          aria-label={`Select date, currently ${bookingDateLabel}`}
-                        >
-                          <span className="booking-date-tab__main">{bookingDateLabel}</span>
-                          <span className="booking-date-tab__calendar" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false">
-                              <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
-                            </svg>
-                          </span>
-                          <input
-                            id="booking-date"
-                            type="date"
-                            className="booking-date-tab__input"
-                            value={date}
-                            min={minBookingDate}
-                            onChange={(event) => setDate(event.target.value)}
-                            aria-label="Select booking date"
-                          />
-                        </label>
-                      </div>
-                    </div>
+                    <BookingDateCarousel
+                      date={date}
+                      minDate={minBookingDate}
+                      timezone={bookingTimezone}
+                      onDateChange={(nextDate) => {
+                        if (nextDate === date) return;
+                        setTime('');
+                        setSlots([]);
+                        setDate(nextDate);
+                      }}
+                    />
 
                     <div className="booking-slots-section">
                       <div className="booking-slots-section__head">

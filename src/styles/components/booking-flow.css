@@ -1969,3 +1969,128 @@
   line-height: 1.4;
   color: var(--muted);
 }
+
+/* Horizontal, touch-native date rail shared by live and demo booking flows. */
+.booking-flow--wizard .booking-date-carousel {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+.booking-flow--wizard .booking-date-carousel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.booking-flow--wizard .booking-date-carousel__header > strong {
+  font-size: 0.88rem;
+  color: var(--fg);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.booking-flow--wizard .booking-date-carousel__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  position: relative;
+}
+.booking-flow--wizard .booking-date-carousel__arrow,
+.booking-flow--wizard .booking-date-carousel__calendar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--booking-choice-border) 75%, transparent);
+  border-radius: 8px;
+  background: var(--booking-choice-surface);
+  color: var(--booking-choice-text);
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+.booking-flow--wizard .booking-date-carousel__calendar svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.booking-flow--wizard .booking-date-carousel__arrow:hover,
+.booking-flow--wizard .booking-date-carousel__calendar:hover {
+  border-color: var(--booking-choice-accent);
+}
+.booking-flow--wizard .booking-date-carousel__arrow:focus-visible,
+.booking-flow--wizard .booking-date-carousel__calendar:focus-visible,
+.booking-flow--wizard .booking-date-carousel__day:focus-visible {
+  outline: 2px solid var(--booking-choice-focus-ring);
+  outline-offset: 2px;
+}
+.booking-flow--wizard .booking-date-carousel__native {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+.booking-flow--wizard .booking-date-carousel__rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  padding: 0.15rem 0 0.4rem;
+  min-width: 0;
+}
+.booking-flow--wizard .booking-date-carousel__rail::-webkit-scrollbar {
+  display: none;
+}
+.booking-flow--wizard .booking-date-carousel__day {
+  flex: 0 0 4.1rem;
+  min-height: 4.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.27rem;
+  padding: 0.55rem 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--booking-choice-border) 75%, transparent);
+  border-radius: 12px;
+  background: var(--booking-choice-surface);
+  color: var(--booking-choice-text);
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: background 130ms ease, border-color 130ms ease, color 130ms ease;
+}
+.booking-flow--wizard .booking-date-carousel__day > span {
+  font-size: 0.67rem;
+  color: var(--booking-choice-text-muted);
+  font-weight: 600;
+}
+.booking-flow--wizard .booking-date-carousel__day > strong {
+  font-size: 1.18rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.booking-flow--wizard .booking-date-carousel__day.is-selected {
+  background: var(--booking-choice-accent);
+  border-color: var(--booking-choice-accent);
+  color: var(--booking-choice-accent-contrast);
+}
+.booking-flow--wizard .booking-date-carousel__day.is-selected > span {
+  color: var(--booking-choice-accent-contrast);
+}
+@media (max-width: 39.99rem) {
+  .booking-flow--wizard .booking-date-carousel__day {
+    flex-basis: 3.7rem;
+    min-height: 4.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-flow--wizard .booking-date-carousel__day { transition: none; }
+}
