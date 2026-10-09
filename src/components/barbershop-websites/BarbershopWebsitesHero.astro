@@ -1,0 +1,82 @@
+---
+import { MapPin, ShieldCheck } from 'lucide-react';
+import BlacklineWebsitePreview from './BlacklineWebsitePreview.astro';
+import BookingPreview from './BookingPreview.astro';
+import WebsiteFeaturesPanel from './WebsiteFeaturesPanel.astro';
+import HeroBenefits from './HeroBenefits.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BARBERSHOP_WEBSITES_PAGE_H1 } from '@/lib/seo/barbershopWebsitesPage';
+import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/barbershop-websites-hero.css';
+
+const headline = BARBERSHOP_WEBSITES_PAGE_H1.replace(/\.$/, '');
+const splitAt = headline.indexOf(' that ');
+const [lineOne, lineTwo] = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt + 1)] : [headline, ''];
+---
+
+<section class="bsw-hero" aria-labelledby="bsw-hero-title">
+  <div class="bsw-hero__ambient" aria-hidden="true"></div>
+
+  <div class="bsw-hero__head">
+    <p class="bsw-hero__eyebrow">Barbershop websites</p>
+    <h1 id="bsw-hero-title" class="bsw-hero__title">
+      <span>{lineOne}</span>
+      {lineTwo && ' '}
+      <span>{lineTwo}<span class="bsw-accent">.</span></span>
+    </h1>
+    <p class="bsw-hero__lead">
+      A premium website for your barbershop, with your own domain, online booking and all the
+      tools you need — all in Full KERSIVO.
+    </p>
+    <p class="bsw-hero__price">
+      <strong>£{SAAS_MONTHLY_GBP}/month per location</strong>
+      <span aria-hidden="true">·</span>
+      <span>No setup fee</span>
+      <span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission</span>
+    </p>
+    <div class="bsw-hero__actions">
+      <a
+        href="/demo"
+        class="fresha-alt-hero__action fresha-alt-hero__action--primary bsw-hero__action"
+        data-track="view_live_demo_click"
+        data-track-placement="barbershop_websites_hero"
+      >
+        See a real working demo <span aria-hidden="true">→</span>
+      </a>
+      <a href="/pricing#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary bsw-hero__action">
+        Explore Full KERSIVO
+      </a>
+    </div>
+
+    <ul class="bsw-badges" role="list">
+      <li class="bsw-badge bsw-badge--left">
+        <span class="bsw-badge__icon" aria-hidden="true"><MapPin size={15} strokeWidth={1.6} /></span>
+        <span>Built for independent<br class="bsw-badge__br" /> UK barbers.</span>
+      </li>
+      <li class="bsw-badge bsw-badge--right">
+        <span class="bsw-badge__icon" aria-hidden="true"><ShieldCheck size={15} strokeWidth={1.6} /></span>
+        <span>Own your brand.<br class="bsw-badge__br" /> Own your bookings.</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="bsw-stage">
+    <div class="bsw-stage__item bsw-stage__item--centre">
+      <BlacklineWebsitePreview />
+    </div>
+    <div class="bsw-stage__item bsw-stage__item--right">
+      <BookingPreview />
+    </div>
+    <div class="bsw-stage__item bsw-stage__item--left">
+      <WebsiteFeaturesPanel />
+    </div>
+  </div>
+
+  <p class="bsw-disclosure">
+    BLACKLINE BARBERS is a fictional demonstration shop. These previews are illustrative —
+    <a href="/demo">explore the working demo</a> for live behaviour.
+  </p>
+
+  <HeroBenefits />
+</section>

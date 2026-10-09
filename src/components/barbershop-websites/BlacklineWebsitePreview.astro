@@ -1,0 +1,88 @@
+---
+import { ArrowRight, Lock, RotateCw } from 'lucide-react';
+import { DEMO_SERVICES, demoBookingHref, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_BOOK_HREF, DEMO_CONTACT_HREF, DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
+
+const IMG = '/images/barbershop-websites';
+
+const serviceCards = [
+  { slug: 'haircut-finish', label: 'Haircut', image: `${IMG}/service-haircut.webp` },
+  { slug: 'beard-trim', label: 'Beard Trim', image: `${IMG}/service-beard.webp` },
+  { slug: 'skin-fade', label: 'Skin Fade', image: `${IMG}/service-fade.webp` },
+  { slug: 'wash-style-finish', label: 'Style & Finish', image: `${IMG}/service-style.webp` },
+].flatMap((card) => {
+  const service = DEMO_SERVICES.find((item) => item.slug === card.slug);
+  return service ? [{ ...card, service }] : [];
+});
+
+const siteNav = [
+  { href: DEMO_HOME_HREF, label: 'Home', current: true },
+  { href: '/demo/services', label: 'Services' },
+  { href: '/demo/barbers', label: 'Barbers' },
+  { href: DEMO_GALLERY_HREF, label: 'Gallery' },
+  { href: DEMO_CONTACT_HREF, label: 'Contact' },
+];
+---
+
+<figure class="bsw-browser" aria-label="Illustrated preview of the BLACKLINE BARBERS demo website built on KERSIVO">
+  <div class="bsw-browser__toolbar">
+    <span class="bsw-browser__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <a class="bsw-browser__address" href={DEMO_HOME_HREF}>
+      <Lock size={11} strokeWidth={2} aria-hidden="true" />
+      <span>kersivo.co.uk/demo</span>
+    </a>
+    <span class="bsw-browser__refresh" aria-hidden="true"><RotateCw size={12} strokeWidth={1.8} /></span>
+  </div>
+
+  <div class="bsw-site">
+    <div class="bsw-site__nav">
+      <a class="bsw-site__brand" href={DEMO_HOME_HREF} aria-label="BLACKLINE BARBERS demo home">
+        <span>BLACKLINE</span>
+        <span>BARBERS</span>
+      </a>
+      <nav class="bsw-site__links" aria-label="BLACKLINE demo pages">
+        {siteNav.map((item) => (
+          <a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a>
+        ))}
+      </nav>
+      <a class="bsw-site__book" href={DEMO_BOOK_HREF}>Book Now</a>
+    </div>
+
+    <div class="bsw-site__hero">
+      <picture class="bsw-site__photo">
+        <source media="(max-width: 640px)" srcset={`${IMG}/site-hero-640.webp`} />
+        <img
+          src={`${IMG}/site-hero-1100.webp`}
+          alt="A BLACKLINE demo barber cutting a client's hair with clippers"
+          width="1100"
+          height="900"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </picture>
+      <div class="bsw-site__copy">
+        <p class="bsw-site__eyebrow">Precision <span aria-hidden="true">×</span> Style <span aria-hidden="true">×</span> Community</p>
+        <p class="bsw-site__headline">More than<br />a haircut<span class="bsw-accent">.</span></p>
+        <p class="bsw-site__lead">Modern cuts. Real people. A barbershop built on quality, community and good conversation.</p>
+        <a class="bsw-site__cta" href={DEMO_BOOK_HREF}>
+          Book an Appointment <ArrowRight size={13} strokeWidth={2} aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+
+    <ul class="bsw-site__services" role="list">
+      {serviceCards.map((card) => (
+        <li>
+          <a class="bsw-service" href={demoBookingHref(card.slug)} aria-label={`${card.service.name}, from ${formatDemoPriceGbp(card.service.pricePence)}, book in the demo`}>
+            <img src={card.image} alt="" width="400" height="300" loading="lazy" decoding="async" />
+            <span class="bsw-service__text">
+              <span class="bsw-service__name">{card.label}</span>
+              <span class="bsw-service__price">From {formatDemoPriceGbp(card.service.pricePence)}</span>
+            </span>
+            <ArrowRight className="bsw-service__arrow" size={13} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</figure>

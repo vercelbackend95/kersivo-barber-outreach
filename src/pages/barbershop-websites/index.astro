@@ -1,0 +1,54 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import BarbershopWebsitesHero from '@/components/barbershop-websites/BarbershopWebsitesHero.astro';
+import {
+  BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
+  BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+  BARBERSHOP_WEBSITES_PAGE_PATH,
+  BARBERSHOP_WEBSITES_PAGE_TITLE,
+} from '@/lib/seo/barbershopWebsitesPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BARBERSHOP_WEBSITES_PAGE_TITLE}
+  description={BARBERSHOP_WEBSITES_PAGE_DESCRIPTION}
+  canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
+  noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}
+  robotsFollow
+>
+  <main class="bsw-page">
+    <BarbershopWebsitesHero />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Starter', href: '/starter' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Booksy comparison', href: '/booksy-alternative' },
+        { name: 'Fresha comparison', href: '/fresha-alternative' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>

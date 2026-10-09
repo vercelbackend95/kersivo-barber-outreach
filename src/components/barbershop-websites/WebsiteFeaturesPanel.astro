@@ -1,0 +1,59 @@
+---
+import { ChevronRight } from 'lucide-react';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
+
+const IMG = '/images/barbershop-websites';
+
+const rows = [
+  { key: 'hero', label: 'Hero sections', body: 'Make a strong first impression.', href: DEMO_HOME_HREF },
+  { key: 'services', label: 'Services', body: 'Show what you offer.', href: '/demo/services' },
+  { key: 'team', label: 'Team', body: 'Introduce your barbers.', href: '/demo/barbers' },
+  { key: 'gallery', label: 'Gallery', body: 'Show your work.', href: DEMO_GALLERY_HREF },
+  { key: 'branding', label: 'Branding', body: 'Colours, fonts, your identity.', href: DEMO_HOME_HREF },
+] as const;
+---
+
+<aside class="bsw-panel bsw-features" aria-labelledby="bsw-features-title">
+  <p id="bsw-features-title" class="bsw-features__title">Your website. Your style.</p>
+  <ul class="bsw-features__list" role="list">
+    {rows.map((row) => (
+      <li>
+        <a class="bsw-feature" href={row.href}>
+          <span class:list={['bsw-thumb', `bsw-thumb--${row.key}`]} aria-hidden="true">
+            {row.key === 'hero' && (
+              <>
+                <img src={`${IMG}/thumb-hero.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
+                <span class="bsw-thumb__mini">
+                  <span class="bsw-thumb__mini-brand">BLACKLINE</span>
+                  <span class="bsw-thumb__mini-head">More than<br />a haircut<span class="bsw-accent">.</span></span>
+                </span>
+              </>
+            )}
+            {row.key === 'services' && (
+              <img src={`${IMG}/thumb-services.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
+            )}
+            {row.key === 'team' &&
+              DEMO_BARBERS.map((barber) => (
+                <img src={`${IMG}/team-${barber.slug}.webp`} alt="" width="96" height="150" loading="lazy" decoding="async" />
+              ))}
+            {row.key === 'gallery' && (
+              <>
+                <img src={`${IMG}/thumb-gallery-a.webp`} alt="" width="120" height="150" loading="lazy" decoding="async" />
+                <img src={`${IMG}/thumb-gallery-b.webp`} alt="" width="120" height="150" loading="lazy" decoding="async" />
+              </>
+            )}
+            {row.key === 'branding' && (
+              <span class="bsw-swatches"><i></i><i></i><i></i></span>
+            )}
+          </span>
+          <span class="bsw-feature__text">
+            <span class="bsw-feature__label">{row.label}</span>
+            <span class="bsw-feature__body">{row.body}</span>
+          </span>
+          <ChevronRight className="bsw-feature__chevron" size={14} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </li>
+    ))}
+  </ul>
+</aside>

@@ -1,0 +1,24 @@
+---
+import { CalendarCheck, Globe, LayoutDashboard } from 'lucide-react';
+
+const benefits = [
+  { icon: Globe, title: 'Own domain', body: 'Your brand. Your domain.' },
+  { icon: CalendarCheck, title: 'Online booking', body: 'A connected booking journey.' },
+  { icon: LayoutDashboard, title: 'Business tools', body: 'Everything to help you manage your shop.' },
+];
+---
+
+<ul class="bsw-benefits" role="list">
+  {benefits.map((benefit) => {
+    const Icon = benefit.icon;
+    return (
+      <li class="bsw-benefit">
+        <span class="bsw-benefit__icon" aria-hidden="true"><Icon size={22} strokeWidth={1.6} /></span>
+        <span class="bsw-benefit__text">
+          <span class="bsw-benefit__title">{benefit.title}</span>
+          <span class="bsw-benefit__body">{benefit.body}</span>
+        </span>
+      </li>
+    );
+  })}
+</ul>
