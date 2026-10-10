@@ -915,6 +915,104 @@
   min-width: 0;
 }
 
+/* Static miniature of /demo/book BookingDateCarousel. Match the real
+   month toolbar / weekday-number tiles / solid accent selection, but
+   intentionally no button, input, scroll or JS behaviour. */
+.bsw-date-preview {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  user-select: none;
+}
+
+.bsw-date-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.bsw-date-preview__header > strong {
+  min-width: 0;
+  color: var(--fg);
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.bsw-date-preview__actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+
+.bsw-date-preview__control {
+  display: inline-grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid var(--bsw-line-strong);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface-2) 75%, var(--bsw-ink));
+  color: var(--fg);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.bsw-date-preview__days {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bsw-date-preview__day {
+  display: flex;
+  min-width: 0;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.18rem;
+  border: 1px solid var(--bsw-line-strong);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface-2) 75%, var(--bsw-ink));
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.bsw-date-preview__day > span {
+  color: var(--bsw-text-2);
+  font-size: 0.63rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.bsw-date-preview__day > strong {
+  font-size: 1.04rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.bsw-date-preview__day.is-selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast, #fff);
+}
+
+.bsw-date-preview__day.is-selected > span {
+  color: var(--accent-contrast, #fff);
+}
+
+
 .bsw-barbers {
   display: grid;
   gap: 0.3rem;
