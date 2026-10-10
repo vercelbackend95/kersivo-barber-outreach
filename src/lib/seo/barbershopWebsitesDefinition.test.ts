@@ -37,9 +37,9 @@ describe('/barbershop-websites — section 02 definition', () => {
     expect(section).toContain('width="1449"');
     expect(section).toContain('height="1086"');
     expect(section).not.toContain('bsw-definition-device');
-    expect(section).toContain('/images/barbershop-websites/booksy.webp');
-    expect(section).toContain('width="1448"');
-    expect(section).toContain('height="1086"');
+    expect(section).toContain('/images/barbershop-websites/booksy.webp?v=20261010-2');
+    expect(section).toContain('width="1536"');
+    expect(section).toContain('height="1024"');
     expect(section).toContain('fictional barbershops');
     expect(section).not.toContain('bsw-definition-marketplace');
     expect(styles).not.toContain('.bsw-definition-marketplace');
