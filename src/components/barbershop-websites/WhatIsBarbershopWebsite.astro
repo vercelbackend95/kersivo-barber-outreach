@@ -1,0 +1,147 @@
+---
+import { ChartNoAxesColumnIncreasing, Check, Globe, Minus, Users } from 'lucide-react';
+
+const ownWebsiteBenefits = [
+  'Your branding, website and domain',
+  'Clear services, prices and barber profiles',
+  'Online booking connected to your site',
+  'Retail pickup in Full KERSIVO',
+  'One dedicated home for your business',
+];
+
+const bookingProfilePoints = [
+  'A profile within a wider booking service',
+  'Layout and navigation shaped by the provider',
+  'Customers may discover other businesses there',
+  'Some platforms offer their own website tools',
+];
+---
+
+<section class="bsw-definition" aria-labelledby="bsw-definition-heading">
+  <div class="bsw-definition__inner">
+    <div class="bsw-definition__intro">
+      <p class="bsw-definition__eyebrow">The basics</p>
+      <h2 id="bsw-definition-heading" class="bsw-definition__heading">
+        What is a<br class="bsw-definition__desktop-break" /> barbershop website<span class="bsw-definition__period">?</span>
+      </h2>
+      <p class="bsw-definition__answer">
+        A barbershop website is the online home of an independent barber or barbershop.
+        It brings together your brand, services, prices, team, location and a clear
+        way for clients to book. It can live on your own domain and connect directly
+        to online booking. Unlike relying only on a profile within a booking
+        platform, it gives customers a dedicated place to discover your business
+        and understand what makes it different.
+      </p>
+      <div class="bsw-definition__insight">
+        <ChartNoAxesColumnIncreasing size={22} strokeWidth={1.8} aria-hidden="true" />
+        <p>
+          Your own website gives your barbershop a dedicated place to build
+          its identity, showcase your work and turn interest into bookings.
+        </p>
+      </div>
+    </div>
+
+    <div class="bsw-definition__comparison">
+      <article class="bsw-definition-card bsw-definition-card--owned" aria-labelledby="bsw-definition-owned-title">
+        <div class="bsw-definition-card__visual" role="img" aria-label="Illustrative desktop and mobile views of the fictional BLACKLINE BARBERS demonstration website.">
+          <div class="bsw-definition-device bsw-definition-device--desktop" aria-hidden="true">
+            <div class="bsw-definition-device__bar">
+              <span class="bsw-definition-device__brand">BLACKLINE <small>BARBERS</small></span>
+              <span class="bsw-definition-device__nav">Home &nbsp; Services &nbsp; Barbers &nbsp; Book Now</span>
+            </div>
+            <div class="bsw-definition-device__photo">
+              <img src="/images/barbershop-websites/site-hero-1100.webp" alt="" width="1100" height="900" loading="lazy" decoding="async" />
+              <span class="bsw-definition-device__shade"></span>
+              <span class="bsw-definition-device__copy">
+                <small>PRECISION × STYLE × COMMUNITY</small>
+                <strong>MORE THAN<br />A HAIRCUT<span>.</span></strong>
+                <span class="bsw-definition-device__fake-action">Book Now <span>→</span></span>
+              </span>
+            </div>
+          </div>
+          <div class="bsw-definition-device bsw-definition-device--phone" aria-hidden="true">
+            <div class="bsw-definition-device__phone-top"><span></span></div>
+            <div class="bsw-definition-device__phone-body">
+              <img src="/images/barbershop-websites/site-hero-640.webp" alt="" width="640" height="900" loading="lazy" decoding="async" />
+              <div class="bsw-definition-device__phone-overlay">
+                <span class="bsw-definition-device__phone-brand">BLACKLINE<small>BARBERS</small></span>
+                <strong>MORE THAN<br />A HAIRCUT<span>.</span></strong>
+                <span class="bsw-definition-device__fake-action">Book Now →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bsw-definition-card__content">
+          <div class="bsw-definition-card__heading">
+            <span class="bsw-definition-card__icon bsw-definition-card__icon--owned" aria-hidden="true">
+              <Globe size={26} strokeWidth={1.8} />
+            </span>
+            <div>
+              <h3 id="bsw-definition-owned-title">Your own website</h3>
+              <p>A branded website on your own domain, built around your barbershop and connected to online booking.</p>
+            </div>
+          </div>
+          <ul class="bsw-definition-card__list" role="list">
+            {ownWebsiteBenefits.map((benefit) => (
+              <li>
+                <span class="bsw-definition-card__check" aria-hidden="true"><Check size={12} strokeWidth={2.5} /></span>
+                <span>{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </article>
+
+      <article class="bsw-definition-card bsw-definition-card--platform" aria-labelledby="bsw-definition-platform-title">
+        <div class="bsw-definition-card__visual bsw-definition-card__visual--platform" role="img" aria-label="Illustrative, unbranded booking-platform profile and marketplace interface; not an actual competitor screenshot.">
+          <div class="bsw-definition-marketplace bsw-definition-marketplace--desktop" aria-hidden="true">
+            <div class="bsw-definition-marketplace__header">
+              <span>Booking platform</span>
+              <span class="bsw-definition-marketplace__search">Search barbershops</span>
+            </div>
+            <div class="bsw-definition-marketplace__filters"><span>All</span><span>Barbershops</span><span>Services</span></div>
+            <div class="bsw-definition-marketplace__rows">
+              <div><i></i><span><b>Shop profile</b><small>Services and booking</small></span><em>Book</em></div>
+              <div><i></i><span><b>Another shop</b><small>Services and booking</small></span><em>Book</em></div>
+              <div><i></i><span><b>Nearby business</b><small>Services and booking</small></span><em>Book</em></div>
+            </div>
+          </div>
+          <div class="bsw-definition-marketplace bsw-definition-marketplace--phone" aria-hidden="true">
+            <div class="bsw-definition-marketplace__notch"></div>
+            <div class="bsw-definition-marketplace__phone-header">Booking platform</div>
+            <div class="bsw-definition-marketplace__phone-photo">
+              <img src="/images/barbershop-websites/thumb-services.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+            </div>
+            <div class="bsw-definition-marketplace__profile">
+              <b>Barbershop profile</b>
+              <span>Services · Team · Booking</span>
+              <div><small>Haircut</small><em>Book</em></div>
+              <div><small>Beard trim</small><em>Book</em></div>
+              <div><small>Skin fade</small><em>Book</em></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bsw-definition-card__content">
+          <div class="bsw-definition-card__heading">
+            <span class="bsw-definition-card__icon" aria-hidden="true"><Users size={26} strokeWidth={1.8} /></span>
+            <div>
+              <h3 id="bsw-definition-platform-title">A booking platform profile</h3>
+              <p>A business profile within a booking service or marketplace, often alongside other shops.</p>
+            </div>
+          </div>
+          <ul class="bsw-definition-card__list bsw-definition-card__list--platform" role="list">
+            {bookingProfilePoints.map((point) => (
+              <li>
+                <span class="bsw-definition-card__minus" aria-hidden="true"><Minus size={12} strokeWidth={2} /></span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="bsw-definition-card__note">Both can support bookings. The available website and branding features depend on the provider.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
