@@ -201,6 +201,10 @@
   --bsw-panel-shadow-x: 0px;
   position: relative;
   height: 100%;
+  /* Prevent 3D compositing from exposing a 1px painted edge during hover. */
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   padding: 1.15rem 1.1rem 1.1rem;
   border: 1px solid var(--bsw-line);
   border-radius: var(--bsw-radius-card);
@@ -1258,6 +1262,9 @@
   .bsw-stage__item--left,
   .bsw-stage__item--right {
     align-self: stretch;
+    /* Keep the face stable when the rotated cards are repainted. */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
   .bsw-stage__item--left {
@@ -1297,10 +1304,9 @@
       22px 40px 80px rgb(0 0 0 / 0.5);
   }
 
-  .bsw-panel {
-    backdrop-filter: blur(12px);
-  }
-
+  /* No backdrop-filter on the rotated cards: the backdrop is effectively
+     opaque already, and mixing backdrop-filter with rotateY can produce
+     single-pixel coloured seams in some browser GPU compositors. */
 
 }
 
