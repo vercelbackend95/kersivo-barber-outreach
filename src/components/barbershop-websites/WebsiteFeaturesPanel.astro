@@ -1,0 +1,67 @@
+---
+import { CalendarDays, ChevronRight, MapPin } from 'lucide-react';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import {
+  DEMO_BOOK_HREF,
+  DEMO_CONTACT_HREF,
+  DEMO_HOME_HREF,
+  DEMO_SHOP_HREF,
+} from '@/lib/demo/nav';
+
+const IMG = '/images/barbershop-websites';
+
+// Purposeful navigation to existing BLACKLINE demo pages.
+// Dedicated SEO pages may follow after keyword validation; do not create thin duplicates.
+const rows = [
+  { key: 'branding', label: 'Branding', body: 'Make your website feel like your shop.', href: DEMO_HOME_HREF },
+  { key: 'services', label: 'Services', body: 'Show your cuts, prices and services.', href: '/demo/services' },
+  { key: 'team', label: 'Your Team', body: 'Introduce the people behind the chairs.', href: '/demo/barbers' },
+  { key: 'retail', label: 'Retail Shop', body: 'Sell products for in-shop collection.', href: DEMO_SHOP_HREF },
+  { key: 'booking', label: 'Online Booking', body: 'Let clients book directly on your site.', href: DEMO_BOOK_HREF },
+  { key: 'contact', label: 'Contact & Location', body: 'Make your shop easy to find.', href: DEMO_CONTACT_HREF },
+] as const;
+---
+
+<aside class="bsw-panel bsw-features" aria-labelledby="bsw-features-title">
+  <p id="bsw-features-title" class="bsw-features__title">Your website. Your business.</p>
+  <ul class="bsw-features__list" role="list">
+    {rows.map((row) => (
+      <li>
+        <a class="bsw-feature" href={row.href}>
+          <span class:list={['bsw-thumb', `bsw-thumb--${row.key}`]} aria-hidden="true">
+            {row.key === 'branding' && (
+              <span class="bsw-swatches"><i></i><i></i><i></i></span>
+            )}
+            {row.key === 'services' && (
+              <img src={`${IMG}/thumb-services.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
+            )}
+            {row.key === 'team' &&
+              DEMO_BARBERS.map((barber) => (
+                <img src={`${IMG}/team-${barber.slug}.webp`} alt="" width="96" height="150" loading="lazy" decoding="async" />
+              ))}
+            {row.key === 'retail' && (
+              <img src="/demo/products/matte-clay.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+            )}
+            {row.key === 'booking' && (
+              <span class="bsw-thumb__booking-ui">
+                <CalendarDays size={13} strokeWidth={1.7} />
+                <span class="bsw-thumb__booking-slots"><i>10:00</i><i>11:00</i></span>
+              </span>
+            )}
+            {row.key === 'contact' && (
+              <>
+                <img src="/demo/gallery/interior-detail.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+                <span class="bsw-thumb__location-marker"><MapPin size={16} strokeWidth={2} /></span>
+              </>
+            )}
+          </span>
+          <span class="bsw-feature__text">
+            <span class="bsw-feature__label">{row.label}</span>
+            <span class="bsw-feature__body">{row.body}</span>
+          </span>
+          <ChevronRight className="bsw-feature__chevron" size={14} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </li>
+    ))}
+  </ul>
+</aside>

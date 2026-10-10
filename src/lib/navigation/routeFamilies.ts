@@ -33,6 +33,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/pricing',
   '/starter',
   '/about',
+  '/barbershop-websites',
 ];
 
 export function getRouteFamily(pathname: string): RouteFamily {

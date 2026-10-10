@@ -1,0 +1,111 @@
+---
+import { ArrowRight, CalendarDays, ChevronDown } from 'lucide-react';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+
+const IMG = '/images/barbershop-websites';
+
+const service = DEMO_SERVICES.find((item) => item.slug === 'skin-fade') ?? DEMO_SERVICES[0];
+const barbers = DEMO_BARBERS.map((barber, index) => ({
+  name: barber.name,
+  role: barber.specialisation.split('·')[0].trim(),
+  avatar: `${IMG}/barber-${barber.slug}.webp`,
+  selected: index === 0,
+}));
+const firstBarber = DEMO_BARBERS[0];
+const slots = [
+  { time: '10:00' },
+  { time: '11:00', selected: true },
+  { time: '12:00' },
+  { time: '13:00' },
+];
+const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=${encodeURIComponent(firstBarber.slug)}`;
+---
+
+<aside class="bsw-panel bsw-booking" aria-labelledby="bsw-booking-title">
+  <header class="bsw-booking__head">
+    <span class="bsw-booking__icon" aria-hidden="true"><CalendarDays size={16} strokeWidth={1.6} /></span>
+    <div>
+      <p id="bsw-booking-title" class="bsw-booking__title">Book an Appointment</p>
+      <p class="bsw-booking__sub">A preview of the BLACKLINE demo booking flow.</p>
+    </div>
+  </header>
+
+  <ol class="bsw-booking__steps" role="list">
+    <li class="bsw-step">
+      <span class="bsw-step__num" aria-hidden="true">1</span>
+      <div class="bsw-step__body">
+        <p class="bsw-step__label">Select a service</p>
+        <div class="bsw-field">
+          <span>
+            <span class="bsw-field__main">{service.name}</span>
+            <span class="bsw-field__meta">{service.durationMinutes} mins · {formatDemoPriceGbp(service.pricePence)}</span>
+          </span>
+          <ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" />
+        </div>
+      </div>
+    </li>
+
+    <li class="bsw-step">
+      <span class="bsw-step__num" aria-hidden="true">2</span>
+      <div class="bsw-step__body">
+        <p class="bsw-step__label">Choose your barber</p>
+        <ul class="bsw-barbers" role="list">
+          {barbers.map((barber) => (
+            <li class:list={['bsw-barber', { 'is-selected': barber.selected }]}>
+              <img src={barber.avatar} alt="" width="160" height="160" loading="lazy" decoding="async" />
+              <span class="bsw-barber__text">
+                <span class="bsw-barber__name">{barber.name}</span>
+                <span class="bsw-barber__role">{barber.role}</span>
+              </span>
+              <span class="bsw-radio" aria-hidden="true"></span>
+              {barber.selected && <span class="sr-only">(selected in this example)</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </li>
+
+    <li class="bsw-step">
+      <span class="bsw-step__num" aria-hidden="true">3</span>
+      <div class="bsw-step__body">
+        <p class="bsw-step__label">Pick a date <span class="bsw-step__hint">Example dates</span></p>
+        <!-- Static miniature of the real BookingDateCarousel from /demo/book.
+             Date tiles and navigation icons intentionally contain no buttons or handlers. -->
+        <div class="bsw-date-preview" aria-label="Illustrative October 2026 booking dates. This preview is not interactive and does not show availability.">
+          <div class="bsw-date-preview__header">
+            <strong>October 2026</strong>
+            <span class="bsw-date-preview__actions" aria-hidden="true">
+              <span class="bsw-date-preview__control">‹</span>
+              <span class="bsw-date-preview__control">›</span>
+              <span class="bsw-date-preview__control bsw-date-preview__control--calendar">
+                <CalendarDays size={13} strokeWidth={1.7} />
+              </span>
+            </span>
+          </div>
+          <ul class="bsw-date-preview__days" role="list">
+            <li class="bsw-date-preview__day"><span>Mon</span><strong>12</strong></li>
+            <li class="bsw-date-preview__day is-selected"><span>Tue</span><strong>13</strong></li>
+            <li class="bsw-date-preview__day"><span>Wed</span><strong>14</strong></li>
+          </ul>
+        </div>
+      </div>
+    </li>
+
+    <li class="bsw-step">
+      <span class="bsw-step__num" aria-hidden="true">4</span>
+      <div class="bsw-step__body">
+        <p class="bsw-step__label">Choose a time <span class="bsw-step__hint">Example times</span></p>
+        <ul class="bsw-slots" role="list">
+          {slots.map((slot) => (
+            <li class:list={['bsw-slot', { 'is-selected': slot.selected }]}>{slot.time}</li>
+          ))}
+        </ul>
+      </div>
+    </li>
+  </ol>
+
+  <a class="bsw-booking__cta" href={demoHref} data-track="view_live_demo_click" data-track-placement="barbershop_websites_booking_card">
+    Try the Booking Demo <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
+  </a>
+</aside>
