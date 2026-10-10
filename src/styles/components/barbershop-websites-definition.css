@@ -73,16 +73,20 @@
   color: var(--fg);
 }
 
+/* Shared premium comparison-card system.
+   No new global/background colours: every surface and accent is a KERSIVO token. */
 .bsw-definition__comparison {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  gap: clamp(.65rem, 1vw, 1rem);
+  gap: clamp(0.75rem, 1.1vw, 1.1rem);
   min-width: 0;
 }
 
 .bsw-definition-card {
   display: flex;
+  position: relative;
+  isolation: isolate;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
@@ -90,104 +94,191 @@
   border-radius: var(--radius-16);
   background: var(--surface-1);
   color: var(--fg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent),
+    0 14px 40px color-mix(in srgb, var(--bg) 55%, transparent);
 }
+
+/* Light-catching edge, without an oversized glow or a new page background. */
+.bsw-definition-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--fg) 17%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
 .bsw-definition-card--owned {
-  border-color: color-mix(in srgb, var(--accent) 67%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent),
+    0 16px 42px color-mix(in srgb, var(--bg) 61%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .bsw-definition-card__visual {
   position: relative;
-  height: clamp(14rem, 20vw, 20rem);
-  min-height: 0;
-  overflow: hidden;
+  flex: none;
+  min-width: 0;
+  height: clamp(15.5rem, 20vw, 21rem);
+  padding: 0.8rem;
   border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+  overflow: hidden;
 }
-.bsw-definition-card__visual--platform { border-color: var(--border); }
 
+/* Same physical frame and image geometry for both approved photos. */
 .bsw-definition-card__image {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  border-radius: var(--radius-12);
+  box-shadow: var(--shadow-sm);
 }
 
 .bsw-definition-card__content {
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 1rem;
+  gap: 1.25rem;
   min-width: 0;
-  padding: clamp(1rem, 1.25vw, 1.4rem);
+  padding: clamp(1.2rem, 1.55vw, 1.65rem);
 }
+
 .bsw-definition-card__heading {
   display: grid;
-  grid-template-columns: 2.4rem minmax(0,1fr);
-  gap: .75rem;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 0.9rem;
   align-items: start;
+  min-height: 8.5rem;
 }
+
+.bsw-definition-card__heading > div {
+  min-width: 0;
+}
+
 .bsw-definition-card__icon {
   display: grid;
   place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-12);
+  background: var(--surface-2);
   color: var(--muted);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent);
 }
+
 .bsw-definition-card__icon--owned {
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--border));
   color: var(--accent-text);
 }
-.bsw-definition-card__heading h3 {
-  margin: .05rem 0 .35rem;
-  font-size: clamp(.96rem, 1.25vw, 1.25rem);
-  line-height: 1.25;
+
+.bsw-definition-card__eyebrow {
+  display: block;
+  margin: 0 0 0.42rem;
+  color: var(--muted);
   font-family: var(--font-body);
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: -.02em;
-  color: var(--fg);
+  letter-spacing: 0.10em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
+
+.bsw-definition-card--owned .bsw-definition-card__eyebrow {
+  color: var(--accent-text);
+}
+
+.bsw-definition-card__heading h3 {
+  margin: 0 0 0.58rem;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.06rem, 1.38vw, 1.28rem);
+  font-weight: 700;
+  letter-spacing: -0.033em;
+  line-height: 1.22;
+  text-wrap: balance;
+}
+
 .bsw-definition-card__heading p {
   margin: 0;
   color: var(--muted);
-  font-size: .82rem;
-  line-height: 1.45;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-wrap: pretty;
 }
+
 .bsw-definition-card__list {
   display: grid;
   align-content: start;
-  gap: .65rem;
+  gap: 0.86rem;
   margin: 0;
-  padding: .9rem 0 0;
+  padding: 1.18rem 0 0;
   border-top: 1px solid var(--border);
   list-style: none;
 }
+
 .bsw-definition-card__list > li {
   display: grid;
-  grid-template-columns: 1.1rem minmax(0,1fr);
+  grid-template-columns: 1.05rem minmax(0, 1fr);
   align-items: start;
-  gap: .52rem;
+  gap: 0.72rem;
   color: var(--fg);
-  font-size: .76rem;
-  line-height: 1.35;
+  font-family: var(--font-body);
+  font-size: 0.81rem;
+  font-weight: 400;
+  line-height: 1.5;
 }
+
 .bsw-definition-card__check,
 .bsw-definition-card__minus {
   display: grid;
   place-items: center;
-  width: 1rem; height: 1rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.1rem;
   border-radius: var(--radius-full);
+  flex: none;
 }
-.bsw-definition-card__check { background: var(--accent); color: var(--fg); }
-.bsw-definition-card__minus { background: var(--surface-3); color: var(--muted); }
-.bsw-definition-card__list--platform > li { color: var(--muted); }
+
+.bsw-definition-card__check {
+  background: var(--accent);
+  color: var(--fg);
+}
+
+.bsw-definition-card__minus {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.bsw-definition-card__list--platform > li {
+  color: var(--muted);
+}
+
 .bsw-definition-card__note {
   margin: auto 0 0;
-  padding-top: .65rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: .69rem;
-  line-height: 1.4;
+  font-family: var(--font-body);
+  font-size: 0.73rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 78rem) {
@@ -198,6 +289,7 @@
   .bsw-definition__answer { max-width: 75ch; }
   .bsw-definition__insight { max-width: 39rem; }
   .bsw-definition-card__visual { height: clamp(16rem, 28vw, 23rem); }
+  .bsw-definition-card__heading { min-height: 0; }
   .bsw-definition-card__heading h3 { font-size: 1.18rem; }
 }
 @media (max-width: 43rem) {
@@ -205,6 +297,10 @@
   .bsw-definition__inner { width: calc(100% - 1.35rem); }
   .bsw-definition__heading { font-size: clamp(2.1rem, 8.5vw, 3.1rem); }
   .bsw-definition__comparison { grid-template-columns: minmax(0,1fr); }
-  .bsw-definition-card__visual { height: clamp(15rem, 70vw, 22rem); }
+  .bsw-definition-card__visual { height: clamp(15rem, 70vw, 22rem); padding: 0.65rem; }
+  .bsw-definition-card__content { gap: 1.1rem; padding: 1.15rem; }
+  .bsw-definition-card__heading { grid-template-columns: 2.35rem minmax(0,1fr); gap: 0.8rem; }
+  .bsw-definition-card__icon { width: 2.35rem; height: 2.35rem; }
+  .bsw-definition-card__list { gap: 0.75rem; }
   .bsw-definition__insight { padding: 1rem; }
 }
