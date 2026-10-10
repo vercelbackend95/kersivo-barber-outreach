@@ -2,6 +2,8 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import BarbershopWebsitesHero from '@/components/barbershop-websites/BarbershopWebsitesHero.astro';
+import WhatIsBarbershopWebsite from '@/components/barbershop-websites/WhatIsBarbershopWebsite.astro';
+import '@/styles/components/barbershop-websites-definition.css';
 import {
   BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
@@ -26,6 +28,7 @@ const currentYear = new Date().getFullYear();
 >
   <main class="bsw-page">
     <BarbershopWebsitesHero />
+    <WhatIsBarbershopWebsite />
 
     <Footer50
       showIntro={false}
