@@ -75,6 +75,21 @@ describe('/barbershop-websites pillar hero', () => {
     }
   });
 
+  it('uses a visual-only calendar rail matching the real booking date picker', () => {
+    const preview = read(`${componentDir}BookingPreview.astro`);
+    const calendar = preview.split('<p class="bsw-step__label">Pick a date')[1]
+      ?.split('<p class="bsw-step__label">Choose a time')[0] ?? '';
+    expect(calendar).toContain('bsw-date-preview__header');
+    expect(calendar).toContain('bsw-date-preview__days');
+    expect(calendar).toContain('bsw-date-preview__day is-selected');
+    expect(calendar).toContain('Example dates');
+    expect(calendar).toContain('not interactive');
+    expect(calendar).not.toMatch(/<button|<input|<a\\b|onClick|onChange/);
+    const css = read('../../styles/components/barbershop-websites-hero.css');
+    expect(css).toContain('.bsw-date-preview__day.is-selected');
+    expect(css).toContain('background: var(--accent);');
+  });
+
   it('shares the marketing route family for page transitions', () => {
     expect(getRouteFamily(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('marketing');
   });
