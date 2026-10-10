@@ -1,20 +1,5 @@
 ---
-import { ChartNoAxesColumnIncreasing, Check, Globe, Minus, Users } from 'lucide-react';
-
-const ownWebsiteBenefits = [
-  'Your branding, website and domain',
-  'Clear services, prices and barber profiles',
-  'Online booking connected to your site',
-  'Retail pickup in Full KERSIVO',
-  'One dedicated home for your business',
-];
-
-const bookingProfilePoints = [
-  'A profile within a wider booking service',
-  'Layout and navigation shaped by the provider',
-  'Customers may discover other businesses there',
-  'Some platforms offer their own website tools',
-];
+import { BellRing, CalendarCheck2, Globe2, LayoutDashboard, Percent } from 'lucide-react';
 ---
 
 <section class="bsw-definition" aria-labelledby="bsw-definition-heading">
@@ -22,91 +7,81 @@ const bookingProfilePoints = [
     <div class="bsw-definition__intro">
       <p class="bsw-definition__eyebrow">The basics</p>
       <h2 id="bsw-definition-heading" class="bsw-definition__heading">
-        What is a<br class="bsw-definition__desktop-break" /> barbershop website<span class="bsw-definition__period">?</span>
+        What is a barbershop website<span class="bsw-definition__period">?</span>
       </h2>
+
       <p class="bsw-definition__answer">
-        A barbershop website is the online home of an independent barber or barbershop.
-        It brings together your brand, services, prices, team, location and a clear
-        way for clients to book. It can live on your own domain and connect directly
-        to online booking. Unlike relying only on a profile within a booking
-        platform, it gives customers a dedicated place to discover your business
-        and understand what makes it different.
+        A barbershop website is the dedicated online home for a barber or barbershop.
+        It shows clients who you are, what services you offer, who works behind
+        the chairs, where to find you and how to book. A professional site can use
+        your own domain, reflect your shop's identity and connect directly to online
+        booking. Unlike relying only on a profile within a third-party booking
+        platform, a website gives your business its own place for customers to
+        discover, explore and book.
       </p>
-      <div class="bsw-definition__insight">
-        <ChartNoAxesColumnIncreasing size={22} strokeWidth={1.8} aria-hidden="true" />
-        <p>
-          Your own website gives your barbershop a dedicated place to build
-          its identity, showcase your work and turn interest into bookings.
-        </p>
-      </div>
+
+      <p class="bsw-definition__context">
+        For an independent UK barbershop, that means your first impression, service
+        information and booking journey can sit together under your brand.
+        Full KERSIVO brings the website, online bookings and day-to-day barbershop
+        tools into one connected experience.
+      </p>
     </div>
 
-    <div class="bsw-definition__comparison">
-      <article class="bsw-definition-card bsw-definition-card--owned" aria-labelledby="bsw-definition-owned-title">
-        <div class="bsw-definition-card__visual bsw-definition-card__visual--owned">
-          <img
-            class="bsw-definition-card__image"
-            src="/images/barbershop-websites/blackline.webp"
-            alt="Illustrative phone and laptop showing the fictional BLACKLINE BARBERS demonstration website with online booking and haircut services."
-            width="1449"
-            height="1086"
-            loading="lazy"
-            decoding="async"
-          />
+    <div class="bsw-definition__benefits" aria-label="Five practical benefits of a Full KERSIVO barbershop website">
+      <article class="bsw-definition-benefit">
+        <div class="bsw-definition-benefit__top">
+          <span class="bsw-definition-benefit__icon" aria-hidden="true">
+            <Globe2 size={24} strokeWidth={1.7} />
+          </span>
+          <span class="bsw-definition-benefit__number" aria-hidden="true">01</span>
         </div>
-
-        <div class="bsw-definition-card__content">
-          <div class="bsw-definition-card__heading">
-            <span class="bsw-definition-card__icon bsw-definition-card__icon--owned" aria-hidden="true">
-              <Globe size={26} strokeWidth={1.8} />
-            </span>
-            <div>
-              <h3 id="bsw-definition-owned-title">Your own website</h3>
-              <p>A branded website on your own domain, built around your barbershop and connected to online booking.</p>
-            </div>
-          </div>
-          <ul class="bsw-definition-card__list" role="list">
-            {ownWebsiteBenefits.map((benefit) => (
-              <li>
-                <span class="bsw-definition-card__check" aria-hidden="true"><Check size={12} strokeWidth={2.5} /></span>
-                <span>{benefit}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <h3>Your brand. Your domain.</h3>
+        <p>A professionally prepared website that reflects your shop, with one standard domain included.</p>
       </article>
 
-      <article class="bsw-definition-card bsw-definition-card--platform" aria-labelledby="bsw-definition-platform-title">
-        <div class="bsw-definition-card__visual bsw-definition-card__visual--platform">
-          <img
-            class="bsw-definition-card__image"
-            src="/images/barbershop-websites/booksy.webp?v=20261010-2"
-            alt="Illustrative Booksy marketplace and booking profile on laptop and phone, featuring fictional barbershops and example listings rather than actual customer data."
-            width="1536"
-            height="1024"
-            loading="lazy"
-            decoding="async"
-          />
+      <article class="bsw-definition-benefit">
+        <div class="bsw-definition-benefit__top">
+          <span class="bsw-definition-benefit__icon" aria-hidden="true">
+            <CalendarCheck2 size={24} strokeWidth={1.7} />
+          </span>
+          <span class="bsw-definition-benefit__number" aria-hidden="true">02</span>
         </div>
+        <h3>Bookings built in.</h3>
+        <p>Clients choose a service, barber and available time through your own website.</p>
+      </article>
 
-        <div class="bsw-definition-card__content">
-          <div class="bsw-definition-card__heading">
-            <span class="bsw-definition-card__icon" aria-hidden="true"><Users size={26} strokeWidth={1.8} /></span>
-            <div>
-              <h3 id="bsw-definition-platform-title">A booking platform profile</h3>
-              <p>A business profile within a booking service or marketplace, often alongside other shops.</p>
-            </div>
-          </div>
-          <ul class="bsw-definition-card__list bsw-definition-card__list--platform" role="list">
-            {bookingProfilePoints.map((point) => (
-              <li>
-                <span class="bsw-definition-card__minus" aria-hidden="true"><Minus size={12} strokeWidth={2} /></span>
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-          <p class="bsw-definition-card__note">Both can support bookings. The available website and branding features depend on the provider.</p>
+      <article class="bsw-definition-benefit">
+        <div class="bsw-definition-benefit__top">
+          <span class="bsw-definition-benefit__icon" aria-hidden="true">
+            <BellRing size={24} strokeWidth={1.7} />
+          </span>
+          <span class="bsw-definition-benefit__number" aria-hidden="true">03</span>
         </div>
+        <h3>Deposits & reminders.</h3>
+        <p>Optional £5 booking deposits, email confirmations and appointment reminders by email and SMS.</p>
+      </article>
+
+      <article class="bsw-definition-benefit">
+        <div class="bsw-definition-benefit__top">
+          <span class="bsw-definition-benefit__icon" aria-hidden="true">
+            <Percent size={24} strokeWidth={1.7} />
+          </span>
+          <span class="bsw-definition-benefit__number" aria-hidden="true">04</span>
+        </div>
+        <h3>0% KERSIVO commission.</h3>
+        <p>No KERSIVO commission on bookings or retail payments. Standard Stripe fees still apply.</p>
+      </article>
+
+      <article class="bsw-definition-benefit">
+        <div class="bsw-definition-benefit__top">
+          <span class="bsw-definition-benefit__icon" aria-hidden="true">
+            <LayoutDashboard size={24} strokeWidth={1.7} />
+          </span>
+          <span class="bsw-definition-benefit__number" aria-hidden="true">05</span>
+        </div>
+        <h3>More than a website.</h3>
+        <p>Manage barbers, services and clients, with reports and a retail pickup shop.</p>
       </article>
     </div>
   </div>
