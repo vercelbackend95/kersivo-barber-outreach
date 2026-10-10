@@ -1,210 +1,247 @@
-/* Pillar section 02. The section has NO background of its own:
-   it inherits the existing KERSIVO page surface, font and brand tokens.
-   All mockups are illustrative HTML/CSS, not real third-party screenshots. */
+/* Section 02: a centred, indexable answer and five concise Full KERSIVO benefits.
+   Uses only global KERSIVO design tokens. No section background or illustration. */
 .bsw-definition {
-  padding: clamp(4rem, 6.5vw, 7rem) 0;
+  padding: clamp(4.5rem, 7vw, 7.75rem) 0;
   color: var(--fg);
   font-family: var(--font-body);
 }
 
 .bsw-definition__inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1.86fr);
-  gap: clamp(1.5rem, 2vw, 2.75rem);
-  align-items: center;
-  width: min(94vw, 91.1rem);
+  width: min(92vw, 91.1rem);
   margin-inline: auto;
 }
 
-.bsw-definition__intro { min-width: 0; }
+.bsw-definition__intro {
+  width: 100%;
+  max-width: 63rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
 .bsw-definition__eyebrow {
   margin: 0 0 1.15rem;
+  color: var(--accent-text);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1.3;
   text-transform: uppercase;
-  color: var(--accent-text);
 }
 
 .bsw-definition__heading {
-  max-width: 12ch;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 22ch;
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: clamp(2.45rem, 3.5vw, 3.75rem);
+  font-size: clamp(2.3rem, 4.3vw, 4.2rem);
   font-weight: 700;
-  line-height: 1.04;
+  line-height: 1.08;
   letter-spacing: -0.052em;
   text-wrap: balance;
 }
 
-.bsw-definition__period { color: var(--accent-text); }
+.bsw-definition__period {
+  color: var(--accent-text);
+}
 
 .bsw-definition__answer {
-  max-width: 59ch;
-  margin: 1.45rem 0 0;
+  max-width: 72ch;
+  margin: clamp(1.4rem, 2.3vw, 2rem) auto 0;
+  color: var(--fg);
   font-family: var(--font-body);
-  font-size: clamp(0.9rem, 1.05vw, 1rem);
-  line-height: 1.65;
+  font-size: clamp(1.01rem, 1.22vw, 1.13rem);
   font-weight: 400;
-  color: var(--muted);
+  line-height: 1.7;
   text-wrap: pretty;
 }
 
-.bsw-definition__insight {
-  display: grid;
-  grid-template-columns: 1.4rem minmax(0,1fr);
-  align-items: start;
-  gap: 1rem;
-  max-width: 35rem;
-  margin-top: 1.75rem;
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-12);
-  background: var(--surface-1);
-}
-.bsw-definition__insight svg { color: var(--accent-text); margin-top: .13rem; }
-.bsw-definition__insight p {
-  margin: 0;
-  font-size: .94rem;
-  line-height: 1.55;
-  color: var(--fg);
+.bsw-definition__context {
+  max-width: 75ch;
+  margin: 0.9rem auto 0;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: clamp(0.94rem, 1.03vw, 1.01rem);
+  font-weight: 400;
+  line-height: 1.7;
+  text-wrap: pretty;
 }
 
-.bsw-definition__comparison {
+/* Five small, equal-purpose cards; no photos or second product demo. */
+.bsw-definition__benefits {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  align-items: stretch;
-  gap: clamp(.65rem, 1vw, 1rem);
-  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(0.65rem, 1vw, 1rem);
+  margin-top: clamp(2.5rem, 4vw, 4rem);
 }
 
-.bsw-definition-card {
+.bsw-definition-benefit {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 14.5rem;
+  padding: clamp(1.05rem, 1.4vw, 1.5rem);
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-16);
   background: var(--surface-1);
-  color: var(--fg);
-}
-.bsw-definition-card--owned {
-  border-color: color-mix(in srgb, var(--accent) 67%, var(--border));
+  box-shadow: var(--shadow-xs);
 }
 
-.bsw-definition-card__visual {
-  position: relative;
-  height: clamp(14rem, 20vw, 20rem);
-  min-height: 0;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border);
-}
-.bsw-definition-card__visual--platform { border-color: var(--border); }
-
-.bsw-definition-card__image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+.bsw-definition-benefit::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 15%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--fg) 15%, transparent),
+    transparent
+  );
+  pointer-events: none;
 }
 
-.bsw-definition-card__content {
+.bsw-definition-benefit__top {
   display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 1rem;
-  min-width: 0;
-  padding: clamp(1rem, 1.25vw, 1.4rem);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
-.bsw-definition-card__heading {
-  display: grid;
-  grid-template-columns: 2.4rem minmax(0,1fr);
-  gap: .75rem;
-  align-items: start;
-}
-.bsw-definition-card__icon {
-  display: grid;
+
+.bsw-definition-benefit__icon {
+  display: inline-grid;
   place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border: 1px solid var(--border);
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
   border-radius: var(--radius-12);
-  color: var(--muted);
-}
-.bsw-definition-card__icon--owned {
-  border-color: var(--accent);
+  background: var(--surface-2);
   color: var(--accent-text);
 }
-.bsw-definition-card__heading h3 {
-  margin: .05rem 0 .35rem;
-  font-size: clamp(.96rem, 1.25vw, 1.25rem);
-  line-height: 1.25;
-  font-family: var(--font-body);
-  font-weight: 700;
-  letter-spacing: -.02em;
-  color: var(--fg);
-}
-.bsw-definition-card__heading p {
-  margin: 0;
+
+.bsw-definition-benefit__number {
+  margin-top: 0.13rem;
   color: var(--muted);
-  font-size: .82rem;
-  line-height: 1.45;
-}
-.bsw-definition-card__list {
-  display: grid;
-  align-content: start;
-  gap: .65rem;
-  margin: 0;
-  padding: .9rem 0 0;
-  border-top: 1px solid var(--border);
-  list-style: none;
-}
-.bsw-definition-card__list > li {
-  display: grid;
-  grid-template-columns: 1.1rem minmax(0,1fr);
-  align-items: start;
-  gap: .52rem;
-  color: var(--fg);
-  font-size: .76rem;
-  line-height: 1.35;
-}
-.bsw-definition-card__check,
-.bsw-definition-card__minus {
-  display: grid;
-  place-items: center;
-  width: 1rem; height: 1rem;
-  border-radius: var(--radius-full);
-}
-.bsw-definition-card__check { background: var(--accent); color: var(--fg); }
-.bsw-definition-card__minus { background: var(--surface-3); color: var(--muted); }
-.bsw-definition-card__list--platform > li { color: var(--muted); }
-.bsw-definition-card__note {
-  margin: auto 0 0;
-  padding-top: .65rem;
-  color: var(--muted);
-  font-size: .69rem;
-  line-height: 1.4;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
 }
 
-@media (max-width: 78rem) {
-  .bsw-definition__inner { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
-  .bsw-definition__intro { max-width: 67rem; }
-  .bsw-definition__heading { max-width: 22ch; }
-  .bsw-definition__desktop-break { display: none; }
-  .bsw-definition__answer { max-width: 75ch; }
-  .bsw-definition__insight { max-width: 39rem; }
-  .bsw-definition-card__visual { height: clamp(16rem, 28vw, 23rem); }
-  .bsw-definition-card__heading h3 { font-size: 1.18rem; }
+.bsw-definition-benefit h3 {
+  margin: auto 0 0;
+  padding-top: 1.6rem;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(0.94rem, 1.1vw, 1.14rem);
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
-@media (max-width: 43rem) {
-  .bsw-definition { padding-block: clamp(3.5rem, 11vw, 5rem); }
-  .bsw-definition__inner { width: calc(100% - 1.35rem); }
-  .bsw-definition__heading { font-size: clamp(2.1rem, 8.5vw, 3.1rem); }
-  .bsw-definition__comparison { grid-template-columns: minmax(0,1fr); }
-  .bsw-definition-card__visual { height: clamp(15rem, 70vw, 22rem); }
-  .bsw-definition__insight { padding: 1rem; }
+
+.bsw-definition-benefit p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: clamp(0.77rem, 0.87vw, 0.85rem);
+  font-weight: 400;
+  line-height: 1.52;
+  text-wrap: pretty;
+}
+
+@media (max-width: 79rem) and (min-width: 48.01rem) {
+  .bsw-definition__benefits {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .bsw-definition-benefit {
+    grid-column: span 2;
+    min-height: 13rem;
+  }
+
+  .bsw-definition-benefit:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+
+  .bsw-definition-benefit:nth-child(5) {
+    grid-column: 4 / span 2;
+  }
+
+  .bsw-definition-benefit h3 {
+    font-size: 1.05rem;
+  }
+
+  .bsw-definition-benefit p {
+    font-size: 0.84rem;
+  }
+}
+
+@media (max-width: 48rem) and (min-width: 34.01rem) {
+  .bsw-definition__benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bsw-definition-benefit {
+    min-height: 12.7rem;
+  }
+
+  .bsw-definition-benefit:nth-child(5) {
+    grid-column: 1 / -1;
+    width: min(100%, 24rem);
+    justify-self: center;
+  }
+
+  .bsw-definition-benefit h3 {
+    font-size: 1.04rem;
+  }
+}
+
+@media (max-width: 34rem) {
+  .bsw-definition {
+    padding: clamp(3.6rem, 11vw, 5rem) 0;
+  }
+
+  .bsw-definition__inner {
+    width: calc(100% - 1.5rem);
+  }
+
+  .bsw-definition__heading {
+    font-size: clamp(2.05rem, 8.4vw, 2.75rem);
+  }
+
+  .bsw-definition__answer {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .bsw-definition__context {
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
+  .bsw-definition__benefits {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.7rem;
+    margin-top: 2.5rem;
+  }
+
+  .bsw-definition-benefit {
+    min-height: 0;
+    padding: 1.15rem;
+  }
+
+  .bsw-definition-benefit h3 {
+    padding-top: 0.95rem;
+    font-size: 1.04rem;
+  }
+
+  .bsw-definition-benefit p {
+    font-size: 0.86rem;
+  }
 }
