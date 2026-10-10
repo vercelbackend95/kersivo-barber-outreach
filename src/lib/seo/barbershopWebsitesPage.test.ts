@@ -84,7 +84,7 @@ describe('/barbershop-websites pillar hero', () => {
     expect(calendar).toContain('bsw-date-preview__day is-selected');
     expect(calendar).toContain('Example dates');
     expect(calendar).toContain('not interactive');
-    expect(calendar).not.toMatch(/<button|<input|<a\\b|onClick|onChange/);
+    expect(calendar).not.toMatch(/<button|<input|<a\b|onClick|onChange/);
     const css = read('../../styles/components/barbershop-websites-hero.css');
     expect(css).toContain('.bsw-date-preview__day.is-selected');
     expect(css).toContain('background: var(--accent);');
