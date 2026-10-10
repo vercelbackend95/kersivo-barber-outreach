@@ -33,8 +33,11 @@ describe('/barbershop-websites — section 02 definition', () => {
   });
 
   it('uses real BLACKLINE photography, no embeds and no unrelated section background', () => {
-    expect(section).toContain('/images/barbershop-websites/site-hero-1100.webp');
-    expect(section).toContain('/images/barbershop-websites/site-hero-640.webp');
+    expect(section).toContain('/images/barbershop-websites/blackline.webp');
+    expect(section).toContain('width="1449"');
+    expect(section).toContain('height="1086"');
+    expect(section).not.toContain('bsw-definition-device');
+    expect(styles).toContain('.bsw-definition-card__image');
     expect(section).not.toMatch(/<iframe|<embed|<video|<button/);
     const rule = styles.match(/\.bsw-definition\s*\{([^}]+)\}/)?.[1] ?? '';
     expect(rule).not.toMatch(/background\s*:/);
