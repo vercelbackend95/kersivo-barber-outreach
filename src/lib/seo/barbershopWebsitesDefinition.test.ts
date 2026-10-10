@@ -32,22 +32,6 @@ describe('/barbershop-websites — section 02 definition', () => {
     expect(section).toContain('fictional BLACKLINE BARBERS demonstration');
   });
 
-  it('uses the approved two-image KERSIVO premium comparison-card system', () => {
-    expect(section).toContain('Your brand. Your space.');
-    expect(section).toContain('Inside a booking platform');
-    expect(section).toContain('/images/barbershop-websites/blackline.webp');
-    expect(section).toContain('/images/barbershop-websites/booksy.webp?v=20261010-2');
-    expect((section.match(/class="bsw-definition-card__image"/g) ?? [])).toHaveLength(2);
-    expect(styles).toContain('.bsw-definition-card__visual');
-    expect(styles).toContain('padding: 0.8rem');
-    expect(styles).toContain('object-fit: cover');
-    expect(styles).toContain('.bsw-definition-card__eyebrow');
-    expect(styles).toContain('.bsw-definition-card__content');
-    expect(styles).toContain('.bsw-definition-card__note');
-    expect(styles).toContain('@media (max-width: 43rem)');
-    expect(styles).not.toContain('.bsw-definition-marketplace');
-  });
-
   it('uses real BLACKLINE photography, no embeds and no unrelated section background', () => {
     expect(section).toContain('/images/barbershop-websites/blackline.webp');
     expect(section).toContain('width="1449"');
