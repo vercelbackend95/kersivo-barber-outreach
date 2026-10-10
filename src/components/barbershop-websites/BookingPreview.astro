@@ -69,16 +69,25 @@ const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=
     <li class="bsw-step">
       <span class="bsw-step__num" aria-hidden="true">3</span>
       <div class="bsw-step__body">
-        <p class="bsw-step__label">Pick a date</p>
-        <div class="bsw-field bsw-field--date">
-          <span class="bsw-field__inline">
-            <CalendarDays size={14} strokeWidth={1.6} aria-hidden="true" />
-            <span>
-              <span class="bsw-field__main">Sample date</span>
-              <span class="bsw-field__meta">Choose a real date in the demo</span>
+        <p class="bsw-step__label">Pick a date <span class="bsw-step__hint">Example dates</span></p>
+        <!-- Static miniature of the real BookingDateCarousel from /demo/book.
+             Date tiles and navigation icons intentionally contain no buttons or handlers. -->
+        <div class="bsw-date-preview" aria-label="Illustrative October 2026 booking dates. This preview is not interactive and does not show availability.">
+          <div class="bsw-date-preview__header">
+            <strong>October 2026</strong>
+            <span class="bsw-date-preview__actions" aria-hidden="true">
+              <span class="bsw-date-preview__control">‹</span>
+              <span class="bsw-date-preview__control">›</span>
+              <span class="bsw-date-preview__control bsw-date-preview__control--calendar">
+                <CalendarDays size={13} strokeWidth={1.7} />
+              </span>
             </span>
-          </span>
-          <ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" />
+          </div>
+          <ul class="bsw-date-preview__days" role="list">
+            <li class="bsw-date-preview__day"><span>Mon</span><strong>12</strong></li>
+            <li class="bsw-date-preview__day is-selected"><span>Tue</span><strong>13</strong></li>
+            <li class="bsw-date-preview__day"><span>Wed</span><strong>14</strong></li>
+          </ul>
         </div>
       </div>
     </li>
