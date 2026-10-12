@@ -1,173 +1,217 @@
 ---
 import '@/styles/components/barbershop-websites-brand-to-booking.css';
-import { DEMO_BARBERS, demoBarberBookingHref } from '@/lib/demo/barbers';
-import { DEMO_BOOK_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_BARBERS, demoBarberBookingHref, demoBarberFirstName } from '@/lib/demo/barbers';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 
-const discoverImages = {
-  main: {
-    src: '/demo/gallery/barber-at-work.webp',
-    width: 2000,
-    height: 1333,
-    alt: 'A barber attending a client at the chair in the fictional BLACKLINE shop.',
-  },
-  detail: {
-    src: '/demo/gallery/scissor-cut.webp',
-    width: 1333,
-    height: 2000,
-    alt: 'Close-up of a scissor cut at the fictional BLACKLINE shop.',
-  },
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_websites_brand_to_booking';
+
+const barber = DEMO_BARBERS.find((item) => item.slug === 'noah-reid') ?? DEMO_BARBERS[0];
+const firstName = demoBarberFirstName(barber.name);
+const barbersHref = '/demo/barbers';
+const bookingHref = demoBarberBookingHref(barber.slug);
+
+const shopPhoto = {
+  src: '/demo/gallery/barber-at-work.webp',
+  width: 2000,
+  height: 1333,
 };
 
-const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3);
-const barbers = DEMO_BARBERS.map((barber) => ({
-  name: barber.name,
-  href: demoBarberBookingHref(barber.slug),
-  thumb: `/images/barbershop-websites/barber-${barber.slug}.webp`,
-  alt: barber.image.alt,
-}));
-
-const exampleService = services[0];
-const exampleBarber = DEMO_BARBERS[0];
+const bookingSteps = [
+  { label: 'Choose a service', value: 'Pick what you need', state: 'current' },
+  { label: 'Choose a barber', value: barber.name, state: 'carried' },
+  { label: 'Pick a time', value: 'Date and available slots', state: 'next' },
+  { label: 'Your details', value: 'Demo only — details stay in this browser', state: 'next' },
+];
 ---
 
 <section class="bsw-b2b" aria-labelledby="bsw-b2b-heading">
   <div class="bsw-b2b__inner">
-    <header class="bsw-b2b__intro">
-      <p class="bsw-b2b__eyebrow">From brand to booking</p>
-      <h2 id="bsw-b2b-heading" class="bsw-b2b__heading">
-        Your brand. Your website. <span class="bsw-b2b__accent">Your bookings.</span>
-      </h2>
-      <p class="bsw-b2b__lede">
-        From discovering your barbershop to booking an appointment, give clients one connected
-        experience built around your business.
-      </p>
-      <p class="bsw-b2b__thought">
-        Your website should feel like your shop — with online booking that fits naturally into the
-        experience.
-      </p>
-      <div class="bsw-b2b__actions">
-        <a class="bsw-b2b__cta bsw-b2b__cta--primary" href={DEMO_HOME_HREF}>Explore the working demo</a>
-        <a class="bsw-b2b__cta bsw-b2b__cta--secondary" href={DEMO_BOOK_HREF}>Try a demo booking</a>
+    <header class="bsw-b2b__header">
+      <div>
+        <p class="bsw-b2b__eyebrow">From brand to booking</p>
+        <h2 id="bsw-b2b-heading" class="bsw-b2b__heading">
+          Your brand. Your website. <span class="bsw-b2b__accent">Your bookings.</span>
+        </h2>
       </div>
-      <p class="bsw-b2b__disclosure">
-        BLACKLINE Barbers is a fictional demonstration shop. Demo bookings stay in your browser
-        session — no real appointment is made and nothing is charged.
-      </p>
+      <div class="bsw-b2b__intro">
+        <p class="bsw-b2b__lede">
+          From discovering your barbershop to booking an appointment, give clients one connected
+          experience built around your business. Your name, photography and colours carry through
+          every step — booking included.
+        </p>
+        <a
+          class="bsw-b2b__cta"
+          href={DEMO_HOME_HREF}
+          data-track={TRACK_EVENT}
+          data-track-placement={TRACK_PLACEMENT}
+        >
+          Explore the working demo <span aria-hidden="true">→</span>
+        </a>
+        <p class="bsw-b2b__disclosure">
+          BLACKLINE Barbers is a fictional demonstration shop. Demo bookings stay in your browser
+          session — no real appointment is made and nothing is charged.
+        </p>
+      </div>
     </header>
 
-    <ol class="bsw-b2b__journey" role="list">
-      <li class="bsw-b2b-step">
-        <span class="bsw-b2b-step__number" aria-hidden="true">01</span>
-        <div class="bsw-b2b-step__copy">
-          <h3 class="bsw-b2b-step__title">Discover the shop</h3>
-          <p class="bsw-b2b-step__text">
-            Clients meet your name, your photos and your work first, so they know straight away whose
-            shop this is.
-          </p>
-        </div>
-        <div class="bsw-b2b-step__visual bsw-b2b-discover">
-          <img
-            class="bsw-b2b-discover__main"
-            src={discoverImages.main.src}
-            alt={discoverImages.main.alt}
-            width={discoverImages.main.width}
-            height={discoverImages.main.height}
-            loading="lazy"
-            decoding="async"
-          />
-          <img
-            class="bsw-b2b-discover__detail"
-            src={discoverImages.detail.src}
-            alt={discoverImages.detail.alt}
-            width={discoverImages.detail.width}
-            height={discoverImages.detail.height}
-            loading="lazy"
-            decoding="async"
-          />
-          <div class="bsw-b2b-discover__plate">
-            <p class="bsw-b2b-discover__wordmark">BLACKLINE</p>
-            <a class="bsw-b2b__link" href={DEMO_HOME_HREF}>Visit the BLACKLINE homepage</a>
-          </div>
-        </div>
-      </li>
+    <div class="bsw-b2b__stage">
+      <div class="bsw-b2b__legend">
+        <p class="bsw-b2b__identity">
+          <span class="bsw-b2b__identity-label">BLACKLINE identity</span>
+          <span class="bsw-b2b__swatches">
+            <span class="bsw-b2b__swatch bsw-b2b__swatch--carbon"><span class="sr-only">Carbon</span></span>
+            <span class="bsw-b2b__swatch bsw-b2b__swatch--ivory"><span class="sr-only">Ivory</span></span>
+            <span class="bsw-b2b__swatch bsw-b2b__swatch--cobalt"><span class="sr-only">Cobalt</span></span>
+          </span>
+          <span class="bsw-b2b__identity-items">Wordmark · Photography · Voice</span>
+        </p>
+        <p class="bsw-b2b__note">Illustrative previews of the demo pages. The links open the working demo.</p>
+      </div>
 
-      <li class="bsw-b2b-step">
-        <span class="bsw-b2b-step__number" aria-hidden="true">02</span>
-        <div class="bsw-b2b-step__copy">
-          <h3 class="bsw-b2b-step__title">Explore and choose</h3>
-          <p class="bsw-b2b-step__text">
-            They compare services with clear prices and pick the barber they want, without leaving your
-            website.
-          </p>
-        </div>
-        <div class="bsw-b2b-step__visual bsw-b2b-choose">
-          <ul class="bsw-b2b-choose__services" role="list" aria-label="Example BLACKLINE services">
-            {services.map((service) => (
-              <li class="bsw-b2b-choose__service">
-                <span class="bsw-b2b-choose__service-name">{service.name}</span>
-                <span class="bsw-b2b-choose__service-meta">
-                  {service.durationMinutes} min · {formatDemoPriceGbp(service.pricePence)}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <ul class="bsw-b2b-choose__barbers" role="list" aria-label="BLACKLINE barbers">
-            {barbers.map((barber) => (
-              <li>
-                <a
-                  class="bsw-b2b-choose__barber"
-                  href={barber.href}
-                  aria-label={`Start a demo booking with ${barber.name}`}
-                >
-                  <img
-                    src={barber.thumb}
-                    alt={barber.alt}
-                    width="160"
-                    height="160"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span class="bsw-b2b-choose__barber-name">{barber.name}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </li>
+      <p class="bsw-b2b__swipe" aria-hidden="true">Swipe to follow the journey</p>
 
-      <li class="bsw-b2b-step">
-        <span class="bsw-b2b-step__number" aria-hidden="true">03</span>
-        <div class="bsw-b2b-step__copy">
-          <h3 class="bsw-b2b-step__title">Book an appointment</h3>
-          <p class="bsw-b2b-step__text">
-            Then they book on the same website, in the same look, from the first tap to the
-            confirmation.
-          </p>
-        </div>
-        <div class="bsw-b2b-step__visual bsw-b2b-book">
-          <p class="bsw-b2b-book__label">Example booking summary</p>
-          <dl class="bsw-b2b-book__summary">
-            <div>
-              <dt>Shop</dt>
-              <dd>BLACKLINE Barbers</dd>
+      <div class="bsw-b2b__track" role="region" aria-label="The BLACKLINE client journey" tabindex="0">
+        <ol class="bsw-b2b__moments" role="list">
+          <li class="bsw-b2b-moment">
+            <div
+              class="bsw-b2b-phone"
+              role="img"
+              aria-label="Illustrative preview of the BLACKLINE demo homepage: shop photography, the headline Precision in every detail and a Book an appointment button."
+            >
+              <div class="bsw-b2b-phone__screen" aria-hidden="true">
+                <div class="bsw-b2b-phone__bar">
+                  <span class="bsw-b2b-phone__wordmark">BLACKLINE</span>
+                  <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
+                </div>
+                <img
+                  class="bsw-b2b-phone__photo"
+                  src={shopPhoto.src}
+                  alt=""
+                  width={shopPhoto.width}
+                  height={shopPhoto.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div class="bsw-b2b-phone__body">
+                  <span class="bsw-b2b-phone__kicker">Appointments & walk-ins</span>
+                  <span class="bsw-b2b-phone__title">Precision in every detail.</span>
+                  <span class="bsw-b2b-phone__button">Book an appointment</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <dt>Service</dt>
-              <dd>{exampleService.name} · {formatDemoPriceGbp(exampleService.pricePence)}</dd>
+            <div class="bsw-b2b-moment__caption">
+              <span class="bsw-b2b-moment__number" aria-hidden="true">01</span>
+              <h3 class="bsw-b2b-moment__title">Discover the shop</h3>
+              <p class="bsw-b2b-moment__text">
+                Your name, your photography and your voice make the first impression.
+              </p>
             </div>
-            <div>
-              <dt>Barber</dt>
-              <dd>{exampleBarber.name}</dd>
+          </li>
+
+          <li class="bsw-b2b-moment">
+            <div
+              class="bsw-b2b-phone"
+              role="img"
+              aria-label={`Illustrative preview of the BLACKLINE demo barbers page: ${barber.name}, ${barber.specialisation}, with a Book with ${firstName} button.`}
+            >
+              <div class="bsw-b2b-phone__screen" aria-hidden="true">
+                <div class="bsw-b2b-phone__bar">
+                  <span class="bsw-b2b-phone__wordmark">BLACKLINE</span>
+                  <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
+                </div>
+                <img
+                  class="bsw-b2b-phone__photo bsw-b2b-phone__photo--portrait"
+                  src={barber.image.src}
+                  alt=""
+                  width={barber.image.width}
+                  height={barber.image.height}
+                  style={`object-position: ${barber.objectPosition}`}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div class="bsw-b2b-phone__body">
+                  <span class="bsw-b2b-phone__kicker">Choose your chair.</span>
+                  <span class="bsw-b2b-phone__title">{barber.name}</span>
+                  <span class="bsw-b2b-phone__meta">{barber.specialisation}</span>
+                  <span class="bsw-b2b-phone__button bsw-b2b-phone__button--handoff">Book with {firstName}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <dt>When</dt>
-              <dd>Saturday, 10:30</dd>
+            <div class="bsw-b2b-moment__caption">
+              <span class="bsw-b2b-moment__number" aria-hidden="true">02</span>
+              <h3 class="bsw-b2b-moment__title">Explore and choose</h3>
+              <p class="bsw-b2b-moment__text">
+                Clients get to know your team and choose the barber they want.
+              </p>
+              <a
+                class="bsw-b2b-moment__link"
+                href={barbersHref}
+                data-track={TRACK_EVENT}
+                data-track-placement={TRACK_PLACEMENT}
+              >
+                Meet the BLACKLINE barbers
+              </a>
             </div>
-          </dl>
-          <a class="bsw-b2b__link" href={DEMO_BOOK_HREF}>Book in the working demo</a>
-        </div>
-      </li>
-    </ol>
+          </li>
+
+          <li class="bsw-b2b-moment">
+            <div
+              class="bsw-b2b-phone"
+              role="img"
+              aria-label={`Illustrative preview of the BLACKLINE demo booking page with ${barber.name} already selected as the barber.`}
+            >
+              <div class="bsw-b2b-phone__screen" aria-hidden="true">
+                <div class="bsw-b2b-phone__bar">
+                  <span class="bsw-b2b-phone__wordmark">BLACKLINE</span>
+                  <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
+                </div>
+                <div class="bsw-b2b-phone__body bsw-b2b-phone__body--booking">
+                  <span class="bsw-b2b-phone__kicker">Book an appointment</span>
+                  <ol class="bsw-b2b-steps">
+                    {bookingSteps.map((step, index) => (
+                      <li class:list={['bsw-b2b-steps__item', `is-${step.state}`]}>
+                        <span class="bsw-b2b-steps__index">{index + 1}</span>
+                        <span class="bsw-b2b-steps__text">
+                          <span class="bsw-b2b-steps__label">{step.label}</span>
+                          <span class="bsw-b2b-steps__value">
+                            {step.state === 'carried' && (
+                              <img
+                                src={`/images/barbershop-websites/barber-${barber.slug}.webp`}
+                                alt=""
+                                width="160"
+                                height="160"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            )}
+                            {step.value}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            </div>
+            <div class="bsw-b2b-moment__caption">
+              <span class="bsw-b2b-moment__number" aria-hidden="true">03</span>
+              <h3 class="bsw-b2b-moment__title">Book an appointment</h3>
+              <p class="bsw-b2b-moment__text">
+                Booking continues in the same look, with {firstName} already selected.
+              </p>
+              <a
+                class="bsw-b2b-moment__link"
+                href={bookingHref}
+                data-track={TRACK_EVENT}
+                data-track-placement={TRACK_PLACEMENT}
+              >
+                Start a demo booking with {firstName}
+              </a>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
   </div>
 </section>
