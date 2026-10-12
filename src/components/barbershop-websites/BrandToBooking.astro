@@ -1,12 +1,7 @@
 ---
 import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-brand-to-booking.css';
-import {
-  DEMO_BARBERS,
-  demoBarberBookingHref,
-  demoBarberFirstName,
-  demoBarberRosterIndex,
-} from '@/lib/demo/barbers';
+import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
 
@@ -16,8 +11,6 @@ const TRACK_PLACEMENT = 'barbershop_websites_brand_to_booking';
 const barberIndex = Math.max(0, DEMO_BARBERS.findIndex((item) => item.slug === 'ellis-ward'));
 const barber = DEMO_BARBERS[barberIndex] ?? DEMO_BARBERS[0];
 const firstName = demoBarberFirstName(barber.name);
-const barbersHref = '/demo/barbers';
-const bookingHref = demoBarberBookingHref(barber.slug);
 
 const shopPhoto = {
   src: '/demo/gallery/barber-at-work.webp',
@@ -122,9 +115,12 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
                     />
                     <span class="bsw-b2b-roster__index">{demoBarberRosterIndex(barberIndex)}</span>
                   </span>
-                  <span class="bsw-b2b-roster__name">{barber.name}</span>
-                  <span class="bsw-b2b-roster__spec">{barber.specialisation}</span>
-                  <span class="bsw-b2b-roster__book">Book with {firstName} <span class="bsw-b2b-roster__arrow"></span></span>
+                  <span class="bsw-b2b-roster__details">
+                    <span class="bsw-b2b-roster__name">{barber.name}</span>
+                    <span class="bsw-b2b-roster__spec">{barber.specialisation}</span>
+                    <span class="bsw-b2b-roster__copy">{barber.selectionCopy}</span>
+                    <span class="bsw-b2b-roster__book">Book with {firstName} <span class="bsw-b2b-roster__arrow"></span></span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -134,17 +130,6 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
               <p class="bsw-b2b-moment__text">
                 Clients get to know your team and choose the barber they want.
               </p>
-              <a
-                class="bsw-b2b-moment__action"
-                href={barbersHref}
-                data-track={TRACK_EVENT}
-                data-track-placement={TRACK_PLACEMENT}
-              >
-                <span>Meet the BLACKLINE barbers</span>
-                <span class="bsw-b2b-moment__action-icon">
-                  <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
-                </span>
-              </a>
             </div>
           </li>
 
@@ -214,17 +199,6 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
               <p class="bsw-b2b-moment__text">
                 Booking continues in the same look, with {firstName} already selected.
               </p>
-              <a
-                class="bsw-b2b-moment__action"
-                href={bookingHref}
-                data-track={TRACK_EVENT}
-                data-track-placement={TRACK_PLACEMENT}
-              >
-                <span>Start a demo booking with {firstName}</span>
-                <span class="bsw-b2b-moment__action-icon">
-                  <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
-                </span>
-              </a>
             </div>
           </li>
         </ol>
@@ -236,7 +210,7 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
             BLACKLINE Barbers is a fictional demonstration shop. Demo bookings stay in your browser
             session — no real appointment is made and nothing is charged.
           </p>
-          <p class="bsw-b2b__note">The screens above are illustrative previews. The arrow links open the working demo.</p>
+          <p class="bsw-b2b__note">The screens above are illustrative previews. The working demo lets you follow the journey yourself.</p>
         </div>
         <a
           class="bsw-b2b__cta"

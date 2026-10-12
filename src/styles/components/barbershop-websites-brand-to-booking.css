@@ -1,4 +1,4 @@
-/* Section 04: one showcase panel. An editorial statement introduces three phone previews of
+/* Section 04: an editorial statement introduces three phone previews of
    the real BLACKLINE pages, which step up towards the booking screen above a single rail in the
    shop's own accent. Section chrome uses KERSIVO tokens; the previews use the BLACKLINE identity. */
 
@@ -33,7 +33,6 @@
   --bsw-b2b-bar: 3.25rem;
   --bsw-b2b-node: 2.1rem;
   --bsw-b2b-step: 0rem;
-  --bsw-b2b-indent: 0rem;
 
   padding: clamp(4.5rem, 7vw, 7rem) 0;
   border-top: 1px solid var(--bsw-b2b-line);
@@ -44,13 +43,6 @@
 .bsw-b2b__inner {
   width: min(92vw, 80rem);
   margin-inline: auto;
-}
-
-.bsw-b2b__showcase {
-  padding: clamp(1.25rem, 3.4vw, 2.75rem);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-16);
-  background: var(--surface-1);
 }
 
 /* ---------- Header: one editorial statement ---------- */
@@ -83,10 +75,6 @@
   display: block;
 }
 
-.bsw-b2b__heading > span + span {
-  margin-left: var(--bsw-b2b-indent);
-}
-
 .bsw-b2b__accent {
   color: var(--accent-text);
   font-style: normal;
@@ -94,7 +82,7 @@
 
 .bsw-b2b__lede {
   max-width: 46ch;
-  margin: clamp(1.1rem, 2vw, 1.5rem) 0 0 var(--bsw-b2b-indent);
+  margin: clamp(1.1rem, 2vw, 1.5rem) 0 0;
   color: var(--bsw-b2b-text-2);
   font-size: clamp(1rem, 1.15vw, 1.1rem);
   line-height: 1.7;
@@ -346,14 +334,35 @@
 /* Barbers page roster card */
 
 .bsw-b2b-phone__body--roster {
-  gap: 0.35rem;
+  gap: 0.7rem;
 }
 
+/* The portrait takes whatever height the row gives it, so the card never shows a dead gap. */
 .bsw-b2b-roster {
   position: relative;
   display: block;
+  flex: 1 1 auto;
   width: 100%;
-  margin: 0.4rem 0 0.15rem;
+  min-height: 8.5rem;
+  overflow: hidden;
+  border-radius: var(--bsw-shop-radius-card);
+  background: var(--bsw-shop-surface);
+}
+
+.bsw-b2b-roster .bsw-b2b-phone__photo--portrait {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.bsw-b2b-roster__details {
+  display: grid;
+  justify-items: start;
+  gap: 0.3rem;
+  width: 100%;
 }
 
 .bsw-b2b-roster__index {
@@ -386,11 +395,17 @@
   text-transform: uppercase;
 }
 
+.bsw-b2b-roster__copy {
+  color: var(--bsw-shop-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
 .bsw-b2b-roster__book {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  margin-top: auto;
+  margin-top: 0.35rem;
   padding: 0.55rem 0.7rem;
   border-radius: var(--bsw-shop-radius);
   background: color-mix(in srgb, var(--bsw-shop-accent) 18%, transparent);
@@ -632,8 +647,8 @@
   content: "";
   position: absolute;
   top: calc(var(--bsw-b2b-node) / 2 - 1px);
-  left: 50%;
-  width: calc(100% + var(--bsw-b2b-gap));
+  left: calc(50% + var(--bsw-b2b-node) / 2 + 0.4rem);
+  width: calc(100% + var(--bsw-b2b-gap) - var(--bsw-b2b-node) - 0.8rem);
   border-top: 2px solid color-mix(in srgb, var(--bsw-shop-accent) 55%, transparent);
 }
 
@@ -650,7 +665,6 @@
   margin: 0 auto 1rem;
   border: 2px solid var(--bsw-shop-accent);
   border-radius: 50%;
-  background: var(--surface-1);
   color: var(--fg);
   font-size: 0.72rem;
   font-weight: 700;
@@ -680,46 +694,6 @@
   font-size: 0.95rem;
   line-height: 1.55;
   text-wrap: pretty;
-}
-
-/* Quiet arrow-led action: clearly clickable, never louder than the primary CTA. */
-.bsw-b2b-moment__action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  max-width: 100%;
-  margin-top: 1rem;
-  padding: 0.4rem 0.4rem 0.4rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--fg) 3%, transparent);
-  color: var(--fg);
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.25;
-  text-align: left;
-  text-decoration: none;
-}
-
-.bsw-b2b-moment__action-icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.1rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--fg) 9%, transparent);
-  color: var(--fg);
-}
-
-.bsw-b2b-moment__action:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--fg) 6%, transparent);
-}
-
-.bsw-b2b-moment__action:hover .bsw-b2b-moment__action-icon {
-  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
 }
 
 /* ---------- Closing bar: disclosure and the primary CTA ---------- */
@@ -778,8 +752,7 @@
   background: color-mix(in srgb, var(--accent) 76%, var(--bg));
 }
 
-.bsw-b2b__cta:focus-visible,
-.bsw-b2b-moment__action:focus-visible {
+.bsw-b2b__cta:focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 3px;
 }
@@ -791,22 +764,15 @@
     scroll-behavior: smooth;
   }
 
-  .bsw-b2b__cta,
-  .bsw-b2b-moment__action,
-  .bsw-b2b-moment__action-icon {
-    transition:
-      background-color 200ms ease,
-      border-color 200ms ease,
-      color 200ms ease;
+  .bsw-b2b__cta {
+    transition: background-color 200ms ease;
   }
 
-  .bsw-b2b__cta-icon,
-  .bsw-b2b-moment__action-icon svg {
+  .bsw-b2b__cta-icon {
     transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .bsw-b2b__cta:hover .bsw-b2b__cta-icon,
-  .bsw-b2b-moment__action:hover .bsw-b2b-moment__action-icon svg {
+  .bsw-b2b__cta:hover .bsw-b2b__cta-icon {
     transform: translateX(3px);
   }
 }
@@ -816,7 +782,6 @@
 @media (min-width: 48rem) {
   .bsw-b2b {
     --bsw-b2b-step: 1rem;
-    --bsw-b2b-indent: clamp(2.5rem, 9vw, 8rem);
   }
 
   .bsw-b2b__swipe {
@@ -841,14 +806,6 @@
     --bsw-b2b-step: 0.75rem;
   }
 
-  .bsw-b2b__showcase {
-    padding-inline: 1rem;
-  }
-
-  .bsw-b2b__header {
-    padding-inline: 1rem;
-  }
-
   .bsw-b2b-phone__display {
     font-size: 1.45rem;
   }
@@ -865,13 +822,6 @@
     white-space: normal;
   }
 
-  .bsw-b2b-moment__action {
-    font-size: 0.82rem;
-  }
-
-  .bsw-b2b__close {
-    padding-inline: 1rem;
-  }
 }
 
 @media (min-width: 64rem) {
@@ -880,7 +830,7 @@
   }
 }
 
-/* Wide screens: the supporting copy sits in the space the indented second line leaves open. */
+/* Wide screens: the supporting copy sits in the space the short second line leaves open. */
 @media (min-width: 80rem) {
   .bsw-b2b__header {
     display: grid;
@@ -917,20 +867,8 @@
     width: calc(100% - 1.5rem);
   }
 
-  .bsw-b2b__showcase {
-    padding: 1.5rem 0.9rem 1.25rem;
-  }
-
-  .bsw-b2b__header {
-    padding-inline: 0.35rem;
-  }
-
   .bsw-b2b__heading {
     font-size: clamp(2.05rem, 8.6vw, 2.6rem);
-  }
-
-  .bsw-b2b__close {
-    padding-inline: 0.35rem;
   }
 
   .bsw-b2b__cta {
