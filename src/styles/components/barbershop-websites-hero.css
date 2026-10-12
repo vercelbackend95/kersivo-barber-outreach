@@ -74,8 +74,8 @@
 }
 
 .bsw-hero__lead {
-  max-width: 46ch;
-  margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
+  max-width: 50ch;
+  margin: clamp(1.1rem, 1.9vw, 1.5rem) 0 0;
   color: color-mix(in srgb, var(--muted) 92%, var(--fg));
   font-family: var(--font-body);
   font-size: clamp(0.9rem, 1.05vw, 1rem);
@@ -90,7 +90,7 @@
   justify-content: center;
   gap: 0.35rem 0.6rem;
   margin: 0.95rem 0 0;
-  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  color: var(--bsw-text-2);
   font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 400;
@@ -100,6 +100,15 @@
 .bsw-hero__price strong {
   color: color-mix(in srgb, var(--fg) 88%, var(--muted));
   font-weight: 700;
+}
+
+.bsw-hero__price-note {
+  margin: 0.3rem 0 0;
+  color: var(--bsw-text-2);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.45;
 }
 
 .bsw-hero__actions {

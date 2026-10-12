@@ -52,6 +52,19 @@ describe('/barbershop-websites pillar hero', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_H1).toBe('Barbershop Websites with Online Booking');
   });
 
+  it('only draws the accent full stop inside the final headline line when the H1 ends with one', () => {
+    expect(hero).toContain("const endsWithFullStop = BARBERSHOP_WEBSITES_PAGE_H1.endsWith('.')");
+    expect(hero).toContain('endsWithFullStop && index === lines.length - 1');
+    expect(hero).not.toMatch(/<span>\{lineTwo\}<span class="bsw-accent">/);
+  });
+
+  it('qualifies the 0% KERSIVO commission claim with the Stripe fees note', () => {
+    expect(hero).toContain('0% KERSIVO commission');
+    expect(hero).toContain('import { STRIPE_FEES_NOTE }');
+    expect(hero).toContain('<p class="bsw-hero__price-note">{STRIPE_FEES_NOTE}</p>');
+    expect(hero.indexOf('bsw-hero__price-note')).toBeGreaterThan(hero.indexOf('0% KERSIVO commission'));
+  });
+
   it('uses real demo data, no iframes, and labels BLACKLINE as fictional', () => {
     const source = components.join('\n');
     expect(source).not.toMatch(/<iframe|<embed|<video/);

@@ -4,13 +4,17 @@ import BookingPreview from './BookingPreview.astro';
 import WebsiteFeaturesPanel from './WebsiteFeaturesPanel.astro';
 import HeroBenefits from './HeroBenefits.astro';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { BARBERSHOP_WEBSITES_PAGE_H1 } from '@/lib/seo/barbershopWebsitesPage';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/barbershop-websites-hero.css';
 
+// The red accent full stop is only drawn when the approved H1 itself ends with one,
+// and always sits inside the final line so it can never wrap on its own.
+const endsWithFullStop = BARBERSHOP_WEBSITES_PAGE_H1.endsWith('.');
 const headline = BARBERSHOP_WEBSITES_PAGE_H1.replace(/\.$/, '');
 const splitAt = headline.indexOf(' that ');
-const [lineOne, lineTwo] = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt + 1)] : [headline, ''];
+const lines = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt + 1)] : [headline];
 ---
 
 <section class="bsw-hero" aria-labelledby="bsw-hero-title">
@@ -19,9 +23,12 @@ const [lineOne, lineTwo] = splitAt > 0 ? [headline.slice(0, splitAt), headline.s
   <div class="bsw-hero__head">
     <p class="fresha-alt-hero__eyebrow"><span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>Barbershop websites</p>
     <h1 id="bsw-hero-title" class="bsw-hero__title">
-      <span>{lineOne}</span>
-      {lineTwo && ' '}
-      <span>{lineTwo}<span class="bsw-accent">.</span></span>
+      {lines.map((line, index) => (
+        <>
+          {index > 0 && ' '}
+          <span>{line}{endsWithFullStop && index === lines.length - 1 && <span class="bsw-accent">.</span>}</span>
+        </>
+      ))}
     </h1>
     <p class="bsw-hero__lead">
       A premium website for your barbershop, with your own domain, online booking and all the
@@ -34,6 +41,7 @@ const [lineOne, lineTwo] = splitAt > 0 ? [headline.slice(0, splitAt), headline.s
       <span aria-hidden="true">·</span>
       <span>0% KERSIVO commission</span>
     </p>
+    <p class="bsw-hero__price-note">{STRIPE_FEES_NOTE}</p>
     <div class="bsw-hero__actions">
       <a
         href="/demo"
