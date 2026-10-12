@@ -8,53 +8,62 @@ const page = readFileSync(join(here, '../../pages/barbershop-websites/index.astr
 const section = readFileSync(join(here, '../../components/barbershop-websites/WhatIsBarbershopWebsite.astro'), 'utf8');
 const styles = readFileSync(join(here, '../../styles/components/barbershop-websites-definition.css'), 'utf8');
 
-describe('/barbershop-websites — section 02 definition', () => {
-  it('renders after hero and provides one centred informational H2', () => {
-    expect(page).toContain('<WhatIsBarbershopWebsite />');
-    expect(page.indexOf('<WhatIsBarbershopWebsite />')).toBeGreaterThan(page.indexOf('<BarbershopWebsitesHero />'));
-    expect(section).toContain('id="bsw-definition-heading"');
-    expect(section).toContain('What is a barbershop website');
-    expect((section.match(/<h2\b/g) ?? [])).toHaveLength(1);
+const text = (source: string) => source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const block = (className: string) =>
+  section.match(new RegExp(`<(?:p|dd|dt) class="${className}">([\\s\\S]*?)</(?:p|dd|dt)>`))?.[1] ?? '';
+
+describe('/barbershop-websites — section 02 the basics', () => {
+  it('renders between the hero and section 03 with one informational H2', () => {
+    const hero = page.indexOf('<BarbershopWebsitesHero />');
+    const basics = page.indexOf('<WhatIsBarbershopWebsite />');
+    expect(basics).toBeGreaterThan(hero);
+    expect(page.indexOf('<WebsiteEssentials />')).toBeGreaterThan(basics);
+    expect(section).toContain('aria-labelledby="bsw-definition-heading"');
+    expect(section.match(/<h2\b/g) ?? []).toHaveLength(1);
     expect(section).not.toMatch(/<h1\b/);
-    expect(styles).toContain('text-align: center');
-    expect(styles).toContain('.bsw-definition__intro');
+    expect(text(section)).toContain('The basics');
+    expect(section).toContain('What is a barbershop website<span class="bsw-definition__period">?</span>');
   });
 
-  it('answers the UK barbershop website query before describing KERSIVO', () => {
-    const answer = section.match(/<p class="bsw-definition__answer">([\s\S]*?)<\/p>/)?.[1] ?? '';
-    const words = answer.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  it('gives a self-contained 40–90 word definition as visible text', () => {
+    const answer = text(block('bsw-definition__answer'));
+    const words = answer.split(' ');
     expect(words.length).toBeGreaterThanOrEqual(40);
     expect(words.length).toBeLessThanOrEqual(90);
-    expect(answer).toContain('own domain');
-    expect(answer).toContain('online');
-    expect(answer).toContain('who works behind');
-    expect(answer).toContain('third-party booking');
-    expect(section.indexOf('bsw-definition__answer')).toBeLessThan(section.indexOf('bsw-definition__context'));
-    expect(section).toContain('independent UK barbershop');
+    expect(answer.startsWith('A barbershop website is the dedicated online home for your shop.')).toBe(true);
+    for (const phrase of ['services, team, location, opening hours and booking', 'own domain', 'mobile']) {
+      expect(answer).toContain(phrase);
+    }
+    expect(answer).not.toMatch(/KERSIVO|£|rank|revenue|conversion/i);
+    expect(section.indexOf('bsw-definition__answer')).toBeLessThan(section.indexOf('bsw-definition__support'));
   });
 
-  it('has exactly five concise product benefits grounded in Full KERSIVO scope', () => {
-    expect((section.match(/class="bsw-definition-benefit"/g) ?? [])).toHaveLength(5);
-    expect((section.match(/<h3>/g) ?? [])).toHaveLength(5);
-    expect(section).toContain('one standard domain included');
-    expect(section).toContain('Clients choose a service, barber and available time');
-    expect(section).toContain('Optional £5 booking deposits');
-    expect(section).toContain('Standard Stripe fees still apply');
-    expect(section).toContain('a retail pickup shop');
-    expect(section).not.toContain('bsw-definition-card--platform');
-    expect(section).not.toContain('bsw-definition-card--owned');
-    expect(section).not.toMatch(/<iframe|<embed|<video|<button/);
+  it('contrasts a booking profile with the shop website without attacking providers', () => {
+    const terms = [...section.matchAll(/<dt class="bsw-definition-concept__label">([^<]+)<\/dt>/g)].map((m) => m[1]);
+    expect(terms).toEqual(['A booking profile', 'Your barbershop website']);
+    expect(text(block('bsw-definition-concept__text'))).toBe('A useful place for clients to arrange an appointment.');
+    expect(text(section)).toContain('A branded home for your identity, team, services, location and booking journey.');
+    expect(text(section)).toContain('what each booking platform offers varies');
+    expect(section).not.toMatch(/Booksy|Fresha|Nearcut|Treatwell|cannot|can't|lack/i);
   });
 
-  it('inherits KERSIVO styling without adding a background to the section', () => {
+  it('replaces the v1.1 five-card feature grid with a compact static composition', () => {
+    expect(section).not.toContain('bsw-definition-benefit');
+    expect(section).not.toMatch(/lucide-react|<img|<svg|<iframe|<button|<script|client:/);
+    expect(section).not.toMatch(/<h3\b/);
+    expect(styles).not.toContain('repeat(5, minmax(0, 1fr))');
+    expect(styles).not.toMatch(/(?:^|[\s;{])(?:min-|max-)?height\s*:/m);
+  });
+
+  it('uses an asymmetric desktop layout that collapses to one column, with emphasis on the website', () => {
+    expect(styles).toContain('grid-template-columns: minmax(0, 1fr)');
+    expect(styles).toMatch(/@media \(min-width: 64rem\)[\s\S]*grid-template-columns: minmax\(0, 1\.15fr\) minmax\(0, 0\.85fr\)/);
+    expect(styles).toMatch(/\.bsw-definition-concept--website \{[^}]*border-left: 2px solid var\(--accent\)/);
     const rule = styles.match(/\.bsw-definition\s*\{([^}]+)\}/)?.[1] ?? '';
     expect(rule).not.toMatch(/background\s*:/);
-    expect(rule).toContain('font-family: var(--font-body)');
-    expect(styles).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))');
-    expect(styles).toContain('@media (max-width: 34rem)');
-    for (const token of ['var(--fg)', 'var(--muted)', 'var(--surface-1)', 'var(--accent)', 'var(--border)']) {
+    for (const token of ['var(--fg)', 'var(--muted)', 'var(--accent)', 'var(--accent-text)', 'var(--font-body)']) {
       expect(styles).toContain(token);
     }
-    expect(styles).not.toMatch(/#[\da-f]{3,8}\b/i);
+    expect(styles).not.toMatch(/#[\da-f]{3,8}\b|gradient|box-shadow|animation/i);
   });
 });

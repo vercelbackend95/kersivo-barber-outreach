@@ -9,9 +9,10 @@
  * in Chromium, and overwrites the PNGs in qa/visual/barbershop-websites/.
  */
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
+import sharp from 'sharp';
 import { startServer } from './serve-vercel-output.mjs';
 
 const ROUTE = '/barbershop-websites';
@@ -44,6 +45,14 @@ const FREEZE_CSS = `
 const args = process.argv.slice(2);
 const skipBuild = args.includes('--skip-build');
 const baseUrlArg = args.find((arg) => arg.startsWith('--base-url='))?.split('=')[1];
+
+// Palette-quantised PNG keeps text edges crisp while making files small enough to view on GitHub.
+async function optimisePng(path) {
+  const input = readFileSync(path);
+  const output = await sharp(input).png({ palette: true, quality: 92, effort: 10, compressionLevel: 9, dither: 0.6 }).toBuffer();
+  if (output.length < input.length) writeFileSync(path, output);
+  return Math.round(statSync(path).size / 1024);
+}
 
 function run(command, commandArgs) {
   const result = spawnSync(command, commandArgs, { stdio: 'inherit', shell: process.platform === 'win32' });
@@ -163,10 +172,12 @@ async function main() {
       const full = await captureFull(browser, baseURL, viewport);
       if (full.overflow > 0) throw new Error(`${viewport.name}: horizontal overflow of ${full.overflow}px`);
       const sections = await captureSections(browser, baseURL, viewport);
+      const files = [full.file, ...sections];
+      for (const file of files) await optimisePng(join(OUT_DIR, file));
       manifest.captures.push({
         viewport: `${viewport.width}x${viewport.height}`,
         name: viewport.name,
-        files: [full.file, ...sections],
+        files,
       });
       console.log(`[visual-qa] ${viewport.name}: ${1 + sections.length} screenshots`);
     }
