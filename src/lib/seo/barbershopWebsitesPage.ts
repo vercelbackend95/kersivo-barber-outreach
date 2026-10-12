@@ -6,7 +6,7 @@ export const BARBERSHOP_WEBSITES_PAGE_TITLE =
 export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
   'Professional barbershop websites on your own domain, with online booking and business tools. Full KERSIVO costs £39/month with no setup fee.';
 
-export const BARBERSHOP_WEBSITES_PAGE_H1 = 'Websites for barbershops that are built to book.';
+export const BARBERSHOP_WEBSITES_PAGE_H1 = 'Barbershop Websites with Online Booking';
 
 /**
  * The pillar page is only partially built. Keep it out of the index and the

@@ -49,7 +49,7 @@ describe('/barbershop-websites pillar hero', () => {
     const h1Count = [page, ...components].join('\n').match(/<h1\b/g) ?? [];
     expect(h1Count).toHaveLength(1);
     expect(hero).toContain('BARBERSHOP_WEBSITES_PAGE_H1');
-    expect(BARBERSHOP_WEBSITES_PAGE_H1).toBe('Websites for barbershops that are built to book.');
+    expect(BARBERSHOP_WEBSITES_PAGE_H1).toBe('Barbershop Websites with Online Booking');
   });
 
   it('uses real demo data, no iframes, and labels BLACKLINE as fictional', () => {
