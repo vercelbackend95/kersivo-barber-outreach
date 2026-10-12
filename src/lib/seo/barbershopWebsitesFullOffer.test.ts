@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import {
   BILLING_CYCLE_SHORT,
-  NO_SETUP_FEE_CLAIM,
+  NO_SETUP_FEE_SHORT,
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
   SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
@@ -24,7 +24,8 @@ const text = (source: string) =>
   source.replace(/<[^>]+>/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
 const constant = (name: string) => frontmatter.match(new RegExp(`const ${name} = '([^']+)'`))?.[1];
 const anchors = () => markup.match(/<a\b[\s\S]*?<\/a>/g) ?? [];
-const conditions = () => frontmatter.match(/const conditions = \[([\s\S]*?)\];/)?.[1] ?? '';
+const list = (name: string) =>
+  frontmatter.match(new RegExp(`const ${name}(?:: \\w+\\[\\])? = \\[([\\s\\S]*?)\\n\\];`))?.[1] ?? '';
 
 describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
   it('renders after section 04 and before the footer without touching earlier sections', () => {
@@ -49,10 +50,47 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     expect(markup.indexOf('<h2')).toBeLessThan(markup.indexOf('<h3'));
   });
 
-  it('states the approved supporting copy', () => {
+  it('states the supporting copy', () => {
     expect(text(markup)).toContain(
-      'A professionally branded barbershop website, connected online booking and the tools to manage your shop. All in one Full KERSIVO subscription.',
+      'A professionally branded website for your shop, online booking that runs through it and the tools to manage the day. One Full KERSIVO subscription covers the lot.',
     );
+  });
+
+  it('places the price and CTA straight after the heading, before the value detail', () => {
+    const heading = markup.indexOf('<h2');
+    const price = markup.indexOf('bsw-offer-panel__amount');
+    const cta = markup.indexOf('bsw-offer-panel__cta');
+    expect(heading).toBeLessThan(price);
+    expect(price).toBeLessThan(cta);
+    expect(cta).toBeLessThan(markup.indexOf('<h3'));
+  });
+
+  it('keeps value copy and purchase facts distinct', () => {
+    const values = list('values');
+    const facts = `${list('facts')}${list('payment')}`;
+    expect(values).not.toBe('');
+    expect(facts).not.toBe('');
+    for (const shared of ['domain', 'hosting', 'commission', 'setup']) {
+      const inValues = new RegExp(shared, 'i').test(values);
+      const inFacts = new RegExp(shared, 'i').test(facts);
+      expect(inValues && inFacts, shared).toBe(false);
+    }
+  });
+
+  it('still covers the verified Full capabilities', () => {
+    const values = list('values');
+    for (const capability of [
+      /logo, colours and photos/,
+      /host it with SSL, keep it updated and help/,
+      /service, a barber and a time/,
+      /pay in the shop, leave a £\$\{KERSIVO_BOOKING_DEPOSIT_GBP\} deposit or pay in full online/,
+      /Confirmations and reminders go out by email/,
+      /SMS_INCLUDED_WITH_ALLOWANCE_CLAIM/,
+      /barbers and services, keep track of clients and check your reports/,
+      /sell products online for customers to collect in the shop/,
+    ]) {
+      expect(values).toMatch(capability);
+    }
   });
 
   it('prices from the canonical constant: per month, per location', () => {
@@ -64,29 +102,36 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     expect(PLAN_SCOPE_SHORT).toMatch(/one physical barbershop location/);
   });
 
-  it('keeps every material billing condition visible next to the CTA', () => {
-    const list = conditions();
-    expect(list).toContain('NO_SETUP_FEE_CLAIM');
-    expect(NO_SETUP_FEE_CLAIM).toMatch(/does not charge a separate installation or setup fee/);
-    expect(list).toMatch(/0% KERSIVO commission on bookings and retail payments\. \$\{STRIPE_FEES_NOTE\}/);
+  it('leads with the headline buying facts', () => {
+    const facts = list('facts');
+    expect(facts).toMatch(/Standard website setup included\. \$\{NO_SETUP_FEE_SHORT\}/);
+    expect(NO_SETUP_FEE_SHORT).toBe('No setup fee.');
+    expect(facts).toContain('Your own standard domain included.');
+    expect(facts).toContain('0% KERSIVO commission on bookings and retail.');
+    expect(markup.indexOf('bsw-offer-panel__facts')).toBeLessThan(markup.indexOf('bsw-offer-panel__cta'));
+  });
+
+  it('keeps every payment condition and the VAT position visible beside the CTA', () => {
+    const payment = list('payment');
+    expect(payment).toContain('STRIPE_FEES_NOTE');
     expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
-    expect(list).toMatch(/subscription starts when you purchase, not when your website goes live\. \$\{BILLING_CYCLE_SHORT\}/);
-    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today/);
-    expect(list).toContain('PRICE_VAT_DISCLAIMER');
+    expect(payment).toContain('Your subscription starts when you buy, not when your website goes live.');
+    expect(payment).toContain('BILLING_CYCLE_SHORT');
+    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly/);
+    expect(markup).toContain('{PRICE_VAT_DISCLAIMER}');
     expect(SAAS_ADDS_VAT).toBe(false);
     expect(PRICE_VAT_DISCLAIMER).toMatch(/not currently VAT registered/);
+    expect(markup).not.toMatch(/<details|<summary|title=/);
     expect(markup.indexOf('bsw-offer-panel__cta')).toBeLessThan(markup.indexOf('bsw-offer-panel__conditions'));
   });
 
-  it('qualifies the domain, SMS and ownership claims', () => {
-    expect(frontmatter).toMatch(/One standard domain for your location/);
+  it('qualifies the SMS and ownership claims', () => {
     expect(frontmatter).not.toMatch(/premium domain|any domain/i);
-    expect(frontmatter).toContain('SMS_INCLUDED_WITH_ALLOWANCE_CLAIM');
     expect(SMS_INCLUDED_WITH_ALLOWANCE_CLAIM).toMatch(/monthly SMS allowance/);
     const managed = text(markup.match(/<div class="bsw-offer__managed">[\s\S]*?<\/div>/)?.[0] ?? '');
     expect(managed).toMatch(/managed service rather than buying website code/);
-    expect(managed).toMatch(/brand, content, domain and eligible business-data exports remain yours/);
-    expect(managed).toMatch(/KERSIVO owns and maintains the underlying software, templates and hosting/);
+    expect(managed).toMatch(/brand, content, domain and eligible business-data exports remain yours under our terms/);
+    expect(managed).toMatch(/KERSIVO owns and maintains the software, templates and hosting/);
     expect(managed).toContain('“Powered by KERSIVO”');
   });
 

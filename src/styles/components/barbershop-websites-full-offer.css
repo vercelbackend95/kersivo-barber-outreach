@@ -1,7 +1,6 @@
-/* Section 05: the offer sheet. An editorial statement and three value rows on the left,
-   a single price panel on the right that stays in view on desktop while the rows are read.
-   Typographic rather than visual, so it steps away from the Section 04 phone previews.
-   Global KERSIVO tokens only. */
+/* Section 05: the offer sheet. The price panel follows the statement in source order, so phones
+   reach the price and CTA straight after the heading; on desktop it moves into its own column
+   and stays in view while the value rows are read. Global KERSIVO tokens only. */
 .bsw-offer {
   --bsw-offer-line: color-mix(in srgb, var(--fg) 11%, transparent);
   --bsw-offer-text-2: color-mix(in srgb, var(--muted) 86%, var(--fg));
@@ -14,10 +13,31 @@
 
 .bsw-offer__inner {
   display: grid;
+  grid-template-areas:
+    "header"
+    "panel"
+    "values"
+    "managed";
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(2.5rem, 5vw, 3.5rem);
   width: min(92vw, 80rem);
   margin-inline: auto;
+}
+
+.bsw-offer__header {
+  grid-area: header;
+}
+
+.bsw-offer__panel-wrap {
+  grid-area: panel;
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.bsw-offer__values {
+  grid-area: values;
+}
+
+.bsw-offer__managed {
+  grid-area: managed;
 }
 
 /* ---------- Statement ---------- */
@@ -60,7 +80,7 @@
 /* ---------- Value rows ---------- */
 
 .bsw-offer__values {
-  margin: clamp(2.25rem, 4vw, 3.25rem) 0 0;
+  margin: clamp(2.25rem, 4vw, 3rem) 0 0;
   padding: 0;
   border-top: 1px solid var(--bsw-offer-line);
   list-style: none;
@@ -83,39 +103,23 @@
   letter-spacing: -0.025em;
 }
 
-.bsw-offer-value__description {
+.bsw-offer-value__body {
+  display: grid;
+  gap: 0.4rem;
   max-width: 58ch;
+}
+
+.bsw-offer-value__body p {
   margin: 0;
-  color: var(--fg);
-  font-size: clamp(0.96rem, 1.05vw, 1.02rem);
+  color: var(--bsw-offer-text-2);
+  font-size: 0.95rem;
   line-height: 1.6;
   text-wrap: pretty;
 }
 
-.bsw-offer-value__points {
-  display: grid;
-  gap: 0.45rem;
-  margin: 0.9rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.bsw-offer-value__points li {
-  position: relative;
-  padding-left: 1.1rem;
-  color: var(--bsw-offer-text-2);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-
-.bsw-offer-value__points li::before {
-  content: "";
-  position: absolute;
-  top: 0.72em;
-  left: 0;
-  width: 0.5rem;
-  border-top: 1px solid var(--accent-text);
+.bsw-offer-value__body p:first-child {
+  color: var(--fg);
+  font-size: clamp(0.98rem, 1.05vw, 1.04rem);
 }
 
 /* ---------- Managed-platform note ---------- */
@@ -201,30 +205,23 @@
   line-height: 1.5;
 }
 
-.bsw-offer-panel__label {
-  margin: 1.5rem 0 0;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--bsw-offer-line);
-  color: var(--fg);
-  font-size: 0.9rem;
-  font-weight: 650;
-  line-height: 1.4;
-}
-
-.bsw-offer-panel__included {
+/* Headline buying facts: the three things that decide the price question. */
+.bsw-offer-panel__facts {
   display: grid;
-  gap: 0.6rem;
-  margin: 0.85rem 0 0;
-  padding: 0;
+  gap: 0.65rem;
+  margin: 1.35rem 0 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--bsw-offer-line);
   list-style: none;
 }
 
-.bsw-offer-panel__included li {
+.bsw-offer-panel__facts li {
   display: flex;
   gap: 0.6rem;
   align-items: flex-start;
   color: var(--fg);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -262,25 +259,60 @@
   background: color-mix(in srgb, var(--accent) 76%, var(--bg));
 }
 
+/* Essential payment conditions: readable, never folded away. */
+.bsw-offer-panel__payment {
+  margin-top: 1.4rem;
+}
+
+.bsw-offer-panel__label {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 .bsw-offer-panel__conditions {
   display: grid;
-  gap: 0.5rem;
-  margin: 1.25rem 0 0;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .bsw-offer-panel__conditions li {
+  position: relative;
+  padding-left: 0.95rem;
   color: var(--bsw-offer-text-2);
-  font-size: 0.82rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.bsw-offer-panel__conditions li::before {
+  content: "";
+  position: absolute;
+  top: 0.68em;
+  left: 0;
+  width: 0.35rem;
+  border-top: 1px solid var(--bsw-offer-text-2);
+}
+
+/* Supporting contractual detail. */
+.bsw-offer-panel__fine {
+  margin: 1.15rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bsw-offer-line);
+  color: var(--bsw-offer-text-2);
+  font-size: 0.8rem;
   line-height: 1.55;
   text-wrap: pretty;
 }
 
 .bsw-offer-panel__terms {
   display: inline-block;
-  margin-top: 0.75rem;
-  padding-block: 0.35rem;
+  margin-top: 0.3rem;
+  padding-block: 0.3rem;
   color: var(--fg);
   font-size: 0.85rem;
   font-weight: 600;
@@ -323,11 +355,6 @@
     padding: 1.75rem 0;
   }
 
-  .bsw-offer-value__points {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.5rem;
-  }
-
   .bsw-offer__panel-wrap {
     max-width: 34rem;
   }
@@ -337,9 +364,13 @@
 
 @media (min-width: 64rem) {
   .bsw-offer__inner {
+    grid-template-areas:
+      "header  panel"
+      "values  panel"
+      "managed panel";
     grid-template-columns: minmax(0, 1fr) minmax(21rem, 25rem);
-    gap: clamp(3rem, 6vw, 6rem);
-    align-items: start;
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(3rem, 6vw, 6rem);
   }
 
   .bsw-offer-value {
@@ -350,7 +381,9 @@
   .bsw-offer__panel-wrap {
     position: sticky;
     top: 6rem;
+    align-self: start;
     max-width: none;
+    margin-top: 0;
   }
 }
 
