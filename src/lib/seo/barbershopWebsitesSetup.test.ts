@@ -24,8 +24,9 @@ const [, frontmatter = '', markup = ''] = section.split(/^---$/m);
 const text = (source: string) =>
   source.replace(/<[^>]+>/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
 const constant = (name: string) => frontmatter.match(new RegExp(`const ${name} = '([^']+)'`))?.[1];
+const stagesSource = frontmatter.slice(frontmatter.indexOf('const stages'), frontmatter.indexOf('type Note'));
 const stageField = (field: string) =>
-  [...frontmatter.matchAll(new RegExp(`${field}: [\`']([^\`']+)[\`']`, 'g'))].map((m) => m[1]);
+  [...stagesSource.matchAll(new RegExp(`${field}: [\`']([^\`']+)[\`']`, 'g'))].map((m) => m[1]);
 const copy = `${frontmatter}\n${text(markup)}`;
 
 describe('/barbershop-websites — section 06 setup process', () => {
@@ -56,42 +57,46 @@ describe('/barbershop-websites — section 06 setup process', () => {
     expect(markup).toMatch(/<ol class="bsw-setup__stages"/);
   });
 
+  it('keeps stage copy short and balanced', () => {
+    const lengths = stageField('copy').map((c) => c.length);
+    expect(lengths).toHaveLength(5);
+    for (const length of lengths) expect(length).toBeLessThanOrEqual(120);
+  });
+
   it('is honest about when billing starts', () => {
     expect(copy).toMatch(/Your first payment is taken at checkout/);
-    expect(copy).toMatch(/subscription starts on the day you buy\. Billing doesn’t pause while we prepare your site or wait for your materials/);
+    expect(copy).toMatch(/subscription starts when you buy, including while we prepare your site/);
     expect(ONBOARDING_BILLING_INDEPENDENT_CLAIM).toMatch(/starts on the day of purchase\. Not sending materials does not pause/);
     expect(copy).not.toMatch(/free (trial|period)|pay (only )?(when|once) (you|your site) go(es)? live|billing starts (at|on) launch/i);
   });
 
-  it('states the approved setup estimate without guaranteeing a date', () => {
-    expect(constant('SETUP_ESTIMATE')).toBe('Roughly 1–2 weeks after we receive all required information.');
-    expect(ONBOARDING_TIMELINE_CLAIM).toContain(constant('SETUP_ESTIMATE'));
-    expect(markup).toContain('{SETUP_ESTIMATE}');
-    expect(copy).toMatch(/can take longer if details are missing/);
-    expect(copy.match(/1–2 weeks/g) ?? []).toHaveLength(2);
+  it('shows the setup estimate once, as an estimate with its conditions', () => {
+    expect(ONBOARDING_TIMELINE_CLAIM).toMatch(/Roughly 1–2 weeks after we receive all required information/);
+    expect(copy.match(/1–2 weeks/g) ?? []).toHaveLength(1);
+    expect(copy).toMatch(/An estimate, counted from when we have everything we need/);
+    expect(copy).toMatch(/Missing details, domain access or moving data across can take longer/);
     expect(copy).not.toMatch(/guarantee|within \d+ (days|hours)|same[- ]day|instant(ly)?/i);
   });
 
   it('describes the real preview and approval step', () => {
-    expect(copy).toMatch(/private preview appears in your KERSIVO dashboard/);
-    expect(copy).toMatch(/approve the site when you’re happy/);
+    expect(copy).toMatch(/Preview it in your KERSIVO dashboard and try a booking\. Nothing goes live until you approve it/);
     expect(PREVIEW_LAUNCH_CLAIM).toMatch(/private preview/);
     expect(PREVIEW_LAUNCH_CLAIM).toMatch(/only after your explicit approval/);
     expect(existsSync(join(root, 'src/pages/admin/site-preview.astro'))).toBe(true);
     expect(existsSync(join(root, 'src/pages/api/admin/site-launch/approve.ts'))).toBe(true);
-    expect(copy).toMatch(/Once you’ve approved it and the domain and booking setup are ready/);
+    expect(copy).toMatch(/Once you’ve approved the site and the final technical checks are done, we publish it/);
   });
 
   it('does not make every optional asset a blocker', () => {
-    expect(copy).toMatch(/If a few extras like gallery photos aren’t ready, we can work around them/);
+    expect(copy).toMatch(/Missing a few photos\? We can still get started/);
     expect(MISSING_OPTIONAL_MATERIALS_CLAIM).toMatch(/hide the gallery section/);
   });
 
   it('handles domains within the approved scope', () => {
-    expect(copy).toMatch(/Already have one\? It stays yours\. You don’t need to transfer it to us/);
-    expect(copy).toMatch(/you keep renewing it/);
+    expect(copy).toMatch(/Already have one\? It stays yours, and you don’t need to transfer it/);
+    expect(copy).toMatch(/We help with the technical setup\. You keep renewing it/);
     expect(DOMAIN_EXISTING_CLAIM).toMatch(/Transferring the domain to KERSIVO is not required.*responsible for renewing/);
-    expect(copy).toMatch(/register a standard one for your business, and legal ownership stays with you/);
+    expect(copy).toMatch(/No domain yet\? A standard one is included and owned by your business/);
     expect(DOMAIN_NEW_CLAIM).toMatch(/Legal ownership of the domain remains with the salon/);
     expect(copy).toMatch(/Premium or unusually expensive names aren’t included as standard/);
     expect(DOMAIN_LIMIT_CLAIM).toMatch(/Premium domains/);
@@ -100,15 +105,17 @@ describe('/barbershop-websites — section 06 setup process', () => {
 
   it('keeps migration promises within what exports allow', () => {
     expect(INCLUDED_SETUP_CLAIM).toMatch(/migration help/);
-    expect(copy).toMatch(/Help with moving across is part of the standard setup/);
-    expect(copy).toMatch(/depends on what your current system lets you export/);
-    expect(copy).toMatch(/can’t promise every client record or past appointment will transfer/);
-    expect(copy).toMatch(/Where it’s technically possible, your current website and bookings can keep running/);
+    expect(copy).toMatch(/Help moving across is part of the standard setup/);
+    expect(copy).toMatch(/depends on what your current provider lets you export, so some history may not transfer/);
+    expect(copy).toMatch(/Where possible, your current bookings keep running while we build/);
+    expect(copy).not.toMatch(/all (your )?(data|history|records)|everything (comes|moves) across|full migration/i);
   });
 
   it('links only to existing terms anchors and adds no purchase CTA or tracking', () => {
-    const anchors = markup.match(/<a\b[\s\S]*?<\/a>/g) ?? [];
-    expect(anchors).toHaveLength(2);
+    const hrefs = [...frontmatter.matchAll(/href: (\w+_HREF)/g)].map((m) => m[1]);
+    expect(hrefs).toEqual(['DOMAIN_TERMS_HREF', 'SETUP_TERMS_HREF']);
+    expect(markup.match(/<a\b/g) ?? []).toHaveLength(1);
+    expect(markup).toContain('href={note.link.href}');
     expect(constant('SETUP_TERMS_HREF')).toBe('/terms#onboarding-and-launch');
     expect(constant('DOMAIN_TERMS_HREF')).toBe('/terms#domain');
     expect(terms).toContain('id="onboarding-and-launch"');

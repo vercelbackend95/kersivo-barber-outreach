@@ -1,8 +1,8 @@
 ---
+import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-setup.css';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
-const SETUP_ESTIMATE = 'Roughly 1–2 weeks after we receive all required information.';
 const SETUP_TERMS_HREF = '/terms#onboarding-and-launch';
 const DOMAIN_TERMS_HREF = '/terms#domain';
 
@@ -18,31 +18,59 @@ const stages: Stage[] = [
     number: '01',
     owner: 'You',
     title: 'Choose Full KERSIVO',
-    copy: `Subscribe for £${SAAS_MONTHLY_GBP} a month. Your first payment is taken at checkout, and you can send us your details straight away.`,
+    copy: `Subscribe for £${SAAS_MONTHLY_GBP} a month. Your first payment is taken at checkout.`,
   },
   {
     number: '02',
     owner: 'You',
     title: 'Tell us about your shop',
-    copy: 'Send your shop details, logo, photos, team, services, prices and opening hours. We’ll guide you through what we need. If a few extras like gallery photos aren’t ready, we can work around them.',
+    copy: 'Share your shop details, branding, team, services and opening hours. Missing a few photos? We can still get started.',
   },
   {
     number: '03',
     owner: 'We',
     title: 'We prepare your website',
-    copy: 'We put your site together on the KERSIVO platform using your branding, sort out your domain and set up services, barbers and hours to match how your shop works.',
+    copy: 'We build your branded website, set up your bookings and help get your domain ready.',
   },
   {
     number: '04',
     owner: 'You',
     title: 'Check it before launch',
-    copy: 'A private preview appears in your KERSIVO dashboard. Check the details, try the booking flow and approve the site when you’re happy.',
+    copy: 'Preview it in your KERSIVO dashboard and try a booking. Nothing goes live until you approve it.',
   },
   {
     number: '05',
     owner: 'We',
     title: 'Go live',
-    copy: 'Once you’ve approved it and the domain and booking setup are ready, we publish your website and clients can start booking.',
+    copy: 'Once you’ve approved the site and the final technical checks are done, we publish it.',
+  },
+];
+
+type Note = {
+  title: string;
+  points: string[];
+  link: { href: string; label: string };
+};
+
+const notes: Note[] = [
+  {
+    title: 'Your domain',
+    points: [
+      'Already have one? It stays yours, and you don’t need to transfer it.',
+      'We help with the technical setup. You keep renewing it as you do now.',
+      'No domain yet? A standard one is included and owned by your business.',
+      'Premium or unusually expensive names aren’t included as standard.',
+    ],
+    link: { href: DOMAIN_TERMS_HREF, label: 'Domain terms' },
+  },
+  {
+    title: 'Switching from another booking system',
+    points: [
+      'Help moving across is part of the standard setup.',
+      'What we can bring over depends on what your current provider lets you export, so some history may not transfer.',
+      'Where possible, your current bookings keep running while we build.',
+    ],
+    link: { href: SETUP_TERMS_HREF, label: 'Setup and launch terms' },
   },
 ];
 ---
@@ -63,12 +91,11 @@ const stages: Stage[] = [
         <p class="bsw-setup__timing-label">Typical setup time</p>
         <p class="bsw-setup__timing-figure">1–2 weeks</p>
         <p class="bsw-setup__timing-copy">
-          {SETUP_ESTIMATE} It can take longer if details are missing, or if domain access or moving
-          your data across needs more time.
+          An estimate, counted from when we have everything we need. Missing details, domain access
+          or moving data across can take longer.
         </p>
         <p class="bsw-setup__timing-billing">
-          Your subscription starts on the day you buy. Billing doesn’t pause while we prepare your
-          site or wait for your materials.
+          Your subscription starts when you buy, including while we prepare your site.
         </p>
       </div>
     </header>
@@ -87,32 +114,18 @@ const stages: Stage[] = [
     </ol>
 
     <div class="bsw-setup__notes">
-      <div class="bsw-setup-note">
-        <h3 class="bsw-setup-note__title">Your domain</h3>
-        <p class="bsw-setup-note__copy">
-          Already have one? It stays yours. You don’t need to transfer it to us. We’ll help with the
-          technical setup, and you keep renewing it as you do now.
-        </p>
-        <p class="bsw-setup-note__copy">
-          No domain yet? We can register a standard one for your business, and legal ownership stays
-          with you. Premium or unusually expensive names aren’t included as standard.
-        </p>
-        <a class="bsw-setup-note__link" href={DOMAIN_TERMS_HREF}>Domain terms</a>
-      </div>
-
-      <div class="bsw-setup-note">
-        <h3 class="bsw-setup-note__title">Switching from another booking system</h3>
-        <p class="bsw-setup-note__copy">
-          Help with moving across is part of the standard setup. What we can bring over depends on
-          what your current system lets you export, so we can’t promise every client record or past
-          appointment will transfer.
-        </p>
-        <p class="bsw-setup-note__copy">
-          Where it’s technically possible, your current website and bookings can keep running while
-          we build.
-        </p>
-        <a class="bsw-setup-note__link" href={SETUP_TERMS_HREF}>Setup and launch terms</a>
-      </div>
+      {notes.map((note) => (
+        <div class="bsw-setup-note">
+          <h3 class="bsw-setup-note__title">{note.title}</h3>
+          <ul class="bsw-setup-note__points" role="list">
+            {note.points.map((point) => <li>{point}</li>)}
+          </ul>
+          <a class="bsw-setup-note__link" href={note.link.href}>
+            {note.link.label}
+            <ArrowRight className="bsw-setup-note__link-icon" size={15} strokeWidth={2} aria-hidden="true" />
+          </a>
+        </div>
+      ))}
     </div>
   </div>
 </section>
