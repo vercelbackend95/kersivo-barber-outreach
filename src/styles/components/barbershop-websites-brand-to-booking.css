@@ -1,6 +1,6 @@
-/* Section 04: three phone previews of the real BLACKLINE pages joined by one thread in the
-   shop's own accent, so the visitor sees the brand, not the platform, carry through to booking.
-   Section chrome uses KERSIVO tokens; the previews use the BLACKLINE identity below. */
+/* Section 04: one showcase panel. An editorial statement introduces three phone previews of
+   the real BLACKLINE pages, which step up towards the booking screen above a single rail in the
+   shop's own accent. Section chrome uses KERSIVO tokens; the previews use the BLACKLINE identity. */
 
 /* Uniquely named so the BLACKLINE display face never leaks into KERSIVO typography. */
 @font-face {
@@ -31,6 +31,9 @@
   --bsw-b2b-gap: clamp(1rem, 2.4vw, 2.5rem);
   --bsw-b2b-bezel: 0.5rem;
   --bsw-b2b-bar: 3.25rem;
+  --bsw-b2b-node: 2.1rem;
+  --bsw-b2b-step: 0rem;
+  --bsw-b2b-indent: 0rem;
 
   padding: clamp(4.5rem, 7vw, 7rem) 0;
   border-top: 1px solid var(--bsw-b2b-line);
@@ -43,11 +46,17 @@
   margin-inline: auto;
 }
 
-/* ---------- Header ---------- */
+.bsw-b2b__showcase {
+  padding: clamp(1.25rem, 3.4vw, 2.75rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-16);
+  background: var(--surface-1);
+}
+
+/* ---------- Header: one editorial statement ---------- */
 
 .bsw-b2b__header {
-  display: grid;
-  gap: clamp(1.25rem, 2.4vw, 1.75rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 .bsw-b2b__eyebrow {
@@ -61,132 +70,46 @@
 }
 
 .bsw-b2b__heading {
-  max-width: 14ch;
   margin: 0;
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: clamp(2.2rem, 3.9vw, 3.6rem);
+  font-size: clamp(2.3rem, 4.6vw, 3.9rem);
   font-weight: 700;
-  line-height: 1.06;
+  line-height: 1.02;
   letter-spacing: -0.05em;
-  text-wrap: balance;
+}
+
+.bsw-b2b__heading > span {
+  display: block;
+}
+
+.bsw-b2b__heading > span + span {
+  margin-left: var(--bsw-b2b-indent);
 }
 
 .bsw-b2b__accent {
   color: var(--accent-text);
+  font-style: normal;
 }
 
 .bsw-b2b__lede {
-  max-width: 52ch;
-  margin: 0;
+  max-width: 46ch;
+  margin: clamp(1.1rem, 2vw, 1.5rem) 0 0 var(--bsw-b2b-indent);
   color: var(--bsw-b2b-text-2);
   font-size: clamp(1rem, 1.15vw, 1.1rem);
   line-height: 1.7;
   text-wrap: pretty;
 }
 
-.bsw-b2b__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 1.5rem;
-  padding: 0.85rem 1.3rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-12);
-  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
-  color: var(--fg);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.2;
-  text-decoration: none;
-}
-
-.bsw-b2b__cta-icon {
-  flex: none;
-}
-
-.bsw-b2b__cta:hover {
-  background: color-mix(in srgb, var(--accent) 76%, var(--bg));
-}
-
-.bsw-b2b__disclosure {
-  max-width: 52ch;
-  margin: 1rem 0 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1.55;
-}
-
-/* ---------- Stage ---------- */
-
-.bsw-b2b__stage {
-  margin-top: clamp(2.5rem, 4.5vw, 3.5rem);
-  padding: clamp(1.25rem, 3vw, 2.5rem);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-16);
-  background: var(--surface-1);
-}
-
-.bsw-b2b__legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 2rem;
-  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
-}
-
-.bsw-b2b__identity {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.85rem;
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.bsw-b2b__identity-label {
-  color: var(--fg);
-  font-weight: 650;
-}
-
-.bsw-b2b__identity-items {
-  color: var(--muted);
-}
-
-.bsw-b2b__swatches {
-  display: inline-flex;
-  gap: 0.3rem;
-}
-
-.bsw-b2b__swatch {
-  display: inline-block;
-  width: 0.95rem;
-  aspect-ratio: 1;
-  border: 1px solid var(--bsw-shop-line);
-  border-radius: 50%;
-}
-
-.bsw-b2b__swatch--carbon { background: var(--bsw-shop-bg); }
-.bsw-b2b__swatch--ivory { background: var(--bsw-shop-text); }
-.bsw-b2b__swatch--cobalt { background: var(--bsw-shop-accent); }
-
-.bsw-b2b__note,
-.bsw-b2b__swipe {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
-  line-height: 1.45;
-}
-
 .bsw-b2b__swipe {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.9rem;
+  margin: 0 0 0.9rem;
   color: var(--fg);
+  font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 /* ---------- Journey track ---------- */
@@ -212,14 +135,13 @@
   grid-auto-columns: min(76vw, 18.5rem);
   grid-template-rows: auto auto;
   column-gap: var(--bsw-b2b-gap);
-  row-gap: 1.4rem;
+  row-gap: calc(1.25rem + var(--bsw-b2b-step) * 2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .bsw-b2b-moment {
-  position: relative;
   display: grid;
   grid-row: span 2;
   grid-template-rows: subgrid;
@@ -228,21 +150,10 @@
   scroll-snap-align: start;
 }
 
-/* The thread: from the centre of one preview's brand bar to the next. */
-.bsw-b2b-moment:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  top: calc(1px + var(--bsw-b2b-bezel) + var(--bsw-b2b-bar) / 2);
-  left: 50%;
-  width: calc(100% + var(--bsw-b2b-gap));
-  border-top: 2px solid var(--bsw-shop-accent);
-}
-
 /* ---------- Phone preview ---------- */
 
 .bsw-b2b-phone {
   position: relative;
-  z-index: 1;
   display: flex;
   width: 100%;
   max-width: 18.5rem;
@@ -252,6 +163,23 @@
   background: var(--bg);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--fg) 10%, transparent),
+    0 1.75rem 3.5rem -1.75rem rgba(0, 0, 0, 0.8);
+}
+
+/* The previews climb towards the booking screen. */
+.bsw-b2b-moment:nth-child(1) .bsw-b2b-phone {
+  translate: 0 calc(var(--bsw-b2b-step) * 2);
+}
+
+.bsw-b2b-moment:nth-child(2) .bsw-b2b-phone {
+  translate: 0 var(--bsw-b2b-step);
+}
+
+.bsw-b2b-moment--destination .bsw-b2b-phone {
+  border-color: color-mix(in srgb, var(--bsw-shop-accent) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 10%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--bsw-shop-accent) 12%, transparent),
     0 1.75rem 3.5rem -1.75rem rgba(0, 0, 0, 0.8);
 }
 
@@ -330,7 +258,8 @@
 }
 
 .bsw-b2b-phone__photo--shop {
-  object-position: 50% 30%;
+  aspect-ratio: 3 / 2;
+  object-position: 54% 26%;
 }
 
 .bsw-b2b-phone__photo--portrait {
@@ -370,12 +299,28 @@
   font-size: 1.4rem;
 }
 
+.bsw-b2b-phone__lede {
+  color: var(--bsw-shop-muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+/* Hero copy overlaps the photograph, as the demo's split hero does at full width. */
+.bsw-b2b-phone__body--hero {
+  position: relative;
+  margin-top: -1.6rem;
+  margin-right: 1.4rem;
+  padding-top: 0.85rem;
+  border-top-right-radius: var(--bsw-shop-radius-card);
+  background: var(--bsw-shop-bg);
+}
+
 .bsw-b2b-phone__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: auto;
-  padding-top: 0.6rem;
+  padding-top: 0.5rem;
 }
 
 .bsw-b2b-phone__btn {
@@ -401,14 +346,14 @@
 /* Barbers page roster card */
 
 .bsw-b2b-phone__body--roster {
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .bsw-b2b-roster {
   position: relative;
   display: block;
   width: 100%;
-  margin-top: 0.4rem;
+  margin: 0.4rem 0 0.15rem;
 }
 
 .bsw-b2b-roster__index {
@@ -425,7 +370,6 @@
 }
 
 .bsw-b2b-roster__name {
-  margin-top: 0.3rem;
   font-family: var(--bsw-shop-display);
   font-size: 1.35rem;
   font-weight: 800;
@@ -434,9 +378,12 @@
 }
 
 .bsw-b2b-roster__spec {
-  color: var(--bsw-shop-muted);
-  font-size: 0.75rem;
+  color: var(--bsw-shop-accent-text);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   line-height: 1.35;
+  text-transform: uppercase;
 }
 
 .bsw-b2b-roster__book {
@@ -444,7 +391,7 @@
   align-items: center;
   gap: 0.55rem;
   margin-top: auto;
-  padding: 0.5rem 0.65rem;
+  padding: 0.55rem 0.7rem;
   border-radius: var(--bsw-shop-radius);
   background: color-mix(in srgb, var(--bsw-shop-accent) 18%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bsw-shop-accent) 60%, transparent);
@@ -479,15 +426,19 @@
 
 /* Booking page */
 
-.bsw-b2b-phone__body--booking {
-  gap: 0.6rem;
+.bsw-b2b-booking-head {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 0.95rem 0.85rem;
+  border-bottom: 1px solid var(--bsw-shop-line);
+  background: var(--bsw-shop-surface);
 }
 
 .bsw-b2b-progress {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
 }
 
 .bsw-b2b-progress__step {
@@ -540,6 +491,10 @@
   border-color: var(--bsw-shop-accent);
   background: var(--bsw-shop-accent);
   color: var(--bsw-shop-on-accent);
+}
+
+.bsw-b2b-phone__body--booking {
+  gap: 0.75rem;
 }
 
 .bsw-b2b-carried {
@@ -608,30 +563,45 @@
   display: grid;
   gap: 0.35rem;
   width: 100%;
-  margin-top: auto;
 }
 
 .bsw-b2b-services__title {
-  margin-bottom: 0.1rem;
-  font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1.3;
-}
-
-.bsw-b2b-services__row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.15rem 0.6rem;
+  gap: 0.1rem 0.5rem;
+  margin-bottom: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.bsw-b2b-services__hint {
+  color: var(--bsw-shop-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.bsw-b2b-services__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
   padding: 0.55rem 0.65rem;
   border: 1px solid var(--bsw-shop-line);
   border-radius: var(--bsw-shop-radius-card);
   background: var(--bsw-shop-surface);
 }
 
+.bsw-b2b-services__text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .bsw-b2b-services__name {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -639,27 +609,58 @@
 .bsw-b2b-services__meta {
   color: var(--bsw-shop-muted);
   font-size: 0.68rem;
-  line-height: 1.25;
-  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.bsw-b2b-services__price {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Captions ---------- */
+/* ---------- Captions on one rail ---------- */
 
 .bsw-b2b-moment__caption {
+  position: relative;
   width: 100%;
-  max-width: 18.5rem;
+  padding-inline: 0.5rem;
+  text-align: center;
 }
 
-.bsw-b2b-moment__number {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--accent-text);
-  font-size: 0.8rem;
+.bsw-b2b-moment:not(:last-child) .bsw-b2b-moment__caption::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--bsw-b2b-node) / 2 - 1px);
+  left: 50%;
+  width: calc(100% + var(--bsw-b2b-gap));
+  border-top: 2px solid color-mix(in srgb, var(--bsw-shop-accent) 55%, transparent);
+}
+
+.bsw-b2b-moment:nth-child(2) .bsw-b2b-moment__caption::before {
+  border-top-color: var(--bsw-shop-accent);
+}
+
+.bsw-b2b-moment__node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--bsw-b2b-node);
+  aspect-ratio: 1;
+  margin: 0 auto 1rem;
+  border: 2px solid var(--bsw-shop-accent);
+  border-radius: 50%;
+  background: var(--surface-1);
+  color: var(--fg);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.3;
+  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
+}
+
+.bsw-b2b-moment--destination .bsw-b2b-moment__node {
+  background: var(--bsw-shop-accent);
+  color: var(--bsw-shop-on-accent);
 }
 
 .bsw-b2b-moment__title {
@@ -673,7 +674,8 @@
 }
 
 .bsw-b2b-moment__text {
-  margin: 0.45rem 0 0;
+  max-width: 30ch;
+  margin: 0.45rem auto 0;
   color: var(--bsw-b2b-text-2);
   font-size: 0.95rem;
   line-height: 1.55;
@@ -696,6 +698,7 @@
   font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.25;
+  text-align: left;
   text-decoration: none;
 }
 
@@ -717,6 +720,62 @@
 
 .bsw-b2b-moment__action:hover .bsw-b2b-moment__action-icon {
   background: color-mix(in srgb, var(--accent) 88%, var(--bg));
+}
+
+/* ---------- Closing bar: disclosure and the primary CTA ---------- */
+
+.bsw-b2b__close {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2.5rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-top: 1px solid var(--bsw-b2b-line);
+}
+
+.bsw-b2b__close-copy {
+  flex: 1 1 28rem;
+  max-width: 60ch;
+}
+
+.bsw-b2b__disclosure {
+  margin: 0;
+  color: var(--bsw-b2b-text-2);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.bsw-b2b__note {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.bsw-b2b__cta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-12);
+  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
+  color: var(--fg);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.bsw-b2b__cta-icon {
+  flex: none;
+}
+
+.bsw-b2b__cta:hover {
+  background: color-mix(in srgb, var(--accent) 76%, var(--bg));
 }
 
 .bsw-b2b__cta:focus-visible,
@@ -755,6 +814,11 @@
 /* ---------- Tablet and up: the whole journey in one row ---------- */
 
 @media (min-width: 48rem) {
+  .bsw-b2b {
+    --bsw-b2b-step: 1rem;
+    --bsw-b2b-indent: clamp(2.5rem, 9vw, 8rem);
+  }
+
   .bsw-b2b__swipe {
     display: none;
   }
@@ -774,9 +838,14 @@
 @media (min-width: 48rem) and (max-width: 63.99rem) {
   .bsw-b2b {
     --bsw-b2b-gap: 1rem;
+    --bsw-b2b-step: 0.75rem;
   }
 
-  .bsw-b2b__stage {
+  .bsw-b2b__showcase {
+    padding-inline: 1rem;
+  }
+
+  .bsw-b2b__header {
     padding-inline: 1rem;
   }
 
@@ -799,15 +868,41 @@
   .bsw-b2b-moment__action {
     font-size: 0.82rem;
   }
+
+  .bsw-b2b__close {
+    padding-inline: 1rem;
+  }
 }
 
-/* ---------- Desktop: split header ---------- */
-
 @media (min-width: 64rem) {
+  .bsw-b2b {
+    --bsw-b2b-step: 1.25rem;
+  }
+}
+
+/* Wide screens: the supporting copy sits in the space the indented second line leaves open. */
+@media (min-width: 80rem) {
   .bsw-b2b__header {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: clamp(3rem, 6vw, 6rem);
-    align-items: end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+    column-gap: 3rem;
+  }
+
+  .bsw-b2b__eyebrow,
+  .bsw-b2b__heading {
+    grid-column: 1 / -1;
+  }
+
+  .bsw-b2b__heading {
+    grid-row: 2;
+  }
+
+  .bsw-b2b__lede {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+    margin: 0;
+    padding-bottom: 0.35rem;
   }
 }
 
@@ -822,16 +917,24 @@
     width: calc(100% - 1.5rem);
   }
 
+  .bsw-b2b__showcase {
+    padding: 1.5rem 0.9rem 1.25rem;
+  }
+
+  .bsw-b2b__header {
+    padding-inline: 0.35rem;
+  }
+
   .bsw-b2b__heading {
-    font-size: clamp(2.05rem, 8.4vw, 2.6rem);
+    font-size: clamp(2.05rem, 8.6vw, 2.6rem);
+  }
+
+  .bsw-b2b__close {
+    padding-inline: 0.35rem;
   }
 
   .bsw-b2b__cta {
     justify-content: center;
     width: 100%;
-  }
-
-  .bsw-b2b__stage {
-    padding: 1.1rem 0.9rem 1rem;
   }
 }

@@ -33,15 +33,17 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(section).not.toMatch(/<h1\b/);
   });
 
-  it('leads with the approved message and says the identity carries through to booking', () => {
+  it('introduces the client journey with the approved editorial header', () => {
     expect(section).toContain('aria-labelledby="bsw-b2b-heading"');
     expect(section.match(/<h2\b/g) ?? []).toHaveLength(1);
+    const heading = text(markup.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '').replace(' .', '.');
+    expect(heading).toBe('From first impression to booking.');
     const copy = text(markup);
-    expect(copy).toContain('Your brand. Your website. Your bookings.');
+    expect(copy).toMatch(/^The client journey/i);
     expect(copy).toContain(
-      'From discovering your barbershop to booking an appointment, give clients one connected experience built around your business.',
+      'Your brand sets the tone. Your website carries it through — from discovering your barbershop and choosing a barber to booking an appointment.',
     );
-    expect(copy).toMatch(/carry through every step — booking included/);
+    expect(markup.indexOf('<h2')).toBeLessThan(markup.indexOf('bsw-b2b__moments'));
   });
 
   it('tells one journey as three ordered H3 moments: discover, choose, book', () => {
@@ -52,7 +54,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
   });
 
   it('labels the previews as illustrative and keeps them non-interactive', () => {
-    expect(text(markup)).toContain('Illustrative previews of the demo pages. The links open the working demo.');
+    expect(text(markup)).toMatch(/illustrative previews\. The arrow links open the working demo\./);
     const phones = markup.match(/<div\s+class="bsw-b2b-phone"[\s\S]*?<div class="bsw-b2b-moment__caption">/g) ?? [];
     expect(phones).toHaveLength(3);
     for (const phone of phones) {
@@ -67,10 +69,11 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
   it('offers one primary demo CTA and secondary links that follow the journey', () => {
     const links = anchors();
     expect(links).toHaveLength(3);
-    const [primary = '', barbersLink = '', bookingLink = ''] = links;
-    expect(primary).toContain('href={DEMO_HOME_HREF}');
-    expect(text(primary.replace(/<span aria-hidden="true">[^<]*<\/span>/g, ''))).toBe('Explore the working demo');
-    expect(markup.indexOf('Explore the working demo')).toBeLessThan(markup.indexOf('bsw-b2b__stage'));
+    const primary = links.find((link) => link.includes('href={DEMO_HOME_HREF}')) ?? '';
+    const [barbersLink = '', bookingLink = ''] = links.filter((link) => link !== primary);
+    expect(text(primary)).toBe('Explore the working demo');
+    expect(primary).toContain('class="bsw-b2b__cta"');
+    expect(markup.match(/class="bsw-b2b__cta"/g) ?? []).toHaveLength(1);
     expect(text(barbersLink)).toBe('Meet the BLACKLINE barbers');
     expect(text(bookingLink)).toMatch(/^Start a demo booking with/);
     expect(DEMO_HOME_HREF).toBe('/demo');
