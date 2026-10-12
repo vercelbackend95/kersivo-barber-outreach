@@ -6,6 +6,7 @@ import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import {
   BILLING_CYCLE_SHORT,
   NO_SETUP_FEE_SHORT,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
   SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
@@ -115,9 +116,13 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     const payment = list('payment');
     expect(payment).toContain('STRIPE_FEES_NOTE');
     expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
-    expect(payment).toContain('Your subscription starts when you buy, not when your website goes live.');
-    expect(payment).toContain('BILLING_CYCLE_SHORT');
-    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly/);
+    expect(payment).toContain(
+      'You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same billing-cycle day.',
+    );
+    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly on the same billing-cycle day/);
+    expect(payment).toContain('Billing runs while we prepare your website and doesn’t pause if your materials arrive late.');
+    expect(ONBOARDING_BILLING_INDEPENDENT_CLAIM).toMatch(/does not pause or stop the billing cycle/);
+    expect(payment).not.toMatch(/free (trial|period|setup period)|after (launch|go-live)/i);
     expect(markup).toContain('{PRICE_VAT_DISCLAIMER}');
     expect(SAAS_ADDS_VAT).toBe(false);
     expect(PRICE_VAT_DISCLAIMER).toMatch(/not currently VAT registered/);
@@ -129,10 +134,11 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     expect(frontmatter).not.toMatch(/premium domain|any domain/i);
     expect(SMS_INCLUDED_WITH_ALLOWANCE_CLAIM).toMatch(/monthly SMS allowance/);
     const managed = text(markup.match(/<div class="bsw-offer__managed">[\s\S]*?<\/div>/)?.[0] ?? '');
-    expect(managed).toMatch(/managed service rather than buying website code/);
-    expect(managed).toMatch(/brand, content, domain and eligible business-data exports remain yours under our terms/);
-    expect(managed).toMatch(/KERSIVO owns and maintains the software, templates and hosting/);
-    expect(managed).toContain('“Powered by KERSIVO”');
+    expect(managed).toMatch(/We prepare your website and keep it and your booking system running for as long as you subscribe/);
+    expect(managed).toMatch(/brand, content and domain stay yours/);
+    expect(managed).toMatch(/export eligible business data under our terms/);
+    expect(managed).toMatch(/software, templates, code and hosting behind it remain KERSIVO’s/);
+    expect(managed).toContain('subtle “Powered by KERSIVO” mark');
   });
 
   it('offers exactly one Full CTA into the real launch journey', () => {

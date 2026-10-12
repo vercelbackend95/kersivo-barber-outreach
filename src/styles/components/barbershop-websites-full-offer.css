@@ -283,8 +283,8 @@
 .bsw-offer-panel__conditions li {
   position: relative;
   padding-left: 0.95rem;
-  color: var(--bsw-offer-text-2);
-  font-size: 0.88rem;
+  color: color-mix(in srgb, var(--muted) 60%, var(--fg));
+  font-size: 0.9rem;
   line-height: 1.5;
   text-wrap: pretty;
 }
@@ -304,8 +304,8 @@
   padding-top: 1rem;
   border-top: 1px solid var(--bsw-offer-line);
   color: var(--bsw-offer-text-2);
-  font-size: 0.8rem;
-  line-height: 1.55;
+  font-size: 0.84rem;
+  line-height: 1.5;
   text-wrap: pretty;
 }
 
@@ -314,7 +314,7 @@
   margin-top: 0.3rem;
   padding-block: 0.3rem;
   color: var(--fg);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.4;
   text-decoration: underline;

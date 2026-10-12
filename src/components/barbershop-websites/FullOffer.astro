@@ -2,7 +2,6 @@
 import { ArrowRight, Check } from 'lucide-react';
 import '@/styles/components/barbershop-websites-full-offer.css';
 import {
-  BILLING_CYCLE_SHORT,
   NO_SETUP_FEE_SHORT,
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
@@ -58,8 +57,8 @@ const facts = [
 
 const payment = [
   STRIPE_FEES_NOTE,
-  'Your subscription starts when you buy, not when your website goes live.',
-  BILLING_CYCLE_SHORT,
+  `You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same billing-cycle day.`,
+  'Billing runs while we prepare your website and doesn’t pause if your materials arrive late.',
 ];
 ---
 
@@ -132,10 +131,10 @@ const payment = [
     <div class="bsw-offer__managed">
       <p class="bsw-offer__managed-title">A monthly service, not a one-off build</p>
       <p class="bsw-offer__managed-copy">
-        You subscribe to a managed service rather than buying website code. Your brand, content,
-        domain and eligible business-data exports remain yours under our terms. KERSIVO owns and
-        maintains the software, templates and hosting behind your site, which carries a subtle
-        “Powered by KERSIVO” mark.
+        We prepare your website and keep it and your booking system running for as long as you
+        subscribe. Your brand, content and domain stay yours, and you can export eligible business
+        data under our terms. The software, templates, code and hosting behind it remain KERSIVO’s,
+        and your site carries a subtle “Powered by KERSIVO” mark.
       </p>
     </div>
   </div>
