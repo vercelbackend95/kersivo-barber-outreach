@@ -29,6 +29,7 @@
   --bsw-b2b-line: color-mix(in srgb, var(--fg) 11%, transparent);
   --bsw-b2b-text-2: color-mix(in srgb, var(--muted) 86%, var(--fg));
   --bsw-b2b-gap: clamp(1rem, 2.4vw, 2.5rem);
+  --bsw-b2b-phone: 18.5rem;
   --bsw-b2b-bezel: 0.5rem;
   --bsw-b2b-bar: 3.25rem;
   --bsw-b2b-node: 2.1rem;
@@ -120,7 +121,7 @@
 .bsw-b2b__moments {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(76vw, 18.5rem);
+  grid-auto-columns: min(76vw, var(--bsw-b2b-phone));
   grid-template-rows: auto auto;
   column-gap: var(--bsw-b2b-gap);
   row-gap: calc(1.25rem + var(--bsw-b2b-step) * 2);
@@ -144,7 +145,7 @@
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 18.5rem;
+  max-width: var(--bsw-b2b-phone);
   padding: var(--bsw-b2b-bezel);
   border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
   border-radius: 2rem;
@@ -709,23 +710,14 @@
   border-top: 1px solid var(--bsw-b2b-line);
 }
 
-.bsw-b2b__close-copy {
-  flex: 1 1 28rem;
-  max-width: 60ch;
-}
-
 .bsw-b2b__disclosure {
+  flex: 1 1 24rem;
+  max-width: 62ch;
   margin: 0;
   color: var(--bsw-b2b-text-2);
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
-.bsw-b2b__note {
-  margin: 0.35rem 0 0;
-  color: var(--muted);
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .bsw-b2b__cta {
@@ -796,6 +788,12 @@
   .bsw-b2b__moments {
     grid-auto-flow: row;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Inset by the space left beside each centred phone, so the footer runs from the first
+     preview's left edge to the third preview's right edge. */
+  .bsw-b2b__close {
+    margin-inline: max(0px, ((100% - 2 * var(--bsw-b2b-gap)) / 3 - var(--bsw-b2b-phone)) / 2);
   }
 }
 

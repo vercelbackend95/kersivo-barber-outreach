@@ -54,7 +54,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
   });
 
   it('labels the previews as illustrative and keeps them non-interactive', () => {
-    expect(text(markup)).toMatch(/The screens above are illustrative previews\./);
+    expect(text(markup)).toContain('These previews are illustrative.');
     const phones = markup.match(/<div\s+class="bsw-b2b-phone"[\s\S]*?<div class="bsw-b2b-moment__caption">/g) ?? [];
     expect(phones).toHaveLength(3);
     for (const phone of phones) {
@@ -105,9 +105,10 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
   });
 
   it('discloses that BLACKLINE is fictional and demo bookings are not real', () => {
-    const copy = text(markup);
-    expect(copy).toContain('BLACKLINE Barbers is a fictional demonstration shop.');
-    expect(copy).toMatch(/no real appointment is made and nothing is charged/);
+    const disclosure = text(markup.match(/<p class="bsw-b2b__disclosure">[\s\S]*?<\/p>/)?.[0] ?? '');
+    expect(disclosure).toBe(
+      'BLACKLINE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings stay in your browser session — no real appointment is created and no payment is taken.',
+    );
   });
 
   it('uses real, sized, lazy-loaded images', () => {
