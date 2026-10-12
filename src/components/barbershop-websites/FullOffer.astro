@@ -1,0 +1,156 @@
+---
+import { ArrowRight, Check } from 'lucide-react';
+import '@/styles/components/barbershop-websites-full-offer.css';
+import {
+  BILLING_CYCLE_SHORT,
+  NO_SETUP_FEE_CLAIM,
+  PLAN_SCOPE_SHORT,
+  PRICE_VAT_DISCLAIMER,
+  SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
+  STRIPE_FEES_NOTE,
+} from '@/lib/pricing/claimsPolicy';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const TRACK_EVENT = 'saas_subscribe_click';
+const TRACK_PLACEMENT = 'barbershop_websites_full_offer';
+const FULL_LAUNCH_HREF = '/admin/launch';
+const SUBSCRIPTION_TERMS_HREF = '/terms#subscription';
+
+type Value = {
+  key: string;
+  title: string;
+  description: string;
+  points: string[];
+};
+
+const values: Value[] = [
+  {
+    key: 'website',
+    title: 'Your Website',
+    description:
+      'A professional website built around your barbershop’s identity, with your own standard domain, hosting and ongoing support included.',
+    points: [
+      'Designed around your logo, colours and photos',
+      'Your own standard domain',
+      'Hosting and SSL while your subscription is active',
+      'Platform updates and standard support',
+    ],
+  },
+  {
+    key: 'bookings',
+    title: 'Your Bookings',
+    description:
+      'Let clients book through your website while you manage appointments, services, barbers and availability from one connected system.',
+    points: [
+      'Clients choose a service, a barber and a time',
+      `Pay at the shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment online`,
+      'Email confirmations and appointment reminders',
+      SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
+    ],
+  },
+  {
+    key: 'business',
+    title: 'Your Business',
+    description:
+      'Manage your team, client records, bookings and retail activity from one dashboard built for the day-to-day running of your shop.',
+    points: [
+      'Team, services and opening hours in one dashboard',
+      'Client records with notes and booking history',
+      'Booking and business reports',
+      'Retail pickup: sell products online for collection in the shop',
+    ],
+  },
+];
+
+const included = [
+  'Standard website preparation and brand adaptation',
+  'One standard domain for your location',
+  'Hosting, SSL and platform updates',
+  'Standard support',
+  'Booking, client, retail and reporting tools',
+];
+
+const conditions = [
+  NO_SETUP_FEE_CLAIM,
+  `0% KERSIVO commission on bookings and retail payments. ${STRIPE_FEES_NOTE}`,
+  `Your subscription starts when you purchase, not when your website goes live. ${BILLING_CYCLE_SHORT}`,
+  PRICE_VAT_DISCLAIMER,
+];
+---
+
+<section class="bsw-offer" aria-labelledby="bsw-offer-heading">
+  <div class="bsw-offer__inner">
+    <div class="bsw-offer__story">
+      <header class="bsw-offer__header">
+        <p class="bsw-offer__eyebrow">Full KERSIVO</p>
+        <h2 id="bsw-offer-heading" class="bsw-offer__heading">
+          Your website. Your bookings. Your business <span class="bsw-offer__accent">— together.</span>
+        </h2>
+        <p class="bsw-offer__lede">
+          A professionally branded barbershop website, connected online booking and the tools to
+          manage your shop. All in one Full KERSIVO subscription.
+        </p>
+      </header>
+
+      <ul class="bsw-offer__values" role="list">
+        {values.map((value) => (
+          <li class="bsw-offer-value" data-value={value.key}>
+            <h3 class="bsw-offer-value__title">{value.title}</h3>
+            <div class="bsw-offer-value__body">
+              <p class="bsw-offer-value__description">{value.description}</p>
+              <ul class="bsw-offer-value__points" role="list">
+                {value.points.map((point) => <li>{point}</li>)}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div class="bsw-offer__managed">
+        <p class="bsw-offer__managed-title">An ongoing platform, not a one-off build</p>
+        <p class="bsw-offer__managed-copy">
+          You subscribe to a managed service rather than buying website code. Your brand, content,
+          domain and eligible business-data exports remain yours under our terms. KERSIVO owns and
+          maintains the underlying software, templates and hosting, and your website carries a
+          subtle “Powered by KERSIVO” mark.
+        </p>
+      </div>
+    </div>
+
+    <div class="bsw-offer__panel-wrap">
+      <div class="bsw-offer-panel">
+        <p class="bsw-offer-panel__plan">Full KERSIVO</p>
+        <p class="bsw-offer-panel__price">
+          <span class="bsw-offer-panel__amount">£{SAAS_MONTHLY_GBP}</span>
+          <span class="bsw-offer-panel__period">/month per location</span>
+        </p>
+        <p class="bsw-offer-panel__scope">{PLAN_SCOPE_SHORT}</p>
+
+        <p class="bsw-offer-panel__label">Included in your subscription</p>
+        <ul class="bsw-offer-panel__included" role="list">
+          {included.map((item) => (
+            <li>
+              <Check className="bsw-offer-panel__check" size={16} strokeWidth={2.25} aria-hidden="true" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <a
+          class="bsw-offer-panel__cta"
+          href={FULL_LAUNCH_HREF}
+          data-track={TRACK_EVENT}
+          data-track-placement={TRACK_PLACEMENT}
+        >
+          Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+          <ArrowRight className="bsw-offer-panel__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
+        </a>
+
+        <ul class="bsw-offer-panel__conditions" role="list">
+          {conditions.map((condition) => <li>{condition}</li>)}
+        </ul>
+        <a class="bsw-offer-panel__terms" href={SUBSCRIPTION_TERMS_HREF}>Read the subscription terms</a>
+      </div>
+    </div>
+  </div>
+</section>
