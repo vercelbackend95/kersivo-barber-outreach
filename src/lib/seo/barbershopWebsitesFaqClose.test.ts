@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { BOOKING_DEPOSIT_CAP_PENCE, FULL_KERSIVO_PLATFORM_FEE_BPS } from '@/lib/booking/bookingPaymentPolicy';
 import {
   BILLING_CYCLE_CLAIM,
   DOMAIN_EXISTING_CLAIM,
@@ -11,12 +12,13 @@ import {
   NO_SETUP_FEE_SHORT,
   ONBOARDING_BILLING_INDEPENDENT_CLAIM,
   ONBOARDING_TIMELINE_CLAIM,
+  OWNER_SELF_CONFIG_CLAIM,
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { FREE_BOOKABLE_BARBER_LIMIT } from '@/lib/shop/freeBookableBarbers';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
@@ -26,6 +28,7 @@ const section = read('../../components/barbershop-websites/FaqAndClose.astro');
 const terms = read('../../pages/terms.astro');
 const postFullPlan = read('../../pages/api/setup/post-full-plan.ts');
 const cancelSubscription = read('../../pages/api/setup/cancel-subscription.ts');
+const depositsApi = read('../../pages/api/admin/barbershop-settings/deposits.ts');
 const [, frontmatter = '', markup = ''] = section.split(/^---$/m);
 
 const text = (source: string) =>
@@ -66,16 +69,21 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     );
   });
 
-  it('asks exactly seven real questions with answers in native, crawlable HTML', () => {
+  it('asks exactly eleven real questions in buying-decision order, in native, crawlable HTML', () => {
     expect(questions).toEqual([
-      'Can I use my existing domain?',
       'Is there a setup fee, and when do I start paying?',
+      'Does KERSIVO take commission on my bookings?',
+      'Can my clients pay a deposit or pay in full online?',
+      'Can I change my services, prices and opening hours myself?',
+      'Can I use my existing domain?',
+      'Do I own my website?',
       'How long does it take to get my website live?',
       'Can you help me switch from my current booking system?',
-      'Do I own my website?',
+      'Can I sell products through my barbershop website?',
       'Can I cancel Full KERSIVO at any time?',
       'What’s the difference between Starter and Full KERSIVO?',
     ]);
+    expect(new Set([...faqSource.matchAll(/id: '([^']+)'/g)].map((m) => m[1])).size).toBe(11);
     expect(markup).toMatch(/<details class="bsw-faq-item"/);
     expect(markup).toMatch(/<div class="bsw-faq-item__answer">\s*\{faq\.answer\.map/);
     expect(markup).not.toMatch(/\shidden[\s=>]|display:\s*none/);
@@ -100,7 +108,44 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(a).toMatch(/first payment is taken when you subscribe, then monthly from that date, including while we prepare your website/);
     expect(BILLING_CYCLE_CLAIM).toMatch(/first payment is taken immediately when you subscribe/);
     expect(ONBOARDING_BILLING_INDEPENDENT_CLAIM).toMatch(/does not pause/);
-    expect(a).toMatch(/Standard Stripe processing fees apply/);
+  });
+
+  it('says 0% commission without implying card processing is free', () => {
+    const a = answer('commission');
+    expect(a).toMatch(/No\. KERSIVO takes 0% commission on bookings and retail sales/);
+    expect(a).toMatch(/standard Stripe processing fees still apply to card payments/);
+    expect(FULL_KERSIVO_PLATFORM_FEE_BPS).toBe(0);
+    expect(section).not.toMatch(/free (card|payment) processing|no (card|Stripe|processing) fees/i);
+  });
+
+  it('describes the Full payment modes the owner can actually choose', () => {
+    const a = answer('payments');
+    expect(a).toMatch(/you choose how clients pay when they book: at the shop, with a £\$\{KERSIVO_BOOKING_DEPOSIT_GBP\} deposit or the full amount online/);
+    expect(KERSIVO_BOOKING_DEPOSIT_GBP * 100).toBe(BOOKING_DEPOSIT_CAP_PENCE);
+    expect(a).toMatch(/your own connected Stripe account/);
+    expect(depositsApi).toContain("bookingPaymentMode must be NONE, DEPOSIT or FULL.");
+    expect(depositsApi).toContain("productAccess.state !== 'FULL_KERSIVO'");
+    expect(terms).toMatch(/Full KERSIVO may offer owner-controlled Pay at shop, £5-deposit or full-payment modes/);
+  });
+
+  it('matches the real owner dashboard for services, prices and hours', () => {
+    const a = answer('manage');
+    expect(a).toMatch(/manage your services, prices, barbers and working hours from your KERSIVO dashboard/);
+    expect(OWNER_SELF_CONFIG_CLAIM).toMatch(/barbers, services, prices, working hours/);
+    for (const route of ['services/[id].ts', 'barbershop-settings/hours.ts', 'barbers/[id]/rules.ts']) {
+      expect(existsSync(join(root, 'src/pages/api/admin', route))).toBe(true);
+    }
+  });
+
+  it('describes retail as pay online and collect in the shop, with no delivery', () => {
+    const a = answer('retail');
+    expect(a).toMatch(/online shop where clients can pay for grooming products and collect them from your barbershop/);
+    expect(a).toMatch(/manage products and orders from your dashboard/);
+    expect(a).toMatch(/Delivery and shipping aren’t included/);
+    expect(terms).toMatch(/Retail \/ Products \/ Orders \/ Sales are Full KERSIVO features/);
+    expect(terms).toMatch(/pickup-only fulfilment/);
+    expect(existsSync(join(root, 'src/pages/api/admin/shop/orders/[id]/collect.ts'))).toBe(true);
+    expect(section).not.toMatch(/inventory|stock (levels|management)|we deliver|next-day/i);
   });
 
   it('gives the setup time as an estimate, not a promise', () => {
@@ -130,11 +175,13 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     const a = answer('cancel');
     expect(a).toMatch(/no minimum term and no notice period/);
     expect(terms).toMatch(/no minimum term<\/strong> and\s+<strong>no notice period/);
-    expect(a).toMatch(/Full stays active until the end of the month you’ve paid for/);
+    expect(a).toMatch(/Full stays active until the end of your current paid billing period/);
+    expect(a).not.toMatch(/end of the month/);
     expect(NO_PAUSE_CLAIM).toMatch(/active until the end of the paid month/);
     expect(cancelSubscription).toContain('cancelSubscriptionAtPeriodEnd');
     expect(a).toMatch(/no pro-rata refund for the time left/);
-    expect(a).toMatch(/you can choose Starter before then, as long as your shop meets its requirements\. Nothing switches over automatically/);
+    expect(a).toMatch(/Once you’ve scheduled the cancellation, you can choose to move to Starter before that date, as long as your shop meets its requirements/);
+    expect(a).toMatch(/Nothing switches over automatically: you need to make that choice yourself/);
     expect(postFullPlan).toMatch(/Choose KERSIVO Starter or Leave KERSIVO/);
     expect(postFullPlan).toContain('FREE_BOOKABLE_BARBER_LIMIT');
     expect(FREE_BOOKABLE_BARBER_LIMIT).toBe(4);

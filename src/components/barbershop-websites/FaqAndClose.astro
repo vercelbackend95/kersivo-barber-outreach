@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-faq-close.css';
 import { NO_SETUP_FEE_SHORT, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const FULL_TRACK_EVENT = 'saas_subscribe_click';
 const FULL_TRACK_PLACEMENT = 'barbershop_websites_final_full_cta';
@@ -20,6 +20,36 @@ type Faq = {
 
 const faqs: Faq[] = [
   {
+    id: 'cost',
+    question: 'Is there a setup fee, and when do I start paying?',
+    answer: [
+      `There’s no separate fee for the standard website setup. Full KERSIVO is £${SAAS_MONTHLY_GBP} a month for each physical barbershop location.`,
+      'Your first payment is taken when you subscribe, then monthly from that date, including while we prepare your website.',
+    ],
+  },
+  {
+    id: 'commission',
+    question: 'Does KERSIVO take commission on my bookings?',
+    answer: [
+      'No. KERSIVO takes 0% commission on bookings and retail sales. You pay your Full subscription, and standard Stripe processing fees still apply to card payments.',
+    ],
+  },
+  {
+    id: 'payments',
+    question: 'Can my clients pay a deposit or pay in full online?',
+    answer: [
+      `Yes. With Full KERSIVO, you choose how clients pay when they book: at the shop, with a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or the full amount online.`,
+      'Card payments go through your own connected Stripe account, so the money is paid to your shop.',
+    ],
+  },
+  {
+    id: 'manage',
+    question: 'Can I change my services, prices and opening hours myself?',
+    answer: [
+      'Yes. You manage your services, prices, barbers and working hours from your KERSIVO dashboard. There’s no need to contact us every time you change a haircut price or update your team’s availability.',
+    ],
+  },
+  {
     id: 'domain',
     question: 'Can I use my existing domain?',
     answer: [
@@ -28,11 +58,11 @@ const faqs: Faq[] = [
     ],
   },
   {
-    id: 'cost',
-    question: 'Is there a setup fee, and when do I start paying?',
+    id: 'ownership',
+    question: 'Do I own my website?',
     answer: [
-      `There’s no separate fee for the standard website setup. Full KERSIVO is £${SAAS_MONTHLY_GBP} a month for each physical barbershop location.`,
-      'Your first payment is taken when you subscribe, then monthly from that date, including while we prepare your website. Standard Stripe processing fees apply to card payments your shop takes.',
+      'Your business name, brand, photos, content and domain stay yours, and you can export eligible business data under our terms.',
+      'The website runs on the KERSIVO platform, so the software, templates, code and hosting behind it aren’t transferred to you. Standard websites also carry a subtle “Powered by KERSIVO” mark.',
     ],
   },
   {
@@ -52,19 +82,19 @@ const faqs: Faq[] = [
     ],
   },
   {
-    id: 'ownership',
-    question: 'Do I own my website?',
+    id: 'retail',
+    question: 'Can I sell products through my barbershop website?',
     answer: [
-      'Your business name, brand, photos, content and domain stay yours, and you can export eligible business data under our terms.',
-      'The website runs on the KERSIVO platform, so the software, templates, code and hosting behind it aren’t transferred to you. Standard websites also carry a subtle “Powered by KERSIVO” mark.',
+      'Yes. Full KERSIVO includes an online shop where clients can pay for grooming products and collect them from your barbershop. You manage products and orders from your dashboard.',
+      'Orders are for collection in the shop. Delivery and shipping aren’t included.',
     ],
   },
   {
     id: 'cancel',
     question: 'Can I cancel Full KERSIVO at any time?',
     answer: [
-      'Yes. There’s no minimum term and no notice period. Full stays active until the end of the month you’ve paid for, and there’s no pro-rata refund for the time left.',
-      'When Full ends, your branded website and Full features end with it. If you’d like to stay with KERSIVO, you can choose Starter before then, as long as your shop meets its requirements. Nothing switches over automatically.',
+      'Yes. There’s no minimum term and no notice period. Full stays active until the end of your current paid billing period, and there’s no pro-rata refund for the time left.',
+      'When Full ends, your branded website and Full features end with it. Once you’ve scheduled the cancellation, you can choose to move to Starter before that date, as long as your shop meets its requirements. Nothing switches over automatically: you need to make that choice yourself.',
     ],
   },
   {
@@ -85,7 +115,7 @@ const faqs: Faq[] = [
         <p class="bsw-faq__eyebrow">Questions</p>
         <h2 id="bsw-faq-heading" class="bsw-faq__heading">Before you decide</h2>
         <p class="bsw-faq__lede">
-          Straight answers on cost, domains, switching systems and what happens if you cancel.
+          Straight answers on cost, payments, domains, switching systems and what happens if you cancel.
         </p>
       </header>
 
