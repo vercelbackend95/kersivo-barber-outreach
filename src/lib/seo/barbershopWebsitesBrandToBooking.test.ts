@@ -82,8 +82,12 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
 
   it('hands the chosen barber into the real booking flow', () => {
     expect(section).toContain('const bookingHref = demoBarberBookingHref(barber.slug)');
-    expect(section).toContain("value: barber.name, state: 'carried'");
-    const barber = DEMO_BARBERS.find((b) => b.slug === 'noah-reid') ?? DEMO_BARBERS[0];
+    const phones = markup.match(/<div\s+class="bsw-b2b-phone"[\s\S]*?<div class="bsw-b2b-moment__caption">/g) ?? [];
+    for (const phone of phones.slice(1)) {
+      expect(phone).toContain('{barber.name}');
+    }
+    expect(phones[2] ?? '').toContain('Book a chair');
+    const barber = DEMO_BARBERS.find((b) => b.slug === 'ellis-ward') ?? DEMO_BARBERS[0];
     const query = new URLSearchParams(demoBarberBookingHref(barber.slug).split('?')[1]);
     expect(resolveDemoBarberSlug(query.get('barber'))?.name).toBe(barber.name);
     expect(existsSync(join(root, 'public', barber.image.src))).toBe(true);
