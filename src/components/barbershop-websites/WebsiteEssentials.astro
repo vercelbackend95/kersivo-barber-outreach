@@ -4,159 +4,83 @@ import '@/styles/components/barbershop-websites-essentials.css';
 type Essential = {
   number: string;
   title: string;
+  description: string;
   why: string;
-  inFull: string;
 };
 
-type EssentialGroup = {
-  key: string;
-  label: string;
-  items: Essential[];
-};
-
-const groups: EssentialGroup[] = [
+const essentials: Essential[] = [
   {
-    key: 'identity',
-    label: 'Who you are',
-    items: [
-      {
-        number: '01',
-        title: 'A clear brand and recognisable business details',
-        why: 'A new client should know straight away that they are in the right place. Your name, logo, colours and tone should match the sign above the door and your social profiles, and your business name and town should be stated plainly rather than buried in a footer.',
-        inFull: 'Your site is prepared around your shop name, logo and colours, on your own domain. One standard domain is included.',
-      },
-      {
-        number: '02',
-        title: 'The barbers behind the chairs',
-        why: 'Many clients choose a barber, not just a shop. Names, photos and a line about each person help newcomers pick someone they feel comfortable with, and help regulars find the barber they already trust.',
-        inFull: 'Your barbers can be introduced on your site, and clients choose a barber as part of booking.',
-      },
-      {
-        number: '03',
-        title: 'Genuine photography',
-        why: 'Real photos of your shop, your chairs and your finished cuts show your standard far more honestly than stock images. If you do not have good photos yet, a clean layout is better than borrowed pictures of someone else’s shop.',
-        inFull: 'Shop photos you supply during setup can be used on your site. The quality of this section depends on the photos you provide.',
-      },
-    ],
+    number: '01',
+    title: 'Your branding',
+    description: 'Make your website recognisably yours, using your logo, colours and genuine photos of your shop and work.',
+    why: 'A consistent first impression tells clients they have found the right shop.',
   },
   {
-    key: 'offer',
-    label: 'What you offer',
-    items: [
-      {
-        number: '04',
-        title: 'Services with clear prices',
-        why: 'Not knowing the price is one of the simplest reasons to leave without booking. List each service with a plain name, a price and how long it takes, so clients know what they are choosing and what it will cost.',
-        inFull: 'Services, prices and durations are shown in the booking flow. A separate, dedicated services page is not part of the standard setup.',
-      },
-      {
-        number: '05',
-        title: 'Address, contact details and opening hours',
-        why: 'Clients need to find you, reach you and know when you are open. Show your full address, a phone number or email, and opening hours that stay accurate, especially around bank holidays and late nights.',
-        inFull: 'Your address and contact details appear on your site, and your opening hours shape the times clients can book.',
-      },
-    ],
+    number: '02',
+    title: 'Services & pricing',
+    description: 'Show clients what they can book, how much each service costs and, where useful, how long it takes.',
+    why: 'Clear prices remove the guesswork before anyone books.',
   },
   {
-    key: 'booking',
-    label: 'How clients book',
-    items: [
-      {
-        number: '06',
-        title: 'Designed for phones first',
-        why: 'Many people look for a barber on their phone, often when they are already nearby. Text should be readable without zooming, buttons easy to tap with a thumb, and pages quick to load on mobile data.',
-        inFull: 'The website and booking flow are built for phones first, then scale up to tablet and desktop.',
-      },
-      {
-        number: '07',
-        title: 'An obvious online booking journey',
-        why: 'If booking means hunting for a link or downloading another app, some clients will give up. A visible booking button that leads to a short journey — service, barber, time, details — keeps the decision moving.',
-        inFull: 'Online booking is built into your website, with optional £5 deposits, email confirmations and appointment reminders.',
-      },
-      {
-        number: '08',
-        title: 'One clear next step',
-        why: 'Every page should answer “what do I do now?” For most visitors that is booking; for others it is calling or getting directions. One main action per screen is clearer than several buttons competing for attention.',
-        inFull: 'Booking is the main call to action throughout your site, with contact details close at hand.',
-      },
-    ],
+    number: '03',
+    title: 'Your team',
+    description: 'Introduce the people behind the chairs and help clients choose the barber who suits them.',
+    why: 'Many clients choose a person, not just a time slot.',
+  },
+  {
+    number: '04',
+    title: 'Location & contact',
+    description: 'Make your address, opening hours and contact details easy to find.',
+    why: 'It is what clients check before they set off, so keep it accurate.',
+  },
+  {
+    number: '05',
+    title: 'Mobile experience',
+    description: 'Keep your website easy to read, navigate and use on a phone.',
+    why: 'Many clients will find you on their phone, often on the move.',
+  },
+  {
+    number: '06',
+    title: 'Online booking',
+    description: 'Give clients a clear way to choose a service, barber and available appointment.',
+    why: 'One obvious next step keeps the decision moving.',
   },
 ];
 ---
 
 <section class="bsw-essentials" aria-labelledby="bsw-essentials-heading">
   <div class="bsw-essentials__inner">
-    <header class="bsw-essentials__intro">
-      <p class="bsw-essentials__eyebrow">Website checklist</p>
-      <h2 id="bsw-essentials-heading" class="bsw-essentials__heading">
-        What should a barbershop website include<span class="bsw-essentials__mark">?</span>
-      </h2>
-
+    <header class="bsw-essentials__header">
+      <div class="bsw-essentials__title-block">
+        <p class="bsw-essentials__eyebrow">Website essentials</p>
+        <h2 id="bsw-essentials-heading" class="bsw-essentials__heading">
+          What should a barbershop website include<span class="bsw-essentials__mark">?</span>
+        </h2>
+      </div>
       <p class="bsw-essentials__answer">
-        A good barbershop website tells a new client, within seconds, who you are, what you
-        charge, who will cut their hair, where you are and how to book. In practice that means
-        clear branding and business details, services with prices, your team, your address,
-        contact details and opening hours, real photos, a layout that works on a phone and an
-        online booking journey that is easy to find.
+        A good barbershop website should make the essentials easy to find: your branding,
+        services and prices, barbers, location and opening hours, plus a clear way to book. It
+        should work just as well on a phone as on a desktop, helping new clients get to know your
+        shop and regulars book with less effort.
       </p>
-
-      <p class="bsw-essentials__context">
-        Use this checklist to judge any barbershop website, whoever builds it. Where Full
-        KERSIVO covers a point as standard, we say so, and where the result depends on you,
-        we say that too.
-      </p>
-
-      <ul class="bsw-essentials__key" aria-label="How to read this checklist">
-        <li class="bsw-essentials__key-item">
-          <span class="bsw-essentials__key-swatch" aria-hidden="true"></span>
-          <span><strong>Why it matters</strong> applies to any barbershop website.</span>
-        </li>
-        <li class="bsw-essentials__key-item bsw-essentials__key-item--full">
-          <span class="bsw-essentials__key-swatch" aria-hidden="true"></span>
-          <span><strong>In Full KERSIVO</strong> is what the standard plan provides.</span>
-        </li>
-      </ul>
     </header>
 
-    <div class="bsw-essentials__groups">
-      {groups.map((group) => (
-        <div class="bsw-essentials-group" role="group" aria-labelledby={`bsw-essentials-group-${group.key}`}>
-          <p id={`bsw-essentials-group-${group.key}`} class="bsw-essentials-group__label">
-            {group.label}
-          </p>
-          <ol class="bsw-essentials-group__list" role="list">
-            {group.items.map((item) => (
-              <li class="bsw-essential">
-                <span class="bsw-essential__number" aria-hidden="true">{item.number}</span>
-                <div class="bsw-essential__body">
-                  <h3 class="bsw-essential__title">{item.title}</h3>
-                  <p class="bsw-essential__why">{item.why}</p>
-                  <p class="bsw-essential__full">
-                    <span class="bsw-essential__full-label">In Full KERSIVO</span>
-                    <span class="bsw-essential__full-text">{item.inFull}</span>
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
+    <ol class="bsw-essentials__list" role="list">
+      {essentials.map((item) => (
+        <li class="bsw-essential">
+          <span class="bsw-essential__number" aria-hidden="true">{item.number}</span>
+          <h3 class="bsw-essential__title">{item.title}</h3>
+          <p class="bsw-essential__description">{item.description}</p>
+          <p class="bsw-essential__why">{item.why}</p>
+        </li>
       ))}
-    </div>
-  </div>
+    </ol>
 
-  <div class="bsw-essentials__closing">
-    <div class="bsw-essentials-test">
-      <h3 class="bsw-essentials-test__title">The one-minute phone test</h3>
-      <p class="bsw-essentials-test__body">
-        Open your website on your phone as a new client would. Within a minute, can you find a
-        price, your address, today’s opening hours and a time you can book, without zooming or
-        leaving the site? If not, start there.
-      </p>
-    </div>
-    <p class="bsw-essentials__scope">
-      Full KERSIVO is a professionally prepared website on a standard structure, with help for
-      straightforward updates through the support inbox. It does not include bespoke feature
-      development, and no website can guarantee search rankings or a set number of bookings.
+    <p class="bsw-essentials__test">
+      <span class="bsw-essentials__test-label">Quick test</span>
+      <span class="bsw-essentials__test-text">
+        Can a new client find your prices, opening hours and booking button in under a minute?
+      </span>
     </p>
   </div>
 </section>
