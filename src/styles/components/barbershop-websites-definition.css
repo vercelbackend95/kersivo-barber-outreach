@@ -54,13 +54,18 @@
   text-wrap: pretty;
 }
 
+/* An editorial aside rather than another explanatory paragraph. */
 .bsw-definition__support {
-  max-width: 54ch;
-  margin: 1rem 0 0;
-  color: var(--bsw-def-text-2);
-  font-size: clamp(0.95rem, 1.02vw, 1rem);
-  line-height: 1.68;
-  text-wrap: pretty;
+  max-width: 34ch;
+  margin: clamp(1.5rem, 2.4vw, 2rem) 0 0;
+  padding-top: clamp(1.1rem, 1.8vw, 1.4rem);
+  border-top: 1px solid var(--bsw-def-line);
+  color: var(--fg);
+  font-size: clamp(1.1rem, 1.45vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 /* ---------- Conceptual contrast ---------- */
@@ -78,8 +83,8 @@
 
 .bsw-definition-concept {
   display: grid;
-  gap: 0.55rem;
-  padding: clamp(1.35rem, 2.2vw, 1.85rem) 0;
+  gap: 0.6rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem) 0;
 }
 
 .bsw-definition-concept + .bsw-definition-concept {
@@ -97,13 +102,12 @@
 }
 
 .bsw-definition-concept__text {
-  max-width: 34ch;
   margin: 0;
   color: var(--bsw-def-text-2);
-  font-size: clamp(1rem, 1.2vw, 1.12rem);
+  font-size: clamp(1.05rem, 1.3vw, 1.2rem);
   font-weight: 400;
-  line-height: 1.5;
-  text-wrap: pretty;
+  line-height: 1.4;
+  text-wrap: balance;
 }
 
 .bsw-definition-concept--website {
@@ -115,17 +119,21 @@
   color: var(--accent-text);
 }
 
+.bsw-definition-concept__line {
+  display: block;
+}
+
 .bsw-definition-concept--website .bsw-definition-concept__text {
   color: var(--fg);
-  font-size: clamp(1.15rem, 1.55vw, 1.4rem);
-  font-weight: 600;
-  line-height: 1.38;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.6rem, 2.5vw, 2.3rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 
 .bsw-definition__note {
   max-width: 48ch;
-  margin: 1rem 0 0;
+  margin: 0.9rem 0 0;
   color: var(--muted);
   font-size: 0.85rem;
   line-height: 1.6;
@@ -136,9 +144,25 @@
 
 @media (min-width: 64rem) {
   .bsw-definition__inner {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
     gap: clamp(3.5rem, 7vw, 7rem);
-    align-items: center;
+    align-items: end;
+  }
+}
+
+/* ---------- Tablet: keep the contrast compact under the definition ---------- */
+
+@media (min-width: 34.01rem) and (max-width: 63.99rem) {
+  .bsw-definition__contrast {
+    max-width: 36rem;
+  }
+
+  .bsw-definition__concepts {
+    border-top: 0;
+  }
+
+  .bsw-definition-concept--profile {
+    padding-top: 0;
   }
 }
 
@@ -146,12 +170,37 @@
 
 @media (max-width: 34rem) {
   .bsw-definition {
-    padding: clamp(3.6rem, 11vw, 4.5rem) 0;
+    padding: 3.25rem 0 3.5rem;
   }
 
   .bsw-definition__inner {
     width: calc(100% - 1.5rem);
-    gap: 2.25rem;
+    gap: 2rem;
+  }
+
+  .bsw-definition__eyebrow {
+    margin-bottom: 0.85rem;
+  }
+
+  .bsw-definition__support {
+    margin-top: 1.35rem;
+    padding-top: 1rem;
+  }
+
+  .bsw-definition-concept {
+    padding-block: 1.1rem;
+  }
+
+  .bsw-definition__concepts {
+    border-top: 0;
+  }
+
+  .bsw-definition-concept--profile {
+    padding-top: 0;
+  }
+
+  .bsw-definition-concept--website .bsw-definition-concept__text {
+    font-size: clamp(1.45rem, 6.3vw, 1.85rem);
   }
 
   .bsw-definition__heading {
