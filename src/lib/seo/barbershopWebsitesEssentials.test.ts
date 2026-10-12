@@ -23,10 +23,24 @@ describe('/barbershop-websites — section 03 website essentials', () => {
 
   it('opens with the direct answer as visible text before the topics', () => {
     const answer = text(section.match(/<p class="bsw-essentials__answer">([\s\S]*?)<\/p>/)?.[1] ?? '');
-    expect(answer).toBe(
-      'A good barbershop website should make the essentials easy to find: your branding, services and prices, barbers, location and opening hours, plus a clear way to book. It should work just as well on a phone as on a desktop, helping new clients get to know your shop and regulars book with less effort.',
-    );
+    expect(answer.startsWith('A good barbershop website helps clients get to know your shop and book with confidence.')).toBe(true);
+    const words = answer.split(' ').length;
+    expect(words).toBeGreaterThanOrEqual(35);
+    expect(words).toBeLessThanOrEqual(70);
+    for (const phrase of ['who you are', 'what it costs', 'who will cut their hair', 'where to find you', 'how to book', 'phone']) {
+      expect(answer).toContain(phrase);
+    }
+    expect(section.match(/<p class="bsw-essentials__answer">/g) ?? []).toHaveLength(1);
     expect(section.indexOf('bsw-essentials__answer')).toBeLessThan(section.indexOf('bsw-essentials__list'));
+  });
+
+  it('closes with a prominent quick test that keeps the exact question', () => {
+    const question = text(section.match(/<p class="bsw-essentials-test__question">([\s\S]*?)<\/p>/)?.[1] ?? '').replace(' ?', '?');
+    expect(question).toBe('Can a new client find your prices, opening hours and booking button in under a minute?');
+    expect(section).toContain('<p class="bsw-essentials-test__label">Quick test</p>');
+    expect(section.indexOf('bsw-essentials-test')).toBeGreaterThan(section.indexOf('</ol>'));
+    const size = (selector: string) => Number(styles.match(new RegExp(`${selector} \\{[^}]*font-size: clamp\\(([\\d.]+)rem`))?.[1]);
+    expect(size('\\.bsw-essentials-test__question')).toBeGreaterThan(size('\\.bsw-essential__title'));
   });
 
   it('covers exactly six essentials as an ordered list of H3 topics', () => {
@@ -58,7 +72,6 @@ describe('/barbershop-websites — section 03 website essentials', () => {
     ]) {
       expect(descriptions).toContain(phrase);
     }
-    expect(text(section)).toContain('Can a new client find your prices, opening hours and booking button in under a minute?');
   });
 
   it('stays general guidance without product sales notes or unsupported claims', () => {

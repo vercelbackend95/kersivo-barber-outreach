@@ -124,33 +124,58 @@
 
 /* ---------- Quick test ---------- */
 
-.bsw-essentials__test {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 1rem;
-  margin: clamp(2rem, 3.5vw, 2.75rem) 0 0;
-  padding: 0 0 0 1rem;
-  border-left: 2px solid var(--accent);
+/* The section's closing moment: one framed question, set larger than the topics. */
+.bsw-essentials-test {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  margin: clamp(2.5rem, 4.5vw, 3.75rem) 0 0;
+  padding: clamp(1.6rem, 3.2vw, 2.6rem) clamp(1.25rem, 3.2vw, 2.75rem);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-16);
+  background: var(--surface-1);
 }
 
-.bsw-essentials__test-label {
+.bsw-essentials-test::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: clamp(1.25rem, 3.2vw, 2.75rem);
+  width: 3rem;
+  border-top: 2px solid var(--accent);
+}
+
+.bsw-essentials-test__label {
+  margin: 0;
   color: var(--accent-text);
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1.4;
   text-transform: uppercase;
-  white-space: nowrap;
 }
 
-.bsw-essentials__test-text {
-  flex: 1 1 18rem;
-  color: var(--fg);
-  font-size: clamp(1.02rem, 1.3vw, 1.15rem);
-  font-weight: 500;
+.bsw-essentials-test__hint {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.bsw-essentials-test__question {
+  max-width: 30ch;
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(1.45rem, 2.6vw, 2.25rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
   text-wrap: balance;
+}
+
+.bsw-essentials-test__emphasis {
+  color: var(--accent-text);
 }
 
 /* ---------- Tablet: two columns ---------- */
@@ -193,6 +218,12 @@
   .bsw-essential__number {
     margin-bottom: 1.1rem;
     padding-top: 0;
+  }
+
+  .bsw-essentials-test {
+    grid-template-columns: minmax(12rem, 0.32fr) minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: center;
   }
 }
 
