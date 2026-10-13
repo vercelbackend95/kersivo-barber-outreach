@@ -415,16 +415,8 @@
   }
 }
 
-/* 02 — the booking action on the BLACKLINE homepage: the desktop site as the main view, with
-   the mobile site laid over its corner. Each view scales from its own width, so the type keeps
-   the real proportions at every size. */
-
-.bwd-spec-cta {
-  --cta-mobile: clamp(18.5rem, 26cqi, 22rem);
-
-  display: grid;
-  gap: 0.75rem;
-}
+/* 02 — the booking action: the BLACKLINE services page on desktop and on a phone, side by side.
+   Cobalt is kept for the booking actions, so the header button and each service link read first. */
 
 .bwd-spec:has(.bwd-spec-cta) {
   border: 0;
@@ -432,13 +424,21 @@
   background: none;
 }
 
+.bwd-spec-cta {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
 .bwd-spec-cta__desktop,
 .bwd-spec-cta__mobile {
   container-type: inline-size;
+  display: block;
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--bl-line-dark);
-  background: var(--bl-carbon);
+  background: var(--bl-ivory);
+  color: var(--bl-ink);
 }
 
 .bwd-spec-cta__desktop {
@@ -448,37 +448,34 @@
 .bwd-spec-cta__mobile {
   justify-self: center;
   width: 100%;
-  max-width: 26rem;
-  border-radius: 1.1rem;
-  aspect-ratio: 3 / 4;
-}
-
-.bwd-spec-cta__site {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  border-radius: 1.25rem;
 }
 
 .bwd-spec-cta__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6em;
-  border-bottom: 1px solid var(--bl-line-dark);
+  gap: 0.375rem;
+  background: var(--bl-carbon);
+  color: var(--bl-ivory);
 }
 
 .bwd-spec-cta__brand {
-  font-size: max(1.5em, 1.25rem);
+  font-size: 1.0625rem;
 }
 
 .bwd-spec-cta__nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 0.9rem;
 }
 
 .bwd-spec-cta__link {
   position: relative;
-  font-size: 0.9em;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
@@ -487,7 +484,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -0.5em;
+  bottom: -0.4rem;
   height: 2px;
   background: var(--bl-cobalt);
 }
@@ -495,7 +492,7 @@
 .bwd-spec-cta__actions {
   display: flex;
   align-items: center;
-  gap: 0.6em;
+  gap: 0.375rem;
 }
 
 .bwd-spec-cta__bag,
@@ -504,303 +501,234 @@
   flex: none;
   align-items: center;
   justify-content: center;
+  height: 2.25rem;
   border: 1px solid var(--bl-line-dark);
-  border-radius: 0.5em;
+  border-radius: 8px;
 }
 
 .bwd-spec-cta__bag {
-  gap: 0.45em;
-  height: 2.9em;
-  padding: 0 0.8em;
+  gap: 0.35rem;
+  padding: 0 0.55rem;
   background: rgba(244, 241, 234, 0.04);
-  font-size: 1em;
 }
 
 .bwd-spec-cta__bag span {
-  font-size: max(0.75em, 0.625rem);
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.bwd-spec-cta__bag svg {
-  width: 1.1em;
-  height: 1.1em;
+.bwd-spec-cta__bag-label {
+  display: none;
 }
 
-.bwd-spec-cta__book,
-.bwd-spec-cta__btn {
+.bwd-spec-cta__book {
   display: inline-flex;
   flex: none;
   align-items: center;
-  justify-content: center;
-  gap: 0.55em;
-  border-radius: 0.5em;
+  gap: 0.4rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: 8px;
   background: var(--bl-cobalt);
   color: #fff;
+  font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.bwd-spec-cta__book {
-  height: 3.6em;
-  padding: 0 1.4em;
-  font-size: max(0.8em, 0.625rem);
-}
-
-.bwd-spec-cta__book svg {
-  width: 1.1em;
-  height: 1.1em;
-}
-
 .bwd-spec-cta__toggle {
   flex-direction: column;
-  gap: 0.32em;
-  width: 2.75em;
-  height: 2.75em;
+  gap: 0.3rem;
+  width: 2.25rem;
 }
 
 .bwd-spec-cta__toggle i {
-  width: 1.2em;
+  width: 1rem;
   height: 1.5px;
   background: var(--bl-ivory);
 }
 
-.bwd-spec-cta__copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
+.bwd-spec-cta__menu {
+  display: block;
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.bwd-spec-cta__intro {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .bwd-spec-cta__eyebrow {
-  color: var(--bl-silver);
-  font-size: max(0.75em, 0.625rem);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.bwd-spec-cta__h1,
-.bwd-spec-cta__display {
+  color: var(--bl-cobalt);
   font-family: var(--bl-display);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-.bwd-spec-cta__h1 {
-  line-height: 0.95;
-}
-
-.bwd-spec-cta__display {
+.bwd-spec-cta__heading {
+  font-family: var(--bl-display);
+  font-size: clamp(1.75rem, 11cqi, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
   line-height: 0.9;
+  text-transform: uppercase;
 }
 
-.bwd-spec-cta__lede {
-  color: var(--bl-silver);
-  line-height: 1.55;
+.bwd-spec-cta__group {
+  display: block;
+  margin-top: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bl-line-light);
+  color: var(--bl-slate);
+  font-family: var(--bl-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.bwd-spec-cta__buttons {
+.bwd-spec-cta__row {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  grid-template-areas:
+    'index name'
+    '. meta'
+    'book book';
+  column-gap: 0.5rem;
+  padding: 0.85rem 0 0;
+  border-bottom: 1px solid var(--bl-line-light);
+}
+
+.bwd-spec-cta__row:last-child {
+  border-bottom: 0;
+}
+
+.bwd-spec-cta__index {
+  grid-area: index;
+  padding-top: 0.2rem;
+  color: var(--bl-cobalt);
+  font-family: var(--bl-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bwd-spec-cta__name {
+  grid-area: name;
+  font-family: var(--bl-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.bwd-spec-cta__meta {
+  grid-area: meta;
+  margin-top: 0.25rem;
+  color: var(--bl-slate);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.bwd-spec-cta__service-book {
+  grid-area: book;
   display: flex;
-  gap: 0.75em;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--bl-line-light);
+  color: var(--bl-cobalt);
+  font-family: var(--bl-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.bwd-spec-cta__btn {
-  height: 3.4em;
-  padding: 0 1.7em;
-  font-size: max(0.8em, 0.625rem);
-  letter-spacing: 0.08em;
-}
-
-.bwd-spec-cta__btn--secondary {
-  border: 1px solid var(--bl-line-dark);
-  background: transparent;
-  color: var(--bl-ivory);
-}
-
-.bwd-spec-cta__split {
-  background: var(--bl-cobalt);
-}
-
-.bwd-spec-cta__media {
-  position: relative;
-  display: block;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  background: var(--bl-graphite);
-}
-
-.bwd-spec-cta__media img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 45%;
-  filter: saturate(0.78) contrast(1.06) brightness(0.92);
-}
-
-/* Desktop site. Below 44rem of evidence the full header cannot stay legible on one line, so the
-   links move to their own row and the hero keeps only its headline. */
-.bwd-spec-cta__desktop .bwd-spec-cta__site {
-  font-size: clamp(0.66rem, 4.1cqi, 0.8rem);
-}
-
+/* Desktop frame: brand and booking actions on the first line, the links on their own line until
+   the frame is wide enough to hold the real one-line header. */
 .bwd-spec-cta__desktop .bwd-spec-cta__header {
-  flex-wrap: wrap;
-  padding: 0.9em 1.2em 0;
+  padding: 0.75rem 0.75rem 0;
 }
 
 .bwd-spec-cta__desktop .bwd-spec-cta__actions {
   margin-left: auto;
 }
 
-.bwd-spec-cta__desktop .bwd-spec-cta__bag-label {
-  display: none;
-}
-
 .bwd-spec-cta__desktop .bwd-spec-cta__nav {
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5em 1em;
   order: 1;
   width: 100%;
-  margin-top: 0.9em;
-  padding: 0.8em 0 1em;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0 0.8rem;
   border-top: 1px solid var(--bl-line-dark);
 }
 
-.bwd-spec-cta__desktop .bwd-spec-cta__link {
-  font-size: 1em;
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 0.8fr);
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__copy {
-  justify-content: center;
-  gap: 0.6em;
-  padding: 1.6em 1.2em;
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__h1 {
-  font-size: 1.7em;
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__display {
-  font-size: 2.6em;
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__lede,
-.bwd-spec-cta__desktop .bwd-spec-cta__buttons {
-  display: none;
-}
-
-/* Mobile site, set as a 380px-wide phone page scaled to the frame. */
-.bwd-spec-cta__mobile .bwd-spec-cta__site {
-  font-size: clamp(0.6rem, 4.2cqi, 1rem);
-}
-
 .bwd-spec-cta__mobile .bwd-spec-cta__header {
-  flex: none;
-  height: 4.2em;
-  padding: 0 1.4em;
+  flex-wrap: nowrap;
+  height: 3.5rem;
+  padding: 0 0.75rem;
 }
 
 .bwd-spec-cta__mobile .bwd-spec-cta__brand {
   margin-right: auto;
 }
 
-.bwd-spec-cta__mobile .bwd-spec-cta__book {
-  height: 3.6em;
-  padding: 0 1.3em;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__copy {
-  flex: none;
-  gap: 0.7em;
-  padding: 1.75em 1.4em 1.5em;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__h1 {
-  font-size: 2.25em;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__display {
-  font-size: 3.25em;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__buttons {
-  flex-direction: column;
-  align-self: stretch;
-  margin-top: 0.6em;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__media {
-  flex: 1;
-}
-
-@container (min-width: 44rem) {
-  .bwd-spec-cta {
-    grid-template-columns: minmax(0, 1fr) var(--cta-mobile);
-    grid-template-rows: auto 8rem;
-    gap: 0;
-    padding: var(--spec-pad);
-    border: 1px solid var(--bwd-line-strong);
-    border-radius: 6px;
-    background: var(--bl-graphite);
-  }
-
-  .bwd-spec-cta__desktop {
-    grid-column: 1 / 3;
-    grid-row: 1;
-    align-self: start;
-  }
-
-  .bwd-spec-cta__mobile {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    align-self: end;
-    max-width: none;
-    aspect-ratio: 2 / 3;
-    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.5);
-  }
-}
-
-/* Measured against the desktop frame itself: wide enough for the real one-line header. */
-@container (min-width: 40rem) {
+@container (min-width: 30rem) {
   .bwd-spec-cta__desktop .bwd-spec-cta__bag-label {
     display: inline;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__site {
-    font-size: clamp(0.72rem, 1.75cqi, 1rem);
+  .bwd-spec-cta__desktop .bwd-spec-cta__header {
+    padding: 0.85rem 1.25rem 0;
   }
 
+  .bwd-spec-cta__desktop .bwd-spec-cta__menu {
+    padding: 1.75rem 1.5rem 0.5rem;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__row {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'index name book'
+      '. meta book';
+    padding: 1rem 0;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__service-book {
+    justify-content: flex-start;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+  }
+}
+
+@container (min-width: 48rem) {
   .bwd-spec-cta__desktop .bwd-spec-cta__header {
     flex-wrap: nowrap;
     justify-content: space-between;
-    height: 4.8em;
-    padding: 0 2em;
+    gap: 1rem;
+    height: 4.25rem;
+    padding: 0 1.25rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__actions {
-    margin-left: 0;
+  .bwd-spec-cta__desktop .bwd-spec-cta__brand {
+    font-size: 1.25rem;
   }
 
   .bwd-spec-cta__desktop .bwd-spec-cta__nav {
-    flex-wrap: nowrap;
     order: 0;
-    gap: 1.35em;
+    flex-wrap: nowrap;
+    gap: 1.1rem;
     width: auto;
     margin: 0;
     padding: 0;
@@ -808,57 +736,57 @@
   }
 
   .bwd-spec-cta__desktop .bwd-spec-cta__link {
-    font-size: 0.9em;
+    font-size: 0.8125rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__hero {
-    grid-template-columns: minmax(0, 0.45fr) 1px minmax(0, 0.55fr);
-    min-height: 30em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__actions {
+    margin-left: 0;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__copy {
-    gap: 0;
-    padding: 3em 2.2em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__bag,
+  .bwd-spec-cta__desktop .bwd-spec-cta__book {
+    height: 2.5rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__eyebrow {
-    margin-bottom: 1em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__book {
+    padding: 0 1rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__h1 {
-    margin-bottom: 0.3em;
-    font-size: 2.5em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__menu {
+    padding: 2.25rem 2rem 0.75rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__display {
-    font-size: 4.2em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__heading {
+    font-size: clamp(2.5rem, 6cqi, 3.5rem);
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__lede {
-    display: block;
-    max-width: 24em;
-    margin-top: 1.2em;
-    font-size: 1.0625em;
-  }
-
-  .bwd-spec-cta__desktop .bwd-spec-cta__buttons {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 2em;
+  .bwd-spec-cta__desktop .bwd-spec-cta__name {
+    font-size: 1.375rem;
   }
 }
 
-/* Wide evidence: the mobile site sits beside the desktop site's edge instead of over its photo. */
-@container (min-width: 56rem) {
+/* The stage: from here the two views sit on a graphite ground, side by side when there is room. */
+@container (min-width: 30rem) {
   .bwd-spec-cta {
-    grid-template-columns:
-      minmax(0, 1fr) calc(var(--cta-mobile) * 0.35)
-      calc(var(--cta-mobile) * 0.65);
-    grid-template-rows: auto 5rem;
+    padding: var(--spec-pad);
+    border: 1px solid var(--bwd-line-strong);
+    border-radius: 6px;
+    background: var(--bl-graphite);
   }
 
   .bwd-spec-cta__mobile {
-    grid-column: 2 / 4;
+    max-width: 22rem;
+  }
+}
+
+@container (min-width: 52rem) {
+  .bwd-spec-cta {
+    grid-template-columns: minmax(0, 1fr) clamp(18rem, 26cqi, 20rem);
+    gap: clamp(1.25rem, 2.5cqi, 2rem);
+  }
+
+  .bwd-spec-cta__mobile {
+    max-width: none;
   }
 }
 
