@@ -63,7 +63,8 @@ describe('/barbershop-website-design Section 01 hero', () => {
   });
 
   it('renders exactly one H1 built from the approved headline', () => {
-    expect((`${page}\n${hero}`.match(/<h1\b/g) ?? [])).toHaveLength(1);
+    const breakdown = read('../../components/barbershop-website-design/WebsiteDesignBreakdown.astro');
+    expect((`${page}\n${hero}\n${breakdown}`.match(/<h1\b/g) ?? [])).toHaveLength(1);
     expect(hero).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_H1');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_H1).toBe('Barbershop Website Design That Looks Like Your Shop');
   });
