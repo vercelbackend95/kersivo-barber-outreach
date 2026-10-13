@@ -568,15 +568,15 @@
   min-width: 0;
 }
 
-.bwd-spec-cta__frame--hairline,
-.bwd-spec-cta__frame--beard {
+.bwd-spec-cta__frame--fade,
+.bwd-spec-cta__frame--hairline {
   display: none;
 }
 
 .bwd-spec-cta__stage {
   display: block;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   border: 1px solid rgba(11, 12, 14, 0.18);
   border-radius: 12px;
   background: rgba(11, 12, 14, 0.06);
@@ -587,6 +587,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--bwd-gallery-pos-mobile);
 }
 
 .bwd-spec-cta__counter {
@@ -631,8 +632,12 @@
     margin-top: 1.75rem;
   }
 
-  .bwd-spec-cta__frame--beard {
+  .bwd-spec-cta__frame--fade {
     display: block;
+  }
+
+  .bwd-spec-cta__stage img {
+    object-position: var(--bwd-gallery-pos);
   }
 
   .bwd-spec-cta__frame--fade .bwd-spec-cta__stage,

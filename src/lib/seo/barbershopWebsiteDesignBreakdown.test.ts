@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { DEMO_BARBERS, demoBarberBookingHref } from '@/lib/demo/barbers';
+import { demoGalleryIndexLabel, demoGallerySequence } from '@/lib/demo/gallery';
 import { DEMO_NAV } from '@/lib/demo/nav';
 import { DEMO_SERVICES, demoServiceNavigatorGroups } from '@/lib/demo/services';
 import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
@@ -112,6 +113,17 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(example).toContain("item.label === 'Gallery'");
     expect(example.match(/class="bwd-spec-cta__book"/g) ?? []).toHaveLength(1);
     expect(example).not.toMatch(/heroimg|Book this service|Choose your finish|bwd-spec-cta__(desktop|mobile)\b/);
+  });
+
+  it('leads the narrow gallery with the beard frame at 4:3 and its own mobile crop', () => {
+    const narrow = styles.slice(styles.indexOf('/* 02 — the booking action'), styles.indexOf('@container (min-width: 30rem)', styles.indexOf('/* 02 — the booking action')));
+    expect(narrow).toMatch(/\.bwd-spec-cta__frame--fade,\s*\.bwd-spec-cta__frame--hairline \{\s*display: none;/);
+    expect(narrow).toMatch(/\.bwd-spec-cta__stage \{[^}]*aspect-ratio: 4 \/ 3;/);
+    expect(narrow).toContain('object-position: var(--bwd-gallery-pos-mobile);');
+    expect(section).toContain('--bwd-gallery-pos-mobile: ${frame.image.objectPosition.mobile}');
+    const beard = demoGallerySequence().findIndex((image) => image.id === 'beard');
+    expect(demoGalleryIndexLabel(beard)).toBe('04 / 06');
+    expect(section).not.toContain('galleryCaptionList');
   });
 
   it('scales service durations with the demo menu’s own ratio', () => {

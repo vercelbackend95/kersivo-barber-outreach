@@ -38,7 +38,7 @@ const galleryFrames = (['fade', 'hairline', 'beard'] as const).flatMap((id) => {
   const image = gallerySequence[position];
   return image ? [{ image, label: demoGalleryIndexLabel(position, gallerySequence.length) }] : [];
 });
-const galleryCaptionList = galleryFrames.map((frame) => frame.image.caption.replace(/\.$/, '').toLowerCase()).join('; ');
+const beardFrame = galleryFrames.find((frame) => frame.image.id === 'beard');
 
 // The barber step of the real booking flow, as reached from "Book with Ellis" after a service is chosen.
 const bookingSteps = ['Service', 'Barber', 'Schedule', 'Details'];
@@ -123,7 +123,7 @@ const ROW_LAYOUTS = [
 
 const specimenLabels = [
   'Recreated BLACKLINE identity from the demo homepage: the BLACKLINE BARBERS wordmark and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
-  `Recreated BLACKLINE gallery page. The header carries the wordmark, the links ${navList} with Gallery marked as the current page, a Bag button and a cobalt BOOK NOW button. Below it, the heading THE BLACKLINE CUT, IN FOCUS. introduces photographs of the work: ${galleryCaptionList}. On narrow screens the header keeps the wordmark, a cobalt BOOK button and the menu button.`,
+  `Recreated BLACKLINE gallery page. The header carries the wordmark, the links ${navList} with Gallery marked as the current page, a Bag button and a cobalt BOOK NOW button. Below it, the heading THE BLACKLINE CUT, IN FOCUS. introduces photographs of the work, including ${beardFrame ? `frame ${beardFrame.label}, ${beardFrame.image.caption.replace(/\.$/, '').toLowerCase()}` : 'recent cuts'}. On narrow screens the header keeps the wordmark, a cobalt BOOK button and the menu button.`,
   `Recreated view of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
     .join('; ')}, each with a Book this service link.`,
@@ -238,7 +238,7 @@ const specimenLabels = [
                                 height={frame.image.height}
                                 loading="lazy"
                                 decoding="async"
-                                style={`object-position: ${frame.image.objectPosition.desktop}`}
+                                style={`--bwd-gallery-pos: ${frame.image.objectPosition.desktop}; --bwd-gallery-pos-mobile: ${frame.image.objectPosition.mobile}`}
                               />
                             </span>
                             <span class="bwd-spec-cta__counter">{frame.label}</span>
