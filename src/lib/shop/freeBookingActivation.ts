@@ -20,6 +20,8 @@ import {
 import { loadKersivoAccess } from './kersivoAccess';
 import { SHOP_DEPARTURE_IN_PROGRESS, SHOP_DEPARTURE_IN_PROGRESS_MESSAGE } from './shopDepartureCopy';
 import { ensureShopBookingSlug } from '../booking/bookingSlug';
+import { enqueueStarterActivationNotification } from '../email/internalSignupNotifications';
+import { resolveDeploymentEnvironment } from '../email/internalNotificationRecipient';
 
 export const ONBOARDING_REQUIREMENTS_MESSAGE =
   'Finish shop, team, services and hours before continuing.';
@@ -90,7 +92,7 @@ export async function activateFreeBooking(params: {
     return { ok: true, outcome: 'full_kersivo' };
   }
 
-  return prisma.$transaction(async (tx): Promise<FreeBookingActivationResult> => {
+  const result = await prisma.$transaction(async (tx): Promise<FreeBookingActivationResult> => {
     await lockShopForBookableBarberChange(tx, shopId);
 
     const shop = await tx.shopSettings.findUniqueOrThrow({
@@ -209,10 +211,26 @@ export async function activateFreeBooking(params: {
         activeBookableBarbers: bookable,
         freeBookableBarberLimit: FREE_BOOKABLE_BARBER_LIMIT,
         bookingSlug,
+        // Atomic origin marker: Production and Preview share one database, and only activations
+        // marked 'production' are eligible for internal-notification reconciliation.
+        deploymentEnvironment: resolveDeploymentEnvironment(),
       },
       db: tx,
     });
 
     return { ok: true, outcome: 'activated' };
   });
+
+  if (result.ok && result.outcome === 'activated') {
+    // After commit, so a notification failure can never undo the activation; the email-outbox
+    // cron reconciles anything missed.
+    await enqueueStarterActivationNotification(shopId).catch((error: unknown) => {
+      console.error('[onboarding] Starter activation notification enqueue threw', {
+        shopId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+  }
+
+  return result;
 }

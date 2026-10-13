@@ -48,6 +48,14 @@ const {
 
 const slugAdvisoryLock = vi.fn();
 
+const { enqueueStarterActivationNotification } = vi.hoisted(() => ({
+  enqueueStarterActivationNotification: vi.fn(),
+}));
+
+vi.mock('@/lib/email/internalSignupNotifications', () => ({
+  enqueueStarterActivationNotification: (...a: unknown[]) => enqueueStarterActivationNotification(...a),
+}));
+
 const tx = {
   $queryRaw: async (sql: { sql: string }) => {
     if (sql.sql.includes('pg_advisory_xact_lock')) {
@@ -225,6 +233,91 @@ describe('POST /api/admin/onboarding/complete — Free Booking activation', () =
         db.shop.onboardingCompleted = true;
         db.shop.onboardingCompletedAt = new Date();
       }
+    });
+    enqueueStarterActivationNotification.mockResolvedValue({ status: 'enqueued', outboxId: 'out_1' });
+  });
+
+  describe('internal Starter activation notification', () => {
+    it('a first SETUP → FREE_BOOKING activation queues exactly one notification, after commit', async () => {
+      const markerAtCall: Array<Date | null> = [];
+      enqueueStarterActivationNotification.mockImplementation(async () => {
+        markerAtCall.push(db.shop.freeBookingActivatedAt);
+        return { status: 'enqueued', outboxId: 'out_1' };
+      });
+
+      const res = await complete({ termsAccepted: true, plan: 'STARTER' });
+
+      expect(res.body.activation).toBe('activated');
+      expect(enqueueStarterActivationNotification).toHaveBeenCalledTimes(1);
+      expect(enqueueStarterActivationNotification).toHaveBeenCalledWith('shop_1');
+      expect(markerAtCall[0]).toBeInstanceOf(Date);
+    });
+
+    it('replays, refreshes and double submits after activation never queue another', async () => {
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      await complete();
+      expect(enqueueStarterActivationNotification).toHaveBeenCalledTimes(1);
+    });
+
+    it('concurrent submissions: the request that loses the shop lock queues nothing', async () => {
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      const winnerAt = db.shop.freeBookingActivatedAt;
+      db.shop.freeBookingActivatedAt = null;
+      db.onLock = () => {
+        db.shop.freeBookingActivatedAt = winnerAt;
+      };
+
+      const loser = await complete({ termsAccepted: true, plan: 'STARTER' });
+
+      expect(loser.body.activation).toBe('already_free');
+      expect(enqueueStarterActivationNotification).toHaveBeenCalledTimes(1);
+    });
+
+    it('FULL_KERSIVO completion never queues a Starter notification', async () => {
+      db.subscription = { status: 'ACTIVE', currentPeriodEnd: new Date('2999-01-01T00:00:00.000Z') };
+      const res = await complete({ termsAccepted: true, plan: 'STARTER' });
+      expect(res.body.activation).toBe('full_kersivo');
+      expect(enqueueStarterActivationNotification).not.toHaveBeenCalled();
+    });
+
+    it('rejected or failed activations never queue a notification', async () => {
+      await complete({ termsAccepted: true });
+      await complete({ plan: 'STARTER' });
+      db.activeBookableBarbers = 5;
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      db.activeBookableBarbers = 1;
+      shopMeetsOnboardingCompletionRequirements.mockResolvedValueOnce(false);
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      vi.spyOn(tx.legalAcceptance, 'create').mockRejectedValueOnce(new Error('db down'));
+      const failed = await complete({ termsAccepted: true, plan: 'STARTER' });
+
+      expect(failed.status).toBe(500);
+      expect(db.shop.freeBookingActivatedAt).toBeNull();
+      expect(enqueueStarterActivationNotification).not.toHaveBeenCalled();
+    });
+
+    it('stamps the deployment environment into the activation legal record, atomically with activation', async () => {
+      vi.stubEnv('VERCEL_ENV', 'production');
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      expect(db.legal[0]!.meta).toMatchObject({ deploymentEnvironment: 'production' });
+
+      db.shop = freshShop();
+      db.legal = [];
+      vi.stubEnv('VERCEL_ENV', 'preview');
+      await complete({ termsAccepted: true, plan: 'STARTER' });
+      expect(db.legal[0]!.meta).toMatchObject({ deploymentEnvironment: 'preview' });
+      vi.unstubAllEnvs();
+    });
+
+    it('a notification failure never undoes or fails the Starter activation', async () => {
+      enqueueStarterActivationNotification.mockRejectedValueOnce(new Error('enum missing'));
+      const res = await complete({ termsAccepted: true, plan: 'STARTER' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.activation).toBe('activated');
+      expect(db.shop.freeBookingActivatedAt).toBeInstanceOf(Date);
+      expect(db.legal).toHaveLength(1);
     });
   });
 

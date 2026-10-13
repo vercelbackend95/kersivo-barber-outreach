@@ -44,30 +44,30 @@ function parsePayload(raw: unknown): EmailOutboxPayload | null {
 async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promise<void> {
   captureOpsException(new Error(errorMessage), {
     route: 'email.outbox.deliverOutboxEmail',
-    shopId: row.shopId,
+    shopId: row.shopId ?? undefined,
     opsAlert: true,
     tags: { emailOutboundId: row.id, purpose: row.purpose },
   });
 }
 
-/**
- * Write-ahead: enqueue a transactional email inside an existing Prisma transaction.
- * Caller must commit the transaction before calling deliverOutboxEmail.
- * Optional dedupeKey makes concurrent/retry enqueues idempotent via upsert (no P2002-in-tx).
- */
-export async function enqueueEmail(
-  tx: Prisma.TransactionClient,
-  input: {
-    shopId: string;
-    bookingId?: string | null;
-    purpose: EmailOutboundPurpose;
-    to: string;
-    subject: string;
-    html: string;
-    replyTo?: string;
-    dedupeKey?: string | null;
-  },
-): Promise<EmailOutbound> {
+export type EnqueueEmailInput = {
+  /** Null only for internal notifications that are not tied to a shop. */
+  shopId: string | null;
+  bookingId?: string | null;
+  purpose: EmailOutboundPurpose;
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+  dedupeKey?: string | null;
+  /**
+   * Record the dedupe row without ever sending it (status SUPPRESSED, no payload).
+   * Never drained, never counted as sent.
+   */
+  suppressed?: boolean;
+};
+
+function buildOutboxRowData(input: EnqueueEmailInput) {
   const now = new Date();
   const to = input.to.trim().toLowerCase();
   const dedupeKey = input.dedupeKey?.trim() || null;
@@ -78,21 +78,46 @@ export async function enqueueEmail(
     ...(input.replyTo?.trim() ? { replyTo: input.replyTo.trim() } : {}),
   };
 
-  const data = {
+  const base = {
     shopId: input.shopId,
     bookingId: input.bookingId ?? null,
     toEmail: to,
     subject: input.subject,
     purpose: input.purpose,
-    provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
-    status: EmailOutboundStatus.QUEUED,
-    payload,
     dedupeKey,
     attempts: 0,
     maxAttempts: DEFAULT_MAX_ATTEMPTS,
-    nextAttemptAt: now,
-    error: null,
   };
+  const data = input.suppressed
+    ? {
+        ...base,
+        provider: 'suppressed',
+        status: EmailOutboundStatus.SUPPRESSED,
+        payload: Prisma.DbNull,
+        nextAttemptAt: null,
+        error: null,
+      }
+    : {
+        ...base,
+        provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
+        status: EmailOutboundStatus.QUEUED,
+        payload,
+        nextAttemptAt: now,
+        error: null,
+      };
+  return { dedupeKey, data };
+}
+
+/**
+ * Write-ahead: enqueue a transactional email inside an existing Prisma transaction.
+ * Caller must commit the transaction before calling deliverOutboxEmail.
+ * Optional dedupeKey makes concurrent/retry enqueues idempotent via upsert (no P2002-in-tx).
+ */
+export async function enqueueEmail(
+  tx: Prisma.TransactionClient,
+  input: EnqueueEmailInput,
+): Promise<EmailOutbound> {
+  const { dedupeKey, data } = buildOutboxRowData(input);
 
   if (dedupeKey) {
     return tx.emailOutbound.upsert({
@@ -103,6 +128,34 @@ export async function enqueueEmail(
   }
 
   return tx.emailOutbound.create({ data });
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
+/**
+ * Idempotent enqueue outside an interactive transaction (after the business commit).
+ * Concurrent creators racing on the same dedupeKey resolve to the single winning row.
+ */
+export async function enqueueEmailOnce(
+  input: EnqueueEmailInput & { dedupeKey: string },
+  db: Prisma.TransactionClient = prisma,
+): Promise<{ row: EmailOutbound; created: boolean }> {
+  const { dedupeKey, data } = buildOutboxRowData(input);
+  if (!dedupeKey) throw new Error('enqueueEmailOnce requires a dedupeKey');
+  const existing = await db.emailOutbound.findUnique({ where: { dedupeKey } });
+  if (existing) return { row: existing, created: false };
+  try {
+    // Plain create (not upsert) so only the single winning creator reports created=true.
+    const row = await db.emailOutbound.create({ data });
+    return { row, created: true };
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    const winner = await db.emailOutbound.findUnique({ where: { dedupeKey } });
+    if (!winner) throw error;
+    return { row: winner, created: false };
+  }
 }
 
 export type DeliverOutboxResult = {
@@ -120,6 +173,10 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
 
   if (row.status === EmailOutboundStatus.SENT) {
     return { status: 'sent', row };
+  }
+
+  if (row.status === EmailOutboundStatus.SUPPRESSED) {
+    return { status: 'skipped', row };
   }
 
   if (row.status === EmailOutboundStatus.FAILED && row.attempts >= row.maxAttempts) {
@@ -279,7 +336,18 @@ export async function processDueEmailOutbox(
   };
 
   for (const item of due) {
-    const result = await deliverOutboxEmail(item.id);
+    // One unreadable/erroring row must not block the rest of the drain.
+    let result: DeliverOutboxResult;
+    try {
+      result = await deliverOutboxEmail(item.id);
+    } catch (error) {
+      console.error('[EMAIL] Outbox drain row threw', {
+        emailOutboundId: item.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      summary.skipped += 1;
+      continue;
+    }
     if (result.status === 'sent') summary.sent += 1;
     else if (result.status === 'queued') summary.queued += 1;
     else if (result.status === 'failed') summary.failed += 1;
@@ -294,6 +362,7 @@ export async function retryOutboxEmailForOperator(id: string): Promise<DeliverOu
   const row = await prisma.emailOutbound.findUnique({ where: { id } });
   if (!row) return { status: 'skipped', row: null };
   if (row.status === EmailOutboundStatus.SENT) return { status: 'sent', row };
+  if (row.status === EmailOutboundStatus.SUPPRESSED) return { status: 'skipped', row };
   if (!parsePayload(row.payload)) {
     return { status: 'failed', row };
   }

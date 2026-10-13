@@ -36,7 +36,9 @@ describe('auth.ts OAuth credential persistence guard wiring', () => {
   });
 
   it('preserves shop provisioning on user create with userId/name/email', () => {
-    expect(authSrc).toMatch(
+    expect(authSrc).toMatch(/user:\s*\{\s*create:\s*\{[\s\S]*?after:\s*async\s*\(user\)\s*=>\s*\{\s*await handleUserCreated\(user\);/);
+    const hookSrc = readFileSync(resolve(process.cwd(), 'src/lib/auth/userCreatedHook.ts'), 'utf8');
+    expect(hookSrc).toMatch(
       /provisionShopForUser\(\{\s*userId:\s*user\.id,\s*name:\s*user\.name,\s*email:\s*user\.email,\s*\}\)/,
     );
   });
