@@ -1,0 +1,230 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_NAV } from '@/lib/demo/nav';
+import { DEMO_SERVICES } from '@/lib/demo/services';
+import {
+  DEMO_LOCATION,
+  DEMO_SHOP_NAME,
+  DEMO_SHOP_TAGLINE,
+  DEMO_WALK_INS,
+} from '@/lib/demo/site';
+import '@/styles/components/barbershop-website-design-brand.css';
+
+const PARENT_HREF = '/barbershop-websites';
+
+// The story section of the BLACKLINE homepage (components/demo/DemoStory.astro).
+const STORY_IMAGE = { src: '/demo/storyimg.webp', width: 2000, height: 3000 };
+const STORY_HEADING = ['A proper barbershop.', 'Built for modern Manchester.'];
+const STORY_OPENING = 'BLACKLINE combines modern barbering with proper attention to detail.';
+
+const palette = [
+  { name: 'Carbon', hex: '#0B0C0E' },
+  { name: 'Graphite', hex: '#14161A' },
+  { name: 'Ivory', hex: '#F4F1EA' },
+  { name: 'Silver', hex: '#A7ABB2' },
+  { name: 'Cobalt', hex: '#315EF5' },
+];
+
+const navExcerpt = DEMO_NAV.slice(0, 3);
+const barberCount = DEMO_BARBERS.length;
+const serviceCount = DEMO_SERVICES.length;
+const [taglineFirst, ...taglineRest] = DEMO_SHOP_TAGLINE.split('. ');
+
+const facts = [
+  { label: 'Shop', value: DEMO_SHOP_NAME },
+  { label: 'Location', value: DEMO_LOCATION },
+  { label: 'Team', value: `${barberCount} barbers` },
+  { label: 'Menu', value: `${serviceCount} services` },
+];
+
+const rows = ['Name', 'Colour & type', 'Photography & voice', 'Business details'];
+
+const ideas = [
+  {
+    title: 'Name & identity',
+    body: 'The name and logo clients know from the shopfront should be the first thing they recognise online, set in the header and carried through every page.',
+  },
+  {
+    title: 'Colour & typography',
+    body: 'Colours and type should suit the character of the shop — for BLACKLINE, a dark palette, condensed capitals and a single cobalt accent. Within the standard Full KERSIVO service, the website is adapted to the shop’s own branding.',
+  },
+  {
+    title: 'Photography & personality',
+    body: 'The shop’s own photographs and the way it talks about its work make a website feel like somewhere real, rather than a template anyone could use.',
+  },
+  {
+    title: 'A consistent business identity',
+    body: 'The shop name, team, services, location and booking details should match wherever they appear, so visitors know they are dealing with the same business from first visit to appointment.',
+  },
+];
+
+const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO demonstration shop. On the left, the brand system: the BLACKLINE wordmark with the line “${DEMO_SHOP_TAGLINE}”, a palette of ${palette.map((colour) => colour.name.toLowerCase()).join(', ')}, condensed display type with a rounded body face, a photograph of the shop’s workstation, and the shop’s details — ${DEMO_LOCATION}, ${barberCount} barbers and ${serviceCount} services. On the right, the same elements on the website: the wordmark in the header beside the navigation, the services heading “Choose your finish.” with a cobalt booking button, the story section “${STORY_HEADING.join(' ')}”, and the contact details in the shop’s own type.`;
+---
+
+<section class="bwb" aria-labelledby="bwb-heading">
+  <div class="bwb__inner">
+    <header class="bwb__intro">
+      <p class="bwb__kicker"><span class="bwb__kicker-mark" aria-hidden="true"></span>Brand and identity</p>
+      <h2 id="bwb-heading" class="bwb__heading">Your Brand Should Lead the Design</h2>
+      <p class="bwb__lede">
+        Your logo, colours, photography and tone tell clients what kind of shop they are choosing. A
+        good website brings those details together instead of making every barbershop feel
+        interchangeable.
+      </p>
+    </header>
+
+    <figure class="bwb-board" role="img" aria-label={boardLabel}>
+      <div class="bwb-board__canvas" aria-hidden="true">
+        <span class="bwb-board__plates">
+          <span class="bwb-board__plate-label bwb-board__plate-label--brand">Brand system</span>
+          <span class="bwb-board__plate-label bwb-board__plate-label--site">On the website</span>
+        </span>
+
+        {rows.map((row, rowIndex) => (
+          <span class="bwb-row">
+            <span class="bwb-row__label">
+              <span class="bwb-row__num">{String(rowIndex + 1).padStart(2, '0')}</span>
+              {row}
+            </span>
+
+            <span class="bwb-row__brand">
+              {rowIndex === 0 && (
+                <span class="bwb-name">
+                  <span class="bwb-lockup bwb-lockup--hero">
+                    <span class="bwb-lockup__name">BLACKLINE</span>
+                    <span class="bwb-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
+                  </span>
+                  <span class="bwb-name__tagline">
+                    <span>{taglineFirst}.</span> <span>{taglineRest.join('. ')}</span>
+                  </span>
+                </span>
+              )}
+
+              {rowIndex === 1 && (
+                <span class="bwb-system">
+                  <span class="bwb-palette">
+                    {palette.map((colour) => (
+                      <span class="bwb-palette__chip">
+                        <span class="bwb-palette__swatch" style={`--bwb-swatch: ${colour.hex}`}></span>
+                        <span class="bwb-palette__name">{colour.name}</span>
+                        <span class="bwb-palette__hex">{colour.hex}</span>
+                      </span>
+                    ))}
+                  </span>
+                  <span class="bwb-type">
+                    <span class="bwb-type__display">Defined cuts.</span>
+                    <span class="bwb-type__meta">Barlow Condensed · headings</span>
+                    <span class="bwb-type__body">Modern cuts, sharp fades and proper attention to every line.</span>
+                    <span class="bwb-type__meta bwb-type__meta--body">Manrope · body copy</span>
+                  </span>
+                </span>
+              )}
+
+              {rowIndex === 2 && (
+                <span class="bwb-photo">
+                  <img
+                    src={STORY_IMAGE.src}
+                    alt=""
+                    width={STORY_IMAGE.width}
+                    height={STORY_IMAGE.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="bwb-photo__voice">“Proper attention to detail.”</span>
+                </span>
+              )}
+
+              {rowIndex === 3 && (
+                <span class="bwb-facts">
+                  {facts.map((fact) => (
+                    <span class="bwb-facts__item">
+                      <span class="bwb-facts__label">{fact.label}</span>
+                      <span class="bwb-facts__value">{fact.value}</span>
+                    </span>
+                  ))}
+                </span>
+              )}
+            </span>
+
+            <span class="bwb-row__site">
+              {rowIndex === 0 && (
+                <span class="bwb-header">
+                  <span class="bwb-lockup bwb-lockup--header">
+                    <span class="bwb-lockup__name">BLACKLINE</span>
+                    <span class="bwb-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
+                  </span>
+                  <span class="bwb-header__nav">
+                    {navExcerpt.map((item, navIndex) => (
+                      <span class:list={['bwb-header__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
+                    ))}
+                  </span>
+                </span>
+              )}
+
+              {rowIndex === 1 && (
+                <span class="bwb-menu-intro">
+                  <span class="bwb-site-eyebrow">Find your service</span>
+                  <span class="bwb-menu-intro__title">Choose your finish.</span>
+                  <span class="bwb-menu-intro__button">Book an appointment</span>
+                </span>
+              )}
+
+              {rowIndex === 2 && (
+                <span class="bwb-story">
+                  <span class="bwb-story__rule"></span>
+                  <span class="bwb-story__eyebrow"><span>02</span> · Blackline</span>
+                  <span class="bwb-story__title">
+                    {STORY_HEADING.map((line) => <span>{line}</span>)}
+                  </span>
+                  <span class="bwb-story__body">{STORY_OPENING}</span>
+                </span>
+              )}
+
+              {rowIndex === 3 && (
+                <span class="bwb-contact">
+                  <span class="bwb-site-eyebrow">Contact Index</span>
+                  <span class="bwb-contact__title">Find Blackline.</span>
+                  <span class="bwb-contact__row">
+                    <span class="bwb-site-eyebrow">Visit</span>
+                    <span class="bwb-contact__value">{DEMO_LOCATION}</span>
+                  </span>
+                  <span class="bwb-contact__row">
+                    <span class="bwb-site-eyebrow">Walk-ins</span>
+                    <span class="bwb-contact__value">{DEMO_WALK_INS}</span>
+                  </span>
+                </span>
+              )}
+            </span>
+          </span>
+        ))}
+      </div>
+    </figure>
+
+    <ol class="bwb-ideas">
+      {ideas.map((idea, ideaIndex) => (
+        <li class="bwb-idea">
+          <span class="bwb-idea__num" aria-hidden="true">{String(ideaIndex + 1).padStart(2, '0')}</span>
+          <h3 class="bwb-idea__title">{idea.title}</h3>
+          <p class="bwb-idea__body">{idea.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="bwb-offer">
+      <p class="bwb-offer__title">Your shop already has an identity. Your website should reflect it.</p>
+      <div class="bwb-offer__copy">
+        <p>
+          Full KERSIVO brings your shop’s branding, business information and bookings together in a
+          professionally prepared website on your own domain. The website is adapted to your shop’s
+          branding within the standard Full KERSIVO website service.
+        </p>
+        <a class="bwb-offer__link" href={PARENT_HREF}>See what a Full KERSIVO website includes</a>
+      </div>
+    </div>
+
+    <p class="bwb__disclosure">
+      BLACKLINE BARBERS is a fictional KERSIVO demonstration shop. The board above is recreated from
+      its existing pages, copy and imagery.
+    </p>
+  </div>
+</section>

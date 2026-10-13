@@ -3,6 +3,7 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import WebsiteDesignHero from '@/components/barbershop-website-design/WebsiteDesignHero.astro';
 import WebsiteDesignBreakdown from '@/components/barbershop-website-design/WebsiteDesignBreakdown.astro';
+import WebsiteDesignBrand from '@/components/barbershop-website-design/WebsiteDesignBrand.astro';
 import {
   BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
@@ -30,6 +31,7 @@ const currentYear = new Date().getFullYear();
   <main class="bwd-page">
     <WebsiteDesignHero />
     <WebsiteDesignBreakdown />
+    <WebsiteDesignBrand />
 
     <Footer50
       showIntro={false}
