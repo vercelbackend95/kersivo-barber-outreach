@@ -1,0 +1,159 @@
+---
+import { ArrowRight } from 'lucide-react';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 } from '@/lib/seo/barbershopWebsiteDesignPage';
+import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/barbershop-website-design-hero.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_website_design_hero_demo';
+
+const splitAt = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' That ');
+const lineOne = splitAt > 0 ? BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(0, splitAt) : BARBERSHOP_WEBSITE_DESIGN_PAGE_H1;
+const lineTwo = splitAt > 0 ? BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(splitAt + 1) : '';
+const ACCENT_WORDS = 'Your Shop';
+const lineTwoLead = lineTwo.endsWith(ACCENT_WORDS) ? lineTwo.slice(0, -ACCENT_WORDS.length) : lineTwo;
+const lineTwoAccent = lineTwo.endsWith(ACCENT_WORDS) ? ACCENT_WORDS : '';
+
+const service = DEMO_SERVICES.find((item) => item.slug === 'skin-fade') ?? DEMO_SERVICES[0];
+
+const notes = [
+  {
+    title: 'Identity',
+    body: 'The shop’s name, wordmark and colours set the tone before a client reads a word.',
+  },
+  {
+    title: 'Photography',
+    body: 'Real photographs of the chair, the craft and the team — never generic stock.',
+  },
+  {
+    title: 'Booking path',
+    body: `One clear route from a service such as ${service.name} (${formatDemoPriceGbp(service.pricePence)}) to choosing a barber and a time.`,
+  },
+];
+
+// Mirrors the BLACKLINE theme tokens in styles/demo/blackline.css.
+const palette = [
+  { name: 'Ink', value: '#0B0C0E' },
+  { name: 'Bone', value: '#F4F1EA' },
+  { name: 'Signal blue', value: '#315EF5' },
+  { name: 'Rule red', value: '#D72638' },
+];
+---
+
+<section class="bwd-hero" aria-labelledby="bwd-hero-title">
+  <div class="bwd-hero__ambient" aria-hidden="true"></div>
+
+  <div class="bwd-hero__inner">
+    <div class="bwd-hero__copy">
+      <p class="bwd-hero__kicker">
+        <span class="bwd-hero__kicker-mark" aria-hidden="true"></span>
+        Barbershop website design
+      </p>
+
+      <h1 id="bwd-hero-title" class="bwd-hero__title">
+        <span class="bwd-hero__line">{lineOne}</span>
+        {lineTwo && ' '}
+        {lineTwo && (
+          <span class="bwd-hero__line">
+            {lineTwoLead}{lineTwoAccent && <span class="bwd-hero__accent">{lineTwoAccent}</span>}
+          </span>
+        )}
+      </h1>
+
+      <p class="bwd-hero__lead">
+        Your barbershop has its own character. Your website should reflect it — from the first
+        image to the booking experience.
+      </p>
+
+      <div class="bwd-hero__actions">
+        <a
+          href={DEMO_HOME_HREF}
+          class="fresha-alt-hero__action fresha-alt-hero__action--primary bwd-hero__action"
+          data-track={TRACK_EVENT}
+          data-track-placement={TRACK_PLACEMENT}
+        >
+          Explore the BLACKLINE demo
+          <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />
+        </a>
+        <a
+          href={BARBERSHOP_WEBSITES_PAGE_PATH}
+          class="fresha-alt-hero__action fresha-alt-hero__action--secondary bwd-hero__action"
+        >
+          See Full KERSIVO
+        </a>
+      </div>
+
+      <p class="bwd-hero__micro">Branded websites and connected bookings for independent UK barbershops.</p>
+    </div>
+
+    <figure class="bwd-plate" aria-labelledby="bwd-plate-caption">
+      <div class="bwd-plate__layout">
+        <div class="bwd-plate__frame">
+          <picture class="bwd-plate__photo">
+            <source media="(max-width: 640px)" srcset="/images/barbershop-websites/site-hero-640.webp" />
+            <img
+              src="/images/barbershop-websites/site-hero-1100.webp"
+              alt="BLACKLINE demo photography: a barber lining up a cut with clippers and a comb"
+              width="1100"
+              height="900"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
+
+          <div class="bwd-plate__overlay" aria-hidden="true">
+            <span class="bwd-lockup">
+              <span class="bwd-lockup__name">BLACKLINE</span>
+              <span class="bwd-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
+            </span>
+            <span class="bwd-plate__display">Precision in every detail.</span>
+            <span class="bwd-plate__book">Book an appointment</span>
+          </div>
+
+          <span class="bwd-plate__marker bwd-plate__marker--1" aria-hidden="true">01</span>
+          <span class="bwd-plate__marker bwd-plate__marker--2" aria-hidden="true">02</span>
+          <span class="bwd-plate__marker bwd-plate__marker--3" aria-hidden="true">03</span>
+        </div>
+
+        <div class="bwd-plate__side">
+          <ol class="bwd-plate__notes" aria-label="What this design gets right">
+            {notes.map((note, index) => (
+              <li class="bwd-note">
+                <span class="bwd-note__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="bwd-note__text">
+                  <span class="bwd-note__title">{note.title}</span>
+                  <span class="bwd-note__body">{note.body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+
+          <div class="bwd-kit" role="group" aria-label="BLACKLINE brand kit">
+            <p class="bwd-kit__label">Brand kit</p>
+            <div class="bwd-kit__row">
+              <span class="bwd-kit__type" aria-hidden="true">Aa</span>
+              <ul class="bwd-kit__swatches" role="list">
+                {palette.map((swatch) => (
+                  <li class="bwd-kit__swatch">
+                    <span class="bwd-kit__chip" style={`background:${swatch.value}`} aria-hidden="true"></span>
+                    <span class="bwd-kit__name">{swatch.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption id="bwd-plate-caption" class="bwd-plate__caption">
+        BLACKLINE BARBERS is a fictional KERSIVO demonstration shop. This is an illustrative
+        composition built from the demo’s real photography and brand —
+        <a href={DEMO_HOME_HREF}>explore the working demo</a> to see the live website and booking.
+      </figcaption>
+    </figure>
+  </div>
+</section>
