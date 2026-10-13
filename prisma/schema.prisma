@@ -80,12 +80,18 @@ enum EmailOutboundPurpose {
   QR_KIT_REQUEST_ACKNOWLEDGEMENT
   SHOP_DEPARTURE_CONFIRMATION
   QR_KIT_REQUEST_INTERNAL
+  /// Internal KERSIVO notification: a genuinely new user account was created.
+  USER_REGISTRATION_INTERNAL
+  /// Internal KERSIVO notification: first SETUP → FREE_BOOKING (KERSIVO Starter) activation.
+  STARTER_ACTIVATION_INTERNAL
 }
 
 enum EmailOutboundStatus {
   QUEUED
   SENT
   FAILED
+  /// Recorded but intentionally never sent (non-production internal notification). Never drained.
+  SUPPRESSED
 }
 
 enum OrderStatus {
@@ -865,7 +871,8 @@ model SmsOutbound {
 /// Durable email outbox (transactional + reminders). Payload cleared on SENT.
 model EmailOutbound {
   id                String               @id @default(cuid())
-  shopId            String
+  /// Null only for internal notifications not tied to a shop (e.g. a new user without a shop).
+  shopId            String?
   bookingId         String?
   toEmail           String
   subject           String
@@ -891,6 +898,29 @@ model EmailOutbound {
   @@index([bookingId])
   @@index([shopId, createdAt])
   @@index([status, nextAttemptAt])
+}
+
+/// Rollout cutoff for internal notifications. The row is stamped by its migration, so
+/// reconciliation never backfills events from before the feature was enabled.
+model InternalNotificationRollout {
+  key       String   @id
+  enabledAt DateTime @default(now())
+}
+
+/// Positive Production-origin marker for internal-notification reconciliation. Written ONLY by the
+/// Production runtime, immediately before the event commits (Production and Preview share one
+/// database, so the event rows themselves cannot prove where they came from). Short-lived:
+/// deleted once the notification is queued and purged after the reconciliation window.
+model InternalNotificationOrigin {
+  id         String   @id @default(cuid())
+  /// e.g. USER_REGISTRATION
+  kind       String
+  /// USER_REGISTRATION: normalised account email (user id is not known before insert).
+  subjectKey String
+  createdAt  DateTime @default(now())
+
+  @@unique([kind, subjectKey])
+  @@index([kind, createdAt])
 }
 
 model Product {

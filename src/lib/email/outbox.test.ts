@@ -34,8 +34,10 @@ vi.mock('../ops/sentry', () => ({
 import {
   deliverOutboxEmail,
   enqueueEmail,
+  enqueueEmailOnce,
   EMAIL_OUTBOX_IN_FLIGHT_ERROR,
   processDueEmailOutbox,
+  retryOutboxEmailForOperator,
   tryDeliverOutboxEmail,
 } from './outbox';
 
@@ -185,10 +187,150 @@ describe('enqueueEmail', () => {
   });
 });
 
+describe('enqueueEmail — internal notifications', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('accepts a null shopId for notifications not tied to a shop', async () => {
+    createOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'out_n', ...data }));
+    const tx = { emailOutbound: { create: (...args: unknown[]) => createOutbound(...args) } };
+
+    await enqueueEmail(tx as never, {
+      shopId: null,
+      purpose: EmailOutboundPurpose.USER_REGISTRATION_INTERNAL,
+      to: 'hello@kersivo.co.uk',
+      subject: 'New KERSIVO registration — a@b.com',
+      html: '<p>x</p>',
+    });
+
+    expect(createOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ shopId: null, status: EmailOutboundStatus.QUEUED }) }),
+    );
+  });
+
+  it('suppressed rows carry no payload, no nextAttemptAt and are never SENT', async () => {
+    createOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'out_s', ...data }));
+    const tx = { emailOutbound: { create: (...args: unknown[]) => createOutbound(...args) } };
+
+    await enqueueEmail(tx as never, {
+      shopId: null,
+      purpose: EmailOutboundPurpose.USER_REGISTRATION_INTERNAL,
+      to: 'hello@kersivo.co.uk',
+      subject: 's',
+      html: '<p>x</p>',
+      suppressed: true,
+    });
+
+    expect(createOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: EmailOutboundStatus.SUPPRESSED,
+          payload: Prisma.DbNull,
+          nextAttemptAt: null,
+          provider: 'suppressed',
+        }),
+      }),
+    );
+  });
+});
+
+describe('enqueueEmailOnce', () => {
+  const input = {
+    shopId: 'shop_1',
+    purpose: EmailOutboundPurpose.STARTER_ACTIVATION_INTERNAL,
+    to: 'hello@kersivo.co.uk',
+    subject: 'New KERSIVO Starter activation — Fade Lab',
+    html: '<p>x</p>',
+    dedupeKey: 'internal:starter-activation:shop_1',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the existing row without creating', async () => {
+    const existing = queuedRow({ id: 'out_existing' });
+    const db = {
+      emailOutbound: {
+        findUnique: vi.fn(async () => existing),
+        create: vi.fn(),
+      },
+    };
+    const result = await enqueueEmailOnce(input, db as never);
+    expect(result).toEqual({ row: existing, created: false });
+    expect(db.emailOutbound.create).not.toHaveBeenCalled();
+  });
+
+  it('a concurrent loser (P2002) resolves to the winning row', async () => {
+    const winner = queuedRow({ id: 'out_winner' });
+    const db = {
+      emailOutbound: {
+        findUnique: vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(winner),
+        create: vi.fn(async () => {
+          throw new Prisma.PrismaClientKnownRequestError('Unique', { code: 'P2002', clientVersion: '5.22.0' });
+        }),
+      },
+    };
+    const result = await enqueueEmailOnce(input, db as never);
+    expect(result).toEqual({ row: winner, created: false });
+  });
+
+  it('non-unique errors propagate to the caller', async () => {
+    const db = {
+      emailOutbound: {
+        findUnique: vi.fn(async () => null),
+        create: vi.fn(async () => {
+          throw new Error('invalid input value for enum');
+        }),
+      },
+    };
+    await expect(enqueueEmailOnce(input, db as never)).rejects.toThrow('invalid input value for enum');
+  });
+});
+
 describe('deliverOutboxEmail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     isEmailDeliveryConfigured.mockReturnValue(true);
+  });
+
+  it('operator retry never revives a SUPPRESSED row', async () => {
+    findUniqueOutbound.mockResolvedValue(
+      queuedRow({ status: EmailOutboundStatus.SUPPRESSED, payload: null, nextAttemptAt: null }),
+    );
+    const result = await retryOutboxEmailForOperator('out_1');
+    expect(result.status).toBe('skipped');
+    expect(updateOutbound).not.toHaveBeenCalled();
+    expect(sendRenderedEmail).not.toHaveBeenCalled();
+  });
+
+  it('never sends a SUPPRESSED row', async () => {
+    findUniqueOutbound.mockResolvedValueOnce(
+      queuedRow({ status: EmailOutboundStatus.SUPPRESSED, payload: null, nextAttemptAt: null }),
+    );
+    const result = await deliverOutboxEmail('out_1');
+    expect(result.status).toBe('skipped');
+    expect(updateManyOutbound).not.toHaveBeenCalled();
+    expect(sendRenderedEmail).not.toHaveBeenCalled();
+  });
+
+  it('alerts without a shop tag when a shopless row exhausts its attempts', async () => {
+    const row = queuedRow({ shopId: null, bookingId: null, attempts: 5, purpose: EmailOutboundPurpose.USER_REGISTRATION_INTERNAL });
+    findUniqueOutbound
+      .mockResolvedValueOnce(row)
+      .mockResolvedValueOnce({ ...row, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR });
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    sendRenderedEmail.mockRejectedValue(new Error('timeout'));
+    updateOutbound.mockResolvedValue({ ...row, status: EmailOutboundStatus.FAILED, attempts: 6 });
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('failed');
+    expect(captureOpsException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ shopId: undefined }),
+    );
   });
 
   it('marks SENT and clears payload on successful Resend send', async () => {
@@ -392,5 +534,21 @@ describe('processDueEmailOutbox', () => {
         take: 25,
       }),
     );
+  });
+
+  it('one row that throws does not block the rest of the drain', async () => {
+    findManyOutbound.mockResolvedValue([{ id: 'bad' }, { id: 'out_ok' }]);
+    const okRow = queuedRow({ id: 'out_ok' });
+    findUniqueOutbound.mockImplementation(async ({ where }: { where: { id: string } }) => {
+      if (where.id === 'bad') throw new Error('Value not found in enum');
+      return { ...okRow, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR };
+    });
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    sendRenderedEmail.mockResolvedValue({ messageId: 'm_ok' });
+    updateOutbound.mockResolvedValue({ ...okRow, status: EmailOutboundStatus.SENT });
+
+    const summary = await processDueEmailOutbox(new Date());
+
+    expect(summary).toEqual({ scanned: 2, sent: 1, queued: 0, failed: 0, skipped: 1 });
   });
 });

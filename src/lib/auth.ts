@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@/lib/db/client';
-import { provisionShopForUser } from '@/lib/auth/provisionShop';
+import { handleUserCreated, handleUserCreating } from '@/lib/auth/userCreatedHook';
 import { stripOAuthCredentialsForHook } from '@/lib/auth/stripOAuthCredentialsForPersistence';
 import {
   resolveBetterAuthBaseUrl,
@@ -195,12 +195,11 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+          await handleUserCreating(user);
+        },
         after: async (user) => {
-          await provisionShopForUser({
-            userId: user.id,
-            name: user.name,
-            email: user.email,
-          });
+          await handleUserCreated(user);
         },
       },
     },
