@@ -1,13 +1,21 @@
 ---
-import { ArrowRight } from 'lucide-react';
-import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
+import { ArrowDown, ArrowRight, Check, ShoppingBag, X } from 'lucide-react';
+import { ANY_BARBER_NAME } from '@/lib/booking/constants';
+import {
+  DEMO_BARBERS,
+  demoBarberBookingHref,
+  demoBarberFirstName,
+  demoBarberRosterIndex,
+} from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav';
 import {
   DEMO_SERVICES,
+  demoServiceDurationRatio,
   demoServiceIndex,
   demoServiceNavigatorGroups,
   formatDemoPriceGbp,
 } from '@/lib/demo/services';
+import { DEMO_LOCATION, DEMO_LOCATION_NOTE } from '@/lib/demo/site';
 import '@/styles/components/barbershop-website-design-breakdown.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -21,6 +29,7 @@ const categoryCount = groups.length;
 
 const [lead, ...others] = DEMO_BARBERS;
 const leadFirstName = demoBarberFirstName(lead.name);
+const leadBookingHref = demoBarberBookingHref(lead.slug);
 const teamNames = DEMO_BARBERS.map((barber) => barber.name);
 const teamList = `${teamNames.slice(0, -1).join(', ')} and ${teamNames.at(-1)}`;
 
@@ -28,8 +37,18 @@ const navLabels = DEMO_NAV.map((item) => item.label);
 const navList = `${navLabels.slice(0, -1).join(', ')} and ${navLabels.at(-1)}`;
 const navCount = navLabels.length;
 
+// The barber step of the real booking flow, as reached from "Book with Ellis" after a service is chosen.
 const bookingSteps = ['Service', 'Barber', 'Schedule', 'Details'];
-const bookingServices = DEMO_SERVICES.filter((service) => service.featured).slice(0, 2);
+const exampleService = DEMO_SERVICES.find((service) => service.id === 'bl-svc-skin-fade') ?? DEMO_SERVICES[0];
+const barberChoices = [
+  { name: ANY_BARBER_NAME, helper: 'Fastest available', image: null, selected: false },
+  ...DEMO_BARBERS.map((barber) => ({
+    name: barber.name,
+    helper: null,
+    image: `/images/barbershop-websites/barber-${barber.slug}.webp`,
+    selected: barber.id === lead.id,
+  })),
+];
 
 const principles = [
   {
@@ -39,7 +58,7 @@ const principles = [
     why:
       'Someone arriving from Google Maps or an Instagram bio first wants to confirm they have reached the right shop. If the opening screen could belong to any barbershop, they end up checking the address bar instead of the haircuts.',
     demo:
-      'The homepage opens with the BLACKLINE wordmark in the header, the line “Manchester · Appointments & walk-ins”, the shop name and a single promise — “Precision in every detail.” — set beside the shop’s imagery.',
+      'The homepage pairs the BLACKLINE wordmark and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work, then commits to a single promise in heavy condensed capitals: “Precision in every detail.”',
   },
   {
     title: 'A visible booking action',
@@ -48,7 +67,7 @@ const principles = [
     why:
       'If someone has found the right shop and knows which service they want, they shouldn’t need to search through several pages before starting a booking.',
     demo:
-      'The header carries a cobalt “BOOK NOW” beside the navigation. On narrow screens it shortens to “BOOK” but stays next to the menu button rather than disappearing inside it, and the homepage repeats the action as “Book an appointment”.',
+      'The header ends with a cobalt “BOOK NOW” after the navigation and bag. On narrow screens it shortens to “BOOK” but keeps its colour and its place beside the menu button rather than disappearing inside it.',
   },
   {
     title: 'Services and pricing where expected',
@@ -56,7 +75,7 @@ const principles = [
       'A services list grouped the way clients think — cuts, beard work, combined appointments — with the duration and price on every line and a direct route to book that particular service.',
     why:
       'Price and time are usually the first practical questions. A visitor who can see the length and cost of a skin fade decides in seconds; one who has to message the shop to ask often doesn’t bother.',
-    demo: `The demo services page groups ${serviceCount} services into ${categoryCount} categories, such as ${firstGroup.label}, each with a service count. Every row shows a short description, the minutes and the price, and links to booking with that service already chosen.`,
+    demo: `The demo services page groups ${serviceCount} services into ${categoryCount} categories, such as ${firstGroup.label}. Every row gives the service name, a short description, the minutes with a bar scaled to the appointment length and the price, and links to booking with that service already chosen.`,
   },
   {
     title: 'The people behind the chairs',
@@ -72,7 +91,7 @@ const principles = [
       'A short menu in which every item is somewhere a client genuinely needs to go: services, the team, examples of work, contact details and booking. Plain labels beat clever ones.',
     why:
       'Visitors scan menus rather than read them. A handful of obvious labels is found faster than a long list, and nobody has to guess what a vague heading contains.',
-    demo: `The demo uses ${navCount} items — ${navList}. On mobile they become a numbered list with the current page marked, while booking sits in its own bar beneath them.`,
+    demo: `The demo uses ${navCount} items — ${navList}. On mobile they become a numbered list with the current page marked, followed by a full-width “Book an appointment” button, the bag and the shop’s location.`,
   },
   {
     title: 'Consistency from website to booking',
@@ -80,7 +99,7 @@ const principles = [
       'When a visitor moves from the website into booking, the name, colours and type should stay the same, and any choice they have already made should carry through.',
     why:
       'A sudden change of look at the moment of booking can make people wonder whether they have left the shop’s site. Carrying a choice forward also saves them from making it twice.',
-    demo: `Selecting “Book with ${leadFirstName}” opens the booking page with ${lead.name} already selected. The page keeps the BLACKLINE header, dark palette, cobalt accent and condensed headings, and names the shop above the “Book a chair” title.`,
+    demo: `“Book with ${leadFirstName}” opens the booking page with ${lead.name} carried in the link. The visitor picks a service first; when they continue, the barber step opens with ${leadFirstName} already selected. The BLACKLINE header, dark palette, cobalt accent and condensed headings stay in place throughout.`,
   },
 ].map((principle, index) => ({
   ...principle,
@@ -100,17 +119,24 @@ const ROW_LAYOUTS = [
 ];
 
 const specimenLabels = [
-  'Recreated detail of the BLACKLINE demo homepage: the wordmark, the line Manchester, Appointments and walk-ins, the shop name Blackline Barbers, the headline Precision in every detail and the buttons Book an appointment and Explore services, beside a photograph of a barber at work.',
-  'Recreated BLACKLINE demo headers. Desktop: wordmark, six navigation links, Bag and a cobalt BOOK NOW button. Mobile: wordmark, a BOOK button and a menu button.',
+  'Recreated BLACKLINE identity from the demo homepage: the BLACKLINE BARBERS wordmark and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
+  'Recreated BLACKLINE headers, aligned on the booking button. Desktop: the navigation, a Bag button and a cobalt BOOK NOW button. Mobile: the wordmark, the bag, a cobalt BOOK button and the menu button.',
   `Recreated detail of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
-    .join('; ')}.`,
+    .join('; ')}, each with a Book this service link.`,
   `Recreated detail of the BLACKLINE demo barbers page: a card for ${lead.name}, ${lead.specialisation}, with a Book with ${leadFirstName} link, followed by ${others.map((barber) => barber.name).join(' and ')}.`,
-  `Recreated BLACKLINE demo mobile menu: a numbered list of ${navList}, with Home marked as the current page, and a Book an appointment bar beneath.`,
-  `Recreated journey from the BLACKLINE barbers page to the booking page: Book with ${leadFirstName} leads to Book a chair, with the steps ${bookingSteps.join(', ')}.`,
+  `Recreated BLACKLINE demo mobile menu: a numbered list of ${navList}, with Home marked as the current page, followed by a Book an appointment button, the bag and the location ${DEMO_LOCATION}.`,
+  `Recreated journey from the BLACKLINE barbers page to booking. Book with ${leadFirstName} links to ${leadBookingHref}. After a service such as ${exampleService.name} is chosen, the Book a chair page shows the barber step with ${lead.name} already selected, under the same BLACKLINE header.`,
 ];
 
-const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barbers', 'mobile menu', '/demo/barbers → /demo/book'];
+const specimenSources = [
+  '/demo homepage',
+  'site header, desktop and mobile',
+  '/demo/services',
+  '/demo/barbers',
+  'mobile menu',
+  `/demo/barbers → ${leadBookingHref}`,
+];
 ---
 
 <section class="bwd-review" aria-labelledby="bwd-review-heading">
@@ -156,66 +182,69 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
               <div class="bwd-spec__canvas" aria-hidden="true">
                 {index === 0 && (
                   <div class="bwd-spec-first">
-                    <div class="bwd-spec-first__copy">
-                      <span class="bwd-wordmark">
+                    <span class="bwd-spec-first__copy">
+                      <span class="bwd-wordmark bwd-wordmark--display">
                         <span class="bwd-wordmark__name">BLACKLINE</span>
                         <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
                       </span>
-                      <span class="bwd-spec__eyebrow">Manchester · Appointments &amp; walk-ins</span>
-                      <span class="bwd-spec-first__name">
-                        Blackline Barbers <span class="bwd-pin">01</span>
-                      </span>
-                      <span class="bwd-spec-first__display">Precision in every detail.</span>
-                      <span class="bwd-spec-first__lede">Modern cuts, sharp fades and proper attention to every line.</span>
-                      <span class="bwd-spec-first__actions">
-                        <span class="bwd-spec-first__btn">Book an appointment</span>
-                        <span class="bwd-spec-first__btn bwd-spec-first__btn--ghost">Explore services</span>
-                      </span>
-                    </div>
+                      <span class="bwd-spec-first__eyebrow">Manchester · Appointments &amp; walk-ins</span>
+                    </span>
                     <span class="bwd-spec-first__split"></span>
-                    <img
-                      class="bwd-spec-first__photo"
-                      src="/images/barbershop-websites/site-hero-640.webp"
-                      srcset="/images/barbershop-websites/site-hero-640.webp 640w, /images/barbershop-websites/site-hero-1100.webp 1100w"
-                      sizes="(min-width: 1024px) 40vw, 92vw"
-                      alt=""
-                      width="640"
-                      height="524"
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    <span class="bwd-spec-first__media">
+                      <img
+                        src="/demo/heroimg.webp"
+                        alt=""
+                        width="1800"
+                        height="2700"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </span>
+                    <span class="bwd-spec-first__display">Precision in every detail.</span>
                   </div>
                 )}
 
                 {index === 1 && (
-                  <div class="bwd-spec-headers">
-                    <span class="bwd-spec__label">Desktop header</span>
-                    <span class="bwd-spec-bar bwd-spec-bar--desktop">
-                      <span class="bwd-wordmark bwd-wordmark--sm">
-                        <span class="bwd-wordmark__name">BLACKLINE</span>
-                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                      </span>
-                      <span class="bwd-spec-bar__nav">
-                        {DEMO_NAV.map((item, navIndex) => (
-                          <span class:list={['bwd-spec-bar__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
-                        ))}
-                      </span>
-                      <span class="bwd-spec-bar__actions">
-                        <span class="bwd-spec-bar__bag">Bag <span>0</span></span>
-                        <span class="bwd-spec-bar__book">BOOK NOW →</span>
-                        <span class="bwd-pin">02</span>
+                  <div class="bwd-spec-cta">
+                    <span class="bwd-spec-cta__view">
+                      <span class="bwd-spec-cta__caption">Desktop header</span>
+                      <span class="bwd-spec-cta__bar bwd-spec-cta__bar--desktop">
+                        <span class="bwd-wordmark bwd-spec-cta__brand">
+                          <span class="bwd-wordmark__name">BLACKLINE</span>
+                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                        </span>
+                        <span class="bwd-spec-cta__nav">
+                          {DEMO_NAV.map((item, navIndex) => (
+                            <span class:list={['bwd-spec-cta__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
+                          ))}
+                        </span>
+                        <span class="bwd-spec-cta__bag">
+                          <ShoppingBag size={18} strokeWidth={1.75} />
+                          <span>Bag</span>
+                          <span class="bwd-spec-cta__count">0</span>
+                        </span>
+                        <span class="bwd-spec-cta__book">
+                          <span>Book now</span>
+                          <ArrowRight size={14} strokeWidth={2.25} />
+                        </span>
                       </span>
                     </span>
-                    <span class="bwd-spec__label">Mobile header</span>
-                    <span class="bwd-spec-bar bwd-spec-bar--mobile">
-                      <span class="bwd-wordmark bwd-wordmark--sm">
-                        <span class="bwd-wordmark__name">BLACKLINE</span>
-                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                      </span>
-                      <span class="bwd-spec-bar__actions">
-                        <span class="bwd-pin">02</span>
-                        <span class="bwd-spec-bar__book">BOOK →</span>
-                        <span class="bwd-spec-bar__menu"><i></i><i></i></span>
+                    <span class="bwd-spec-cta__view bwd-spec-cta__view--mobile">
+                      <span class="bwd-spec-cta__caption">Mobile header</span>
+                      <span class="bwd-spec-cta__bar bwd-spec-cta__bar--mobile">
+                        <span class="bwd-wordmark bwd-spec-cta__brand">
+                          <span class="bwd-wordmark__name">BLACKLINE</span>
+                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                        </span>
+                        <span class="bwd-spec-cta__bag">
+                          <ShoppingBag size={18} strokeWidth={1.75} />
+                          <span class="bwd-spec-cta__count">0</span>
+                        </span>
+                        <span class="bwd-spec-cta__book">
+                          <span>Book</span>
+                          <ArrowRight size={14} strokeWidth={2.25} />
+                        </span>
+                        <span class="bwd-spec-cta__toggle"><i></i><i></i></span>
                       </span>
                     </span>
                   </div>
@@ -224,31 +253,37 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
                 {index === 2 && (
                   <div class="bwd-spec-services">
                     <span class="bwd-spec-services__head">
-                      <span>
-                        <span class="bwd-spec__eyebrow">Service category</span>
+                      <span class="bwd-spec-services__heading">
+                        <span class="bwd-spec-services__kicker">Service category</span>
                         <span class="bwd-spec-services__name">{firstGroup.label}</span>
                       </span>
-                      <span class="bwd-spec-services__count">{firstGroup.countLabel}</span>
-                    </span>
-                    {groupRows.map((service, rowIndex) => (
-                      <span class="bwd-spec-services__row">
-                        <span class="bwd-spec-services__index">{demoServiceIndex(rowIndex)}</span>
-                        <span class="bwd-spec-services__text">
-                          <span class="bwd-spec-services__title">
-                            {service.name}
-                            {service.featured && <span class="bwd-spec-services__chip">Featured</span>}
-                          </span>
-                          <span class="bwd-spec-services__desc">{service.description}</span>
-                        </span>
-                        <span class="bwd-spec-services__meta">
-                          <span class="bwd-spec-services__mins">{service.durationMinutes} min</span>
-                          <span class="bwd-spec-services__price">
-                            {rowIndex === 0 && <span class="bwd-pin">03</span>}
-                            {formatDemoPriceGbp(service.pricePence)}
-                          </span>
-                        </span>
+                      <span class="bwd-spec-services__summary">
+                        <span class="bwd-spec-services__count">{firstGroup.countLabel}</span>
+                        <span class="bwd-spec-services__group-desc">{firstGroup.description}</span>
                       </span>
-                    ))}
+                    </span>
+                    <span class="bwd-spec-services__list">
+                      {groupRows.map((service, rowIndex) => (
+                        <span
+                          class="bwd-spec-services__row"
+                          style={`--bwd-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes)}`}
+                        >
+                          <span class="bwd-spec-services__index">{demoServiceIndex(rowIndex)}</span>
+                          <span class="bwd-spec-services__main">
+                            <span class="bwd-spec-services__title">{service.name}</span>
+                            <span class="bwd-spec-services__desc">{service.description}</span>
+                            <span class="bwd-spec-services__book">
+                              Book this service <ArrowRight size={13} strokeWidth={2.25} />
+                            </span>
+                          </span>
+                          <span class="bwd-spec-services__time">
+                            <span>{service.durationMinutes} min</span>
+                            <span class="bwd-spec-services__track"><span></span></span>
+                          </span>
+                          <span class="bwd-spec-services__price">{formatDemoPriceGbp(service.pricePence)}</span>
+                        </span>
+                      ))}
+                    </span>
                   </div>
                 )}
 
@@ -270,9 +305,7 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
                         <span class="bwd-spec-team__name">{lead.name}</span>
                         <span class="bwd-spec-team__spec">{lead.specialisation}</span>
                         <span class="bwd-spec-team__line">{lead.selectionCopy}</span>
-                        <span class="bwd-spec-team__book">
-                          Book with {leadFirstName} → <span class="bwd-pin">04</span>
-                        </span>
+                        <span class="bwd-spec-team__book">Book with {leadFirstName} →</span>
                       </span>
                     </span>
                     {others.map((barber, otherIndex) => (
@@ -297,63 +330,134 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
 
                 {index === 4 && (
                   <div class="bwd-spec-menu">
-                    <span class="bwd-spec-bar bwd-spec-bar--mobile">
-                      <span class="bwd-wordmark bwd-wordmark--sm">
+                    <span class="bwd-spec-menu__top">
+                      <span class="bwd-wordmark bwd-spec-menu__brand">
                         <span class="bwd-wordmark__name">BLACKLINE</span>
                         <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
                       </span>
-                      <span class="bwd-spec-bar__actions">
-                        <span class="bwd-spec-bar__book">BOOK →</span>
-                        <span class="bwd-spec-bar__close"></span>
+                      <span class="bwd-spec-menu__bag">
+                        <ShoppingBag size={18} strokeWidth={1.75} />
+                        <span>0</span>
                       </span>
+                      <span class="bwd-spec-menu__cta">
+                        <span>Book</span>
+                        <ArrowRight size={13} strokeWidth={2.25} />
+                      </span>
+                      <span class="bwd-spec-menu__close"><X size={18} strokeWidth={1.75} /></span>
                     </span>
                     <span class="bwd-spec-menu__list">
-                      <span class="bwd-spec-menu__pin"><span class="bwd-pin">05</span></span>
                       {DEMO_NAV.map((item, navIndex) => (
-                        <span class="bwd-spec-menu__item">
+                        <span class:list={['bwd-spec-menu__item', { 'is-current': navIndex === 0 }]}>
                           <span class="bwd-spec-menu__num">{String(navIndex + 1).padStart(2, '0')}</span>
-                          <span class="bwd-spec-menu__label">{item.label}</span>
-                          {navIndex === 0 && <span class="bwd-spec-menu__current">Current</span>}
+                          <span class="bwd-spec-menu__copy">
+                            <span class="bwd-spec-menu__label">{item.label}</span>
+                            {navIndex === 0 && <span class="bwd-spec-menu__current">Current</span>}
+                          </span>
+                          <span class="bwd-spec-menu__mark"></span>
                         </span>
                       ))}
                     </span>
-                    <span class="bwd-spec-menu__dock">Book an appointment →</span>
+                    <span class="bwd-spec-menu__book">
+                      <span>Book an appointment</span>
+                      <ArrowRight size={16} strokeWidth={2.25} />
+                    </span>
+                    <span class="bwd-spec-menu__bag-link">Bag (0)</span>
+                    <span class="bwd-spec-menu__place">
+                      <span>{DEMO_LOCATION}</span>
+                      <span>{DEMO_LOCATION_NOTE}</span>
+                    </span>
                   </div>
                 )}
 
                 {index === 5 && (
                   <div class="bwd-spec-flow">
-                    <span class="bwd-spec-flow__pane">
-                      <span class="bwd-spec__label">/demo/barbers</span>
-                      <span class="bwd-spec-team__name">{lead.name}</span>
-                      <span class="bwd-spec-team__spec">{lead.specialisation}</span>
-                      <span class="bwd-spec-team__book">Book with {leadFirstName} →</span>
-                    </span>
-                    <span class="bwd-spec-flow__link">
-                      <span class="bwd-pin">06</span>
-                      <span class="bwd-spec-flow__note">{leadFirstName} already selected</span>
-                    </span>
-                    <span class="bwd-spec-flow__pane bwd-spec-flow__pane--book">
-                      <span class="bwd-spec__label">/demo/book</span>
-                      <span class="bwd-spec__eyebrow">Blackline Barbers</span>
-                      <span class="bwd-spec-flow__title">Book a chair</span>
-                      <span class="bwd-spec-flow__steps">
-                        {bookingSteps.map((step, stepIndex) => (
-                          <span class:list={['bwd-spec-flow__step', { 'is-active': stepIndex === 0 }]}>
-                            <span class="bwd-spec-flow__dot">{stepIndex + 1}</span>
-                            {step}
-                          </span>
-                        ))}
-                      </span>
-                      <span class="bwd-spec-flow__prompt">
-                        Choose a service <span>Pick what you need</span>
-                      </span>
-                      {bookingServices.map((service) => (
-                        <span class="bwd-spec-flow__service">
-                          <span>{service.name}</span>
-                          <span>{formatDemoPriceGbp(service.pricePence)}</span>
+                    <span class="bwd-spec-flow__screen bwd-spec-flow__screen--site">
+                      <span class="bwd-spec-flow__chrome">
+                        <span class="bwd-wordmark bwd-spec-flow__brand">
+                          <span class="bwd-wordmark__name">BLACKLINE</span>
+                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
                         </span>
-                      ))}
+                        <span class="bwd-spec-flow__chrome-cta">Book now</span>
+                      </span>
+                      <span class="bwd-spec-flow__roster">
+                        <img
+                          class="bwd-spec-flow__portrait"
+                          src={lead.image.src}
+                          alt=""
+                          width={lead.image.width}
+                          height={lead.image.height}
+                          loading="lazy"
+                          decoding="async"
+                          style={`object-position: ${lead.rosterObjectPosition}`}
+                        />
+                        <span class="bwd-spec-flow__profile">
+                          <span class="bwd-spec-flow__index">{demoBarberRosterIndex(0)}</span>
+                          <span class="bwd-spec-flow__name">{lead.name}</span>
+                          <span class="bwd-spec-flow__spec">{lead.specialisation}</span>
+                          <span class="bwd-spec-flow__action">
+                            Book with {leadFirstName} <ArrowRight size={15} strokeWidth={2.25} />
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+
+                    <span class="bwd-spec-flow__handoff">
+                      <span class="bwd-spec-flow__url">{leadBookingHref}</span>
+                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--down"><ArrowDown size={20} strokeWidth={2} /></span>
+                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--right"><ArrowRight size={22} strokeWidth={2} /></span>
+                      <span class="bwd-spec-flow__note">Service chosen, then Continue</span>
+                    </span>
+
+                    <span class="bwd-spec-flow__screen bwd-spec-flow__screen--book">
+                      <span class="bwd-spec-flow__chrome">
+                        <span class="bwd-wordmark bwd-spec-flow__brand">
+                          <span class="bwd-wordmark__name">BLACKLINE</span>
+                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                        </span>
+                        <span class="bwd-spec-flow__chrome-cta">Book now</span>
+                      </span>
+                      <span class="bwd-spec-flow__booking">
+                        <span class="bwd-spec-flow__eyebrow">Blackline Barbers</span>
+                        <span class="bwd-spec-flow__title">Book a chair</span>
+                        <span class="bwd-spec-flow__steps">
+                          {bookingSteps.map((step, stepIndex) => (
+                            <span
+                              class:list={[
+                                'bwd-spec-flow__step',
+                                { 'is-done': stepIndex === 0, 'is-active': stepIndex === 1 },
+                              ]}
+                            >
+                              <span class="bwd-spec-flow__dot">
+                                {stepIndex === 0 ? <Check size={12} strokeWidth={2.5} /> : stepIndex + 1}
+                              </span>
+                              <span class="bwd-spec-flow__step-label">{step}</span>
+                            </span>
+                          ))}
+                        </span>
+                        <span class="bwd-spec-flow__picks">{exampleService.name} · {lead.name}</span>
+                        <span class="bwd-spec-flow__step-head">
+                          <span class="bwd-spec-flow__step-title">Choose a barber</span>
+                          <span class="bwd-spec-flow__step-hint">Who should take you</span>
+                        </span>
+                        <span class="bwd-spec-flow__choices">
+                          {barberChoices.map((choice) => (
+                            <span class:list={['bwd-spec-flow__choice', { 'is-selected': choice.selected }]}>
+                              <span class="bwd-spec-flow__avatar">
+                                {choice.image ? (
+                                  <img src={choice.image} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                                ) : (
+                                  'ANY'
+                                )}
+                              </span>
+                              <span class="bwd-spec-flow__choice-copy">
+                                <span class="bwd-spec-flow__choice-name">{choice.name}</span>
+                                {choice.helper && <span class="bwd-spec-flow__choice-helper">{choice.helper}</span>}
+                              </span>
+                              <span class="bwd-spec-flow__check"><Check size={11} strokeWidth={2.5} /></span>
+                            </span>
+                          ))}
+                        </span>
+                      </span>
                     </span>
                   </div>
                 )}

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_BARBERS, demoBarberBookingHref } from '@/lib/demo/barbers';
 import { DEMO_NAV } from '@/lib/demo/nav';
 import { DEMO_SERVICES, demoServiceNavigatorGroups } from '@/lib/demo/services';
 import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
@@ -12,6 +12,8 @@ const read = (path: string) => readFileSync(join(here, path), 'utf8');
 const page = read('../../pages/barbershop-website-design/index.astro');
 const section = read('../../components/barbershop-website-design/WebsiteDesignBreakdown.astro');
 const markup = section.split('---').slice(2).join('---');
+const styles = read('../../styles/components/barbershop-website-design-breakdown.css');
+const bookingFlow = read('../../components/booking/BookingFlow.tsx');
 const text = (source: string) => source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 const TITLES = [
@@ -81,6 +83,26 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(markup).toContain('Book a chair');
     expect(markup).toContain('Precision in every detail.');
     expect(section).toContain('three fictional demo barbers');
+  });
+
+  it('shows the real barber hand-off into booking rather than an invented state', () => {
+    expect(demoBarberBookingHref('ellis-ward')).toBe('/demo/book?barber=ellis-ward');
+    expect(section).toContain('demoBarberBookingHref(lead.slug)');
+    expect(bookingFlow).toContain("barber: { title: 'Choose a barber', hint: 'Who should take you' }");
+    expect(markup).toContain('Choose a barber');
+    expect(markup).toContain('Who should take you');
+    expect(section).toContain("from '@/lib/booking/constants'");
+    expect(section).toContain('selected: barber.id === lead.id');
+    expect(section).toContain('The visitor picks a service first');
+  });
+
+  it('scales service durations with the demo menu’s own ratio', () => {
+    expect(section).toContain('demoServiceDurationRatio(service.durationMinutes)');
+  });
+
+  it('relies on the large principle numbers alone, with no numbered pins inside specimens', () => {
+    expect(section).not.toContain('bwd-pin');
+    expect(styles).not.toContain('bwd-pin');
   });
 
   it('keeps specimens as labelled, non-interactive illustrations', () => {
