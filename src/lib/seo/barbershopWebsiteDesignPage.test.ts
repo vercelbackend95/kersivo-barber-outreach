@@ -90,9 +90,23 @@ describe('/barbershop-website-design Section 01 hero', () => {
     }
   });
 
+  it('shows one BLACKLINE website built from the real demo navigation, without educational modules', () => {
+    expect(hero).toContain("import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav'");
+    expect(hero).toContain('DEMO_NAV.map(');
+    expect(hero).toContain('Precision in every detail.');
+    expect(hero).toContain('Book an appointment');
+    expect(hero).toContain('/demo/heroimg.webp');
+    for (const removed of ['Identity', 'Photography', 'Booking path', 'Brand kit', 'bwd-plate__marker']) {
+      expect(hero).not.toContain(removed);
+    }
+    expect(hero).not.toContain('fresha-alternative.css');
+    expect(hero).not.toContain('fresha-alt-hero');
+  });
+
   it('discloses BLACKLINE as fictional and avoids unapproved claims or embeds', () => {
     expect(hero).toContain('BLACKLINE BARBERS is a fictional KERSIVO demonstration shop.');
-    expect(hero).toContain('illustrative');
+    expect(hero).toContain('This illustration recreates');
+    expect(hero).not.toMatch(/real photographs/i);
     expect(hero).not.toMatch(/<iframe|<embed|<video/);
     expect(hero).not.toMatch(/testimonial|review|rating|award|guarantee|rank|\d+\+?\s*(shops|customers|clients)/i);
   });
