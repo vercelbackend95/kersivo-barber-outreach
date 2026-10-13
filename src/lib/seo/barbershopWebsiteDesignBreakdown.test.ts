@@ -27,7 +27,7 @@ const TITLES = [
 
 const specimens = () => {
   const parts = markup.split('<div class="bwd-spec" ');
-  return parts.slice(1).map((part) => part.split('<figcaption')[0]);
+  return parts.slice(1).map((part) => part.split('</figure>')[0]);
 };
 
 describe('/barbershop-website-design — Section 02 design breakdown', () => {
@@ -87,7 +87,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
 
   it('shows the real barber hand-off into booking rather than an invented state', () => {
     expect(demoBarberBookingHref('ellis-ward')).toBe('/demo/book?barber=ellis-ward');
-    expect(section).toContain('demoBarberBookingHref(lead.slug)');
+    expect(markup).toContain('Book with');
     expect(bookingFlow).toContain("barber: { title: 'Choose a barber', hint: 'Who should take you' }");
     expect(markup).toContain('Choose a barber');
     expect(markup).toContain('Who should take you');
@@ -103,6 +103,17 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
   it('relies on the large principle numbers alone, with no numbered pins inside specimens', () => {
     expect(section).not.toContain('bwd-pin');
     expect(styles).not.toContain('bwd-pin');
+  });
+
+  it('keeps routes and technical captions out of the illustrations', () => {
+    expect(section).not.toContain('?barber=');
+    expect(section).not.toContain('leadBookingHref');
+    expect(markup).not.toContain('Recreated detail');
+    expect(markup).not.toContain('<figcaption');
+    expect(markup).not.toContain('Service chosen');
+    expect(styles).not.toContain('bwd-principle__source');
+    expect(styles).not.toContain('bwd-spec-flow__url');
+    expect(styles).not.toContain('bwd-spec-flow__note');
   });
 
   it('keeps specimens as labelled, non-interactive illustrations', () => {

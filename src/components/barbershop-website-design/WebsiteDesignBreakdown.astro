@@ -1,12 +1,7 @@
 ---
 import { ArrowDown, ArrowRight, Check, ShoppingBag, X } from 'lucide-react';
 import { ANY_BARBER_NAME } from '@/lib/booking/constants';
-import {
-  DEMO_BARBERS,
-  demoBarberBookingHref,
-  demoBarberFirstName,
-  demoBarberRosterIndex,
-} from '@/lib/demo/barbers';
+import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav';
 import {
   DEMO_SERVICES,
@@ -29,7 +24,6 @@ const categoryCount = groups.length;
 
 const [lead, ...others] = DEMO_BARBERS;
 const leadFirstName = demoBarberFirstName(lead.name);
-const leadBookingHref = demoBarberBookingHref(lead.slug);
 const teamNames = DEMO_BARBERS.map((barber) => barber.name);
 const teamList = `${teamNames.slice(0, -1).join(', ')} and ${teamNames.at(-1)}`;
 
@@ -120,22 +114,13 @@ const ROW_LAYOUTS = [
 
 const specimenLabels = [
   'Recreated BLACKLINE identity from the demo homepage: the BLACKLINE BARBERS wordmark and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
-  'Recreated BLACKLINE headers, aligned on the booking button. Desktop: the navigation, a Bag button and a cobalt BOOK NOW button. Mobile: the wordmark, the bag, a cobalt BOOK button and the menu button.',
+  `Recreated BLACKLINE homepage on desktop and mobile. On desktop, the header carries the wordmark, the links ${navList}, a Bag button and a cobalt BOOK NOW button above the hero. On mobile, the header keeps the wordmark, the bag, a cobalt BOOK button and the menu button above the same hero and its Book an appointment button.`,
   `Recreated detail of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
     .join('; ')}, each with a Book this service link.`,
   `Recreated detail of the BLACKLINE demo barbers page: a card for ${lead.name}, ${lead.specialisation}, with a Book with ${leadFirstName} link, followed by ${others.map((barber) => barber.name).join(' and ')}.`,
   `Recreated BLACKLINE demo mobile menu: a numbered list of ${navList}, with Home marked as the current page, followed by a Book an appointment button, the bag and the location ${DEMO_LOCATION}.`,
-  `Recreated journey from the BLACKLINE barbers page to booking. Book with ${leadFirstName} links to ${leadBookingHref}. After a service such as ${exampleService.name} is chosen, the Book a chair page shows the barber step with ${lead.name} already selected, under the same BLACKLINE header.`,
-];
-
-const specimenSources = [
-  '/demo homepage',
-  'site header, desktop and mobile',
-  '/demo/services',
-  '/demo/barbers',
-  'mobile menu',
-  `/demo/barbers → ${leadBookingHref}`,
+  `Recreated journey from the BLACKLINE barbers page to booking. ${lead.name}’s profile with its Book with ${leadFirstName} link leads to the Book a chair page, where, after a service such as ${exampleService.name}, the barber step shows ${lead.name} already selected under the same BLACKLINE header.`,
 ];
 ---
 
@@ -206,45 +191,92 @@ const specimenSources = [
 
                 {index === 1 && (
                   <div class="bwd-spec-cta">
-                    <span class="bwd-spec-cta__view">
-                      <span class="bwd-spec-cta__caption">Desktop header</span>
-                      <span class="bwd-spec-cta__bar bwd-spec-cta__bar--desktop">
-                        <span class="bwd-wordmark bwd-spec-cta__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                    <span class="bwd-spec-cta__desktop">
+                      <span class="bwd-spec-cta__site">
+                        <span class="bwd-spec-cta__header">
+                          <span class="bwd-wordmark bwd-spec-cta__brand">
+                            <span class="bwd-wordmark__name">BLACKLINE</span>
+                            <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                          </span>
+                          <span class="bwd-spec-cta__nav">
+                            {DEMO_NAV.map((item, navIndex) => (
+                              <span class:list={['bwd-spec-cta__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
+                            ))}
+                          </span>
+                          <span class="bwd-spec-cta__actions">
+                            <span class="bwd-spec-cta__bag">
+                              <ShoppingBag size={18} strokeWidth={1.75} />
+                              <span class="bwd-spec-cta__bag-label">Bag</span>
+                              <span>0</span>
+                            </span>
+                            <span class="bwd-spec-cta__book">
+                              Book now
+                              <ArrowRight size={14} strokeWidth={2.25} />
+                            </span>
+                          </span>
                         </span>
-                        <span class="bwd-spec-cta__nav">
-                          {DEMO_NAV.map((item, navIndex) => (
-                            <span class:list={['bwd-spec-cta__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
-                          ))}
-                        </span>
-                        <span class="bwd-spec-cta__bag">
-                          <ShoppingBag size={18} strokeWidth={1.75} />
-                          <span>Bag</span>
-                          <span class="bwd-spec-cta__count">0</span>
-                        </span>
-                        <span class="bwd-spec-cta__book">
-                          <span>Book now</span>
-                          <ArrowRight size={14} strokeWidth={2.25} />
+                        <span class="bwd-spec-cta__hero">
+                          <span class="bwd-spec-cta__copy">
+                            <span class="bwd-spec-cta__eyebrow">Manchester · Appointments &amp; walk-ins</span>
+                            <span class="bwd-spec-cta__h1">Blackline Barbers</span>
+                            <span class="bwd-spec-cta__display">Precision in every detail.</span>
+                            <span class="bwd-spec-cta__lede">Modern cuts, sharp fades and proper attention to every line.</span>
+                            <span class="bwd-spec-cta__buttons">
+                              <span class="bwd-spec-cta__btn">Book an appointment</span>
+                              <span class="bwd-spec-cta__btn bwd-spec-cta__btn--secondary">Explore services</span>
+                            </span>
+                          </span>
+                          <span class="bwd-spec-cta__split"></span>
+                          <span class="bwd-spec-cta__media">
+                            <img
+                              src="/demo/heroimg.webp"
+                              alt=""
+                              width="1800"
+                              height="2700"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </span>
                         </span>
                       </span>
                     </span>
-                    <span class="bwd-spec-cta__view bwd-spec-cta__view--mobile">
-                      <span class="bwd-spec-cta__caption">Mobile header</span>
-                      <span class="bwd-spec-cta__bar bwd-spec-cta__bar--mobile">
-                        <span class="bwd-wordmark bwd-spec-cta__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+
+                    <span class="bwd-spec-cta__mobile">
+                      <span class="bwd-spec-cta__site">
+                        <span class="bwd-spec-cta__header">
+                          <span class="bwd-wordmark bwd-spec-cta__brand">
+                            <span class="bwd-wordmark__name">BLACKLINE</span>
+                            <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
+                          </span>
+                          <span class="bwd-spec-cta__bag">
+                            <ShoppingBag size={18} strokeWidth={1.75} />
+                            <span>0</span>
+                          </span>
+                          <span class="bwd-spec-cta__book">
+                            Book
+                            <ArrowRight size={14} strokeWidth={2.25} />
+                          </span>
+                          <span class="bwd-spec-cta__toggle"><i></i><i></i></span>
                         </span>
-                        <span class="bwd-spec-cta__bag">
-                          <ShoppingBag size={18} strokeWidth={1.75} />
-                          <span class="bwd-spec-cta__count">0</span>
+                        <span class="bwd-spec-cta__copy">
+                          <span class="bwd-spec-cta__eyebrow">Manchester · Appointments &amp; walk-ins</span>
+                          <span class="bwd-spec-cta__h1">Blackline Barbers</span>
+                          <span class="bwd-spec-cta__display">Precision in every detail.</span>
+                          <span class="bwd-spec-cta__buttons">
+                            <span class="bwd-spec-cta__btn">Book an appointment</span>
+                            <span class="bwd-spec-cta__btn bwd-spec-cta__btn--secondary">Explore services</span>
+                          </span>
                         </span>
-                        <span class="bwd-spec-cta__book">
-                          <span>Book</span>
-                          <ArrowRight size={14} strokeWidth={2.25} />
+                        <span class="bwd-spec-cta__media">
+                          <img
+                            src="/demo/heroimg.webp"
+                            alt=""
+                            width="1800"
+                            height="2700"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </span>
-                        <span class="bwd-spec-cta__toggle"><i></i><i></i></span>
                       </span>
                     </span>
                   </div>
@@ -402,10 +434,8 @@ const specimenSources = [
                     </span>
 
                     <span class="bwd-spec-flow__handoff">
-                      <span class="bwd-spec-flow__url">{leadBookingHref}</span>
-                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--down"><ArrowDown size={20} strokeWidth={2} /></span>
-                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--right"><ArrowRight size={22} strokeWidth={2} /></span>
-                      <span class="bwd-spec-flow__note">Service chosen, then Continue</span>
+                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--down"><ArrowDown size={28} strokeWidth={1.5} /></span>
+                      <span class="bwd-spec-flow__arrow bwd-spec-flow__arrow--right"><ArrowRight size={32} strokeWidth={1.5} /></span>
                     </span>
 
                     <span class="bwd-spec-flow__screen bwd-spec-flow__screen--book">
@@ -463,9 +493,6 @@ const specimenSources = [
                 )}
               </div>
             </div>
-            <figcaption class="bwd-principle__source">
-              Recreated detail · {specimenSources[index]}
-            </figcaption>
           </figure>
 
           <div class="bwd-principle__analysis">

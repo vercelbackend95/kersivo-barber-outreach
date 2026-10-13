@@ -213,13 +213,6 @@
   margin: 0;
 }
 
-.bwd-principle__source {
-  margin-top: 0.65rem;
-  color: var(--bwd-text-3);
-  font-size: var(--text-xs);
-  letter-spacing: 0.04em;
-}
-
 /* ---------- Specimens ---------- */
 
 /* The heading/label weights that the BLACKLINE pages use, beyond the faces the Hero declares. */
@@ -422,76 +415,63 @@
   }
 }
 
-/* 02 — the booking action, aligned across desktop and mobile headers. The bars are cropped
-   from the left so the cobalt button sits in the same column at every width. */
+/* 02 — the booking action on the BLACKLINE homepage: the desktop site as the main view, with
+   the mobile site laid over its corner. Each view scales from its own width, so the type keeps
+   the real proportions at every size. */
 
 .bwd-spec-cta {
-  display: grid;
-  gap: clamp(1.5rem, 3.5cqi, 2.5rem);
-  padding: var(--spec-pad) var(--spec-pad) var(--spec-pad) 0;
-  background: var(--bl-graphite);
-  font-size: clamp(1rem, 1.75cqi, 1.4rem);
-}
+  --cta-mobile: clamp(18.5rem, 26cqi, 22rem);
 
-.bwd-spec-cta__view {
   display: grid;
   gap: 0.75rem;
+}
+
+.bwd-spec:has(.bwd-spec-cta) {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.bwd-spec-cta__desktop,
+.bwd-spec-cta__mobile {
+  container-type: inline-size;
   min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--bl-line-dark);
+  background: var(--bl-carbon);
 }
 
-.bwd-spec-cta__view--mobile {
-  width: min(100%, 24.375em);
-  margin-left: auto;
+.bwd-spec-cta__desktop {
+  border-radius: 8px;
 }
 
-.bwd-spec-cta__caption {
-  justify-self: end;
-  color: var(--bl-silver);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.bwd-spec-cta__mobile {
+  justify-self: center;
+  width: 100%;
+  max-width: 26rem;
+  border-radius: 1.1rem;
+  aspect-ratio: 3 / 4;
 }
 
-.bwd-spec-cta__bar {
+.bwd-spec-cta__site {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.bwd-spec-cta__header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.65em;
-  overflow: hidden;
-  padding-right: 1.4em;
-  border: 1px solid var(--bl-line-dark);
-  border-left: 0;
-  border-radius: 0 6px 6px 0;
-  background: var(--bl-carbon);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 3em);
-  mask-image: linear-gradient(to right, transparent, #000 3em);
-}
-
-/* The desktop inset matches the mobile menu button, so both booking buttons end on one line. */
-.bwd-spec-cta__bar--desktop {
-  height: 4.8em;
-  padding-right: 4.8em;
-}
-
-.bwd-spec-cta__bar--mobile {
-  height: 4.2em;
+  gap: 0.6em;
+  border-bottom: 1px solid var(--bl-line-dark);
 }
 
 .bwd-spec-cta__brand {
-  margin-right: auto;
-  font-size: 1.5em;
-}
-
-.bwd-spec-cta__bar--desktop .bwd-spec-cta__brand {
-  margin-right: 20em;
+  font-size: max(1.5em, 1.25rem);
 }
 
 .bwd-spec-cta__nav {
   display: flex;
-  flex: none;
-  gap: 1.05em;
-  margin-right: 9.5em;
 }
 
 .bwd-spec-cta__link {
@@ -507,102 +487,378 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -0.55em;
+  bottom: -0.5em;
   height: 2px;
   background: var(--bl-cobalt);
 }
 
-.bwd-spec-cta__bag {
+.bwd-spec-cta__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.bwd-spec-cta__bag,
+.bwd-spec-cta__toggle {
   display: inline-flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  gap: 0.45em;
-  height: 3.1em;
-  padding: 0 0.9em;
   border: 1px solid var(--bl-line-dark);
   border-radius: 0.5em;
+}
+
+.bwd-spec-cta__bag {
+  gap: 0.45em;
+  height: 2.9em;
+  padding: 0 0.8em;
   background: rgba(244, 241, 234, 0.04);
   font-size: 1em;
 }
 
-.bwd-spec-cta__bag svg {
-  width: 1.125em;
-  height: 1.125em;
-}
-
-.bwd-spec-cta__bag > span:not(.bwd-spec-cta__count) {
-  font-size: 0.72em;
+.bwd-spec-cta__bag span {
+  font-size: max(0.75em, 0.625rem);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.bwd-spec-cta__count {
-  font-size: 0.72em;
-  font-weight: 700;
+.bwd-spec-cta__bag svg {
+  width: 1.1em;
+  height: 1.1em;
 }
 
-.bwd-spec-cta__bar--mobile .bwd-spec-cta__bag {
-  height: 2.9em;
-  padding: 0 0.75em;
-}
-
-.bwd-spec-cta__book {
+.bwd-spec-cta__book,
+.bwd-spec-cta__btn {
   display: inline-flex;
   flex: none;
   align-items: center;
+  justify-content: center;
   gap: 0.55em;
-  height: 3.2em;
-  padding: 0 1.3em;
   border-radius: 0.5em;
   background: var(--bl-cobalt);
   color: #fff;
-}
-
-.bwd-spec-cta__book span {
-  font-size: 0.72em;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.bwd-spec-cta__book svg {
-  width: 0.875em;
-  height: 0.875em;
+.bwd-spec-cta__book {
+  height: 3.6em;
+  padding: 0 1.4em;
+  font-size: max(0.8em, 0.625rem);
 }
 
-.bwd-spec-cta__bar--mobile .bwd-spec-cta__book {
-  height: 2.9em;
-  padding: 0 1.05em;
+.bwd-spec-cta__book svg {
+  width: 1.1em;
+  height: 1.1em;
 }
 
 .bwd-spec-cta__toggle {
-  display: grid;
-  flex: none;
-  align-content: center;
+  flex-direction: column;
   gap: 0.32em;
   width: 2.75em;
   height: 2.75em;
-  padding: 0 0.75em;
-  border: 1px solid var(--bl-line-dark);
-  border-radius: 0.5em;
 }
 
 .bwd-spec-cta__toggle i {
+  width: 1.2em;
   height: 1.5px;
   background: var(--bl-ivory);
 }
 
-/* The mobile header only needs its crop when the evidence is narrower than the bar. */
-@container (min-width: 28rem) {
-  .bwd-spec-cta__bar--mobile {
-    padding-left: 1.4em;
-    border-left: 1px solid var(--bl-line-dark);
+.bwd-spec-cta__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.bwd-spec-cta__eyebrow {
+  color: var(--bl-silver);
+  font-size: max(0.75em, 0.625rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bwd-spec-cta__h1,
+.bwd-spec-cta__display {
+  font-family: var(--bl-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.bwd-spec-cta__h1 {
+  line-height: 0.95;
+}
+
+.bwd-spec-cta__display {
+  line-height: 0.9;
+}
+
+.bwd-spec-cta__lede {
+  color: var(--bl-silver);
+  line-height: 1.55;
+}
+
+.bwd-spec-cta__buttons {
+  display: flex;
+  gap: 0.75em;
+}
+
+.bwd-spec-cta__btn {
+  height: 3.4em;
+  padding: 0 1.7em;
+  font-size: max(0.8em, 0.625rem);
+  letter-spacing: 0.08em;
+}
+
+.bwd-spec-cta__btn--secondary {
+  border: 1px solid var(--bl-line-dark);
+  background: transparent;
+  color: var(--bl-ivory);
+}
+
+.bwd-spec-cta__split {
+  background: var(--bl-cobalt);
+}
+
+.bwd-spec-cta__media {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bl-graphite);
+}
+
+.bwd-spec-cta__media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 45%;
+  filter: saturate(0.78) contrast(1.06) brightness(0.92);
+}
+
+/* Desktop site. Below 44rem of evidence the full header cannot stay legible on one line, so the
+   links move to their own row and the hero keeps only its headline. */
+.bwd-spec-cta__desktop .bwd-spec-cta__site {
+  font-size: clamp(0.66rem, 4.1cqi, 0.8rem);
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__header {
+  flex-wrap: wrap;
+  padding: 0.9em 1.2em 0;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__actions {
+  margin-left: auto;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__bag-label {
+  display: none;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__nav {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5em 1em;
+  order: 1;
+  width: 100%;
+  margin-top: 0.9em;
+  padding: 0.8em 0 1em;
+  border-top: 1px solid var(--bl-line-dark);
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__link {
+  font-size: 1em;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 0.8fr);
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__copy {
+  justify-content: center;
+  gap: 0.6em;
+  padding: 1.6em 1.2em;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__h1 {
+  font-size: 1.7em;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__display {
+  font-size: 2.6em;
+}
+
+.bwd-spec-cta__desktop .bwd-spec-cta__lede,
+.bwd-spec-cta__desktop .bwd-spec-cta__buttons {
+  display: none;
+}
+
+/* Mobile site, set as a 380px-wide phone page scaled to the frame. */
+.bwd-spec-cta__mobile .bwd-spec-cta__site {
+  font-size: clamp(0.6rem, 4.2cqi, 1rem);
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__header {
+  flex: none;
+  height: 4.2em;
+  padding: 0 1.4em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__brand {
+  margin-right: auto;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__book {
+  height: 3.6em;
+  padding: 0 1.3em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__copy {
+  flex: none;
+  gap: 0.7em;
+  padding: 1.75em 1.4em 1.5em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__h1 {
+  font-size: 2.25em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__display {
+  font-size: 3.25em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__buttons {
+  flex-direction: column;
+  align-self: stretch;
+  margin-top: 0.6em;
+}
+
+.bwd-spec-cta__mobile .bwd-spec-cta__media {
+  flex: 1;
+}
+
+@container (min-width: 44rem) {
+  .bwd-spec-cta {
+    grid-template-columns: minmax(0, 1fr) var(--cta-mobile);
+    grid-template-rows: auto 8rem;
+    gap: 0;
+    padding: var(--spec-pad);
+    border: 1px solid var(--bwd-line-strong);
     border-radius: 6px;
-    -webkit-mask-image: none;
-    mask-image: none;
+    background: var(--bl-graphite);
+  }
+
+  .bwd-spec-cta__desktop {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .bwd-spec-cta__mobile {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: end;
+    max-width: none;
+    aspect-ratio: 2 / 3;
+    box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Measured against the desktop frame itself: wide enough for the real one-line header. */
+@container (min-width: 40rem) {
+  .bwd-spec-cta__desktop .bwd-spec-cta__bag-label {
+    display: inline;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__site {
+    font-size: clamp(0.72rem, 1.75cqi, 1rem);
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__header {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    height: 4.8em;
+    padding: 0 2em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__actions {
+    margin-left: 0;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__nav {
+    flex-wrap: nowrap;
+    order: 0;
+    gap: 1.35em;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__link {
+    font-size: 0.9em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__hero {
+    grid-template-columns: minmax(0, 0.45fr) 1px minmax(0, 0.55fr);
+    min-height: 30em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__copy {
+    gap: 0;
+    padding: 3em 2.2em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__eyebrow {
+    margin-bottom: 1em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__h1 {
+    margin-bottom: 0.3em;
+    font-size: 2.5em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__display {
+    font-size: 4.2em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__lede {
+    display: block;
+    max-width: 24em;
+    margin-top: 1.2em;
+    font-size: 1.0625em;
+  }
+
+  .bwd-spec-cta__desktop .bwd-spec-cta__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 2em;
+  }
+}
+
+/* Wide evidence: the mobile site sits beside the desktop site's edge instead of over its photo. */
+@container (min-width: 56rem) {
+  .bwd-spec-cta {
+    grid-template-columns:
+      minmax(0, 1fr) calc(var(--cta-mobile) * 0.35)
+      calc(var(--cta-mobile) * 0.65);
+    grid-template-rows: auto 5rem;
+  }
+
+  .bwd-spec-cta__mobile {
+    grid-column: 2 / 4;
   }
 }
 
@@ -1226,39 +1482,15 @@
 }
 
 .bwd-spec-flow__handoff {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    'arrow url'
-    'arrow note';
-  gap: 0.2rem 0.9rem;
-  align-items: center;
-  padding: 0.25rem 0.25rem 0.25rem 1rem;
-}
-
-.bwd-spec-flow__url {
-  grid-area: url;
+  display: flex;
+  justify-content: center;
   color: var(--bl-ivory);
-  font-size: 0.85rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.bwd-spec-flow__note {
-  grid-area: note;
-  color: var(--bl-silver);
-  font-size: 0.78rem;
+  opacity: 0.7;
 }
 
 .bwd-spec-flow__arrow {
-  grid-area: arrow;
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background: var(--bl-cobalt);
-  color: #fff;
+  display: block;
+  flex: none;
 }
 
 .bwd-spec-flow__arrow--right {
@@ -1475,17 +1707,8 @@
   }
 
   .bwd-spec-flow__handoff {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'url'
-      'arrow'
-      'note';
-    gap: 0.75rem;
-    justify-items: center;
     align-self: center;
-    width: clamp(7.5rem, 13cqi, 10rem);
-    padding: 0;
-    text-align: center;
+    padding: 0 0.25rem;
   }
 
   .bwd-spec-flow__arrow--down {
@@ -1493,9 +1716,7 @@
   }
 
   .bwd-spec-flow__arrow--right {
-    display: grid;
-    width: 3rem;
-    height: 3rem;
+    display: block;
   }
 
   .bwd-spec-flow__roster {
