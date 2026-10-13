@@ -2,6 +2,7 @@
 import { ArrowDown, ArrowRight, Check, ShoppingBag, X } from 'lucide-react';
 import { ANY_BARBER_NAME } from '@/lib/booking/constants';
 import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
+import { demoGalleryIndexLabel, demoGallerySequence } from '@/lib/demo/gallery';
 import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav';
 import {
   DEMO_SERVICES,
@@ -19,8 +20,6 @@ const TRACK_PLACEMENT = 'barbershop_website_design_breakdown_demo';
 const groups = demoServiceNavigatorGroups();
 const firstGroup = groups[0];
 const groupRows = firstGroup.services.slice(0, 3);
-const bookingGroup = groups[1] ?? firstGroup;
-const bookingRows = bookingGroup.services.slice(0, 2);
 const serviceCount = DEMO_SERVICES.length;
 const categoryCount = groups.length;
 
@@ -32,6 +31,14 @@ const teamList = `${teamNames.slice(0, -1).join(', ')} and ${teamNames.at(-1)}`;
 const navLabels = DEMO_NAV.map((item) => item.label);
 const navList = `${navLabels.slice(0, -1).join(', ')} and ${navLabels.at(-1)}`;
 const navCount = navLabels.length;
+
+const gallerySequence = demoGallerySequence();
+const galleryFrames = (['fade', 'hairline', 'beard'] as const).flatMap((id) => {
+  const position = gallerySequence.findIndex((image) => image.id === id);
+  const image = gallerySequence[position];
+  return image ? [{ image, label: demoGalleryIndexLabel(position, gallerySequence.length) }] : [];
+});
+const galleryCaptionList = galleryFrames.map((frame) => frame.image.caption.replace(/\.$/, '').toLowerCase()).join('; ');
 
 // The barber step of the real booking flow, as reached from "Book with Ellis" after a service is chosen.
 const bookingSteps = ['Service', 'Barber', 'Schedule', 'Details'];
@@ -59,11 +66,11 @@ const principles = [
   {
     title: 'A visible booking action',
     lookFor:
-      'A booking action that is easy to spot wherever a visitor makes up their mind: in the header on every page, beside each service and just as clearly on a phone. It should carry the one accent colour that nothing else on the page competes with.',
+      'A booking action that stays easy to find while visitors explore the shop’s work: placed in the header beside the main navigation, in an accent colour that nothing else on the page competes with, and still in view on a phone.',
     why:
-      'Clients should never have to search for how to book. Once someone has found the right shop and the service they want, the next step should already be in front of them.',
+      'Clients should never have to search for how to book. Someone looking through photographs of fades and beard work may decide at any moment, and good design keeps the next step obvious when they do.',
     demo:
-      'A cobalt “BOOK NOW” closes the header, and every service on the menu carries its own “Book this service” link. On a phone the header button shortens to “BOOK” but keeps its colour and its place beside the menu button, and each service still ends with its booking link.',
+      'On the gallery page, the photographs sit under a header that ends with a cobalt “BOOK NOW” — the only solid button in the header, after the navigation and the bag. On a phone it shortens to “BOOK” but keeps its colour and its place beside the menu button.',
   },
   {
     title: 'Services and pricing where expected',
@@ -116,7 +123,7 @@ const ROW_LAYOUTS = [
 
 const specimenLabels = [
   'Recreated BLACKLINE identity from the demo homepage: the BLACKLINE BARBERS wordmark and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
-  `Recreated BLACKLINE services page on desktop and mobile. On desktop, a cobalt BOOK NOW button closes the header after the links ${navList}, and each ${bookingGroup.label} service, ${bookingRows.map((service) => service.name).join(' and ')}, has its own Book this service link. On mobile, a cobalt BOOK button stays in the header beside the menu button, and ${bookingRows[0].name} ends with a full-width Book this service link.`,
+  `Recreated BLACKLINE gallery page. The header carries the wordmark, the links ${navList} with Gallery marked as the current page, a Bag button and a cobalt BOOK NOW button. Below it, the heading THE BLACKLINE CUT, IN FOCUS. introduces photographs of the work: ${galleryCaptionList}. On narrow screens the header keeps the wordmark, a cobalt BOOK button and the menu button.`,
   `Recreated view of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
     .join('; ')}, each with a Book this service link.`,
@@ -193,82 +200,51 @@ const specimenLabels = [
 
                 {index === 1 && (
                   <div class="bwd-spec-cta">
-                    <span class="bwd-spec-cta__desktop">
-                      <span class="bwd-spec-cta__header">
-                        <span class="bwd-wordmark bwd-spec-cta__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                        </span>
-                        <span class="bwd-spec-cta__nav">
-                          {DEMO_NAV.map((item) => (
-                            <span class:list={['bwd-spec-cta__link', { 'is-current': item.label === 'Services' }]}>{item.label}</span>
-                          ))}
-                        </span>
-                        <span class="bwd-spec-cta__actions">
-                          <span class="bwd-spec-cta__bag">
-                            <ShoppingBag size={16} strokeWidth={1.75} />
-                            <span class="bwd-spec-cta__bag-label">Bag</span>
-                            <span>0</span>
-                          </span>
-                          <span class="bwd-spec-cta__book">
-                            Book now
-                            <ArrowRight size={14} strokeWidth={2.25} />
-                          </span>
-                        </span>
+                    <span class="bwd-spec-cta__header">
+                      <span class="bwd-wordmark bwd-spec-cta__brand">
+                        <span class="bwd-wordmark__name">BLACKLINE</span>
+                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
                       </span>
-                      <span class="bwd-spec-cta__menu">
-                        <span class="bwd-spec-cta__intro">
-                          <span class="bwd-spec-cta__eyebrow">Find your service</span>
-                          <span class="bwd-spec-cta__heading">Choose your finish.</span>
-                        </span>
-                        <span class="bwd-spec-cta__group">{bookingGroup.label}</span>
-                        {bookingRows.map((service, rowIndex) => (
-                          <span class="bwd-spec-cta__row">
-                            <span class="bwd-spec-cta__index">{demoServiceIndex(rowIndex)}</span>
-                            <span class="bwd-spec-cta__name">{service.name}</span>
-                            <span class="bwd-spec-cta__meta">
-                              {service.durationMinutes} min · {formatDemoPriceGbp(service.pricePence)}
-                            </span>
-                            <span class="bwd-spec-cta__service-book">
-                              Book this service <ArrowRight size={13} strokeWidth={2.25} />
-                            </span>
-                          </span>
+                      <span class="bwd-spec-cta__nav">
+                        {DEMO_NAV.map((item) => (
+                          <span class:list={['bwd-spec-cta__link', { 'is-current': item.label === 'Gallery' }]}>{item.label}</span>
                         ))}
                       </span>
-                    </span>
-
-                    <span class="bwd-spec-cta__mobile">
-                      <span class="bwd-spec-cta__header">
-                        <span class="bwd-wordmark bwd-spec-cta__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                        </span>
-                        <span class="bwd-spec-cta__bag">
-                          <ShoppingBag size={16} strokeWidth={1.75} />
-                          <span>0</span>
-                        </span>
-                        <span class="bwd-spec-cta__book">
-                          Book
-                          <ArrowRight size={14} strokeWidth={2.25} />
-                        </span>
-                        <span class="bwd-spec-cta__toggle"><i></i><i></i></span>
+                      <span class="bwd-spec-cta__bag">
+                        <ShoppingBag size={16} strokeWidth={1.75} />
+                        <span class="bwd-spec-cta__bag-label">Bag</span>
+                        <span>0</span>
                       </span>
-                      <span class="bwd-spec-cta__menu">
-                        <span class="bwd-spec-cta__intro">
-                          <span class="bwd-spec-cta__eyebrow">Find your service</span>
-                          <span class="bwd-spec-cta__heading">Choose your finish.</span>
-                        </span>
-                        <span class="bwd-spec-cta__group">{bookingGroup.label}</span>
-                        <span class="bwd-spec-cta__row">
-                          <span class="bwd-spec-cta__index">{demoServiceIndex(0)}</span>
-                          <span class="bwd-spec-cta__name">{bookingRows[0].name}</span>
-                          <span class="bwd-spec-cta__meta">
-                            {bookingRows[0].durationMinutes} min · {formatDemoPriceGbp(bookingRows[0].pricePence)}
+                      <span class="bwd-spec-cta__book">
+                        <span>Book<span class="bwd-spec-cta__book-now"> now</span></span>
+                        <ArrowRight size={14} strokeWidth={2.25} />
+                      </span>
+                      <span class="bwd-spec-cta__toggle"><i></i><i></i></span>
+                    </span>
+                    <span class="bwd-spec-cta__page">
+                      <span class="bwd-spec-cta__intro">
+                        <span class="bwd-spec-cta__eyebrow">03 · RECENT WORK</span>
+                        <span class="bwd-spec-cta__heading">THE BLACKLINE CUT, IN FOCUS.</span>
+                        <span class="bwd-spec-cta__lede">Fades, scissor work, beard shaping and the details in between.</span>
+                      </span>
+                      <span class="bwd-spec-cta__frames">
+                        {galleryFrames.map((frame) => (
+                          <span class:list={['bwd-spec-cta__frame', `bwd-spec-cta__frame--${frame.image.id}`]}>
+                            <span class="bwd-spec-cta__stage">
+                              <img
+                                src={frame.image.src}
+                                alt=""
+                                width={frame.image.width}
+                                height={frame.image.height}
+                                loading="lazy"
+                                decoding="async"
+                                style={`object-position: ${frame.image.objectPosition.desktop}`}
+                              />
+                            </span>
+                            <span class="bwd-spec-cta__counter">{frame.label}</span>
+                            <span class="bwd-spec-cta__caption">{frame.image.caption}</span>
                           </span>
-                          <span class="bwd-spec-cta__service-book">
-                            Book this service <ArrowRight size={13} strokeWidth={2.25} />
-                          </span>
-                        </span>
+                        ))}
                       </span>
                     </span>
                   </div>

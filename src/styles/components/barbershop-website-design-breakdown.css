@@ -415,65 +415,37 @@
   }
 }
 
-/* 02 — the booking action: the BLACKLINE services page on desktop and on a phone, side by side.
-   Cobalt is kept for the booking actions, so the header button and each service link read first. */
-
-.bwd-spec:has(.bwd-spec-cta) {
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
+/* 02 — the booking action: the BLACKLINE gallery page as one site. The cobalt header button is the
+   only solid control on the page, so it reads first while the photographs carry the interest.
+   Narrow columns get the real mobile header rather than a shrunken desktop one. */
 
 .bwd-spec-cta {
-  display: grid;
-  gap: 1rem;
-  align-items: start;
-}
-
-.bwd-spec-cta__desktop,
-.bwd-spec-cta__mobile {
-  container-type: inline-size;
   display: block;
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--bl-line-dark);
-  background: var(--bl-ivory);
-  color: var(--bl-ink);
-}
-
-.bwd-spec-cta__desktop {
-  border-radius: 8px;
-}
-
-.bwd-spec-cta__mobile {
-  justify-self: center;
-  width: 100%;
-  border-radius: 1.25rem;
 }
 
 .bwd-spec-cta__header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.375rem;
+  height: 3.5rem;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--bl-line-dark);
   background: var(--bl-carbon);
   color: var(--bl-ivory);
 }
 
 .bwd-spec-cta__brand {
+  margin-right: auto;
   font-size: 1.0625rem;
 }
 
 .bwd-spec-cta__nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem 0.9rem;
+  display: none;
 }
 
 .bwd-spec-cta__link {
   position: relative;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -487,12 +459,6 @@
   bottom: -0.4rem;
   height: 2px;
   background: var(--bl-cobalt);
-}
-
-.bwd-spec-cta__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
 }
 
 .bwd-spec-cta__bag,
@@ -519,7 +485,8 @@
   text-transform: uppercase;
 }
 
-.bwd-spec-cta__bag-label {
+.bwd-spec-cta__bag .bwd-spec-cta__bag-label,
+.bwd-spec-cta__book-now {
   display: none;
 }
 
@@ -552,241 +519,199 @@
   background: var(--bl-ivory);
 }
 
-.bwd-spec-cta__menu {
+.bwd-spec-cta__page {
   display: block;
-  padding: 1.25rem 1rem 0.5rem;
+  padding: 1.5rem 1rem 1.25rem;
+  background: var(--bl-ivory);
+  color: var(--bl-ink);
 }
 
 .bwd-spec-cta__intro {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  max-width: 40rem;
 }
 
 .bwd-spec-cta__eyebrow {
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
 .bwd-spec-cta__heading {
   font-family: var(--bl-display);
-  font-size: clamp(1.75rem, 11cqi, 2.75rem);
+  font-size: clamp(2rem, 9cqi, 3.35rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 0.9;
-  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
 }
 
-.bwd-spec-cta__group {
-  display: block;
-  margin-top: 1.25rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--bl-line-light);
+.bwd-spec-cta__lede {
+  max-width: 42ch;
   color: var(--bl-slate);
-  font-family: var(--bl-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
-.bwd-spec-cta__row {
+.bwd-spec-cta__frames {
   display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr);
-  grid-template-areas:
-    'index name'
-    '. meta'
-    'book book';
-  column-gap: 0.5rem;
-  padding: 0.85rem 0 0;
-  border-bottom: 1px solid var(--bl-line-light);
+  gap: 1rem;
+  align-items: start;
+  margin-top: 1.5rem;
 }
 
-.bwd-spec-cta__row:last-child {
-  border-bottom: 0;
+.bwd-spec-cta__frame {
+  display: block;
+  min-width: 0;
 }
 
-.bwd-spec-cta__index {
-  grid-area: index;
-  padding-top: 0.2rem;
-  color: var(--bl-cobalt);
-  font-family: var(--bl-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  font-variant-numeric: tabular-nums;
+.bwd-spec-cta__frame--hairline,
+.bwd-spec-cta__frame--beard {
+  display: none;
 }
 
-.bwd-spec-cta__name {
-  grid-area: name;
-  font-family: var(--bl-display);
-  font-size: 1.125rem;
-  font-weight: 700;
-  line-height: 1.1;
-  text-transform: uppercase;
+.bwd-spec-cta__stage {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 1px solid rgba(11, 12, 14, 0.18);
+  border-radius: 12px;
+  background: rgba(11, 12, 14, 0.06);
 }
 
-.bwd-spec-cta__meta {
-  grid-area: meta;
-  margin-top: 0.25rem;
-  color: var(--bl-slate);
-  font-size: 0.75rem;
-  font-weight: 700;
+.bwd-spec-cta__stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.bwd-spec-cta__service-book {
-  grid-area: book;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  margin-top: 0.6rem;
-  border-top: 1px solid var(--bl-line-light);
+.bwd-spec-cta__counter {
+  display: block;
+  margin-top: 0.5rem;
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Desktop frame: brand and booking actions on the first line, the links on their own line until
-   the frame is wide enough to hold the real one-line header. */
-.bwd-spec-cta__desktop .bwd-spec-cta__header {
-  padding: 0.75rem 0.75rem 0;
+.bwd-spec-cta__caption {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
-.bwd-spec-cta__desktop .bwd-spec-cta__actions {
-  margin-left: auto;
-}
-
-.bwd-spec-cta__desktop .bwd-spec-cta__nav {
-  order: 1;
-  width: 100%;
-  margin-top: 0.75rem;
-  padding: 0.65rem 0 0.8rem;
-  border-top: 1px solid var(--bl-line-dark);
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__header {
-  flex-wrap: nowrap;
-  height: 3.5rem;
-  padding: 0 0.75rem;
-}
-
-.bwd-spec-cta__mobile .bwd-spec-cta__brand {
-  margin-right: auto;
-}
-
+/* Two frames whose widths follow their 4:5 and 4:3 ratios, so both stand at the same height. */
 @container (min-width: 30rem) {
-  .bwd-spec-cta__desktop .bwd-spec-cta__bag-label {
-    display: inline;
-  }
-
-  .bwd-spec-cta__desktop .bwd-spec-cta__header {
-    padding: 0.85rem 1.25rem 0;
-  }
-
-  .bwd-spec-cta__desktop .bwd-spec-cta__menu {
-    padding: 1.75rem 1.5rem 0.5rem;
-  }
-
-  .bwd-spec-cta__desktop .bwd-spec-cta__row {
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    grid-template-areas:
-      'index name book'
-      '. meta book';
-    padding: 1rem 0;
-  }
-
-  .bwd-spec-cta__desktop .bwd-spec-cta__service-book {
-    justify-content: flex-start;
-    min-height: 0;
-    margin: 0;
-    border: 0;
-  }
-}
-
-@container (min-width: 48rem) {
-  .bwd-spec-cta__desktop .bwd-spec-cta__header {
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: 1rem;
-    height: 4.25rem;
+  .bwd-spec-cta__header {
     padding: 0 1.25rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__brand {
+  .bwd-spec-cta__brand {
     font-size: 1.25rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__nav {
-    order: 0;
-    flex-wrap: nowrap;
-    gap: 1.1rem;
-    width: auto;
-    margin: 0;
-    padding: 0;
-    border: 0;
+  .bwd-spec-cta__page {
+    padding: 2rem 1.5rem 1.75rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__link {
-    font-size: 0.8125rem;
+  .bwd-spec-cta__lede {
+    font-size: 1rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__actions {
-    margin-left: 0;
+  .bwd-spec-cta__frames {
+    grid-template-columns: minmax(0, 12fr) minmax(0, 20fr);
+    margin-top: 1.75rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__bag,
-  .bwd-spec-cta__desktop .bwd-spec-cta__book {
+  .bwd-spec-cta__frame--beard {
+    display: block;
+  }
+
+  .bwd-spec-cta__frame--fade .bwd-spec-cta__stage,
+  .bwd-spec-cta__frame--hairline .bwd-spec-cta__stage {
+    aspect-ratio: 4 / 5;
+  }
+
+  .bwd-spec-cta__frame--beard .bwd-spec-cta__stage {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* The full desktop header and the gallery's opening run of three frames. */
+@container (min-width: 52rem) {
+  .bwd-spec-cta__header {
+    gap: 1rem;
+    height: 4.25rem;
+    padding: 0 1.5rem;
+  }
+
+  .bwd-spec-cta__brand {
+    margin-right: 0;
+  }
+
+  .bwd-spec-cta__nav {
+    display: flex;
+    gap: 1.15rem;
+    margin-inline: auto;
+  }
+
+  .bwd-spec-cta__bag,
+  .bwd-spec-cta__book {
     height: 2.5rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__book {
+  .bwd-spec-cta__bag {
+    padding: 0 0.75rem;
+  }
+
+  .bwd-spec-cta__bag .bwd-spec-cta__bag-label {
+    display: inline;
+  }
+
+  .bwd-spec-cta__book {
     padding: 0 1rem;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__menu {
-    padding: 2.25rem 2rem 0.75rem;
+  .bwd-spec-cta__book-now {
+    display: inline;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__heading {
-    font-size: clamp(2.5rem, 6cqi, 3.5rem);
+  .bwd-spec-cta__toggle {
+    display: none;
   }
 
-  .bwd-spec-cta__desktop .bwd-spec-cta__name {
-    font-size: 1.375rem;
-  }
-}
-
-/* The stage: from here the two views sit on a graphite ground, side by side when there is room. */
-@container (min-width: 30rem) {
-  .bwd-spec-cta {
-    padding: var(--spec-pad);
-    border: 1px solid var(--bwd-line-strong);
-    border-radius: 6px;
-    background: var(--bl-graphite);
+  .bwd-spec-cta__page {
+    padding: clamp(2rem, 3.5cqi, 3rem) clamp(1.5rem, 3.5cqi, 3rem);
   }
 
-  .bwd-spec-cta__mobile {
-    max-width: 22rem;
-  }
-}
-
-@container (min-width: 52rem) {
-  .bwd-spec-cta {
-    grid-template-columns: minmax(0, 1fr) clamp(18rem, 26cqi, 20rem);
-    gap: clamp(1.25rem, 2.5cqi, 2rem);
+  .bwd-spec-cta__heading {
+    font-size: clamp(2.25rem, 4.2cqi, 3.35rem);
   }
 
-  .bwd-spec-cta__mobile {
-    max-width: none;
+  .bwd-spec-cta__lede {
+    font-size: 1.0625rem;
+  }
+
+  .bwd-spec-cta__frames {
+    grid-template-columns: minmax(0, 12fr) minmax(0, 12fr) minmax(0, 20fr);
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+
+  .bwd-spec-cta__frame--hairline {
+    display: block;
+  }
+
+  .bwd-spec-cta__caption {
+    font-size: 0.9375rem;
   }
 }
 

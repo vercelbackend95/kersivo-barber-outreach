@@ -96,6 +96,24 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(section).toContain('The visitor picks a service first');
   });
 
+  it('shows the booking action on one recreated gallery page, not the hero or services', () => {
+    const example = markup.slice(markup.indexOf('{index === 1 && ('), markup.indexOf('{index === 2 && ('));
+    const galleryHero = read('../../components/demo/DemoGalleryHero.astro');
+    for (const copy of [
+      '03 · RECENT WORK',
+      'THE BLACKLINE CUT, IN FOCUS.',
+      'Fades, scissor work, beard shaping and the details in between.',
+    ]) {
+      expect(galleryHero).toContain(copy);
+      expect(example).toContain(copy);
+    }
+    expect(section).toContain("from '@/lib/demo/gallery'");
+    expect(section).toContain("(['fade', 'hairline', 'beard'] as const)");
+    expect(example).toContain("item.label === 'Gallery'");
+    expect(example.match(/class="bwd-spec-cta__book"/g) ?? []).toHaveLength(1);
+    expect(example).not.toMatch(/heroimg|Book this service|Choose your finish|bwd-spec-cta__(desktop|mobile)\b/);
+  });
+
   it('scales service durations with the demo menu’s own ratio', () => {
     expect(section).toContain('demoServiceDurationRatio(service.durationMinutes)');
   });
