@@ -133,52 +133,62 @@
 }
 
 .bwd-principle {
+  /* Each row is an <li>; the base layer caps every li at 68ch, which would pin the row's
+     grid to the left half of the editorial width. */
+  max-width: none;
   display: grid;
   gap: clamp(1.25rem, 2.5vw, 1.75rem);
-  padding: clamp(2.5rem, 5.5vw, 5rem) 0;
+  padding: clamp(2.75rem, 6vw, 6rem) 0;
   border-top: 1px solid var(--bwd-line);
 }
 
 .bwd-principle__head {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.75rem;
+  align-content: start;
   min-width: 0;
 }
 
 .bwd-principle__num {
   display: block;
-  padding-bottom: 0.6rem;
+  padding-bottom: 0.7rem;
   border-bottom: 2px solid var(--accent);
   width: max-content;
-  color: var(--bwd-text-2);
+  color: color-mix(in srgb, var(--fg) 70%, transparent);
   font-family: var(--font-heading);
-  font-size: clamp(2.6rem, 4vw, 3.4rem);
-  line-height: 0.85;
+  font-size: clamp(3rem, 5vw, 4.75rem);
+  line-height: 0.82;
   letter-spacing: 0.02em;
 }
 
 .bwd-principle__title {
-  margin: 0.4rem 0 0;
-  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  max-width: 18ch;
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.6rem, 2.7vw, 2.5rem);
   font-weight: 650;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
   text-wrap: balance;
   scroll-margin-top: 6rem;
 }
 
 .bwd-principle__analysis {
   display: grid;
-  gap: 1.1rem;
+  gap: 1.35rem;
+  align-content: start;
   min-width: 0;
 }
 
 .bwd-principle__part {
-  max-width: 50ch;
+  max-width: 62ch;
   margin: 0;
   color: var(--bwd-text-2);
-  font-size: var(--text-md);
-  line-height: 1.65;
+  font-size: clamp(1rem, 1.1vw, 1.0625rem);
+  line-height: 1.7;
+}
+
+.bwd-principle__part:first-child {
+  color: var(--fg);
 }
 
 .bwd-principle__part--demo {
@@ -394,10 +404,85 @@
   }
 }
 
+.bwd-spec-first__lede {
+  max-width: 34ch;
+  color: var(--bl-silver);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.bwd-spec-first__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.bwd-spec-first__btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 4px;
+  background: var(--bl-cobalt);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bwd-spec-first__btn--ghost {
+  border: 1px solid var(--bl-line);
+  background: transparent;
+  color: var(--bl-ivory);
+}
+
+@container (min-width: 52rem) {
+  .bwd-spec-first {
+    grid-template-columns: minmax(0, 0.95fr) 1px minmax(0, 1.05fr);
+  }
+
+  .bwd-spec-first__copy {
+    gap: 0.9rem;
+    padding: clamp(2.5rem, 5cqi, 4rem);
+  }
+
+  .bwd-spec-first__copy .bwd-wordmark__name {
+    font-size: 1.45rem;
+  }
+
+  .bwd-spec-first__copy .bwd-wordmark__sub span {
+    font-size: 0.55rem;
+  }
+
+  .bwd-spec-first__name {
+    font-size: 1.4rem;
+  }
+
+  .bwd-spec-first__display {
+    font-size: clamp(3.4rem, 6.2cqi, 5.2rem);
+  }
+
+  .bwd-spec-first__lede {
+    font-size: 1rem;
+  }
+
+  .bwd-spec-first__btn {
+    min-height: 3rem;
+    padding: 0 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .bwd-spec-first__photo {
+    min-height: 32rem;
+  }
+}
+
 /* 02 — header booking action */
 
 .bwd-spec-headers {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.6rem;
   padding: 1.25rem 1rem 1.4rem;
 }
@@ -514,17 +599,45 @@
   transform: rotate(-45deg);
 }
 
-@container (min-width: 44rem) {
+/* The desktop header needs roughly 48rem to show the full BLACKLINE navigation legibly. */
+@container (min-width: 50rem) {
+  .bwd-spec-headers {
+    gap: 0.75rem;
+    padding: clamp(2.25rem, 4cqi, 3.25rem) clamp(2rem, 4cqi, 3.25rem);
+  }
+
+  .bwd-spec-headers .bwd-spec-bar {
+    margin-bottom: 1.25rem;
+  }
+
   .bwd-spec-headers > .bwd-spec__label:first-child {
     display: block;
   }
 
   .bwd-spec-bar--desktop {
     display: flex;
+    min-height: 4.5rem;
+    padding: 0 1.25rem;
+  }
+
+  .bwd-spec-bar--desktop .bwd-wordmark__name {
+    font-size: 1.25rem;
+  }
+
+  .bwd-spec-bar--desktop .bwd-spec-bar__link,
+  .bwd-spec-bar--desktop .bwd-spec-bar__bag {
+    font-size: 0.86rem;
+  }
+
+  .bwd-spec-bar--desktop .bwd-spec-bar__book {
+    height: 3rem;
+    padding: 0 1.15rem;
+    font-size: 0.86rem;
   }
 
   .bwd-spec-bar--mobile {
-    max-width: 24rem;
+    max-width: 23rem;
+    min-height: 4rem;
   }
 }
 
@@ -646,6 +759,42 @@
   }
 }
 
+@container (min-width: 40rem) {
+  .bwd-spec-services {
+    padding: 2.25rem 2.25rem 1rem;
+  }
+
+  .bwd-spec-services__name {
+    font-size: 2.5rem;
+  }
+
+  .bwd-spec-services__count {
+    font-size: 0.88rem;
+  }
+
+  .bwd-spec-services__row {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    gap: 1.25rem;
+    padding: 1.35rem 0;
+  }
+
+  .bwd-spec-services__title {
+    font-size: 1.5rem;
+  }
+
+  .bwd-spec-services__desc {
+    font-size: 0.92rem;
+  }
+
+  .bwd-spec-services__mins {
+    font-size: 0.88rem;
+  }
+
+  .bwd-spec-services__price {
+    font-size: 1.85rem;
+  }
+}
+
 /* 04 — the people behind the chairs */
 
 .bwd-spec-team {
@@ -762,6 +911,52 @@
   }
 }
 
+@container (min-width: 40rem) {
+  .bwd-spec-team {
+    padding: 2rem;
+  }
+
+  .bwd-spec-team__lead {
+    gap: 2rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .bwd-spec-team__photo {
+    min-height: 20rem;
+  }
+
+  .bwd-spec-team__lead .bwd-spec-team__name {
+    font-size: 2.75rem;
+  }
+
+  .bwd-spec-team__spec {
+    font-size: 0.88rem;
+  }
+
+  .bwd-spec-team__line {
+    font-size: 1rem;
+  }
+
+  .bwd-spec-team__book {
+    font-size: 0.95rem;
+  }
+
+  .bwd-spec-team__row {
+    grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+
+  .bwd-spec-team__row img {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .bwd-spec-team__row-name {
+    font-size: 1.35rem;
+  }
+}
+
 /* 05 — navigation */
 
 .bwd-spec-menu {
@@ -830,6 +1025,22 @@
   font-size: 0.88rem;
   font-weight: 600;
   text-align: center;
+}
+
+/* On wider evidence the menu sits as a phone-width panel on the specimen backdrop. */
+@container (min-width: 30rem) {
+  .bwd-spec-menu {
+    width: min(100% - 4rem, 25rem);
+    margin-block: 2.25rem;
+    padding: 1.25rem 0 1.5rem;
+    border: 1px solid var(--bl-line);
+    border-radius: 6px;
+    background: var(--bl-carbon);
+  }
+
+  .bwd-spec-menu__label {
+    font-size: 1.75rem;
+  }
 }
 
 /* 06 — website to booking */
@@ -979,6 +1190,60 @@
   }
 }
 
+@container (min-width: 60rem) {
+  .bwd-spec-flow {
+    grid-template-columns: minmax(0, 0.75fr) auto minmax(0, 1.25fr);
+    gap: 1.75rem;
+    padding: 2.5rem;
+  }
+
+  .bwd-spec-flow__pane {
+    gap: 0.6rem;
+    padding: 2rem;
+  }
+
+  .bwd-spec-flow__pane .bwd-spec-team__name {
+    font-size: 2.6rem;
+  }
+
+  .bwd-spec-flow__pane .bwd-spec-team__spec,
+  .bwd-spec-flow__pane .bwd-spec-team__book {
+    font-size: 0.95rem;
+  }
+
+  .bwd-spec-flow__title {
+    font-size: 2.75rem;
+  }
+
+  .bwd-spec-flow__step {
+    font-size: 0.85rem;
+  }
+
+  .bwd-spec-flow__dot {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.7rem;
+  }
+
+  .bwd-spec-flow__prompt {
+    font-size: 1.4rem;
+  }
+
+  .bwd-spec-flow__prompt span {
+    font-size: 0.82rem;
+  }
+
+  .bwd-spec-flow__service {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .bwd-spec-flow__link {
+    max-width: 8rem;
+    font-size: 0.85rem;
+  }
+}
+
 /* ---------- Close ---------- */
 
 .bwd-review__close {
@@ -1050,20 +1315,8 @@
   }
 
   .bwd-principle {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-areas:
-      'evidence head'
-      'evidence analysis';
-    grid-template-rows: auto 1fr;
-    column-gap: clamp(3rem, 5.5vw, 5.5rem);
-    row-gap: 1.5rem;
-  }
-
-  .bwd-principle--flip {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    grid-template-areas:
-      'head evidence'
-      'analysis evidence';
+    column-gap: clamp(3rem, 5vw, 5.5rem);
+    row-gap: 2rem;
   }
 
   .bwd-principle__head {
@@ -1072,12 +1325,65 @@
 
   .bwd-principle__analysis {
     grid-area: analysis;
-    align-content: start;
   }
 
   .bwd-principle__evidence {
     grid-area: evidence;
     align-self: start;
+  }
+
+  /* Split: large evidence beside a single reading column. */
+  .bwd-principle--split {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'evidence head'
+      'evidence analysis';
+  }
+
+  .bwd-principle--evidence-right {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-areas:
+      'head evidence'
+      'analysis evidence';
+  }
+
+  .bwd-principle--compact.bwd-principle--evidence-right {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .bwd-principle--split .bwd-principle__head {
+    padding-top: 0.5rem;
+  }
+
+  /* Spread: heading and the key idea above full-width evidence, with the reasoning set in
+     two columns beneath it. */
+  .bwd-principle--spread {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'head look'
+      'evidence evidence'
+      'why demo';
+    row-gap: clamp(2rem, 3.5vw, 3rem);
+  }
+
+  .bwd-principle--spread .bwd-principle__analysis {
+    display: contents;
+  }
+
+  .bwd-principle--spread .bwd-principle__part:nth-child(1) {
+    grid-area: look;
+    align-self: end;
+    font-size: clamp(1.1rem, 1.35vw, 1.25rem);
+    line-height: 1.6;
+  }
+
+  .bwd-principle--spread .bwd-principle__part:nth-child(2) {
+    grid-area: why;
+  }
+
+  .bwd-principle--spread .bwd-principle__part:nth-child(3) {
+    grid-area: demo;
   }
 }
 

@@ -88,8 +88,19 @@ const principles = [
   id: `bwd-principle-${String(index + 1).padStart(2, '0')}`,
 }));
 
+// Editorial rhythm on wide screens: alternating splits, with full-width spreads for the two
+// examples that compare wide layouts. Mobile always reads heading, evidence, then analysis.
+const ROW_LAYOUTS = [
+  'bwd-principle--split',
+  'bwd-principle--spread',
+  'bwd-principle--split bwd-principle--evidence-right',
+  'bwd-principle--split',
+  'bwd-principle--split bwd-principle--compact bwd-principle--evidence-right',
+  'bwd-principle--spread',
+];
+
 const specimenLabels = [
-  'Recreated detail of the BLACKLINE demo homepage: the wordmark, the line Manchester, Appointments and walk-ins, the shop name Blackline Barbers and the headline Precision in every detail, beside a photograph of a barber at work.',
+  'Recreated detail of the BLACKLINE demo homepage: the wordmark, the line Manchester, Appointments and walk-ins, the shop name Blackline Barbers, the headline Precision in every detail and the buttons Book an appointment and Explore services, beside a photograph of a barber at work.',
   'Recreated BLACKLINE demo headers. Desktop: wordmark, six navigation links, Bag and a cobalt BOOK NOW button. Mobile: wordmark, a BOOK button and a menu button.',
   `Recreated detail of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
@@ -134,7 +145,7 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
 
     <ol class="bwd-review__principles" role="list">
       {principles.map((principle, index) => (
-        <li class:list={['bwd-principle', { 'bwd-principle--flip': index % 2 === 1 }]}>
+        <li class:list={['bwd-principle', ROW_LAYOUTS[index]]}>
           <div class="bwd-principle__head">
             <span class="bwd-principle__num" aria-hidden="true">{principle.number}</span>
             <h3 id={principle.id} class="bwd-principle__title">{principle.title}</h3>
@@ -155,11 +166,18 @@ const specimenSources = ['/demo', 'site header', '/demo/services', '/demo/barber
                         Blackline Barbers <span class="bwd-pin">01</span>
                       </span>
                       <span class="bwd-spec-first__display">Precision in every detail.</span>
+                      <span class="bwd-spec-first__lede">Modern cuts, sharp fades and proper attention to every line.</span>
+                      <span class="bwd-spec-first__actions">
+                        <span class="bwd-spec-first__btn">Book an appointment</span>
+                        <span class="bwd-spec-first__btn bwd-spec-first__btn--ghost">Explore services</span>
+                      </span>
                     </div>
                     <span class="bwd-spec-first__split"></span>
                     <img
                       class="bwd-spec-first__photo"
                       src="/images/barbershop-websites/site-hero-640.webp"
+                      srcset="/images/barbershop-websites/site-hero-640.webp 640w, /images/barbershop-websites/site-hero-1100.webp 1100w"
+                      sizes="(min-width: 1024px) 40vw, 92vw"
                       alt=""
                       width="640"
                       height="524"
