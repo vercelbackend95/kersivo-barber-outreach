@@ -192,8 +192,11 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     const a = answer('starter');
     expect(a).toMatch(/Starter is our free booking plan: a KERSIVO-hosted booking page with the core booking tools/);
     expect(a).toMatch(/isn’t a free version of the Full branded website/);
-    expect(a).toMatch(/£0 a month within its published limits/);
-    expect(a).toMatch(/needs a connected Stripe account before clients can book online/);
+    expect(a).toMatch(/Starter is £0\/month within its published limits\./);
+    expect(a).toMatch(
+      /A payment-ready Stripe Connect Standard account is required before customers can book online\. Standard Stripe processing fees apply\./,
+    );
+    expect(a).not.toMatch(/needs a connected Stripe account/);
     expect(terms).toMatch(/Starter is a genuine <strong>£0\/month<\/strong>/);
     expect(terms).toMatch(/Stripe Connect Standard<\/strong> account is required/);
   });
