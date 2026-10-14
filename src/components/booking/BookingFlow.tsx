@@ -612,7 +612,7 @@ export default function BookingFlow({
           { label: 'No real appointment will be created' },
           { label: 'No confirmation email will be sent' },
           { label: 'Your demo details stay in this browser session and are cleared automatically' },
-          { label: 'Times shown follow the Blackline owner timeline' },
+          { label: 'Times shown follow the Cutstate owner timeline' },
         ];
       }
       return [

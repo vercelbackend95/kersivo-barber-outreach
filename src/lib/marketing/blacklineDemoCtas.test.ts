@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BLACKLINE_ADMIN_DEMO_PATH, blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
 import { MARKETING_NAV_GROUPS, MARKETING_NAV_ITEMS, MARKETING_NAV_SECONDARY_ACTION } from '@/lib/nav/marketingNavigation';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
@@ -61,6 +63,18 @@ describe('marketing CTAs route to the live BLACKLINE demo', () => {
     expect(FEATURE261_MONETIZATION_ROW.ctaLabel).toBe('Explore reports');
     expect(FEATURE261_MONETIZATION_ROW.ctaHref).toBe('/demo/admin?section=bookings_reports');
     expect(resolveAdminSpaSection('bookings_reports')).toBe('bookings_reports');
+  });
+
+  it('presents the shared marketing demo as CUTSTATE BARBERS', () => {
+    const preview = SOURCES.homepage;
+    expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
+    expect(preview).toContain('fallbackBrandMark="CS"');
+    expect(preview).toContain('shopName={DEMO_SHOP_NAME}');
+    expect(preview).toContain('ariaLabel={`${DEMO_SHOP_NAME} products`}');
+    expect(preview).not.toMatch(/BLACKLINE"|Blackline products|fallbackBrandMark="BL"/);
+    expect(preview).toContain('data-sf-theme="blackline"');
+    expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.eyebrow).toBe('Cutstate Barbers');
+    expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.confirmCtas?.[0]?.label).toBe('Back to Cutstate');
   });
 
   it('routes the homepage live admin widget to the BLACKLINE bookings dashboard', () => {

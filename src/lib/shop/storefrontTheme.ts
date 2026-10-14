@@ -19,7 +19,7 @@ export const KERSIVO_STOREFRONT_THEME: StorefrontTheme = {
 
 export const BLACKLINE_STOREFRONT_THEME: StorefrontTheme = {
   id: 'blackline',
-  shopName: 'BLACKLINE BARBERS',
+  shopName: 'CUTSTATE BARBERS',
   fulfilmentLabel: 'COLLECT IN SHOP',
   imageFallback: 'wordmark',
 };

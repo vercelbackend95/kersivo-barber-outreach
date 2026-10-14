@@ -52,7 +52,7 @@ describe('ProductRail', () => {
         showAction="none"
         showControls
         showProgress
-        fallbackBrandMark="BL"
+        fallbackBrandMark="CS"
         imageFallback="wordmark"
         ariaLabel="Featured products"
       />,
@@ -70,7 +70,7 @@ describe('ProductRail', () => {
 
     const styling = getByRole('link', { name: /view essential styling set/i });
     expect(within(styling).queryByRole('img', { name: /essential styling set/i })).toBeTruthy();
-    expect(styling.querySelector('.sf-media-mark')?.textContent).toBe('BL');
+    expect(styling.querySelector('.sf-media-mark')?.textContent).toBe('CS');
     expect(styling.querySelector('img')).toBeNull();
   });
 

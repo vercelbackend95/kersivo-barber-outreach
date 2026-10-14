@@ -9,17 +9,17 @@ describe('ProductMediaFallback', () => {
   it('renders product initials and alt text when src is empty', () => {
     const { getByRole, container } = render(
       <ProductMediaFallback
-        image={{ src: '', alt: 'Shave Cream in the fictional BLACKLINE shop.' }}
+        image={{ src: '', alt: 'Shave Cream in the fictional CUTSTATE shop.' }}
         name="Shave Cream"
-        shopName="BLACKLINE"
+        shopName="Cutstate Barbers"
         fallback="wordmark"
       />,
     );
     expect(container.querySelector('img')).toBeNull();
-    const media = getByRole('img', { name: /shave cream in the fictional blackline shop/i });
+    const media = getByRole('img', { name: /shave cream in the fictional cutstate shop/i });
     expect(media.querySelector('.sf-media-initial')?.textContent).toBe('SC');
     expect(media.querySelector('.sf-media-soon')?.textContent).toBe('Image coming soon');
-    expect(media.querySelector('.sf-media-mark')?.textContent).toBe('BL');
+    expect(media.querySelector('.sf-media-mark')?.textContent).toBe('CS');
   });
 
   it('uses a configurable brand mark for wordmark fallback', () => {

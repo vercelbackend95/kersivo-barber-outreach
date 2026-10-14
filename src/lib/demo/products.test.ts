@@ -76,9 +76,9 @@ describe('BLACKLINE demo products', () => {
     expect(getDemoProductById('bl-product-hot-towel-kit')?.image).toMatchObject({ width: 1402, height: 1122 });
   });
 
-  it('describes packaging without claiming BLACKLINE manufacture', () => {
+  it('describes packaging without claiming CUTSTATE manufacture', () => {
     for (const product of DEMO_PRODUCTS) {
-      expect(product.image.alt.toLowerCase()).toContain('fictional blackline shop');
+      expect(product.image.alt.toLowerCase()).toContain('fictional cutstate shop');
       expect(product.image.alt.toLowerCase()).not.toContain('manufactured');
       expect(product.image.alt.toLowerCase()).not.toContain('award');
     }

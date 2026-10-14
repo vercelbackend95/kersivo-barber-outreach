@@ -61,8 +61,8 @@ describe('BLACKLINE Contact page', () => {
     expect(heroSource).toContain('DEMO_LOCATION');
     expect(heroSource).toContain('DEMO_LOCATION_NOTE');
     expect(indexSource).toContain('Contact Index');
-    expect(indexSource).toContain('Find Blackline.');
-    expect(indexSource).toContain('The details below belong to the fictional BLACKLINE demonstration shop.');
+    expect(indexSource).toContain('Find Cutstate.');
+    expect(indexSource).toContain('The details below belong to the fictional CUTSTATE BARBERS demonstration shop.');
     expect(indexSource).toContain('Choose your barber, service and time.');
     expect(indexSource).toContain('Book an appointment');
     expect(hoursSource).toContain('Opening Hours');
@@ -78,7 +78,7 @@ describe('BLACKLINE Contact page', () => {
     expect(DEMO_LOCATION_NOTE).toBe('Demonstration location');
     expect(DEMO_PHONE).toBe('0161 496 0127');
     expect(DEMO_PHONE_TEL).toBe('tel:+441614960127');
-    expect(DEMO_PHONE_ACCESSIBLE_NAME).toBe('Call BLACKLINE demo number 0161 496 0127');
+    expect(DEMO_PHONE_ACCESSIBLE_NAME).toBe('Call CUTSTATE demo number 0161 496 0127');
     expect(DEMO_PHONE_FICTION_NOTE).toBe('Fictional Manchester demo number');
     expect(DEMO_WALK_INS).toBe('Walk-ins welcome when availability allows.');
     expect(DEMO_HOURS).toEqual([

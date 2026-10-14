@@ -18,7 +18,7 @@ type ProductMediaFallbackProps = {
   priority?: boolean;
   className?: string;
   decorative?: boolean;
-  /** Wordmark badge text (e.g. BL). Not used for initial-only fallback. */
+  /** Wordmark badge text (e.g. CS). Not used for initial-only fallback. */
   brandMark?: string;
   presentation?: ProductMediaPresentation;
 };
@@ -32,7 +32,7 @@ export default function ProductMediaFallback({
   priority = false,
   className = '',
   decorative = false,
-  brandMark = 'BL',
+  brandMark = 'CS',
   presentation = 'default',
 }: ProductMediaFallbackProps) {
   const src = image.src?.trim() ?? '';

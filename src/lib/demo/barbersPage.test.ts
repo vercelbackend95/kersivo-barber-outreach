@@ -31,7 +31,7 @@ describe('BLACKLINE Our Barbers page', () => {
   it('uses the exact hero, profile, and closing copy', () => {
     expect(heroSource).toContain('The hands');
     expect(heroSource).toContain('behind');
-    expect(heroSource).toContain('Blackline.');
+    expect(heroSource).toContain('Cutstate.');
     expect(heroSource).toContain('Three barbers. Three approaches. One standard.');
     expect(heroSource).toContain('03 Barbers');
     expect(DEMO_BARBERS.map((barber) => barber.name)).toEqual(['Ellis Ward', 'Noah Reid', 'Marcus Bell']);

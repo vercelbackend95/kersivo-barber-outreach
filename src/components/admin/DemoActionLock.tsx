@@ -142,7 +142,7 @@ export default function DemoActionLock({ variant = 'generic' }: DemoActionLockPr
                   Sample data
                 </p>
                 <p id="admin-demo-lock-desc" className="admin-demo-lock__body">
-                  This BLACKLINE owner dashboard is read-only. Changes reset automatically and no real
+                  This CUTSTATE owner dashboard is read-only. Changes reset automatically and no real
                   appointments, orders or payments are created.
                 </p>
                 <hr className="admin-demo-lock__rule" />
