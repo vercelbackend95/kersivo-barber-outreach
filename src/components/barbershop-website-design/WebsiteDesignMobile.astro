@@ -26,7 +26,7 @@ const principles = [
   },
   {
     title: 'Find the next step',
-    body: 'A full-width booking button sits directly under the headline, with a route into the services beside it, and the menu keeps every page within reach of a thumb.',
+    body: 'A full-width booking button follows the introduction, with ‘Explore services’ directly below. The header keeps booking and navigation easy to find.',
   },
   {
     title: 'Use it without friction',
@@ -34,7 +34,7 @@ const principles = [
   },
 ];
 
-const screenLabel = `Illustration of the ${DEMO_SHOP_NAME} demo homepage at phone width. A header with the CUTSTATE logo, a cobalt Book button and a menu icon; the line “${HERO_EYEBROW}”; the shop name with the headline “${HERO_DISPLAY}” and “${HERO_LEDE}”; full-width Book an appointment and Explore services buttons; and featured services with durations and prices — ${services.map((service) => `${service.name}, ${service.duration}, ${service.price}`).join('; ')}. Markers 01 to 03 point to the headline, the booking buttons and the service rows. CUTSTATE is a fictional KERSIVO demonstration shop.`;
+const screenLabel = `Illustration of the ${DEMO_SHOP_NAME} demo homepage at phone width. A header with the CUTSTATE logo, a cobalt Book button and a menu icon; the line “${HERO_EYEBROW}”; the shop name with the headline “${HERO_DISPLAY}” and “${HERO_LEDE}”; full-width Book an appointment and Explore services buttons; and featured services with durations and prices — ${services.map((service) => `${service.name}, ${service.duration}, ${service.price}`).join('; ')}. Markers 01 to 03 point to the shop name and headline, the booking buttons and the service rows. CUTSTATE is a fictional KERSIVO demonstration shop.`;
 ---
 
 <section class="bwm" aria-labelledby="bwm-heading">
@@ -71,12 +71,14 @@ const screenLabel = `Illustration of the ${DEMO_SHOP_NAME} demo homepage at phon
               </span>
 
               <span class="bwm-phone__hero">
-                <span class="bwm-phone__block bwm-phone__block--read">
-                  <span class="bwm-marker">01</span>
+                <span class="bwm-phone__intro">
                   <span class="bwm-phone__eyebrow">{HERO_EYEBROW}</span>
-                  <span class="bwm-phone__name">{DEMO_SHOP_NAME}</span>
-                  <span class="bwm-phone__display">{HERO_DISPLAY}</span>
-                  <span class="bwm-phone__lede">{HERO_LEDE}</span>
+                  <span class="bwm-phone__block bwm-phone__block--read">
+                    <span class="bwm-marker">01</span>
+                    <span class="bwm-phone__name">{DEMO_SHOP_NAME}</span>
+                    <span class="bwm-phone__display">{HERO_DISPLAY}</span>
+                    <span class="bwm-phone__lede">{HERO_LEDE}</span>
+                  </span>
                 </span>
 
                 <span class="bwm-phone__block bwm-phone__block--next">
@@ -122,13 +124,13 @@ const screenLabel = `Illustration of the ${DEMO_SHOP_NAME} demo homepage at phon
       </ol>
 
       <p class="bwm-try">
-        The booking flow itself lives in the demo, not in this illustration.
+        Explore the working booking journey in the demo.
         <a
           class="bwm-try__link"
           href={DEMO_BOOK_HREF}
           data-track={TRACK_EVENT}
           data-track-placement={TRACK_PLACEMENT}
-        >Try the demo booking flow on your phone</a>
+        >Try the demo booking flow</a>
       </p>
     </div>
     </div>

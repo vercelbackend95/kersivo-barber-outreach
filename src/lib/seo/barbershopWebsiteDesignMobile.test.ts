@@ -83,13 +83,35 @@ describe('/barbershop-website-design — Section 04 mobile design', () => {
     const copy = text(markup);
     expect(copy).toContain('Illustration recreating the CUTSTATE demo mobile homepage.');
     expect(copy).toContain('CUTSTATE BARBERS is a fictional KERSIVO demonstration shop.');
-    expect(copy).toContain('The booking flow itself lives in the demo, not in this illustration.');
+    expect(copy).toContain('Explore the working booking journey in the demo.');
+    expect(copy).not.toMatch(/lives in the demo, not in this illustration/);
+  });
+
+  it('describes the actions in the order the illustration shows them', () => {
+    expect(frontmatter).toContain(
+      "body: 'A full-width booking button follows the introduction, with ‘Explore services’ directly below. The header keeps booking and navigation easy to find.',",
+    );
+    expect(text(section).toLowerCase()).not.toMatch(/thumb|beside it|directly under the headline/);
+    const next = markup.match(/<span class="bwm-phone__block bwm-phone__block--next">([\s\S]*?)<\/span>\s*<\/span>/)?.[1] ?? '';
+    expect(next.indexOf('Book an appointment')).toBeGreaterThan(-1);
+    expect(next.indexOf('Explore services')).toBeGreaterThan(next.indexOf('Book an appointment'));
+  });
+
+  it('anchors marker 01 to the shop name and headline rather than the eyebrow', () => {
+    const read = markup.match(/<span class="bwm-phone__block bwm-phone__block--read">([\s\S]*?)<\/span>\s*<\/span>/)?.[1] ?? '';
+    const children = [...read.matchAll(/<span class="([^"]+)">/g)].map((match) => match[1]);
+    expect(children.slice(0, 3)).toEqual(['bwm-marker', 'bwm-phone__name', 'bwm-phone__display']);
+    expect(read).not.toContain('bwm-phone__eyebrow');
+    expect(markup).toMatch(/<span class="bwm-phone__intro">\s*<span class="bwm-phone__eyebrow">\{HERO_EYEBROW\}<\/span>/);
+    expect(frontmatter).toContain('Markers 01 to 03 point to the shop name and headline, the booking buttons and the service rows.');
+    expect(styles).toMatch(/\.bwm-phone__block--read \.bwm-marker \{[^}]*var\(--bwm-name-size\)/);
   });
 
   it('links once to the demo booking flow with tracking and a visible focus style', () => {
     const links = markup.match(/<a\b[\s\S]*?>/g) ?? [];
     expect(links).toHaveLength(1);
     expect(links[0]).toContain('href={DEMO_BOOK_HREF}');
+    expect(text(markup.match(/<a\b[\s\S]*?<\/a>/)?.[0] ?? '')).toBe('Try the demo booking flow');
     expect(DEMO_BOOK_HREF).toBe('/demo/book');
     expect(links[0]).toContain('data-track={TRACK_EVENT}');
     expect(links[0]).toContain('data-track-placement={TRACK_PLACEMENT}');

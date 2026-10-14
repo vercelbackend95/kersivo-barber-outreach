@@ -238,18 +238,26 @@
   text-transform: uppercase;
 }
 
+.bwm-phone__intro {
+  display: grid;
+  gap: 1rem;
+}
+
+/* Marker 01 is centred on the first line of the shop name, at whatever size the name renders. */
 .bwm-phone__block--read {
+  --bwm-name-size: clamp(1.9rem, 10cqi, 2.25rem);
+
   gap: 0;
 }
 
-.bwm-phone__block--read .bwm-phone__eyebrow {
-  margin-bottom: 1rem;
+.bwm-phone__block--read .bwm-marker {
+  top: calc((var(--bwm-name-size) * 0.95 - var(--bwm-marker)) / 2);
 }
 
 .bwm-phone__name {
   margin-bottom: 0.75rem;
   font-family: var(--bwm-display);
-  font-size: clamp(1.9rem, 10cqi, 2.25rem);
+  font-size: var(--bwm-name-size);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.02em;
