@@ -98,7 +98,7 @@ export function ProductRail({
   showProgress = false,
   density = 'compact',
   ariaLabel = 'Featured products',
-  fallbackBrandMark = 'BL',
+  fallbackBrandMark = 'CS',
   shopName = 'Shop',
   imageFallback = 'initial',
   priceFormat = 'gbp',

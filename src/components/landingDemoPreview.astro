@@ -1,6 +1,7 @@
 ---
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { ProductRail } from '@/components/shop/ProductRail';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
@@ -148,14 +149,14 @@ const {
                   showProgress={false}
                   showCategory={true}
                   showPrice={true}
-                  fallbackBrandMark="BL"
-                  shopName="BLACKLINE"
+                  fallbackBrandMark="CS"
+                  shopName={DEMO_SHOP_NAME}
                   addToBagLabel="Add to bag"
                   addToBagShortLabel="Add"
                   addedLabel="Added"
                   chooseOptionsLabel="Choose options"
                   soldOutLabel="Sold out"
-                  ariaLabel="Blackline products"
+                  ariaLabel={`${DEMO_SHOP_NAME} products`}
                 />
               </div>
             </div>

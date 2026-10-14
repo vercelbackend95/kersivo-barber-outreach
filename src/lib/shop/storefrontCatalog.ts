@@ -410,5 +410,5 @@ export function productInitials(name: string | null | undefined): string {
   }
   const compact = words[0] ?? '';
   if (compact.length >= 2) return compact.slice(0, 2).toUpperCase();
-  return (compact.charAt(0) || 'BL').toUpperCase();
+  return (compact.charAt(0) || 'CS').toUpperCase();
 }
