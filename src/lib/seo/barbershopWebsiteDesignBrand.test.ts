@@ -113,12 +113,13 @@ describe('/barbershop-website-design — Section 03 brand-led design', () => {
     expect(styles).toMatch(/\.bwb-offer__link:focus-visible \{[^}]*outline: 2px solid/);
   });
 
-  it('connects to Full KERSIVO with the standard-service qualification', () => {
+  it('connects to Full KERSIVO with the standard-setup qualification, stated once', () => {
     expect(markup).toContain('Your shop already has an identity. Your website should reflect it.');
     expect(text(markup)).toContain(
-      'Full KERSIVO brings your shop’s branding, business information and bookings together in a professionally prepared website on your own domain.',
+      'Full KERSIVO brings your shop’s branding, business details and online bookings together on a professionally prepared website on your own domain. Standard website setup is included in the £39/month plan per location.',
     );
-    expect(text(section)).toContain('within the standard Full KERSIVO website service');
+    expect(text(section).match(/£39/g) ?? []).toHaveLength(1);
+    expect(text(section)).not.toMatch(/adapted to (your|the) shop’s (own )?branding/);
   });
 
   it('discloses CUTSTATE as fictional', () => {

@@ -207,5 +207,18 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
       /guarantee|increase(s|d)? (your )?bookings|more bookings|\brank(ing|s)?\b|testimonial|\breviews?\b|\d+%|award/i,
     );
     expect(section).not.toMatch(/real (customer|client|business)|paying customer|case study/i);
+    expect(section).not.toContain('checking the address bar');
+    expect(section).toContain('A recognisable name, location and photograph help them do that straight away.');
+  });
+
+  it('describes the demo header booking button as it actually behaves at each width', () => {
+    const header = read('../../components/shop/storefront/StorefrontHeader.astro');
+    const headerCss = read('../../styles/components/storefront-header.css');
+    expect(header).toContain('<span class="sf-header-cta-full">BOOK NOW</span>');
+    expect(header).toContain('<span class="sf-header-cta-short">BOOK</span>');
+    expect(header).toMatch(/data-bl-nav-book[\s\S]*?Book an appointment/);
+    expect(headerCss).toMatch(/@media \(max-width: 359px\) \{[^}]*\.sf-header-cta \{\s*display: none;/);
+    expect(section).toContain('On smaller screens it becomes “BOOK” beside the menu button; at the narrowest widths the header button is hidden and “Book an appointment” remains in the mobile menu.');
+    expect(section).not.toMatch(/still visible on a phone|still in view on a phone/);
   });
 });

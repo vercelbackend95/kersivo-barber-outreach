@@ -58,52 +58,52 @@ const principles = [
   {
     title: 'A recognisable first impression',
     lookFor:
-      'In the first screen, a visitor should be able to read the shop’s name, where it is and what kind of barbering it offers — without scrolling. The name, a location line and one clear statement should outrank any decoration.',
+      'Without scrolling, a visitor should see the shop’s name, where it is and what kind of barbering it offers. The name, a location line and one clear statement should outrank any decoration.',
     why:
-      'Someone arriving from Google Maps or an Instagram bio first wants to confirm they have reached the right shop. If the opening screen could belong to any barbershop, they end up checking the address bar instead of the haircuts.',
+      'Visitors arriving from Google Maps or an Instagram bio first want to confirm they have found the right shop. A recognisable name, location and photograph help them do that straight away.',
     demo:
-      'The homepage pairs the CUTSTATE logo and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work, then commits to a single promise in heavy condensed capitals: “Precision in every detail.”',
+      'The homepage pairs the CUTSTATE logo and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work and one headline in heavy condensed capitals: “Precision in every detail.”',
   },
   {
     title: 'A visible booking action',
     lookFor:
-      'A booking action that stays easy to find while visitors explore the shop’s work: placed in the header beside the main navigation, in an accent colour that nothing else on the page competes with, and still in view on a phone.',
+      'A booking action that stays easy to find while visitors explore the shop’s work: prominent in the header where space allows, and available through clear mobile navigation on smaller screens.',
     why:
-      'Clients should never have to search for how to book. Someone looking through photographs of fades and beard work may decide at any moment, and good design keeps the next step obvious when they do.',
+      'Clients should not have to search for how to book. Someone browsing photographs of fades and beard work can decide at any point, so the next step should already be in view.',
     demo:
-      'On the gallery page, the photographs sit under a header that ends with a cobalt “BOOK NOW” — the only solid button in the header, after the navigation and the bag. On a phone it shortens to “BOOK” but keeps its colour and its place beside the menu button.',
+      'On the gallery page, the header ends with a cobalt “BOOK NOW” — its only solid button, after the navigation and the bag. On smaller screens it becomes “BOOK” beside the menu button; at the narrowest widths the header button is hidden and “Book an appointment” remains in the mobile menu.',
   },
   {
     title: 'Services and pricing where expected',
     lookFor:
-      'A services list grouped the way clients think — cuts, beard work, combined appointments — with the duration and price on every line and a direct route to book that particular service.',
+      'Services grouped the way clients think — cuts, beard work, combined appointments — with the duration and price on every line and a direct route to book each one.',
     why:
-      'Price and time are usually the first practical questions. A visitor who can see the length and cost of a skin fade decides in seconds; one who has to message the shop to ask often doesn’t bother.',
-    demo: `The demo services page groups ${serviceCount} services into ${categoryCount} categories, such as ${firstGroup.label}. Every row gives the service name, a short description, the minutes with a bar scaled to the appointment length and the price, and links to booking with that service already chosen.`,
+      'Price and time are usually the first practical questions. Showing both on every service answers them before a visitor has to message the shop.',
+    demo: `The demo services page groups ${serviceCount} services into ${categoryCount} categories, such as ${firstGroup.label}. Each row shows the name, a short description, the duration with a bar scaled to its length and the price, and opens booking with that service already chosen.`,
   },
   {
     title: 'The people behind the chairs',
     lookFor:
-      'A team page with a clear photograph of each barber, their name and what they are known for, written plainly — and a way to book with that person.',
+      'A team page with a clear photograph, name and specialisation for each barber, written plainly, and a way to book with that person.',
     why:
-      'Many clients choose a barber, not just a shop. Knowing who specialises in skin fades or scissor work helps a new client choose with confidence and helps regulars find their usual chair.',
+      'Many clients choose a barber, not just a shop. Seeing who specialises in skin fades or scissor work helps new clients choose and regulars find their usual chair.',
     demo: `The “Choose your chair.” page introduces three fictional demo barbers — ${teamList} — each with a portrait, specialisation, a one-line description and a “Book with” link.`,
   },
   {
     title: 'Simple, purposeful navigation',
     lookFor:
-      'A short menu in which every item is somewhere a client genuinely needs to go: services, the team, examples of work, contact details and booking. Plain labels beat clever ones.',
+      'A short menu where every item is somewhere a client genuinely needs to go: services, the team, examples of work, contact details and booking. Plain labels beat clever ones.',
     why:
-      'Visitors scan menus rather than read them. A handful of obvious labels is found faster than a long list, and nobody has to guess what a vague heading contains.',
+      'Visitors scan menus rather than read them, so a few obvious labels serve them better than a long list or headings they have to guess at.',
     demo: `The demo uses ${navCount} items — ${navList}. On mobile they become a numbered list with the current page marked, followed by a full-width “Book an appointment” button, the bag and the shop’s location.`,
   },
   {
     title: 'Consistency from website to booking',
     lookFor:
-      'When a visitor moves from the website into booking, the name, colours and type should stay the same, and any choice they have already made should carry through.',
+      'When a visitor moves into booking, the name, colours and type should stay the same, and any choice already made should carry through.',
     why:
-      'A sudden change of look at the moment of booking can make people wonder whether they have left the shop’s site. Carrying a choice forward also saves them from making it twice.',
-    demo: `“Book with ${leadFirstName}” opens the booking page with ${lead.name} carried in the link. The visitor picks a service first; when they continue, the barber step opens with ${leadFirstName} already selected. The CUTSTATE header, dark palette, cobalt accent and condensed headings stay in place throughout.`,
+      'A sudden change of look at the booking step can make people wonder whether they have left the shop’s site. Carrying a choice forward saves them making it twice.',
+    demo: `“Book with ${leadFirstName}” opens booking with ${lead.name} carried in the link. The visitor picks a service first; the barber step then opens with ${leadFirstName} already selected, under the same CUTSTATE header, dark palette, cobalt accent and condensed headings.`,
   },
 ].map((principle, index) => ({
   ...principle,
