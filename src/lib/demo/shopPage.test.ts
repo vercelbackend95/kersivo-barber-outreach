@@ -22,7 +22,7 @@ describe('BLACKLINE shop pages', () => {
   it('uses the required catalog, checkout and confirmation copy', () => {
     expect(shopPage).toContain('StorefrontShopPage');
     expect(shopPage).toContain('headingId: \'blackline-shop-heading\'');
-    expect(shopPage).toContain('THE BLACKLINE EDIT.');
+    expect(shopPage).toContain('THE CUTSTATE EDIT.');
     expect(shopPage).toContain('Grooming essentials selected by the shop, ready to collect.');
     expect(shopPage).toContain('COLLECT IN SHOP');
     expect(shopPage).toContain('DEMO CHECKOUT');

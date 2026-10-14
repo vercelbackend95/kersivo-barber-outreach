@@ -1,5 +1,5 @@
 export const DEMO_CONTACT_MAP_LABEL =
-  'Stylised illustrative map marking the fictional BLACKLINE demonstration location in Manchester’s Northern Quarter.';
+  'Stylised illustrative map marking the fictional CUTSTATE demonstration location in Manchester’s Northern Quarter.';
 
 export const DEMO_CONTACT_MAP_WARNING = 'Illustrative map · Not for navigation';
 

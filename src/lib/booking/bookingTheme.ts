@@ -60,7 +60,7 @@ export const BOOKING_THEME_PRESETS: Record<BookingThemePreset, BookingThemeInput
     radiusLg: '20px',
     shadow: '0 12px 32px rgb(0 0 0 / 0.28)',
     shadowHover: '0 16px 40px rgb(0 0 0 / 0.34)',
-    shopName: 'Blackline Barbers',
+    shopName: 'Cutstate Barbers',
   },
   kersivo: {
     appearance: 'dark',

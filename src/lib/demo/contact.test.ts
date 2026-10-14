@@ -12,7 +12,7 @@ import {
 
 describe('BLACKLINE demo contact helpers', () => {
   it('exposes map, safety, and field limits without implying a real enquiry channel', () => {
-    expect(DEMO_CONTACT_MAP_LABEL).toContain('fictional BLACKLINE demonstration location');
+    expect(DEMO_CONTACT_MAP_LABEL).toContain('fictional CUTSTATE demonstration location');
     expect(DEMO_CONTACT_MAP_WARNING).toBe('Illustrative map · Not for navigation');
     expect(DEMO_CONTACT_SAFETY_LABEL).toBe('Demo form · No message will be sent');
     expect(DEMO_CONTACT_SUCCESS).toBe('Demo complete. No message was sent or stored.');

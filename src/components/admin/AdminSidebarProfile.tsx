@@ -537,7 +537,7 @@ export default function AdminSidebarProfile({
                   </a>
                   <a className="admin-profile-menu__item" role="menuitem" href={previewWebsiteHref}>
                     <Globe width={15} height={15} aria-hidden="true" />
-                    Preview BLACKLINE website
+                    Preview CUTSTATE website
                   </a>
                   <a className="admin-profile-menu__item" role="menuitem" href={kersivoHomeHref}>
                     <LogOut width={15} height={15} aria-hidden="true" />

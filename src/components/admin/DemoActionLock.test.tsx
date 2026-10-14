@@ -40,7 +40,7 @@ describe('DemoActionLock', () => {
     expect(screen.getByText('DEMO MODE')).toBeTruthy();
     expect(
       screen.getByText(
-        'This BLACKLINE owner dashboard is read-only. Changes reset automatically and no real appointments, orders or payments are created.',
+        'This CUTSTATE owner dashboard is read-only. Changes reset automatically and no real appointments, orders or payments are created.',
       ),
     ).toBeTruthy();
     expect(screen.getByText('Ready to make it yours?')).toBeTruthy();

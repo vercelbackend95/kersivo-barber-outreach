@@ -35,9 +35,9 @@ describe('BLACKLINE demo barbers', () => {
       'Scissor-led cuts with a natural, wearable finish.',
     ]);
     expect(DEMO_BARBERS.map((barber) => barber.image.alt)).toEqual([
-      'Portrait of Ellis Ward, a fictional barber in the BLACKLINE demonstration shop.',
-      'Portrait of Noah Reid, a fictional barber in the BLACKLINE demonstration shop.',
-      'Portrait of Marcus Bell, a fictional barber in the BLACKLINE demonstration shop.',
+      'Portrait of Ellis Ward, a fictional barber in the CUTSTATE demonstration shop.',
+      'Portrait of Noah Reid, a fictional barber in the CUTSTATE demonstration shop.',
+      'Portrait of Marcus Bell, a fictional barber in the CUTSTATE demonstration shop.',
     ]);
   });
 

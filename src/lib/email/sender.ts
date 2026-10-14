@@ -660,7 +660,7 @@ export async function sendBlacklineDemoContactEmail(input: {
   const subjectLabel = input.shopName?.trim() || input.name;
   const timestamp = new Date().toISOString();
 
-  const html = `<p><strong>KERSIVO demo enquiry</strong> (BLACKLINE /demo/contact)</p>
+  const html = `<p><strong>KERSIVO demo enquiry</strong> (CUTSTATE demo /demo/contact)</p>
   <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
   <p><strong>Barbershop name:</strong> ${escapeHtml(shopLabel)}</p>
@@ -673,7 +673,7 @@ export async function sendBlacklineDemoContactEmail(input: {
     subject: `KERSIVO demo enquiry — ${subjectLabel}`,
     html,
     replyTo: input.email,
-    devLogLabel: '[DEV EMAIL] BLACKLINE demo contact',
+    devLogLabel: '[DEV EMAIL] CUTSTATE demo contact',
     devPayload: {
       to: inbox,
       name: input.name,

@@ -16,15 +16,15 @@ const source = readFileSync(new URL('../../components/demo/DemoFooter.astro', im
 
 describe('BLACKLINE demo footer', () => {
   it('declares a footer landmark and labelled navigation', () => {
-    expect(source).toContain('aria-label="BLACKLINE site footer"');
+    expect(source).toContain('aria-label="CUTSTATE site footer"');
     expect(source).toContain('aria-label="Footer navigation"');
-    expect(source).toContain('aria-label="BLACKLINE demo home"');
+    expect(source).toContain('aria-label="CUTSTATE demo home"');
     expect(source).toContain('BlacklineWordmark');
     expect(source).toContain('size="display"');
   });
 
-  it('states that BLACKLINE is fictional and creates no real transaction', () => {
-    expect(source).toContain('BLACKLINE is a fictional barbershop created to demonstrate KERSIVO.');
+  it('states that CUTSTATE BARBERS is fictional and creates no real transaction', () => {
+    expect(source).toContain('CUTSTATE BARBERS is a fictional barbershop created to demonstrate KERSIVO.');
     expect(source).toContain('No real appointment, order or payment is created.');
   });
 

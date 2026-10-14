@@ -54,7 +54,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/ironclad-pomade.webp',
-      'Graphite tin labelled Ironclad Pomade in the fictional BLACKLINE shop.',
+      'Graphite tin labelled Ironclad Pomade in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -71,7 +71,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/beard-balm.webp',
-      'Metal tin labelled Northline Beard Balm in the fictional BLACKLINE shop.',
+      'Metal tin labelled Northline Beard Balm in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -88,7 +88,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/barber-wash.webp',
-      'Black pump bottle labelled Barber Wash in the fictional BLACKLINE shop.',
+      'Black pump bottle labelled Barber Wash in the fictional CUTSTATE shop.',
       1254,
       1254,
       { x: 50, y: 44 },
@@ -106,7 +106,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/essential-styling-set.webp',
-      'Essential Styling Set with texture spray, barber wash and styling clay in the fictional BLACKLINE shop.',
+      'Essential Styling Set with texture spray, barber wash and styling clay in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -123,7 +123,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/matte-pomade.webp',
-      'Matte tin labelled North and Steel Matte Pomade in the fictional BLACKLINE shop.',
+      'Matte tin labelled North and Steel Matte Pomade in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -140,7 +140,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/sea-salt-texture-spray.webp',
-      'Black spray bottle labelled North and Steel Sea Salt Texture Spray in the fictional BLACKLINE shop.',
+      'Black spray bottle labelled North and Steel Sea Salt Texture Spray in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -157,7 +157,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/beard-oil.webp',
-      'Amber dropper bottle labelled North and Steel Beard Oil in the fictional BLACKLINE shop.',
+      'Amber dropper bottle labelled North and Steel Beard Oil in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -174,7 +174,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/forge-styling-powder.webp',
-      'Black jar labelled Forge Styling Powder in the fictional BLACKLINE shop.',
+      'Black jar labelled Forge Styling Powder in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -191,7 +191,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/fibre-paste.webp',
-      'Black jar labelled Fibre Paste in the fictional BLACKLINE shop.',
+      'Black jar labelled Fibre Paste in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -208,7 +208,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/matte-clay.webp',
-      'Matte black tin labelled Matte Clay in the fictional BLACKLINE shop.',
+      'Matte black tin labelled Matte Clay in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -225,7 +225,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/styling-cream.webp',
-      'Black tube labelled Styling Cream in the fictional BLACKLINE shop.',
+      'Black tube labelled Styling Cream in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -242,7 +242,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/daily-conditioner.webp',
-      'Black bottle labelled Daily Conditioner in the fictional BLACKLINE shop.',
+      'Black bottle labelled Daily Conditioner in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -259,7 +259,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/scalp-scrub.webp',
-      'Jar labelled Scalp Scrub in the fictional BLACKLINE shop.',
+      'Jar labelled Scalp Scrub in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -276,7 +276,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/clarifying-rinse.webp',
-      'Bottle labelled Clarifying Rinse in the fictional BLACKLINE shop.',
+      'Bottle labelled Clarifying Rinse in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -293,7 +293,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/beard-wash.webp',
-      'Black bottle labelled Beard Wash in the fictional BLACKLINE shop.',
+      'Black bottle labelled Beard Wash in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -310,7 +310,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/beard-butter.webp',
-      'Tin labelled Beard Butter in the fictional BLACKLINE shop.',
+      'Tin labelled Beard Butter in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -327,7 +327,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/moustache-wax.webp',
-      'Small tin labelled Moustache Wax in the fictional BLACKLINE shop.',
+      'Small tin labelled Moustache Wax in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -344,7 +344,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/shave-cream.webp',
-      'Tin labelled Shave Cream in the fictional BLACKLINE shop.',
+      'Tin labelled Shave Cream in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -361,7 +361,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/aftershave-balm.webp',
-      'Tube labelled Aftershave Balm in the fictional BLACKLINE shop.',
+      'Tube labelled Aftershave Balm in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -378,7 +378,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/face-wash.webp',
-      'Tube labelled Face Wash in the fictional BLACKLINE shop.',
+      'Tube labelled Face Wash in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -395,7 +395,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/daily-moisturiser.webp',
-      'Pump bottle labelled Daily Moisturiser in the fictional BLACKLINE shop.',
+      'Pump bottle labelled Daily Moisturiser in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -412,7 +412,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/cutting-comb.webp',
-      'Black cutting comb in the fictional BLACKLINE shop.',
+      'Black cutting comb in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -429,7 +429,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/boar-bristle-brush.webp',
-      'Boar bristle brush in the fictional BLACKLINE shop.',
+      'Boar bristle brush in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -446,7 +446,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/neck-duster.webp',
-      'Neck duster brush in the fictional BLACKLINE shop.',
+      'Neck duster brush in the fictional CUTSTATE shop.',
       1122,
       1402,
     ),
@@ -463,7 +463,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/clipper-guard-set.webp',
-      'Clipper guard set in a presentation box in the fictional BLACKLINE shop.',
+      'Clipper guard set in a presentation box in the fictional CUTSTATE shop.',
       1254,
       1254,
     ),
@@ -480,7 +480,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/beard-kit.webp',
-      'Beard Kit with wash, oil, balm and grooming tools in the fictional BLACKLINE shop.',
+      'Beard Kit with wash, oil, balm and grooming tools in the fictional CUTSTATE shop.',
       1402,
       1122,
     ),
@@ -497,7 +497,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/travel-grooming-set.webp',
-      'Travel grooming set with pouch, wash, oil, brush, comb and scissors in the fictional BLACKLINE shop.',
+      'Travel grooming set with pouch, wash, oil, brush, comb and scissors in the fictional CUTSTATE shop.',
       1402,
       1122,
     ),
@@ -514,7 +514,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/shop-gift-box.webp',
-      'Shop gift box with styling, wash and finishing tools in the fictional BLACKLINE shop.',
+      'Shop gift box with styling, wash and finishing tools in the fictional CUTSTATE shop.',
       1402,
       1122,
     ),
@@ -531,7 +531,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     active: true,
     image: packshot(
       '/demo/products/hot-towel-kit.webp',
-      'Hot Towel Home Kit with towel warmer and shave accessories in the fictional BLACKLINE shop.',
+      'Hot Towel Home Kit with towel warmer and shave accessories in the fictional CUTSTATE shop.',
       1402,
       1122,
     ),
