@@ -265,6 +265,23 @@
   color: var(--muted);
 }
 
+/* The single max-content column is the logo's width, so the attribution centres on the logo.
+   The zero-width text block keeps a wider caption from widening the column and moving the logo. */
+aside.admin-sidebar .admin-sidebar-brand--blackline {
+  display: grid;
+  grid-template-columns: max-content;
+}
+
+aside.admin-sidebar .admin-sidebar-brand--blackline .admin-sidebar-brand-text {
+  justify-self: center;
+  width: 0;
+  align-items: center;
+}
+
+aside.admin-sidebar .admin-sidebar-brand--blackline .admin-sidebar-brand-powered {
+  white-space: nowrap;
+}
+
 .admin-mobile-header .admin-sidebar-brand--blackline {
   flex-direction: row;
   align-items: center;
