@@ -12,7 +12,7 @@ test.describe('demo checkout surface', () => {
     await page.goto('/demo/shop/checkout', { waitUntil: 'networkidle' });
     const surface = page.locator('[data-checkout-surface].checkout-surface');
     await expect(surface).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Collect at Blackline Barbers/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Collect at Cutstate Barbers/i })).toBeVisible();
 
     const color = await page.locator('.bl-checkout-heading').evaluate((el) => getComputedStyle(el).color);
     // ivory-ish text on dark (rgb high channels)

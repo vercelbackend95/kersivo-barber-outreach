@@ -61,8 +61,8 @@ test.describe('BLACKLINE owner dashboard', () => {
   test('opens without login and hides onboarding chrome', async ({ page }) => {
     const errors = collectApplicationErrors(page);
     await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
-    await expect(page.getByText('BLACKLINE owner demo', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'CUTSTATE BARBERS owner dashboard' })).toBeAttached();
+    await expect(page.getByText('CUTSTATE owner demo', { exact: true })).toBeVisible();
     const conversionCta = page.locator('aside.admin-sidebar a.admin-sidebar-launch-cta');
     await expect(conversionCta).toBeVisible();
     await expect(conversionCta).toHaveAttribute('href', '/admin/launch');
@@ -80,31 +80,37 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(page.getByText('CREATE MY SYSTEM')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'VIEW PLANS' })).toHaveCount(0);
     await expect(conversionCta.locator('form, input, progress, [type="checkbox"]')).toHaveCount(0);
-    await expect(page.getByText('BLACKLINE OWNER DEMO', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('CUTSTATE OWNER DEMO', { exact: true })).toHaveCount(0);
     await expect(page.getByText('DEMO MODE')).toHaveCount(0);
     await expect(page.locator('.admin-demo-pill')).toHaveCount(0);
     await expect(page.getByText('READY TO LAUNCH')).toHaveCount(0);
     await expect(page.getByText('Continue setup')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Open BLACKLINE customer website' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open CUTSTATE customer website' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Back to Kersivo' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: /email/i })).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
-  test('uses the BLACKLINE wordmark as tenant identity, not KERSIVO logos', async ({ page }) => {
+  test('uses the CUTSTATE logo as tenant identity, not KERSIVO logos', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
 
     const desktopBrand = page.locator('aside.admin-sidebar .admin-sidebar-brand--blackline');
-    await expect(desktopBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    const desktopLogo = desktopBrand.getByRole('img', { name: 'CUTSTATE BARBERS' });
+    await expect(desktopLogo).toBeVisible();
+    await expect(desktopLogo).toHaveAttribute('src', '/demo/cutstate-logo.png');
     await expect(desktopBrand.getByText('Powered by KERSIVO')).toBeVisible();
     await expect(desktopBrand.locator('img[src*="logo_nobg"]')).toHaveCount(0);
-    await expect(page.locator('aside.admin-sidebar .admin-sidebar-brand img')).toHaveCount(0);
+    await expect(page.locator('aside.admin-sidebar .admin-sidebar-brand img')).toHaveCount(1);
+    await expect(page.locator('aside.admin-sidebar .admin-sidebar-brand img:not([src="/demo/cutstate-logo.png"])')).toHaveCount(0);
+    await expect(page.locator('aside.admin-sidebar .admin-sidebar-monogram')).toHaveCount(0);
 
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
     const mobileBrand = page.locator('.admin-mobile-header .admin-sidebar-brand--blackline');
-    await expect(mobileBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    const mobileLogo = mobileBrand.getByRole('img', { name: 'CUTSTATE BARBERS' });
+    await expect(mobileLogo).toBeVisible();
+    await expect(mobileLogo).toHaveAttribute('src', '/demo/cutstate-logo.png');
     await expect(mobileBrand.locator('img[src*="logo_nobg"]')).toHaveCount(0);
 
     await dismissCookieBanner(page);
@@ -117,7 +123,7 @@ test.describe('BLACKLINE owner dashboard', () => {
     );
     await expect(drawer).toHaveClass(/admin-mobile-drawer--open/);
     const drawerBrand = drawer.locator('.admin-sidebar-brand--blackline');
-    await expect(drawerBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    await expect(drawerBrand.getByRole('img', { name: 'CUTSTATE BARBERS' })).toBeVisible();
     await expect(drawerBrand.getByText('Powered by KERSIVO')).toBeVisible();
     const drawerCta = drawer.locator('a.admin-sidebar-launch-cta');
     await expect(drawerCta).toBeVisible();
@@ -135,7 +141,7 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(drawerCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
   });
 
-  test('customer demo header and footer use the BLACKLINE wordmark', async ({ page }) => {
+  test('customer demo header and footer use the CUTSTATE logo', async ({ page }) => {
     const viewports = [
       { width: 375, height: 812 },
       { width: 768, height: 1024 },
@@ -145,10 +151,10 @@ test.describe('BLACKLINE owner dashboard', () => {
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       await page.goto('/demo', { waitUntil: 'domcontentloaded' });
-      const headerMark = page.locator('.bl-header .bl-wordmark').getByRole('img', { name: 'BLACKLINE BARBERS' });
+      const headerMark = page.locator('.bl-header .bl-wordmark').getByRole('img', { name: 'CUTSTATE BARBERS' });
       await expect(headerMark).toBeVisible();
       await expect(page.locator('.bl-header img[src*="logo_nobg"]')).toHaveCount(0);
-      await expect(page.locator('footer.bl-footer').getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+      await expect(page.locator('footer.bl-footer').getByRole('img', { name: 'CUTSTATE BARBERS' })).toBeVisible();
       await expect(page.getByText('Demo experience by Kersivo')).toBeVisible();
       await assertNoHorizontalOverflow(page);
     }
@@ -156,9 +162,9 @@ test.describe('BLACKLINE owner dashboard', () => {
 
   test('banner round-trips between customer and owner views', async ({ page }) => {
     await page.goto('/demo', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('link', { name: 'Open BLACKLINE owner dashboard' }).click();
+    await page.getByRole('link', { name: 'Open CUTSTATE owner dashboard' }).click();
     await expect(page).toHaveURL(/\/demo\/admin/);
-    await page.getByRole('link', { name: 'Open BLACKLINE customer website' }).click();
+    await page.getByRole('link', { name: 'Open CUTSTATE customer website' }).click();
     await expect(page).toHaveURL(/\/demo\/?$/);
   });
 
@@ -197,7 +203,7 @@ test.describe('BLACKLINE owner dashboard', () => {
     const createShop = page.getByRole('menuitem', { name: 'Create your own barbershop' });
     await expect(createShop).toBeVisible();
     await expect(createShop).toHaveAttribute('href', '/admin/onboarding');
-    await expect(page.getByRole('menuitem', { name: 'Preview BLACKLINE website' })).toHaveAttribute(
+    await expect(page.getByRole('menuitem', { name: 'Preview CUTSTATE website' })).toHaveAttribute(
       'href',
       '/demo',
     );
@@ -249,7 +255,7 @@ test.describe('BLACKLINE owner dashboard', () => {
     await gear.click();
     const dialog = page.getByRole('dialog', { name: /Sample data/i });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText(/This BLACKLINE owner dashboard is read-only/i)).toBeVisible();
+    await expect(dialog.getByText(/This CUTSTATE owner dashboard is read-only/i)).toBeVisible();
     await expect(dialog.getByText('Ready to make it yours?')).toBeVisible();
     await expect(page.getByRole('link', { name: /create my barbershop/i })).toHaveAttribute(
       'href',
@@ -295,7 +301,7 @@ test.describe('BLACKLINE owner dashboard', () => {
     await gear.click();
     const dialog = page.getByRole('dialog', { name: /Sample data/i });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText(/This BLACKLINE owner dashboard is read-only/i)).toBeVisible();
+    await expect(dialog.getByText(/This CUTSTATE owner dashboard is read-only/i)).toBeVisible();
     await expect(dialog.getByText('Ready to make it yours?')).toBeVisible();
     await expect(page.getByRole('link', { name: /create my barbershop/i })).toHaveAttribute(
       'href',
@@ -327,7 +333,7 @@ test.describe('BLACKLINE owner dashboard', () => {
       const errors = collectApplicationErrors(page);
       await page.setViewportSize(viewport);
       await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
-      await expect(page.getByText('BLACKLINE owner demo', { exact: true })).toBeVisible();
+      await expect(page.getByText('CUTSTATE owner demo', { exact: true })).toBeVisible();
       await assertNoHorizontalOverflow(page);
       expect(errors).toEqual([]);
     });

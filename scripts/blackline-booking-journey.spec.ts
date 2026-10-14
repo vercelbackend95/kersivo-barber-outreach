@@ -118,7 +118,7 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
 
     await timelineLink.click();
     await expect(page).toHaveURL(/\/demo\/admin/);
-    await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
+    await expect(page.getByRole('heading', { name: 'CUTSTATE BARBERS owner dashboard' })).toBeAttached();
 
     await expect
       .poll(async () =>

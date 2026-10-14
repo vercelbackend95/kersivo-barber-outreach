@@ -89,7 +89,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
 
     await dashboardLink.click();
     await expect(page).toHaveURL(/\/demo\/admin/);
-    await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
+    await expect(page.getByRole('heading', { name: 'CUTSTATE BARBERS owner dashboard' })).toBeAttached();
     await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible({ timeout: 15000 });
 
     const row = page.locator(`[data-order-id="${orderId}"]`);
@@ -171,7 +171,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     test(`listing does not overflow at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
       await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('heading', { name: /the blackline edit/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /the cutstate edit/i })).toBeVisible();
       await assertNoHorizontalOverflow(page);
     });
   }

@@ -10,7 +10,7 @@ test.describe('BLACKLINE gallery journey', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/gallery', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByRole('heading', { name: /the blackline cut, in focus/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /the cut, in focus/i })).toBeVisible();
     const tiles = page.locator('.bl-work-tile');
     await expect(tiles).toHaveCount(6);
 
