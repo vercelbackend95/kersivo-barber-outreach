@@ -8,6 +8,8 @@ import {
   BLACKLINE_RETAIL_JOURNEY_KEY,
   BLACKLINE_SESSION_ORDER_SOURCE,
   BLACKLINE_SESSION_ORDER_TAG,
+  BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL,
+  LEGACY_SESSION_ORDER_CUSTOMER_EMAIL,
   addBlacklineSessionOrder,
   buildBlacklineSessionOrder,
   collectBlacklineSessionOrder,
@@ -111,7 +113,7 @@ describe('blacklineSessionOrders', () => {
     expect(created.subtotalPence).toBe(1900);
     expect(created.currency).toBe('GBP');
     expect(created.items[0]?.name).toBe('Ironclad Pomade');
-    expect(created.customerEmail).toContain('@blackline.demo');
+    expect(created.customerEmail).toBe('demo.customer@cutstate.demo');
 
     const stored = listBlacklineSessionOrders(NOW);
     expect(stored).toHaveLength(1);
@@ -119,6 +121,38 @@ describe('blacklineSessionOrders', () => {
     expect(JSON.parse(window.sessionStorage.getItem(BLACKLINE_SESSION_ORDERS_KEY) ?? '[]')[0].id).toBe(
       created.id,
     );
+  });
+
+  it('shows the CUTSTATE fallback email for session orders stored with the legacy address', () => {
+    const legacy = {
+      ...buildBlacklineSessionOrder({ items: [IRONCLAD], totalPence: 1900, now: NOW }),
+      customerEmail: LEGACY_SESSION_ORDER_CUSTOMER_EMAIL,
+    };
+    window.sessionStorage.setItem(BLACKLINE_SESSION_ORDERS_KEY, JSON.stringify([legacy]));
+
+    const [listed] = listBlacklineSessionOrders(NOW);
+    expect(listed?.id).toBe(legacy.id);
+    expect(listed?.reference).toBe(legacy.reference);
+    expect(listed?.customerEmail).toBe(BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL);
+
+    const [merged] = mergeBlacklineSessionOrders([], NOW);
+    expect(merged).toMatchObject({ id: legacy.id, customerEmail: BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL });
+    expect(toAdminOrderDetail(getBlacklineSessionOrder(legacy.id, NOW)!).customerEmail).toBe(
+      BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL,
+    );
+    expect(toConfirmationSnapshot(listed!)).toMatchObject({ orderId: legacy.id, reference: legacy.reference });
+
+    const collected = collectBlacklineSessionOrder(legacy.id, NOW);
+    expect(collected?.customerEmail).toBe(BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL);
+    expect(window.sessionStorage.getItem(BLACKLINE_SESSION_ORDERS_KEY)).not.toContain('@blackline.demo');
+  });
+
+  it('keeps an explicitly supplied customer email exactly as entered', () => {
+    const supplied = 'Alex.Client+demo@Example.com';
+    const created = addBlacklineSessionOrder({ items: [IRONCLAD], totalPence: 1900, customerEmail: supplied, now: NOW });
+    expect(created.customerEmail).toBe(supplied);
+    expect(listBlacklineSessionOrders(NOW)[0]?.customerEmail).toBe(supplied);
+    expect(toAdminOrder(created).customerEmail).toBe(supplied);
   });
 
   it('recovers from malformed or expired storage without throwing', () => {
