@@ -1,9 +1,9 @@
 /* /barbershop-website-design Section 01: an editorial opening spread. A left-aligned
    typographic column faces one showcased website — a faithful HTML/CSS recreation of the
-   BLACKLINE demo homepage. Page chrome uses KERSIVO tokens; the showcase uses the BLACKLINE
+   CUTSTATE demo homepage. Page chrome uses KERSIVO tokens; the showcase uses the CUTSTATE
    identity and switches between its desktop and mobile layouts by container width. */
 
-/* Uniquely named so the BLACKLINE faces never leak into KERSIVO typography. */
+/* Uniquely named so the CUTSTATE faces never leak into KERSIVO typography. */
 @font-face {
   font-family: 'BWD Blackline Display';
   font-style: normal;
@@ -188,7 +188,7 @@
   line-height: 1.5;
 }
 
-/* ---------- BLACKLINE website showcase ---------- */
+/* ---------- CUTSTATE website showcase ---------- */
 
 .bwd-showcase {
   min-width: 0;
@@ -196,13 +196,12 @@
 }
 
 .bwd-site {
-  /* Mirrors the BLACKLINE theme tokens in styles/demo/blackline.css, which only load inside DemoLayout. */
+  /* Mirrors the CUTSTATE theme tokens in styles/demo/blackline.css, which only load inside DemoLayout. */
   --bl-carbon: #0b0c0e;
   --bl-graphite: #14161a;
   --bl-ivory: #f4f1ea;
   --bl-silver: #a7abb2;
   --bl-cobalt: #315ef5;
-  --bl-rule: #d72638;
   --bl-line: rgba(244, 241, 234, 0.16);
   --bl-display: 'BWD Blackline Display', 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --bl-body: 'BWD Blackline Body', 'Manrope', system-ui, sans-serif;
@@ -229,39 +228,14 @@
   border-bottom: 1px solid var(--bl-line);
 }
 
+/* The approved logo PNG carries its own transparent margin, so the box is taller than the visible mark. */
 .bwd-site__wordmark {
-  display: inline-flex;
-  flex-direction: column;
-  width: max-content;
-  font-family: var(--bl-display);
-  line-height: 1;
-}
-
-.bwd-site__wordmark-name {
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 0.86;
-}
-
-.bwd-site__wordmark-sub {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.2rem;
-}
-
-.bwd-site__wordmark-sub i {
-  flex: 1;
-  height: 1px;
-  background: var(--bl-rule);
-}
-
-.bwd-site__wordmark-sub span {
-  font-size: 0.42rem;
-  font-weight: 800;
-  letter-spacing: 0.42em;
-  margin-inline-end: -0.42em;
+  display: block;
+  flex: none;
+  width: auto;
+  height: 2rem;
+  max-width: 45%;
+  object-fit: contain;
 }
 
 .bwd-site__nav {

@@ -11,7 +11,8 @@ import {
   demoServiceNavigatorGroups,
   formatDemoPriceGbp,
 } from '@/lib/demo/services';
-import { DEMO_LOCATION, DEMO_LOCATION_NOTE } from '@/lib/demo/site';
+import { DEMO_LOCATION, DEMO_LOCATION_NOTE, DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 import '@/styles/components/barbershop-website-design-breakdown.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -61,7 +62,7 @@ const principles = [
     why:
       'Someone arriving from Google Maps or an Instagram bio first wants to confirm they have reached the right shop. If the opening screen could belong to any barbershop, they end up checking the address bar instead of the haircuts.',
     demo:
-      'The homepage pairs the BLACKLINE wordmark and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work, then commits to a single promise in heavy condensed capitals: “Precision in every detail.”',
+      'The homepage pairs the CUTSTATE logo and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work, then commits to a single promise in heavy condensed capitals: “Precision in every detail.”',
   },
   {
     title: 'A visible booking action',
@@ -102,7 +103,7 @@ const principles = [
       'When a visitor moves from the website into booking, the name, colours and type should stay the same, and any choice they have already made should carry through.',
     why:
       'A sudden change of look at the moment of booking can make people wonder whether they have left the shop’s site. Carrying a choice forward also saves them from making it twice.',
-    demo: `“Book with ${leadFirstName}” opens the booking page with ${lead.name} carried in the link. The visitor picks a service first; when they continue, the barber step opens with ${leadFirstName} already selected. The BLACKLINE header, dark palette, cobalt accent and condensed headings stay in place throughout.`,
+    demo: `“Book with ${leadFirstName}” opens the booking page with ${lead.name} carried in the link. The visitor picks a service first; when they continue, the barber step opens with ${leadFirstName} already selected. The CUTSTATE header, dark palette, cobalt accent and condensed headings stay in place throughout.`,
   },
 ].map((principle, index) => ({
   ...principle,
@@ -122,14 +123,14 @@ const ROW_LAYOUTS = [
 ];
 
 const specimenLabels = [
-  'Recreated BLACKLINE identity from the demo homepage: the BLACKLINE BARBERS wordmark and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
-  `Recreated BLACKLINE gallery page. The header carries the wordmark, the links ${navList} with Gallery marked as the current page, a Bag button and a cobalt BOOK NOW button. Below it, the heading THE BLACKLINE CUT, IN FOCUS. introduces photographs of the work, including ${beardFrame ? `frame ${beardFrame.label}, ${beardFrame.image.caption.replace(/\.$/, '').toLowerCase()}` : 'recent cuts'}. On narrow screens the header keeps the wordmark, a cobalt BOOK button and the menu button.`,
-  `Recreated view of the BLACKLINE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
+  'Recreated CUTSTATE identity from the demo homepage: the CUTSTATE BARBERS logo and the line Manchester, Appointments and walk-ins beside a close photograph of a barber using clippers, with the headline Precision in every detail set across the image.',
+  `Recreated CUTSTATE gallery page. The header carries the logo, the links ${navList} with Gallery marked as the current page, a Bag button and a cobalt BOOK NOW button. Below it, the heading THE CUT, IN FOCUS. introduces photographs of the work, including ${beardFrame ? `frame ${beardFrame.label}, ${beardFrame.image.caption.replace(/\.$/, '').toLowerCase()}` : 'recent cuts'}. On narrow screens the header keeps the logo, a cobalt BOOK button and the menu button.`,
+  `Recreated view of the CUTSTATE demo services page: the ${firstGroup.label} category with ${firstGroup.countLabel}, and rows for ${groupRows
     .map((service) => `${service.name}, ${service.durationMinutes} minutes, ${formatDemoPriceGbp(service.pricePence)}`)
     .join('; ')}, each with a Book this service link.`,
-  `Recreated view of the BLACKLINE demo barbers page: a card for ${lead.name}, ${lead.specialisation}, with a Book with ${leadFirstName} link, followed by ${others.map((barber) => barber.name).join(' and ')}.`,
-  `Recreated BLACKLINE demo mobile menu: a numbered list of ${navList}, with Home marked as the current page, followed by a Book an appointment button, the bag and the location ${DEMO_LOCATION}.`,
-  `Recreated journey from the BLACKLINE barbers page to booking. ${lead.name}’s profile with its Book with ${leadFirstName} link leads to the Book a chair page, where, after a service such as ${exampleService.name}, the barber step shows ${lead.name} already selected under the same BLACKLINE header.`,
+  `Recreated view of the CUTSTATE demo barbers page: a card for ${lead.name}, ${lead.specialisation}, with a Book with ${leadFirstName} link, followed by ${others.map((barber) => barber.name).join(' and ')}.`,
+  `Recreated CUTSTATE demo mobile menu: a numbered list of ${navList}, with Home marked as the current page, followed by a Book an appointment button, the bag and the location ${DEMO_LOCATION}.`,
+  `Recreated journey from the CUTSTATE barbers page to booking. ${lead.name}’s profile with its Book with ${leadFirstName} link leads to the Book a chair page, where, after a service such as ${exampleService.name}, the barber step shows ${lead.name} already selected under the same CUTSTATE header.`,
 ];
 ---
 
@@ -177,10 +178,7 @@ const specimenLabels = [
                 {index === 0 && (
                   <div class="bwd-spec-first">
                     <span class="bwd-spec-first__copy">
-                      <span class="bwd-wordmark bwd-wordmark--display">
-                        <span class="bwd-wordmark__name">BLACKLINE</span>
-                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                      </span>
+                      <img class="bwd-wordmark bwd-wordmark--display" src={CUTSTATE_LOGO_SRC} alt="" width={CUTSTATE_LOGO_WIDTH} height={CUTSTATE_LOGO_HEIGHT} loading="lazy" decoding="async" />
                       <span class="bwd-spec-first__eyebrow">Manchester · Appointments &amp; walk-ins</span>
                     </span>
                     <span class="bwd-spec-first__split"></span>
@@ -201,10 +199,7 @@ const specimenLabels = [
                 {index === 1 && (
                   <div class="bwd-spec-cta">
                     <span class="bwd-spec-cta__header">
-                      <span class="bwd-wordmark bwd-spec-cta__brand">
-                        <span class="bwd-wordmark__name">BLACKLINE</span>
-                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                      </span>
+                      <img class="bwd-wordmark bwd-spec-cta__brand" src={CUTSTATE_LOGO_SRC} alt="" width={CUTSTATE_LOGO_WIDTH} height={CUTSTATE_LOGO_HEIGHT} loading="lazy" decoding="async" />
                       <span class="bwd-spec-cta__nav">
                         {DEMO_NAV.map((item) => (
                           <span class:list={['bwd-spec-cta__link', { 'is-current': item.label === 'Gallery' }]}>{item.label}</span>
@@ -224,7 +219,7 @@ const specimenLabels = [
                     <span class="bwd-spec-cta__page">
                       <span class="bwd-spec-cta__intro">
                         <span class="bwd-spec-cta__eyebrow">03 · RECENT WORK</span>
-                        <span class="bwd-spec-cta__heading">THE BLACKLINE CUT, IN FOCUS.</span>
+                        <span class="bwd-spec-cta__heading">THE CUT, IN FOCUS.</span>
                         <span class="bwd-spec-cta__lede">Fades, scissor work, beard shaping and the details in between.</span>
                       </span>
                       <span class="bwd-spec-cta__frames">
@@ -331,10 +326,7 @@ const specimenLabels = [
                 {index === 4 && (
                   <div class="bwd-spec-menu">
                     <span class="bwd-spec-menu__top">
-                      <span class="bwd-wordmark bwd-spec-menu__brand">
-                        <span class="bwd-wordmark__name">BLACKLINE</span>
-                        <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                      </span>
+                      <img class="bwd-wordmark bwd-spec-menu__brand" src={CUTSTATE_LOGO_SRC} alt="" width={CUTSTATE_LOGO_WIDTH} height={CUTSTATE_LOGO_HEIGHT} loading="lazy" decoding="async" />
                       <span class="bwd-spec-menu__bag">
                         <ShoppingBag size={18} strokeWidth={1.75} />
                         <span>0</span>
@@ -373,10 +365,7 @@ const specimenLabels = [
                   <div class="bwd-spec-flow">
                     <span class="bwd-spec-flow__screen bwd-spec-flow__screen--site">
                       <span class="bwd-spec-flow__chrome">
-                        <span class="bwd-wordmark bwd-spec-flow__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                        </span>
+                        <img class="bwd-wordmark bwd-spec-flow__brand" src={CUTSTATE_LOGO_SRC} alt="" width={CUTSTATE_LOGO_WIDTH} height={CUTSTATE_LOGO_HEIGHT} loading="lazy" decoding="async" />
                         <span class="bwd-spec-flow__chrome-cta">Book now</span>
                       </span>
                       <span class="bwd-spec-flow__roster">
@@ -408,14 +397,11 @@ const specimenLabels = [
 
                     <span class="bwd-spec-flow__screen bwd-spec-flow__screen--book">
                       <span class="bwd-spec-flow__chrome">
-                        <span class="bwd-wordmark bwd-spec-flow__brand">
-                          <span class="bwd-wordmark__name">BLACKLINE</span>
-                          <span class="bwd-wordmark__sub"><i></i><span>BARBERS</span><i></i></span>
-                        </span>
+                        <img class="bwd-wordmark bwd-spec-flow__brand" src={CUTSTATE_LOGO_SRC} alt="" width={CUTSTATE_LOGO_WIDTH} height={CUTSTATE_LOGO_HEIGHT} loading="lazy" decoding="async" />
                         <span class="bwd-spec-flow__chrome-cta">Book now</span>
                       </span>
                       <span class="bwd-spec-flow__booking">
-                        <span class="bwd-spec-flow__eyebrow">Blackline Barbers</span>
+                        <span class="bwd-spec-flow__eyebrow">{DEMO_SHOP_NAME}</span>
                         <span class="bwd-spec-flow__title">Book a chair</span>
                         <span class="bwd-spec-flow__steps">
                           {bookingSteps.map((step, stepIndex) => (
@@ -473,7 +459,7 @@ const specimenLabels = [
               {principle.why}
             </p>
             <p class="bwd-principle__part bwd-principle__part--demo">
-              <span class="bwd-principle__label">In the BLACKLINE demo</span>
+              <span class="bwd-principle__label">In the CUTSTATE demo</span>
               {principle.demo}
             </p>
           </div>
@@ -483,7 +469,7 @@ const specimenLabels = [
 
     <footer class="bwd-review__close">
       <p class="bwd-review__disclosure">
-        BLACKLINE BARBERS is a fictional KERSIVO demonstration shop. These details are recreated from
+        CUTSTATE BARBERS is a fictional KERSIVO demonstration shop. These details are recreated from
         the demo’s existing pages, copy and stock imagery, so they are not working controls.
       </p>
       <a
@@ -492,7 +478,7 @@ const specimenLabels = [
         data-track={TRACK_EVENT}
         data-track-placement={TRACK_PLACEMENT}
       >
-        See the working BLACKLINE website
+        See the working CUTSTATE website
         <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
       </a>
     </footer>

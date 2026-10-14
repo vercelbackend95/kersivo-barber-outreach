@@ -44,7 +44,7 @@ describe('/barbershop-website-design — Section 03 brand-led design', () => {
     );
   });
 
-  it('builds the board from real BLACKLINE data and imagery', () => {
+  it('builds the board from real CUTSTATE demo data and imagery', () => {
     expect(frontmatter).toContain("from '@/lib/demo/site'");
     expect(frontmatter).toContain("from '@/lib/demo/barbers'");
     expect(frontmatter).toContain("from '@/lib/demo/services'");
@@ -54,9 +54,38 @@ describe('/barbershop-website-design — Section 03 brand-led design', () => {
     expect(frontmatter).toContain("'/demo/storyimg.webp'");
     expect(section).not.toMatch(/heroimg|\/demo\/gallery\//);
     expect(markup).toContain('Choose your finish.');
-    expect(markup).toContain('Find Blackline.');
+    expect(markup).toContain('Find Cutstate.');
     expect(frontmatter).toContain("hex: '#315EF5'");
     expect(styles).not.toMatch(/#d72638/i);
+  });
+
+  it('recreates the story and contact copy exactly as the CUTSTATE demo shows it', () => {
+    const story = read('../../components/demo/DemoStory.astro');
+    const contactIndex = read('../../components/demo/DemoContactIndex.astro');
+    const opening = frontmatter.match(/const STORY_OPENING = '([^']+)'/)?.[1] ?? '';
+    expect(opening).toBe('CUTSTATE combines modern barbering with proper attention to detail.');
+    expect(story.replace(/\s+/g, ' ')).toContain(opening);
+    expect(markup).toContain('<span class="bwb-story__eyebrow"><span>02</span> · Cutstate</span>');
+    expect(story).toMatch(/<span class="bl-story-eyebrow-index">02<\/span>[\s\S]*?Cutstate\s*<\/p>/);
+    expect(contactIndex).toContain('>Find Cutstate.</h2>');
+    expect(text(markup)).not.toMatch(/blackline/i);
+    expect(frontmatter).not.toMatch(/BLACKLINE/);
+  });
+
+  it('shows the approved CUTSTATE logo in both name-row positions, sized by the board', () => {
+    const logos = markup.match(/<img\s+class="bwb-lockup[^"]*"[\s\S]*?\/>/g) ?? [];
+    expect(logos).toHaveLength(2);
+    expect(logos[0]).toContain('bwb-lockup--hero');
+    expect(logos[1]).toContain('bwb-lockup--header');
+    for (const logo of logos) {
+      expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
+      expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
+      expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+      expect(logo).toContain('alt=""');
+    }
+    expect(markup).not.toMatch(/bwb-lockup__(name|sub)/);
+    expect(styles).toMatch(/\.bwb-lockup \{[^}]*width: auto;[^}]*object-fit: contain;/);
+    expect(styles).not.toContain('.bwb-lockup__');
   });
 
   it('describes the board once for assistive technology and hides the visual copy', () => {
@@ -92,8 +121,8 @@ describe('/barbershop-website-design — Section 03 brand-led design', () => {
     expect(text(section)).toContain('within the standard Full KERSIVO website service');
   });
 
-  it('discloses BLACKLINE as fictional', () => {
-    expect(text(markup)).toContain('BLACKLINE BARBERS is a fictional KERSIVO demonstration shop.');
+  it('discloses CUTSTATE as fictional', () => {
+    expect(text(markup)).toContain('CUTSTATE BARBERS is a fictional KERSIVO demonstration shop.');
   });
 
   it('makes no claims outside the standard offer', () => {

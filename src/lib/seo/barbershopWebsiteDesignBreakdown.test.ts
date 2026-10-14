@@ -60,8 +60,8 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(markup.indexOf('bwd-review__answer')).toBeLessThan(markup.indexOf('bwd-review__principles'));
   });
 
-  it('answers what to look for, why it matters and how BLACKLINE shows it for every principle', () => {
-    for (const label of ['What to look for', 'Why it matters to clients', 'In the BLACKLINE demo']) {
+  it('answers what to look for, why it matters and how CUTSTATE shows it for every principle', () => {
+    for (const label of ['What to look for', 'Why it matters to clients', 'In the CUTSTATE demo']) {
       expect(markup).toContain(label);
     }
     for (const key of ['lookFor', 'why', 'demo']) {
@@ -71,7 +71,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     }
   });
 
-  it('draws its evidence from the real BLACKLINE data', () => {
+  it('draws its evidence from the real CUTSTATE demo data', () => {
     expect(section).toContain("from '@/lib/demo/barbers'");
     expect(section).toContain("from '@/lib/demo/nav'");
     expect(section).toContain('demoServiceNavigatorGroups()');
@@ -102,7 +102,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     const galleryHero = read('../../components/demo/DemoGalleryHero.astro');
     for (const copy of [
       '03 · RECENT WORK',
-      'THE BLACKLINE CUT, IN FOCUS.',
+      'THE CUT, IN FOCUS.',
       'Fades, scissor work, beard shaping and the details in between.',
     ]) {
       expect(galleryHero).toContain(copy);
@@ -156,6 +156,27 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect([...section.matchAll(/^\s*'Recreated|^\s*`Recreated/gm)]).toHaveLength(6);
   });
 
+  it('shows the approved CUTSTATE logo wherever a specimen carries the shop header', () => {
+    const logos = markup.match(/<img class="bwd-wordmark[^"]*"[^>]*\/>/g) ?? [];
+    expect(logos).toHaveLength(5);
+    for (const logo of logos) {
+      expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
+      expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
+      expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+      expect(logo).toContain('alt=""');
+    }
+    for (const placement of ['bwd-wordmark--display', 'bwd-spec-cta__brand', 'bwd-spec-menu__brand']) {
+      expect(logos.filter((logo) => logo.includes(placement))).toHaveLength(1);
+    }
+    expect(logos.filter((logo) => logo.includes('bwd-spec-flow__brand'))).toHaveLength(2);
+    expect(markup).not.toMatch(/bwd-wordmark__(name|sub)/);
+    expect(markup).toContain('<span class="bwd-spec-flow__eyebrow">{DEMO_SHOP_NAME}</span>');
+    expect(BLACKLINE_BOOKING_PRESENTATION.eyebrow).toBe('Cutstate Barbers');
+    const styles = read('../../styles/components/barbershop-website-design-breakdown.css');
+    expect(styles).toMatch(/\.bwd-wordmark \{[^}]*width: auto;[^}]*object-fit: contain;/);
+    expect(styles).not.toMatch(/bwd-wordmark__|--bl-rule|#d72638/i);
+  });
+
   it('lazy-loads every specimen image', () => {
     const images = markup.match(/<img\b[\s\S]*?\/>/g) ?? [];
     expect(images.length).toBeGreaterThan(0);
@@ -167,8 +188,8 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
   });
 
   it('discloses the fictional demo and offers one exploratory link to /demo', () => {
-    expect(markup).toContain('BLACKLINE BARBERS is a fictional KERSIVO demonstration shop.');
-    expect(markup).toContain('See the working BLACKLINE website');
+    expect(markup).toContain('CUTSTATE BARBERS is a fictional KERSIVO demonstration shop.');
+    expect(markup).toContain('See the working CUTSTATE website');
     expect(section).toContain("const TRACK_EVENT = 'view_live_demo_click'");
     expect(section).toContain("const TRACK_PLACEMENT = 'barbershop_website_design_breakdown_demo'");
     const links = markup.match(/<a\b[\s\S]*?>/g) ?? [];

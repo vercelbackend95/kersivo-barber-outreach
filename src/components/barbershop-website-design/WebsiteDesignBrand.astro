@@ -8,14 +8,15 @@ import {
   DEMO_SHOP_TAGLINE,
   DEMO_WALK_INS,
 } from '@/lib/demo/site';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 import '@/styles/components/barbershop-website-design-brand.css';
 
 const PARENT_HREF = '/barbershop-websites';
 
-// The story section of the BLACKLINE homepage (components/demo/DemoStory.astro).
+// The story section of the CUTSTATE demo homepage (components/demo/DemoStory.astro).
 const STORY_IMAGE = { src: '/demo/storyimg.webp', width: 2000, height: 3000 };
 const STORY_HEADING = ['A proper barbershop.', 'Built for modern Manchester.'];
-const STORY_OPENING = 'BLACKLINE combines modern barbering with proper attention to detail.';
+const STORY_OPENING = 'CUTSTATE combines modern barbering with proper attention to detail.';
 
 const palette = [
   { name: 'Carbon', hex: '#0B0C0E' },
@@ -46,7 +47,7 @@ const ideas = [
   },
   {
     title: 'Colour & typography',
-    body: 'Colours and type should suit the character of the shop — for BLACKLINE, a dark palette, condensed capitals and a single cobalt accent. Within the standard Full KERSIVO service, the website is adapted to the shop’s own branding.',
+    body: 'Colours and type should suit the character of the shop — for CUTSTATE, a dark palette, condensed capitals and a single cobalt accent. Within the standard Full KERSIVO service, the website is adapted to the shop’s own branding.',
   },
   {
     title: 'Photography & personality',
@@ -58,7 +59,7 @@ const ideas = [
   },
 ];
 
-const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO demonstration shop. On the left, the brand system: the BLACKLINE wordmark with the line “${DEMO_SHOP_TAGLINE}”, a palette of ${palette.map((colour) => colour.name.toLowerCase()).join(', ')}, condensed display type with a rounded body face, a photograph of the shop’s workstation, and the shop’s details — ${DEMO_LOCATION}, ${barberCount} barbers and ${serviceCount} services. On the right, the same elements on the website: the wordmark in the header beside the navigation, the services heading “Choose your finish.” with a cobalt booking button, the story section “${STORY_HEADING.join(' ')}”, and the contact details in the shop’s own type.`;
+const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO demonstration shop. On the left, the brand system: the CUTSTATE logo with the line “${DEMO_SHOP_TAGLINE}”, a palette of ${palette.map((colour) => colour.name.toLowerCase()).join(', ')}, condensed display type with a rounded body face, a photograph of the shop’s workstation, and the shop’s details — ${DEMO_LOCATION}, ${barberCount} barbers and ${serviceCount} services. On the right, the same elements on the website: the logo in the header beside the navigation, the services heading “Choose your finish.” with a cobalt booking button, the story section “${STORY_HEADING.join(' ')}”, and the contact details in the shop’s own type.`;
 ---
 
 <section class="bwb" aria-labelledby="bwb-heading">
@@ -90,10 +91,15 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
             <span class="bwb-row__brand">
               {rowIndex === 0 && (
                 <span class="bwb-name">
-                  <span class="bwb-lockup bwb-lockup--hero">
-                    <span class="bwb-lockup__name">BLACKLINE</span>
-                    <span class="bwb-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
-                  </span>
+                  <img
+                    class="bwb-lockup bwb-lockup--hero"
+                    src={CUTSTATE_LOGO_SRC}
+                    alt=""
+                    width={CUTSTATE_LOGO_WIDTH}
+                    height={CUTSTATE_LOGO_HEIGHT}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span class="bwb-name__tagline">
                     <span>{taglineFirst}.</span> <span>{taglineRest.join('. ')}</span>
                   </span>
@@ -149,10 +155,15 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
             <span class="bwb-row__site">
               {rowIndex === 0 && (
                 <span class="bwb-header">
-                  <span class="bwb-lockup bwb-lockup--header">
-                    <span class="bwb-lockup__name">BLACKLINE</span>
-                    <span class="bwb-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
-                  </span>
+                  <img
+                    class="bwb-lockup bwb-lockup--header"
+                    src={CUTSTATE_LOGO_SRC}
+                    alt=""
+                    width={CUTSTATE_LOGO_WIDTH}
+                    height={CUTSTATE_LOGO_HEIGHT}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span class="bwb-header__nav">
                     {navExcerpt.map((item, navIndex) => (
                       <span class:list={['bwb-header__link', { 'is-current': navIndex === 0 }]}>{item.label}</span>
@@ -172,7 +183,7 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
               {rowIndex === 2 && (
                 <span class="bwb-story">
                   <span class="bwb-story__rule"></span>
-                  <span class="bwb-story__eyebrow"><span>02</span> · Blackline</span>
+                  <span class="bwb-story__eyebrow"><span>02</span> · Cutstate</span>
                   <span class="bwb-story__title">
                     {STORY_HEADING.map((line) => <span>{line}</span>)}
                   </span>
@@ -183,7 +194,7 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
               {rowIndex === 3 && (
                 <span class="bwb-contact">
                   <span class="bwb-site-eyebrow">Contact Index</span>
-                  <span class="bwb-contact__title">Find Blackline.</span>
+                  <span class="bwb-contact__title">Find Cutstate.</span>
                   <span class="bwb-contact__row">
                     <span class="bwb-site-eyebrow">Visit</span>
                     <span class="bwb-contact__value">{DEMO_LOCATION}</span>
@@ -223,7 +234,7 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
     </div>
 
     <p class="bwb__disclosure">
-      BLACKLINE BARBERS is a fictional KERSIVO demonstration shop. The board above is recreated from
+      CUTSTATE BARBERS is a fictional KERSIVO demonstration shop. The board above is recreated from
       its existing pages, copy and imagery.
     </p>
   </div>

@@ -16,12 +16,15 @@ import {
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
 const pagePath = '../../pages/barbershop-website-design/index.astro';
 const page = read(pagePath);
-const hero = read('../../components/barbershop-website-design/WebsiteDesignHero.astro');
+const designDir = '../../components/barbershop-website-design/';
+const hero = read(`${designDir}WebsiteDesignHero.astro`);
+const heroCss = read('../../styles/components/barbershop-website-design-hero.css');
 const layout = read('../../layouts/LandingLayout.astro');
 
 const anchors = (source: string) => source.match(/<a\b[\s\S]*?>/g) ?? [];
@@ -76,7 +79,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(hero).toContain("const TRACK_EVENT = 'view_live_demo_click'");
     expect(hero).toContain("const TRACK_PLACEMENT = 'barbershop_website_design_hero_demo'");
     expect(demo).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(hero).toContain('Explore the BLACKLINE demo');
+    expect(hero).toContain('Explore the CUTSTATE demo');
 
     const full = links.find((tag) => tag.includes('href={BARBERSHOP_WEBSITES_PAGE_PATH}'));
     expect(full).toBeDefined();
@@ -91,7 +94,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     }
   });
 
-  it('shows one BLACKLINE website built from the real demo navigation, without educational modules', () => {
+  it('shows one CUTSTATE website built from the real demo navigation, without educational modules', () => {
     expect(hero).toContain("import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav'");
     expect(hero).toContain('DEMO_NAV.map(');
     expect(hero).toContain('Precision in every detail.');
@@ -104,8 +107,42 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(hero).not.toContain('fresha-alt-hero');
   });
 
-  it('discloses BLACKLINE as fictional and avoids unapproved claims or embeds', () => {
-    expect(hero).toContain('BLACKLINE BARBERS is a fictional KERSIVO demonstration shop.');
+  it('brands the showcase header with the approved CUTSTATE logo image', () => {
+    const header = hero.match(/<div class="bwd-site__header"[\s\S]*?<span class="bwd-site__nav">/)?.[0] ?? '';
+    const logo = header.match(/<img\b[\s\S]*?\/>/)?.[0] ?? '';
+    expect(logo).toContain('class="bwd-site__wordmark"');
+    expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
+    expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
+    expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+    expect(logo).toContain('alt=""');
+    expect(hero).not.toMatch(/bwd-site__wordmark-(name|sub)/);
+    expect(hero).toContain('<span class="bwd-site__name">{DEMO_SHOP_NAME}</span>');
+    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
+    expect(existsSync(join(here, '../../../public', CUTSTATE_LOGO_SRC))).toBe(true);
+    expect(heroCss).toMatch(/\.bwd-site__wordmark \{[^}]*width: auto;[^}]*object-fit: contain;/);
+    expect(heroCss).not.toMatch(/bwd-site__wordmark-|--bl-rule|#d72638/i);
+  });
+
+  it('uses the approved logo in all eight illustrated positions and renders no BLACKLINE identity', () => {
+    const sources = { hero, breakdown: read(`${designDir}WebsiteDesignBreakdown.astro`), brand: read(`${designDir}WebsiteDesignBrand.astro`) };
+    const logoCount = (source: string) => (source.match(/<img\b[^>]*src=\{CUTSTATE_LOGO_SRC\}/g) ?? []).length;
+    expect(logoCount(sources.hero)).toBe(1);
+    expect(logoCount(sources.breakdown)).toBe(5);
+    expect(logoCount(sources.brand)).toBe(2);
+    for (const source of [page, ...Object.values(sources)]) {
+      const markup = source.split(/^---$/m).slice(2).join('---') || source;
+      const visibleText = markup.replace(/<[^>]+>/g, ' ');
+      const accessibleText = [...markup.matchAll(/\b(?:aria-label|alt|title)=(["{`])([\s\S]*?)\1/g)]
+        .map((match) => match[2])
+        .join(' ');
+      expect(visibleText).not.toMatch(/blackline/i);
+      expect(accessibleText).not.toMatch(/blackline/i);
+      expect(source).not.toMatch(/'[^']*BLACKLINE[^']*'|`[^`]*BLACKLINE[^`]*`/);
+    }
+  });
+
+  it('discloses CUTSTATE as fictional and avoids unapproved claims or embeds', () => {
+    expect(hero).toContain('CUTSTATE BARBERS is a fictional KERSIVO demonstration shop.');
     expect(hero).toContain('This illustration recreates');
     expect(hero).not.toMatch(/real photographs/i);
     expect(hero).not.toMatch(/<iframe|<embed|<video/);

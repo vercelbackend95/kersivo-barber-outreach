@@ -1,7 +1,7 @@
 /* /barbershop-website-design Section 02: an editorial design review. Six principles alternate
-   with close-up recreations of real BLACKLINE interface details. Page chrome uses KERSIVO
-   tokens; the specimens keep the BLACKLINE identity (cobalt accent, condensed display type).
-   The 400/600/800 BLACKLINE faces are declared in the Hero stylesheet. */
+   with close-up recreations of real CUTSTATE demo interface details. Page chrome uses KERSIVO
+   tokens; the specimens keep the CUTSTATE identity (cobalt accent, condensed display type).
+   The 400/600/800 CUTSTATE faces are declared in the Hero stylesheet. */
 
 .bwd-review {
   --bwd-ink: color-mix(in srgb, var(--bg) 52%, #000);
@@ -215,7 +215,7 @@
 
 /* ---------- Specimens ---------- */
 
-/* The heading/label weights that the BLACKLINE pages use, beyond the faces the Hero declares. */
+/* The heading/label weights that the CUTSTATE pages use, beyond the faces the Hero declares. */
 @font-face {
   font-family: 'BWD Blackline Display';
   font-style: normal;
@@ -233,7 +233,7 @@
 }
 
 .bwd-spec {
-  /* Mirrors the BLACKLINE theme tokens in styles/demo/blackline.css, which only load inside DemoLayout. */
+  /* Mirrors the CUTSTATE theme tokens in styles/demo/blackline.css, which only load inside DemoLayout. */
   --bl-carbon: #0b0c0e;
   --bl-graphite: #14161a;
   --bl-steel: #202329;
@@ -242,7 +242,6 @@
   --bl-silver: #a7abb2;
   --bl-slate: #626872;
   --bl-cobalt: #315ef5;
-  --bl-rule: #d72638;
   --bl-line-dark: rgba(244, 241, 234, 0.16);
   --bl-line-light: rgba(17, 19, 24, 0.14);
   --bl-display: 'BWD Blackline Display', 'Barlow Condensed', 'Arial Narrow', sans-serif;
@@ -266,49 +265,16 @@
   flex: none;
 }
 
-/* BLACKLINE BARBERS lockup (styles/demo/blackline-wordmark.css), sized by its font-size. */
+/* Approved CUTSTATE logo (/demo/cutstate-logo.png), still sized by font-size so each specimen's
+   override applies. The PNG carries its own transparent margin, so the box is taller than the mark. */
 .bwd-wordmark {
-  display: inline-flex;
+  display: block;
   flex: none;
-  flex-direction: column;
-  width: max-content;
-  font-family: var(--bl-display);
+  width: auto;
+  height: 1.72em;
+  max-width: 100%;
   font-size: 1.5rem;
-  line-height: 1;
-  text-align: center;
-}
-
-.bwd-wordmark__name {
-  font-size: 1em;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 0.86;
-  white-space: nowrap;
-}
-
-.bwd-wordmark__sub {
-  display: flex;
-  align-items: center;
-  gap: 0.27em;
-  margin-top: 0.19em;
-}
-
-.bwd-wordmark__sub i {
-  flex: 1 1 0;
-  min-width: 0.25em;
-  height: 1px;
-  background: var(--bl-rule);
-}
-
-.bwd-wordmark__sub span {
-  font-size: 0.27em;
-  font-weight: 700;
-  letter-spacing: 0.42em;
-  margin-inline-end: -0.42em;
-}
-
-.bwd-wordmark--display .bwd-wordmark__sub i {
-  height: 2px;
+  object-fit: contain;
 }
 
 /* 01 — identity: a tight crop of the homepage photograph, with the promise set across it. */
@@ -415,7 +381,7 @@
   }
 }
 
-/* 02 — the booking action: the BLACKLINE gallery page as one site. The cobalt header button is the
+/* 02 — the booking action: the CUTSTATE gallery page as one site. The cobalt header button is the
    only solid control on the page, so it reads first while the photographs carry the interest.
    Narrow columns get the real mobile header rather than a shrunken desktop one. */
 
@@ -1058,7 +1024,7 @@
   }
 }
 
-/* 05 — navigation: the open BLACKLINE mobile menu, edge to edge at phone proportions. */
+/* 05 — navigation: the open CUTSTATE mobile menu, edge to edge at phone proportions. */
 
 .bwd-spec:has(.bwd-spec-menu) {
   max-width: 30rem;
@@ -1227,7 +1193,7 @@
   }
 }
 
-/* 06 — the same BLACKLINE header over both screens: the barber profile, then the booking
+/* 06 — the same CUTSTATE header over both screens: the barber profile, then the booking
    flow's barber step with that barber already chosen. */
 
 .bwd-spec-flow {

@@ -1,6 +1,6 @@
-/* /barbershop-website-design Section 03: one brand board pairing BLACKLINE's brand system with
+/* /barbershop-website-design Section 03: one brand board pairing CUTSTATE's brand system with
    the places it appears on its website. Page chrome uses KERSIVO tokens; the board keeps the
-   BLACKLINE identity (carbon, ivory, cobalt; Barlow Condensed and Manrope). The BLACKLINE faces
+   CUTSTATE identity (carbon, ivory, cobalt; Barlow Condensed and Manrope). The display/body faces
    are declared in the Hero and Section 02 stylesheets. */
 
 .bwb {
@@ -292,42 +292,17 @@
   }
 }
 
-/* ---------- BLACKLINE wordmark ---------- */
+/* ---------- CUTSTATE logo ---------- */
 
+/* Approved logo PNG, still sized by font-size; its transparent margin makes the box taller than the mark. */
 .bwb-lockup {
-  display: inline-grid;
-  justify-items: stretch;
-  width: max-content;
-  color: var(--bwb-ivory);
-  font-family: var(--bwb-display);
-}
-
-.bwb-lockup__name {
-  font-size: 1em;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 0.86;
-}
-
-.bwb-lockup__sub {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-top: 0.3em;
-  font-size: 0.27em;
-  font-weight: 700;
-  letter-spacing: 0.42em;
-  line-height: 1;
-}
-
-.bwb-lockup__sub span {
-  margin-right: -0.42em;
-}
-
-.bwb-lockup__sub i {
-  flex: 1;
-  height: 1px;
-  background: var(--bwb-silver);
+  display: block;
+  flex: none;
+  justify-self: start;
+  width: auto;
+  height: 1.86em;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .bwb-lockup--hero {
