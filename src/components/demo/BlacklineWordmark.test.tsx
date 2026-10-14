@@ -11,14 +11,15 @@ describe('BlacklineWordmark', () => {
     cleanup();
   });
 
-  it('renders the BLACKLINE BARBERS lockup without a raster image', () => {
+  it('renders the approved CUTSTATE BARBERS logo with intrinsic dimensions', () => {
     const { container } = render(<BlacklineWordmark />);
-    expect(screen.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeTruthy();
-    expect(container.querySelector('.bl-lockup__name')?.textContent).toBe('BLACKLINE');
-    expect(container.querySelector('.bl-lockup__barbers')?.textContent).toBe('BARBERS');
-    expect(container.querySelectorAll('.bl-lockup__rule')).toHaveLength(2);
-    expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('.bl-lockup--default')).toBeTruthy();
+    const logo = screen.getByRole('img', { name: 'CUTSTATE BARBERS' }) as HTMLImageElement;
+    expect(logo.tagName).toBe('IMG');
+    expect(logo.getAttribute('src')).toBe('/demo/cutstate-logo.png');
+    expect(logo.getAttribute('width')).toBe('2172');
+    expect(logo.getAttribute('height')).toBe('724');
+    expect(container.querySelector('.bl-lockup--default')).toBe(logo);
+    expect(container.textContent).not.toContain('BLACKLINE');
   });
 
   it('supports compact and display sizes', () => {

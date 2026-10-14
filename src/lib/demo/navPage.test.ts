@@ -18,7 +18,7 @@ const css = readFileSync(new URL('../../styles/components/storefront-header.css'
 describe('BLACKLINE mobile navigation markup', () => {
   it('starts closed with a real toggle and accessible names', () => {
     expect(header).toContain('data-bl-nav-state="closed"');
-    expect(wrapper).toContain('homeLabel="BLACKLINE demo home"');
+    expect(wrapper).toContain('homeLabel="CUTSTATE demo home"');
     expect(wrapper).toContain('BlacklineWordmark');
     expect(wrapper).toContain('size="default"');
     expect(wrapper).not.toContain('bl-wordmark-sub');

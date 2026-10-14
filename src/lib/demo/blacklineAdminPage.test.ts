@@ -55,7 +55,7 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(adminLayoutSource).toContain('DEFAULT_SIDEBAR_LOGO');
     expect(adminLayoutSource).toContain('/images/logo_nobg.png');
     expect(profileSource).toContain('Create your own barbershop');
-    expect(profileSource).toContain('Preview BLACKLINE website');
+    expect(profileSource).toContain('Preview CUTSTATE website');
     expect(profileSource).toContain('Back to Kersivo');
     expect(profileSource).toContain('href={createShopHref}');
     expect(CREATE_OWN_BARBERSHOP_HREF).toBe('/admin/onboarding');
@@ -64,10 +64,10 @@ describe('BLACKLINE owner dashboard page', () => {
 
   it('wires banner navigation between customer and owner views', () => {
     expect(layoutSource).toContain('view="customer"');
-    expect(bannerSource).toContain('aria-label="Open BLACKLINE owner dashboard"');
+    expect(bannerSource).toContain('aria-label="Open CUTSTATE owner dashboard"');
     expect(bannerSource).toContain('Owner dashboard');
     expect(bannerSource).toContain('Owner view');
-    expect(bannerSource).toContain('aria-label="Open BLACKLINE customer website"');
+    expect(bannerSource).toContain('aria-label="Open CUTSTATE customer website"');
     expect(bannerSource).toContain('Customer website');
     expect(bannerSource).toContain('href="/"');
     expect(bannerSource).toContain('data-astro-reload');

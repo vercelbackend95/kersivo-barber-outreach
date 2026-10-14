@@ -39,7 +39,7 @@ describe('BLACKLINE Gallery page', () => {
 
   it('uses the compact intro copy and keeps the booking close', () => {
     expect(heroSource).toContain('03 · RECENT WORK');
-    expect(heroSource).toContain('THE BLACKLINE CUT, IN FOCUS.');
+    expect(heroSource).toContain('THE CUT, IN FOCUS.');
     expect(heroSource).toContain('Fades, scissor work, beard shaping and the details in between.');
     expect(heroSource).not.toContain('The work,');
     expect(indexSource).not.toContain('Visual Index');

@@ -44,7 +44,7 @@ describe('BLACKLINE Services page', () => {
     expect(demoServicesMeta().fromPriceLabel).toBe('FROM £12');
     expect(menuSource).toContain('Find your service');
     expect(menuSource).toContain('Choose your finish.');
-    expect(menuSource).toContain('The complete Blackline menu is on this page.');
+    expect(menuSource).toContain('The complete Cutstate menu is on this page.');
     expect(menuSource).toContain('Current service category');
     expect(menuSource).toContain('Now viewing');
     expect(menuSource).toContain('demoServiceCategoryAnchorId');

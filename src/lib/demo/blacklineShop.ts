@@ -60,7 +60,7 @@ export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<v
   await client.shopSettings.upsert({
     where: { id: BLACKLINE_SHOP_ID },
     update: {
-      name: 'Blackline Barbers',
+      name: 'Cutstate Barbers',
       timezone: 'Europe/London',
       retailEnabled: false,
       smsRemindersEnabled: false,
@@ -70,7 +70,7 @@ export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<v
     },
     create: {
       id: BLACKLINE_SHOP_ID,
-      name: 'Blackline Barbers',
+      name: 'Cutstate Barbers',
       timezone: 'Europe/London',
       cancellationWindowHours: 2,
       rescheduleWindowHours: 2,

@@ -32,7 +32,7 @@ describe('BLACKLINE demo business profile', () => {
   it('uses the reserved Ofcom Manchester drama number', () => {
     expect(DEMO_PHONE).toBe('0161 496 0127');
     expect(DEMO_PHONE_TEL).toBe('tel:+441614960127');
-    expect(DEMO_PHONE_ACCESSIBLE_NAME).toBe('Call BLACKLINE demo number 0161 496 0127');
+    expect(DEMO_PHONE_ACCESSIBLE_NAME).toBe('Call CUTSTATE demo number 0161 496 0127');
     expect(DEMO_PHONE_NOTE.toLowerCase()).not.toContain('disabled');
     expect(DEMO_PHONE_FICTION_NOTE).toBe('Fictional Manchester demo number');
   });

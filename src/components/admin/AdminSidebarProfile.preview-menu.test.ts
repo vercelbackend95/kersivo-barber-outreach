@@ -28,7 +28,7 @@ describe('preview sidebar account menu', () => {
     expect(source).toContain('{!isPreview ? (');
     expect(source).toContain('Launch My Barbershop');
     expect(source).toContain('Create your own barbershop');
-    expect(source).toContain('Preview BLACKLINE website');
+    expect(source).toContain('Preview CUTSTATE website');
     expect(source).toContain('Workspace setup');
     expect(source).toContain('Retail onboarding');
     expect(source).toContain('Create account');

@@ -7,9 +7,14 @@ type BlacklineWordmarkProps = {
   className?: string;
 };
 
+export const CUTSTATE_LOGO_SRC = '/demo/cutstate-logo.png';
+export const CUTSTATE_LOGO_WIDTH = 2172;
+export const CUTSTATE_LOGO_HEIGHT = 724;
+export const CUTSTATE_LOGO_ALT = 'CUTSTATE BARBERS';
+
 /**
- * Code-native BLACKLINE BARBERS lockup.
- * Visual reference (not rendered): /demo/logo.png
+ * Approved CUTSTATE BARBERS logo for the fictional demo shop.
+ * The component keeps its historical name so demo imports stay stable.
  */
 export default function BlacklineWordmark({
   size = 'default',
@@ -18,15 +23,16 @@ export default function BlacklineWordmark({
   const classes = ['bl-lockup', `bl-lockup--${size}`, className].filter(Boolean).join(' ');
 
   return (
-    <span className={classes} role="img" aria-label="BLACKLINE BARBERS">
-      <span className="bl-lockup__name" aria-hidden="true">
-        BLACKLINE
-      </span>
-      <span className="bl-lockup__sub" aria-hidden="true">
-        <span className="bl-lockup__rule" />
-        <span className="bl-lockup__barbers">BARBERS</span>
-        <span className="bl-lockup__rule" />
-      </span>
-    </span>
+    <img
+      className={classes}
+      src={CUTSTATE_LOGO_SRC}
+      width={CUTSTATE_LOGO_WIDTH}
+      height={CUTSTATE_LOGO_HEIGHT}
+      alt={CUTSTATE_LOGO_ALT}
+      decoding="async"
+      draggable={false}
+    />
   );
 }
+
+export { BlacklineWordmark as CutstateLogo };

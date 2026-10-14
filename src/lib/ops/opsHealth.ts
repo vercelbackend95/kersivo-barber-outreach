@@ -254,7 +254,7 @@ export async function collectStuckRefunds(now = new Date()): Promise<
 export async function collectStuckEmails(now = new Date()): Promise<
   Array<{
     id: string;
-    shopId: string;
+    shopId: string | null;
     bookingId: string | null;
     purpose: string;
     status: EmailOutboundStatus;
@@ -374,7 +374,7 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     captureOpsMessage('Transactional email stuck', {
       level: 'error',
       route: 'opsHealth.email.stuck',
-      shopId: row.shopId,
+      shopId: row.shopId ?? undefined,
       tags: {
         emailOutboundId: row.id,
         purpose: row.purpose,
