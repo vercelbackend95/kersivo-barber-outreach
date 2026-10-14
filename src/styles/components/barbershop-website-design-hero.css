@@ -432,6 +432,11 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
+  /* In an auto grid track a percentage max-width resolves against the logo's own column and shrinks it. */
+  .bwd-site__wordmark {
+    max-width: none;
+  }
+
   .bwd-site__nav {
     display: flex;
     justify-content: center;

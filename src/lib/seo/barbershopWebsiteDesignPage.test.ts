@@ -123,6 +123,25 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(heroCss).not.toMatch(/bwd-site__wordmark-|--bl-rule|#d72638/i);
   });
 
+  it('does not let the percentage logo cap shrink the logo inside the desktop grid header', () => {
+    const start = heroCss.indexOf('@container (min-width: 44rem) {');
+    expect(start).toBeGreaterThan(-1);
+    let depth = 0;
+    let end = start;
+    for (let i = heroCss.indexOf('{', start); i < heroCss.length; i += 1) {
+      if (heroCss[i] === '{') depth += 1;
+      if (heroCss[i] === '}') depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+    const gridBlock = heroCss.slice(start, end + 1);
+    expect(gridBlock).toMatch(/\.bwd-site__header \{[^}]*display: grid;[^}]*grid-template-columns: auto minmax\(0, 1fr\) auto;/);
+    expect(gridBlock).toMatch(/\.bwd-site__wordmark \{[^}]*max-width: none;/);
+    expect(heroCss).toMatch(/\.bwd-site__wordmark \{[^}]*height: 2rem;[^}]*max-width: 45%;/);
+  });
+
   it('uses the approved logo in all eight illustrated positions and renders no BLACKLINE identity', () => {
     const sources = { hero, breakdown: read(`${designDir}WebsiteDesignBreakdown.astro`), brand: read(`${designDir}WebsiteDesignBrand.astro`) };
     const logoCount = (source: string) => (source.match(/<img\b[^>]*src=\{CUTSTATE_LOGO_SRC\}/g) ?? []).length;

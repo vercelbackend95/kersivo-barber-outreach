@@ -12,7 +12,9 @@ export const BLACKLINE_SESSION_ORDER_TAG = 'YOUR DEMO ORDER';
 export const BLACKLINE_SESSION_SALE_TAG = 'YOUR DEMO SALE';
 export const BLACKLINE_SESSION_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
 export const BLACKLINE_SESSION_ORDER_CUSTOMER_NAME = 'Demo customer';
-export const BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL = 'demo.customer@blackline.demo';
+export const BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL = 'demo.customer@cutstate.demo';
+/** Fallback stored by demo orders created before the CUTSTATE rename; they can stay in sessionStorage for the TTL. */
+export const LEGACY_SESSION_ORDER_CUSTOMER_EMAIL = 'demo.customer@blackline.demo';
 export const BLACKLINE_SESSION_ORDER_COLLECT_RE = /^\/api\/admin\/shop\/orders\/([^/]+)\/collect$/;
 
 const REFERENCE_RE = /^[A-Z]{2}-\d{4}$/;
@@ -209,10 +211,19 @@ function writeList(rows: BlacklineSessionOrder[]): void {
   }
 }
 
+function withCurrentFallbackEmail(row: BlacklineSessionOrder): BlacklineSessionOrder {
+  return row.customerEmail === LEGACY_SESSION_ORDER_CUSTOMER_EMAIL
+    ? { ...row, customerEmail: BLACKLINE_SESSION_ORDER_CUSTOMER_EMAIL }
+    : row;
+}
+
 function persistValidated(now = new Date()): BlacklineSessionOrder[] {
   const nowMs = now.getTime();
   const incoming = readRawList();
-  const valid = incoming.filter(isBlacklineSessionOrder).filter((row) => isFresh(row, nowMs));
+  const valid = incoming
+    .filter(isBlacklineSessionOrder)
+    .filter((row) => isFresh(row, nowMs))
+    .map(withCurrentFallbackEmail);
   if (valid.length !== incoming.length) writeList(valid);
   return valid;
 }
