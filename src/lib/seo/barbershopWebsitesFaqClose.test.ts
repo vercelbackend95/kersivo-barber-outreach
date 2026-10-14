@@ -239,7 +239,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(NO_SETUP_FEE_SHORT).toBe('No setup fee.');
     expect(fine).toMatch(/0% KERSIVO commission\. \{STRIPE_FEES_NOTE\}/);
     expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
-    expect(fine).toMatch(/BLACKLINE\s+Barbers, a fictional shop/);
+    expect(fine).toMatch(/CUTSTATE\s+Barbers, a fictional shop/);
     expect(markup).toMatch(/£\{SAAS_MONTHLY_GBP\}<\/span>\s*<span class="bsw-final__period">\/month per location/);
     expect(section).not.toMatch(/£\s?39\b/);
   });

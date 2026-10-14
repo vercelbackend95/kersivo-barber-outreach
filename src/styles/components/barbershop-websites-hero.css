@@ -1,7 +1,7 @@
 /* ============================================================
    /barbershop-websites pillar hero.
    Three-surface product composition: angled website-features panel,
-   dominant BLACKLINE browser preview, angled booking preview.
+   dominant CUTSTATE browser preview, angled booking preview.
    ============================================================ */
 
 .bsw-page {
@@ -590,22 +590,19 @@
 }
 
 .bsw-site__brand {
-  display: grid;
-  color: var(--fg);
-  line-height: 0.9;
+  display: block;
+  flex: none;
+  line-height: 0;
   text-decoration: none;
 }
 
-.bsw-site__brand span:first-child {
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-}
-
-.bsw-site__brand span:last-child {
-  font-size: 0.44rem;
-  font-weight: 600;
-  letter-spacing: 0.46em;
+/* The approved logo PNG carries its own transparent margin, so the box is taller than the old text lockup. */
+.bsw-site__brand img {
+  display: block;
+  width: auto;
+  height: 1.75rem;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .bsw-site__links {

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,9 @@ import {
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
 } from './barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
 import { DEMO_SERVICES } from '@/lib/demo/services';
+import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -65,11 +67,11 @@ describe('/barbershop-websites pillar hero', () => {
     expect(hero.indexOf('bsw-hero__price-note')).toBeGreaterThan(hero.indexOf('0% KERSIVO commission'));
   });
 
-  it('uses real demo data, no iframes, and labels BLACKLINE as fictional', () => {
+  it('uses real demo data, no iframes, and labels CUTSTATE as fictional', () => {
     const source = components.join('\n');
     expect(source).not.toMatch(/<iframe|<embed|<video/);
     expect(source).not.toMatch(/<select|<input|<button/);
-    expect(hero).toContain('fictional demonstration shop');
+    expect(hero).toContain('CUTSTATE BARBERS is a fictional demonstration shop');
     for (const slug of ['haircut-finish', 'beard-trim', 'skin-fade', 'wash-style-finish']) {
       expect(DEMO_SERVICES.some((service) => service.slug === slug)).toBe(true);
     }
@@ -101,6 +103,40 @@ describe('/barbershop-websites pillar hero', () => {
     const css = read('../../styles/components/barbershop-websites-hero.css');
     expect(css).toContain('.bsw-date-preview__day.is-selected');
     expect(css).toContain('background: var(--accent);');
+  });
+
+  it('brands the website preview with the approved CUTSTATE logo image', () => {
+    const preview = read(`${componentDir}BlacklineWebsitePreview.astro`);
+    const brand = preview.match(/<a class="bsw-site__brand"[\s\S]*?<\/a>/)?.[0] ?? '';
+    expect(brand).toContain('aria-label="CUTSTATE BARBERS demo home"');
+    expect(brand).toContain('href={DEMO_HOME_HREF}');
+    expect(brand).toMatch(/<img\s[\s\S]*src=\{CUTSTATE_LOGO_SRC\}/);
+    expect(brand).toContain('width={CUTSTATE_LOGO_WIDTH}');
+    expect(brand).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+    expect(brand).not.toMatch(/<span>/);
+    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
+    const css = read('../../styles/components/barbershop-websites-hero.css');
+    expect(css).toMatch(/\.bsw-site__brand img \{[^}]*width: auto;[^}]*object-fit: contain;/);
+    expect(css).not.toContain('.bsw-site__brand span');
+  });
+
+  it('renders no BLACKLINE identity anywhere on the page', () => {
+    const sources = [page, ...readdirSync(join(here, componentDir)).map((file) => read(`${componentDir}${file}`))];
+    for (const source of sources) {
+      const markup = source.split(/^---$/m).slice(2).join('---') || source;
+      const visibleText = markup.replace(/<[^>]+>/g, ' ');
+      const accessibleText = [...markup.matchAll(/\b(?:aria-label|alt|title)=(["{`])([\s\S]*?)\1/g)]
+        .map((match) => match[2])
+        .join(' ');
+      expect(visibleText).not.toMatch(/blackline/i);
+      expect(accessibleText).not.toMatch(/blackline/i);
+    }
+  });
+
+  it('keeps /barbershop-website-design noindex and out of the sitemap for Phase 04B', () => {
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(false);
+    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
+    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-website-design');
   });
 
   it('shares the marketing route family for page transitions', () => {

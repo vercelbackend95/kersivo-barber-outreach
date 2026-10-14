@@ -2,6 +2,7 @@
 import { ArrowRight, Lock, RotateCw } from 'lucide-react';
 import { DEMO_SERVICES, demoBookingHref, formatDemoPriceGbp } from '@/lib/demo/services';
 import { DEMO_BOOK_HREF, DEMO_CONTACT_HREF, DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 
 const IMG = '/images/barbershop-websites';
 
@@ -24,7 +25,7 @@ const siteNav = [
 ];
 ---
 
-<figure class="bsw-browser" aria-label="Illustrated preview of the BLACKLINE BARBERS demo website built on KERSIVO">
+<figure class="bsw-browser" aria-label="Illustrated preview of the CUTSTATE BARBERS demo website built on KERSIVO">
   <div class="bsw-browser__toolbar">
     <span class="bsw-browser__dots" aria-hidden="true"><i></i><i></i><i></i></span>
     <a class="bsw-browser__address" href={DEMO_HOME_HREF}>
@@ -36,11 +37,17 @@ const siteNav = [
 
   <div class="bsw-site">
     <div class="bsw-site__nav">
-      <a class="bsw-site__brand" href={DEMO_HOME_HREF} aria-label="BLACKLINE BARBERS demo home">
-        <span>BLACKLINE</span>
-        <span>BARBERS</span>
+      <a class="bsw-site__brand" href={DEMO_HOME_HREF} aria-label="CUTSTATE BARBERS demo home">
+        <img
+          src={CUTSTATE_LOGO_SRC}
+          alt=""
+          width={CUTSTATE_LOGO_WIDTH}
+          height={CUTSTATE_LOGO_HEIGHT}
+          decoding="async"
+          draggable="false"
+        />
       </a>
-      <nav class="bsw-site__links" aria-label="BLACKLINE demo pages">
+      <nav class="bsw-site__links" aria-label="CUTSTATE demo pages">
         {siteNav.map((item) => (
           <a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a>
         ))}
@@ -53,7 +60,7 @@ const siteNav = [
         <source media="(max-width: 640px)" srcset={`${IMG}/site-hero-640.webp`} />
         <img
           src={`${IMG}/site-hero-1100.webp`}
-          alt="A BLACKLINE demo barber cutting a client's hair with clippers"
+          alt="A CUTSTATE demo barber cutting a client's hair with clippers"
           width="1100"
           height="900"
           fetchpriority="high"

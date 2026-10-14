@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { DEMO_BARBERS, demoBarberBookingHref, resolveDemoBarberSlug } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
@@ -13,6 +15,7 @@ const page = read('../../pages/barbershop-websites/index.astro');
 const section = read('../../components/barbershop-websites/BrandToBooking.astro');
 const hero = read('../../components/barbershop-websites/BarbershopWebsitesHero.astro');
 const bookingCard = read('../../components/barbershop-websites/BookingPreview.astro');
+const brandCss = read('../../styles/components/barbershop-websites-brand-to-booking.css');
 const [, frontmatter = '', markup = ''] = section.split(/^---$/m);
 
 const text = (source: string) =>
@@ -59,7 +62,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(phones).toHaveLength(3);
     for (const phone of phones) {
       expect(phone).toMatch(/role="img"/);
-      expect(phone).toMatch(/aria-label=[{"`]+Illustrative preview of the BLACKLINE demo/);
+      expect(phone).toMatch(/aria-label=[{"`]+Illustrative preview of the CUTSTATE demo/);
       expect(phone).toContain('aria-hidden="true"');
       expect(phone).not.toMatch(/<a\b|<button\b|href=/);
     }
@@ -74,7 +77,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(text(cta)).toBe('Explore the working demo');
     expect(DEMO_HOME_HREF).toBe('/demo');
     expect(demoRouteExists(DEMO_HOME_HREF)).toBe(true);
-    expect(markup).not.toMatch(/Meet the BLACKLINE barbers|Start a demo booking/);
+    expect(markup).not.toMatch(/Meet the (BLACKLINE|CUTSTATE) barbers|Start a demo booking/);
   });
 
   it('carries the chosen barber from the roster into the booking screen', () => {
@@ -104,10 +107,29 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(markup).not.toMatch(/onclick|addEventListener|gtag\(|checkout|starter_signup/i);
   });
 
-  it('discloses that BLACKLINE is fictional and demo bookings are not real', () => {
+  it('shows the approved CUTSTATE logo in every phone preview instead of a recreated wordmark', () => {
+    const phones = markup.match(/<div\s+class="bsw-b2b-phone"[\s\S]*?<div class="bsw-b2b-moment__caption">/g) ?? [];
+    expect(phones).toHaveLength(3);
+    for (const phone of phones) {
+      const logo = phone.match(/<img\s+class="bsw-b2b-lockup"[\s\S]*?\/>/)?.[0] ?? '';
+      expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
+      expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
+      expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+      expect(phone).not.toMatch(/bsw-b2b-lockup__(name|sub)/);
+    }
+    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
+    expect(existsSync(join(root, 'public', CUTSTATE_LOGO_SRC))).toBe(true);
+    expect(phones[2]).toContain('<span class="bsw-b2b-phone__eyebrow">{DEMO_SHOP_NAME}</span>');
+    expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
+    expect(text(markup)).not.toMatch(/blackline/i);
+    expect(brandCss).not.toMatch(/bsw-shop-rule|#d72638|bsw-b2b-lockup__/i);
+    expect(brandCss).toContain('--bsw-shop-accent: #315ef5;');
+  });
+
+  it('discloses that CUTSTATE is fictional and demo bookings are not real', () => {
     const disclosure = text(markup.match(/<p class="bsw-b2b__disclosure">[\s\S]*?<\/p>/)?.[0] ?? '');
     expect(disclosure).toBe(
-      'BLACKLINE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings stay in your browser session — no real appointment is created and no payment is taken.',
+      'CUTSTATE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings stay in your browser session — no real appointment is created and no payment is taken.',
     );
   });
 

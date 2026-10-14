@@ -3,6 +3,8 @@ import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-brand-to-booking.css';
 import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -42,20 +44,25 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
         <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
       </p>
 
-      <div class="bsw-b2b__track" role="region" aria-label="The BLACKLINE client journey" tabindex="0">
+      <div class="bsw-b2b__track" role="region" aria-label="The CUTSTATE client journey" tabindex="0">
         <ol class="bsw-b2b__moments" role="list">
           <li class="bsw-b2b-moment">
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the BLACKLINE demo homepage: ${barber.name} at work, the headline Precision in every detail and a Book an appointment button.`}
+              aria-label={`Illustrative preview of the CUTSTATE demo homepage: ${barber.name} at work, the headline Precision in every detail and a Book an appointment button.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
-                  <span class="bsw-b2b-lockup">
-                    <span class="bsw-b2b-lockup__name">BLACKLINE</span>
-                    <span class="bsw-b2b-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
-                  </span>
+                  <img
+                    class="bsw-b2b-lockup"
+                    src={CUTSTATE_LOGO_SRC}
+                    alt=""
+                    width={CUTSTATE_LOGO_WIDTH}
+                    height={CUTSTATE_LOGO_HEIGHT}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
                 </div>
                 <img
@@ -91,14 +98,19 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the BLACKLINE demo barbers page: ${barber.name}, ${barber.specialisation}, with a Book with ${firstName} link.`}
+              aria-label={`Illustrative preview of the CUTSTATE demo barbers page: ${barber.name}, ${barber.specialisation}, with a Book with ${firstName} link.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
-                  <span class="bsw-b2b-lockup">
-                    <span class="bsw-b2b-lockup__name">BLACKLINE</span>
-                    <span class="bsw-b2b-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
-                  </span>
+                  <img
+                    class="bsw-b2b-lockup"
+                    src={CUTSTATE_LOGO_SRC}
+                    alt=""
+                    width={CUTSTATE_LOGO_WIDTH}
+                    height={CUTSTATE_LOGO_HEIGHT}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
                 </div>
                 <div class="bsw-b2b-phone__body bsw-b2b-phone__body--roster">
@@ -137,18 +149,23 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the BLACKLINE demo booking page, Book a chair, with ${barber.name} already selected as the barber.`}
+              aria-label={`Illustrative preview of the CUTSTATE demo booking page, Book a chair, with ${barber.name} already selected as the barber.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
-                  <span class="bsw-b2b-lockup">
-                    <span class="bsw-b2b-lockup__name">BLACKLINE</span>
-                    <span class="bsw-b2b-lockup__sub"><i></i><span>BARBERS</span><i></i></span>
-                  </span>
+                  <img
+                    class="bsw-b2b-lockup"
+                    src={CUTSTATE_LOGO_SRC}
+                    alt=""
+                    width={CUTSTATE_LOGO_WIDTH}
+                    height={CUTSTATE_LOGO_HEIGHT}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <span class="bsw-b2b-phone__menu"><i></i><i></i></span>
                 </div>
                 <div class="bsw-b2b-booking-head">
-                  <span class="bsw-b2b-phone__eyebrow">Blackline Barbers</span>
+                  <span class="bsw-b2b-phone__eyebrow">{DEMO_SHOP_NAME}</span>
                   <span class="bsw-b2b-phone__display bsw-b2b-phone__display--sm">Book a chair</span>
                   <span class="bsw-b2b-progress">
                     {bookingProgress.map((label, index) => (
@@ -206,7 +223,7 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
 
       <footer class="bsw-b2b__close">
         <p class="bsw-b2b__disclosure">
-          BLACKLINE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings
+          CUTSTATE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings
           stay in your browser session — no real appointment is created and no payment is taken.
         </p>
         <a

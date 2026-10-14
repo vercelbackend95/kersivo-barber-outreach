@@ -1,6 +1,6 @@
 /* Section 04: an editorial statement introduces three phone previews of
-   the real BLACKLINE pages, which step up towards the booking screen above a single rail in the
-   shop's own accent. Section chrome uses KERSIVO tokens; the previews use the BLACKLINE identity. */
+   the real CUTSTATE demo pages, which step up towards the booking screen above a single rail in the
+   shop's own accent. Section chrome uses KERSIVO tokens; the previews use the CUTSTATE identity. */
 
 /* Uniquely named so the BLACKLINE display face never leaks into KERSIVO typography. */
 @font-face {
@@ -20,7 +20,6 @@
   --bsw-shop-accent: #315ef5;
   --bsw-shop-accent-text: #91aeff;
   --bsw-shop-on-accent: #ffffff;
-  --bsw-shop-rule: #d72638;
   --bsw-shop-line: rgba(244, 241, 234, 0.14);
   --bsw-shop-display: 'BSW Blackline Display', 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --bsw-shop-radius: 4px;
@@ -193,38 +192,14 @@
   border-bottom: 1px solid var(--bsw-shop-line);
 }
 
+/* The approved logo PNG carries its own transparent margin, so the box is taller than the old text lockup. */
 .bsw-b2b-lockup {
-  display: inline-flex;
-  flex-direction: column;
-  width: max-content;
-  font-family: var(--bsw-shop-display);
-  line-height: 1;
-}
-
-.bsw-b2b-lockup__name {
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 0.86;
-}
-
-.bsw-b2b-lockup__sub {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.2rem;
-}
-
-.bsw-b2b-lockup__sub i {
-  flex: 1;
-  border-top: 1px solid var(--bsw-shop-rule);
-}
-
-.bsw-b2b-lockup__sub span {
-  font-size: 0.42rem;
-  font-weight: 800;
-  letter-spacing: 0.42em;
-  margin-inline-end: -0.42em;
+  display: block;
+  flex: none;
+  width: auto;
+  height: 2rem;
+  max-width: 70%;
+  object-fit: contain;
 }
 
 .bsw-b2b-phone__menu {
