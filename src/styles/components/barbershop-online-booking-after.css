@@ -1,0 +1,450 @@
+/* /barbershop-online-booking Section 05: from first booking to next visit.
+   Part A = live confirmation/reminder previews. Part B = labelled Concept only. */
+
+.bob-ab {
+  --bob-ab-red: var(--accent);
+  --bob-ab-red-text: var(--accent-text);
+  --bob-ab-line: rgb(255 255 255 / 0.08);
+  --bob-ab-line-strong: rgb(255 255 255 / 0.15);
+  --bob-ab-ink: #f4f1ea;
+  --bob-ab-muted: #b4b8bf;
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.5rem 0 4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background:
+    radial-gradient(ellipse 50% 40% at 20% 20%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 70%),
+    #040404;
+}
+
+.bob-ab__inner {
+  width: calc(100% - 2rem);
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.bob-ab__head {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 48rem;
+}
+
+.bob-ab__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--bob-ab-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bob-ab__eyebrow::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--bob-ab-red) 75%, transparent);
+}
+
+.bob-ab__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.85rem, 7.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.bob-ab__lead {
+  max-width: 42rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.bob-ab-part {
+  margin-top: 2.4rem;
+}
+
+.bob-ab-part__head {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 46rem;
+  margin-bottom: 1.25rem;
+}
+
+.bob-ab-part__tag {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid rgb(34 197 94 / 0.45);
+  border-radius: 999px;
+  background: rgb(34 197 94 / 0.08);
+  color: #86efac;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bob-ab-part__tag--concept {
+  border-color: rgb(215 38 56 / 0.45);
+  background: rgb(215 38 56 / 0.08);
+  color: var(--bob-ab-red-text);
+}
+
+.bob-ab-part__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 3.5vw, 1.55rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.bob-ab-part__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.bob-ab-mails {
+  display: grid;
+  gap: 1rem;
+}
+
+.bob-ab-mail {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.bob-ab-mail__beat {
+  margin: 0;
+  color: var(--bob-ab-red-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bob-ab-mail__window {
+  border: 1px solid var(--bob-ab-line-strong);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #141416, #0c0c0d);
+  overflow: hidden;
+}
+
+.bob-ab-mail__chrome {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--bob-ab-line);
+  background: rgb(255 255 255 / 0.02);
+}
+
+.bob-ab-mail__chrome span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.bob-ab-mail__meta {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--bob-ab-line);
+  color: var(--bob-ab-muted);
+  font-size: 0.82rem;
+}
+
+.bob-ab-mail__meta strong {
+  color: var(--bob-ab-ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bob-ab-mail__body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem 1rem 1.15rem;
+  color: var(--bob-ab-ink);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.bob-ab-mail__greeting,
+.bob-ab-mail__body > p,
+.bob-ab-mail__note {
+  margin: 0;
+}
+
+.bob-ab-mail__heading {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.bob-ab-mail__lines {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px dashed var(--bob-ab-line-strong);
+}
+
+.bob-ab-mail__lines > div {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.bob-ab-mail__lines dt {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.8rem;
+}
+
+.bob-ab-mail__lines dd {
+  margin: 0;
+  color: var(--bob-ab-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.bob-ab-mail__note {
+  color: var(--bob-ab-muted);
+  font-size: 0.84rem;
+}
+
+.bob-ab-mail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bob-ab-mail__actions span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgb(215 38 56 / 0.55);
+  border-radius: 0.65rem;
+  background: rgb(215 38 56 / 0.1);
+  color: var(--fg);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.bob-ab-facts {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bob-ab .bob-ab-facts li {
+  max-width: none;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--bob-ab-line-strong);
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.bob-ab-facts strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--fg);
+}
+
+.bob-ab-part--concept {
+  margin-top: 2.75rem;
+  padding: 1.25rem 1rem 1.35rem;
+  border: 1px dashed color-mix(in srgb, var(--bob-ab-red) 45%, var(--bob-ab-line-strong));
+  border-radius: 1.1rem;
+  background: rgb(215 38 56 / 0.03);
+}
+
+.bob-ab-concepts {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.bob-ab-concept {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--bob-ab-line-strong);
+  border-radius: 0.9rem;
+  background: rgb(0 0 0 / 0.35);
+}
+
+.bob-ab-concept__stage {
+  margin: 0;
+  color: var(--bob-ab-red-text);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bob-ab-concept__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.bob-ab-concept__body {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.bob-ab-concept__cta {
+  justify-self: start;
+  margin: 0.25rem 0 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--bob-ab-line-strong);
+  border-radius: 999px;
+  color: var(--bob-ab-ink);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.bob-ab-foot {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 2rem;
+}
+
+.bob-ab__disclosure {
+  max-width: 48rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.bob-ab__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border: 1px solid rgb(215 38 56 / 0.6);
+  border-radius: 0.75rem;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bob-ab__cta:hover {
+  border-color: var(--bob-ab-red);
+  background: rgb(215 38 56 / 0.16);
+}
+
+.bob-ab__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.bob-ab__cta-icon {
+  display: inline-flex;
+  color: var(--bob-ab-red-text);
+}
+
+.bob-ab__cta-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+@media (max-width: 47.99rem) {
+  .bob-ab__cta {
+    width: 100%;
+  }
+
+  .bob-ab-mail__lines > div,
+  .bob-ab-mail__meta {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .bob-ab {
+    padding: 4.5rem 0 5rem;
+  }
+
+  .bob-ab-mails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .bob-ab-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1.75rem;
+  }
+
+  .bob-ab-part--concept {
+    padding: 1.5rem 1.4rem 1.6rem;
+  }
+
+  .bob-ab-concepts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .bob-ab-foot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bob-ab__inner {
+    width: calc(100% - 4rem);
+  }
+
+  .bob-ab__title {
+    font-size: clamp(2.5rem, 3.6vw, 3.2rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bob-ab__cta {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+}

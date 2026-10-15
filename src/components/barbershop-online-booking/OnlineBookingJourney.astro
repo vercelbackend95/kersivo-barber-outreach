@@ -1,0 +1,440 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
+import { DEMO_SERVICE_CATEGORIES } from '@/lib/demo/serviceCategories';
+import { DEMO_DEFAULT_SERVICE_SLUG, DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { BARBERSHOP_ONLINE_BOOKING_DEMO_HREF } from '@/lib/seo/barbershopOnlineBookingPage';
+import '@/styles/components/barbershop-online-booking-journey.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_journey';
+
+const presentation = BLACKLINE_BOOKING_PRESENTATION;
+
+// Step labels, titles and hints mirror the public BookingFlow wizard (STEP_COPY, PUBLIC_DEMO_DETAILS_COPY).
+const FLOW_STEPS = ['Service', 'Barber', 'Schedule', 'Details'] as const;
+const STEP_COPY = {
+  service: { title: 'Choose a service', hint: 'Pick what you need' },
+  barber: { title: 'Choose a barber', hint: 'Who should take you' },
+  schedule: { title: 'Pick a time', hint: 'Date and available slots' },
+  details: { title: 'Your details', hint: 'Demo only — details stay in this browser' },
+};
+const ANY_BARBER = { name: 'Any barber', initials: 'ANY', helper: 'Fastest available' };
+
+// Subset of PREVIEW_STATIC_SLOTS, the fixed sandbox times BookingFlow shows in preview mode.
+const EXAMPLE_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30'] as const;
+const SELECTED_SLOT = '11:00';
+const EXAMPLE_DAY = 'Example day';
+
+// Starter's fixed online payment amount, as in bookingPaymentPolicy.
+const STARTER_DEPOSIT_PENCE = 500;
+
+// Trust items BookingFlow lists for the session-persisted Cutstate demo.
+const DEMO_TRUST_ITEMS = [
+  'No real appointment will be created',
+  'No confirmation email will be sent',
+  'Times shown follow the Cutstate owner timeline',
+];
+
+const THUMB_SIZE = 160;
+const thumbSrc = (slug: string) => `/demo/barbers/thumbs/${slug}-${THUMB_SIZE}.webp`;
+
+// The service grid opens on the first category, ordered as BookingFlow orders it: featured first.
+const firstCategory = DEMO_SERVICE_CATEGORIES[0];
+const categoryServices = DEMO_SERVICES.filter((service) => service.category === firstCategory.key)
+  .slice()
+  .sort((a, b) => Number(b.featured) - Number(a.featured) || a.displayOrder - b.displayOrder)
+  .slice(0, 4)
+  .map((service) => ({
+    id: service.id,
+    name: service.name,
+    description: service.description,
+    duration: `${service.durationMinutes} min`,
+    price: formatDemoPriceGbp(service.pricePence),
+  }));
+const selectedService = DEMO_SERVICES.find((service) => service.slug === DEMO_DEFAULT_SERVICE_SLUG) ?? DEMO_SERVICES[0];
+const servicePrice = formatDemoPriceGbp(selectedService.pricePence);
+const serviceDuration = `${selectedService.durationMinutes} min`;
+
+const barbers = DEMO_BARBERS.map((barber) => ({ id: barber.id, slug: barber.slug, name: barber.name, thumb: thumbSrc(barber.slug) }));
+const SELECTED_BARBER_SLUG = 'marcus-bell';
+const selectedBarber = barbers.find((barber) => barber.slug === SELECTED_BARBER_SLUG) ?? barbers[barbers.length - 1];
+
+const addMinutes = (time: string, minutes: number) => {
+  const [h, m] = time.split(':').map(Number);
+  const total = h * 60 + m + minutes;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
+const endsAt = addMinutes(SELECTED_SLOT, selectedService.durationMinutes);
+
+const summaryRows = [
+  ['Service', selectedService.name],
+  ['Barber', selectedBarber.name],
+  ['Date', EXAMPLE_DAY],
+  ['Time', SELECTED_SLOT],
+  ['Duration', serviceDuration],
+  ['Price', servicePrice],
+  ['Ends', endsAt],
+] as const;
+
+const picks = [
+  '',
+  selectedService.name,
+  [selectedService.name, selectedBarber.name].join(' · '),
+  [selectedService.name, selectedBarber.name, EXAMPLE_DAY, SELECTED_SLOT].join(' · '),
+];
+
+const svg = (paths: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
+const ICONS = {
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+  chevronRight: '<path d="m9 18 6-6-6-6"/>',
+  arrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+};
+
+const stages = [
+  {
+    tab: 'Service',
+    title: 'Choose the service',
+    client: `Clients start from your shop's own service menu, with each price and duration shown before they choose.`,
+    shop: 'The service fixes the appointment length and price before any time is offered.',
+    summary: `${STEP_COPY.service.title}: ${categoryServices.map((s) => `${s.name}, ${s.duration}, ${s.price}`).join('; ')}. ${selectedService.name} selected.`,
+  },
+  {
+    tab: 'Barber',
+    title: 'Choose the barber',
+    client: `Clients pick a named barber, or “${ANY_BARBER.name}” when the fastest available chair matters more.`,
+    shop: 'Only barbers who offer the chosen service are listed, so requests reach someone who does that work.',
+    summary: `${STEP_COPY.barber.title}: ${ANY_BARBER.name} (${ANY_BARBER.helper}), ${barbers.map((b) => b.name).join(', ')}. ${selectedBarber.name} selected.`,
+  },
+  {
+    tab: 'Time',
+    title: 'Choose an available time',
+    client: 'Clients see open times for the day they pick, with the appointment summary alongside.',
+    shop: `Times follow your working hours, the service length and appointments already booked. In the ${DEMO_SHOP_NAME} demo they follow the demo shop's own timeline.`,
+    summary: `${STEP_COPY.schedule.title}: illustrative example times ${EXAMPLE_SLOTS.join(', ')}; ${SELECTED_SLOT} selected. Summary: ${summaryRows.map(([label, value]) => `${label} ${value}`).join(', ')}.`,
+  },
+  {
+    tab: 'Details',
+    title: 'Add details and the payment step',
+    client: 'Name and email are required; phone is optional. On a live KERSIVO Starter booking page, clients then choose to pay a £5 deposit or the full price.',
+    shop: 'Contact details arrive with the booking, and the payment terms are clear before the client confirms. The fictional demo takes no payment.',
+    summary: `${STEP_COPY.details.title}: Name, Email, Phone (optional). On a live KERSIVO Starter booking page the Payment choice reads Pay £5 deposit, £5 now and ${formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE)} at the shop, or Pay in full, ${servicePrice} now and nothing to pay at the shop.`,
+  },
+  {
+    tab: 'Confirm',
+    title: 'See the booking confirmation',
+    client: `The demo ends with “${presentation.confirmHeading}” and creates no appointment or email. On a live booking page clients see “Booking confirmed”, and the appointment details are on their way by email.`,
+    shop: "A confirmed live booking appears in the shop's booking system.",
+    summary: `${presentation.confirmEyebrow}: ${presentation.confirmHeading} ${presentation.confirmBody} Booking summary: ${selectedService.name}, ${EXAMPLE_DAY} at ${SELECTED_SLOT}, with ${selectedBarber.name}.`,
+  },
+].map((stage, index) => ({ ...stage, number: String(index + 1).padStart(2, '0'), id: `boj-stage-${index + 1}` }));
+
+const stepState = (stageIndex: number, stepIndex: number) =>
+  stepIndex < stageIndex ? 'done' : stepIndex === stageIndex ? 'active' : 'pending';
+---
+
+<section class="boj" aria-labelledby="boj-title" data-boj>
+  <div class="boj__inner">
+    <header class="boj__head">
+      <p class="boj__eyebrow">The client booking journey</p>
+      <h2 id="boj-title" class="boj__title">From Book Now to a Confirmed Appointment</h2>
+      <p class="boj__lead">
+        A useful barbershop booking flow makes the service, barber, available time and payment conditions
+        clear before the client confirms. Here is what the customer sees — and why each step matters to the shop.
+      </p>
+    </header>
+
+    <div class="boj__body">
+      <div class="boj__tabs" role="group" aria-label="Booking journey steps" data-boj-group data-boj-anchor>
+        {stages.map((stage, index) => (
+          <button
+            type="button"
+            class="boj-tab"
+            aria-controls={`${stage.id}-panel`}
+            aria-pressed={index === 0 ? 'true' : 'false'}
+            data-boj-select={index}
+          >
+            <span class="boj-tab__num" aria-hidden="true">{stage.number}</span>
+            <span class="sr-only">Step {index + 1} of {stages.length}:</span>
+            <span class="boj-tab__label">{stage.tab}</span>
+          </button>
+        ))}
+      </div>
+
+      <ol class="boj__rail" data-boj-group>
+        {stages.map((stage, index) => (
+          <li class:list={['boj-stage', { 'is-active': index === 0 }]} data-boj-stage>
+            <span class="boj-stage__num" aria-hidden="true">{stage.number}</span>
+            <div class="boj-stage__text">
+              <h3 id={`${stage.id}-title`} class="boj-stage__title">{stage.title}</h3>
+              <p class="boj-stage__client">{stage.client}</p>
+              <p class="boj-stage__shop"><span class="boj-stage__shop-label">For the shop</span> {stage.shop}</p>
+            </div>
+            <button
+              type="button"
+              class="boj-stage__select"
+              aria-controls={`${stage.id}-panel`}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+              data-boj-select={index}
+            >
+              <span class="sr-only">Show step {index + 1} of {stages.length}, {stage.title}, in the booking preview</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <figure class="boj__showcase">
+        <p class="sr-only" aria-live="polite" data-boj-status></p>
+        <div class="boj__panels">
+          {stages.map((stage, index) => (
+            <div
+              id={`${stage.id}-panel`}
+              class:list={['boj-panel', { 'is-active': index === 0 }]}
+              role="group"
+              aria-labelledby={`${stage.id}-title`}
+              data-boj-panel
+            >
+              <p class="sr-only">{stage.summary}</p>
+              <span class="boj-panel__label" aria-hidden="true">{stage.number} — {stage.title}</span>
+
+              <div class="boj-screen" aria-hidden="true">
+                <div class="boj-screen__head">
+                  <span class="boj-screen__shop">
+                    <span class="boj-screen__eyebrow">{presentation.eyebrow}</span>
+                    <span class="boj-screen__heading">{presentation.title}</span>
+                  </span>
+                  {index < 4 && (
+                    <span class="boj-screen__steps">
+                      {FLOW_STEPS.map((step, stepIndex) => (
+                        <span class={`boj-screen__step is-${stepState(index, stepIndex)}`}>
+                          <span class="boj-screen__step-dot">
+                            {stepIndex < index ? <Fragment set:html={svg(ICONS.check)} /> : stepIndex + 1}
+                          </span>
+                          <span class="boj-screen__step-label">{step}</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+
+                {index >= 1 && index <= 3 && <p class="boj-screen__picks">{picks[index]}</p>}
+
+                {index === 0 && (
+                  <div class="boj-screen__body">
+                    <span class="boj-screen__title">{STEP_COPY.service.title}</span>
+                    <span class="boj-screen__hint">{STEP_COPY.service.hint}</span>
+                    <span class="boj-screen__category">{firstCategory.label}</span>
+                    <span class="boj-screen__services">
+                      {categoryServices.map((service) => (
+                        <span class:list={['boj-card boj-card--service', { 'is-selected': service.id === selectedService.id }]}>
+                          <span class="boj-card__copy">
+                            <span class="boj-card__name">{service.name}</span>
+                            <span class="boj-card__desc">{service.description}</span>
+                          </span>
+                          <span class="boj-card__meta">
+                            <span class="boj-card__price">{service.price}</span>
+                            <span class="boj-card__stat">{service.duration}</span>
+                          </span>
+                          <span class="boj-card__mark" set:html={svg(ICONS.check)} />
+                        </span>
+                      ))}
+                    </span>
+                    <span class="boj-screen__more">{categoryServices.length} of {DEMO_SERVICES.length} services shown</span>
+                  </div>
+                )}
+
+                {index === 1 && (
+                  <div class="boj-screen__body">
+                    <span class="boj-screen__title">{STEP_COPY.barber.title}</span>
+                    <span class="boj-screen__hint">{STEP_COPY.barber.hint}</span>
+                    <span class="boj-screen__barbers">
+                      <span class="boj-card boj-card--barber boj-card--any">
+                        <span class="boj-card__avatar boj-card__avatar--any">{ANY_BARBER.initials}</span>
+                        <span class="boj-card__copy">
+                          <span class="boj-card__name">{ANY_BARBER.name}</span>
+                          <span class="boj-card__helper">{ANY_BARBER.helper}</span>
+                        </span>
+                        <span class="boj-card__mark" set:html={svg(ICONS.check)} />
+                      </span>
+                      {barbers.map((barber) => (
+                        <span class:list={['boj-card boj-card--barber', { 'is-selected': barber.id === selectedBarber.id }]}>
+                          <span class="boj-card__avatar">
+                            <img src={barber.thumb} alt="" width={THUMB_SIZE} height={THUMB_SIZE} loading="lazy" decoding="async" />
+                          </span>
+                          <span class="boj-card__copy">
+                            <span class="boj-card__name">{barber.name}</span>
+                          </span>
+                          <span class="boj-card__mark" set:html={svg(ICONS.check)} />
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                )}
+
+                {index === 2 && (
+                  <div class="boj-screen__body boj-screen__body--split">
+                    <span class="boj-screen__main">
+                      <span class="boj-screen__title">{STEP_COPY.schedule.title}</span>
+                      <span class="boj-screen__hint">{STEP_COPY.schedule.hint}</span>
+                      <span class="boj-screen__day">
+                        <span class="boj-screen__chevron" set:html={svg(ICONS.chevronLeft)} />
+                        <span class="boj-screen__day-label">{EXAMPLE_DAY}</span>
+                        <span class="boj-screen__chevron" set:html={svg(ICONS.chevronRight)} />
+                      </span>
+                      <span class="boj-screen__label">Available times</span>
+                      <span class="boj-screen__helper">Illustrative example times</span>
+                      <span class="boj-screen__slots">
+                        {EXAMPLE_SLOTS.map((slot) => (
+                          <span class:list={['boj-slot', { 'is-selected': slot === SELECTED_SLOT }]}>{slot}</span>
+                        ))}
+                      </span>
+                    </span>
+                    <span class="boj-summary">
+                      <span class="boj-summary__eyebrow">Summary</span>
+                      <span class="boj-summary__title">Your booking</span>
+                      <span class="boj-summary__card">
+                        <span class="boj-summary__card-title">Appointment</span>
+                        {summaryRows.map(([label, value]) => (
+                          <span class="boj-summary__row">
+                            <span>{label}</span>
+                            <span>{value}</span>
+                          </span>
+                        ))}
+                      </span>
+                      <span class="boj-summary__card boj-summary__card--next">
+                        <span class="boj-summary__card-title">Next</span>
+                        {DEMO_TRUST_ITEMS.map((item) => <span class="boj-summary__trust">{item}</span>)}
+                      </span>
+                    </span>
+                  </div>
+                )}
+
+                {index === 3 && (
+                  <div class="boj-screen__body boj-screen__body--split">
+                    <span class="boj-screen__main">
+                      <span class="boj-screen__title">{STEP_COPY.details.title}</span>
+                      <span class="boj-screen__hint">{STEP_COPY.details.hint}</span>
+                      <span class="boj-fields">
+                        <span class="boj-field">
+                          <span class="boj-field__label">Name</span>
+                          <span class="boj-field__input">Your full name</span>
+                        </span>
+                        <span class="boj-field">
+                          <span class="boj-field__label">Email</span>
+                          <span class="boj-field__input">you@email.com</span>
+                        </span>
+                        <span class="boj-field boj-field--wide">
+                          <span class="boj-field__label">Phone <em>(optional)</em></span>
+                          <span class="boj-field__input">Mobile number</span>
+                        </span>
+                      </span>
+                      <span class="boj-screen__note">{presentation.sandboxNote}</span>
+                    </span>
+                    <span class="boj-live">
+                      <span class="boj-live__tag">On a live KERSIVO Starter booking page</span>
+                      <span class="boj-live__legend">Payment</span>
+                      <span class="boj-live__options">
+                        <span class="boj-live__option is-selected">
+                          <span class="boj-live__radio"></span>
+                          <span class="boj-live__copy">
+                            <span class="boj-live__name">Pay £5 deposit</span>
+                            <span class="boj-live__sub">£5 now · {formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE)} at the shop</span>
+                          </span>
+                        </span>
+                        <span class="boj-live__option">
+                          <span class="boj-live__radio"></span>
+                          <span class="boj-live__copy">
+                            <span class="boj-live__name">Pay in full</span>
+                            <span class="boj-live__sub">{servicePrice} now · nothing to pay at the shop</span>
+                          </span>
+                        </span>
+                      </span>
+                      <span class="boj-live__note">0% KERSIVO commission. Stripe processing fees apply.</span>
+                    </span>
+                  </div>
+                )}
+
+                {index === 4 && (
+                  <div class="boj-screen__body boj-confirm">
+                    <span class="boj-confirm__mark" set:html={svg(ICONS.check)} />
+                    <span class="boj-confirm__eyebrow">{presentation.confirmEyebrow}</span>
+                    <span class="boj-confirm__heading">{presentation.confirmHeading}</span>
+                    <span class="boj-confirm__body">{presentation.confirmBody}</span>
+                    <span class="boj-confirm__card">
+                      <span class="boj-confirm__card-title">Booking summary</span>
+                      <span class="boj-summary__row"><span>Appointment</span><span>{selectedService.name}</span></span>
+                      <span class="boj-summary__row"><span>When</span><span>{EXAMPLE_DAY} · {SELECTED_SLOT}</span></span>
+                      <span class="boj-summary__row"><span>Barber</span><span>with {selectedBarber.name}</span></span>
+                    </span>
+                    <span class="boj-screen__actions boj-screen__actions--confirm">
+                      <span class="boj-btn boj-btn--primary">View booking online</span>
+                      <span class="boj-btn">{presentation.confirmCtas?.[0]?.label}</span>
+                    </span>
+                  </div>
+                )}
+
+                {index < 4 && (
+                  <div class:list={['boj-screen__actions', { 'boj-screen__actions--nav': index < 3 }]}>
+                    <span class:list={['boj-btn', { 'is-muted': index === 0 }]}>Back</span>
+                    <span class="boj-btn boj-btn--primary">{index === 3 ? 'Complete demo booking' : 'Continue'}</span>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          ))}
+        </div>
+      </figure>
+
+      <div class="boj__pager">
+        <button type="button" class="boj-pager__btn" aria-disabled="true" data-boj-step="-1">
+          <span class="boj-pager__icon" set:html={svg(ICONS.chevronLeft)} />
+          Previous<span class="sr-only"> step</span>
+        </button>
+        <span class="boj-pager__count" aria-hidden="true" data-boj-count>1 / {stages.length}</span>
+        <button type="button" class="boj-pager__btn boj-pager__btn--next" aria-disabled="false" data-boj-step="1">
+          Next<span class="sr-only"> step</span>
+          <span class="boj-pager__icon" set:html={svg(ICONS.chevronRight)} />
+        </button>
+      </div>
+    </div>
+
+    <div class="boj__close">
+      <p class="boj__disclosure">
+        <span class="boj__tag">Demo</span>
+        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Cutstate is a fictional KERSIVO
+        demonstration shop; times are examples, no appointment is created and no payment is taken.
+      </p>
+      <a
+        class="boj__cta"
+        href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >
+        Explore the full booking demo
+        <span class="boj__cta-icon" set:html={svg(ICONS.arrowRight)} />
+      </a>
+    </div>
+  </div>
+
+  <noscript>
+    <style is:inline>
+      .boj-panel:not(.is-active) { display: flex !important; }
+      .boj-stage:not(.is-active) { display: grid !important; }
+      .boj__panels { gap: 1.5rem; }
+      .boj-panel__label { display: block !important; }
+      .boj-stage__select, .boj__tabs, .boj__pager { display: none !important; }
+      .boj-stage.is-active { box-shadow: none !important; background: none !important; }
+    </style>
+  </noscript>
+</section>
+
+<script>
+  import { bindBookingJourney } from '@/lib/barbershopOnlineBooking/journeyStages';
+
+  bindBookingJourney();
+  document.addEventListener('astro:page-load', () => bindBookingJourney());
+</script>

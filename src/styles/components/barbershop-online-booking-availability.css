@@ -1,0 +1,446 @@
+/* /barbershop-online-booking Section 03: one schedule, two perspectives. A compact client time
+   picker paired with the real KERSIVO admin timeline in the landing page's floating widget style.
+   The timeline itself is styled by the admin (booking.css) and the landing widget (`.isw`). */
+
+.boa {
+  --boa-red: var(--accent);
+  --boa-red-text: var(--accent-text);
+  --boa-booked: #22c55e;
+  --boa-line: rgb(255 255 255 / 0.08);
+  --boa-line-strong: rgb(255 255 255 / 0.15);
+  --boa-card: #141415;
+  --boa-ink: #f4f1ea;
+  --boa-ink-muted: #b4b8bf;
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.5rem 0 4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: #030303;
+}
+
+.boa__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 45% at 70% 42%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 0%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.boa__inner {
+  width: calc(100% - 2rem);
+  max-width: 90rem;
+  margin-inline: auto;
+}
+
+/* Head */
+
+.boa__head {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 50rem;
+}
+
+.boa__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--boa-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.boa__eyebrow::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--boa-red) 75%, transparent);
+}
+
+.boa__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.85rem, 7.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.boa__lead {
+  max-width: 42rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* Stage: client view directly above (or beside) the owner timeline. */
+
+.boa__stage {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.boa-sync {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+/* Client view */
+
+.boa-client {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1px solid var(--boa-line-strong);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #111113, #0b0b0c);
+  color: var(--boa-ink);
+  font-family: 'BOB Cutstate Body', var(--font-body);
+}
+
+.boa-client__title,
+.boa-owner__title {
+  margin: 0;
+  color: var(--boa-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.boa-client__context {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.boa-client__avatar {
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--boa-red);
+}
+
+.boa-client__picks {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.boa-client__picks strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.boa-client__picks span {
+  color: var(--boa-ink-muted);
+}
+
+.boa-client__day {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--boa-line);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.boa-client__day-name {
+  color: var(--boa-ink-muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+
+.boa-client__times {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.boa-time {
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--boa-line-strong);
+  border-radius: 0.6rem;
+  background: var(--boa-card);
+  color: var(--boa-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.boa-time:hover {
+  border-color: rgb(215 38 56 / 0.6);
+}
+
+.boa-time[aria-pressed='true'] {
+  border-color: var(--boa-red);
+  background: var(--boa-red);
+  color: #fff;
+  box-shadow: 0 0 14px -3px rgb(215 38 56 / 0.55);
+}
+
+.boa-time:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.boa-client__note {
+  margin: 0;
+  color: var(--boa-ink-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+/* Owner view: the floating landing-style timeline, no panel around it. */
+
+.boa-owner {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.boa-owner__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 1rem;
+}
+
+.boa-owner__meta {
+  margin: 0;
+  color: var(--boa-ink-muted);
+  font-size: 0.78rem;
+}
+
+.boa__disclosure {
+  max-width: 60rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg));
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.boa__tag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid rgb(215 38 56 / 0.45);
+  border-radius: 999px;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--boa-red-text);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+}
+
+/* Rules */
+
+.boa-rules {
+  display: grid;
+  gap: 1rem;
+  margin: 2.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: boa-rule;
+}
+
+.boa .boa-rule {
+  display: grid;
+  gap: 0.35rem;
+  max-width: none;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--boa-line-strong);
+  counter-increment: boa-rule;
+}
+
+.boa-rule__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.boa-rule__title::before {
+  content: counter(boa-rule, decimal-leading-zero);
+  color: var(--boa-red-text);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.boa-rule__body {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Where confirmed bookings land */
+
+.boa-lands {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 2rem;
+  padding: 1.2rem;
+  border: 1px solid var(--boa-line-strong);
+  border-left: 3px solid var(--boa-booked);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.02);
+}
+
+.boa-lands__copy {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.boa-lands__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.boa-lands__copy p {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.boa__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border: 1px solid rgb(215 38 56 / 0.6);
+  border-radius: 0.75rem;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.boa__cta:hover {
+  border-color: var(--boa-red);
+  background: rgb(215 38 56 / 0.16);
+}
+
+.boa__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.boa__cta-icon {
+  display: inline-flex;
+  color: var(--boa-red-text);
+}
+
+.boa__cta-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+@media (max-width: 47.99rem) {
+  .boa-client {
+    gap: 0.6rem;
+    padding: 0.9rem;
+  }
+
+  .boa__cta {
+    width: 100%;
+  }
+}
+
+@media (min-width: 48rem) {
+  .boa {
+    padding: 4.5rem 0 5rem;
+  }
+
+  .boa__stage {
+    margin-top: 2.25rem;
+  }
+
+  .boa-rules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .boa-lands {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.4rem 1.6rem;
+  }
+}
+
+/* 1024px+: the client view beside the timeline, which takes most of the width. */
+
+@media (min-width: 64rem) {
+  .boa__inner {
+    width: calc(100% - 4rem);
+  }
+
+  .boa__title {
+    font-size: clamp(2.5rem, 3.6vw, 3.2rem);
+  }
+
+  .boa-sync {
+    grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 4vw, 4.5rem);
+  }
+
+  .boa-client {
+    padding: 1.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .boa-time {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+}

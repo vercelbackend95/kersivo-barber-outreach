@@ -35,6 +35,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/about',
   '/barbershop-websites',
   '/barbershop-website-design',
+  '/barbershop-online-booking',
 ];
 
 export function getRouteFamily(pathname: string): RouteFamily {

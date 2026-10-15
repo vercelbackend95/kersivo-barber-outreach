@@ -1,0 +1,112 @@
+---
+import OnlineBookingHeroPreview from '@/components/barbershop-online-booking/OnlineBookingHeroPreview.astro';
+import {
+  BARBERSHOP_ONLINE_BOOKING_DEMO_HREF,
+  BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF,
+  BARBERSHOP_ONLINE_BOOKING_PAGE_H1,
+} from '@/lib/seo/barbershopOnlineBookingPage';
+import '@/styles/components/barbershop-online-booking-hero.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_hero_demo';
+
+// Desktop composition: "See How Online Booking / Works for Your Barbershop".
+const ACCENT_WORDS = 'Your Barbershop';
+const lineBreak = BARBERSHOP_ONLINE_BOOKING_PAGE_H1.indexOf(' Works ');
+const titleFirst = lineBreak > 0 ? BARBERSHOP_ONLINE_BOOKING_PAGE_H1.slice(0, lineBreak) : '';
+const titleSecond = lineBreak > 0 ? BARBERSHOP_ONLINE_BOOKING_PAGE_H1.slice(lineBreak + 1) : BARBERSHOP_ONLINE_BOOKING_PAGE_H1;
+const titleSecondLead = titleSecond.endsWith(ACCENT_WORDS) ? titleSecond.slice(0, -ACCENT_WORDS.length) : titleSecond;
+const titleAccent = titleSecond.endsWith(ACCENT_WORDS) ? ACCENT_WORDS : '';
+
+const svg = (paths: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
+const ICONS = {
+  arrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  checkCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  browser: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M6 6.5h.01M9 6.5h.01"/>',
+  calendarCheck: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+  store: '<path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/>',
+};
+
+const terms = ['KERSIVO Starter £0/month', 'Full £39/month per location', '0% KERSIVO commission'];
+
+const strip = [
+  { icon: ICONS.link, title: 'Book from anywhere', body: 'Open the booking page from a shared link.' },
+  { icon: ICONS.browser, title: 'No customer app required', body: 'Book directly in the browser.' },
+  { icon: ICONS.calendarCheck, title: 'Connected to your diary', body: "Confirmed bookings appear in the shop's system." },
+  { icon: ICONS.store, title: 'Built for UK barbershops', body: 'Designed for independent barber businesses.' },
+];
+---
+
+<section class="bob-hero" aria-labelledby="bob-hero-title">
+  <div class="bob-hero__spotlight" aria-hidden="true"></div>
+
+  <div class="bob-hero__inner">
+    <nav class="bob-hero__breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li><span aria-current="page">Online booking</span></li>
+      </ol>
+    </nav>
+
+    <div class="bob-hero__head">
+      <p class="bob-hero__eyebrow">Online booking for UK barbershops</p>
+
+      <h1 id="bob-hero-title" class="bob-hero__title">
+        {titleFirst && <span class="bob-hero__title-line">{titleFirst}</span>}{titleFirst && ' '}
+        <span class="bob-hero__title-line">
+          {titleSecondLead}{titleAccent && <span class="bob-hero__accent">{titleAccent}</span>}
+        </span>
+      </h1>
+
+      <p class="bob-hero__lead">
+        Clients choose a service, a barber and an available time — and the appointment lands in your
+        shop's booking system. Start with a KERSIVO-hosted booking page, or bring bookings onto your own
+        branded website with Full KERSIVO.
+      </p>
+
+      <div class="bob-hero__actions">
+        <a
+          href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}
+          class="bob-hero__action bob-hero__action--primary"
+          data-track={TRACK_EVENT}
+          data-track-placement={TRACK_PLACEMENT}
+        >
+          See the booking demo
+          <span class="bob-hero__action-icon" set:html={svg(ICONS.arrowRight)} />
+        </a>
+        <a href={BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF} class="bob-hero__action bob-hero__action--secondary">
+          Compare your booking options
+        </a>
+      </div>
+
+      <div class="bob-hero__terms">
+        <ul class="bob-hero__terms-list">
+          {terms.map((term) => (
+            <li class="bob-hero__term">
+              <span class="bob-hero__term-icon" set:html={svg(ICONS.checkCircle)} />
+              <span>{term}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="bob-hero__fees">Stripe processing fees apply to card payments.</p>
+      </div>
+    </div>
+
+    <OnlineBookingHeroPreview />
+
+    <ul class="bob-strip">
+      {strip.map((item) => (
+        <li class="bob-strip__item">
+          <span class="bob-strip__icon" set:html={svg(item.icon)} />
+          <span class="bob-strip__text">
+            <span class="bob-strip__title">{item.title}</span>
+            <span class="bob-strip__body">{item.body}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

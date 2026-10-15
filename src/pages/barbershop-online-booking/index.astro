@@ -1,0 +1,66 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import OnlineBookingHero from '@/components/barbershop-online-booking/OnlineBookingHero.astro';
+import OnlineBookingJourney from '@/components/barbershop-online-booking/OnlineBookingJourney.astro';
+import OnlineBookingAvailability from '@/components/barbershop-online-booking/OnlineBookingAvailability.astro';
+import OnlineBookingPayments from '@/components/barbershop-online-booking/OnlineBookingPayments.astro';
+import OnlineBookingEntryPoints from '@/components/barbershop-online-booking/OnlineBookingEntryPoints.astro';
+import OnlineBookingAfterBooking from '@/components/barbershop-online-booking/OnlineBookingAfterBooking.astro';
+import {
+  BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION,
+  BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE,
+  BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
+  BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
+  buildBarbershopOnlineBookingJsonLd,
+} from '@/lib/seo/barbershopOnlineBookingPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE}
+  description={BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION}
+  canonicalPath={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}
+  noindex={!BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE}
+  robotsFollow
+  jsonLd={buildBarbershopOnlineBookingJsonLd()}
+>
+  <main class="bob-page">
+    <OnlineBookingHero />
+    <OnlineBookingJourney />
+    <OnlineBookingAvailability />
+    <OnlineBookingPayments />
+    <OnlineBookingEntryPoints />
+    <OnlineBookingAfterBooking />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Starter', href: '/starter' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Booksy comparison', href: '/booksy-alternative' },
+        { name: 'Fresha comparison', href: '/fresha-alternative' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>

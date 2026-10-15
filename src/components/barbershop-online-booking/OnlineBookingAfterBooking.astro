@@ -1,0 +1,150 @@
+---
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { buildAfterBookingExample } from '@/lib/barbershopOnlineBooking/afterBookingExample';
+import { SMS_INCLUDED_WITH_ALLOWANCE_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import '@/styles/components/barbershop-online-booking-after.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_after';
+const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');
+
+const example = buildAfterBookingExample();
+const liveEmails = [
+  { preview: example.confirmation, beat: 'Before the visit', label: 'Confirmation' },
+  { preview: example.reminder, beat: 'Before the visit', label: 'Reminder' },
+];
+
+const ARROW =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+---
+
+<section class="bob-ab" aria-labelledby="bob-ab-title">
+  <div class="bob-ab__inner">
+    <header class="bob-ab__head">
+      <p class="bob-ab__eyebrow">From first booking to next visit</p>
+      <h2 id="bob-ab-title" class="bob-ab__title">What Happens After a Booking?</h2>
+      <p class="bob-ab__lead">
+        A great booking experience does not end at confirmation. Keeping clients informed, making it easy to change
+        plans when the rules allow, and building a direct relationship with your shop all matter.
+      </p>
+    </header>
+
+    <div class="bob-ab-part">
+      <div class="bob-ab-part__head">
+        <p class="bob-ab-part__tag">Live today</p>
+        <h3 class="bob-ab-part__title">Keep the appointment organised</h3>
+        <p class="bob-ab-part__lead">
+          On Starter and Full, confirmed bookings send a confirmation email. Applicable appointments also receive an
+          email reminder about a day before. Bookings made too close to the appointment do not get that day-before
+          reminder.
+        </p>
+      </div>
+
+      <div class="bob-ab-mails">
+        {
+          liveEmails.map(({ preview, beat, label }) => (
+            <article class="bob-ab-mail" aria-label={`${label} email preview`}>
+              <p class="bob-ab-mail__beat">{beat}</p>
+              <div class="bob-ab-mail__window">
+                <div class="bob-ab-mail__chrome" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p class="bob-ab-mail__meta">
+                  <span>From</span>
+                  <strong>{preview.fromLabel}</strong>
+                </p>
+                <p class="bob-ab-mail__meta">
+                  <span>Subject</span>
+                  <strong>{preview.subject}</strong>
+                </p>
+                <div class="bob-ab-mail__body">
+                  <p class="bob-ab-mail__greeting">Hi {example.clientName},</p>
+                  <h4 class="bob-ab-mail__heading">{preview.title}</h4>
+                  <p>{preview.intro}</p>
+                  {preview.kind === 'confirmation' && preview.footer && <p>{preview.footer}</p>}
+                  <dl class="bob-ab-mail__lines">
+                    {preview.lines.map((line) => (
+                      <div>
+                        <dt>{line.label}</dt>
+                        <dd>{line.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {preview.kind === 'reminder' && preview.footer && <p class="bob-ab-mail__note">{preview.footer}</p>}
+                  {preview.actions.length > 0 && (
+                    <ul class="bob-ab-mail__actions">
+                      {preview.actions.map((action) => (
+                        <li>
+                          <span>{action.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <ul class="bob-ab-facts">
+        <li>
+          <strong>In the shop diary.</strong>
+          The confirmed booking lands in the owner timeline the team works from — the same diary shown earlier on this
+          page.
+        </li>
+        <li>
+          <strong>Full KERSIVO only.</strong>
+          {SMS_INCLUDED_WITH_ALLOWANCE_CLAIM} Starter uses email reminders, not SMS.
+        </li>
+      </ul>
+    </div>
+
+    <div class="bob-ab-part bob-ab-part--concept">
+      <div class="bob-ab-part__head">
+        <p class="bob-ab-part__tag bob-ab-part__tag--concept">Concept</p>
+        <h3 class="bob-ab-part__title">Keep the relationship going</h3>
+        <p class="bob-ab-part__lead">
+          Product direction for Full KERSIVO — not available in the live product yet. The aim is a thank-you after a real
+          visit, an honest Google review invitation through the shop’s own profile, and a relevant invitation to book
+          again on the shop’s own booking page. These examples are illustrative only.
+        </p>
+      </div>
+
+      <div class="bob-ab-concepts">
+        {
+          example.concepts.map((card) => (
+            <article class="bob-ab-concept" aria-labelledby={`bob-ab-concept-${card.id}`}>
+              <p class="bob-ab-concept__stage">{card.stage}</p>
+              <h4 id={`bob-ab-concept-${card.id}`} class="bob-ab-concept__title">
+                {card.title}
+              </h4>
+              <p class="bob-ab-concept__body">{card.body}</p>
+              {card.ctaLabel && <p class="bob-ab-concept__cta">{card.ctaLabel}</p>}
+            </article>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="bob-ab-foot">
+      <p class="bob-ab__disclosure">
+        Previews use the fictional {DEMO_SHOP_NAME} demo identity. Confirmation and reminder copy match the live KERSIVO
+        email templates; nothing on this page sends a message. Concept cards are not live product features. A booking is
+        not marketing consent — promotional follow-ups need their own approved rules before they can ship.
+      </p>
+      <a
+        class="bob-ab__cta"
+        href={OWNER_TIMELINE_HREF}
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >
+        Explore the admin demo
+        <span class="bob-ab__cta-icon" set:html={ARROW} />
+      </a>
+    </div>
+  </div>
+</section>

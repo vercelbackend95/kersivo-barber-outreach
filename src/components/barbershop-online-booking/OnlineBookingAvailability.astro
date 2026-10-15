@@ -1,0 +1,92 @@
+---
+import OnlineBookingAvailabilitySync from '@/components/barbershop-online-booking/OnlineBookingAvailabilitySync';
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { buildAvailabilityExample } from '@/lib/barbershopOnlineBooking/availabilityExample';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import '@/styles/components/barbershop-online-booking-availability.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_availability';
+const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');
+
+const example = buildAvailabilityExample();
+const { barber, service, window: hours, offered, notOffered } = example;
+const firstName = barber.name.split(' ')[0];
+const [overlapCurrent, overlapNext] = notOffered;
+const times = offered.map(({ label, start, endLabel }) => ({ label, start, endLabel }));
+
+const rules = [
+  {
+    title: 'Working hours',
+    body: `On this day ${firstName} works ${hours.openLabel}–${hours.closeLabel}, so no time starts earlier or finishes later. On a live KERSIVO booking page, each barber's weekly hours — within the shop's opening hours, less breaks and time off — set that window.`,
+  },
+  {
+    title: 'Service length',
+    body: `A ${service.name} needs ${service.duration} free minutes. ${overlapNext.label} isn't offered: it would run into ${firstName}'s ${overlapNext.blockedBy.startLabel} appointment.`,
+  },
+  {
+    title: 'Existing appointments',
+    body: `${overlapCurrent.label} isn't offered either — ${firstName} is booked until ${overlapCurrent.blockedBy.endLabel}. Booked appointments hold their time, so clients are only offered time that is still free.`,
+  },
+];
+
+const ICONS = {
+  arrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+};
+const svg = (paths: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
+---
+
+<section class="boa" aria-labelledby="boa-title">
+  <div class="boa__glow" aria-hidden="true"></div>
+  <div class="boa__inner">
+    <header class="boa__head">
+      <p class="boa__eyebrow">Available times and the shop diary</p>
+      <h2 id="boa-title" class="boa__title">The Time Clients Choose Comes From Your Shop's Diary</h2>
+      <p class="boa__lead">
+        Clients should only be offered times that match your barbers' availability, their services and the
+        appointments already in the diary. The owner needs to see where each confirmed booking lands.
+      </p>
+    </header>
+
+    <div class="boa__stage">
+      <OnlineBookingAvailabilitySync
+        client:visible={{ rootMargin: '200px' }}
+        times={times}
+        barber={{ name: barber.name, thumb: barber.thumb }}
+        service={service}
+        dayLabel={example.dayLabel}
+        shopName={DEMO_SHOP_NAME}
+      />
+      <p class="boa__disclosure">
+        <span class="boa__tag">Demo</span>
+        Real KERSIVO admin interface with fictional {DEMO_SHOP_NAME} demo appointments for an example weekday. The
+        client times are what the demo booking page offers {barber.name} on that day; choosing one only moves the view
+        and doesn't create a booking.
+      </p>
+    </div>
+
+    <ul class="boa-rules">
+      {rules.map((rule) => (
+        <li class="boa-rule">
+          <h3 class="boa-rule__title">{rule.title}</h3>
+          <p class="boa-rule__body">{rule.body}</p>
+        </li>
+      ))}
+    </ul>
+
+    <div class="boa-lands">
+      <div class="boa-lands__copy">
+        <h3 class="boa-lands__title">Where confirmed bookings land</h3>
+        <p>
+          When a real booking is confirmed, it is saved as Booked in your shop's Bookings timeline — the diary the
+          owner and team work from — and that time stops being offered to other clients.
+        </p>
+      </div>
+      <a class="boa__cta" href={OWNER_TIMELINE_HREF} data-track={TRACK_EVENT} data-track-placement={TRACK_PLACEMENT}>
+        Explore the admin demo
+        <span class="boa__cta-icon" set:html={svg(ICONS.arrowRight)} />
+      </a>
+    </div>
+  </div>
+</section>

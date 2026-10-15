@@ -1,0 +1,136 @@
+---
+import { buildPaymentExample, formatGbp } from '@/lib/barbershopOnlineBooking/paymentExample';
+import { KERSIVO_COMMISSION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
+import '@/styles/components/barbershop-online-booking-payments.css';
+
+const TRACK_EVENT = 'primary_cta_clicked';
+const TRACK_PLACEMENT = 'barbershop_online_booking_payments';
+
+const example = buildPaymentExample();
+const price = formatGbp(example.pricePence);
+const deposit = formatGbp(example.depositPence);
+
+const NOTES = {
+  DEPOSIT: `The ${deposit} is part of the ${price} price, not an extra fee.`,
+  FULL: `The whole ${price} is paid online, so nothing is left to pay at the shop.`,
+};
+
+const paths = example.options.map((option, index) => ({
+  ...option,
+  id: `bop-option-${option.choice.toLowerCase()}`,
+  index: String(index + 1).padStart(2, '0'),
+  now: formatGbp(option.nowPence),
+  atShop: formatGbp(option.atShopPence),
+  total: formatGbp(option.totalPence),
+  note: NOTES[option.choice],
+}));
+const [depositPath, fullPath] = paths;
+
+const rules = [
+  { lead: KERSIVO_COMMISSION_CLAIM, body: STRIPE_FEES_NOTE },
+  {
+    lead: 'Connect Stripe first.',
+    body: "Public Starter bookings need the shop's own connected, payment-ready Stripe account.",
+  },
+  {
+    lead: 'Choose how to pay.',
+    body: `For services above ${deposit}, customers choose either the ${deposit} deposit or payment in full — not both. A service priced at exactly ${deposit} has a single ${deposit} payment.`,
+  },
+  {
+    lead: 'No pay-at-shop option on Starter.',
+    body: `Every public Starter booking requires an online payment of at least ${deposit}. Public booking without an online payment is not available on Starter.`,
+  },
+];
+
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+---
+
+<section class="bop" aria-labelledby="bop-title">
+  <div class="bop__inner">
+    <header class="bop__head">
+      <p class="bop__eyebrow">Deposits and payment options</p>
+      <h2 id="bop-title" class="bop__title">What Does a Customer Pay When They Book?</h2>
+      <p class="bop__lead">
+        What a customer pays depends on how the shop takes bookings. KERSIVO Starter (£0/month) keeps it simple:
+        everyone who books online pays at least {deposit} when they book, choosing between a {deposit} deposit and
+        the full price. Here is how that works for one service.
+      </p>
+    </header>
+
+    <div class="bop-example">
+      <div class="bop-ticket">
+        <span class="bop-ticket__stroke" aria-hidden="true"></span>
+        <div class="bop-ticket__face">
+          <p class="bop-ticket__tag">Illustrative example</p>
+          <p class="bop-ticket__price">
+            <span class="bop-ticket__label">Total service price</span>
+            <span class="bop-ticket__amount">{price}</span>
+          </p>
+          <p class="bop-ticket__caption">One service on KERSIVO Starter. Two ways to pay for it.</p>
+        </div>
+      </div>
+
+      <div class="bop-fork" aria-hidden="true"></div>
+
+      <div class="bop-paths">
+        {[depositPath, null, fullPath].map((path) =>
+          path ? (
+            <article class={`bop-path bop-path--${path.choice.toLowerCase()}`} aria-labelledby={path.id}>
+              <p class="bop-path__index">Option {path.index}</p>
+              <h3 id={path.id} class="bop-path__title">{path.label}</h3>
+              <div class="bop-split" aria-hidden="true">
+                <span class="bop-split__now" style={`flex-grow: ${path.nowPence}`}></span>
+                {path.atShopPence > 0 && <span class="bop-split__shop" style={`flex-grow: ${path.atShopPence}`}></span>}
+              </div>
+              <dl class="bop-path__rows">
+                <div class="bop-row bop-row--now">
+                  <dt>Paid online now</dt>
+                  <dd>{path.now}</dd>
+                </div>
+                <div class="bop-row bop-row--shop">
+                  <dt>Left to pay at the shop</dt>
+                  <dd>{path.atShop}</dd>
+                </div>
+                <div class="bop-row bop-row--total">
+                  <dt>Service price</dt>
+                  <dd>{path.total}</dd>
+                </div>
+              </dl>
+              <p class="bop-path__note">{path.note}</p>
+            </article>
+          ) : (
+            <p class="bop-or">or</p>
+          ),
+        )}
+      </div>
+    </div>
+
+    <ul class="bop-rules">
+      {rules.map((rule) => (
+        <li class="bop-rule">
+          <strong class="bop-rule__lead">{rule.lead}</strong>
+          <span class="bop-rule__body">{rule.body}</span>
+        </li>
+      ))}
+    </ul>
+
+    <div class="bop-foot">
+      <p class="bop-full">
+        <span class="bop-full__tag">Full KERSIVO</span>
+        £39/month per physical location, with a professionally prepared branded website. Booking deposits are included and
+        optional for the shop: a fixed {deposit} per booking that counts towards the service price, with the rest paid
+        at the shop. Standard Stripe processing fees apply to online card payments.
+      </p>
+      <a class="bop__cta" href={STARTER_PAGE_PATH} data-track={TRACK_EVENT} data-track-placement={TRACK_PLACEMENT}>
+        Explore KERSIVO Starter
+        <span class="bop__cta-icon" set:html={ARROW} />
+      </a>
+    </div>
+
+    <p class="bop__disclosure">
+      The {price} price is an illustrative example, not a real shop's service. Nothing on this page takes a payment or
+      connects to Stripe.
+    </p>
+  </div>
+</section>
