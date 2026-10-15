@@ -1,0 +1,115 @@
+---
+import { DEMO_GALLERY } from '@/lib/demo/gallery';
+import '@/styles/components/barbershop-website-design-photography.css';
+
+const TEAM_HREF = '/demo/barbers';
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_website_design_photography_demo_team';
+
+// One existing frame from the CUTSTATE demo gallery: a barber, a client and the shop in one image.
+const photo = DEMO_GALLERY.find((image) => image.id === 'barber-at-work') ?? DEMO_GALLERY[0];
+
+const points = [
+  {
+    title: 'The shop',
+    body: 'A clear photograph of the shopfront or interior helps clients recognise the business when they arrive. Shoot in good light, keep the frame level and clear away clutter that pulls attention from the space.',
+  },
+  {
+    title: 'The barbers',
+    body: 'A genuine portrait, a name and a short, honest introduction for each barber who takes appointments. Describe what they actually do, and leave out titles or awards you can’t stand behind.',
+  },
+  {
+    title: 'The work',
+    body: 'A few photographs of the cuts, fades and beard work the shop really offers. Show the detail close up and keep the light and background consistent, so the set looks like one shop’s work.',
+  },
+  {
+    title: 'The details',
+    optional: true,
+    body: 'A workstation, tools or a corner of the shop can add character. Treat it as a finishing touch: it doesn’t replace the address, opening hours or booking details.',
+  },
+];
+
+const checklist = [
+  'Framed so the subject is clear',
+  'Sharp at full-screen size, not a cropped thumbnail',
+  'Similar lighting across the set',
+  'Photos you own or have permission to publish',
+  'Consent from anyone recognisable in them',
+];
+---
+
+<section id="your-team" class="bwp" aria-labelledby="bwp-heading">
+  <div class="bwp__inner">
+    <header class="bwp__intro">
+      <p class="bwp__kicker"><span class="bwp__kicker-mark" aria-hidden="true"></span>People and photography</p>
+      <h2 id="bwp-heading" class="bwp__heading">Show Your Shop, Your Barbers and Your Work</h2>
+      <p class="bwp__lede">
+        Photography should help people recognise your shop and understand what you do. Start with the
+        space, the barbers and the cuts — then add detail shots only where they earn their place.
+      </p>
+    </header>
+
+    <div class="bwp-split">
+      <figure class="bwp-photo">
+        <img
+          class="bwp-photo__img"
+          src={photo.src}
+          alt={photo.alt}
+          width={photo.width}
+          height={photo.height}
+          sizes="(max-width: 899px) 100vw, 40vw"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption class="bwp-photo__caption">
+          Demonstration image from the CUTSTATE demo gallery. CUTSTATE BARBERS is a fictional KERSIVO
+          demonstration shop and its photographs are stock imagery, not a KERSIVO customer.
+        </figcaption>
+      </figure>
+
+      <ol class="bwp-points">
+        {points.map((point, index) => (
+          <li class="bwp-point">
+            <span class="bwp-point__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <h3 class="bwp-point__title">
+              {point.title}
+              {point.optional && <span class="bwp-point__optional">Optional</span>}
+            </h3>
+            <p class="bwp-point__body">{point.body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="bwp-prep">
+      <div class="bwp-prep__block">
+        <h3 class="bwp-prep__title">Before you send photos</h3>
+        <ul class="bwp-checklist">
+          {checklist.map((item) => <li class="bwp-checklist__item">{item}</li>)}
+        </ul>
+        <p class="bwp-prep__takeaway">
+          Choose a few clear, genuine photographs over a large gallery that doesn't represent your shop.
+        </p>
+      </div>
+
+      <div class="bwp-prep__block">
+        <h3 class="bwp-prep__title">No professional photographs yet?</h3>
+        <p class="bwp-prep__body">
+          That doesn’t hold a website back. Within the standard setup, a typographic shop name can
+          stand in for a missing logo, a neutral placeholder can stand in for a missing barber
+          portrait, and an optional gallery can simply be left out. The shop’s address and contact
+          details are still needed before launch.
+        </p>
+      </div>
+    </div>
+
+    <p class="bwp-more">
+      <a
+        class="bwp-more__link"
+        href={TEAM_HREF}
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >Meet the CUTSTATE demo team</a>
+    </p>
+  </div>
+</section>
