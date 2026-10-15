@@ -83,8 +83,9 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
+  object-position: 50% 55%;
   border: 1px solid var(--bwp-line-strong);
   border-radius: var(--radius-12, 0.75rem);
   background: var(--surface-1, var(--bg));
@@ -259,6 +260,14 @@
   }
 }
 
+/* Stacked at tablet widths: a wider crop keeps the full-width photograph from dominating. */
+@container (min-width: 40rem) {
+  .bwp-photo__img {
+    aspect-ratio: 3 / 2;
+    object-position: 50% 50%;
+  }
+}
+
 @container (min-width: 44rem) {
   .bwp-prep {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -272,5 +281,10 @@
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     align-items: start;
     column-gap: clamp(2.5rem, 6cqi, 5.5rem);
+  }
+
+  .bwp-photo__img {
+    aspect-ratio: 4 / 5;
+    object-position: 50% 60%;
   }
 }

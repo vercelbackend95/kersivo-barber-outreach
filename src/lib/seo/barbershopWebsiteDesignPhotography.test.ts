@@ -56,10 +56,12 @@ describe('/barbershop-website-design — Section 05 people and photography', () 
 
   it('reuses one existing CUTSTATE demo gallery photograph with its own alt text and dimensions', () => {
     expect(frontmatter).toContain("from '@/lib/demo/gallery'");
-    expect(frontmatter).toContain("image.id === 'barber-at-work'");
-    const photo = DEMO_GALLERY.find((image) => image.id === 'barber-at-work');
-    expect(photo?.src).toBe('/demo/gallery/barber-at-work.webp');
-    expect(existsSync(join(here, '../../../public/demo/gallery/barber-at-work.webp'))).toBe(true);
+    expect(frontmatter).toContain("image.id === 'fade'");
+    const photo = DEMO_GALLERY.find((image) => image.id === 'fade');
+    expect(photo?.src).toBe('/demo/gallery/fade.webp');
+    expect(photo?.width).toBe(1333);
+    expect(photo?.height).toBe(2000);
+    expect(existsSync(join(here, '../../../public/demo/gallery/fade.webp'))).toBe(true);
     const images = markup.match(/<img\b[\s\S]*?\/>/g) ?? [];
     expect(images).toHaveLength(1);
     for (const attr of ['src={photo.src}', 'alt={photo.alt}', 'width={photo.width}', 'height={photo.height}', 'loading="lazy"']) {
@@ -68,9 +70,16 @@ describe('/barbershop-website-design — Section 05 people and photography', () 
   });
 
   it('discloses the demo photograph as fictional stock imagery', () => {
-    expect(text(markup)).toContain(
-      'Demonstration image from the CUTSTATE demo gallery. CUTSTATE BARBERS is a fictional KERSIVO demonstration shop and its photographs are stock imagery, not a KERSIVO customer.',
+    expect(text(markup.match(/<figcaption[\s\S]*?<\/figcaption>/)?.[0] ?? '')).toBe(
+      'CUTSTATE BARBERS is a fictional KERSIVO demo. Stock photography shown, not a real customer.',
     );
+    expect(markup).toMatch(/<\/figcaption>\s*<\/figure>/);
+  });
+
+  it('crops the photograph without distortion, taller beside the list than when stacked', () => {
+    expect(styles).toMatch(/\.bwp-photo__img \{[^}]*aspect-ratio: 1 \/ 1;[^}]*object-fit: cover;/);
+    expect(styles).toMatch(/@container \(min-width: 40rem\) \{\s*\.bwp-photo__img \{[^}]*aspect-ratio: 3 \/ 2;/);
+    expect(styles).toMatch(/@container \(min-width: 56rem\) \{[\s\S]*?\.bwp-photo__img \{[^}]*aspect-ratio: 4 \/ 5;/);
   });
 
   it('gives a practical photo checklist and the approved takeaway', () => {

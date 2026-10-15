@@ -6,8 +6,8 @@ const TEAM_HREF = '/demo/barbers';
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_website_design_photography_demo_team';
 
-// One existing frame from the CUTSTATE demo gallery: a barber, a client and the shop in one image.
-const photo = DEMO_GALLERY.find((image) => image.id === 'barber-at-work') ?? DEMO_GALLERY[0];
+// One existing frame from the CUTSTATE demo gallery: the barber's hands and the work in progress.
+const photo = DEMO_GALLERY.find((image) => image.id === 'fade') ?? DEMO_GALLERY[0];
 
 const points = [
   {
@@ -62,8 +62,7 @@ const checklist = [
           decoding="async"
         />
         <figcaption class="bwp-photo__caption">
-          Demonstration image from the CUTSTATE demo gallery. CUTSTATE BARBERS is a fictional KERSIVO
-          demonstration shop and its photographs are stock imagery, not a KERSIVO customer.
+          CUTSTATE BARBERS is a fictional KERSIVO demo. Stock photography shown, not a real customer.
         </figcaption>
       </figure>
 
