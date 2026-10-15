@@ -1,0 +1,147 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import {
+  SEO_GROWTH_CONTACT,
+  SEO_GROWTH_INTERNAL_USE_NOTE,
+  SEO_GROWTH_INTRO_PARAGRAPHS,
+  SEO_GROWTH_PAGE_DESCRIPTION,
+  SEO_GROWTH_PAGE_H1,
+  SEO_GROWTH_PAGE_PATH,
+  SEO_GROWTH_PAGE_SUBTITLE,
+  SEO_GROWTH_PAGE_TITLE,
+  SEO_GROWTH_PRIVACY_PARAGRAPHS,
+  SEO_GROWTH_USAGE_INTRO,
+  SEO_GROWTH_USAGE_ITEMS,
+} from '@/lib/seo/seoGrowthPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/company-pages.css';
+import '@/styles/components/seo-growth.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={SEO_GROWTH_PAGE_TITLE}
+  description={SEO_GROWTH_PAGE_DESCRIPTION}
+  canonicalPath={SEO_GROWTH_PAGE_PATH}
+  noindex
+  robotsFollow
+>
+  <main class="fresha-alt seo-growth landing-overflow-guard">
+    <section class="fresha-alt-hero company-hero" aria-labelledby="seo-growth-title">
+      <div class="fresha-alt-hero__content">
+        <p class="fresha-alt-hero__eyebrow">
+          <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
+          Internal application · In development
+        </p>
+        <h1 id="seo-growth-title" class="fresha-alt-hero__title">
+          <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">
+            {SEO_GROWTH_PAGE_H1}
+          </span>
+        </h1>
+        <p class="seo-growth__subtitle">{SEO_GROWTH_PAGE_SUBTITLE}</p>
+        {SEO_GROWTH_INTRO_PARAGRAPHS.map((paragraph) => <p class="fresha-alt-hero__lead">{paragraph}</p>)}
+      </div>
+    </section>
+
+    <section id="google-ads-data" class="fresha-alt__section" aria-labelledby="seo-growth-usage-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">GOOGLE ADS API</p>
+          <h2 id="seo-growth-usage-title" class="fresha-alt__h2">How We Use Google Ads Data</h2>
+          <p class="fresha-alt__lead">{SEO_GROWTH_USAGE_INTRO}</p>
+        </header>
+        <ul class="company-checks company-checks--columns">
+          {SEO_GROWTH_USAGE_ITEMS.map((item) => <li>{item}</li>)}
+        </ul>
+        <p class="seo-growth__notice">
+          <strong>Internal use only.</strong>
+          {SEO_GROWTH_INTERNAL_USE_NOTE}
+        </p>
+      </div>
+    </section>
+
+    <section id="privacy" class="fresha-alt__section" aria-labelledby="seo-growth-privacy-title">
+      <div class="fresha-alt__glow" aria-hidden="true"></div>
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">PRIVACY</p>
+          <h2 id="seo-growth-privacy-title" class="fresha-alt__h2">Privacy &amp; Data Use</h2>
+        </header>
+        <div class="company-prose">
+          {SEO_GROWTH_PRIVACY_PARAGRAPHS.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+        <ul class="seo-growth__links">
+          <li>
+            <a href={FOOTER_LEGAL_LINKS.privacy.href} class="company-link">
+              Privacy Policy <span aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a href={FOOTER_LEGAL_LINKS.terms.href} class="company-link">
+              Terms of Service <span aria-hidden="true">→</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="contact" class="fresha-alt__section" aria-labelledby="seo-growth-contact-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">CONTACT</p>
+          <h2 id="seo-growth-contact-title" class="fresha-alt__h2">Contact</h2>
+        </header>
+        <address class="seo-growth__contact">
+          <p class="seo-growth__contact-name">{SEO_GROWTH_CONTACT.organisation}</p>
+          <dl class="seo-growth__contact-list">
+            <div>
+              <dt>Website</dt>
+              <dd>
+                <a href={SEO_GROWTH_CONTACT.websiteUrl} class="company-link">{SEO_GROWTH_CONTACT.websiteLabel}</a>
+              </dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>
+                <a href={`mailto:${SEO_GROWTH_CONTACT.email}`} class="company-link">{SEO_GROWTH_CONTACT.email}</a>
+              </dd>
+            </div>
+          </dl>
+        </address>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'About', href: '/about' },
+        { name: 'Pricing', href: '/pricing' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.terms,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>
