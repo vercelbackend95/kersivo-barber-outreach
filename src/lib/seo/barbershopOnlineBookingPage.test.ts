@@ -73,13 +73,13 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(buildBarbershopOnlineBookingJsonLd().inLanguage).toBe('en-GB');
   });
 
-  it('stays noindex, follow and out of the marketing sitemap during development', () => {
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
+  it('publishes the booking guide as crawlable, canonical and in the sitemap', () => {
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE}');
     expect(page).toContain('robotsFollow');
-    expect(resolveRobotsContent({ noindex: true, robotsFollow: true })).toBe('noindex, follow');
+    expect(resolveRobotsContent({ noindex: !BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, robotsFollow: true })).toBeUndefined();
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-online-booking');
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-online-booking');
   });
 
   it('renders Section 01 with exactly one H1 split into the approved two lines', () => {
@@ -398,12 +398,12 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(getRouteFamily(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe('marketing');
   });
 
-  it('prepares internal links within the unpublished cluster but keeps public navigation gated', () => {
+  it('links published booking guide in Resources only when the pillar is also published', () => {
     const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
     const nav = read('../../lib/nav/marketingNavigation.ts');
     expect(panel).toContain('href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
     expect(nav).toContain('visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE');
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
   });
 
   it('places the global footer outside main and links the three website guides', () => {
