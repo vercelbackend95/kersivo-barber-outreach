@@ -101,10 +101,12 @@ describe('/barbershop-online-booking Section 01 hero', () => {
       'OnlineBookingHeroPreview.astro',
       'OnlineBookingJourney.astro',
       'OnlineBookingPayments.astro',
+      'OnlineBookingPlanChoice.astro',
       'OnlineBookingTimelinePreview.test.tsx',
       'OnlineBookingTimelinePreview.tsx',
     ]);
-    expect(page).not.toMatch(/<h2\b|booking-options/);
+    expect(page).toContain('<OnlineBookingPlanChoice />');
+    expect(BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF).toBe('#booking-options');
   });
 
   it('orders eyebrow, H1, lead, CTAs, pricing, product stage and bottom strip', () => {
@@ -147,10 +149,9 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(hero).toContain('<span class="bob-hero__action-icon" set:html={svg(ICONS.arrowRight)} />');
   });
 
-  it('sends the secondary action to the temporary pricing comparison, untracked and not as a signup', () => {
+  it('sends the secondary action to the in-page plan choice anchor, untracked and not as a signup', () => {
     const compare = anchors(hero).find((tag) => tag.includes('href={BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF}'));
-    expect(BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF).toBe('/pricing');
-    expect(existsSync(join(srcDir, 'pages/pricing.astro'))).toBe(true);
+    expect(BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF).toBe('#booking-options');
     expect(compare).toContain('bob-hero__action--secondary');
     expect(compare).not.toContain('data-track');
     expect(hero).toContain('Compare your booking options');
@@ -168,13 +169,16 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(previewMarkup).toContain('>Try it live</a>');
   });
 
-  it('never labels an exploratory click as a signup, checkout or subscription', () => {
-    for (const source of [hero, preview, page]) {
+  it('never labels an exploratory Hero click as a signup, checkout or subscription', () => {
+    for (const source of [hero, preview]) {
       for (const event of ['starter_signup_click', 'checkout_started', 'checkout_completed', 'saas_subscribe_click']) {
         expect(source).not.toContain(event);
       }
       expect(source).not.toMatch(/href="\/admin/);
     }
+    expect(page).not.toContain('checkout_started');
+    expect(page).not.toContain('checkout_completed');
+    expect(page).not.toContain('saas_subscribe_click');
   });
 
   it('states the commercial terms with the Stripe processing-fee qualifier', () => {

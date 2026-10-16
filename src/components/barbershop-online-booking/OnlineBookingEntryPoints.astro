@@ -1,16 +1,8 @@
 ---
 import { buildEntryPointsExample } from '@/lib/barbershopOnlineBooking/entryPointsExample';
-import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
 import '@/styles/components/barbershop-online-booking-entry.css';
 
-const TRACK_EVENT = 'primary_cta_clicked';
-const TRACK_PLACEMENT = 'barbershop_online_booking_entry';
-
 const example = buildEntryPointsExample();
-const { destination } = example;
-
-const ARROW =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 ---
 
 <section class="bob-ep" aria-labelledby="bob-ep-title">
@@ -19,132 +11,118 @@ const ARROW =
       <p class="bob-ep__eyebrow">Where bookings start</p>
       <h2 id="bob-ep-title" class="bob-ep__title">One Booking Journey, Several Ways to Reach It</h2>
       <p class="bob-ep__lead">
-        Your website, Google Business Profile, social profiles and an in-shop QR code can all help customers find their
-        way to your booking page — one coherent booking experience for your shop, wherever they first look.
+        Website, Google, social and QR can each open your shop’s booking experience — different routes, one journey.
       </p>
     </header>
 
     <div class="bob-ep-stage">
-      <fieldset class="bob-ep-sources">
-        <legend class="bob-ep-sources__legend">Choose an entry point</legend>
+      <ul class="bob-ep-sources" role="list">
         {
           example.channels.map((channel, index) => (
-            <div class={`bob-ep-source bob-ep-source--${channel.id}`}>
-              <input
-                class="bob-ep-source__input"
-                type="radio"
-                name="bob-ep-channel"
-                id={`bob-ep-ch-${channel.id}`}
-                value={channel.id}
-                checked={index === 0}
-                aria-describedby={`bob-ep-explain-${channel.id}`}
-              />
-              <label class="bob-ep-source__label" for={`bob-ep-ch-${channel.id}`}>
-                <span class="bob-ep-source__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <li class={`bob-ep-source bob-ep-source--${channel.id}`}>
+              <div class="bob-ep-source__visual" aria-hidden="true">
+                {channel.visual.kind === 'website' && (
+                  <span class="bob-ep-viz bob-ep-viz--website">
+                    <img
+                      class="bob-ep-viz__hero"
+                      src={channel.visual.heroSrc}
+                      alt=""
+                      width="900"
+                      height="1350"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="bob-ep-viz__chrome">
+                      <img
+                        class="bob-ep-viz__logo"
+                        src={channel.visual.logoSrc}
+                        alt=""
+                        width="217"
+                        height="72"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="bob-ep-viz__book">{channel.visual.bookLabel}</span>
+                    </span>
+                    <span class="bob-ep-viz__shop">{channel.visual.shopName}</span>
+                  </span>
+                )}
+
+                {channel.visual.kind === 'google' && (
+                  <span class="bob-ep-viz bob-ep-viz--google">
+                    <img
+                      class="bob-ep-viz__mark"
+                      src={channel.visual.markSrc}
+                      alt=""
+                      width="192"
+                      height="192"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                )}
+
+                {channel.visual.kind === 'instagram' && (
+                  <span class="bob-ep-viz bob-ep-viz--instagram">
+                    <span class="bob-ep-ig">
+                      <span class="bob-ep-ig__head">
+                        <span class="bob-ep-ig__ring">
+                          <img
+                            class="bob-ep-ig__avatar"
+                            src={channel.visual.avatarSrc}
+                            alt=""
+                            width="72"
+                            height="72"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </span>
+                        <span class="bob-ep-ig__meta">
+                          <span class="bob-ep-ig__name">{channel.visual.shopName}</span>
+                          <span class="bob-ep-ig__handle">{channel.visual.handle}</span>
+                        </span>
+                      </span>
+                      <span class="bob-ep-ig__book">{channel.visual.bookLabel}</span>
+                      <span class="bob-ep-ig__grid">
+                        {channel.visual.gridSrcs.map((src) => (
+                          <img
+                            class="bob-ep-ig__cell"
+                            src={src}
+                            alt=""
+                            width="200"
+                            height="200"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ))}
+                      </span>
+                    </span>
+                  </span>
+                )}
+
+                {channel.visual.kind === 'qr' && (
+                  <span class="bob-ep-viz bob-ep-viz--qr">
+                    <img
+                      class="bob-ep-viz__qr"
+                      src={channel.visual.src}
+                      alt=""
+                      width={channel.visual.width}
+                      height={channel.visual.height}
+                      loading="lazy"
+                      decoding="async"
+                      style={`object-position: ${channel.visual.objectPosition}`}
+                    />
+                  </span>
+                )}
+              </div>
+              <p class="bob-ep-source__meta">
+                <span class="bob-ep-source__index">{String(index + 1).padStart(2, '0')}</span>
                 <span class="bob-ep-source__name">{channel.shortLabel}</span>
-              </label>
-            </div>
+              </p>
+            </li>
           ))
         }
-      </fieldset>
-
-      <div class="bob-ep-board" aria-hidden="true">
-        <svg class="bob-ep-connectors" viewBox="0 0 100 36" preserveAspectRatio="none" focusable="false">
-          <path class="bob-ep-connectors__line bob-ep-connectors__line--website" d="M12.5 2 V18 L50 34" />
-          <path class="bob-ep-connectors__line bob-ep-connectors__line--google" d="M37.5 2 V14 L50 34" />
-          <path class="bob-ep-connectors__line bob-ep-connectors__line--social" d="M62.5 2 V14 L50 34" />
-          <path class="bob-ep-connectors__line bob-ep-connectors__line--qr" d="M87.5 2 V18 L50 34" />
-        </svg>
-      </div>
-
-      <article class="bob-ep-dest" aria-label="Booking destination preview">
-        <p class="bob-ep-dest__eyebrow">Booking destination</p>
-        <h3 class="bob-ep-dest__shop">{destination.shopName}</h3>
-        <p class="bob-ep-dest__hint">{destination.hint}</p>
-        <dl class="bob-ep-dest__lines">
-          <div>
-            <dt>Service</dt>
-            <dd>{destination.serviceName}</dd>
-          </div>
-          <div>
-            <dt>Barber</dt>
-            <dd>{destination.barberName}</dd>
-          </div>
-          <div>
-            <dt>Time</dt>
-            <dd>{destination.timeLabel}</dd>
-          </div>
-        </dl>
-      </article>
-
-      <div class="bob-ep-explains">
-        {
-          example.channels.map((channel) => (
-            <p class={`bob-ep-explain bob-ep-explain--${channel.id}`} id={`bob-ep-explain-${channel.id}`}>
-              <strong>{channel.label}.</strong> {channel.body}
-            </p>
-          ))
-        }
-      </div>
-    </div>
-
-    <ul class="bob-ep-plans">
-      <li>
-        <strong>Starter.</strong>
-        {example.starterDestination}
-      </li>
-      <li>
-        <strong>Full.</strong>
-        {example.fullDestination}
-      </li>
-    </ul>
-
-    <div class="bob-ep-qr">
-      <div class="bob-ep-qr__copy">
-        <p class="bob-ep-qr__tag">In-shop QR</p>
-        <p class="bob-ep-qr__lead">
-          Two physical placements can point scanners at the shop’s current booking destination. Eligible verified UK
-          physical locations may request a Booking QR Kit — details on Starter.
-        </p>
-        <ul class="bob-ep-qr__placements">
-          {
-            example.qrPlacements.map((placement) => (
-              <li>
-                <span class="bob-ep-qr__placement-title">{placement.title}</span>
-                <strong>{placement.line}</strong>
-                <span>{placement.purpose}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-      <figure class="bob-ep-qr__figure">
-        <img
-          class="bob-ep-qr__img"
-          src={example.qrIllustrativeSrc}
-          alt={example.qrIllustrativeAlt}
-          width="640"
-          height="720"
-          loading="lazy"
-          decoding="async"
-        />
-        <figcaption>Illustrative placement — not a live shop QR code</figcaption>
-      </figure>
-    </div>
-
-    <p class="bob-ep__bridge">{example.bridge}</p>
-
-    <div class="bob-ep-foot">
-      <p class="bob-ep__disclosure">{example.disclosure}</p>
-      <a
-        class="bob-ep__cta"
-        href={STARTER_PAGE_PATH}
-        data-track={TRACK_EVENT}
-        data-track-placement={TRACK_PLACEMENT}
-      >
-        Explore KERSIVO Starter
-        <span class="bob-ep__cta-icon" set:html={ARROW} />
-      </a>
+      </ul>
     </div>
   </div>
 </section>

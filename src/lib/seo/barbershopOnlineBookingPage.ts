@@ -19,11 +19,9 @@ export const BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE = false;
 export const BARBERSHOP_ONLINE_BOOKING_DEMO_HREF = '/demo/book';
 
 /**
- * Temporary: the Hero's "Compare your booking options" action belongs on the
- * Section 07 `#booking-options` anchor. Until that section exists it points at
- * the live Starter/Full pricing comparison.
+ * Hero secondary action: jump to Section 07 plan choice on this page.
  */
-export const BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF = '/pricing';
+export const BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF = '#booking-options';
 
 export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();

@@ -2,17 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import {
   ENTRY_BANNED_CLAIMS,
-  ENTRY_BRIDGE,
   ENTRY_CHANNELS,
-  ENTRY_DISCLOSURE,
-  ENTRY_QR_PLACEMENTS,
   buildEntryPointsExample,
 } from '@/lib/barbershopOnlineBooking/entryPointsExample';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
-import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, '../..');
@@ -26,18 +21,11 @@ const amendment = readFileSync(
   'utf8',
 );
 
-const [, frontmatter, ...rest] = component.split(/^---$/m);
+const [, , ...rest] = component.split(/^---$/m);
 const markup = rest.join('---');
-const source = `${frontmatter}\n${markup}`;
-const textOf = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 const publicCopy = [
-  ...ENTRY_CHANNELS.map((channel) => `${channel.label} ${channel.body}`),
-  ENTRY_BRIDGE,
-  ENTRY_DISCLOSURE,
-  ...ENTRY_QR_PLACEMENTS.map((placement) => `${placement.title} ${placement.line} ${placement.purpose}`),
-  ...Object.values(buildEntryPointsExample()).flatMap((value) =>
-    typeof value === 'string' ? [value] : Array.isArray(value) ? value.map((entry) => JSON.stringify(entry)) : [],
-  ),
+  ...ENTRY_CHANNELS.map((channel) => `${channel.label} ${channel.shortLabel}`),
+  buildEntryPointsExample().qrCardAlt,
 ]
   .join(' ')
   .toLowerCase();
@@ -58,81 +46,60 @@ describe('Barbershop online booking page — Section 05 entry points', () => {
     expect(amendment).toContain('06 | After Booking & Customer Retention');
   });
 
-  it('uses one H2 and four selectable entry channels into one destination', () => {
+  it('uses one H2 and four always-visible sources without a lower close block', () => {
     expect(markup.match(/<h2\b/g) ?? []).toHaveLength(1);
     expect(markup).toContain(
       '<h2 id="bob-ep-title" class="bob-ep__title">One Booking Journey, Several Ways to Reach It</h2>',
     );
     expect(markup).toContain('Where bookings start');
-    expect(markup).toContain('name="bob-ep-channel"');
-    expect(markup).toContain('example.channels.map');
-    expect(ENTRY_CHANNELS).toHaveLength(4);
-    expect(markup).toContain('id={`bob-ep-ch-${channel.id}`}');
-    expect(markup).toContain('Booking destination');
-    expect(markup).toContain('{destination.shopName}');
+    expect(markup).toContain('bob-ep-source__visual');
+    expect(markup).not.toContain('bob-ep-close');
+    expect(markup).not.toContain('bob-ep-dest');
+    expect(markup).not.toContain('bob-ep-converge');
+    expect(markup).not.toContain('bob-ep-unity');
+    expect(markup).not.toContain('bob-ep-detail');
+    expect(markup).not.toContain('bob-ep-foot');
+    expect(markup).not.toContain('type="radio"');
+    expect(markup).not.toContain('<a ');
     expect(helper).toContain('buildEntryPointsExample');
+    expect(css).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
+    expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))');
+    expect(css).toContain('place-items: center');
+    expect(css).not.toContain('bob-ep-close');
+    expect(css).not.toContain('bob-ep-dest');
   });
 
-  it('keeps Starter hosted and Full verified own-domain destinations distinct', () => {
-    expect(source).toContain('starterDestination');
-    expect(source).toContain('fullDestination');
-    expect(helper).toContain('KERSIVO-hosted public booking page');
-    expect(helper).toContain('own-domain booking destination');
-    expect(textOf(markup)).toContain('Starter.');
-    expect(textOf(markup)).toContain('Full.');
+  it('uses required source visuals: Cutstate demo, Google mark, Instagram profile, QR', () => {
+    expect(markup).toContain('bob-ep-viz--website');
+    expect(helper).toContain('/demo/heroimg.webp');
+    expect(helper).toContain('/demo/cutstate-logo.png');
+    expect(markup).toContain('bob-ep-viz--google');
+    expect(helper).toContain('/images/starter/google-g-192.webp');
+    expect(markup).toContain('bob-ep-viz--instagram');
+    expect(markup).toContain('bob-ep-ig__book');
+    expect(markup).toContain('bob-ep-ig__grid');
+    expect(helper).toContain('@cutstatebarbers');
+    expect(helper).not.toContain('barber-at-work');
+    expect(markup).toContain('bob-ep-viz--qr');
+    expect(helper).toContain('kersivo-book-now-qr-glass-sign-640.webp');
   });
 
-  it('qualifies Google and social without native-integration or Reserve with Google claims', () => {
-    expect(publicCopy).toContain('guided setup');
-    expect(publicCopy).toContain('google decides');
-    expect(publicCopy).toContain('does not offer a native instagram booking product');
+  it('stays free of native-integration and Reserve with Google claims', () => {
     for (const banned of ENTRY_BANNED_CLAIMS) {
       expect(publicCopy).not.toContain(banned);
     }
   });
 
-  it('presents WINDOW and REBOOK QR as illustrative placements, not live scannable codes', () => {
-    expect(ENTRY_QR_PLACEMENTS.map((placement) => placement.title)).toEqual(['WINDOW', 'REBOOK']);
-    expect(ENTRY_QR_PLACEMENTS.map((placement) => placement.line)).toEqual([
-      'BOOK ONLINE',
-      'REBOOK BEFORE YOU LEAVE',
-    ]);
-    expect(markup).toContain('example.qrPlacements.map');
-    expect(markup).toContain('not a live shop QR code');
-    expect(helper).toContain('kersivo-book-now-qr-glass-sign-640.webp');
-    expect(publicCopy).not.toContain('kit has already been shipped');
-  });
-
-  it('bridges toward future retention without advertising automated campaigns', () => {
-    expect(ENTRY_BRIDGE.toLowerCase()).toContain('already in the chair');
-    expect(markup).toContain('{example.bridge}');
-    expect(publicCopy).not.toContain('automatically sends');
-    expect(publicCopy).not.toContain('google review request');
-    expect(publicCopy).not.toContain('rebooking campaign');
-  });
-
-  it('keeps the page unpublished and uses one tracked Starter CTA', () => {
+  it('keeps the page unpublished and has no tracked CTA in this section', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
-    const anchors = markup.match(/<a\b[\s\S]*?>/g) ?? [];
-    expect(anchors).toHaveLength(1);
-    expect(anchors[0]).toContain('href={STARTER_PAGE_PATH}');
-    expect(anchors[0]).toContain('data-track={TRACK_EVENT}');
-    expect(anchors[0]).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(frontmatter).toContain('STARTER_PAGE_PATH');
-    expect(STARTER_PAGE_PATH).toBe('/starter');
-    expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.primary_cta_clicked}';`);
-    expect(frontmatter).toContain("const TRACK_PLACEMENT = 'barbershop_online_booking_entry';");
-    expect(markup).toContain('Explore KERSIVO Starter');
+    expect(component).not.toContain('data-track');
+    expect(component).not.toContain('TRACK_EVENT');
+    expect(component).not.toContain('STARTER_PAGE_PATH');
   });
 
-  it('stays free of client islands and uses radio CSS progressive enhancement', () => {
+  it('stays free of client islands', () => {
     expect(component).not.toMatch(/<script\b|<iframe\b|client:/);
     expect(component).not.toMatch(/<form\b/);
     expect(markup).toContain('aria-labelledby="bob-ep-title"');
-    expect(css).toContain(':has(#bob-ep-ch-website:checked)');
-    expect(css).toMatch(/\.bob-ep__cta:focus-visible \{[^}]*outline:/);
-    expect(css).toContain('prefers-reduced-motion');
-    expect(ENTRY_DISCLOSURE).toContain('Nothing on this page activates Google');
-    expect(markup).toContain('{example.disclosure}');
   });
 });

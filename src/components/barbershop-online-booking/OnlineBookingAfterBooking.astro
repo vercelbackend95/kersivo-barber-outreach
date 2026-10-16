@@ -1,7 +1,6 @@
 ---
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { buildAfterBookingExample } from '@/lib/barbershopOnlineBooking/afterBookingExample';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/components/barbershop-online-booking-after.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -9,65 +8,72 @@ const TRACK_PLACEMENT = 'barbershop_online_booking_after';
 const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');
 
 const example = buildAfterBookingExample();
-const confirmScene = example.scenes.find((scene) => scene.id === 'confirmReminder')!;
-const thanksScene = example.scenes.find((scene) => scene.id === 'thanksReview')!;
-const rebookScene = example.scenes.find((scene) => scene.id === 'rebook')!;
+const thanks = example.moments.find((moment) => moment.id === 'thanks')!;
+const review = example.moments.find((moment) => moment.id === 'review')!;
+const rebook = example.moments.find((moment) => moment.id === 'rebook')!;
 
 const ARROW =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 ---
 
-<section class="bob-ab" data-bob-ab aria-labelledby="bob-ab-title" style="--bob-ab-p: 0">
+<section class="bob-ab" aria-labelledby="bob-ab-title">
   <div class="bob-ab__inner">
     <header class="bob-ab__head">
-      <p class="bob-ab__eyebrow">After the booking</p>
+      <p class="bob-ab__eyebrow">After the visit</p>
       <h2 id="bob-ab-title" class="bob-ab__title">The Next Booking Starts With the Last Visit.</h2>
-      <p class="bob-ab__support">Keep the connection. Make it easy to come back.</p>
+      <p class="bob-ab__lead">
+        Once the cut is done, keep the connection — thank the client, invite an honest review, and make coming back easy.
+      </p>
     </header>
 
-    <p class="bob-ab-handoff">
-      <span class="bob-ab-handoff__from">From the booking journey</span>
-      <span class="bob-ab-handoff__chip">
-        <span class="bob-ab-handoff__status">{confirmScene.statusLabel}</span>
-        <span class="bob-ab-handoff__label">{example.handoffLabel}</span>
-      </span>
-    </p>
+    <div class="bob-ab-showcase" aria-label="Post-visit communication concepts">
+      <div class="bob-ab-showcase__banner">
+        <p class="bob-ab-concept">{example.conceptStatus}</p>
+        <p class="bob-ab-showcase__note">{example.disclosure}</p>
+      </div>
 
-    <div class="bob-ab-story" data-bob-ab-track>
-      <div class="bob-ab-stage">
-        <!-- Scene A: confirm + reminder SMS -->
-        <article
-          class="bob-ab-scene bob-ab-scene--a"
-          data-bob-ab-scene="confirmReminder"
-          aria-label="Confirmation and appointment reminder"
-        >
-          <p class="bob-ab-scene__status bob-ab-scene__status--live">{confirmScene.statusLabel}</p>
-          <p class="bob-ab-scene__shop">{DEMO_SHOP_NAME}</p>
-          <p class="bob-ab-scene__confirm">{example.confirmationSubject}</p>
-          <div class="bob-ab-sms" aria-label="Illustrative SMS reminder">
-            <p class="bob-ab-sms__from">{DEMO_SHOP_NAME}</p>
-            <p class="bob-ab-sms__body">{example.smsPreviewLine}</p>
+      <!-- Moment 01: Thank-you email -->
+      <article class="bob-ab-beat bob-ab-beat--thanks" aria-label="Thank you after the visit">
+        <div class="bob-ab-beat__copy">
+          <span class="bob-ab-beat__index">{thanks.index}</span>
+          <p class="bob-ab-display">{thanks.display}</p>
+          {thanks.support && <p class="bob-ab-beat__support">{thanks.support}</p>}
+        </div>
+
+        {thanks.thanksPreview && (
+          <div class="bob-ab-mail" aria-hidden="true">
+            <div class="bob-ab-mail__chrome">
+              <span class="bob-ab-mail__dot"></span>
+              <span class="bob-ab-mail__dot"></span>
+              <span class="bob-ab-mail__dot"></span>
+              <span class="bob-ab-mail__kind">Email</span>
+            </div>
+            <dl class="bob-ab-mail__meta">
+              <div class="bob-ab-mail__row">
+                <dt>{thanks.thanksPreview.fromLabel}</dt>
+                <dd>{thanks.thanksPreview.from}</dd>
+              </div>
+              <div class="bob-ab-mail__row">
+                <dt>{thanks.thanksPreview.subjectLabel}</dt>
+                <dd>{thanks.thanksPreview.subject}</dd>
+              </div>
+            </dl>
+            <p class="bob-ab-mail__body">{thanks.thanksPreview.message}</p>
           </div>
-          <p class="bob-ab-scene__body">{example.emailReminderNote}</p>
-          <p class="bob-ab-scene__note">
-            <span class="bob-ab-scene__note-label">Full SMS</span>
-            {example.smsNote}
-          </p>
-        </article>
+        )}
+      </article>
 
-        <!-- Scene B: thank-you + Google review -->
-        <article
-          class="bob-ab-scene bob-ab-scene--b"
-          data-bob-ab-scene="thanksReview"
-          aria-label="Thank you and Google review"
-        >
-          <p class="bob-ab-scene__status bob-ab-scene__status--planned">{thanksScene.statusLabel}</p>
-          <p class="bob-ab-scene__display">{thanksScene.display}</p>
-          <p class="bob-ab-scene__title">{thanksScene.title}</p>
-          {thanksScene.body && <p class="bob-ab-scene__body">{thanksScene.body}</p>}
-          <div class="bob-ab-review">
+      <!-- Moment 02: Google review -->
+      <article class="bob-ab-beat bob-ab-beat--review" aria-label="Google review invitation">
+        <div class="bob-ab-beat__copy">
+          {review.stageLabel && <p class="bob-ab-beat__stage">{review.stageLabel}</p>}
+          <p class="bob-ab-display bob-ab-display--review">{review.display}</p>
+        </div>
+
+        {review.reviewPreview && (
+          <div class="bob-ab-invite" aria-hidden="true">
             <img
-              class="bob-ab-review__mark"
+              class="bob-ab-invite__mark"
               src={example.googleMarkSrc}
               alt=""
               width="40"
@@ -75,42 +81,55 @@ const ARROW =
               decoding="async"
               loading="lazy"
             />
-            <p class="bob-ab-review__cta" aria-hidden="true">{thanksScene.ctaLabel}</p>
+            <p class="bob-ab-invite__heading">{review.reviewPreview.heading}</p>
+            <p class="bob-ab-invite__body">{review.reviewPreview.body}</p>
+            <p class="bob-ab-invite__cta">
+              <img
+                class="bob-ab-invite__cta-mark"
+                src={example.googleMarkSrc}
+                alt=""
+                width="18"
+                height="18"
+                decoding="async"
+                loading="lazy"
+              />
+              <span>{review.reviewPreview.ctaLabel}</span>
+            </p>
           </div>
-        </article>
+        )}
+      </article>
 
-        <!-- Scene C: book again -->
-        <article
-          class="bob-ab-scene bob-ab-scene--c"
-          data-bob-ab-scene="rebook"
-          aria-label="Book again"
-        >
-          <p class="bob-ab-scene__status bob-ab-scene__status--planned">{rebookScene.statusLabel}</p>
-          <p class="bob-ab-scene__display">{rebookScene.display}</p>
-          <p class="bob-ab-scene__title">{rebookScene.title}</p>
-          <p class="bob-ab-rebook__cta" aria-hidden="true">{rebookScene.ctaLabel}</p>
-        </article>
-      </div>
+      <!-- Moment 03: Rebook -->
+      <article class="bob-ab-beat bob-ab-beat--rebook" aria-label="Book again">
+        <div class="bob-ab-beat__copy">
+          <span class="bob-ab-beat__index">{rebook.index}</span>
+          <p class="bob-ab-display bob-ab-display--climax">{rebook.display}</p>
+          {rebook.support && <p class="bob-ab-beat__support">{rebook.support}</p>}
+        </div>
+
+        {rebook.rebookPreview && (
+          <div class="bob-ab-return" aria-hidden="true">
+            <p class="bob-ab-return__shop">{rebook.rebookPreview.shopName}</p>
+            <p class="bob-ab-return__heading">{rebook.rebookPreview.heading}</p>
+            <p class="bob-ab-return__cta">
+              <span>{rebook.rebookPreview.ctaLabel}</span>
+              <span class="bob-ab-return__arrow" set:html={ARROW} />
+            </p>
+          </div>
+        )}
+      </article>
     </div>
 
-    <div class="bob-ab-foot">
-      <p class="bob-ab__disclosure">{example.disclosure}</p>
+    <footer class="bob-ab-end">
       <a
         class="bob-ab__cta"
         href={OWNER_TIMELINE_HREF}
         data-track={TRACK_EVENT}
         data-track-placement={TRACK_PLACEMENT}
       >
-        Explore the admin demo
+        See bookings in the admin demo
         <span class="bob-ab__cta-icon" set:html={ARROW} />
       </a>
-    </div>
+    </footer>
   </div>
 </section>
-
-<script>
-  import { bindAfterBookingScroll } from '@/lib/barbershopOnlineBooking/afterBookingScroll';
-
-  bindAfterBookingScroll();
-  document.addEventListener('astro:page-load', () => bindAfterBookingScroll());
-</script>

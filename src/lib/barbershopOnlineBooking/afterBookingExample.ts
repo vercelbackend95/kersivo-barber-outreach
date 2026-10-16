@@ -1,8 +1,8 @@
 /**
- * Section 06 presentation data for /barbershop-online-booking — cinematic scroll story.
+ * Section 06 presentation data for /barbershop-online-booking — post-visit retention story.
  *
- * Live confirmation/reminder subjects come from real email builders. SMS reminder visual is
- * Full-only illustrative (not every booking). Thank-you / review / rebook are Planned Full only.
+ * Focus: thank-you, Google review invite, and rebook after the visit (Planned Full illustrations).
+ * Pre-visit confirmation/reminders are not the hero of this section.
  */
 import {
   buildAppointmentReminderEmail,
@@ -12,46 +12,65 @@ import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_DEFAULT_SERVICE_SLUG, DEMO_SERVICES } from '@/lib/demo/services';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 
-/** Fixed appointment used only for illustrative email previews. */
+/** Fixed appointment used only for claim-safe builder fixtures. */
 export const AFTER_BOOKING_EXAMPLE_START = new Date('2027-01-14T11:00:00.000Z');
 export const AFTER_BOOKING_EXAMPLE_CLIENT = 'Jordan Ellis';
 export const AFTER_BOOKING_EXAMPLE_TIMEZONE = 'Europe/London';
 
-/** Display-only placeholders — previews never navigate to live manage tokens. */
+/** Display-only placeholders — never navigate to live manage tokens. */
 export const AFTER_BOOKING_PREVIEW_RESCHEDULE_HREF = '#preview-reschedule';
 export const AFTER_BOOKING_PREVIEW_CANCEL_HREF = '#preview-cancel';
 
-export const AFTER_BOOKING_LIVE_STATUS = 'Live today' as const;
-export const AFTER_BOOKING_PLANNED_STATUS = 'Planned for Full KERSIVO · Illustrative experience' as const;
+/** Section-level status for the three planned post-visit concepts. */
+export const AFTER_BOOKING_CONCEPT_STATUS = 'CONCEPT PREVIEW · PLANNED FOR FULL KERSIVO' as const;
+
+/** @deprecated Prefer AFTER_BOOKING_CONCEPT_STATUS — kept for claim-language continuity in tests. */
+export const AFTER_BOOKING_PLANNED_STATUS = AFTER_BOOKING_CONCEPT_STATUS;
 
 export const AFTER_BOOKING_GOOGLE_MARK_SRC = '/images/starter/google-g-192.webp';
 
-export type AfterBookingSceneId = 'confirmReminder' | 'thanksReview' | 'rebook';
+export type AfterBookingMomentId = 'thanks' | 'review' | 'rebook';
 
-export type AfterBookingScene = {
-  id: AfterBookingSceneId;
-  /** Short status for the scene (live vs planned). */
-  statusLabel: string;
-  /** Large editorial display line when used. */
-  display: string | null;
-  title: string;
-  body: string | null;
+export type AfterBookingThanksPreview = {
+  fromLabel: string;
+  from: string;
+  subjectLabel: string;
+  subject: string;
+  message: string;
+};
+
+export type AfterBookingReviewPreview = {
+  heading: string;
+  body: string;
+  ctaLabel: string;
+};
+
+export type AfterBookingRebookPreview = {
+  shopName: string;
+  heading: string;
+  ctaLabel: string;
+};
+
+export type AfterBookingMoment = {
+  id: AfterBookingMomentId;
+  index: string;
+  stageLabel: string | null;
+  display: string;
+  support: string | null;
   ctaLabel: string | null;
-  /** Optional micro note under the scene (e.g. Full SMS qualifier). */
-  note: string | null;
+  thanksPreview: AfterBookingThanksPreview | null;
+  reviewPreview: AfterBookingReviewPreview | null;
+  rebookPreview: AfterBookingRebookPreview | null;
 };
 
 export type AfterBookingExample = {
   shopName: string;
   clientName: string;
-  handoffLabel: string;
+  conceptStatus: typeof AFTER_BOOKING_CONCEPT_STATUS;
   confirmationSubject: string;
   reminderSubject: string;
-  smsPreviewLine: string;
-  smsNote: string;
-  emailReminderNote: string;
   googleMarkSrc: string;
-  scenes: AfterBookingScene[];
+  moments: AfterBookingMoment[];
   confirmationLines: { label: string; value: string }[];
   reminderLines: { label: string; value: string }[];
   manageLabels: string[];
@@ -109,7 +128,8 @@ function demoFixture() {
   };
 }
 
-export const AFTER_BOOKING_DISCLOSURE = `Fictional ${DEMO_SHOP_NAME} demo. Confirmation and email reminders are live; SMS reminders are Full-only subject to allowance. Thank-you, review and rebook examples are planned Full illustrations. Nothing here sends a message. A booking is not marketing consent.`;
+export const AFTER_BOOKING_DISCLOSURE =
+  'Illustrative post-visit communication concepts for Full KERSIVO. These automations are not currently live.';
 
 export function buildAfterBookingExample(): AfterBookingExample {
   const base = demoFixture();
@@ -123,51 +143,64 @@ export function buildAfterBookingExample(): AfterBookingExample {
     timezone: AFTER_BOOKING_EXAMPLE_TIMEZONE,
   });
 
-  const confirmationSubject = confirmationBuilt.subject;
-  const reminderSubject = reminderBuilt.subject;
-
-  const scenes: AfterBookingScene[] = [
+  const moments: AfterBookingMoment[] = [
     {
-      id: 'confirmReminder',
-      statusLabel: AFTER_BOOKING_LIVE_STATUS,
-      display: null,
-      title: 'Your appointment is coming up.',
-      body: 'Email reminder about a day before when the booking window allows.',
+      id: 'thanks',
+      index: '01',
+      stageLabel: null,
+      display: 'THANKS FOR COMING IN.',
+      support: 'A warm thank-you after the cut keeps the relationship alive.',
       ctaLabel: null,
-      note: 'SMS appointment reminders: Full KERSIVO only, subject to the plan’s monthly SMS allowance — not every booking.',
+      thanksPreview: {
+        fromLabel: 'From',
+        from: DEMO_SHOP_NAME,
+        subjectLabel: 'Subject',
+        subject: 'Thanks for coming in.',
+        message: `Thanks for visiting ${DEMO_SHOP_NAME}. We hope you enjoyed your cut.`,
+      },
+      reviewPreview: null,
+      rebookPreview: null,
     },
     {
-      id: 'thanksReview',
-      statusLabel: AFTER_BOOKING_PLANNED_STATUS,
-      display: 'THANKS FOR COMING IN.',
-      title: `Thanks for visiting ${DEMO_SHOP_NAME}`,
-      body: 'We’d appreciate an honest review of your visit.',
+      id: 'review',
+      index: '02',
+      stageLabel: '02 / BUILD YOUR REPUTATION',
+      display: 'A GREAT CUT DESERVES AN HONEST REVIEW.',
+      support: null,
       ctaLabel: 'Leave a Google Review',
-      note: null,
+      thanksPreview: null,
+      reviewPreview: {
+        heading: 'How was your visit?',
+        body: `We’d appreciate an honest review of your experience at ${DEMO_SHOP_NAME}.`,
+        ctaLabel: 'Leave a Google Review',
+      },
+      rebookPreview: null,
     },
     {
       id: 'rebook',
-      statusLabel: AFTER_BOOKING_PLANNED_STATUS,
+      index: '03',
+      stageLabel: null,
       display: 'READY FOR YOUR NEXT CUT?',
-      title: `Your next appointment at ${DEMO_SHOP_NAME} is just a few clicks away.`,
-      body: null,
-      ctaLabel: 'Book Again',
-      note: null,
+      support: `Your next appointment at ${DEMO_SHOP_NAME} is just a few clicks away.`,
+      ctaLabel: 'BOOK AGAIN',
+      thanksPreview: null,
+      reviewPreview: null,
+      rebookPreview: {
+        shopName: DEMO_SHOP_NAME,
+        heading: 'Time for your next cut?',
+        ctaLabel: 'BOOK AGAIN',
+      },
     },
   ];
 
   return {
     shopName: base.shopName,
     clientName: base.fullName,
-    handoffLabel: confirmationSubject,
-    confirmationSubject,
-    reminderSubject,
-    smsPreviewLine: 'Your appointment is coming up.',
-    smsNote:
-      'SMS appointment reminders: Full KERSIVO only, subject to the plan’s monthly SMS allowance — not every booking.',
-    emailReminderNote: 'Email reminder about a day before when the booking window allows.',
+    conceptStatus: AFTER_BOOKING_CONCEPT_STATUS,
+    confirmationSubject: confirmationBuilt.subject,
+    reminderSubject: reminderBuilt.subject,
     googleMarkSrc: AFTER_BOOKING_GOOGLE_MARK_SRC,
-    scenes,
+    moments,
     confirmationLines: extractStrongLines(confirmationBuilt.html),
     reminderLines: extractStrongLines(reminderBuilt.html),
     manageLabels: extractActions(confirmationBuilt.html).map((action) => action.label),
