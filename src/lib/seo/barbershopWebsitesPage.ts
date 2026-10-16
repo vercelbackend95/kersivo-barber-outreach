@@ -1,3 +1,6 @@
+import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+
 export const BARBERSHOP_WEBSITES_PAGE_PATH = '/barbershop-websites';
 
 export const BARBERSHOP_WEBSITES_PAGE_TITLE =
@@ -8,8 +11,30 @@ export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
 
 export const BARBERSHOP_WEBSITES_PAGE_H1 = 'Barbershop Websites with Online Booking';
 
-/**
- * The pillar page is only partially built. Keep it out of the index and the
- * marketing sitemap until every section has been approved.
- */
+/** The pillar stays noindex and out of the sitemap until the entire cluster passes release QA. */
 export const BARBERSHOP_WEBSITES_PAGE_INDEXABLE = false;
+
+/** Links the sales pillar into KERSIVO's existing WebSite/Organization schema entities. */
+export function buildBarbershopWebsitesJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = `${siteUrl}${BARBERSHOP_WEBSITES_PAGE_PATH}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: BARBERSHOP_WEBSITES_PAGE_TITLE,
+    description: BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
+    inLanguage: 'en-GB',
+    isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
+    publisher: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      '@id': `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: pageUrl },
+      ],
+    },
+  };
+}
