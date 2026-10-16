@@ -140,12 +140,12 @@ describe('/barbershop-website-design — Section 04 mobile design', () => {
     }
   });
 
-  it('adds no structured data and leaves the page noindex, follow and out of the sitemap', () => {
+  it('adds no extra structured data and keeps the released page in the sitemap', () => {
     expect(section).not.toMatch(/application\/ld\+json|FAQPage/);
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(false);
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}');
     expect(page).toContain('robotsFollow');
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-website-design');
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-website-design');
   });
 });
