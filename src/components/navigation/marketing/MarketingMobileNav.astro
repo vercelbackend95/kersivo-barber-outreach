@@ -2,7 +2,7 @@
 import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
 import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
 import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
-import { buildMarketingNavTopLevelEntries } from '@/lib/nav/marketingNavigation';
+import { buildMarketingNavTopLevelEntries, isMarketingDirectLinkCurrent } from '@/lib/nav/marketingNavigation';
 import type {
   MarketingNavAction,
   MarketingNavDirectLink,
@@ -80,7 +80,8 @@ const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
                 href={entry.link.href}
                 data-mnav-section={entry.link.sectionId}
                 data-mnav-match={entry.link.sectionId ? undefined : entry.link.href}
-                aria-current={!entry.link.sectionId && entry.link.href === pathname ? 'page' : undefined}
+                data-mnav-match-prefix={entry.link.matchPrefix}
+                aria-current={isMarketingDirectLinkCurrent(entry.link, pathname) ? 'page' : undefined}
               >
                 <span class="mnav-hub__row-label">{entry.link.label}</span>
               </a>
