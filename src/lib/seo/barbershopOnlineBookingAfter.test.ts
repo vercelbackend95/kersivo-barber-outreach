@@ -123,8 +123,8 @@ describe('Barbershop online booking page — Section 06 post-visit retention sto
     expect(markup).not.toMatch(/href=.*(Leave a Google Review|BOOK AGAIN|Book Again)/);
   });
 
-  it('keeps one tracked admin demo CTA, page unpublished, and Section 05 files untouched', () => {
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
+  it('keeps one tracked admin demo CTA, published booking page, and Section 05 files untouched', () => {
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
     const anchors = markup.match(/<a\b[\s\S]*?>/g) ?? [];
     expect(anchors).toHaveLength(1);
     expect(anchors[0]).toContain('href={OWNER_TIMELINE_HREF}');
