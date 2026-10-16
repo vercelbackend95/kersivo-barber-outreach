@@ -109,7 +109,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     section: 'explore',
     icon: 'website',
     featured: true,
-    // The commercial pillar must only surface once all Websites routes are approved for publication.
+    // Keep this link hidden until the pillar receives explicit publication approval.
     visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
