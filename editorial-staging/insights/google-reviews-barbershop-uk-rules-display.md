@@ -1,7 +1,7 @@
 # Google Reviews for Barbershops: Two Rulebooks, One Habit
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1600" height="1000" loading="eager" decoding="async" alt="Barbers working with clients in a real barbershop in Aldershot, England." />
-<figcaption>Photograph: <a href="https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU">Bruce Barrow / Unsplash</a>. Editorial photography; not a KERSIVO customer.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1600" height="1000" loading="eager" decoding="async" alt="Barbers working with clients inside a real British barbershop." />
+<figcaption>Editorial photograph; the barbers pictured are not KERSIVO clients. — <a href="https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU" target="_blank" rel="noopener noreferrer">Bruce Barrow / Unsplash</a>.</figcaption></figure>
 
 Two barbershops sit on the same high street. One has 41 Google reviews averaging 4.9, the other has 380 averaging 4.6. Someone new to the area searches "barber near me", and Google has to choose which one to show first. Most owners assume the 4.9 wins. It may not, but reviews are only part of the answer. Google says local results are mainly based on relevance (how well a profile matches the search), distance (how far the business is from the searcher) and prominence (how well known it is), and that review count and ratings feed into prominence. So the nearer shop with the better-matched profile can come first whatever its review count. Still, a long, steady record of reviews tells both Google and a stranger that people keep coming to this place.
 
@@ -32,8 +32,8 @@ Google says content that breaks these rules is removed, and its Business Profile
 
 Put the two rulebooks side by side and the safe area is clear:
 
-<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/two-rulebooks.svg" width="1200" height="660" loading="lazy" decoding="async" alt="UK law prohibits concealed incentives; Google also prohibits disclosed incentives and selective review requests." />
-<figcaption>Two separate rulebooks. The full comparison table follows.</figcaption></figure>
+<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/two-rulebooks.svg" width="1200" height="660" loading="lazy" decoding="async" alt="Side-by-side summary of the UK consumer law and Google review-policy requirements." />
+<figcaption>Original KERSIVO illustration; see the full comparison table for legal qualifications..</figcaption></figure>
 
 | Practice | UK law (DMCC Act and wider consumer law) | Google policy |
 | --- | --- | --- |
@@ -55,15 +55,15 @@ Many satisfied clients never leave a review, often because nobody asked them. A 
 
 Here's an illustrative example (assumed rates, not survey data; we found no reliable data on barbershop review rates). A shop does 120 cuts a week. If 1 in 25 clients reviews when asked, that's about 5 reviews a week, or roughly 250 a year. If 1 in 200 reviews without being asked, it's under one a week. The exact rates will differ in every shop. What matters is the gap between them, and the gap comes from asking, not from discounts.
 
-<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/review-rates.svg" width="1200" height="590" loading="lazy" decoding="async" alt="120 cuts a week, an illustrative 4.8 reviews at 1 in 25 versus 0.6 at 1 in 200; assumed rates, not survey data." />
-<figcaption>Illustrative assumptions from the article — not survey data.</figcaption></figure>
+<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/review-rates.svg" width="1200" height="590" loading="lazy" decoding="async" alt="Illustrative 120 cuts per week, yielding 4.8 reviews at a one-in-25 rate versus 0.6 at one-in-200." />
+<figcaption>Illustrative calculation from the article, not measured barbershop data..</figcaption></figure>
 
 #### The habit that holds up
 
 A system that works on a busy Saturday has to be boring. Four parts are enough.
 
-<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/habit.svg" width="1200" height="500" loading="lazy" decoding="async" alt="One link everywhere, ask every client, send requests after the cut, and accept honest feedback." />
-<figcaption>A repeatable review-request habit.</figcaption></figure>
+<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/habit.svg" width="1200" height="500" loading="lazy" decoding="async" alt="Four-part review habit: one link, ask all clients, ask after the visit and accept honest feedback." />
+<figcaption>Original KERSIVO process illustration based on the steps below..</figcaption></figure>
 
 **1. One link, everywhere.** Google Business Profile lets you create a review link or QR code from your profile. Use the same link in your post-appointment message, on a small card at the till and on your booking confirmation. Everyone gets the same ask. That's both the fair approach and the easy one.
 
@@ -83,8 +83,8 @@ That's true, and it's a useful limit on the advice. Reviews matter most at the e
 
 There's a second objection: asking everyone means inviting criticism. It does. Google itself says a mix of positive and negative feedback often feels more trustworthy. A profile of 300 reviews with a few honest grumbles and good replies looks like a real business. A profile of 40 identical five-star reviews can look like the opposite.
 
-<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1500" height="900" loading="lazy" decoding="async" alt="Barber chair and mirror inside a barbershop." />
-<figcaption>Photograph: <a href="https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0">Redd Francisco / Unsplash</a>. Editorial photography; not a KERSIVO customer.</figcaption></figure>
+<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1500" height="900" loading="lazy" decoding="async" alt="Barber chair and mirror in a barbershop." />
+<figcaption>Editorial photograph; not a KERSIVO customer or partner. — <a href="https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0" target="_blank" rel="noopener noreferrer">Redd Francisco / Unsplash</a>.</figcaption></figure>
 
 #### What to measure
 
