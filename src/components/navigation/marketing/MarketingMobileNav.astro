@@ -50,6 +50,44 @@ const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
                       </li>
                     ))}
                   </ul>
+                ) : null}
+                {entry.group.sections.map((section) => (
+                  <div class="mnav-hub__subsection">
+                    {section.label ? <p class="mnav-hub__section-label">{section.label}</p> : null}
+                    <ul class="mnav-hub__items" role="list">
+                      {section.items.map((item) => (
+                        <li>
+                          <MarketingNavLink item={item} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                {entry.group.featuredAction ? (
+                  <a class="mnav-hub__action" href={entry.group.featuredAction.href}>
+                    {entry.group.featuredAction.label}
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d={MARKETING_NAV_ICONS.arrow} />
+                    </svg>
+                  </a>
+                ) : null}
+              </div>
+            </li>
+          ) : (
+            <li class="mnav-hub__group">
+              <a
+                class="mnav-hub__row"
+                href={entry.link.href}
+                data-mnav-section={entry.link.sectionId}
+                data-mnav-match={entry.link.sectionId ? undefined : entry.link.href}
+                aria-current={!entry.link.sectionId && entry.link.href === pathname ? 'page' : undefined}
+              >
+                <span class="mnav-hub__row-label">{entry.link.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </nav>
   </div>
   <MarketingNavActions class="mnav-hub__actions" primary={primary} secondary={secondary} />
