@@ -31,10 +31,13 @@ describe('marketing navbar markup', () => {
   it('drives desktop and mobile from the same resolved config', () => {
     expect(navbar).toContain('const groups = buildMarketingNavigation();');
     expect(navbar).toMatch(/<MarketingMobileNav[\s\S]*groups=\{groups\}/);
-    expect(navbar).toContain('<MarketingNavPanel group={group}');
+    expect(navbar).toContain('<MarketingNavPanel group={entry.group}');
     expect(panel).toContain('<MarketingNavLink');
     expect(mobile).toContain('<MarketingNavLink');
-    expect(navbar).toContain('MARKETING_NAV_DIRECT_LINKS.map');
+    expect(navbar).toContain('buildMarketingNavTopLevelEntries(groups, MARKETING_NAV_DIRECT_LINKS)');
+    expect(navbar).toContain('navEntries.map((entry)');
+    expect(mobile).toContain('buildMarketingNavTopLevelEntries(groups, directLinks)');
+    expect(mobile).toContain('navEntries.map((entry)');
     expect(navbar).toContain('directLinks={MARKETING_NAV_DIRECT_LINKS}');
     for (const source of [navbar, mobile, panel]) expect(source).not.toMatch(/href="\/(booksy|fresha|barber-software)/);
   });
@@ -51,10 +54,10 @@ describe('marketing navbar markup', () => {
 
   it('uses disclosure semantics for desktop triggers and mobile accordions', () => {
     expect(navbar).toContain('aria-expanded="false"');
-    expect(navbar).toContain('aria-controls={`mnav-panel-${group.id}`}');
+    expect(navbar).toContain('aria-controls={`mnav-panel-${entry.group.id}`}');
     expect(navbar).toContain('aria-controls="mnav-hub"');
     expect(navbar).toContain('<nav class="mnav__desktop" aria-label="Main">');
-    expect(mobile).toContain('aria-controls={`${id}-${group.id}`}');
+    expect(mobile).toContain('aria-controls={`${id}-${entry.group.id}`}');
     expect(mobile).toMatch(/class="mnav-hub"[^>]*hidden inert/);
     expect(panel).toMatch(/data-mnav-panel[^>]*hidden/);
   });
