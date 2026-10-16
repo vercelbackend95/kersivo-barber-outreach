@@ -38,13 +38,13 @@ describe('/barbershop-websites pillar hero', () => {
     expect(page).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
   });
 
-  it('stays noindex and out of the marketing sitemap until the pillar is approved', () => {
-    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(false);
+  it('publishes the canonical pillar for search and includes it in the sitemap', () => {
+    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     expect(page).toContain('robotsFollow');
-    expect(resolveRobotsContent({ noindex: true, robotsFollow: true })).toBe('noindex, follow');
+    expect(resolveRobotsContent({ noindex: !BARBERSHOP_WEBSITES_PAGE_INDEXABLE, robotsFollow: true })).toBeUndefined();
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-websites');
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-websites');
   });
 
   it('renders exactly one H1 built from the approved headline', () => {
@@ -133,10 +133,10 @@ describe('/barbershop-websites pillar hero', () => {
     }
   });
 
-  it('keeps /barbershop-website-design noindex and out of the sitemap for Phase 04B', () => {
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(false);
+  it('publishes the companion website-design guide in the sitemap', () => {
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-website-design');
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-website-design');
   });
 
   it('shares the marketing route family for page transitions', () => {
