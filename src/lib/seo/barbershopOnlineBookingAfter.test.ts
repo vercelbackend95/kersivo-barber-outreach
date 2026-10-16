@@ -37,10 +37,11 @@ describe('Barbershop online booking page — Section 06 post-visit retention sto
 
     expect(markup.match(/<h2\b/g) ?? []).toHaveLength(1);
     expect(markup).toContain(
-      '<h2 id="bob-ab-title" class="bob-ab__title">The Next Booking Starts With the Last Visit.</h2>',
+      '<h2 id="bob-ab-title" class="bob-ab__title">Booking Confirmations and What Comes Next.</h2>',
     );
-    expect(markup).toContain('After the visit');
-    expect(markup).toContain('thank the client');
+    expect(markup).toContain('After a booking');
+    expect(markup).toContain('provides booking confirmation emails and appointment reminders');
+    expect(markup).toContain('planned concepts, not features available today');
     expect(markup).not.toContain('bob-ab-handoff');
   });
 
@@ -79,6 +80,8 @@ describe('Barbershop online booking page — Section 06 post-visit retention sto
     expect(example.googleMarkSrc).toBe(AFTER_BOOKING_GOOGLE_MARK_SRC);
     expect(example.conceptStatus).toBe(AFTER_BOOKING_CONCEPT_STATUS);
     expect(markup).toContain('bob-ab-concept');
+    expect(markup).toContain('not currently live');
+    expect(example.disclosure).toContain('None of these post-visit automations is live.');
     expect(markup).toContain('{example.conceptStatus}');
     expect(markup).toContain('bob-ab-invite__cta');
     expect(markup).toContain('bob-ab-return__cta');
