@@ -2,6 +2,7 @@
 import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
 import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
 import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+import { isMarketingDirectLinkCurrent } from '@/lib/nav/marketingNavigation';
 import type {
   MarketingNavAction,
   MarketingNavDirectLink,
@@ -17,7 +18,9 @@ interface Props {
 }
 
 const { id, groups, directLinks, primary, secondary } = Astro.props;
-const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+const pathname = Astro.url.pathname;
+const insightsLink = directLinks.find((link) => link.id === 'insights');
+const remainingDirectLinks = directLinks.filter((link) => link.id !== 'insights');
 ---
 
 <div id={id} class="mnav-hub" data-mnav-hub hidden inert>
@@ -25,6 +28,20 @@ const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
     <p class="mnav-hub__context">Booking software for UK barbershops</p>
     <nav class="mnav-hub__nav" aria-label="Main">
       <ul class="mnav-hub__list" role="list">
+        {insightsLink ? (
+          <li class="mnav-hub__group mnav-hub__group--editorial">
+            <a
+              class="mnav-hub__row mnav-hub__row--editorial"
+              href={insightsLink.href}
+              data-mnav-match={insightsLink.href}
+              data-mnav-match-prefix={insightsLink.matchPrefix}
+              aria-current={isMarketingDirectLinkCurrent(insightsLink, pathname) ? 'page' : undefined}
+            >
+              <span class="mnav-hub__row-label">Insights</span>
+              <span class="mnav-hub__editorial-hint">FOR UK BARBERS <span aria-hidden="true">↗</span></span>
+            </a>
+          </li>
+        ) : null}
         {
           groups.map((group) => (
             <li class="mnav-hub__group">
@@ -74,14 +91,15 @@ const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
           ))
         }
         {
-          directLinks.map((link) => (
+          remainingDirectLinks.map((link) => (
             <li class="mnav-hub__group">
               <a
                 class="mnav-hub__row"
                 href={link.href}
                 data-mnav-section={link.sectionId}
                 data-mnav-match={link.sectionId ? undefined : link.href}
-                aria-current={!link.sectionId && link.href === pathname ? 'page' : undefined}
+                data-mnav-match-prefix={link.matchPrefix}
+                aria-current={isMarketingDirectLinkCurrent(link, pathname) ? 'page' : undefined}
               >
                 <span class="mnav-hub__row-label">{link.label}</span>
               </a>
