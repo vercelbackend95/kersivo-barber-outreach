@@ -213,7 +213,11 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
   });
 
   it('makes no unsupported results, ranking or testimonial claims', () => {
-    const prose = section.replace(/bwd-review[\w-]*/g, '').replace(/\b(design|this) review\b/gi, '');
+    const prose = section
+      .replace(/bwd-review[\w-]*/g, '')
+      .replace(/\b(design|this) review\b/gi, '')
+      // An explicit scope limitation is not an unsupported performance guarantee.
+      .replace(/\bnot guaranteed\b/gi, '');
     expect(prose).not.toMatch(
       /guarantee|increase(s|d)? (your )?bookings|more bookings|\brank(ing|s)?\b|testimonial|\breviews?\b|\d+%|award/i,
     );
