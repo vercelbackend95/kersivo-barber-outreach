@@ -16,6 +16,8 @@ import {
 } from './marketingNavigation';
 import { MARKETING_NAV_ICONS } from './marketingNavIcons';
 import { NAVBAR_SUBSCRIBE_CTA_LABEL } from './navbar17Items';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const pagesDir = path.resolve(__dirname, '../../pages');
@@ -103,6 +105,18 @@ describe('marketing navigation config', () => {
       expect(group, item.id).toBeDefined();
       if (!item.featured) expect(group!.sections.map((section) => section.id), item.id).toContain(item.section);
     }
+  });
+
+  it('keeps the booking guide out of global navigation until both pages can be indexed', () => {
+    const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-online-booking');
+    expect(guide).toMatchObject({
+      label: 'Online Booking for Barbershops',
+      href: '/barbershop-online-booking',
+      group: 'resources',
+      section: 'guides',
+      icon: 'guide',
+    });
+    expect(guide?.visible).toBe(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE);
   });
 
   it('places the current SEO pages where the IA expects them', () => {
