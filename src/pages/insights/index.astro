@@ -1,0 +1,51 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import '@/styles/components/insights-preview.css';
+const articlePath = '/insights/google-reviews-barbershop-uk-rules';
+---
+
+<LandingLayout
+  title="KERSIVO Insights | The Business Behind the Chair"
+  description="Useful thinking for UK barbershop owners: branding, customer relationships, bookings and the business behind the chair."
+  canonicalPath="/insights"
+  noindex={true}
+>
+  <main class="insights-page">
+    <section class="insights-masthead" aria-label="KERSIVO Insights">
+      <div class="insights-shell">
+        <nav class="insights-breadcrumbs" aria-label="Breadcrumb">
+          <a href="/">KERSIVO</a><span aria-hidden="true">/</span><span aria-current="page">Insights</span>
+        </nav>
+        <div class="insights-masthead__identity">
+          <div>
+            <p class="insights-eyebrow"><span class="insights-eyebrow__rule"></span> THE BUSINESS BEHIND THE CHAIR</p>
+            <h1 class="insights-masthead__name">KERSIVO <span>/</span> INSIGHTS</h1>
+          </div>
+          <span class="insights-masthead__edition">UK BARBERSHOP INTELLIGENCE</span>
+        </div>
+        <div class="insights-masthead__divider"></div>
+        <p class="insights-article-meta">Practical guides and independent thinking on running a barbershop in the UK.</p>
+      </div>
+    </section>
+    <section class="insights-index" aria-labelledby="insights-featured">
+      <div class="insights-index__inner">
+        <h2 class="insights-index__label" id="insights-featured">FEATURED READING</h2>
+        <a href={articlePath} class="insights-index__feature">
+          <div>
+            <p class="insights-article-meta__category" style="color:#982431; font-size:.72rem; letter-spacing:.13em; margin-bottom:1rem">BRAND &amp; MARKETING</p>
+            <h3 class="insights-index__title">Google Reviews for Barbershops: Two Rulebooks, One Habit</h3>
+            <p class="insights-index__summary">What UK consumer law and Google's review policies actually mean for a barbershop asking clients for feedback.</p>
+            <span class="insights-index__read">READ THE ARTICLE <span aria-hidden="true">↗</span></span>
+          </div>
+          <span aria-hidden="true" class="insights-index__arrow">↗</span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <Footer50 showIntro={false} navigation={[
+    { name: 'KERSIVO', href: '/' },
+    { name: 'About', href: '/about' },
+    { name: 'Pricing', href: '/pricing' },
+  ]} />
+</LandingLayout>
