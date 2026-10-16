@@ -125,6 +125,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(cssRule('.bob-hero__eyebrow')).toContain('text-transform: uppercase;');
     expect(cssRule('.bob-hero__head')).toContain('text-align: center;');
     expect(hero).toContain('<li><a href="/">Home</a></li>');
+    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>');
     expect(hero).toContain('<li><span aria-current="page">Online booking</span></li>');
   });
 
@@ -373,14 +374,23 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(heroCss.slice(0, reducedStart)).not.toMatch(/animation:/);
   });
 
-  it('uses a WebPage node linked to the existing KERSIVO identifiers only', () => {
+  it('uses a WebPage node with matching three-level BreadcrumbList and existing entity identifiers', () => {
     const siteUrl = getPublicSiteUrl();
     const jsonLd = buildBarbershopOnlineBookingJsonLd();
     expect(jsonLd['@type']).toBe('WebPage');
     expect(jsonLd['@id']).toBe(`${siteUrl}/barbershop-online-booking#webpage`);
     expect(jsonLd.isPartOf).toEqual({ '@id': getKersivoWebsiteId(siteUrl) });
     expect(jsonLd.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
-    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|BreadcrumbList|Review|AggregateRating|Offer/);
+    expect(jsonLd.breadcrumb).toEqual({
+      '@type': 'BreadcrumbList',
+      '@id': `${siteUrl}/barbershop-online-booking#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}/barbershop-websites` },
+        { '@type': 'ListItem', position: 3, name: 'Online booking', item: `${siteUrl}/barbershop-online-booking` },
+      ],
+    });
+    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating|Offer/);
     expect(page).toContain('jsonLd={buildBarbershopOnlineBookingJsonLd()}');
   });
 
@@ -388,18 +398,23 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(getRouteFamily(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe('marketing');
   });
 
-  it('is not linked from any other page or component while unfinished', () => {
-    const allowed = new Set([
-      'pages/barbershop-online-booking/index.astro',
-      'lib/seo/barbershopOnlineBookingPage.ts',
-      'lib/seo/barbershopOnlineBookingPage.test.ts',
-      'lib/navigation/routeFamilies.ts',
-    ]);
-    const offenders = (readdirSync(srcDir, { recursive: true }) as string[])
-      .map((file) => file.replace(/\\/g, '/'))
-      .filter((file) => /\.(astro|tsx?|mdx?)$/.test(file) && !allowed.has(file))
-      .filter((file) => /["'`]\/barbershop-online-booking\b/.test(readFileSync(join(srcDir, file), 'utf8')))
-      .map((file) => relative(srcDir, join(srcDir, file)));
-    expect(offenders).toEqual([]);
+  it('prepares internal links within the unpublished cluster but keeps public navigation gated', () => {
+    const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
+    const nav = read('../../lib/nav/marketingNavigation.ts');
+    expect(panel).toContain('href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
+    expect(nav).toContain('visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE');
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
+  });
+
+  it('places the global footer outside main and links the three website guides', () => {
+    expect(page).toContain('href: BARBERSHOP_WEBSITES_PAGE_PATH');
+    expect(page).toContain('href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
+    const mainOpen = page.indexOf('<main class="bob-page">');
+    const mainClose = page.indexOf('</main>');
+    const footer = page.indexOf('<Footer50');
+    expect(mainOpen).toBeGreaterThan(-1);
+    expect(mainClose).toBeGreaterThan(mainOpen);
+    expect(footer).toBeGreaterThan(mainClose);
+    expect(page.match(/<main\\b/g)).toHaveLength(1);
   });
 });
