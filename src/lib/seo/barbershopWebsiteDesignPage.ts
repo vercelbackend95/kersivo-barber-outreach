@@ -12,11 +12,8 @@ export const BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION =
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 = 'Barbershop Website Design That Looks Like Your Shop';
 
-/**
- * The supporting page is only partially built. Keep it out of the index and the
- * marketing sitemap until every section has been approved.
- */
-export const BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE = false;
+/** Published design guide, with reciprocal pillar links and canonical WebPage schema. */
+export const BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE = true;
 
 export function buildBarbershopWebsiteDesignJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
