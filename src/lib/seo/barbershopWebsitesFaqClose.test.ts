@@ -52,8 +52,8 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(page.indexOf('<Footer50')).toBeGreaterThan(page.indexOf('</main>'));
   });
 
-  it('keeps the page noindex and adds no structured data', () => {
-    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(false);
+  it('publishes the pillar without adding extra FAQ structured data', () => {
+    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     expect(section).not.toMatch(/application\/ld\+json|schema\.org|FAQPage|itemscope|itemprop/);
     expect(section).not.toMatch(/client:|<script|<iframe/);
