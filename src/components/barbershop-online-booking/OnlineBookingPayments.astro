@@ -38,8 +38,8 @@ const rules = [
     body: `For services above ${deposit}, customers choose either the ${deposit} deposit or payment in full — not both. A service priced at exactly ${deposit} has a single ${deposit} payment.`,
   },
   {
-    lead: 'No pay-at-shop option on Starter.',
-    body: `Every public Starter booking requires an online payment of at least ${deposit}. Public booking without an online payment is not available on Starter.`,
+    lead: 'No pay-at-shop option for public Starter bookings.',
+    body: `Public Starter bookings require at least ${deposit} paid online. Customers cannot book online without making a payment.`,
   },
 ];
 
@@ -52,9 +52,8 @@ const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
       <p class="bop__eyebrow">Deposits and payment options</p>
       <h2 id="bop-title" class="bop__title">What Does a Customer Pay When They Book?</h2>
       <p class="bop__lead">
-        What a customer pays depends on how the shop takes bookings. KERSIVO Starter (£0/month) keeps it simple:
-        everyone who books online pays at least {deposit} when they book, choosing between a {deposit} deposit and
-        the full price. Here is how that works for one service.
+        Every public booking on KERSIVO Starter (£0/month) requires an online payment. Here is how a client
+        can pay for an illustrative {price} service.
       </p>
     </header>
 
