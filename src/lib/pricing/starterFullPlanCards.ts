@@ -17,10 +17,7 @@ export const STARTER_FULL_PLAN_STARTER_FEATURES = [
   'Included initial QR Kit for eligible verified UK locations',
 ] as const;
 
-/** Full-only extras shown on the Full card (Starter page source of truth).
- * The Full payment-mode matrix is pending Commercial Offer B1 approval; do not
- * advertise editable public payment modes here until the offer and Terms agree.
- */
+/** Full-only extras shown on the Full card. Full owners control public booking payment mode (NONE / DEPOSIT / FULL). */
 export const STARTER_FULL_PLAN_FULL_ONLY = [
   'Your own branded website and domain',
   'More than 4 active bookable barbers',
@@ -30,7 +27,7 @@ export const STARTER_FULL_PLAN_FULL_ONLY = [
   'Retail, Products, Orders and Sales',
   'SMS reminders',
   'Live KERSIVO Assistant',
-  'Optional £5 booking deposits',
+  'Owner-controlled payments: Pay at shop, £5 deposit or Pay in full',
 ] as const;
 
 export const STARTER_FULL_PLAN_STARTER_CTA = {

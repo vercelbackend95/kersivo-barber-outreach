@@ -63,25 +63,12 @@ describe('Barbershop online booking page — Section 04 deposits and payment opt
     expect(source).toContain('A public Starter booking cannot be completed without payment.');
   });
 
-  it('keeps the Full note to approved Commercial Offer terms while B1 is unresolved', () => {
+  it('explains the three shop-controlled Full modes without implying Starter offers Pay at shop', () => {
     const text = textOf(markup);
-    expect(text).toContain(
-      '£39/month per physical location, with a professionally prepared branded website. Booking deposits are included and optional for the shop: a fixed {deposit} per booking that counts towards the service price, with the rest paid at the shop. Standard Stripe processing fees apply to online card payments.',
-    );
-    const lower = source.toLowerCase();
-    for (const blocked of [
-      'pay at shop',
-      'require full payment',
-      'full payment upfront',
-      'full upfront',
-      'require £5 deposit',
-      'require ${deposit} deposit',
-      'payment controls',
-      'payment modes',
-      'payment settings',
-    ]) {
-      expect(lower).not.toContain(blocked);
-    }
+    expect(text).toContain('The shop owner can choose Pay at shop (no online payment), a {deposit} deposit, or full payment online.');
+    expect(text).toContain('Deposits count towards the service price, with the balance paid at the shop.');
+    expect(text).toContain('Standard Stripe processing fees apply to online card payments.');
+    expect(source).toContain('No pay-at-shop option for public Starter bookings.');
     expect(markup).not.toMatch(/href=["{]?["']?\/pricing/);
   });
 

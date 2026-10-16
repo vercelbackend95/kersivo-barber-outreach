@@ -73,7 +73,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
   it('asks exactly seven real questions in buying-decision order, in native, crawlable HTML', () => {
     expect(questions).toEqual([
       'What does Full KERSIVO cost, and when do I start paying?',
-      'How do booking deposits work?',
+      'Can I choose how clients pay when booking?',
       'Can I use my existing domain?',
       'Do I own my website?',
       'How long does setup take, and can you help me switch?',
@@ -122,16 +122,19 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
 
   it('describes the Full payment modes the owner can actually choose', () => {
     const a = answer('payments');
-    expect(a).toContain('Full KERSIVO supports an optional');
+    expect(a).toContain('In Full KERSIVO, the shop owner chooses Pay at shop');
     expect(a).toContain('KERSIVO_BOOKING_DEPOSIT_GBP');
     expect(a).toContain('capped at the service price');
-    expect(a).toContain('deposit counts towards the final service price');
+    expect(a).toContain('or full payment online');
+    expect(a).toContain('deposit counts towards the service price');
     expect(a).toContain('remaining balance is paid at the shop');
-    expect(a).toContain('connected Stripe account');
+    expect(a).toContain('connected, payment-ready Stripe account');
     expect(KERSIVO_BOOKING_DEPOSIT_GBP * 100).toBe(BOOKING_DEPOSIT_CAP_PENCE);
-    expect(a).not.toMatch(/pay in full online|the full amount online|editable payment controls/i);
-    // This page follows Commercial Offer v1.0 until wider Full B1 terms are formally approved.
+    expect(a).toContain('The deposit and full-payment modes require');
     expect(depositsApi).toContain("productAccess.state !== 'FULL_KERSIVO'");
+    expect(depositsApi).toContain("body.bookingPaymentMode === 'NONE'");
+    expect(depositsApi).toContain("body.bookingPaymentMode === 'DEPOSIT'");
+    expect(depositsApi).toContain("body.bookingPaymentMode === 'FULL'");
   });
 
   it('matches the real owner dashboard for services, prices and hours', () => {

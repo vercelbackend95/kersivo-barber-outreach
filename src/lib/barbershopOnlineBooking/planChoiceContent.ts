@@ -68,7 +68,7 @@ export function buildPlanChoiceContent(): PlanChoiceContent {
       question: 'Do customers have to pay when booking?',
       answer: [
         `On KERSIVO Starter, every public online booking requires at least ${deposit} paid online. For services above ${deposit}, the customer chooses a ${deposit} deposit or payment in full. A service priced at exactly ${deposit} is paid in full.`,
-        `On Full KERSIVO, booking deposits are optional for the shop: a fixed ${deposit} per booking that counts towards the service price when enabled. ${STRIPE_FEES_NOTE}`,
+        `On Full KERSIVO, the shop owner chooses Pay at shop (no online payment), a ${deposit} deposit, or payment in full online. Deposits count towards the service price and the balance is paid at the shop. ${STRIPE_FEES_NOTE}`, 
       ],
     },
     {
