@@ -82,22 +82,28 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(page.match(/<main\b/g)).toHaveLength(1);
   });
 
-  it('remains unpublished in the marketing sitemap and hidden from public navigation', () => {
-    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(false);
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(false);
+  it('publishes all three pages in the marketing sitemap and exposes the Websites navigation hierarchy', () => {
+    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     const urls = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(urls.some((url) => /\/barbershop-(websites|website-design|online-booking)$/.test(url))).toBe(false);
-    // The pillar is a direct Websites entry after approval, not a duplicated Resources guide.
+    for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
+      expect(urls).toContain(`https://kersivo.co.uk${path}`);
+    }
+    // The pillar is promoted to a direct Websites link, not duplicated inside Resources.
     expect(MARKETING_NAV_ITEMS.some((entry) => entry.href === BARBERSHOP_WEBSITES_PAGE_PATH)).toBe(false);
-    expect(MARKETING_NAV_DIRECT_LINKS.some((entry) => entry.id === 'websites')).toBe(false);
-    expect(buildMarketingNavTopLevelEntries().some((entry) =>
-      entry.kind === 'link' && entry.link.href === BARBERSHOP_WEBSITES_PAGE_PATH,
-    )).toBe(false);
-    const visibleHrefs = buildMarketingNavigation()
-      .flatMap((group) => [...group.featured, ...group.sections.flatMap((section) => section.items)])
-      .map((entry) => entry.href);
-    expect(visibleHrefs).not.toContain(BARBERSHOP_WEBSITES_PAGE_PATH);
+    expect(MARKETING_NAV_DIRECT_LINKS.find((entry) => entry.id === 'websites')).toMatchObject({
+      label: 'Websites',
+      href: BARBERSHOP_WEBSITES_PAGE_PATH,
+    });
+    expect(buildMarketingNavTopLevelEntries().map((entry) =>
+      entry.kind === 'group' ? entry.group.label : entry.link.label,
+    )).toEqual(['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']);
+    const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
+    expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
+      '/barbershop-website-design',
+      '/barbershop-online-booking',
+    ]);
   });
 });
