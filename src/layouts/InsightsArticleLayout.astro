@@ -36,7 +36,7 @@ const path = `/insights/${slug}`;
   jsonLd={published ? buildInsightsArticleJsonLd({path, headline, description, publishedDate, verifiedDate, heroImage}) : undefined}
 >
   <main class="insights-page">
-    <InsightsMasthead page="article" category={category} dateLabel={dateLabel} />
+    <InsightsMasthead page="article" category={category} dateLabel={dateLabel} currentLabel={headline} />
     <div class="insights-paper">
       <article class="insights-article" aria-label={title}>
         <div class="insights-article__body">
