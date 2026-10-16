@@ -11,7 +11,7 @@ import {
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from './barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
-import { MARKETING_NAV_ITEMS, buildMarketingNavigation } from '@/lib/nav/marketingNavigation';
+import { MARKETING_NAV_ITEMS, MARKETING_NAV_DIRECT_LINKS, buildMarketingNavigation, buildMarketingNavTopLevelEntries } from '@/lib/nav/marketingNavigation';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from './kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -89,18 +89,15 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     const urls = buildMarketingSitemapEntries().map((entry) => entry.loc);
     expect(urls.some((url) => /\/barbershop-(websites|website-design|online-booking)$/.test(url))).toBe(false);
-    const item = MARKETING_NAV_ITEMS.find((entry) => entry.id === 'resources-barbershop-websites');
-    expect(item).toMatchObject({
-      label: 'Barbershop Websites',
-      href: BARBERSHOP_WEBSITES_PAGE_PATH,
-      group: 'resources',
-      section: 'guides',
-      icon: 'guide',
-      visible: false,
-    });
-    const visibleIds = buildMarketingNavigation()
+    // The pillar is a direct Websites entry after approval, not a duplicated Resources guide.
+    expect(MARKETING_NAV_ITEMS.some((entry) => entry.href === BARBERSHOP_WEBSITES_PAGE_PATH)).toBe(false);
+    expect(MARKETING_NAV_DIRECT_LINKS.some((entry) => entry.id === 'websites')).toBe(false);
+    expect(buildMarketingNavTopLevelEntries().some((entry) =>
+      entry.kind === 'link' && entry.link.href === BARBERSHOP_WEBSITES_PAGE_PATH,
+    )).toBe(false);
+    const visibleHrefs = buildMarketingNavigation()
       .flatMap((group) => [...group.featured, ...group.sections.flatMap((section) => section.items)])
-      .map((entry) => entry.id);
-    expect(visibleIds).not.toContain('resources-barbershop-websites');
+      .map((entry) => entry.href);
+    expect(visibleHrefs).not.toContain(BARBERSHOP_WEBSITES_PAGE_PATH);
   });
 });
