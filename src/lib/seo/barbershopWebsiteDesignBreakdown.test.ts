@@ -213,7 +213,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
   });
 
   it('makes no unsupported results, ranking or testimonial claims', () => {
-    const prose = section.replace(/bwd-review[\w-]*/g, '').replace(/(design|this) review/gi, '');
+    const prose = section.replace(/bwd-review[\w-]*/g, '').replace(/\b(design|this) review\b/gi, '');
     expect(prose).not.toMatch(
       /guarantee|increase(s|d)? (your )?bookings|more bookings|\brank(ing|s)?\b|testimonial|\breviews?\b|\d+%|award/i,
     );
