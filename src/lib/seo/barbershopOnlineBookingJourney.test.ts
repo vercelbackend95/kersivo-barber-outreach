@@ -53,7 +53,7 @@ describe('Barbershop online booking page — Section 02 client booking journey',
 
   it('keeps the approved working answer', () => {
     expect(textOf(markup)).toContain(
-      'A useful barbershop booking flow makes the service, barber, available time and payment conditions clear before the client confirms. Here is what the customer sees — and why each step matters to the shop.',
+      'Follow the booking journey from choosing a service to confirmation. Each step shows what the client sees and what it means for your shop.',
     );
   });
 

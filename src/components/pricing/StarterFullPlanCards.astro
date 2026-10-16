@@ -59,6 +59,8 @@ const { placement } = Astro.props;
     <a
       href={STARTER_FULL_PLAN_FULL_CTA.href}
       class="starter-plan-card__cta starter-plan-card__cta--secondary"
+      data-track={STARTER_FULL_PLAN_FULL_CTA.trackEvent}
+      data-track-placement={placement}
     >
       {STARTER_FULL_PLAN_FULL_CTA.label}
     </a>

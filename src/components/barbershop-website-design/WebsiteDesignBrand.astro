@@ -11,8 +11,6 @@ import {
 import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 import '@/styles/components/barbershop-website-design-brand.css';
 
-const PARENT_HREF = '/barbershop-websites';
-
 // The story section of the CUTSTATE demo homepage (components/demo/DemoStory.astro).
 const STORY_IMAGE = { src: '/demo/storyimg.webp', width: 2000, height: 3000 };
 const STORY_HEADING = ['A proper barbershop.', 'Built for modern Manchester.'];
@@ -43,19 +41,19 @@ const rows = ['Name', 'Colour & type', 'Photography & voice', 'Business details'
 const ideas = [
   {
     title: 'Name & identity',
-    body: 'The name and logo clients know from the shopfront should be the first thing they recognise online, in the header and on every page.',
+    body: 'Use the shop name clients recognise from your sign and profiles. Supply a clear logo file if you have one; within the standard setup, a typographic shop name can be used instead.',
   },
   {
     title: 'Colour & typography',
-    body: 'Colours and type should suit the character of the shop — for CUTSTATE, a dark palette, condensed capitals and a single cobalt accent.',
+    body: 'Choose colours that suit your shop, with enough contrast for text and buttons. Keep body text easy to read and use distinctive type sparingly for headings.',
   },
   {
     title: 'Photography & personality',
-    body: 'The shop’s own photographs and the way it describes its work make the website feel like a real place, not a template anyone could use.',
+    body: 'Gather photographs of your shop and work, plus a short description of the services you offer. Use the same straightforward language you would use with a new client.',
   },
   {
     title: 'A consistent business identity',
-    body: 'The shop name, team, services, location and booking details should match wherever they appear, from the first visit to the appointment.',
+    body: 'Check the spelling of your shop name, address, opening hours, services and prices before sending them. Use those same details across your website and business profiles.',
   },
 ];
 
@@ -220,18 +218,6 @@ const boardLabel = `A brand board for ${DEMO_SHOP_NAME}, a fictional KERSIVO dem
         </li>
       ))}
     </ol>
-
-    <div class="bwb-offer">
-      <p class="bwb-offer__title">Your shop already has an identity. Your website should reflect it.</p>
-      <div class="bwb-offer__copy">
-        <p>
-          Full KERSIVO brings your shop’s branding, business details and online bookings together on
-          a professionally prepared website on your own domain. Standard website setup is included in
-          the £39/month plan per location.
-        </p>
-        <a class="bwb-offer__link" href={PARENT_HREF}>See what a Full KERSIVO website includes</a>
-      </div>
-    </div>
 
     <p class="bwb__disclosure">
       CUTSTATE BARBERS is a fictional KERSIVO demonstration shop. The board above is recreated from

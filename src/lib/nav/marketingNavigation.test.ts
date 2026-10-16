@@ -16,6 +16,9 @@ import {
 } from './marketingNavigation';
 import { MARKETING_NAV_ICONS } from './marketingNavIcons';
 import { NAVBAR_SUBSCRIBE_CTA_LABEL } from './navbar17Items';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const pagesDir = path.resolve(__dirname, '../../pages');
@@ -105,6 +108,30 @@ describe('marketing navigation config', () => {
     }
   });
 
+  it('keeps the booking guide out of global navigation until its route and parent are released', () => {
+    const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-online-booking');
+    expect(guide).toMatchObject({
+      label: 'Online Booking for Barbershops',
+      href: '/barbershop-online-booking',
+      group: 'resources',
+      section: 'guides',
+      icon: 'guide',
+    });
+    expect(guide?.visible).toBe(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE);
+  });
+
+  it('keeps the website-design guide hidden in global navigation until both cluster pages are released', () => {
+    const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-website-design');
+    expect(guide).toMatchObject({
+      label: 'Barbershop Website Design',
+      href: '/barbershop-website-design',
+      group: 'resources',
+      section: 'guides',
+      icon: 'guide',
+    });
+    expect(guide?.visible).toBe(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE);
+  });
+
   it('places the current SEO pages where the IA expects them', () => {
     const groups = buildMarketingNavigation();
     const compare = groups.find((group) => group.id === 'compare')!;
@@ -120,7 +147,9 @@ describe('marketing navigation config', () => {
     const tools = resources.sections.find((section) => section.id === 'tools');
     expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
     expect(tools?.items.map((item) => item.href)).toContain('/compare');
-    expect(resources.sections.map((section) => section.id)).not.toContain('guides');
+    const guides = resources.sections.find((section) => section.id === 'guides');
+    const guideReady = BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE;
+    expect(guides?.items.some((item) => item.href === '/barbershop-website-design') ?? false).toBe(guideReady);
   });
 });
 

@@ -6,6 +6,8 @@
 
 import { NAVBAR_SUBSCRIBE_CTA_LABEL, type Navbar17CtaTrack } from './navbar17Items';
 import type { MarketingNavIcon } from './marketingNavIcons';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 
 export type MarketingNavGroupId = 'platform' | 'compare' | 'resources';
@@ -261,6 +263,26 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'resources',
     section: 'tools',
     icon: 'calculator',
+  },
+  {
+    id: 'resources-website-design',
+    label: 'Barbershop Website Design',
+    description: 'Practical tips for barbershop branding, photography and mobile website design.',
+    href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
+    group: 'resources',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+  },
+  {
+    id: 'resources-online-booking',
+    label: 'Online Booking for Barbershops',
+    description: 'Booking steps, availability, deposits and the shop diary explained.',
+    href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
+    group: 'resources',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
     id: 'resources-barbershop-websites',
