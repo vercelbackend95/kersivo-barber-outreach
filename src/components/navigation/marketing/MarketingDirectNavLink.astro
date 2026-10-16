@@ -1,0 +1,20 @@
+---
+import { isMarketingDirectLinkCurrent, type MarketingNavDirectLink } from '@/lib/nav/marketingNavigation';
+interface Props {
+  link: MarketingNavDirectLink;
+  pathname: string;
+}
+const { link, pathname } = Astro.props;
+---
+<li class="mnav__item">
+  <a
+    class="mnav__link"
+    href={link.href}
+    data-mnav-section={link.sectionId}
+    data-mnav-match={link.sectionId ? undefined : link.href}
+    data-mnav-match-prefix={link.matchPrefix}
+    aria-current={isMarketingDirectLinkCurrent(link, pathname) ? 'page' : undefined}
+  >
+    {link.label}
+  </a>
+</li>
