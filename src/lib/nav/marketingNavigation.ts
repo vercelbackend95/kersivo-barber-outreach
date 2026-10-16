@@ -46,6 +46,8 @@ export type MarketingNavDirectLink = {
   href: string;
   /** Homepage section id used for the in-view state on `/`. Omit for links to standalone pages. */
   sectionId?: string;
+  /** Optional descendant path matching, e.g. /insights and all its articles. */
+  matchPrefix?: string;
 };
 
 export type MarketingNavAction = { label: string; href: string | null; track?: Navbar17CtaTrack };
@@ -281,10 +283,14 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
 ];
 
+/**
+ * Insights is a standalone editorial destination, not a software feature.
+ * FAQ remains accessible through Resources > Help so the top bar stays uncluttered.
+ */
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
+  { id: 'insights', label: 'Insights', href: '/insights', matchPrefix: '/insights' },
   { id: 'starter', label: 'Starter', href: '/starter' },
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
-  { id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' },
 ];
 
 export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
@@ -303,6 +309,22 @@ export function isPublicMarketingHref(href: string): boolean {
   if (!href.startsWith('/')) return true;
   const pathname = new URL(href, 'https://kersivo.co.uk').pathname;
   return !PRIVATE_PATH.test(pathname);
+}
+
+/** Match a direct nav item exactly or across a section's descendants (without matching /insights-other). */
+export function isMarketingDirectLinkCurrent(
+  item: Pick<MarketingNavDirectLink, 'href' | 'sectionId' | 'matchPrefix'>,
+  pathname: string,
+): boolean {
+  if (item.sectionId) return false;
+  const normalize = (p: string) => (p.length > 1 && p.endsWith('/') ? p.slice(0, -1) : p || '/');
+  const path = normalize(pathname);
+  if (item.matchPrefix) {
+    const prefix = normalize(item.matchPrefix);
+    return path === prefix || path.startsWith(`${prefix}/`);
+  }
+  if (!item.href.startsWith('/') || item.href.includes('#')) return false;
+  return path === normalize(new URL(item.href, 'https://kersivo.co.uk').pathname);
 }
 
 /** Pathname that marks an item as the current page, or null for in-page section links. */
