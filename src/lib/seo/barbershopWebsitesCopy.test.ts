@@ -28,16 +28,14 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(hero).toContain('href="/pricing#plan"');
   });
 
-  it('never advertises unapproved editable Full booking payment modes', () => {
+  it('advertises the three owner-controlled Full modes actually supported by the payment API', () => {
     const paymentMarketing = [offer, closing].join('\n');
-    expect(paymentMarketing).not.toMatch(
-      /pay in full online|full amount online|editable (booking[ -])?payment controls|choose how clients pay when they book/i,
-    );
-    expect(offer).toContain('booking deposit, capped at the service price');
-    expect(offer).toContain('Any remaining balance is paid at the shop');
-    expect(closing).toContain('How do booking deposits work?');
-    expect(closing).toContain('deposit counts towards the final service price');
-    expect(closing).toContain('Standard Stripe processing fees apply.');
+    expect(paymentMarketing).toContain('Pay at shop');
+    expect(paymentMarketing).toContain('deposit capped at the service price');
+    expect(paymentMarketing).toContain('full payment online');
+    expect(closing).toContain('Can I choose how clients pay when booking?');
+    expect(closing).toContain('The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account.');
+    expect(closing).toContain('Standard Stripe processing fees apply');
   });
 
   it('keeps material Full terms and non-bespoke delivery limits', () => {
