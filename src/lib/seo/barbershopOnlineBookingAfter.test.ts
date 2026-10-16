@@ -41,7 +41,7 @@ describe('Barbershop online booking page — Section 06 post-visit retention sto
     );
     expect(markup).toContain('After a booking');
     expect(markup).toContain('provides booking confirmation emails and appointment reminders');
-    expect(markup).toContain('planned concepts, not features available today');
+    expect(textOf(markup)).toContain('planned concepts, not features available today');
     expect(markup).not.toContain('bob-ab-handoff');
   });
 
@@ -81,7 +81,7 @@ describe('Barbershop online booking page — Section 06 post-visit retention sto
     expect(example.conceptStatus).toBe(AFTER_BOOKING_CONCEPT_STATUS);
     expect(markup).toContain('bob-ab-concept');
     expect(markup).toContain('not currently live');
-    expect(example.disclosure).toContain('None of these post-visit automations is live.');
+    expect(example.disclosure).toContain('These automations are not currently live.');
     expect(markup).toContain('{example.conceptStatus}');
     expect(markup).toContain('bob-ab-invite__cta');
     expect(markup).toContain('bob-ab-return__cta');
