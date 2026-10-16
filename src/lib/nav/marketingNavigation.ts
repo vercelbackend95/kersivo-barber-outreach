@@ -101,6 +101,18 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'overview',
   },
   {
+    id: 'platform-barbershop-websites',
+    label: 'Barbershop Websites',
+    description: 'Your own branded site and online bookings. Full KERSIVO £39/month per location.',
+    href: BARBERSHOP_WEBSITES_PAGE_PATH,
+    group: 'platform',
+    section: 'explore',
+    icon: 'website',
+    featured: true,
+    // The commercial pillar must only surface once all Websites routes are approved for publication.
+    visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+  },
+  {
     id: 'platform-inside',
     label: 'Inside the System',
     description: 'See the admin, booking flow, retail and reports.',
@@ -283,17 +295,6 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     section: 'guides',
     icon: 'guide',
     visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
-  },
-  {
-    id: 'resources-barbershop-websites',
-    label: 'Barbershop Websites',
-    description: 'Your branded website, booking journey and Full KERSIVO setup.',
-    href: BARBERSHOP_WEBSITES_PAGE_PATH,
-    group: 'resources',
-    section: 'guides',
-    icon: 'guide',
-    // Do not surface prelaunch content in public navigation.
-    visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
     id: 'resources-faq',
