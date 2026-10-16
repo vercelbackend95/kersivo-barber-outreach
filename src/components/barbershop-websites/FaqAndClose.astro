@@ -29,10 +29,10 @@ const faqs: Faq[] = [
   },
   {
     id: 'payments',
-    question: 'How do booking deposits work?',
+    question: 'Can I choose how clients pay when booking?'
     answer: [
-      `Full KERSIVO supports an optional £${KERSIVO_BOOKING_DEPOSIT_GBP} booking deposit, capped at the service price for cheaper appointments. The deposit counts towards the final service price, and any remaining balance is paid at the shop.`,
-      'Deposits are processed through your shop’s connected Stripe account. Standard Stripe processing fees apply.',
+      `Yes. In Full KERSIVO, the shop owner chooses Pay at shop (no online payment), a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit capped at the service price, or full payment online. The deposit counts towards the service price, with any remaining balance paid at the shop.`, 
+      'The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account. Standard Stripe processing fees apply to online payments.',
     ],
   },
   {
@@ -86,7 +86,7 @@ const faqs: Faq[] = [
         <p class="bsw-faq__eyebrow">Questions</p>
         <h2 id="bsw-faq-heading" class="bsw-faq__heading">Before you decide</h2>
         <p class="bsw-faq__lede">
-          Practical answers on pricing, deposits, domains, setup and cancellation.
+          Practical answers on pricing, payment options, domains, setup and cancellation.
         </p>
       </header>
 
