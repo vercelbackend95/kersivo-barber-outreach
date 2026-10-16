@@ -1,6 +1,7 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
+import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
 import '@/styles/components/insights-preview.css';
 const articlePath = '/insights/google-reviews-barbershop-uk-rules';
 ---
@@ -12,22 +13,7 @@ const articlePath = '/insights/google-reviews-barbershop-uk-rules';
   noindex={true}
 >
   <main class="insights-page">
-    <section class="insights-masthead" aria-label="KERSIVO Insights">
-      <div class="insights-shell">
-        <nav class="insights-breadcrumbs" aria-label="Breadcrumb">
-          <a href="/">KERSIVO</a><span aria-hidden="true">/</span><span aria-current="page">Insights</span>
-        </nav>
-        <div class="insights-masthead__identity">
-          <div>
-            <p class="insights-eyebrow"><span class="insights-eyebrow__rule"></span> THE BUSINESS BEHIND THE CHAIR</p>
-            <h1 class="insights-masthead__name">KERSIVO <span>/</span> INSIGHTS</h1>
-          </div>
-          <span class="insights-masthead__edition">UK BARBERSHOP INTELLIGENCE</span>
-        </div>
-        <div class="insights-masthead__divider"></div>
-        <p class="insights-article-meta">Practical guides and independent thinking on running a barbershop in the UK.</p>
-      </div>
-    </section>
+    <InsightsMasthead page="index" />
     <section class="insights-index" aria-labelledby="insights-featured">
       <div class="insights-index__inner">
         <h2 class="insights-index__label" id="insights-featured">FEATURED READING</h2>
