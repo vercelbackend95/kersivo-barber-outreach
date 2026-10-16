@@ -383,6 +383,33 @@ html.mnav-locked body::before {
   text-underline-offset: 0.35em;
 }
 
+/* KERSIVO Insights is the editorial entry point, not a second conversion button.
+ * It is intentionally listed first in the mobile hub while the CTA remains pinned below.
+ */
+.mnav-hub__group--editorial {
+  border-bottom-color: color-mix(in srgb, var(--accent-text) 30%, var(--mnav-line));
+}
+
+.mnav-hub__row--editorial .mnav-hub__row-label {
+  font-weight: 700;
+}
+
+.mnav-hub__editorial-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+}
+
+.mnav-hub__row--editorial:hover .mnav-hub__editorial-hint,
+.mnav-hub__row--editorial[aria-current='page'] .mnav-hub__editorial-hint {
+  color: var(--accent-text);
+}
+
 .mnav-hub__chevron {
   width: 0.6rem;
   height: 0.6rem;
