@@ -21,17 +21,12 @@ const TRACK_PLACEMENT = 'barbershop_website_design_breakdown_demo';
 const groups = demoServiceNavigatorGroups();
 const firstGroup = groups[0];
 const groupRows = firstGroup.services.slice(0, 3);
-const serviceCount = DEMO_SERVICES.length;
-const categoryCount = groups.length;
 
 const [lead, ...others] = DEMO_BARBERS;
 const leadFirstName = demoBarberFirstName(lead.name);
-const teamNames = DEMO_BARBERS.map((barber) => barber.name);
-const teamList = `${teamNames.slice(0, -1).join(', ')} and ${teamNames.at(-1)}`;
 
 const navLabels = DEMO_NAV.map((item) => item.label);
 const navList = `${navLabels.slice(0, -1).join(', ')} and ${navLabels.at(-1)}`;
-const navCount = navLabels.length;
 
 const gallerySequence = demoGallerySequence();
 const galleryFrames = (['fade', 'hairline', 'beard'] as const).flatMap((id) => {
@@ -454,9 +449,8 @@ const specimenLabels = [
               </div>
             </div>
           </figure>
-          {index === 2 && <p class="bwd-review__disclosure">CUTSTATE has a separate services page. Standard Full KERSIVO shows services in the booking flow; a separate services page is not guaranteed.</p>}
-
           <div class="bwd-principle__analysis">
+            {index === 2 && <p class="bwd-review__disclosure">CUTSTATE has a separate services page. Standard Full KERSIVO shows services in the booking flow; a separate services page is not guaranteed.</p>}
             <p class="bwd-principle__part">
               <span class="bwd-principle__label">What to look for</span>
               {principle.lookFor}
