@@ -16,7 +16,7 @@ Status: **implemented for preview / not approved for production publication**. S
 Single source of truth: `src/styles/components/insights-preview.css` and `src/layouts/InsightsArticleLayout.astro` plus `InsightsMasthead.astro`.
 
 - Desktop shell: maximum 1520 px, with a consistent responsive outer gutter of 20–76 px. All masthead, text, photos, diagrams, tables and footer editorial material have a **shared LEFT EDGE**. Do not centre the article inside a narrow 750 px column.
-- Reading copy: maximum 890 px; long enough to use the canvas but still legible.
+- Reading copy: maximum 800 px; long enough to use the canvas but still legible.
 - H1: maximum 1080 px, fluid 50–90 px on desktop. Use one H1 supplied by Notion.
 - Hero photo: maximum 1210 px; 16:9 crop on desktop, 1.45 crop on mobile. Keep the subject visible and verify the source image suits cropping.
 - Breakout diagrams, structured illustrations, tables and section photographs: maximum 1100 px. Inline small media: maximum 890 px. Respect true image proportions for SVG diagrams; do not crop data.
