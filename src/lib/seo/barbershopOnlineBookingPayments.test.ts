@@ -60,7 +60,7 @@ describe('Barbershop online booking page — Section 04 deposits and payment opt
   it('states that public Starter booking has no pay-at-shop option', () => {
     expect(source).toContain('No pay-at-shop option for public Starter bookings.');
     expect(source).toContain('Public Starter bookings require at least ${deposit} paid online.');
-    expect(source).toContain('Customers cannot book online without making a payment.');
+    expect(source).toContain('A public Starter booking cannot be completed without payment.');
   });
 
   it('keeps the Full note to approved Commercial Offer terms while B1 is unresolved', () => {
