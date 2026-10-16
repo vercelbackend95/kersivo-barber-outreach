@@ -415,6 +415,6 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(mainOpen).toBeGreaterThan(-1);
     expect(mainClose).toBeGreaterThan(mainOpen);
     expect(footer).toBeGreaterThan(mainClose);
-    expect(page.match(/<main\\b/g)).toHaveLength(1);
+    expect(page.match(/<main\b/g)).toHaveLength(1);
   });
 });
