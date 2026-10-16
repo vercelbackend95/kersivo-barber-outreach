@@ -69,7 +69,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     );
   });
 
-  it('asks exactly eleven real questions in buying-decision order, in native, crawlable HTML', () => {
+  it('asks exactly seven real questions in buying-decision order, in native, crawlable HTML', () => {
     expect(questions).toEqual([
       'What does Full KERSIVO cost, and when do I start paying?',
       'How do booking deposits work?',
