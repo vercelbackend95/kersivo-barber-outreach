@@ -5,7 +5,7 @@
 .insights-page {
   --insights-edge: clamp(20px, 5vw, 76px);
   --insights-stage: 1520px;
-  --insights-copy: 890px;
+  --insights-copy: 800px;
   --insights-title: 1080px;
   --insights-hero: 1210px;
   --insights-breakout: 1100px;
