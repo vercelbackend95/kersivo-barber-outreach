@@ -55,7 +55,7 @@ describe('Alternatives hub: metadata and indexability', () => {
   it('uses /compare as the canonical with unique title, description and H1', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
     expect(resolveCanonicalUrl(ALTERNATIVES_HUB_PAGE_PATH)).toBe(pageUrl);
-    expect(ALTERNATIVES_HUB_TITLE).toBe('Compare Barber Booking Software UK | KERSIVO');
+    expect(ALTERNATIVES_HUB_TITLE).toBe('Compare 11 Barber Booking Systems in the UK | KERSIVO');
     expect(ALTERNATIVES_HUB_TITLE.length).toBeLessThanOrEqual(65);
     expect(ALTERNATIVES_HUB_DESCRIPTION.length).toBeLessThanOrEqual(165);
     expect(ALTERNATIVES_HUB_H1).toBe('Find the right barber booking system');
@@ -86,8 +86,10 @@ describe('Alternatives hub: metadata and indexability', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0].lastmod).toBe(ALTERNATIVES_HUB_LAST_UPDATED_ISO);
     const navItems = MARKETING_NAV_ITEMS.filter((item) => item.href === '/compare');
-    expect(navItems).toHaveLength(1);
-    expect(navItems[0].group).toBe('compare');
+    // The hub is intentionally discoverable from both Compare and Resources > Tools.
+    expect(navItems).toHaveLength(2);
+    expect(navItems.map((item) => item.group).sort()).toEqual(['compare', 'resources']);
+    expect(new Set(navItems.map((item) => item.id)).size).toBe(2);
     expect(getRouteFamily('/compare')).toBe('marketing');
     const robots = await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
     expect(robots).not.toContain('Disallow: /compare');
