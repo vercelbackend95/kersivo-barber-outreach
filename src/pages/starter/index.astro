@@ -2,6 +2,7 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
+import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro';
 import {
   STARTER_FAQ_ITEMS,
   STARTER_PAGE_DESCRIPTION,
@@ -18,7 +19,6 @@ import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { CreditCard, UserRound, UsersRound } from 'lucide-react';
 import '@/styles/components/fresha-alternative.css';
@@ -70,17 +70,6 @@ const starterFeatures = [
   },
 ] as const;
 
-const fullOnly = [
-  'Your own branded website and domain',
-  'More than 4 active bookable barbers',
-  'Full booking history',
-  'Advanced Clients / CRM',
-  'Reports',
-  'Retail, Products, Orders and Sales',
-  'SMS reminders',
-  'Live KERSIVO Assistant',
-  'Editable booking payment controls, including Pay at shop',
-] as const;
 ---
 
 <LandingLayout
@@ -302,44 +291,7 @@ const fullOnly = [
           </p>
         </header>
 
-        <div class="starter-plan-grid">
-          <article class="starter-plan-card starter-plan-card--active">
-            <p class="starter-plan-card__label">KERSIVO STARTER</p>
-            <p class="starter-plan-card__price">£0<span>/month</span></p>
-            <ul>
-              <li>KERSIVO-hosted booking page</li>
-              <li>Up to 4 active bookable barbers</li>
-              <li>Bookings, team, services and availability</li>
-              <li>Manual bookings</li>
-              <li>Rolling 90-day booking history</li>
-              <li>Clients Core</li>
-              <li>Automated email reminders</li>
-              <li>£5 deposit or Pay in full on every public booking</li>
-              <li>Guided Google booking-link setup</li>
-              <li>Included initial QR Kit for eligible verified UK locations</li>
-            </ul>
-            <a
-              href="/admin"
-              class="fresha-alt-hero__action fresha-alt-hero__action--primary"
-              data-track="starter_signup_click"
-              data-track-placement="starter_compare"
-            >
-              Start KERSIVO Starter
-            </a>
-          </article>
-
-          <article class="starter-plan-card">
-            <p class="starter-plan-card__label">FULL KERSIVO</p>
-            <p class="starter-plan-card__price">£{SAAS_MONTHLY_GBP}<span>/month per location</span></p>
-            <p class="starter-plan-card__intro">
-              Everything in the Starter booking operation, plus the full KERSIVO ownership layer:
-            </p>
-            <ul>
-              {fullOnly.map((item) => <li>{item}</li>)}
-            </ul>
-            <a href="/pricing#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">See Full KERSIVO pricing</a>
-          </article>
-        </div>
+        <StarterFullPlanCards placement="starter_compare" />
       </div>
     </section>
 

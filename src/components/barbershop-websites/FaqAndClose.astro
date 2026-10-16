@@ -1,0 +1,152 @@
+---
+import { ArrowRight } from 'lucide-react';
+import '@/styles/components/barbershop-websites-faq-close.css';
+import { NO_SETUP_FEE_SHORT, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const FULL_TRACK_EVENT = 'saas_subscribe_click';
+const FULL_TRACK_PLACEMENT = 'barbershop_websites_final_full_cta';
+const DEMO_TRACK_EVENT = 'view_live_demo_click';
+const DEMO_TRACK_PLACEMENT = 'barbershop_websites_final_demo';
+const FULL_LAUNCH_HREF = '/admin/launch';
+const SUBSCRIPTION_TERMS_HREF = '/terms#subscription';
+
+type Faq = {
+  id: string;
+  question: string;
+  answer: string[];
+};
+
+const faqs: Faq[] = [
+  {
+    id: 'cost',
+    question: 'What does Full KERSIVO cost, and when do I start paying?',
+    answer: [
+      `Full KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location, with no separate standard setup fee. Your first payment is taken when you subscribe; monthly billing continues while we prepare your website.`,
+      'KERSIVO takes 0% commission on bookings and retail. Standard Stripe processing fees still apply to online card payments.',
+    ],
+  },
+  {
+    id: 'payments',
+    question: 'Can I choose how clients pay when booking?',
+    answer: [
+      `Yes. In Full KERSIVO, the shop owner chooses Pay at shop (no online payment), a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit capped at the service price, or full payment online. The deposit counts towards the service price, with any remaining balance paid at the shop.`,
+      'The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account. Standard Stripe processing fees apply to online payments.',
+    ],
+  },
+  {
+    id: 'domain',
+    question: 'Can I use my existing domain?',
+    answer: [
+      'Yes. Your domain remains yours, and you do not need to transfer it to KERSIVO. We help connect it to the website while you continue renewing it with your existing registrar.',
+      'If you do not have a domain, one standard domain is included. Premium or unusually expensive names are not included as standard.',
+    ],
+  },
+  {
+    id: 'ownership',
+    question: 'Do I own my website?',
+    answer: [
+      'Your business name, brand, photos, content and domain stay yours. You can export eligible business data under our terms.',
+      'The website runs on the KERSIVO platform: its software, templates, source code and hosting are not transferred to you. Standard websites include a subtle “Powered by KERSIVO” mark.',
+    ],
+  },
+  {
+    id: 'timing',
+    question: 'How long does setup take, and can you help me switch?',
+    answer: [
+      'Setup typically takes 1–2 weeks after we receive the information needed. You will approve a private website preview before launch. This is an estimate, not a guaranteed date.',
+      'We can help move eligible information exported from your existing booking provider. Some history may not transfer, and domain access or data migration can take longer. Where possible, your current bookings can continue while we prepare the site.',
+    ],
+  },
+  {
+    id: 'cancel',
+    question: 'Can I cancel Full KERSIVO at any time?',
+    answer: [
+      'Yes. There is no minimum term or notice period. Full stays active until the end of your current paid billing period, with no pro-rata refund for unused time.',
+      'Your branded website and Full-only features end when Full ends. You may be able to move to Starter before then if your shop meets its requirements. That change is not automatic.',
+    ],
+  },
+  {
+    id: 'starter',
+    question: 'What is the difference between Starter and Full?',
+    answer: [
+      'Starter is a £0/month KERSIVO-hosted booking page within its published limits; it is not the Full branded website.',
+      'Full adds your own branded website and standard domain, plus wider tools including reports, retail pickup and SMS appointment reminders.',
+      'Starter requires a payment-ready Stripe Connect Standard account before customers can book online. Standard Stripe processing fees apply.',
+    ],
+  },
+];
+---
+
+<div class="bsw-close-wrap">
+  <section class="bsw-faq" aria-labelledby="bsw-faq-heading">
+    <div class="bsw-faq__inner">
+      <header class="bsw-faq__header">
+        <p class="bsw-faq__eyebrow">Questions</p>
+        <h2 id="bsw-faq-heading" class="bsw-faq__heading">Before you decide</h2>
+        <p class="bsw-faq__lede">
+          Practical answers on pricing, payment options, domains, setup and cancellation.
+        </p>
+      </header>
+
+      <div class="bsw-faq__list">
+        {faqs.map((faq, index) => (
+          <details class="bsw-faq-item" id={`bsw-faq-${faq.id}`}>
+            <summary class="bsw-faq-item__summary">
+              <span class="bsw-faq-item__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <h3 class="bsw-faq-item__question">{faq.question}</h3>
+              <span class="bsw-faq-item__toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="bsw-faq-item__answer">
+              {faq.answer.map((paragraph) => <p>{paragraph}</p>)}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bsw-final" aria-labelledby="bsw-final-heading">
+    <div class="bsw-final__inner">
+      <div class="bsw-final__message">
+        <h2 id="bsw-final-heading" class="bsw-final__heading">
+          Ready for a website that feels like <span class="bsw-final__accent">your shop?</span>
+        </h2>
+        <p class="bsw-final__lede">
+          Your branded website and connected booking setup, prepared and managed by KERSIVO.
+        </p>
+      </div>
+
+      <div class="bsw-final__actions">
+        <p class="bsw-final__price">
+          <span class="bsw-final__amount">£{SAAS_MONTHLY_GBP}</span>
+          <span class="bsw-final__period">/month per location</span>
+        </p>
+        <a
+          class="bsw-final__cta"
+          href={FULL_LAUNCH_HREF}
+          data-track={FULL_TRACK_EVENT}
+          data-track-placement={FULL_TRACK_PLACEMENT}
+        >
+          Start Full KERSIVO
+          <ArrowRight className="bsw-final__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
+        </a>
+        <a
+          class="bsw-final__demo"
+          href={DEMO_HOME_HREF}
+          data-track={DEMO_TRACK_EVENT}
+          data-track-placement={DEMO_TRACK_PLACEMENT}
+        >
+          Explore the working demo
+          <ArrowRight className="bsw-final__demo-icon" size={15} strokeWidth={2} aria-hidden="true" />
+        </a>
+        <p class="bsw-final__fine">
+          {NO_SETUP_FEE_SHORT} 0% KERSIVO commission. {STRIPE_FEES_NOTE} The demo uses CUTSTATE
+          Barbers, a fictional shop.
+          <a class="bsw-final__terms" href={SUBSCRIPTION_TERMS_HREF}>Subscription terms</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>

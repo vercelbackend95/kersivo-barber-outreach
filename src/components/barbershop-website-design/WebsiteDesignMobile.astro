@@ -1,0 +1,136 @@
+---
+import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
+import { formatDemoPriceGbp, getDemoFeaturedServices } from '@/lib/demo/services';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
+import '@/styles/components/barbershop-website-design-mobile.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_website_design_mobile_demo_book';
+
+// The first screen of the CUTSTATE demo homepage on a phone (pages/demo/index.astro).
+const HERO_EYEBROW = 'Manchester · Appointments & walk-ins';
+const HERO_DISPLAY = 'Precision in every detail.';
+const HERO_LEDE = 'Modern cuts, sharp fades and proper attention to every line.';
+
+const services = getDemoFeaturedServices().slice(0, 2).map((service) => ({
+  name: service.name,
+  duration: `${service.durationMinutes} min`,
+  price: formatDemoPriceGbp(service.pricePence),
+}));
+
+const principles = [
+  {
+    title: 'Read it at a glance',
+    body: 'Open the homepage without zooming. Can you read the shop name, understand where it is and see what it offers? Check that important text remains readable as you scroll.',
+  },
+  {
+    title: 'Find the next step',
+    body: 'Find the booking link from the homepage, services and team pages. On a small screen, check the menu as well as the header, then follow the link to make sure it reaches the right place.',
+  },
+  {
+    title: 'Use it without friction',
+    body: 'Try the buttons with your thumb and check service names, prices and durations. Look for clipped text, sideways scrolling or controls that are difficult to tap.',
+  },
+];
+
+const screenLabel = `Illustration of the ${DEMO_SHOP_NAME} demo homepage at phone width. A header with the CUTSTATE logo, a cobalt Book button and a menu icon; the line “${HERO_EYEBROW}”; the shop name with the headline “${HERO_DISPLAY}” and “${HERO_LEDE}”; full-width Book an appointment and Explore services buttons; and featured services with durations and prices — ${services.map((service) => `${service.name}, ${service.duration}, ${service.price}`).join('; ')}. Markers 01 to 03 point to the shop name and headline, the booking buttons and the service rows. CUTSTATE is a fictional KERSIVO demonstration shop.`;
+---
+
+<section class="bwm" aria-labelledby="bwm-heading">
+  <div class="bwm__inner">
+    <div class="bwm__grid">
+      <header class="bwm__intro">
+        <p class="bwm__kicker"><span class="bwm__kicker-mark" aria-hidden="true"></span>Mobile design</p>
+        <h2 id="bwm-heading" class="bwm__heading">Designed for the Phone in Your Client’s Hand</h2>
+        <p class="bwm__lede">
+          Check your website on a real phone, from the first screen to the booking link. These
+          three checks will help you spot problems that a desktop preview can miss.
+        </p>
+      </header>
+
+      <div class="bwm-visual">
+        <figure class="bwm-screen" role="img" aria-label={screenLabel}>
+          <div class="bwm-screen__canvas" aria-hidden="true">
+            <span class="bwm-screen__ruler"><span>Phone width</span></span>
+
+            <span class="bwm-phone">
+              <span class="bwm-phone__header">
+                <img
+                  class="bwm-phone__logo"
+                  src={CUTSTATE_LOGO_SRC}
+                  alt=""
+                  width={CUTSTATE_LOGO_WIDTH}
+                  height={CUTSTATE_LOGO_HEIGHT}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="bwm-phone__book">Book</span>
+                <span class="bwm-phone__menu"><span></span><span></span></span>
+              </span>
+
+              <span class="bwm-phone__hero">
+                <span class="bwm-phone__intro">
+                  <span class="bwm-phone__eyebrow">{HERO_EYEBROW}</span>
+                  <span class="bwm-phone__block bwm-phone__block--read">
+                    <span class="bwm-marker">01</span>
+                    <span class="bwm-phone__name">{DEMO_SHOP_NAME}</span>
+                    <span class="bwm-phone__display">{HERO_DISPLAY}</span>
+                    <span class="bwm-phone__lede">{HERO_LEDE}</span>
+                  </span>
+                </span>
+
+                <span class="bwm-phone__block bwm-phone__block--next">
+                  <span class="bwm-marker">02</span>
+                  <span class="bwm-phone__button bwm-phone__button--primary">Book an appointment</span>
+                  <span class="bwm-phone__button">Explore services</span>
+                </span>
+              </span>
+
+              <span class="bwm-phone__services">
+                <span class="bwm-phone__eyebrow">Featured services</span>
+                <span class="bwm-phone__block bwm-phone__block--use">
+                  <span class="bwm-marker">03</span>
+                  {services.map((service) => (
+                    <span class="bwm-phone__service">
+                      <span class="bwm-phone__service-name">{service.name}</span>
+                      <span class="bwm-phone__service-meta">
+                        <span>{service.duration}</span>
+                        <span class="bwm-phone__service-price">{service.price}</span>
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </span>
+          </div>
+        </figure>
+
+        <p class="bwm__disclosure">
+          Illustration recreating the CUTSTATE demo mobile homepage. CUTSTATE BARBERS is a fictional
+          KERSIVO demonstration shop.
+        </p>
+      </div>
+
+      <ol class="bwm-principles">
+        {principles.map((principle, index) => (
+          <li class="bwm-principle">
+            <span class="bwm-principle__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <h3 class="bwm-principle__title">{principle.title}</h3>
+            <p class="bwm-principle__body">{principle.body}</p>
+          </li>
+        ))}
+      </ol>
+
+      <p class="bwm-try">
+        Explore the working booking journey in the demo.
+        <a
+          class="bwm-try__link"
+          href={DEMO_BOOK_HREF}
+          data-track={TRACK_EVENT}
+          data-track-placement={TRACK_PLACEMENT}
+        >Try the demo booking flow</a>
+      </p>
+    </div>
+    </div>
+</section>

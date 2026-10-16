@@ -640,9 +640,12 @@ describe('comparison cluster internal links', () => {
   it('links to the /compare hub only through the shared CompareHubLink component', () => {
     expect(pageSource).toContain('<CompareHubLink />');
     expect(pageSource.indexOf('<CompareHubLink />')).toBeLessThan(pageSource.indexOf('<FreshaSources />'));
-    for (const source of [pageSource, ...newComponentSources, booksyFitSource, switcherSource]) {
+    for (const source of [pageSource, ...newComponentSources, booksyFitSource]) {
       expect(source).not.toMatch(/href="\/compare/);
     }
+    // The shared homepage switching section is a distinct navigation context
+    // where a direct link to the comparison hub is intentional and useful.
+    expect(switcherSource).toContain('href="/compare"');
   });
 });
 

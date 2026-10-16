@@ -72,8 +72,9 @@ describe('KERSIVO Starter landing page structure and claims', () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const read = (path: string) => readFileSync(join(here, '../..', path), 'utf8');
   const page = read('pages/starter/index.astro');
+  const planCards = read('lib/pricing/starterFullPlanCards.ts');
   const faqText = STARTER_FAQ_ITEMS.flatMap((item) => [item.question, item.answer]).join(' ');
-  const allCopy = `${page} ${faqText} ${STARTER_PAGE_TITLE} ${STARTER_PAGE_DESCRIPTION}`;
+  const allCopy = `${page} ${planCards} ${faqText} ${STARTER_PAGE_TITLE} ${STARTER_PAGE_DESCRIPTION}`;
 
   it('is canonical, indexable and has a sensible title/meta length', () => {
     expect(page).toContain('canonicalPath={STARTER_PAGE_PATH}');
@@ -107,18 +108,26 @@ describe('KERSIVO Starter landing page structure and claims', () => {
   });
 
   it('keeps Full-only features out of the Starter feature list and plan card', () => {
-    const starterCard = page.slice(
-      page.indexOf('starter-plan-card--active'),
-      page.indexOf('FULL KERSIVO</p>'),
+    const planCards = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../pricing/starterFullPlanCards.ts'),
+      'utf8',
     );
-    const features = page.slice(page.indexOf('const starterFeatures'), page.indexOf('const fullOnly'));
-    for (const block of [starterCard, features]) {
+    const features = page.slice(page.indexOf('const starterFeatures'), page.indexOf('---', page.indexOf('const starterFeatures')));
+    const starterFeaturesBlock = planCards.slice(
+      planCards.indexOf('STARTER_FULL_PLAN_STARTER_FEATURES'),
+      planCards.indexOf('STARTER_FULL_PLAN_FULL_ONLY'),
+    );
+    for (const block of [starterFeaturesBlock, features]) {
       expect(block).not.toMatch(/own domain|branded website|SMS|Reports|Retail|Advanced Clients|live (KERSIVO )?Assistant/i);
     }
-    const fullOnly = page.slice(page.indexOf('const fullOnly'), page.indexOf('---', page.indexOf('const fullOnly')));
+    const fullOnly = planCards.slice(
+      planCards.indexOf('STARTER_FULL_PLAN_FULL_ONLY'),
+      planCards.indexOf('STARTER_FULL_PLAN_STARTER_CTA'),
+    );
     for (const item of ['domain', 'More than 4', 'Full booking history', 'Advanced Clients', 'Reports', 'Retail', 'SMS', 'Assistant']) {
       expect(fullOnly).toContain(item);
     }
+    expect(page).toContain('<StarterFullPlanCards placement="starter_compare" />');
   });
 
   it('builds FAQPage JSON-LD from the same items the page renders', () => {
@@ -137,11 +146,18 @@ describe('KERSIVO Starter landing page structure and claims', () => {
 
   it('sends Starter CTAs to the existing /admin signup, never to Stripe or the Full checkout', () => {
     const starterCtas = [...page.matchAll(/<a[^>]*data-track="starter_signup_click"[^>]*>/g)].map((m) => m[0]);
-    expect(starterCtas.length).toBeGreaterThanOrEqual(3);
+    expect(starterCtas.length).toBeGreaterThanOrEqual(2);
     for (const cta of starterCtas) {
       expect(cta).toContain('href="/admin"');
       expect(cta).toMatch(/data-track-placement="starter_[a-z]+"/);
     }
+    const planCards = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../pricing/starterFullPlanCards.ts'),
+      'utf8',
+    );
+    expect(planCards).toContain("href: '/admin'");
+    expect(planCards).toContain("trackEvent: 'starter_signup_click'");
+    expect(page).toContain('<StarterFullPlanCards placement="starter_compare" />');
     expect(page).not.toContain('/admin/launch');
     expect(page).not.toMatch(/checkout\.stripe\.com|buy\.stripe\.com/);
     expect(page).not.toContain('saas_subscribe_click');

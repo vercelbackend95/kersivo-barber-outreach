@@ -1,0 +1,144 @@
+---
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import '@/styles/components/barbershop-website-design-faq-close.css';
+
+const OFFER_HREF = '/barbershop-websites';
+const OFFER_TRACK_EVENT = 'primary_cta_clicked';
+const OFFER_TRACK_PLACEMENT = 'barbershop_website_design_final_cta';
+const DEMO_TRACK_EVENT = 'view_live_demo_click';
+const DEMO_TRACK_PLACEMENT = 'barbershop_website_design_final_demo';
+const SUBSCRIPTION_TERMS_HREF = '/terms#subscription';
+const UPDATE_SUPPORT_TERMS_HREF = '/terms#website-update-support';
+
+type Faq = {
+  id: string;
+  question: string;
+  answer: string[];
+  link?: { href: string; label: string };
+};
+
+// Design and delivery questions only; cost, payments, ownership, switching and cancellation are answered on the parent page.
+const faqs: Faq[] = [
+  {
+    id: 'demo',
+    question: 'Will my website look exactly like the CUTSTATE demo?',
+    answer: [
+      'No. CUTSTATE is a fictional example. Your website uses KERSIVO’s standard managed structure, adapted with your shop name, branding, available photographs and business details. Unlimited bespoke design and development are not included.',
+    ],
+  },
+  {
+    id: 'changes',
+    question: 'Can I request changes before launch?',
+    answer: [
+      'Yes. You’ll receive a private preview to check your branding, information, photographs and booking journey. Reasonable corrections to the standard website are made before you approve launch. A full redesign, bespoke pages or new features may need a separate quote.',
+    ],
+  },
+  {
+    id: 'domain',
+    question: 'Can I keep my existing domain while the website is prepared?',
+    answer: [
+      'Yes. You keep ownership of your existing domain and remain responsible for its renewal. Where technically possible, your current site can stay live while we prepare the new one. We help with DNS and SSL, then switch the domain after you approve the preview.',
+    ],
+  },
+  {
+    id: 'updates',
+    question: 'What can I update after my website goes live?',
+    answer: [
+      'You can manage barbers, services, prices, working hours, your shop name, town or city, logo and retail products in the dashboard. KERSIVO provides standard support for reasonable changes to supplied website text, contact details and photographs. Bespoke pages, new features and a full redesign are outside that support and may need a separate quote.',
+    ],
+    link: { href: UPDATE_SUPPORT_TERMS_HREF, label: 'Website update support terms' },
+  },
+  {
+    id: 'pages',
+    question: 'Will my website include a gallery and a separate services page?',
+    answer: [
+      'A gallery can be included when you have suitable photographs, but it isn’t required. Your services are presented in the booking flow, so clients can see what you offer and choose an appointment. A separate services page isn’t guaranteed as part of the standard website package.',
+    ],
+  },
+  {
+    id: 'timing',
+    question: 'How long will it take to get my website live?',
+    answer: [
+      'Standard setup typically takes around 1–2 weeks after we receive all the required information. Missing details, domain access or migration work can take longer. This is an estimate, not a guaranteed launch date.',
+    ],
+  },
+];
+---
+
+<section class="bwf" aria-labelledby="bwf-heading">
+  <div class="bwf__inner">
+    <div class="bwf__grid">
+      <header class="bwf__intro">
+        <p class="bwf__kicker"><span class="bwf__kicker-mark" aria-hidden="true"></span>Questions before you start</p>
+        <h2 id="bwf-heading" class="bwf__heading">Questions About Your Website Design</h2>
+        <p class="bwf__lede">
+          What to expect from the standard website setup, your preview and ongoing updates.
+        </p>
+      </header>
+
+      <div class="bwf__list">
+        {faqs.map((faq, index) => (
+          <details class="bwf-item" id={`bwf-${faq.id}`}>
+            <summary class="bwf-item__summary">
+              <span class="bwf-item__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <h3 class="bwf-item__question">{faq.question}</h3>
+              <span class="bwf-item__icon" aria-hidden="true"></span>
+            </summary>
+            <div class="bwf-item__answer">
+              {faq.answer.map((paragraph) => <p>{paragraph}</p>)}
+              {faq.link && (
+                <p class="bwf-item__more">
+                  <a href={faq.link.href}>{faq.link.label}</a>
+                </p>
+              )}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bwc" aria-labelledby="bwc-heading">
+  <div class="bwc__inner">
+    <div class="bwc__panel">
+      <div class="bwc__message">
+        <p class="bwc__kicker">Full KERSIVO</p>
+        <h2 id="bwc-heading" class="bwc__heading">
+          <span class="bwc__line bwc__line--primary">See What Your KERSIVO</span>
+          <span class="bwc__line">Website Includes.</span>
+        </h2>
+        <p class="bwc__lede">
+          Explore the Full KERSIVO package, including standard website setup, domain arrangements and ongoing support.
+        </p>
+      </div>
+
+      <div class="bwc__actions">
+        <a
+          class="bwc__primary"
+          href={OFFER_HREF}
+          data-track={OFFER_TRACK_EVENT}
+          data-track-placement={OFFER_TRACK_PLACEMENT}
+        >
+          Explore Full KERSIVO
+        </a>
+        <a
+          class="bwc__secondary"
+          href={DEMO_HOME_HREF}
+          data-track={DEMO_TRACK_EVENT}
+          data-track-placement={DEMO_TRACK_PLACEMENT}
+        >
+          Explore the CUTSTATE demo<span class="bwc__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <p class="bwc__note">
+        Full KERSIVO: £{SAAS_MONTHLY_GBP}/month per physical location. Standard website setup included. The first
+        payment is taken when you subscribe, before your website goes live. CUTSTATE is a fictional demonstration
+        shop.
+        <a class="bwc__terms" href={SUBSCRIPTION_TERMS_HREF}>Subscription terms</a>
+      </p>
+    </div>
+  </div>
+</section>

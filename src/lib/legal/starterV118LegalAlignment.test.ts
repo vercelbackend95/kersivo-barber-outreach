@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CURRENT_DPA_VERSION } from './dpaVersion';
 import { CURRENT_TERMS_VERSION } from './termsVersion';
+import { PRIVACY_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from './legalPageDates';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -112,6 +113,7 @@ describe('v1.19 legal/product alignment', () => {
   it('bumps the material legal package versions together', () => {
     expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(privacy).toContain('Last updated: 6 October 2026');
+    expect(privacy).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
+    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('6 October 2026');
   });
 });
