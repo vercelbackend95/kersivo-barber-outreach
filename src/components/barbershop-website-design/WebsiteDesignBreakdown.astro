@@ -137,31 +137,35 @@ const specimenLabels = [
 <section class="bwd-review" aria-labelledby="bwd-review-heading">
   <div class="bwd-review__inner">
     <header class="bwd-review__intro">
-      <p class="bwd-review__kicker">
-        <span class="bwd-review__kicker-mark" aria-hidden="true"></span>
-        The design review
-      </p>
-      <h2 id="bwd-review-heading" class="bwd-review__heading">
-        What Makes a Great Barbershop Website Design<span class="bwd-review__mark">?</span>
-      </h2>
-      <p class="bwd-review__answer">
-        A well-designed barbershop website should look like the shop it represents, make key
-        information easy to find and give visitors a clear next step. Strong photography, legible
-        typography and an obvious booking action matter more than decorative effects.
-      </p>
-      <nav class="bwd-review__contents" aria-label="Design principles in this review">
-        <p class="bwd-review__contents-label">In this review</p>
-        <ol class="bwd-review__contents-list">
-          {principles.map((principle) => (
-            <li>
-              <a href={`#${principle.id}`}>
-                <span class="bwd-review__contents-num" aria-hidden="true">{principle.number}</span>
-                {principle.title}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
+      <div class="bwd-review__title-group">
+        <p class="bwd-review__kicker">
+          <span class="bwd-review__kicker-mark" aria-hidden="true"></span>
+          The design review
+        </p>
+        <h2 id="bwd-review-heading" class="bwd-review__heading">
+          What Makes a Great Barbershop Website Design<span class="bwd-review__mark">?</span>
+        </h2>
+      </div>
+      <div class="bwd-review__overview">
+        <p class="bwd-review__answer">
+          A well-designed barbershop website should look like the shop it represents, make key
+          information easy to find and give visitors a clear next step. Strong photography, legible
+          typography and an obvious booking action matter more than decorative effects.
+        </p>
+        <nav class="bwd-review__contents" aria-label="Design principles in this review">
+          <p class="bwd-review__contents-label">In this review</p>
+          <ol class="bwd-review__contents-list">
+            {principles.map((principle) => (
+              <li>
+                <a href={`#${principle.id}`}>
+                  <span class="bwd-review__contents-num" aria-hidden="true">{principle.number}</span>
+                  {principle.title}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </div>
     </header>
 
     <ol class="bwd-review__principles" role="list">

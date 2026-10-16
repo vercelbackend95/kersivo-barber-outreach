@@ -60,6 +60,17 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(markup.indexOf('bwd-review__answer')).toBeLessThan(markup.indexOf('bwd-review__principles'));
   });
 
+  it('keeps the kicker and H2 together, independent of the contents column height', () => {
+    const titleGroup = markup.match(/<div class="bwd-review__title-group">([\s\S]*?)<\/div>/)?.[1] ?? '';
+    expect(titleGroup).toContain('class="bwd-review__kicker"');
+    expect(titleGroup).toContain('class="bwd-review__heading"');
+    const overview = markup.slice(markup.indexOf('<div class="bwd-review__overview">'), markup.indexOf('</header>'));
+    expect(overview).toContain('class="bwd-review__answer"');
+    expect(overview).toContain('class="bwd-review__contents"');
+    expect(styles).not.toMatch(/\.bwd-review__(heading|answer|kicker|contents)\s*\{[^}]*grid-(row|column)/);
+    expect(styles).toMatch(/\.bwd-review__overview \.bwd-review__contents \{\s*order: -1;/);
+  });
+
   it('answers what to look for, why it matters and how CUTSTATE shows it for every principle', () => {
     for (const label of ['What to look for', 'Why it matters to clients', 'In the CUTSTATE demo']) {
       expect(markup).toContain(label);

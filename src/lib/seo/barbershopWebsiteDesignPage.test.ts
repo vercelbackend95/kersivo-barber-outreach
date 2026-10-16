@@ -94,60 +94,82 @@ describe('/barbershop-website-design Section 01 hero', () => {
     }
   });
 
-  it('shows one CUTSTATE website built from the real demo navigation, without educational modules', () => {
-    expect(hero).toContain("import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav'");
-    expect(hero).toContain('DEMO_NAV.map(');
-    expect(hero).toContain('Precision in every detail.');
-    expect(hero).toContain('Book an appointment');
-    expect(hero).toContain('/demo/heroimg.webp');
-    for (const removed of ['Identity', 'Photography', 'Booking path', 'Brand kit', 'bwd-plate__marker']) {
-      expect(hero).not.toContain(removed);
+  it('mirrors the Booksy Alternative hero: breadcrumb, eyebrow, H1, lead, actions and meta in one column', () => {
+    const order = [
+      '<nav class="bwd-hero__breadcrumb" aria-label="Breadcrumb">',
+      '<p class="bwd-hero__eyebrow">',
+      '<h1 id="bwd-hero-title" class="bwd-hero__title">',
+      '<p class="bwd-hero__lead">',
+      '<div class="bwd-hero__actions">',
+      '<div class="bwd-hero__meta">',
+    ].map((marker) => hero.indexOf(marker));
+    expect(order.every((index) => index > -1)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(hero).toContain('<li><a href="/">Home</a></li>');
+    expect(hero).toContain('<li><span aria-current="page">Barbershop website design</span></li>');
+    expect(hero).toContain('<span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>');
+    expect(hero).toContain('Barbershop website design for UK barbershops');
+    expect(hero).toContain(
+      'Your barbershop has its own character. Your website should reflect it — from the first\n      image to the booking experience.',
+    );
+    for (const meta of ['Branded barbershop websites', 'Connected online bookings', 'Built for independent UK barbershops']) {
+      expect(hero).toContain(meta);
     }
+    expect(hero).not.toMatch(/£|Starter/);
     expect(hero).not.toContain('fresha-alternative.css');
     expect(hero).not.toContain('fresha-alt-hero');
   });
 
-  it('brands the showcase header with the approved CUTSTATE logo image', () => {
-    const header = hero.match(/<div class="bwd-site__header"[\s\S]*?<span class="bwd-site__nav">/)?.[0] ?? '';
-    const logo = header.match(/<img\b[\s\S]*?\/>/)?.[0] ?? '';
-    expect(logo).toContain('class="bwd-site__wordmark"');
-    expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
-    expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
-    expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
-    expect(logo).toContain('alt=""');
-    expect(hero).not.toMatch(/bwd-site__wordmark-(name|sub)/);
-    expect(hero).toContain('<span class="bwd-site__name">{DEMO_SHOP_NAME}</span>');
-    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
-    expect(existsSync(join(here, '../../../public', CUTSTATE_LOGO_SRC))).toBe(true);
-    expect(heroCss).toMatch(/\.bwd-site__wordmark \{[^}]*width: auto;[^}]*object-fit: contain;/);
-    expect(heroCss).not.toMatch(/bwd-site__wordmark-|--bl-rule|#d72638/i);
+  it('splits the canonical H1 into three lines with only "Your Shop" in KERSIVO red', () => {
+    expect(hero).toContain("BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Design ')");
+    expect(hero).toContain("BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Like ')");
+    expect(hero).toContain("const ACCENT_WORDS = 'Your Shop';");
+    expect((hero.match(/class="bwd-hero__accent"/g) ?? [])).toHaveLength(1);
+    expect(heroCss).toMatch(/\.bwd-hero__accent \{\s*color: var\(--accent-text\);\s*\}/);
+    const breakdownCss = read('../../styles/components/barbershop-website-design-breakdown.css');
+    expect(breakdownCss).toMatch(/\.bwd-review__mark \{\s*color: var\(--accent-text\);\s*\}/);
   });
 
-  it('does not let the percentage logo cap shrink the logo inside the desktop grid header', () => {
-    const start = heroCss.indexOf('@container (min-width: 44rem) {');
-    expect(start).toBeGreaterThan(-1);
-    let depth = 0;
-    let end = start;
-    for (let i = heroCss.indexOf('{', start); i < heroCss.length; i += 1) {
-      if (heroCss[i] === '{') depth += 1;
-      if (heroCss[i] === '}') depth -= 1;
-      if (depth === 0) {
-        end = i;
-        break;
-      }
+  it('copies the Booksy hero typography values, with a looser line height so the lines never touch', () => {
+    const rule = (selector: string, source = heroCss) => {
+      const start = source.indexOf(`${selector} {`);
+      return start < 0 ? '' : source.slice(start, source.indexOf('}', start));
+    };
+    const title = rule('.bwd-hero__title');
+    expect(title).toContain('font-family: var(--font-body);');
+    expect(title).toContain('font-size: clamp(2.85rem, 5.25vw, 5.55rem);');
+    expect(title).toContain('font-weight: 650;');
+    expect(title).toContain('line-height: 1.04;');
+    expect(title).toContain('letter-spacing: -0.062em;');
+    const lead = rule('.bwd-hero__lead');
+    expect(lead).toContain('max-width: 46ch;');
+    expect(lead).toContain('font-size: clamp(0.9rem, 1.05vw, 1rem);');
+    expect(lead).toContain('line-height: 1.55;');
+    const mobile = heroCss.slice(heroCss.indexOf('@media (max-width: 48rem)'));
+    expect(rule('.bwd-hero__title', mobile)).toContain('font-size: clamp(2.35rem, 10vw, 4.15rem);');
+    expect(rule('.bwd-hero__title', mobile)).toContain('letter-spacing: -0.055em;');
+    expect(rule('.bwd-hero__action')).toContain('min-height: 2.75rem;');
+    expect(rule('.bwd-hero__action')).toContain('border-radius: 1rem;');
+    expect(rule('.bwd-hero__meta')).toContain('font-size: 0.72rem;');
+  });
+
+  it('has no supporting visual, design board or homepage showcase', () => {
+    expect(hero).not.toMatch(/<img\b|<figure\b|<picture\b|<iframe|<embed|<video|<svg\b/);
+    expect(hero).not.toMatch(/<script\b/);
+    for (const removed of ['bwd-board', 'bwd-showcase', 'bwd-site', 'heroimg', 'interior-detail', 'DEMO_GALLERY', 'DEMO_SERVICES', 'DEMO_NAV', 'CUTSTATE_LOGO']) {
+      expect(hero).not.toContain(removed);
     }
-    const gridBlock = heroCss.slice(start, end + 1);
-    expect(gridBlock).toMatch(/\.bwd-site__header \{[^}]*display: grid;[^}]*grid-template-columns: auto minmax\(0, 1fr\) auto;/);
-    expect(gridBlock).toMatch(/\.bwd-site__wordmark \{[^}]*max-width: none;/);
-    expect(heroCss).toMatch(/\.bwd-site__wordmark \{[^}]*height: 2rem;[^}]*max-width: 45%;/);
+    expect(heroCss).not.toMatch(/bwd-board|bwd-showcase|bwd-site|bwd-hero__inner|bwd-hero__ambient|@container|grid-template-columns/);
   });
 
-  it('uses the approved logo in all eight illustrated positions and renders no BLACKLINE identity', () => {
+  it('uses the approved logo in all seven illustrated positions and renders no BLACKLINE identity', () => {
     const sources = { hero, breakdown: read(`${designDir}WebsiteDesignBreakdown.astro`), brand: read(`${designDir}WebsiteDesignBrand.astro`) };
     const logoCount = (source: string) => (source.match(/<img\b[^>]*src=\{CUTSTATE_LOGO_SRC\}/g) ?? []).length;
-    expect(logoCount(sources.hero)).toBe(1);
+    expect(logoCount(sources.hero)).toBe(0);
     expect(logoCount(sources.breakdown)).toBe(5);
     expect(logoCount(sources.brand)).toBe(2);
+    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
+    expect(existsSync(join(here, '../../../public', CUTSTATE_LOGO_SRC))).toBe(true);
     for (const source of [page, ...Object.values(sources)]) {
       const markup = source.split(/^---$/m).slice(2).join('---') || source;
       const visibleText = markup.replace(/<[^>]+>/g, ' ');
@@ -160,11 +182,14 @@ describe('/barbershop-website-design Section 01 hero', () => {
     }
   });
 
-  it('discloses CUTSTATE as fictional and avoids unapproved claims or embeds', () => {
-    expect(hero).toContain('CUTSTATE BARBERS is a fictional KERSIVO demonstration shop.');
-    expect(hero).toContain('This illustration recreates');
+  it('keeps the CUTSTATE faces declared for the sections that use them', () => {
+    expect(heroCss).toMatch(/font-family: 'BWD Blackline Display';[^}]*font-weight: 800;/);
+    expect(heroCss).toMatch(/font-family: 'BWD Blackline Body';[^}]*font-weight: 400;/);
+    expect(heroCss).toMatch(/font-family: 'BWD Blackline Body';[^}]*font-weight: 600;/);
+  });
+
+  it('avoids unapproved claims', () => {
     expect(hero).not.toMatch(/real photographs/i);
-    expect(hero).not.toMatch(/<iframe|<embed|<video/);
     expect(hero).not.toMatch(/testimonial|review|rating|award|guarantee|rank|\d+\+?\s*(shops|customers|clients)/i);
   });
 

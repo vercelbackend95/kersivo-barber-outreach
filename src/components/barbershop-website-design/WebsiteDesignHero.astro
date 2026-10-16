@@ -1,8 +1,5 @@
 ---
-import { ArrowRight } from 'lucide-react';
-import { DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 } from '@/lib/seo/barbershopWebsiteDesignPage';
 import '@/styles/components/barbershop-website-design-hero.css';
@@ -10,119 +7,74 @@ import '@/styles/components/barbershop-website-design-hero.css';
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_website_design_hero_demo';
 
-const splitAt = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' That ');
-const lineOne = splitAt > 0 ? BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(0, splitAt) : BARBERSHOP_WEBSITE_DESIGN_PAGE_H1;
-const lineTwo = splitAt > 0 ? BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(splitAt + 1) : '';
+// Desktop composition: "Barbershop Website / Design That Looks / Like Your Shop", split from the H1 source of truth.
 const ACCENT_WORDS = 'Your Shop';
-const lineTwoLead = lineTwo.endsWith(ACCENT_WORDS) ? lineTwo.slice(0, -ACCENT_WORDS.length) : lineTwo;
-const lineTwoAccent = lineTwo.endsWith(ACCENT_WORDS) ? ACCENT_WORDS : '';
+const breakOne = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Design ');
+const breakTwo = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Like ');
+const titleLines =
+  breakOne > 0 && breakTwo > breakOne
+    ? [
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(0, breakOne),
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(breakOne + 1, breakTwo),
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(breakTwo + 1),
+      ]
+    : [BARBERSHOP_WEBSITE_DESIGN_PAGE_H1];
+const lastLine = titleLines[titleLines.length - 1];
+const lastLineLead = lastLine.endsWith(ACCENT_WORDS) ? lastLine.slice(0, -ACCENT_WORDS.length) : lastLine;
+const lastLineAccent = lastLine.endsWith(ACCENT_WORDS) ? ACCENT_WORDS : '';
 ---
 
 <section class="bwd-hero" aria-labelledby="bwd-hero-title">
-  <div class="bwd-hero__ambient" aria-hidden="true"></div>
+  <div class="bwd-hero__content">
+    <nav class="bwd-hero__breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li><span aria-current="page">Barbershop website design</span></li>
+      </ol>
+    </nav>
 
-  <div class="bwd-hero__inner">
-    <div class="bwd-hero__copy">
-      <p class="bwd-hero__kicker">
-        <span class="bwd-hero__kicker-mark" aria-hidden="true"></span>
-        Barbershop website design
-      </p>
+    <p class="bwd-hero__eyebrow">
+      <span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>
+      Barbershop website design for UK barbershops
+    </p>
 
-      <h1 id="bwd-hero-title" class="bwd-hero__title">
-        <span class="bwd-hero__line">{lineOne}</span>
-        {lineTwo && ' '}
-        {lineTwo && (
-          <span class="bwd-hero__line">
-            {lineTwoLead}{lineTwoAccent && <span class="bwd-hero__accent">{lineTwoAccent}</span>}
-          </span>
-        )}
-      </h1>
+    <h1 id="bwd-hero-title" class="bwd-hero__title">
+      {titleLines.slice(0, -1).map((line, index) => (
+        <>
+          <span class:list={['bwd-hero__title-line', { 'bwd-hero__title-line--primary': index === 0 }]}>{line}</span>{' '}
+        </>
+      ))}
+      <span class:list={['bwd-hero__title-line', { 'bwd-hero__title-line--primary': titleLines.length === 1 }]}>
+        {lastLineLead}{lastLineAccent && <span class="bwd-hero__accent">{lastLineAccent}</span>}
+      </span>
+    </h1>
 
-      <p class="bwd-hero__lead">
-        Your barbershop has its own character. Your website should reflect it — from the first
-        image to the booking experience.
-      </p>
+    <p class="bwd-hero__lead">
+      Your barbershop has its own character. Your website should reflect it — from the first
+      image to the booking experience.
+    </p>
 
-      <div class="bwd-hero__actions">
-        <a
-          href={DEMO_HOME_HREF}
-          class="bwd-btn bwd-btn--primary"
-          data-track={TRACK_EVENT}
-          data-track-placement={TRACK_PLACEMENT}
-        >
-          Explore the CUTSTATE demo
-          <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />
-        </a>
-        <a href={BARBERSHOP_WEBSITES_PAGE_PATH} class="bwd-btn bwd-btn--secondary">
-          See Full KERSIVO
-        </a>
-      </div>
-
-      <p class="bwd-hero__micro">Branded websites and connected bookings for independent UK barbershops.</p>
+    <div class="bwd-hero__actions">
+      <a
+        href={DEMO_HOME_HREF}
+        class="bwd-hero__action bwd-hero__action--primary"
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >
+        Explore the CUTSTATE demo
+      </a>
+      <a href={BARBERSHOP_WEBSITES_PAGE_PATH} class="bwd-hero__action bwd-hero__action--secondary">
+        See Full KERSIVO
+      </a>
     </div>
 
-    <figure class="bwd-showcase" aria-labelledby="bwd-showcase-caption">
-      <div
-        class="bwd-site"
-        role="img"
-        aria-label="Illustration of the CUTSTATE BARBERS demo homepage: the CUTSTATE logo and site navigation, the headline Precision in every detail, a Book an appointment button and a photograph of a barber shaping a haircut."
-      >
-        <div class="bwd-site__header" aria-hidden="true">
-          <img
-            class="bwd-site__wordmark"
-            src={CUTSTATE_LOGO_SRC}
-            alt=""
-            width={CUTSTATE_LOGO_WIDTH}
-            height={CUTSTATE_LOGO_HEIGHT}
-            decoding="async"
-          />
-          <span class="bwd-site__nav">
-            {DEMO_NAV.map((item, index) => (
-              <span class:list={['bwd-site__nav-link', { 'is-current': index === 0 }]}>{item.label}</span>
-            ))}
-          </span>
-          <span class="bwd-site__header-actions">
-            <span class="bwd-site__bag">Bag <span class="bwd-site__bag-count">0</span></span>
-            <span class="bwd-site__book">
-              <span class="bwd-site__book-full">BOOK NOW</span>
-              <span class="bwd-site__book-short">BOOK</span>
-              <span aria-hidden="true">→</span>
-            </span>
-            <span class="bwd-site__menu"><i></i><i></i></span>
-          </span>
-        </div>
-
-        <div class="bwd-site__hero">
-          <div class="bwd-site__copy" aria-hidden="true">
-            <span class="bwd-site__eyebrow">Manchester · Appointments &amp; walk-ins</span>
-            <span class="bwd-site__name">{DEMO_SHOP_NAME}</span>
-            <span class="bwd-site__display">Precision in every detail.</span>
-            <span class="bwd-site__lede">Modern cuts, sharp fades and proper attention to every line.</span>
-            <span class="bwd-site__actions">
-              <span class="bwd-site__btn bwd-site__btn--primary">Book an appointment</span>
-              <span class="bwd-site__btn bwd-site__btn--secondary">Explore services</span>
-            </span>
-          </div>
-          <span class="bwd-site__split" aria-hidden="true"></span>
-          <div class="bwd-site__media">
-            <img
-              src="/demo/heroimg.webp"
-              alt=""
-              width="1800"
-              height="2700"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async"
-            />
-          </div>
-        </div>
-      </div>
-
-      <figcaption id="bwd-showcase-caption" class="bwd-showcase__caption">
-        CUTSTATE BARBERS is a fictional KERSIVO demonstration shop. This illustration recreates
-        its homepage from the demo’s existing imagery and branding —
-        <a href={DEMO_HOME_HREF}>explore the working demo</a>.
-      </figcaption>
-    </figure>
+    <div class="bwd-hero__meta">
+      <span><strong>Branded barbershop websites</strong></span>
+      <span aria-hidden="true">·</span>
+      <span><strong>Connected online bookings</strong></span>
+      <span aria-hidden="true">·</span>
+      <span>Built for independent UK barbershops</span>
+    </div>
   </div>
 </section>

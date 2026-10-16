@@ -34,6 +34,15 @@
   padding-bottom: clamp(2.5rem, 5vw, 4rem);
 }
 
+/* Kicker and H2 stay one group (spaced like Section 03), whatever the height of the overview. */
+.bwd-review__title-group,
+.bwd-review__overview {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  align-content: start;
+  min-width: 0;
+}
+
 .bwd-review__kicker {
   display: flex;
   align-items: center;
@@ -1620,22 +1629,9 @@
     align-items: start;
   }
 
-  .bwd-review__kicker,
-  .bwd-review__heading {
-    grid-column: 1;
-  }
-
-  .bwd-review__answer,
-  .bwd-review__contents {
-    grid-column: 2;
-  }
-
-  .bwd-review__answer {
-    grid-row: 2;
-  }
-
-  .bwd-review__heading {
-    grid-row: 2 / span 2;
+  /* The answer stays first in source for the stacked reading order; on desktop the contents lead the column. */
+  .bwd-review__overview .bwd-review__contents {
+    order: -1;
   }
 
   .bwd-principle {

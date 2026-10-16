@@ -1,0 +1,429 @@
+/* /barbershop-website-design Section 07: design FAQ and the closing call to action.
+   FAQ: native details/summary rows on hairline separators, no script. The closing panel shares the
+   dark gradient surface language of the Section 06 card without repeating its price block. */
+
+.bwf,
+.bwc {
+  --bw7-line: color-mix(in srgb, var(--fg) 10%, transparent);
+  --bw7-text-2: color-mix(in srgb, var(--muted) 90%, var(--fg));
+  --bw7-text-3: color-mix(in srgb, var(--fg) 70%, transparent);
+
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+}
+
+.bwf__inner,
+.bwc__inner {
+  container-type: inline-size;
+  width: min(100% - 2.5rem, 84rem);
+  margin-inline: auto;
+}
+
+/* ---------- FAQ ---------- */
+
+.bwf {
+  padding: clamp(3.5rem, 7vw, 6.5rem) 0 clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid var(--bw7-line);
+}
+
+.bwf__grid {
+  display: grid;
+  gap: clamp(2.25rem, 5vw, 3rem);
+}
+
+.bwf__intro {
+  display: grid;
+  align-content: start;
+  gap: clamp(1.1rem, 2.2vw, 1.6rem);
+}
+
+.bwf__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--bw7-text-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bwf__kicker-mark {
+  flex: none;
+  width: 2rem;
+  height: 2px;
+  background: var(--accent);
+}
+
+.bwf__heading {
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.bwf__lede {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--bw7-text-2);
+  font-size: clamp(1.02rem, 1.3vw, 1.15rem);
+  line-height: 1.65;
+}
+
+.bwf__list {
+  border-top: 1px solid var(--bw7-line);
+}
+
+.bwf-item {
+  border-bottom: 1px solid var(--bw7-line);
+}
+
+.bwf-item__summary {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 1.5rem;
+  column-gap: 1rem;
+  align-items: start;
+  min-height: 3.5rem;
+  padding: 1.4rem 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.bwf-item__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bwf-item__summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.bwf-item__index {
+  padding-top: 0.3rem;
+  color: var(--bw7-text-2);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+.bwf-item__question {
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(1.08rem, 1rem + 0.45vw, 1.3rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  transition: color 160ms ease;
+}
+
+.bwf-item__summary:hover .bwf-item__question {
+  color: color-mix(in srgb, var(--fg) 82%, var(--accent));
+}
+
+.bwf-item__icon {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.05rem;
+  border: 1px solid var(--bw7-line);
+  border-radius: 50%;
+  color: var(--bw7-text-2);
+  transition: color 160ms ease;
+}
+
+.bwf-item__icon::before,
+.bwf-item__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.625rem;
+  height: 1.5px;
+  margin: -0.75px 0 0 -0.3125rem;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.bwf-item__icon::after {
+  transform: rotate(90deg);
+}
+
+.bwf-item[open] .bwf-item__icon {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-text, var(--accent));
+}
+
+.bwf-item[open] .bwf-item__icon::after {
+  transform: rotate(90deg) scaleX(0);
+}
+
+.bwf-item__answer {
+  padding: 0 2.5rem 1.6rem 3rem;
+}
+
+.bwf-item__answer p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--bw7-text-3);
+  font-size: clamp(0.98rem, 0.95rem + 0.12vw, 1.0625rem);
+  line-height: 1.68;
+}
+
+.bwf-item__answer p + p {
+  margin-top: 0.85rem;
+}
+
+.bwf-item__more a {
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ---------- Closing call to action ---------- */
+
+.bwc {
+  padding: 0 0 clamp(3.5rem, 6vw, 5rem);
+}
+
+.bwc__panel {
+  position: relative;
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  padding: clamp(1.4rem, 3.5cqi, 2.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(48rem 26rem at 100% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 62%),
+    linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow:
+    0 30px 80px -40px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.bwc__panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: clamp(1.4rem, 3.5cqi, 2.75rem);
+  width: min(12rem, 34%);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), transparent);
+  pointer-events: none;
+}
+
+.bwc__message {
+  display: grid;
+  gap: clamp(0.9rem, 1.6vw, 1.15rem);
+  min-width: 0;
+}
+
+.bwc__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--bw7-text-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bwc__kicker::before {
+  content: '';
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #ff1717;
+}
+
+/* Heading and lead use the /starter hero type scale (.starter-hero__title / __title-line / __lead). */
+.bwc__heading {
+  max-width: 100%;
+  margin: 0;
+  font-size: clamp(2.85rem, 5.25vw, 4.4rem);
+  font-weight: 650;
+  line-height: 0.9;
+  letter-spacing: -0.062em;
+  color: #fff;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+.bwc__line {
+  display: block;
+  color: #d4d4d7;
+}
+
+.bwc__line--primary {
+  color: #fff;
+}
+
+.bwc__lede {
+  max-width: 46ch;
+  margin: 0.15rem 0 0;
+  color: #9d9d9f;
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.bwc__actions {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.bwc__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.55rem 1.35rem;
+  border-radius: var(--radius-12);
+  background: var(--accent);
+  box-shadow: 0 12px 28px -16px color-mix(in srgb, var(--accent) 70%, transparent);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.bwc__primary:hover,
+.bwc__primary:focus-visible {
+  background: color-mix(in srgb, var(--accent) 88%, #fff);
+  color: #fff;
+}
+
+.bwc__secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg) 28%, transparent);
+  text-underline-offset: 0.3em;
+}
+
+.bwc__secondary:hover {
+  color: var(--fg);
+  text-decoration-color: var(--accent);
+}
+
+.bwc__primary:focus-visible,
+.bwc__secondary:focus-visible,
+.bwc__terms:focus-visible,
+.bwf-item__more a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.bwc__arrow {
+  color: var(--accent-text, var(--accent));
+}
+
+.bwc__note {
+  max-width: none;
+  margin: 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--bw7-line);
+  color: var(--bw7-text-2);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.bwc__terms {
+  margin-left: 0.2rem;
+  color: var(--fg);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bwf-item__question,
+  .bwf-item__icon,
+  .bwc__primary {
+    transition: none;
+  }
+}
+
+/* ---------- Narrow containers ---------- */
+
+@container (max-width: 30rem) {
+  .bwf-item__summary {
+    grid-template-columns: 1.6rem minmax(0, 1fr) 1.5rem;
+    column-gap: 0.75rem;
+    padding: 1.2rem 0;
+  }
+
+  .bwf-item__answer {
+    padding: 0 0 1.4rem 2.35rem;
+  }
+
+  .bwc__primary {
+    width: 100%;
+  }
+
+  .bwc__actions {
+    justify-items: stretch;
+  }
+
+  .bwc__secondary {
+    justify-content: center;
+  }
+}
+
+/* Same breakpoint and values as the /starter hero title on small screens. */
+@media (max-width: 640px) {
+  .bwc__heading {
+    font-size: clamp(2.35rem, 10vw, 4.15rem);
+    letter-spacing: -0.055em;
+  }
+
+  .bwc__line {
+    display: inline;
+  }
+}
+
+/* ---------- Desktop ---------- */
+
+@container (min-width: 56rem) {
+  .bwf__grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: clamp(3rem, 7cqi, 7rem);
+    align-items: start;
+  }
+
+  /* A narrow action column leaves the heading room for two lines; the actions centre on the message,
+     and the disclosure runs across both columns underneath. */
+  .bwc__panel {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 17rem);
+    column-gap: clamp(2rem, 4cqi, 4rem);
+    align-items: center;
+  }
+
+  .bwc__note {
+    grid-column: 1 / -1;
+  }
+}
