@@ -86,7 +86,7 @@ describe('/barbershop-websites pillar hero', () => {
     expect(panel).not.toContain('Hero sections');
     expect(panel).not.toContain("label: 'Gallery'");
     expect(panel).toContain("href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH");
-    expect(panel).toContain("href: \`${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team\`");
+    expect(panel).toContain('href: `${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team`');
     for (const route of ['BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH', '#your-team', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) {
       expect(panel).toContain(route);
     }
