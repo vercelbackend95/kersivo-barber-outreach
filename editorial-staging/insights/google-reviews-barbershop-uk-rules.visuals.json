@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/google-reviews-barbershop-uk-rules.md",
+  "output": "editorial-staging/insights/google-reviews-barbershop-uk-rules-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8171bef0d462be52901f",
+  "status": "Approved for publication — explicit owner instruction 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "Google Reviews for Barbershops: What's Allowed in the UK",
+    "description": "How UK barbershops can get more Google reviews without breaking the DMCC Act or Google's stricter rules on incentives, review gating and staff targets.",
+    "slug": "google-reviews-barbershop-uk-rules",
+    "category": "Brand & Marketing"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Google Reviews for Barbershops: Two Rulebooks, One Habit",
+      "src": "https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Barbers working with clients inside a real British barbershop.",
+      "caption": "Editorial photograph; the barbers pictured are not KERSIVO clients.",
+      "credit": "Bruce Barrow / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU",
+      "rights": "Unsplash image — photographer credited; final publication licence recheck required",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Put the two rulebooks side by side and the safe area is clear:",
+      "src": "/images/insights/google-reviews/two-rulebooks.svg",
+      "width": 1200,
+      "height": 660,
+      "alt": "Side-by-side summary of the UK consumer law and Google review-policy requirements.",
+      "caption": "Original KERSIVO illustration; see the full comparison table for legal qualifications.",
+      "rights": "Original KERSIVO editorial diagram — summary of Notion article, no third-party photo",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Here's an illustrative example (assumed rates, not survey data;",
+      "src": "/images/insights/google-reviews/review-rates.svg",
+      "width": 1200,
+      "height": 590,
+      "alt": "Illustrative 120 cuts per week, yielding 4.8 reviews at a one-in-25 rate versus 0.6 at one-in-200.",
+      "caption": "Illustrative calculation from the article, not measured barbershop data.",
+      "rights": "Original KERSIVO editorial diagram; illustrative assumptions explicitly labelled",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "A system that works on a busy Saturday has to be boring. Four parts are enough.",
+      "src": "/images/insights/google-reviews/habit.svg",
+      "width": 1200,
+      "height": 500,
+      "alt": "Four-part review habit: one link, ask all clients, ask after the visit and accept honest feedback.",
+      "caption": "Original KERSIVO process illustration based on the steps below.",
+      "rights": "Original KERSIVO editorial diagram, source-backed by Notion article",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "There's a second objection: asking everyone means inviting criticism.",
+      "src": "https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "width": 1500,
+      "height": 900,
+      "alt": "Barber chair and mirror in a barbershop.",
+      "caption": "Editorial photograph; not a KERSIVO customer or partner.",
+      "credit": "Redd Francisco / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0",
+      "rights": "Unsplash image — photographer credited; final publication licence recheck required",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8171bef0d462be52901f",
+    "note": "Owner explicitly requested production release of KERSIVO Insights and the first completed article."
+  }
+}

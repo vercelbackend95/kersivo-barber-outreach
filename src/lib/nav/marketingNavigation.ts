@@ -49,6 +49,8 @@ export type MarketingNavDirectLink = {
   href: string;
   /** Homepage section id used for the in-view state on `/`. Omit for links to standalone pages. */
   sectionId?: string;
+  /** Mark this direct link active on descendant pages, e.g. /insights/slug. */
+  matchPrefix?: string;
 };
 
 export type MarketingNavAction = { label: string; href: string | null; track?: Navbar17CtaTrack };
@@ -312,11 +314,10 @@ export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
   ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE
     ? [{ id: 'websites', label: 'Websites', href: BARBERSHOP_WEBSITES_PAGE_PATH }]
     : []),
+  { id: 'insights', label: 'Insights', href: '/insights', matchPrefix: '/insights' },
   { id: 'starter', label: 'Starter', href: '/starter' },
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
-  ...(!BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-    ? [{ id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' }]
-    : []),
+  // FAQ stays accessible via Resources > Help. Insights takes this top-level slot.
 ];
 
 export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
@@ -335,6 +336,21 @@ export function isPublicMarketingHref(href: string): boolean {
   if (!href.startsWith('/')) return true;
   const pathname = new URL(href, 'https://kersivo.co.uk').pathname;
   return !PRIVATE_PATH.test(pathname);
+}
+
+export function isMarketingDirectLinkCurrent(
+  link: Pick<MarketingNavDirectLink, 'href' | 'matchPrefix' | 'sectionId'>,
+  pathname: string,
+): boolean {
+  if (link.sectionId) return false;
+  const normal = (value: string) => value.length > 1 && value.endsWith('/') ? value.slice(0, -1) : value;
+  const path = normal(pathname);
+  const hrefPath = normal(link.href.split('#')[0]);
+  if (link.matchPrefix) {
+    const prefix = normal(link.matchPrefix);
+    return path === prefix || path.startsWith(`${prefix}/`);
+  }
+  return path === hrefPath;
 }
 
 /** Pathname that marks an item as the current page, or null for in-page section links. */
@@ -374,8 +390,7 @@ export function buildMarketingNavigation(
 }
 
 /** One top-level order for the desktop navbar and mobile hub.
- * Published: Platform → Websites → Compare → Resources → Starter → Pricing.
- * Before launch: Platform → Compare → Resources → Starter → Pricing → FAQ.
+ * Published: Platform → [Websites] → Compare → Insights → Resources → Starter → Pricing.
  */
 export type MarketingNavTopLevelEntry =
   | { kind: 'group'; group: ResolvedMarketingNavGroup }
@@ -386,17 +401,22 @@ export function buildMarketingNavTopLevelEntries(
   directLinks: readonly MarketingNavDirectLink[] = MARKETING_NAV_DIRECT_LINKS,
 ): MarketingNavTopLevelEntry[] {
   const websitesLink = directLinks.find((link) => link.id === 'websites');
+  const insightsLink = directLinks.find((link) => link.id === 'insights');
   const entries: MarketingNavTopLevelEntry[] = [];
   for (const group of groups) {
     entries.push({ kind: 'group', group });
     if (group.id === 'platform' && websitesLink) entries.push({ kind: 'link', link: websitesLink });
+    if (group.id === 'compare' && insightsLink) entries.push({ kind: 'link', link: insightsLink });
   }
   // Preserve an explicitly supplied Websites destination in configurations without Platform.
   if (websitesLink && !groups.some((group) => group.id === 'platform')) {
     entries.unshift({ kind: 'link', link: websitesLink });
   }
+  if (insightsLink && !groups.some((group) => group.id === 'compare')) {
+    entries.push({ kind: 'link', link: insightsLink });
+  }
   for (const link of directLinks) {
-    if (link.id !== 'websites') entries.push({ kind: 'link', link });
+    if (link.id !== 'websites' && link.id !== 'insights') entries.push({ kind: 'link', link });
   }
   return entries;
 }

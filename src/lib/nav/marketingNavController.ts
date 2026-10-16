@@ -23,7 +23,10 @@ const normalizePath = (path: string) => (path.length > 1 && path.endsWith('/') ?
 export function applyMarketingNavCurrent(root: HTMLElement, location: Pick<Location, 'pathname'>): void {
   const pathname = normalizePath(location.pathname);
   root.querySelectorAll<HTMLAnchorElement>('a[data-mnav-match]').forEach((link) => {
-    if (normalizePath(link.dataset.mnavMatch ?? '') === pathname) link.setAttribute('aria-current', 'page');
+    const exact = normalizePath(link.dataset.mnavMatch ?? '') === pathname;
+    const prefix = link.dataset.mnavMatchPrefix ? normalizePath(link.dataset.mnavMatchPrefix) : '';
+    const inSection = Boolean(prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`)));
+    if (exact || inSection) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
   root.querySelectorAll<HTMLElement>('[data-mnav-trigger], [data-mnav-accordion]').forEach((control) => {

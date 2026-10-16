@@ -1,0 +1,49 @@
+---
+/**
+ * Standard KERSIVO Insights table renderer.
+ * Enhances semantic Markdown/Notion HTML tables without replacing any source
+ * text, and re-runs when Astro's client navigation swaps the document.
+ */
+---
+<script>
+  function upgradeInsightsTables() {
+    document.querySelectorAll<HTMLTableElement>('.insights-article__body table').forEach((table) => {
+      if (table.dataset.insightsEnhanced === 'true') return;
+      table.dataset.insightsEnhanced = 'true';
+
+      const headerTexts = [...table.querySelectorAll('thead th')].map((th) => th.textContent?.trim() || '');
+      if (!table.tHead && table.rows.length > 0) {
+        // Notion HTML can contain header cells in a plain first row.
+        const firstRow = table.rows[0];
+        const head = table.createTHead();
+        const row = head.insertRow();
+        [...firstRow.cells].forEach((cell) => {
+          const th = document.createElement('th');
+          th.scope = 'col';
+          th.innerHTML = cell.innerHTML;
+          row.appendChild(th);
+        });
+        firstRow.remove();
+      } else {
+        table.querySelectorAll('thead th').forEach((th) => th.scope = 'col');
+      }
+
+      table.querySelectorAll<HTMLTableCellElement>('tbody td').forEach((cell) => {
+        const text = (cell.textContent || '').trim().toLowerCase();
+        if (/^(allowed|encouraged)([.:\s]|$)/.test(text)) cell.dataset.tone = 'positive';
+        else if (/^(not allowed|banned|likely fake)([.:\s(]|$)/.test(text)) cell.dataset.tone = 'negative';
+        else if (/^(risky|not banned outright|not an incentive)([.:\s;]|$)/.test(text)) cell.dataset.tone = 'caution';
+      });
+
+      const region = document.createElement('div');
+      region.className = 'insights-data-table';
+      region.tabIndex = 0;
+      region.setAttribute('role', 'region');
+      region.setAttribute('aria-label', headerTexts.filter(Boolean).join(', ') || 'Scrollable article data table');
+      table.parentNode?.insertBefore(region, table);
+      region.appendChild(table);
+    });
+  }
+  upgradeInsightsTables();
+  document.addEventListener('astro:page-load', upgradeInsightsTables);
+</script>
