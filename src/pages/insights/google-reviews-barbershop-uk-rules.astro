@@ -1,79 +1,14 @@
 ---
-import LandingLayout from '@/layouts/LandingLayout.astro';
-import Footer50 from '@/components/footer50.astro';
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
 import { Content as ReviewArticle } from '../../../editorial-staging/insights/google-reviews-barbershop-uk-rules-display.md';
-import '@/styles/components/insights-preview.css';
-
-// Text imported verbatim from the final ARTICLE DRAFT v2 in Notion.
-// This is an editorial preview only: the owner has not approved publication.
-const path = '/insights/google-reviews-barbershop-uk-rules';
-const title = 'Google Reviews for Barbershops: What\'s Allowed in the UK';
-const description = 'How UK barbershops can get more Google reviews without breaking the DMCC Act or Google\'s stricter rules on incentives, review gating and staff targets.';
-const source = 'https://app.notion.com/p/3fb7dbe5bbda8171bef0d462be52901f';
 ---
-
-<LandingLayout
-  title={title}
-  description={description}
-  canonicalPath={path}
-  ogType="article"
-  noindex={true}
+<InsightsArticleLayout
+  title="Google Reviews for Barbershops: What's Allowed in the UK"
+  description="How UK barbershops can get more Google reviews without breaking the DMCC Act or Google's stricter rules on incentives, review gating and staff targets."
+  slug="google-reviews-barbershop-uk-rules"
+  category="BRAND &amp; MARKETING"
+  dateLabel="16 October 2026 · Editorial draft preview"
+  sourceUrl="https://app.notion.com/p/3fb7dbe5bbda8171bef0d462be52901f"
 >
-  <main class="insights-page">
-    <section class="insights-masthead" aria-label="KERSIVO Insights">
-      <div class="insights-shell">
-        <nav class="insights-breadcrumbs" aria-label="Breadcrumb">
-          <a href="/">KERSIVO</a>
-          <span aria-hidden="true">/</span>
-          <a href="/insights">Insights</a>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">Article</span>
-        </nav>
-        <div class="insights-masthead__identity">
-          <div>
-            <p class="insights-eyebrow"><span class="insights-eyebrow__rule"></span> THE BUSINESS BEHIND THE CHAIR</p>
-            <p class="insights-masthead__name">KERSIVO <span>/</span> INSIGHTS</p>
-          </div>
-          <span class="insights-masthead__edition">UK BARBERSHOP INTELLIGENCE</span>
-        </div>
-        <div class="insights-masthead__divider"></div>
-        <div class="insights-article-meta">
-          <span class="insights-article-meta__category">BRAND &amp; MARKETING</span>
-          <span class="insights-article-meta__dot" aria-hidden="true"></span>
-          <span>16 October 2026 · Editorial draft preview</span>
-        </div>
-      </div>
-    </section>
-
-    <div class="insights-paper">
-      <article class="insights-article" aria-label="Google Reviews for Barbershops">
-        <div class="insights-article__body">
-          <ReviewArticle />
-        </div>
-        <div class="insights-article__provenance">
-          <span>PREVIEW / SOURCE CONTROL</span>
-          <p>Article text: KERSIVO Editorial Pipeline, draft v2. Content unchanged from Notion.</p>
-          <a href={source} target="_blank" rel="noopener noreferrer">View the Notion source <span aria-hidden="true">↗</span></a>
-        </div>
-      </article>
-
-      <aside class="insights-read-next" aria-label="Explore KERSIVO">
-        <div class="insights-read-next__inner">
-          <p class="insights-read-next__kicker">ABOUT THIS PUBLICATION</p>
-          <h2>Independent thinking for independent barbers.</h2>
-          <p>KERSIVO Insights explores the decisions behind running a barbershop in the UK, from reputation and client relationships to costs and bookings.</p>
-          <div class="insights-read-next__links">
-            <a href="/insights">Explore Insights <span aria-hidden="true">↗</span></a>
-            <a href="/about">About KERSIVO <span aria-hidden="true">↗</span></a>
-          </div>
-        </div>
-      </aside>
-    </div>
-  </main>
-  <Footer50 showIntro={false} navigation={[
-    { name: 'Insights', href: '/insights' },
-    { name: 'About KERSIVO', href: '/about' },
-    { name: 'See the demo', href: '/demo' },
-    { name: 'Pricing', href: '/pricing' },
-  ]} />
-</LandingLayout>
+  <ReviewArticle />
+</InsightsArticleLayout>
