@@ -1,0 +1,582 @@
+/* /barbershop-online-booking Section 04: one illustrative service price that divides into the two
+   KERSIVO Starter checkout choices. Static HTML and CSS only; every amount is real text. */
+
+.bop {
+  --bop-red: var(--accent);
+  --bop-red-text: var(--accent-text);
+  --bop-line: rgb(255 255 255 / 0.08);
+  --bop-line-strong: rgb(255 255 255 / 0.16);
+  --bop-ink: #f4f1ea;
+  --bop-ink-muted: #b9bdc4;
+  --bop-or: 2.75rem;
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.5rem 0 4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background:
+    radial-gradient(ellipse 55% 35% at 50% 38%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 70%),
+    #050505;
+}
+
+.bop__inner {
+  width: calc(100% - 2rem);
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+/* Head — centred composition into the ticket; cards keep their own alignment. */
+
+.bop__head {
+  display: grid;
+  justify-items: center;
+  gap: 0.95rem;
+  max-width: 46rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.bop__eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--bop-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bop__eyebrow::before,
+.bop__eyebrow::after {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--bop-red) 75%, transparent);
+}
+
+.bop__title {
+  margin: 0;
+  max-width: 22ch;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.85rem, 7.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.bop__lead {
+  max-width: 40rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* The example: ticket, fork, two paths */
+
+.bop-example {
+  margin-top: 2.4rem;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/*
+ * Ticket notches: face and stroke share one circle cutout in the same coordinates. The stroke
+ * is 1px larger, so the ring follows the concave notches. No CSS border and no sharp
+ * drop-shadow, so nothing can leave a straight line through the cutouts.
+ */
+.bop-ticket {
+  --bop-notch-r: 0.5rem;
+  position: relative;
+  max-width: 22rem;
+  margin-inline: auto;
+  filter: drop-shadow(0 28px 36px rgb(0 0 0 / 0.55));
+}
+
+.bop-ticket__stroke {
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(1rem + 1px);
+  background: var(--bop-line-strong);
+  pointer-events: none;
+  /* Hole 1px smaller than the face so the stroke ring follows the concave notch. */
+  -webkit-mask:
+    radial-gradient(circle calc(var(--bop-notch-r) - 1px) at 1px 50%, #0000 99%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle calc(var(--bop-notch-r) - 1px) at calc(100% - 1px) 50%, #0000 99%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle calc(var(--bop-notch-r) - 1px) at 1px 50%, #0000 99%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle calc(var(--bop-notch-r) - 1px) at calc(100% - 1px) 50%, #0000 99%, #000) right / 51% 100% no-repeat;
+}
+
+.bop-ticket__face {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1.15rem 1.6rem 1.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #151516, #0d0d0e);
+  text-align: center;
+  -webkit-mask:
+    radial-gradient(circle var(--bop-notch-r) at 0 50%, #0000 99%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--bop-notch-r) at 100% 50%, #0000 99%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--bop-notch-r) at 0 50%, #0000 99%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--bop-notch-r) at 100% 50%, #0000 99%, #000) right / 51% 100% no-repeat;
+}
+
+.bop-ticket__tag {
+  margin: 0;
+  color: var(--bop-red-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bop-ticket__price {
+  display: grid;
+  justify-items: center;
+  margin: 0;
+}
+
+.bop-ticket__label {
+  color: var(--bop-ink-muted);
+  font-size: 0.9rem;
+}
+
+.bop-ticket__amount {
+  color: var(--bop-ink);
+  font-family: var(--font-body);
+  font-size: clamp(3.4rem, 15vw, 4.6rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.bop-ticket__caption {
+  margin: 0;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--bop-line-strong);
+  color: var(--bop-ink-muted);
+  font-size: 0.9rem;
+  text-wrap: pretty;
+}
+
+.bop-fork {
+  position: relative;
+  height: 1.75rem;
+}
+
+.bop-fork::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(180deg, var(--bop-line-strong), color-mix(in srgb, var(--bop-red) 70%, transparent));
+}
+
+.bop-paths {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.bop-path {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  min-height: 100%;
+  padding: 1.15rem 1.15rem 1.2rem;
+  border: 1px solid var(--bop-line-strong);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.025);
+}
+
+.bop-path--deposit {
+  border-color: color-mix(in srgb, var(--bop-red) 45%, var(--bop-line-strong));
+}
+
+.bop-path__index {
+  margin: 0;
+  color: var(--bop-red-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bop-path__title {
+  margin: -0.5rem 0 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.bop-split {
+  display: flex;
+  gap: 3px;
+  height: 0.7rem;
+}
+
+.bop-split span {
+  flex-basis: 0;
+  border-radius: 999px;
+}
+
+.bop-split__now {
+  background: var(--bop-red);
+  box-shadow: 0 0 14px -3px rgb(215 38 56 / 0.6);
+}
+
+.bop-split__shop {
+  border: 1px solid rgb(255 255 255 / 0.4);
+}
+
+.bop-path__rows {
+  display: grid;
+  margin: 0;
+}
+
+.bop-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+}
+
+.bop-row dt {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--bop-ink-muted);
+  font-size: 0.95rem;
+}
+
+.bop-row dd {
+  margin: 0;
+  color: var(--bop-ink);
+  font-family: var(--font-body);
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.bop-row--now dt::before,
+.bop-row--shop dt::before {
+  content: '';
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.bop-row--now dt::before {
+  background: var(--bop-red);
+}
+
+.bop-row--shop dt::before {
+  border: 1px solid rgb(255 255 255 / 0.55);
+}
+
+.bop-row--now dd {
+  color: #ff5f6f;
+}
+
+.bop-row--total {
+  margin-top: 0.3rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--bop-line-strong);
+}
+
+.bop-row--total dt {
+  color: var(--bop-ink);
+  font-weight: 600;
+}
+
+.bop-row--total dd {
+  font-size: 1.25rem;
+}
+
+.bop-path__note {
+  margin: 0;
+  color: var(--bop-ink);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.bop-or {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0;
+  color: var(--bop-ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.bop-or::before,
+.bop-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bop-line);
+}
+
+/* Rules — supporting notes, not competing feature cards. */
+
+.bop-rules {
+  display: grid;
+  gap: 0;
+  margin: 2.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--bop-line-strong);
+}
+
+.bop .bop-rule {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  max-width: none;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--bop-line);
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.bop-rule__lead {
+  color: var(--fg);
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.bop-rule__body {
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+}
+
+/* Full note and action */
+
+.bop-foot {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 2rem;
+  padding: 1.2rem;
+  border: 1px solid var(--bop-line-strong);
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.02);
+}
+
+.bop-full {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+
+.bop-full__tag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--bop-line-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+}
+
+.bop__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border: 1px solid rgb(215 38 56 / 0.6);
+  border-radius: 0.75rem;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bop__cta:hover {
+  border-color: var(--bop-red);
+  background: rgb(215 38 56 / 0.16);
+}
+
+.bop__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.bop__cta-icon {
+  display: inline-flex;
+  color: var(--bop-red-text);
+}
+
+.bop__cta-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.bop__disclosure {
+  max-width: 36rem;
+  margin: 1.35rem auto 0;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  font-size: 0.86rem;
+  line-height: 1.55;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+@media (max-width: 47.99rem) {
+  .bop__cta {
+    width: 100%;
+  }
+
+  .bop__title {
+    max-width: 16ch;
+  }
+}
+
+/* 768px+: the ticket divides into two side-by-side choices. */
+
+@media (min-width: 48rem) {
+  .bop {
+    padding: 4.5rem 0 5rem;
+  }
+
+  .bop-example {
+    margin-top: 2.9rem;
+  }
+
+  .bop-fork {
+    height: 2.75rem;
+  }
+
+  .bop-fork::before {
+    bottom: 50%;
+  }
+
+  .bop-fork::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    bottom: 0;
+    left: calc((100% - var(--bop-or)) / 4);
+    right: calc((100% - var(--bop-or)) / 4);
+    border: 1px solid color-mix(in srgb, var(--bop-red) 70%, transparent);
+    border-bottom: 0;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  .bop-paths {
+    grid-template-columns: minmax(0, 1fr) var(--bop-or) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .bop-path {
+    padding: 1.4rem 1.5rem 1.5rem;
+  }
+
+  .bop-or {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.6rem;
+    letter-spacing: 0.12em;
+  }
+
+  .bop-or::before,
+  .bop-or::after {
+    width: 1px;
+    height: auto;
+  }
+
+  .bop-rules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    column-gap: 1.75rem;
+  }
+
+  .bop .bop-rule {
+    padding: 1.1rem 0;
+  }
+
+  .bop-foot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.3rem 1.6rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bop__inner {
+    width: calc(100% - 4rem);
+  }
+
+  .bop__title {
+    max-width: none;
+    font-size: clamp(2.5rem, 3.6vw, 3.2rem);
+  }
+
+  .bop-paths {
+    max-width: 60rem;
+    margin-inline: auto;
+  }
+
+  .bop-fork::after {
+    left: calc(50% - (min(100%, 60rem) - var(--bop-or)) / 4 - var(--bop-or) / 2);
+    right: calc(50% - (min(100%, 60rem) - var(--bop-or)) / 4 - var(--bop-or) / 2);
+  }
+
+  .bop-row dd {
+    font-size: 2.2rem;
+  }
+
+  .bop-row--total dd {
+    font-size: 1.35rem;
+  }
+
+  .bop-rules {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+
+  .bop .bop-rule {
+    padding-right: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bop__cta {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+}

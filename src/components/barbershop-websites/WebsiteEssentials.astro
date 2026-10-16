@@ -1,0 +1,88 @@
+---
+import '@/styles/components/barbershop-websites-essentials.css';
+
+type Essential = {
+  number: string;
+  title: string;
+  description: string;
+  why: string;
+};
+
+const essentials: Essential[] = [
+  {
+    number: '01',
+    title: 'Your branding',
+    description: 'Make your website recognisably yours, using your logo, colours and genuine photos of your shop and work.',
+    why: 'Keep your site recognisable alongside your shopfront and social profiles.',
+  },
+  {
+    number: '02',
+    title: 'Services & pricing',
+    description: 'Show clients what they can book, how much each service costs and, where useful, how long it takes.',
+    why: 'Clients can decide before entering the booking flow.',
+  },
+  {
+    number: '03',
+    title: 'Your team',
+    description: 'Introduce the people behind the chairs and help clients choose the barber who suits them.',
+    why: 'Show who offers each service and how clients can book with them.',
+  },
+  {
+    number: '04',
+    title: 'Location & contact',
+    description: 'Make your address, opening hours and contact details easy to find.',
+    why: 'Keep directions and opening hours accurate on your site and business profiles.',
+  },
+  {
+    number: '05',
+    title: 'Mobile experience',
+    description: 'Keep your website easy to read, navigate and use on a phone.',
+    why: 'Many clients will find you on their phone, often on the move.',
+  },
+  {
+    number: '06',
+    title: 'Online booking',
+    description: 'Give clients a clear way to choose a service, barber and available appointment.',
+    why: 'Make the booking link easy to find on every key page.',
+  },
+];
+---
+
+<section class="bsw-essentials" aria-labelledby="bsw-essentials-heading">
+  <div class="bsw-essentials__inner">
+    <header class="bsw-essentials__header">
+      <div class="bsw-essentials__title-block">
+        <p class="bsw-essentials__eyebrow">Website essentials</p>
+        <h2 id="bsw-essentials-heading" class="bsw-essentials__heading">
+          What should a barbershop website include<span class="bsw-essentials__mark">?</span>
+        </h2>
+      </div>
+      <p class="bsw-essentials__answer">
+        A useful barbershop website answers six questions: who you are, what you offer, what it
+        costs, who’s cutting, where you are and how to book.
+      </p>
+    </header>
+
+    <ol class="bsw-essentials__list" role="list">
+      {essentials.map((item) => (
+        <li class="bsw-essential">
+          <span class="bsw-essential__number" aria-hidden="true">{item.number}</span>
+          <h3 class="bsw-essential__title">{item.title}</h3>
+          <p class="bsw-essential__description">{item.description}</p>
+          <p class="bsw-essential__why">{item.why}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="bsw-essentials-test">
+      <div class="bsw-essentials-test__intro">
+        <p class="bsw-essentials-test__label">Quick test</p>
+        <p class="bsw-essentials-test__hint">Try it on your own website, using your phone.</p>
+      </div>
+      <p class="bsw-essentials-test__question">
+        Can a new client find your prices, opening hours and booking button in
+        <span class="bsw-essentials-test__emphasis">under a minute</span>?
+      </p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,219 @@
+---
+import { CUTSTATE_LOGO_ALT, CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { formatDemoPriceGbp, getDemoFeaturedServices } from '@/lib/demo/services';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { BARBERSHOP_ONLINE_BOOKING_DEMO_HREF } from '@/lib/seo/barbershopOnlineBookingPage';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_hero_preview';
+
+// Step labels, titles and hints mirror the public BookingFlow wizard (STEP_COPY).
+const STEPS = ['Service', 'Barber', 'Schedule', 'Details'] as const;
+const SERVICE_STEP = { title: 'Choose a service', hint: 'Pick what you need' };
+const BARBER_STEP = { title: 'Choose a barber', hint: 'Who should take you' };
+const TIME_STEP_TITLE = 'Pick a time';
+const TIME_STEP_HINT = 'Illustrative example times';
+
+// Subset of PREVIEW_STATIC_SLOTS, the fixed sandbox times BookingFlow shows in preview mode.
+// The selected slot closes the first row so its connector reaches it from the tablet edge.
+const EXAMPLE_SLOTS = ['10:00', '10:30', '11:00', '11:30', '14:00', '14:30'] as const;
+const SELECTED_SLOT = '11:00';
+
+const THUMB_SIZE = 160;
+const thumbSrc = (slug: string) => `/demo/barbers/thumbs/${slug}-${THUMB_SIZE}.webp`;
+
+const services = getDemoFeaturedServices().map((service) => ({
+  id: service.id,
+  name: service.name,
+  duration: `${service.durationMinutes} min`,
+  price: formatDemoPriceGbp(service.pricePence),
+}));
+const selectedService = services[0];
+
+const barbers = DEMO_BARBERS.map((barber) => ({
+  id: barber.id,
+  slug: barber.slug,
+  name: barber.name,
+  specialisation: barber.specialisation,
+  thumb: thumbSrc(barber.slug),
+}));
+// The bottom card, so the barber connector reaches it on one level line beneath the service list.
+const SELECTED_BARBER_SLUG = 'marcus-bell';
+const selectedBarber = barbers.find((barber) => barber.slug === SELECTED_BARBER_SLUG) ?? barbers[barbers.length - 1];
+
+const svg = (paths: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
+const ICONS = {
+  scissors:
+    '<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>',
+  user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+  calendar: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  userCheck:
+    '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
+  chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+  chevronRight: '<path d="m9 18 6-6-6-6"/>',
+};
+
+// Each callout names the data-bob-ref of the exact element its connector lands on.
+// The barber card sits under the service card; its line runs level beneath the service list into Marcus Bell.
+const callouts = [
+  { id: 'service', side: 'left', icon: ICONS.scissors, title: 'Choose a service', body: "From your shop's service menu." },
+  { id: 'barber', side: 'left', icon: ICONS.user, title: 'Pick a barber', body: 'Let clients choose their preferred available barber.' },
+  { id: 'details', side: 'right', icon: ICONS.userCheck, title: 'Next: Details & confirmation', body: 'Client details and booking confirmation.' },
+  { id: 'times', side: 'right', icon: ICONS.calendar, title: 'Available times', body: "Based on your shop's configured availability." },
+] as const;
+
+const screenLabel = [
+  `Illustrative recreation of the ${DEMO_SHOP_NAME} demo booking page on a tablet, headed by the ${CUTSTATE_LOGO_ALT} logo.`,
+  `Steps: ${STEPS.join(', ')}.`,
+  `${SERVICE_STEP.title}: ${services.map((s) => `${s.name}, ${s.duration}, ${s.price}`).join('; ')}; ${selectedService.name} selected.`,
+  `${BARBER_STEP.title}: ${barbers.map((b) => `${b.name}, ${b.specialisation}`).join('; ')}; ${selectedBarber.name} selected.`,
+  `${TIME_STEP_TITLE}: illustrative example times ${EXAMPLE_SLOTS.join(', ')}; ${SELECTED_SLOT} selected.`,
+].join(' ');
+---
+
+<div class="bob-stage">
+  <div class="bob-stage__atmosphere" aria-hidden="true">
+    <span class="bob-stage__glow"></span>
+    <span class="bob-stage__ground"></span>
+  </div>
+
+  <figure class="bob-device">
+    <div class="bob-device__body" data-bob-showcase>
+      <div class="bob-device__bezel" role="img" aria-label={screenLabel} data-bob-ref="device">
+        <div class="bob-screen" aria-hidden="true">
+          <div class="bob-screen__bar" data-bob-ref="bar">
+            <img
+              class="bob-screen__logo"
+              src={CUTSTATE_LOGO_SRC}
+              alt=""
+              width={CUTSTATE_LOGO_WIDTH}
+              height={CUTSTATE_LOGO_HEIGHT}
+              decoding="async"
+            />
+            <span class="bob-screen__stepper">
+              {STEPS.map((step, index) => (
+                <span class:list={['bob-screen__step', { 'is-active': index === 0 }]}>
+                  <span class="bob-screen__step-num" data-bob-ref={index === STEPS.length - 1 ? 'details' : undefined}>{index + 1}</span>
+                  <span class="bob-screen__step-label">{step}</span>
+                </span>
+              ))}
+            </span>
+          </div>
+
+          <div class="bob-screen__cols">
+            <div class="bob-screen__col bob-screen__col--services">
+              <span class="bob-screen__col-title">{SERVICE_STEP.title}</span>
+              <span class="bob-screen__col-hint">{SERVICE_STEP.hint}</span>
+              <span class="bob-screen__list">
+                {services.map((service) => (
+                  <span
+                    class:list={['bob-screen__row', { 'is-selected': service.id === selectedService.id }]}
+                    data-bob-ref={service.id === selectedService.id ? 'service' : undefined}
+                  >
+                    <span class="bob-screen__radio"></span>
+                    <span class="bob-screen__tile" set:html={svg(ICONS.scissors)} />
+                    <span class="bob-screen__row-main">
+                      <span class="bob-screen__row-name">{service.name}</span>
+                    </span>
+                    <span class="bob-screen__row-end">
+                      <span class="bob-screen__row-sub">{service.duration}</span>
+                      <span class="bob-screen__price">{service.price}</span>
+                    </span>
+                  </span>
+                ))}
+              </span>
+            </div>
+
+            <div class="bob-screen__col bob-screen__col--barbers">
+              <span class="bob-screen__col-title">{BARBER_STEP.title}</span>
+              <span class="bob-screen__col-hint">{BARBER_STEP.hint}</span>
+              <span class="bob-screen__list">
+                {barbers.map((barber) => (
+                  <span
+                    class:list={['bob-screen__row', { 'is-selected': barber.id === selectedBarber.id }]}
+                    data-bob-ref={barber.id === selectedBarber.id ? 'barber' : undefined}
+                  >
+                    <span class="bob-screen__radio"></span>
+                    <span class="bob-screen__avatar">
+                      <img
+                        src={barber.thumb}
+                        alt=""
+                        width={THUMB_SIZE}
+                        height={THUMB_SIZE}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </span>
+                    <span class="bob-screen__row-main">
+                      <span class="bob-screen__row-name">{barber.name}</span>
+                      <span class="bob-screen__row-sub">{barber.specialisation}</span>
+                    </span>
+                  </span>
+                ))}
+              </span>
+            </div>
+
+            <div class="bob-screen__col bob-screen__col--times">
+              <span class="bob-screen__col-title">{TIME_STEP_TITLE}</span>
+              <span class="bob-screen__col-hint">{TIME_STEP_HINT}</span>
+              <span class="bob-screen__day">
+                <span class="bob-screen__chevron" set:html={svg(ICONS.chevronLeft)} />
+                <span class="bob-screen__day-label">Example day</span>
+                <span class="bob-screen__chevron" set:html={svg(ICONS.chevronRight)} />
+              </span>
+              <span class="bob-screen__slots">
+                {EXAMPLE_SLOTS.map((slot) => (
+                  <span
+                    class:list={['bob-screen__slot', { 'is-selected': slot === SELECTED_SLOT }]}
+                    data-bob-ref={slot === SELECTED_SLOT ? 'times' : undefined}
+                  >{slot}</span>
+                ))}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="bob-callouts">
+        {callouts.map((callout) => (
+          <li
+            class:list={['bob-callout', `bob-callout--${callout.id}`, `bob-callout--${callout.side}`]}
+            data-bob-callout={callout.id}
+            data-bob-side={callout.side}
+          >
+            <span class="bob-callout__icon" set:html={svg(callout.icon)} />
+            <span class="bob-callout__text">
+              <span class="bob-callout__title">{callout.title}</span>
+              <span class="bob-callout__body">{callout.body}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <svg class="bob-connectors" data-bob-connectors aria-hidden="true" focusable="false"></svg>
+    </div>
+
+    <figcaption class="bob-device__caption">
+      <span class="bob-device__tag">Demo</span>
+      <span class="bob-device__note">
+        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Cutstate is a fictional KERSIVO
+        demonstration shop; times shown are examples, no appointment is created and no payment is taken.
+      </span>
+      <a
+        class="bob-device__live"
+        href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >Try it live</a>
+    </figcaption>
+  </figure>
+</div>
+
+<script>
+  import { bindBookingHeroConnectors } from '@/lib/barbershopOnlineBooking/heroConnectors';
+
+  bindBookingHeroConnectors();
+  document.addEventListener('astro:page-load', () => bindBookingHeroConnectors());
+</script>

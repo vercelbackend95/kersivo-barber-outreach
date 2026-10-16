@@ -6,6 +6,9 @@
 
 import { NAVBAR_SUBSCRIBE_CTA_LABEL, type Navbar17CtaTrack } from './navbar17Items';
 import type { MarketingNavIcon } from './marketingNavIcons';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 
 export type MarketingNavGroupId = 'platform' | 'compare' | 'resources';
 
@@ -262,6 +265,26 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
+    id: 'resources-website-design',
+    label: 'Barbershop Website Design',
+    description: 'Practical tips for barbershop branding, photography and mobile website design.',
+    href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
+    group: 'resources',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+  },
+  {
+    id: 'resources-online-booking',
+    label: 'Online Booking for Barbershops',
+    description: 'Booking steps, availability, deposits and the shop diary explained.',
+    href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
+    group: 'resources',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+  },
+  {
     id: 'resources-faq',
     label: 'Frequently Asked Questions',
     description: 'Answers about pricing, setup, switching, domains and billing.',
@@ -281,10 +304,19 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
 ];
 
+/** Websites takes the global FAQ slot only once the pillar has been approved for indexing.
+ * Until then the existing navbar stays exactly as published.
+ * FAQ always remains accessible via Resources > Help.
+ */
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
+  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+    ? [{ id: 'websites', label: 'Websites', href: BARBERSHOP_WEBSITES_PAGE_PATH }]
+    : []),
   { id: 'starter', label: 'Starter', href: '/starter' },
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
-  { id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' },
+  ...(!BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+    ? [{ id: 'faq', label: 'FAQ', href: '/#faq', sectionId: 'faq' }]
+    : []),
 ];
 
 export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
@@ -339,4 +371,32 @@ export function buildMarketingNavigation(
       };
     })
     .filter((group) => group.featured.length > 0 || group.sections.length > 0);
+}
+
+/** One top-level order for the desktop navbar and mobile hub.
+ * Published: Platform → Websites → Compare → Resources → Starter → Pricing.
+ * Before launch: Platform → Compare → Resources → Starter → Pricing → FAQ.
+ */
+export type MarketingNavTopLevelEntry =
+  | { kind: 'group'; group: ResolvedMarketingNavGroup }
+  | { kind: 'link'; link: MarketingNavDirectLink };
+
+export function buildMarketingNavTopLevelEntries(
+  groups: readonly ResolvedMarketingNavGroup[] = buildMarketingNavigation(),
+  directLinks: readonly MarketingNavDirectLink[] = MARKETING_NAV_DIRECT_LINKS,
+): MarketingNavTopLevelEntry[] {
+  const websitesLink = directLinks.find((link) => link.id === 'websites');
+  const entries: MarketingNavTopLevelEntry[] = [];
+  for (const group of groups) {
+    entries.push({ kind: 'group', group });
+    if (group.id === 'platform' && websitesLink) entries.push({ kind: 'link', link: websitesLink });
+  }
+  // Preserve an explicitly supplied Websites destination in configurations without Platform.
+  if (websitesLink && !groups.some((group) => group.id === 'platform')) {
+    entries.unshift({ kind: 'link', link: websitesLink });
+  }
+  for (const link of directLinks) {
+    if (link.id !== 'websites') entries.push({ kind: 'link', link });
+  }
+  return entries;
 }

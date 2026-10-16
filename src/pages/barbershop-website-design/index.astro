@@ -1,0 +1,68 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import WebsiteDesignHero from '@/components/barbershop-website-design/WebsiteDesignHero.astro';
+import WebsiteDesignBreakdown from '@/components/barbershop-website-design/WebsiteDesignBreakdown.astro';
+import WebsiteDesignBrand from '@/components/barbershop-website-design/WebsiteDesignBrand.astro';
+import WebsiteDesignMobile from '@/components/barbershop-website-design/WebsiteDesignMobile.astro';
+import WebsiteDesignPhotography from '@/components/barbershop-website-design/WebsiteDesignPhotography.astro';
+import WebsiteDesignProcess from '@/components/barbershop-website-design/WebsiteDesignProcess.astro';
+import WebsiteDesignFaqClose from '@/components/barbershop-website-design/WebsiteDesignFaqClose.astro';
+import {
+  BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION,
+  BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
+  BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
+  BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
+  buildBarbershopWebsiteDesignJsonLd,
+} from '@/lib/seo/barbershopWebsiteDesignPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE}
+  description={BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION}
+  canonicalPath={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}
+  noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}
+  robotsFollow
+  jsonLd={buildBarbershopWebsiteDesignJsonLd()}
+>
+  <main class="bwd-page">
+    <WebsiteDesignHero />
+    <WebsiteDesignBreakdown />
+    <WebsiteDesignBrand />
+    <WebsiteDesignMobile />
+    <WebsiteDesignPhotography />
+    <WebsiteDesignProcess />
+    <WebsiteDesignFaqClose />
+  </main>
+
+  <Footer50
+    showIntro={false}
+    brandLine="Own your brand. Own your bookings."
+    contactEmail={KERSIVO_CONTACT_EMAIL}
+    brandName="KERSIVO"
+    copyright={`© ${currentYear} KERSIVO`}
+    navigation={[
+      { name: 'Home', href: '/' },
+      { name: 'Starter', href: '/starter' },
+      { name: 'Pricing', href: '/pricing' },
+      { name: 'Live demo', href: '/demo' },
+      { name: 'Booksy comparison', href: '/booksy-alternative' },
+      { name: 'Fresha comparison', href: '/fresha-alternative' },
+    ]}
+    social={getFooterSocialLinks()}
+    legal={[
+      FOOTER_LEGAL_LINKS.privacy,
+      FOOTER_LEGAL_LINKS.cookies,
+      FOOTER_LEGAL_LINKS.cookieSettings,
+      FOOTER_LEGAL_LINKS.dpa,
+      FOOTER_LEGAL_LINKS.termsAndCancellation,
+    ]}
+  />
+</LandingLayout>

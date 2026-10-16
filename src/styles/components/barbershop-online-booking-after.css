@@ -1,0 +1,535 @@
+/* /barbershop-online-booking Section 06: post-visit communication showcase.
+   Static editorial composition. No scroll scrub. */
+
+.bob-ab {
+  --bob-ab-red: var(--accent);
+  --bob-ab-red-text: var(--accent-text);
+  --bob-ab-muted: #b4b8bf;
+  --bob-ab-line: rgb(255 255 255 / 0.1);
+  --bob-ab-surface: rgb(14 14 14);
+  --bob-ab-surface-2: rgb(10 10 10);
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.25rem 0 3.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background:
+    radial-gradient(ellipse 50% 36% at 10% 8%, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 72%),
+    #040404;
+}
+
+.bob-ab__inner {
+  width: calc(100% - 2rem);
+  max-width: 74rem;
+  margin-inline: auto;
+}
+
+.bob-ab__head {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 40rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.bob-ab__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0 auto;
+  color: var(--bob-ab-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bob-ab__eyebrow::before,
+.bob-ab__eyebrow::after {
+  content: '';
+  flex: none;
+  width: 1.2rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--bob-ab-red) 70%, transparent);
+}
+
+.bob-ab__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.75rem, 6.8vw, 2.55rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.bob-ab__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* Showcase shell */
+
+.bob-ab-showcase {
+  margin-top: 2.25rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 0.3rem;
+  background: linear-gradient(180deg, rgb(11 11 11) 0%, rgb(6 6 6) 100%);
+  overflow: hidden;
+}
+
+.bob-ab-showcase__banner {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.1rem 1.25rem 1.15rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.07);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--bob-ab-red) 10%, transparent) 0%, transparent 55%);
+}
+
+.bob-ab-concept {
+  margin: 0;
+  color: var(--bob-ab-red-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bob-ab-showcase__note {
+  margin: 0;
+  max-width: 40rem;
+  color: color-mix(in srgb, var(--bob-ab-muted) 92%, var(--fg));
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+/* Beats */
+
+.bob-ab-beat {
+  display: grid;
+  gap: 1.35rem;
+  padding: 1.65rem 1.25rem 1.7rem;
+}
+
+.bob-ab-beat + .bob-ab-beat {
+  border-top: 1px solid rgb(255 255 255 / 0.07);
+}
+
+.bob-ab-beat__copy {
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.bob-ab-beat__index {
+  color: var(--bob-ab-red-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.bob-ab-beat__stage {
+  margin: 0;
+  color: var(--bob-ab-red-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bob-ab-display {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.7rem, 6.4vw, 2.55rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.bob-ab-display--review {
+  font-size: clamp(1.55rem, 5.8vw, 2.25rem);
+}
+
+.bob-ab-display--climax {
+  font-size: clamp(1.7rem, 6.2vw, 2.55rem);
+}
+
+.bob-ab-beat__support {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--bob-ab-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Stage 01 — thank-you email */
+
+.bob-ab-beat--thanks {
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--bob-ab-red) 8%, transparent) 0%, transparent 52%);
+}
+
+.bob-ab-mail {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 0.35rem;
+  background: linear-gradient(180deg, rgb(28 28 28) 0%, rgb(16 16 16) 100%);
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  overflow: hidden;
+}
+
+.bob-ab-mail__chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(255 255 255 / 0.02);
+}
+
+.bob-ab-mail__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.bob-ab-mail__dot:nth-child(1) {
+  background: color-mix(in srgb, var(--bob-ab-red) 55%, rgb(255 255 255 / 0.2));
+}
+
+.bob-ab-mail__kind {
+  margin-left: auto;
+  color: var(--bob-ab-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bob-ab-mail__meta {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0.85rem 1rem 0.15rem;
+}
+
+.bob-ab-mail__row {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.05);
+}
+
+.bob-ab-mail__row dt {
+  margin: 0;
+  color: color-mix(in srgb, var(--bob-ab-muted) 85%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bob-ab-mail__row dd {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.bob-ab-mail__body {
+  margin: 0;
+  padding: 1rem 1rem 1.15rem;
+  color: color-mix(in srgb, var(--fg) 90%, var(--bob-ab-muted));
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* Stage 02 — Google review */
+
+.bob-ab-beat--review {
+  background: rgb(255 255 255 / 0.012);
+}
+
+.bob-ab-invite {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: start;
+  min-width: 0;
+  padding: 1.25rem 1.2rem 1.3rem;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 0.35rem;
+  background:
+    radial-gradient(ellipse 80% 70% at 0% 0%, color-mix(in srgb, var(--bob-ab-red) 10%, transparent) 0%, transparent 55%),
+    linear-gradient(180deg, rgb(30 30 30) 0%, rgb(16 16 16) 100%);
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.bob-ab-invite__mark {
+  width: 2.15rem;
+  height: 2.15rem;
+  object-fit: contain;
+}
+
+.bob-ab-invite__heading {
+  margin: 0;
+  color: var(--fg);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.bob-ab-invite__body {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: 28rem;
+}
+
+.bob-ab-invite__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.35rem 0 0;
+  min-height: 2.65rem;
+  padding: 0 1rem;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.bob-ab-invite__cta-mark {
+  width: 1.05rem;
+  height: 1.05rem;
+  object-fit: contain;
+}
+
+/* Stage 03 — rebook */
+
+.bob-ab-beat--rebook {
+  background:
+    linear-gradient(155deg, transparent 0%, color-mix(in srgb, var(--bob-ab-red) 7%, transparent) 100%);
+}
+
+.bob-ab-return {
+  display: grid;
+  gap: 0.75rem;
+  align-content: center;
+  min-width: 0;
+  padding: 1.4rem 1.25rem 1.45rem;
+  border: 1px solid color-mix(in srgb, var(--bob-ab-red) 42%, rgb(255 255 255 / 0.12));
+  border-radius: 0.35rem;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--bob-ab-red) 18%, rgb(28 28 28)) 0%, rgb(16 16 16) 62%);
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.34),
+    inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+.bob-ab-return__shop {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bob-ab-return__heading {
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(1.25rem, 4vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.bob-ab-return__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0.35rem 0 0;
+  min-height: 2.85rem;
+  padding: 0 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--bob-ab-red) 70%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--bob-ab-red) 88%, black);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.bob-ab-return__arrow {
+  display: inline-flex;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.bob-ab-return__arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Ending — real demo CTA only */
+
+.bob-ab-end {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.bob-ab__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 2.85rem;
+  padding: 0 1.25rem;
+  border: 1px solid rgb(215 38 56 / 0.55);
+  border-radius: 0.75rem;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.bob-ab__cta:hover {
+  border-color: var(--bob-ab-red);
+  background: rgb(215 38 56 / 0.16);
+}
+
+.bob-ab__cta:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--bob-ab-red) 80%, white);
+  outline-offset: 3px;
+}
+
+.bob-ab__cta-icon {
+  display: inline-flex;
+  color: var(--bob-ab-red-text);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.bob-ab__cta-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 48rem) {
+  .bob-ab-showcase {
+    margin-top: 2.65rem;
+  }
+
+  .bob-ab-showcase__banner {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 1rem 1.5rem;
+    padding: 1.2rem 2rem;
+  }
+
+  .bob-ab-beat {
+    grid-template-columns: minmax(0, 1.05fr) minmax(17rem, 0.95fr);
+    column-gap: 2.25rem;
+    align-items: center;
+    padding: 2.1rem 2rem;
+  }
+
+  .bob-ab-beat--review {
+    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  }
+
+  .bob-ab-beat--rebook {
+    grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+  }
+
+  .bob-ab-mail__meta {
+    padding-inline: 1.15rem;
+  }
+
+  .bob-ab-mail__body {
+    padding: 1.1rem 1.15rem 1.3rem;
+  }
+
+  .bob-ab-invite {
+    padding: 1.4rem 1.35rem 1.45rem;
+  }
+
+  .bob-ab-return {
+    padding: 1.55rem 1.4rem 1.6rem;
+    min-height: 12.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bob-ab-display {
+    font-size: clamp(2.05rem, 3.2vw, 2.85rem);
+  }
+
+  .bob-ab-display--review {
+    font-size: clamp(1.85rem, 2.8vw, 2.45rem);
+  }
+
+  .bob-ab-beat {
+    column-gap: 2.75rem;
+    padding: 2.35rem 2.35rem;
+  }
+}
+
+@media (max-width: 22.5rem) {
+  .bob-ab-beat {
+    padding-inline: 1rem;
+  }
+
+  .bob-ab-mail__row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .bob-ab-invite__cta,
+  .bob-ab-return__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bob-ab__cta {
+    transition: none;
+  }
+}

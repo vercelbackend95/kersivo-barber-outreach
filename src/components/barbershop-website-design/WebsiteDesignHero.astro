@@ -1,0 +1,82 @@
+---
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 } from '@/lib/seo/barbershopWebsiteDesignPage';
+import '@/styles/components/barbershop-website-design-hero.css';
+
+const TRACK_EVENT = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_website_design_hero_demo';
+
+// Desktop composition: "Barbershop Website / Design That Looks / Like Your Shop", split from the H1 source of truth.
+const ACCENT_WORDS = 'Your Shop';
+const breakOne = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Design ');
+const breakTwo = BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.indexOf(' Like ');
+const titleLines =
+  breakOne > 0 && breakTwo > breakOne
+    ? [
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(0, breakOne),
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(breakOne + 1, breakTwo),
+        BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.slice(breakTwo + 1),
+      ]
+    : [BARBERSHOP_WEBSITE_DESIGN_PAGE_H1];
+const lastLine = titleLines[titleLines.length - 1];
+const lastLineLead = lastLine.endsWith(ACCENT_WORDS) ? lastLine.slice(0, -ACCENT_WORDS.length) : lastLine;
+const lastLineAccent = lastLine.endsWith(ACCENT_WORDS) ? ACCENT_WORDS : '';
+---
+
+<section class="bwd-hero" aria-labelledby="bwd-hero-title">
+  <div class="bwd-hero__content">
+    <nav class="bwd-hero__breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>
+        <li aria-hidden="true">/</li>
+        <li><span aria-current="page">Website design</span></li>
+      </ol>
+    </nav>
+
+    <p class="bwd-hero__eyebrow">
+      <span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>
+      A practical guide for UK barbershop owners
+    </p>
+
+    <h1 id="bwd-hero-title" class="bwd-hero__title">
+      {titleLines.slice(0, -1).map((line, index) => (
+        <>
+          <span class:list={['bwd-hero__title-line', { 'bwd-hero__title-line--primary': index === 0 }]}>{line}</span>{' '}
+        </>
+      ))}
+      <span class:list={['bwd-hero__title-line', { 'bwd-hero__title-line--primary': titleLines.length === 1 }]}>
+        {lastLineLead}{lastLineAccent && <span class="bwd-hero__accent">{lastLineAccent}</span>}
+      </span>
+    </h1>
+
+    <p class="bwd-hero__lead">
+      See how branding, photography and mobile design work together to make a barbershop
+      website easier to use — with examples from our fictional CUTSTATE demo.
+    </p>
+
+    <div class="bwd-hero__actions">
+      <a
+        href={DEMO_HOME_HREF}
+        class="bwd-hero__action bwd-hero__action--primary"
+        data-track={TRACK_EVENT}
+        data-track-placement={TRACK_PLACEMENT}
+      >
+        Explore the CUTSTATE demo
+      </a>
+      <a href={BARBERSHOP_WEBSITES_PAGE_PATH} class="bwd-hero__action bwd-hero__action--secondary">
+        Explore Full KERSIVO
+      </a>
+    </div>
+
+    <div class="bwd-hero__meta">
+      <span><strong>Branded barbershop websites</strong></span>
+      <span aria-hidden="true">·</span>
+      <span><strong>Connected online bookings</strong></span>
+      <span aria-hidden="true">·</span>
+      <span>Built for independent UK barbershops</span>
+    </div>
+  </div>
+</section>

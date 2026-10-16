@@ -614,7 +614,7 @@ describe('ClientOnboardingWizard hardening', () => {
     render(<ClientOnboardingWizard />);
     await screen.findByRole('heading', { name: /Barber availability/i });
     await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
-    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.click(await screen.findByRole('switch', { name: /Sat/i }));
     fireEvent.change(screen.getByLabelText(/Barber/i), { target: { value: 'barber_2' } });
     await waitFor(() => {
       expect(
@@ -626,7 +626,7 @@ describe('ClientOnboardingWizard hardening', () => {
       ).toBe(true);
     });
 
-    fireEvent.click(screen.getByRole('switch', { name: /Sun/i }));
+    fireEvent.click(await screen.findByRole('switch', { name: /Sun/i }));
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
     await waitFor(() => {
       expect(
@@ -674,7 +674,7 @@ describe('ClientOnboardingWizard hardening', () => {
     render(<ClientOnboardingWizard />);
     await screen.findByRole('heading', { name: /Barber availability/i });
     await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
-    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.click(await screen.findByRole('switch', { name: /Sat/i }));
     fireEvent.change(screen.getByLabelText(/Barber/i), { target: { value: 'barber_2' } });
     expect(await screen.findByText(/Rules failed|Could not save/i)).toBeTruthy();
     expect((screen.getByLabelText(/Barber/i) as HTMLSelectElement).value).toBe('barber_1');
@@ -1107,7 +1107,7 @@ describe('ClientOnboardingWizard hardening', () => {
     render(<ClientOnboardingWizard />);
     await screen.findByRole('heading', { name: /Barber availability/i });
     await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
-    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.click(await screen.findByRole('switch', { name: /Sat/i }));
     fireEvent.click(screen.getByRole('button', { name: /Back/i }));
     await waitFor(() => {
       expect(

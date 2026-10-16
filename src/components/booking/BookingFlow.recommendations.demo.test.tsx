@@ -16,7 +16,10 @@ vi.mock('@/lib/consent/events', () => ({
   trackConsentedEvent: vi.fn(),
 }));
 
+// Keep the dated demo fixture in the future relative to the test clock.
+// Mock Date only; real timers remain active for React's asynchronous waitFor.
 const WEDNESDAY = '2026-08-12';
+const FIXTURE_NOW = new Date('2026-08-10T08:00:00.000Z');
 
 const services = DEMO_SERVICES.map((service) => ({
   id: service.id,
@@ -85,6 +88,8 @@ describe('BookingFlow BLACKLINE confirmation recommendations', () => {
   const fetchSpy = vi.fn();
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXTURE_NOW);
     fetchSpy.mockReset();
     vi.stubGlobal('fetch', fetchSpy);
     window.sessionStorage.removeItem(BLACKLINE_SESSION_BOOKINGS_KEY);
@@ -93,6 +98,7 @@ describe('BookingFlow BLACKLINE confirmation recommendations', () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     window.sessionStorage.removeItem(BLACKLINE_SESSION_BOOKINGS_KEY);
   });

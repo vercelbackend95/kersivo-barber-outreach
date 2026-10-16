@@ -1,0 +1,443 @@
+/* /barbershop-website-design Section 06: how KERSIVO turns the design ideas into a live website.
+   Left: the three stages on a left-hand rail, adapted from the editorial process timeline
+   (process-timeline.css) in its complete, static state — no alternating spine, no script.
+   Right: the Full KERSIVO summary, a scoped copy of the Starter glance card surface
+   (starter-landing.css .starter-glance-card). Neither reference stylesheet is imported. */
+
+.bwk {
+  --bwk-line: color-mix(in srgb, var(--fg) 10%, transparent);
+  --bwk-text-2: color-mix(in srgb, var(--muted) 90%, var(--fg));
+  --bwk-text-3: color-mix(in srgb, var(--muted) 82%, var(--bg));
+
+  padding: clamp(3.5rem, 7vw, 6.5rem) 0 clamp(3.5rem, 7vw, 6rem);
+  border-top: 1px solid var(--bwk-line);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+}
+
+.bwk__inner {
+  container-type: inline-size;
+  width: min(100% - 2.5rem, 84rem);
+  margin-inline: auto;
+}
+
+/* ---------- Intro ---------- */
+
+.bwk__intro {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  padding-bottom: clamp(2.5rem, 5vw, 3.75rem);
+}
+
+.bwk__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--bwk-text-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bwk__kicker-mark {
+  flex: none;
+  width: 2rem;
+  height: 2px;
+  background: var(--accent);
+}
+
+.bwk__heading {
+  max-width: 16ch;
+  margin: 0;
+  font-size: clamp(2rem, 4.2vw, 3.6rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.bwk__lede {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(1.08rem, 1.5vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.bwk__grid {
+  display: grid;
+  gap: clamp(2.75rem, 6vw, 3.5rem);
+}
+
+/* ---------- Process timeline (left rail) ---------- */
+
+.bwk-timeline {
+  --tl-node: 2.5rem;
+  --tl-gap: 1.25rem;
+  --tl-line: 2px;
+  --tl-step-gap: clamp(2.5rem, 6vw, 3.25rem);
+  --tl-red: color-mix(in srgb, var(--accent) 88%, var(--fg));
+  --tl-track: color-mix(in srgb, var(--fg) 9%, transparent);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tl-step-gap);
+  max-width: 40rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bwk-timeline__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-node) minmax(0, 1fr);
+  column-gap: var(--tl-gap);
+  align-items: start;
+  max-width: none;
+}
+
+/* Each segment runs from this node's centre to the next node's centre, so the rail starts and
+   ends exactly on the first and last nodes without measuring in script. */
+.bwk-timeline__step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--tl-node) / 2);
+  left: calc(var(--tl-node) / 2 - var(--tl-line) / 2);
+  width: var(--tl-line);
+  height: calc(100% + var(--tl-step-gap));
+  border-radius: var(--tl-line);
+  background: var(--tl-track);
+  pointer-events: none;
+}
+
+/* A short red lead-in only: a fully red rail would read as completed progress. */
+.bwk-timeline__step:first-child::before {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--tl-red) 55%, transparent) 0%,
+    color-mix(in srgb, var(--tl-red) 40%, transparent) 30%,
+    var(--tl-track) 75%
+  );
+}
+
+.bwk-timeline__node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--tl-node);
+  height: var(--tl-node);
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  color: color-mix(in srgb, var(--fg) 72%, transparent);
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.bwk-timeline__step--kersivo .bwk-timeline__node {
+  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent);
+  color: var(--fg);
+}
+
+.bwk-timeline__content {
+  min-width: 0;
+  padding-top: 0.75rem;
+}
+
+.bwk-timeline__role {
+  margin: 0;
+  color: var(--bwk-text-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.bwk-timeline__step--kersivo .bwk-timeline__role {
+  color: var(--accent-text, var(--accent));
+}
+
+.bwk-timeline__title {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.45rem);
+  font-weight: 620;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+
+.bwk-timeline__body {
+  max-width: 44ch;
+  margin: 0.55rem 0 0;
+  color: color-mix(in srgb, var(--fg) 64%, var(--muted));
+  font-size: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+
+/* ---------- Full KERSIVO card (Starter glance-card family) ---------- */
+
+.bwk-card {
+  --card-line: rgba(255, 255, 255, 0.07);
+
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  padding: 1.6rem 1.6rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 40px 90px -50px #000,
+    0 18px 40px -30px rgba(0, 0, 0, 0.9);
+}
+
+.bwk-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 1.6rem;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), rgba(255, 23, 23, 0));
+  pointer-events: none;
+}
+
+.bwk-card__label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--card-line);
+  color: #8e8e92;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.bwk-card__label::before {
+  content: '';
+  flex: none;
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: #ff1717;
+}
+
+.bwk-card__price {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 1.5rem 0 1.4rem;
+}
+
+.bwk-card__amount {
+  color: #fff;
+  font-size: clamp(2.6rem, 4vw, 3.4rem);
+  font-weight: 650;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.bwk-card__per {
+  color: #a1a1a6;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.bwk-card__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--card-line);
+}
+
+.bwk-card__fact {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  padding: 1.05rem 0;
+}
+
+.bwk-card__fact:nth-child(2),
+.bwk-card__fact:nth-child(4) {
+  padding-left: 1.4rem;
+}
+
+.bwk-card__fact:nth-child(3),
+.bwk-card__fact:nth-child(4) {
+  border-top: 1px solid var(--card-line);
+}
+
+.bwk-card__fact dt,
+.bwk-card__fact dd {
+  margin: 0;
+}
+
+.bwk-card__fact dt {
+  color: #77777b;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.bwk-card__fact dd {
+  color: #f2f2f2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.bwk-card__fact--wide {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.bwk-card__billing {
+  margin: 1.2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-line);
+  color: #a1a1a6;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.bwk-card__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.6rem;
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.35em;
+  transition: color 160ms ease;
+}
+
+.bwk-card__link:hover {
+  color: var(--accent-text);
+}
+
+.bwk-card__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bwk-card__link {
+    transition: none;
+  }
+}
+
+/* ---------- Managed-service note ---------- */
+
+.bwk-managed {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: clamp(2.5rem, 5vw, 3.25rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--bwk-line);
+}
+
+.bwk-managed__title {
+  margin: 0;
+  color: var(--bwk-text-2);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.bwk-managed__body {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--bwk-text-3);
+  font-size: var(--text-xs);
+  line-height: 1.65;
+}
+
+/* Narrow phones: the Starter card's compact padding, and facts in one column. */
+@container (max-width: 30rem) {
+  .bwk-card {
+    padding: 1.15rem;
+  }
+
+  .bwk-card::before {
+    left: 1.15rem;
+  }
+
+  .bwk-card__price {
+    padding: 1.25rem 0 1.2rem;
+  }
+
+  .bwk-card__amount {
+    font-size: 2.4rem;
+  }
+
+  .bwk-card__fact:nth-child(2),
+  .bwk-card__fact:nth-child(4) {
+    padding-left: 1.1rem;
+  }
+}
+
+@container (max-width: 20rem) {
+  .bwk-card__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bwk-card__fact:nth-child(2),
+  .bwk-card__fact:nth-child(4) {
+    padding-left: 0;
+  }
+
+  .bwk-card__fact:nth-child(2) {
+    border-top: 1px solid var(--card-line);
+  }
+}
+
+/* Desktop: the timeline on the left, the card on the right. */
+@container (min-width: 56rem) {
+  .bwk__grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+    column-gap: clamp(2.5rem, 6cqi, 5.5rem);
+  }
+
+  .bwk-timeline {
+    --tl-node: 2.75rem;
+  }
+
+  .bwk-timeline__content {
+    padding-top: 0.85rem;
+  }
+
+  .bwk-card {
+    justify-self: end;
+    max-width: 28rem;
+  }
+}

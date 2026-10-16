@@ -1,0 +1,1418 @@
+/* /barbershop-online-booking Section 02: an editorial stage rail beside one large, flat booking
+   showcase. Each rail stage selects a recreated /demo/book state; without JavaScript every state
+   is shown in order. The showcase reuses the CUTSTATE body face declared by the Section 01 sheet. */
+
+.boj {
+  --boj-red: var(--accent);
+  --boj-red-text: var(--accent-text);
+  --boj-red-tint: rgb(215 38 56 / 0.1);
+  --boj-line: rgb(255 255 255 / 0.08);
+  --boj-line-strong: rgb(255 255 255 / 0.15);
+  --boj-ink: #f4f1ea;
+  --boj-ink-muted: #b4b8bf;
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.5rem 0 4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background:
+    radial-gradient(60% 40% at 70% 40%, rgb(215 38 56 / 0.05), transparent 70%),
+    #070708;
+}
+
+.boj__inner {
+  width: calc(100% - 2rem);
+  max-width: 90rem;
+  margin-inline: auto;
+}
+
+/* Left-aligned editorial head */
+
+.boj__head {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 44rem;
+}
+
+.boj__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--boj-red-text);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.boj__eyebrow::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--boj-red) 75%, transparent);
+}
+
+.boj__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.85rem, 7.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.boj__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* Below 64rem: one step at a time — step selector, the active step's explanation, its preview,
+   then Previous / Next. From 64rem the full rail sits beside the preview instead. */
+
+.boj__body {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+}
+
+/* Compact step selector */
+
+.boj__tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.95rem;
+  background: rgb(255 255 255 / 0.02);
+  scroll-margin-top: 5.5rem;
+}
+
+.boj-tab {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 3.25rem;
+  margin: 0;
+  padding: 0.35rem 0.1rem;
+  border: 1px solid transparent;
+  border-radius: 0.72rem;
+  background: none;
+  color: var(--boj-ink-muted);
+  font-family: var(--font-body);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.boj-tab::before {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  left: 22%;
+  right: 22%;
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.boj-tab__num {
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.boj-tab__label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boj-tab.is-done .boj-tab__num {
+  color: color-mix(in srgb, var(--boj-red-text) 75%, transparent);
+}
+
+.boj-tab[aria-pressed='true'] {
+  border-color: rgb(215 38 56 / 0.5);
+  background: linear-gradient(180deg, rgb(215 38 56 / 0.16), rgb(215 38 56 / 0.06));
+  color: var(--fg);
+}
+
+.boj-tab[aria-pressed='true']::before {
+  background: var(--boj-red);
+  box-shadow: 0 0 10px rgb(215 38 56 / 0.6);
+}
+
+.boj-tab[aria-pressed='true'] .boj-tab__num {
+  color: var(--boj-red-text);
+}
+
+.boj-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Stage text: only the active stage shows below 64rem. */
+
+.boj__rail {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boj-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.boj-stage:not(.is-active) {
+  display: none;
+}
+
+.boj-stage__num {
+  display: none;
+  align-items: center;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 50%;
+  color: var(--boj-ink-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.boj-stage.is-active .boj-stage__num {
+  border-color: var(--boj-red);
+  background: var(--boj-red);
+  color: #fff;
+  box-shadow: 0 0 14px -2px rgb(215 38 56 / 0.55);
+}
+
+.boj-stage__text {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.boj-stage__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.boj-stage__client {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.boj-stage__shop {
+  margin: 0.3rem 0 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 2px solid rgb(215 38 56 / 0.55);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: rgb(255 255 255 / 0.025);
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.boj-stage__shop-label {
+  display: block;
+  margin-bottom: 0.1rem;
+  color: var(--boj-red-text);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* From 64rem the whole stage is the select target; the button sits over it. */
+.boj-stage__select {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+.boj-stage__select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Showcase */
+
+.boj__showcase {
+  position: relative;
+  container-type: inline-size;
+  margin: 0;
+}
+
+.boj__showcase::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -1.5rem;
+  z-index: -1;
+  height: 3rem;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(215 38 56 / 0.18), transparent);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.boj__panels {
+  display: grid;
+}
+
+/* Each state takes its own height; the 64rem+ showcase sets a floor so switching stays calm. */
+.boj-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.boj-panel:not(.is-active) {
+  display: none;
+}
+
+.boj-panel__label {
+  display: none;
+  margin-bottom: 0.6rem;
+  color: var(--boj-red-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.boj-screen {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 1.15em;
+  overflow: hidden;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgb(255 255 255 / 0.035), transparent 70%),
+    linear-gradient(180deg, #111114, #0b0b0d);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 1px 0 rgb(0 0 0 / 0.6),
+    0 40px 70px -40px #000;
+  color: var(--boj-ink);
+  font-family: 'BOB Cutstate Body', var(--font-body);
+  font-size: clamp(13px, 1.9cqi, 16px);
+  line-height: 1.4;
+}
+
+.boj-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(220 78 91 / 0.55), transparent);
+}
+
+.boj-screen__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8em 1.2em;
+  padding-bottom: 0.95em;
+  border-bottom: 1px solid var(--boj-line);
+}
+
+.boj-screen__shop {
+  display: grid;
+  gap: 0.1em;
+}
+
+.boj-screen__eyebrow {
+  color: var(--boj-red-text);
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.boj-screen__heading {
+  font-size: 1.3em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.boj-screen__steps {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.boj-screen__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: var(--boj-ink-muted);
+  font-size: 0.78em;
+}
+
+.boj-screen__step + .boj-screen__step::before {
+  content: '';
+  width: 1.1em;
+  height: 1px;
+  margin-right: 0.15em;
+  background: var(--boj-line-strong);
+}
+
+.boj-screen__step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75em;
+  height: 1.75em;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 50%;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.boj-screen__step-dot svg {
+  width: 0.95em;
+  height: 0.95em;
+}
+
+.boj-screen__step.is-active {
+  color: var(--boj-ink);
+}
+
+.boj-screen__step.is-active .boj-screen__step-dot {
+  border-color: var(--boj-red);
+  background: var(--boj-red);
+  color: #fff;
+  box-shadow: 0 0 10px rgb(215 38 56 / 0.45);
+}
+
+.boj-screen__step.is-done .boj-screen__step-dot {
+  border-color: rgb(215 38 56 / 0.6);
+  color: var(--boj-red-text);
+}
+
+.boj-screen__picks {
+  align-self: flex-start;
+  margin: 0.95em 0 0;
+  padding: 0.4em 0.85em;
+  border: 1px solid var(--boj-line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+  color: var(--boj-ink-muted);
+  font-size: 0.8em;
+}
+
+.boj-screen__body {
+  display: grid;
+  align-content: start;
+  gap: 0.3em;
+  margin-top: 1.1em;
+}
+
+.boj-screen__main {
+  display: grid;
+  align-content: start;
+  gap: 0.3em;
+  min-width: 0;
+}
+
+.boj-screen__title {
+  font-size: 1.12em;
+  font-weight: 600;
+}
+
+.boj-screen__hint,
+.boj-screen__helper,
+.boj-screen__more {
+  color: var(--boj-ink-muted);
+  font-size: 0.8em;
+}
+
+.boj-screen__category {
+  margin-top: 0.9em;
+  color: var(--boj-ink-muted);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.boj-screen__more {
+  margin-top: 0.4em;
+}
+
+/* Choice cards */
+
+.boj-screen__services,
+.boj-screen__barbers {
+  display: grid;
+  gap: 0.55em;
+  margin-top: 0.45em;
+}
+
+.boj-screen__barbers {
+  margin-top: 0.9em;
+}
+
+.boj-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.8em 0.9em;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.8em;
+  background: #141416;
+}
+
+.boj-card.is-selected {
+  border-color: var(--boj-red);
+  background: linear-gradient(180deg, rgb(215 38 56 / 0.13), rgb(215 38 56 / 0.05));
+  box-shadow:
+    inset 0 0 0 1px rgb(215 38 56 / 0.5),
+    0 0 16px -4px rgb(215 38 56 / 0.35);
+}
+
+.boj-card__copy {
+  display: grid;
+  gap: 0.2em;
+  min-width: 0;
+}
+
+.boj-card__name {
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.boj-card__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--boj-ink-muted);
+  font-size: 0.76em;
+  line-height: 1.45;
+}
+
+.boj-card__helper {
+  color: var(--boj-ink-muted);
+  font-size: 0.76em;
+}
+
+.boj-card__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.1em;
+}
+
+.boj-card__price {
+  font-size: 1em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.boj-card__stat {
+  color: var(--boj-ink-muted);
+  font-size: 0.74em;
+}
+
+.boj-card__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  border: 1.5px solid rgb(255 255 255 / 0.22);
+  border-radius: 50%;
+  color: transparent;
+}
+
+.boj-card__mark svg {
+  width: 0.8em;
+  height: 0.8em;
+}
+
+.boj-card.is-selected .boj-card__mark {
+  border-color: var(--boj-red);
+  background: var(--boj-red);
+  color: #fff;
+}
+
+.boj-card--barber {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.boj-card__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9em;
+  height: 2.9em;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #1f1f23;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.boj-card__avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.boj-card__avatar--any {
+  color: var(--boj-ink-muted);
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.boj-card--any .boj-card__avatar--any {
+  width: 4.25em;
+  height: 4.25em;
+}
+
+.boj-card.is-selected .boj-card__avatar {
+  box-shadow: 0 0 0 2px var(--boj-red);
+}
+
+/* Time */
+
+.boj-screen__day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.8em;
+  padding: 0.5em 0.7em;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.65em;
+  background: #141416;
+}
+
+.boj-screen__day-label {
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.boj-screen__chevron {
+  display: inline-flex;
+  color: var(--boj-ink-muted);
+}
+
+.boj-screen__chevron svg {
+  width: 1em;
+  height: 1em;
+}
+
+.boj-screen__label {
+  margin-top: 0.9em;
+  font-size: 0.88em;
+  font-weight: 600;
+}
+
+.boj-screen__slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5em;
+  margin-top: 0.45em;
+}
+
+.boj-slot {
+  padding: 0.62em 0;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.55em;
+  background: #141416;
+  font-size: 0.86em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.boj-slot.is-selected {
+  border-color: var(--boj-red);
+  background: var(--boj-red);
+  color: #fff;
+  box-shadow: 0 0 12px -2px rgb(215 38 56 / 0.45);
+}
+
+/* Booking summary */
+
+.boj-summary {
+  display: grid;
+  align-content: start;
+  gap: 0.25em;
+  min-width: 0;
+  margin-top: 1.1em;
+  padding: 0.95em 1em;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.9em;
+  background: rgb(255 255 255 / 0.02);
+}
+
+.boj-summary__eyebrow {
+  color: var(--boj-red-text);
+  font-size: 0.66em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.boj-summary__title {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.boj-summary__card {
+  display: grid;
+  gap: 0.35em;
+  margin-top: 0.6em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--boj-line);
+}
+
+.boj-summary__card-title,
+.boj-confirm__card-title {
+  color: var(--boj-ink-muted);
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.boj-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  font-size: 0.8em;
+}
+
+.boj-summary__row > span:first-child {
+  color: var(--boj-ink-muted);
+}
+
+.boj-summary__row > span:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+.boj-summary__trust {
+  display: flex;
+  gap: 0.5em;
+  color: var(--boj-ink-muted);
+  font-size: 0.74em;
+  line-height: 1.45;
+}
+
+.boj-summary__trust::before {
+  content: '';
+  flex: none;
+  width: 0.35em;
+  height: 0.35em;
+  margin-top: 0.5em;
+  border-radius: 50%;
+  background: var(--boj-red-text);
+}
+
+/* Details */
+
+.boj-fields {
+  display: grid;
+  gap: 0.65em;
+  margin-top: 0.8em;
+}
+
+.boj-field {
+  display: grid;
+  gap: 0.35em;
+}
+
+.boj-field__label {
+  font-size: 0.78em;
+  font-weight: 600;
+}
+
+.boj-field__label em {
+  color: var(--boj-ink-muted);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.boj-field__input {
+  padding: 0.68em 0.8em;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 0.6em;
+  background: #101012;
+  color: rgb(180 184 191 / 0.7);
+  font-size: 0.84em;
+}
+
+.boj-screen__note {
+  margin-top: 0.9em;
+  padding: 0.7em 0.85em;
+  border-radius: 0.6em;
+  background: rgb(255 255 255 / 0.03);
+  color: var(--boj-ink-muted);
+  font-size: 0.74em;
+  line-height: 1.5;
+}
+
+/* Live Starter payment choice, set apart from the demo with a dashed frame and its own label. */
+.boj-live {
+  display: grid;
+  align-content: start;
+  gap: 0.5em;
+  min-width: 0;
+  margin-top: 1.1em;
+  padding: 1em;
+  border: 1px dashed rgb(255 255 255 / 0.2);
+  border-radius: 0.9em;
+  background: rgb(255 255 255 / 0.015);
+}
+
+.boj-live__tag {
+  justify-self: start;
+  padding: 0.25em 0.65em;
+  border: 1px solid rgb(215 38 56 / 0.45);
+  border-radius: 999px;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--boj-red-text);
+  font-size: 0.66em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.boj-live__legend {
+  margin-top: 0.35em;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.boj-live__options {
+  display: grid;
+  gap: 0.5em;
+}
+
+.boj-live__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.7em 0.8em;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.7em;
+  background: #141416;
+}
+
+.boj-live__option.is-selected {
+  border-color: var(--boj-red);
+  background: linear-gradient(180deg, rgb(215 38 56 / 0.12), rgb(215 38 56 / 0.04));
+}
+
+.boj-live__radio {
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid rgb(255 255 255 / 0.3);
+  border-radius: 50%;
+}
+
+.boj-live__option.is-selected .boj-live__radio {
+  border-color: var(--boj-red);
+  background: radial-gradient(circle, var(--boj-red) 0 38%, transparent 42%);
+}
+
+.boj-live__copy {
+  display: grid;
+  gap: 0.15em;
+}
+
+.boj-live__name {
+  font-size: 0.86em;
+  font-weight: 600;
+}
+
+.boj-live__sub,
+.boj-live__note {
+  color: var(--boj-ink-muted);
+  font-size: 0.74em;
+}
+
+/* Confirmation */
+
+.boj-confirm {
+  justify-items: center;
+  gap: 0.45em;
+  padding: 1.2em 0 0.4em;
+  text-align: center;
+}
+
+.boj-confirm__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8em;
+  height: 2.8em;
+  margin-bottom: 0.4em;
+  border: 1px solid rgb(215 38 56 / 0.5);
+  border-radius: 50%;
+  background: rgb(215 38 56 / 0.12);
+  color: var(--boj-red-text);
+  box-shadow: 0 0 24px -6px rgb(215 38 56 / 0.5);
+}
+
+.boj-confirm__mark svg {
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.boj-confirm__eyebrow {
+  color: var(--boj-red-text);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.boj-confirm__heading {
+  font-size: 1.65em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.boj-confirm__body {
+  color: var(--boj-ink-muted);
+  font-size: 0.86em;
+}
+
+.boj-confirm__card {
+  display: grid;
+  gap: 0.45em;
+  width: min(100%, 24em);
+  margin-top: 0.9em;
+  padding: 1em 1.1em;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 0.9em;
+  background: #141416;
+  text-align: left;
+}
+
+/* Action bar */
+
+.boj-screen__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75em;
+  margin-top: auto;
+  padding-top: 1.1em;
+}
+
+.boj-screen > .boj-screen__actions {
+  border-top: 1px solid var(--boj-line);
+}
+
+.boj-screen > .boj-screen__body {
+  margin-bottom: 1.2em;
+}
+
+.boj-screen__actions--confirm {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.6em;
+}
+
+.boj-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.62em 1.15em;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 0.65em;
+  font-size: 0.84em;
+  font-weight: 600;
+}
+
+.boj-btn--primary {
+  border-color: var(--boj-red);
+  background: var(--boj-red);
+  color: #fff;
+}
+
+.boj-btn.is-muted {
+  opacity: 0.45;
+}
+
+/* Disclosure and CTA */
+
+.boj__close {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 2.25rem;
+}
+
+.boj__disclosure {
+  margin: 0;
+  max-width: 46rem;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg));
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.boj__tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.08rem 0.55rem;
+  border: 1px solid rgb(215 38 56 / 0.45);
+  border-radius: 999px;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--boj-red-text);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+}
+
+.boj__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border: 1px solid rgb(215 38 56 / 0.6);
+  border-radius: 0.75rem;
+  background: rgb(215 38 56 / 0.08);
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.boj__cta:hover {
+  border-color: var(--boj-red);
+  background: rgb(215 38 56 / 0.16);
+}
+
+.boj__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.boj__cta-icon {
+  display: inline-flex;
+  color: var(--boj-red-text);
+}
+
+.boj__cta-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+/* Previous / Next (below 64rem) */
+
+.boj__pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.boj-pager__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0 1rem 0 0.75rem;
+  border: 1px solid var(--boj-line-strong);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 0.03);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boj-pager__btn--next {
+  justify-self: end;
+  padding: 0 0.75rem 0 1rem;
+  border-color: rgb(215 38 56 / 0.6);
+  background: rgb(215 38 56 / 0.1);
+}
+
+.boj-pager__btn[aria-disabled='true'] {
+  border-color: var(--boj-line);
+  background: none;
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
+  cursor: default;
+}
+
+.boj-pager__btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.boj-pager__icon {
+  display: inline-flex;
+}
+
+.boj-pager__icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.boj-pager__count {
+  color: var(--boj-ink-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+/* Narrow previews are laid out for the phone, not shrunk: compact stepper, service rows without
+   descriptions, single-column barbers and fields, and a side-by-side payment choice. */
+@container (max-width: 26rem) {
+  .boj-screen__step:not(.is-active) .boj-screen__step-label {
+    display: none;
+  }
+
+  .boj-screen__step + .boj-screen__step::before {
+    width: 0.7em;
+  }
+}
+
+@container (max-width: 33.99rem) {
+  .boj-screen {
+    padding: 1em;
+    font-size: 14px;
+  }
+
+  .boj-card--service .boj-card__desc {
+    display: none;
+  }
+
+  .boj-card {
+    padding: 0.75em 0.85em;
+  }
+
+  .boj-card--any .boj-card__avatar--any {
+    width: 2.9em;
+    height: 2.9em;
+  }
+
+  .boj-summary__card--next {
+    display: none;
+  }
+
+  /* The page's own Previous / Next drive the walkthrough here, so the mock wizard keeps only its
+     final submit to avoid two competing sets of navigation. */
+  .boj-screen__actions--nav {
+    display: none;
+  }
+
+  .boj-screen > .boj-screen__body:has(+ .boj-screen__actions--nav) {
+    margin-bottom: 0.2em;
+  }
+
+  .boj-screen__actions:not(.boj-screen__actions--confirm) .boj-btn:not(.boj-btn--primary) {
+    display: none;
+  }
+
+  .boj-screen__actions:not(.boj-screen__actions--confirm) .boj-btn--primary {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .boj-summary__card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35em 1.2em;
+  }
+
+  .boj-summary__card-title {
+    grid-column: 1 / -1;
+  }
+
+  .boj-live {
+    gap: 0.45em;
+    padding: 0.85em;
+  }
+
+  .boj-live__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .boj-live__option {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.45em;
+    padding: 0.65em 0.7em;
+  }
+}
+
+@container (max-width: 20rem) {
+  .boj-screen {
+    font-size: 13px;
+  }
+}
+
+@container (min-width: 30rem) {
+  .boj-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .boj-field--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (min-width: 34rem) {
+  .boj-screen {
+    padding: 1.5em 1.6em;
+  }
+
+  .boj-screen__services,
+  .boj-screen__barbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 44rem) {
+  .boj-screen__body--split {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 1.4em;
+  }
+
+  .boj-screen__body--split > .boj-summary,
+  .boj-screen__body--split > .boj-live {
+    margin-top: 0;
+  }
+}
+
+/* 768px+: the same one-step walkthrough with more room. */
+
+@media (min-width: 48rem) {
+  .boj {
+    padding: 4.5rem 0 5rem;
+  }
+
+  .boj__tabs {
+    gap: 0.35rem;
+  }
+
+  .boj-tab {
+    grid-auto-flow: column;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+  }
+
+  .boj-tab__label {
+    font-size: 0.85rem;
+  }
+
+  .boj__rail {
+    max-width: 44rem;
+  }
+
+  .boj__close {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+/* 1024px+: head in two columns; rail beside a dominant showcase. */
+
+@media (min-width: 64rem) {
+  .boj__inner {
+    width: calc(100% - 4rem);
+  }
+
+  .boj__head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 0.9rem 4rem;
+    max-width: none;
+  }
+
+  .boj__eyebrow {
+    grid-column: 1 / -1;
+  }
+
+  .boj__title {
+    font-size: clamp(2.5rem, 3.6vw, 3.2rem);
+  }
+
+  .boj__lead {
+    max-width: 36rem;
+    padding-bottom: 0.3rem;
+  }
+
+  .boj__body {
+    grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
+    align-items: start;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+
+  .boj__tabs,
+  .boj__pager {
+    display: none;
+  }
+
+  .boj__rail {
+    gap: 0.4rem;
+    max-width: none;
+  }
+
+  .boj-stage,
+  .boj-stage:not(.is-active) {
+    display: grid;
+    grid-template-columns: 2.1rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 1rem 0.9rem 1rem 0.95rem;
+    border-left: 1px solid var(--boj-line-strong);
+    border-radius: 0 0.85rem 0.85rem 0;
+  }
+
+  .boj-stage.is-active {
+    background: linear-gradient(90deg, var(--boj-red-tint), rgb(215 38 56 / 0.02) 70%, transparent);
+    box-shadow: inset 2px 0 0 var(--boj-red);
+  }
+
+  .boj-stage:not(.is-active):hover {
+    background: rgb(255 255 255 / 0.025);
+  }
+
+  .boj-stage__num {
+    display: inline-flex;
+  }
+
+  .boj-stage__select {
+    display: block;
+  }
+
+  .boj-stage__text {
+    gap: 0.3rem;
+  }
+
+  .boj-stage__title {
+    margin-top: 0.2rem;
+    font-size: 1.02rem;
+  }
+
+  .boj-stage__client {
+    font-size: 0.88rem;
+  }
+
+  .boj-stage__shop {
+    margin-top: 0.15rem;
+    padding: 0;
+    border-left: 0;
+    background: none;
+  }
+
+  .boj-stage__shop-label {
+    display: inline;
+    margin: 0 0.35rem 0 0;
+    font-size: 0.66rem;
+  }
+
+  /* A modest floor keeps short states from collapsing without reserving the tallest one. */
+  .boj-panel {
+    min-height: 30rem;
+  }
+}
+
+/* With room to spare, the preview stays beside the rail while the lower stages are read. */
+@media (min-width: 64rem) and (min-height: 52rem) {
+  .boj__showcase {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .boj__body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 52rem);
+    gap: 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes boj-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(0.35rem);
+    }
+  }
+
+  .boj-panel.is-active,
+  .boj-stage.is-active .boj-stage__text {
+    animation: boj-reveal 260ms ease both;
+  }
+
+  .boj-tab,
+  .boj-stage {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease;
+  }
+}
+
+@media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+  .boj-stage.is-active .boj-stage__text {
+    animation: none;
+  }
+}

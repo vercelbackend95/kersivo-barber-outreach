@@ -1,0 +1,37 @@
+{
+  "route": "/barbershop-websites",
+  "source": "local production build (.vercel/output)",
+  "browser": "chromium 147.0.7727.15",
+  "captures": [
+    {
+      "viewport": "1440x900",
+      "name": "desktop-1440x900",
+      "files": [
+        "desktop-1440x900-full.png",
+        "desktop-1440x900-section-01-hero.png",
+        "desktop-1440x900-section-02-definition.png",
+        "desktop-1440x900-section-03-essentials.png"
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "name": "mobile-390x844",
+      "files": [
+        "mobile-390x844-full.png",
+        "mobile-390x844-section-01-hero.png",
+        "mobile-390x844-section-02-definition.png",
+        "mobile-390x844-section-03-essentials.png"
+      ]
+    },
+    {
+      "viewport": "375x812",
+      "name": "small-mobile-375x812",
+      "files": [
+        "small-mobile-375x812-full.png",
+        "small-mobile-375x812-section-01-hero.png",
+        "small-mobile-375x812-section-02-definition.png",
+        "small-mobile-375x812-section-03-essentials.png"
+      ]
+    }
+  ]
+}
