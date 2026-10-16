@@ -108,6 +108,53 @@ describe('marketing navigation config', () => {
     }
   });
 
+  it('features the Full website pillar in Platform and puts the two supporting guides under Resources', () => {
+    const pillar = MARKETING_NAV_ITEMS.find((item) => item.id === 'platform-barbershop-websites');
+    expect(pillar).toMatchObject({
+      label: 'Barbershop Websites',
+      href: '/barbershop-websites',
+      group: 'platform',
+      featured: true,
+      icon: 'website',
+      visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+    });
+    expect(MARKETING_NAV_ITEMS.filter((item) => item.href === '/barbershop-websites')).toHaveLength(1);
+
+    const supporting = MARKETING_NAV_ITEMS.filter((item) =>
+      ['/barbershop-website-design', '/barbershop-online-booking'].includes(item.href),
+    );
+    expect(supporting.map((item) => item.group)).toEqual(['resources', 'resources']);
+    expect(supporting.map((item) => item.section)).toEqual(['guides', 'guides']);
+
+    // Simulate approved release without touching the real INDEXABLE gates.
+    const approvedNav = buildMarketingNavigation(
+      MARKETING_NAV_ITEMS.map((item) =>
+        ['platform-barbershop-websites', 'resources-website-design', 'resources-online-booking'].includes(item.id)
+          ? { ...item, visible: true }
+          : item,
+      ),
+    );
+    const platform = approvedNav.find((group) => group.id === 'platform')!;
+    const resources = approvedNav.find((group) => group.id === 'resources')!;
+    expect(platform.featured.map((item) => item.id)).toContain('platform-barbershop-websites');
+    expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.id)).toEqual([
+      'resources-website-design',
+      'resources-online-booking',
+    ]);
+
+    // The actual release gate must still keep all three routes out of global navigation.
+    const expectedVisibleRoutes = [
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+      BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+      BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+    ].filter(Boolean).length;
+    expect(buildMarketingNavigation()
+      .flatMap((group) => [...group.featured, ...group.sections.flatMap((section) => section.items)])
+      .filter((item) => [
+        '/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking',
+      ].includes(item.href))).toHaveLength(expectedVisibleRoutes);
+  });
+
   it('keeps the booking guide out of global navigation until its route and parent are released', () => {
     const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-online-booking');
     expect(guide).toMatchObject({

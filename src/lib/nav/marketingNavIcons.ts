@@ -2,6 +2,7 @@
 export const MARKETING_NAV_ICONS = {
   overview: 'M3 10.5 12 3l9 7.5M5 9v11h14V9M10 20v-6h4v6',
   system: 'M4 5h16v11H4zM8 20h8M12 16v4',
+  website: 'M3 4h18v16H3zM3 8h18M7 6h.01M10 6h.01M7 12h10M7 16h7',
   booking: 'M7 3v3M17 3v3M4 8h16M5 5h14v15H5zM9 13l2 2 4-4',
   admin: 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z',
   retail: 'M6 7h12l-1 13H7L6 7Zm3 0V5a3 3 0 0 1 6 0v2',
