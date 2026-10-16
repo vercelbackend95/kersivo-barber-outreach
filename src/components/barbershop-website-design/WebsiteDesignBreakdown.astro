@@ -21,17 +21,12 @@ const TRACK_PLACEMENT = 'barbershop_website_design_breakdown_demo';
 const groups = demoServiceNavigatorGroups();
 const firstGroup = groups[0];
 const groupRows = firstGroup.services.slice(0, 3);
-const serviceCount = DEMO_SERVICES.length;
-const categoryCount = groups.length;
 
 const [lead, ...others] = DEMO_BARBERS;
 const leadFirstName = demoBarberFirstName(lead.name);
-const teamNames = DEMO_BARBERS.map((barber) => barber.name);
-const teamList = `${teamNames.slice(0, -1).join(', ')} and ${teamNames.at(-1)}`;
 
 const navLabels = DEMO_NAV.map((item) => item.label);
 const navList = `${navLabels.slice(0, -1).join(', ')} and ${navLabels.at(-1)}`;
-const navCount = navLabels.length;
 
 const gallerySequence = demoGallerySequence();
 const galleryFrames = (['fade', 'hairline', 'beard'] as const).flatMap((id) => {
@@ -62,16 +57,16 @@ const principles = [
     why:
       'Visitors arriving from Google Maps or an Instagram bio first want to confirm they have found the right shop. A recognisable name, location and photograph help them do that straight away.',
     demo:
-      'The homepage pairs the CUTSTATE logo and the line “Manchester · Appointments & walk-ins” with a close photograph of a barber at work and one headline in heavy condensed capitals: “Precision in every detail.”',
+      'CUTSTATE puts its name, Manchester location and appointment information beside a photograph of barbering in progress. Visitors can recognise the shop before exploring further.',
   },
   {
     title: 'A visible booking action',
     lookFor:
       'A booking action that stays easy to find while visitors explore the shop’s work: prominent in the header where space allows, and available through clear mobile navigation on smaller screens.',
     why:
-      'Clients should not have to search for how to book. Someone browsing photographs of fades and beard work can decide at any point, so the next step should already be in view.',
+      'Clients may decide to book while browsing the shop’s work. Give them one obvious place to find the booking link on every page.',
     demo:
-      'On the gallery page, the header ends with a cobalt “BOOK NOW” — its only solid button, after the navigation and the bag. On smaller screens it becomes “BOOK” beside the menu button; at the narrowest widths the header button is hidden and “Book an appointment” remains in the mobile menu.',
+      'The demo uses a distinct booking button in the header. On smaller screens its label changes to “BOOK”; below 360px, “Book an appointment” remains in the menu.',
   },
   {
     title: 'Services and pricing where expected',
@@ -79,7 +74,7 @@ const principles = [
       'Services grouped the way clients think — cuts, beard work, combined appointments — with the duration and price on every line and a direct route to book each one.',
     why:
       'Price and time are usually the first practical questions. Showing both on every service answers them before a visitor has to message the shop.',
-    demo: `The demo services page groups ${serviceCount} services into ${categoryCount} categories, such as ${firstGroup.label}. Each row shows the name, a short description, the duration with a bar scaled to its length and the price, and opens booking with that service already chosen.`,
+    demo: `The demo groups services by type and shows the price and duration beside each one. Choosing a service opens booking with that service selected.`,
   },
   {
     title: 'The people behind the chairs',
@@ -87,7 +82,7 @@ const principles = [
       'A team page with a clear photograph, name and specialisation for each barber, written plainly, and a way to book with that person.',
     why:
       'Many clients choose a barber, not just a shop. Seeing who specialises in skin fades or scissor work helps new clients choose and regulars find their usual chair.',
-    demo: `The “Choose your chair.” page introduces three fictional demo barbers — ${teamList} — each with a portrait, specialisation, a one-line description and a “Book with” link.`,
+    demo: `Each fictional CUTSTATE barber has a portrait, a short introduction and a link to book with them. This helps clients choose a person as well as a service.`,
   },
   {
     title: 'Simple, purposeful navigation',
@@ -95,7 +90,7 @@ const principles = [
       'A short menu where every item is somewhere a client genuinely needs to go: services, the team, examples of work, contact details and booking. Plain labels beat clever ones.',
     why:
       'Visitors scan menus rather than read them, so a few obvious labels serve them better than a long list or headings they have to guess at.',
-    demo: `The demo uses ${navCount} items — ${navList}. On mobile they become a numbered list with the current page marked, followed by a full-width “Book an appointment” button, the bag and the shop’s location.`,
+    demo: `The demo keeps services, the team, work examples and contact details within a plainly labelled menu. On mobile, the menu also includes a clear booking link.`,
   },
   {
     title: 'Consistency from website to booking',
@@ -103,7 +98,7 @@ const principles = [
       'When a visitor moves into booking, the name, colours and type should stay the same, and any choice already made should carry through.',
     why:
       'A sudden change of look at the booking step can make people wonder whether they have left the shop’s site. Carrying a choice forward saves them making it twice.',
-    demo: `“Book with ${leadFirstName}” opens booking with ${lead.name} carried in the link. The visitor picks a service first; the barber step then opens with ${leadFirstName} already selected, under the same CUTSTATE header, dark palette, cobalt accent and condensed headings.`,
+    demo: `Choosing “Book with ${leadFirstName}” carries the selected barber into booking. The visitor chooses a service first, then reaches the barber step with ${leadFirstName} selected. The shop’s identity stays consistent throughout.`,
   },
 ].map((principle, index) => ({
   ...principle,
@@ -167,6 +162,8 @@ const specimenLabels = [
         </nav>
       </div>
     </header>
+
+    <p class="bwd-review__disclosure">The examples below recreate CUTSTATE, KERSIVO’s fictional demo shop. They are static illustrations, not working controls. Use the live demo link to try the booking journey.</p>
 
     <ol class="bwd-review__principles" role="list">
       {principles.map((principle, index) => (
@@ -452,8 +449,8 @@ const specimenLabels = [
               </div>
             </div>
           </figure>
-
           <div class="bwd-principle__analysis">
+            {index === 2 && <p class="bwd-review__disclosure">CUTSTATE has a separate services page. Standard Full KERSIVO shows services in the booking flow; a separate services page is not guaranteed.</p>}
             <p class="bwd-principle__part">
               <span class="bwd-principle__label">What to look for</span>
               {principle.lookFor}

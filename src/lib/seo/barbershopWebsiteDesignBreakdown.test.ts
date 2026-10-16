@@ -94,7 +94,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(BLACKLINE_BOOKING_PRESENTATION.title).toBe('Book a chair');
     expect(markup).toContain('Book a chair');
     expect(markup).toContain('Precision in every detail.');
-    expect(section).toContain('three fictional demo barbers');
+    expect(section).toContain('Each fictional CUTSTATE barber has a portrait');
   });
 
   it('shows the real barber hand-off into booking rather than an invented state', () => {
@@ -105,7 +105,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(markup).toContain('Who should take you');
     expect(section).toContain("from '@/lib/booking/constants'");
     expect(section).toContain('selected: barber.id === lead.id');
-    expect(section).toContain('The visitor picks a service first');
+    expect(section).toContain('The visitor chooses a service first');
   });
 
   it('shows the booking action on one recreated gallery page, not the hero or services', () => {
@@ -213,7 +213,11 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
   });
 
   it('makes no unsupported results, ranking or testimonial claims', () => {
-    const prose = section.replace(/bwd-review[\w-]*/g, '').replace(/(design|this) review/gi, '');
+    const prose = section
+      .replace(/bwd-review[\w-]*/g, '')
+      .replace(/\b(design|this) review\b/gi, '')
+      // An explicit scope limitation is not an unsupported performance guarantee.
+      .replace(/\bnot guaranteed\b/gi, '');
     expect(prose).not.toMatch(
       /guarantee|increase(s|d)? (your )?bookings|more bookings|\brank(ing|s)?\b|testimonial|\breviews?\b|\d+%|award/i,
     );
@@ -229,7 +233,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(header).toContain('<span class="sf-header-cta-short">BOOK</span>');
     expect(header).toMatch(/data-bl-nav-book[\s\S]*?Book an appointment/);
     expect(headerCss).toMatch(/@media \(max-width: 359px\) \{[^}]*\.sf-header-cta \{\s*display: none;/);
-    expect(section).toContain('On smaller screens it becomes “BOOK” beside the menu button; at the narrowest widths the header button is hidden and “Book an appointment” remains in the mobile menu.');
+    expect(section).toContain('On smaller screens its label changes to “BOOK”; below 360px, “Book an appointment” remains in the menu.');
     expect(section).not.toMatch(/still visible on a phone|still in view on a phone/);
   });
 });

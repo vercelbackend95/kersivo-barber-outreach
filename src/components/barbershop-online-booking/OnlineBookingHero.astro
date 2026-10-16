@@ -5,6 +5,7 @@ import {
   BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF,
   BARBERSHOP_ONLINE_BOOKING_PAGE_H1,
 } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import '@/styles/components/barbershop-online-booking-hero.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -47,6 +48,8 @@ const strip = [
       <ol>
         <li><a href="/">Home</a></li>
         <li aria-hidden="true">/</li>
+        <li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>
+        <li aria-hidden="true">/</li>
         <li><span aria-current="page">Online booking</span></li>
       </ol>
     </nav>
@@ -62,9 +65,8 @@ const strip = [
       </h1>
 
       <p class="bob-hero__lead">
-        Clients choose a service, a barber and an available time — and the appointment lands in your
-        shop's booking system. Start with a KERSIVO-hosted booking page, or bring bookings onto your own
-        branded website with Full KERSIVO.
+        Clients choose a service, barber and available time. Confirmed appointments appear in your shop diary.
+        Starter gives you a KERSIVO-hosted booking page; Full adds your own branded website.
       </p>
 
       <div class="bob-hero__actions">
@@ -78,7 +80,7 @@ const strip = [
           <span class="bob-hero__action-icon" set:html={svg(ICONS.arrowRight)} />
         </a>
         <a href={BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF} class="bob-hero__action bob-hero__action--secondary">
-          Compare your booking options
+          Compare Starter and Full
         </a>
       </div>
 

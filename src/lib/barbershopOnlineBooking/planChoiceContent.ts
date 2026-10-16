@@ -13,12 +13,12 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
 
 export const PLAN_CHOICE_SECTION_ID = 'booking-options';
 
-export const PLAN_CHOICE_H2 = 'Start With Bookings. Grow Into Your Own Brand.';
+export const PLAN_CHOICE_H2 = 'Choose the Booking Setup That Fits Your Shop.';
 
 export const PLAN_CHOICE_LEAD =
-  'Choose a KERSIVO setup that fits your barbershop today — from a free booking page to a complete branded website and business platform.';
+  'Starter provides a hosted booking page. Full adds your branded website and broader shop-management tools.';
 
-export const PLAN_CHOICE_CLOSE = 'Your Shop. Your Bookings. Your Next Move.';
+export const PLAN_CHOICE_CLOSE = 'Choose Starter or explore what Full KERSIVO includes.';
 
 export type PlanChoiceFaq = {
   id: string;
@@ -40,11 +40,11 @@ const fullPrice = `£${SAAS_MONTHLY_GBP}`;
 
 export function buildPlanChoiceContent(): PlanChoiceContent {
   const disclosure = [
-    `Stripe processing fees apply to online card payments. ${STRIPE_FEES_NOTE}`,
+    STRIPE_FEES_NOTE,
     `Full KERSIVO costs ${fullPrice}/month per physical location. ${BILLING_CYCLE_SHORT}`,
     ONBOARDING_BILLING_INDEPENDENT_CLAIM,
     `Starter public online bookings require a connected Stripe account and at least ${deposit} paid online.`,
-    `${KERSIVO_COMMISSION_CLAIM} That is separate from third-party card-processing costs.`,
+    KERSIVO_COMMISSION_CLAIM,
   ];
 
   const faqs: PlanChoiceFaq[] = [
@@ -52,14 +52,14 @@ export function buildPlanChoiceContent(): PlanChoiceContent {
       id: 'app',
       question: 'Do my customers need to download an app?',
       answer: [
-        'No. Customers book through a browser-based booking experience — on a phone, tablet or computer — without downloading an app.',
+        'No. Customers can book in their browser on a phone, tablet or computer.',
       ],
     },
     {
       id: 'barber',
       question: 'Can customers choose their preferred barber?',
       answer: [
-        'Yes. Clients can select from eligible bookable barbers and available appointments for the services you offer.',
+        'Yes. Clients can choose an eligible barber who offers the selected service and has an available appointment.',
         'KERSIVO Starter supports up to four active bookable barbers per physical location. Full KERSIVO is the path when you need a larger active team.',
       ],
     },
@@ -75,16 +75,16 @@ export function buildPlanChoiceContent(): PlanChoiceContent {
       id: 'changes',
       question: 'Can customers reschedule or cancel appointments?',
       answer: [
-        'Customers can request changes through the reschedule and cancel links in their booking confirmation email.',
-        'Booking changes remain subject to the applicable booking, cancellation and payment policies. The standard booking flow does not promise unlimited free changes or automatic refunds.',
+        'Customers can request a change or cancellation through links in their booking confirmation email.',
+        'Requests are subject to the shop’s booking, cancellation and payment policies. Free changes or automatic refunds are not guaranteed.',
       ],
     },
     {
       id: 'upgrade',
       question: 'Can I start with Starter and upgrade to Full later?',
       answer: [
-        'Yes. Starter and Full use the same underlying KERSIVO platform. Full unlocks the branded website, standard domain arrangement, larger team support and the wider business tools when you are ready.',
-        `Full KERSIVO is ${fullPrice}/month per physical location. Website preparation still follows the standard onboarding process — it is not an instant launch with zero setup.`,
+        'Yes. Starter and Full share the same underlying KERSIVO platform. Full adds a branded website, standard domain arrangement, support for larger teams and wider business tools.',
+        `Full KERSIVO is ${fullPrice}/month per physical location. Website preparation follows standard onboarding; it is not an instant launch.`,
       ],
     },
   ];

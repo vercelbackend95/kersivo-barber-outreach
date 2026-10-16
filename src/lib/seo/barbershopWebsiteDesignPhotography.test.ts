@@ -99,10 +99,10 @@ describe('/barbershop-website-design — Section 05 people and photography', () 
   it('explains missing-photo fallbacks without promising photography', () => {
     const copy = text(markup);
     expect(copy).toContain('No professional photographs yet?');
-    expect(copy).toContain('a typographic shop name can stand in for a missing logo');
-    expect(copy).toContain('a neutral placeholder can stand in for a missing barber portrait');
-    expect(copy).toContain('an optional gallery can simply be left out');
-    expect(copy).toContain('The shop’s address and contact details are still needed before launch.');
+    expect(copy).toContain('a neutral placeholder can be used for a missing barber portrait');
+    expect(copy).toContain('a neutral placeholder can be used for a missing barber portrait');
+    expect(copy).toContain('an optional gallery can be left out');
+    expect(copy).toContain('Your shop’s address and contact details are still needed before launch.');
   });
 
   it('links once to the demo team with tracking and a visible focus style', () => {

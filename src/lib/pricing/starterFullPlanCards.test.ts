@@ -48,10 +48,22 @@ describe('Shared StarterFullPlanCards', () => {
     expect(STARTER_FULL_PLAN_STARTER_CTA.href).toBe('/admin');
     expect(STARTER_FULL_PLAN_STARTER_CTA.trackEvent).toBe('starter_signup_click');
     expect(STARTER_FULL_PLAN_FULL_CTA.href).toBe('/pricing#plan');
+    expect(STARTER_FULL_PLAN_FULL_CTA.trackEvent).toBe('plan_my_setup_click');
+    expect(component).toContain('data-track={STARTER_FULL_PLAN_FULL_CTA.trackEvent}');
+    expect(component.match(/data-track-placement={placement}/g)).toHaveLength(2);
     expect(STARTER_FULL_PLAN_FULL_CTA.label).toBe('See Full KERSIVO pricing');
     expect(component).not.toContain('/admin/launch');
     expect(component).not.toContain('saas_subscribe_click');
     expect(component).toContain('data-track-placement={placement}');
+  });
+
+  it('uses only approved payment claims until Full B1 is resolved', () => {
+    const starter = STARTER_FULL_PLAN_STARTER_FEATURES.join(' ');
+    const full = STARTER_FULL_PLAN_FULL_ONLY.join(' ');
+    expect(starter).toContain('Manage bookings in your shop diary');
+    expect(starter).not.toContain('Manual bookings');
+    expect(full).toContain('Optional £5 booking deposits');
+    expect(full).not.toMatch(/Editable booking payment controls|Pay at shop|Require full payment upfront/i);
   });
 
   it('keeps Full-only features out of the Starter list', () => {

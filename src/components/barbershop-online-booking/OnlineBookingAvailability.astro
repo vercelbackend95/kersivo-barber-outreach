@@ -18,15 +18,15 @@ const times = offered.map(({ label, start, endLabel }) => ({ label, start, endLa
 const rules = [
   {
     title: 'Working hours',
-    body: `On this day ${firstName} works ${hours.openLabel}–${hours.closeLabel}, so no time starts earlier or finishes later. On a live KERSIVO booking page, each barber's weekly hours — within the shop's opening hours, less breaks and time off — set that window.`,
+    body: `In this example, ${firstName} works ${hours.openLabel}–${hours.closeLabel}. On a live shop page, each barber's hours, breaks and time off determine when they can be booked.`,
   },
   {
     title: 'Service length',
-    body: `A ${service.name} needs ${service.duration} free minutes. ${overlapNext.label} isn't offered: it would run into ${firstName}'s ${overlapNext.blockedBy.startLabel} appointment.`,
+    body: `A ${service.name} needs ${service.duration} minutes. ${overlapNext.label} is unavailable because it would overlap ${firstName}'s ${overlapNext.blockedBy.startLabel} appointment.`,
   },
   {
     title: 'Existing appointments',
-    body: `${overlapCurrent.label} isn't offered either — ${firstName} is booked until ${overlapCurrent.blockedBy.endLabel}. Booked appointments hold their time, so clients are only offered time that is still free.`,
+    body: `${overlapCurrent.label} is also unavailable: ${firstName} is booked until ${overlapCurrent.blockedBy.endLabel}. Clients are shown the remaining free slots.`,
   },
 ];
 
@@ -44,8 +44,8 @@ const svg = (paths: string) =>
       <p class="boa__eyebrow">Available times and the shop diary</p>
       <h2 id="boa-title" class="boa__title">The Time Clients Choose Comes From Your Shop's Diary</h2>
       <p class="boa__lead">
-        Clients should only be offered times that match your barbers' availability, their services and the
-        appointments already in the diary. The owner needs to see where each confirmed booking lands.
+        Available times depend on working hours, service length and existing appointments. See how a confirmed
+        booking appears in the shop diary.
       </p>
     </header>
 

@@ -44,7 +44,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
     expect(section).not.toMatch(/<h1\b/);
     expect(markup.match(/<h2\b/g) ?? []).toHaveLength(2);
     expect(text(faqSection.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '')).toBe('Questions About Your Website Design');
-    expect(text(closeSection.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '')).toBe('Your Shop. Your Look. Your Booking Experience.');
+    expect(text(closeSection.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '')).toBe('See What Your KERSIVO Website Includes.');
     expect(faqSection).toContain('aria-labelledby="bwf-heading"');
     expect(closeSection).toContain('aria-labelledby="bwc-heading"');
     expect(markup.match(/<h3\b/g) ?? []).toHaveLength(1);
@@ -62,34 +62,34 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
   it('uses the approved kicker and introduction copy', () => {
     expect(text(faqSection.match(/<p class="bwf__kicker">[\s\S]*?<\/p>/)?.[0] ?? '')).toBe('Questions before you start');
     expect(text(faqSection.match(/<p class="bwf__lede">([\s\S]*?)<\/p>/)?.[1] ?? '')).toBe(
-      'Before you put your shop online, it’s worth knowing what you can change, what stays yours and how the finished website is prepared.',
+      'What to expect from the standard website setup, your preview and ongoing updates.',
     );
     expect(text(closeSection.match(/<p class="bwc__lede">([\s\S]*?)<\/p>/)?.[1] ?? '')).toBe(
-      'Bring your branding, services and online bookings together on a professionally prepared website with Full KERSIVO.',
+      'Explore the Full KERSIVO package, including standard website setup, domain arrangements and ongoing support.',
     );
   });
 
   it('answers each question within the commercial policy', () => {
-    expect(answers).toHaveLength(10);
-    const [demo1, demo2, changes1, changes2, domain1, domain2, updates1, updates2, pages, timing] = answers;
-    expect(demo1).toContain('CUTSTATE is a fictional demonstration shop');
-    expect(demo2).toContain('rather than unlimited bespoke development');
+    expect(answers).toHaveLength(6);
+    const [demo1, changes1, domain1, updates1, pages, timing] = answers;
+    expect(demo1).toContain('CUTSTATE is a fictional example');
+    expect(demo1).toContain('Unlimited bespoke design and development are not included');
     expect(changes1).toContain('private preview');
-    expect(changes2).toContain('Nothing goes live until you do.');
-    expect(changes2).toContain('a full redesign, bespoke pages or new features aren’t part of the standard setup and may need a separate quote');
-    expect(domain1).toContain('transferring it to KERSIVO isn’t required');
-    expect(domain2).toContain('Where technically possible');
-    expect(domain2).toContain('only switched over after you approve the preview');
-    expect(domain2).toContain('You remain responsible for renewing a domain you already own.');
-    expect(updates1).toContain('barbers, services, prices and working hours through your KERSIVO dashboard');
-    expect(updates1).toContain('(your shop name, town or city and logo)');
-    expect(updates2).toContain('standard website update support');
-    expect(updates2).toContain('It isn’t a self-service website builder');
+    expect(changes1).toContain('before you approve launch');
+    expect(changes1).toContain('A full redesign, bespoke pages or new features may need a separate quote');
+    expect(domain1).toContain('You keep ownership of your existing domain');
+    expect(domain1).toContain('Where technically possible');
+    expect(domain1).toContain('after you approve the preview');
+    expect(domain1).toContain('responsible for its renewal');
+    expect(updates1).toContain('barbers, services, prices, working hours');
+    expect(updates1).toContain('your shop name, town or city, logo');
+    expect(updates1).toContain('standard support for reasonable changes');
+    expect(updates1).toContain('Bespoke pages, new features and a full redesign');
     expect(pages).toBe(
       'A gallery can be included when you have suitable photographs, but it isn’t required. Your services are presented in the booking flow, so clients can see what you offer and choose an appointment. A separate services page isn’t guaranteed as part of the standard website package.',
     );
     expect(timing).toBe(
-      'Standard setup typically takes around 1–2 weeks after we’ve received all the information we need. Missing details, domain access and migration requirements can make it take longer. This is an estimate, not a guaranteed launch date.',
+      'Standard setup typically takes around 1–2 weeks after we receive all the required information. Missing details, domain access or migration work can take longer. This is an estimate, not a guaranteed launch date.',
     );
   });
 
@@ -106,7 +106,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
   });
 
   it('makes no bespoke, unlimited, revision-count, guarantee, trial, timing or builder claims', () => {
-    const timingEstimate = 'standard setup typically takes around 1–2 weeks after we’ve received all the information we need.';
+    const timingEstimate = 'standard setup typically takes around 1–2 weeks after we receive all the required information.';
     const copy = text(section)
       .toLowerCase()
       .replace(timingEstimate, '')
@@ -140,7 +140,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
     expect(existsSync(join(here, '../../pages/barbershop-websites.astro')) || existsSync(join(here, '../../pages/barbershop-websites/index.astro'))).toBe(true);
     expect(frontmatter).toContain(`const OFFER_TRACK_EVENT = '${FUNNEL_EVENTS.primary_cta_clicked}';`);
     expect(frontmatter).toContain("const OFFER_TRACK_PLACEMENT = 'barbershop_website_design_final_cta';");
-    expect(text(closeSection.match(/<a\s+class="bwc__primary"[\s\S]*?<\/a>/)?.[0] ?? '')).toBe('Get your barbershop website');
+    expect(text(closeSection.match(/<a\s+class="bwc__primary"[\s\S]*?<\/a>/)?.[0] ?? '')).toBe('Explore Full KERSIVO');
 
     expect(links[1]).toContain('class="bwc__secondary"');
     expect(links[1]).toContain('href={DEMO_HOME_HREF}');
@@ -192,7 +192,8 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
   });
 
   it('sets the closing heading and lead in the /starter hero type scale without importing its stylesheet', () => {
-    expect(closeSection).toMatch(/<span class="bwc__line bwc__line--primary">Your Shop\. Your Look\.<\/span>\s*<span class="bwc__line">Your Booking Experience\.<\/span>/);
+    expect(closeSection).toContain('See What Your KERSIVO');
+    expect(closeSection).toContain('Website Includes.');
     expect(styles).toMatch(/\.bwc__heading \{[^}]*font-size: clamp\(2\.85rem, 5\.25vw, 4\.4rem\);[^}]*font-weight: 650;[^}]*line-height: 0\.9;[^}]*letter-spacing: -0\.062em;/);
     expect(styles).toMatch(/\.bwc__line \{[^}]*color: #d4d4d7;/);
     expect(styles).toMatch(/\.bwc__line--primary \{[^}]*color: #fff;/);

@@ -8,7 +8,7 @@ export const STARTER_FULL_PLAN_STARTER_FEATURES = [
   'KERSIVO-hosted booking page',
   'Up to 4 active bookable barbers',
   'Bookings, team, services and availability',
-  'Manual bookings',
+  'Manage bookings in your shop diary',
   'Rolling 90-day booking history',
   'Clients Core',
   'Automated email reminders',
@@ -17,7 +17,10 @@ export const STARTER_FULL_PLAN_STARTER_FEATURES = [
   'Included initial QR Kit for eligible verified UK locations',
 ] as const;
 
-/** Full-only extras shown on the Full card (Starter page source of truth). */
+/** Full-only extras shown on the Full card (Starter page source of truth).
+ * The Full payment-mode matrix is pending Commercial Offer B1 approval; do not
+ * advertise editable public payment modes here until the offer and Terms agree.
+ */
 export const STARTER_FULL_PLAN_FULL_ONLY = [
   'Your own branded website and domain',
   'More than 4 active bookable barbers',
@@ -27,7 +30,7 @@ export const STARTER_FULL_PLAN_FULL_ONLY = [
   'Retail, Products, Orders and Sales',
   'SMS reminders',
   'Live KERSIVO Assistant',
-  'Editable booking payment controls, including Pay at shop',
+  'Optional £5 booking deposits',
 ] as const;
 
 export const STARTER_FULL_PLAN_STARTER_CTA = {
@@ -39,6 +42,7 @@ export const STARTER_FULL_PLAN_STARTER_CTA = {
 export const STARTER_FULL_PLAN_FULL_CTA = {
   label: 'See Full KERSIVO pricing',
   href: '/pricing#plan',
+  trackEvent: 'plan_my_setup_click',
 } as const;
 
 export const STARTER_FULL_PLAN_MONTHLY_GBP = SAAS_MONTHLY_GBP;

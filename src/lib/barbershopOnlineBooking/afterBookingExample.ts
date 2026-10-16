@@ -129,7 +129,7 @@ function demoFixture() {
 }
 
 export const AFTER_BOOKING_DISCLOSURE =
-  'Illustrative post-visit communication concepts for Full KERSIVO. These automations are not currently live.';
+  'These thank-you, Google review and rebooking messages are concepts for Full KERSIVO. These automations are not currently live.';
 
 export function buildAfterBookingExample(): AfterBookingExample {
   const base = demoFixture();
@@ -149,7 +149,7 @@ export function buildAfterBookingExample(): AfterBookingExample {
       index: '01',
       stageLabel: null,
       display: 'THANKS FOR COMING IN.',
-      support: 'A warm thank-you after the cut keeps the relationship alive.',
+      support: 'Planned concept: a thank-you message after the visit.',
       ctaLabel: null,
       thanksPreview: {
         fromLabel: 'From',
@@ -164,7 +164,7 @@ export function buildAfterBookingExample(): AfterBookingExample {
     {
       id: 'review',
       index: '02',
-      stageLabel: '02 / BUILD YOUR REPUTATION',
+      stageLabel: '02 / PLANNED REVIEW INVITATION',
       display: 'A GREAT CUT DESERVES AN HONEST REVIEW.',
       support: null,
       ctaLabel: 'Leave a Google Review',
@@ -181,7 +181,7 @@ export function buildAfterBookingExample(): AfterBookingExample {
       index: '03',
       stageLabel: null,
       display: 'READY FOR YOUR NEXT CUT?',
-      support: `Your next appointment at ${DEMO_SHOP_NAME} is just a few clicks away.`,
+      support: `Planned concept: a link back to the booking page for ${DEMO_SHOP_NAME}.`,
       ctaLabel: 'BOOK AGAIN',
       thanksPreview: null,
       reviewPreview: null,
