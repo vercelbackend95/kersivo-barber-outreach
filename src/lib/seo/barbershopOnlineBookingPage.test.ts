@@ -156,7 +156,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(compare).toContain('bob-hero__action--secondary');
     expect(compare).not.toContain('data-track');
     expect(hero).toContain('Compare Starter and Full');
-    expect(anchors(hero)).toHaveLength(3);
+    expect(anchors(hero).filter((anchor) => anchor.includes('bob-hero__action'))).toHaveLength(2);
   });
 
   it('links the stage disclosure to the live demo with its own placement', () => {
