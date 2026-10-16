@@ -11,11 +11,8 @@ export const BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION =
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'See How Online Booking Works for Your Barbershop';
 
-/**
- * The supporting page is only partially built. Keep it out of the index and the
- * marketing sitemap until every section has been approved.
- */
-export const BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE = false;
+/** Published booking guide, with reciprocal pillar links and canonical WebPage schema. */
+export const BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE = true;
 
 export const BARBERSHOP_ONLINE_BOOKING_DEMO_HREF = '/demo/book';
 
