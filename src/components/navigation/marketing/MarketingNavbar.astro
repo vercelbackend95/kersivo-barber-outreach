@@ -8,11 +8,13 @@ import {
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
+  buildMarketingNavTopLevelEntries,
   isMarketingNavItemCurrent,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
 
 const groups = buildMarketingNavigation();
+const navEntries = buildMarketingNavTopLevelEntries(groups, MARKETING_NAV_DIRECT_LINKS);
 const pathname = Astro.url.pathname;
 const resolvedCta = Astro.locals.navbarPreviewCta;
 const primary: MarketingNavAction = resolvedCta
@@ -42,34 +44,31 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
       <nav class="mnav__desktop" aria-label="Main">
         <ul class="mnav__list" role="list">
           {
-            groups.map((group) => (
+            navEntries.map((entry) => entry.kind === 'group' ? (
               <li class="mnav__item">
                 <button
                   type="button"
                   class="mnav__trigger"
                   aria-expanded="false"
-                  aria-controls={`mnav-panel-${group.id}`}
-                  data-mnav-trigger={group.id}
-                  data-current={groupIsCurrent(group) ? '' : undefined}
+                  aria-controls={`mnav-panel-${entry.group.id}`}
+                  data-mnav-trigger={entry.group.id}
+                  data-current={groupIsCurrent(entry.group) ? '' : undefined}
                 >
-                  {group.label}
+                  {entry.group.label}
                   <span class="mnav__chevron" aria-hidden="true" />
                 </button>
-                <MarketingNavPanel group={group} id={`mnav-panel-${group.id}`} />
+                <MarketingNavPanel group={entry.group} id={`mnav-panel-${entry.group.id}`} />
               </li>
-            ))
-          }
-          {
-            MARKETING_NAV_DIRECT_LINKS.map((link) => (
+            ) : (
               <li class="mnav__item">
                 <a
                   class="mnav__link"
-                  href={link.href}
-                  data-mnav-section={link.sectionId}
-                  data-mnav-match={link.sectionId ? undefined : link.href}
-                  aria-current={!link.sectionId && link.href === pathname.replace(/\/$/, '') ? 'page' : undefined}
+                  href={entry.link.href}
+                  data-mnav-section={entry.link.sectionId}
+                  data-mnav-match={entry.link.sectionId ? undefined : entry.link.href}
+                  aria-current={!entry.link.sectionId && entry.link.href === pathname.replace(/\/$/, '') ? 'page' : undefined}
                 >
-                  {link.label}
+                  {entry.link.label}
                 </a>
               </li>
             ))
