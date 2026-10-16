@@ -57,7 +57,7 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
   it('uses the approved kicker, introduction and stage copy', () => {
     expect(text(markup.match(/<p class="bwk__kicker">[\s\S]*?<\/p>/)?.[0] ?? '')).toBe('From design to your website');
     expect(text(markup.match(/<p class="bwk__lede">([\s\S]*?)<\/p>/)?.[1] ?? '')).toBe(
-      'You share the details that make your barbershop yours. KERSIVO prepares a branded website and connected booking experience, then gives you a private preview to check before launch.',
+      'Here’s what you provide, what KERSIVO prepares and what you review before launch.',
     );
     for (const body of [
       'Share your shop details, services, opening hours and branding, along with any photographs and team information you have.',
