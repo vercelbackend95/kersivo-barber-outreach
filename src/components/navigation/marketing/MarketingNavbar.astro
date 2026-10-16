@@ -10,6 +10,7 @@ import {
   buildMarketingNavigation,
   buildMarketingNavTopLevelEntries,
   isMarketingNavItemCurrent,
+  isMarketingDirectLinkCurrent,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
 
@@ -66,7 +67,8 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
                   href={entry.link.href}
                   data-mnav-section={entry.link.sectionId}
                   data-mnav-match={entry.link.sectionId ? undefined : entry.link.href}
-                  aria-current={!entry.link.sectionId && entry.link.href === pathname.replace(/\/$/, '') ? 'page' : undefined}
+                  data-mnav-match-prefix={entry.link.matchPrefix}
+                  aria-current={isMarketingDirectLinkCurrent(entry.link, pathname) ? 'page' : undefined}
                 >
                   {entry.link.label}
                 </a>
