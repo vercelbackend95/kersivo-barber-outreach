@@ -221,7 +221,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(mainOpen).toBeGreaterThan(-1);
     expect(mainClose).toBeGreaterThan(mainOpen);
     expect(footer).toBeGreaterThan(mainClose);
-    expect(page.match(/<main\\b/g)).toHaveLength(1);
+    expect(page.match(/<main\b/g)).toHaveLength(1);
   });
 
   it('adds no other supporting SEO routes yet', () => {
