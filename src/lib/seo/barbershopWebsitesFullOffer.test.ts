@@ -52,9 +52,8 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
   });
 
   it('states the supporting copy', () => {
-    expect(text(markup)).toContain(
-      'A professionally branded website for your shop, online booking that runs through it and the tools to manage the day. One Full KERSIVO subscription covers the lot.',
-    );
+    expect(markup).toContain('Full KERSIVO combines a branded website, online booking and shop-management tools for');
+    expect(markup).toContain('£{SAAS_MONTHLY_GBP}/month per location.');
   });
 
   it('places the price and CTA straight after the heading, before the value detail', () => {
@@ -81,11 +80,11 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
   it('still covers the verified Full capabilities', () => {
     const values = list('values');
     for (const capability of [
-      /logo, colours and photos/,
+      /logo, colours and available photos/,
       /host it with SSL, keep it updated and help/,
       /service, a barber and a time/,
-      /pay in the shop, leave a £\$\{KERSIVO_BOOKING_DEPOSIT_GBP\} deposit or pay in full online/,
-      /Confirmations and reminders go out by email/,
+      /enable a £\$\{KERSIVO_BOOKING_DEPOSIT_GBP\} booking deposit, capped at the service price/,
+      /Booking confirmations and reminders are sent by email/,
       /SMS_INCLUDED_WITH_ALLOWANCE_CLAIM/,
       /barbers and services, keep track of clients and check your reports/,
       /sell products online for customers to collect in the shop/,

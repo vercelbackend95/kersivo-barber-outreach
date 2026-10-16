@@ -30,8 +30,8 @@ describe('/barbershop-websites — section 02 the basics', () => {
     const words = answer.split(' ');
     expect(words.length).toBeGreaterThanOrEqual(40);
     expect(words.length).toBeLessThanOrEqual(90);
-    expect(answer.startsWith('A barbershop website is a dedicated online home for a barber or barbershop.')).toBe(true);
-    for (const phrase of ['services, prices, team information, location, opening hours and appointment booking', 'own domain', 'book again', 'mobile']) {
+    expect(answer.startsWith('A barbershop website gives clients one place to see')).toBe(true);
+    for (const phrase of ['services, prices, team, opening hours and location', 'online booking', 'own domain', 'social profiles and booking apps']) {
       expect(answer).toContain(phrase);
     }
     expect(answer).not.toMatch(/KERSIVO|£|rank|revenue|conversion|guarantee|more (clients|customers|bookings)/i);
@@ -40,7 +40,7 @@ describe('/barbershop-websites — section 02 the basics', () => {
 
   it('follows the definition with one short human reason, not another explanation', () => {
     const support = text(block('bsw-definition__support'));
-    expect(support).toBe('Because clients don’t just choose a time slot. They choose a barber and a shop they trust.');
+    expect(support).toBe('Show clients the shop and people behind the booking button.');
     expect(section.match(/<p class="bsw-definition__support">/g) ?? []).toHaveLength(1);
     expect(section).not.toContain('online home that');
   });
@@ -49,7 +49,7 @@ describe('/barbershop-websites — section 02 the basics', () => {
     const terms = [...section.matchAll(/<dt class="bsw-definition-concept__label">([^<]+)<\/dt>/g)].map((m) => m[1]);
     expect(terms).toEqual(['A booking profile', 'Your barbershop website']);
     const statements = [...section.matchAll(/<dd class="bsw-definition-concept__text">([\s\S]*?)<\/dd>/g)].map((m) => text(m[1]));
-    expect(statements).toEqual(['A place to book.', 'A reason to choose you — and a way to book.']);
+    expect(statements).toEqual(['A booking-first page, with features that vary by provider.', 'Your services, team and location — with a way to book.']);
     expect(text(block('bsw-definition__note'))).toBe('Both can work together. Features vary between providers.');
     expect(section).not.toMatch(/Booksy|Fresha|Nearcut|Treatwell|cannot|can't|lack|only a/i);
   });

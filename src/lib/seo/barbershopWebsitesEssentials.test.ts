@@ -23,11 +23,11 @@ describe('/barbershop-websites — section 03 website essentials', () => {
 
   it('opens with the direct answer as visible text before the topics', () => {
     const answer = text(section.match(/<p class="bsw-essentials__answer">([\s\S]*?)<\/p>/)?.[1] ?? '');
-    expect(answer.startsWith('A good barbershop website helps clients get to know your shop and book with confidence.')).toBe(true);
+    expect(answer.startsWith('A useful barbershop website answers six questions:')).toBe(true);
     const words = answer.split(' ').length;
-    expect(words).toBeGreaterThanOrEqual(35);
-    expect(words).toBeLessThanOrEqual(70);
-    for (const phrase of ['who you are', 'what it costs', 'who will cut their hair', 'where to find you', 'how to book', 'phone']) {
+    expect(words).toBeGreaterThanOrEqual(20);
+    expect(words).toBeLessThanOrEqual(45);
+    for (const phrase of ['who you are', 'what you offer', 'what it costs', 'who’s cutting', 'where you are', 'how to book']) {
       expect(answer).toContain(phrase);
     }
     expect(section.match(/<p class="bsw-essentials__answer">/g) ?? []).toHaveLength(1);
