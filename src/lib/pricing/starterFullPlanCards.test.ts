@@ -57,13 +57,13 @@ describe('Shared StarterFullPlanCards', () => {
     expect(component).toContain('data-track-placement={placement}');
   });
 
-  it('uses only approved payment claims until Full B1 is resolved', () => {
+  it('keeps Starter fixed and Full owner-controlled payment modes distinct', () => {
     const starter = STARTER_FULL_PLAN_STARTER_FEATURES.join(' ');
     const full = STARTER_FULL_PLAN_FULL_ONLY.join(' ');
     expect(starter).toContain('Manage bookings in your shop diary');
     expect(starter).not.toContain('Manual bookings');
-    expect(full).toContain('Optional £5 booking deposits');
-    expect(full).not.toMatch(/Editable booking payment controls|Pay at shop|Require full payment upfront/i);
+    expect(full).toContain('Owner-controlled payments: Pay at shop, £5 deposit or Pay in full');
+    expect(starter).not.toContain('Pay at shop');
   });
 
   it('keeps Full-only features out of the Starter list', () => {
