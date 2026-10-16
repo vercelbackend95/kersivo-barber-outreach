@@ -51,17 +51,17 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(buildBarbershopWebsiteDesignJsonLd().inLanguage).toBe('en-GB');
   });
 
-  it('stays noindex, follow and out of the marketing sitemap during development', () => {
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(false);
+  it('publishes the design guide with self-canonical, crawlable indexable metadata and sitemap entry', () => {
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}');
     expect(page).toContain('robotsFollow');
-    expect(resolveRobotsContent({ noindex: true, robotsFollow: true })).toBe('noindex, follow');
+    expect(resolveRobotsContent({ noindex: !BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, robotsFollow: true })).toBeUndefined();
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).not.toContain('https://kersivo.co.uk/barbershop-website-design');
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-website-design');
   });
 
-  it('leaves the parent pillar indexing status unchanged', () => {
-    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(false);
+  it('requires the parent pillar to be published alongside the design guide', () => {
+    expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
     expect(BARBERSHOP_WEBSITES_PAGE_PATH).toBe('/barbershop-websites');
   });
 
