@@ -61,6 +61,36 @@
   text-align: center;
 }
 
+/* Two-level breadcrumb: small, quiet and consistent with both supporting guides. */
+.bsw-hero__breadcrumb {
+  margin: 0 0 1rem;
+}
+
+.bsw-hero__breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.bsw-hero__breadcrumb li,
+.bsw-hero__breadcrumb a {
+  color: var(--bsw-text-2);
+  text-decoration: none;
+}
+
+.bsw-hero__breadcrumb a:hover,
+.bsw-hero__breadcrumb a:focus-visible {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
 .bsw-hero__title {
   max-width: 100%;
   margin: 0;
