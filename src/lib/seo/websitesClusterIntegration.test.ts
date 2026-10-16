@@ -29,31 +29,32 @@ describe('Websites three-page integrated cluster release gates', () => {
     }
   });
 
-  it('keeps the Websites pillar and both Resources guides hidden pending cluster release', () => {
+  it('publishes the pillar as a top-level link, both guides in Resources, and all three URLs in sitemap', () => {
     expect([
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
       BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
       BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE,
-    ]).toEqual([false, false, false]);
-
-    // The pillar is promoted to a direct top-level link at launch, never duplicated as a guide.
+    ]).toEqual([true, true, true]);
     expect(MARKETING_NAV_ITEMS.some((item) => item.href === '/barbershop-websites')).toBe(false);
-    expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(false);
-    const topEntries = buildMarketingNavTopLevelEntries();
-    expect(topEntries.some((entry) => entry.kind === 'link' && entry.link.href === '/barbershop-websites')).toBe(false);
+    expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'websites')).toMatchObject({
+      label: 'Websites', href: '/barbershop-websites',
+    });
+    expect(buildMarketingNavTopLevelEntries().map((entry) =>
+      entry.kind === 'group' ? entry.group.label : entry.link.label,
+    )).toEqual(['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']);
 
     for (const id of ['resources-website-design', 'resources-online-booking']) {
       const item = MARKETING_NAV_ITEMS.find((entry) => entry.id === id);
       expect(item, id).toBeDefined();
-      expect(item?.visible, id).toBe(false);
+      expect(item?.visible, id).toBe(true);
     }
-    const visible = buildMarketingNavigation().flatMap((g) => [...g.featured, ...g.sections.flatMap((s) => s.items)]);
-    for (const href of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
-      expect(visible.map((entry) => entry.href)).not.toContain(href);
-    }
+    const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
+    expect(resources.sections.find((section) => section.id === 'guides')?.items.map((x) => x.href)).toEqual([
+      '/barbershop-website-design', '/barbershop-online-booking',
+    ]);
     const sitemap = buildMarketingSitemapEntries().map((entry) => entry.loc);
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
-      expect(sitemap).not.toContain(getPublicSiteUrl() + path);
+      expect(sitemap).toContain(getPublicSiteUrl() + path);
     }
   });
 
