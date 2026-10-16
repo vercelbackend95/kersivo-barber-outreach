@@ -131,7 +131,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
   it('keeps the verified lead instead of unsupported growth copy', () => {
     const lead = textOf(heroMarkup.slice(heroMarkup.indexOf('<p class="bob-hero__lead">')));
     expect(lead).toContain(
-      "Clients choose a service, a barber and an available time — and the appointment lands in your shop's booking system. Start with a KERSIVO-hosted booking page, or bring bookings onto your own branded website with Full KERSIVO.",
+      "Clients choose a service, barber and available time. Confirmed appointments appear in your shop diary. Starter gives you a KERSIVO-hosted booking page; Full adds your own branded website.",
     );
     expect(textOf(heroMarkup)).not.toMatch(/fill your chairs|faster, easier/i);
   });
@@ -154,7 +154,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF).toBe('#booking-options');
     expect(compare).toContain('bob-hero__action--secondary');
     expect(compare).not.toContain('data-track');
-    expect(hero).toContain('Compare your booking options');
+    expect(hero).toContain('Compare Starter and Full');
     expect(anchors(hero)).toHaveLength(3);
   });
 
