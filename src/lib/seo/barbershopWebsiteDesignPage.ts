@@ -7,7 +7,7 @@ export const BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE =
   'Barbershop Website Design UK: Branding & Layout | KERSIVO';
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION =
-  'Learn what makes a barbershop website look professional, from branding and photography to mobile design. See how Full KERSIVO brings it together.';
+  'Explore barbershop website design through a fictional CUTSTATE demo, with practical advice on branding, photography, mobile layouts and clear booking routes.';
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 = 'Barbershop Website Design That Looks Like Your Shop';
 
