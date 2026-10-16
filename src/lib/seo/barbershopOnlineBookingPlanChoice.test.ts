@@ -70,6 +70,15 @@ describe('Barbershop online booking page — Section 07 plan choice + FAQ', () =
     }
   });
 
+  it('distinguishes the fixed Starter policy from three owner-controlled Full modes', () => {
+    const pay = buildPlanChoiceContent().faqs.find((faq) => faq.id === 'pay');
+    expect(pay?.answer[0]).toContain('On KERSIVO Starter');
+    expect(pay?.answer[0]).toContain('customer chooses');
+    expect(pay?.answer[1]).toContain('the shop owner chooses Pay at shop');
+    expect(pay?.answer[1]).toContain('deposit, or payment in full online');
+    expect(pay?.answer[1]).toContain('Standard Stripe payment-processing fees still apply.');
+  });
+
   it('keeps the page unpublished and does not rewrite Section 06', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
     expect(afterComponent).toContain('bob-ab-showcase');
