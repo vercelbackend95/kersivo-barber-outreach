@@ -15,6 +15,8 @@ import {
   BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
   buildBarbershopOnlineBookingJsonLd,
 } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
@@ -40,29 +42,31 @@ const currentYear = new Date().getFullYear();
     <OnlineBookingEntryPoints />
     <OnlineBookingAfterBooking />
     <OnlineBookingPlanChoice />
-
-    <Footer50
-      showIntro={false}
-      brandLine="Own your brand. Own your bookings."
-      contactEmail={KERSIVO_CONTACT_EMAIL}
-      brandName="KERSIVO"
-      copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Home', href: '/' },
-        { name: 'Starter', href: '/starter' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'Live demo', href: '/demo' },
-        { name: 'Booksy comparison', href: '/booksy-alternative' },
-        { name: 'Fresha comparison', href: '/fresha-alternative' },
-      ]}
-      social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
-    />
   </main>
+
+  <Footer50
+    showIntro={false}
+    brandLine="Own your brand. Own your bookings."
+    contactEmail={KERSIVO_CONTACT_EMAIL}
+    brandName="KERSIVO"
+    copyright={`© ${currentYear} KERSIVO`}
+    navigation={[
+      { name: 'Home', href: '/' },
+      { name: 'Starter', href: '/starter' },
+      { name: 'Pricing', href: '/pricing' },
+      { name: 'Barbershop websites', href: BARBERSHOP_WEBSITES_PAGE_PATH },
+      { name: 'Website design guide', href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH },
+      { name: 'Live demo', href: '/demo' },
+      { name: 'Booksy comparison', href: '/booksy-alternative' },
+      { name: 'Fresha comparison', href: '/fresha-alternative' },
+    ]}
+    social={getFooterSocialLinks()}
+    legal={[
+      FOOTER_LEGAL_LINKS.privacy,
+      FOOTER_LEGAL_LINKS.cookies,
+      FOOTER_LEGAL_LINKS.cookieSettings,
+      FOOTER_LEGAL_LINKS.dpa,
+      FOOTER_LEGAL_LINKS.termsAndCancellation,
+    ]}
+  />
 </LandingLayout>
