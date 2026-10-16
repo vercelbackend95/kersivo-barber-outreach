@@ -3,17 +3,19 @@ import MarketingMobileNav from '@/components/navigation/marketing/MarketingMobil
 import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
 import MarketingNavbarClient from '@/components/navigation/marketing/MarketingNavbarClient.astro';
 import MarketingNavPanel from '@/components/navigation/marketing/MarketingNavPanel.astro';
+import MarketingDirectNavLink from '@/components/navigation/marketing/MarketingDirectNavLink.astro';
 import {
   MARKETING_NAV_DIRECT_LINKS,
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
-  isMarketingDirectLinkCurrent,
   isMarketingNavItemCurrent,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
 
 const groups = buildMarketingNavigation();
+const insightsLink = MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights');
+const otherDirectLinks = MARKETING_NAV_DIRECT_LINKS.filter((link) => link.id !== 'insights');
 const pathname = Astro.url.pathname;
 const resolvedCta = Astro.locals.navbarPreviewCta;
 const primary: MarketingNavAction = resolvedCta
@@ -44,36 +46,30 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
         <ul class="mnav__list" role="list">
           {
             groups.map((group) => (
-              <li class="mnav__item">
-                <button
-                  type="button"
-                  class="mnav__trigger"
-                  aria-expanded="false"
-                  aria-controls={`mnav-panel-${group.id}`}
-                  data-mnav-trigger={group.id}
-                  data-current={groupIsCurrent(group) ? '' : undefined}
-                >
-                  {group.label}
-                  <span class="mnav__chevron" aria-hidden="true" />
-                </button>
-                <MarketingNavPanel group={group} id={`mnav-panel-${group.id}`} />
-              </li>
+              <>
+                <li class="mnav__item">
+                  <button
+                    type="button"
+                    class="mnav__trigger"
+                    aria-expanded="false"
+                    aria-controls={`mnav-panel-${group.id}`}
+                    data-mnav-trigger={group.id}
+                    data-current={groupIsCurrent(group) ? '' : undefined}
+                  >
+                    {group.label}
+                    <span class="mnav__chevron" aria-hidden="true" />
+                  </button>
+                  <MarketingNavPanel group={group} id={`mnav-panel-${group.id}`} />
+                </li>
+                {group.id === 'compare' && insightsLink
+                  ? <MarketingDirectNavLink link={insightsLink} pathname={pathname} />
+                  : null}
+              </>
             ))
           }
           {
-            MARKETING_NAV_DIRECT_LINKS.map((link) => (
-              <li class="mnav__item">
-                <a
-                  class="mnav__link"
-                  href={link.href}
-                  data-mnav-section={link.sectionId}
-                  data-mnav-match={link.sectionId ? undefined : link.href}
-                  data-mnav-match-prefix={link.matchPrefix}
-                  aria-current={isMarketingDirectLinkCurrent(link, pathname) ? 'page' : undefined}
-                >
-                  {link.label}
-                </a>
-              </li>
+            otherDirectLinks.map((link) => (
+              <MarketingDirectNavLink link={link} pathname={pathname} />
             ))
           }
         </ul>
