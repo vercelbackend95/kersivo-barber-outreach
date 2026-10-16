@@ -129,7 +129,7 @@ function demoFixture() {
 }
 
 export const AFTER_BOOKING_DISCLOSURE =
-  'These thank-you, Google review and rebooking messages are illustrative ideas for Full KERSIVO. None of these post-visit automations is live.';
+  'These thank-you, Google review and rebooking messages are concepts for Full KERSIVO. These automations are not currently live.';
 
 export function buildAfterBookingExample(): AfterBookingExample {
   const base = demoFixture();
@@ -181,7 +181,7 @@ export function buildAfterBookingExample(): AfterBookingExample {
       index: '03',
       stageLabel: null,
       display: 'READY FOR YOUR NEXT CUT?',
-      support: `Planned concept: a message linking back to ${DEMO_SHOP_NAME}'s booking page.`,
+      support: `Planned concept: a link back to the booking page for ${DEMO_SHOP_NAME}.`,
       ctaLabel: 'BOOK AGAIN',
       thanksPreview: null,
       reviewPreview: null,
