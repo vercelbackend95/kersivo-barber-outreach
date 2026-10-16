@@ -229,7 +229,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(header).toContain('<span class="sf-header-cta-short">BOOK</span>');
     expect(header).toMatch(/data-bl-nav-book[\s\S]*?Book an appointment/);
     expect(headerCss).toMatch(/@media \(max-width: 359px\) \{[^}]*\.sf-header-cta \{\s*display: none;/);
-    expect(section).toContain('On smaller screens it becomes “BOOK” beside the menu button; at the narrowest widths the header button is hidden and “Book an appointment” remains in the mobile menu.');
+    expect(section).toContain('On smaller screens its label changes to “BOOK”; below 360px, “Book an appointment” remains in the menu.');
     expect(section).not.toMatch(/still visible on a phone|still in view on a phone/);
   });
 });
