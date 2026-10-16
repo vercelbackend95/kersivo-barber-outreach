@@ -8,6 +8,7 @@ import {
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
+  isMarketingDirectLinkCurrent,
   isMarketingNavItemCurrent,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
@@ -67,7 +68,8 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
                   href={link.href}
                   data-mnav-section={link.sectionId}
                   data-mnav-match={link.sectionId ? undefined : link.href}
-                  aria-current={!link.sectionId && link.href === pathname.replace(/\/$/, '') ? 'page' : undefined}
+                  data-mnav-match-prefix={link.matchPrefix}
+                  aria-current={isMarketingDirectLinkCurrent(link, pathname) ? 'page' : undefined}
                 >
                   {link.label}
                 </a>
