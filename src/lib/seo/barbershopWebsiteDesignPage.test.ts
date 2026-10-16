@@ -106,7 +106,8 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(order.every((index) => index > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(hero).toContain('<li><a href="/">Home</a></li>');
-    expect(hero).toContain('<li><span aria-current="page">Barbershop website design</span></li>');
+    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>');
+    expect(hero).toContain('<li><span aria-current="page">Website design</span></li>');
     expect(hero).toContain('<span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>');
     expect(hero).toContain('A practical guide for UK barbershop owners');
     expect(hero).toContain(
@@ -200,8 +201,27 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(jsonLd['@id']).toBe(`${siteUrl}/barbershop-website-design#webpage`);
     expect(jsonLd.isPartOf).toEqual({ '@id': getKersivoWebsiteId(siteUrl) });
     expect(jsonLd.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
-    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|BreadcrumbList|Review|AggregateRating/);
+    expect(jsonLd.breadcrumb).toEqual({
+      '@type': 'BreadcrumbList',
+      '@id': `${siteUrl}/barbershop-website-design#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}/barbershop-websites` },
+        { '@type': 'ListItem', position: 3, name: 'Website design', item: `${siteUrl}/barbershop-website-design` },
+      ],
+    });
+    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating/);
     expect(page).toContain('jsonLd={buildBarbershopWebsiteDesignJsonLd()}');
+  });
+
+  it('keeps the global footer outside the main landmark', () => {
+    const mainOpen = page.indexOf('<main class="bwd-page">');
+    const mainClose = page.indexOf('</main>');
+    const footer = page.indexOf('<Footer50');
+    expect(mainOpen).toBeGreaterThan(-1);
+    expect(mainClose).toBeGreaterThan(mainOpen);
+    expect(footer).toBeGreaterThan(mainClose);
+    expect(page.match(/<main\\b/g)).toHaveLength(1);
   });
 
   it('adds no other supporting SEO routes yet', () => {
