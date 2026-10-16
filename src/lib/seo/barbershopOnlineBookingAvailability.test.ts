@@ -42,7 +42,7 @@ describe('Barbershop online booking page — Section 03 client times and the rea
       "    title: 'Existing appointments',",
     ]);
     expect(textOf(markup)).toContain(
-      "Clients should only be offered times that match your barbers' availability, their services and the appointments already in the diary. The owner needs to see where each confirmed booking lands.",
+      "Available times depend on working hours, service length and existing appointments. See how a confirmed booking appears in the shop diary.",
     );
   });
 
