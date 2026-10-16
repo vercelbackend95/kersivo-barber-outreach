@@ -143,17 +143,16 @@ describe('marketing navigation config', () => {
     ]);
 
     // The actual release gate must still keep all three routes out of global navigation.
+    const expectedVisibleRoutes = [
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+      BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+      BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+    ].filter(Boolean).length;
     expect(buildMarketingNavigation()
       .flatMap((group) => [...group.featured, ...group.sections.flatMap((section) => section.items)])
       .filter((item) => [
         '/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking',
-      ].includes(item.href))).toHaveLength(
-        BARBERSHOP_WEBSITES_PAGE_INDEXABLE ||
-          BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE ||
-          BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE
-          ? 3
-          : 0,
-      );
+      ].includes(item.href))).toHaveLength(expectedVisibleRoutes);
   });
 
   it('keeps the booking guide out of global navigation until its route and parent are released', () => {
