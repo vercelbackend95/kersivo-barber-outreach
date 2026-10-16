@@ -94,7 +94,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(BLACKLINE_BOOKING_PRESENTATION.title).toBe('Book a chair');
     expect(markup).toContain('Book a chair');
     expect(markup).toContain('Precision in every detail.');
-    expect(section).toContain('three fictional demo barbers');
+    expect(section).toContain('Each fictional CUTSTATE barber has a portrait');
   });
 
   it('shows the real barber hand-off into booking rather than an invented state', () => {
@@ -105,7 +105,7 @@ describe('/barbershop-website-design — Section 02 design breakdown', () => {
     expect(markup).toContain('Who should take you');
     expect(section).toContain("from '@/lib/booking/constants'");
     expect(section).toContain('selected: barber.id === lead.id');
-    expect(section).toContain('The visitor picks a service first');
+    expect(section).toContain('The visitor chooses a service first');
   });
 
   it('shows the booking action on one recreated gallery page, not the hero or services', () => {
