@@ -1,9 +1,8 @@
 /**
- * Section 05 presentation data for /barbershop-online-booking.
+ * Section 06 presentation data for /barbershop-online-booking — cinematic scroll story.
  *
- * Part A previews are derived from the live confirmation and reminder email builders so the
- * marketing page cannot drift from what customers actually receive. Part B concept copy is
- * product-direction only — those automations are not implemented and must stay labelled Concept.
+ * Live confirmation/reminder subjects come from real email builders. SMS reminder visual is
+ * Full-only illustrative (not every booking). Thank-you / review / rebook are Planned Full only.
  */
 import {
   buildAppointmentReminderEmail,
@@ -22,50 +21,63 @@ export const AFTER_BOOKING_EXAMPLE_TIMEZONE = 'Europe/London';
 export const AFTER_BOOKING_PREVIEW_RESCHEDULE_HREF = '#preview-reschedule';
 export const AFTER_BOOKING_PREVIEW_CANCEL_HREF = '#preview-cancel';
 
-export type AfterBookingEmailPreview = {
-  kind: 'confirmation' | 'reminder';
-  fromLabel: string;
-  subject: string;
-  title: string;
-  intro: string;
-  lines: { label: string; value: string }[];
-  footer: string;
-  actions: { label: string }[];
-};
+export const AFTER_BOOKING_LIVE_STATUS = 'Live today' as const;
+export const AFTER_BOOKING_PLANNED_STATUS = 'Planned for Full KERSIVO · Illustrative experience' as const;
 
-export type AfterBookingConceptCard = {
-  id: 'thanks' | 'review' | 'rebook';
-  stage: string;
+export const AFTER_BOOKING_GOOGLE_MARK_SRC = '/images/starter/google-g-192.webp';
+
+export type AfterBookingSceneId = 'confirmReminder' | 'thanksReview' | 'rebook';
+
+export type AfterBookingScene = {
+  id: AfterBookingSceneId;
+  /** Short status for the scene (live vs planned). */
+  statusLabel: string;
+  /** Large editorial display line when used. */
+  display: string | null;
   title: string;
-  body: string;
-  ctaLabel?: string;
+  body: string | null;
+  ctaLabel: string | null;
+  /** Optional micro note under the scene (e.g. Full SMS qualifier). */
+  note: string | null;
 };
 
 export type AfterBookingExample = {
   shopName: string;
   clientName: string;
-  confirmation: AfterBookingEmailPreview;
-  reminder: AfterBookingEmailPreview;
-  concepts: AfterBookingConceptCard[];
+  handoffLabel: string;
+  confirmationSubject: string;
+  reminderSubject: string;
+  smsPreviewLine: string;
+  smsNote: string;
+  emailReminderNote: string;
+  googleMarkSrc: string;
+  scenes: AfterBookingScene[];
+  confirmationLines: { label: string; value: string }[];
+  reminderLines: { label: string; value: string }[];
+  manageLabels: string[];
+  disclosure: string;
 };
 
-function stripTags(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<\/h2>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
+export function decodeHtmlEntities(value: string): string {
+  return value
     .replace(/&amp;/g, '&')
-    .replace(/\s+/g, ' ')
-    .trim();
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
 }
 
-function extractStrongLines(html: string): { label: string; value: string }[] {
+/** Exported for unit tests — labels/values must never retain double-escaped entities. */
+export function extractStrongLines(html: string): { label: string; value: string }[] {
   const lines: { label: string; value: string }[] = [];
   const pattern = /<strong>([^<:]+):<\/strong>\s*([^<]+)/gi;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(html))) {
-    lines.push({ label: match[1].trim(), value: match[2].trim() });
+    lines.push({
+      label: decodeHtmlEntities(match[1]).trim(),
+      value: decodeHtmlEntities(match[2]).trim(),
+    });
   }
   return lines;
 }
@@ -75,27 +87,10 @@ function extractActions(html: string): { label: string }[] {
   const pattern = /<a[^>]*>([^<]+)<\/a>/gi;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(html))) {
-    const label = match[1].trim();
+    const label = decodeHtmlEntities(match[1]).trim();
     if (label) actions.push({ label });
   }
   return actions;
-}
-
-function firstParagraphAfterTitle(html: string, title: string): string {
-  const titleIndex = html.indexOf(title);
-  if (titleIndex < 0) return '';
-  const after = html.slice(titleIndex + title.length);
-  const paragraph = after.match(/<p>([\s\S]*?)<\/p>/i);
-  return paragraph ? stripTags(paragraph[1]) : '';
-}
-
-function paragraphMatching(html: string, needle: string): string {
-  const matches = [...html.matchAll(/<p>([\s\S]*?)<\/p>/gi)];
-  for (const match of matches) {
-    const text = stripTags(match[1]);
-    if (text.toLowerCase().includes(needle.toLowerCase())) return text;
-  }
-  return '';
 }
 
 function demoFixture() {
@@ -114,28 +109,7 @@ function demoFixture() {
   };
 }
 
-export const AFTER_BOOKING_CONCEPTS: AfterBookingConceptCard[] = [
-  {
-    id: 'thanks',
-    stage: 'After the visit',
-    title: 'Thank-you message',
-    body: `Thanks for visiting ${DEMO_SHOP_NAME}. We hope you enjoyed your appointment.`,
-  },
-  {
-    id: 'review',
-    stage: 'After the visit',
-    title: 'Honest Google review invitation',
-    body: 'If you have a moment, we would appreciate an honest review of your experience.',
-    ctaLabel: 'Leave a Google review',
-  },
-  {
-    id: 'rebook',
-    stage: 'Before the next visit',
-    title: 'Invitation to book again',
-    body: `Ready for your next cut? Book your next appointment directly with ${DEMO_SHOP_NAME}.`,
-    ctaLabel: 'Book again',
-  },
-];
+export const AFTER_BOOKING_DISCLOSURE = `Fictional ${DEMO_SHOP_NAME} demo. Confirmation and email reminders are live; SMS reminders are Full-only subject to allowance. Thank-you, review and rebook examples are planned Full illustrations. Nothing here sends a message. A booking is not marketing consent.`;
 
 export function buildAfterBookingExample(): AfterBookingExample {
   const base = demoFixture();
@@ -149,29 +123,65 @@ export function buildAfterBookingExample(): AfterBookingExample {
     timezone: AFTER_BOOKING_EXAMPLE_TIMEZONE,
   });
 
+  const confirmationSubject = confirmationBuilt.subject;
+  const reminderSubject = reminderBuilt.subject;
+
+  const scenes: AfterBookingScene[] = [
+    {
+      id: 'confirmReminder',
+      statusLabel: AFTER_BOOKING_LIVE_STATUS,
+      display: null,
+      title: 'Your appointment is coming up.',
+      body: 'Email reminder about a day before when the booking window allows.',
+      ctaLabel: null,
+      note: 'SMS appointment reminders: Full KERSIVO only, subject to the plan’s monthly SMS allowance — not every booking.',
+    },
+    {
+      id: 'thanksReview',
+      statusLabel: AFTER_BOOKING_PLANNED_STATUS,
+      display: 'THANKS FOR COMING IN.',
+      title: `Thanks for visiting ${DEMO_SHOP_NAME}`,
+      body: 'We’d appreciate an honest review of your visit.',
+      ctaLabel: 'Leave a Google Review',
+      note: null,
+    },
+    {
+      id: 'rebook',
+      statusLabel: AFTER_BOOKING_PLANNED_STATUS,
+      display: 'READY FOR YOUR NEXT CUT?',
+      title: `Your next appointment at ${DEMO_SHOP_NAME} is just a few clicks away.`,
+      body: null,
+      ctaLabel: 'Book Again',
+      note: null,
+    },
+  ];
+
   return {
     shopName: base.shopName,
     clientName: base.fullName,
-    confirmation: {
-      kind: 'confirmation',
-      fromLabel: `${base.shopName} via KERSIVO`,
-      subject: confirmationBuilt.subject,
-      title: 'Your booking is confirmed',
-      intro: firstParagraphAfterTitle(confirmationBuilt.html, 'Your booking is confirmed'),
-      lines: extractStrongLines(confirmationBuilt.html),
-      footer: paragraphMatching(confirmationBuilt.html, 'reschedule or cancel'),
-      actions: extractActions(confirmationBuilt.html),
-    },
-    reminder: {
-      kind: 'reminder',
-      fromLabel: `${base.shopName} via KERSIVO`,
-      subject: reminderBuilt.subject,
-      title: 'Appointment reminder',
-      intro: firstParagraphAfterTitle(reminderBuilt.html, 'Appointment reminder'),
-      lines: extractStrongLines(reminderBuilt.html),
-      footer: paragraphMatching(reminderBuilt.html, 'confirmation email'),
-      actions: [],
-    },
-    concepts: AFTER_BOOKING_CONCEPTS,
+    handoffLabel: confirmationSubject,
+    confirmationSubject,
+    reminderSubject,
+    smsPreviewLine: 'Your appointment is coming up.',
+    smsNote:
+      'SMS appointment reminders: Full KERSIVO only, subject to the plan’s monthly SMS allowance — not every booking.',
+    emailReminderNote: 'Email reminder about a day before when the booking window allows.',
+    googleMarkSrc: AFTER_BOOKING_GOOGLE_MARK_SRC,
+    scenes,
+    confirmationLines: extractStrongLines(confirmationBuilt.html),
+    reminderLines: extractStrongLines(reminderBuilt.html),
+    manageLabels: extractActions(confirmationBuilt.html).map((action) => action.label),
+    disclosure: AFTER_BOOKING_DISCLOSURE,
   };
 }
+
+/** Public copy that must never claim live automation for planned retention. */
+export const AFTER_BOOKING_BANNED_CLAIMS = [
+  'automatically sends',
+  'kersivo automatically',
+  'will automatically',
+  'thank-you email is sent',
+  'rebooking campaign',
+  'guaranteed review',
+  'reserve with google',
+] as const;

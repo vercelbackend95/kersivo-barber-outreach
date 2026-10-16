@@ -1,21 +1,22 @@
-/* /barbershop-online-booking Section 05: from first booking to next visit.
-   Part A = live confirmation/reminder previews. Part B = labelled Concept only. */
+/* /barbershop-online-booking Section 06: cinematic scroll story.
+   Sticky scrub via --bob-ab-p; stacked fallback for no-JS / reduced-motion. */
 
 .bob-ab {
   --bob-ab-red: var(--accent);
   --bob-ab-red-text: var(--accent-text);
-  --bob-ab-line: rgb(255 255 255 / 0.08);
-  --bob-ab-line-strong: rgb(255 255 255 / 0.15);
-  --bob-ab-ink: #f4f1ea;
   --bob-ab-muted: #b4b8bf;
+  --bob-ab-line: rgb(255 255 255 / 0.12);
+  --bob-ab-p: 0;
 
   position: relative;
   isolation: isolate;
   padding: 3.5rem 0 4rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   background:
-    radial-gradient(ellipse 50% 40% at 20% 20%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 48% 36% at 50% 28%, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 28% at 82% 72%, rgb(255 255 255 / 0.03) 0%, transparent 60%),
     #040404;
+  overflow: clip;
 }
 
 .bob-ab__inner {
@@ -26,15 +27,18 @@
 
 .bob-ab__head {
   display: grid;
-  gap: 0.9rem;
-  max-width: 48rem;
+  gap: 0.75rem;
+  max-width: 40rem;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .bob-ab__eyebrow {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  margin: 0;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0 auto;
   color: var(--bob-ab-red-text);
   font-family: var(--font-body);
   font-size: 0.68rem;
@@ -44,407 +48,406 @@
   text-transform: uppercase;
 }
 
-.bob-ab__eyebrow::before {
+.bob-ab__eyebrow::before,
+.bob-ab__eyebrow::after {
   content: '';
   flex: none;
-  width: 1.5rem;
+  width: 1.2rem;
   height: 1px;
-  background: color-mix(in srgb, var(--bob-ab-red) 75%, transparent);
+  background: color-mix(in srgb, var(--bob-ab-red) 70%, transparent);
 }
 
 .bob-ab__title {
   margin: 0;
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: clamp(1.85rem, 7.4vw, 2.6rem);
+  font-size: clamp(1.75rem, 6.8vw, 2.55rem);
   font-weight: 800;
-  line-height: 1.06;
+  line-height: 1.05;
   letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
-.bob-ab__lead {
-  max-width: 42rem;
+.bob-ab__support {
   margin: 0;
   color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  font-size: 1rem;
-  line-height: 1.6;
-  text-wrap: pretty;
+  font-size: 0.98rem;
+  line-height: 1.5;
 }
 
-.bob-ab-part {
-  margin-top: 2.4rem;
-}
-
-.bob-ab-part__head {
-  display: grid;
-  gap: 0.55rem;
-  max-width: 46rem;
-  margin-bottom: 1.25rem;
-}
-
-.bob-ab-part__tag {
-  display: inline-flex;
+/* Handoff chip — Section 06 continuity only (no Section 05 DOM morph) */
+.bob-ab-handoff {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-self: start;
-  margin: 0;
-  padding: 0.15rem 0.55rem;
-  border: 1px solid rgb(34 197 94 / 0.45);
-  border-radius: 999px;
-  background: rgb(34 197 94 / 0.08);
-  color: #86efac;
-  font-size: 0.66rem;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin: 2rem auto 0;
+  max-width: 36rem;
+  text-align: center;
+}
+
+.bob-ab-handoff__from {
+  color: var(--bob-ab-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bob-ab-handoff__chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--bob-ab-red) 14%, rgb(0 0 0 / 0.55));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--bob-ab-red) 35%, transparent),
+    0 12px 28px -18px rgb(0 0 0 / 0.8);
+}
+
+.bob-ab-handoff__status {
+  color: var(--bob-ab-red-text);
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.bob-ab-part__tag--concept {
-  border-color: rgb(215 38 56 / 0.45);
-  background: rgb(215 38 56 / 0.08);
-  color: var(--bob-ab-red-text);
-}
-
-.bob-ab-part__title {
-  margin: 0;
+.bob-ab-handoff__label {
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: clamp(1.25rem, 3.5vw, 1.55rem);
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
-.bob-ab-part__lead {
-  margin: 0;
-  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
   font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.bob-ab-mails {
-  display: grid;
-  gap: 1rem;
-}
-
-.bob-ab-mail {
-  display: grid;
-  gap: 0.55rem;
-  min-width: 0;
-}
-
-.bob-ab-mail__beat {
-  margin: 0;
-  color: var(--bob-ab-red-text);
-  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.bob-ab-mail__window {
-  border: 1px solid var(--bob-ab-line-strong);
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #141416, #0c0c0d);
+/* Tall scrub track + sticky stage viewport */
+.bob-ab-story {
+  position: relative;
+  margin-top: 2.25rem;
+  height: 240vh;
+}
+
+.bob-ab-stage {
+  position: sticky;
+  top: max(1rem, calc(50vh - 14rem));
+  height: min(28rem, calc(100vh - 4rem));
+  max-width: 40rem;
+  margin-inline: auto;
   overflow: hidden;
 }
 
-.bob-ab-mail__chrome {
-  display: flex;
-  gap: 0.35rem;
-  padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid var(--bob-ab-line);
-  background: rgb(255 255 255 / 0.02);
-}
-
-.bob-ab-mail__chrome span {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.18);
-}
-
-.bob-ab-mail__meta {
+.bob-ab-scene {
+  position: absolute;
+  inset: 0;
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0.55rem 1rem;
-  border-bottom: 1px solid var(--bob-ab-line);
-  color: var(--bob-ab-muted);
-  font-size: 0.82rem;
-}
-
-.bob-ab-mail__meta strong {
-  color: var(--bob-ab-ink);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.bob-ab-mail__body {
-  display: grid;
+  align-content: center;
   gap: 0.65rem;
-  padding: 1rem 1rem 1.15rem;
-  color: var(--bob-ab-ink);
-  font-size: 0.9rem;
-  line-height: 1.55;
+  padding: 1.25rem 0.25rem;
+  opacity: 0;
+  transform: translate3d(0, 1.25rem, 0);
+  pointer-events: none;
+  will-change: opacity, transform;
 }
 
-.bob-ab-mail__greeting,
-.bob-ab-mail__body > p,
-.bob-ab-mail__note {
+.bob-ab-scene__status {
   margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.bob-ab-mail__heading {
+.bob-ab-scene__status--live {
+  color: var(--bob-ab-red-text);
+}
+
+.bob-ab-scene__status--planned {
+  color: color-mix(in srgb, var(--bob-ab-muted) 88%, var(--fg));
+}
+
+.bob-ab-scene__shop {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bob-ab-scene__confirm {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-shadow: 0 10px 32px rgb(0 0 0 / 0.55);
+}
+
+.bob-ab-scene__display {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.85rem, 7vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+  text-shadow: 0 14px 40px rgb(0 0 0 / 0.55);
+}
+
+.bob-ab-scene__title {
+  margin: 0;
+  color: color-mix(in srgb, var(--fg) 92%, var(--muted));
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.bob-ab-scene__body {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: 32rem;
+}
+
+.bob-ab-scene__note {
+  margin: 0.35rem 0 0;
+  color: color-mix(in srgb, var(--bob-ab-muted) 90%, var(--fg));
+  font-size: 0.78rem;
+  line-height: 1.45;
+  max-width: 34rem;
+}
+
+.bob-ab-scene__note-label {
+  display: inline-block;
+  margin-right: 0.4rem;
+  color: var(--bob-ab-red-text);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+}
+
+/* Scene A — message depth via type/shadow, not phone chrome */
+.bob-ab-sms {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0.15rem;
+  max-width: 22rem;
+  padding: 0.85rem 0 0.85rem 0.95rem;
+  border-left: 2px solid color-mix(in srgb, var(--bob-ab-red) 70%, transparent);
+  box-shadow: -12px 0 28px -18px color-mix(in srgb, var(--bob-ab-red) 55%, transparent);
+}
+
+.bob-ab-sms__from {
+  margin: 0;
+  color: var(--bob-ab-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bob-ab-sms__body {
   margin: 0;
   color: var(--fg);
   font-family: var(--font-body);
   font-size: 1.15rem;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
-.bob-ab-mail__lines {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.2rem 0 0;
-  padding: 0.75rem 0 0;
-  border-top: 1px dashed var(--bob-ab-line-strong);
-}
-
-.bob-ab-mail__lines > div {
-  display: grid;
-  grid-template-columns: 7.5rem minmax(0, 1fr);
-  gap: 0.6rem;
-}
-
-.bob-ab-mail__lines dt {
-  margin: 0;
-  color: var(--bob-ab-muted);
-  font-size: 0.8rem;
-}
-
-.bob-ab-mail__lines dd {
-  margin: 0;
-  color: var(--bob-ab-ink);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.bob-ab-mail__note {
-  color: var(--bob-ab-muted);
-  font-size: 0.84rem;
-}
-
-.bob-ab-mail__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.25rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.bob-ab-mail__actions span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.4rem;
-  padding: 0 0.9rem;
-  border: 1px solid rgb(215 38 56 / 0.55);
-  border-radius: 0.65rem;
-  background: rgb(215 38 56 / 0.1);
-  color: var(--fg);
-  font-size: 0.85rem;
-  font-weight: 650;
-}
-
-.bob-ab-facts {
-  display: grid;
-  gap: 0.85rem;
-  margin: 1.35rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.bob-ab .bob-ab-facts li {
-  max-width: none;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--bob-ab-line-strong);
-  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.bob-ab-facts strong {
-  display: block;
-  margin-bottom: 0.2rem;
-  color: var(--fg);
-}
-
-.bob-ab-part--concept {
-  margin-top: 2.75rem;
-  padding: 1.25rem 1rem 1.35rem;
-  border: 1px dashed color-mix(in srgb, var(--bob-ab-red) 45%, var(--bob-ab-line-strong));
-  border-radius: 1.1rem;
-  background: rgb(215 38 56 / 0.03);
-}
-
-.bob-ab-concepts {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.bob-ab-concept {
-  display: grid;
-  gap: 0.4rem;
-  padding: 1rem;
-  border: 1px solid var(--bob-ab-line-strong);
-  border-radius: 0.9rem;
-  background: rgb(0 0 0 / 0.35);
-}
-
-.bob-ab-concept__stage {
-  margin: 0;
-  color: var(--bob-ab-red-text);
-  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
-.bob-ab-concept__title {
+/* Scene B — editorial Google review, no card chrome */
+.bob-ab-review {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.bob-ab-review__mark {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+}
+
+.bob-ab-review__cta,
+.bob-ab-rebook__cta {
   margin: 0;
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--bob-ab-red) 65%, transparent);
+  text-underline-offset: 0.2em;
 }
 
-.bob-ab-concept__body {
-  margin: 0;
-  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  font-size: 0.9rem;
-  line-height: 1.55;
+.bob-ab-rebook__cta {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
 }
 
-.bob-ab-concept__cta {
-  justify-self: start;
-  margin: 0.25rem 0 0;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid var(--bob-ab-line-strong);
-  border-radius: 999px;
-  color: var(--bob-ab-ink);
-  font-size: 0.78rem;
-  font-weight: 650;
+/*
+  Progress bands (scrub mode only when script sets data-bob-ab-scrub="on"):
+  0–0.33 A · 0.33–0.66 A→B · 0.66–1 B→C
+*/
+.bob-ab[data-bob-ab-scrub='on'] .bob-ab-scene--a {
+  opacity: clamp(0, calc(1 - (var(--bob-ab-p) - 0.22) / 0.22), 1);
+  transform: translate3d(0, calc((var(--bob-ab-p) - 0.22) * 2.5rem), 0);
+}
+
+.bob-ab[data-bob-ab-scrub='on'] .bob-ab-scene--b {
+  opacity: clamp(
+    0,
+    min(
+      calc((var(--bob-ab-p) - 0.28) / 0.18),
+      calc(1 - (var(--bob-ab-p) - 0.62) / 0.2)
+    ),
+    1
+  );
+  transform: translate3d(0, calc((0.45 - var(--bob-ab-p)) * 2rem), 0);
+}
+
+.bob-ab[data-bob-ab-scrub='on'] .bob-ab-scene--c {
+  opacity: clamp(0, calc((var(--bob-ab-p) - 0.62) / 0.22), 1);
+  transform: translate3d(0, calc((1 - var(--bob-ab-p)) * 1.5rem), 0);
+}
+
+/* Default / no-JS / reduced-motion: stack scenes in normal flow */
+.bob-ab:not([data-bob-ab-scrub='on']) .bob-ab-story {
+  height: auto;
+}
+
+.bob-ab:not([data-bob-ab-scrub='on']) .bob-ab-stage {
+  position: static;
+  height: auto;
+  overflow: visible;
+  display: grid;
+  gap: 2.75rem;
+}
+
+.bob-ab:not([data-bob-ab-scrub='on']) .bob-ab-scene {
+  position: static;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  will-change: auto;
+  padding: 0;
 }
 
 .bob-ab-foot {
   display: grid;
-  gap: 1.1rem;
-  margin-top: 2rem;
+  gap: 1.25rem;
+  justify-items: center;
+  margin-top: 2.75rem;
+  max-width: 36rem;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .bob-ab__disclosure {
-  max-width: 48rem;
   margin: 0;
-  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  color: color-mix(in srgb, var(--bob-ab-muted) 92%, var(--fg));
   font-size: 0.8rem;
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .bob-ab__cta {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  min-height: 3rem;
-  padding: 0 1.4rem;
-  border: 1px solid rgb(215 38 56 / 0.6);
-  border-radius: 0.75rem;
-  background: rgb(215 38 56 / 0.08);
-  color: var(--fg);
+  gap: 0.55rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0.35rem;
+  background: var(--bob-ab-red);
+  color: #fff;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
   text-decoration: none;
+  transition: background 0.15s ease;
 }
 
 .bob-ab__cta:hover {
-  border-color: var(--bob-ab-red);
-  background: rgb(215 38 56 / 0.16);
+  background: color-mix(in srgb, var(--bob-ab-red) 88%, #fff 12%);
 }
 
 .bob-ab__cta:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--bob-ab-red-text);
   outline-offset: 3px;
 }
 
 .bob-ab__cta-icon {
   display: inline-flex;
-  color: var(--bob-ab-red-text);
-}
-
-.bob-ab__cta-icon svg {
   width: 1.05rem;
   height: 1.05rem;
 }
 
+.bob-ab__cta-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 @media (max-width: 47.99rem) {
-  .bob-ab__cta {
-    width: 100%;
-  }
-
-  .bob-ab-mail__lines > div,
-  .bob-ab-mail__meta {
-    grid-template-columns: 1fr;
-    gap: 0.15rem;
-  }
-}
-
-@media (min-width: 48rem) {
   .bob-ab {
-    padding: 4.5rem 0 5rem;
+    padding: 2.75rem 0 3.25rem;
   }
 
-  .bob-ab-mails {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
+  .bob-ab-story {
+    height: 220vh;
   }
 
-  .bob-ab-facts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem 1.75rem;
+  .bob-ab-stage {
+    top: max(0.75rem, calc(50vh - 12.5rem));
+    height: min(26rem, calc(100vh - 3rem));
   }
 
-  .bob-ab-part--concept {
-    padding: 1.5rem 1.4rem 1.6rem;
+  .bob-ab-scene__display {
+    font-size: clamp(1.65rem, 9vw, 2.4rem);
   }
 
-  .bob-ab-concepts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
+  .bob-ab-sms {
+    max-width: 100%;
   }
 
-  .bob-ab-foot {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 2rem;
+  .bob-ab:not([data-bob-ab-scrub='on']) .bob-ab-stage {
+    gap: 2.25rem;
   }
 }
 
-@media (min-width: 64rem) {
-  .bob-ab__inner {
-    width: calc(100% - 4rem);
+@media (prefers-reduced-motion: reduce) {
+  .bob-ab-story {
+    height: auto !important;
   }
 
-  .bob-ab__title {
-    font-size: clamp(2.5rem, 3.6vw, 3.2rem);
+  .bob-ab-stage {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: grid;
+    gap: 2.75rem;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  .bob-ab__cta {
-    transition:
-      background-color 160ms ease,
-      border-color 160ms ease;
+  .bob-ab-scene {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    will-change: auto;
+    padding: 0;
   }
 }
