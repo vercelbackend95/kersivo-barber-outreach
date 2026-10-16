@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { MARKETING_NAV_ITEMS, buildMarketingNavigation } from '@/lib/nav/marketingNavigation';
+import { MARKETING_NAV_DIRECT_LINKS, MARKETING_NAV_ITEMS, buildMarketingNavigation, buildMarketingNavTopLevelEntries } from '@/lib/nav/marketingNavigation';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, buildBarbershopWebsitesJsonLd } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, buildBarbershopWebsiteDesignJsonLd } from './barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, buildBarbershopOnlineBookingJsonLd } from './barbershopOnlineBookingPage';
@@ -29,16 +29,27 @@ describe('Websites three-page integrated cluster release gates', () => {
     }
   });
 
-  it('keeps all three Resources items hidden pending cluster release', () => {
-    expect([BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE]).toEqual([false, false, false]);
-    for (const id of ['resources-barbershop-websites', 'resources-website-design', 'resources-online-booking']) {
+  it('keeps the Websites pillar and both Resources guides hidden pending cluster release', () => {
+    expect([
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+      BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
+      BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE,
+    ]).toEqual([false, false, false]);
+
+    // The pillar is promoted to a direct top-level link at launch, never duplicated as a guide.
+    expect(MARKETING_NAV_ITEMS.some((item) => item.href === '/barbershop-websites')).toBe(false);
+    expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(false);
+    const topEntries = buildMarketingNavTopLevelEntries();
+    expect(topEntries.some((entry) => entry.kind === 'link' && entry.link.href === '/barbershop-websites')).toBe(false);
+
+    for (const id of ['resources-website-design', 'resources-online-booking']) {
       const item = MARKETING_NAV_ITEMS.find((entry) => entry.id === id);
       expect(item, id).toBeDefined();
       expect(item?.visible, id).toBe(false);
     }
     const visible = buildMarketingNavigation().flatMap((g) => [...g.featured, ...g.sections.flatMap((s) => s.items)]);
-    for (const id of ['resources-barbershop-websites', 'resources-website-design', 'resources-online-booking']) {
-      expect(visible.map((x) => x.id)).not.toContain(id);
+    for (const href of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
+      expect(visible.map((entry) => entry.href)).not.toContain(href);
     }
     const sitemap = buildMarketingSitemapEntries().map((entry) => entry.loc);
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
