@@ -77,7 +77,7 @@ describe('/barbershop-websites pillar hero', () => {
     }
   });
 
-  it('presents six distinct website/business capabilities with working demo destinations', () => {
+  it('presents six capabilities linking online booking to the focused guide and the others to demos', () => {
     const panel = read(`${componentDir}WebsiteFeaturesPanel.astro`);
     expect(panel).toContain('Your website. Your business.');
     const capabilities = ['Branding', 'Services', 'Your Team', 'Retail Shop', 'Online Booking', 'Contact & Location'];
@@ -85,9 +85,10 @@ describe('/barbershop-websites pillar hero', () => {
     expect((panel.match(/key: '/g) ?? [])).toHaveLength(6);
     expect(panel).not.toContain('Hero sections');
     expect(panel).not.toContain("label: 'Gallery'");
-    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF', '/demo/services', '/demo/barbers']) {
+    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'BARBERSHOP_ONLINE_BOOKING_PAGE_PATH', 'DEMO_CONTACT_HREF', '/demo/services', '/demo/barbers']) {
       expect(panel).toContain(route);
     }
+    expect(panel).toContain("href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH");
   });
 
   it('uses a visual-only calendar rail matching the real booking date picker', () => {
