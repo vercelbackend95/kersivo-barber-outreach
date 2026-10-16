@@ -83,7 +83,7 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
       /logo, colours and available photos/,
       /host it with SSL, keep it updated and help/,
       /service, a barber and a time/,
-      /enable a £\\$\\{KERSIVO_BOOKING_DEPOSIT_GBP\\} booking deposit, capped at the service price/,
+      /enable a £\$\{KERSIVO_BOOKING_DEPOSIT_GBP\} booking deposit, capped at the service price/,
       /Booking confirmations and reminders are sent by email/,
       /SMS_INCLUDED_WITH_ALLOWANCE_CLAIM/,
       /barbers and services, keep track of clients and check your reports/,
