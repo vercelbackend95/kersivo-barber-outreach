@@ -26,6 +26,9 @@ import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from '.
 import { buildAbsoluteUrl } from './meta';
 import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
 import { STARTER_PAGE_LAST_UPDATED_ISO, STARTER_PAGE_PATH } from './starterPage';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from './barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
 
 /**
  * Marketing-domain sitemap for kersivo.co.uk only.
@@ -48,6 +51,12 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: PRICING_PAGE_PATH, lastmod: PRICING_PAGE_LAST_UPDATED_ISO },
   /** KERSIVO Starter product-led acquisition page. */
   { path: STARTER_PAGE_PATH, lastmod: STARTER_PAGE_LAST_UPDATED_ISO },
+  /** Published Websites pillar and supporting guides (no fabricated lastmod dates). */
+  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE ? [{ path: BARBERSHOP_WEBSITES_PAGE_PATH }] : []),
+  ...(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+    ? [{ path: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH }] : []),
+  ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+    ? [{ path: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH }] : []),
   /** Matches the visible "Last updated" date on src/pages/about.astro. */
   { path: ABOUT_PAGE_PATH, lastmod: ABOUT_PAGE_LAST_UPDATED_ISO },
   /** Alternatives Hub; matches the visible "Last updated" date on src/pages/compare/index.astro. */
