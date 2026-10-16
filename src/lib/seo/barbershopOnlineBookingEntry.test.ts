@@ -90,8 +90,8 @@ describe('Barbershop online booking page — Section 05 entry points', () => {
     }
   });
 
-  it('keeps the page unpublished and has no tracked CTA in this section', () => {
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(false);
+  it('keeps the published page free of extra tracked CTA in this section', () => {
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
     expect(component).not.toContain('data-track');
     expect(component).not.toContain('TRACK_EVENT');
     expect(component).not.toContain('STARTER_PAGE_PATH');
