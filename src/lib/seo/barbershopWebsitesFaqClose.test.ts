@@ -48,7 +48,8 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     const at = page.indexOf('<FaqAndClose />');
     expect(at).toBeGreaterThan(page.indexOf('<SetupProcess />'));
     const between = page.slice(at + '<FaqAndClose />'.length, page.indexOf('<Footer50'));
-    expect(between.trim()).toBe('');
+    expect(between.trim()).toBe('</main>');
+    expect(page.indexOf('<Footer50')).toBeGreaterThan(page.indexOf('</main>'));
   });
 
   it('keeps the page noindex and adds no structured data', () => {
