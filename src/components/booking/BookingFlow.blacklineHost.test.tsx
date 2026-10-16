@@ -21,7 +21,10 @@ import { trackConsentedEvent } from '@/lib/consent/events';
 
 const trackSpy = vi.mocked(trackConsentedEvent);
 
+// Keep the dated demo fixture in the future relative to the test clock.
+// Mock Date only; real timers remain active for React's asynchronous waitFor.
 const WEDNESDAY = '2026-08-12';
+const FIXTURE_NOW = new Date('2026-08-10T08:00:00.000Z');
 
 const services = DEMO_SERVICES.map((service) => ({
   id: service.id,
@@ -101,6 +104,8 @@ describe('BookingFlow BLACKLINE host', () => {
   const fetchSpy = vi.fn();
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXTURE_NOW);
     trackSpy.mockClear();
     fetchSpy.mockReset();
     vi.stubGlobal('fetch', fetchSpy);
@@ -110,6 +115,7 @@ describe('BookingFlow BLACKLINE host', () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     window.sessionStorage.removeItem(BLACKLINE_SESSION_BOOKINGS_KEY);
   });
@@ -172,7 +178,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(href).toContain('demoJourney=booking');
     expect(href).toContain('section=bookings_dashboard');
 
-    expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
+    expect(screen.getByRole('link', { name: 'Back to Cutstate' }).getAttribute('href')).toBe('/demo');
     expect(screen.queryByRole('link', { name: 'View services' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
