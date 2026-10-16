@@ -11,8 +11,8 @@ export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
 
 export const BARBERSHOP_WEBSITES_PAGE_H1 = 'Barbershop Websites with Online Booking';
 
-/** The pillar stays noindex and out of the sitemap until the entire cluster passes release QA. */
-export const BARBERSHOP_WEBSITES_PAGE_INDEXABLE = false;
+/** Published as the canonical pillar of the UK barbershop websites cluster. */
+export const BARBERSHOP_WEBSITES_PAGE_INDEXABLE = true;
 
 /** Links the sales pillar into KERSIVO's existing WebSite/Organization schema entities. */
 export function buildBarbershopWebsitesJsonLd(): Record<string, unknown> {
