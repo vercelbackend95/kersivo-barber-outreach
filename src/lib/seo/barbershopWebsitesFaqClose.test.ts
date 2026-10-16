@@ -127,7 +127,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(a).toContain('capped at the service price');
     expect(a).toContain('or full payment online');
     expect(a).toContain('deposit counts towards the service price');
-    expect(a).toContain('remaining balance is paid at the shop');
+    expect(a).toContain('with any remaining balance paid at the shop');
     expect(a).toContain('connected, payment-ready Stripe account');
     expect(KERSIVO_BOOKING_DEPOSIT_GBP * 100).toBe(BOOKING_DEPOSIT_CAP_PENCE);
     expect(a).toContain('The deposit and full-payment modes require');
