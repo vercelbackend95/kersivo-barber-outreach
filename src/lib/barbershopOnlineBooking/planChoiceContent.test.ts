@@ -36,7 +36,12 @@ describe('Section 07 plan choice content', () => {
 
     const pay = content.faqs.find((faq) => faq.id === 'pay');
     expect(pay?.answer.join(' ')).toContain(`£${KERSIVO_BOOKING_DEPOSIT_GBP}`);
-    expect(pay?.answer.join(' ').toLowerCase()).toContain('optional for the shop');
+    const [starterPaymentRule, fullPaymentRule] = pay?.answer ?? [];
+    expect(starterPaymentRule).toContain('the customer chooses');
+    expect(starterPaymentRule).not.toMatch(/Pay at shop/i);
+    expect(fullPaymentRule).toContain('the shop owner chooses Pay at shop');
+    expect(fullPaymentRule).toContain('deposit, or payment in full online');
+    expect(fullPaymentRule).toContain(STRIPE_FEES_NOTE);
 
     const blob = [
       content.lead,

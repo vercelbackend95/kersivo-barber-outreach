@@ -149,9 +149,12 @@ describe('homepage SEO phase 1: headings', () => {
     expect(text(between(switcher, '<h2 id="landing-switcher-reassurance-title"', '</h2>'))).toBe(
       'Switch barber booking platforms without interrupting bookings',
     );
-    expect(text(between(switcher, '<p class="landing-switcher-reassurance__lead">', '</p>'))).toBe(
+    const switcherLead = text(between(switcher, '<p class="landing-switcher-reassurance__lead">', '</p>'));
+    expect(switcherLead).toContain(
       'Already using Booksy, Fresha, Setora or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
     );
+    expect(switcherLead).toContain('Before you switch, compare UK barber booking systems side by side');
+    expect(switcher).toContain('href="/compare"');
   });
 });
 
