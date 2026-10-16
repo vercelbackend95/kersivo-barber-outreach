@@ -23,7 +23,13 @@ const normalizePath = (path: string) => (path.length > 1 && path.endsWith('/') ?
 export function applyMarketingNavCurrent(root: HTMLElement, location: Pick<Location, 'pathname'>): void {
   const pathname = normalizePath(location.pathname);
   root.querySelectorAll<HTMLAnchorElement>('a[data-mnav-match]').forEach((link) => {
-    if (normalizePath(link.dataset.mnavMatch ?? '') === pathname) link.setAttribute('aria-current', 'page');
+    const exact = normalizePath(link.dataset.mnavMatch ?? '') === pathname;
+    const rawPrefix = link.dataset.mnavMatchPrefix;
+    const prefix = rawPrefix ? normalizePath(rawPrefix) : null;
+    // A section remains current on nested article pages even after Astro swaps
+    // the persisted navbar; /insights must not match unrelated /insights-anything.
+    const descendant = Boolean(prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`)));
+    if (exact || descendant) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
   root.querySelectorAll<HTMLElement>('[data-mnav-trigger], [data-mnav-accordion]').forEach((control) => {
