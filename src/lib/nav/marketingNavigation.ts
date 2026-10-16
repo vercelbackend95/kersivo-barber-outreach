@@ -6,6 +6,7 @@
 
 import { NAVBAR_SUBSCRIBE_CTA_LABEL, type Navbar17CtaTrack } from './navbar17Items';
 import type { MarketingNavIcon } from './marketingNavIcons';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 
 export type MarketingNavGroupId = 'platform' | 'compare' | 'resources';
 
@@ -260,6 +261,17 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'resources',
     section: 'tools',
     icon: 'calculator',
+  },
+  {
+    id: 'resources-barbershop-websites',
+    label: 'Barbershop Websites',
+    description: 'Your branded website, booking journey and Full KERSIVO setup.',
+    href: BARBERSHOP_WEBSITES_PAGE_PATH,
+    group: 'resources',
+    section: 'guides',
+    icon: 'guide',
+    // Do not surface prelaunch content in public navigation.
+    visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
     id: 'resources-faq',

@@ -14,7 +14,10 @@ import {
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  buildBarbershopWebsitesJsonLd,
 } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import {
   FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
@@ -30,6 +33,7 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}
   robotsFollow
+  jsonLd={buildBarbershopWebsitesJsonLd()}
 >
   <main class="bsw-page">
     <BarbershopWebsitesHero />
@@ -39,29 +43,31 @@ const currentYear = new Date().getFullYear();
     <FullOffer />
     <SetupProcess />
     <FaqAndClose />
-
-    <Footer50
-      showIntro={false}
-      brandLine="Own your brand. Own your bookings."
-      contactEmail={KERSIVO_CONTACT_EMAIL}
-      brandName="KERSIVO"
-      copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Home', href: '/' },
-        { name: 'Starter', href: '/starter' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'Live demo', href: '/demo' },
-        { name: 'Booksy comparison', href: '/booksy-alternative' },
-        { name: 'Fresha comparison', href: '/fresha-alternative' },
-      ]}
-      social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
-    />
   </main>
+
+  <Footer50
+    showIntro={false}
+    brandLine="Own your brand. Own your bookings."
+    contactEmail={KERSIVO_CONTACT_EMAIL}
+    brandName="KERSIVO"
+    copyright={`© ${currentYear} KERSIVO`}
+    navigation={[
+      { name: 'Home', href: '/' },
+      { name: 'Starter', href: '/starter' },
+      { name: 'Pricing', href: '/pricing' },
+      { name: 'Website design guide', href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH },
+      { name: 'Online booking guide', href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH },
+      { name: 'Live demo', href: '/demo' },
+      { name: 'Booksy comparison', href: '/booksy-alternative' },
+      { name: 'Fresha comparison', href: '/fresha-alternative' },
+    ]}
+    social={getFooterSocialLinks()}
+    legal={[
+      FOOTER_LEGAL_LINKS.privacy,
+      FOOTER_LEGAL_LINKS.cookies,
+      FOOTER_LEGAL_LINKS.cookieSettings,
+      FOOTER_LEGAL_LINKS.dpa,
+      FOOTER_LEGAL_LINKS.termsAndCancellation,
+    ]}
+  />
 </LandingLayout>

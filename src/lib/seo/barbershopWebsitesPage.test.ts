@@ -77,7 +77,7 @@ describe('/barbershop-websites pillar hero', () => {
     }
   });
 
-  it('presents six distinct website/business capabilities with working demo destinations', () => {
+  it('presents six capabilities with focused guide links and working demo destinations', () => {
     const panel = read(`${componentDir}WebsiteFeaturesPanel.astro`);
     expect(panel).toContain('Your website. Your business.');
     const capabilities = ['Branding', 'Services', 'Your Team', 'Retail Shop', 'Online Booking', 'Contact & Location'];
@@ -85,7 +85,7 @@ describe('/barbershop-websites pillar hero', () => {
     expect((panel.match(/key: '/g) ?? [])).toHaveLength(6);
     expect(panel).not.toContain('Hero sections');
     expect(panel).not.toContain("label: 'Gallery'");
-    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF', '/demo/services', '/demo/barbers']) {
+    for (const route of ['BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH', 'BARBERSHOP_ONLINE_BOOKING_PAGE_PATH', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) {
       expect(panel).toContain(route);
     }
   });

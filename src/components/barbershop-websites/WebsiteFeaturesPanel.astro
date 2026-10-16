@@ -1,23 +1,23 @@
 ---
 import { CalendarDays, ChevronRight, MapPin } from 'lucide-react';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import {
-  DEMO_BOOK_HREF,
   DEMO_CONTACT_HREF,
-  DEMO_HOME_HREF,
   DEMO_SHOP_HREF,
 } from '@/lib/demo/nav';
 
 const IMG = '/images/barbershop-websites';
 
-// Purposeful navigation to existing BLACKLINE demo pages.
-// Dedicated SEO pages may follow after keyword validation; do not create thin duplicates.
+// Focused guide links explain design, team and booking; the remaining entries lead to the working demo.
+// The full cluster must be integrated and released together before these links become public.
 const rows = [
-  { key: 'branding', label: 'Branding', body: 'Make your website feel like your shop.', href: DEMO_HOME_HREF },
+  { key: 'branding', label: 'Branding', body: 'See how to present your barbershop brand.', href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH },
   { key: 'services', label: 'Services', body: 'Show your cuts, prices and services.', href: '/demo/services' },
-  { key: 'team', label: 'Your Team', body: 'Introduce the people behind the chairs.', href: '/demo/barbers' },
+  { key: 'team', label: 'Your Team', body: 'Present the barbers behind your shop.', href: `${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team` },
   { key: 'retail', label: 'Retail Shop', body: 'Sell products for in-shop collection.', href: DEMO_SHOP_HREF },
-  { key: 'booking', label: 'Online Booking', body: 'Let clients book directly on your site.', href: DEMO_BOOK_HREF },
+  { key: 'booking', label: 'Online Booking', body: 'See how booking works for clients and your shop.', href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH },
   { key: 'contact', label: 'Contact & Location', body: 'Make your shop easy to find.', href: DEMO_CONTACT_HREF },
 ] as const;
 ---
