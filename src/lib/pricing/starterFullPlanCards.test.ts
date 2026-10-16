@@ -48,6 +48,9 @@ describe('Shared StarterFullPlanCards', () => {
     expect(STARTER_FULL_PLAN_STARTER_CTA.href).toBe('/admin');
     expect(STARTER_FULL_PLAN_STARTER_CTA.trackEvent).toBe('starter_signup_click');
     expect(STARTER_FULL_PLAN_FULL_CTA.href).toBe('/pricing#plan');
+    expect(STARTER_FULL_PLAN_FULL_CTA.trackEvent).toBe('plan_my_setup_click');
+    expect(component).toContain('data-track={STARTER_FULL_PLAN_FULL_CTA.trackEvent}');
+    expect(component.match(/data-track-placement={placement}/g)).toHaveLength(2);
     expect(STARTER_FULL_PLAN_FULL_CTA.label).toBe('See Full KERSIVO pricing');
     expect(component).not.toContain('/admin/launch');
     expect(component).not.toContain('saas_subscribe_click');

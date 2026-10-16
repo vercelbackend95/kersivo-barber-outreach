@@ -98,29 +98,29 @@ const stages = [
   {
     tab: 'Service',
     title: 'Choose the service',
-    client: `Clients start from your shop's own service menu, with each price and duration shown before they choose.`,
-    shop: 'The service fixes the appointment length and price before any time is offered.',
+    client: `Clients see the price and duration of each service before choosing.`,
+    shop: 'Service duration determines how much free time the appointment needs.',
     summary: `${STEP_COPY.service.title}: ${categoryServices.map((s) => `${s.name}, ${s.duration}, ${s.price}`).join('; ')}. ${selectedService.name} selected.`,
   },
   {
     tab: 'Barber',
     title: 'Choose the barber',
     client: `Clients pick a named barber, or “${ANY_BARBER.name}” when the fastest available chair matters more.`,
-    shop: 'Only barbers who offer the chosen service are listed, so requests reach someone who does that work.',
+    shop: 'Only barbers who offer that service appear as choices.',
     summary: `${STEP_COPY.barber.title}: ${ANY_BARBER.name} (${ANY_BARBER.helper}), ${barbers.map((b) => b.name).join(', ')}. ${selectedBarber.name} selected.`,
   },
   {
     tab: 'Time',
     title: 'Choose an available time',
-    client: 'Clients see open times for the day they pick, with the appointment summary alongside.',
-    shop: `Times follow your working hours, the service length and appointments already booked. In the ${DEMO_SHOP_NAME} demo they follow the demo shop's own timeline.`,
+    client: 'Clients choose a day and see available times alongside their booking details.',
+    shop: `The shop's hours, service duration and existing bookings decide which times appear. The ${DEMO_SHOP_NAME} example uses fictional diary data.`,
     summary: `${STEP_COPY.schedule.title}: illustrative example times ${EXAMPLE_SLOTS.join(', ')}; ${SELECTED_SLOT} selected. Summary: ${summaryRows.map(([label, value]) => `${label} ${value}`).join(', ')}.`,
   },
   {
     tab: 'Details',
     title: 'Add details and the payment step',
     client: 'Name and email are required; phone is optional. On a live KERSIVO Starter booking page, clients then choose to pay a £5 deposit or the full price.',
-    shop: 'Contact details arrive with the booking, and the payment terms are clear before the client confirms. The fictional demo takes no payment.',
+    shop: "Booking details include the client's contact information and any required payment. The fictional demo takes no payment.",
     summary: `${STEP_COPY.details.title}: Name, Email, Phone (optional). On a live KERSIVO Starter booking page the Payment choice reads Pay £5 deposit, £5 now and ${formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE)} at the shop, or Pay in full, ${servicePrice} now and nothing to pay at the shop.`,
   },
   {
@@ -142,8 +142,8 @@ const stepState = (stageIndex: number, stepIndex: number) =>
       <p class="boj__eyebrow">The client booking journey</p>
       <h2 id="boj-title" class="boj__title">From Book Now to a Confirmed Appointment</h2>
       <p class="boj__lead">
-        A useful barbershop booking flow makes the service, barber, available time and payment conditions
-        clear before the client confirms. Here is what the customer sees — and why each step matters to the shop.
+        Follow the booking journey from choosing a service to confirmation. Each step shows what the client sees
+        and what it means for your shop.
       </p>
     </header>
 

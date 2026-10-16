@@ -42,6 +42,7 @@ export const STARTER_FULL_PLAN_STARTER_CTA = {
 export const STARTER_FULL_PLAN_FULL_CTA = {
   label: 'See Full KERSIVO pricing',
   href: '/pricing#plan',
+  trackEvent: 'plan_my_setup_click',
 } as const;
 
 export const STARTER_FULL_PLAN_MONTHLY_GBP = SAAS_MONTHLY_GBP;
