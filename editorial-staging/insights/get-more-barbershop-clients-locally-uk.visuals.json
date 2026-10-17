@@ -3,8 +3,8 @@
   "source": "editorial-staging/insights/get-more-barbershop-clients-locally-uk.md",
   "output": "editorial-staging/insights/get-more-barbershop-clients-locally-uk-display.md",
   "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58",
-  "status": "Draft Ready for Review — Writing Approved — no Hold — Owner final approval pending",
-  "publishApproved": false,
+  "status": "Approved for publication — explicit owner instruction 2026-10-17",
+  "publishApproved": true,
   "seo": {
     "title": "How to Get More Barbershop Clients Locally (UK Guide)",
     "description": "Judge every marketing channel by what a returning client costs. Referrals, lapsed clients, Google and leaflets, with the UK rules on texts and flyers.",
@@ -60,5 +60,11 @@
       "rights": "Unsplash License page verified 2026-10-17. Described as barber chair/mirror with no people; property permissions are not independently confirmed.",
       "licenceReviewed": true
     }
-  ]
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58",
+    "note": "Owner approved preview appearance and requested production publication on 17 October 2026. Source ARTICLE DRAFT v2."
+  }
 }
