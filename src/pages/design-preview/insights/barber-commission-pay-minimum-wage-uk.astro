@@ -1,0 +1,37 @@
+---
+/**
+ * Editorial preview only. Not in INSIGHTS_PUBLISHED_ARTICLES or public sitemap.
+ * Registry-driven public Insights routes are unchanged. Noindex is enforced
+ * by InsightsArticleLayout until explicit owner publication approval.
+ */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as CommissionPayArticle } from '../../../../editorial-staging/insights/barber-commission-pay-minimum-wage-uk-display.md';
+
+const article = {
+  headline: 'Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage',
+  seoTitle: 'Commission Pay for Barbers: UK Minimum Wage Rules (2026)',
+  description: 'Commission-only or a base plus percentage? Check UK minimum wage rates, hours and pay reference periods for employed barbers — with a worked £2,198.83 example.',
+  slug: 'barber-commission-pay-minimum-wage-uk',
+  categoryId: 'industry-people' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d',
+  heroImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="Barber at work in a Doncaster UK hair salon"
+  publishedDate="2026-10-17"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <CommissionPayArticle />
+</InsightsArticleLayout>
