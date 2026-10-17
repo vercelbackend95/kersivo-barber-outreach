@@ -8,7 +8,7 @@ import {
   GATE1_OWNERS_DESK,
   GATE1_TOPICS,
 } from '@/lib/insights/gate1Preview';
-import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS } from '@/lib/seo/insights';
+import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS, INSIGHTS_CARD_FEES } from '@/lib/seo/insights';
 
 const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
@@ -57,6 +57,17 @@ export const INSIGHTS_HOME_FEATURE_STACK = [
 
 /** Latest Thinking — published articles only. */
 export const INSIGHTS_HOME_LATEST = [
+  {
+    id: INSIGHTS_CARD_FEES.slug,
+    category: INSIGHTS_CARD_FEES.category,
+    format: 'Guide',
+    title: INSIGHTS_CARD_FEES.headline,
+    excerpt: INSIGHTS_CARD_FEES.lead,
+    readMinutes: 9,
+    imageSrc: INSIGHTS_CARD_FEES.heroImage,
+    imageAlt: 'Original KERSIVO Insights editorial illustration of a 20p fixed card processing fee',
+    href: INSIGHTS_CARD_FEES.path,
+  },
   {
     id: INSIGHTS_LOCAL_CLIENTS.slug,
     category: INSIGHTS_LOCAL_CLIENTS.category,
