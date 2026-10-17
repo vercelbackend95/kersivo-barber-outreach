@@ -1,0 +1,85 @@
+# Barbers' Hands: The Skin Problem That Builds Slowly and Costs Quietly
+
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Professional barber's hands cutting hair with scissors and a comb" />
+<figcaption>Editorial photo of barbering craft, not a KERSIVO client or endorsement — <a href="https://unsplash.com/photos/barber-cutting-hair-with-scissors-and-comb-sdh4g0H-uXg" target="_blank" rel="noopener noreferrer">Josh Marty / Unsplash</a>.</figcaption></figure>
+
+Ask a barber what they need to do the job and they'll talk about clippers, scissors and a steady eye. Hands rarely come up, until they start to crack.
+
+Work-related dermatitis is often thought of as a hairdresser's problem, linked to colour and bleach. Barbershops can't rule themselves out. The Health and Safety Executive's guidance for the sector names frequent contact with water and shampoo, and some hairdressing and cleaning products, among the causes. Its hairdressing sheet notes that barbicides "contain chemicals that can irritate the skin and eyes". Add the hand-washing and sanitiser a busy shop goes through in a day, and a barber's hands may face more of this than the job's reputation suggests.
+
+The useful point for an owner isn't that skin damage is common. It's that it builds slowly, is largely preventable, and is far cheaper to prevent than to manage once a barber can't work comfortably.
+
+## How it happens
+
+HSE describes two main forms. Irritant contact dermatitis comes from repeated exposure to things that strip and damage skin, such as water, detergents and some chemicals. Allergic contact dermatitis comes from becoming sensitised to a substance. Once someone is sensitised, even small exposures can set it off, and it may never fully go away.
+
+In a barbershop, the obvious culprits are wet work, cleaning and disinfecting tools, and some products used on clients. The less obvious one is time. Each wash, each wipe-down and each squirt of sanitiser does a little damage. On a busy day those small amounts add up, and skin that never fully recovers between shifts gradually gets worse.
+
+<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1584744354544-a956499a4959?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2200" width="1600" height="1000" loading="lazy" decoding="async" alt="Close-up of hands being washed at a sink, illustrating repeated wet work" />
+<figcaption>Hand-washing photograph illustrating wet work; not a photograph of work-related dermatitis — <a href="https://unsplash.com/photos/a-person-washing-their-hands-in-a-sink-BGiJJcHwA94" target="_blank" rel="noopener noreferrer">Mélissa Jeanty / Unsplash</a>.</figcaption></figure>
+
+## What HSE says to do
+
+None of HSE's advice for the sector is complicated, and most of it costs very little.
+
+<figure class="insights-figure insights-figure--diagram"><img src="/images/insights/barbers-hands/skin-protection-cycle.svg" width="1200" height="730" loading="lazy" decoding="async" alt="HSE-inspired three-step workplace skin care diagram: avoid unnecessary exposure, protect with gloves and proper drying and moisturising, and check for early signs of dermatitis" />
+<figcaption>Original KERSIVO graphic based on HSE prevention guidance; not a medical diagnosis or replacement for workplace COSHH risk assessment.</figcaption></figure>
+
+Its key messages for hairdressers are to keep the workplace well ventilated, wear disposable non-latex gloves for shampooing, colouring and bleaching, dry hands thoroughly with a soft towel, moisturise as often as possible, change gloves between clients, and check skin regularly for early signs of problems. Its broader prevention guidance adds soft cotton or disposable paper towels for drying, mild cleansers, and moisturisers in dispensers that prevent cross-contamination. HSE's hairdressing sheet also warns that skin creams are not a substitute for gloves and don't provide a full barrier.
+
+For a barbershop, the practical translation is a short list: gloves for the wet and chemical tasks that call for them, decent towels by the sink rather than relying on a hand dryer, moisturiser within reach of every station, and gloves when cleaning and disinfecting tools.
+
+## Checking skin is part of the job
+
+Prevention only works if someone notices when it's failing. HSE's guidance on preventing skin disease recommends regular skin checks to spot early signs such as itchy, dry or red skin. The earlier problems are recognised and treated, the more likely a full recovery is.
+
+Informal checks are good practice. Formal **health surveillance** is a legal requirement in some situations. HSE's guidance says it is required when, after all reasonable controls, employees are still exposed to a residual risk from a substance linked to an identifiable disease, there's a reasonable likelihood of that disease under the conditions of work, and there's a valid way to detect it. HSE lists wet work causing dermatitis in hairdressers as an example of where it may be appropriate, along with exposure to sensitising products and reliance on gloves as a control. Its hairdressing sheet says employers must carry out health surveillance where workers use a product labelled as possibly causing sensitisation by skin contact.
+
+What's suitable depends on the risk. Where exposure is clear and dermatitis isn't unusual in the work, HSE describes a higher level: a baseline skin check when someone starts, regular checks by a trained "responsible person", often a brief monthly routine, and clear instructions on reporting symptoms. Where exposure is occasional and controls are adequate, a lower level, such as an annual questionnaire, may be enough. Your risk assessment decides which applies, and HSE suggests taking occupational health advice rather than guessing.
+
+There's a reporting duty too. Under RIDDOR, occupational dermatitis is reportable once a doctor has diagnosed it, and only where the person's work involves significant or regular exposure to a chemical or biological skin irritant or sensitising agent. For an employee, the diagnosis must be in writing before the employer reports it. A self-employed person needs only a doctor's verbal diagnosis to trigger their own duty to report.
+
+## What a sore pair of hands costs
+
+Here's a **hypothetical** to show why prevention is worth the bother. Suppose a barber's hands become bad enough that they need two weeks away from wet work and cutting. Assume their chair would otherwise have earned £30 an hour in contribution over a 35-hour week, nobody covers the chair, and none of their clients simply move to another day. On those assumptions, about £2,100 of contribution is at risk over the two weeks (2 × 35 × £30).
+
+That's contribution at risk, not a proven loss. If other barbers absorb some of the bookings, or clients wait and rebook, the shop loses less. If clients book elsewhere and don't come back, or the shop pays sick pay or cover, it loses more.
+
+Gloves, towels and moisturiser for a year will cost most shops much less than a figure of that size, so prevention looks cheap by comparison. But the comparison only holds if the precautions actually reduce the risk, which is why the skin checks matter.
+
+The longer-term cost is harder to put a figure on. A barber who becomes sensitised to a product may have to avoid it for good, and in some cases that can make it hard to stay in the trade. That's a loss to the person first, but also to a shop that has trained them and built a clientele around them.
+
+## Whose responsibility it is
+
+Who carries the legal duty depends on the arrangement, and there's no single answer for every shop.
+
+For a shop with **employed barbers**, the duty is clear. Under the Control of Substances Hazardous to Health regulations, the employer has to assess and control the risks to employees from hazardous substances, including skin risks. That means a risk assessment that covers skin, suitable gloves and skin-care products, training, health surveillance where it's required, and RIDDOR reports where they apply.
+
+For an **owner-operator** working alone, there's no employer duty to yourself in the same way. The reporting rule for the self-employed can still apply, and the same habits protect the one pair of hands the business depends on.
+
+For **self-employed chair renters**, the position depends on the facts. A genuinely self-employed renter is generally responsible for their own working practices and products. The shop, as the business in control of the premises, still has duties for what it controls, such as the sinks, the facilities and any products or cleaning chemicals it supplies. If renters are in practice treated like employees, employer duties may apply. Agree in writing who supplies what, and check HSE's guidance or take advice if the arrangement is mixed.
+
+## Doubts worth answering
+
+Some barbers dislike working in gloves and feel they lose touch and precision. That's a fair point for cutting, and HSE's advice doesn't ask anyone to cut in gloves. It's aimed at the wet and chemical tasks: shampooing, colouring, mixing and cleaning. Gloves for those, and careful drying and moisturising the rest of the time, address most of the risk without changing how anyone cuts hair.
+
+Others assume skin problems are just part of the job. HSE's guidance points the other way: work-related dermatitis is largely preventable, and early action makes a full recovery more likely.
+
+## A five-minute audit
+
+Walk round the shop at the end of a busy day and look at three things: what's by the sink for drying hands, whether there's moisturiser at every station, and whether gloves are used when tools are cleaned and disinfected. Then ask each barber, privately, whether their hands have been sore, cracked or itchy recently. If anyone says yes, that's the moment to act, not when they can no longer hold the clippers comfortably. If you employ staff, make sure your risk assessment covers skin, and take occupational health advice on whether, and at what level, you need formal health surveillance.
+
+<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1656921350183-7935040cf7fb?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2200" width="1600" height="1000" loading="lazy" decoding="async" alt="Barber's scissors and combs laid out as professional tools" />
+<figcaption>Tools used in the trade, shown for editorial context — <a href="https://unsplash.com/photos/a-group-of-scissors-and-combs-y-VX9YhDd4c" target="_blank" rel="noopener noreferrer">Zlobniyy / Unsplash</a>.</figcaption></figure>
+
+---
+
+## References (checked 16 October 2026; items 5–7 added in v2)
+
+1. HSE, COSHH and hairdressers — key messages — [https://www.hse.gov.uk/COSHH/industry/hairdressing.htm](https://www.hse.gov.uk/COSHH/industry/hairdressing.htm)
+2. HSE, Hairdressing (COSHH essentials sheet SR11) — [https://www.hse.gov.uk/pubns/guidance/sr11.pdf](https://www.hse.gov.uk/pubns/guidance/sr11.pdf)
+3. HSE, Skin at work: work-related skin diseases — prevention — [https://www.hse.gov.uk/skin/employ/prevention.htm](https://www.hse.gov.uk/skin/employ/prevention.htm)
+4. The Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013 (RIDDOR), reg. 8(c) — [https://www.legislation.gov.uk/uksi/2013/1471/regulation/8](https://www.legislation.gov.uk/uksi/2013/1471/regulation/8)
+5. HSE, Skin at work: health surveillance — [https://www.hse.gov.uk/skin/professional/health-surveillance.htm](https://www.hse.gov.uk/skin/professional/health-surveillance.htm)
+6. HSE, COSHH health surveillance — [https://www.hse.gov.uk/coshh/basics/surveillance.htm](https://www.hse.gov.uk/coshh/basics/surveillance.htm)
+7. HSE, RIDDOR reportable occupational diseases (occupational dermatitis) — [https://www.hse.gov.uk/RIDDOR/occupational-diseases.htm](https://www.hse.gov.uk/RIDDOR/occupational-diseases.htm)
