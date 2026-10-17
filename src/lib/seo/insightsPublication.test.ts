@@ -22,7 +22,7 @@ describe('Insights publication safety', () => {
   it('keeps a unique owner-approved registry of published articles', () => {
     const slugs = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.slug);
     const paths = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path);
-    expect(slugs).toHaveLength(8);
+    expect(slugs).toHaveLength(9);
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(new Set(paths).size).toBe(paths.length);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
