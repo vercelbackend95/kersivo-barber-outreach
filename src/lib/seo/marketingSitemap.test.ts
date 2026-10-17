@@ -14,6 +14,7 @@ import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/insights',
+  'https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk',
   'https://kersivo.co.uk/insights/barbershop-client-retention-second-visit',
   'https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse',
   'https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning',
@@ -76,6 +77,7 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/insights']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-client-retention-second-visit']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning']).toBe('2026-10-17');
