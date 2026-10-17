@@ -1,7 +1,7 @@
 # How to Get More Barbershop Clients Locally: Price the Channel Before You Pick It
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1759134248487-e8baaf31e33e?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2400" width="1800" height="1125" loading="eager" decoding="async" alt="Clients receiving haircuts in a professional barbershop interior" />
-<figcaption>Editorial photography of a working barbershop; not a KERSIVO client. — <a href="https://unsplash.com/photos/barber-shop-interior-with-clients-receiving-haircuts-_EjaOZ0D8xY" target="_blank" rel="noopener noreferrer">Chaps &amp; Co / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1125" loading="eager" decoding="async" alt="Vintage leather barber chairs and mirrors inside an empty barbershop" />
+<figcaption>Editorial photograph of an empty barbershop; no models pictured, not a KERSIVO client. — <a href="https://unsplash.com/photos/an-empty-barbershop-interior-with-several-chairs-and-mirrors-AXurvQTtO3Y" target="_blank" rel="noopener noreferrer">Barney Goodman / Unsplash</a>.</figcaption></figure>
 
 Most advice on getting more clients is a list of channels: Instagram, leaflets, Google, a referral scheme, a deal site. The lists aren't wrong. What they leave out is the question an owner should ask first. **What does a new client cost through this channel, and how many of them come back?**
 
@@ -49,8 +49,8 @@ The same guidance covers lapsed clients. Under the "soft opt-in", you can text o
 
 #### 2. Being findable: the Google profile
 
-<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2000" width="1600" height="1050" loading="lazy" decoding="async" alt="A customer sitting in a barbershop chair in Doncaster, England" />
-<figcaption>Editorial barbershop photograph from Doncaster, UK; not a KERSIVO customer. — <a href="https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI" target="_blank" rel="noopener noreferrer">Osama Madlom / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2000" width="1600" height="1050" loading="lazy" decoding="async" alt="An empty leather barber chair and mirror in a barbershop" />
+<figcaption>Editorial photograph of barbershop furniture; no model pictured, not a KERSIVO client. — <a href="https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0" target="_blank" rel="noopener noreferrer">Redd Francisco / Unsplash</a>.</figcaption></figure>
 
 When someone types "barber near me", Google says local results depend on three things: **relevance**, **distance** and **prominence**. You can't move your shop, so distance is fixed. Relevance is mostly housekeeping: the correct category, accurate opening hours (including bank holidays), services listed in plain words, and current photos. Prominence builds up over time, and Google's own help pages say it includes how many reviews you have and links to your business from elsewhere on the web.
 
