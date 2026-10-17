@@ -1,0 +1,36 @@
+---
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as CardFeesArticle } from '../../../editorial-staging/insights/barbershop-card-payment-fees-uk-display.md';
+
+/**
+ * Editorial Preview: Notion ARTICLE DRAFT v2, research and writing approved;
+ * owner publication approval has not been given.
+ * Deliberately excluded from the public Insights registry and sitemap.
+ */
+const article = {
+  headline: "The 20p You Don't Notice: How Card Fees Really Work for a Barbershop",
+  seoTitle: 'Barbershop Card Fees: What You Really Pay per Payment',
+  description: "Card fees cost a barbershop more than the headline rate suggests. How fixed fees, card mix and split payments add up, and why you can't surcharge.",
+  slug: 'barbershop-card-payment-fees-uk',
+  category: 'Software & Costs',
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e',
+  heroImage: '/images/insights/card-fees/card-fees-hero.svg',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  coverImage={article.heroImage}
+  coverImageAlt="KERSIVO Insights illustration of a 20p fixed card processing fee"
+  verifiedDate="2026-10-16"
+  publishedDate="2026-10-17"
+  published={false}
+>
+  <CardFeesArticle />
+</InsightsArticleLayout>
