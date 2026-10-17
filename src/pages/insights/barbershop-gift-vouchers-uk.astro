@@ -1,0 +1,36 @@
+---
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as VoucherArticle } from '../../../editorial-staging/insights/barbershop-gift-vouchers-uk-display.md';
+
+/**
+ * EDITORIAL PREVIEW ONLY.
+ * Source: Notion ARTICLE DRAFT v2 (16 Oct 2026), Research & Writing Approved.
+ * No owner final publication approval. Do not add to public registry / sitemap.
+ */
+const article = {
+  headline: 'Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March',
+  seoTitle: 'Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value',
+  description: 'Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.',
+  slug: 'barbershop-gift-vouchers-uk',
+  category: 'Business & Revenue',
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba',
+  heroImage: '/images/insights/gift-vouchers/voucher-hero.svg',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  coverImage={article.heroImage}
+  coverImageAlt="Original KERSIVO Insights editorial gift voucher illustration"
+  verifiedDate="2026-10-16"
+  publishedDate="2026-10-17"
+  published={false}
+>
+  <VoucherArticle />
+</InsightsArticleLayout>
