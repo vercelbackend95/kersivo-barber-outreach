@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 770" role="img" aria-labelledby="title desc">
+<title id="title">Commission vs the national minimum wage for three example months</title>
+<desc id="desc">Example based on a barber aged at least 21, 173 qualifying hours and 40 percent commission. Minimum pay is two thousand one hundred ninety-eight pounds eighty-three pence. Commission of £2600 in a busy month requires no top-up, £2000 in a normal month needs £198.83, and £1400 in a quiet month needs £798.83.</desc>
+<rect width="1200" height="770" fill="#f2f0eb"/><rect x="40" y="43" width="1120" height="685" rx="16" fill="#fffdfa" stroke="#d8d3cc" stroke-width="2"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="80" y="96" fill="#b7283d" font-size="19" font-weight="800" letter-spacing="3">ILLUSTRATIVE / 173 HOURS / 40% COMMISSION</text>
+<text x="80" y="152" fill="#202229" font-size="47" font-weight="850" letter-spacing="-1">Three months. One legal pay floor.</text>
+<text x="80" y="192" fill="#616870" font-size="21">For a worker aged 21+: 173 hours × £12.71 = £2,198.83 minimum.</text>
+<rect x="80" y="236" width="1040" height="47" rx="5" fill="#ede8e2"/><text x="101" y="267" font-size="20" fill="#484e55" font-weight="800">MONTH</text><text x="454" y="267" font-size="20" fill="#484e55" font-weight="800">COMMISSION</text><text x="842" y="267" font-size="20" fill="#484e55" font-weight="800">TOP-UP NEEDED</text>
+<g font-size="26" fill="#21242a" font-weight="750">
+<text x="100" y="338">Busy December</text><text x="455" y="338">£2,600</text><text x="846" y="338" fill="#377567">£0</text>
+<text x="100" y="429">Normal month</text><text x="455" y="429">£2,000</text><text x="846" y="429" fill="#ad3043">£198.83</text>
+<text x="100" y="520">Quiet January</text><text x="455" y="520">£1,400</text><text x="846" y="520" fill="#ad3043">£798.83</text>
+</g>
+<g stroke="#e1ddd6" stroke-width="2"><path d="M80 367H1120M80 458H1120M80 549H1120"/></g>
+<rect x="80" y="579" width="1040" height="100" rx="8" fill="#272b32"/>
+<text x="105" y="620" fill="#f5f0ec" font-size="24" font-weight="800">Commission is variable.</text><text x="105" y="651" fill="#f07c8c" font-size="23">The legal minimum is not.</text>
+<text x="80" y="709" fill="#63696e" font-size="17">Illustrative only: assess actual qualifying pay and hours in each pay reference period.</text>
+</g></svg>
