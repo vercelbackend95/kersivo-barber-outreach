@@ -11,8 +11,11 @@ import {
   SITEMAP_CONTENT_TYPE,
 } from './marketingSitemap';
 import { GET } from '../../pages/sitemap.xml';
+import { INSIGHTS_INDEX_PATH, INSIGHTS_GOOGLE_REVIEWS } from './insights';
 
 const EXPECTED_LOCS = [
+  'https://kersivo.co.uk/insights',
+  'https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules',
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/pricing',
   'https://kersivo.co.uk/starter',
@@ -53,11 +56,14 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(23);
+    expect(entries).toHaveLength(25);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(23);
+    expect(new Set(locs).size).toBe(25);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
+    expect(byLoc['https://kersivo.co.uk/insights']).toBe(INSIGHTS_GOOGLE_REVIEWS.publishedDate);
+    expect(byLoc['https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules']).toBe(INSIGHTS_GOOGLE_REVIEWS.publishedDate);
+    expect(INSIGHTS_INDEX_PATH).toBe('/insights');
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
@@ -84,8 +90,8 @@ describe('marketing sitemap', () => {
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
     expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
 
-    expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
-    for (const loc of EXPECTED_LOCS.slice(1)) {
+    expect(EXPECTED_LOCS.find((loc) => new URL(loc).pathname === '/')?.endsWith('/')).toBe(true);
+    for (const loc of EXPECTED_LOCS.filter((loc) => new URL(loc).pathname !== '/')) {
       expect(loc.endsWith('/')).toBe(false);
     }
   });
@@ -110,7 +116,7 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(23);
+    expect(urlMatches).toHaveLength(25);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
@@ -121,7 +127,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(19);
+    expect(xml.match(/<lastmod>/g)?.length).toBe(21);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
 
     expect(xml).not.toContain('demo-product-');

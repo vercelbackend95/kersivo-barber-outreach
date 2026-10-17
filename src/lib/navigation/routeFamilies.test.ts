@@ -30,6 +30,8 @@ describe('route families', () => {
     expect(getRouteFamily('/privacy')).toBe('marketing');
     expect(getRouteFamily('/cookies')).toBe('marketing');
     expect(getRouteFamily('/terms')).toBe('marketing');
+    expect(getRouteFamily('/insights')).toBe('marketing');
+    expect(getRouteFamily('/insights/google-reviews-barbershop-uk-rules')).toBe('marketing');
     expect(getRouteFamily('/demo')).toBe('demo');
     expect(getRouteFamily('/demo/shop')).toBe('demo');
     expect(getRouteFamily('/demo/admin')).toBe('minimal');

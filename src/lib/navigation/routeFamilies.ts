@@ -21,6 +21,7 @@ export function isLiveTenantShopPath(pathname: string): boolean {
 
 /** Public SEO, comparison and tool pages rendered with LandingLayout and the marketing navigation. */
 export const MARKETING_CONTENT_PATHS: readonly string[] = [
+  '/insights',
   '/compare',
   '/booksy-alternative',
   '/fresha-alternative',
@@ -70,7 +71,8 @@ export function getRouteFamily(pathname: string): RouteFamily {
     path === '/privacy' ||
     path === '/cookies' ||
     path === '/terms' ||
-    MARKETING_CONTENT_PATHS.includes(path)
+    MARKETING_CONTENT_PATHS.includes(path) ||
+    path.startsWith('/insights/')
   ) {
     return 'marketing';
   }

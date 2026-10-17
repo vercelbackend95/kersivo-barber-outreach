@@ -46,9 +46,15 @@ describe('marketing navigation config', () => {
     expect(groups.map((group) => group.label)).toEqual(['Platform', 'Compare', 'Resources']);
     expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Websites', 'Starter', 'Pricing']
-        : ['Starter', 'Pricing', 'FAQ'],
+        ? ['Websites', 'Insights', 'Starter', 'Pricing']
+        : ['Insights', 'Starter', 'Pricing', 'FAQ'],
     );
+    expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights')).toEqual({
+      id: 'insights',
+      label: 'Insights',
+      href: '/insights',
+      matchPrefix: '/insights',
+    });
     expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'starter')).toEqual({
       id: 'starter',
       label: 'Starter',
@@ -67,8 +73,8 @@ describe('marketing navigation config', () => {
     const labels = entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label);
     expect(labels).toEqual(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']
-        : ['Platform', 'Compare', 'Resources', 'Starter', 'Pricing', 'FAQ'],
+        ? ['Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing']
+        : ['Platform', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing', 'FAQ'],
     );
     expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
