@@ -106,8 +106,9 @@ describe('Insights six-category taxonomy', () => {
       'how-to-price-haircut-uk-barber': 'business-profit',
       'barbershop-christmas-opening-hours-planning': 'bookings-operations',
       'barber-dermatitis-skin-care-hse': 'industry-people',
+      'barber-commission-pay-minimum-wage-uk': 'industry-people',
     };
-    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(8);
+    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(9);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       expect(isInsightsCategoryId(article.categoryId)).toBe(true);
       expect(article.categoryId).toBe(expected[article.slug]);
@@ -117,11 +118,11 @@ describe('Insights six-category taxonomy', () => {
     expect(getPublishedArticlesByCategory('brand-marketing')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('bookings-operations')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('tools-payments')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(1);
+    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(2);
 
     const all = INSIGHTS_CATEGORY_IDS.flatMap((id) => getPublishedArticlesByCategory(id));
-    expect(all).toHaveLength(8);
-    expect(new Set(all.map((article) => article.slug)).size).toBe(8);
+    expect(all).toHaveLength(9);
+    expect(new Set(all.map((article) => article.slug)).size).toBe(9);
   });
 
   it('sitemaps every owner-approved category even when it has no published articles', () => {
