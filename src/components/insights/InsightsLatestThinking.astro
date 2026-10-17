@@ -8,49 +8,79 @@ interface Item {
   readMinutes: number;
   imageSrc: string;
   imageAlt: string;
+  href?: string;
 }
 
 interface Props {
   items: readonly Item[];
+  archiveHref?: string;
 }
 
-const { items } = Astro.props;
+const { items, archiveHref = '#insights-top' } = Astro.props;
+const single = items.length === 1;
 ---
 
 <section class="ins-latest" id="insights-latest" aria-labelledby="insights-latest-heading">
   <div class="ins-latest__header">
     <h2 id="insights-latest-heading" class="ins-latest__heading">Latest Thinking</h2>
-    <a class="ins-latest__archive" href="#insights-top">All Articles →</a>
+    <a class="ins-latest__archive" href={archiveHref}>All Articles →</a>
   </div>
 
-  <ul class="ins-latest__grid">
+  <ul class:list={['ins-latest__grid', single && 'ins-latest__grid--single']}>
     {
       items.map((item) => (
         <li class="ins-latest__item">
-          <article class="ins-latest__card">
-            <div class="ins-latest__media-wrap">
-              <img
-                class="ins-latest__media"
-                src={item.imageSrc}
-                alt={item.imageAlt}
-                width="640"
-                height="400"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <p class="ins-latest__meta">
-              <span class="ins-latest__cat">{item.category}</span>
-              <span class="ins-latest__sep" aria-hidden="true">/</span>
-              <span class="ins-latest__format">{item.format}</span>
-            </p>
-            <h3 class="ins-latest__title">{item.title}</h3>
-            <p class="ins-latest__excerpt">{item.excerpt}</p>
-            <p class="ins-latest__footer">
-              <span class="ins-latest__read">{item.readMinutes} MIN READ</span>
-              <span class="ins-latest__arrow" aria-hidden="true">→</span>
-            </p>
-          </article>
+          {item.href ? (
+            <a class="ins-latest__card ins-latest__card--link" href={item.href}>
+              <div class="ins-latest__media-wrap">
+                <img
+                  class="ins-latest__media"
+                  src={item.imageSrc}
+                  alt={item.imageAlt}
+                  width="640"
+                  height="400"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <p class="ins-latest__meta">
+                <span class="ins-latest__cat">{item.category}</span>
+                <span class="ins-latest__sep" aria-hidden="true">/</span>
+                <span class="ins-latest__format">{item.format}</span>
+              </p>
+              <h3 class="ins-latest__title">{item.title}</h3>
+              <p class="ins-latest__excerpt">{item.excerpt}</p>
+              <p class="ins-latest__footer">
+                <span class="ins-latest__read">{item.readMinutes} MIN READ</span>
+                <span class="ins-latest__arrow" aria-hidden="true">→</span>
+              </p>
+            </a>
+          ) : (
+            <article class="ins-latest__card">
+              <div class="ins-latest__media-wrap">
+                <img
+                  class="ins-latest__media"
+                  src={item.imageSrc}
+                  alt={item.imageAlt}
+                  width="640"
+                  height="400"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <p class="ins-latest__meta">
+                <span class="ins-latest__cat">{item.category}</span>
+                <span class="ins-latest__sep" aria-hidden="true">/</span>
+                <span class="ins-latest__format">{item.format}</span>
+              </p>
+              <h3 class="ins-latest__title">{item.title}</h3>
+              <p class="ins-latest__excerpt">{item.excerpt}</p>
+              <p class="ins-latest__footer">
+                <span class="ins-latest__read">{item.readMinutes} MIN READ</span>
+                <span class="ins-latest__arrow" aria-hidden="true">→</span>
+              </p>
+            </article>
+          )}
         </li>
       ))
     }

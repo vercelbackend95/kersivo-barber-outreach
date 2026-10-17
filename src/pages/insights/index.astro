@@ -1,41 +1,127 @@
 ---
+/**
+ * Public KERSIVO Insights hub — magazine homepage.
+ * Published article links only from the Insights registry.
+ */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
-import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
-import '@/styles/components/insights-preview.css';
-import { INSIGHTS_INDEX_TITLE, INSIGHTS_INDEX_DESCRIPTION, INSIGHTS_GOOGLE_REVIEWS as article, buildInsightsIndexJsonLd } from '@/lib/seo/insights';
-const articlePath = article.path;
+import InsightsEditorialMasthead from '@/components/insights/InsightsEditorialMasthead.astro';
+import InsightsFeatureMosaic from '@/components/insights/InsightsFeatureMosaic.astro';
+import InsightsTopicStrip from '@/components/insights/InsightsTopicStrip.astro';
+import InsightsLatestThinking from '@/components/insights/InsightsLatestThinking.astro';
+import InsightsOwnersDesk from '@/components/insights/InsightsOwnersDesk.astro';
+import {
+  INSIGHTS_HOME_FEATURE_DOMINANT,
+  INSIGHTS_HOME_FEATURE_STACK,
+  INSIGHTS_HOME_FEATURE_VERTICAL,
+  INSIGHTS_HOME_LATEST,
+  INSIGHTS_HOME_MASTHEAD,
+  INSIGHTS_HOME_OWNERS_DESK,
+  INSIGHTS_HOME_TOPICS,
+} from '@/lib/insights/insightsHome';
+import {
+  INSIGHTS_INDEX_DESCRIPTION,
+  INSIGHTS_INDEX_PATH,
+  INSIGHTS_INDEX_TITLE,
+  buildInsightsIndexJsonLd,
+} from '@/lib/seo/insights';
+import {
+  FOOTER_LEGAL_LINKS,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fonts-insights.css';
+import '@/styles/components/insights-tokens.css';
+import '@/styles/components/insights-gate1.css';
+
+const currentYear = new Date().getFullYear();
 ---
 
 <LandingLayout
   title={INSIGHTS_INDEX_TITLE}
   description={INSIGHTS_INDEX_DESCRIPTION}
-  canonicalPath="/insights"
+  canonicalPath={INSIGHTS_INDEX_PATH}
   jsonLd={buildInsightsIndexJsonLd()}
 >
-  <main class="insights-page">
-    <InsightsMasthead page="index" />
-    <section class="insights-index" aria-labelledby="insights-featured">
-      <div class="insights-index__inner">
-        <h2 class="insights-index__label" id="insights-featured">FEATURED READING</h2>
-        <a href={articlePath} class="insights-index__feature">
-          <div>
-            <p class="insights-article-meta__category" style="color:#982431; font-size:.72rem; letter-spacing:.13em; margin-bottom:1rem">BRAND &amp; MARKETING</p>
-            <h3 class="insights-index__title">{article.headline}</h3>
-            <p class="insights-index__summary">{article.lead}</p>
-            <span class="insights-index__read">READ THE ARTICLE <span aria-hidden="true">↗</span></span>
-          </div>
-          <span class="insights-index__media">
-            <img src="https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" alt="Barbers working in a barbershop in Aldershot, UK" width="700" height="850" loading="eager" decoding="async" />
-            <span class="insights-index__media-credit">BRUCE BARROW / UNSPLASH</span>
-          </span>
-        </a>
-      </div>
-    </section>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/newsreader-latin-700-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/barlow-condensed-latin-800-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <main class="insights-shell landing-overflow-guard" id="insights-top">
+    <div class="ins-frame ins-page">
+      <InsightsEditorialMasthead
+        mark={INSIGHTS_HOME_MASTHEAD.mark}
+        headlineLines={INSIGHTS_HOME_MASTHEAD.headlineLines}
+        lead={INSIGHTS_HOME_MASTHEAD.lead}
+        statementLines={INSIGHTS_HOME_MASTHEAD.statementLines}
+        audienceLines={INSIGHTS_HOME_MASTHEAD.audienceLines}
+      />
+
+      <InsightsFeatureMosaic
+        dominant={{
+          label: INSIGHTS_HOME_FEATURE_DOMINANT.label,
+          titleLines: INSIGHTS_HOME_FEATURE_DOMINANT.titleLines,
+          deck: INSIGHTS_HOME_FEATURE_DOMINANT.deck,
+          cta: INSIGHTS_HOME_FEATURE_DOMINANT.cta,
+          href: INSIGHTS_HOME_FEATURE_DOMINANT.href,
+          imageSrc: INSIGHTS_HOME_FEATURE_DOMINANT.imageSrc,
+          imageAlt: INSIGHTS_HOME_FEATURE_DOMINANT.imageAlt,
+        }}
+        vertical={{
+          category: INSIGHTS_HOME_FEATURE_VERTICAL.category,
+          coverLines: INSIGHTS_HOME_FEATURE_VERTICAL.coverLines,
+          footer: INSIGHTS_HOME_FEATURE_VERTICAL.footer,
+          imageSrc: INSIGHTS_HOME_FEATURE_VERTICAL.imageSrc,
+          imageAlt: INSIGHTS_HOME_FEATURE_VERTICAL.imageAlt,
+        }}
+        stack={INSIGHTS_HOME_FEATURE_STACK}
+      />
+
+      <InsightsTopicStrip topics={INSIGHTS_HOME_TOPICS} />
+
+      <InsightsLatestThinking
+        items={INSIGHTS_HOME_LATEST}
+        archiveHref={INSIGHTS_HOME_FEATURE_DOMINANT.href}
+      />
+
+      <InsightsOwnersDesk
+        eyebrow={INSIGHTS_HOME_OWNERS_DESK.eyebrow}
+        heading={INSIGHTS_HOME_OWNERS_DESK.heading}
+        lead={INSIGHTS_HOME_OWNERS_DESK.lead}
+        tools={INSIGHTS_HOME_OWNERS_DESK.tools}
+      />
+    </div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
   </main>
-  <Footer50 showIntro={false} navigation={[
-    { name: 'KERSIVO', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Pricing', href: '/pricing' },
-  ]} />
 </LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

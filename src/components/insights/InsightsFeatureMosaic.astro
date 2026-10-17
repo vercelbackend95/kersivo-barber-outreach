@@ -6,6 +6,7 @@ interface Dominant {
   cta: string;
   imageSrc: string;
   imageAlt: string;
+  href?: string;
 }
 
 interface Vertical {
@@ -22,6 +23,7 @@ interface StackItem {
   title: string;
   imageSrc: string;
   imageAlt: string;
+  href?: string;
 }
 
 interface Props {
@@ -31,6 +33,7 @@ interface Props {
 }
 
 const { dominant, vertical, stack } = Astro.props;
+const dominantHref = dominant.href ?? '#insights-latest';
 ---
 
 <section class="ins-mosaic" aria-label="Featured stories">
@@ -58,7 +61,7 @@ const { dominant, vertical, stack } = Astro.props;
         }
       </h2>
       <p class="ins-mosaic__dominant-deck">{dominant.deck}</p>
-      <a class="ins-mosaic__cta" href="#insights-latest">{dominant.cta} →</a>
+      <a class="ins-mosaic__cta" href={dominantHref}>{dominant.cta} →</a>
     </div>
   </article>
 
@@ -86,25 +89,45 @@ const { dominant, vertical, stack } = Astro.props;
 
   <div class="ins-mosaic__stack">
     {
-      stack.map((item) => (
-        <article class="ins-mosaic__stack-card">
-          <img
-            class="ins-mosaic__media ins-mosaic__media--stack"
-            src={item.imageSrc}
-            alt={item.imageAlt}
-            width="480"
-            height="320"
-            decoding="async"
-            loading="lazy"
-          />
-          <div class="ins-mosaic__stack-scrim" aria-hidden="true"></div>
-          <div class="ins-mosaic__stack-body">
-            <p class="ins-mosaic__stack-cat">{item.category}</p>
-            <h3 class="ins-mosaic__stack-title">{item.title}</h3>
-            <span class="ins-mosaic__arrow" aria-hidden="true">→</span>
-          </div>
-        </article>
-      ))
+      stack.map((item) =>
+        item.href ? (
+          <a class="ins-mosaic__stack-card ins-mosaic__stack-card--link" href={item.href}>
+            <img
+              class="ins-mosaic__media ins-mosaic__media--stack"
+              src={item.imageSrc}
+              alt={item.imageAlt}
+              width="480"
+              height="320"
+              decoding="async"
+              loading="lazy"
+            />
+            <div class="ins-mosaic__stack-scrim" aria-hidden="true"></div>
+            <div class="ins-mosaic__stack-body">
+              <p class="ins-mosaic__stack-cat">{item.category}</p>
+              <h3 class="ins-mosaic__stack-title">{item.title}</h3>
+              <span class="ins-mosaic__arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        ) : (
+          <article class="ins-mosaic__stack-card">
+            <img
+              class="ins-mosaic__media ins-mosaic__media--stack"
+              src={item.imageSrc}
+              alt={item.imageAlt}
+              width="480"
+              height="320"
+              decoding="async"
+              loading="lazy"
+            />
+            <div class="ins-mosaic__stack-scrim" aria-hidden="true"></div>
+            <div class="ins-mosaic__stack-body">
+              <p class="ins-mosaic__stack-cat">{item.category}</p>
+              <h3 class="ins-mosaic__stack-title">{item.title}</h3>
+              <span class="ins-mosaic__arrow" aria-hidden="true">→</span>
+            </div>
+          </article>
+        ),
+      )
     }
   </div>
 </section>

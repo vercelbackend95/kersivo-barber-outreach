@@ -159,6 +159,12 @@
   border: var(--ins-rule);
 }
 
+a.ins-mosaic__stack-card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .ins-mosaic__media,
 .ins-mosaic__vertical-media {
   position: absolute;
@@ -506,6 +512,16 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
+}
+
+.ins-latest__grid--single {
+  grid-template-columns: minmax(0, 22rem);
+}
+
+.ins-latest__card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .ins-latest__item {
