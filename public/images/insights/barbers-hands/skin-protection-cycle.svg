@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730" role="img" aria-labelledby="title desc">
+<title id="title">Protect the hands behind every haircut</title>
+<desc id="desc">Three practical steps adapted from UK HSE guidance: avoid unnecessary wet and chemical contact, protect with appropriate gloves, good drying and moisturiser, and check regularly for early signs of irritated or damaged skin.</desc>
+<rect width="1200" height="730" fill="#171a1f"/>
+<rect width="1200" height="8" fill="#d92b40"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="64" y="91" fill="#ec6877" font-size="18" font-weight="800" letter-spacing="3">KERSIVO / INDUSTRY &amp; PEOPLE</text>
+<text x="64" y="160" fill="#faf7f2" font-size="53" font-weight="850" letter-spacing="-1.7">The hands behind every haircut.</text>
+<text x="64" y="208" fill="#b8c1cb" font-size="24">HSE's practical skin-protection approach, applied to barbers.</text>
+<rect x="64" y="252" width="333" height="340" rx="12" fill="#292f38"/>
+<rect x="432" y="252" width="333" height="340" rx="12" fill="#292f38"/>
+<rect x="800" y="252" width="336" height="340" rx="12" fill="#292f38"/>
+<g fill="#ed6c7b" font-size="19" font-weight="850" letter-spacing="3">
+<text x="88" y="304">01 / AVOID</text><text x="456" y="304">02 / PROTECT</text><text x="824" y="304">03 / CHECK</text>
+</g>
+<g fill="#fcf8f0" font-size="36" font-weight="850">
+<text x="88" y="366">Reduce contact</text><text x="456" y="366">Use the right</text><text x="456" y="408">precautions</text><text x="824" y="366">Spot early signs</text>
+</g>
+<g fill="#c4cbd2" font-size="22">
+<text x="88" y="433">Limit unnecessary</text><text x="88" y="467">wet work and direct</text><text x="88" y="501">chemical exposure.</text>
+<text x="456" y="453">Suitable gloves, soft</text><text x="456" y="487">towels and regular</text><text x="456" y="521">moisturising.</text>
+<text x="824" y="433">Dryness, redness,</text><text x="824" y="467">itching or cracks</text><text x="824" y="501">need attention.</text>
+</g>
+<path d="M65 628H1136" stroke="#4c535d" stroke-width="2"/>
+<text x="65" y="672" fill="#aab3bb" font-size="20">Follow your COSHH risk assessment and HSE guidance for your actual products and work.</text>
+<text x="65" y="704" fill="#c4a2ab" font-size="16">Source: HSE, Skin at work — Prevention / COSHH and hairdressers</text>
+</g></svg>
