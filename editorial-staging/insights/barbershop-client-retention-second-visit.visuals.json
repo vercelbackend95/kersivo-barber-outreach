@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-client-retention-second-visit.md",
+  "output": "editorial-staging/insights/barbershop-client-retention-second-visit-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8171a198c0ca613b14e0",
+  "status": "Draft Ready for Review — Research Approved — Writing Approved — no Hold — final owner publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Barbershop Client Retention: Why the Second Visit Matters",
+    "description": "A barbershop grows when first-time clients come back. Three numbers to track, simple ways to lift rebooking, and the UK rules on reminder messages.",
+    "slug": "barbershop-client-retention-second-visit",
+    "categoryId": "clients-growth",
+    "category": "Clients & Growth",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# The Second Visit: Why a Barbershop's Growth Is Decided After the First Haircut",
+      "src": "https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Atmospheric vintage barber chairs inside a UK barbershop in Camberley",
+      "caption": "Barbershop interior in Camberley, UK. Editorial photography; not a KERSIVO customer",
+      "credit": "Bruce Barrow / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/vintage-barber-chairs-in-a-dimly-lit-salon-38ZCvdHMmyk",
+      "rights": "Verified 2026-10-17: Bruce Barrow original Unsplash photo page, 'Download free', 'Free to use under the Unsplash License'. Commercial editorial website use permitted subject to other rights. No people are identified; no claim the photographed premises uses KERSIVO.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Suppose the shop gains 40 new clients a month, and its second-visit rate rises from 50% to 60%.",
+      "src": "/images/insights/second-visit/return-rate-cohorts.svg",
+      "width": 1200,
+      "height": 710,
+      "alt": "Hypothetical 40 new clients: 20 second visits at 50 percent return compared with 24 at 60 percent, four more second visits",
+      "caption": "Illustrative arithmetic from the article, not a UK barbershop benchmark",
+      "rights": "Original KERSIVO SVG. Arithmetic taken directly from approved Notion ARTICLE DRAFT v2 (40 first-time clients; 50% versus 60% second-visit rate); does not claim market-average retention.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "None of these need special software.",
+      "src": "/images/insights/second-visit/three-retention-metrics.svg",
+      "width": 1200,
+      "height": 750,
+      "alt": "Three numbers for barber client retention: second-visit rate, rebooking before leaving and typical gap between visits",
+      "caption": "Three shop-level retention measures described in the article; no fabricated performance figures",
+      "rights": "Original KERSIVO SVG, terms from the approved Notion ARTICLE DRAFT v2; no third-party imagery.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "The simplest lever is asking.",
+      "src": "https://images.unsplash.com/photo-1771489465791-00ee339a9c92?auto=format&fit=crop&fm=jpg&q=75&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "A barber cutting a customer's hair inside a busy barbershop",
+      "caption": "Editorial image illustrating the client experience; people shown are not KERSIVO customers or endorsers",
+      "credit": "Georgi Kalaydzhiev / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barber-cutting-hair-of-a-customer-in-a-busy-barbershop-QDV80LO1VUQ",
+      "rights": "Verified 2026-10-17: original photo page credited to Georgi Kalaydzhiev, Download free under Unsplash License. Copyright-commercial permission confirmed; third-party model/property releases not independently established. Editorial, non-endorsement caption; do not use in advertisements or claim affiliation.",
+      "licenceReviewed": true
+    }
+  ]
+}
