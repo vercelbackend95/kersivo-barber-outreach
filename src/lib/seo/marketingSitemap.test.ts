@@ -20,6 +20,12 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk',
   'https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk',
   'https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules',
+  'https://kersivo.co.uk/insights/category/business-profit',
+  'https://kersivo.co.uk/insights/category/clients-growth',
+  'https://kersivo.co.uk/insights/category/brand-marketing',
+  'https://kersivo.co.uk/insights/category/bookings-operations',
+  'https://kersivo.co.uk/insights/category/tools-payments',
+  'https://kersivo.co.uk/insights/category/industry-people',
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/pricing',
   'https://kersivo.co.uk/starter',
@@ -74,6 +80,13 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules']).toBe('2026-10-17');
+    // Categories are indexable even when empty; do not invent a lastmod date.
+    expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/insights/category/clients-growth']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/insights/category/brand-marketing']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/insights/category/bookings-operations']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBeUndefined();
+    expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
@@ -140,8 +153,8 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
-    // Homepage + three Websites cluster pages omit lastmod; Insights + remaining pages include it.
-    expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT - 4);
+    // Homepage, six Insights categories and three Websites cluster pages have no source-backed lastmod.
+    expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT - 10);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
     expect(xml).not.toContain('/design-preview/');
 

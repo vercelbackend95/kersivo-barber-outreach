@@ -88,12 +88,22 @@ describe('Insights publication safety', () => {
       path: INSIGHTS_INDEX_PATH,
       lastmod: '2026-10-17',
     });
-    expect(insightsSitemap.slice(1).map((entry) => entry.path)).toEqual(
-      INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path),
-    );
+    const publishedPaths = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path);
+    const categories = [
+      '/insights/category/business-profit',
+      '/insights/category/clients-growth',
+      '/insights/category/brand-marketing',
+      '/insights/category/bookings-operations',
+      '/insights/category/tools-payments',
+      '/insights/category/industry-people',
+    ];
+    expect(insightsSitemap.slice(1).map((entry) => entry.path)).toEqual([
+      ...publishedPaths,
+      ...categories,
+    ]);
 
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(1 + INSIGHTS_PUBLISHED_ARTICLES.length);
+    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(1 + INSIGHTS_PUBLISHED_ARTICLES.length + categories.length);
     expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 

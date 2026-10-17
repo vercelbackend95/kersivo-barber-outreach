@@ -34,8 +34,9 @@ export type InsightsCategory = {
   seoTitle: string;
   seoDescription: string;
   /**
-   * Owner-approved indexability. false until the category has enough distinct
-   * editorial depth to deserve a standalone indexed collection page.
+   * Owner-approved indexability. All six category archives are intentionally
+   * indexable, including archives with no published articles yet. Google
+   * independently decides whether an indexable URL is worth indexing.
    */
   indexable: boolean;
   order: number;
@@ -53,7 +54,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Business & Profit for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Guides for UK barbershop owners on pricing, revenue, margins, VAT and the commercial decisions that shape a profitable shop.',
-    indexable: false,
+    indexable: true,
     order: 1,
   },
   {
@@ -67,7 +68,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Clients & Growth for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Practical guidance for UK barbershop owners on client acquisition, retention, referrals and lifetime value.',
-    indexable: false,
+    indexable: true,
     order: 2,
   },
   {
@@ -81,7 +82,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Brand & Marketing for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'UK barbershop guidance on reputation, Google Reviews, local visibility, brand identity and marketing that stays credible.',
-    indexable: false,
+    indexable: true,
     order: 3,
   },
   {
@@ -95,7 +96,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Bookings & Operations for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Operational guides for UK barbershop owners on scheduling, no-shows, deposits, team availability and shop processes.',
-    indexable: false,
+    indexable: true,
     order: 4,
   },
   {
@@ -109,7 +110,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Tools & Payments for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Guides for UK barbershop owners on booking software, websites, card fees and payment technology costs.',
-    indexable: false,
+    indexable: true,
     order: 5,
   },
   {
@@ -123,7 +124,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     seoTitle: 'Industry & People | KERSIVO Insights',
     seoDescription:
       'Perspectives on UK barber culture, careers, industry trends and the people behind independent shops.',
-    indexable: false,
+    indexable: true,
     order: 6,
   },
 ] as const;
