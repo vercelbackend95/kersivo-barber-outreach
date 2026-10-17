@@ -1,11 +1,12 @@
 ---
-type TopicIcon = 'chart' | 'calendar' | 'megaphone' | 'laptop' | 'people';
+import type { InsightsCategoryIcon } from '@/lib/insights/categories';
 
 interface Topic {
   id: string;
   name: string;
   descriptor: string;
-  icon: TopicIcon;
+  icon: InsightsCategoryIcon;
+  href: string;
 }
 
 interface Props {
@@ -14,22 +15,22 @@ interface Props {
 
 const { topics } = Astro.props;
 
-const paths: Record<TopicIcon, string> = {
+const paths: Record<InsightsCategoryIcon, string> = {
   chart: 'M4 19V9M9 19V5M14 19v-7M19 19V8',
-  calendar: 'M7 3v2M17 3v2M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',
+  users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a5 5 0 0 1 10 0M11 20a5 5 0 0 1 10 0',
   megaphone: 'M3 10v4l12 3V7L3 10zm12 0v4M17 9l3-1v8l-3-1',
+  calendar: 'M7 3v2M17 3v2M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',
   laptop: 'M4 6h16v10H4V6zm-1 12h18',
-  people: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a5 5 0 0 1 10 0M11 20a5 5 0 0 1 10 0',
+  culture: 'M12 3l2.2 4.5L19 8.2l-3.5 3.4.8 4.9L12 14.8 7.7 16.5l.8-4.9L5 8.2l4.8-.7L12 3z',
 };
 ---
 
-{/* Editorial topic labels only — no category routes exist in Phase 1. */}
-<section class="ins-topics" aria-label="Insights topic areas">
+<nav class="ins-topics" aria-label="Insights categories">
   <ul class="ins-topics__list">
     {
       topics.map((topic) => (
         <li class="ins-topics__item">
-          <div class="ins-topics__module">
+          <a class="ins-topics__module" href={topic.href}>
             <span class="ins-topics__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.55">
                 <path d={paths[topic.icon]} stroke-linecap="round" stroke-linejoin="round" />
@@ -39,9 +40,9 @@ const paths: Record<TopicIcon, string> = {
               <span class="ins-topics__name">{topic.name}</span>
               <span class="ins-topics__desc">{topic.descriptor}</span>
             </span>
-          </div>
+          </a>
         </li>
       ))
     }
   </ul>
-</section>
+</nav>

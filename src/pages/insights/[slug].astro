@@ -2,11 +2,13 @@
 /**
  * Published Insights articles — one template, registry-driven static paths.
  * Unpublished or unknown slugs are not generated (production 404).
+ * Category archives live under /insights/category/[category] — not here.
  */
 import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
 import {
   INSIGHTS_PUBLISHED_ARTICLES,
   formatInsightsDateLabel,
+  getInsightsArticleCategoryLabel,
   getInsightsPublishedArticle,
   isInsightsArticlePublished,
 } from '@/lib/seo/insights';
@@ -19,14 +21,14 @@ export function getStaticPaths() {
   }));
 }
 
-const slug = Astro.params.slug;
+const slug = Astro.params.slug as string | undefined;
 if (!slug || !isInsightsArticlePublished(slug)) {
-  return Astro.redirect('/404');
+  return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 const article = getInsightsPublishedArticle(slug);
 if (!article) {
-  return Astro.redirect('/404');
+  return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 const modules = import.meta.glob('../../../editorial-staging/insights/*-display.md');
@@ -43,7 +45,8 @@ const ArticleBody = mod.Content;
   title={article.seoTitle}
   description={article.description}
   slug={article.slug}
-  category={article.category}
+  categoryId={article.categoryId}
+  category={getInsightsArticleCategoryLabel(article)}
   dateLabel={formatInsightsDateLabel(article.publishedDate)}
   sourceUrl={article.notionUrl}
   headline={article.headline}

@@ -1,0 +1,165 @@
+---
+/**
+ * Insights category archives — one template for all six taxonomy routes.
+ * Indexability is an explicit owner gate on each category (currently all noindex).
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
+import {
+  INSIGHTS_CATEGORIES,
+  getInsightsCategory,
+  isInsightsCategoryId,
+  type InsightsCategoryId,
+} from '@/lib/insights/categories';
+import {
+  buildInsightsCategoryJsonLd,
+  formatInsightsDateLabel,
+  getPublishedArticlesByCategory,
+  INSIGHTS_PUBLISHED_ARTICLES,
+} from '@/lib/seo/insights';
+import {
+  FOOTER_LEGAL_LINKS,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fonts-insights.css';
+import '@/styles/components/insights-tokens.css';
+import '@/styles/components/insights-gate1.css';
+import '@/styles/components/insights-preview.css';
+import '@/styles/components/insights-category.css';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return INSIGHTS_CATEGORIES.map((category) => ({
+    params: { category: category.id },
+  }));
+}
+
+const raw = Astro.params.category;
+if (!raw || !isInsightsCategoryId(raw)) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const categoryId = raw as InsightsCategoryId;
+const category = getInsightsCategory(categoryId);
+const articles = getPublishedArticlesByCategory(categoryId);
+const count = articles.length;
+const elsewhere =
+  count === 0
+    ? INSIGHTS_PUBLISHED_ARTICLES.slice(0, 3)
+    : INSIGHTS_PUBLISHED_ARTICLES.filter((article) => article.categoryId !== categoryId).slice(0, 3);
+const indexable = category.indexable && count > 0;
+const currentYear = new Date().getFullYear();
+const countLabel =
+  count === 0 ? 'No articles published yet' : count === 1 ? '1 published article' : `${count} published articles`;
+---
+
+<LandingLayout
+  title={category.seoTitle}
+  description={category.seoDescription}
+  canonicalPath={category.path}
+  ogType="website"
+  noindex={!indexable}
+  robotsFollow
+  suppressMarketingFontPreloads
+  jsonLd={buildInsightsCategoryJsonLd({ categoryId, articles, indexable })}
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/newsreader-latin-700-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <main class="insights-page insights-category-page">
+    <InsightsMasthead page="category" currentLabel={category.name} />
+    <div class="insights-paper insights-category">
+      <header class="insights-category__header">
+        <p class="insights-category__eyebrow">{category.descriptor}</p>
+        <h1 class="insights-category__title">{category.name}</h1>
+        <p class="insights-category__intro">{category.intro}</p>
+        <p class="insights-category__count">{countLabel}</p>
+      </header>
+
+      {
+        count > 0 ? (
+          <ul class="insights-category__grid">
+            {articles.map((article) => (
+              <li>
+                <a class="insights-category__card" href={article.path}>
+                  <div class="insights-category__media">
+                    <img
+                      src={article.heroImage}
+                      alt={article.ogImageAlt}
+                      width="640"
+                      height="400"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <p class="insights-category__meta">
+                    <span>{category.name}</span>
+                    <span aria-hidden="true">/</span>
+                    <time datetime={article.publishedDate}>{formatInsightsDateLabel(article.publishedDate)}</time>
+                  </p>
+                  <h2 class="insights-category__card-title">{article.headline}</h2>
+                  <p class="insights-category__excerpt">{article.lead}</p>
+                  <span class="insights-category__cta">Read the article <span aria-hidden="true">→</span></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <section class="insights-category__empty" aria-labelledby="insights-category-empty-heading">
+            <h2 id="insights-category-empty-heading">No articles published in this topic yet.</h2>
+            <p>
+              This archive is ready for owner-approved pieces in {category.name}. Until then, the topic stays
+              open for browsing without pretending content exists.
+            </p>
+            <a class="insights-category__all" href="/insights">Explore all Insights</a>
+          </section>
+        )
+      }
+
+      {
+        elsewhere.length > 0 && (
+          <aside class="insights-category__elsewhere" aria-labelledby="insights-elsewhere-heading">
+            <h2 id="insights-elsewhere-heading">
+              {count === 0 ? 'Elsewhere in Insights' : 'More from Insights'}
+            </h2>
+            <p class="insights-category__elsewhere-note">
+              {count === 0
+                ? 'These published articles belong to other topics — not to this archive.'
+                : 'Other published pieces across KERSIVO Insights.'}
+            </p>
+            <ul class="insights-category__elsewhere-list">
+              {elsewhere.map((article) => (
+                <li>
+                  <a href={article.path}>{article.headline}</a>
+                </li>
+              ))}
+            </ul>
+            <a class="insights-category__all" href="/insights">Back to Insights</a>
+          </aside>
+        )
+      }
+    </div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>

@@ -29,6 +29,7 @@ describe('Insights publication safety', () => {
       expect(article.path).toBe(`/insights/${article.slug}`);
       expect(isInsightsArticlePublished(article.slug)).toBe(true);
       expect(article.publishedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(article.categoryId).toBeTruthy();
       expect(article.ogImage).toMatch(/^\/images\/insights\/og\//);
       expect(existsSync(join(here, '../../../public', article.ogImage.replace(/^\//, ''))), article.ogImage).toBe(
         true,
@@ -103,7 +104,7 @@ describe('Insights publication safety', () => {
       verifiedDate: article.verifiedDate,
       heroImage: article.heroImage,
       ogImage: article.ogImage,
-      category: article.category,
+      categoryId: article.categoryId,
     });
     expect(jsonLd).not.toHaveProperty('dateModified');
     expect(jsonLd).toHaveProperty('datePublished', article.publishedDate);

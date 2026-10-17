@@ -1,22 +1,31 @@
 ---
 interface Props {
-  page: 'index' | 'article';
+  page: 'index' | 'article' | 'category';
   category?: string;
+  categoryHref?: string;
   dateLabel?: string;
   currentLabel?: string;
 }
-const { page, category, dateLabel, currentLabel = 'Article' } = Astro.props;
+const { page, category, categoryHref, dateLabel, currentLabel = 'Article' } = Astro.props;
 ---
 <header class="insights-masthead">
   <div class="insights-shell">
     <nav class="insights-breadcrumbs" aria-label="Breadcrumb">
       <a href="/">KERSIVO</a>
       <span aria-hidden="true">/</span>
-      {page === 'article' ? (
+      {page === 'article' || page === 'category' ? (
         <>
           <a href="/insights">Insights</a>
           <span aria-hidden="true">/</span>
-          <span aria-current="page">{currentLabel}</span>
+          {page === 'article' && category && categoryHref ? (
+            <>
+              <a href={categoryHref}>{category}</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{currentLabel}</span>
+            </>
+          ) : (
+            <span aria-current="page">{currentLabel}</span>
+          )}
         </>
       ) : <span aria-current="page">Insights</span>}
     </nav>
@@ -34,10 +43,16 @@ const { page, category, dateLabel, currentLabel = 'Article' } = Astro.props;
     <div class="insights-masthead__divider"></div>
     {page === 'article' ? (
       <div class="insights-article-meta">
-        <span class="insights-article-meta__category">{category}</span>
+        {categoryHref && category ? (
+          <a class="insights-article-meta__category" href={categoryHref}>{category}</a>
+        ) : (
+          <span class="insights-article-meta__category">{category}</span>
+        )}
         <span class="insights-article-meta__dot" aria-hidden="true"></span>
         <span>{dateLabel}</span>
       </div>
+    ) : page === 'category' ? (
+      <p class="insights-article-meta">Topic archive for independent UK barbershop owners.</p>
     ) : (
       <p class="insights-article-meta">Practical guides and independent thinking on running a barbershop in the UK.</p>
     )}

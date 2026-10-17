@@ -403,11 +403,12 @@ a.ins-mosaic__stack-card--link {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .ins-topics__item {
   border-right: var(--ins-rule);
+  min-width: 0;
 }
 
 .ins-topics__item:last-child {
@@ -416,11 +417,30 @@ a.ins-mosaic__stack-card--link {
 
 .ins-topics__module {
   display: flex;
-  gap: 0.7rem;
+  gap: 0.65rem;
   align-items: center;
-  padding: 0.75rem 0.8rem;
+  padding: 0.75rem 0.7rem;
   min-height: 3.5rem;
-  cursor: default;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.ins-topics__module:hover {
+  background: color-mix(in srgb, var(--ins-fg) 4%, transparent);
+}
+
+.ins-topics__module:focus-visible {
+  outline: 2px solid var(--ins-accent-text);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--ins-accent-text) 8%, transparent);
+}
+
+.ins-topics__module:hover .ins-topics__name,
+.ins-topics__module:focus-visible .ins-topics__name {
+  color: var(--ins-accent-text);
 }
 
 .ins-topics__icon {
@@ -446,19 +466,25 @@ a.ins-mosaic__stack-card--link {
 }
 
 .ins-topics__name {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--ins-fg);
   line-height: 1.2;
 }
 
 .ins-topics__desc {
-  font-size: 0.5625rem;
+  font-size: 0.54rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--ins-muted) 82%, transparent);
   line-height: 1.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ins-topics__module {
+    transition: none;
+  }
 }
 
 /* —— Latest Thinking —— */
@@ -780,6 +806,23 @@ a.ins-mosaic__stack-card--link {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
+
+  .ins-topics__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ins-topics__item {
+    border-right: var(--ins-rule);
+    border-bottom: var(--ins-rule);
+  }
+
+  .ins-topics__item:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .ins-topics__item:nth-last-child(-n + 3) {
+    border-bottom: 0;
+  }
 }
 
 @media (max-width: 63.99rem) {
@@ -810,17 +853,21 @@ a.ins-mosaic__stack-card--link {
     border-bottom: var(--ins-rule);
   }
 
+  /* Override the 3-column border rules from the wider breakpoint. */
+  .ins-topics__item:nth-child(3n) {
+    border-right: var(--ins-rule);
+  }
+
   .ins-topics__item:nth-child(2n) {
     border-right: 0;
   }
 
-  .ins-topics__item:nth-last-child(-n + 2) {
-    border-bottom: 0;
+  .ins-topics__item:nth-last-child(-n + 3) {
+    border-bottom: var(--ins-rule);
   }
 
-  .ins-topics__item:last-child {
-    grid-column: 1 / -1;
-    border-right: 0;
+  .ins-topics__item:nth-last-child(-n + 2) {
+    border-bottom: 0;
   }
 
   .ins-topics__module {

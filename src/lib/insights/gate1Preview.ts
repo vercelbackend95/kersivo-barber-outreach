@@ -62,36 +62,52 @@ export const GATE1_FEATURE_STACK = [
   },
 ] as const;
 
+/**
+ * Visual fixture aligned to the production six-category taxonomy.
+ * Production hub uses getInsightsTopicStripItems() — keep this in sync for design-preview only.
+ */
 export const GATE1_TOPICS = [
   {
-    id: 'business-revenue',
-    name: 'Business & Revenue',
-    descriptor: 'Pricing · Growth · Profit',
+    id: 'business-profit',
+    name: 'Business & Profit',
+    descriptor: 'Pricing · Revenue · Margins',
     icon: 'chart' as const,
+    href: '/insights/category/business-profit',
   },
   {
-    id: 'bookings-clients',
-    name: 'Bookings & Clients',
-    descriptor: 'Retention · Systems · Experience',
-    icon: 'calendar' as const,
+    id: 'clients-growth',
+    name: 'Clients & Growth',
+    descriptor: 'Acquisition · Retention · Loyalty',
+    icon: 'users' as const,
+    href: '/insights/category/clients-growth',
   },
   {
     id: 'brand-marketing',
     name: 'Brand & Marketing',
-    descriptor: 'Identity · Local · Storytelling',
+    descriptor: 'Reputation · Google · Social',
     icon: 'megaphone' as const,
+    href: '/insights/category/brand-marketing',
   },
   {
-    id: 'software-costs',
-    name: 'Software & Costs',
-    descriptor: 'Tools · Workflows · Value',
+    id: 'bookings-operations',
+    name: 'Bookings & Operations',
+    descriptor: 'Scheduling · No-shows · Teams',
+    icon: 'calendar' as const,
+    href: '/insights/category/bookings-operations',
+  },
+  {
+    id: 'tools-payments',
+    name: 'Tools & Payments',
+    descriptor: 'Software · Websites · Payments',
     icon: 'laptop' as const,
+    href: '/insights/category/tools-payments',
   },
   {
     id: 'industry-people',
     name: 'Industry & People',
-    descriptor: 'People · Culture · The Future',
-    icon: 'people' as const,
+    descriptor: 'Barbers · Trends · Culture',
+    icon: 'culture' as const,
+    href: '/insights/category/industry-people',
   },
 ] as const;
 

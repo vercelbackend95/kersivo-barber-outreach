@@ -3,6 +3,12 @@
  * Only owner-approved, actually published articles may be added here.
  * Notion remains authoritative for source copy; this file holds website metadata.
  */
+import {
+  getInsightsCategory,
+  getInsightsCategoryName,
+  getIndexableInsightsCategorySitemapEntries,
+  type InsightsCategoryId,
+} from '@/lib/insights/categories';
 import { buildAbsoluteUrl } from './meta';
 
 export const INSIGHTS_INDEX_PATH = '/insights';
@@ -17,7 +23,7 @@ export const INSIGHTS_GOOGLE_REVIEWS = {
   seoTitle: "Google Reviews for Barbershops: What's Allowed in the UK",
   description:
     "How UK barbershops can get more Google reviews without breaking the DMCC Act or Google's stricter rules on incentives, review gating and staff targets.",
-  category: 'Brand & Marketing',
+  categoryId: 'brand-marketing' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8171bef0d462be52901f',
@@ -36,7 +42,7 @@ export const INSIGHTS_LOCAL_CLIENTS = {
   seoTitle: 'How to Get More Barbershop Clients Locally (UK Guide)',
   description:
     'Judge every marketing channel by what a returning client costs. Referrals, lapsed clients, Google and leaflets, with the UK rules on texts and flyers.',
-  category: 'Bookings & Clients',
+  categoryId: 'clients-growth' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58',
@@ -54,7 +60,7 @@ export const INSIGHTS_CARD_FEES = {
   seoTitle: 'Barbershop Card Fees: What You Really Pay per Payment',
   description:
     "Card fees cost a barbershop more than the headline rate suggests. How fixed fees, card mix and split payments add up, and why you can't surcharge.",
-  category: 'Software & Costs',
+  categoryId: 'tools-payments' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e',
@@ -71,7 +77,7 @@ export const INSIGHTS_GIFT_VOUCHERS = {
   seoTitle: 'Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value',
   description:
     'Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.',
-  category: 'Business & Revenue',
+  categoryId: 'business-profit' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba',
@@ -98,12 +104,26 @@ export type InsightsPublishedArticle = (typeof INSIGHTS_PUBLISHED_ARTICLES)[numb
   modifiedDate?: string;
 };
 
+export function getInsightsArticleCategoryId(article: { categoryId: InsightsCategoryId }): InsightsCategoryId {
+  return article.categoryId;
+}
+
+export function getInsightsArticleCategoryLabel(article: { categoryId: InsightsCategoryId }): string {
+  return getInsightsCategoryName(article.categoryId);
+}
+
 export function isInsightsArticlePublished(slug: string): boolean {
   return INSIGHTS_PUBLISHED_ARTICLES.some((article) => article.slug === slug);
 }
 
 export function getInsightsPublishedArticle(slug: string): InsightsPublishedArticle | undefined {
   return INSIGHTS_PUBLISHED_ARTICLES.find((article) => article.slug === slug);
+}
+
+export function getPublishedArticlesByCategory(
+  categoryId: InsightsCategoryId,
+): InsightsPublishedArticle[] {
+  return INSIGHTS_PUBLISHED_ARTICLES.filter((article) => article.categoryId === categoryId);
 }
 
 export function formatInsightsDateLabel(isoDate: string): string {
@@ -130,7 +150,7 @@ export function getInsightsIndexLastmod(): string {
   );
 }
 
-export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: string }> {
+export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod?: string }> {
   return [
     { path: INSIGHTS_INDEX_PATH, lastmod: getInsightsIndexLastmod() },
     ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => {
@@ -143,20 +163,34 @@ export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: st
         lastmod: modified && modified.length > 0 ? modified : article.publishedDate,
       };
     }),
+    ...getIndexableInsightsCategorySitemapEntries(),
   ];
 }
 
-export function buildInsightsBreadcrumbs(article?: { path: string; headline: string }) {
-  const items = [
+export function buildInsightsBreadcrumbs(options?: {
+  path?: string;
+  headline?: string;
+  categoryId?: InsightsCategoryId;
+}) {
+  const items: Array<{ '@type': 'ListItem'; position: number; name: string; item: string }> = [
     { '@type': 'ListItem', position: 1, name: 'KERSIVO', item: buildAbsoluteUrl('/') },
     { '@type': 'ListItem', position: 2, name: 'Insights', item: buildAbsoluteUrl(INSIGHTS_INDEX_PATH) },
   ];
-  if (article) {
+  if (options?.categoryId) {
+    const category = getInsightsCategory(options.categoryId);
     items.push({
       '@type': 'ListItem',
-      position: 3,
-      name: article.headline,
-      item: buildAbsoluteUrl(article.path),
+      position: items.length + 1,
+      name: category.name,
+      item: buildAbsoluteUrl(category.path),
+    });
+  }
+  if (options?.path && options.headline) {
+    items.push({
+      '@type': 'ListItem',
+      position: items.length + 1,
+      name: options.headline,
+      item: buildAbsoluteUrl(options.path),
     });
   }
   return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items };
@@ -188,6 +222,38 @@ export function buildInsightsIndexJsonLd() {
   ];
 }
 
+export function buildInsightsCategoryJsonLd(options: {
+  categoryId: InsightsCategoryId;
+  articles: readonly InsightsPublishedArticle[];
+  indexable: boolean;
+}) {
+  const category = getInsightsCategory(options.categoryId);
+  const url = buildAbsoluteUrl(category.path);
+  const page: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': url + '#webpage',
+    url,
+    name: category.seoTitle,
+    description: category.seoDescription,
+    inLanguage: 'en-GB',
+    isPartOf: { '@id': buildAbsoluteUrl('/') + '#website' },
+  };
+  if (options.indexable && options.articles.length > 0) {
+    page.mainEntity = {
+      '@type': 'ItemList',
+      numberOfItems: options.articles.length,
+      itemListElement: options.articles.map((article, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: article.headline,
+        url: buildAbsoluteUrl(article.path),
+      })),
+    };
+  }
+  return [page, buildInsightsBreadcrumbs({ categoryId: options.categoryId })];
+}
+
 export function buildInsightsArticleJsonLd(article: {
   path: string;
   headline: string;
@@ -197,10 +263,11 @@ export function buildInsightsArticleJsonLd(article: {
   modifiedDate?: string;
   heroImage: string;
   ogImage?: string;
-  category?: string;
+  categoryId: InsightsCategoryId;
 }) {
   const url = buildAbsoluteUrl(article.path);
   const imageUrl = absoluteAssetUrl(article.ogImage ?? article.heroImage);
+  const categoryName = getInsightsCategoryName(article.categoryId);
   const payload: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -221,11 +288,18 @@ export function buildInsightsArticleJsonLd(article: {
         url: buildAbsoluteUrl('/images/logo-kersivo.png'),
       },
     },
-    articleSection: article.category ?? 'Brand & Marketing',
+    articleSection: categoryName,
     isAccessibleForFree: true,
   };
   if (article.modifiedDate && article.modifiedDate !== article.publishedDate) {
     payload.dateModified = article.modifiedDate;
   }
-  return [payload, buildInsightsBreadcrumbs(article)];
+  return [
+    payload,
+    buildInsightsBreadcrumbs({
+      path: article.path,
+      headline: article.headline,
+      categoryId: article.categoryId,
+    }),
+  ];
 }

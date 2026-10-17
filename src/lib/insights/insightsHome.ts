@@ -2,13 +2,13 @@
  * Public Insights homepage composition (magazine layout).
  * Only published registry articles and real product URLs appear as links.
  */
+import { GATE1_FEATURE_VERTICAL, GATE1_MASTHEAD, GATE1_OWNERS_DESK } from '@/lib/insights/gate1Preview';
+import { getInsightsTopicStripItems } from '@/lib/insights/categories';
 import {
-  GATE1_FEATURE_VERTICAL,
-  GATE1_MASTHEAD,
-  GATE1_OWNERS_DESK,
-  GATE1_TOPICS,
-} from '@/lib/insights/gate1Preview';
-import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
+  getInsightsArticleCategoryLabel,
+  INSIGHTS_GOOGLE_REVIEWS,
+  INSIGHTS_PUBLISHED_ARTICLES,
+} from '@/lib/seo/insights';
 
 const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
@@ -17,7 +17,8 @@ export const INSIGHTS_HOME_MASTHEAD = {
   lead: 'Practical insights for independent UK barbershop owners — bookings, clients, costs, branding and stronger day-to-day decisions.',
 } as const;
 
-export const INSIGHTS_HOME_TOPICS = GATE1_TOPICS;
+/** Canonical six-category topic strip — not design-preview fixtures. */
+export const INSIGHTS_HOME_TOPICS = getInsightsTopicStripItems();
 
 export const INSIGHTS_HOME_OWNERS_DESK = GATE1_OWNERS_DESK;
 
@@ -77,7 +78,7 @@ const LATEST_READ_MINUTES: Record<string, number> = {
 /** Latest Thinking — derived only from the published Insights registry. */
 export const INSIGHTS_HOME_LATEST = INSIGHTS_PUBLISHED_ARTICLES.map((article) => ({
   id: article.slug,
-  category: article.category,
+  category: getInsightsArticleCategoryLabel(article),
   format: 'Guide' as const,
   title: article.headline,
   excerpt: article.lead,

@@ -11,6 +11,7 @@ import {
   formatInsightsDateLabel,
   isInsightsArticlePublished,
 } from '@/lib/seo/insights';
+import { getInsightsCategory, type InsightsCategoryId } from '@/lib/insights/categories';
 import {
   getInsightsCommercialNext,
   getInsightsRelatedLinks,
@@ -20,7 +21,9 @@ interface Props {
   title: string;
   description: string;
   slug: string;
-  category: string;
+  categoryId: InsightsCategoryId;
+  /** Display label — derived from taxonomy; kept for masthead convenience. */
+  category?: string;
   dateLabel?: string;
   sourceUrl: string;
   coverImage?: string;
@@ -39,6 +42,7 @@ const {
   title,
   description,
   slug,
+  categoryId,
   category,
   dateLabel,
   sourceUrl,
@@ -55,6 +59,8 @@ const {
   suppressMarketingFontPreloads = true,
 } = Astro.props;
 const path = `/insights/${slug}`;
+const taxonomy = getInsightsCategory(categoryId);
+const categoryLabel = category ?? taxonomy.name;
 /** Indexable only when the page asks for publish AND the slug is in the owner-approved registry. */
 const isPublic = published && isInsightsArticlePublished(slug);
 const related = getInsightsRelatedLinks(slug);
@@ -86,7 +92,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
           modifiedDate,
           heroImage,
           ogImage,
-          category,
+          categoryId,
         })
       : undefined
   }
@@ -102,7 +108,8 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
   <main class="insights-page">
     <InsightsMasthead
       page="article"
-      category={category}
+      category={categoryLabel}
+      categoryHref={taxonomy.path}
       dateLabel={resolvedDateLabel}
       currentLabel={headline}
     />
