@@ -1,7 +1,7 @@
 # Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March
 
 <figure class="insights-figure insights-figure--hero"><img src="/images/insights/gift-vouchers/voucher-hero.svg" width="1600" height="900" loading="eager" decoding="async" alt="Original editorial illustration of a fictional thirty-pound gift voucher and the words cash today, a cut tomorrow." />
-<figcaption>Original KERSIVO Insights editorial artwork: the fictional voucher shown is not a KERSIVO product and cannot be redeemed..</figcaption></figure>
+<figcaption>Original KERSIVO Insights illustration. The fictional voucher is not a KERSIVO product and cannot be redeemed.</figcaption></figure>
 
 Every December, the same thing happens at the counter. Someone's partner, mother or best mate wants to buy a haircut as a present, and the shop either has something to sell them or doesn't. Gift vouchers look like easy money: paid in full and up front, at a time of year when plenty of people walk past the window.
 
@@ -22,7 +22,7 @@ For accounts under FRS 102, the revenue section was rewritten for periods beginn
 This matters for three reasons:
 
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/gift-vouchers/cash-timing.svg" width="1200" height="690" loading="lazy" decoding="async" alt="Illustrative gift voucher timeline from sale to haircut redemption and follow-up booking, with conditional VAT note." />
-<figcaption>Illustrative timeline. VAT and accounting treatment depend on the shop's registration, voucher type and accounting framework..</figcaption></figure>
+<figcaption>Illustrative timeline. VAT and accounting treatment depend on registration, voucher type and the accounting framework.</figcaption></figure>
 
 - **Cash isn't profit.** £1,200 of December voucher sales (illustratively, 40 vouchers at £30) is £1,200 in the bank, but it's matched by £1,200 of services at your prices that you'll have to deliver later. If a cut costs £30, that's 40 cuts of barber time. If a cut costs £24, the same vouchers buy 50 cuts, and some will be part-used or topped up. If you're VAT-registered, £200 of the £1,200 is VAT, so the most it can become in revenue is £1,000.
 - **Timing shifts the strain.** If those 40 vouchers are all redeemed on Saturdays in January, they take paying slots. If they fill quiet Tuesday mornings that would genuinely have been empty, the main cost is products and card fees.
@@ -58,6 +58,9 @@ You won't know which group a voucher falls into when you sell it. You can find o
 
 Two practical points improve the odds. First, design the voucher for the person receiving it, not the buyer: include the booking link or phone number, and say how to book. Second, consider making vouchers redeemable at quieter times, or at least encourage it. A voucher redeemed in a slot that would otherwise have stayed empty displaces no paid work. If Tuesday mornings are already booked, steering vouchers there doesn't save anything.
 
+<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1596362601603-b74f6ef166e4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1200" loading="lazy" decoding="async" alt="Barber scissors and hair comb arranged on a work surface, with no people present" />
+<figcaption>Barbershop tools photograph by Sinval Carvalho / Unsplash. Editorial imagery, not a KERSIVO customer — <a href="https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY" target="_blank" rel="noopener noreferrer">Sinval Carvalho / Unsplash</a>.</figcaption></figure>
+
 #### The counterargument: unredeemed vouchers are free money
 
 Some owners quietly count on vouchers that never get used. Every voucher that expires unused is cash with no haircut to deliver. On that view, a short expiry and a forgetful public make vouchers very profitable.
@@ -67,7 +70,7 @@ It's true that some vouchers go unredeemed. How and when that becomes income in 
 #### Before you sell the first one
 
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/gift-vouchers/voucher-checklist.svg" width="1200" height="730" loading="lazy" decoding="async" alt="Six-item checklist for selling vouchers: transparent expiry, booking instructions, register, VAT, accounts and returning clients." />
-<figcaption>Visual checklist derived from the practical steps below; not legal, tax or accounting advice..</figcaption></figure>
+<figcaption>Practical steps from the article; general information, not legal, tax or accounting advice.</figcaption></figure>
 
 1. Print the expiry date (two years is a sensible guide) and the terms clearly on the voucher.
 2. Put the booking link and instructions on it.
