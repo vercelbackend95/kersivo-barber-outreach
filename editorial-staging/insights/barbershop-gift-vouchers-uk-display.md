@@ -59,7 +59,7 @@ You won't know which group a voucher falls into when you sell it. You can find o
 Two practical points improve the odds. First, design the voucher for the person receiving it, not the buyer: include the booking link or phone number, and say how to book. Second, consider making vouchers redeemable at quieter times, or at least encourage it. A voucher redeemed in a slot that would otherwise have stayed empty displaces no paid work. If Tuesday mornings are already booked, steering vouchers there doesn't save anything.
 
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1596362601603-b74f6ef166e4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1200" loading="lazy" decoding="async" alt="Barber scissors and hair comb arranged on a work surface, with no people present" />
-<figcaption>Barbershop tools photograph by Sinval Carvalho / Unsplash. Editorial imagery, not a KERSIVO customer — <a href="https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY" target="_blank" rel="noopener noreferrer">Sinval Carvalho / Unsplash</a>.</figcaption></figure>
+<figcaption>Editorial photograph of barber scissors and a comb, used to illustrate the barbershop business — <a href="https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY" target="_blank" rel="noopener noreferrer">Sinval Carvalho / Unsplash</a>.</figcaption></figure>
 
 #### The counterargument: unredeemed vouchers are free money
 
