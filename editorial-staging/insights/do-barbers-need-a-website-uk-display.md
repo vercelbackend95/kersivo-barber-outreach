@@ -1,7 +1,7 @@
 # Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Empty classic barbershop interior with vintage leather chairs, mirrors and styling stations" />
-<figcaption>Editorial photograph of a barbershop interior, not a KERSIVO customer or example installation — <a href="https://unsplash.com/photos/an-empty-barbershop-interior-with-several-chairs-and-mirrors-AXurvQTtO3Y" target="_blank" rel="noopener noreferrer">Barney Goodman / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Classic red barber chair in a real London hair salon, photographed by Jennifer Latham" />
+<figcaption>Real barber chair photographed in London, England. Editorial image; this is not a KERSIVO customer or installation — <a href="https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/" target="_blank" rel="noopener noreferrer">Jennifer Latham / Pexels</a>.</figcaption></figure>
 
 "Do I need a website?" is one of the most common questions barbershop owners ask, and the answers online are almost all yes. Many of them are written by people who sell websites, and so is this one: KERSIVO sells booking software and websites for barbershops. That's a good reason to work through the question yourself rather than take anyone's word for it, ours included.
 
@@ -32,8 +32,8 @@ The case for a website rests on jobs the free platforms either do badly or do on
 
 This is a rule of thumb, not a scoring system. It's a quick way to see whether a website would do a job you actually need done. Answer these four questions honestly:
 
-<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1773863745081-582b4a9ec628?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2200" width="1600" height="1000" loading="lazy" decoding="async" alt="Barber shaving a client seen in a mirror reflection at a traditional salon in Geneva" />
-<figcaption>Editorial image showing a working barbershop; it does not depict a KERSIVO customer, employee or product — <a href="https://unsplash.com/photos/barber-shaving-a-client-in-a-mirror-reflection-tz5POOj8RRQ" target="_blank" rel="noopener noreferrer">Uğur Çelik / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--photo"><img src="https://images.pexels.com/photos/7192863/pexels-photo-7192863.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2200" width="1600" height="1000" loading="lazy" decoding="async" alt="Stylist attending an older client in a traditional barbershop in London, England" />
+<figcaption>Traditional barbershop in London, England, photographed for editorial context; no KERSIVO affiliation is claimed — <a href="https://www.pexels.com/photo/elderly-man-sitting-in-the-chair-with-blue-apron-in-barbershop-7192863/" target="_blank" rel="noopener noreferrer">Bence Szemerey / Pexels</a>.</figcaption></figure>
 
 | Question | If yes | If no |
 | --- | --- | --- |
