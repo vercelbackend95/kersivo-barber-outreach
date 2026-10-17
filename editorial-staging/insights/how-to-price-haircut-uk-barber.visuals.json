@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/how-to-price-haircut-uk-barber.md",
+  "output": "editorial-staging/insights/how-to-price-haircut-uk-barber-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda817688dee88a79cd9d00",
+  "status": "Draft Ready for Review — Writing Approved — no Hold — owner publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "How to Price a Haircut in the UK: A Barber's Method",
+    "description": "Set haircut prices from your real cost per minute and the local range, test a price rise with break-even maths, and show prices the way UK law expects.",
+    "slug": "how-to-price-haircut-uk-barber",
+    "category": "Business & Revenue"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# How to Price a Haircut in the UK: A Floor, a Ceiling and the Price List In Between",
+      "src": "https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Vintage barber chairs, mirrors and styling stations in an old-fashioned barbershop",
+      "caption": "Editorial photograph of an independent barbershop interior; not a KERSIVO customer",
+      "credit": "Sebastian Ciepiela (Sabe.79) / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/vintage-barber-chairs-in-an-old-fashioned-barbershop-fB65Wx6Tug0",
+      "rights": "Verified on the original photo page 2026-10-17: Download free, Unsplash License; commercial website use permitted under https://unsplash.com/license. No identifiable individuals described. Do not imply affiliation or endorsements. URL extracted from actual Unsplash image link.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "These figures are hypothetical. Use your own wage, hours, pension terms and booked hours.",
+      "src": "/images/insights/haircut-pricing/cost-floor.svg",
+      "width": 1200,
+      "height": 690,
+      "alt": "Illustrative monthly cost recovery: overhead cost £16.67 plus staff cost £19.66 per booked chair-hour equals £36.33 per booked hour, or £18.16 per 30 minutes before products and card fees",
+      "caption": "Worked example from the article; these figures are not market prices or financial advice",
+      "rights": "Original KERSIVO SVG; uses only hypothetical figures supplied by ARTICLE DRAFT v2 in Notion",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "#### The ceiling: what your clients will pay",
+      "src": "https://images.unsplash.com/photo-1731655257703-99d690707781?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "A close-up of barber scissors and cutting equipment on a dark work surface",
+      "caption": "Photograph of barbershop tools; editorial image, not a KERSIVO product",
+      "credit": "Mehmet Talha Onuk / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-close-up-of-a-pair-of-scissors-on-a-table-586N6c3vNS0",
+      "rights": "Verified on original Unsplash photo page 2026-10-17: free download under Unsplash License, commercial use allowed. No people featured in described image. Image CDN URL taken from actual image link, not inferred.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "(Calculated as 1 − old contribution ÷ new contribution, which is the same as the price rise",
+      "src": "/images/insights/haircut-pricing/price-rise-test.svg",
+      "width": 1200,
+      "height": 770,
+      "alt": "Price-rise break-even examples: moving from £20 to £22 allows an illustrative 11.1 percent loss of cuts, £20 to £21 allows 5.9 percent, and £30 to £33 allows 10.7 percent before total contribution falls",
+      "caption": "Illustrative arithmetic only; it does not predict how real customers will react to a price change",
+      "rights": "Original KERSIVO SVG chart, values copied from the v2 Notion article's comparison table",
+      "licenceReviewed": true
+    }
+  ]
+}
