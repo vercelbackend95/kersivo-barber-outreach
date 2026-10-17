@@ -49,6 +49,10 @@ Minimum visual QA relative to source body length:
 - Above 2,200 words: one hero + three supporting visuals.
 - Every article must also contain a real structured comparison table or source-supported diagram. If justified assets cannot be obtained, **block the article for asset review** rather than inventing or padding.
 
+**Photo policy:** do not replace genuinely relevant photography with only SVGs out of generalized licensing caution. Use varied, authentic editorial photography wherever it adds atmosphere or evidence, alongside accurate original diagrams. Before incorporation, verify the original creator's exact licensed asset page, commercial-use permission, creator credit, description, and possible model/property/trademark rights. Prefer generic close-up objects and spaces when third-party releases are uncertain; avoid depicting someone as a KERSIVO user or owner without proof. Never assert that a stock-image copyright licence alone guarantees every third-party right. Keep licence/attribution URLs in each article manifest and captions.
+
+**Graphic QA:** render and inspect every hero and diagram at desktop and mobile sizes before publication. No text/image overlap, text escaping the SVG viewBox, illegible headings, or visual infographic crowding. Illustrations must remain legible at the size shown in the actual article. Ensure the media caption generator does not produce double full stops.
+
 Use hero after H1, and insert later diagrams beside the relevant numerical example, comparison or process. Vary pacing; do not repeat the same image or add multiple near-duplicate photos.
 
 ## 5. Automated preparation, NOT automated publication

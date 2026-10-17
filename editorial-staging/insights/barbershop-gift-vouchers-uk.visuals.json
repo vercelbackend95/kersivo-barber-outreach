@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-gift-vouchers-uk.md",
+  "output": "editorial-staging/insights/barbershop-gift-vouchers-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba",
+  "status": "Owner approved for production publication — 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value",
+    "description": "Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.",
+    "slug": "barbershop-gift-vouchers-uk",
+    "category": "Business & Revenue"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March",
+      "src": "/images/insights/gift-vouchers/voucher-hero.svg",
+      "width": 1600,
+      "height": 900,
+      "alt": "Original editorial illustration of a fictional thirty-pound gift voucher and the words cash today, a cut tomorrow.",
+      "caption": "Original KERSIVO Insights illustration. The fictional voucher is not a KERSIVO product and cannot be redeemed",
+      "rights": "Original KERSIVO SVG: no third-party photography, logos or recognisable people.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "This matters for three reasons:",
+      "src": "/images/insights/gift-vouchers/cash-timing.svg",
+      "width": 1200,
+      "height": 690,
+      "alt": "Illustrative gift voucher timeline from sale to haircut redemption and follow-up booking, with conditional VAT note.",
+      "caption": "Illustrative timeline. VAT and accounting treatment depend on registration, voucher type and the accounting framework",
+      "rights": "Original KERSIVO data illustration derived only from the v2 Notion article.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "Two practical points improve the odds.",
+      "src": "https://images.unsplash.com/photo-1596362601603-b74f6ef166e4?auto=format&fit=crop&fm=jpg&q=75&w=2400",
+      "width": 1800,
+      "height": 1200,
+      "alt": "Barber scissors and hair comb arranged on a work surface, with no people present",
+      "caption": "Editorial photograph of barber scissors and a comb, used to illustrate the barbershop business",
+      "credit": "Sinval Carvalho / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY",
+      "rights": "Unsplash License (free download, commercial use permitted), verified 2026-10-17 at https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY. Photograph depicts tools; no recognisable people. Third-party logos and property rights would require separate permission if identifiable.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "#### Before you sell the first one",
+      "src": "/images/insights/gift-vouchers/voucher-checklist.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Six-item checklist for selling vouchers: transparent expiry, booking instructions, register, VAT, accounts and returning clients.",
+      "caption": "Practical steps from the article; general information, not legal, tax or accounting advice",
+      "rights": "Original KERSIVO diagram without external photographs or models.",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba",
+    "note": "User requested corrections based on supplied screenshots and explicitly instructed production publication of fourth article; original Notion ARTICLE DRAFT v2 retained."
+  }
+}

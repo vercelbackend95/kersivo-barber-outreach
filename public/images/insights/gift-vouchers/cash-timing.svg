@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="title description">
+<title id="title">A voucher is sold, redeemed and then measured by repeat visits</title>
+<desc id="description">Three clear, non-overlapping cards show a gift voucher's business timeline: thirty pounds cash received and haircut owed, service delivered on redemption, and a follow-up check to see whether the client books again. VAT is subject to registration and voucher type.</desc>
+<rect width="1200" height="690" fill="#eeeae2"/>
+<rect x="40" y="40" width="1120" height="610" rx="14" fill="#fdfbf7" stroke="#dad4ca" stroke-width="2"/>
+<g font-family="Arial,Helvetica,sans-serif">
+ <text x="83" y="105" fill="#ad2839" font-size="18" font-weight="800" letter-spacing="3">ILLUSTRATIVE / £30 VOUCHER</text>
+ <text x="82" y="164" fill="#1c1e23" font-size="45" font-weight="850" letter-spacing="-1.5">Three moments. Different outcomes.</text>
+ <text x="83" y="211" fill="#60656d" font-size="22">The cash comes in before the service is delivered.</text>
+</g>
+<path d="M113 295H1087" stroke="#d5d4cf" stroke-width="5" stroke-linecap="round"/>
+<g fill="#bc293e"><circle cx="215" cy="295" r="17"/><circle cx="600" cy="295" r="17"/><circle cx="988" cy="295" r="17"/></g>
+<g font-family="Arial,Helvetica,sans-serif">
+ <rect x="80" y="330" width="323" height="221" rx="10" fill="#f2ede6"/>
+ <rect x="438" y="330" width="324" height="221" rx="10" fill="#f2ede6"/>
+ <rect x="797" y="330" width="323" height="221" rx="10" fill="#f2ede6"/>
+ <g font-size="18" fill="#af2639" font-weight="850" letter-spacing="1.8"><text x="102" y="366">01 / SOLD</text><text x="461" y="366">02 / REDEEMED</text><text x="818" y="366">03 / FOLLOW-UP</text></g>
+ <g fill="#1e2025" font-size="29" font-weight="850" letter-spacing="-.4"><text x="102" y="415">£30 cash arrives</text><text x="461" y="415">Haircut delivered</text><text x="818" y="415">Did they return?</text></g>
+ <g fill="#555b62" font-size="20">
+ <text x="102" y="461">Service still owed</text><text x="102" y="495">VAT may be due now*</text>
+ <text x="461" y="461">Obligation fulfilled</text><text x="461" y="495">Barber time used</text>
+ <text x="818" y="461">Track the next paid</text><text x="818" y="495">appointment</text>
+ </g>
+ <path d="M83 578H1116" stroke="#d3cec7" stroke-width="2"/>
+ <text x="83" y="617" fill="#626970" font-size="18">*For VAT-registered shops with single-purpose vouchers. Check the rules for your shop.</text>
+</g>
+</svg>
