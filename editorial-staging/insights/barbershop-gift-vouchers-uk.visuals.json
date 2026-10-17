@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-gift-vouchers-uk.md",
+  "output": "editorial-staging/insights/barbershop-gift-vouchers-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba",
+  "status": "Draft Ready for Review; Writing Approved; no Hold; Owner final approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value",
+    "description": "Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.",
+    "slug": "barbershop-gift-vouchers-uk",
+    "category": "Business & Revenue"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March",
+      "src": "/images/insights/gift-vouchers/voucher-hero.svg",
+      "width": 1600,
+      "height": 900,
+      "alt": "Original editorial illustration of a fictional thirty-pound gift voucher and the words cash today, a cut tomorrow.",
+      "caption": "Original KERSIVO Insights editorial artwork: the fictional voucher shown is not a KERSIVO product and cannot be redeemed.",
+      "rights": "Original KERSIVO SVG: no third-party photography, logos or recognisable people.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "This matters for three reasons:",
+      "src": "/images/insights/gift-vouchers/cash-timing.svg",
+      "width": 1200,
+      "height": 690,
+      "alt": "Illustrative gift voucher timeline from sale to haircut redemption and follow-up booking, with conditional VAT note.",
+      "caption": "Illustrative timeline. VAT and accounting treatment depend on the shop's registration, voucher type and accounting framework.",
+      "rights": "Original KERSIVO data illustration derived only from the v2 Notion article.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "#### Before you sell the first one",
+      "src": "/images/insights/gift-vouchers/voucher-checklist.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Six-item checklist for selling vouchers: transparent expiry, booking instructions, register, VAT, accounts and returning clients.",
+      "caption": "Visual checklist derived from the practical steps below; not legal, tax or accounting advice.",
+      "rights": "Original KERSIVO diagram without external photographs or models.",
+      "licenceReviewed": true
+    }
+  ]
+}
