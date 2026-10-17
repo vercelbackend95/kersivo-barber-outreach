@@ -122,15 +122,25 @@ describe('Insights six-category taxonomy', () => {
     expect(new Set(all.map((article) => article.slug)).size).toBe(6);
   });
 
-  it('excludes non-indexable categories from the marketing sitemap while keeping articles', () => {
-    expect(INSIGHTS_CATEGORIES.every((category) => category.indexable === false)).toBe(true);
-    expect(getIndexableInsightsCategorySitemapEntries()).toEqual([]);
+  it('sitemaps every owner-approved category even when it has no published articles', () => {
+    expect(INSIGHTS_CATEGORIES.every((category) => category.indexable === true)).toBe(true);
+    const categoryEntries = getIndexableInsightsCategorySitemapEntries();
+    expect(categoryEntries.map((entry) => entry.path)).toEqual(
+      INSIGHTS_CATEGORIES.map((category) => category.path),
+    );
+    // An empty category must remain indexable; no fake articles are added.
+    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(0);
+    expect(categoryEntries.some((entry) => entry.path === '/insights/category/industry-people')).toBe(true);
+
     const locs = buildInsightsSitemapEntries().map((entry) => entry.path);
-    expect(locs).toContain('/insights');
-    expect(locs.filter((path) => path.startsWith('/insights/category/'))).toEqual([]);
-    for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
-      expect(locs).toContain(article.path);
-    }
+    expect(locs).toHaveLength(1 + INSIGHTS_PUBLISHED_ARTICLES.length + INSIGHTS_CATEGORIES.length);
+    expect(locs[0]).toBe('/insights');
+    expect(locs.slice(1, 1 + INSIGHTS_PUBLISHED_ARTICLES.length)).toEqual(
+      INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path),
+    );
+    expect(locs.slice(1 + INSIGHTS_PUBLISHED_ARTICLES.length)).toEqual(
+      INSIGHTS_CATEGORIES.map((category) => category.path),
+    );
   });
 
   it('renders category modules as anchors in the topic strip component', () => {
@@ -146,6 +156,8 @@ describe('Insights six-category taxonomy', () => {
     expect(page).toContain('getStaticPaths');
     expect(page).toContain('INSIGHTS_CATEGORIES');
     expect(page).toContain('noindex={!indexable}');
+    expect(page).toContain('const indexable = category.indexable;');
+    expect(page).not.toContain('indexable && count > 0');
     expect(page).toContain('No articles published in this topic yet');
     expect(page).toContain('Elsewhere in Insights');
   });
