@@ -1,0 +1,37 @@
+---
+/**
+ * Editorial Preview only. This draft is not part of INSIGHTS_PUBLISHED_ARTICLES;
+ * no sitemap, category listing or production content changes are authorised.
+ * InsightsArticleLayout emits noindex while published=false.
+ */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as WebsiteNeedArticle } from '../../../../editorial-staging/insights/do-barbers-need-a-website-uk-display.md';
+
+const article = {
+  headline: 'Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google',
+  seoTitle: 'Do Barbers Need a Website? An Honest UK Test',
+  description: "Some barbershops don't need a website. A four-question test, what Google and Instagram already cover, and the UK rules on prices and company details online.",
+  slug: 'do-barbers-need-a-website-uk',
+  categoryId: 'tools-payments' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502',
+  heroImage: 'https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="Vintage barber chairs and mirrors in an empty barbershop"
+  publishedDate="2026-10-17"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <WebsiteNeedArticle />
+</InsightsArticleLayout>
