@@ -151,12 +151,29 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_COMMISSION_PAY = {
+  slug: 'barber-commission-pay-minimum-wage-uk',
+  path: '/insights/barber-commission-pay-minimum-wage-uk',
+  headline: 'Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage',
+  seoTitle: 'Commission Pay for Barbers: UK Minimum Wage Rules (2026)',
+  description: 'Commission-only or a base plus percentage? Check UK minimum wage rates, hours and pay reference periods for employed barbers — with a worked £2,198.83 example.',
+  categoryId: 'industry-people' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d',
+  lead: 'What commission-based pay means for employed UK barbers, with the minimum wage test across busy and quiet months.',
+  heroImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImageAlt: 'Barber at work with a client in a hair salon in Doncaster, United Kingdom',
+} as const;
+
 /**
  * Single source of publication for owner-approved Insights articles.
  * Sitemap, hub cards and indexability must derive from this list only.
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
