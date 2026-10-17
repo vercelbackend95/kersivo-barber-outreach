@@ -1,0 +1,35 @@
+---
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as DecemberHoursArticle } from '../../../editorial-staging/insights/barbershop-christmas-opening-hours-planning-display.md';
+
+/**
+ * Editorial preview only: Notion ARTICLE DRAFT v2.
+ * Research Approved, Writing Approved, no Hold, owner publication approval pending.
+ * This route must remain noindex and absent from production Insights registry and sitemap.
+ */
+const article = {
+  title: "The Extra Hour Test: Planning a Barbershop's December Without Fooling Yourself",
+  seoTitle: 'Barbershop Christmas Opening Hours: Do Late Nights Pay?',
+  description: 'Should your barbershop open late in December? A simple extra-hour test, 2026 bank holiday dates, staff rules, and how to fill January before it arrives.',
+  slug: 'barbershop-christmas-opening-hours-planning',
+  category: 'Bookings & Clients',
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda81e9ae9eeadf5007f087',
+  heroImage: 'https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=2400',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.title}
+  heroImage={article.heroImage}
+  coverImageAlt="Barbershop interior, vintage chairs and mirrors, editorial photograph by František Čaník"
+  verifiedDate="2026-10-16"
+  publishedDate="2026-10-17"
+  published={false}
+>
+  <DecemberHoursArticle />
+</InsightsArticleLayout>
