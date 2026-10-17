@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 770" role="img" aria-labelledby="title desc">
+<title id="title">How many bookings could a barbershop lose after raising prices?</title>
+<desc id="desc">Illustrative price-rise break-even test with unchanged variable costs. A twenty pound haircut raised to twenty two pounds with four pound variable costs can lose eleven point one percent of cuts and break even on contribution. Twenty to twenty-one pounds can lose five point nine percent; thirty to thirty-three pounds with five pound variable costs can lose ten point seven percent.</desc>
+<rect width="1200" height="770" fill="#f2f0ea"/>
+<rect x="42" y="44" width="1116" height="677" rx="12" fill="#fffdf9" stroke="#d5d0c7" stroke-width="2"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="80" y="102" fill="#ad293a" font-size="19" letter-spacing="3" font-weight="800">ILLUSTRATIVE / BREAK-EVEN PRICE RISE</text>
+<text x="80" y="166" fill="#1c1e23" font-size="47" letter-spacing="-1.2" font-weight="850">How much demand can a rise lose?</text>
+<text x="80" y="212" fill="#646971" font-size="22">The same total contribution, assuming variable costs don't change.</text>
+<text x="82" y="283" fill="#282b30" font-size="24" font-weight="800">£20 → £22</text>
+<text x="1118" y="283" text-anchor="end" fill="#a82a3b" font-size="40" font-weight="850">11.1%</text>
+<rect x="82" y="301" width="1036" height="51" rx="5" fill="#ece7df"/><rect x="82" y="301" width="997" height="51" rx="5" fill="#ba2d42"/>
+<text x="82" y="386" fill="#282b30" font-size="24" font-weight="800">£20 → £21</text>
+<text x="1118" y="386" text-anchor="end" fill="#2f434b" font-size="40" font-weight="850">5.9%</text>
+<rect x="82" y="405" width="1036" height="51" rx="5" fill="#ece7df"/><rect x="82" y="405" width="529" height="51" rx="5" fill="#778791"/>
+<text x="82" y="491" fill="#282b30" font-size="24" font-weight="800">£30 → £33</text>
+<text x="1118" y="491" text-anchor="end" fill="#2f434b" font-size="40" font-weight="850">10.7%</text>
+<rect x="82" y="510" width="1036" height="51" rx="5" fill="#ece7df"/><rect x="82" y="510" width="962" height="51" rx="5" fill="#778791"/>
+<path d="M82 598H1118" stroke="#d7d1c8" stroke-width="2"/>
+<text x="82" y="637" fill="#51565b" font-size="20">Measure rebooking after the change — this maths does not forecast demand.</text>
+<text x="82" y="674" fill="#8d3a45" font-size="17" font-weight="800">Variable costs: £4 / £4 / £5 respectively · source: Notion article examples</text>
+</g></svg>
