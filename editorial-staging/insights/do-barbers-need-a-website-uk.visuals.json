@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/do-barbers-need-a-website-uk.md",
+  "output": "editorial-staging/insights/do-barbers-need-a-website-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502",
+  "status": "Draft Ready for Review; Research Approved; Writing Approved; no Hold; owner publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Do Barbers Need a Website? An Honest UK Test",
+    "description": "Some barbershops don't need a website. A four-question test, what Google and Instagram already cover, and the UK rules on prices and company details online.",
+    "slug": "do-barbers-need-a-website-uk",
+    "categoryId": "tools-payments",
+    "category": "Tools & Payments",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google",
+      "src": "https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&fit=crop&fm=jpg&q=75&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Empty classic barbershop interior with vintage leather chairs, mirrors and styling stations",
+      "caption": "Editorial photograph of a barbershop interior, not a KERSIVO customer or example installation",
+      "credit": "Barney Goodman / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/an-empty-barbershop-interior-with-several-chairs-and-mirrors-AXurvQTtO3Y",
+      "rights": "Original free Unsplash photo page verified 2026-10-17. Barney Goodman, 14 June 2026; Download free, free to use under Unsplash License allowing commercial editorial use. The image includes no identifiable people; third-party property/trademark rights are not separately established.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**4. Booking without a middleman's shop window.** A client who finds you on a marketplace app is browsing a list of your competitors.",
+      "src": "/images/insights/do-barbers-need-website/platform-vs-owned-page.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Comparison of three online channels: Google for discovery, Instagram for portfolio, a shop-owned website or booking page for prices, availability and policies",
+      "caption": "Illustrative comparison of channel roles from the article; capabilities vary by provider and configuration",
+      "rights": "Original KERSIVO SVG authored for this article; based on approved Notion ARTICLE DRAFT v2, no third-party artwork.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "This is a rule of thumb, not a scoring system. It's a quick way to see whether a website would do a job you actually need done.",
+      "src": "https://images.unsplash.com/photo-1773863745081-582b4a9ec628?auto=format&fit=crop&fm=jpg&q=75&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Barber shaving a client seen in a mirror reflection at a traditional salon in Geneva",
+      "caption": "Editorial image showing a working barbershop; it does not depict a KERSIVO customer, employee or product",
+      "credit": "Uğur Çelik / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barber-shaving-a-client-in-a-mirror-reflection-tz5POOj8RRQ",
+      "rights": "Original free Unsplash photograph page verified 2026-10-17, photographer Uğur Çelik, Geneva, published 18 March 2026. Unsplash License allows commercial editorial reuse; model or property releases and endorsements not independently verified. Use for editorial context only and never imply KERSIVO affiliation.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Illustratively: a site costing £240 a year, a cut that leaves £16 of contribution",
+      "src": "/images/insights/do-barbers-need-website/website-break-even.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Example break-even website calculation: £240 annual cost divided by £16 contribution per cut, 10.4 annual visits and half-year retention equals approximately 2.9 genuinely additional regular clients",
+      "caption": "Illustrative numbers taken from the article; your own costs and genuinely additional bookings determine the real result",
+      "rights": "Original KERSIVO SVG from worked hypothetical figures in ARTICLE DRAFT v2; not a market benchmark or forecast.",
+      "licenceReviewed": true
+    }
+  ]
+}
