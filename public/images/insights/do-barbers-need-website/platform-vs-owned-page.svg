@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730" role="img" aria-labelledby="t d">
+<title id="t">Which job does each online channel do for a barbershop?</title>
+<desc id="d">An illustrative comparison: Google Business Profile helps local discovery and reviews, Instagram shows portfolio and ongoing work, and a barbershop-owned page can put services, prices, booking links and cancellation terms in one place. The exact capabilities depend on the services and settings used.</desc>
+<rect width="1200" height="730" rx="0" fill="#15191e"/>
+<path d="M0 0H1200V8H0" fill="#e12840"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="65" y="90" fill="#ee6478" font-size="18" font-weight="800" letter-spacing="3">KERSIVO INSIGHTS / CHANNEL ROLES</text>
+<text x="65" y="155" fill="#fbf7f0" font-size="50" font-weight="850" letter-spacing="-1">Discovery isn't the whole journey.</text>
+<text x="65" y="208" fill="#abb8c3" font-size="23">Each channel does a different job for the person booking.</text>
+<rect x="65" y="267" width="335" height="310" rx="12" fill="#282f38"/>
+<rect x="433" y="267" width="335" height="310" rx="12" fill="#282f38"/>
+<rect x="801" y="267" width="335" height="310" rx="12" fill="#342b35"/>
+<rect x="801" y="267" width="335" height="7" fill="#e23a50"/>
+<g font-size="20" font-weight="850" letter-spacing="2">
+<text x="88" y="315" fill="#aebbc6">01 / GOOGLE</text>
+<text x="456" y="315" fill="#aebbc6">02 / INSTAGRAM</text>
+<text x="824" y="315" fill="#f08794">03 / OWN PAGE</text>
+</g>
+<g font-size="31" font-weight="850" fill="#faf7f0">
+<text x="88" y="373">Get discovered</text>
+<text x="456" y="373">Show your work</text>
+<text x="824" y="373">Make it easy</text>
+<text x="824" y="414">to book</text>
+</g>
+<g fill="#c4cbd2" font-size="21">
+<text x="88" y="429">Maps, hours, reviews</text>
+<text x="88" y="463">and local discovery</text>
+<text x="456" y="429">Cuts, portfolio and</text>
+<text x="456" y="463">client familiarity</text>
+<text x="824" y="468">Prices, availability</text>
+<text x="824" y="501">and clear policies</text>
+</g>
+<path d="M65 621H1136" stroke="#4c535a" stroke-width="2"/>
+<text x="65" y="666" fill="#b0bbc4" font-size="20">If Google and Instagram already do every job you need, don't buy a site out of guilt.</text>
+<text x="65" y="701" fill="#aeb5be" font-size="17">Illustrative channel roles, not a platform feature audit or performance guarantee.</text>
+</g></svg>
