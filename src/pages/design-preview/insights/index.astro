@@ -5,7 +5,7 @@
  */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
-import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
+import InsightsEditorialMasthead from '@/components/insights/InsightsEditorialMasthead.astro';
 import InsightsFeatureMosaic from '@/components/insights/InsightsFeatureMosaic.astro';
 import InsightsTopicStrip from '@/components/insights/InsightsTopicStrip.astro';
 import InsightsLatestThinking from '@/components/insights/InsightsLatestThinking.astro';
@@ -59,7 +59,7 @@ const currentYear = new Date().getFullYear();
 
   <main class="insights-shell landing-overflow-guard" id="insights-top">
     <div class="ins-frame ins-page">
-      <InsightsMasthead
+      <InsightsEditorialMasthead
         mark={GATE1_MASTHEAD.mark}
         headlineLines={GATE1_MASTHEAD.headlineLines}
         lead={GATE1_MASTHEAD.lead}
