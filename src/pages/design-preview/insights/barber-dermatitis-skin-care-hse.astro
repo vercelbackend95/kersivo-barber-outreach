@@ -1,0 +1,39 @@
+---
+/**
+ * Protected editorial review only. The article is NOT in INSIGHTS_PUBLISHED_ARTICLES,
+ * will NOT enter the production sitemap, and remains noindex until owner approval.
+ * This route is separate from the registry-driven /insights/[slug] production route.
+ */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as SkinHealthArticle } from '../../../../editorial-staging/insights/barber-dermatitis-skin-care-hse-display.md';
+
+const article = {
+  title: "Barbers' Hands: The Skin Problem That Builds Slowly and Costs Quietly",
+  seoTitle: "Dermatitis in Barbers: How to Protect Your Team's Hands",
+  description: "Wet work, disinfectants and constant hand washing can damage barbers' skin. What HSE advises, employer duties, and a five-minute audit for your shop.",
+  slug: 'barber-dermatitis-skin-care-hse',
+  categoryId: 'industry-people' as const,
+  category: 'Industry & People',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8188a0dcc982ec96541a',
+  heroImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.notionUrl}
+  headline={article.title}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="Professional barber's hands cutting hair with scissors and comb"
+  publishedDate="2026-10-17"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <SkinHealthArticle />
+</InsightsArticleLayout>
