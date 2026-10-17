@@ -7,7 +7,7 @@ Ask ten barbers how they set their prices and most will give a version of the sa
 
 A haircut price has to do three things. Across the price list, it has to cover what the time in the chair costs you on average. It has to be one that people in your area will pay. And it has to appear on the price list in a way the law accepts and clients understand. This article takes them in that order.
 
-#### The floor: what an hour in the chair costs on average
+## The floor: what an hour in the chair costs on average
 
 The starting point is your own costs, not your competitors'. The useful figure is an **average cost-recovery price**: the price per booked hour that, if your bookings came in as planned, would cover the shop's costs. This is a planning allocation, not the cost of any single appointment. With illustrative numbers:
 
@@ -30,7 +30,7 @@ What this number tells you is whether your price list, at the bookings you expec
 
 So the floor is a test of the whole price list, not a rule that every slot must earn £18.16. The divisor is *booked* hours, not opening hours, so a quiet Tuesday raises the average cost of every cut you do. And it's per minute, so a skin fade that really takes 45 minutes needs a different price from a 20-minute clipper cut, even if both are called "a men's cut".
 
-#### The ceiling: what your clients will pay
+## The ceiling: what your clients will pay
 
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1731655257703-99d690707781?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1500" height="1000" loading="lazy" decoding="async" alt="A close-up of barber scissors and cutting equipment on a dark work surface" />
 <figcaption>Photograph of barbershop tools; editorial image, not a KERSIVO product — <a href="https://unsplash.com/photos/a-close-up-of-a-pair-of-scissors-on-a-table-586N6c3vNS0" target="_blank" rel="noopener noreferrer">Mehmet Talha Onuk / Unsplash</a>.</figcaption></figure>
@@ -39,7 +39,7 @@ Above the floor, the market decides. This is where the shop down the road become
 
 Your position depends on what clients get from you that they don't get elsewhere. That could be appointments that run to time, a barber with a following, a late evening slot, or the only shop in the area that does a particular style well. If you can't say what that is, pricing at the top of the local range will be hard to sustain. If you can, pricing in the middle is probably leaving money on the table.
 
-#### The test: before you raise prices
+## The test: before you raise prices
 
 Most owners don't struggle with the first price. They struggle with the second, the price rise. The fear is losing clients. A simple break-even calculation shows how many you could lose before the rise stops paying for itself.
 
@@ -60,7 +60,7 @@ The test assumes the variable cost per cut stays the same and the barber's pay d
 
 One caution that matters for the bottom line: the extra £2 is extra contribution, not extra profit. If you pass some of it on as a pay rise or a rent-a-chair adjustment, the gain is smaller. The test still works. You just need to use the right number for "variable cost".
 
-#### The price list: the part the law has a view on
+## The price list: the part the law has a view on
 
 The price itself is up to you. How you show it isn't entirely.
 
@@ -70,7 +70,7 @@ The price itself is up to you. How you show it isn't entirely.
 
 **Make "from" honest.** "Skin fade from £20" is likely to be fine if a reasonable number of clients actually pay £20. If almost everyone ends up paying £26 because of the "extras", the headline is doing the misleading for you. A clearer approach is to price by service and length: "Skin fade (45 min) £26; scissor cut (30 min) £22; beard trim (15 min) £10".
 
-#### The counterargument: "my clients won't pay more"
+## The counterargument: "my clients won't pay more"
 
 Some owners, especially in lower-income areas, will say this is all theory. Local clients have a fixed idea of what a haircut costs, and a shop that goes above it simply empties.
 
@@ -78,7 +78,7 @@ That's a real risk, and it's why the method begins with the floor rather than th
 
 There's also the opposite objection: that a premium price is itself a signal, and clients read a cheap cut as a poor cut. That can be true. It's also the easiest pricing story to tell yourself without evidence. A small test on one service, with the rebooking rate as the measure, will tell you more than either belief.
 
-#### A one-page method
+## A one-page method
 
 1. Work out your average cost per booked hour, then per minute, as a planning check.
 2. Check each service's price against it, using the service's real length, and know its contribution per cut.
@@ -89,7 +89,7 @@ There's also the opposite objection: that a premium price is itself a signal, an
 
 A price is the most important number in a barbershop, and in most shops it's set by copying the shop down the road. Setting it from your own costs takes about an hour with a spreadsheet.
 
-#### References
+## References
 
 1. The Provision of Services Regulations 2009 (SI 2009/2999), regulations 8 and 11 (UK). [legislation.gov.uk/uksi/2009/2999/regulation/8](http://legislation.gov.uk/uksi/2009/2999/regulation/8) (accessed 16 Oct 2026).
 2. Competition and Markets Authority, *Unfair commercial practices (CMA207)* (DMCC Act provisions from 6 April 2025; drip pricing). [gov.uk](http://gov.uk) (accessed 16 Oct 2026).
