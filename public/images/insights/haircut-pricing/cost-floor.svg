@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+<title id="title">Illustrative cost-recovery floor for a barbershop</title>
+<desc id="desc">Monthly overheads four thousand pounds divided by two hundred and forty booked chair hours give sixteen pounds sixty seven in overhead per booked hour. Illustrative staff cost nineteen pounds sixty six per booked hour. Combined cost-recovery average thirty-six pounds thirty-three per booked hour, or eighteen pounds sixteen for thirty minutes before products and card fees.</desc>
+<rect width="1200" height="690" fill="#15191e"/><rect width="1200" height="8" fill="#d6263c"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="60" y="91" fill="#ed6576" font-size="19" font-weight="800" letter-spacing="4">KERSIVO / INSIGHTS / PRICING</text>
+<text x="60" y="158" fill="#f9f7f0" font-size="51" letter-spacing="-1" font-weight="800">Know your cost-recovery floor.</text>
+<text x="60" y="202" fill="#b9c2c8" font-size="22">Illustrative figures, not a recommended haircut price.</text>
+<rect x="60" y="243" width="511" height="150" rx="10" fill="#272d35"/>
+<rect x="627" y="243" width="511" height="150" rx="10" fill="#272d35"/>
+<text x="88" y="285" fill="#b5bec8" font-size="19" letter-spacing="1" font-weight="700">OVERHEAD / BOOKED CHAIR HOUR</text>
+<text x="88" y="357" fill="#fffaf2" font-size="59" font-weight="900">£16.67</text>
+<text x="655" y="285" fill="#b5bec8" font-size="19" letter-spacing="1" font-weight="700">STAFF COST / BOOKED HOUR</text>
+<text x="655" y="357" fill="#fffaf2" font-size="59" font-weight="900">£19.66</text>
+<path d="M597 311v25" stroke="#e46777" stroke-width="5" stroke-linecap="round"/>
+<path d="M585 323h24" stroke="#e46777" stroke-width="5" stroke-linecap="round"/>
+<rect x="60" y="415" width="1078" height="174" rx="12" fill="#363039"/>
+<rect x="60" y="415" width="8" height="174" fill="#d6263c"/>
+<text x="90" y="462" fill="#f0a7b1" font-size="19" font-weight="800" letter-spacing="2">COST RECOVERY / PLANNING AVERAGE</text>
+<text x="90" y="540" fill="#fffaf3" font-size="66" font-weight="900">£36.33</text>
+<text x="346" y="542" fill="#dcd9d5" font-size="26">per booked hour</text>
+<text x="770" y="530" fill="#f2eff0" font-size="35" font-weight="850">£18.16</text>
+<text x="770" y="563" fill="#d7cbd0" font-size="20">per 30 minutes</text>
+<text x="60" y="636" fill="#aeb6c0" font-size="19">Before products and card fees. Use your own wage, costs and booked hours.</text>
+</g></svg>

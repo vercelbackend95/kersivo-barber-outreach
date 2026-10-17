@@ -14,6 +14,8 @@ import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/insights',
+  'https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning',
+  'https://kersivo.co.uk/insights/how-to-price-haircut-uk-barber',
   'https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk',
   'https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk',
   'https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk',
@@ -66,6 +68,8 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/insights']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/how-to-price-haircut-uk-barber']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk']).toBe('2026-10-17');

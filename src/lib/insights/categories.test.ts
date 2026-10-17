@@ -102,22 +102,24 @@ describe('Insights six-category taxonomy', () => {
       'get-more-barbershop-clients-locally-uk': 'clients-growth',
       'barbershop-card-payment-fees-uk': 'tools-payments',
       'barbershop-gift-vouchers-uk': 'business-profit',
+      'how-to-price-haircut-uk-barber': 'business-profit',
+      'barbershop-christmas-opening-hours-planning': 'bookings-operations',
     };
-    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(4);
+    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(6);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       expect(isInsightsCategoryId(article.categoryId)).toBe(true);
       expect(article.categoryId).toBe(expected[article.slug]);
     }
-    expect(getPublishedArticlesByCategory('business-profit')).toHaveLength(1);
+    expect(getPublishedArticlesByCategory('business-profit')).toHaveLength(2);
     expect(getPublishedArticlesByCategory('clients-growth')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('brand-marketing')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('bookings-operations')).toHaveLength(0);
+    expect(getPublishedArticlesByCategory('bookings-operations')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('tools-payments')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(0);
 
     const all = INSIGHTS_CATEGORY_IDS.flatMap((id) => getPublishedArticlesByCategory(id));
-    expect(all).toHaveLength(4);
-    expect(new Set(all.map((article) => article.slug)).size).toBe(4);
+    expect(all).toHaveLength(6);
+    expect(new Set(all.map((article) => article.slug)).size).toBe(6);
   });
 
   it('excludes non-indexable categories from the marketing sitemap while keeping articles', () => {

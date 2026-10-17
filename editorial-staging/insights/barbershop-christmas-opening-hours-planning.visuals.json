@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-christmas-opening-hours-planning.md",
+  "output": "editorial-staging/insights/barbershop-christmas-opening-hours-planning-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81e9ae9eeadf5007f087",
+  "status": "Owner approved for production publication — 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "Barbershop Christmas Opening Hours: Do Late Nights Pay?",
+    "description": "Should your barbershop open late in December? A simple extra-hour test, 2026 bank holiday dates, staff rules, and how to fill January before it arrives.",
+    "slug": "barbershop-christmas-opening-hours-planning",
+    "category": "Bookings & Clients"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# The Extra Hour Test: Planning a Barbershop's December Without Fooling Yourself",
+      "src": "https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Empty vintage barbershop with copper-toned chairs, mirrors and brick walls, photographed in Bratislava",
+      "caption": "Editorial barbershop photograph; no association with KERSIVO or a UK customer",
+      "credit": "František Čaník / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-barber-shop-with-a-brick-wall-and-lots-of-chairs-tX5JNBNSJic",
+      "rights": "Unsplash License expressly allows commercial website use. Source listing credits František Čaník and marks Download free; checked 2026-10-17. No people visible in identified image; do not imply the premises uses KERSIVO. Interior/property permission not independently confirmed.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "In general: **break-even cuts = extra cost of opening the hour ÷ contribution per genuinely additional cut**.",
+      "src": "/images/insights/december-hours/extra-hour-maths.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "With £15 in extra hourly costs and £19 contribution per genuinely additional cut: one cut gives £4, one and a half £13.50, and two £23; displaced bookings are not extra cuts",
+      "caption": "Illustrative December extra-hour calculation from the article, not a forecast for a specific barbershop",
+      "rights": "Original KERSIVO SVG illustration, values and assumptions taken directly from Notion ARTICLE DRAFT v2",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "## Making December pay into January",
+      "src": "https://images.unsplash.com/photo-1625038032200-648fbcd800d0?auto=format&fit=crop&q=78&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Professional haircutting scissors and green comb arranged on a dark barber work mat",
+      "caption": "Professional barber tools, editorial photograph; not a KERSIVO customer or product",
+      "credit": "Vitor Monthay / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/black-handled-scissors-beside-green-hair-comb-and-black-handled-scissors-Ehsvw7CEfb4",
+      "rights": "Unsplash License allows commercial use, source photo 'Download free', creator Vitor Monthay; verified 2026-10-17. No identifiable people shown.",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda81e9ae9eeadf5007f087",
+    "note": "After reviewing the final Preview, owner explicitly instructed publishing both previously prepared articles on 17 October 2026, adapted to the new Insights architecture."
+  }
+}

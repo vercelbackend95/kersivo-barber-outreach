@@ -87,12 +87,46 @@ export const INSIGHTS_GIFT_VOUCHERS = {
   ogImageAlt: 'Original KERSIVO editorial artwork of a fictional gift voucher',
 } as const;
 
+export const INSIGHTS_DECEMBER_HOURS = {
+  slug: 'barbershop-christmas-opening-hours-planning',
+  path: '/insights/barbershop-christmas-opening-hours-planning',
+  headline: "The Extra Hour Test: Planning a Barbershop's December Without Fooling Yourself",
+  seoTitle: 'Barbershop Christmas Opening Hours: Do Late Nights Pay?',
+  description: 'Should your barbershop open late in December? A simple extra-hour test, 2026 bank holiday dates, staff rules, and how to fill January before it arrives.',
+  categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81e9ae9eeadf5007f087',
+  lead: 'Use break-even maths to decide whether longer December opening hours actually add revenue — and plan for January before it comes.',
+  heroImage: 'https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=1200&h=630',
+  ogImageAlt: 'Empty vintage barbershop with chairs, mirrors and brick walls',
+} as const;
+
+export const INSIGHTS_HAIRCUT_PRICING = {
+  slug: 'how-to-price-haircut-uk-barber',
+  path: '/insights/how-to-price-haircut-uk-barber',
+  headline: 'How to Price a Haircut in the UK: A Floor, a Ceiling and the Price List In Between',
+  seoTitle: "How to Price a Haircut in the UK: A Barber's Method",
+  description: 'Set haircut prices from your real cost per minute and the local range, test a price rise with break-even maths, and show prices the way UK law expects.',
+  categoryId: 'business-profit' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda817688dee88a79cd9d00',
+  lead: 'Find the cost-recovery floor, compare your local market, then test the numbers before you raise haircut prices.',
+  heroImage: 'https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  ogImage: 'https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImageAlt: 'Vintage barber chairs and mirrors in a classic barbershop',
+} as const;
+
 /**
  * Single source of publication for owner-approved Insights articles.
  * Sitemap, hub cards and indexability must derive from this list only.
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_DECEMBER_HOURS,
+  INSIGHTS_HAIRCUT_PRICING,
   INSIGHTS_GIFT_VOUCHERS,
   INSIGHTS_CARD_FEES,
   INSIGHTS_LOCAL_CLIENTS,

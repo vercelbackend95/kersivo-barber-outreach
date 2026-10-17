@@ -4,6 +4,8 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_DECEMBER_HOURS,
+  INSIGHTS_HAIRCUT_PRICING,
   INSIGHTS_GIFT_VOUCHERS,
   INSIGHTS_GOOGLE_REVIEWS,
   INSIGHTS_LOCAL_CLIENTS,
@@ -24,6 +26,35 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_DECEMBER_HOURS.slug]: [
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'How to price a haircut using your real costs',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'Online booking for barbershops',
+      kind: 'guide',
+    },
+  ],
+  [INSIGHTS_HAIRCUT_PRICING.slug]: [
+    {
+      href: INSIGHTS_DECEMBER_HOURS.path,
+      label: 'When does an extra hour of opening pay?',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_GIFT_VOUCHERS.path,
+      label: 'Gift vouchers: cash today, a haircut later',
+      kind: 'article',
+    },
+    {
+      href: '/barber-software-cost-calculator',
+      label: 'Calculate your booking software overhead',
+      kind: 'tool',
+    },
+  ],
   [INSIGHTS_GOOGLE_REVIEWS.slug]: [
     {
       href: INSIGHTS_LOCAL_CLIENTS.path,
@@ -67,6 +98,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
   ],
   [INSIGHTS_GIFT_VOUCHERS.slug]: [
     {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'How to price a haircut using your cost floor',
+      kind: 'article',
+    },
+    {
       href: INSIGHTS_CARD_FEES.path,
       label: 'How card fees really work for a barbershop',
       kind: 'article',
@@ -80,6 +116,16 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
 };
 
 const COMMERCIAL: Record<string, InsightsCommercialNext> = {
+  [INSIGHTS_DECEMBER_HOURS.slug]: {
+    href: '/barbershop-online-booking',
+    label: 'Explore how online booking works for barbershops',
+    note: 'Read about the booking journey when planning seasonal opening hours; this does not claim that longer opening is more profitable.',
+  },
+  [INSIGHTS_HAIRCUT_PRICING.slug]: {
+    href: '/barber-software-cost-calculator',
+    label: 'Check one component of your shop overhead: booking software',
+    note: 'Software cost is only one input in haircut pricing. Use your own full shop costs when making pricing decisions.',
+  },
   [INSIGHTS_GOOGLE_REVIEWS.slug]: {
     href: '/barbershop-websites',
     label: 'See how KERSIVO websites present a shop',
