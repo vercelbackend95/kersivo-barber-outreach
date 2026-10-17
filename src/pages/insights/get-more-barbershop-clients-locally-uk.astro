@@ -1,0 +1,35 @@
+---
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as LocalClientsArticle } from '../../../editorial-staging/insights/get-more-barbershop-clients-locally-uk-display.md';
+
+/**
+ * PREVIEW ONLY. This Notion record is Draft Ready for Review and Writing Approved,
+ * but has not received owner publication approval. Deliberately excluded from the
+ * live Insights registry, sitemap, listing, navigation and Article JSON-LD.
+ */
+const article = {
+  headline: 'How to Get More Barbershop Clients Locally: Price the Channel Before You Pick It',
+  seoTitle: 'How to Get More Barbershop Clients Locally (UK Guide)',
+  description: 'Judge every marketing channel by what a returning client costs. Referrals, lapsed clients, Google and leaflets, with the UK rules on texts and flyers.',
+  slug: 'get-more-barbershop-clients-locally-uk',
+  category: 'Bookings & Clients',
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58',
+  heroImage: 'https://images.unsplash.com/photo-1759134248487-e8baaf31e33e?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=75&w=2400',
+};
+---
+
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  verifiedDate="2026-10-16"
+  publishedDate="2026-10-17"
+  published={false}
+>
+  <LocalClientsArticle />
+</InsightsArticleLayout>
