@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" role="img" aria-labelledby="t d">
+<title id="t">Your actual card payment rate is a blend</title><desc id="d">For a hypothetical month of six hundred twenty-five pound payments, fifteen thousand pounds in card takings, with eighty percent standard cards and twenty percent premium cards, fees rise from three hundred forty-five pounds to three hundred eighty-four pounds, an effective rate of 2.56 percent.</desc>
+<rect width="1200" height="730" fill="#171b21"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="68" y="86" fill="#e14a5d" font-size="19" font-weight="850" letter-spacing="3">ILLUSTRATIVE MONTH / NOT A SURVEY</text>
+<text x="68" y="159" fill="#f5f3ed" font-size="53" font-weight="800" letter-spacing="-1.2">The price list isn't your real rate.</text>
+<text x="68" y="208" fill="#b9c1ca" font-size="25">600 card payments · £25 each · £15,000 takings</text>
+<rect x="68" y="258" width="1064" height="183" rx="14" fill="#282e36"/>
+<rect x="68" y="465" width="1064" height="183" rx="14" fill="#282e36"/>
+<text x="101" y="311" fill="#b8c3cc" font-size="20" font-weight="800" letter-spacing="2">ALL STANDARD UK CARDS</text>
+<text x="101" y="385" fill="#faf7f2" font-size="68" font-weight="800">£345</text>
+<text x="616" y="385" fill="#f0efeb" font-size="42" font-weight="800">2.30%</text>
+<text x="616" y="416" fill="#afb8c1" font-size="19">effective processing rate</text>
+<text x="101" y="519" fill="#b8c3cc" font-size="20" font-weight="800" letter-spacing="2">80% STANDARD / 20% PREMIUM</text>
+<text x="101" y="595" fill="#f0f1f0" font-size="68" font-weight="800">£384</text>
+<text x="616" y="595" fill="#f46c7b" font-size="42" font-weight="800">2.56%</text>
+<text x="616" y="626" fill="#afb8c1" font-size="19">effective processing rate</text>
+</g></svg>

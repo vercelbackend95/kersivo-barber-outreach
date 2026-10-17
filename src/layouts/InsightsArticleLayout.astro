@@ -33,7 +33,7 @@ const path = `/insights/${slug}`;
   ogImagePath={coverImage?.startsWith('/') ? coverImage : undefined}
   ogImageAlt={coverImageAlt}
   noindex={!published}
-  jsonLd={published ? buildInsightsArticleJsonLd({path, headline, description, publishedDate, verifiedDate, heroImage}) : undefined}
+  jsonLd={published ? buildInsightsArticleJsonLd({path, headline, description, publishedDate, verifiedDate, heroImage, category}) : undefined}
 >
   <main class="insights-page">
     <InsightsMasthead page="article" category={category} dateLabel={dateLabel} />

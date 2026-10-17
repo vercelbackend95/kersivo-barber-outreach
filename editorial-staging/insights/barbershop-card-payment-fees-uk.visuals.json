@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-card-payment-fees-uk.md",
+  "output": "editorial-staging/insights/barbershop-card-payment-fees-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e",
+  "status": "Approved for publication — explicit owner instruction 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "Barbershop Card Fees: What You Really Pay per Payment",
+    "description": "Card fees cost a barbershop more than the headline rate suggests. How fixed fees, card mix and split payments add up, and why you can't surcharge.",
+    "slug": "barbershop-card-payment-fees-uk",
+    "category": "Software & Costs"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# The 20p You Don't Notice: How Card Fees Really Work for a Barbershop",
+      "src": "/images/insights/card-fees/card-fees-hero.svg",
+      "width": 1600,
+      "height": 900,
+      "alt": "Graphic of a twenty-pence fixed processing fee on every card payment, with editorial KERSIVO typography.",
+      "caption": "Original KERSIVO Insights illustration. The 20p refers to the published example online card processing fee.",
+      "rights": "Original KERSIVO-authored SVG based on the Notion card-fees draft; no third-party images, people, branding or trademarks.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "The headline rate is 1.5%, but a £12 kids' cut costs more than twice that.",
+      "src": "/images/insights/card-fees/fixed-fee-share.svg",
+      "width": 1200,
+      "height": 650,
+      "alt": "Illustrative fee share at 1.5% plus 20p: 3.17% on a £12 cut, 2.30% on a £25 cut and 2.00% on a £40 cut.",
+      "caption": "Worked examples from the article, not estimates of any particular barbershop's fee statement.",
+      "rights": "Original KERSIVO-authored SVG with numbers derived from the source article.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Here is a **hypothetical** month, counting processing fees only:",
+      "src": "/images/insights/card-fees/blended-rate.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Hypothetical £15,000 card takings: all-standard payment fees £345 or 2.30%, compared with 80% standard and 20% premium at £384 or 2.56%.",
+      "caption": "Hypothetical 600-payment month from the article; excludes dispute, hardware and other fees.",
+      "rights": "Original KERSIVO-authored SVG with illustrative calculations from the source article.",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e",
+    "note": "Owner explicitly approved the finished preview and requested production publication on 17 October 2026."
+  }
+}

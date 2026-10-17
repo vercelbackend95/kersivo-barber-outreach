@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="t d">
+<title id="t">The twenty pence you do not notice</title><desc id="d">Editorial illustration showing a twenty pence fixed card fee next to a clean example card payment receipt, with the label every payment counts.</desc>
+<rect width="1600" height="900" fill="#111419"/><rect y="0" width="1600" height="9" fill="#cf2137"/>
+<g opacity=".2" stroke="#adb7be" stroke-width="2"><path d="M0 140H1600M0 290H1600M0 440H1600M0 590H1600M0 740H1600"/><path d="M160 0V900M360 0V900M560 0V900M760 0V900M960 0V900M1160 0V900M1360 0V900"/></g>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="92" y="116" fill="#e95466" font-size="24" font-weight="800" letter-spacing="6">KERSIVO  /  INSIGHTS</text>
+<text x="90" y="306" fill="#f6f2ea" font-size="112" font-weight="850" letter-spacing="-5">THE FEE YOU</text>
+<text x="90" y="414" fill="#f6f2ea" font-size="112" font-weight="850" letter-spacing="-5">DON'T NOTICE.</text>
+<rect x="90" y="464" width="244" height="7" fill="#d3263a"/>
+<text x="91" y="542" fill="#e0e0df" font-size="36">One tiny fixed fee.</text><text x="91" y="595" fill="#e0e0df" font-size="36">Every single payment.</text>
+<text x="92" y="815" fill="#a6aeba" font-size="20" font-weight="700" letter-spacing="4">THE BUSINESS BEHIND THE CHAIR</text>
+<rect x="1060" y="167" width="402" height="550" rx="25" fill="#262b33" stroke="#50565d" stroke-width="3"/>
+<path d="M1101 261H1420M1101 604H1420" stroke="#626875" stroke-width="2"/>
+<text x="1100" y="226" fill="#aab3be" font-size="25" font-weight="700" letter-spacing="3">CARD PAYMENT</text>
+<text x="1096" y="430" fill="#f8f5ef" font-size="182" font-weight="850" letter-spacing="-10">20<tspan fill="#de3548" font-size="110">p</tspan></text>
+<text x="1103" y="500" fill="#d6d8dc" font-size="26">FIXED FEE EXAMPLE</text>
+<text x="1103" y="656" fill="#aeb6bf" font-size="24">+ a percentage</text>
+</g>
+</svg>
