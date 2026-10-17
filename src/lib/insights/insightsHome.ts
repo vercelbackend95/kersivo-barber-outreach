@@ -7,6 +7,7 @@ import { getInsightsTopicStripItems } from '@/lib/insights/categories';
 import {
   getInsightsArticleCategoryLabel,
   INSIGHTS_GOOGLE_REVIEWS,
+  INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
@@ -64,6 +65,7 @@ export const INSIGHTS_HOME_FEATURE_STACK = [
 ] as const;
 
 const LATEST_IMAGE_ALT: Record<string, string> = {
+  [INSIGHTS_COMMISSION_PAY.slug]: 'Barber at work with a seated customer in a Doncaster salon',
   [INSIGHTS_SECOND_VISIT.slug]: 'Vintage barber chairs inside a UK barbershop in Camberley',
   [INSIGHTS_BARBERS_HANDS.slug]: 'A barber working with scissors and a comb, illustrating the care and craft behind the trade',
   [INSIGHTS_DECEMBER_HOURS.slug]: 'Empty vintage barbershop with chairs, mirrors and brick walls',
@@ -77,6 +79,7 @@ const LATEST_IMAGE_ALT: Record<string, string> = {
 };
 
 const LATEST_READ_MINUTES: Record<string, number> = {
+  [INSIGHTS_COMMISSION_PAY.slug]: 10,
   [INSIGHTS_SECOND_VISIT.slug]: 8,
   [INSIGHTS_BARBERS_HANDS.slug]: 8,
   [INSIGHTS_DECEMBER_HOURS.slug]: 9,

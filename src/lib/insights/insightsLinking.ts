@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
@@ -28,6 +29,18 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_COMMISSION_PAY.slug]: [
+    {
+      href: INSIGHTS_BARBERS_HANDS.path,
+      label: "Barbers' hands: protecting the people behind every haircut",
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'Find the real cost floor behind your haircut prices',
+      kind: 'article',
+    },
+  ],
   [INSIGHTS_SECOND_VISIT.slug]: [
     {
       href: INSIGHTS_LOCAL_CLIENTS.path,
@@ -41,6 +54,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
     },
   ],
   [INSIGHTS_BARBERS_HANDS.slug]: [
+    {
+      href: INSIGHTS_COMMISSION_PAY.path,
+      label: 'Commission pay and the minimum wage for employed barbers',
+      kind: 'article',
+    },
     {
       href: INSIGHTS_DECEMBER_HOURS.path,
       label: "Working longer hours? Run the extra-hour test before changing shifts",
