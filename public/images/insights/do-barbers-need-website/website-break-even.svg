@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730" role="img" aria-labelledby="t d">
+<title id="t">How many genuinely additional regular clients would pay for a basic barbershop website?</title>
+<desc id="d">Illustrative calculation taken from the article: a site costs £240 per year, average contribution per cut is £16, a typical client gets a haircut every five weeks or approximately 10.4 visits per year, and the new regular stays half of their first year on average. Break-even is 240 divided by sixteen times 10.4 times 0.5, approximately 2.9 genuinely additional regular clients per year.</desc>
+<rect width="1200" height="730" fill="#f1eee8"/>
+<rect x="40" y="42" width="1120" height="644" rx="14" fill="#fffdfa" stroke="#d7d2c8" stroke-width="2"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="79" y="101" fill="#af293f" font-size="19" font-weight="850" letter-spacing="3">AN ILLUSTRATIVE BREAK-EVEN TEST</text>
+<text x="78" y="161" fill="#24262c" font-size="48" font-weight="850" letter-spacing="-1.5">What must the website actually earn?</text>
+<text x="78" y="207" fill="#60676d" font-size="22">Only genuinely extra regulars count.</text>
+<rect x="79" y="260" width="316" height="156" rx="9" fill="#f2efeb"/>
+<rect x="443" y="260" width="316" height="156" rx="9" fill="#f2efeb"/>
+<rect x="807" y="260" width="316" height="156" rx="9" fill="#f2efeb"/>
+<g fill="#a82c3e" font-size="19" font-weight="800" letter-spacing="1.6">
+<text x="101" y="300">ANNUAL SITE COST</text>
+<text x="465" y="300">CONTRIBUTION / CUT</text>
+<text x="829" y="300">VISITS / FIRST YEAR</text>
+</g>
+<g fill="#22252b" font-size="57" font-weight="900">
+<text x="100" y="378">£240</text>
+<text x="465" y="378">£16</text>
+<text x="828" y="378">5.2</text>
+</g>
+<text x="828" y="403" fill="#60666b" font-size="16">10.4 yearly × ½ year</text>
+<rect x="78" y="462" width="1045" height="130" rx="10" fill="#292d35"/>
+<text x="101" y="506" fill="#ccd3da" font-size="21" font-weight="800">EXTRA REGULARS NEEDED PER YEAR</text>
+<text x="101" y="564" fill="#fcfaf4" font-size="65" font-weight="900">≈ 2.9</text>
+<text x="410" y="558" fill="#e8b1ba" font-size="25">£240 ÷ (£16 × 10.4 × 0.5)</text>
+<path d="M78 621H1123" stroke="#dbd6cf" stroke-width="2"/>
+<text x="78" y="658" fill="#62686d" font-size="18">Use your own shop's costs. This does not forecast the bookings a website will deliver.</text>
+</g></svg>
