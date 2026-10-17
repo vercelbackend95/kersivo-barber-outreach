@@ -3,8 +3,8 @@
   "source": "editorial-staging/insights/barbershop-gift-vouchers-uk.md",
   "output": "editorial-staging/insights/barbershop-gift-vouchers-uk-display.md",
   "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba",
-  "status": "Draft Ready for Review; Writing Approved; no Hold; Owner final approval pending",
-  "publishApproved": false,
+  "status": "Owner approved for production publication — 2026-10-17",
+  "publishApproved": true,
   "seo": {
     "title": "Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value",
     "description": "Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.",
@@ -58,5 +58,11 @@
       "rights": "Original KERSIVO diagram without external photographs or models.",
       "licenceReviewed": true
     }
-  ]
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba",
+    "note": "User requested corrections based on supplied screenshots and explicitly instructed production publication of fourth article; original Notion ARTICLE DRAFT v2 retained."
+  }
 }
