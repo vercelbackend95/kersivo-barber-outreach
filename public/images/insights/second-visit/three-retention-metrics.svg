@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-labelledby="title description">
+<title id="title">Three barbershop client-retention metrics worth tracking</title>
+<desc id="description">Track your shop's second-visit rate on a fully observed client cohort, share rebooking before clients leave, and the typical gap between return visits. These are definitions, not national benchmarks.</desc>
+<rect width="1200" height="750" fill="#f1eee7"/>
+<rect x="38" y="41" width="1124" height="662" rx="16" fill="#fffdf8" stroke="#d4cfc5" stroke-width="2"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="78" y="103" fill="#b5293c" font-size="18" font-weight="850" letter-spacing="4">THREE NUMBERS / ONE CLEARER DIARY</text>
+<text x="78" y="161" fill="#1d2025" font-size="49" font-weight="850" letter-spacing="-1.5">Measure what happens after the cut.</text>
+<text x="78" y="204" fill="#636971" font-size="21">Your shop's own patterns are more useful than invented industry averages.</text>
+<rect x="78" y="254" width="1044" height="118" rx="9" fill="#f3eee9"/>
+<rect x="78" y="392" width="1044" height="118" rx="9" fill="#f3eee9"/>
+<rect x="78" y="530" width="1044" height="118" rx="9" fill="#f3eee9"/>
+<g font-size="19" fill="#b02c3f" font-weight="850" letter-spacing="2">
+<text x="105" y="295">01 / RETURN</text><text x="105" y="433">02 / REBOOK</text><text x="105" y="571">03 / INTERVAL</text>
+</g>
+<g fill="#202329" font-size="30" font-weight="850">
+<text x="105" y="333">Second-visit rate</text>
+<text x="105" y="471">Rebooking before leaving</text>
+<text x="105" y="609">Typical gap between visits</text>
+</g>
+<g fill="#5b6167" font-size="19">
+<text x="640" y="307">Returns within a full,</text><text x="640" y="335">chosen cohort window</text>
+<text x="640" y="445">Next appointments already</text><text x="640" y="473">in the diary at checkout</text>
+<text x="640" y="583">How many weeks clients</text><text x="640" y="611">usually leave between cuts</text>
+</g>
+</g></svg>
