@@ -58,7 +58,7 @@ describe('KERSIVO Insights public indexing release gates', () => {
   it('publishes owner-approved article schema, dates and honest editorial image attribution', () => {
     const data = buildInsightsArticleJsonLd(INSIGHTS_GOOGLE_REVIEWS);
     const article = data.find((entry) => entry['@type'] === 'Article')!;
-    const breadcrumbs = data.find((entry) => entry['@type'] === 'BreadcrumbList')!;
+    const breadcrumbs = data.find((entry) => entry['@type'] === 'BreadcrumbList') as { itemListElement: Array<{ position: number }> } | undefined;
     expect(article).toMatchObject({
       '@id': 'https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules#article',
       headline: INSIGHTS_GOOGLE_REVIEWS.headline,
@@ -68,7 +68,7 @@ describe('KERSIVO Insights public indexing release gates', () => {
       inLanguage: 'en-GB',
       isAccessibleForFree: true,
     });
-    expect((breadcrumbs.itemListElement as Array<{ position: number }>).map((item) => item.position)).toEqual([1, 2, 3]);
+    expect(breadcrumbs?.itemListElement.map((item) => item.position)).toEqual([1, 2, 3]);
     const manifest = JSON.parse(read('../../../editorial-staging/insights/google-reviews-barbershop-uk-rules.visuals.json')) as {
       publishApproved: boolean;
       publicationApproval?: { approvedBy?: string; approvedOn?: string };
