@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
   INSIGHTS_HAIRCUT_PRICING,
@@ -27,6 +28,18 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_SECOND_VISIT.slug]: [
+    {
+      href: INSIGHTS_LOCAL_CLIENTS.path,
+      label: 'The real cost of finding new local barbershop clients',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'How barbershop online booking works',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_BARBERS_HANDS.slug]: [
     {
       href: INSIGHTS_DECEMBER_HOURS.path,
@@ -82,6 +95,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
   ],
   [INSIGHTS_LOCAL_CLIENTS.slug]: [
     {
+      href: INSIGHTS_SECOND_VISIT.path,
+      label: 'Why the second haircut matters more than the first',
+      kind: 'article',
+    },
+    {
       href: INSIGHTS_GOOGLE_REVIEWS.path,
       label: 'Google Reviews rules for UK barbershops',
       kind: 'article',
@@ -129,6 +147,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
 };
 
 const COMMERCIAL: Record<string, InsightsCommercialNext> = {
+  [INSIGHTS_SECOND_VISIT.slug]: {
+    href: '/barbershop-online-booking',
+    label: 'Explore barbershop online booking',
+    note: 'A booking system can help record appointments and client history; retention outcomes depend on the shop and clients.',
+  },
   [INSIGHTS_DECEMBER_HOURS.slug]: {
     href: '/barbershop-online-booking',
     label: 'Explore how online booking works for barbershops',
