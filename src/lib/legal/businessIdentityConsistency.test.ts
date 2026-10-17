@@ -10,6 +10,7 @@ import {
 } from './businessIdentity';
 import { termsAcceptanceStripeMetadata } from './requireTermsAcceptance';
 import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from './termsVersion';
+import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from './legalPageDates';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -49,7 +50,8 @@ describe('legal page identity wording', () => {
     expect(privacySource).not.toContain('operating as a freelancer');
     expect(privacySource).toContain('{LEGAL_OPERATOR_NAME}');
     expect(privacySource).toContain('trading as {TRADING_NAME}');
-    expect(privacySource).toContain('Last updated: 6 October 2026');
+    expect(privacySource).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
+    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('6 October 2026');
     expect(privacySource).toContain('href="/dpa"');
     expect(privacySource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
@@ -67,7 +69,8 @@ describe('legal page identity wording', () => {
 
   it('Cookie Policy includes a concise trading-name disclosure', () => {
     expect(cookiesSource).toContain('{TRADING_NAME} is a trading name of {LEGAL_OPERATOR_NAME}');
-    expect(cookiesSource).toContain('Last updated: 25 September 2026');
+    expect(cookiesSource).toContain('Last updated: {formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)}');
+    expect(formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)).toBe('25 September 2026');
     expect(cookiesSource).toContain("from '@/lib/legal/businessIdentity'");
     expect(LEGAL_OPERATOR_NAME).toBe('Bartosz Jasinski');
     expect(TRADING_NAME).toBe('KERSIVO');

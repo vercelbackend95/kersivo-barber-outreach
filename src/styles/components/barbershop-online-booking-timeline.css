@@ -1,0 +1,180 @@
+/*
+ * /barbershop-online-booking Section 03 — the real admin timeline in the landing widget's floating
+ * treatment (`.isw`, from insideSystemLiveWidget.css), made taller for this section, plus the
+ * selected-time marker and the read-only message. Rows, avatars and cards keep the admin and
+ * landing styling untouched.
+ */
+
+.isw.bot {
+  --bot-window: 34rem;
+}
+
+.bot__stage {
+  position: relative;
+}
+
+.isw.bot .admin-vtl-scroll {
+  height: var(--bot-window);
+  max-height: none;
+}
+
+@media (max-width: 899px) {
+  .isw.bot {
+    --bot-window: 24rem;
+  }
+
+  /* Inert window: no scroll of its own (no nested scroll trap); only the selected time moves it. */
+  .bot--passive .admin-vtl-scroll {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: pan-y;
+  }
+
+  .bot--passive .admin-vtl-swipe-root {
+    touch-action: pan-y;
+  }
+}
+
+@media (max-width: 400px) {
+  .isw.bot {
+    --bot-window: 22rem;
+  }
+}
+
+/* Selected client time: a thin dashed line with its exact time, drawn over the timeline. */
+.bot-marker {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  height: 0;
+  border-top: 1.5px dashed var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bot-marker.is-visible {
+  opacity: 1;
+}
+
+.bot-marker::before {
+  content: '';
+  position: absolute;
+  top: -4.5px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.bot-marker__label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  padding: 0.18rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-radius: 999px;
+  background: #160709;
+  color: #fff8ee;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.55);
+}
+
+.bot-marker__label strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.bot.is-dimmed .bot-marker {
+  opacity: 0;
+}
+
+/* Read-only message */
+.bot-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.bot-lock__card {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  width: min(100%, 24rem);
+  padding: 1.25rem 1.3rem 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.6);
+}
+
+.bot-lock__close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.45rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bot-lock__close:hover {
+  color: var(--fg);
+  background: rgb(255 255 255 / 0.06);
+}
+
+.bot-lock__title {
+  margin: 0;
+  padding-right: 2.5rem;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.bot-lock__body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.bot-lock__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bot-lock__close:focus-visible,
+.bot-lock__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

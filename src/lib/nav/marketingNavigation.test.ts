@@ -8,6 +8,7 @@ import {
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
+  buildMarketingNavTopLevelEntries,
   isMarketingNavItemCurrent,
   isPublicMarketingHref,
   marketingNavItemMatch,
@@ -16,6 +17,9 @@ import {
 } from './marketingNavigation';
 import { MARKETING_NAV_ICONS } from './marketingNavIcons';
 import { NAVBAR_SUBSCRIBE_CTA_LABEL } from './navbar17Items';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const pagesDir = path.resolve(__dirname, '../../pages');
@@ -40,7 +44,11 @@ describe('marketing navigation config', () => {
   it('exposes the approved top-level IA in order', () => {
     const groups = buildMarketingNavigation();
     expect(groups.map((group) => group.label)).toEqual(['Platform', 'Compare', 'Resources']);
-    expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(['Starter', 'Pricing', 'FAQ']);
+    expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+        ? ['Websites', 'Starter', 'Pricing']
+        : ['Starter', 'Pricing', 'FAQ'],
+    );
     expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'starter')).toEqual({
       id: 'starter',
       label: 'Starter',
@@ -52,6 +60,49 @@ describe('marketing navigation config', () => {
       href: '/admin/launch',
       track: 'saas_subscribe_click',
     });
+  });
+
+  it('keeps pre-release navigation unchanged and never globally links a noindex pillar', () => {
+    const entries = buildMarketingNavTopLevelEntries();
+    const labels = entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label);
+    expect(labels).toEqual(
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+        ? ['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']
+        : ['Platform', 'Compare', 'Resources', 'Starter', 'Pricing', 'FAQ'],
+    );
+    expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(
+      BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+    );
+    expect(MARKETING_NAV_ITEMS.some((item) => item.href === '/barbershop-websites')).toBe(false);
+    const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
+    expect(resources.sections.find((section) => section.id === 'help')?.items.map((item) => item.id)).toEqual([
+      'resources-faq',
+      'resources-contact',
+    ]);
+  });
+
+  it('renders a future released Websites link after Platform on desktop and mobile without duplicate guide links', () => {
+    // Simulate the approved launch without changing INDEXABLE in this branch.
+    const releasedDirectLinks = [
+      { id: 'websites', label: 'Websites', href: '/barbershop-websites' },
+      { id: 'starter', label: 'Starter', href: '/starter' },
+      { id: 'pricing', label: 'Pricing', href: '/pricing' },
+    ];
+    const entries = buildMarketingNavTopLevelEntries(buildMarketingNavigation(), releasedDirectLinks);
+    expect(entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label)).toEqual([
+      'Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing',
+    ]);
+    expect(entries.filter((entry) => entry.kind === 'link' && entry.link.id === 'websites')).toHaveLength(1);
+    const readyGuides = MARKETING_NAV_ITEMS.map((item) =>
+      item.id === 'resources-online-booking' || item.id === 'resources-website-design'
+        ? { ...item, visible: true }
+        : item,
+    );
+    const resources = buildMarketingNavigation(readyGuides).find((group) => group.id === 'resources')!;
+    expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
+      '/barbershop-website-design',
+      '/barbershop-online-booking',
+    ]);
   });
 
   it('links only to destinations that exist today', () => {
@@ -105,6 +156,30 @@ describe('marketing navigation config', () => {
     }
   });
 
+  it('keeps the booking guide out of global navigation until its route and parent are released', () => {
+    const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-online-booking');
+    expect(guide).toMatchObject({
+      label: 'Online Booking for Barbershops',
+      href: '/barbershop-online-booking',
+      group: 'resources',
+      section: 'guides',
+      icon: 'guide',
+    });
+    expect(guide?.visible).toBe(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE);
+  });
+
+  it('keeps the website-design guide hidden in global navigation until both cluster pages are released', () => {
+    const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-website-design');
+    expect(guide).toMatchObject({
+      label: 'Barbershop Website Design',
+      href: '/barbershop-website-design',
+      group: 'resources',
+      section: 'guides',
+      icon: 'guide',
+    });
+    expect(guide?.visible).toBe(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE);
+  });
+
   it('places the current SEO pages where the IA expects them', () => {
     const groups = buildMarketingNavigation();
     const compare = groups.find((group) => group.id === 'compare')!;
@@ -120,7 +195,9 @@ describe('marketing navigation config', () => {
     const tools = resources.sections.find((section) => section.id === 'tools');
     expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
     expect(tools?.items.map((item) => item.href)).toContain('/compare');
-    expect(resources.sections.map((section) => section.id)).not.toContain('guides');
+    const guides = resources.sections.find((section) => section.id === 'guides');
+    const guideReady = BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE;
+    expect(guides?.items.some((item) => item.href === '/barbershop-website-design') ?? false).toBe(guideReady);
   });
 });
 

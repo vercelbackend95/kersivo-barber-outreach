@@ -1,0 +1,232 @@
+/* /barbershop-online-booking Section 07: plan choice chrome + FAQ.
+   Plan cards come from shared StarterFullPlanCards. */
+
+.bob-pc {
+  --bob-pc-red: var(--accent);
+  --bob-pc-red-text: var(--accent-text);
+  --bob-pc-muted: #b4b8bf;
+  --bob-pc-line: rgb(255 255 255 / 0.1);
+
+  position: relative;
+  isolation: isolate;
+  padding: 3.5rem 0 4rem;
+  background: #050505;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.bob-pc__inner {
+  width: calc(100% - 2rem);
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.bob-pc__head {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 40rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.bob-pc__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0 auto;
+  color: var(--bob-pc-red-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.bob-pc__eyebrow::before,
+.bob-pc__eyebrow::after {
+  content: '';
+  width: 1.2rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--bob-pc-red) 70%, transparent);
+}
+
+.bob-pc__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: clamp(1.75rem, 6.5vw, 2.55rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.bob-pc__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: 1rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.bob-pc .starter-plan-grid {
+  margin-top: 2.35rem;
+}
+
+/* Disclosure */
+
+.bob-pc-disclosure {
+  margin-top: 1.75rem;
+  padding: 1.2rem 1.25rem 1.25rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 0.3rem;
+  background: rgb(255 255 255 / 0.02);
+}
+
+.bob-pc-disclosure__label {
+  margin: 0 0 0.65rem;
+  color: var(--bob-pc-red-text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bob-pc-disclosure__list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bob-pc-disclosure__list li {
+  color: color-mix(in srgb, var(--bob-pc-muted) 94%, var(--fg));
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+/* FAQ */
+
+.bob-pc-faq {
+  margin-top: 2.75rem;
+}
+
+.bob-pc-faq__title {
+  margin: 0 0 1.25rem;
+  color: var(--fg);
+  font-size: clamp(1.45rem, 4.5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.bob-pc-faq__list {
+  border-top: 1px solid var(--bob-pc-line);
+}
+
+.bob-pc-faq__item {
+  border-bottom: 1px solid var(--bob-pc-line);
+}
+
+.bob-pc-faq__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.25rem;
+  padding: 0.95rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bob-pc-faq__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bob-pc-faq__question {
+  color: var(--fg);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.bob-pc-faq__icon {
+  position: relative;
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.bob-pc-faq__icon::before,
+.bob-pc-faq__icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.7rem;
+  height: 1.5px;
+  background: var(--bob-pc-red-text);
+  transform: translate(-50%, -50%);
+}
+
+.bob-pc-faq__icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+  transition: opacity 120ms ease;
+}
+
+.bob-pc-faq__item[open] .bob-pc-faq__icon::after {
+  opacity: 0;
+}
+
+.bob-pc-faq__answer {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0 0 1.15rem;
+}
+
+.bob-pc-faq__answer p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--bob-pc-muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.bob-pc__close {
+  margin: 2.75rem 0 0;
+  text-align: center;
+  color: var(--fg);
+  font-size: clamp(1.2rem, 3.5vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+@media (min-width: 48rem) {
+  .bob-pc .starter-plan-grid {
+    margin-top: 2.75rem;
+  }
+
+  .bob-pc-disclosure {
+    margin-top: 1.85rem;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .bob-pc-disclosure__list {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.65rem 1.5rem;
+  }
+
+  .bob-pc-faq {
+    margin-top: 3.25rem;
+    max-width: 48rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bob-pc-faq__icon::after {
+    transition: none;
+  }
+}

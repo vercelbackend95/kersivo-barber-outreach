@@ -1,0 +1,67 @@
+---
+import { CalendarDays, ChevronRight, MapPin } from 'lucide-react';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
+import {
+  DEMO_CONTACT_HREF,
+  DEMO_SHOP_HREF,
+} from '@/lib/demo/nav';
+
+const IMG = '/images/barbershop-websites';
+
+// Focused guide links explain design, team and booking; the remaining entries lead to the working demo.
+// The full cluster must be integrated and released together before these links become public.
+const rows = [
+  { key: 'branding', label: 'Branding', body: 'See how to present your barbershop brand.', href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH },
+  { key: 'services', label: 'Services', body: 'Show your cuts, prices and services.', href: '/demo/services' },
+  { key: 'team', label: 'Your Team', body: 'Present the barbers behind your shop.', href: `${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team` },
+  { key: 'retail', label: 'Retail Shop', body: 'Sell products for in-shop collection.', href: DEMO_SHOP_HREF },
+  { key: 'booking', label: 'Online Booking', body: 'See how booking works for clients and your shop.', href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH },
+  { key: 'contact', label: 'Contact & Location', body: 'Make your shop easy to find.', href: DEMO_CONTACT_HREF },
+] as const;
+---
+
+<aside class="bsw-panel bsw-features" aria-labelledby="bsw-features-title">
+  <p id="bsw-features-title" class="bsw-features__title">Your website. Your business.</p>
+  <ul class="bsw-features__list" role="list">
+    {rows.map((row) => (
+      <li>
+        <a class="bsw-feature" href={row.href}>
+          <span class:list={['bsw-thumb', `bsw-thumb--${row.key}`]} aria-hidden="true">
+            {row.key === 'branding' && (
+              <span class="bsw-swatches"><i></i><i></i><i></i></span>
+            )}
+            {row.key === 'services' && (
+              <img src={`${IMG}/thumb-services.webp`} alt="" width="240" height="150" loading="lazy" decoding="async" />
+            )}
+            {row.key === 'team' &&
+              DEMO_BARBERS.map((barber) => (
+                <img src={`${IMG}/team-${barber.slug}.webp`} alt="" width="96" height="150" loading="lazy" decoding="async" />
+              ))}
+            {row.key === 'retail' && (
+              <img src="/demo/products/matte-clay.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+            )}
+            {row.key === 'booking' && (
+              <span class="bsw-thumb__booking-ui">
+                <CalendarDays size={13} strokeWidth={1.7} />
+                <span class="bsw-thumb__booking-slots"><i>10:00</i><i>11:00</i></span>
+              </span>
+            )}
+            {row.key === 'contact' && (
+              <>
+                <img src="/demo/gallery/interior-detail.webp" alt="" width="240" height="150" loading="lazy" decoding="async" />
+                <span class="bsw-thumb__location-marker"><MapPin size={16} strokeWidth={2} /></span>
+              </>
+            )}
+          </span>
+          <span class="bsw-feature__text">
+            <span class="bsw-feature__label">{row.label}</span>
+            <span class="bsw-feature__body">{row.body}</span>
+          </span>
+          <ChevronRight className="bsw-feature__chevron" size={14} strokeWidth={1.8} aria-hidden="true" />
+        </a>
+      </li>
+    ))}
+  </ul>
+</aside>

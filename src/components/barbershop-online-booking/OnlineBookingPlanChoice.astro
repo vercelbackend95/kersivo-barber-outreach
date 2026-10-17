@@ -1,0 +1,49 @@
+---
+import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro';
+import { buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
+import '@/styles/components/barbershop-online-booking-plan-choice.css';
+
+const content = buildPlanChoiceContent();
+---
+
+<section class="bob-pc" id={content.sectionId} aria-labelledby="bob-pc-title">
+  <div class="bob-pc__inner">
+    <header class="bob-pc__head">
+      <p class="bob-pc__eyebrow">Choose your setup</p>
+      <h2 id="bob-pc-title" class="bob-pc__title">{content.h2}</h2>
+      <p class="bob-pc__lead">{content.lead}</p>
+    </header>
+
+    <StarterFullPlanCards placement="barbershop_online_booking_final" />
+
+    <div class="bob-pc-disclosure">
+      <p class="bob-pc-disclosure__label">Before you choose</p>
+      <ul class="bob-pc-disclosure__list">
+        {content.disclosure.map((line) => (
+          <li>{line}</li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="bob-pc-faq">
+      <h3 class="bob-pc-faq__title">A Few Things Worth Knowing.</h3>
+      <div class="bob-pc-faq__list">
+        {content.faqs.map((faq) => (
+          <details class="bob-pc-faq__item" name="bob-pc-faq">
+            <summary class="bob-pc-faq__summary">
+              <span class="bob-pc-faq__question">{faq.question}</span>
+              <span class="bob-pc-faq__icon" aria-hidden="true"></span>
+            </summary>
+            <div class="bob-pc-faq__answer">
+              {faq.answer.map((paragraph) => (
+                <p>{paragraph}</p>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+
+    <p class="bob-pc__close">{content.close}</p>
+  </div>
+</section>

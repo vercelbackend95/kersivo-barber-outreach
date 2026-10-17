@@ -9,7 +9,7 @@ import {
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { getTwitterHandle } from './socialProfiles';
 
-export type OgType = 'website' | 'product';
+export type OgType = 'website' | 'product' | 'article';
 
 export type PageSeo = {
   title?: string;

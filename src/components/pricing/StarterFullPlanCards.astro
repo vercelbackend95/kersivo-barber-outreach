@@ -1,0 +1,68 @@
+---
+/**
+ * Shared Starter vs Full pricing cards for /starter and
+ * /barbershop-online-booking Section 07.
+ */
+import {
+  STARTER_FULL_PLAN_FULL_CTA,
+  STARTER_FULL_PLAN_FULL_ONLY,
+  STARTER_FULL_PLAN_INTRO,
+  STARTER_FULL_PLAN_MONTHLY_GBP,
+  STARTER_FULL_PLAN_STARTER_CTA,
+  STARTER_FULL_PLAN_STARTER_FEATURES,
+} from '@/lib/pricing/starterFullPlanCards';
+import '@/styles/components/starter-full-plan-cards.css';
+
+interface Props {
+  /** Analytics placement for the Starter signup CTA only. */
+  placement: string;
+}
+
+const { placement } = Astro.props;
+---
+
+<div class="starter-plan-grid">
+  <article class="starter-plan-card starter-plan-card--active">
+    <p class="starter-plan-card__label">KERSIVO STARTER</p>
+    <p class="starter-plan-card__price">
+      <span class="starter-plan-card__amount">£0</span>
+      <span class="starter-plan-card__billing">
+        <span class="starter-plan-card__period">/month</span>
+      </span>
+    </p>
+    <ul>
+      {STARTER_FULL_PLAN_STARTER_FEATURES.map((item) => <li>{item}</li>)}
+    </ul>
+    <a
+      href={STARTER_FULL_PLAN_STARTER_CTA.href}
+      class="starter-plan-card__cta starter-plan-card__cta--primary"
+      data-track={STARTER_FULL_PLAN_STARTER_CTA.trackEvent}
+      data-track-placement={placement}
+    >
+      {STARTER_FULL_PLAN_STARTER_CTA.label}
+    </a>
+  </article>
+
+  <article class="starter-plan-card">
+    <p class="starter-plan-card__label">FULL KERSIVO</p>
+    <p class="starter-plan-card__price">
+      <span class="starter-plan-card__amount">£{STARTER_FULL_PLAN_MONTHLY_GBP}</span>
+      <span class="starter-plan-card__billing">
+        <span class="starter-plan-card__period">/month</span>
+        <span class="starter-plan-card__scope">per location</span>
+      </span>
+    </p>
+    <p class="starter-plan-card__intro">{STARTER_FULL_PLAN_INTRO}</p>
+    <ul>
+      {STARTER_FULL_PLAN_FULL_ONLY.map((item) => <li>{item}</li>)}
+    </ul>
+    <a
+      href={STARTER_FULL_PLAN_FULL_CTA.href}
+      class="starter-plan-card__cta starter-plan-card__cta--secondary"
+      data-track={STARTER_FULL_PLAN_FULL_CTA.trackEvent}
+      data-track-placement={placement}
+    >
+      {STARTER_FULL_PLAN_FULL_CTA.label}
+    </a>
+  </article>
+</div>

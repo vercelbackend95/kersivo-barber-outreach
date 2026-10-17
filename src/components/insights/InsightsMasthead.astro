@@ -1,0 +1,45 @@
+---
+interface Props {
+  page: 'index' | 'article';
+  category?: string;
+  dateLabel?: string;
+  currentLabel?: string;
+}
+const { page, category, dateLabel, currentLabel = 'Article' } = Astro.props;
+---
+<header class="insights-masthead">
+  <div class="insights-shell">
+    <nav class="insights-breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">KERSIVO</a>
+      <span aria-hidden="true">/</span>
+      {page === 'article' ? (
+        <>
+          <a href="/insights">Insights</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{currentLabel}</span>
+        </>
+      ) : <span aria-current="page">Insights</span>}
+    </nav>
+    <div class="insights-masthead__identity">
+      <div class="insights-masthead__main">
+        <p class="insights-eyebrow"><span class="insights-eyebrow__rule" aria-hidden="true"></span> THE BUSINESS BEHIND THE CHAIR</p>
+        {page === 'index' ? (
+          <h1 class="insights-masthead__name">KERSIVO <span>/</span> INSIGHTS</h1>
+        ) : (
+          <p class="insights-masthead__name">KERSIVO <span>/</span> INSIGHTS</p>
+        )}
+      </div>
+      <span class="insights-masthead__edition">UK BARBERSHOP INTELLIGENCE</span>
+    </div>
+    <div class="insights-masthead__divider"></div>
+    {page === 'article' ? (
+      <div class="insights-article-meta">
+        <span class="insights-article-meta__category">{category}</span>
+        <span class="insights-article-meta__dot" aria-hidden="true"></span>
+        <span>{dateLabel}</span>
+      </div>
+    ) : (
+      <p class="insights-article-meta">Practical guides and independent thinking on running a barbershop in the UK.</p>
+    )}
+  </div>
+</header>
