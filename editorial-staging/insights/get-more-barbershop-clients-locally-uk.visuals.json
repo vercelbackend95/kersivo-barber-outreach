@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/get-more-barbershop-clients-locally-uk.md",
+  "output": "editorial-staging/insights/get-more-barbershop-clients-locally-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58",
+  "status": "Approved for publication — explicit owner instruction 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "How to Get More Barbershop Clients Locally (UK Guide)",
+    "description": "Judge every marketing channel by what a returning client costs. Referrals, lapsed clients, Google and leaflets, with the UK rules on texts and flyers.",
+    "slug": "get-more-barbershop-clients-locally-uk",
+    "category": "Bookings & Clients"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# How to Get More Barbershop Clients Locally: Price the Channel Before You Pick It",
+      "src": "https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&fit=crop&fm=jpg&q=75&w=2400",
+      "width": 1800,
+      "height": 1125,
+      "alt": "Vintage leather barber chairs and mirrors inside an empty barbershop",
+      "caption": "Editorial photograph of an empty barbershop; no models pictured, not a KERSIVO client.",
+      "credit": "Barney Goodman / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/an-empty-barbershop-interior-with-several-chairs-and-mirrors-AXurvQTtO3Y",
+      "rights": "Unsplash License page verified 2026-10-17. No recognisable people in described image; third-party property permissions are not independently confirmed.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Now compare two channels. It helps to separate three costs, because each one divides by a smaller number:",
+      "src": "/images/insights/local-clients/acquisition-metrics.svg",
+      "width": 1200,
+      "height": 810,
+      "alt": "Three different measures: cost per first-time client, cost per second-visit client and cost per retained regular",
+      "caption": "A measurement framework based on the three definitions in the article, not external performance statistics.",
+      "rights": "Original KERSIVO SVG illustration derived exclusively from the approved Notion draft",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Staff time is left out for both.",
+      "src": "/images/insights/local-clients/second-visit-cost.svg",
+      "width": 1200,
+      "height": 740,
+      "alt": "Illustrative second-visit costs: £60 for the deal-site offer, and £10 for the referral card under the assumed return rates",
+      "caption": "Illustrative comparison from the article: assumed return rates, no platform fee and no staff time included.",
+      "rights": "Original KERSIVO SVG illustration derived exclusively from the approved Notion draft",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "#### 2. Being findable: the Google profile",
+      "src": "https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&fit=crop&fm=jpg&q=75&w=2000",
+      "width": 1600,
+      "height": 1050,
+      "alt": "An empty leather barber chair and mirror in a barbershop",
+      "caption": "Editorial photograph of barbershop furniture; no model pictured, not a KERSIVO client.",
+      "credit": "Redd Francisco / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0",
+      "rights": "Unsplash License page verified 2026-10-17. Described as barber chair/mirror with no people; property permissions are not independently confirmed.",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58",
+    "note": "Owner approved preview appearance and requested production publication on 17 October 2026. Source ARTICLE DRAFT v2."
+  }
+}

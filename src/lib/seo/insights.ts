@@ -27,6 +27,20 @@ export const INSIGHTS_GOOGLE_REVIEWS = {
     'https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
 } as const;
 
+export const INSIGHTS_LOCAL_CLIENTS = {
+  slug: 'get-more-barbershop-clients-locally-uk',
+  path: '/insights/get-more-barbershop-clients-locally-uk',
+  headline: 'How to Get More Barbershop Clients Locally: Price the Channel Before You Pick It',
+  seoTitle: 'How to Get More Barbershop Clients Locally (UK Guide)',
+  description: 'Judge every marketing channel by what a returning client costs. Referrals, lapsed clients, Google and leaflets, with the UK rules on texts and flyers.',
+  category: 'Bookings & Clients',
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8163947eef1b68eb6b58',
+  lead: 'Compare the real cost of a second-visit client across referrals, Google, local partnerships and promotional channels.',
+  heroImage: 'https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+} as const;
+
 export function buildInsightsBreadcrumbs(article?: { path: string; headline: string }) {
   const items = [
     { '@type': 'ListItem', position: 1, name: 'KERSIVO', item: buildAbsoluteUrl('/') },
@@ -51,11 +65,17 @@ export function buildInsightsIndexJsonLd() {
       isPartOf: { '@id': buildAbsoluteUrl('/') + '#website' },
       mainEntity: {
         '@type': 'ItemList',
-        numberOfItems: 1,
+        numberOfItems: 2,
         itemListElement: [
           {
             '@type': 'ListItem',
             position: 1,
+            name: INSIGHTS_LOCAL_CLIENTS.headline,
+            url: buildAbsoluteUrl(INSIGHTS_LOCAL_CLIENTS.path),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
             name: INSIGHTS_GOOGLE_REVIEWS.headline,
             url: buildAbsoluteUrl(INSIGHTS_GOOGLE_REVIEWS.path),
           },

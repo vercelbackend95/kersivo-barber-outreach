@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 810" role="img" aria-labelledby="title description">
+<title id="title">Three costs that tell different stories</title>
+<desc id="description">Cost per first-time client includes reward, platform fee and staff time. Cost per second visit divides first-visit cost by the share coming back. Cost per retained regular divides the second-visit cost by the share still coming months later.</desc>
+<rect width="1200" height="810" fill="#15181E"/><path d="M0 0h1200v8H0z" fill="#D3273D"/>
+<text x="66" y="87" fill="#EB6675" font-size="18" letter-spacing="3.5" font-weight="800" font-family="Arial,Helvetica,sans-serif">KERSIVO / INSIGHTS</text>
+<text x="66" y="151" fill="#FAF7F1" font-size="53" font-weight="800" font-family="Arial,Helvetica,sans-serif" letter-spacing="-2">Three costs. Three different answers.</text>
+<text x="66" y="202" fill="#ACB5BE" font-size="24" font-family="Arial,Helvetica,sans-serif">Measure the return — not just the first booking.</text>
+<rect x="64" y="243" width="1072" height="138" rx="13" fill="#252A32"/>
+<rect x="64" y="404" width="1072" height="138" rx="13" fill="#252A32"/>
+<rect x="64" y="565" width="1072" height="138" rx="13" fill="#252A32"/>
+<rect x="64" y="243" width="8" height="138" rx="4" fill="#D3273D"/>
+<rect x="64" y="404" width="8" height="138" rx="4" fill="#D3273D"/>
+<rect x="64" y="565" width="8" height="138" rx="4" fill="#D3273D"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="96" y="292" fill="#EA7280" font-size="18" font-weight="800" letter-spacing="2">01 / ACQUISITION</text>
+<text x="96" y="343" fill="#F9F7F1" font-size="32" font-weight="800">Cost per first-time client</text>
+<text x="675" y="307" fill="#F4F1EB" font-size="24" font-weight="700">Reward + fees + any staff time</text>
+<text x="675" y="348" fill="#AFB8C2" font-size="22">for each new arrival</text>
+<text x="96" y="453" fill="#EA7280" font-size="18" font-weight="800" letter-spacing="2">02 / SECOND VISIT</text>
+<text x="96" y="503" fill="#F9F7F1" font-size="32" font-weight="800">Cost per returning client</text>
+<text x="675" y="469" fill="#F4F1EB" font-size="24" font-weight="700">First-visit cost ÷ share who</text>
+<text x="675" y="510" fill="#AFB8C2" font-size="22">come back for another cut</text>
+<text x="96" y="614" fill="#EA7280" font-size="18" font-weight="800" letter-spacing="2">03 / LONG-TERM</text>
+<text x="96" y="665" fill="#F9F7F1" font-size="32" font-weight="800">Cost per retained regular</text>
+<text x="675" y="629" fill="#F4F1EB" font-size="24" font-weight="700">Second-visit cost ÷ share</text>
+<text x="675" y="670" fill="#AFB8C2" font-size="22">still visiting months later</text>
+</g>
+<path d="M66 746H1136" stroke="#454B54"/><text x="66" y="783" fill="#A5AEB9" font-size="18" font-family="Arial,Helvetica,sans-serif">Use your own customer records. This is a measurement framework, not a benchmark.</text>
+</svg>
