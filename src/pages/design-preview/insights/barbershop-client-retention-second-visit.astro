@@ -1,0 +1,37 @@
+---
+/**
+ * Editorial Preview only. Not in INSIGHTS_PUBLISHED_ARTICLES, sitemap, or live category.
+ * Noindex remains enforced by the shared InsightsArticleLayout registry gate.
+ * Owner's production approval has not yet been given.
+ */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as SecondVisitArticle } from '../../../../editorial-staging/insights/barbershop-client-retention-second-visit-display.md';
+
+const article = {
+  headline: "The Second Visit: Why a Barbershop's Growth Is Decided After the First Haircut",
+  seoTitle: 'Barbershop Client Retention: Why the Second Visit Matters',
+  description: 'A barbershop grows when first-time clients come back. Three numbers to track, simple ways to lift rebooking, and the UK rules on reminder messages.',
+  slug: 'barbershop-client-retention-second-visit',
+  categoryId: 'clients-growth' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda8171a198c0ca613b14e0',
+  heroImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="Vintage barbershop chairs in a salon in Camberley, United Kingdom"
+  publishedDate="2026-10-17"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <SecondVisitArticle />
+</InsightsArticleLayout>
