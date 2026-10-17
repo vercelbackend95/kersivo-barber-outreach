@@ -3,8 +3,8 @@
   "source": "editorial-staging/insights/barbershop-card-payment-fees-uk.md",
   "output": "editorial-staging/insights/barbershop-card-payment-fees-uk-display.md",
   "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e",
-  "status": "Draft Ready for Review; Writing Approved; no Hold; Owner publication approval pending",
-  "publishApproved": false,
+  "status": "Approved for publication — explicit owner instruction 2026-10-17",
+  "publishApproved": true,
   "seo": {
     "title": "Barbershop Card Fees: What You Really Pay per Payment",
     "description": "Card fees cost a barbershop more than the headline rate suggests. How fixed fees, card mix and split payments add up, and why you can't surcharge.",
@@ -45,5 +45,11 @@
       "rights": "Original KERSIVO-authored SVG with illustrative calculations from the source article.",
       "licenceReviewed": true
     }
-  ]
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8170b7f1d8101223b50e",
+    "note": "Owner explicitly approved the finished preview and requested production publication on 17 October 2026."
+  }
 }
