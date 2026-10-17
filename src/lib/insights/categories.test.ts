@@ -104,8 +104,9 @@ describe('Insights six-category taxonomy', () => {
       'barbershop-gift-vouchers-uk': 'business-profit',
       'how-to-price-haircut-uk-barber': 'business-profit',
       'barbershop-christmas-opening-hours-planning': 'bookings-operations',
+      'barber-dermatitis-skin-care-hse': 'industry-people',
     };
-    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(6);
+    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(7);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       expect(isInsightsCategoryId(article.categoryId)).toBe(true);
       expect(article.categoryId).toBe(expected[article.slug]);
@@ -115,11 +116,11 @@ describe('Insights six-category taxonomy', () => {
     expect(getPublishedArticlesByCategory('brand-marketing')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('bookings-operations')).toHaveLength(1);
     expect(getPublishedArticlesByCategory('tools-payments')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(0);
+    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(1);
 
     const all = INSIGHTS_CATEGORY_IDS.flatMap((id) => getPublishedArticlesByCategory(id));
-    expect(all).toHaveLength(6);
-    expect(new Set(all.map((article) => article.slug)).size).toBe(6);
+    expect(all).toHaveLength(7);
+    expect(new Set(all.map((article) => article.slug)).size).toBe(7);
   });
 
   it('sitemaps every owner-approved category even when it has no published articles', () => {
@@ -128,8 +129,8 @@ describe('Insights six-category taxonomy', () => {
     expect(categoryEntries.map((entry) => entry.path)).toEqual(
       INSIGHTS_CATEGORIES.map((category) => category.path),
     );
-    // An empty category must remain indexable; no fake articles are added.
-    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(0);
+    // Every category must remain indexable even when its article count changes.
+    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(1);
     expect(categoryEntries.some((entry) => entry.path === '/insights/category/industry-people')).toBe(true);
 
     const locs = buildInsightsSitemapEntries().map((entry) => entry.path);

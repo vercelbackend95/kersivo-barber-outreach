@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barber-dermatitis-skin-care-hse.md",
+  "output": "editorial-staging/insights/barber-dermatitis-skin-care-hse-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8188a0dcc982ec96541a",
+  "status": "Owner approved for production publication — 2026-10-17",
+  "publishApproved": true,
+  "seo": {
+    "title": "Dermatitis in Barbers: How to Protect Your Team's Hands",
+    "description": "Wet work, disinfectants and constant hand washing can damage barbers' skin. What HSE advises, employer duties, and a five-minute audit for your shop.",
+    "slug": "barber-dermatitis-skin-care-hse",
+    "categoryId": "industry-people",
+    "category": "Industry & People",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Barbers' Hands: The Skin Problem That Builds Slowly and Costs Quietly",
+      "src": "https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=75&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Professional barber's hands cutting hair with scissors and a comb",
+      "caption": "Editorial photo of barbering craft, not a KERSIVO client or endorsement",
+      "credit": "Josh Marty / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barber-cutting-hair-with-scissors-and-comb-sdh4g0H-uXg",
+      "rights": "Creator Josh Marty, Unsplash License, Download free on original Unsplash photo page, checked 2026-10-17. Commercial editorial website use allowed under https://unsplash.com/license. Human faces, if identifiable, require separate assessment for endorsements; this caption makes no KERSIVO affiliation claim.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "In a barbershop, the obvious culprits are wet work, cleaning and disinfecting tools, and some products used on clients.",
+      "src": "https://images.unsplash.com/photo-1584744354544-a956499a4959?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=75&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Close-up of hands being washed at a sink, illustrating repeated wet work",
+      "caption": "Hand-washing photograph illustrating wet work; not a photograph of work-related dermatitis",
+      "credit": "Mélissa Jeanty / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-person-washing-their-hands-in-a-sink-BGiJJcHwA94",
+      "rights": "Creator Mélissa Jeanty. Photo listing Free to use under Unsplash License, checked 2026-10-17. Commercial editorial use permitted. Hand-washing context is illustrative, not an assertion that the subject has any condition.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "None of HSE's advice for the sector is complicated, and most of it costs very little.",
+      "src": "/images/insights/barbers-hands/skin-protection-cycle.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "HSE-inspired three-step workplace skin care diagram: avoid unnecessary exposure, protect with gloves and proper drying and moisturising, and check for early signs of dermatitis",
+      "caption": "Original KERSIVO graphic based on HSE prevention guidance; not a medical diagnosis or replacement for workplace COSHH risk assessment",
+      "rights": "Original KERSIVO SVG based on HSE COSHH and Hairdressers guidance (hse.gov.uk/COSHH/industry/hairdressing.htm) and HSE Skin Prevention (hse.gov.uk/skin/employ/prevention.htm). No third-party photos or models.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "Walk round the shop at the end of a busy day and look at three things:",
+      "src": "https://images.unsplash.com/photo-1656921350183-7935040cf7fb?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=75&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Barber's scissors and combs laid out as professional tools",
+      "caption": "Tools used in the trade, shown for editorial context",
+      "credit": "Zlobniyy / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-group-of-scissors-and-combs-y-VX9YhDd4c",
+      "rights": "Creator Zlobniyy. Original Unsplash listing Download free, Unsplash License, checked 2026-10-17. Commercial editorial use permitted; photograph of barber tools, no identifiable people.",
+      "licenceReviewed": true
+    }
+  ],
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-17",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda8188a0dcc982ec96541a",
+    "note": "Owner explicitly approved the complete Industry & People Preview in conversation and requested production publication and GSC indexing URLs."
+  }
+}
