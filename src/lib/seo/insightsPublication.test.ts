@@ -22,7 +22,7 @@ describe('Insights publication safety', () => {
   it('keeps a unique owner-approved registry of published articles', () => {
     const slugs = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.slug);
     const paths = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path);
-    expect(slugs).toHaveLength(4);
+    expect(slugs).toHaveLength(6);
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(new Set(paths).size).toBe(paths.length);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
@@ -30,10 +30,29 @@ describe('Insights publication safety', () => {
       expect(isInsightsArticlePublished(article.slug)).toBe(true);
       expect(article.publishedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(article.categoryId).toBeTruthy();
-      expect(article.ogImage).toMatch(/^\/images\/insights\/og\//);
-      expect(existsSync(join(here, '../../../public', article.ogImage.replace(/^\//, ''))), article.ogImage).toBe(
-        true,
-      );
+      // OG assets are either committed raster files or exact licensed Unsplash
+      // photo crops matched to the approved source hero (never an arbitrary URL).
+      if (article.ogImage.startsWith('/')) {
+        expect(article.ogImage).toMatch(/^\/images\/insights\/og\//);
+        expect(existsSync(join(here, '../../../public', article.ogImage.replace(/^\//, ''))), article.ogImage).toBe(
+          true,
+        );
+      } else {
+        const og = new URL(article.ogImage);
+        const hero = new URL(article.heroImage);
+        expect(og.protocol).toBe('https:');
+        expect(og.hostname).toBe('images.unsplash.com');
+        expect(og.pathname).toBe(hero.pathname);
+        expect(og.searchParams.get('w')).toBe('1200');
+        expect(og.searchParams.get('h')).toBe('630');
+        const manifestPath = join(stagingDir, `${article.slug}.visuals.json`);
+        const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+          media: Array<{ kind: string; licenceReviewed: boolean; creditUrl?: string }>;
+        };
+        expect(manifest.media.some((asset) =>
+          asset.kind === 'hero' && asset.licenceReviewed && asset.creditUrl?.startsWith('https://unsplash.com/')
+        )).toBe(true);
+      }
       expect(existsSync(join(stagingDir, `${article.slug}-display.md`)), article.slug).toBe(true);
     }
     expect(isInsightsArticlePublished('not-a-real-article')).toBe(false);
@@ -74,7 +93,7 @@ describe('Insights publication safety', () => {
     );
 
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(5);
+    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(1 + INSIGHTS_PUBLISHED_ARTICLES.length);
     expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 
