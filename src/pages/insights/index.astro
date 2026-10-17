@@ -1,10 +1,14 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
-import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
-import '@/styles/components/insights-preview.css';
+import { INSIGHTS_HOME_TOPICS, INSIGHTS_HOME_READING } from '@/lib/insights/homeContent';
 import { INSIGHTS_INDEX_TITLE, INSIGHTS_INDEX_DESCRIPTION, INSIGHTS_GOOGLE_REVIEWS as article, buildInsightsIndexJsonLd } from '@/lib/seo/insights';
-const articlePath = article.path;
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_H1, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_H1, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBER_COST_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberCostCalculatorPage';
+import { ALTERNATIVES_HUB_PAGE_PATH } from '@/lib/seo/alternativesHubSeo';
+import '@/styles/components/insights-preview.css';
+import '@/styles/components/insights-home.css';
 ---
 
 <LandingLayout
@@ -13,29 +17,217 @@ const articlePath = article.path;
   canonicalPath="/insights"
   jsonLd={buildInsightsIndexJsonLd()}
 >
-  <main class="insights-page">
-    <InsightsMasthead page="index" />
-    <section class="insights-index" aria-labelledby="insights-featured">
-      <div class="insights-index__inner">
-        <h2 class="insights-index__label" id="insights-featured">FEATURED READING</h2>
-        <a href={articlePath} class="insights-index__feature">
-          <div>
-            <p class="insights-article-meta__category" style="color:#982431; font-size:.72rem; letter-spacing:.13em; margin-bottom:1rem">BRAND &amp; MARKETING</p>
-            <h3 class="insights-index__title">{article.headline}</h3>
-            <p class="insights-index__summary">{article.lead}</p>
-            <span class="insights-index__read">READ THE ARTICLE <span aria-hidden="true">↗</span></span>
+  <main class="insights-page insights-home" id="insights-top">
+    <header class="ih-head">
+      <div class="ih-container">
+        <nav class="ih-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">KERSIVO</a><span aria-hidden="true">/</span><span aria-current="page">INSIGHTS</span>
+        </nav>
+        <div class="ih-head__mast">
+          <div class="ih-head__main">
+            <p class="ih-overline"><span class="ih-overline__line" aria-hidden="true"></span> KERSIVO / INSIGHTS</p>
+            <h1 class="ih-head__headline">
+              <span>The Business</span>
+              <span>Behind the Chair<span class="ih-head__period">.</span></span>
+            </h1>
           </div>
-          <span class="insights-index__media">
-            <img src="https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" alt="Barbers working in a barbershop in Aldershot, UK" width="700" height="850" loading="eager" decoding="async" />
-            <span class="insights-index__media-credit">BRUCE BARROW / UNSPLASH</span>
-          </span>
-        </a>
+          <div class="ih-head__aside">
+            <span class="ih-head__issue">INDEPENDENT UK BARBER INTELLIGENCE</span>
+            <p>Good barbering gets clients through the door. Smart decisions build the business behind it.</p>
+            <a href="#featured" class="ih-head__explore">Explore the journal <span aria-hidden="true">↘</span></a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="ih-featured" id="featured" aria-label="Featured editorial and useful guides">
+      <div class="ih-container">
+        <div class="ih-section-kicker"><span>01 / THE FRONT PAGE</span><span>THINK BEYOND THE CHAIR</span></div>
+        <div class="ih-mosaic">
+          <a class="ih-mosaic__lead" href={article.path} aria-label={article.headline}>
+            <img
+              class="ih-mosaic__lead-photo"
+              src={article.heroImage}
+              width="1400" height="1400"
+              alt="Barbers working with clients in a UK barbershop"
+              fetchpriority="high" loading="eager" decoding="async"
+            />
+            <div class="ih-mosaic__lead-tint" aria-hidden="true"></div>
+            <div class="ih-mosaic__lead-content">
+              <span class="ih-mosaic__meta">FEATURED ARTICLE <span class="ih-mosaic__meta-dot">/</span> BRAND &amp; MARKETING</span>
+              <h2>{article.headline}</h2>
+              <p>{article.lead}</p>
+              <span class="ih-mosaic__link">READ THE STORY <span aria-hidden="true">↗</span></span>
+            </div>
+            <span class="ih-mosaic__photo-credit">PHOTO: BRUCE BARROW / UNSPLASH</span>
+          </a>
+          <a class="ih-mosaic__red" href={BARBER_COST_CALCULATOR_PAGE_PATH}>
+            <span class="ih-mosaic__red-top">THE BUSINESS QUESTION <span aria-hidden="true">↗</span></span>
+            <span class="ih-mosaic__red-line" aria-hidden="true"></span>
+            <span class="ih-mosaic__red-title">PRICE<br />WITH<br />INTENT<span>.</span></span>
+            <span class="ih-mosaic__red-bottom">Know what your software costs before making your next move.</span>
+            <span class="ih-mosaic__red-cta">EXPLORE THE COST CALCULATOR <span aria-hidden="true">↗</span></span>
+          </a>
+          <div class="ih-mosaic__right">
+            <a class="ih-mosaic__side ih-mosaic__side--light" href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}>
+              <span class="ih-mosaic__side-top">DESIGN / GUIDE <span aria-hidden="true">↗</span></span>
+              <span class="ih-mosaic__side-art ih-mosaic__side-art--design" aria-hidden="true"><span></span><span></span><span></span></span>
+              <h3>{BARBERSHOP_WEBSITE_DESIGN_PAGE_H1}</h3>
+              <span class="ih-mosaic__side-bottom">EXPLORE THE GUIDE <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="ih-mosaic__side ih-mosaic__side--dark" href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}>
+              <span class="ih-mosaic__side-top">CLIENT EXPERIENCE / GUIDE <span aria-hidden="true">↗</span></span>
+              <span class="ih-mosaic__side-art ih-mosaic__side-art--booking" aria-hidden="true"><span class="ih-mosaic__booking-dot"></span><span class="ih-mosaic__booking-lines"></span></span>
+              <h3>{BARBERSHOP_ONLINE_BOOKING_PAGE_H1}</h3>
+              <span class="ih-mosaic__side-bottom">EXPLORE THE GUIDE <span aria-hidden="true">→</span></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ih-topics" id="topics" aria-labelledby="ih-topics-title">
+      <div class="ih-container">
+        <div class="ih-topics__head">
+          <h2 id="ih-topics-title">Explore by topic<span>.</span></h2>
+          <p>Find the thinking that matters to your shop.</p>
+        </div>
+        <div class="ih-topics__grid" role="group" aria-label="Filter reading by topic">
+          {INSIGHTS_HOME_TOPICS.map((topic) => (
+            <button class="ih-topic" type="button" data-insights-filter={topic.id} aria-pressed="false" aria-controls="insights-latest-grid">
+              <svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d={topic.iconPath} />
+              </svg>
+              <span class="ih-topic__label">{topic.name}</span>
+              <span class="ih-topic__arrow" aria-hidden="true">↗</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="ih-latest" id="latest-thinking" aria-labelledby="ih-latest-title">
+      <div class="ih-container">
+        <div class="ih-section-heading">
+          <div>
+            <p class="ih-overline ih-overline--ink">THE READING ROOM / 02</p>
+            <h2 id="ih-latest-title">Latest Thinking<span>.</span></h2>
+            <p class="ih-section-heading__description">Original Insights articles alongside useful KERSIVO guides and tools — clearly marked so you know what you're reading.</p>
+          </div>
+          <a class="ih-section-heading__all" href="#latest-thinking" data-insights-reset>ALL ARTICLES <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="ih-latest__grid" id="insights-latest-grid" data-insights-results>
+          {INSIGHTS_HOME_READING.map((item, i) => (
+            <a
+              href={item.href}
+              class="ih-story"
+              data-insights-categories={item.categories.join('|')}
+              data-insights-type={item.type}
+            >
+              <div class:list={['ih-story__visual', `ih-story__visual--${item.artwork}`]}>
+                {item.image ? (
+                  <img src={item.image} alt={item.imageAlt} loading="lazy" decoding="async" width="740" height="525" />
+                ) : (
+                  <span class="ih-story__visual-graphic" aria-hidden="true">
+                    <span class="ih-story__graphic-number">{String(i + 1).padStart(2, '0')}</span>
+                    <span class="ih-story__graphic-lines"></span>
+                    <span class="ih-story__graphic-arrow">↗</span>
+                  </span>
+                )}
+                <span class="ih-story__tag">{item.type === 'article' ? 'ARTICLE' : item.type === 'guide' ? 'GUIDE' : 'TOOL'}</span>
+              </div>
+              <div class="ih-story__content">
+                <p class="ih-story__eyebrow">{item.typeLabel}</p>
+                <h3>{item.title}</h3>
+                <p class="ih-story__description">{item.description}</p>
+                <span class="ih-story__read">{item.type === 'article' ? 'READ ARTICLE' : item.type === 'guide' ? 'EXPLORE GUIDE' : 'OPEN TOOL'} <span aria-hidden="true">↗</span></span>
+              </div>
+            </a>
+          ))}
+        </div>
+        <div class="ih-latest__empty" data-insights-empty hidden aria-live="polite">
+          <span class="ih-latest__empty-symbol" aria-hidden="true">✳</span>
+          <h3>More thinking is on the way.</h3>
+          <p>We haven’t published a piece in this category yet. Browse what’s available now, or explore the practical tools below.</p>
+          <button type="button" data-insights-reset>VIEW ALL READING <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ih-desk" id="owners-desk" aria-labelledby="ih-desk-title">
+      <div class="ih-container">
+        <div class="ih-desk__header">
+          <div>
+            <p class="ih-overline">FROM IDEAS TO ACTION / 03</p>
+            <h2 id="ih-desk-title">The Owner’s Desk<span>.</span></h2>
+          </div>
+          <p>Practical tools for the decisions that shape your shop.</p>
+        </div>
+        <div class="ih-desk__grid">
+          <a href={BARBER_COST_CALCULATOR_PAGE_PATH} class="ih-desk__item ih-desk__item--calculator">
+            <div class="ih-desk__item-top"><span>01 / KNOW YOUR NUMBERS</span><span aria-hidden="true">↗</span></div>
+            <div class="ih-desk__item-inner">
+              <span class="ih-desk__symbol" aria-hidden="true">£</span>
+              <h3>What does your software actually cost?</h3>
+              <p>Explore subscriptions, payment fees and team costs using the interactive calculator.</p>
+              <span class="ih-desk__action">EXPLORE THE COST CALCULATOR <span aria-hidden="true">↗</span></span>
+            </div>
+          </a>
+          <a href={ALTERNATIVES_HUB_PAGE_PATH} class="ih-desk__item ih-desk__item--compare">
+            <div class="ih-desk__item-top"><span>02 / KNOW YOUR OPTIONS</span><span aria-hidden="true">↗</span></div>
+            <div class="ih-desk__item-inner">
+              <span class="ih-desk__symbol" aria-hidden="true">≠</span>
+              <h3>Your next booking system is a business decision.</h3>
+              <p>Compare different platforms for independent UK barbershops in one place.</p>
+              <span class="ih-desk__action">COMPARE BOOKING SYSTEMS <span aria-hidden="true">↗</span></span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section class="ih-outro" aria-label="About KERSIVO Insights">
+      <div class="ih-container ih-outro__inner">
+        <p>BUILT FOR THE PEOPLE WHO BUILD THE SHOPS.</p>
+        <span>KERSIVO INSIGHTS <span aria-hidden="true">/</span> THE BUSINESS BEHIND THE CHAIR</span>
       </div>
     </section>
   </main>
   <Footer50 showIntro={false} navigation={[
-    { name: 'KERSIVO', href: '/' },
-    { name: 'About', href: '/about' },
+    { name: 'Insights', href: '/insights' },
+    { name: 'About KERSIVO', href: '/about' },
     { name: 'Pricing', href: '/pricing' },
+    { name: 'See live demo', href: '/demo' },
   ]} />
 </LandingLayout>
+
+<script>
+  function initInsightsHomeFilters() {
+    const page = document.querySelector<HTMLElement>('.insights-home');
+    if (!page || page.dataset.filtersBound === 'true') return;
+    page.dataset.filtersBound = 'true';
+    const filters = [...page.querySelectorAll<HTMLButtonElement>('[data-insights-filter]')];
+    const cards = [...page.querySelectorAll<HTMLElement>('.ih-story[data-insights-categories]')];
+    const empty = page.querySelector<HTMLElement>('[data-insights-empty]');
+    const apply = (topic: string | null) => {
+      let visible = 0;
+      filters.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.insightsFilter === topic)));
+      cards.forEach((card) => {
+        const categories = (card.dataset.insightsCategories ?? '').split('|');
+        const show = topic === null || categories.includes(topic);
+        card.hidden = !show;
+        if (show) visible += 1;
+      });
+      if (empty) empty.hidden = visible > 0;
+    };
+    filters.forEach((button) => button.addEventListener('click', () => {
+      apply(button.dataset.insightsFilter || null);
+      document.getElementById('latest-thinking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+    page.querySelectorAll<HTMLElement>('[data-insights-reset]').forEach((reset) => {
+      reset.addEventListener('click', () => apply(null));
+    });
+    apply(null);
+  }
+  initInsightsHomeFilters();
+  document.addEventListener('astro:page-load', initInsightsHomeFilters);
+</script>
