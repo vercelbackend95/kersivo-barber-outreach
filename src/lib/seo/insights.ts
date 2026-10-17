@@ -119,12 +119,29 @@ export const INSIGHTS_HAIRCUT_PRICING = {
   ogImageAlt: 'Vintage barber chairs and mirrors in a classic barbershop',
 } as const;
 
+export const INSIGHTS_BARBERS_HANDS = {
+  slug: 'barber-dermatitis-skin-care-hse',
+  path: '/insights/barber-dermatitis-skin-care-hse',
+  headline: "Barbers' Hands: The Skin Problem That Builds Slowly and Costs Quietly",
+  seoTitle: "Dermatitis in Barbers: How to Protect Your Team's Hands",
+  description: "Wet work, disinfectants and constant hand washing can damage barbers' skin. What HSE advises, employer duties, and a five-minute audit for your shop.",
+  categoryId: 'industry-people' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8188a0dcc982ec96541a',
+  lead: "How UK barbers can protect their hands from work-related skin damage, and what responsible shops should put in place.",
+  heroImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImageAlt: "A barber's hands working with scissors and a comb",
+} as const;
+
 /**
  * Single source of publication for owner-approved Insights articles.
  * Sitemap, hub cards and indexability must derive from this list only.
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
   INSIGHTS_HAIRCUT_PRICING,
   INSIGHTS_GIFT_VOUCHERS,
