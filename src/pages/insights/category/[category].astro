@@ -1,7 +1,8 @@
 ---
 /**
  * Insights category archives — one template for all six taxonomy routes.
- * Indexability is an explicit owner gate on each category (currently all noindex).
+ * Owner has explicitly approved indexing all six category archives,
+ * including any category not yet containing published articles.
  */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -49,7 +50,7 @@ const elsewhere =
   count === 0
     ? INSIGHTS_PUBLISHED_ARTICLES.slice(0, 3)
     : INSIGHTS_PUBLISHED_ARTICLES.filter((article) => article.categoryId !== categoryId).slice(0, 3);
-const indexable = category.indexable && count > 0;
+const indexable = category.indexable; // Explicit owner-approved gate, independent of article count.
 const currentYear = new Date().getFullYear();
 const countLabel =
   count === 0 ? 'No articles published yet' : count === 1 ? '1 published article' : `${count} published articles`;
