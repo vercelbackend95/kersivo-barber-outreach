@@ -8,7 +8,7 @@ import {
   GATE1_OWNERS_DESK,
   GATE1_TOPICS,
 } from '@/lib/insights/gate1Preview';
-import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS, INSIGHTS_CARD_FEES } from '@/lib/seo/insights';
+import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS, INSIGHTS_CARD_FEES, INSIGHTS_GIFT_VOUCHERS } from '@/lib/seo/insights';
 
 const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
@@ -57,6 +57,17 @@ export const INSIGHTS_HOME_FEATURE_STACK = [
 
 /** Latest Thinking — published articles only. */
 export const INSIGHTS_HOME_LATEST = [
+  {
+    id: INSIGHTS_GIFT_VOUCHERS.slug,
+    category: INSIGHTS_GIFT_VOUCHERS.category,
+    format: 'Guide',
+    title: INSIGHTS_GIFT_VOUCHERS.headline,
+    excerpt: INSIGHTS_GIFT_VOUCHERS.lead,
+    readMinutes: 10,
+    imageSrc: INSIGHTS_GIFT_VOUCHERS.heroImage,
+    imageAlt: 'Original KERSIVO editorial artwork of a fictional gift voucher',
+    href: INSIGHTS_GIFT_VOUCHERS.path,
+  },
   {
     id: INSIGHTS_CARD_FEES.slug,
     category: INSIGHTS_CARD_FEES.category,
