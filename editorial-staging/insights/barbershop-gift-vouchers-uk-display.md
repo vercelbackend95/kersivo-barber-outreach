@@ -7,7 +7,7 @@ Every December, the same thing happens at the counter. Someone's partner, mother
 
 They're worth selling. But a voucher isn't income in the way a haircut is. It's a promise to cut someone's hair later, paid for now, and that promise has rules: on expiry, on VAT, and in your books. The owners who do well from vouchers are the ones who know which part is cash, which part is revenue, and which part is a debt.
 
-#### What you've actually sold
+## What you've actually sold
 
 When a client pays £30 for a voucher, the shop has the £30. It hasn't earned it yet. Until the voucher is used, you owe £30 of services at your prices to whoever turns up holding it. Five different things are happening, and it helps to keep them apart:
 
@@ -28,13 +28,13 @@ This matters for three reasons:
 - **Timing shifts the strain.** If those 40 vouchers are all redeemed on Saturdays in January, they take paying slots. If they fill quiet Tuesday mornings that would genuinely have been empty, the main cost is products and card fees.
 - **Who redeems them decides their value.** A voucher used by an existing regular, who'd have come and paid anyway, is mostly a change in the timing of cash. A voucher used by someone new is a first visit, not yet a regular. It turns into a client acquisition only if they come back and pay, which is where most of the commercial value of vouchers lies.
 
-#### The expiry question
+## The expiry question
 
 Owners often ask how long a voucher has to last. There's no fixed answer in law. In a written parliamentary answer in July 2023, the Department for Business and Trade said: "there is no legal minimum term for the validity of gift cards". The government has encouraged businesses, working with the UK Gift Card & Voucher Association, to use expiry dates of **at least two years**, and to be transparent about terms. That two-year figure is guidance, not law. In June 2026 a minister again answered that the Law Commission had found no need for additional measures, including on expiry dates, so as of October 2026 there's no proposal before Parliament for a legal minimum.
 
 "No legal minimum" isn't the same as "anything goes". The Consumer Rights Act 2015, Part 2, says unfair terms in consumer contracts aren't binding on the consumer, and written terms have to be transparent. A very short expiry date hidden in small print is the kind of term that invites a challenge. It's also the kind that goes down badly on a review page. The practical approach is simple. Print the expiry date clearly on the voucher itself. Make it generous enough that nobody feels caught out; the two-year guide is a sensible reference. And say whether the voucher can be part-used, topped up, or transferred.
 
-#### VAT: due when you sell, not when you cut
+## VAT: due when you sell, not when you cut
 
 This section only applies if your shop is VAT-registered. If it is, vouchers follow specific rules under Schedule 10B to the Value Added Tax Act 1994, in force since 1 January 2019.
 
@@ -44,7 +44,7 @@ In the illustrative example, 40 vouchers at £30 means £200 of VAT due in the V
 
 A discounted voucher, say "£50 of haircuts for £40", is taxed on what the customer actually paid, not on the face value. The £10 discount is a real cost, though. You give up £10 of revenue you'd otherwise have earned from the £50 of services.
 
-#### When vouchers make money, and when they don't
+## When vouchers make money, and when they don't
 
 Here's an honest way to judge your voucher sales. Take the vouchers redeemed in a year and sort them into two groups:
 
@@ -61,13 +61,13 @@ Two practical points improve the odds. First, design the voucher for the person 
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1596362601603-b74f6ef166e4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1200" loading="lazy" decoding="async" alt="Barber scissors and hair comb arranged on a work surface, with no people present" />
 <figcaption>Editorial photograph of barber scissors and a comb, used to illustrate the barbershop business — <a href="https://unsplash.com/photos/stainless-steel-scissors-and-hair-comb-WbEibGKHBMY" target="_blank" rel="noopener noreferrer">Sinval Carvalho / Unsplash</a>.</figcaption></figure>
 
-#### The counterargument: unredeemed vouchers are free money
+## The counterargument: unredeemed vouchers are free money
 
 Some owners quietly count on vouchers that never get used. Every voucher that expires unused is cash with no haircut to deliver. On that view, a short expiry and a forgetful public make vouchers very profitable.
 
 It's true that some vouchers go unredeemed. How and when that becomes income in your accounts depends on your accounting framework and your voucher terms. Under FRS 102 from 2026 and IFRS 15, a business that can reliably estimate how many vouchers won't be used may recognise that "breakage" gradually as other vouchers are redeemed; otherwise it waits until use becomes unlikely, such as at expiry. Your accountant will decide which applies. But building a strategy on it is a poor bet for a local business. A voucher bought as a present is often bought by a regular. If their partner turns up a week after an expiry date nobody noticed, the shop loses more than the £30 of goodwill it saved. The government's two-year guide and the transparency requirement point the same way. Treat unredeemed vouchers as a small bonus, not as the business case.
 
-#### Before you sell the first one
+## Before you sell the first one
 
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/gift-vouchers/voucher-checklist.svg" width="1200" height="730" loading="lazy" decoding="async" alt="Six-item checklist for selling vouchers: transparent expiry, booking instructions, register, VAT, accounts and returning clients." />
 <figcaption>Practical steps from the article; general information, not legal, tax or accounting advice.</figcaption></figure>
@@ -79,11 +79,11 @@ It's true that some vouchers go unredeemed. How and when that becomes income in 
 5. Ask your accountant how to show unredeemed vouchers in your books.
 6. Note who redeems, and check whether new clients come back.
 
-A voucher sold in December is a client you might gain in February. The paperwork is small, and the useful part is that note at redemption telling you whether the voucher brought someone new.
+[A voucher sold in December is a client you might gain in February](/insights/get-more-barbershop-clients-locally-uk). The paperwork is small, and the useful part is that note at redemption telling you whether the voucher brought someone new.
 
 *General information, not legal or tax advice.*
 
-#### References
+## References
 
 1. Hansard, written answer by Kevin Hollinrake (Department for Business and Trade), 21 July 2023, *Voucher Schemes* ("no legal minimum term for the validity of gift cards"; at least two years encouraged with the GCVA; Law Commission view). [theyworkforyou.com/wrans/?id=2023-07-13.194072.h](http://theyworkforyou.com/wrans/?id=2023-07-13.194072.h) (accessed 16 Oct 2026).
 2. Consumer Rights Act 2015, Part 2 (unfair terms; transparency). [legislation.gov.uk/ukpga/2015/15/part/2](http://legislation.gov.uk/ukpga/2015/15/part/2) (accessed 16 Oct 2026).

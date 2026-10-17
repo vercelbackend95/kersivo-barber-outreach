@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { resolvePageSeo, resolveRobotsContent } from './meta';
+import { resolveOgImageUrl, resolvePageSeo, resolveRobotsContent } from './meta';
 
 describe('resolvePageSeo robots', () => {
+  it('accepts absolute HTTPS Open Graph image URLs without rewriting the host', () => {
+    const absolute = 'https://images.example.com/insights/hero.jpg';
+    expect(resolveOgImageUrl(absolute)).toBe(absolute);
+    expect(resolvePageSeo({ ogImagePath: absolute }).ogImage).toBe(absolute);
+  });
+
   it('omits robots meta when noindex is false', () => {
     const seo = resolvePageSeo({ canonicalPath: '/' });
     expect(seo.noindex).toBe(false);

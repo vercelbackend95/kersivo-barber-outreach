@@ -40,6 +40,8 @@ const currentYear = new Date().getFullYear();
   title={INSIGHTS_INDEX_TITLE}
   description={INSIGHTS_INDEX_DESCRIPTION}
   canonicalPath={INSIGHTS_INDEX_PATH}
+  ogType="website"
+  suppressMarketingFontPreloads
   jsonLd={buildInsightsIndexJsonLd()}
 >
   <link
@@ -91,10 +93,7 @@ const currentYear = new Date().getFullYear();
 
       <InsightsTopicStrip topics={INSIGHTS_HOME_TOPICS} />
 
-      <InsightsLatestThinking
-        items={INSIGHTS_HOME_LATEST}
-        archiveHref={INSIGHTS_HOME_FEATURE_DOMINANT.href}
-      />
+      <InsightsLatestThinking items={INSIGHTS_HOME_LATEST} />
 
       <InsightsOwnersDesk
         eyebrow={INSIGHTS_HOME_OWNERS_DESK.eyebrow}

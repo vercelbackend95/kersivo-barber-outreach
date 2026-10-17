@@ -7,7 +7,7 @@ For many barbershops, card is now the normal way clients pay, and most owners ca
 
 Many card providers charge a percentage plus a fixed fee on every payment. Stripe's published UK pricing for online card payments, for example, is 1.5% plus 20p for standard UK cards and 2.8% plus 20p for premium UK cards. Its in-person pricing, for payments taken on its card readers, is different: 1.4% plus 10p for EEA cards and 2.9% plus 10p for non-EEA cards. (Stripe's page doesn't spell out which band UK-issued cards fall into in person, so check your own statement or ask.) The fixed part doesn't care how much the haircut cost. On a cheap service it can be the biggest part of the fee.
 
-#### Same rate, different cost
+## Same rate, different cost
 
 Take the online rate of 1.5% plus 20p and apply it to three prices. These are worked examples using a published rate, not a claim about what you pay.
 
@@ -30,7 +30,7 @@ That has a practical consequence. Anything that splits one visit into several ca
 
 Your own provider may price these differently. None of this is a reason to stop taking deposits, but it is a cost worth knowing.
 
-#### Your real rate is a blend
+## Your real rate is a blend
 
 The rate on your contract is not the rate you pay. Your real rate depends on the mix of cards your clients use and the size of the payments.
 
@@ -45,27 +45,27 @@ It also makes comparisons honest. Imagine a **hypothetical** provider, not a rea
 
 One more thing to check while you have the statement open. Many providers price online payments and in-person payments differently, and some charge extra for card types or currencies you rarely think about, such as cards issued abroad. If you take deposits online and the rest at the counter, you may be on two different price lists at once. Your blended rate should include both, because that's what leaves your account. A shop near a station or a hotel, with more visitors from abroad, can see a noticeably different blend from a shop on a residential high street, even at the same prices.
 
-#### Can you pass the cost on?
+## Can you pass the cost on?
 
 No, not as a card surcharge. Since 13 January 2018, regulation 6A of the Consumer Rights (Payment Surcharges) Regulations 2012, inserted by the Payment Services Regulations 2017, says a payee "must not charge a payer any fee" for payment by a card-based payment instrument that isn't a commercial card. That covers the ordinary debit, credit and prepaid cards your clients use. The same ban applies to many other electronic payment methods. Business-to-business commercial cards can still be surcharged, but never by more than the cost to you. For a barbershop serving the public, a "card fee" sign at the till is not an option.
 
-What you can do is set prices that cover your real costs, including card fees. That turns the question from "how do I charge for cards?" into "what does a card payment actually cost me per service?", which is the question the table answers.
+What you can do is set prices that cover your real costs, including card fees. That turns the question from "how do I charge for cards?" into "[what does a card payment actually cost me per service?](/barber-software-cost-calculator)", which is the question the table answers.
 
 Cash isn't free either. It has its own costs: time spent counting and banking, bank charges for deposits, and the risk of loss. Some shops find card cheaper overall once those are counted. Without your own figures, nobody can tell you which is cheaper for you.
 
-#### The fee nobody budgets for
+## The fee nobody budgets for
 
 Disputes are rare, but they're expensive. Stripe's published UK pricing lists a £20 fee for each dispute received, and another £20 if you respond to it manually, which you get back only if you win. If you lose, you usually lose the payment too. On the standard rate, that's the same as the fees on about 35 card payments of £25. One disputed booking can wipe out a week's saving from a slightly better rate.
 
 The best protection is unglamorous: a clear name on the client's bank statement so they recognise the payment, a booking record they agreed to, and a quick reply when a client queries a charge with you before going to their bank.
 
-#### How it plays out by shop
+## How it plays out by shop
 
 For an **owner-operator or a shop with employed barbers**, card fees come out of the shop's takings. They are a true variable cost: they rise and fall with every payment.
 
 For **chair renters**, it depends on who takes the payment. If each renter has their own card reader and account, the fees are theirs. If the shop takes all payments and pays renters their share, the agreement should say who carries the card fees. Otherwise the shop may be quietly absorbing a cost that belongs to someone else, or the other way round.
 
-#### What to do with this
+## What to do with this
 
 There are three things worth doing this month. Work out your real card rate from a full month's statement. Look at your cheapest services and check whether the fixed fee is a large share of the price. And count how many visits are split into more than one card payment.
 
@@ -73,7 +73,7 @@ None of it needs a new provider. It needs one afternoon with a statement and a c
 
 ---
 
-#### References (checked 16 October 2026; rechecked and item 3 added in v2)
+## References (checked 16 October 2026; rechecked and item 3 added in v2)
 
 1. The Consumer Rights (Payment Surcharges) Regulations 2012, reg. 6A (in force from 13 January 2018) — [https://www.legislation.gov.uk/uksi/2012/3110/regulation/6A](https://www.legislation.gov.uk/uksi/2012/3110/regulation/6A)
 2. Stripe, UK pricing (online: standard UK cards 1.5% + 20p, premium UK cards 2.8% + 20p; Terminal in-person: 1.4% + 10p EEA cards, 2.9% + 10p non-EEA cards; dispute received £20, dispute countered £20) — [https://stripe.com/gb/pricing](https://stripe.com/gb/pricing)

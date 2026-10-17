@@ -23,12 +23,13 @@ const paths: Record<TopicIcon, string> = {
 };
 ---
 
-<nav class="ins-topics" aria-label="Insights topics">
+{/* Editorial topic labels only — no category routes exist in Phase 1. */}
+<section class="ins-topics" aria-label="Insights topic areas">
   <ul class="ins-topics__list">
     {
       topics.map((topic) => (
         <li class="ins-topics__item">
-          <div class="ins-topics__module" tabindex="0">
+          <div class="ins-topics__module">
             <span class="ins-topics__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.55">
                 <path d={paths[topic.icon]} stroke-linecap="round" stroke-linejoin="round" />
@@ -43,4 +44,4 @@ const paths: Record<TopicIcon, string> = {
       ))
     }
   </ul>
-</nav>
+</section>

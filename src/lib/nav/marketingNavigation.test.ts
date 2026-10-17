@@ -9,6 +9,7 @@ import {
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
   buildMarketingNavTopLevelEntries,
+  isMarketingDirectLinkCurrent,
   isMarketingNavItemCurrent,
   isPublicMarketingHref,
   marketingNavItemMatch,
@@ -46,9 +47,15 @@ describe('marketing navigation config', () => {
     expect(groups.map((group) => group.label)).toEqual(['Platform', 'Compare', 'Resources']);
     expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Websites', 'Starter', 'Pricing']
-        : ['Starter', 'Pricing', 'FAQ'],
+        ? ['Websites', 'Insights', 'Starter', 'Pricing']
+        : ['Insights', 'Starter', 'Pricing'],
     );
+    expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights')).toEqual({
+      id: 'insights',
+      label: 'Insights',
+      href: '/insights',
+      matchPrefix: '/insights',
+    });
     expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'starter')).toEqual({
       id: 'starter',
       label: 'Starter',
@@ -67,8 +74,8 @@ describe('marketing navigation config', () => {
     const labels = entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label);
     expect(labels).toEqual(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']
-        : ['Platform', 'Compare', 'Resources', 'Starter', 'Pricing', 'FAQ'],
+        ? ['Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing']
+        : ['Platform', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing'],
     );
     expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(
       BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
@@ -85,14 +92,16 @@ describe('marketing navigation config', () => {
     // Simulate the approved launch without changing INDEXABLE in this branch.
     const releasedDirectLinks = [
       { id: 'websites', label: 'Websites', href: '/barbershop-websites' },
+      { id: 'insights', label: 'Insights', href: '/insights', matchPrefix: '/insights' },
       { id: 'starter', label: 'Starter', href: '/starter' },
       { id: 'pricing', label: 'Pricing', href: '/pricing' },
     ];
     const entries = buildMarketingNavTopLevelEntries(buildMarketingNavigation(), releasedDirectLinks);
     expect(entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label)).toEqual([
-      'Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing',
+      'Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing',
     ]);
     expect(entries.filter((entry) => entry.kind === 'link' && entry.link.id === 'websites')).toHaveLength(1);
+    expect(entries.filter((entry) => entry.kind === 'link' && entry.link.id === 'insights')).toHaveLength(1);
     const readyGuides = MARKETING_NAV_ITEMS.map((item) =>
       item.id === 'resources-online-booking' || item.id === 'resources-website-design'
         ? { ...item, visible: true }
@@ -141,6 +150,18 @@ describe('marketing navigation config', () => {
       expect(pages).toContain(pathname);
       expect(getRouteFamily(pathname)).toBe('marketing');
     }
+    expect(getRouteFamily('/insights')).toBe('marketing');
+    expect(getRouteFamily('/insights/google-reviews-barbershop-uk-rules')).toBe('marketing');
+    expect(getRouteFamily('/design-preview/insights')).not.toBe('marketing');
+  });
+
+  it('marks Insights as current for hub and descendant article paths', () => {
+    const insights = MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights')!;
+    expect(isMarketingDirectLinkCurrent(insights, '/insights')).toBe(true);
+    expect(isMarketingDirectLinkCurrent(insights, '/insights/')).toBe(true);
+    expect(isMarketingDirectLinkCurrent(insights, '/insights/barbershop-gift-vouchers-uk')).toBe(true);
+    expect(isMarketingDirectLinkCurrent(insights, '/compare')).toBe(false);
+    expect(isMarketingDirectLinkCurrent(insights, '/design-preview/insights')).toBe(false);
   });
 
   it('gives every item a unique id, a description, a known icon and a configured section', () => {

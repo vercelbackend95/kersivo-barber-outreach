@@ -13,17 +13,16 @@ interface Item {
 
 interface Props {
   items: readonly Item[];
-  archiveHref?: string;
 }
 
-const { items, archiveHref = '#insights-top' } = Astro.props;
+const { items } = Astro.props;
 const single = items.length === 1;
 ---
 
+{/* Hub already lists every published article — no separate archive route exists. */}
 <section class="ins-latest" id="insights-latest" aria-labelledby="insights-latest-heading">
   <div class="ins-latest__header">
     <h2 id="insights-latest-heading" class="ins-latest__heading">Latest Thinking</h2>
-    <a class="ins-latest__archive" href={archiveHref}>All Articles →</a>
   </div>
 
   <ul class:list={['ins-latest__grid', single && 'ins-latest__grid--single']}>

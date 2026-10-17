@@ -13,6 +13,11 @@ import {
 import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
+  'https://kersivo.co.uk/insights',
+  'https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk',
+  'https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk',
+  'https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk',
+  'https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules',
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/pricing',
   'https://kersivo.co.uk/starter',
@@ -38,6 +43,8 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/terms',
 ] as const;
 
+const EXPECTED_COUNT = EXPECTED_LOCS.length;
+
 describe('marketing sitemap', () => {
   it('S: excludes dynamic tenant booking URLs and QR redirects', async () => {
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
@@ -53,11 +60,16 @@ describe('marketing sitemap', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(23);
+    expect(entries).toHaveLength(EXPECTED_COUNT);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(23);
+    expect(new Set(locs).size).toBe(EXPECTED_COUNT);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
+    expect(byLoc['https://kersivo.co.uk/insights']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
@@ -84,10 +96,12 @@ describe('marketing sitemap', () => {
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
     expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
 
-    expect(EXPECTED_LOCS[0].endsWith('/')).toBe(true);
-    for (const loc of EXPECTED_LOCS.slice(1)) {
-      expect(loc.endsWith('/')).toBe(false);
+    expect(EXPECTED_LOCS.some((loc) => loc === 'https://kersivo.co.uk/')).toBe(true);
+    for (const loc of EXPECTED_LOCS) {
+      if (loc === 'https://kersivo.co.uk/') continue;
+      expect(loc.endsWith('/'), loc).toBe(false);
     }
+    expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 
   it('uses the same lastmod dates as the visible legal documents', () => {
@@ -110,19 +124,22 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(23);
+    expect(urlMatches).toHaveLength(EXPECTED_COUNT);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml).not.toContain('2026-07-18');
     expect(xml).not.toContain('<lastmod>2026-07-18</lastmod>');
     expect(xml).toContain('<lastmod>2026-09-25</lastmod>');
     expect(xml).not.toContain('<lastmod>2026-10-05</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-06</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-17</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
-    expect(xml.match(/<lastmod>/g)?.length).toBe(19);
+    // Homepage + three Websites cluster pages omit lastmod; Insights + remaining pages include it.
+    expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT - 4);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
+    expect(xml).not.toContain('/design-preview/');
 
     expect(xml).not.toContain('demo-product-');
     expect(xml).not.toContain('cmmj3fcis0005l1kt8ii5itvd');

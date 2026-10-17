@@ -7,7 +7,7 @@ Most advice on getting more clients is a list of channels: Instagram, leaflets, 
 
 A barbershop is a local business with a short radius. Most clients live, work or commute within a short trip of the door. So "more clients" doesn't need a big marketing plan. It's more like accounting. Each channel brings strangers in at some cost in money, time or margin. The ones worth repeating bring in strangers who turn into regulars.
 
-#### A quick way to compare channels
+## A quick way to compare channels
 
 Here's a framework, not a benchmark. The numbers below are illustrative.
 
@@ -39,7 +39,7 @@ The return rates are assumptions to illustrate the point. Here is how wrong they
 
 That's the main idea of this article. The other sections apply it to the channels a local shop actually has.
 
-#### 1. The clients you already have
+## 1. The clients you already have
 
 Often the cheapest new client comes through an existing one. A referral scheme only needs three things: a reason to mention you, something to hand over, and a reward that arrives after the friend's visit, not before.
 
@@ -47,16 +47,16 @@ How you run it matters legally. The ICO's guidance on the Privacy and Electronic
 
 The same guidance covers lapsed clients. Under the "soft opt-in", you can text or email your own previous customers about similar services, provided you gave them a clear chance to opt out when you collected their details and do so again in every message. A short "we haven't seen you since spring, here's the booking link" to clients who didn't opt out costs almost nothing to send and reaches people who already know the chair. It does fail if your contact records never offered an opt-out. Note that the ICO says this guidance is under review after the Data (Use and Access) Act, so check it again before you build a routine around it.
 
-#### 2. Being findable: the Google profile
+## 2. Being findable: the Google profile
 
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2000" width="1600" height="1050" loading="lazy" decoding="async" alt="An empty leather barber chair and mirror in a barbershop" />
 <figcaption>Editorial photograph of barbershop furniture; no model pictured, not a KERSIVO client. — <a href="https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0" target="_blank" rel="noopener noreferrer">Redd Francisco / Unsplash</a>.</figcaption></figure>
 
 When someone types "barber near me", Google says local results depend on three things: **relevance**, **distance** and **prominence**. You can't move your shop, so distance is fixed. Relevance is mostly housekeeping: the correct category, accurate opening hours (including bank holidays), services listed in plain words, and current photos. Prominence builds up over time, and Google's own help pages say it includes how many reviews you have and links to your business from elsewhere on the web.
 
-This channel has unusual economics. The upfront cost is time, not money, and it doesn't stop working when you stop paying, unlike an ad. Its weak point is the step after the search. A stranger who finds you and then can't easily book or see a price often moves on to the next listing. How you handle reviews matters here too: the rules on incentives and selective asking are stricter than many owners expect.
+This channel has unusual economics. The upfront cost is time, not money, and it doesn't stop working when you stop paying, unlike an ad. Its weak point is the step after the search. A stranger who finds you and then [can't easily book or see a price](/barbershop-online-booking) often moves on to the next listing. [How you handle reviews matters here too](/insights/google-reviews-barbershop-uk-rules): the rules on incentives and selective asking are stricter than many owners expect.
 
-#### 3. The street
+## 3. The street
 
 Leaflets, A-boards and window displays can still work for a business whose customers walk past every day. They're also the channels most often done badly.
 
@@ -64,13 +64,13 @@ One legal point first, for England and Wales. Under section 94B of and Schedule 
 
 On the economics: a leaflet with a vague message ("Quality cuts, friendly service") gives a stranger no reason to switch. A leaflet that answers the questions a new client actually has works harder. What does a cut cost? Can I just walk in, or do I need to book, and how? When are you open late? The same goes for the window. The board outside is often the first price list a passer-by sees.
 
-#### 4. Neighbours with your clients
+## 4. Neighbours with your clients
 
 The gym down the road, the office building around the corner and the student accommodation nearby all have people who need a haircut every few weeks. A simple arrangement with a local business can bring a steady trickle of people who live or work within walking distance: a card on their noticeboard, or a staff offer for their team. Those clients may be more likely to become regulars, because the shop is convenient for them.
 
 Measure it like any other channel. If it brings three new clients a month and two stay, at little cost, that compares well with many paid options. If it brings none after two months, stop.
 
-#### The counterargument: "I'm full; I don't need clients"
+## The counterargument: "I'm full; I don't need clients"
 
 Some owners will say marketing is for shops that cut badly. A good barber gets busy by word of mouth, and chasing strangers gets you discount-hunters who never come back.
 
@@ -78,7 +78,7 @@ There's something in this. Channel A in the table above is a fair description of
 
 But "full" usually means full at the peak. A typical diary has quiet mid-week mornings, and those are the gaps new local clients can fill, especially people with flexible hours: shift workers, students, retired people. The case for growing the client base isn't about volume. It's about evening out the week, and about having a replacement ready when regulars move away, as some always do.
 
-#### What to track
+## What to track
 
 The most useful numbers are simple:
 
@@ -88,7 +88,7 @@ The most useful numbers are simple:
 
 Once the window has closed for a few months' worth of new clients, divide each channel's cost by the number of its clients who came back. Keep the channels with a low figure and stop the others.
 
-#### The short version
+## The short version
 
 1. Work out what a regular is worth to you: revenue, then contribution.
 2. Judge each channel by cost per *returning* client, not cost per first visit.
@@ -99,7 +99,7 @@ Once the window has closed for a few months' worth of new clients, divide each c
 
 None of this is complicated. It needs the same habit a good barber already has: noticing who sits in the chair and why they came back.
 
-#### References
+## References
 
 1. Information Commissioner's Office, *Electronic mail marketing* (Guide to PECR; regulation 22; soft opt-in; viral marketing). [ico.org.uk](http://ico.org.uk) (accessed 16 Oct 2026). Note: under review following the Data (Use and Access) Act.
 2. Environmental Protection Act 1990, Schedule 3A (free distribution of printed matter on designated land; England and Wales). [legislation.gov.uk/ukpga/1990/43/schedule/3A](http://legislation.gov.uk/ukpga/1990/43/schedule/3A) (accessed 16 Oct 2026).

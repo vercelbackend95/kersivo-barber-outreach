@@ -1,0 +1,27 @@
+---
+import type { InsightsRelatedLink } from '@/lib/insights/insightsLinking';
+
+interface Props {
+  links: readonly InsightsRelatedLink[];
+}
+
+const { links } = Astro.props;
+---
+
+{
+  links.length > 0 && (
+    <aside class="insights-related" aria-labelledby="insights-related-heading">
+      <h2 id="insights-related-heading" class="insights-related__heading">Related reading</h2>
+      <ul class="insights-related__list">
+        {links.map((link) => (
+          <li>
+            <a href={link.href}>
+              <span class="insights-related__kind">{link.kind === 'article' ? 'Article' : link.kind === 'tool' ? 'Tool' : 'Guide'}</span>
+              <span class="insights-related__label">{link.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}

@@ -37,7 +37,8 @@ export function resolveCanonicalUrl(canonicalPath: string): string {
 }
 
 export function resolveOgImageUrl(ogImagePath: string = DEFAULT_OG_IMAGE_PATH): string {
-  return buildAbsoluteUrl(ogImagePath);
+  if (/^https?:\/\//i.test(ogImagePath)) return ogImagePath;
+  return buildAbsoluteUrl(ogImagePath.startsWith('/') ? ogImagePath : `/${ogImagePath}`);
 }
 
 export type ResolvedPageSeo = ReturnType<typeof resolvePageSeo>;

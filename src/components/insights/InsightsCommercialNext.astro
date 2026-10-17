@@ -1,0 +1,17 @@
+---
+import type { InsightsCommercialNext } from '@/lib/insights/insightsLinking';
+
+interface Props {
+  next: InsightsCommercialNext;
+}
+
+const { next } = Astro.props;
+---
+
+<aside class="insights-commercial-next" aria-labelledby="insights-commercial-next-heading">
+  <p class="insights-commercial-next__kicker">If you are evaluating tools</p>
+  <h2 id="insights-commercial-next-heading" class="insights-commercial-next__heading">
+    <a href={next.href}>{next.label}</a>
+  </h2>
+  <p class="insights-commercial-next__note">{next.note}</p>
+</aside>

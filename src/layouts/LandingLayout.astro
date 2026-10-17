@@ -19,6 +19,8 @@ import '@/styles/components/route-transition.css';
 interface Props extends PageSeo {
   title: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Insights pages preload editorial fonts via slot="head"; skip unused marketing preloads. */
+  suppressMarketingFontPreloads?: boolean;
 }
 
 const {
@@ -33,6 +35,7 @@ const {
   noindex,
   robotsFollow,
   jsonLd,
+  suppressMarketingFontPreloads = false,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -48,10 +51,14 @@ const jsonLdBlocks = jsonLd
     <GoogleAnalytics />
     <FaviconLinks />
     <meta name="viewport" content="width=device-width" />
-    <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/antonio-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    {!suppressMarketingFontPreloads && (
+      <>
+        <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/antonio-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+      </>
+    )}
     <title>{title}</title>
     <SeoHead
       title={title}

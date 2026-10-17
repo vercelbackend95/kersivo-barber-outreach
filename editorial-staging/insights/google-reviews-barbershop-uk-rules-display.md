@@ -7,7 +7,7 @@ Two barbershops sit on the same high street. One has 41 Google reviews averaging
 
 So the useful question for an owner isn't "how do I get five-star reviews?" It's "how do I get a steady flow of honest reviews, without breaking either of the two rulebooks that now cover them?"
 
-#### Rulebook one: the law
+## Rulebook one: the law
 
 Since 6 April 2025, the Digital Markets, Competition and Consumers Act 2024 (Schedule 20, paragraph 13) has made certain review practices automatically unfair across the UK. Nobody has to show that a customer was actually misled. The banned practices are:
 
@@ -19,7 +19,7 @@ The Competition and Markets Authority published its guidance (CMA208) on 4 April
 
 A detail is worth noticing. The Act's specific ban is on reviews that *conceal* an incentive. A disclosed incentive isn't automatically banned, but that doesn't make it automatically lawful either. If the incentive, or the way reviews are then presented, gives people a misleading picture, other parts of consumer law can still apply. You could read the Act as permission to offer "£2 off your next cut for a review", as long as it's labelled. On Google, that reading is a mistake in any case.
 
-#### Rulebook two: Google's policy
+## Rulebook two: Google's policy
 
 Google's Maps user-contributed content policy is stricter than the law. It says merchants may not "offer incentives – such as payment, discounts, free goods and/or services - in exchange for posting any review". It doesn't matter whether you disclose the incentive. Google lists further practices it doesn't allow:
 
@@ -47,7 +47,7 @@ Put the two rulebooks side by side and the safe area is clear:
 
 The table isn't legal advice, and the boundary cases need care. Staff reviews raise three separate questions: whether the review reflects a genuine experience, whether a commercial connection is hidden from readers, and whether Google treats it as a conflict of interest. A barber's honest review of their own workplace can fail the last test even if it passes the first. The practical rule is simple: **ask everyone, offer nothing, and accept whatever comes back.**
 
-#### Why "ask everyone" also works commercially
+## Why "ask everyone" also works commercially
 
 This can look like a compliance tax. In fact, the honest version is also the one that gets you more reviews, for a reason that's easy to miss.
 
@@ -58,24 +58,24 @@ Here's an illustrative example (assumed rates, not survey data; we found no reli
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/review-rates.svg" width="1200" height="590" loading="lazy" decoding="async" alt="Illustrative 120 cuts per week, yielding 4.8 reviews at a one-in-25 rate versus 0.6 at one-in-200." />
 <figcaption>Illustrative calculation from the article, not measured barbershop data..</figcaption></figure>
 
-#### The habit that holds up
+## The habit that holds up
 
 A system that works on a busy Saturday has to be boring. Four parts are enough.
 
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/google-reviews/habit.svg" width="1200" height="500" loading="lazy" decoding="async" alt="Four-part review habit: one link, ask all clients, ask after the visit and accept honest feedback." />
 <figcaption>Original KERSIVO process illustration based on the steps below..</figcaption></figure>
 
-**1. One link, everywhere.** Google Business Profile lets you create a review link or QR code from your profile. Use the same link in your post-appointment message, on a small card at the till and on your booking confirmation. Everyone gets the same ask. That's both the fair approach and the easy one.
+**1. One link, everywhere.** Google Business Profile lets you create a review link or QR code from your profile. Use the same link in your post-appointment message, on a small card at the till and [on your booking confirmation](/barbershop-online-booking). Everyone gets the same ask. That's both the fair approach and the easy one.
 
 **2. Ask after the moment, not during it.** Google's policy is against pressure on the premises. You're allowed to mention reviews at the chair, but don't stand over someone while they type. A short message a few hours after the cut, with the link, keeps you clear of the rule and is easier for the client than an awkward request at the mirror. We found no evidence on which works better for barbershops, so test it in your own shop.
 
 Before you send review requests by text or email, work out what the message is for. The ICO's guidance treats promotional messages as direct marketing, and a request that promotes your business can count even without an offer in it. If it's marketing, the electronic marketing rules apply: you need consent, or the "soft opt-in" conditions for existing clients, and an opt-out in every message. Decide the purpose and the legal basis first, rather than assuming a review request is exempt.
 
-**3. Never pay for reviews, and don't set review targets for your team.** Paying a client for a review and paying a barber a bonus for gathering reviews are different things. The bonus isn't an incentive to the reviewer, but Google specifically rules out staff review targets and requests to name a staff member. If you want to recognise good work, reward rebooking or retention. Those numbers say more about a barber's chair than review counts do.
+**3. Never pay for reviews, and don't set review targets for your team.** Paying a client for a review and paying a barber a bonus for gathering reviews are different things. The bonus isn't an incentive to the reviewer, but Google specifically rules out staff review targets and requests to name a staff member. If you want to recognise good work, [reward rebooking or retention](/insights/get-more-barbershop-clients-locally-uk). Those numbers say more about a barber's chair than review counts do.
 
 **4. Reply like a professional, especially to the bad ones.** Google advises short, specific, non-promotional replies and private follow-up on complex complaints. A calm reply to a 2-star review is read by everyone who comes after. It may do as much for a stranger's trust as another "great fade, cheers".
 
-#### The counterargument: stars don't fill chairs, cuts do
+## The counterargument: stars don't fill chairs, cuts do
 
 There's a fair objection. A barbershop's reputation is built in the chair and in the conversations clients have at work. Reviews only record it. Some well-run shops have modest review profiles and full diaries thanks to word of mouth.
 
@@ -86,13 +86,13 @@ There's a second objection: asking everyone means inviting criticism. It does. G
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=60&amp;w=3000" width="1500" height="900" loading="lazy" decoding="async" alt="Barber chair and mirror in a barbershop." />
 <figcaption>Editorial photograph; not a KERSIVO customer or partner. — <a href="https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0" target="_blank" rel="noopener noreferrer">Redd Francisco / Unsplash</a>.</figcaption></figure>
 
-#### What to measure
+## What to measure
 
 You don't need software to see whether this works. Once a month, write down three numbers: total review count, average rating, and the number of new clients who say they found you on Google (ask at first booking). The first two show whether the habit is working. The third is the only one that pays bills.
 
 Keep that distinction clear. A review is not revenue. A new client who returns and rebooks is. The value of a review is how many strangers it turns into first visits, and that value is gone if the first visit doesn't lead to a second.
 
-#### The short version
+## The short version
 
 - Ask every client, the same way, after the appointment.
 - Offer nothing for a review. Google bans incentives even when disclosed.
@@ -102,7 +102,7 @@ Keep that distinction clear. A review is not revenue. A new client who returns a
 
 The law sets the minimum. Google's policy is the stricter of the two, and for most shops, asking everyone honestly is also the approach most likely to build a steady, credible record.
 
-#### References (checked 16 October 2026; items 6–8 added in v2)
+## References (checked 16 October 2026; items 6–8 added in v2)
 
 1. Digital Markets, Competition and Consumers Act 2024, Schedule 20, paragraph 13 (in force 6 April 2025, SI 2025/272). [legislation.gov.uk/ukpga/2024/13/schedule/20/paragraph/13](http://legislation.gov.uk/ukpga/2024/13/schedule/20/paragraph/13) (accessed 16 Oct 2026).
 2. Competition and Markets Authority, *Fake reviews guidance (CMA208)*, 4 April 2025. [gov.uk/government/publications/fake-reviews](http://gov.uk/government/publications/fake-reviews) (accessed 16 Oct 2026).

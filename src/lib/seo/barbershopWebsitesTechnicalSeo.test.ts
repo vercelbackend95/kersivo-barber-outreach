@@ -99,7 +99,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     });
     expect(buildMarketingNavTopLevelEntries().map((entry) =>
       entry.kind === 'group' ? entry.group.label : entry.link.label,
-    )).toEqual(['Platform', 'Websites', 'Compare', 'Resources', 'Starter', 'Pricing']);
+    )).toEqual(['Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing']);
     const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
     expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
       '/barbershop-website-design',

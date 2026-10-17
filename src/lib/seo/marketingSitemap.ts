@@ -24,7 +24,7 @@ import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } fro
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
-import { INSIGHTS_INDEX_PATH, INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS, INSIGHTS_CARD_FEES, INSIGHTS_GIFT_VOUCHERS } from './insights';
+import { buildInsightsSitemapEntries } from './insights';
 import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
 import { STARTER_PAGE_LAST_UPDATED_ISO, STARTER_PAGE_PATH } from './starterPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
@@ -47,12 +47,8 @@ export type MarketingSitemapEntry = {
 };
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
-  /** KERSIVO Insights editorial hub and its owner-approved first article. */
-  { path: INSIGHTS_INDEX_PATH, lastmod: INSIGHTS_GOOGLE_REVIEWS.publishedDate },
-  { path: INSIGHTS_GOOGLE_REVIEWS.path, lastmod: INSIGHTS_GOOGLE_REVIEWS.publishedDate },
-  { path: INSIGHTS_LOCAL_CLIENTS.path, lastmod: INSIGHTS_LOCAL_CLIENTS.publishedDate },
-  { path: INSIGHTS_CARD_FEES.path, lastmod: INSIGHTS_CARD_FEES.publishedDate },
-  { path: INSIGHTS_GIFT_VOUCHERS.path, lastmod: INSIGHTS_GIFT_VOUCHERS.publishedDate },
+  /** KERSIVO Insights hub + owner-approved published articles only. */
+  ...buildInsightsSitemapEntries(),
   { path: '/' },
   /** Matches the visible "Last updated" date on src/pages/pricing.astro. */
   { path: PRICING_PAGE_PATH, lastmod: PRICING_PAGE_LAST_UPDATED_ISO },

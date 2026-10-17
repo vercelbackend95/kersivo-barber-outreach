@@ -61,9 +61,16 @@ describe('route families', () => {
       '/book/abc',
       '/shop/live-shop-id',
       '/booksy-alternative-x',
+      '/design-preview/insights',
     ]) {
       expect(getRouteFamily(path), path).not.toBe('marketing');
     }
+    expect(getRouteFamily('/insights')).toBe('marketing');
+    expect(getRouteFamily('/insights/')).toBe('marketing');
+    expect(getRouteFamily('/insights/google-reviews-barbershop-uk-rules')).toBe('marketing');
+    expect(getRouteFamily('/insights/barbershop-gift-vouchers-uk')).toBe('marketing');
+    expect(isSameRouteFamily('/insights', '/insights/google-reviews-barbershop-uk-rules')).toBe(true);
+    expect(isSameRouteFamily('/', '/insights')).toBe(true);
   });
 
   it('classifies live tenant storefront routes as tenant', () => {

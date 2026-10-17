@@ -1,0 +1,61 @@
+---
+/**
+ * Published Insights articles — one template, registry-driven static paths.
+ * Unpublished or unknown slugs are not generated (production 404).
+ */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import {
+  INSIGHTS_PUBLISHED_ARTICLES,
+  formatInsightsDateLabel,
+  getInsightsPublishedArticle,
+  isInsightsArticlePublished,
+} from '@/lib/seo/insights';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return INSIGHTS_PUBLISHED_ARTICLES.map((article) => ({
+    params: { slug: article.slug },
+  }));
+}
+
+const slug = Astro.params.slug;
+if (!slug || !isInsightsArticlePublished(slug)) {
+  return Astro.redirect('/404');
+}
+
+const article = getInsightsPublishedArticle(slug);
+if (!article) {
+  return Astro.redirect('/404');
+}
+
+const modules = import.meta.glob('../../../editorial-staging/insights/*-display.md');
+const key = `../../../editorial-staging/insights/${slug}-display.md`;
+const loader = modules[key];
+if (!loader) {
+  throw new Error(`Missing Insights display Markdown for published slug: ${slug}`);
+}
+const mod = (await loader()) as { Content: any };
+const ArticleBody = mod.Content;
+---
+
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel={formatInsightsDateLabel(article.publishedDate)}
+  sourceUrl={article.notionUrl}
+  headline={article.headline}
+  publishedDate={article.publishedDate}
+  verifiedDate={article.verifiedDate}
+  modifiedDate={'modifiedDate' in article ? (article as { modifiedDate?: string }).modifiedDate : undefined}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt={article.ogImageAlt}
+  coverImage={article.ogImage}
+  coverImageAlt={article.ogImageAlt}
+  published={isInsightsArticlePublished(article.slug)}
+>
+  <ArticleBody />
+</InsightsArticleLayout>

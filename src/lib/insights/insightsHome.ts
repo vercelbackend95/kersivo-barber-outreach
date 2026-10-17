@@ -8,11 +8,14 @@ import {
   GATE1_OWNERS_DESK,
   GATE1_TOPICS,
 } from '@/lib/insights/gate1Preview';
-import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS, INSIGHTS_CARD_FEES, INSIGHTS_GIFT_VOUCHERS } from '@/lib/seo/insights';
+import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
 
 const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
-export const INSIGHTS_HOME_MASTHEAD = GATE1_MASTHEAD;
+export const INSIGHTS_HOME_MASTHEAD = {
+  ...GATE1_MASTHEAD,
+  lead: 'Practical insights for independent UK barbershop owners — bookings, clients, costs, branding and stronger day-to-day decisions.',
+} as const;
 
 export const INSIGHTS_HOME_TOPICS = GATE1_TOPICS;
 
@@ -55,50 +58,31 @@ export const INSIGHTS_HOME_FEATURE_STACK = [
   },
 ] as const;
 
-/** Latest Thinking — published articles only. */
-export const INSIGHTS_HOME_LATEST = [
-  {
-    id: INSIGHTS_GIFT_VOUCHERS.slug,
-    category: INSIGHTS_GIFT_VOUCHERS.category,
-    format: 'Guide',
-    title: INSIGHTS_GIFT_VOUCHERS.headline,
-    excerpt: INSIGHTS_GIFT_VOUCHERS.lead,
-    readMinutes: 10,
-    imageSrc: INSIGHTS_GIFT_VOUCHERS.heroImage,
-    imageAlt: 'Original KERSIVO editorial artwork of a fictional gift voucher',
-    href: INSIGHTS_GIFT_VOUCHERS.path,
-  },
-  {
-    id: INSIGHTS_CARD_FEES.slug,
-    category: INSIGHTS_CARD_FEES.category,
-    format: 'Guide',
-    title: INSIGHTS_CARD_FEES.headline,
-    excerpt: INSIGHTS_CARD_FEES.lead,
-    readMinutes: 9,
-    imageSrc: INSIGHTS_CARD_FEES.heroImage,
-    imageAlt: 'Original KERSIVO Insights editorial illustration of a 20p fixed card processing fee',
-    href: INSIGHTS_CARD_FEES.path,
-  },
-  {
-    id: INSIGHTS_LOCAL_CLIENTS.slug,
-    category: INSIGHTS_LOCAL_CLIENTS.category,
-    format: 'Guide',
-    title: INSIGHTS_LOCAL_CLIENTS.headline,
-    excerpt: INSIGHTS_LOCAL_CLIENTS.lead,
-    readMinutes: 10,
-    imageSrc: INSIGHTS_LOCAL_CLIENTS.heroImage,
-    imageAlt: 'Empty barbershop with vintage leather barber chairs and mirrors',
-    href: INSIGHTS_LOCAL_CLIENTS.path,
-  },
-  {
-    id: reviews.slug,
-    category: reviews.category,
-    format: 'Guide',
-    title: reviews.headline,
-    excerpt: reviews.lead,
-    readMinutes: 12,
-    imageSrc: reviews.heroImage,
-    imageAlt: 'Barbers working in a barbershop in Aldershot, UK',
-    href: reviews.path,
-  },
-] as const;
+const LATEST_IMAGE_ALT: Record<string, string> = {
+  [INSIGHTS_GOOGLE_REVIEWS.slug]: 'Barbers working in a barbershop in Aldershot, UK',
+  'get-more-barbershop-clients-locally-uk':
+    'Empty barbershop with vintage leather barber chairs and mirrors',
+  'barbershop-card-payment-fees-uk':
+    'Original KERSIVO Insights editorial illustration of a 20p fixed card processing fee',
+  'barbershop-gift-vouchers-uk': 'Original KERSIVO editorial artwork of a fictional gift voucher',
+};
+
+const LATEST_READ_MINUTES: Record<string, number> = {
+  [INSIGHTS_GOOGLE_REVIEWS.slug]: 12,
+  'get-more-barbershop-clients-locally-uk': 10,
+  'barbershop-card-payment-fees-uk': 9,
+  'barbershop-gift-vouchers-uk': 10,
+};
+
+/** Latest Thinking — derived only from the published Insights registry. */
+export const INSIGHTS_HOME_LATEST = INSIGHTS_PUBLISHED_ARTICLES.map((article) => ({
+  id: article.slug,
+  category: article.category,
+  format: 'Guide' as const,
+  title: article.headline,
+  excerpt: article.lead,
+  readMinutes: LATEST_READ_MINUTES[article.slug] ?? 10,
+  imageSrc: article.heroImage,
+  imageAlt: LATEST_IMAGE_ALT[article.slug] ?? '',
+  href: article.path,
+}));

@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { applyInsightsLinkOverlays } from './link-overlays.mjs';
 
 const root = process.cwd();
 const fail = (message) => { throw new Error(`Insights compositor: ${message}`); };
@@ -60,7 +61,11 @@ function convertNotionTable(fragment) {
   return [rows[0], rows[0].map(() => '---'), ...rows.slice(1)]
     .map((row) => `| ${row.map(escapeCell).join(' | ')} |`).join('\n');
 }
-const normalizedSource = source.replace(/<table header-row="true">([\s\S]*?)<\/table>/g, (_match, inner) => convertNotionTable(inner));
+// Structural heading normalize for HTML outline only — wording unchanged.
+// Notion ARTICLE DRAFT exports often use H4 for primary sections; public HTML needs H1 → H2.
+const normalizedSource = source
+  .replace(/<table header-row="true">([\s\S]*?)<\/table>/g, (_match, inner) => convertNotionTable(inner))
+  .replace(/^#### /gm, '## ');
 
 function getType(line) {
   if (/^\|/.test(line)) return 'table';
@@ -125,13 +130,14 @@ for (const block of blocks) {
 if (seen.size !== media.length) {
   fail(`visual anchors missing or ambiguous: ${media.filter((_, index) => !seen.has(index)).map((a) => a.anchor).join(' | ')}`);
 }
-const rendered = result.join('\n\n') + '\n';
-const withoutInsertedFigures = rendered.replace(/<figure class="insights-figure[^]*?<\/figure>\n\n/g, '').replace(/\n\n<figure class="insights-figure[^]*?<\/figure>/g, '');
+const renderedWithFigures = result.join('\n\n') + '\n';
 const canonical = blocks.map((block) => block.markdown).join('\n\n');
 const stripFigures = (html) => html.replace(/<figure class="insights-figure[^]*?<\/figure>/g, '');
-if (stripFigures(rendered).trim().replace(/\n{3,}/g, '\n\n') !== canonical.trim()) {
+if (stripFigures(renderedWithFigures).trim().replace(/\n{3,}/g, '\n\n') !== canonical.trim()) {
   fail('article text changed during visual insertion');
 }
+const slug = path.basename(manifest.output).replace(/-display\.md$/, '');
+const rendered = applyInsightsLinkOverlays(renderedWithFigures, slug);
 if (flags.includes('--check')) {
   if (readFileSync(outputPath, 'utf8') !== rendered) fail('generated article differs from checked-in output');
   console.log('PASS: article render is deterministic and source text is preserved.');

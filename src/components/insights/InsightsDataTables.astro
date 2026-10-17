@@ -25,7 +25,9 @@
         });
         firstRow.remove();
       } else {
-        table.querySelectorAll('thead th').forEach((th) => th.scope = 'col');
+        table.querySelectorAll<HTMLTableCellElement>('thead th').forEach((th) => {
+          th.scope = 'col';
+        });
       }
 
       table.querySelectorAll<HTMLTableCellElement>('tbody td').forEach((cell) => {

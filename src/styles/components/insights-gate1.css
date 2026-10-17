@@ -420,13 +420,7 @@ a.ins-mosaic__stack-card--link {
   align-items: center;
   padding: 0.75rem 0.8rem;
   min-height: 3.5rem;
-  transition: background-color var(--ins-motion);
   cursor: default;
-}
-
-.ins-topics__module:hover,
-.ins-topics__module:focus-visible {
-  background: color-mix(in srgb, var(--ins-surface) 75%, transparent);
 }
 
 .ins-topics__icon {
@@ -475,8 +469,6 @@ a.ins-mosaic__stack-card--link {
 .ins-latest__header {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
   margin-bottom: 0.85rem;
   padding-bottom: 0.55rem;
   border-bottom: var(--ins-rule);
@@ -489,20 +481,6 @@ a.ins-mosaic__stack-card--link {
   font-weight: 700;
   letter-spacing: -0.012em;
   color: var(--ins-fg);
-}
-
-.ins-latest__archive {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ins-accent-text);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.ins-latest__archive:hover {
-  color: var(--ins-accent-hover);
 }
 
 .ins-latest__grid {
