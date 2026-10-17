@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" role="img" aria-labelledby="title description">
+<title id="title">Illustrative second-visit costs: deal-site offer compared with a referral card</title>
+<desc id="description">Assuming zero platform fees and equal uncounted staff time: Channel A costs twelve pounds per first-time client with one in five returning, giving sixty pounds per second-visit client. Channel B costs five pounds per first-time client with one in two returning, giving ten pounds per second-visit client.</desc>
+<rect width="1200" height="740" fill="#F1EFE8"/><rect x="43" y="43" width="1114" height="652" rx="16" fill="#FCFAF6" stroke="#D6D3CC" stroke-width="2"/>
+<text x="86" y="108" fill="#A82A38" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="800" letter-spacing="3">ILLUSTRATIVE COMPARISON</text>
+<text x="86" y="165" fill="#1B1E22" font-family="Arial,Helvetica,sans-serif" font-size="46" font-weight="800" letter-spacing="-1.4">What does the second visit cost?</text>
+<text x="86" y="207" fill="#6C7278" font-family="Arial,Helvetica,sans-serif" font-size="21">Same goal. Different assumed return rates.</text>
+<text x="86" y="275" fill="#24282C" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="800">DEAL SITE / CHANNEL A</text>
+<text x="1110" y="273" text-anchor="end" fill="#A82333" font-family="Arial,Helvetica,sans-serif" font-size="43" font-weight="800">£60</text>
+<rect x="86" y="296" width="1024" height="57" rx="4" fill="#E5E1DA"/><rect x="86" y="296" width="1024" height="57" rx="4" fill="#9E2735"/>
+<text x="86" y="390" fill="#51565C" font-family="Arial,Helvetica,sans-serif" font-size="21">£12 first-visit cost ÷ 0.2 returning (1 in 5)</text>
+<text x="86" y="476" fill="#24282C" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="800">REFERRAL / CHANNEL B</text>
+<text x="1110" y="474" text-anchor="end" fill="#24282C" font-family="Arial,Helvetica,sans-serif" font-size="43" font-weight="800">£10</text>
+<rect x="86" y="496" width="1024" height="57" rx="4" fill="#E5E1DA"/><rect x="86" y="496" width="171" height="57" rx="4" fill="#2F424B"/>
+<text x="86" y="589" fill="#51565C" font-family="Arial,Helvetica,sans-serif" font-size="21">£5 first-visit cost ÷ 0.5 returning (1 in 2)</text>
+<path d="M86 623H1110" stroke="#D9D6D0" stroke-width="2"/>
+<text x="86" y="655" fill="#51565C" font-family="Arial,Helvetica,sans-serif" font-size="19">ASSUMED RATES • NO PLATFORM FEES • STAFF TIME NOT COUNTED</text>
+<text x="1110" y="655" text-anchor="end" fill="#A72B37" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800">KERSIVO INSIGHTS</text>
+</svg>
