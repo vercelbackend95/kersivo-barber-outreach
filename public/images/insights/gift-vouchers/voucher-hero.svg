@@ -1,6 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="t d"><title id="t">A gift voucher is cash now and a service owed later</title><desc id="d">Original KERSIVO editorial illustration showing a fictional thirty-pound barbershop gift voucher on a dark background, representing future service obligations.</desc>
-<defs><linearGradient id="bg" x1="0" x2="1" y1="1" y2="0"><stop stop-color="#101318"/><stop offset="1" stop-color="#222830"/></linearGradient><linearGradient id="paper" x1="0" x2="1"><stop stop-color="#f9f3e9"/><stop offset="1" stop-color="#e7e1d7"/></linearGradient></defs>
-<rect width="1600" height="900" fill="url(#bg)"/><path d="M0 0H1600V9H0z" fill="#da2a40"/><g stroke="#ffffff" stroke-opacity=".06"><path d="M0 176H1600M0 350H1600M0 525H1600M0 700H1600"/><path d="M170 0V900M450 0V900M730 0V900M1010 0V900M1290 0V900"/></g>
-<g font-family="Arial,Helvetica,sans-serif"><text x="86" y="117" font-size="20" fill="#ef6072" font-weight="800" letter-spacing="5">KERSIVO / INSIGHTS</text><text x="86" y="283" font-size="94" fill="#faf7ef" font-weight="800" letter-spacing="-4">CASH TODAY.</text><text x="86" y="389" font-size="94" fill="#faf7ef" font-weight="800" letter-spacing="-4">A CUT TOMORROW.</text><rect x="86" y="449" width="85" height="6" fill="#e3374b"/><text x="86" y="531" font-size="31" fill="#c6cbd1">The real economics of gift vouchers</text><text x="86" y="577" font-size="31" fill="#c6cbd1">for independent barbershops.</text>
-<g transform="translate(1030 225) rotate(-9 215 225)"><rect x="14" y="24" width="480" height="426" rx="17" fill="#060a0c" opacity=".5"/><rect width="480" height="426" rx="17" fill="url(#paper)"/><rect x="28" y="28" width="424" height="370" rx="8" fill="none" stroke="#c0b5a7" stroke-width="2"/><text x="52" y="91" font-size="19" letter-spacing="4" fill="#b22439" font-weight="800">EDITORIAL / EXAMPLE</text><text x="52" y="172" font-size="51" fill="#202329" font-weight="750">GIFT</text><text x="52" y="228" font-size="51" fill="#202329" font-weight="750">VOUCHER</text><text x="52" y="315" font-size="99" fill="#b5253b" font-weight="800">£30</text><text x="55" y="369" font-size="17" fill="#595d63">ILLUSTRATION ONLY · NOT REDEEMABLE</text></g>
-<text x="86" y="823" fill="#a8b0ba" font-size="18" letter-spacing="3.5" font-weight="750">THE BUSINESS BEHIND THE CHAIR</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+<title id="title">Gift vouchers: cash today, a cut tomorrow</title>
+<desc id="description">An original KERSIVO editorial illustration. Large text occupies the left half of a black premium composition while a separate fictional thirty-pound voucher occupies the right. Nothing overlaps.</desc>
+<defs>
+  <linearGradient id="background" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#101318"/><stop offset="1" stop-color="#20252c"/></linearGradient>
+  <linearGradient id="paper" x1="0" x2="1"><stop stop-color="#faf6ee"/><stop offset="1" stop-color="#e9e2d6"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="170%" height="170%"><feDropShadow dx="9" dy="21" stdDeviation="15" flood-color="#040608" flood-opacity=".46"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#background)"/>
+<path d="M0 0H1600V9H0z" fill="#dc263d"/>
+<g stroke="#ffffff" stroke-opacity=".035" stroke-width="1"><path d="M0 180H1600M0 360H1600M0 540H1600M0 720H1600"/><path d="M160 0V900M400 0V900M640 0V900M880 0V900M1120 0V900M1360 0V900"/></g>
+<g font-family="Arial,Helvetica,sans-serif">
+ <text x="86" y="112" font-size="20" font-weight="800" letter-spacing="5" fill="#ec6475">KERSIVO / INSIGHTS</text>
+ <text x="84" y="268" font-size="89" font-weight="900" letter-spacing="-3" fill="#f9f7f0">CASH TODAY.</text>
+ <text x="84" y="377" font-size="89" font-weight="900" letter-spacing="-3" fill="#f9f7f0">A CUT</text>
+ <text x="84" y="484" font-size="89" font-weight="900" letter-spacing="-3" fill="#f9f7f0">TOMORROW.</text>
+ <rect x="86" y="527" width="77" height="6" fill="#e53549"/>
+ <text x="86" y="604" font-size="30" fill="#d1d2d2">The real economics of gift vouchers</text>
+ <text x="86" y="649" font-size="30" fill="#d1d2d2">for independent barbershops.</text>
+ <text x="86" y="821" fill="#aeb6c1" font-size="18" letter-spacing="3.2" font-weight="800">THE BUSINESS BEHIND THE CHAIR</text>
+</g>
+<g transform="translate(1010 228) rotate(-6 232 218)" filter="url(#shadow)" font-family="Arial,Helvetica,sans-serif">
+ <rect width="478" height="426" rx="17" fill="url(#paper)"/>
+ <rect x="27" y="27" width="424" height="372" rx="8" fill="none" stroke="#bfb4a8" stroke-width="2"/>
+ <text x="53" y="83" font-size="19" letter-spacing="3.6" font-weight="800" fill="#b72a3b">EDITORIAL EXAMPLE</text>
+ <text x="51" y="164" font-size="52" font-weight="850" fill="#22252b">GIFT</text>
+ <text x="51" y="219" font-size="52" font-weight="850" fill="#22252b">VOUCHER</text>
+ <text x="53" y="323" font-size="103" font-weight="900" fill="#ae2338">£30</text>
+ <path d="M52 340H426" stroke="#c6bab0" stroke-width="2"/>
+ <text x="54" y="370" font-size="15" font-weight="700" fill="#5b6064" letter-spacing=".5">ILLUSTRATION ONLY / NOT REDEEMABLE</text>
+</g>
+</svg>
