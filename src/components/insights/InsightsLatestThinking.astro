@@ -1,0 +1,58 @@
+---
+interface Item {
+  id: string;
+  category: string;
+  format: string;
+  title: string;
+  excerpt: string;
+  readMinutes: number;
+  imageSrc: string;
+  imageAlt: string;
+}
+
+interface Props {
+  items: readonly Item[];
+}
+
+const { items } = Astro.props;
+---
+
+<section class="ins-latest" id="insights-latest" aria-labelledby="insights-latest-heading">
+  <div class="ins-latest__header">
+    <h2 id="insights-latest-heading" class="ins-latest__heading">Latest Thinking</h2>
+    <a class="ins-latest__archive" href="#insights-top">All Articles →</a>
+  </div>
+
+  <ul class="ins-latest__grid">
+    {
+      items.map((item) => (
+        <li class="ins-latest__item">
+          <article class="ins-latest__card">
+            <div class="ins-latest__media-wrap">
+              <img
+                class="ins-latest__media"
+                src={item.imageSrc}
+                alt={item.imageAlt}
+                width="640"
+                height="400"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <p class="ins-latest__meta">
+              <span class="ins-latest__cat">{item.category}</span>
+              <span class="ins-latest__sep" aria-hidden="true">/</span>
+              <span class="ins-latest__format">{item.format}</span>
+            </p>
+            <h3 class="ins-latest__title">{item.title}</h3>
+            <p class="ins-latest__excerpt">{item.excerpt}</p>
+            <p class="ins-latest__footer">
+              <span class="ins-latest__read">{item.readMinutes} MIN READ</span>
+              <span class="ins-latest__arrow" aria-hidden="true">→</span>
+            </p>
+          </article>
+        </li>
+      ))
+    }
+  </ul>
+</section>

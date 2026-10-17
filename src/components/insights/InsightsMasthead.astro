@@ -1,0 +1,63 @@
+---
+interface Props {
+  mark: string;
+  headlineLines: readonly string[];
+  lead: string;
+  statementLines: readonly string[];
+  audienceLines: readonly string[];
+}
+
+const { mark, headlineLines, lead, statementLines, audienceLines } = Astro.props;
+
+const lines = headlineLines.map((line, index) => {
+  const isLast = index === headlineLines.length - 1;
+  const cleaned = isLast && line.endsWith('.') ? line.slice(0, -1) : line;
+  return { text: cleaned, isLast };
+});
+---
+
+<header class="ins-masthead" aria-labelledby="insights-masthead-title">
+  <div class="ins-masthead__primary">
+    <div class="ins-masthead__mark-row">
+      <span class="ins-masthead__rule" aria-hidden="true"></span>
+      <p class="ins-masthead__mark">{mark}</p>
+    </div>
+
+    <h1 id="insights-masthead-title" class="ins-masthead__headline">
+      {
+        lines.map((line) =>
+          line.isLast ? (
+            <>
+              <span class="ins-masthead__line ins-masthead__line--keep">{line.text}</span><span class="ins-masthead__period" aria-hidden="true">.</span>
+            </>
+          ) : (
+            <>
+              <span class="ins-masthead__line">{line.text}</span>
+              <br />
+            </>
+          ),
+        )
+      }
+    </h1>
+
+    <p class="ins-masthead__lead">{lead}</p>
+  </div>
+
+  <aside class="ins-masthead__aside" aria-label="Publication statement">
+    <ul class="ins-masthead__statement">
+      {
+        statementLines.map((line) => (
+          <li class="ins-masthead__statement-line">{line}</li>
+        ))
+      }
+    </ul>
+    <hr class="ins-masthead__aside-rule" />
+    <p class="ins-masthead__audience">
+      {
+        audienceLines.map((line) => (
+          <span class="ins-masthead__audience-line">{line}</span>
+        ))
+      }
+    </p>
+  </aside>
+</header>

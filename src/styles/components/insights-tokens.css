@@ -1,0 +1,53 @@
+/**
+ * KERSIVO Insights — magazine tokens (visual polish).
+ */
+
+.insights-shell {
+  --ins-bg: var(--bg);
+  --ins-fg: var(--fg);
+  --ins-muted: var(--muted);
+  --ins-border: var(--border);
+  --ins-surface: var(--surface-1);
+  --ins-surface-2: var(--surface-2);
+  --ins-accent: var(--accent);
+  --ins-accent-text: var(--accent-text);
+  --ins-accent-hover: var(--accent-hover);
+  --ins-focus: var(--focus);
+
+  --ins-font-body: var(--font-body);
+  --ins-font-serif: "Newsreader", "Iowan Old Style", Palatino, Georgia, serif;
+  --ins-font-condensed: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+
+  /* Wide editorial container — Insights only */
+  --ins-outer-max: 105rem; /* 1680px */
+  --ins-frame-pad: clamp(1.5rem, 5vw, 4.5rem);
+  --ins-gutter-sm: 1rem;
+  --ins-rule: 1px solid color-mix(in srgb, var(--ins-border) 88%, transparent);
+  --ins-gap: 12px;
+  --ins-motion: 160ms ease;
+
+  /* Compact masthead H1 — wider, not taller */
+  --ins-masthead-h1: clamp(3rem, 4.4vw, 4.375rem); /* 48–70px */
+  --ins-lead: clamp(1rem, 1.05vw, 1.0625rem); /* ≥16px on mobile */
+  --ins-meta: 0.6875rem;
+  --ins-mosaic-h: clamp(20.5rem, 24.5vw, 23.5rem); /* ~328–376px after gutters */
+  --ins-topic-icon: 1.625rem; /* 26px */
+
+  color: var(--ins-fg);
+  background: var(--ins-bg);
+  font-family: var(--ins-font-body);
+}
+
+.insights-shell a:focus-visible,
+.insights-shell button:focus-visible {
+  outline: 2px solid var(--ins-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insights-shell *,
+  .insights-shell *::before,
+  .insights-shell *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

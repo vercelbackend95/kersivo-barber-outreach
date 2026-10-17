@@ -1,0 +1,110 @@
+---
+interface Dominant {
+  label: string;
+  titleLines: readonly string[];
+  deck: string;
+  cta: string;
+  imageSrc: string;
+  imageAlt: string;
+}
+
+interface Vertical {
+  category: string;
+  coverLines: readonly string[];
+  footer: string;
+  imageSrc: string;
+  imageAlt: string;
+}
+
+interface StackItem {
+  id: string;
+  category: string;
+  title: string;
+  imageSrc: string;
+  imageAlt: string;
+}
+
+interface Props {
+  dominant: Dominant;
+  vertical: Vertical;
+  stack: readonly StackItem[];
+}
+
+const { dominant, vertical, stack } = Astro.props;
+---
+
+<section class="ins-mosaic" aria-label="Featured stories">
+  <article class="ins-mosaic__dominant">
+    <img
+      class="ins-mosaic__media ins-mosaic__media--dominant"
+      src={dominant.imageSrc}
+      alt={dominant.imageAlt}
+      width="960"
+      height="720"
+      decoding="async"
+      fetchpriority="high"
+    />
+    <div class="ins-mosaic__dominant-scrim" aria-hidden="true"></div>
+    <div class="ins-mosaic__dominant-body">
+      <p class="ins-mosaic__label">{dominant.label}</p>
+      <h2 class="ins-mosaic__dominant-title">
+        {
+          dominant.titleLines.map((line, index) => (
+            <>
+              {line}
+              {index < dominant.titleLines.length - 1 ? <br /> : null}
+            </>
+          ))
+        }
+      </h2>
+      <p class="ins-mosaic__dominant-deck">{dominant.deck}</p>
+      <a class="ins-mosaic__cta" href="#insights-latest">{dominant.cta} →</a>
+    </div>
+  </article>
+
+  <article class="ins-mosaic__vertical" aria-label={vertical.category}>
+    <img
+      class="ins-mosaic__vertical-media"
+      src={vertical.imageSrc}
+      alt={vertical.imageAlt}
+      width="480"
+      height="720"
+      decoding="async"
+    />
+    <div class="ins-mosaic__vertical-scrim" aria-hidden="true"></div>
+    <p class="ins-mosaic__vertical-cat">{vertical.category}</p>
+    <p class="ins-mosaic__vertical-display">
+      {
+        vertical.coverLines.map((line) => (
+          <span class="ins-mosaic__vertical-line">{line}</span>
+        ))
+      }
+    </p>
+    <p class="ins-mosaic__vertical-footer">{vertical.footer}</p>
+    <span class="ins-mosaic__mark" aria-hidden="true">K</span>
+  </article>
+
+  <div class="ins-mosaic__stack">
+    {
+      stack.map((item) => (
+        <article class="ins-mosaic__stack-card">
+          <img
+            class="ins-mosaic__media ins-mosaic__media--stack"
+            src={item.imageSrc}
+            alt={item.imageAlt}
+            width="480"
+            height="320"
+            decoding="async"
+            loading="lazy"
+          />
+          <div class="ins-mosaic__stack-scrim" aria-hidden="true"></div>
+          <div class="ins-mosaic__stack-body">
+            <p class="ins-mosaic__stack-cat">{item.category}</p>
+            <h3 class="ins-mosaic__stack-title">{item.title}</h3>
+            <span class="ins-mosaic__arrow" aria-hidden="true">→</span>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>

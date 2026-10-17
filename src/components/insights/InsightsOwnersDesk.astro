@@ -1,0 +1,57 @@
+---
+interface Tool {
+  id: string;
+  number: string;
+  category: string;
+  title: string;
+  description: string;
+  cta: string;
+  href: string;
+}
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  lead: string;
+  tools: readonly Tool[];
+}
+
+const { eyebrow, heading, lead, tools } = Astro.props;
+---
+
+<section class="ins-desk" aria-labelledby="insights-owners-desk-heading">
+  <div class="ins-desk__intro">
+    <p class="ins-desk__eyebrow">{eyebrow}</p>
+    <h2 id="insights-owners-desk-heading" class="ins-desk__heading">{heading}</h2>
+    <p class="ins-desk__lead">{lead}</p>
+    <span class="ins-desk__accent" aria-hidden="true"></span>
+  </div>
+
+  <ul class="ins-desk__tools">
+    {
+      tools.map((tool) => (
+        <li class="ins-desk__tool">
+          <a class="ins-desk__link" href={tool.href}>
+            <span class="ins-desk__num" aria-hidden="true">
+              {tool.number}
+            </span>
+            <span class="ins-desk__body">
+              <p class="ins-desk__cat">
+                {tool.number} / {tool.category}
+              </p>
+              <h3 class="ins-desk__title">{tool.title}</h3>
+              <p class="ins-desk__desc">{tool.description}</p>
+              <span class="ins-desk__cta">
+                {tool.cta}
+                <span aria-hidden="true">→</span>
+              </span>
+            </span>
+            <span class="ins-desk__arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

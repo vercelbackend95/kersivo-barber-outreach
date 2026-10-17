@@ -87,6 +87,8 @@
     "@fontsource/bebas-neue": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/manrope": "^5.3.0",
+    "@fontsource/newsreader": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.1",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/astro": "^10.69.0",

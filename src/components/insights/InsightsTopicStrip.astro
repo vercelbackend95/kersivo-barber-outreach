@@ -1,0 +1,46 @@
+---
+type TopicIcon = 'chart' | 'calendar' | 'megaphone' | 'laptop' | 'people';
+
+interface Topic {
+  id: string;
+  name: string;
+  descriptor: string;
+  icon: TopicIcon;
+}
+
+interface Props {
+  topics: readonly Topic[];
+}
+
+const { topics } = Astro.props;
+
+const paths: Record<TopicIcon, string> = {
+  chart: 'M4 19V9M9 19V5M14 19v-7M19 19V8',
+  calendar: 'M7 3v2M17 3v2M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',
+  megaphone: 'M3 10v4l12 3V7L3 10zm12 0v4M17 9l3-1v8l-3-1',
+  laptop: 'M4 6h16v10H4V6zm-1 12h18',
+  people: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a5 5 0 0 1 10 0M11 20a5 5 0 0 1 10 0',
+};
+---
+
+<nav class="ins-topics" aria-label="Insights topics">
+  <ul class="ins-topics__list">
+    {
+      topics.map((topic) => (
+        <li class="ins-topics__item">
+          <div class="ins-topics__module" tabindex="0">
+            <span class="ins-topics__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.55">
+                <path d={paths[topic.icon]} stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="ins-topics__text">
+              <span class="ins-topics__name">{topic.name}</span>
+              <span class="ins-topics__desc">{topic.descriptor}</span>
+            </span>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

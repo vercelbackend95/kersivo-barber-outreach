@@ -1,0 +1,121 @@
+---
+/**
+ * GATE 1 — noindex magazine design preview (founder-approved reference).
+ * Not the live /insights hub. Fixtures live in gate1Preview.ts only.
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
+import InsightsFeatureMosaic from '@/components/insights/InsightsFeatureMosaic.astro';
+import InsightsTopicStrip from '@/components/insights/InsightsTopicStrip.astro';
+import InsightsLatestThinking from '@/components/insights/InsightsLatestThinking.astro';
+import InsightsOwnersDesk from '@/components/insights/InsightsOwnersDesk.astro';
+import {
+  GATE1_FEATURE_DOMINANT,
+  GATE1_FEATURE_STACK,
+  GATE1_FEATURE_VERTICAL,
+  GATE1_LATEST,
+  GATE1_MASTHEAD,
+  GATE1_OWNERS_DESK,
+  GATE1_PREVIEW_DESCRIPTION,
+  GATE1_PREVIEW_PATH,
+  GATE1_PREVIEW_TITLE,
+  GATE1_TOPICS,
+} from '@/lib/insights/gate1Preview';
+import {
+  FOOTER_LEGAL_LINKS,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/fonts-insights.css';
+import '@/styles/components/insights-tokens.css';
+import '@/styles/components/insights-gate1.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={GATE1_PREVIEW_TITLE}
+  description={GATE1_PREVIEW_DESCRIPTION}
+  canonicalPath={GATE1_PREVIEW_PATH}
+  noindex
+  robotsFollow
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/newsreader-latin-700-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/barlow-condensed-latin-800-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <main class="insights-shell landing-overflow-guard" id="insights-top">
+    <div class="ins-frame ins-page">
+      <InsightsMasthead
+        mark={GATE1_MASTHEAD.mark}
+        headlineLines={GATE1_MASTHEAD.headlineLines}
+        lead={GATE1_MASTHEAD.lead}
+        statementLines={GATE1_MASTHEAD.statementLines}
+        audienceLines={GATE1_MASTHEAD.audienceLines}
+      />
+
+      <InsightsFeatureMosaic
+        dominant={{
+          label: GATE1_FEATURE_DOMINANT.label,
+          titleLines: GATE1_FEATURE_DOMINANT.titleLines,
+          deck: GATE1_FEATURE_DOMINANT.deck,
+          cta: GATE1_FEATURE_DOMINANT.cta,
+          imageSrc: GATE1_FEATURE_DOMINANT.imageSrc,
+          imageAlt: GATE1_FEATURE_DOMINANT.imageAlt,
+        }}
+        vertical={{
+          category: GATE1_FEATURE_VERTICAL.category,
+          coverLines: GATE1_FEATURE_VERTICAL.coverLines,
+          footer: GATE1_FEATURE_VERTICAL.footer,
+          imageSrc: GATE1_FEATURE_VERTICAL.imageSrc,
+          imageAlt: GATE1_FEATURE_VERTICAL.imageAlt,
+        }}
+        stack={GATE1_FEATURE_STACK}
+      />
+
+      <InsightsTopicStrip topics={GATE1_TOPICS} />
+
+      <InsightsLatestThinking items={GATE1_LATEST} />
+
+      <InsightsOwnersDesk
+        eyebrow={GATE1_OWNERS_DESK.eyebrow}
+        heading={GATE1_OWNERS_DESK.heading}
+        lead={GATE1_OWNERS_DESK.lead}
+        tools={GATE1_OWNERS_DESK.tools}
+      />
+    </div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>
