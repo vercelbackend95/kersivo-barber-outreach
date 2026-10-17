@@ -38,38 +38,3 @@ Walk round the shop at the end of a busy day and look at three things: what's by
 5. HSE, Skin at work: health surveillance — [https://www.hse.gov.uk/skin/professional/health-surveillance.htm](https://www.hse.gov.uk/skin/professional/health-surveillance.htm)
 6. HSE, COSHH health surveillance — [https://www.hse.gov.uk/coshh/basics/surveillance.htm](https://www.hse.gov.uk/coshh/basics/surveillance.htm)
 7. HSE, RIDDOR reportable occupational diseases (occupational dermatitis) — [https://www.hse.gov.uk/RIDDOR/occupational-diseases.htm](https://www.hse.gov.uk/RIDDOR/occupational-diseases.htm)
----
-## Audit batch 2 resolution — 16 Oct 2026 (RES-0011 → v2)
-**Review result: PASS** (after the revisions below). Status remains Draft Ready for Review. Hold not set. Owner Approved, Final Approved and Published untouched.
-**Public category (text only):** Industry & People.
-### Independent ChatGPT audit (external findings, as received)
-- Add HSE health surveillance, distinguishing what is legally required from what is recommended.
-- RIDDOR: a written diagnosis is needed, and the work must involve relevant exposure.
-- Separate the duties of employers, self-employed barbers and premises operators; there's no one-size answer for chair rental.
-- Rework the £2,100 example with explicit assumptions, and distinguish contribution at risk from a proven loss.
-- Qualify the prevention-vs-loss comparison.
-### Grok internal QA (my own verification, separate from the audit)
-**Sources (fetched 16 Oct 2026):**
-- **HSE skin health surveillance:**
-	- "required" conditions: residual risk after controls; agent associated with an identifiable disease; reasonable likelihood; valid detection technique;
-	- situations listed include sensitisers, reliance on PPE, and wet work in hairdressers;
-	- higher level: baseline check, regular checks by a "responsible person" (often monthly), reporting instructions;
-	- lower level: e.g. an annual questionnaire.
-- **HSE COSHH surveillance:** necessary when there is a disease associated with the substance, it can be detected, and workplace conditions make it likely; results must be interpreted and acted on.
-- **HSE RIDDOR occupational diseases:**
-	- dermatitis is reportable where the work involves "significant or regular exposure to any chemical or biological skin irritant or sensitising agent";
-	- the diagnosis must come from a doctor;
-	- employees must provide it in writing;
-	- self-employed people need only a verbal diagnosis.
-**Changes:**
-- Skin-check section split into: good practice vs legally required surveillance; higher vs lower level; RIDDOR conditions with written/verbal diagnosis.
-- Responsibility section rewritten by arrangement:
-	- employer under COSHH;
-	- owner-operator, with the self-employed RIDDOR rule;
-	- renter is fact-dependent, with premises-controller duties for what the shop controls, and the risk of a renter actually being treated as an employee;
-	- no single statement for chair rental.
-**£2,100 (Python: 2 × 35 × 30 = 2,100):** the figure is unchanged, but it's now "contribution at risk". The stated assumptions are no cover, no recovered bookings, and £30/h contribution. A new paragraph explains why the actual loss could be lower or higher.
-**Prevention comparison:** "a small fraction … lopsided in a way few other shop decisions are" is replaced with a qualified statement. Precaution costs are stated generally, with no invented £ figure, and the comparison holds only if the controls actually reduce risk.
-**SEO:** title, meta and slug unchanged. Cannibalisation Low. Internal links: none.
-**Word count v2:** 1,407 (v1 1,150).
-**Property history:** Word Count 1150 → 1,407; Last Verified 2026-10-16. BP 46 unchanged. v1 preserved above.
