@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 710" role="img" aria-labelledby="title description">
+<title id="title">A small improvement in second-visit rate adds four returning clients per cohort</title>
+<desc id="description">From forty first-time clients, a fifty percent second-visit rate produces twenty returns while sixty percent produces twenty-four: four more second visits. This is hypothetical and is not a benchmark or prediction.</desc>
+<rect width="1200" height="710" fill="#171b20"/><rect width="1200" height="8" fill="#df2c44"/>
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="64" y="90" fill="#f2697b" font-size="19" font-weight="850" letter-spacing="4">KERSIVO INSIGHTS / CLIENTS &amp; GROWTH</text>
+<text x="64" y="158" fill="#faf7ef" font-size="51" font-weight="850" letter-spacing="-1.4">The second-visit difference.</text>
+<text x="64" y="207" fill="#bbc4ce" font-size="23">Hypothetical cohort of 40 first-time clients</text>
+<rect x="64" y="256" width="520" height="279" rx="14" fill="#2a3038"/>
+<rect x="616" y="256" width="520" height="279" rx="14" fill="#2a3038"/>
+<text x="94" y="306" fill="#c5ced4" font-size="23" font-weight="700">50% return rate</text>
+<text x="646" y="306" fill="#c5ced4" font-size="23" font-weight="700">60% return rate</text>
+<text x="94" y="421" fill="#fff8ee" font-size="101" font-weight="900">20</text>
+<text x="245" y="418" fill="#c1cad3" font-size="24">second visits</text>
+<text x="646" y="421" fill="#faf7ef" font-size="101" font-weight="900">24</text>
+<text x="799" y="418" fill="#c1cad3" font-size="24">second visits</text>
+<rect x="95" y="455" width="455" height="24" rx="5" fill="#434b56"/><rect x="95" y="455" width="228" height="24" rx="5" fill="#85919e"/>
+<rect x="647" y="455" width="455" height="24" rx="5" fill="#434b56"/><rect x="647" y="455" width="273" height="24" rx="5" fill="#e04759"/>
+<rect x="64" y="559" width="1072" height="103" rx="11" fill="#463039"/>
+<rect x="64" y="559" width="8" height="103" rx="3" fill="#ef6374"/>
+<text x="91" y="604" fill="#f6e9e8" font-size="32" font-weight="850">+4 returning clients</text>
+<text x="532" y="604" fill="#e1c6cb" font-size="24">from the same 40 first visits</text>
+<text x="65" y="693" fill="#9eabb7" font-size="17">Illustrative arithmetic only. Count returns after each client's full observation window.</text>
+</g></svg>
