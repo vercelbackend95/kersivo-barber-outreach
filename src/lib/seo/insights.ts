@@ -135,12 +135,29 @@ export const INSIGHTS_BARBERS_HANDS = {
   ogImageAlt: "A barber's hands working with scissors and a comb",
 } as const;
 
+export const INSIGHTS_SECOND_VISIT = {
+  slug: 'barbershop-client-retention-second-visit',
+  path: '/insights/barbershop-client-retention-second-visit',
+  headline: "The Second Visit: Why a Barbershop's Growth Is Decided After the First Haircut",
+  seoTitle: 'Barbershop Client Retention: Why the Second Visit Matters',
+  description: 'A barbershop grows when first-time clients come back. Three numbers to track, simple ways to lift rebooking, and the UK rules on reminder messages.',
+  categoryId: 'clients-growth' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8171a198c0ca613b14e0',
+  lead: 'Learn to measure first-to-second visit retention, improve rebooking habits and distinguish service reminders from marketing texts.',
+  heroImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=2400',
+  ogImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
+} as const;
+
 /**
  * Single source of publication for owner-approved Insights articles.
  * Sitemap, hub cards and indexability must derive from this list only.
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
   INSIGHTS_HAIRCUT_PRICING,
