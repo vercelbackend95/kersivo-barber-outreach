@@ -1,0 +1,35 @@
+---
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as HaircutPricingArticle } from '../../../editorial-staging/insights/how-to-price-haircut-uk-barber-display.md';
+
+/**
+ * PREVIEW ONLY: Notion ARTICLE DRAFT v2, Research/Writing Approved, no Hold.
+ * Owner publication approval is pending. Keep noindex, and do not modify the
+ * public Insights homepage, published-article registry, sitemap or Notion status.
+ */
+const article = {
+  headline: 'How to Price a Haircut in the UK: A Floor, a Ceiling and the Price List In Between',
+  seoTitle: "How to Price a Haircut in the UK: A Barber's Method",
+  description: 'Set haircut prices from your real cost per minute and the local range, test a price rise with break-even maths, and show prices the way UK law expects.',
+  slug: 'how-to-price-haircut-uk-barber',
+  category: 'Business & Revenue',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda817688dee88a79cd9d00',
+  heroImage: 'https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  category={article.category}
+  dateLabel="EDITORIAL PREVIEW · 17 October 2026"
+  sourceUrl={article.notionUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  coverImageAlt="Vintage barber chairs and mirrors in an old-fashioned barbershop"
+  verifiedDate="2026-10-16"
+  publishedDate="2026-10-17"
+  published={false}
+>
+  <HaircutPricingArticle />
+</InsightsArticleLayout>
