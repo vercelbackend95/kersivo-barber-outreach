@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barber-commission-pay-minimum-wage-uk.md",
+  "output": "editorial-staging/insights/barber-commission-pay-minimum-wage-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d",
+  "status": "Draft Ready for Review; Research Approved; Writing Approved; no Hold; owner final publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Commission Pay for Barbers: UK Minimum Wage Rules (2026)",
+    "description": "Commission-only or a base plus percentage? Check UK minimum wage rates, hours and pay reference periods for employed barbers — with a worked £2,198.83 example.",
+    "slug": "barber-commission-pay-minimum-wage-uk",
+    "categoryId": "industry-people",
+    "category": "Industry & People",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage",
+      "src": "https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Barber at work with a client seated in a Doncaster UK hair salon",
+      "caption": "Editorial barbering photograph from Doncaster; the person pictured is not a KERSIVO employee or customer",
+      "credit": "Osama Madlom / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI",
+      "rights": "Verified 2026-10-17 original Unsplash listing: creator Osama Madlom, UK Doncaster 2 August 2024, Download free, Unsplash License permitting commercial editorial website usage. Do not imply subject, barber or business endorses KERSIVO. Any separate model/property releases unverified.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "The arrangement that looked generous in December is unlawful in January unless the shop tops it up.",
+      "src": "/images/insights/commission-pay/commission-floor.svg",
+      "width": 1200,
+      "height": 770,
+      "alt": "Illustrative months on forty percent commission: £2600 requires no top-up, £2000 requires £198.83, £1400 requires £798.83 to meet 2026 minimum-wage floor",
+      "caption": "Illustrative commission example for a 21+ worker and 173 qualifying hours; actual payroll must use the correct legal rules and working hours",
+      "rights": "Original KERSIVO-authored SVG. Numbers copied from approved Notion ARTICLE DRAFT v2 and rechecked against UK 2026 rate of £12.71/hour (GOV.UK).",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "## Structures that hold up",
+      "src": "https://images.unsplash.com/photo-1702865272115-5afdbae975af?auto=format&fit=crop&fm=jpg&q=75&w=2000",
+      "width": 1600,
+      "height": 1000,
+      "alt": "An empty barber's chair positioned in front of a mirror inside a barbershop",
+      "caption": "Barbershop interior for editorial illustration, not a KERSIVO customer location",
+      "credit": "Redd Francisco / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-barber-shop-with-a-chair-and-a-mirror-BBGyxhtPpC0",
+      "rights": "Original Unsplash photo page checked 2026-10-17: Redd Francisco, 18 December 2023, Download free, Unsplash License permitting commercial editorial use. No recognisable people in the stated image.",
+      "licenceReviewed": true
+    }
+  ]
+}
