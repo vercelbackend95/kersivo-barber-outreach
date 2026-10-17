@@ -55,6 +55,20 @@ export const INSIGHTS_CARD_FEES = {
   heroImage: '/images/insights/card-fees/card-fees-hero.svg',
 } as const;
 
+export const INSIGHTS_GIFT_VOUCHERS = {
+  slug: 'barbershop-gift-vouchers-uk',
+  path: '/insights/barbershop-gift-vouchers-uk',
+  headline: 'Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March',
+  seoTitle: 'Barbershop Gift Vouchers: Expiry Rules, VAT and Real Value',
+  description: 'Gift vouchers bring cash in December but you still owe the haircut. UK expiry rules, VAT on single-purpose vouchers, and how to tell if they make money.',
+  category: 'Business & Revenue',
+  publishedDate: '2026-10-17',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda817c8479e203928f3cba',
+  lead: 'Cash in today is not always earned revenue. Understand the true cost of gift vouchers, UK expiry terms and VAT rules.',
+  heroImage: '/images/insights/gift-vouchers/voucher-hero.svg',
+} as const;
+
 export function buildInsightsBreadcrumbs(article?: { path: string; headline: string }) {
   const items = [
     { '@type': 'ListItem', position: 1, name: 'KERSIVO', item: buildAbsoluteUrl('/') },
@@ -79,23 +93,29 @@ export function buildInsightsIndexJsonLd() {
       isPartOf: { '@id': buildAbsoluteUrl('/') + '#website' },
       mainEntity: {
         '@type': 'ItemList',
-        numberOfItems: 3,
+        numberOfItems: 4,
         itemListElement: [
           {
             '@type': 'ListItem',
             position: 1,
+            name: INSIGHTS_GIFT_VOUCHERS.headline,
+            url: buildAbsoluteUrl(INSIGHTS_GIFT_VOUCHERS.path),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
             name: INSIGHTS_CARD_FEES.headline,
             url: buildAbsoluteUrl(INSIGHTS_CARD_FEES.path),
           },
           {
             '@type': 'ListItem',
-            position: 2,
+            position: 3,
             name: INSIGHTS_LOCAL_CLIENTS.headline,
             url: buildAbsoluteUrl(INSIGHTS_LOCAL_CLIENTS.path),
           },
           {
             '@type': 'ListItem',
-            position: 3,
+            position: 4,
             name: INSIGHTS_GOOGLE_REVIEWS.headline,
             url: buildAbsoluteUrl(INSIGHTS_GOOGLE_REVIEWS.path),
           },
