@@ -8,7 +8,7 @@ import {
   GATE1_OWNERS_DESK,
   GATE1_TOPICS,
 } from '@/lib/insights/gate1Preview';
-import { INSIGHTS_GOOGLE_REVIEWS } from '@/lib/seo/insights';
+import { INSIGHTS_GOOGLE_REVIEWS, INSIGHTS_LOCAL_CLIENTS } from '@/lib/seo/insights';
 
 const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
@@ -57,6 +57,17 @@ export const INSIGHTS_HOME_FEATURE_STACK = [
 
 /** Latest Thinking — published articles only. */
 export const INSIGHTS_HOME_LATEST = [
+  {
+    id: INSIGHTS_LOCAL_CLIENTS.slug,
+    category: INSIGHTS_LOCAL_CLIENTS.category,
+    format: 'Guide',
+    title: INSIGHTS_LOCAL_CLIENTS.headline,
+    excerpt: INSIGHTS_LOCAL_CLIENTS.lead,
+    readMinutes: 10,
+    imageSrc: INSIGHTS_LOCAL_CLIENTS.heroImage,
+    imageAlt: 'Empty barbershop with vintage leather barber chairs and mirrors',
+    href: INSIGHTS_LOCAL_CLIENTS.path,
+  },
   {
     id: reviews.slug,
     category: reviews.category,
