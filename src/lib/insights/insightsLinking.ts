@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_BARBERS_HANDS,
   INSIGHTS_DECEMBER_HOURS,
   INSIGHTS_HAIRCUT_PRICING,
   INSIGHTS_GIFT_VOUCHERS,
@@ -26,6 +27,18 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_BARBERS_HANDS.slug]: [
+    {
+      href: INSIGHTS_DECEMBER_HOURS.path,
+      label: "Working longer hours? Run the extra-hour test before changing shifts",
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'Understand the business costs behind each haircut',
+      kind: 'article',
+    },
+  ],
   [INSIGHTS_DECEMBER_HOURS.slug]: [
     {
       href: INSIGHTS_HAIRCUT_PRICING.path,
