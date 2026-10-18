@@ -1,0 +1,32 @@
+---
+/** Editorial preview only; not in the public Insights registry or sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as RatesArticle } from '../../../../editorial-staging/insights/barbershop-business-rates-2026-england-display.md';
+const article = {
+  slug: 'barbershop-business-rates-2026-england',
+  headline: 'Lower Rates, Higher Bill? What the 2026 Business Rates Changes Mean for Barbershops in England',
+  seoTitle: 'Barbershop Business Rates 2026: Three Checks for Owners',
+  description: 'The 2026 business rates changes cut the multiplier for barbershops in England, yet some bills rose. What changed, why, and three checks worth making.',
+  categoryId: 'business-profit' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda81a89758c88641f937c9',
+  heroImage: 'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage: 'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 18 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="Independent Liverpool barbershop storefront photographed by Phil Evenden"
+  publishedDate="2026-10-18"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <RatesArticle />
+</InsightsArticleLayout>
