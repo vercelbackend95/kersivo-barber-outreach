@@ -1,0 +1,32 @@
+---
+/** Editorial Preview only. Not included in published registry or sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as LoyaltyArticle } from '../../../../editorial-staging/insights/barbershop-loyalty-scheme-uk-display.md';
+const story = {
+ slug: 'barbershop-loyalty-scheme-uk',
+ headline: 'Barbershop Loyalty Schemes: Who Are You Rewarding, and What Does It Buy?',
+ seoTitle: 'Barbershop Loyalty Schemes: Do Stamp Cards Pay? (UK)',
+ description: "A free tenth cut costs about 10% of a regular's spend. How to work out whether a barbershop loyalty scheme pays, the UK rules on 'free', and a better design.",
+ categoryId: 'clients-growth' as const,
+ sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda81cd91c8ef0c600aa094',
+ heroImage: 'https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&fit=crop&fm=jpg&q=80&w=2200',
+ ogImage: 'https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+ title={story.seoTitle}
+ description={story.description}
+ slug={story.slug}
+ categoryId={story.categoryId}
+ dateLabel="EDITORIAL PREVIEW · 18 October 2026"
+ sourceUrl={story.sourceUrl}
+ headline={story.headline}
+ heroImage={story.heroImage}
+ ogImage={story.ogImage}
+ ogImageAlt="A real Aldershot barbershop interior photographed at night by Bruce Barrow"
+ publishedDate="2026-10-18"
+ verifiedDate="2026-10-16"
+ published={false}
+>
+ <LoyaltyArticle />
+</InsightsArticleLayout>

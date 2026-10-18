@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-loyalty-scheme-uk.md",
+  "output": "editorial-staging/insights/barbershop-loyalty-scheme-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81cd91c8ef0c600aa094",
+  "status": "Draft Ready for Review; approved research and writing; no Hold; awaiting owner publication approval",
+  "publishApproved": false,
+  "seo": {
+    "title": "Barbershop Loyalty Schemes: Do Stamp Cards Pay? (UK)",
+    "description": "A free tenth cut costs about 10% of a regular's spend. How to work out whether a barbershop loyalty scheme pays, the UK rules on \"free\", and a better design.",
+    "slug": "barbershop-loyalty-scheme-uk",
+    "categoryId": "clients-growth",
+    "category": "Clients & Growth",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Barbershop Loyalty Schemes: Who Are You Rewarding, and What Does It Buy?",
+      "src": "https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&fit=crop&fm=jpg&q=80&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "People having their hair cut inside a real barbershop in Aldershot, England, at night",
+      "caption": "A real barbershop in Aldershot, UK. Editorial context only: no claim of KERSIVO use or participation in any loyalty programme",
+      "credit": "Bruce Barrow / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU",
+      "rights": "Photo by Bruce Barrow, original https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU, explicitly Aldershot, England, UK; Unsplash listing dated 17 Jan 2026 and Free to use under https://unsplash.com/license for editorial/commercial website reuse. Individual photo subject/model, premises or trademark consents were not separately verified; no KERSIVO endorsement or product association implied.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "If the shop is full when the free cut is redeemed, it can also push out a paying client",
+      "src": "/images/insights/loyalty-schemes/free-cut-cost.svg",
+      "width": 1200,
+      "height": 710,
+      "alt": "Conditional free haircut costs in a hypothetical barbershop: a paid visit displaced costs about £22; a truly incremental visit in an empty slot costs about £3 in variable expenses",
+      "caption": "Hypothetical example from the article, assuming a £22 cut and approximately £3 variable cost. Actual impact depends on whether a paid booking is displaced",
+      "rights": "Original KERSIVO SVG based on Notion ARTICLE DRAFT v2, no external graphics. The £22 and £3 amounts are alternative counterfactuals, not real performance benchmarks.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Every extra visit the card brings also earns a stamp, so it's worth £16.80 on average",
+      "src": "/images/insights/loyalty-schemes/loyalty-break-even.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Hypothetical barbershop loyalty scheme contribution: ten paid visits yield £190, nine paid visits and one free yield £168; approximately 13.1 percent more total visits are required to break even",
+      "caption": "Illustrative cycle-average economics: ten full-price visits vs nine paid plus one free; around 13.1% more total visits needed to match £190 contribution",
+      "rights": "Original KERSIVO SVG; numbers from Notion ARTICLE DRAFT v2: 10 × £19 = £190, 9 × £22 − 10 × £3 = £168, £190 ÷ £16.80 = 11.31 visits. Assumes averages over full stamp cycles, not a discrete annual forecast.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "Some owners will find this approach too calculating.",
+      "src": "https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=80&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "A customer sits in a real barbershop in Doncaster, England",
+      "caption": "A genuine Doncaster barbershop photographed by Osama Madlom. Editorial context only; not a KERSIVO customer testimonial",
+      "credit": "Osama Madlom / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI",
+      "rights": "Unsplash photo by Osama Madlom, original https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI, tagged Doncaster, England, UK, dated 2 Aug 2024; free commercially reusable under Unsplash License https://unsplash.com/license. No separate personal-model, private premises or branding clearances verified; contextual editorial use only, not endorsement or claim of participation in loyalty schemes.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026. Source copy kept, H1 marker and heading levels only structurally normalised.",
+  "editorialVisualDirection": "Two real UK barbering photos from Aldershot and Doncaster with individually verified source pages and commercial licences. Two original KERSIVO hypothetical finance explainers without third-party logos or invented testimonials."
+}
