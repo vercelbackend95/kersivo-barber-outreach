@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" role="img" aria-labelledby="title desc">
+<title id="title">Three ways to run a barbershop diary</title><desc id="desc">Walk-ins only, appointments only and hybrid are compared in terms of when each tends to fit and the operational risk it creates. All approaches depend on the shop's actual client demand and staff capacity.</desc>
+<rect width="1200" height="730" rx="24" fill="#131416"/>
+<text x="55" y="57" fill="#ff3737" font-family="Arial,sans-serif" font-size="17" font-weight="750" letter-spacing="3">KERSIVO INSIGHTS / SHOP OPERATIONS</text>
+<text x="55" y="126" font-family="Arial,sans-serif" fill="#fff" font-weight="750" font-size="49">There is no single right booking model.</text>
+<text x="55" y="170" font-family="Arial,sans-serif" fill="#b8bdc1" font-size="21">Match the rule to your client demand and barber capacity.</text>
+<rect x="54" y="215" width="348" height="390" fill="#f6f5f1" rx="18"/>
+<rect x="426" y="215" width="348" height="390" fill="#f6f5f1" rx="18"/>
+<rect x="798" y="215" width="348" height="390" fill="#f6f5f1" rx="18"/>
+<rect x="54" y="215" width="348" height="10" rx="5" fill="#666e74"/>
+<rect x="426" y="215" width="348" height="10" rx="5" fill="#aa9a7d"/>
+<rect x="798" y="215" width="348" height="10" rx="5" fill="#e02d33"/>
+<text x="80" y="278" font-family="Arial,sans-serif" fill="#17191c" font-size="27" font-weight="750">WALK-INS</text>
+<text x="452" y="278" font-family="Arial,sans-serif" fill="#17191c" font-size="27" font-weight="750">APPOINTMENTS</text>
+<text x="824" y="278" font-family="Arial,sans-serif" fill="#17191c" font-size="27" font-weight="750">HYBRID</text>
+<text x="80" y="316" font-family="Arial,sans-serif" fill="#555c61" font-size="17" font-weight="700">TENDS TO FIT</text>
+<text x="80" y="349" font-family="Arial,sans-serif" fill="#23272c" font-size="19">High footfall, similar cuts,</text>
+<text x="80" y="375" font-family="Arial,sans-serif" fill="#23272c" font-size="19">spare peak capacity</text>
+<text x="452" y="316" font-family="Arial,sans-serif" fill="#555c61" font-size="17" font-weight="700">TENDS TO FIT</text>
+<text x="452" y="349" font-family="Arial,sans-serif" fill="#23272c" font-size="19">Long or varied services,</text>
+<text x="452" y="375" font-family="Arial,sans-serif" fill="#23272c" font-size="19">barbers with regulars</text>
+<text x="824" y="316" font-family="Arial,sans-serif" fill="#555c61" font-size="17" font-weight="700">TENDS TO FIT</text>
+<text x="824" y="349" font-family="Arial,sans-serif" fill="#23272c" font-size="19">Shops needing walk-in</text>
+<text x="824" y="375" font-family="Arial,sans-serif" fill="#23272c" font-size="19">and prebooked time</text>
+<line x1="80" y1="414" x2="376" y2="414" stroke="#d4d1cb"/>
+<line x1="452" y1="414" x2="748" y2="414" stroke="#d4d1cb"/>
+<line x1="824" y1="414" x2="1120" y2="414" stroke="#d4d1cb"/>
+<text x="80" y="457" font-family="Arial,sans-serif" fill="#9d2932" font-size="17" font-weight="700">WATCH OUT FOR</text>
+<text x="80" y="493" font-family="Arial,sans-serif" fill="#23272c" font-size="19">Queues, walk-aways</text>
+<text x="80" y="519" font-family="Arial,sans-serif" fill="#23272c" font-size="19">at peak times</text>
+<text x="452" y="457" font-family="Arial,sans-serif" fill="#9d2932" font-size="17" font-weight="700">WATCH OUT FOR</text>
+<text x="452" y="493" font-family="Arial,sans-serif" fill="#23272c" font-size="19">No-shows, gaps and</text>
+<text x="452" y="519" font-family="Arial,sans-serif" fill="#23272c" font-size="19">missed spontaneous cuts</text>
+<text x="824" y="457" font-family="Arial,sans-serif" fill="#9d2932" font-size="17" font-weight="700">WATCH OUT FOR</text>
+<text x="824" y="493" font-family="Arial,sans-serif" fill="#23272c" font-size="19">Confusing chair rules</text>
+<text x="824" y="519" font-family="Arial,sans-serif" fill="#23272c" font-size="19">and mixed expectations</text>
+<text x="54" y="660" font-family="Arial,sans-serif" fill="#fff" font-size="23" font-weight="700">THE TEST:</text>
+<text x="175" y="660" font-family="Arial,sans-serif" fill="#cbd0d3" font-size="21">Measure walk-aways and unused diary time for two weeks.</text>
+<text x="54" y="702" font-family="Arial,sans-serif" fill="#92999e" font-size="17">Illustrative operating models, not a ranking or a claim about any photographed shop.</text>
+</svg>

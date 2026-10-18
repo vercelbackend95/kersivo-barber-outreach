@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
@@ -31,6 +32,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_WALK_INS.slug]: [
+    {
+      href: INSIGHTS_BOOKING_LINK.path,
+      label: 'Where does your Google booking button send people?',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'How online booking works for barbershops',
+      kind: 'guide',
+    },
+    {
+      href: INSIGHTS_SECOND_VISIT.path,
+      label: 'Why the second visit matters to a barbershop',
+      kind: 'article',
+    },
+  ],
   [INSIGHTS_BOOKING_LINK.slug]: [
     {
       href: INSIGHTS_WEBSITE_NEED.path,

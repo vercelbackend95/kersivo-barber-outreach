@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_WALK_INS = {
+  slug: 'barbershop-walk-ins-vs-appointments',
+  path: '/insights/barbershop-walk-ins-vs-appointments',
+  headline: 'Walk-Ins or Appointments? What the Queue Is Telling a Barbershop Owner',
+  seoTitle: "Walk-Ins or Appointments? A Barbershop Owner's Guide",
+  description:
+    'Why barbershop waiting times grow so fast as the shop gets busy, what walk-aways and empty slots really cost, and how to choose walk-ins, bookings or both.',
+  categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-18',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda812e94a2f3175f1f1da4',
+  lead: 'When a barbershop gets busier, queues and lost capacity do not rise evenly. Compare walk-ins, appointments and hybrid with a two-week owner audit.',
+  heroImage:
+    'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=78&w=2200',
+  ogImage:
+    'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImageAlt: 'People inside a barbershop in Manchester, UK, photographed by beth d',
+} as const;
+
 export const INSIGHTS_BOOKING_LINK = {
   slug: 'google-business-profile-booking-link-barbershop',
   path: '/insights/google-business-profile-booking-link-barbershop',
@@ -209,6 +228,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
