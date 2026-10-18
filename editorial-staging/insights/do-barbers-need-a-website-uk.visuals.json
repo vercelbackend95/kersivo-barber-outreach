@@ -17,14 +17,14 @@
     {
       "kind": "hero",
       "anchor": "# Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google",
-      "src": "https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=2400",
       "width": 1600,
       "height": 1000,
-      "alt": "Classic red barber chair in a real London hair salon, photographed by Jennifer Latham",
-      "caption": "Real barber chair photographed in London, England. Editorial image; this is not a KERSIVO customer or installation",
-      "credit": "Jennifer Latham / Pexels",
-      "creditUrl": "https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/",
-      "rights": "Pexels photo #9703068 by Jennifer Latham. Original Pexels page explicitly specifies London, England, United Kingdom and Free to use. Pexels License permits editorial commercial website use: https://www.pexels.com/legal-pages/license/. Image CDN path follows standard Pexels photo-ID pattern; final image loading and crop must be checked visually before publication. No third-party affiliation implied.",
+      "alt": "A barbershop storefront with warm lighting and neon details in Manchester, England",
+      "caption": "Barbershop frontage photographed in Manchester, England. Editorial imagery; the business is not affiliated with KERSIVO",
+      "credit": "Aldrich / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/",
+      "rights": "Pexels photo #5464697 by Aldrich. Original photo listing https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/ confirms Manchester, England, United Kingdom, licence Free, and original dimensions 5645 x 3763. Pexels License https://www.pexels.com/license/ permits commercial/editorial website and blog usage, including crops; credit is voluntarily provided. This is editorial photography of a real barbershop setting, not an endorsement, KERSIVO customer, or product installation. Identifiable trade marks, property ownership and any property/model releases were not independently cleared by KERSIVO; avoid implying sponsorship or association.",
       "licenceReviewed": true
     },
     {
@@ -63,5 +63,5 @@
       "licenceReviewed": true
     }
   ],
-  "editorialVisualDirection": "UK-first. These two photographic subjects have source-confirmed London locations and replace imagery lacking UK provenance. Select authentic UK premises, streets, craft and people; nationality/ethnicity must not be inferred from appearance. Other sources such as Pexels, Wikimedia Commons and direct photographer licences are welcome once separately cleared."
+  "editorialVisualDirection": "UK-first photography with individually source-confirmed provenance: barbershop frontage in Manchester (Aldrich/Pexels), genuine barbering scene in London (Bence Szemerey/Pexels). Editorial use only, with no KERSIVO customer or third-party endorsement implied. Original Pexels pages and licence details recorded for both photographs. SVG diagrams remain independent KERSIVO illustrations."
 }

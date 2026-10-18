@@ -1,7 +1,7 @@
 # Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Classic red barber chair in a real London hair salon, photographed by Jennifer Latham" />
-<figcaption>Real barber chair photographed in London, England. Editorial image; this is not a KERSIVO customer or installation — <a href="https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/" target="_blank" rel="noopener noreferrer">Jennifer Latham / Pexels</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="A barbershop storefront with warm lighting and neon details in Manchester, England" />
+<figcaption>Barbershop frontage photographed in Manchester, England. Editorial imagery; the business is not affiliated with KERSIVO — <a href="https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/" target="_blank" rel="noopener noreferrer">Aldrich / Pexels</a>.</figcaption></figure>
 
 "Do I need a website?" is one of the most common questions barbershop owners ask, and the answers online are almost all yes. Many of them are written by people who sell websites, and so is this one: KERSIVO sells booking software and websites for barbershops. That's a good reason to work through the question yourself rather than take anyone's word for it, ours included.
 
