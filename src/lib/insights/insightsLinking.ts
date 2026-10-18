@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
@@ -32,6 +33,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_BUSY_DIARY.slug]: [
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'Price each haircut from your real cost floor',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_WALK_INS.path,
+      label: 'Walk-ins or appointments: what your queue is telling you',
+      kind: 'article',
+    },
+    {
+      href: '/barber-software-cost-calculator',
+      label: 'Compare your booking software overhead',
+      kind: 'tool',
+    },
+  ],
   [INSIGHTS_WALK_INS.slug]: [
     {
       href: INSIGHTS_BOOKING_LINK.path,

@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_BUSY_DIARY = {
+  slug: 'busy-barbershop-low-profit-chair-hour',
+  path: '/insights/busy-barbershop-low-profit-chair-hour',
+  headline: "Your Diary Is Full. So Why Isn't Your Barbershop Making More Money?",
+  seoTitle: 'Busy Barbershop, Low Profit? Measure Earnings per Chair-Hour',
+  description:
+    "A full diary isn't the same as a profitable one. How UK barbershop owners can work out what each chair-hour earns, by service, and what to change.",
+  categoryId: 'business-profit' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-18',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda812092c2c2eed8ea914d',
+  lead: 'Why a full appointment diary can hide low contribution per chair-hour, and how service mix and unsold minutes change the result.',
+  heroImage:
+    'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=78&w=2200',
+  ogImage:
+    'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImageAlt: 'An Edinburgh barbershop worker cleaning the floor, photographed by Bruno BD',
+} as const;
+
 export const INSIGHTS_WALK_INS = {
   slug: 'barbershop-walk-ins-vs-appointments',
   path: '/insights/barbershop-walk-ins-vs-appointments',
@@ -228,6 +247,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
