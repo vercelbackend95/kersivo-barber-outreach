@@ -151,6 +151,23 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_WEBSITE_NEED = {
+  slug: 'do-barbers-need-a-website-uk',
+  path: '/insights/do-barbers-need-a-website-uk',
+  headline: 'Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google',
+  seoTitle: 'Do Barbers Need a Website? An Honest UK Test',
+  description:
+    "Some barbershops don't need a website. A four-question test, what Google and Instagram already cover, and the UK rules on prices and company details online.",
+  categoryId: 'tools-payments' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-18',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502',
+  lead: 'A four-question test for UK barbershops deciding whether Google, Instagram and a booking page already do enough.',
+  heroImage: 'https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage: 'https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  ogImageAlt: 'Barbershop frontage with warm lights and neon signage in Manchester, England',
+} as const;
+
 export const INSIGHTS_COMMISSION_PAY = {
   slug: 'barber-commission-pay-minimum-wage-uk',
   path: '/insights/barber-commission-pay-minimum-wage-uk',
@@ -173,6 +190,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,

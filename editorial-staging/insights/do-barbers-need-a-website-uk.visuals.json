@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/do-barbers-need-a-website-uk.md",
+  "output": "editorial-staging/insights/do-barbers-need-a-website-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502",
+  "status": "Approved for publication — owner confirmation 2026-10-18",
+  "publishApproved": true,
+  "seo": {
+    "title": "Do Barbers Need a Website? An Honest UK Test",
+    "description": "Some barbershops don't need a website. A four-question test, what Google and Instagram already cover, and the UK rules on prices and company details online.",
+    "slug": "do-barbers-need-a-website-uk",
+    "categoryId": "tools-payments",
+    "category": "Tools & Payments",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google",
+      "src": "https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "A barbershop storefront with warm lighting and neon details in Manchester, England",
+      "caption": "Barbershop frontage photographed in Manchester, England. Editorial imagery; the business is not affiliated with KERSIVO",
+      "credit": "Aldrich / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/",
+      "rights": "Pexels photo #5464697 by Aldrich. Original photo listing https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/ confirms Manchester, England, United Kingdom, licence Free, and original dimensions 5645 x 3763. Pexels License https://www.pexels.com/license/ permits commercial/editorial website and blog usage, including crops; credit is voluntarily provided. This is editorial photography of a real barbershop setting, not an endorsement, KERSIVO customer, or product installation. Identifiable trade marks, property ownership and any property/model releases were not independently cleared by KERSIVO; avoid implying sponsorship or association.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**4. Booking without a middleman's shop window.** A client who finds you on a marketplace app is browsing a list of your competitors.",
+      "src": "/images/insights/do-barbers-need-website/platform-vs-owned-page.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Comparison of three online channels: Google for discovery, Instagram for portfolio, a shop-owned website or booking page for prices, availability and policies",
+      "caption": "Illustrative comparison of channel roles from the article; capabilities vary by provider and configuration",
+      "rights": "Original KERSIVO SVG authored for this article; based on approved Notion ARTICLE DRAFT v2, no third-party artwork.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "This is a rule of thumb, not a scoring system. It's a quick way to see whether a website would do a job you actually need done.",
+      "src": "https://images.pexels.com/photos/7192863/pexels-photo-7192863.jpeg?auto=compress&cs=tinysrgb&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Stylist attending an older client in a traditional barbershop in London, England",
+      "caption": "Traditional barbershop in London, England, photographed for editorial context; no KERSIVO affiliation is claimed",
+      "credit": "Bence Szemerey / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/elderly-man-sitting-in-the-chair-with-blue-apron-in-barbershop-7192863/",
+      "rights": "Pexels photo #7192863 by Bence Szemerey. Original photo listing describes a traditional barbershop and confirms London, England, UK. Free to use under Pexels License: https://www.pexels.com/legal-pages/license/. No endorsement by photographed business or people; third-party model/property releases not independently verified. Standard Pexels photo-CDN URL should be visually checked for availability on Preview before publication.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Illustratively: a site costing £240 a year, a cut that leaves £16 of contribution",
+      "src": "/images/insights/do-barbers-need-website/website-break-even.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Example break-even website calculation: £240 annual cost divided by £16 contribution per cut, 10.4 annual visits and half-year retention equals approximately 2.9 genuinely additional regular clients",
+      "caption": "Illustrative numbers taken from the article; your own costs and genuinely additional bookings determine the real result",
+      "rights": "Original KERSIVO SVG from worked hypothetical figures in ARTICLE DRAFT v2; not a market benchmark or forecast.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVisualDirection": "UK-first photography with individually source-confirmed provenance: barbershop frontage in Manchester (Aldrich/Pexels), genuine barbering scene in London (Bence Szemerey/Pexels). Editorial use only, with no KERSIVO customer or third-party endorsement implied. Original Pexels pages and licence details recorded for both photographs. SVG diagrams remain independent KERSIVO illustrations.",
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-18",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502",
+    "note": "Owner approved the photographic Preview for production in this conversation on 18 October 2026."
+  }
+}

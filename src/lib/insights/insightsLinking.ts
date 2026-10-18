@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
   INSIGHTS_BARBERS_HANDS,
@@ -29,6 +30,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_WEBSITE_NEED.slug]: [
+    {
+      href: INSIGHTS_GOOGLE_REVIEWS.path,
+      label: 'What UK barbershops should know about Google Reviews',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_LOCAL_CLIENTS.path,
+      label: 'A practical guide to winning more local barbershop clients',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-websites',
+      label: 'Explore what a barbershop website should include',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_COMMISSION_PAY.slug]: [
     {
       href: INSIGHTS_BARBERS_HANDS.path,
