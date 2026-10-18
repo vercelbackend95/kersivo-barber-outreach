@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-walk-ins-vs-appointments.md",
+  "output": "editorial-staging/insights/barbershop-walk-ins-vs-appointments-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda812e94a2f3175f1f1da4",
+  "status": "Draft Ready for Review — Research Approved / Writing Approved; no Hold; owner publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Walk-Ins or Appointments? A Barbershop Owner's Guide",
+    "description": "Why barbershop waiting times grow so fast as the shop gets busy, what walk-aways and empty slots really cost, and how to choose walk-ins, bookings or both.",
+    "slug": "barbershop-walk-ins-vs-appointments",
+    "categoryId": "bookings-operations",
+    "category": "Bookings & Operations",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Walk-Ins or Appointments? What the Queue Is Telling a Barbershop Owner",
+      "src": "https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=78&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "People inside a barber shop photographed in Manchester, England, illuminated by neon lights",
+      "caption": "A real barbershop setting in Manchester, UK. Editorial context only; the shop and people are not identified as KERSIVO customers",
+      "credit": "beth d / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/people-inside-barbershop-d-3iOQBS5eo",
+      "rights": "Photograph by beth d, original Unsplash URL https://unsplash.com/photos/people-inside-barbershop-d-3iOQBS5eo. Source explicitly records Manchester, United Kingdom and Free to use under Unsplash License https://unsplash.com/license (commercial website/editorial use and cropping permitted, attribution appreciated). No separately verified releases for identifiable people/property/trademarks; illustration only, no claim those in the photo were waiting, had appointments, or use KERSIVO.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Going from 80% busy to 90% busy, only ten percentage points",
+      "src": "/images/insights/walk-ins-vs-appointments/queue-wait-times.svg",
+      "width": 1200,
+      "height": 740,
+      "alt": "Original chart showing modelled average queue waits of 7, 19, 36 and 85 minutes when a two-barber shop has 50%, 70%, 80% and 90% utilisation, using 20-minute average cuts",
+      "caption": "Illustrative M/M/2 queueing model, not observed shop data: two always-available barbers, a 20-minute average cut, random independent arrivals and exponentially distributed service times",
+      "rights": "Original KERSIVO vector artwork. Four numbers (7, 19, 36, 85 minutes) and assumptions reproduced from owner-researched Notion ARTICLE DRAFT v2. Verified independently using Erlang C, c=2, S=20min. No third-party artwork or imported datasets.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**Hybrid.** This is a common model and the hardest to run well.",
+      "src": "/images/insights/walk-ins-vs-appointments/three-booking-models.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Three clear barbershop models compared: walk-ins only, appointments only and hybrid, indicating fit, operational challenge and client-facing rule",
+      "caption": "Three operating models drawn from the article. They are options to test, not a ranking or prescription for every barbershop",
+      "rights": "Original KERSIVO SVG, based on editorial research and ARTICLE DRAFT v2. No downloaded charts or borrowed UI.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "Some owners will push back on all of this. For many barbershops",
+      "src": "https://images.pexels.com/photos/16815780/pexels-photo-16815780.jpeg?auto=compress&cs=tinysrgb&w=1800",
+      "width": 1200,
+      "height": 800,
+      "alt": "Real London barber shopfront with a barber pole, lettering on the window and an outdoor table and chairs",
+      "caption": "A traditional barber shopfront in London. The image illustrates high-street barbering, not this particular shop's appointment policy",
+      "credit": "Tony Zohari / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/table-with-chairs-by-a-barber-window-16815780/",
+      "rights": "Photo #16815780 by Tony Zohari, https://www.pexels.com/photo/table-with-chairs-by-a-barber-window-16815780/ explicitly records London, England, United Kingdom, Free license, original dimensions 3648×5472. Pexels License https://www.pexels.com/license/ permits commercial editorial blog use. Named shop signage and other proprietary symbols shown for editorial scene-setting only; any model/property/trademark clearances have not been independently established. No affiliation, endorsement or claims about photographed business operations.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026 (audit batch 3 corrections); unchanged article copy, structural H1 adaptation only.",
+  "editorialVisualDirection": "One copyright-licensed Manchester barbershop interior photo and one genuine London street-level barbershop photo; verified UK location, authors, URLs and usage rights recorded per image. Original KERSIVO mathematical wait-time chart and three operating-model cards. Photos are unrelated to results or customers and imply no endorsement."
+}

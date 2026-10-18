@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="740" viewBox="0 0 1200 740" role="img" aria-labelledby="title desc">
+<title id="title">When barbers get busier, the queue gets much longer</title><desc id="desc">Bar chart for a hypothetical two-barber walk-in shop. Mean waiting in queue for 20-minute cuts and utilisation of 50, 70, 80, 90 percent is 7, 19, 36, 85 minutes respectively.</desc>
+<rect width="1200" height="740" rx="24" fill="#131416"/>
+<text x="54" y="59" fill="#ff3838" font-family="Arial,sans-serif" font-size="17" letter-spacing="3" font-weight="800">KERSIVO INSIGHTS  /  QUEUE ECONOMICS</text>
+<text x="54" y="125" fill="#f7f7f4" font-family="Arial,sans-serif" font-size="46" font-weight="750">When a busy shop becomes a long queue</text>
+<text x="54" y="169" fill="#bfc2c5" font-family="Arial,sans-serif" font-size="21">Modelled average wait before reaching the barber chair</text>
+<text x="54" y="218" fill="#dadde0" font-family="Arial,sans-serif" font-size="17" font-weight="700">MINUTES WAITING IN QUEUE</text>
+<line x1="110" y1="548" x2="1130" y2="548" stroke="#969ba0" stroke-width="2"/>
+<line x1="110" y1="258" x2="1130" y2="258" stroke="#44484d" stroke-dasharray="5 11"/>
+<line x1="110" y1="402" x2="1130" y2="402" stroke="#44484d" stroke-dasharray="5 11"/>
+<text x="65" y="262" fill="#adb1b5" font-family="Arial,sans-serif" font-size="17">90</text>
+<text x="65" y="406" fill="#adb1b5" font-family="Arial,sans-serif" font-size="17">45</text>
+<text x="77" y="552" fill="#adb1b5" font-family="Arial,sans-serif" font-size="17">0</text>
+<rect x="167" y="525.4" width="164" height="22.6" rx="7" fill="#858b91"/>
+<rect x="414" y="486.8" width="164" height="61.2" rx="7" fill="#858b91"/>
+<rect x="661" y="432" width="164" height="116" rx="7" fill="#aab0b4"/>
+<rect x="908" y="274" width="164" height="274" rx="7" fill="#ff2727"/>
+<text x="249" y="503" text-anchor="middle" font-family="Arial,sans-serif" font-weight="750" font-size="37" fill="#f7f7f4">7</text>
+<text x="496" y="464" text-anchor="middle" font-family="Arial,sans-serif" font-weight="750" font-size="37" fill="#f7f7f4">19</text>
+<text x="743" y="411" text-anchor="middle" font-family="Arial,sans-serif" font-weight="750" font-size="37" fill="#f7f7f4">36</text>
+<text x="990" y="255" text-anchor="middle" font-family="Arial,sans-serif" font-weight="750" font-size="42" fill="#ff4545">85</text>
+<text x="249" y="587" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#fff">50%</text>
+<text x="496" y="587" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#fff">70%</text>
+<text x="743" y="587" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#fff">80%</text>
+<text x="990" y="587" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#fff">90%</text>
+<text x="600" y="629" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#d3d7da">BARBER UTILISATION  /  SHARE OF TIME CUTTING</text>
+<line x1="54" y1="655" x2="1146" y2="655" stroke="#42454a"/>
+<text x="54" y="689" font-family="Arial,sans-serif" font-size="17" fill="#c7cbce">Illustration only. M/M/2 queue, two always-available barbers, 20-minute mean cut.</text>
+<text x="54" y="715" font-family="Arial,sans-serif" font-size="16" fill="#a4a9ac">Random arrivals and service times; real shops have breaks, peaks and walk-aways.</text>
+</svg>

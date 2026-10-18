@@ -1,0 +1,33 @@
+---
+/** KERSIVO Insights — editorial staging only. Not included in production registry or sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as WalkInArticle } from '../../../../editorial-staging/insights/barbershop-walk-ins-vs-appointments-display.md';
+
+const article = {
+  headline: 'Walk-Ins or Appointments? What the Queue Is Telling a Barbershop Owner',
+  seoTitle: "Walk-Ins or Appointments? A Barbershop Owner's Guide",
+  description: "Why barbershop waiting times grow so fast as the shop gets busy, what walk-aways and empty slots really cost, and how to choose walk-ins, bookings or both.",
+  slug: 'barbershop-walk-ins-vs-appointments',
+  categoryId: 'bookings-operations' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda812e94a2f3175f1f1da4',
+  heroImage: 'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=78&w=2200',
+  ogImage: 'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 18 October 2026"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="People inside a real barbershop in Manchester, UK, photographed by beth d"
+  publishedDate="2026-10-18"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <WalkInArticle />
+</InsightsArticleLayout>
