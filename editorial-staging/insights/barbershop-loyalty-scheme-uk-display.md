@@ -1,7 +1,7 @@
 # Barbershop Loyalty Schemes: Who Are You Rewarding, and What Does It Buy?
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1768678218016-6bed23a35116?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=80&amp;w=2200" width="1600" height="1000" loading="eager" decoding="async" alt="People having their hair cut inside a real barbershop in Aldershot, England, at night" />
-<figcaption>A real barbershop in Aldershot, UK. Editorial context only: no claim of KERSIVO use or participation in any loyalty programme — <a href="https://unsplash.com/photos/barbershop-interior-with-clients-getting-haircuts-at-night-Yg80kbHnuTU" target="_blank" rel="noopener noreferrer">Bruce Barrow / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1640301133543-41fe25ad6450?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=80&amp;w=2200" width="1600" height="1000" loading="eager" decoding="async" alt="A barber cutting a client's hair in Liverpool, England" />
+<figcaption>Barber at work in Liverpool, England. Editorial photography; neither the person nor the business is presented as a KERSIVO client or loyalty-scheme participant — <a href="https://unsplash.com/photos/a-man-getting-his-hair-cut-by-a-barber-xO8OpsasyZA" target="_blank" rel="noopener noreferrer">Mitchell Orr / Unsplash</a>.</figcaption></figure>
 
 The stamp card is one of the most familiar loyalty schemes on British high streets: ten stamps, one free cut. It's cheap to print, clients understand it at a glance, and it feels generous. Digital versions do the same thing with an app and a QR code.
 
@@ -66,8 +66,8 @@ Loyalty schemes are lightly regulated, but three points matter.
 
 Some owners will find this approach too calculating. A stamp card, they'll say, isn't really an economic tool. It's a gesture. Regulars like being recognised, and a free cut once or twice a year buys goodwill that shows up in referrals, tolerance of the occasional late running, and a warm atmosphere in the shop.
 
-<figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=80&amp;w=2000" width="1500" height="1000" loading="lazy" decoding="async" alt="A customer sits in a real barbershop in Doncaster, England" />
-<figcaption>A genuine Doncaster barbershop photographed by Osama Madlom. Editorial context only; not a KERSIVO customer testimonial — <a href="https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI" target="_blank" rel="noopener noreferrer">Osama Madlom / Unsplash</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--photo"><img src="https://images.pexels.com/photos/20231931/pexels-photo-20231931.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2000" width="1500" height="1000" loading="lazy" decoding="async" alt="A traditional barber shop on a street corner in Bangor, Wales" />
+<figcaption>A real barber shop on a Bangor, Wales, street corner. Editorial setting only; no claim that the shop uses KERSIVO or runs any loyalty offer — <a href="https://www.pexels.com/photo/building-with-barber-salloon-20231931/" target="_blank" rel="noopener noreferrer">Lisa from Pexels / Pexels</a>.</figcaption></figure>
 
 There's truth in that, and the numbers above can't capture all of it. But it's worth being honest about what the gesture costs: on these figures, about 10% of a regular's revenue, every year, for as long as the scheme runs. If a gesture is what you want, there are cheaper ones. Remembering a client's name and usual cut. A complimentary beard tidy on a birthday. An occasional unannounced "this one's on us" for a long-standing regular. These cost far less than a systematic discount, they can't be expected or gamed, and they feel more personal than a stamp. The numbers don't rule out loyalty rewards. They suggest giving them deliberately rather than automatically.
 
