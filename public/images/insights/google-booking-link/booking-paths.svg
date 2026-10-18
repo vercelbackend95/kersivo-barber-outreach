@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="t d"><title id="t">One Google Business Profile, three booking routes</title><desc id="d">A flow comparison of links added by owners, automatically displayed third-party provider links, and integrated Reserve with Google booking options. Routes and capabilities depend on the provider.</desc>
+<rect width="1200" height="720" rx="26" fill="#101114"/>
+<text x="54" y="55" font-family="Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="3" fill="#ff3030">KERSIVO / INSIGHTS</text>
+<text x="54" y="119" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#f9f8f4">One profile. Three booking paths.</text>
+<text x="54" y="157" font-family="Arial,sans-serif" font-size="21" fill="#aaaeb5">The first booking link a client opens changes what happens next.</text>
+<rect x="54" y="188" width="1092" height="77" rx="15" fill="#22252a" stroke="#45494d"/>
+<circle cx="96" cy="226" r="17" fill="#ff2828"/><path d="M88 226h16m-7-7 7 7-7 7" fill="none" stroke="white" stroke-width="2.7" stroke-linecap="round"/>
+<text x="135" y="220" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#fff">GOOGLE BUSINESS PROFILE</text>
+<text x="135" y="245" font-family="Arial,sans-serif" font-size="16" fill="#c4c8cd">Where a new client discovers your shop and taps to book</text>
+<path d="M225 265v32m0 0-7-8m7 8 7-8M600 265v32m0 0-7-8m7 8 7-8M975 265v32m0 0-7-8m7 8 7-8" fill="none" stroke="#ff3838" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="54" y="310" width="346" height="296" rx="17" fill="#f8f7f3"/>
+<rect x="427" y="310" width="346" height="296" rx="17" fill="#f8f7f3"/>
+<rect x="800" y="310" width="346" height="296" rx="17" fill="#f8f7f3"/>
+<text x="78" y="347" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#ca1818">ROUTE 01</text>
+<text x="451" y="347" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#ca1818">ROUTE 02</text>
+<text x="824" y="347" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#ca1818">ROUTE 03</text>
+<text x="78" y="393" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#17191c">Owner-added link</text>
+<text x="451" y="393" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#17191c">Provider-added link</text>
+<text x="824" y="393" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#17191c">Integrated provider</text>
+<rect x="78" y="416" width="298" height="1" fill="#d7d5cf"/><rect x="451" y="416" width="298" height="1" fill="#d7d5cf"/><rect x="824" y="416" width="298" height="1" fill="#d7d5cf"/>
+<text x="78" y="454" font-family="Arial,sans-serif" font-size="20" fill="#353a40">You choose the URL</text><text x="78" y="485" font-family="Arial,sans-serif" font-size="20" fill="#353a40">to your booking page.</text>
+<text x="451" y="454" font-family="Arial,sans-serif" font-size="20" fill="#353a40">A third party may add</text><text x="451" y="485" font-family="Arial,sans-serif" font-size="20" fill="#353a40">a link automatically.</text>
+<text x="824" y="454" font-family="Arial,sans-serif" font-size="20" fill="#353a40">Booking connected through</text><text x="824" y="485" font-family="Arial,sans-serif" font-size="20" fill="#353a40">an eligible provider.</text>
+<rect x="78" y="525" width="298" height="51" rx="9" fill="#e5eae6"/>
+<rect x="451" y="525" width="298" height="51" rx="9" fill="#f0e4df"/>
+<rect x="824" y="525" width="298" height="51" rx="9" fill="#e4e8f1"/>
+<text x="94" y="557" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#225443">Check the destination</text>
+<text x="467" y="557" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#954832">Check the provider</text>
+<text x="840" y="557" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#3d5286">Check eligibility</text>
+<line x1="54" y1="640" x2="1146" y2="640" stroke="#45494d"/>
+<text x="54" y="679" font-family="Arial,sans-serif" font-size="17" fill="#b7bbc0">Illustrative flow, not a Google screenshot. Availability and interface vary by profile and provider.</text>
+</svg>

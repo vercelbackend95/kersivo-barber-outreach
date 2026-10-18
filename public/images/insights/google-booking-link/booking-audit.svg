@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" role="img" aria-labelledby="t d"><title id="t">Ten-minute Google booking link audit</title><desc id="d">Four steps: view the booking options as a customer, open and test every booking destination, select and maintain the preferred link, then measure actual bookings rather than clicks alone. Three separate metrics are explained below.</desc>
+<rect width="1200" height="730" rx="26" fill="#111215"/>
+<text x="53" y="56" font-family="Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="3" fill="#ff3333">OWNER'S CHECKLIST / KERSIVO INSIGHTS</text>
+<text x="53" y="121" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#fff">The 10-minute booking link audit</text>
+<text x="53" y="161" font-family="Arial,sans-serif" font-size="20" fill="#adb1b8">Run this from the client's point of view. Then make a deliberate choice.</text>
+<rect x="52" y="196" width="260" height="264" rx="15" fill="#f7f6f2"/>
+<rect x="330" y="196" width="260" height="264" rx="15" fill="#f7f6f2"/>
+<rect x="608" y="196" width="260" height="264" rx="15" fill="#f7f6f2"/>
+<rect x="886" y="196" width="260" height="264" rx="15" fill="#f7f6f2"/>
+<text x="78" y="257" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#d71920">01</text>
+<text x="356" y="257" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#d71920">02</text>
+<text x="634" y="257" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#d71920">03</text>
+<text x="912" y="257" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="#d71920">04</text>
+<text x="78" y="307" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#16181c">LOOK</text>
+<text x="356" y="307" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#16181c">TEST</text>
+<text x="634" y="307" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#16181c">CHOOSE</text>
+<text x="912" y="307" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#16181c">MEASURE</text>
+<text x="78" y="346" font-family="Arial,sans-serif" font-size="18" fill="#40454a">Search for your shop</text><text x="78" y="372" font-family="Arial,sans-serif" font-size="18" fill="#40454a">as a customer would.</text><text x="78" y="401" font-family="Arial,sans-serif" font-size="16" fill="#70757a">Search + Maps</text>
+<text x="356" y="346" font-family="Arial,sans-serif" font-size="18" fill="#40454a">Open every option.</text><text x="356" y="372" font-family="Arial,sans-serif" font-size="18" fill="#40454a">Check where it lands.</text><text x="356" y="401" font-family="Arial,sans-serif" font-size="16" fill="#70757a">Up to payment step</text>
+<text x="634" y="346" font-family="Arial,sans-serif" font-size="18" fill="#40454a">Fix old links and set</text><text x="634" y="372" font-family="Arial,sans-serif" font-size="18" fill="#40454a">your preferred route.</text><text x="634" y="401" font-family="Arial,sans-serif" font-size="16" fill="#70757a">Check providers too</text>
+<text x="912" y="346" font-family="Arial,sans-serif" font-size="18" fill="#40454a">Track conversions,</text><text x="912" y="372" font-family="Arial,sans-serif" font-size="18" fill="#40454a">not just link clicks.</text><text x="912" y="401" font-family="Arial,sans-serif" font-size="16" fill="#70757a">Review every 3 months</text>
+<text x="53" y="513" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#fff">THREE DIFFERENT MEASURES</text>
+<rect x="53" y="535" width="1093" height="120" rx="13" fill="#25272b" stroke="#41444a"/>
+<line x1="410" x2="410" y1="557" y2="631" stroke="#5b5f64"/>
+<line x1="770" x2="770" y1="557" y2="631" stroke="#5b5f64"/>
+<text x="77" y="573" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#f5f5f2">Profile performance</text>
+<text x="77" y="602" font-family="Arial,sans-serif" font-size="16" fill="#aeb3b9">Views, website clicks, calls</text>
+<text x="434" y="573" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#f5f5f2">Google Bookings</text>
+<text x="434" y="602" font-family="Arial,sans-serif" font-size="16" fill="#aeb3b9">Via supported provider only</text>
+<text x="795" y="573" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#f5f5f2">Your booking system</text>
+<text x="795" y="602" font-family="Arial,sans-serif" font-size="16" fill="#aeb3b9">Track completed bookings</text>
+<text x="53" y="693" font-family="Arial,sans-serif" font-size="16" fill="#aeb3b9">Owner checklist derived from the article. Google features and reporting depend on provider setup.</text>
+</svg>

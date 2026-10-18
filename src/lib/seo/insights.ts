@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_BOOKING_LINK = {
+  slug: 'google-business-profile-booking-link-barbershop',
+  path: '/insights/google-business-profile-booking-link-barbershop',
+  headline: 'Your Google Profile Has a Booking Button. Do You Know Where It Sends People?',
+  seoTitle: "Google Business Profile Booking Link: A Barbershop Owner's Check",
+  description:
+    "Your Google profile's Book button may send new clients to a system you don't use. How UK barbershops can check, choose and measure their booking link.",
+  categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-18',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fa7dbe5bbda81b780dcf7a9ae55f731',
+  lead: 'Check whether your Google booking button sends clients to the right system, which providers control the links, and how to measure completed bookings.',
+  heroImage:
+    'https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage:
+    'https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  ogImageAlt: 'London barbershop seen through its front window, photographed by pierre matile',
+} as const;
+
 export const INSIGHTS_WEBSITE_NEED = {
   slug: 'do-barbers-need-a-website-uk',
   path: '/insights/do-barbers-need-a-website-uk',
@@ -190,6 +209,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,

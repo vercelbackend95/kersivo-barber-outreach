@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_BOOKING_LINK,
   INSIGHTS_WEBSITE_NEED,
   INSIGHTS_COMMISSION_PAY,
   INSIGHTS_SECOND_VISIT,
@@ -30,6 +31,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_BOOKING_LINK.slug]: [
+    {
+      href: INSIGHTS_WEBSITE_NEED.path,
+      label: 'Does your barbershop actually need a website?',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_GOOGLE_REVIEWS.path,
+      label: 'Google Reviews for barbershops: what UK rules allow',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'Explore online booking for independent barbershops',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_WEBSITE_NEED.slug]: [
     {
       href: INSIGHTS_GOOGLE_REVIEWS.path,

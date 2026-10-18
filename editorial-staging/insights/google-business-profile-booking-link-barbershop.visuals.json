@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/google-business-profile-booking-link-barbershop.md",
+  "output": "editorial-staging/insights/google-business-profile-booking-link-barbershop-display.md",
+  "notionUrl": "https://app.notion.com/p/3fa7dbe5bbda81b780dcf7a9ae55f731",
+  "status": "Approved for publication — owner confirmation 2026-10-18",
+  "publishApproved": true,
+  "seo": {
+    "title": "Google Business Profile Booking Link: A Barbershop Owner's Check",
+    "description": "Your Google profile's Book button may send new clients to a system you don't use. How UK barbershops can check, choose and measure their booking link.",
+    "slug": "google-business-profile-booking-link-barbershop",
+    "categoryId": "bookings-operations",
+    "category": "Bookings & Operations",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Your Google Profile Has a Booking Button. Do You Know Where It Sends People?",
+      "src": "https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "View through the window of a real barber shop in London, United Kingdom, with barbering equipment and an interior scene",
+      "caption": "An independent barbershop photographed from the street in London. Editorial photography; no connection to KERSIVO is implied",
+      "credit": "pierre matile / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/window-view-of-barber-shop-interior-in-uk-35430743/",
+      "rights": "Pexels photo #35430743 by pierre matile. Photo listing https://www.pexels.com/photo/window-view-of-barber-shop-interior-in-uk-35430743/ specifically records London, United Kingdom, Free to use, 5700 × 3592. Pexels License https://www.pexels.com/license/ permits commercial blog and website use and modification/crop; attribution supplied for editorial clarity. Third-party rights (people, property, signs) are not separately released or verified by KERSIVO; photo is only illustrating independent barbering and must not imply endorsement, partnership or customer status.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Put those together and the risk is clear. Your profile can show a booking link",
+      "src": "/images/insights/google-booking-link/booking-paths.svg",
+      "width": 1200,
+      "height": 720,
+      "alt": "Original explanatory map contrasting owner-added booking links, external provider links and integrated Google booking providers on a Business Profile",
+      "caption": "Illustrative route map based on Google's published Business Profile guidance. This is not a screenshot of Google's interface",
+      "rights": "Original KERSIVO vector artwork created for this story. Text and distinctions sourced from the approved ARTICLE DRAFT v3 and Google's Business Profile Help articles 6218037 and 7475773; no Google UI artwork, screenshots or trademarks reproduced. No third-party graphics.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "If the link goes to a marketplace you've left, or one that lists your shop without your involvement",
+      "src": "https://images.pexels.com/photos/37328594/pexels-photo-37328594.jpeg?auto=compress&cs=tinysrgb&w=1800",
+      "width": 1200,
+      "height": 800,
+      "alt": "Vintage London barbershop with dark brickwork and a barber pole, photographed from the pavement",
+      "caption": "Barbershop on a London street. A real UK shop pictured for editorial context, not a KERSIVO client",
+      "credit": "Ivo Sousa Martins / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/vintage-barbershop-front-in-london-street-37328594/",
+      "rights": "Pexels photo #37328594, Ivo Sousa Martins, original listing https://www.pexels.com/photo/vintage-barbershop-front-in-london-street-37328594/ records London, England, United Kingdom and Free to use. Pexels License https://www.pexels.com/license/ permits commercial blog use. Photograph depicts the third-party Hobbs Barber Shop frontage: trademark/property rights and any identifiable passer-by releases are not independently established by KERSIVO. Editorial scene only, without any claim about this business's Google bookings, consent, affiliation or software.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Then decide how you'll know whether the link works, because there are three different measures",
+      "src": "/images/insights/google-booking-link/booking-audit.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Four-step owner audit: check links as a customer, test destinations, update and prefer the right booking link, and measure completed bookings separately from Google profile clicks",
+      "caption": "Original KERSIVO owner checklist distilled from the article and Google Business Profile performance guidance; capabilities differ by provider",
+      "rights": "Original KERSIVO vector artwork designed for this article with no borrowed Google UI, logos or screenshot. Content paraphrases approved Notion ARTICLE DRAFT v3 and Google Business Profile Help articles 6218037 and 9918094. All numbers used as step indices only.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v3 — 16 October 2026 (cleanup t17u). Source text exported without rewriting; structural Markdown heading levels adapted by compositor.",
+  "editorialVisualDirection": "Verified United Kingdom provenance for both Pexels photography locations (London). Authentic high-street barbering, without implied sponsorship, customer status or third-party booking data. Two KERSIVO-authored infographics explain the links and testing steps. Original licences documented per asset.",
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-18",
+    "recordUrl": "https://app.notion.com/p/3fa7dbe5bbda81b780dcf7a9ae55f731",
+    "note": "Owner explicitly approved the final Google Profile Booking Button Preview for production publication on 18 October 2026."
+  }
+}
