@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_LOYALTY_SCHEMES = {
+  slug: 'barbershop-loyalty-scheme-uk',
+  path: '/insights/barbershop-loyalty-scheme-uk',
+  headline: 'Barbershop Loyalty Schemes: Who Are You Rewarding, and What Does It Buy?',
+  seoTitle: 'Barbershop Loyalty Schemes: Do Stamp Cards Pay? (UK)',
+  description:
+    "A free tenth cut costs about 10% of a regular's spend. How to work out whether a barbershop loyalty scheme pays, the UK rules on 'free', and a better design.",
+  categoryId: 'clients-growth' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-18',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81cd91c8ef0c600aa094',
+  lead: 'Why a free tenth cut may cost more than it earns, and a way to test whether the loyalty scheme changes real repeat-visit behaviour.',
+  heroImage:
+    'https://images.unsplash.com/photo-1640301133543-41fe25ad6450?auto=format&fit=crop&fm=jpg&q=80&w=2200',
+  ogImage:
+    'https://images.unsplash.com/photo-1640301133543-41fe25ad6450?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImageAlt: 'Barber cutting hair in Liverpool, England, photographed by Mitchell Orr',
+} as const;
+
 export const INSIGHTS_BUSY_DIARY = {
   slug: 'busy-barbershop-low-profit-chair-hour',
   path: '/insights/busy-barbershop-low-profit-chair-hour',
@@ -247,6 +266,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,

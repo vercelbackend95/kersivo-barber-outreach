@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,
   INSIGHTS_BOOKING_LINK,
@@ -33,6 +34,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_LOYALTY_SCHEMES.slug]: [
+    {
+      href: INSIGHTS_SECOND_VISIT.path,
+      label: 'Why the second visit is the real test of retention',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_LOCAL_CLIENTS.path,
+      label: 'How to find clients locally without overpaying',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'Build a clearer online booking journey for your shop',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_BUSY_DIARY.slug]: [
     {
       href: INSIGHTS_HAIRCUT_PRICING.path,
