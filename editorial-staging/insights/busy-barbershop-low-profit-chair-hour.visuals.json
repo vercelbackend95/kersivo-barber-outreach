@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/busy-barbershop-low-profit-chair-hour.md",
+  "output": "editorial-staging/insights/busy-barbershop-low-profit-chair-hour-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda812092c2c2eed8ea914d",
+  "status": "Draft Ready for Review; Research Approved and Writing Approved; no Hold; not approved for publication",
+  "publishApproved": false,
+  "seo": {
+    "title": "Busy Barbershop, Low Profit? Measure Earnings per Chair-Hour",
+    "description": "A full diary isn't the same as a profitable one. How UK barbershop owners can work out what each chair-hour earns, by service, and what to change.",
+    "slug": "busy-barbershop-low-profit-chair-hour",
+    "categoryId": "business-profit",
+    "category": "Business & Profit",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Your Diary Is Full. So Why Isn't Your Barbershop Making More Money?",
+      "src": "https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=78&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "A worker cleaning the floor inside a real barbershop photographed in Edinburgh, Scotland",
+      "caption": "The working day behind the chair: a real barbershop interior photographed in Edinburgh. Editorial imagery, not a KERSIVO customer or a claim about this shop's profit",
+      "credit": "Bruno BD / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-man-cleans-the-modern-barbershop-floor-zi2Er8Q5y2Y",
+      "rights": "Original Unsplash photo 'A man cleans the modern barbershop floor' by Bruno BD, https://unsplash.com/photos/a-man-cleans-the-modern-barbershop-floor-zi2Er8Q5y2Y, posted 6 Aug 2026 with confirmed Edinburgh, UK location. Free to use under https://unsplash.com/license for commercial/editorial website use and crops, photographer credited voluntarily. Persons, trademarks or private-property releases not individually audited; editorial illustration only, no implication of customer relationship or performance.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "The most expensive service isn't the most valuable use of the chair.",
+      "src": "/images/insights/busy-diary-chair-hour/contribution-by-service.svg",
+      "width": 1200,
+      "height": 760,
+      "alt": "Comparative contribution per chair-hour for five hypothetical barbershop services: standard cut £35.43, skin fade £31.66, cut and beard £29.34, beard trim £26.21, kids cut £22.44",
+      "caption": "Original KERSIVO chart of the hypothetical prices, time slots and variable costs in the article. Not a survey of real UK barbershop margins",
+      "rights": "Original KERSIVO vector chart built only from invented worked-example service values in authorised Notion ARTICLE DRAFT v2. Service values £35.43, £31.66, £29.34, £26.21 and £22.44 contribution per chair-hour; sourced from the article's explicitly hypothetical table. No outside imagery.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Day A takes £246 and produces £231.01 of contribution",
+      "src": "/images/insights/busy-diary-chair-hour/same-diary-two-days.svg",
+      "width": 1200,
+      "height": 720,
+      "alt": "Two hypothetical equally busy eight-hour barber-chair days compared: Day A £246 revenue and £231.01 contribution, Day B £274 revenue and £256.79 contribution, both 475 of 480 minutes booked",
+      "caption": "Equal diary utilisation can produce different contribution: £25.78 extra for Day B in this hypothetical illustration; fixed overheads are not deducted",
+      "rights": "Original KERSIVO vector chart calculated from the explicit Day A and Day B worked cases and assumptions in ARTICLE DRAFT v2. No claim of measured industry performance.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "How much of this matters to you depends on how the chairs are run",
+      "src": "https://images.unsplash.com/photo-1784471396268-14d1e6dee9d4?auto=format&fit=crop&fm=jpg&q=78&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "A British barbershop storefront on a street in Bristol, England, photographed with pedestrians and parked cars",
+      "caption": "British barber shopfront photographed in Bristol, England. The photographed business is not affiliated with KERSIVO",
+      "credit": "Alexander Kaufmann / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/british-barber-co-shop-on-a-street-with-parked-cars-sDz6nOTqbYo",
+      "rights": "Unsplash photo by Alexander Kaufmann, original https://unsplash.com/photos/british-barber-co-shop-on-a-street-with-parked-cars-sDz6nOTqbYo, confirmed location Bristol, United Kingdom, free to use under https://unsplash.com/license for commercial/editorial website use. Identifiable shop branding and other property or personal rights not independently cleared, shown for editorial context only; does not represent KERSIVO adoption or shop revenue.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026. Article wording, numerical scenarios, examples and references unaltered. H1 and display heading levels structurally normalised by article compositor.",
+  "editorialVisualDirection": "Two distinct real UK shop photos, verified Edinburgh and Bristol, with free commercial Unsplash License plus editorial rights caveats. Two original premium KERSIVO comparison graphics explicitly mark all numbers hypothetical. No screenshots, fake client endorsements, generic studio stock or feature claims."
+}

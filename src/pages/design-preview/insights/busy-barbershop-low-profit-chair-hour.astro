@@ -1,0 +1,32 @@
+---
+/** KERSIVO Insights editorial preview only — absent from publication registry and production sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as BusyDiaryBody } from '../../../../editorial-staging/insights/busy-barbershop-low-profit-chair-hour-display.md';
+const story = {
+ slug: 'busy-barbershop-low-profit-chair-hour',
+ headline: "Your Diary Is Full. So Why Isn't Your Barbershop Making More Money?",
+ seoTitle: "Busy Barbershop, Low Profit? Measure Earnings per Chair-Hour",
+ description: "A full diary isn't the same as a profitable one. How UK barbershop owners can work out what each chair-hour earns, by service, and what to change.",
+ categoryId: 'business-profit' as const,
+ sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda812092c2c2eed8ea914d',
+ heroImage: 'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=78&w=2200',
+ ogImage: 'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'
+};
+---
+<InsightsArticleLayout
+  title={story.seoTitle}
+  description={story.description}
+  slug={story.slug}
+  categoryId={story.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 18 October 2026"
+  sourceUrl={story.sourceUrl}
+  headline={story.headline}
+  heroImage={story.heroImage}
+  ogImage={story.ogImage}
+  ogImageAlt="An Edinburgh barber shop employee cleaning the shop floor, photographed by Bruno BD"
+  publishedDate="2026-10-18"
+  verifiedDate="2026-10-16"
+  published={false}
+>
+  <BusyDiaryBody />
+</InsightsArticleLayout>
