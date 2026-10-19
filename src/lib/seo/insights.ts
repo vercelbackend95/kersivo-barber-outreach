@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_MTD_BARBERS = {
+  slug: 'making-tax-digital-barbers',
+  path: '/insights/making-tax-digital-barbers',
+  headline: 'Making Tax Digital for Barbers: What Changes When Your Takings Pass £30,000',
+  seoTitle: 'Making Tax Digital for Barbers: The £30,000 Test Explained',
+  description:
+    'Making Tax Digital for Income Tax reaches self-employed barbers above £30,000 of takings from April 2027. Who is in scope, what to record, and the deadlines.',
+  categoryId: 'tools-payments' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-19',
+  verifiedDate: '2026-10-19',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81b8a4d7eda56e2680c5',
+  lead: 'Making Tax Digital for Income Tax uses gross qualifying income, not the profit a chair renter takes home. Check the £30,000 test and the 2027 deadlines.',
+  heroImage:
+    'https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=2400',
+  ogImage:
+    'https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=1200&h=630',
+  ogImageAlt: "A barber cutting a client's hair under colourful lights in a Liverpool barbershop, photographed by Mitchell Orr",
+} as const;
+
 export const INSIGHTS_OWNER_EARNINGS = {
   slug: 'how-much-do-barbershop-owners-make-uk',
   path: '/insights/how-much-do-barbershop-owners-make-uk',
@@ -342,6 +361,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_MTD_BARBERS,
   INSIGHTS_OWNER_EARNINGS,
   INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,

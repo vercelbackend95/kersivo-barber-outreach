@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_MTD_BARBERS,
   INSIGHTS_OWNER_EARNINGS,
   INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,
@@ -38,6 +39,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_MTD_BARBERS.slug]: [
+    {
+      href: INSIGHTS_OWNER_EARNINGS.path,
+      label: 'What UK barbershop owners can actually take home',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_CARD_FEES.path,
+      label: 'Where barbershop card processing fees go',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'Understand your barbershop booking journey',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_OWNER_EARNINGS.slug]: [
     {
       href: INSIGHTS_BUSY_DIARY.path,
