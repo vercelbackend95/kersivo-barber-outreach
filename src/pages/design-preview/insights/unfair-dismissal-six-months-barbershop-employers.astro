@@ -1,0 +1,32 @@
+---
+/** Editorial preview only. Not included in published Insights registry or sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as DismissalArticle } from '../../../../editorial-staging/insights/unfair-dismissal-six-months-barbershop-employers-display.md';
+const story = {
+  slug: 'unfair-dismissal-six-months-barbershop-employers',
+  headline: 'Six Months, Not Two Years: How the 2027 Unfair Dismissal Change Affects Barbershops That Employ Staff',
+  seoTitle: 'Unfair Dismissal After 6 Months: What Barbershops Must Know',
+  description: 'From 1 January 2027, employees can claim unfair dismissal after six months, not two years. What it means for barbershop hiring, probation and records.',
+  categoryId: 'industry-people' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda8192882de0d7f653e7dc',
+  heroImage: 'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage: 'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+};
+---
+<InsightsArticleLayout
+  title={story.seoTitle}
+  description={story.description}
+  slug={story.slug}
+  categoryId={story.categoryId}
+  dateLabel="EDITORIAL PREVIEW · 19 October 2026"
+  sourceUrl={story.sourceUrl}
+  headline={story.headline}
+  heroImage={story.heroImage}
+  ogImage={story.ogImage}
+  ogImageAlt="Traditional barbershop sign in Abergele, North Wales, photographed by Lisa from Pexels"
+  publishedDate="2026-10-19"
+  verifiedDate="2026-10-19"
+  published={false}
+>
+  <DismissalArticle />
+</InsightsArticleLayout>

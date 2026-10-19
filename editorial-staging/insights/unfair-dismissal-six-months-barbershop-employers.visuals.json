@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/unfair-dismissal-six-months-barbershop-employers.md",
+  "output": "editorial-staging/insights/unfair-dismissal-six-months-barbershop-employers-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8192882de0d7f653e7dc",
+  "status": "Draft Ready for Review; Research and Writing Approved; no Hold; owner publication approval pending",
+  "publishApproved": false,
+  "seo": {
+    "title": "Unfair Dismissal After 6 Months: What Barbershops Must Know",
+    "description": "From 1 January 2027, employees can claim unfair dismissal after six months, not two years. What it means for barbershop hiring, probation and records.",
+    "slug": "unfair-dismissal-six-months-barbershop-employers",
+    "categoryId": "industry-people",
+    "category": "Industry & People",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Six Months, Not Two Years: How the 2027 Unfair Dismissal Change Affects Barbershops That Employ Staff",
+      "src": "https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Traditional red barbershop sign on a high-street building in Abergele, Wales",
+      "caption": "A real barbershop sign in Abergele, Wales. Editorial scene only; not a KERSIVO customer or an example of an employment dispute",
+      "credit": "Lisa from Pexels / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/barbershop-sign-in-abergele-wales-35903164/",
+      "rights": "Original Pexels photograph #35903164 by Lisa from Pexels, original source https://www.pexels.com/photo/barbershop-sign-in-abergele-wales-35903164/, showing Abergele, Wales, United Kingdom, marked Free to use. Pexels License https://www.pexels.com/license/ permits commercial editorial use, with attribution voluntarily supplied. Checked photo ID against all 16 published KERSIVO Insights visual manifests on 19 October 2026: not used. Shop property and trademark rights not separately verified; editorial context only with no claim about depicted shop's staff or KERSIVO affiliation.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Timing is set by the \"effective date of termination\"",
+      "src": "/images/insights/unfair-dismissal-2027/six-month-rule.svg",
+      "width": 1200,
+      "height": 735,
+      "alt": "General two-year ordinary unfair dismissal qualifying period changing to six months from January 2027, depending on effective employment termination date",
+      "caption": "The 2027 ordinary unfair-dismissal qualifying-period change. Some day-one legal protections remain; the effective termination date matters",
+      "rights": "Original KERSIVO explanatory SVG based on authorised Notion ARTICLE DRAFT v2, Employment Rights Act 2025 s25, commencement SI 2026/559 and Acas guidance. No reproduced official diagrams or other third-party art. Legal summary not a substitute for case advice.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**Process isn't optional.**",
+      "src": "/images/insights/unfair-dismissal-2027/employer-records-checklist.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Five employer checks: service dates, notice, probation expectations, performance records and fair disciplinary or dismissal procedure",
+      "caption": "Practical owner checklist derived from Acas guidance and the article. Seek professional advice for an actual dismissal",
+      "rights": "Original KERSIVO vector checklist using the source-backed article and Acas Code of Practice; no third-party graphics. Applies England, Wales and Scotland, not Northern Ireland.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "The legal test for fairness isn't new.",
+      "src": "https://images.pexels.com/photos/1020544/pexels-photo-1020544.jpeg?auto=compress&cs=tinysrgb&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "Black-and-white street photograph of a hairdresser cutting a woman's hair among a group of people in Greater London",
+      "caption": "Public hairdressing scene photographed in Greater London. Editorial illustration; no suggestion that anyone pictured works for KERSIVO or is involved in a dismissal",
+      "credit": "Jeff Sof / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/grayscale-photography-of-man-cutting-hair-of-woman-surrounded-with-people-1020544/",
+      "rights": "Pexels photo #1020544 by Jeff Sof, source https://www.pexels.com/photo/grayscale-photography-of-man-cutting-hair-of-woman-surrounded-with-people-1020544/, Greater London, England, United Kingdom, Free to use under Pexels License https://www.pexels.com/license/. Licence allows commercial blog and editorial use/crops. Photo ID verified unused across 16 published KERSIVO Insights visual manifests on 19 October 2026. No model releases, employment status or business affiliations established: a documentary public haircut, not a case study.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026; verified against 2027 commencement documents 19 October 2026. Source text unchanged except structural Markdown H1 and heading level normalization.",
+  "editorialVisualDirection": "Two distinctive editorial photographs in Abergele, Wales and Greater London, license verified and photo IDs unique across 16 published manifests. Captions avoid implying photographed parties have any employment relationship to KERSIVO. Two original law-check diagrams."
+}
