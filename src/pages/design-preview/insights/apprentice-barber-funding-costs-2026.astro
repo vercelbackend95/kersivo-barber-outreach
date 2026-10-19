@@ -1,0 +1,32 @@
+---
+/** Preview staging only: not registered as a published Insights article or in production sitemap. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as ApprenticeBody } from '../../../../editorial-staging/insights/apprentice-barber-funding-costs-2026-display.md';
+const article = {
+ slug: 'apprentice-barber-funding-costs-2026',
+ headline: 'Is an Apprentice Barber Worth It? The 2026 Numbers for Small Shops in England',
+ seoTitle: 'Apprentice Barber Costs and Funding in 2026: Is It Worth It?',
+ description: 'Training is fully funded and hiring payments are up to £2,000, but supervision time is the real cost. A 2026 guide for barbershops in England.',
+ categoryId: 'industry-people' as const,
+ sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda81419acde7a0f6e58dcf',
+ heroImage: 'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=2400',
+ ogImage: 'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+};
+---
+<InsightsArticleLayout
+ title={article.seoTitle}
+ description={article.description}
+ slug={article.slug}
+ categoryId={article.categoryId}
+ dateLabel="EDITORIAL PREVIEW · 19 October 2026"
+ sourceUrl={article.sourceUrl}
+ headline={article.headline}
+ heroImage={article.heroImage}
+ ogImage={article.ogImage}
+ ogImageAlt="Barber cutting a client's hair in a Liverpool barbershop, photographed by Mitchell Orr"
+ publishedDate="2026-10-19"
+ verifiedDate="2026-10-16"
+ published={false}
+>
+ <ApprenticeBody />
+</InsightsArticleLayout>
