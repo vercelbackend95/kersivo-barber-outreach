@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_BUSINESS_RATES = {
+  slug: 'barbershop-business-rates-2026-england',
+  path: '/insights/barbershop-business-rates-2026-england',
+  headline: 'Lower Rates, Higher Bill? What the 2026 Business Rates Changes Mean for Barbershops in England',
+  seoTitle: 'Barbershop Business Rates 2026: Three Checks for Owners',
+  description:
+    'The 2026 business rates changes cut the multiplier for barbershops in England, yet some bills rose. What changed, why, and three checks worth making.',
+  categoryId: 'business-profit' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-19',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81a89758c88641f937c9',
+  lead: 'Why a lower business rates multiplier may still mean a bigger bill for an England barbershop, plus three practical checks owners can make.',
+  heroImage:
+    'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage:
+    'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  ogImageAlt: 'Barbershop on Liverpool Penny Lane, England, photographed by Phil Evenden',
+} as const;
+
 export const INSIGHTS_LOYALTY_SCHEMES = {
   slug: 'barbershop-loyalty-scheme-uk',
   path: '/insights/barbershop-loyalty-scheme-uk',
@@ -266,6 +285,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,

@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-business-rates-2026-england.md",
+  "output": "editorial-staging/insights/barbershop-business-rates-2026-england-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81a89758c88641f937c9",
+  "status": "Owner approved for production, 19 October 2026",
+  "publishApproved": true,
+  "seo": {
+    "title": "Barbershop Business Rates 2026: Three Checks for Owners",
+    "description": "The 2026 business rates changes cut the multiplier for barbershops in England, yet some bills rose. What changed, why, and three checks worth making.",
+    "slug": "barbershop-business-rates-2026-england",
+    "categoryId": "business-profit",
+    "category": "Business & Profit",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Lower Rates, Higher Bill? What the 2026 Business Rates Changes Mean for Barbershops in England",
+      "src": "https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Black-and-white street view of Tony Slavin's barbershop and neighbouring businesses on Penny Lane, Liverpool, England",
+      "caption": "An independent barbershop on Liverpool's Penny Lane. Documentary illustration, not a KERSIVO client or evidence about this shop's business rates",
+      "credit": "Phil Evenden / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/view-of-the-tony-slavin-barber-shop-a-store-and-a-restaurant-in-liverpool-england-20692738/",
+      "rights": "Original Phil Evenden photo Pexels #20692738 at https://www.pexels.com/photo/view-of-the-tony-slavin-barber-shop-a-store-and-a-restaurant-in-liverpool-england-20692738/ lists Liverpool, England, UK, and Free to use. Pexels Licence https://www.pexels.com/license/ allows commercial/editorial website/blog display and crops. Photo is used only as editorial context, no endorsement, customer relationship or claim about depicted shop's tax payments. Separate business/trademark/private-property rights not independently audited. Photo ID checked unique against all 14 published Insights visual manifests on 18 Oct 2026.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "The lesson is narrow but important. The figure that tells you whether 2026 helped you",
+      "src": "/images/insights/business-rates-2026/business-rates-bills.svg",
+      "width": 1200,
+      "height": 750,
+      "alt": "Worked English business rates example: 2025/26 bill £8,982 after 40 percent relief; 2026/27 uncapped £11,760; capped under Supporting Small Business relief £10,329.30",
+      "caption": "Hypothetical England barbershop at unchanged £30,000 rateable value; illustrative amounts, not a real property bill",
+      "rights": "Original KERSIVO graphic generated solely from numbers in approved Notion ARTICLE DRAFT v3. Verified arithmetic: £30,000×0.499×0.6=£8,982; £30,000×0.392=£11,760; £8,982×1.15=£10,329.30. Qualified RHL, 1p supplement and SSB relief assumptions as stated in text, not business rates advice.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**Is your rateable value right?**",
+      "src": "/images/insights/business-rates-2026/owner-three-checks.svg",
+      "width": 1200,
+      "height": 735,
+      "alt": "Three checks for English barbershop business rates: qualifying RHL multiplier, Small Business Rate Relief eligibility and Valuation Office Agency rateable value correctness",
+      "caption": "Owner's three-check checklist derived from the article and official England business rates guidance; eligibility and supplements vary by premises",
+      "rights": "Original KERSIVO SVG, based on the approved ARTICLE DRAFT v3 and GOV.UK 2026 multipliers, business rates relief and Valuation Office Agency rules. No copied logos or government diagrams.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "For anyone **renting the premises**, check your lease.",
+      "src": "https://images.unsplash.com/photo-1641129915760-fd8da7097d7c?auto=format&fit=crop&fm=jpg&q=78&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "Interior of a real Liverpool barbershop showing checked floor tiles, workstations and chairs",
+      "caption": "Inside an independent Liverpool barbershop. Editorial photography, not a case study of its actual rent, lease or taxes",
+      "credit": "Mitchell Orr / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-barber-shop-with-a-checkered-floor-and-black-and-white-tile-dcAw8Ms-teQ",
+      "rights": "Original photograph by Mitchell Orr on Unsplash https://unsplash.com/photos/a-barber-shop-with-a-checkered-floor-and-black-and-white-tile-dcAw8Ms-teQ, taken Liverpool UK, published 2 Jan 2022 and Free to use under Unsplash Licence https://unsplash.com/license/ (commercial editorial and cropping). No implied KERSIVO endorsement or representation of actual rates/lease payments. Any model/property/trademark releases not independently confirmed. Unique photo ID photo-1641129915760 checked against all 14 previously published KERSIVO Insights photo manifests.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v3 — 16 October 2026 (cleanup t17u). Original Notion copy, numerical scenarios and references unaltered, with Markdown H1 and section heading structural normalisation.",
+  "editorialVisualDirection": "Two unique verified Liverpool documentary barber-shop photographs (Pexels #20692738 and Unsplash photo-1641129915760). Audited against all 14 published Insights visual manifests. Original explanatory business-rates graphics only; editorial photos must not imply endorsement, tax case studies or affiliation.",
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-19",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda81a89758c88641f937c9",
+    "note": "Owner approved the Business Rates 2026 Preview for production in this conversation."
+  }
+}

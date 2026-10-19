@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
   INSIGHTS_WALK_INS,
@@ -34,6 +35,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_BUSINESS_RATES.slug]: [
+    {
+      href: INSIGHTS_BUSY_DIARY.path,
+      label: 'What full appointment diaries hide about shop profits',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'How to price a haircut from real costs',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-websites',
+      label: 'Explore independent barbershop websites',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_LOYALTY_SCHEMES.slug]: [
     {
       href: INSIGHTS_SECOND_VISIT.path,
