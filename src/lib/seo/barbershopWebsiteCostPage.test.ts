@@ -315,6 +315,11 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).toContain('.bwcost-svc__table');
     expect(css).toContain('.bwcost-svc__matrix');
     expect(css).toContain('.bwcost-svc__matrix-item');
+    expect(css).toContain('font-size: 0.6875rem; /* 11px — Scope Snapshot capability labels */');
+    expect(css).toContain('font-size: 0.8125rem; /* 13px — Scope Snapshot status text */');
+    expect(css).toContain('font-size: 0.75rem; /* 12px until 1280px */');
+    expect(css).toContain('font-size: 0.75rem; /* 12px */');
+    expect(css).toContain('font-size: 0.875rem; /* 14px */');
     expect(css).not.toContain('.bwcost-svc__chip');
     expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo th');
     expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo td');
