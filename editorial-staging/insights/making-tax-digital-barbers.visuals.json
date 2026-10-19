@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/making-tax-digital-barbers.md",
+  "output": "editorial-staging/insights/making-tax-digital-barbers-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81b8a4d7eda56e2680c5",
+  "status": "NEW EDITORIAL WORKING DRAFT v1 — research and writing not yet approved in Notion; owner review required before publication",
+  "researchApproved": false,
+  "writingApproved": false,
+  "publishApproved": false,
+  "ownerReviewRequired": true,
+  "seo": {
+    "title": "Making Tax Digital for Barbers: The £30,000 Test Explained",
+    "description": "Making Tax Digital for Income Tax reaches self-employed barbers above £30,000 of takings from April 2027. Who is in scope, what to record, and the deadlines.",
+    "slug": "making-tax-digital-barbers",
+    "categoryId": "tools-payments",
+    "category": "Tools & Payments",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Making Tax Digital for Barbers: What Changes When Your Takings Pass £30,000",
+      "src": "https://images.pexels.com/photos/27165069/pexels-photo-27165069.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Contemporary barber and hair salon interior with mirror and wooden floor photographed in London",
+      "caption": "A modern grooming salon in London, England. Editorial photograph; no suggestion that the business is a KERSIVO customer or that its tax records are depicted",
+      "credit": "Wilcle Nunes / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/a-modern-salon-with-a-round-mirror-and-wooden-floors-27165069/",
+      "rights": "Original Pexels photograph #27165069 by Wilcle Nunes; original https://www.pexels.com/photo/a-modern-salon-with-a-round-mirror-and-wooden-floors-27165069/ explicitly shows location London, England, UK; Free to use per Pexels licence https://www.pexels.com/license/ permits commercial editorial use and cropping. Audited unique image ID against all 18 KERSIVO Insights published visual manifests on 19 October 2026. Separate person/property/trademark clearances not established. Editorial context only; no KERSIVO affiliation or compliance claim.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "A barber might take £38,000 through their business over a year",
+      "src": "/images/insights/making-tax-digital-barbers/turnover-not-profit.svg",
+      "width": 1200,
+      "height": 720,
+      "alt": "Illustrative chair renter income £38,000 before £9,000 chair rent and £7,000 costs; profit £22,000, but qualifying turnover exceeds the £30,000 Making Tax Digital threshold",
+      "caption": "Hypothetical sole trader: £38,000 qualifying trading income, £9,000 chair rent, £7,000 other expenses and £22,000 remaining profit; threshold tests gross income",
+      "rights": "Original KERSIVO SVG based on HMRC official MTD qualifying-income guidance: HMRC uses gross turnover from qualifying self-employment and property income, not net profit. Fictional sums, not tax advice; no reused graphics.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "**More than** is important.",
+      "src": "/images/insights/making-tax-digital-barbers/mtd-phase-in.svg",
+      "width": 1200,
+      "height": 750,
+      "alt": "Three Making Tax Digital Income Tax start dates: 6 April 2026 if 2024/25 qualifying income over £50,000; 6 April 2027 if 2025/26 income over £30,000; 6 April 2028 if 2026/27 income over £20,000",
+      "caption": "HMRC phase-in thresholds, based on prior qualifying tax year; exact threshold is not above threshold",
+      "rights": "Original KERSIVO SVG using GOV.UK guidance https://www.gov.uk/guidance/find-out-if-and-when-you-need-to-use-making-tax-digital-for-income-tax and 2026/27 regulations. No government logo or third-party diagram used.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "For barbershop owners managing several chairs",
+      "src": "https://images.pexels.com/photos/27306926/pexels-photo-27306926.jpeg?auto=compress&cs=tinysrgb&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "Two men sitting and talking outside a London shop photographed in daylight",
+      "caption": "London independent retail streetscape. Editorial context for small business owners; the subjects' business, tax status and relationship to KERSIVO are unknown",
+      "credit": "Gonzalo Mendiola / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/two-people-sitting-on-a-bench-in-front-of-a-store-27306926/",
+      "rights": "Original Pexels photograph #27306926 by Gonzalo Mendiola. Original https://www.pexels.com/photo/two-people-sitting-on-a-bench-in-front-of-a-store-27306926/ tagged London, England, UK, free commercial editorial licence https://www.pexels.com/license/. Unique ID verified against all 18 published KERSIVO Insights manifests on 19 October 2026. People portrayed are not identified as barbers, tax advisers, or KERSIVO clients; no implication of their income or personal situation.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "Original DRAFT v1 authored 19 October 2026 from Notion IDEA-010 and validated against HMRC published guidance (last updated September/October 2026). No separate Notion research or writing approval asserted.",
+  "editorialVisualDirection": "Real location-confirmed London salon image and London retail interaction (not implied real clients), checked against all 18 published KERSIVO Insights media manifests. Two original charts explaining MTD thresholds and gross receipts vs net profit. No fabricated adopters or tax outcomes."
+}
