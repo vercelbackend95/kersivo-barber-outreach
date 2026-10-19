@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/apprentice-barber-funding-costs-2026.md",
+  "output": "editorial-staging/insights/apprentice-barber-funding-costs-2026-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda81419acde7a0f6e58dcf",
+  "status": "Owner approved for publication — 19 October 2026",
+  "publishApproved": true,
+  "seo": {
+    "title": "Apprentice Barber Costs and Funding in 2026: Is It Worth It?",
+    "description": "Training is fully funded and hiring payments are up to £2,000, but supervision time is the real cost. A 2026 guide for barbershops in England.",
+    "slug": "apprentice-barber-funding-costs-2026",
+    "categoryId": "industry-people",
+    "category": "Industry & People",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# Is an Apprentice Barber Worth It? The 2026 Numbers for Small Shops in England",
+      "src": "https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "A real barber carrying out a haircut in a Liverpool barbershop in England",
+      "caption": "A working barber and client in Liverpool, UK. Editorial photography; this is not a KERSIVO customer or a documented apprenticeship training session",
+      "credit": "Mitchell Orr / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-man-getting-his-hair-cut-at-a-barber-shop-X03HwElKqfM",
+      "rights": "Original image by Mitchell Orr at https://unsplash.com/photos/a-man-getting-his-hair-cut-at-a-barber-shop-X03HwElKqfM; photo-1640301133857; Unsplash page confirms Liverpool, United Kingdom and publication 23 December 2021, 'Free to use under the Unsplash License', https://unsplash.com/license permits commercial/editorial website use/cropping. Confirmed not reused by checking all 15 published KERSIVO Insights visual manifests on 19 October 2026. No separate model/property/trademark release clearance established. Editorial only; no claim depicted person is an apprentice, trainer, KERSIVO client or beneficiary of public funding.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "On wages alone, the apprentice is much cheaper.",
+      "src": "/images/insights/apprentice-barber-funding/first-year-cost-comparison.svg",
+      "width": 1200,
+      "height": 750,
+      "alt": "Annual hypothetical employer cost comparison: apprentice under 19 £15,600 in gross wages and no employer National Insurance; fully qualified barber aged 21 or over £24,784.50 in wages and up to £2,967.68 employer NI before Employment Allowance",
+      "caption": "Hypothetical 37.5-hour, 52-week wage comparison at April 2026 rates. Pensions and possible Employment Allowance treatment are explained in the article",
+      "rights": "Original KERSIVO vector chart using the reviewed Notion ARTICLE DRAFT v2 calculations: 37.5×52×£8=£15,600; 37.5×52×£12.71=£24,784.50; (£24,784.50−£5,000)×15%=£2,967.68 (rounded). Employer NI treatment can change under Employment Allowance and pension costs are excluded. Not real shop data, no copied third-party artwork.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "Suppose, **hypothetically**, a senior barber spends three hours a week coaching",
+      "src": "/images/insights/apprentice-barber-funding/supervision-time-cost.svg",
+      "width": 1200,
+      "height": 720,
+      "alt": "Illustrative apprentice supervision cost: 3 lost bookable hours each week times £32 contribution per chair-hour equals £96 weekly or £4,608 over 48 working weeks; compare conditional hiring grant up to £2,000 and additional payment up to £1,000",
+      "caption": "Illustrative lost contribution from coaching when it displaces paid appointments; funding payments are conditional and do not automatically offset all time costs",
+      "rights": "Original KERSIVO infographic based on approved Notion ARTICLE DRAFT v2 hypothetical calculation 3 × £32 = £96 per week × 48 = £4,608. Government payment illustrations £2,000 and £1,000 apply only where respective eligibility and instalment conditions are met. Not a forecast, not a wage subsidy claim.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "For a shop of **self-employed chair renters**, it's more complicated.",
+      "src": "https://images.unsplash.com/photo-1523532931495-f51ebf4bc3a2?auto=format&fit=crop&fm=jpg&q=78&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "A professional barber cutting a man's hair in a brick-lined tunnel in York, England",
+      "caption": "An independently photographed barber at work in York, England. Illustrative editorial scene, not an example of an employed apprentice or any specific funding arrangement",
+      "credit": "Thom Holmes / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/barber-cutting-mans-hair-inside-tunnel-Yb6tFZfh28Y",
+      "rights": "Original Thom Holmes Unsplash photo https://unsplash.com/photos/barber-cutting-mans-hair-inside-tunnel-Yb6tFZfh28Y; photo-1523532931495, source location York, United Kingdom, published 12 April 2018. Unsplash Licence https://unsplash.com/license/ allows commercially published editorial websites. Checked against all 15 published Insights manifests: new ID unique. Individuals' releases and other third-party rights not independently confirmed. This is a York haircut scene; do not imply training, employment or KERSIVO association.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026. Original Notion copy and numeric examples preserved; H1 marker and section heading levels normalised structurally only.",
+  "editorialVisualDirection": "Two distinct real UK barbering photographs from Liverpool and York with authentic provenance, author, licence and non-endorsement notices. Checked against all 15 live article manifests. Two original KERSIVO cost-analysis SVGs; no reused photos and no claim that any pictured person is an apprentice.",
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-19",
+    "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda81419acde7a0f6e58dcf",
+    "note": "Owner explicitly approved the final Apprentice Barber Preview for production in this conversation."
+  }
+}

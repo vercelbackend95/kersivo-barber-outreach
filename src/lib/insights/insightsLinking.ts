@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
@@ -35,6 +36,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_APPRENTICE_BARBER.slug]: [
+    {
+      href: INSIGHTS_COMMISSION_PAY.path,
+      label: 'Commission pay and minimum wage in a barbershop',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_BUSY_DIARY.path,
+      label: 'Why a busy diary may not mean more shop profit',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-websites',
+      label: 'Explore a branded website for your shop',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_BUSINESS_RATES.slug]: [
     {
       href: INSIGHTS_BUSY_DIARY.path,

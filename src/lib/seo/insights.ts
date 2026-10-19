@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_APPRENTICE_BARBER = {
+  slug: 'apprentice-barber-funding-costs-2026',
+  path: '/insights/apprentice-barber-funding-costs-2026',
+  headline: 'Is an Apprentice Barber Worth It? The 2026 Numbers for Small Shops in England',
+  seoTitle: 'Apprentice Barber Costs and Funding in 2026: Is It Worth It?',
+  description:
+    'Training is fully funded and hiring payments are up to £2,000, but supervision time is the real cost. A 2026 guide for barbershops in England.',
+  categoryId: 'industry-people' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-19',
+  verifiedDate: '2026-10-16',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81419acde7a0f6e58dcf',
+  lead: 'Weigh funding, wages and lost senior chair time before hiring an apprentice barber in a small England shop.',
+  heroImage:
+    'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=2400',
+  ogImage:
+    'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImageAlt: 'Barber and client in Liverpool, England, photographed by Mitchell Orr',
+} as const;
+
 export const INSIGHTS_BUSINESS_RATES = {
   slug: 'barbershop-business-rates-2026-england',
   path: '/insights/barbershop-business-rates-2026-england',
@@ -285,6 +304,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
   INSIGHTS_BUSY_DIARY,
