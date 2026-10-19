@@ -1316,7 +1316,8 @@
 .bwcost-svc__matrix-item--external .bwcost-svc__matrix-text,
 .bwcost-svc__matrix-item--separate .bwcost-svc__matrix-text,
 .bwcost-svc__matrix-item--project .bwcost-svc__matrix-text,
-.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-text {
+.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-text,
+.bwcost-svc__matrix-item--not-confirmed .bwcost-svc__matrix-text {
   color: var(--muted);
   font-weight: 450;
 }
@@ -1324,7 +1325,8 @@
 .bwcost-svc__matrix-item--external .bwcost-svc__matrix-icon,
 .bwcost-svc__matrix-item--separate .bwcost-svc__matrix-icon,
 .bwcost-svc__matrix-item--project .bwcost-svc__matrix-icon,
-.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-icon {
+.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-icon,
+.bwcost-svc__matrix-item--not-confirmed .bwcost-svc__matrix-icon {
   color: color-mix(in srgb, var(--muted) 88%, transparent);
 }
 

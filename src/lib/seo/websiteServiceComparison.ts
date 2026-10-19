@@ -6,7 +6,8 @@ export type ScopeChipStatus =
   | 'external'
   | 'separate'
   | 'project'
-  | 'not-in-tier';
+  | 'not-in-tier'
+  | 'not-confirmed';
 
 export type ScopeChipKey = 'website' | 'care' | 'booking' | 'shopTools';
 
@@ -66,13 +67,15 @@ export const WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL =
   BARBERSHOP_WEBSITE_COST_PRICES_CHECKED_LABEL;
 
 /**
- * Primary desktop/mobile table order (reference visual). Full catalogue remains in
- * WEBSITE_SERVICE_COMPARISON_OPTIONS for research/tests; BarberFlow, freelance and
- * agency are intentionally not rendered in the primary three-row comparison.
+ * Primary desktop/mobile table order. Full catalogue remains in
+ * WEBSITE_SERVICE_COMPARISON_OPTIONS for research/tests; freelance and agency
+ * category rows are not rendered in the primary five-provider comparison.
  */
 export const WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS = [
   'jones-digital',
   'fadefoundry',
+  'barberflow',
+  'barberque',
   'full-kersivo',
 ] as const;
 
@@ -102,6 +105,7 @@ const STATUS_META: Record<
   separate: { label: 'Separate charge', display: 'Extra', symbol: '+' },
   project: { label: 'Project scope', display: 'Project', symbol: '·' },
   'not-in-tier': { label: 'Not in quoted tier', display: 'Not in tier', symbol: '—' },
+  'not-confirmed': { label: 'Not publicly confirmed', display: 'Not confirmed', symbol: '?' },
 };
 
 function chips(
@@ -128,9 +132,9 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     scopeLabel: 'Integrated managed platform',
     priceFigure: `£${SAAS_MONTHLY_GBP}`,
     priceCaption: 'Per month / location',
-    priceNote: '£0 separate standard setup fee',
+    priceNote: '£0 separate standard setup · no VAT currently added',
     pricePrimary: `£${SAAS_MONTHLY_GBP}/month per physical location`,
-    priceSecondary: '£0 separate standard setup fee',
+    priceSecondary: '£0 separate standard setup fee; no VAT currently added',
     billingModel: 'Monthly subscription — billing starts on purchase',
     websiteDelivery:
       'Branded website prepared for your shop (standard scope), with standard own-domain arrangement, hosting, SSL and platform updates.',
@@ -139,11 +143,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     whatToCheck:
       'Standard Stripe payment-processing fees remain separate. SMS allowances and domain exceptions apply. Platform source code is not transferred on cancellation.',
     whatToCheckShort:
-      'Stripe processing fees remain separate. Source code is not transferred on cancellation.',
+      'Stripe processing fees separate. SMS and domain limits apply; platform source code is not transferred.',
     whatToCheckPoints: [
       'Stripe processing fees remain separate',
       'SMS allowances and domain exceptions apply',
-      'Source code is not transferred on cancellation',
+      'Platform source code is not transferred on cancellation',
     ],
     bookingApproach: 'Integrated bookings + retail pickup',
     mobileHighlight: 'Website, bookings, retail and management in one monthly fee',
@@ -170,27 +174,30 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     id: 'jones-digital',
     name: 'Jones Digital',
     kind: 'named',
-    scopeLabel: 'One-page website project',
+    scopeLabel: 'One-page Starter website',
     priceFigure: '£199',
     priceCaption: 'One-off starter',
-    priceNote: 'Optional care from £29/month',
-    pricePrimary: '£199 one-off',
-    priceSecondary: 'Optional care from £29/month where selected',
-    billingModel: 'One-off Starter package; higher tiers and custom work priced separately',
+    priceNote: '30 days’ post-launch care included',
+    pricePrimary: '£199 one-off Starter',
+    priceSecondary:
+      '30 days’ post-launch care included; after that independent hosting is required (supplier Hosted £29/mo, Care £49/mo, Growth £129/mo are optional)',
+    billingModel:
+      'One-off Starter package; optional monthly care plans after the included 30 days; higher barber/salon packages and custom work priced separately',
     websiteDelivery:
-      'One-page Starter website prepared for the salon or barbershop. Supplier advertises website and domain ownership for the customer.',
+      'One-page Starter website prepared for the salon or barbershop, live in about five days. Supplier advertises website and domain ownership for the customer. The barber/salon page also advertises fixed-price packages from £999 — a different published scope from the £199 Starter.',
     bookingsRetail:
-      'Starter package is a website project — not an integrated native booking platform. More complex booking, e-commerce and custom tools are separately scoped.',
+      'Starter is a website project, not a native booking platform. Custom booking applications are separately scoped (custom work advertised from £1,999). The supplier may connect third-party booking systems in other packages.',
     whatToCheck:
-      'Hosting/care is optional and separate. Confirm what the Starter package includes versus Standard, Pro or Custom quotes.',
-    whatToCheckShort: 'Hosting/care optional. Integrated booking not included in Starter.',
+      'After 30 days, hosting is separate — customers can use Jones Digital Hosted/Care/Growth plans or arrange hosting elsewhere. Confirm Starter versus Standard, Pro (£999) or Custom scopes. Do not treat the £199 Starter and £999+ barber packages as identical.',
+    whatToCheckShort:
+      '30 days’ care included. Hosting afterwards is separate; barber-focused packages also advertised from £999.',
     whatToCheckPoints: [
-      'Hosting/care optional and separately charged',
-      'Integrated booking not included in Starter',
-      'Site and domain ownership advertised',
+      '30 days’ post-launch care included; hosting afterwards is separate',
+      'Optional Hosted £29 / Care £49 / Growth £129 per month, or host elsewhere',
+      'Barber/salon packages also advertised from £999 — different published scope',
     ],
     bookingApproach: 'Not included as a native booking platform in Starter',
-    mobileHighlight: 'One-page Starter; booking/e-commerce separately scoped',
+    mobileHighlight: '£199 one-page Starter; 30 days’ care then hosting separate',
     scopeChips: chips({
       website: 'included',
       care: 'separate',
@@ -205,28 +212,31 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     id: 'fadefoundry',
     name: 'FadeFoundry',
     kind: 'named',
-    scopeLabel: 'Managed one-page founding offer',
+    scopeLabel: 'Founding Website offer',
     priceFigure: '£149',
     priceFigureSecondary: '+ £12/mo',
     priceCaption: 'Setup + monthly care',
-    priceNote: 'First checkout £161 · 12-month minimum',
+    priceNote: 'First checkout £161 · 12-month minimum · £293 year 1',
     pricePrimary: '£149 setup + £12/month',
-    priceSecondary: 'First checkout £161 (founding offer)',
-    billingModel: 'Limited founding offer for qualifying UK shops; 12-month minimum care term',
+    priceSecondary:
+      'First checkout £161; £293 over the 12-month minimum before any applicable VAT (founding offer)',
+    billingModel:
+      'Limited founding offer for qualifying UK shops; 12-month minimum care term. Prices exclude VAT unless checkout/invoice expressly states otherwise; legally applicable VAT is shown before payment.',
     websiteDelivery:
-      'One-page website prepared and maintained, with hosting and routine maintenance included. One small content update per month under the published founding offer.',
+      'One-page website prepared and maintained, with hosting and routine maintenance included. One small content update per month under the published founding offer. Client retains domain/branding; FadeFoundry retains reusable source components under a perpetual licence with conditional static export — not outright ownership of all underlying code.',
     bookingsRetail:
       'Existing Nearcut, Booksy or Fresha booking links can be connected. A paid external booking platform subscription is separate — not an independently integrated booking platform.',
     whatToCheck:
-      'Founding offer is not universally available. New domain, major changes and extra pages may cost extra.',
-    whatToCheckShort: 'Limited founding offer. External booking subscription charged separately.',
+      'Founding offer is limited. New domain, major changes and extra pages may cost extra. Early cancellation without qualifying contractual grounds leaves remaining minimum-term monthly charges payable. VAT follows published terms.',
+    whatToCheckShort:
+      '£161 upfront; £293 over 12 months. External booking and new domain extra; minimum term applies.',
     whatToCheckPoints: [
-      'Limited founding offer; 12-month care minimum',
-      'External booking subscription charged separately',
-      'Extra pages and major changes cost more',
+      '£161 first checkout; £293 over 12 paid months before applicable VAT',
+      'External booking subscription and new domain charged separately',
+      '12-month minimum; early exit can leave remaining months payable',
     ],
     bookingApproach: 'External booking links (subscription separate)',
-    mobileHighlight: 'Founding offer; 12-month care; external booking SaaS separate',
+    mobileHighlight: 'Founding offer; £293 first year; external booking SaaS separate',
     scopeChips: chips({
       website: 'included',
       care: 'included',
@@ -241,28 +251,31 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     id: 'barberflow',
     name: 'BarberFlow',
     kind: 'named',
-    scopeLabel: 'Specialist barber website starter',
+    scopeLabel: 'Starter website package',
     priceFigure: '£149',
     priceFigureSecondary: '+ £39/mo',
     priceCaption: 'Setup + monthly',
     priceNote: 'Hosting and basic support included',
     pricePrimary: '£149 setup + £39/month',
-    billingModel: 'Published Starter package with hosting and basic support',
+    priceSecondary:
+      'Launch offer: setup may be reduced or waived for qualifying early customers in exchange for a case study (3-month minimum applies to that arrangement)',
+    billingModel:
+      'Published Starter package with hosting and basic support. A separate Pro package (£249 setup + £59/month) adds an owner-editable backend and is outside this Starter comparison. VAT treatment and domain registration charges are not confirmed on the public site.',
     websiteDelivery:
-      'Barbershop website with mobile-first design, services and prices, gallery and review section, plus contact and social links.',
+      'Premium barbershop website with mobile-first design, services and prices, gallery and Google reviews section, plus call, directions and Instagram buttons. Hosting and basic support included in the published Starter price.',
     bookingsRetail:
-      'Booking-link setup when needed — distinct from a proprietary integrated booking and shop-management system. Retail is outside the published Starter scope.',
+      'Booking-link setup when needed (Booksy, Fresha, Square, Nearcut or similar). BarberFlow does not include a native booking system in Starter. Retail/shop-management platform features are outside the published Starter scope.',
     whatToCheck:
-      'This comparison covers the published Starter package only. Other functions may be available under separate arrangements.',
+      'Starter only — do not attribute Pro backend features to this tier. Setup fee may be reduced or waived for qualifying early customers in exchange for a case study; a three-month minimum is stated for that discounted-setup arrangement. VAT, domain costs and any standard contract term outside that promotion should be confirmed with the supplier.',
     whatToCheckShort:
-      'Starter package only. Booking-link setup is not an integrated booking platform. Retail outside published scope.',
+      'External booking separate. VAT, domain costs and standard contract term should be confirmed.',
     whatToCheckPoints: [
-      'Published Starter package only',
-      'Booking-link setup is not an integrated platform',
-      'Retail outside the published Starter scope',
+      'External booking-link setup — not a native booking platform',
+      'Setup may be reduced/waived for early case-study customers (3-month minimum for that offer)',
+      'VAT, domain costs and standard contract term not confirmed publicly',
     ],
-    bookingApproach: 'Booking-link setup when needed',
-    mobileHighlight: 'Starter website package; booking link ≠ integrated platform',
+    bookingApproach: 'External booking-link setup when needed',
+    mobileHighlight: 'Starter £149 + £39/mo; booking link ≠ integrated platform',
     scopeChips: chips({
       website: 'included',
       care: 'included',
@@ -272,6 +285,48 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     sourceHref: 'https://barberflow.co.uk/',
     sourceLabel: 'View supplier pricing',
     sourceShortLabel: 'BarberFlow',
+    caveat:
+      'Launch offer: setup fee can be reduced or waived for qualifying early customers in exchange for a case study; a three-month minimum applies when setup is discounted.',
+  },
+  {
+    id: 'barberque',
+    name: 'Barberque',
+    kind: 'named',
+    scopeLabel: 'Book & Pay package',
+    priceFigure: '£50',
+    priceCaption: 'Per month excl. VAT',
+    priceNote: 'Book & Pay · Online Booking from £25/mo excl. VAT',
+    pricePrimary: '£50/month excluding VAT (Book & Pay)',
+    priceSecondary:
+      'Online Booking available at £25/month excl. VAT (one calendar; +£5/mo excl. VAT per extra calendar). Website-only listed at £18/month excl. VAT.',
+    billingModel:
+      'Monthly packages excluding VAT. Cancel anytime is advertised. Setup messaging conflicts on the same page (“Free set up!” alongside “£80” for Website).',
+    websiteDelivery:
+      'Custom website design with essential shop information. Book & Pay includes the website plus online booking setup. The site simultaneously advertises “Free set up!” and an £80 Website price — confirm the current setup charge before purchase.',
+    bookingsRetail:
+      'Book & Pay includes online booking, deposits or full payment via Stripe, up to five calendars, and advertised unlimited SMS/email reminders. Stripe processing fees are separate. Wider retail/CRM platform capabilities are not confirmed from the public page.',
+    whatToCheck:
+      'All listed package prices exclude VAT. A cheaper Online Booking option is £25/month excl. VAT. The official site shows both “Free set up!” and “£80” for Website — do not treat either as a guaranteed unconditional setup fee without confirmation. Stripe fees apply on Book & Pay.',
+    whatToCheckShort:
+      '£25/mo + VAT booking option available. £80 website setup listed alongside a free-setup claim; confirm current charge.',
+    whatToCheckPoints: [
+      'Book & Pay £50/mo excl. VAT; Online Booking £25/mo excl. VAT',
+      '“Free set up!” and £80 Website price both published — confirm current charge',
+      'Stripe processing fees separate on Book & Pay',
+    ],
+    bookingApproach: 'Integrated online booking with payments (Book & Pay)',
+    mobileHighlight: '£50/mo excl. VAT Book & Pay; setup fee conflict on official site',
+    scopeChips: chips({
+      website: 'included',
+      care: 'included',
+      booking: 'included',
+      shopTools: 'not-confirmed',
+    }),
+    sourceHref: 'https://www.barberque.co.uk/',
+    sourceLabel: 'View supplier pricing',
+    sourceShortLabel: 'Barberque',
+    caveat:
+      'Official site simultaneously advertises “Free set up!” and “£80” for Website — confirm the current setup charge before purchase.',
   },
   {
     id: 'freelance',
