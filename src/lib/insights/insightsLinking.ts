@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
@@ -36,6 +37,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_UNFAIR_DISMISSAL.slug]: [
+    {
+      href: INSIGHTS_APPRENTICE_BARBER.path,
+      label: 'The cost of employing an apprentice barber in England',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_COMMISSION_PAY.path,
+      label: 'Commission pay and minimum wage for barbers',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-websites',
+      label: 'Explore a branded website for your barbershop',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_APPRENTICE_BARBER.slug]: [
     {
       href: INSIGHTS_COMMISSION_PAY.path,

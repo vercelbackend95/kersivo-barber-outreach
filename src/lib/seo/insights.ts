@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_UNFAIR_DISMISSAL = {
+  slug: 'unfair-dismissal-six-months-barbershop-employers',
+  path: '/insights/unfair-dismissal-six-months-barbershop-employers',
+  headline: 'Six Months, Not Two Years: How the 2027 Unfair Dismissal Change Affects Barbershops That Employ Staff',
+  seoTitle: 'Unfair Dismissal After 6 Months: What Barbershops Must Know',
+  description:
+    'From 1 January 2027, employees can claim unfair dismissal after six months, not two years. What it means for barbershop hiring, probation and records.',
+  categoryId: 'industry-people' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-19',
+  verifiedDate: '2026-10-19',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8192882de0d7f653e7dc',
+  lead: 'The 2027 change to six months of qualifying service brings dismissal-process and probation decisions forward for employers of small barbershop teams.',
+  heroImage:
+    'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage:
+    'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  ogImageAlt: 'Traditional barbershop sign in Abergele, Wales, photographed by Lisa from Pexels',
+} as const;
+
 export const INSIGHTS_APPRENTICE_BARBER = {
   slug: 'apprentice-barber-funding-costs-2026',
   path: '/insights/apprentice-barber-funding-costs-2026',
@@ -304,6 +323,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,
   INSIGHTS_LOYALTY_SCHEMES,
