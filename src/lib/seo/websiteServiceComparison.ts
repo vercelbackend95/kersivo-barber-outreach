@@ -39,6 +39,8 @@ export type WebsiteServiceComparisonOption = {
   whatToCheck: string;
   /** Short cell copy for desktop What to check column. */
   whatToCheckShort: string;
+  /** Scan-friendly micro-points for What to check (2–3 lines). */
+  whatToCheckPoints: readonly string[];
   bookingApproach: string;
   mobileHighlight: string;
   scopeChips: readonly ScopeChip[];
@@ -47,6 +49,8 @@ export type WebsiteServiceComparisonOption = {
   /** Short link label for the footer cluster (e.g. Jones Digital). */
   sourceShortLabel?: string;
   emphasized?: boolean;
+  /** Optional factual category label for featured row (e.g. Integrated platform). */
+  categoryLabel?: string;
   includedSummary?: readonly string[];
   caveat?: string;
 };
@@ -65,8 +69,8 @@ export const SCOPE_CHIP_LABELS: Record<ScopeChipKey, string> = {
 
 const STATUS_LABEL: Record<ScopeChipStatus, string> = {
   included: 'Included',
-  external: 'External',
-  separate: 'Separate',
+  external: 'External link',
+  separate: 'Separate charge',
   project: 'Project scope',
   'not-in-tier': 'Not in quoted tier',
 };
@@ -102,6 +106,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Standard Stripe payment-processing fees remain separate. SMS allowances and domain exceptions apply. Platform source code is not transferred on cancellation.',
     whatToCheckShort:
       'Stripe processing fees remain separate. SMS allowances and domain exceptions apply. Source code is not transferred on cancellation.',
+    whatToCheckPoints: [
+      'Stripe processing fees remain separate',
+      'SMS allowances and domain exceptions apply',
+      'Source code is not transferred on cancellation',
+    ],
     bookingApproach: 'Integrated bookings + retail pickup',
     mobileHighlight: 'Website, bookings, retail and management in one monthly fee',
     scopeChips: chips({
@@ -114,6 +123,7 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     sourceLabel: 'View KERSIVO pricing',
     sourceShortLabel: 'KERSIVO pricing',
     emphasized: true,
+    categoryLabel: 'Integrated platform',
     includedSummary: [
       'Branded website prepared for your shop',
       'Integrated bookings',
@@ -141,6 +151,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Hosting/care is optional and separate. Confirm what the Starter package includes versus Standard, Pro or Custom quotes.',
     whatToCheckShort:
       'Hosting/care optional. Integrated booking not included in Starter. Site and domain ownership advertised.',
+    whatToCheckPoints: [
+      'Hosting/care optional and separately charged',
+      'Integrated booking not included in Starter',
+      'Site and domain ownership advertised',
+    ],
     bookingApproach: 'Not included as a native booking platform in Starter',
     mobileHighlight: 'One-page Starter; booking/e-commerce separately scoped',
     scopeChips: chips({
@@ -173,6 +188,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Founding offer is not universally available. New domain, major changes and extra pages may cost extra.',
     whatToCheckShort:
       'Limited founding offer. External booking subscription separate. Extra pages and major changes cost more.',
+    whatToCheckPoints: [
+      'Limited founding offer; 12-month care minimum',
+      'External booking subscription charged separately',
+      'Extra pages and major changes cost more',
+    ],
     bookingApproach: 'External booking links (subscription separate)',
     mobileHighlight: 'Founding offer; 12-month care; external booking SaaS separate',
     scopeChips: chips({
@@ -204,6 +224,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'This comparison covers the published Starter package only. Other functions may be available under separate arrangements.',
     whatToCheckShort:
       'Starter package only. Booking-link setup is not an integrated booking platform. Retail outside published scope.',
+    whatToCheckPoints: [
+      'Published Starter package only',
+      'Booking-link setup is not an integrated platform',
+      'Retail outside the published Starter scope',
+    ],
     bookingApproach: 'Booking-link setup when needed',
     mobileHighlight: 'Starter website package; booking link ≠ integrated platform',
     scopeChips: chips({
@@ -234,6 +259,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Clarify code ownership, hosting responsibility, maintenance after launch, and who supports bookings once live.',
     whatToCheckShort:
       'Clarify ownership, hosting, maintenance and who supports bookings after launch.',
+    whatToCheckPoints: [
+      'Clarify code ownership and hosting responsibility',
+      'Agree maintenance after launch',
+      'Confirm who supports bookings once live',
+    ],
     bookingApproach: 'Depends on project',
     mobileHighlight: 'Scope, ownership and ongoing care vary by contract',
     scopeChips: chips({
@@ -263,6 +293,11 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Confirm deliverables, ownership rights, ongoing fees and what happens after the build completes. The £2,000–£6,000 figure is an attributed publisher example for template-based builds, not a barbershop-specific quote.',
     whatToCheckShort:
       'Confirm deliverables, ownership and ongoing fees. £2k–£6k is an attributed template-build example, not a barbershop quote.',
+    whatToCheckPoints: [
+      'Confirm deliverables, ownership and ongoing fees',
+      'Bookings/retail only if scoped in the proposal',
+      '£2k–£6k is an attributed template-build example, not a barbershop quote',
+    ],
     bookingApproach: 'Depends on project',
     mobileHighlight: 'Proposal-based; bookings/retail only if scoped',
     scopeChips: chips({

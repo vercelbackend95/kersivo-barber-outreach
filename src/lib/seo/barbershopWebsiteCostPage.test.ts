@@ -247,9 +247,13 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(serviceComparison).toContain('Wix and Squarespace');
     expect(serviceComparison).toContain('Published offer');
     expect(serviceComparison).toContain('Scope snapshot');
-    expect(serviceComparison).toContain('bwcost-svc__chip');
+    expect(serviceComparison).toContain('bwcost-svc__scope-list');
+    expect(serviceComparison).toContain('bwcost-svc__scope-item');
+    expect(serviceComparison).toContain('bwcost-svc__points');
+    expect(serviceComparison).toContain('bwcost-svc__cell');
     expect(serviceComparison).toContain('bwcost-svc__price-figure');
     expect(serviceComparison).toContain('bwcost-svc__sources');
+    expect(serviceComparison).toContain('row.categoryLabel');
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS).toHaveLength(6);
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.map((row) => row.name)).toEqual([
       'Full KERSIVO',
@@ -267,6 +271,8 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.scopeChips.every((c) => c.status === 'included')).toBe(
       true,
     );
+    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.whatToCheckPoints.length).toBeGreaterThanOrEqual(2);
+    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.categoryLabel).toBe('Integrated platform');
     expect(comparisonData).toContain('https://jonesdigital.co.uk/for/salons/');
     expect(comparisonData).toContain('https://fadefoundry.co.uk/pricing/');
     expect(comparisonData).toContain('https://barberflow.co.uk/');
@@ -277,7 +283,8 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(comparisonData).toContain('Depends on project');
     expect(comparisonData).toContain('whatToCheckShort');
     expect(css).toContain('.bwcost-svc__table');
-    expect(css).toContain('.bwcost-svc__chip');
+    expect(css).toContain('.bwcost-svc__scope-list');
+    expect(css).toContain('.bwcost-svc__cell');
     expect(css).toContain('.bwcost-svc__price-figure');
     expect(css).toContain('.bwcost-svc__card--kersivo');
     expect(css).toContain('.bwcost-svc__mobile');
@@ -285,6 +292,8 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).toMatch(/\.bwcost-svc__title\s*\{[^}]*font-family:\s*var\(--font-body\)/s);
     expect(css).toContain('text-transform: none');
     expect(css).toContain('min(94vw, 91.1rem)');
+    expect(css).toContain('border-collapse: separate');
+    expect(css).toContain('Never set display:flex/grid on them');
     expect(css).toContain('@media (min-width: 1024px)');
   });
 

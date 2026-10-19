@@ -80,45 +80,57 @@ function padIndex(i: number): string {
               options.map((row, index) => (
                 <tr class:list={['bwcost-svc__row', row.emphasized && 'bwcost-svc__row--kersivo']}>
                   <th scope="row" class="bwcost-svc__offer">
-                    <span
-                      class:list={['bwcost-svc__index', row.emphasized && 'bwcost-svc__index--accent']}
-                      aria-hidden="true"
-                    >
-                      {padIndex(index)}
-                    </span>
-                    <span class="bwcost-svc__offer-copy">
-                      <span class="bwcost-svc__name">{row.name}</span>
-                      <span class="bwcost-svc__scope">{row.scopeLabel}</span>
-                    </span>
+                    <div class="bwcost-svc__cell">
+                      <div class="bwcost-svc__offer-inner">
+                        <span
+                          class:list={['bwcost-svc__index', row.emphasized && 'bwcost-svc__index--accent']}
+                          aria-hidden="true"
+                        >
+                          {padIndex(index)}
+                        </span>
+                        <div class="bwcost-svc__offer-copy">
+                          {row.categoryLabel ? (
+                            <span class="bwcost-svc__category">{row.categoryLabel}</span>
+                          ) : null}
+                          <span class="bwcost-svc__name">{row.name}</span>
+                          <span class="bwcost-svc__scope">{row.scopeLabel}</span>
+                        </div>
+                      </div>
+                    </div>
                   </th>
                   <td class="bwcost-svc__price">
-                    <span class="bwcost-svc__price-figure">
-                      {row.priceFigure}
-                      {row.priceFigureSecondary ? (
-                        <span class="bwcost-svc__price-figure-sec">{row.priceFigureSecondary}</span>
-                      ) : null}
-                    </span>
-                    <span class="bwcost-svc__price-caption">{row.priceCaption}</span>
-                    {row.priceNote ? <span class="bwcost-svc__price-note">{row.priceNote}</span> : null}
+                    <div class="bwcost-svc__cell">
+                      <span class="bwcost-svc__price-figure">
+                        {row.priceFigure}
+                        {row.priceFigureSecondary ? (
+                          <span class="bwcost-svc__price-figure-sec">{row.priceFigureSecondary}</span>
+                        ) : null}
+                      </span>
+                      <span class="bwcost-svc__price-caption">{row.priceCaption}</span>
+                      {row.priceNote ? <span class="bwcost-svc__price-note">{row.priceNote}</span> : null}
+                    </div>
                   </td>
-                  <td class="bwcost-svc__chips-cell">
-                    <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
-                      {row.scopeChips.map((chip) => (
-                        <li
-                          class:list={[
-                            'bwcost-svc__chip',
-                            `bwcost-svc__chip--${chip.status}`,
-                            chip.status === 'included' && 'bwcost-svc__chip--on',
-                          ]}
-                          aria-label={`${chip.label}: ${chip.statusLabel}`}
-                        >
-                          <span class="bwcost-svc__chip-label">{chip.label}</span>
-                          <span class="bwcost-sr-only">{chip.statusLabel}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <td class="bwcost-svc__scope-cell">
+                    <div class="bwcost-svc__cell">
+                      <ul class="bwcost-svc__scope-list" aria-label={`Scope for ${row.name}`}>
+                        {row.scopeChips.map((chip) => (
+                          <li class:list={['bwcost-svc__scope-item', `bwcost-svc__scope-item--${chip.status}`]}>
+                            <span class="bwcost-svc__scope-dim">{chip.label}</span>
+                            <span class="bwcost-svc__scope-status">{chip.statusLabel}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </td>
-                  <td class="bwcost-svc__check">{row.whatToCheckShort}</td>
+                  <td class="bwcost-svc__check">
+                    <div class="bwcost-svc__cell">
+                      <ul class="bwcost-svc__points">
+                        {row.whatToCheckPoints.map((point) => (
+                          <li>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </td>
                 </tr>
               ))
             }
@@ -166,6 +178,7 @@ function padIndex(i: number): string {
                   {padIndex(index)}
                 </span>
                 <div>
+                  {row.categoryLabel ? <p class="bwcost-svc__category">{row.categoryLabel}</p> : null}
                   <p class="bwcost-svc__card-name">{row.name}</p>
                   <p class="bwcost-svc__card-scope">{row.scopeLabel}</p>
                 </div>
@@ -182,26 +195,23 @@ function padIndex(i: number): string {
               </p>
               {row.priceNote ? <p class="bwcost-svc__card-price-secondary">{row.priceNote}</p> : null}
 
-              <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
+              <ul class="bwcost-svc__scope-list" aria-label={`Scope for ${row.name}`}>
                 {row.scopeChips.map((chip) => (
-                  <li
-                    class:list={[
-                      'bwcost-svc__chip',
-                      `bwcost-svc__chip--${chip.status}`,
-                      chip.status === 'included' && 'bwcost-svc__chip--on',
-                    ]}
-                    aria-label={`${chip.label}: ${chip.statusLabel}`}
-                  >
-                    <span class="bwcost-svc__chip-label">{chip.label}</span>
-                    <span class="bwcost-sr-only">{chip.statusLabel}</span>
+                  <li class:list={['bwcost-svc__scope-item', `bwcost-svc__scope-item--${chip.status}`]}>
+                    <span class="bwcost-svc__scope-dim">{chip.label}</span>
+                    <span class="bwcost-svc__scope-status">{chip.statusLabel}</span>
                   </li>
                 ))}
               </ul>
 
-              <p class="bwcost-svc__card-highlight">
+              <div class="bwcost-svc__card-highlight">
                 <span class="bwcost-svc__card-label">What to check</span>
-                {row.whatToCheckShort}
-              </p>
+                <ul class="bwcost-svc__points">
+                  {row.whatToCheckPoints.map((point) => (
+                    <li>{point}</li>
+                  ))}
+                </ul>
+              </div>
 
               {row.caveat ? <p class="bwcost-svc__card-caveat">{row.caveat}</p> : null}
 
