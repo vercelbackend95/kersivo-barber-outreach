@@ -151,6 +151,25 @@ export const INSIGHTS_SECOND_VISIT = {
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
+export const INSIGHTS_OWNER_EARNINGS = {
+  slug: 'how-much-do-barbershop-owners-make-uk',
+  path: '/insights/how-much-do-barbershop-owners-make-uk',
+  headline: 'What Does a UK Barbershop Owner Actually Earn? A Model Profit and Loss, Chair by Chair',
+  seoTitle: 'How Much Do Barbershop Owners Make in the UK? A Model P&L',
+  description:
+    'A transparent UK model of what barbershop owners earn at two, four and six chairs, and the three cost lines that decide whether the shop pays its owner.',
+  categoryId: 'business-profit' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-19',
+  verifiedDate: '2026-10-19',
+  notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8181b1ffc7d5f1063a5d',
+  lead: 'Two hypothetical four-chair UK barbershops make £180,000 in annual sales yet deliver very different owner cash after costs, taxes and debt.',
+  heroImage:
+    'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage:
+    'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  ogImageAlt: 'A red barber chair photographed in London by Jennifer Latham',
+} as const;
+
 export const INSIGHTS_UNFAIR_DISMISSAL = {
   slug: 'unfair-dismissal-six-months-barbershop-employers',
   path: '/insights/unfair-dismissal-six-months-barbershop-employers',
@@ -323,6 +342,7 @@ export const INSIGHTS_COMMISSION_PAY = {
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_OWNER_EARNINGS,
   INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,

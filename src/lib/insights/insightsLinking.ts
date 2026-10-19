@@ -4,6 +4,7 @@
  */
 import {
   INSIGHTS_CARD_FEES,
+  INSIGHTS_OWNER_EARNINGS,
   INSIGHTS_UNFAIR_DISMISSAL,
   INSIGHTS_APPRENTICE_BARBER,
   INSIGHTS_BUSINESS_RATES,
@@ -37,6 +38,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_OWNER_EARNINGS.slug]: [
+    {
+      href: INSIGHTS_BUSY_DIARY.path,
+      label: 'Why a full barbershop diary can still mean low profit',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_HAIRCUT_PRICING.path,
+      label: 'Price haircuts with your real operating costs',
+      kind: 'article',
+    },
+    {
+      href: '/barber-software-cost-calculator',
+      label: 'Compare the costs of booking software',
+      kind: 'tool',
+    },
+  ],
   [INSIGHTS_UNFAIR_DISMISSAL.slug]: [
     {
       href: INSIGHTS_APPRENTICE_BARBER.path,
