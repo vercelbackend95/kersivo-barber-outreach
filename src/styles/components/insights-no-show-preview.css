@@ -1,0 +1,7 @@
+/* Internal Insights editorial review callout. Scoped only to the no-show draft. */
+.insights-article__body .no-show-review-banner{box-sizing:border-box;max-width:var(--insights-copy);margin:0 0 3rem;padding:1.3rem 1.45rem;border:1px solid #bd955b;border-left:4px solid #9b5b1f;background:#f5ecdc;color:#32281e;border-radius:3px}
+.insights-article__body .no-show-review-banner__label{display:block;margin:0 0 .6rem;font-size:.73rem;letter-spacing:.12em;font-weight:850;color:#744017}
+.insights-article__body .no-show-review-banner p{margin:0;line-height:1.58;font-size:.98rem;color:#32281e}
+.insights-article__body table{border-collapse:collapse}
+.insights-article__body table th{text-align:left;font-weight:750}
+@media(max-width:680px){.insights-article__body .no-show-review-banner{padding:1rem 1.1rem}}
