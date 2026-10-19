@@ -1,0 +1,31 @@
+---
+/** Noindex editorial review only — legal HOLD remains active in Notion. Never add to published Insights registry. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { getInsightsCategoryName } from '@/lib/insights/categories';
+import '../../../styles/components/insights-no-show-preview.css';
+import { formatInsightsDateLabel } from '@/lib/seo/insights';
+import { Content as ArticleBody } from '../../../../editorial-staging/insights/barbershop-no-show-cost-when-deposit-makes-sense-display.md';
+export const prerender = true;
+const slug = 'barbershop-no-show-cost-when-deposit-makes-sense';
+const headline = 'What a No-Show Really Costs a Barbershop — and When a Deposit Makes Sense';
+---
+<InsightsArticleLayout
+  title="REVIEW DRAFT — Barbershop No-Shows & Deposits | KERSIVO"
+  description="Internal editorial preview of the no-show cost and deposit guide. Legal review pending; not for public release."
+  slug={slug}
+  categoryId="bookings-operations"
+  category={getInsightsCategoryName('bookings-operations')}
+  dateLabel="Editorial preview · 19 October 2026"
+  sourceUrl="https://app.notion.com/p/3fa7dbe5bbda81e2982bc9c20f746a2d"
+  headline={headline}
+  publishedDate="2026-10-19"
+  verifiedDate="2026-10-16"
+  heroImage="/images/insights/og/barbershop-card-payment-fees-uk-1200x630.png"
+  published={false}
+>
+  <div class="no-show-review-banner" role="note" aria-label="Editorial legal hold">
+    <span class="no-show-review-banner__label">INTERNAL REVIEW · NOT PUBLISHED</span>
+    <p>This is Grok's 16 October 2026 draft v4, presented for editorial inspection. A consumer-law question about online booking cancellation rights remains unresolved. This article has not passed specialist legal review. Do not rely on it as legal advice or publish it yet.</p>
+  </div>
+  <ArticleBody />
+</InsightsArticleLayout>
