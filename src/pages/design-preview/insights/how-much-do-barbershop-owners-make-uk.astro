@@ -1,0 +1,32 @@
+---
+/** KERSIVO Insights working draft. Not research/writing-approved in Notion. No public sitemap or indexation. */
+import InsightsArticleLayout from '@/layouts/InsightsArticleLayout.astro';
+import { Content as ProfitBody } from '../../../../editorial-staging/insights/how-much-do-barbershop-owners-make-uk-display.md';
+const article = {
+  slug: 'how-much-do-barbershop-owners-make-uk',
+  headline: 'What Does a UK Barbershop Owner Actually Earn? A Model Profit and Loss, Chair by Chair',
+  seoTitle: 'How Much Do Barbershop Owners Make in the UK? A Model P&L',
+  description: 'A transparent UK model of what barbershop owners earn at two, four and six chairs, and the three cost lines that decide whether the shop pays its owner.',
+  categoryId: 'business-profit' as const,
+  sourceUrl: 'https://app.notion.com/p/3fb7dbe5bbda8181b1ffc7d5f1063a5d',
+  heroImage: 'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400',
+  ogImage: 'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+};
+---
+<InsightsArticleLayout
+  title={article.seoTitle}
+  description={article.description}
+  slug={article.slug}
+  categoryId={article.categoryId}
+  dateLabel="WORKING DRAFT · 19 October 2026 · OWNER REVIEW REQUIRED"
+  sourceUrl={article.sourceUrl}
+  headline={article.headline}
+  heroImage={article.heroImage}
+  ogImage={article.ogImage}
+  ogImageAlt="A red barber chair in a grooming studio in London, England, photographed by Jennifer Latham"
+  publishedDate="2026-10-19"
+  verifiedDate="2026-10-19"
+  published={false}
+>
+  <ProfitBody />
+</InsightsArticleLayout>

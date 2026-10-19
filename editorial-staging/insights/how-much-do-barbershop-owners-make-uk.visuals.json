@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/how-much-do-barbershop-owners-make-uk.md",
+  "output": "editorial-staging/insights/how-much-do-barbershop-owners-make-uk-display.md",
+  "notionUrl": "https://app.notion.com/p/3fb7dbe5bbda8181b1ffc7d5f1063a5d",
+  "status": "NEW WORKING DRAFT — based on IDEA-011 in Notion; Research Approved NO and Writing Approved NO; owner review required before publication",
+  "researchApproved": false,
+  "writingApproved": false,
+  "publishApproved": false,
+  "ownerReviewRequired": true,
+  "seo": {
+    "title": "How Much Do Barbershop Owners Make in the UK? A Model P&L",
+    "description": "A transparent UK model of what barbershop owners earn at two, four and six chairs, and the three cost lines that decide whether the shop pays its owner.",
+    "slug": "how-much-do-barbershop-owners-make-uk",
+    "categoryId": "business-profit",
+    "category": "Business & Profit",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# What Does a UK Barbershop Owner Actually Earn? A Model Profit and Loss, Chair by Chair",
+      "src": "https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Red barber chair and grooming workstations in a real London salon interior",
+      "caption": "A grooming salon interior photographed in London. Editorial illustration only — the premises are not KERSIVO customers or the invented shops in the model",
+      "credit": "Jennifer Latham / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/",
+      "rights": "Original Pexels photo #9703068 by Jennifer Latham, source https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/, with London, England, United Kingdom location and Free to use licence https://www.pexels.com/license/ permitting commercial editorial blog display/crops. Photo ID audited against all 17 production Insights manifests on 19 Oct 2026: unique. Subject premises/brands/people not endorsed by or associated with KERSIVO, with no claims of their finances.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "A shop making £180,000 in annual sales does not have £180,000 to distribute.",
+      "src": "/images/insights/barbershop-owner-earnings/same-turnover-different-owner-cash.svg",
+      "width": 1200,
+      "height": 730,
+      "alt": "Two hypothetical four-chair UK shops each have 180000 pounds turnover; Shop A has 85342 pounds operating profit and 52810 pounds cash left, versus Shop B with 43937 pounds profit and 21781 pounds cash",
+      "caption": "Same hypothetical £180,000 turnover, different costs. Cash figures follow estimated sole-trader tax, loan principal repayments and equipment cash spend",
+      "rights": "Original KERSIVO vector chart based on original Notion IDEA-011 validated model, independently recalculated to unrounded £85,341.60 vs £43,936.60 operating profit and £52,809.53 vs £21,781.28 after the stated tax and cash assumptions. Illustrative, not national statistics or actual client data.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "diagram",
+      "anchor": "The difference between the rows looks attractive",
+      "src": "/images/insights/barbershop-owner-earnings/chair-count-contribution.svg",
+      "width": 1200,
+      "height": 750,
+      "alt": "Hypothetical contribution before fixed overhead for working owner plus employed barbers: two chairs 66247 pounds, four chairs 114142 pounds, six chairs 162036 pounds",
+      "caption": "Before rent, rates, utilities, equipment, other fixed overhead and personal tax; scaling chairs requires matching demand, space and staffing",
+      "rights": "Original KERSIVO vector chart. Model: owner-chair £45,000 revenue, 2% fees and 4% consumables, equals £42,300 contribution. Each employee adds £45,000 revenue less £18,000 pay, £352.80 employer pension, £900 fees, £1,800 consumables = £23,947.20. Calculations: 2 chairs £66,247.20; 4 £114,141.60; 6 £162,036.00. Employment Allowance assumed eligible. These are not owner income figures.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "A shop mixing both arrangements needs a separate revenue and cost view",
+      "src": "https://images.pexels.com/photos/4163939/pexels-photo-4163939.jpeg?auto=compress&cs=tinysrgb&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "Illuminated neon sign photographed inside a commercial interior in Manchester, England",
+      "caption": "An illuminated retail interior in Manchester, England, photographed by Aldrich. Scene-setting only; this business's staffing arrangements and finances are unknown",
+      "credit": "Aldrich / Pexels",
+      "creditUrl": "https://www.pexels.com/photo/illuminated-text-sign-on-the-wall-4163939/",
+      "rights": "Original Pexels photo #4163939 by Aldrich, original https://www.pexels.com/photo/illuminated-text-sign-on-the-wall-4163939/, location Manchester, England, United Kingdom; free use under Pexels licence https://www.pexels.com/license/. Used as general British retail ambiance not proof of a working barbershop or staffing model. Image ID independently audited against all 17 current production Insights visual manifests: not used. No endorsement/customer link asserted.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "Original editorial DRAFT v1 prepared 19 Oct 2026 using Notion IDEA-011 validation model (not approved for writing yet) and rechecked UK gov rules and arithmetic; publication requires separate owner/editorial approval.",
+  "editorialVisualDirection": "Two new location-grounded UK Pexels editorial images (London barber chair and Manchester neon interior), both checked unique across 17 published Insights article manifests; two KERSIVO-original, clearly hypothetical financial charts. No imaginary shop represented as a case study or KERSIVO customer."
+}

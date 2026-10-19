@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" role="img" aria-labelledby="title desc">
+<title id="title">Same turnover, different owner cash</title><desc id="desc">Two hypothetical four-chair shops both earn £180,000 turnover excluding VAT. Shop A keeps £85,342 operating profit and £52,810 illustrative cash after tax, debt principal and equipment; Shop B keeps £43,937 operating profit and £21,781 illustrative cash.</desc>
+<rect width="1200" height="730" rx="24" fill="#141519"/>
+<text x="55" y="61" fill="#ff3636" font-family="Arial,sans-serif" font-size="18" font-weight="750" letter-spacing="3">KERSIVO INSIGHTS / BARBERSHOP ECONOMICS</text>
+<text x="55" y="131" fill="#fff" font-family="Arial,sans-serif" font-size="46" font-weight="750">Same £180k turnover. Different outcome.</text>
+<text x="55" y="170" fill="#b9c0c8" font-family="Arial,sans-serif" font-size="21">Two model four-chair shops · annual, excluding VAT · not a UK average</text>
+<rect x="55" y="218" width="524" height="346" rx="18" fill="#f6f5f1"/>
+<rect x="620" y="218" width="524" height="346" rx="18" fill="#f6f5f1"/>
+<rect x="55" y="218" width="524" height="9" rx="4" fill="#777e85"/>
+<rect x="620" y="218" width="524" height="9" rx="4" fill="#ee3035"/>
+<text x="85" y="270" fill="#33393f" font-family="Arial,sans-serif" font-size="25" font-weight="750">SHOP A</text>
+<text x="650" y="270" fill="#33393f" font-family="Arial,sans-serif" font-size="25" font-weight="750">SHOP B</text>
+<text x="85" y="321" fill="#5b626a" font-family="Arial,sans-serif" font-size="18">Operating profit before owner tax</text>
+<text x="650" y="321" fill="#5b626a" font-family="Arial,sans-serif" font-size="18">Operating profit before owner tax</text>
+<text x="85" y="378" fill="#25292d" font-family="Arial,sans-serif" font-size="53" font-weight="780">£85,342</text>
+<text x="650" y="378" fill="#25292d" font-family="Arial,sans-serif" font-size="53" font-weight="780">£43,937</text>
+<line x1="85" y1="415" x2="550" y2="415" stroke="#d5d4d0" stroke-width="2"/>
+<line x1="650" y1="415" x2="1115" y2="415" stroke="#d5d4d0" stroke-width="2"/>
+<text x="85" y="456" fill="#5b626a" font-family="Arial,sans-serif" font-size="18">Illustrative remaining cash</text>
+<text x="650" y="456" fill="#5b626a" font-family="Arial,sans-serif" font-size="18">Illustrative remaining cash</text>
+<text x="85" y="529" fill="#31795b" font-family="Arial,sans-serif" font-size="62" font-weight="780">£52,810</text>
+<text x="650" y="529" fill="#c52732" font-family="Arial,sans-serif" font-size="62" font-weight="780">£21,781</text>
+<rect x="55" y="603" width="1089" height="75" rx="13" fill="#282c31"/>
+<text x="87" y="652" fill="#fff" font-family="Arial,sans-serif" font-size="29" font-weight="750">CASH DIFFERENCE: <tspan fill="#ff4646">£31,029</tspan></text>
+<text x="55" y="711" fill="#b9c0c6" font-family="Arial,sans-serif" font-size="16">Invented example; excludes individual tax circumstances and real-world variability. See the full model table.</text>
+</svg>
