@@ -230,7 +230,7 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).not.toContain('--bwcost-orbit-r');
   });
 
-  it('renders the three-row reference comparison with chips under the hero', () => {
+  it('renders the three-row reference comparison with scope matrix under the hero', () => {
     expect(WEBSITE_SERVICE_COMPARISON_SECTION_ID).toBe('website-service-comparison');
     expect(serviceComparison).toContain('getPrimaryWebsiteServiceComparisonOptions');
     expect(serviceComparison).toContain('01 / WEBSITE COST COMPARISON');
@@ -249,9 +249,12 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(serviceComparison).toContain('Wix and Squarespace');
     expect(serviceComparison).toContain('Published offer');
     expect(serviceComparison).toContain('Scope snapshot');
-    expect(serviceComparison).toContain('bwcost-svc__chips');
-    expect(serviceComparison).toContain('bwcost-svc__chip');
+    expect(serviceComparison).toContain('bwcost-svc__matrix');
+    expect(serviceComparison).toContain('bwcost-svc__matrix-item');
+    expect(serviceComparison).toContain('bwcost-svc__matrix-label');
+    expect(serviceComparison).toContain('bwcost-svc__matrix-text');
     expect(serviceComparison).toContain('bwcost-svc__check-copy');
+    expect(serviceComparison).not.toContain('bwcost-svc__chip');
     expect(serviceComparison).toContain('bwcost-svc__cell');
     expect(serviceComparison).toContain('bwcost-svc__price-figure');
     expect(serviceComparison).toContain('bwcost-svc__sources');
@@ -282,6 +285,26 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.scopeChips.every((c) => c.status === 'included')).toBe(
       true,
     );
+    const jones = primary.find((row) => row.id === 'jones-digital');
+    expect(jones?.scopeChips.map((c) => c.status)).toEqual([
+      'included',
+      'separate',
+      'not-in-tier',
+      'not-in-tier',
+    ]);
+    expect(jones?.scopeChips.map((c) => c.statusDisplay)).toEqual([
+      'Included',
+      'Extra',
+      'Not in tier',
+      'Not in tier',
+    ]);
+    const fade = primary.find((row) => row.id === 'fadefoundry');
+    expect(fade?.scopeChips.map((c) => c.status)).toEqual([
+      'included',
+      'included',
+      'external',
+      'not-in-tier',
+    ]);
     expect(comparisonData).toContain('https://jonesdigital.co.uk/for/salons/');
     expect(comparisonData).toContain('https://fadefoundry.co.uk/pricing/');
     expect(comparisonData).toContain('https://barberflow.co.uk/');
@@ -290,11 +313,15 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     );
     expect(comparisonData).toContain('Custom quote');
     expect(css).toContain('.bwcost-svc__table');
-    expect(css).toContain('.bwcost-svc__chip');
-    expect(css).toContain('.bwcost-svc__chips');
+    expect(css).toContain('.bwcost-svc__matrix');
+    expect(css).toContain('.bwcost-svc__matrix-item');
+    expect(css).not.toContain('.bwcost-svc__chip');
     expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo th');
     expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo td');
     expect(css).toContain('pointer-events: none');
+    expect(css).toContain(
+      '.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-icon',
+    );
     expect(css).toContain('.bwcost-svc__cell');
     expect(css).toContain('.bwcost-svc__price-figure');
     expect(css).toContain('.bwcost-svc__card--kersivo');

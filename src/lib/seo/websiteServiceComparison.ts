@@ -14,7 +14,12 @@ export type ScopeChip = {
   key: ScopeChipKey;
   label: string;
   status: ScopeChipStatus;
+  /** Full meaning for accessibility / disclosures. */
   statusLabel: string;
+  /** Compact visible status in the Scope Snapshot matrix. */
+  statusDisplay: string;
+  /** Decorative status symbol; hide from assistive tech when statusDisplay is present. */
+  statusSymbol: string;
 };
 
 export type WebsiteServiceComparisonOption = {
@@ -88,23 +93,31 @@ export const SCOPE_CHIP_LABELS: Record<ScopeChipKey, string> = {
   shopTools: 'Shop tools',
 };
 
-const STATUS_LABEL: Record<ScopeChipStatus, string> = {
-  included: 'Included',
-  external: 'External link',
-  separate: 'Separate charge',
-  project: 'Project scope',
-  'not-in-tier': 'Not in quoted tier',
+const STATUS_META: Record<
+  ScopeChipStatus,
+  { label: string; display: string; symbol: string }
+> = {
+  included: { label: 'Included', display: 'Included', symbol: '✓' },
+  external: { label: 'External link', display: 'External link', symbol: '↗' },
+  separate: { label: 'Separate charge', display: 'Extra', symbol: '+' },
+  project: { label: 'Project scope', display: 'Project', symbol: '·' },
+  'not-in-tier': { label: 'Not in quoted tier', display: 'Not in tier', symbol: '—' },
 };
 
 function chips(
   statuses: Record<ScopeChipKey, ScopeChipStatus>,
 ): readonly ScopeChip[] {
-  return (Object.keys(SCOPE_CHIP_LABELS) as ScopeChipKey[]).map((key) => ({
-    key,
-    label: SCOPE_CHIP_LABELS[key],
-    status: statuses[key],
-    statusLabel: STATUS_LABEL[statuses[key]],
-  }));
+  return (Object.keys(SCOPE_CHIP_LABELS) as ScopeChipKey[]).map((key) => {
+    const meta = STATUS_META[statuses[key]];
+    return {
+      key,
+      label: SCOPE_CHIP_LABELS[key],
+      status: statuses[key],
+      statusLabel: meta.label,
+      statusDisplay: meta.display,
+      statusSymbol: meta.symbol,
+    };
+  });
 }
 
 export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparisonOption[] = [

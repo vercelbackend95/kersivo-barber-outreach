@@ -1240,52 +1240,92 @@
   color: color-mix(in srgb, var(--fg) 72%, var(--muted));
 }
 
-/* Informational scope chips — not interactive buttons */
-.bwcost-svc__chips {
+/* Scope Snapshot — editorial capability status matrix (not buttons) */
+.bwcost-svc__matrix {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.4rem;
+  column-gap: 0.65rem;
+  row-gap: 0.55rem;
   pointer-events: none;
-}
-
-.bwcost-svc__chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.55rem;
-  padding: 0.35rem 0.3rem;
-  border-radius: 0.2rem;
-  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
-  background: color-mix(in srgb, var(--fg) 5%, transparent);
-  color: color-mix(in srgb, var(--muted) 90%, transparent);
-  cursor: default;
   user-select: none;
 }
 
-.bwcost-svc__chip--on,
-.bwcost-svc__chip--included {
-  background: color-mix(in srgb, var(--surface-2) 72%, #141414);
-  border-color: color-mix(in srgb, var(--fg) 24%, transparent);
-  color: var(--fg);
+.bwcost-svc__matrix-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.28rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.bwcost-svc__chip--external,
-.bwcost-svc__chip--separate,
-.bwcost-svc__chip--project,
-.bwcost-svc__chip--not-in-tier {
-  opacity: 0.55;
-}
-
-.bwcost-svc__chip-label {
+.bwcost-svc__matrix-label {
   font-family: var(--font-body);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.2;
   white-space: nowrap;
+}
+
+.bwcost-svc__matrix-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.bwcost-svc__matrix-icon {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+}
+
+.bwcost-svc__matrix-text {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+}
+
+.bwcost-svc__matrix-item--included .bwcost-svc__matrix-icon {
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+}
+
+.bwcost-svc__matrix-item--included .bwcost-svc__matrix-text {
+  color: var(--fg);
+  font-weight: 550;
+}
+
+.bwcost-svc__matrix-item--external .bwcost-svc__matrix-text,
+.bwcost-svc__matrix-item--separate .bwcost-svc__matrix-text,
+.bwcost-svc__matrix-item--project .bwcost-svc__matrix-text,
+.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-text {
+  color: var(--muted);
+  font-weight: 450;
+}
+
+.bwcost-svc__matrix-item--external .bwcost-svc__matrix-icon,
+.bwcost-svc__matrix-item--separate .bwcost-svc__matrix-icon,
+.bwcost-svc__matrix-item--project .bwcost-svc__matrix-icon,
+.bwcost-svc__matrix-item--not-in-tier .bwcost-svc__matrix-icon {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
 }
 
 .bwcost-svc__check-copy {
@@ -1313,12 +1353,12 @@
   color: var(--bwcost-accent-text);
 }
 
-.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__chip--included,
-.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__chip--on {
-  background: color-mix(in srgb, var(--bwcost-accent) 48%, #1a080a);
-  border-color: color-mix(in srgb, var(--bwcost-accent) 62%, transparent);
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-icon {
+  color: var(--bwcost-accent-text);
+}
+
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-text {
   color: #fff;
-  opacity: 1;
 }
 
 .bwcost-svc__footer {
@@ -1437,23 +1477,21 @@
   color: var(--bwcost-accent-text);
 }
 
-.bwcost-svc__card .bwcost-svc__chips {
+.bwcost-svc__card .bwcost-svc__matrix {
   margin-top: 0.9rem;
   padding-top: 0.85rem;
   border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.85rem;
+  row-gap: 0.7rem;
 }
 
-.bwcost-svc__card .bwcost-svc__chip {
-  min-height: 2.35rem;
+.bwcost-svc__card--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-icon {
+  color: var(--bwcost-accent-text);
 }
 
-.bwcost-svc__card--kersivo .bwcost-svc__chip--included,
-.bwcost-svc__card--kersivo .bwcost-svc__chip--on {
-  background: color-mix(in srgb, var(--bwcost-accent) 40%, #1a0a0c);
-  border-color: color-mix(in srgb, var(--bwcost-accent) 58%, transparent);
+.bwcost-svc__card--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-text {
   color: #fff;
-  opacity: 1;
 }
 
 .bwcost-svc__card-highlight {

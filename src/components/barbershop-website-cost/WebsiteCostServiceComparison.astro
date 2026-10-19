@@ -106,20 +106,21 @@ function padIndex(i: number): string {
                       {row.priceNote ? <span class="bwcost-svc__price-note">{row.priceNote}</span> : null}
                     </div>
                   </td>
-                  <td class="bwcost-svc__chips-cell">
+                  <td class="bwcost-svc__matrix-cell">
                     <div class="bwcost-svc__cell">
-                      <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
+                      <ul class="bwcost-svc__matrix" aria-label={`Scope for ${row.name}`}>
                         {row.scopeChips.map((chip) => (
                           <li
                             class:list={[
-                              'bwcost-svc__chip',
-                              `bwcost-svc__chip--${chip.status}`,
-                              chip.status === 'included' && 'bwcost-svc__chip--on',
+                              'bwcost-svc__matrix-item',
+                              `bwcost-svc__matrix-item--${chip.status}`,
                             ]}
-                            aria-label={`${chip.label}: ${chip.statusLabel}`}
                           >
-                            <span class="bwcost-svc__chip-label">{chip.label}</span>
-                            <span class="bwcost-sr-only">{chip.statusLabel}</span>
+                            <span class="bwcost-svc__matrix-label">{chip.label}</span>
+                            <span class="bwcost-svc__matrix-status">
+                              <span class="bwcost-svc__matrix-icon" aria-hidden="true">{chip.statusSymbol}</span>
+                              <span class="bwcost-svc__matrix-text">{chip.statusDisplay}</span>
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -193,18 +194,19 @@ function padIndex(i: number): string {
               </p>
               {row.priceNote ? <p class="bwcost-svc__card-price-secondary">{row.priceNote}</p> : null}
 
-              <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
+              <ul class="bwcost-svc__matrix" aria-label={`Scope for ${row.name}`}>
                 {row.scopeChips.map((chip) => (
                   <li
                     class:list={[
-                      'bwcost-svc__chip',
-                      `bwcost-svc__chip--${chip.status}`,
-                      chip.status === 'included' && 'bwcost-svc__chip--on',
+                      'bwcost-svc__matrix-item',
+                      `bwcost-svc__matrix-item--${chip.status}`,
                     ]}
-                    aria-label={`${chip.label}: ${chip.statusLabel}`}
                   >
-                    <span class="bwcost-svc__chip-label">{chip.label}</span>
-                    <span class="bwcost-sr-only">{chip.statusLabel}</span>
+                    <span class="bwcost-svc__matrix-label">{chip.label}</span>
+                    <span class="bwcost-svc__matrix-status">
+                      <span class="bwcost-svc__matrix-icon" aria-hidden="true">{chip.statusSymbol}</span>
+                      <span class="bwcost-svc__matrix-text">{chip.statusDisplay}</span>
+                    </span>
                   </li>
                 ))}
               </ul>
