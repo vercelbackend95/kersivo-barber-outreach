@@ -1240,97 +1240,85 @@
   color: color-mix(in srgb, var(--fg) 72%, var(--muted));
 }
 
-.bwcost-svc__scope-list {
+/* Informational scope chips — not interactive buttons */
+.bwcost-svc__chips {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.35rem;
-}
-
-.bwcost-svc__scope-item {
-  display: grid;
-  grid-template-columns: minmax(4.5rem, 38%) minmax(0, 1fr);
-  column-gap: 0.65rem;
-  align-items: baseline;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.bwcost-svc__scope-dim {
-  color: var(--muted);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.bwcost-svc__scope-status {
-  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
-  font-weight: 550;
-}
-
-.bwcost-svc__scope-item--included .bwcost-svc__scope-status {
-  color: var(--fg);
-  font-weight: 650;
-}
-
-.bwcost-svc__scope-item--external .bwcost-svc__scope-status,
-.bwcost-svc__scope-item--separate .bwcost-svc__scope-status,
-.bwcost-svc__scope-item--project .bwcost-svc__scope-status,
-.bwcost-svc__scope-item--not-in-tier .bwcost-svc__scope-status {
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.bwcost-svc__points {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.4rem;
+  pointer-events: none;
 }
 
-.bwcost-svc__points li {
-  position: relative;
-  padding-left: 0.85rem;
+.bwcost-svc__chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.55rem;
+  padding: 0.35rem 0.3rem;
+  border-radius: 0.2rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  color: color-mix(in srgb, var(--muted) 90%, transparent);
+  cursor: default;
+  user-select: none;
+}
+
+.bwcost-svc__chip--on,
+.bwcost-svc__chip--included {
+  background: color-mix(in srgb, var(--surface-2) 72%, #141414);
+  border-color: color-mix(in srgb, var(--fg) 24%, transparent);
+  color: var(--fg);
+}
+
+.bwcost-svc__chip--external,
+.bwcost-svc__chip--separate,
+.bwcost-svc__chip--project,
+.bwcost-svc__chip--not-in-tier {
+  opacity: 0.55;
+}
+
+.bwcost-svc__chip-label {
   font-family: var(--font-body);
-  font-size: 0.8rem;
-  line-height: 1.4;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bwcost-svc__check-copy {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  line-height: 1.45;
   color: color-mix(in srgb, var(--fg) 80%, var(--muted));
 }
 
-.bwcost-svc__points li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 0.28rem;
-  height: 0.28rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--fg) 35%, transparent);
+/* Beat .bwcost-svc__table tbody th/td { background: transparent } specificity */
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo th,
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo td {
+  background: color-mix(in srgb, var(--bwcost-accent) 24%, #0a0708);
+  border-top: 1px solid color-mix(in srgb, var(--bwcost-accent) 48%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--bwcost-accent) 28%, transparent);
 }
 
-.bwcost-svc__row--kersivo th,
-.bwcost-svc__row--kersivo td {
-  background: color-mix(in srgb, var(--bwcost-accent) 8%, #0d0d0d);
-  border-top: 1px solid color-mix(in srgb, var(--bwcost-accent) 28%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--bwcost-accent) 22%, transparent);
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__name,
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__price-figure {
+  color: #fff;
 }
 
-.bwcost-svc__row--kersivo th:first-child {
-  box-shadow: inset 2px 0 0 var(--bwcost-accent);
-}
-
-.bwcost-svc__row--kersivo .bwcost-svc__price-note {
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__price-note {
   color: var(--bwcost-accent-text);
 }
 
-.bwcost-svc__row--kersivo .bwcost-svc__scope-item--included .bwcost-svc__scope-status {
-  color: var(--fg);
-}
-
-.bwcost-svc__row--kersivo .bwcost-svc__points li::before {
-  background: color-mix(in srgb, var(--bwcost-accent) 70%, transparent);
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__chip--included,
+.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__chip--on {
+  background: color-mix(in srgb, var(--bwcost-accent) 48%, #1a080a);
+  border-color: color-mix(in srgb, var(--bwcost-accent) 62%, transparent);
+  color: #fff;
+  opacity: 1;
 }
 
 .bwcost-svc__footer {
@@ -1449,18 +1437,30 @@
   color: var(--bwcost-accent-text);
 }
 
-.bwcost-svc__card .bwcost-svc__scope-list {
+.bwcost-svc__card .bwcost-svc__chips {
   margin-top: 0.9rem;
   padding-top: 0.85rem;
   border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.bwcost-svc__card .bwcost-svc__scope-item {
-  grid-template-columns: minmax(5rem, 42%) minmax(0, 1fr);
+.bwcost-svc__card .bwcost-svc__chip {
+  min-height: 2.35rem;
+}
+
+.bwcost-svc__card--kersivo .bwcost-svc__chip--included,
+.bwcost-svc__card--kersivo .bwcost-svc__chip--on {
+  background: color-mix(in srgb, var(--bwcost-accent) 40%, #1a0a0c);
+  border-color: color-mix(in srgb, var(--bwcost-accent) 58%, transparent);
+  color: #fff;
+  opacity: 1;
 }
 
 .bwcost-svc__card-highlight {
   margin: 0.9rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
 }
 
 .bwcost-svc__card-label {

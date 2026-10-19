@@ -1,13 +1,13 @@
 ---
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import {
-  WEBSITE_SERVICE_COMPARISON_OPTIONS,
   WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL,
   WEBSITE_SERVICE_COMPARISON_SECTION_ID,
+  getPrimaryWebsiteServiceComparisonOptions,
   type WebsiteServiceComparisonOption,
 } from '@/lib/seo/websiteServiceComparison';
 
-const options = WEBSITE_SERVICE_COMPARISON_OPTIONS;
+const options = getPrimaryWebsiteServiceComparisonOptions();
 const sourced = options.filter(
   (row): row is WebsiteServiceComparisonOption & { sourceHref: string } =>
     Boolean(row.sourceHref),
@@ -58,8 +58,7 @@ function padIndex(i: number): string {
       <div class="bwcost-svc__table-wrap">
         <table class="bwcost-svc__table">
           <caption class="bwcost-sr-only">
-            Done-for-you barbershop website service comparison: Full KERSIVO, Jones Digital, FadeFoundry,
-            BarberFlow, freelance developers and web design agencies
+            Done-for-you barbershop website service comparison: Jones Digital, FadeFoundry and Full KERSIVO
           </caption>
           <colgroup>
             <col class="bwcost-svc__col-offer" />
@@ -89,9 +88,6 @@ function padIndex(i: number): string {
                           {padIndex(index)}
                         </span>
                         <div class="bwcost-svc__offer-copy">
-                          {row.categoryLabel ? (
-                            <span class="bwcost-svc__category">{row.categoryLabel}</span>
-                          ) : null}
                           <span class="bwcost-svc__name">{row.name}</span>
                           <span class="bwcost-svc__scope">{row.scopeLabel}</span>
                         </div>
@@ -110,13 +106,20 @@ function padIndex(i: number): string {
                       {row.priceNote ? <span class="bwcost-svc__price-note">{row.priceNote}</span> : null}
                     </div>
                   </td>
-                  <td class="bwcost-svc__scope-cell">
+                  <td class="bwcost-svc__chips-cell">
                     <div class="bwcost-svc__cell">
-                      <ul class="bwcost-svc__scope-list" aria-label={`Scope for ${row.name}`}>
+                      <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
                         {row.scopeChips.map((chip) => (
-                          <li class:list={['bwcost-svc__scope-item', `bwcost-svc__scope-item--${chip.status}`]}>
-                            <span class="bwcost-svc__scope-dim">{chip.label}</span>
-                            <span class="bwcost-svc__scope-status">{chip.statusLabel}</span>
+                          <li
+                            class:list={[
+                              'bwcost-svc__chip',
+                              `bwcost-svc__chip--${chip.status}`,
+                              chip.status === 'included' && 'bwcost-svc__chip--on',
+                            ]}
+                            aria-label={`${chip.label}: ${chip.statusLabel}`}
+                          >
+                            <span class="bwcost-svc__chip-label">{chip.label}</span>
+                            <span class="bwcost-sr-only">{chip.statusLabel}</span>
                           </li>
                         ))}
                       </ul>
@@ -124,11 +127,7 @@ function padIndex(i: number): string {
                   </td>
                   <td class="bwcost-svc__check">
                     <div class="bwcost-svc__cell">
-                      <ul class="bwcost-svc__points">
-                        {row.whatToCheckPoints.map((point) => (
-                          <li>{point}</li>
-                        ))}
-                      </ul>
+                      <p class="bwcost-svc__check-copy">{row.whatToCheckShort}</p>
                     </div>
                   </td>
                 </tr>
@@ -178,7 +177,6 @@ function padIndex(i: number): string {
                   {padIndex(index)}
                 </span>
                 <div>
-                  {row.categoryLabel ? <p class="bwcost-svc__category">{row.categoryLabel}</p> : null}
                   <p class="bwcost-svc__card-name">{row.name}</p>
                   <p class="bwcost-svc__card-scope">{row.scopeLabel}</p>
                 </div>
@@ -195,23 +193,26 @@ function padIndex(i: number): string {
               </p>
               {row.priceNote ? <p class="bwcost-svc__card-price-secondary">{row.priceNote}</p> : null}
 
-              <ul class="bwcost-svc__scope-list" aria-label={`Scope for ${row.name}`}>
+              <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
                 {row.scopeChips.map((chip) => (
-                  <li class:list={['bwcost-svc__scope-item', `bwcost-svc__scope-item--${chip.status}`]}>
-                    <span class="bwcost-svc__scope-dim">{chip.label}</span>
-                    <span class="bwcost-svc__scope-status">{chip.statusLabel}</span>
+                  <li
+                    class:list={[
+                      'bwcost-svc__chip',
+                      `bwcost-svc__chip--${chip.status}`,
+                      chip.status === 'included' && 'bwcost-svc__chip--on',
+                    ]}
+                    aria-label={`${chip.label}: ${chip.statusLabel}`}
+                  >
+                    <span class="bwcost-svc__chip-label">{chip.label}</span>
+                    <span class="bwcost-sr-only">{chip.statusLabel}</span>
                   </li>
                 ))}
               </ul>
 
-              <div class="bwcost-svc__card-highlight">
+              <p class="bwcost-svc__card-highlight">
                 <span class="bwcost-svc__card-label">What to check</span>
-                <ul class="bwcost-svc__points">
-                  {row.whatToCheckPoints.map((point) => (
-                    <li>{point}</li>
-                  ))}
-                </ul>
-              </div>
+                {row.whatToCheckShort}
+              </p>
 
               {row.caveat ? <p class="bwcost-svc__card-caveat">{row.caveat}</p> : null}
 

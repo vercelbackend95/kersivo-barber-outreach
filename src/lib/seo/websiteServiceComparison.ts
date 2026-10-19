@@ -60,6 +60,27 @@ export const WEBSITE_SERVICE_COMPARISON_SECTION_ID = 'website-service-comparison
 export const WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL =
   BARBERSHOP_WEBSITE_COST_PRICES_CHECKED_LABEL;
 
+/**
+ * Primary desktop/mobile table order (reference visual). Full catalogue remains in
+ * WEBSITE_SERVICE_COMPARISON_OPTIONS for research/tests; BarberFlow, freelance and
+ * agency are intentionally not rendered in the primary three-row comparison.
+ */
+export const WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS = [
+  'jones-digital',
+  'fadefoundry',
+  'full-kersivo',
+] as const;
+
+export function getPrimaryWebsiteServiceComparisonOptions(): WebsiteServiceComparisonOption[] {
+  return WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS.map((id) => {
+    const row = WEBSITE_SERVICE_COMPARISON_OPTIONS.find((option) => option.id === id);
+    if (!row) {
+      throw new Error(`Missing primary comparison option: ${id}`);
+    }
+    return row;
+  });
+}
+
 export const SCOPE_CHIP_LABELS: Record<ScopeChipKey, string> = {
   website: 'Website',
   care: 'Care',
@@ -105,7 +126,7 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     whatToCheck:
       'Standard Stripe payment-processing fees remain separate. SMS allowances and domain exceptions apply. Platform source code is not transferred on cancellation.',
     whatToCheckShort:
-      'Stripe processing fees remain separate. SMS allowances and domain exceptions apply. Source code is not transferred on cancellation.',
+      'Stripe processing fees remain separate. Source code is not transferred on cancellation.',
     whatToCheckPoints: [
       'Stripe processing fees remain separate',
       'SMS allowances and domain exceptions apply',
@@ -149,8 +170,7 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Starter package is a website project — not an integrated native booking platform. More complex booking, e-commerce and custom tools are separately scoped.',
     whatToCheck:
       'Hosting/care is optional and separate. Confirm what the Starter package includes versus Standard, Pro or Custom quotes.',
-    whatToCheckShort:
-      'Hosting/care optional. Integrated booking not included in Starter. Site and domain ownership advertised.',
+    whatToCheckShort: 'Hosting/care optional. Integrated booking not included in Starter.',
     whatToCheckPoints: [
       'Hosting/care optional and separately charged',
       'Integrated booking not included in Starter',
@@ -186,8 +206,7 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
       'Existing Nearcut, Booksy or Fresha booking links can be connected. A paid external booking platform subscription is separate — not an independently integrated booking platform.',
     whatToCheck:
       'Founding offer is not universally available. New domain, major changes and extra pages may cost extra.',
-    whatToCheckShort:
-      'Limited founding offer. External booking subscription separate. Extra pages and major changes cost more.',
+    whatToCheckShort: 'Limited founding offer. External booking subscription charged separately.',
     whatToCheckPoints: [
       'Limited founding offer; 12-month care minimum',
       'External booking subscription charged separately',
