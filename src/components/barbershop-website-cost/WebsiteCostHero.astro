@@ -1,0 +1,158 @@
+---
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  BARBERSHOP_WEBSITE_COST_BREADCRUMB_CURRENT,
+  BARBERSHOP_WEBSITE_COST_BREADCRUMB_PARENT,
+  BARBERSHOP_WEBSITE_COST_PAGE_H1,
+} from '@/lib/seo/barbershopWebsiteCostPage';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import WebsiteCostShowroom, {
+  HERO_SHOWROOM_HEIGHT,
+  HERO_SHOWROOM_SRC,
+  HERO_SHOWROOM_WIDTH,
+} from '@/components/barbershop-website-cost/WebsiteCostShowroom.astro';
+import '@/styles/components/barbershop-website-cost.css';
+
+const SUBSCRIBE_HREF = '/admin/launch';
+const SUBSCRIBE_TRACK = 'saas_subscribe_click';
+const SUBSCRIBE_PLACEMENT = 'barbershop_website_cost_hero';
+const DEMO_TRACK = 'view_live_demo_click';
+const DEMO_PLACEMENT = 'barbershop_website_cost_hero';
+
+const titleLines = (() => {
+  const h1 = BARBERSHOP_WEBSITE_COST_PAGE_H1;
+  const line1End = h1.indexOf(' a ') + 3;
+  const line2End = h1.indexOf(' Cost ');
+  if (line1End > 2 && line2End > line1End) {
+    return [h1.slice(0, line1End).trimEnd(), h1.slice(line1End, line2End).trim(), h1.slice(line2End + 1).trim()];
+  }
+  return [h1];
+})();
+
+const trustItems = [
+  { id: 'setup', label: 'No separate standard setup fee' },
+  { id: 'cancel', label: 'Cancel anytime' },
+  { id: 'uk', label: 'Built for UK barbershops' },
+] as const;
+---
+
+<section class="bwcost-hero" aria-labelledby="bwcost-hero-title">
+  <div class="bwcost-hero__media" aria-hidden="true">
+    <img
+      class="bwcost-hero__bg"
+      src={HERO_SHOWROOM_SRC}
+      width={HERO_SHOWROOM_WIDTH}
+      height={HERO_SHOWROOM_HEIGHT}
+      alt=""
+      decoding="async"
+      fetchpriority="high"
+    />
+  </div>
+  <div class="bwcost-hero__veil" aria-hidden="true"></div>
+
+  <div class="bwcost-hero__copy-wrap">
+    <div class="bwcost-hero__copy">
+      <nav class="bwcost-hero__breadcrumb" aria-label="Breadcrumb">
+        <ol class="bwcost-hero__breadcrumb-list">
+          <li class="bwcost-hero__breadcrumb-item">
+            <a href="/">Home</a>
+          </li>
+          <li class="bwcost-hero__breadcrumb-item" aria-hidden="true">/</li>
+          <li class="bwcost-hero__breadcrumb-item">
+            <a href={BARBERSHOP_WEBSITES_PAGE_PATH}>{BARBERSHOP_WEBSITE_COST_BREADCRUMB_PARENT}</a>
+          </li>
+          <li class="bwcost-hero__breadcrumb-item" aria-hidden="true">/</li>
+          <li class="bwcost-hero__breadcrumb-item">
+            <span aria-current="page">{BARBERSHOP_WEBSITE_COST_BREADCRUMB_CURRENT}</span>
+          </li>
+        </ol>
+      </nav>
+
+      <p class="bwcost-hero__eyebrow">
+        <span class="bwcost-hero__eyebrow-dot" aria-hidden="true"></span>
+        WEBSITES · BOOKINGS · RETAIL · MANAGEMENT
+      </p>
+
+      <h1 id="bwcost-hero-title" class="bwcost-hero__title">
+        {
+          titleLines.length === 3 ? (
+            <>
+              <span class="bwcost-hero__line bwcost-hero__line--primary">{titleLines[0]}</span>
+              <span class="bwcost-hero__line">{titleLines[1]}</span>
+              <span class="bwcost-hero__line bwcost-hero__line--accent">{titleLines[2]}</span>
+            </>
+          ) : (
+            BARBERSHOP_WEBSITE_COST_PAGE_H1
+          )
+        }
+      </h1>
+
+      <p class="bwcost-hero__lead">
+        With KERSIVO, you get a branded website, integrated online bookings, retail capability, hosting, your own
+        standard domain arrangement and shop management tools — all for £{SAAS_MONTHLY_GBP}/month per location.
+      </p>
+
+      <div class="bwcost-hero__actions">
+        <a
+          href={SUBSCRIBE_HREF}
+          class="bwcost-btn bwcost-btn--primary bwcost-hero__cta"
+          data-track={SUBSCRIBE_TRACK}
+          data-track-placement={SUBSCRIBE_PLACEMENT}
+        >
+          Get started — £{SAAS_MONTHLY_GBP}/month
+          <span class="bwcost-hero__cta-arrow" aria-hidden="true">→</span>
+        </a>
+        <a
+          href={DEMO_HOME_HREF}
+          class="bwcost-btn bwcost-btn--secondary bwcost-hero__cta"
+          data-track={DEMO_TRACK}
+          data-track-placement={DEMO_PLACEMENT}
+        >
+          <span class="bwcost-hero__cta-play" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="10" cy="10" r="8.25" stroke="currentColor" stroke-width="1.4" />
+              <path d="M8.2 7.1 13.4 10 8.2 12.9V7.1Z" fill="currentColor" />
+            </svg>
+          </span>
+          See live demo
+        </a>
+      </div>
+
+      <ul class="bwcost-hero__trust">
+        {
+          trustItems.map((item, index) => (
+            <li class="bwcost-hero__trust-item">
+              {index > 0 ? <span class="bwcost-hero__trust-sep" aria-hidden="true"></span> : null}
+              <span class="bwcost-hero__trust-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="8.25" stroke="currentColor" stroke-width="1.35" />
+                  <path
+                    d="M6.1 10.15 8.7 12.7 13.95 7.35"
+                    stroke="#fff"
+                    stroke-width="1.55"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span class="bwcost-hero__trust-label">{item.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="bwcost-hero__stage">
+    <WebsiteCostShowroom />
+  </div>
+
+  <a class="bwcost-hero__scroll" href="#website-service-comparison">
+    <span class="bwcost-hero__scroll-mouse" aria-hidden="true">
+      <span class="bwcost-hero__scroll-dot"></span>
+    </span>
+    <span class="bwcost-hero__scroll-line" aria-hidden="true"></span>
+    <span class="bwcost-hero__scroll-label">SCROLL TO COMPARE</span>
+  </a>
+</section>

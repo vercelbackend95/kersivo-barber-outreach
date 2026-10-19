@@ -1,0 +1,96 @@
+---
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const SUBSCRIBE_HREF = '/admin/launch';
+const PRICING_HREF = '/pricing#plan';
+const TERMS_HREF = '/terms#subscription';
+const SUBSCRIBE_TRACK = 'saas_subscribe_click';
+const SUBSCRIBE_PLACEMENT = 'barbershop_website_cost_full_offer';
+const DEMO_TRACK = 'view_live_demo_click';
+const DEMO_PLACEMENT = 'barbershop_website_cost_full_offer';
+
+const facts = [
+  'Branded website tailored to your shop (standard branded website — not a limitless bespoke design job)',
+  'Your own standard domain included (premium or above-standard domains may need an agreed extra charge)',
+  'Online appointment booking with live selection of service, barber and time',
+  'Hosting, SSL and platform updates included',
+  'Shop management and client tools in one place',
+  '0% KERSIVO commission on bookings and retail — standard Stripe processing fees apply for online card payments',
+];
+---
+
+<section class="bwcost-section bwcost-offer" id="full-kersivo" aria-labelledby="bwcost-offer-heading">
+  <div class="bwcost-section__inner">
+    <p class="bwcost-offer__eyebrow">
+      <span class="bwcost-offer__eyebrow-dot" aria-hidden="true"></span>
+      FULL KERSIVO
+    </p>
+    <h2 id="bwcost-offer-heading" class="bwcost-section__title">
+      One monthly price for your website and booking operation
+    </h2>
+
+    <div class="bwcost-offer__panel">
+      <p class="bwcost-offer__price">
+        <span class="bwcost-offer__amount">£{SAAS_MONTHLY_GBP}</span>
+        <span class="bwcost-offer__period">/ month per physical barbershop location</span>
+      </p>
+      <p class="bwcost-offer__lead">
+        A branded barbershop website, your own standard domain arrangement, online bookings and the everyday
+        management tools together — with no separate standard setup fee.
+      </p>
+
+      <ul class="bwcost-offer__facts">
+        {facts.map((fact) => <li>{fact}</li>)}
+      </ul>
+
+      <ul class="bwcost-offer__exclusions">
+        <li>
+          £{SAAS_MONTHLY_GBP} is charged when you subscribe and then monthly. Standard website setup is included. No
+          separate setup fee.
+        </li>
+        <li>
+          Currently no VAT is added to the £{SAAS_MONTHLY_GBP} KERSIVO subscription — do not read this as “including
+          VAT”.
+        </li>
+        <li>Stripe card-processing fees remain separate. SMS reminders in Full are subject to a monthly allowance.</li>
+        <li>
+          We normally aim to prepare the website roughly 1–2 weeks after receiving all required information; that is
+          not a guaranteed launch date.
+        </li>
+        <li>
+          Cancel anytime; paid access continues to the end of the current period and there is no normal pro-rated
+          subscription refund.
+        </li>
+      </ul>
+
+      <p class="bwcost-offer__control">
+        Your shop remains the brand customers recognise. KERSIVO supplies the platform behind it.
+      </p>
+
+      <div class="bwcost-offer__actions">
+        <a
+          href={SUBSCRIBE_HREF}
+          class="bwcost-btn bwcost-btn--primary"
+          data-track={SUBSCRIBE_TRACK}
+          data-track-placement={SUBSCRIBE_PLACEMENT}
+        >
+          Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+        </a>
+        <a
+          href={DEMO_HOME_HREF}
+          class="bwcost-btn bwcost-btn--secondary"
+          data-track={DEMO_TRACK}
+          data-track-placement={DEMO_PLACEMENT}
+        >
+          Explore the working demo
+        </a>
+      </div>
+      <p class="bwcost-offer__links">
+        <a href={PRICING_HREF}>See the full pricing and terms</a>
+        <span aria-hidden="true">·</span>
+        <a href={TERMS_HREF}>Read subscription terms</a>
+      </p>
+    </div>
+  </div>
+</section>

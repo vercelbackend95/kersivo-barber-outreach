@@ -1,0 +1,84 @@
+---
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { COST_CHECKLIST_QUESTIONS, COST_PAGE_FAQS } from '@/lib/seo/barbershopWebsiteCostPage';
+
+const SUBSCRIBE_HREF = '/admin/launch';
+const DEMO_TRACK = 'view_live_demo_click';
+const DEMO_PLACEMENT = 'barbershop_website_cost_final';
+const SUBSCRIBE_TRACK = 'saas_subscribe_click';
+const SUBSCRIBE_PLACEMENT = 'barbershop_website_cost_final';
+---
+
+<section class="bwcost-section bwcost-close" aria-labelledby="bwcost-checklist-heading">
+  <div class="bwcost-section__inner">
+    <header class="bwcost-section__header">
+      <h2 id="bwcost-checklist-heading" class="bwcost-section__title">
+        Seven questions to ask before paying for a barber website
+      </h2>
+    </header>
+
+    <ol class="bwcost-checklist">
+      {COST_CHECKLIST_QUESTIONS.map((question) => <li>{question}</li>)}
+    </ol>
+
+    <div class="bwcost-faq" aria-labelledby="bwcost-faq-heading">
+      <h3 id="bwcost-faq-heading" class="bwcost-faq__title">Common cost questions</h3>
+      <div class="bwcost-faq__list">
+        {
+          COST_PAGE_FAQS.map((faq, index) => (
+            <details class="bwcost-faq__item" id={`bwcost-faq-${faq.id}`}>
+              <summary>
+                <span class="bwcost-faq__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span class="bwcost-faq__question">{faq.question}</span>
+              </summary>
+              <div class="bwcost-faq__answer">
+                {faq.answer.map((paragraph) => (
+                  <p>{paragraph}</p>
+                ))}
+              </div>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+
+    <p class="bwcost-close__aside" role="note">
+      A website cannot guarantee more customers or a higher Google ranking.
+    </p>
+
+    <div class="bwcost-final" aria-labelledby="bwcost-final-heading">
+      <h3 id="bwcost-final-heading" class="bwcost-final__title">
+        Know the real cost before you choose your website.
+      </h3>
+      <p class="bwcost-final__lede">
+        Compare the upfront price, the monthly running cost and the control you keep. If you want a branded
+        barbershop website and bookings together, see Full KERSIVO working before you decide.
+      </p>
+      <div class="bwcost-final__actions">
+        <a
+          href={DEMO_HOME_HREF}
+          class="bwcost-btn bwcost-btn--primary"
+          data-track={DEMO_TRACK}
+          data-track-placement={DEMO_PLACEMENT}
+        >
+          Explore the working demo
+        </a>
+        <a
+          href={SUBSCRIBE_HREF}
+          class="bwcost-btn bwcost-btn--secondary"
+          data-track={SUBSCRIBE_TRACK}
+          data-track-placement={SUBSCRIBE_PLACEMENT}
+        >
+          Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+        </a>
+      </div>
+      <p class="bwcost-final__tertiary">
+        <a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Explore the complete website offer</a>
+      </p>
+    </div>
+  </div>
+</section>

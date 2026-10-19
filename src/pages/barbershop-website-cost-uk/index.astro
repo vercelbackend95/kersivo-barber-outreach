@@ -1,0 +1,69 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import WebsiteCostHero from '@/components/barbershop-website-cost/WebsiteCostHero.astro';
+import WebsiteCostServiceComparison from '@/components/barbershop-website-cost/WebsiteCostServiceComparison.astro';
+import WebsiteCostModels from '@/components/barbershop-website-cost/WebsiteCostModels.astro';
+import WebsiteCostScenarios from '@/components/barbershop-website-cost/WebsiteCostScenarios.astro';
+import WebsiteCostOwnership from '@/components/barbershop-website-cost/WebsiteCostOwnership.astro';
+import WebsiteCostFullOffer from '@/components/barbershop-website-cost/WebsiteCostFullOffer.astro';
+import WebsiteCostFaqClose from '@/components/barbershop-website-cost/WebsiteCostFaqClose.astro';
+import {
+  BARBERSHOP_WEBSITE_COST_PAGE_DESCRIPTION,
+  BARBERSHOP_WEBSITE_COST_PAGE_INDEXABLE,
+  BARBERSHOP_WEBSITE_COST_PAGE_PATH,
+  BARBERSHOP_WEBSITE_COST_PAGE_TITLE,
+  buildBarbershopWebsiteCostJsonLd,
+} from '@/lib/seo/barbershopWebsiteCostPage';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/barbershop-website-cost.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={BARBERSHOP_WEBSITE_COST_PAGE_TITLE}
+  description={BARBERSHOP_WEBSITE_COST_PAGE_DESCRIPTION}
+  canonicalPath={BARBERSHOP_WEBSITE_COST_PAGE_PATH}
+  noindex={!BARBERSHOP_WEBSITE_COST_PAGE_INDEXABLE}
+  robotsFollow
+  jsonLd={buildBarbershopWebsiteCostJsonLd()}
+>
+  <main class="bwcost-page">
+    <WebsiteCostHero />
+    <WebsiteCostServiceComparison />
+    <WebsiteCostModels />
+    <WebsiteCostScenarios />
+    <WebsiteCostOwnership />
+    <WebsiteCostFullOffer />
+    <WebsiteCostFaqClose />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      navigation={[
+        { name: 'Home', href: '/' },
+        { name: 'Starter', href: '/starter' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'Live demo', href: '/demo' },
+        { name: 'Booksy comparison', href: '/booksy-alternative' },
+        { name: 'Fresha comparison', href: '/fresha-alternative' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.dpa,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
+      ]}
+    />
+  </main>
+</LandingLayout>

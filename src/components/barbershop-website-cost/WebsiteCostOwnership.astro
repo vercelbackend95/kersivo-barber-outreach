@@ -1,0 +1,76 @@
+---
+const facts = [
+  {
+    asset: 'Domain',
+    question: 'Who controls the registration? Can I repoint or transfer it?',
+    kersivo:
+      'The shop retains rights in its domain; one standard domain arrangement is included subject to policy. Transfers or repointing can be arranged when departing. Existing-domain renewal remains the owner’s responsibility.',
+  },
+  {
+    asset: 'Brand and supplied content',
+    question: 'Do I retain my logo, written content and genuine photos?',
+    kersivo:
+      'The shop retains its brand and content rights; it must have rights to the assets it supplies.',
+  },
+  {
+    asset: 'Code, design system and hosting',
+    question: 'Does the fee give me independently deployable source code and hosting if I stop paying?',
+    kersivo:
+      'No source-code handover. KERSIVO owns and provides the platform, software/templates and hosting under an active subscription. Normal continued site hosting is not included after the paid term expires.',
+  },
+  {
+    asset: 'Bookings and business data',
+    question: 'What can I export, in what format and when?',
+    kersivo:
+      'One free CSV export of available business data on request within the Commercial Offer’s 60-day inactive retention window, subject to identity checks and technical limitations. This is not a promise of complete migration.',
+  },
+  {
+    asset: 'Payment, cancellation, platform attribution',
+    question: 'What are the term, refund rules and visible branding?',
+    kersivo:
+      'KERSIVO is billed monthly from purchase. Cancel anytime does not mean a general automatic pro-rated refund; paid access continues to the end of the current period. The standard client website shows a discreet “Powered by KERSIVO” mark.',
+  },
+];
+---
+
+<section class="bwcost-section bwcost-ownership" aria-labelledby="bwcost-ownership-heading">
+  <div class="bwcost-section__inner">
+    <header class="bwcost-section__header">
+      <h2 id="bwcost-ownership-heading" class="bwcost-section__title">
+        A website quote should explain ownership, too
+      </h2>
+      <p class="bwcost-section__lede">
+        Your domain, branding, business content and website software may have different owners. Ask what you can
+        keep or move if you change provider.
+      </p>
+    </header>
+
+    <p class="bwcost-ownership__clarification" role="note">
+      Your brand, domain and content remain yours. The website software and hosting are supplied as part of an
+      active KERSIVO subscription — the underlying source code is not transferred if you cancel.
+    </p>
+
+    <ul class="bwcost-facts">
+      {
+        facts.map((fact) => (
+          <li class="bwcost-fact">
+            <h3 class="bwcost-fact__asset">{fact.asset}</h3>
+            <p class="bwcost-fact__question">
+              <span class="bwcost-fact__label">Ask any provider</span>
+              {fact.question}
+            </p>
+            <p class="bwcost-fact__answer">
+              <span class="bwcost-fact__label">Full KERSIVO</span>
+              {fact.kersivo}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="bwcost-ownership__note">
+      A one-off bespoke project with a real source-code handover may suit an owner who prioritises an independently
+      deployable site. That is a different purchase from a hosted SaaS subscription.
+    </p>
+  </div>
+</section>

@@ -1,0 +1,140 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  BOOKING_SENSITIVITY_MONTHLY_GBP,
+  COST_SCENARIO_A_12,
+  COST_SCENARIO_A_36,
+  COST_SCENARIO_B_12_HIGH,
+  COST_SCENARIO_B_12_LOW,
+  COST_SCENARIO_B_36_HIGH,
+  COST_SCENARIO_B_36_LOW,
+  COST_SCENARIO_C_12,
+  COST_SCENARIO_C_36,
+  HYPOTHETICAL_BUILD_GBP,
+  HYPOTHETICAL_DOMAIN_YEARLY_GBP,
+  HYPOTHETICAL_HOSTING_MONTHLY_GBP,
+  websitePlusBookingTotalGbp,
+} from '@/lib/seo/barbershopWebsiteCostPage';
+
+const formatGbp = (value: number) =>
+  new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    maximumFractionDigits: 0,
+  }).format(value);
+---
+
+<section class="bwcost-section bwcost-scenarios" id="cost-scenarios" aria-labelledby="bwcost-scenarios-heading">
+  <div class="bwcost-section__inner">
+    <header class="bwcost-section__header">
+      <h2 id="bwcost-scenarios-heading" class="bwcost-section__title">
+        What could it cost after one year or three?
+      </h2>
+      <p class="bwcost-section__lede">
+        These totals teach cost arithmetic. Routes A and B use invented illustrative inputs — not Jones Digital,
+        FadeFoundry or any other named supplier package. Full KERSIVO uses the current £{SAAS_MONTHLY_GBP}/month
+        price solely for calculation.
+      </p>
+    </header>
+
+    <p class="bwcost-scenarios__inputs">
+      Hypothetical website-only inputs: {formatGbp(HYPOTHETICAL_BUILD_GBP)} build +{' '}
+      {formatGbp(HYPOTHETICAL_HOSTING_MONTHLY_GBP)}/month hosting/care +{' '}
+      {formatGbp(HYPOTHETICAL_DOMAIN_YEARLY_GBP)}/year domain. Separate booking examples:{' '}
+      {BOOKING_SENSITIVITY_MONTHLY_GBP.map((n) => formatGbp(n)).join(', ')} per month. Calculations assume unchanged
+      rates and exclude VAT, payment processing, commissions, SMS overages and extra work.
+    </p>
+
+    <div class="bwcost-table-wrap">
+      <table class="bwcost-table bwcost-table--results">
+        <caption>
+          Illustrative 12- and 36-month totals for three differently scoped routes
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Illustrative route</th>
+            <th scope="col">12 months</th>
+            <th scope="col">36 months</th>
+            <th scope="col">Paid booking included?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">A. Website + upkeep</th>
+            <td data-label="12 months">{formatGbp(COST_SCENARIO_A_12)}</td>
+            <td data-label="36 months">{formatGbp(COST_SCENARIO_A_36)}</td>
+            <td data-label="Paid booking included?">No</td>
+          </tr>
+          <tr>
+            <th scope="row">B. Website + separate booking</th>
+            <td data-label="12 months">
+              {formatGbp(COST_SCENARIO_B_12_LOW)}–{formatGbp(COST_SCENARIO_B_12_HIGH)}
+            </td>
+            <td data-label="36 months">
+              {formatGbp(COST_SCENARIO_B_36_LOW)}–{formatGbp(COST_SCENARIO_B_36_HIGH)}
+            </td>
+            <td data-label="Paid booking included?">Yes, assumed £10–£40/mo extra booking subscription</td>
+          </tr>
+          <tr>
+            <th scope="row">C. Full KERSIVO</th>
+            <td data-label="12 months">{formatGbp(COST_SCENARIO_C_12)}</td>
+            <td data-label="36 months">{formatGbp(COST_SCENARIO_C_36)}</td>
+            <td data-label="Paid booking included?">Yes, integrated bookings</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="bwcost-sensitivity">
+      <summary>Booking fee assumptions (£10–£40/month) — detail</summary>
+      <div class="bwcost-table-wrap">
+        <table class="bwcost-table">
+          <caption class="bwcost-sr-only">
+            Scenario B totals for each hypothetical separate booking fee
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Hypothetical separate booking fee</th>
+              <th scope="col">12 months total</th>
+              <th scope="col">36 months total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              BOOKING_SENSITIVITY_MONTHLY_GBP.map((fee) => (
+                <tr>
+                  <th scope="row">{formatGbp(fee)}/month</th>
+                  <td data-label="12 months total">{formatGbp(websitePlusBookingTotalGbp(12, fee))}</td>
+                  <td data-label="36 months total">{formatGbp(websitePlusBookingTotalGbp(36, fee))}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The £20 row is a worked input, not a recommended or typical UK price. Real booking platforms may charge more
+        or less, or use per-seat and commission models.
+      </p>
+    </details>
+
+    <p class="bwcost-scenarios__disclaimer" role="note">
+      A and B are fictional example budgets, not supplier quotes or UK averages. The three routes provide different
+      services. The calculations assume unchanged prices and exclude taxes, payment processing and extra work. Real
+      quotes and fees may differ. Full KERSIVO at {formatGbp(COST_SCENARIO_C_12)} / {formatGbp(COST_SCENARIO_C_36)}{' '}
+      assumes £{SAAS_MONTHLY_GBP}/month remains unchanged purely for illustration — the price is not locked for 36
+      months.
+    </p>
+
+    <p class="bwcost-scenarios__close">
+      A website without paid booking may cost less than an integrated service. Once you add a separate booking
+      platform, the result depends heavily on its actual price and terms. Choose by what your barbershop needs as
+      well as the total.
+    </p>
+
+    <p class="bwcost-scenarios__actions">
+      <a href="#full-kersivo" class="bwcost-btn bwcost-btn--primary">See what £{SAAS_MONTHLY_GBP}/month includes</a>
+      <a href="/barber-software-cost-calculator" class="bwcost-text-link">Compare booking software costs</a>
+    </p>
+  </div>
+</section>

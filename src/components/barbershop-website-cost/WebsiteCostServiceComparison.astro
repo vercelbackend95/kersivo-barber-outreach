@@ -1,0 +1,260 @@
+---
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import {
+  WEBSITE_SERVICE_COMPARISON_OPTIONS,
+  WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL,
+  WEBSITE_SERVICE_COMPARISON_SECTION_ID,
+  type WebsiteServiceComparisonOption,
+} from '@/lib/seo/websiteServiceComparison';
+
+const options = WEBSITE_SERVICE_COMPARISON_OPTIONS;
+const sourced = options.filter(
+  (row): row is WebsiteServiceComparisonOption & { sourceHref: string } =>
+    Boolean(row.sourceHref),
+);
+
+const SCENARIOS_HREF = '#cost-scenarios';
+const EXPLORE_HREF = BARBERSHOP_WEBSITES_PAGE_PATH;
+
+function padIndex(i: number): string {
+  return String(i + 1).padStart(2, '0');
+}
+---
+
+<section
+  class="bwcost-section bwcost-svc"
+  id={WEBSITE_SERVICE_COMPARISON_SECTION_ID}
+  aria-labelledby="bwcost-svc-heading"
+>
+  <div class="bwcost-section__inner bwcost-svc__inner">
+    <header class="bwcost-svc__intro">
+      <div class="bwcost-svc__intro-main">
+        <p class="bwcost-svc__eyebrow">
+          <span class="bwcost-svc__eyebrow-dot" aria-hidden="true"></span>
+          01 / WEBSITE COST COMPARISON
+        </p>
+        <h2 id="bwcost-svc-heading" class="bwcost-svc__title">
+          What does a professionally built barbershop website actually cost?
+        </h2>
+      </div>
+
+      <div class="bwcost-svc__intro-aside">
+        <p class="bwcost-svc__aside-copy">
+          Don't compare the number alone. Compare <strong>what you're paying for</strong> — the build, the
+          upkeep, the booking experience and the tools behind it.
+        </p>
+        <div class="bwcost-svc__actions">
+          <a class="bwcost-btn bwcost-btn--primary bwcost-svc__btn" href={SCENARIOS_HREF}>
+            Compare the full costs <span aria-hidden="true">↗</span>
+          </a>
+          <a class="bwcost-btn bwcost-svc__btn bwcost-svc__btn--ghost" href={EXPLORE_HREF}>
+            Explore KERSIVO <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <div class="bwcost-svc__desktop">
+      <div class="bwcost-svc__table-wrap">
+        <table class="bwcost-svc__table">
+          <caption class="bwcost-sr-only">
+            Done-for-you barbershop website service comparison: Full KERSIVO, Jones Digital, FadeFoundry,
+            BarberFlow, freelance developers and web design agencies
+          </caption>
+          <colgroup>
+            <col class="bwcost-svc__col-offer" />
+            <col class="bwcost-svc__col-price" />
+            <col class="bwcost-svc__col-scope" />
+            <col class="bwcost-svc__col-check" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="bwcost-svc__th-offer">Published offer</th>
+              <th scope="col">Price structure</th>
+              <th scope="col">Scope snapshot</th>
+              <th scope="col">What to check</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              options.map((row, index) => (
+                <tr class:list={['bwcost-svc__row', row.emphasized && 'bwcost-svc__row--kersivo']}>
+                  <th scope="row" class="bwcost-svc__offer">
+                    <span
+                      class:list={['bwcost-svc__index', row.emphasized && 'bwcost-svc__index--accent']}
+                      aria-hidden="true"
+                    >
+                      {padIndex(index)}
+                    </span>
+                    <span class="bwcost-svc__offer-copy">
+                      <span class="bwcost-svc__name">{row.name}</span>
+                      <span class="bwcost-svc__scope">{row.scopeLabel}</span>
+                    </span>
+                  </th>
+                  <td class="bwcost-svc__price">
+                    <span class="bwcost-svc__price-figure">
+                      {row.priceFigure}
+                      {row.priceFigureSecondary ? (
+                        <span class="bwcost-svc__price-figure-sec">{row.priceFigureSecondary}</span>
+                      ) : null}
+                    </span>
+                    <span class="bwcost-svc__price-caption">{row.priceCaption}</span>
+                    {row.priceNote ? <span class="bwcost-svc__price-note">{row.priceNote}</span> : null}
+                  </td>
+                  <td class="bwcost-svc__chips-cell">
+                    <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
+                      {row.scopeChips.map((chip) => (
+                        <li
+                          class:list={[
+                            'bwcost-svc__chip',
+                            `bwcost-svc__chip--${chip.status}`,
+                            chip.status === 'included' && 'bwcost-svc__chip--on',
+                          ]}
+                          aria-label={`${chip.label}: ${chip.statusLabel}`}
+                        >
+                          <span class="bwcost-svc__chip-label">{chip.label}</span>
+                          <span class="bwcost-sr-only">{chip.statusLabel}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td class="bwcost-svc__check">{row.whatToCheckShort}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bwcost-svc__footer">
+        <p class="bwcost-svc__disclosure" role="note">
+          * Published supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}. Offers differ in
+          scope and conditions; figures are shown as published and may exclude VAT where not stated. KERSIVO
+          publishes this comparison as a provider with a commercial interest.
+        </p>
+        <ul class="bwcost-svc__sources">
+          {
+            sourced.map((row) => (
+              <li>
+                <a
+                  class="bwcost-svc__source"
+                  href={row.sourceHref}
+                  {...(row.sourceHref.startsWith('http')
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {row.sourceShortLabel ?? row.name}
+                  <span aria-hidden="true"> ↗</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="bwcost-svc__mobile">
+      <ul class="bwcost-svc__cards">
+        {
+          options.map((row, index) => (
+            <li class:list={['bwcost-svc__card', row.emphasized && 'bwcost-svc__card--kersivo']}>
+              <div class="bwcost-svc__card-top">
+                <span
+                  class:list={['bwcost-svc__index', row.emphasized && 'bwcost-svc__index--accent']}
+                  aria-hidden="true"
+                >
+                  {padIndex(index)}
+                </span>
+                <div>
+                  <p class="bwcost-svc__card-name">{row.name}</p>
+                  <p class="bwcost-svc__card-scope">{row.scopeLabel}</p>
+                </div>
+              </div>
+
+              <p class="bwcost-svc__card-price">
+                <span class="bwcost-svc__price-figure">
+                  {row.priceFigure}
+                  {row.priceFigureSecondary ? (
+                    <span class="bwcost-svc__price-figure-sec">{row.priceFigureSecondary}</span>
+                  ) : null}
+                </span>
+                <span class="bwcost-svc__price-caption">{row.priceCaption}</span>
+              </p>
+              {row.priceNote ? <p class="bwcost-svc__card-price-secondary">{row.priceNote}</p> : null}
+
+              <ul class="bwcost-svc__chips" aria-label={`Scope for ${row.name}`}>
+                {row.scopeChips.map((chip) => (
+                  <li
+                    class:list={[
+                      'bwcost-svc__chip',
+                      `bwcost-svc__chip--${chip.status}`,
+                      chip.status === 'included' && 'bwcost-svc__chip--on',
+                    ]}
+                    aria-label={`${chip.label}: ${chip.statusLabel}`}
+                  >
+                    <span class="bwcost-svc__chip-label">{chip.label}</span>
+                    <span class="bwcost-sr-only">{chip.statusLabel}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p class="bwcost-svc__card-highlight">
+                <span class="bwcost-svc__card-label">What to check</span>
+                {row.whatToCheckShort}
+              </p>
+
+              {row.caveat ? <p class="bwcost-svc__card-caveat">{row.caveat}</p> : null}
+
+              <details class="bwcost-svc__details">
+                <summary>More detail</summary>
+                <div class="bwcost-svc__details-body">
+                  <p>
+                    <strong>Billing.</strong> {row.billingModel}
+                  </p>
+                  <p>
+                    <strong>Website delivery.</strong> {row.websiteDelivery}
+                  </p>
+                  <p>
+                    <strong>Bookings + retail.</strong> {row.bookingsRetail}
+                  </p>
+                  <p>
+                    <strong>What to check.</strong> {row.whatToCheck}
+                  </p>
+                  {row.sourceHref ? (
+                    <p>
+                      <a
+                        class="bwcost-svc__source"
+                        href={row.sourceHref}
+                        {...(row.sourceHref.startsWith('http')
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
+                      >
+                        {row.sourceLabel ?? 'View supplier pricing'}
+                        <span aria-hidden="true"> ↗</span>
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+              </details>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="bwcost-svc__disclosure" role="note">
+        * Published supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}. Offers differ in
+        scope and conditions; figures are shown as published and may exclude VAT where not stated. KERSIVO
+        publishes this comparison as a provider with a commercial interest.
+      </p>
+    </div>
+
+    <aside class="bwcost-svc__diy" aria-labelledby="bwcost-svc-diy-heading">
+      <h3 id="bwcost-svc-diy-heading" class="bwcost-svc__diy-title">What about DIY website builders?</h3>
+      <p>
+        Platforms such as Wix and Squarespace let you build and manage your own website, with booking and retail
+        tools available depending on your plan and setup. They may be cheaper, but this comparison focuses on
+        website services where a provider prepares the site for you.
+      </p>
+    </aside>
+  </div>
+</section>

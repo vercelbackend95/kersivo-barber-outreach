@@ -35,6 +35,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/about',
   '/barbershop-websites',
   '/barbershop-website-design',
+  '/barbershop-website-cost-uk',
   '/barbershop-online-booking',
 ];
 
