@@ -20,14 +20,14 @@
     {
       "kind": "hero",
       "anchor": "# Making Tax Digital for Barbers: What Changes When Your Takings Pass £30,000",
-      "src": "https://images.pexels.com/photos/27165069/pexels-photo-27165069.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=2400",
       "width": 1600,
       "height": 1000,
-      "alt": "Contemporary barber and hair salon interior with mirror and wooden floor photographed in London",
-      "caption": "A modern grooming salon in London, England. Editorial photograph; no suggestion that the business is a KERSIVO customer or that its tax records are depicted",
-      "credit": "Wilcle Nunes / Pexels",
-      "creditUrl": "https://www.pexels.com/photo/a-modern-salon-with-a-round-mirror-and-wooden-floors-27165069/",
-      "rights": "Original Pexels photograph #27165069 by Wilcle Nunes; original https://www.pexels.com/photo/a-modern-salon-with-a-round-mirror-and-wooden-floors-27165069/ explicitly shows location London, England, UK; Free to use per Pexels licence https://www.pexels.com/license/ permits commercial editorial use and cropping. Audited unique image ID against all 18 KERSIVO Insights published visual manifests on 19 October 2026. Separate person/property/trademark clearances not established. Editorial context only; no KERSIVO affiliation or compliance claim.",
+      "alt": "A barber cutting a client's hair inside a Liverpool barbershop under colourful lighting",
+      "caption": "A barber at work in Liverpool, England. Editorial photograph only; the barber, client and shop are not presented as KERSIVO customers or as having any particular tax obligations",
+      "credit": "Mitchell Orr / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-man-getting-his-hair-cut-by-a-barber-iDbTDUzQTxY",
+      "rights": "Photograph by Mitchell Orr on Unsplash, source https://unsplash.com/photos/a-man-getting-his-hair-cut-by-a-barber-iDbTDUzQTxY. Unsplash lists Liverpool, United Kingdom, published 11 February 2025, free under the Unsplash License https://unsplash.com/license/ allowing commercial editorial reuse and cropping. The image shows an actual barber cutting a client's hair and is not evidence of KERSIVO product adoption, HMRC reporting or the depicted subjects' tax circumstances. Separate model/property/trademark rights have not been independently cleared. Unique Unsplash photo ID photo-1739302493888 audited against every visual manifest in 19 Insights articles (18 published plus this Preview) on 19 Oct 2026: no other use.",
       "licenceReviewed": true
     },
     {
@@ -67,5 +67,5 @@
     }
   ],
   "editorialVersion": "Original DRAFT v1 authored 19 October 2026 from Notion IDEA-010 and validated against HMRC published guidance (last updated September/October 2026). No separate Notion research or writing approval asserted.",
-  "editorialVisualDirection": "Real location-confirmed London salon image and London retail interaction (not implied real clients), checked against all 18 published KERSIVO Insights media manifests. Two original charts explaining MTD thresholds and gross receipts vs net profit. No fabricated adopters or tax outcomes."
+  "editorialVisualDirection": "New hero features genuine Liverpool barbering action under coloured salon lighting (Mitchell Orr, Unsplash photo-1739302493888), not a generic grooming interior. Photo is unique across all 18 published Insights articles and this Preview. Supporting London street photo and two original HMRC illustrations unchanged. No implied KERSIVO association, taxpayer classification or case study."
 }

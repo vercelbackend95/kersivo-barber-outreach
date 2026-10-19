@@ -1,7 +1,7 @@
 # Making Tax Digital for Barbers: What Changes When Your Takings Pass £30,000
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.pexels.com/photos/27165069/pexels-photo-27165069.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Contemporary barber and hair salon interior with mirror and wooden floor photographed in London" />
-<figcaption>A modern grooming salon in London, England. Editorial photograph; no suggestion that the business is a KERSIVO customer or that its tax records are depicted — <a href="https://www.pexels.com/photo/a-modern-salon-with-a-round-mirror-and-wooden-floors-27165069/" target="_blank" rel="noopener noreferrer">Wilcle Nunes / Pexels</a>.</figcaption></figure>
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=80&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="A barber cutting a client's hair inside a Liverpool barbershop under colourful lighting" />
+<figcaption>A barber at work in Liverpool, England. Editorial photograph only; the barber, client and shop are not presented as KERSIVO customers or as having any particular tax obligations — <a href="https://unsplash.com/photos/a-man-getting-his-hair-cut-by-a-barber-iDbTDUzQTxY" target="_blank" rel="noopener noreferrer">Mitchell Orr / Unsplash</a>.</figcaption></figure>
 
 *Updated for HMRC guidance available on 19 October 2026. This is a practical guide for self-employed UK barbers, not individual tax advice. Tax thresholds and dates are based on the legislation and HMRC guidance cited below.*
 
