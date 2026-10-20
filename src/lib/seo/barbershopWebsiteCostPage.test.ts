@@ -435,8 +435,11 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
       /\.bwcost-models__inner\s*\{[^}]*width:\s*min\(94vw,\s*91\.1rem\)/s,
     );
     expect(css).toContain('.bwcost-models__scope-top .bwcost-models__index::after');
-    expect(css).toContain('min-height: 14rem');
+    expect(css).toContain('min-height: 11.5rem');
+    expect(css).toContain('max-width: 13.2rem');
     expect(css).not.toContain('min-height: 17.5rem');
+    expect(css).not.toContain('min-height: 14rem');
+    expect(css).not.toContain('max-width: 17rem');
     expect(css).not.toContain('.bwcost-anatomy__list');
     expect(css).not.toContain('.bwcost-inset__title');
     const section03Dir = join(here, '../../../public/images/barbershop-website-cost/section-03');

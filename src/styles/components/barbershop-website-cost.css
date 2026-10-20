@@ -2202,14 +2202,28 @@
 
 @media (min-width: 1024px) {
   .bwcost-models__scope-card {
-    padding: 1.1rem 1.35rem 1rem;
-    min-height: 14rem;
+    padding: 0.85rem 1.25rem 0.75rem;
+    min-height: 11.5rem;
+  }
+
+  .bwcost-models__scope-top {
+    margin-bottom: 0.45rem;
   }
 
   .bwcost-models__scope-body {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr);
-    gap: 0.75rem 1.15rem;
+    gap: 0.5rem 1.15rem;
     align-items: center;
+  }
+
+  .bwcost-models__scope-img {
+    /* ~20% smaller than prior 16.5rem desktop default */
+    max-width: 13.2rem;
+  }
+
+  .bwcost-models__points {
+    gap: 0.5rem;
+    padding-bottom: 0;
   }
 
   .bwcost-models__insight {
@@ -2232,11 +2246,12 @@
   }
 
   .bwcost-models__scope-card {
-    min-height: 13.5rem;
+    min-height: 11rem;
   }
 
   .bwcost-models__scope-img {
-    max-width: 17rem;
+    /* ~20% smaller than prior 17rem */
+    max-width: 13.6rem;
   }
 }
 
