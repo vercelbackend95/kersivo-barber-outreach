@@ -397,6 +397,8 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(models).toContain('bwcost-models__fit');
     expect(models).toContain('bwcost-models__insight');
     expect(models).toContain('row.badge');
+    expect(models).not.toContain('{row.index}');
+    expect(models).not.toContain('bwcost-models__fit-index');
     expect(models).toContain('COST_MODELS_INSIGHT_CTA_HREF');
     expect(models).toContain('COST_MODELS_INSIGHT_IMAGE_SRC');
     expect(COST_MODELS_INSIGHT_CTA_HREF).toBe('/barbershop-online-booking');
@@ -430,6 +432,9 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(models).not.toContain('No lock-in');
     expect(css).toContain('.bwcost-models__scope');
     expect(css).toContain('.bwcost-models__fit-card--accent');
+    expect(css).toMatch(
+      /\.bwcost-models__fit-card\s*\{[^}]*background:\s*color-mix\(in srgb,\s*#050505 94%,\s*var\(--surface-1\)\)/s,
+    );
     expect(css).toContain('--bwcost-models-display');
     expect(css).toMatch(
       /\.bwcost-models__inner\s*\{[^}]*width:\s*min\(94vw,\s*91\.1rem\)/s,
