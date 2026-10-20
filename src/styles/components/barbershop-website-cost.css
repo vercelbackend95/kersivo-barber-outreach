@@ -2313,7 +2313,8 @@
   }
 
   .bwcost-models__insight-img {
-    height: 15rem;
+    /* ~13% larger than 15rem — still within the fixed media slot / panel */
+    height: 17rem;
   }
 }
 
