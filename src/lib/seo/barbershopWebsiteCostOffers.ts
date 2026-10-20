@@ -41,7 +41,7 @@ export const WEBSITE_COST_COSTING_POLICY = {
 } as const;
 
 export const WEBSITE_COST_QUOTE_REQUESTS = {
-  nearcut: 'Subscription quote for one UK site with 4 and 6 barbers; custom branded multi-page website, domain, booking, reminders, reports, retail pickup and Business Booster fees including VAT and any setup fees.',
+  nearcut: 'Subscription quote for one UK site with 4 and 6 barbers; confirm that Subscription has no customer booking charge and whether the shop may instead directly cover the Free for You booking charge; separately confirm actual variable booking-charge tariff, VAT, multi-page site, product pickup, domain, reporting and £7.50 product Booster terms.',
   vagaro: 'Confirmed full UK recurring price for one location with 4 and 6 active calendars + MySite, VAT, domain and optional done-for-you website design; online product pickup and transaction costs.',
   fresha: 'Live GBP checkout price for Team with 4 and 6 bookable members + Smart Website, VAT, SMS limits/overage, domain registration, online retail pickup payment fees.',
   uxhm: 'Itemised £499 Salon Growth quote with 4/6 staff profiles, UK VAT, domain registration/renewal, Essential Care plus 3-year terms and booking integration/retail requirements.',
@@ -114,7 +114,7 @@ export type WebsiteCostResearchedOffer = {
   features: CostFeatureCoverage;
   sources: readonly string[];
   /** Public copy must not suggest full feature or fee equivalence. */
-  fullKersivoScopeEquivalenceConfirmed: false;
+  fullKersivoScopeEquivalenceConfirmed: boolean;
 };
 
 export const WEBSITE_COST_OFFERS = [
@@ -162,7 +162,7 @@ export const WEBSITE_COST_OFFERS = [
       customDomain: 'confirmed-in-plan',
     },
     sources: ['/pricing', 'KERSIVO Commercial Offer v1.0.pdf'],
-    fullKersivoScopeEquivalenceConfirmed: false,
+    fullKersivoScopeEquivalenceConfirmed: true,
   },
   {
     id: 'jones-digital-pro',
@@ -368,11 +368,11 @@ export const WEBSITE_COST_OFFERS = [
     pricing: {
       setupGbp: null,
       recurringGbpPerMonth: null,
-      vat: 'ex-VAT',
+      vat: 'not-confirmed',
       minimumTermMonths: null,
       pricingNotes: [
         'PRICE CONFLICT — official /pricing states £39/month/location (including six barbers), whereas homepage, /ai-info and /terms-conditions state £59/month/location.',
-        'Terms also state VAT number not yet VAT-registered; final charged tax must be reconciled with actual terms/invoice.',
+        'Terms disclose that Setora is not VAT-registered at the stated update, and a separate 2026 blog states no VAT currently added; this conflicts with generic “exclusive of VAT” price wording. Reconcile current invoice/tax status before publication.',
         'Unlimited staff; no Setora booking commission; 14-day free trial.',
         'No one-off setup fee appears in the public plan; do not silently assert a guaranteed £0.',
       ],
@@ -404,7 +404,12 @@ export const WEBSITE_COST_OFFERS = [
       hosting: 'confirmed-in-plan',
       customDomain: 'additional-quote-needed',
     },
-    sources: ['https://www.setora.co.uk/', 'https://www.setora.co.uk/ai-info'],
+    sources: [
+      'https://www.setora.co.uk/pricing',
+      'https://www.setora.co.uk/terms-conditions',
+      'https://www.setora.co.uk/',
+      'https://www.setora.co.uk/blog/hidden-cost-free-barbershop-software',
+    ],
     fullKersivoScopeEquivalenceConfirmed: false,
   },
   {
@@ -498,15 +503,16 @@ export const WEBSITE_COST_OFFERS = [
       setupGbp: 0,
       recurringGbpPerMonth: null,
       vat: 'ex-VAT',
-      minimumTermMonths: null,
+      minimumTermMonths: 0,
       pricingNotes: [
-        'Nearcut lists a £0/month customer-funded Free for You option with a booking fee paid by customers. This is a different commercial model and must not be treated as zero total customer cost.',
+        'Nearcut offers TWO publicly described models: (1) Free for You: £0 shop subscription, customers pay a separate checkout booking charge; Nearcut illustrates £1.50 on a £20 haircut, not a confirmed universal per-booking rate. (2) Subscription: shop pays a tailored monthly price excluding VAT, customers pay NO Nearcut booking charge.',
+        'No third Nearcut plan charging the BARBERSHOP exactly £1.50 per booking has been verified; merchant-funding an equivalent amount is a modelling assumption, never an official Nearcut offer.',
         'Its subscription price depends on barber/location count; the publicly accessible page directs customers to request a quote. No verified 4- or 6-barber price.',
-        'The official pricing page states no website/booking setup fee and 30 days of free trial on the subscription.',
+        'Official pricing states no setup fees; Subscription has a 30-day free trial, no long commitment, and is quote-based by barbers and locations.',
       ],
       possibleAdditionalCosts: [
         '4- and 6-barber subscription quotation needed',
-        'product sales & stock management Business Booster shown at £7.50/month on UK pricing page; verify applicability/terms',
+        'product sales & stock management Business Booster listed at £7.50/month on the UK pricing page; verify applicability/terms (other locale versions may display $10)',
         'custom domain and actual multi-page website structure not publicly confirmed',
         'paid booking processing or other optional business boosters, as applicable',
       ],
@@ -515,24 +521,32 @@ export const WEBSITE_COST_OFFERS = [
     limits: [
       'The published £1.50 booking fee is an illustrative haircut transaction, not a universal tariff for all services.',
       'Business Booster price examples appear with dollar amounts and must not be converted into UK fixed add-on prices.',
-      'A guaranteed multi-page team/gallery/shop website has not been established.',
+      'Nearcut Help Centre confirms Homepage and separate Gallery page plus staff bios; separately navigable Team, About and Retail pages analogous to KERSIVO are not all established.',
+      'Nearcut has online product sales and stock management via the Business Booster; click-and-collect checkout / pickup promise not confirmed.',
     ],
     features: {
-      multiPageWebsite: 'not-publicly-confirmed',
-      teamPresentation: 'not-publicly-confirmed',
-      gallery: 'not-publicly-confirmed',
+      multiPageWebsite: 'confirmed-in-plan',
+      teamPresentation: 'confirmed-in-plan',
+      gallery: 'confirmed-in-plan',
       onlineBookings: 'confirmed-in-plan',
       staffCalendars: 'confirmed-in-plan',
       deposits: 'confirmed-in-plan',
       emailReminders: 'confirmed-in-plan',
       smsReminders: 'not-publicly-confirmed',
       clientManagement: 'confirmed-in-plan',
-      businessReports: 'not-publicly-confirmed',
+      businessReports: 'confirmed-in-plan',
       retailPickup: 'not-publicly-confirmed',
       hosting: 'confirmed-in-plan',
       customDomain: 'not-publicly-confirmed',
     },
-    sources: ['https://nearcut.com/en-GB/pricing', 'https://nearcut.com/en-GB'],
+    sources: [
+      'https://nearcut.com/en-GB/pricing',
+      'https://nearcut.com/en-GB',
+      'https://help.nearcut.com/en/articles/16147775-how-to-edit-the-website',
+      'https://help.nearcut.com/en/articles/4518646-how-to-set-up-product-sales',
+      'https://help.nearcut.com/en/articles/4518709-how-to-sell-products',
+      'https://help.nearcut.com/en/articles/5672099-about-online-payments-and-how-to-set-it-up',
+    ],
     fullKersivoScopeEquivalenceConfirmed: false,
   },
   {
@@ -803,6 +817,59 @@ export function freshaUkIndicatedMonthlySubtotalGbp(
 }
 
 /** Research confidence record; not a public price quote. */
+/**
+ * Nearcut's £1.50 is a PUBLISHED MARKETING EXAMPLE OF A CUSTOMER FEE in
+ * Free for You, NOT an officially verified price payable by the barbershop.
+ *
+ * Merchant-absorbed scenario: for research ONLY, simulate a shop voluntarily
+ * offsetting the client's illustrative £1.50 fee (e.g. by lowering its service
+ * price), without claiming Nearcut bills the shop £1.50. This assumes one
+ * offset for each eligible chargeable, completed online booking. Actual amount,
+ * refunds, tax, eligibility and whether an offset can be implemented must be
+ * verified. Customer can still pay Nearcut directly.
+ *
+ * Not comparable with a fixed Subscription quote without separately defining
+ * bookings volume. Booking fee and card-processing fee are DIFFERENT charges.
+ */
+export const NEARCUT_BOOKING_FEE_MODELS = {
+  freeForYou: {
+    publishedPlanName: 'Free for You',
+    subscriptionGbpPerMonth: 0,
+    nearcutBookingChargePayer: 'customer',
+    publishedIllustrativeCustomerBookingChargeGbp: 1.50,
+    fixedChargeForAllBookingsConfirmed: false,
+    merchantCanPayFeeDirectlyToNearcutConfirmed: false,
+    source: 'https://nearcut.com/en-GB/pricing',
+  },
+  subscription: {
+    publishedPlanName: 'Subscription',
+    monthlyShopPrice: 'QUOTE_REQUIRED_FOR_BARBER_COUNT',
+    nearcutBookingChargePayer: 'none',
+    shopPaysQuotedSubscription: true,
+    source: 'https://nearcut.com/en-GB/pricing',
+  },
+  hypotheticalMerchantOffset: {
+    modelName: 'Merchant offsets the illustrative client charge',
+    isRealNearcutTariff: false,
+    perChargeableBookingEquivalentGbp: 1.50,
+    pricingMethod: 'merchant voluntarily offsets the equivalent fee, e.g. through service pricing',
+    caveat: 'Customer-funded Free for You is unchanged. Nearcut has not verified a shop-billed £1.50 per-booking plan.',
+  },
+} as const;
+
+/** Merchant's illustrative economic subsidy, NOT a Nearcut merchant invoice. */
+export function nearcutIllustrativeMerchantOffsetGbp(
+  eligibleChargeableOnlineBookings: number,
+  months: 12 | 36,
+): number {
+  if (!Number.isInteger(eligibleChargeableOnlineBookings) || eligibleChargeableOnlineBookings < 0) {
+    throw new RangeError('eligibleChargeableOnlineBookings must be a non-negative integer per month');
+  }
+  return eligibleChargeableOnlineBookings
+    * NEARCUT_BOOKING_FEE_MODELS.hypotheticalMerchantOffset.perChargeableBookingEquivalentGbp
+    * months;
+}
+
 export const WEBSITE_COST_CURRENT_FINDINGS = {
   vagaroUkFourBarbersPlusMySite: 65,
   vagaroUkSixBarbersPlusMySite: 85,
@@ -810,6 +877,8 @@ export const WEBSITE_COST_CURRENT_FINDINGS = {
   freshaUkIndicativeSixIncVat: 87.18,
   nearcutMonthlySubscription: 'QUOTE_REQUIRED',
   nearcutProductBoosterUkAdvertisedMonthlyGbp: 7.50,
+  nearcutPublishedCustomerBookingChargeIllustrationGbp: 1.50,
+  nearcutMerchantBilledChargePerBooking: 'NOT_CONFIRMED',
   setoraPublicPriceConflict: [39, 59],
   exact12And36MonthTcoStatus: 'BLOCKED_WITHOUT_ALL_MANDATORY_CHARGES_AND_USAGE',
   legalNote: 'UK CMA UCP price transparency rules are aimed at consumers; B2B suppliers can use bespoke quotations. Ads must still avoid misleading price presentation; ASA/CAP applies to prices in ads.',
