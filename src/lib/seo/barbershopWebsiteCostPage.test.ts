@@ -16,7 +16,6 @@ import {
   BARBERSHOP_WEBSITE_COST_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITE_COST_PAGE_PATH,
   BARBERSHOP_WEBSITE_COST_PAGE_TITLE,
-  BOOKING_SENSITIVITY_MONTHLY_GBP,
   COST_BUYING_MODELS,
   COST_MODELS_EYEBROW,
   COST_MODELS_INSIGHT_BODY,
@@ -27,21 +26,18 @@ import {
   COST_SCOPE_CARDS,
   COST_CHECKLIST_QUESTIONS,
   COST_PAGE_FAQS,
-  COST_SCENARIO_A_12,
-  COST_SCENARIO_A_36,
-  COST_SCENARIO_B_12_HIGH,
-  COST_SCENARIO_B_12_LOW,
-  COST_SCENARIO_B_36_HIGH,
-  COST_SCENARIO_B_36_LOW,
   COST_SCENARIO_C_12,
   COST_SCENARIO_C_36,
   buildBarbershopWebsiteCostBreadcrumbJsonLd,
   buildBarbershopWebsiteCostJsonLd,
   buildBarbershopWebsiteCostWebPageJsonLd,
   fullKersivoTotalGbp,
-  websiteOnlyTotalGbp,
-  websitePlusBookingTotalGbp,
 } from './barbershopWebsiteCostPage';
+import {
+  COST_SCENARIOS_SECTION_ID,
+  SCENARIO_DEFAULT,
+  getScenarioComparison,
+} from './barbershopWebsiteCostScenarios';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import {
@@ -135,44 +131,50 @@ describe('/barbershop-website-cost-uk page shell', () => {
   });
 });
 
-describe('/barbershop-website-cost-uk cost mathematics (v1.2)', () => {
-  it('uses the approved hypothetical website-only totals', () => {
-    expect(websiteOnlyTotalGbp(12)).toBe(440);
-    expect(websiteOnlyTotalGbp(36)).toBe(720);
-    expect(COST_SCENARIO_A_12).toBe(440);
-    expect(COST_SCENARIO_A_36).toBe(720);
-  });
-
-  it('computes booking sensitivity rows at £10/£20/£30/£40', () => {
-    expect(BOOKING_SENSITIVITY_MONTHLY_GBP).toEqual([10, 20, 30, 40]);
-    expect(websitePlusBookingTotalGbp(12, 10)).toBe(560);
-    expect(websitePlusBookingTotalGbp(12, 20)).toBe(680);
-    expect(websitePlusBookingTotalGbp(12, 30)).toBe(800);
-    expect(websitePlusBookingTotalGbp(12, 40)).toBe(920);
-    expect(websitePlusBookingTotalGbp(36, 10)).toBe(1080);
-    expect(websitePlusBookingTotalGbp(36, 20)).toBe(1440);
-    expect(websitePlusBookingTotalGbp(36, 30)).toBe(1800);
-    expect(websitePlusBookingTotalGbp(36, 40)).toBe(2160);
-    expect(COST_SCENARIO_B_12_LOW).toBe(560);
-    expect(COST_SCENARIO_B_12_HIGH).toBe(920);
-    expect(COST_SCENARIO_B_36_LOW).toBe(1080);
-    expect(COST_SCENARIO_B_36_HIGH).toBe(2160);
-  });
-
-  it('computes Full KERSIVO totals from SAAS_MONTHLY_GBP', () => {
+describe('/barbershop-website-cost-uk Section 04 scaling costs', () => {
+  it('computes Full KERSIVO totals from SAAS_MONTHLY_GBP via the scenarios module', () => {
     expect(SAAS_MONTHLY_GBP).toBe(39);
     expect(fullKersivoTotalGbp(12)).toBe(468);
     expect(fullKersivoTotalGbp(36)).toBe(1404);
     expect(COST_SCENARIO_C_12).toBe(468);
     expect(COST_SCENARIO_C_36).toBe(1404);
+    expect(getScenarioComparison(4, '36').kersivoSummary.amountGbp).toBe(1404);
   });
 
-  it('does not ship superseded v1.1 scenario totals', () => {
+  it('renders one vertical chart, controls, cards and CTA without fictional budgets', () => {
+    expect(COST_SCENARIOS_SECTION_ID).toBe('cost-scenarios');
+    expect(SCENARIO_DEFAULT).toEqual({ barbers: 4, period: '36' });
+    expect(scenarios).toContain('id={COST_SCENARIOS_SECTION_ID}');
+    expect(scenarios).toContain('04 / SCALING COSTS');
+    expect(scenarios).toContain('barbershop grows');
+    expect(scenarios).toContain('bwcost-scenarios__chart');
+    expect(scenarios).toContain('bwcost-scenarios__bars');
+    expect(scenarios).toContain('data-bwcost-barbers');
+    expect(scenarios).toContain('data-bwcost-period');
+    expect(scenarios).toContain('bwcost-scenarios__cards');
+    expect(scenarios).toContain('More barbers. Same price.');
+    expect(scenarios).toContain('Start for £{SAAS_MONTHLY_GBP}/month');
+    expect(scenarios).toContain("SUBSCRIBE_HREF = '/admin/launch'");
+    expect(scenarios).toContain('buildScenarioPayload');
+    expect(scenarios).toContain('initWebsiteCostScenarios');
+    expect(scenarios).not.toContain('HYPOTHETICAL_BUILD_GBP');
+    expect(scenarios).not.toContain('fictional example');
+    expect(scenarios).not.toContain('£300');
+    expect(scenarios).not.toContain('/barber-software-cost-calculator');
+    expect(css).toContain('.bwcost-scenarios__bars');
+    expect(css).toContain('.bwcost-scenarios__bar--kersivo');
+    expect(css).toContain('--bwcost-scenarios-red: var(--bwcost-accent)');
+    expect(COST_PAGE_FAQS.find((faq) => faq.id === 'one-off-vs-monthly')?.answer.join(' ')).toMatch(
+      /Scaling costs calculator/i,
+    );
+  });
+
+  it('does not ship superseded fictional A/B scenario totals', () => {
     const combined = `${scenarios}\n${hero}\n${faqClose}`;
+    expect(combined).not.toContain('Website + upkeep');
+    expect(combined).not.toContain('Website + separate booking');
     expect(combined).not.toContain('£358');
     expect(combined).not.toContain('£676');
-    expect(combined).not.toContain('£598');
-    expect(combined).not.toContain('£1,396');
   });
 });
 

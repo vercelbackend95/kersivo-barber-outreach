@@ -2411,86 +2411,759 @@
   }
 }
 
-/* —— Scenarios —— */
+/* —— Section 04 / Scaling costs —— */
 
-.bwcost-scenarios__inputs {
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--radius-8);
-  background: var(--bwcost-surface);
-  border: 1px solid var(--bwcost-line);
-  color: var(--muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
+.bwcost-scenarios {
+  /* Reuse page accent token (design-system --accent) — do not hardcode brand hex here. */
+  --bwcost-scenarios-red: var(--bwcost-accent);
+  --bwcost-scenarios-panel: #121214;
+  --bwcost-scenarios-panel-2: #1a1a1e;
+  --bwcost-scenarios-line: color-mix(in srgb, #fff 10%, transparent);
 }
 
-.bwcost-table--results td:nth-child(2),
-.bwcost-table--results td:nth-child(3) {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
+.bwcost-scenarios__inner {
+  width: min(94vw, 74rem);
+}
+
+.bwcost-scenarios__intro {
+  max-width: 46rem;
+  margin: 0 auto 2.25rem;
+  text-align: center;
+}
+
+.bwcost-scenarios__intro-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bwcost-scenarios__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bwcost-scenarios__eyebrow-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--bwcost-scenarios-red);
+  box-shadow: 0 0 0.55rem color-mix(in srgb, var(--bwcost-scenarios-red) 70%, transparent);
+}
+
+.bwcost-scenarios__brand {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+}
+
+.bwcost-scenarios__title {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 4.2vw, 3.15rem);
+  font-weight: 400;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.05;
+  text-transform: uppercase;
   color: var(--fg);
 }
 
-@media (min-width: 700px) {
-  .bwcost-table--results td:nth-child(2),
-  .bwcost-table--results td:nth-child(3) {
-    white-space: nowrap;
+.bwcost-scenarios__title-accent {
+  color: var(--bwcost-scenarios-red);
+}
+
+.bwcost-scenarios__lede {
+  margin: 0 auto;
+  max-width: 40rem;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  font-size: var(--text-md);
+  line-height: 1.55;
+}
+
+.bwcost-scenarios__stage {
+  display: grid;
+  gap: 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .bwcost-scenarios__stage {
+    grid-template-columns: minmax(0, 1.55fr) minmax(17.5rem, 0.85fr);
+    align-items: stretch;
+    gap: 1.25rem;
   }
 }
 
-.bwcost-sensitivity {
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--bwcost-line);
-  border-radius: var(--radius-12);
-  background: var(--bwcost-surface);
+.bwcost-scenarios__chart-panel,
+.bwcost-scenarios__controls {
+  border: 1px solid var(--bwcost-scenarios-line);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, var(--bwcost-scenarios-panel-2), var(--bwcost-scenarios-panel));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bwcost-scenarios-red) 8%, transparent);
 }
 
-.bwcost-sensitivity summary {
-  cursor: pointer;
-  font-weight: 600;
-  min-height: 44px;
+.bwcost-scenarios__chart-panel {
+  padding: 1.15rem 1rem 1.1rem;
+  min-width: 0;
+}
+
+.bwcost-scenarios__chart-head {
+  margin-bottom: 1rem;
+}
+
+.bwcost-scenarios__chart-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.bwcost-scenarios__chart-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.bwcost-scenarios__chart-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bwcost-scenarios__chart {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.1rem minmax(22rem, 1fr);
+  gap: 0.65rem;
+  min-height: 18.5rem;
+  min-width: 28rem;
+}
+
+.bwcost-scenarios__axis {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1.75rem 0 2.1rem;
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.bwcost-sensitivity summary:focus-visible {
+.bwcost-scenarios__bars {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+  align-items: end;
+  min-height: 16.5rem;
+  padding: 0.35rem 0.35rem 0;
+  border-bottom: 1px solid var(--bwcost-scenarios-line);
+  background-image:
+    repeating-linear-gradient(
+      to top,
+      transparent 0,
+      transparent calc(25% - 1px),
+      color-mix(in srgb, #fff 7%, transparent) calc(25% - 1px),
+      color-mix(in srgb, #fff 7%, transparent) 25%
+    );
+  background-size: 100% 100%;
+}
+
+.bwcost-scenarios__bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.bwcost-scenarios__bar-track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  height: 14.5rem;
+}
+
+.bwcost-scenarios__bar-fill {
+  width: min(100%, 2.65rem);
+  border-radius: 0.35rem 0.35rem 0.15rem 0.15rem;
+  background: color-mix(in srgb, #8a8a92 70%, #2a2a30);
+  transition: height 0.35s ease;
+}
+
+.bwcost-scenarios__bar--kersivo .bwcost-scenarios__bar-fill {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bwcost-scenarios-red) 72%, #fff), var(--bwcost-scenarios-red));
+  box-shadow:
+    0 0 1.25rem color-mix(in srgb, var(--bwcost-scenarios-red) 45%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--bwcost-scenarios-red) 55%, transparent);
+}
+
+.bwcost-scenarios__bar--kersivo {
+  border-radius: 0.5rem;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bwcost-scenarios-red) 28%, transparent);
+}
+
+.bwcost-scenarios__bar-value {
+  z-index: 1;
+  max-width: 100%;
+  margin-bottom: 0.28rem;
+  padding: 0 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.bwcost-scenarios__bar-placeholder {
+  position: absolute;
+  inset: auto 0 35%;
+  z-index: 1;
+  margin: 0 auto;
+  max-width: 95%;
+  padding: 0.35rem 0.25rem;
+  border: 1px dashed color-mix(in srgb, #fff 28%, transparent);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, #000 35%, transparent);
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  font-size: 0.62rem;
+  font-weight: 650;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.bwcost-scenarios__bar-label {
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.bwcost-scenarios__bar--kersivo .bwcost-scenarios__bar-label {
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 70%, #fff);
+}
+
+.bwcost-scenarios__chart-note {
+  margin: 0.85rem 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.bwcost-scenarios__controls {
+  padding: 1.15rem 1.05rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.bwcost-scenarios__control-label {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bwcost-scenarios__segments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.bwcost-scenarios__segments--barbers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.bwcost-scenarios__seg {
+  min-height: 2.65rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid color-mix(in srgb, #fff 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 35%, transparent);
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bwcost-scenarios__seg:hover {
+  border-color: color-mix(in srgb, var(--bwcost-scenarios-red) 45%, transparent);
+}
+
+.bwcost-scenarios__seg:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
-.bwcost-sensitivity[open] summary {
-  margin-bottom: 0.85rem;
+.bwcost-scenarios__seg.is-active {
+  border-color: var(--bwcost-scenarios-red);
+  color: #fff;
+  background: color-mix(in srgb, var(--bwcost-scenarios-red) 16%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bwcost-scenarios-red) 35%, transparent);
 }
 
-.bwcost-sensitivity p {
-  margin: 0.5rem 0 0;
+.bwcost-scenarios__summary {
+  margin-top: auto;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 42%, transparent);
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--bwcost-scenarios-red) 22%, transparent), transparent 55%),
+    color-mix(in srgb, #000 45%, var(--bwcost-scenarios-panel-2));
+  box-shadow: 0 0 1.5rem color-mix(in srgb, var(--bwcost-scenarios-red) 18%, transparent);
+}
+
+.bwcost-scenarios__summary-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 75%, #fff);
+}
+
+.bwcost-scenarios__summary-scenario {
+  margin: 0 0 0.65rem;
   color: var(--muted);
-  font-size: var(--text-sm);
+  font-size: 0.85rem;
 }
 
-.bwcost-scenarios__disclaimer {
+.bwcost-scenarios__summary-name {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.bwcost-scenarios__summary-figure {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 2.55rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bwcost-scenarios__summary-caption {
+  margin: 0 0 0.65rem;
+  color: color-mix(in srgb, #fff 75%, var(--muted));
+  font-size: 0.86rem;
+}
+
+.bwcost-scenarios__summary-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.bwcost-scenarios__cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 0 0 1.15rem;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 700px) {
+  .bwcost-scenarios__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .bwcost-scenarios__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .bwcost-scenarios__cards {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.bwcost-scenarios__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 11.5rem;
+  padding: 1rem 0.95rem;
+  border: 1px solid var(--bwcost-scenarios-line);
+  border-radius: 0.9rem;
+  background: var(--bwcost-scenarios-panel);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.bwcost-scenarios__card:hover {
+  border-color: color-mix(in srgb, #fff 22%, transparent);
+}
+
+.bwcost-scenarios__card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bwcost-scenarios__card.is-active {
+  border-color: color-mix(in srgb, var(--bwcost-scenarios-red) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bwcost-scenarios-red) 25%, transparent);
+}
+
+.bwcost-scenarios__card--kersivo {
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--bwcost-scenarios-red) 24%, transparent), transparent 50%),
+    color-mix(in srgb, var(--bwcost-scenarios-red) 8%, #0d0a0b);
+  border-color: color-mix(in srgb, var(--bwcost-scenarios-red) 48%, transparent);
+  box-shadow: 0 0 1.4rem color-mix(in srgb, var(--bwcost-scenarios-red) 16%, transparent);
+}
+
+.bwcost-scenarios__card-mark {
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
+  margin-bottom: 0.15rem;
+}
+
+.bwcost-scenarios__card-name {
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.bwcost-scenarios__card-figure {
+  font-family: var(--font-heading);
+  font-size: 1.55rem;
+  line-height: 1.05;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bwcost-scenarios__card-secondary,
+.bwcost-scenarios__card-qualifier,
+.bwcost-scenarios__card-explain {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.bwcost-scenarios__card-status {
+  margin-top: auto;
+  padding-top: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+}
+
+.bwcost-scenarios__card--kersivo .bwcost-scenarios__card-status {
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 70%, #fff);
+}
+
+.bwcost-scenarios__breakdown {
+  margin: 0 0 1.5rem;
+  padding: 1.15rem 1.1rem;
+  border: 1px solid var(--bwcost-scenarios-line);
+  border-radius: 1rem;
+  background: var(--bwcost-scenarios-panel);
+}
+
+.bwcost-scenarios__bd-kicker {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bwcost-scenarios__bd-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bwcost-scenarios__bd-meta {
   margin: 0 0 1rem;
-  padding: 0.9rem 1rem;
-  border-left: 3px solid color-mix(in srgb, var(--warning) 70%, transparent);
-  background: color-mix(in srgb, var(--warning) 8%, transparent);
-  color: var(--fg);
-  font-size: var(--text-sm);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.bwcost-scenarios__bd-list {
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.bwcost-scenarios__bd-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--bwcost-scenarios-line);
+}
+
+.bwcost-scenarios__bd-row dt {
+  margin: 0;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  font-size: 0.88rem;
+}
+
+.bwcost-scenarios__bd-row dd {
+  margin: 0;
+  text-align: right;
+}
+
+.bwcost-scenarios__bd-amount {
+  display: block;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.bwcost-scenarios__bd-note {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.bwcost-scenarios__bd-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+}
+
+.bwcost-scenarios__bd-total strong {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: #fff;
+}
+
+.bwcost-scenarios__bd-sec,
+.bwcost-scenarios__bd-incomplete {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.bwcost-scenarios__bd-missing {
+  margin: 0 0 0.85rem;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.bwcost-scenarios__bd-source {
+  color: color-mix(in srgb, var(--fg) 85%, var(--muted));
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.bwcost-scenarios__bd-source:hover {
+  color: #fff;
+  border-bottom-color: color-mix(in srgb, #fff 35%, transparent);
+}
+
+.bwcost-scenarios__cta {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.35rem 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 45%, transparent);
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--bwcost-scenarios-red) 35%, transparent), transparent 55%),
+    linear-gradient(135deg, #1a0709, #0c0c0e 55%, #16080a);
+  box-shadow: 0 0 2rem color-mix(in srgb, var(--bwcost-scenarios-red) 18%, transparent);
+}
+
+@media (min-width: 900px) {
+  .bwcost-scenarios__cta {
+    grid-template-columns: minmax(0, 1.4fr) minmax(14rem, 0.75fr);
+    align-items: center;
+    padding: 1.55rem 1.5rem;
+  }
+}
+
+.bwcost-scenarios__cta-eyebrow {
+  margin: 0 0 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 75%, #fff);
+}
+
+.bwcost-scenarios__cta-title {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.55rem, 3.2vw, 2.35rem);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.bwcost-scenarios__cta-body {
+  margin: 0 0 1rem;
+  max-width: 34rem;
+  color: color-mix(in srgb, #fff 78%, var(--muted));
+  font-size: 0.95rem;
   line-height: 1.5;
 }
 
-.bwcost-scenarios__close {
-  margin: 0 0 1.25rem;
-  max-width: 42rem;
-  color: var(--muted);
-  line-height: var(--line-body);
+.bwcost-scenarios__cta-btn {
+  margin-bottom: 0.55rem;
 }
 
-.bwcost-scenarios__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
+.bwcost-scenarios__cta-qualify {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.bwcost-scenarios__cta-panel {
+  justify-self: stretch;
+  padding: 1.1rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 40%, transparent);
+  background: color-mix(in srgb, #000 40%, transparent);
+  text-align: center;
+}
+
+.bwcost-scenarios__cta-mark {
+  width: 2.35rem;
+  height: 2.35rem;
+  object-fit: contain;
+  margin-bottom: 0.45rem;
+}
+
+.bwcost-scenarios__cta-panel-label {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.bwcost-scenarios__cta-badge {
+  display: inline-block;
+  margin: 0 0 0.55rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 50%, transparent);
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 80%, #fff);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.bwcost-scenarios__cta-panel-price {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  line-height: 1;
+  color: #fff;
+}
+
+.bwcost-scenarios__cta-panel-price span {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bwcost-scenarios__bar-fill,
+  .bwcost-scenarios__seg,
+  .bwcost-scenarios__card {
+    transition: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .bwcost-scenarios__intro-row {
+    justify-content: center;
+  }
+
+  .bwcost-scenarios__brand {
+    display: none;
+  }
+
+  .bwcost-scenarios__stage {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bwcost-scenarios__controls {
+    order: -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .bwcost-scenarios__segments--barbers {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .bwcost-scenarios__bd-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bwcost-scenarios__bd-row dd {
+    text-align: left;
+  }
+
+  .bwcost-scenarios__chart {
+    min-width: 26rem;
+  }
 }
 
 /* —— Ownership —— */

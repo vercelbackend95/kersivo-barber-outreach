@@ -1,140 +1,396 @@
 ---
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
-  BOOKING_SENSITIVITY_MONTHLY_GBP,
-  COST_SCENARIO_A_12,
-  COST_SCENARIO_A_36,
-  COST_SCENARIO_B_12_HIGH,
-  COST_SCENARIO_B_12_LOW,
-  COST_SCENARIO_B_36_HIGH,
-  COST_SCENARIO_B_36_LOW,
-  COST_SCENARIO_C_12,
-  COST_SCENARIO_C_36,
-  HYPOTHETICAL_BUILD_GBP,
-  HYPOTHETICAL_DOMAIN_YEARLY_GBP,
-  HYPOTHETICAL_HOSTING_MONTHLY_GBP,
-  websitePlusBookingTotalGbp,
-} from '@/lib/seo/barbershopWebsiteCostPage';
+  COST_SCENARIOS_SECTION_ID,
+  SCENARIO_BARBER_COUNTS,
+  SCENARIO_DEFAULT,
+  SCENARIO_PERIODS,
+  barHeightPercent,
+  buildScenarioPayload,
+  getScenarioComparison,
+} from '@/lib/seo/barbershopWebsiteCostScenarios';
 
-const formatGbp = (value: number) =>
-  new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    maximumFractionDigits: 0,
-  }).format(value);
+const payload = buildScenarioPayload();
+const initial = getScenarioComparison(SCENARIO_DEFAULT.barbers, SCENARIO_DEFAULT.period);
+const activeId = 'full-kersivo';
+const activeRow = initial.providers.find((row) => row.id === activeId) ?? initial.providers[5]!;
+
+const SUBSCRIBE_HREF = '/admin/launch';
+const SUBSCRIBE_TRACK = 'saas_subscribe_click';
+const SUBSCRIBE_PLACEMENT = 'barbershop_website_cost_scenarios';
+
+const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
+  monthly: 'Monthly',
+  '12': '12 months',
+  '36': '36 months',
+};
 ---
 
-<section class="bwcost-section bwcost-scenarios" id="cost-scenarios" aria-labelledby="bwcost-scenarios-heading">
-  <div class="bwcost-section__inner">
-    <header class="bwcost-section__header">
-      <h2 id="bwcost-scenarios-heading" class="bwcost-section__title">
-        What could it cost after one year or three?
+<section
+  class="bwcost-section bwcost-scenarios"
+  id={COST_SCENARIOS_SECTION_ID}
+  aria-labelledby="bwcost-scenarios-heading"
+  data-bwcost-scenarios
+>
+  <div class="bwcost-section__inner bwcost-scenarios__inner">
+    <header class="bwcost-scenarios__intro">
+      <div class="bwcost-scenarios__intro-row">
+        <p class="bwcost-scenarios__eyebrow">
+          <span class="bwcost-scenarios__eyebrow-dot" aria-hidden="true"></span>
+          04 / SCALING COSTS
+        </p>
+        <p class="bwcost-scenarios__brand" aria-hidden="true">KERSIVO</p>
+      </div>
+      <h2 id="bwcost-scenarios-heading" class="bwcost-scenarios__title">
+        How costs scale as your <span class="bwcost-scenarios__title-accent">barbershop grows</span>
       </h2>
-      <p class="bwcost-section__lede">
-        These totals teach cost arithmetic. Routes A and B use invented illustrative inputs — not Jones Digital,
-        FadeFoundry or any other named supplier package. Full KERSIVO uses the current £{SAAS_MONTHLY_GBP}/month
-        price solely for calculation.
+      <p class="bwcost-scenarios__lede">
+        Some website and booking platforms charge more as your team grows. Compare the published costs for your
+        barbershop — and see where KERSIVO’s per-location pricing stays flat.
       </p>
     </header>
 
-    <p class="bwcost-scenarios__inputs">
-      Hypothetical website-only inputs: {formatGbp(HYPOTHETICAL_BUILD_GBP)} build +{' '}
-      {formatGbp(HYPOTHETICAL_HOSTING_MONTHLY_GBP)}/month hosting/care +{' '}
-      {formatGbp(HYPOTHETICAL_DOMAIN_YEARLY_GBP)}/year domain. Separate booking examples:{' '}
-      {BOOKING_SENSITIVITY_MONTHLY_GBP.map((n) => formatGbp(n)).join(', ')} per month. Calculations assume unchanged
-      rates and exclude VAT, payment processing, commissions, SMS overages and extra work.
-    </p>
+    <div class="bwcost-scenarios__stage">
+      <div class="bwcost-scenarios__chart-panel">
+        <div class="bwcost-scenarios__chart-head">
+          <h3 class="bwcost-scenarios__chart-title" data-bwcost-chart-title>{initial.chartTitle}</h3>
+          <p class="bwcost-scenarios__chart-sub" data-bwcost-chart-sub>{initial.chartSubheading}</p>
+        </div>
 
-    <div class="bwcost-table-wrap">
-      <table class="bwcost-table bwcost-table--results">
-        <caption>
-          Illustrative 12- and 36-month totals for three differently scoped routes
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Illustrative route</th>
-            <th scope="col">12 months</th>
-            <th scope="col">36 months</th>
-            <th scope="col">Paid booking included?</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">A. Website + upkeep</th>
-            <td data-label="12 months">{formatGbp(COST_SCENARIO_A_12)}</td>
-            <td data-label="36 months">{formatGbp(COST_SCENARIO_A_36)}</td>
-            <td data-label="Paid booking included?">No</td>
-          </tr>
-          <tr>
-            <th scope="row">B. Website + separate booking</th>
-            <td data-label="12 months">
-              {formatGbp(COST_SCENARIO_B_12_LOW)}–{formatGbp(COST_SCENARIO_B_12_HIGH)}
-            </td>
-            <td data-label="36 months">
-              {formatGbp(COST_SCENARIO_B_36_LOW)}–{formatGbp(COST_SCENARIO_B_36_HIGH)}
-            </td>
-            <td data-label="Paid booking included?">Yes, assumed £10–£40/mo extra booking subscription</td>
-          </tr>
-          <tr>
-            <th scope="row">C. Full KERSIVO</th>
-            <td data-label="12 months">{formatGbp(COST_SCENARIO_C_12)}</td>
-            <td data-label="36 months">{formatGbp(COST_SCENARIO_C_36)}</td>
-            <td data-label="Paid booking included?">Yes, integrated bookings</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <div class="bwcost-scenarios__chart-scroll">
+          <div
+            class="bwcost-scenarios__chart"
+            role="img"
+            aria-labelledby="bwcost-scenarios-chart-desc"
+          >
+            <p id="bwcost-scenarios-chart-desc" class="bwcost-sr-only">
+              Vertical cost comparison for {initial.barbers} bookable barbers over the selected period. Numeric bars
+              show published or indicative package subtotals — not complete total cost of ownership. Nearcut requires
+              a custom quote.
+            </p>
 
-    <details class="bwcost-sensitivity">
-      <summary>Booking fee assumptions (£10–£40/month) — detail</summary>
-      <div class="bwcost-table-wrap">
-        <table class="bwcost-table">
-          <caption class="bwcost-sr-only">
-            Scenario B totals for each hypothetical separate booking fee
-          </caption>
+            <div class="bwcost-scenarios__axis" aria-hidden="true">
+              <span data-bwcost-axis-max>
+                {
+                  Number.isInteger(initial.chartMaxGbp)
+                    ? `£${initial.chartMaxGbp.toLocaleString('en-GB')}`
+                    : `£${initial.chartMaxGbp.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                }
+              </span>
+              <span data-bwcost-axis-mid>
+                {
+                  (() => {
+                    const mid = initial.chartMaxGbp / 2;
+                    return Number.isInteger(mid)
+                      ? `£${mid.toLocaleString('en-GB')}`
+                      : `£${mid.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  })()
+                }
+              </span>
+              <span>£0</span>
+            </div>
+
+            <div class="bwcost-scenarios__bars">
+              {
+                initial.providers.map((row) => {
+                  const height = barHeightPercent(row.amountGbp, initial.chartMaxGbp);
+                  const isQuote = row.amountGbp == null;
+                  return (
+                    <div
+                      class:list={[
+                        'bwcost-scenarios__bar',
+                        row.emphasized && 'bwcost-scenarios__bar--kersivo',
+                        isQuote && 'bwcost-scenarios__bar--quote',
+                      ]}
+                      data-bwcost-bar={row.id}
+                    >
+                      <div class="bwcost-scenarios__bar-track">
+                        <span
+                          class="bwcost-scenarios__bar-value"
+                          hidden={isQuote}
+                        >
+                          {isQuote ? '' : row.displayFigure}
+                        </span>
+                        <span
+                          class="bwcost-scenarios__bar-placeholder"
+                          hidden={!isQuote}
+                        >
+                          {isQuote ? row.displayFigure : ''}
+                        </span>
+                        <div
+                          class="bwcost-scenarios__bar-fill"
+                          style={`height: ${isQuote ? 0 : height}%`}
+                          hidden={isQuote}
+                        />
+                      </div>
+                      <span class="bwcost-scenarios__bar-label">{row.chartLabel}</span>
+                    </div>
+                  );
+                })
+              }
+            </div>
+          </div>
+        </div>
+
+        <table class="bwcost-sr-only">
+          <caption>Cost figures for the selected scenario</caption>
           <thead>
             <tr>
-              <th scope="col">Hypothetical separate booking fee</th>
-              <th scope="col">12 months total</th>
-              <th scope="col">36 months total</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Amount</th>
+              <th scope="col">VAT basis</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody data-bwcost-a11y-table>
             {
-              BOOKING_SENSITIVITY_MONTHLY_GBP.map((fee) => (
+              initial.providers.map((row) => (
                 <tr>
-                  <th scope="row">{formatGbp(fee)}/month</th>
-                  <td data-label="12 months total">{formatGbp(websitePlusBookingTotalGbp(12, fee))}</td>
-                  <td data-label="36 months total">{formatGbp(websitePlusBookingTotalGbp(36, fee))}</td>
+                  <th scope="row">{row.name}</th>
+                  <td>{row.displayFigure}</td>
+                  <td>{row.vatBasisLabel}</td>
                 </tr>
               ))
             }
           </tbody>
         </table>
+
+        <p class="bwcost-scenarios__chart-note" role="note">
+          Bars show published or indicative package costs for the selected configuration — not every operational
+          expense. VAT treatment differs by supplier.
+        </p>
       </div>
-      <p>
-        The £20 row is a worked input, not a recommended or typical UK price. Real booking platforms may charge more
-        or less, or use per-seat and commission models.
-      </p>
-    </details>
 
-    <p class="bwcost-scenarios__disclaimer" role="note">
-      A and B are fictional example budgets, not supplier quotes or UK averages. The three routes provide different
-      services. The calculations assume unchanged prices and exclude taxes, payment processing and extra work. Real
-      quotes and fees may differ. Full KERSIVO at {formatGbp(COST_SCENARIO_C_12)} / {formatGbp(COST_SCENARIO_C_36)}{' '}
-      assumes £{SAAS_MONTHLY_GBP}/month remains unchanged purely for illustration — the price is not locked for 36
-      months.
-    </p>
+      <aside class="bwcost-scenarios__controls" aria-label="Scenario controls">
+        <div class="bwcost-scenarios__control-block">
+          <p class="bwcost-scenarios__control-label" id="bwcost-barbers-label">Number of barbers</p>
+          <div
+            class="bwcost-scenarios__segments bwcost-scenarios__segments--barbers"
+            role="group"
+            aria-labelledby="bwcost-barbers-label"
+          >
+            {
+              SCENARIO_BARBER_COUNTS.map((n) => (
+                <button
+                  type="button"
+                  class:list={[
+                    'bwcost-scenarios__seg',
+                    n === SCENARIO_DEFAULT.barbers && 'is-active',
+                  ]}
+                  data-bwcost-barbers={n}
+                  aria-pressed={n === SCENARIO_DEFAULT.barbers ? 'true' : 'false'}
+                >
+                  {n}
+                </button>
+              ))
+            }
+          </div>
+        </div>
 
-    <p class="bwcost-scenarios__close">
-      A website without paid booking may cost less than an integrated service. Once you add a separate booking
-      platform, the result depends heavily on its actual price and terms. Choose by what your barbershop needs as
-      well as the total.
-    </p>
+        <div class="bwcost-scenarios__control-block">
+          <p class="bwcost-scenarios__control-label" id="bwcost-period-label">Time period</p>
+          <div
+            class="bwcost-scenarios__segments"
+            role="group"
+            aria-labelledby="bwcost-period-label"
+          >
+            {
+              SCENARIO_PERIODS.map((p) => (
+                <button
+                  type="button"
+                  class:list={[
+                    'bwcost-scenarios__seg',
+                    p === SCENARIO_DEFAULT.period && 'is-active',
+                  ]}
+                  data-bwcost-period={p}
+                  aria-pressed={p === SCENARIO_DEFAULT.period ? 'true' : 'false'}
+                >
+                  {periodLabels[p]}
+                </button>
+              ))
+            }
+          </div>
+        </div>
 
-    <p class="bwcost-scenarios__actions">
-      <a href="#full-kersivo" class="bwcost-btn bwcost-btn--primary">See what £{SAAS_MONTHLY_GBP}/month includes</a>
-      <a href="/barber-software-cost-calculator" class="bwcost-text-link">Compare booking software costs</a>
-    </p>
+        <div class="bwcost-scenarios__summary">
+          <p class="bwcost-scenarios__summary-kicker">Selected scenario</p>
+          <p class="bwcost-scenarios__summary-scenario" data-bwcost-summary-scenario>
+            {initial.kersivoSummary.scenarioLabel}
+          </p>
+          <p class="bwcost-scenarios__summary-name">{initial.kersivoSummary.name}</p>
+          <p class="bwcost-scenarios__summary-figure" data-bwcost-summary-figure>
+            {initial.kersivoSummary.displayFigure}
+          </p>
+          <p class="bwcost-scenarios__summary-caption" data-bwcost-summary-caption>
+            {initial.kersivoSummary.caption}
+          </p>
+          <p class="bwcost-scenarios__summary-note">
+            Subscription-only illustration at the current £{SAAS_MONTHLY_GBP}/month rate — not a locked future price
+            and excluding payment-processing fees.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="bwcost-scenarios__cards" role="list">
+      {
+        initial.providers.map((row) => (
+          <button
+            type="button"
+            class:list={[
+              'bwcost-scenarios__card',
+              row.emphasized && 'bwcost-scenarios__card--kersivo',
+              row.id === activeId && 'is-active',
+            ]}
+            role="listitem"
+            data-bwcost-card={row.id}
+            aria-pressed={row.id === activeId ? 'true' : 'false'}
+            aria-controls="bwcost-scenarios-breakdown"
+          >
+            {
+              row.emphasized ? (
+                <img
+                  class="bwcost-scenarios__card-mark"
+                  src="/images/brand/kersivo-mark.png"
+                  alt=""
+                  width="28"
+                  height="28"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null
+            }
+            <span class="bwcost-scenarios__card-name">{row.shortName}</span>
+            <span class="bwcost-scenarios__card-figure" data-bwcost-card-figure>
+              {row.displayFigure}
+            </span>
+            <span
+              class="bwcost-scenarios__card-secondary"
+              data-bwcost-card-secondary
+              hidden={!row.figureSecondary}
+            >
+              {row.figureSecondary ?? ''}
+            </span>
+            <span class="bwcost-scenarios__card-qualifier" data-bwcost-card-qualifier>
+              {row.billingQualifier}
+            </span>
+            <span class="bwcost-scenarios__card-explain">{row.explanation}</span>
+            <span class="bwcost-scenarios__card-status" data-bwcost-card-status>
+              {row.statusLabel}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div
+      class="bwcost-scenarios__breakdown"
+      id="bwcost-scenarios-breakdown"
+      data-bwcost-breakdown
+      tabindex="-1"
+    >
+      <div class="bwcost-scenarios__bd-head">
+        <p class="bwcost-scenarios__bd-kicker">Cost breakdown</p>
+        <h3 class="bwcost-scenarios__bd-title">{activeRow.name}</h3>
+        <p class="bwcost-scenarios__bd-meta">
+          {activeRow.vatBasisLabel} · {activeRow.statusLabel}
+        </p>
+      </div>
+      <dl class="bwcost-scenarios__bd-list">
+        {
+          activeRow.breakdown.map((line) => (
+            <div class="bwcost-scenarios__bd-row">
+              <dt>{line.label}</dt>
+              <dd>
+                <span class="bwcost-scenarios__bd-amount">{line.amountLabel}</span>
+                {line.note ? <span class="bwcost-scenarios__bd-note">{line.note}</span> : null}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="bwcost-scenarios__bd-foot">
+        <p class="bwcost-scenarios__bd-total">
+          <span>Selected scenario</span>
+          <strong>{activeRow.displayFigure}</strong>
+        </p>
+        {
+          activeRow.figureSecondary ? (
+            <p class="bwcost-scenarios__bd-sec">{activeRow.figureSecondary}</p>
+          ) : null
+        }
+        <p class="bwcost-scenarios__bd-incomplete">
+          Published or indicative package costs — not a complete like-for-like TCO.
+        </p>
+        <ul class="bwcost-scenarios__bd-missing">
+          {activeRow.missingFees.map((fee) => <li>{fee}</li>)}
+        </ul>
+        {
+          activeRow.sourceHref ? (
+            <p>
+              <a
+                class="bwcost-scenarios__bd-source"
+                href={activeRow.sourceHref}
+                {...(activeRow.sourceHref.startsWith('http')
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                {activeRow.sourceLabel ?? 'View source'}
+                <span aria-hidden="true"> ↗</span>
+              </a>
+            </p>
+          ) : null
+        }
+      </div>
+    </div>
+
+    <aside class="bwcost-scenarios__cta" aria-labelledby="bwcost-scenarios-cta-heading">
+      <div class="bwcost-scenarios__cta-copy">
+        <p class="bwcost-scenarios__cta-eyebrow">BUILT FOR GROWING BARBERSHOPS</p>
+        <h3 id="bwcost-scenarios-cta-heading" class="bwcost-scenarios__cta-title">
+          More barbers. Same price.
+        </h3>
+        <p class="bwcost-scenarios__cta-body">
+          From 2 to 8 barbers at one location, Full KERSIVO stays £{SAAS_MONTHLY_GBP}/month under the standard plan’s
+          fair-use terms.
+        </p>
+        <a
+          class="bwcost-btn bwcost-btn--primary bwcost-scenarios__cta-btn"
+          href={SUBSCRIBE_HREF}
+          data-track={SUBSCRIBE_TRACK}
+          data-track-placement={SUBSCRIBE_PLACEMENT}
+        >
+          Start for £{SAAS_MONTHLY_GBP}/month
+        </a>
+        <p class="bwcost-scenarios__cta-qualify">Standard payment-processing fees remain separate.</p>
+      </div>
+      <div class="bwcost-scenarios__cta-panel" aria-hidden="true">
+        <img
+          class="bwcost-scenarios__cta-mark"
+          src="/images/brand/kersivo-mark.png"
+          alt=""
+          width="40"
+          height="40"
+          loading="lazy"
+          decoding="async"
+        />
+        <p class="bwcost-scenarios__cta-panel-label">Full KERSIVO</p>
+        <p class="bwcost-scenarios__cta-badge">FLAT PER LOCATION</p>
+        <p class="bwcost-scenarios__cta-panel-price">£{SAAS_MONTHLY_GBP}<span>/mo</span></p>
+      </div>
+    </aside>
   </div>
+
+  <script
+    type="application/json"
+    data-bwcost-scenarios-payload
+    is:inline
+    set:html={JSON.stringify(payload)}
+  />
 </section>
+
+<script>
+  import { initWebsiteCostScenarios } from '@/scripts/barbershopWebsiteCostScenarios';
+
+  const root = document.querySelector('[data-bwcost-scenarios]');
+  if (root instanceof HTMLElement) initWebsiteCostScenarios(root);
+</script>

@@ -3,6 +3,13 @@ import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivo
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import {
+  COST_SCENARIO_C_12,
+  COST_SCENARIO_C_36,
+  fullKersivoTotalGbp,
+} from '@/lib/seo/barbershopWebsiteCostScenarios';
+
+export { COST_SCENARIO_C_12, COST_SCENARIO_C_36, fullKersivoTotalGbp };
 
 export const BARBERSHOP_WEBSITE_COST_PAGE_PATH = '/barbershop-website-cost-uk';
 
@@ -32,41 +39,6 @@ export const BARBERSHOP_WEBSITE_COST_BREADCRUMB_CURRENT = 'Website cost';
 export const BARBERSHOP_WEBSITE_COST_BREADCRUMB_PARENT = 'Barbershop websites';
 
 export const BARBERSHOP_WEBSITE_COST_PRICES_CHECKED_LABEL = '20 October 2026';
-
-/** Hypothetical Section 03 inputs — not named-supplier quotes. */
-export const HYPOTHETICAL_BUILD_GBP = 300;
-export const HYPOTHETICAL_HOSTING_MONTHLY_GBP = 10;
-export const HYPOTHETICAL_DOMAIN_YEARLY_GBP = 20;
-export const BOOKING_SENSITIVITY_MONTHLY_GBP = [10, 20, 30, 40] as const;
-
-export function websiteOnlyTotalGbp(months: 12 | 36): number {
-  const years = months === 12 ? 1 : 3;
-  return (
-    HYPOTHETICAL_BUILD_GBP +
-    HYPOTHETICAL_HOSTING_MONTHLY_GBP * months +
-    HYPOTHETICAL_DOMAIN_YEARLY_GBP * years
-  );
-}
-
-export function websitePlusBookingTotalGbp(
-  months: 12 | 36,
-  bookingMonthlyGbp: (typeof BOOKING_SENSITIVITY_MONTHLY_GBP)[number],
-): number {
-  return websiteOnlyTotalGbp(months) + bookingMonthlyGbp * months;
-}
-
-export function fullKersivoTotalGbp(months: 12 | 36): number {
-  return SAAS_MONTHLY_GBP * months;
-}
-
-export const COST_SCENARIO_A_12 = websiteOnlyTotalGbp(12);
-export const COST_SCENARIO_A_36 = websiteOnlyTotalGbp(36);
-export const COST_SCENARIO_B_12_LOW = websitePlusBookingTotalGbp(12, 10);
-export const COST_SCENARIO_B_12_HIGH = websitePlusBookingTotalGbp(12, 40);
-export const COST_SCENARIO_B_36_LOW = websitePlusBookingTotalGbp(36, 10);
-export const COST_SCENARIO_B_36_HIGH = websitePlusBookingTotalGbp(36, 40);
-export const COST_SCENARIO_C_12 = fullKersivoTotalGbp(12);
-export const COST_SCENARIO_C_36 = fullKersivoTotalGbp(36);
 
 export const COST_MODELS_SECTION_ID = 'cost-options';
 
@@ -230,7 +202,7 @@ export const COST_PAGE_FAQS: readonly CostFaqItem[] = [
     question: 'Is a one-off website cheaper than a monthly website?',
     answer: [
       'It depends on how long you keep the site, what you pay for hosting and care afterwards, and whether online booking is included or bought separately.',
-      'The illustrative 12- and 36-month examples on this page use fictional inputs to show the arithmetic — they are not supplier quotes or a savings guarantee.',
+      'Use the Scaling costs calculator on this page to compare published or indicative supplier package costs for 2–8 barbers over monthly, 12-month and 36-month periods. Those figures are package subtotals — not guaranteed complete totals or a savings promise.',
     ],
   },
   {
