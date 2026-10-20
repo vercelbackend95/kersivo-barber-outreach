@@ -54,6 +54,15 @@ describe('Shared StarterFullPlanCards', () => {
     expect(component).toContain('data-track-placement={placement}');
   });
 
+  it('uses only approved payment claims until Full B1 is resolved', () => {
+    const starter = STARTER_FULL_PLAN_STARTER_FEATURES.join(' ');
+    const full = STARTER_FULL_PLAN_FULL_ONLY.join(' ');
+    expect(starter).toContain('Manage bookings in your shop diary');
+    expect(starter).not.toContain('Manual bookings');
+    expect(full).toContain('Optional £5 booking deposits');
+    expect(full).not.toMatch(/Editable booking payment controls|Pay at shop|Require full payment upfront/i);
+  });
+
   it('keeps Full-only features out of the Starter list', () => {
     const starterBlob = STARTER_FULL_PLAN_STARTER_FEATURES.join(' ');
     expect(starterBlob).not.toMatch(/own domain|branded website|SMS|Reports|Retail|Advanced Clients|Assistant/i);
