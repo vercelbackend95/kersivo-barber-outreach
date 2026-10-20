@@ -624,6 +624,7 @@ export const WEBSITE_COST_OFFERS = [
         'UK Vagaro Pro official FAQ explicitly states promotional £20/month for first calendar plus £10 per additional calendar, up to 7; independent of dynamic button rendering.',
         'Four calendars: £20 + 3×£10 + £15 MySite = £65/month; six: £20 + 5×£10 + £15 MySite = £85/month, before unverified VAT and domain.',
         'The £20 calendar starting amount appears next to crossed-out £30 on the UK pricing page; long-term availability of promotion not guaranteed.',
+        'Official UK Terms contain nuanced channel-dependent first-booking charges: Marketplace/partner/new-client activity may attract 20% plus VAT; ordinary existing-client bookings and direct-channel bookings with Fill My Books disabled should not be incorrectly shown as charged 20%.',
         'UK MySite design service advertises a limited-time no-fee custom design (£699 stated value), subject to conditions/possible other fees. Never treat this as permanent setup £0.',
       ],
       possibleAdditionalCosts: [
@@ -631,6 +632,9 @@ export const WEBSITE_COST_OFFERS = [
         'domain registration/renewal if purchased',
         'whether limited-time promotional free designer-assisted multi-page setup (£699 stated value) is available for the specific shop; additional design/pages/copy may cost extra',
         'merchant payment processing',
+        '20% one-time New Client Connection Fee on qualifying first appointments via UK Vagaro marketplace (plus VAT where applicable), and further conditional partner/Fill My Books channel charges under its terms',
+        'optional branded text marketing from £15/month (do not confuse with included automated appointment reminders)',
+        'merchant-services incentive conditions: free reader may entail a £100 early-exit charge if merchant processing is terminated before 12 months',
         'any optional marketing modules',
       ],
     },
