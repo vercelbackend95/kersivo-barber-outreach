@@ -330,15 +330,17 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(que?.priceFigure).toBe('£50');
     expect(que?.scopeChips.map((c) => c.status)).toEqual([
       'included',
-      'included',
+      'not-confirmed',
       'included',
       'not-confirmed',
     ]);
+    expect(que?.scopeChips[1]?.statusDisplay).toBe('Not confirmed');
     expect(que?.scopeChips[3]?.statusDisplay).toBe('Not confirmed');
     expect(que?.whatToCheckShort).toContain('£25/mo');
+    expect(que?.whatToCheckShort.toLowerCase()).toContain('excl. vat');
     expect(que?.whatToCheckShort.toLowerCase()).toContain('free-setup');
     expect(que?.whatToCheckShort).toContain('£80');
-    expect(que?.caveat?.toLowerCase()).toContain('free set up');
+    expect(que?.caveat).toBeUndefined();
     expect(primary.every((row) => row.whatToCheckShort.length > 0)).toBe(true);
     expect(comparisonData).toContain('https://jonesdigital.co.uk/for/salons/');
     expect(comparisonData).toContain('https://fadefoundry.co.uk/pricing/');

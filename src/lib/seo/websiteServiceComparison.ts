@@ -308,7 +308,7 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     whatToCheck:
       'All listed package prices exclude VAT. A cheaper Online Booking option is £25/month excl. VAT. The official site shows both “Free set up!” and “£80” for Website — do not treat either as a guaranteed unconditional setup fee without confirmation. Stripe fees apply on Book & Pay.',
     whatToCheckShort:
-      '£25/mo + VAT booking option available. £80 website setup listed alongside a free-setup claim; confirm current charge.',
+      'Online Booking from £25/mo excl. VAT. £80 website setup is listed alongside a free-setup claim — confirm the current charge.',
     whatToCheckPoints: [
       'Book & Pay £50/mo excl. VAT; Online Booking £25/mo excl. VAT',
       '“Free set up!” and £80 Website price both published — confirm current charge',
@@ -318,15 +318,13 @@ export const WEBSITE_SERVICE_COMPARISON_OPTIONS: readonly WebsiteServiceComparis
     mobileHighlight: '£50/mo excl. VAT Book & Pay; setup fee conflict on official site',
     scopeChips: chips({
       website: 'included',
-      care: 'included',
+      care: 'not-confirmed',
       booking: 'included',
       shopTools: 'not-confirmed',
     }),
     sourceHref: 'https://www.barberque.co.uk/',
     sourceLabel: 'View supplier pricing',
     sourceShortLabel: 'Barberque',
-    caveat:
-      'Official site simultaneously advertises “Free set up!” and “£80” for Website — confirm the current setup charge before purchase.',
   },
   {
     id: 'freelance',
