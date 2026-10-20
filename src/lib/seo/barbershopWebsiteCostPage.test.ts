@@ -152,8 +152,9 @@ describe('/barbershop-website-cost-uk Section 04 scaling costs', () => {
     expect(scenarios).toContain('data-bwcost-barbers');
     expect(scenarios).toContain('data-bwcost-period');
     expect(scenarios).toContain('bwcost-scenarios__cards');
-    expect(scenarios).toContain('More barbers. Same price.');
-    expect(scenarios).toContain('Start for £{SAAS_MONTHLY_GBP}/month');
+    expect(scenarios).toContain('Full KERSIVO');
+    expect(scenarios).toContain('Start with Full KERSIVO from £{SAAS_MONTHLY_GBP} per month');
+    expect(scenarios).not.toContain('£948');
     expect(scenarios).toContain("SUBSCRIBE_HREF = '/admin/launch'");
     expect(scenarios).toContain('buildScenarioPayload');
     expect(scenarios).toContain('initWebsiteCostScenarios');

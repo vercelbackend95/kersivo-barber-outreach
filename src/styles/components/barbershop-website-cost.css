@@ -2900,24 +2900,16 @@ table.bwcost-sr-only td {
   box-shadow: 0 0 1.4rem color-mix(in srgb, var(--bwcost-scenarios-red) 16%, transparent);
 }
 
-.bwcost-scenarios__card-mark {
-  width: 1.65rem;
-  height: 1.65rem;
-  object-fit: contain;
-  margin-bottom: 0.15rem;
-}
-
-.bwcost-scenarios__wordmark {
+.bwcost-scenarios__lockup {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.45rem;
-  margin: 0 0 0.1rem;
-  font-family: var(--font-heading);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  line-height: 1.1;
-  text-transform: uppercase;
-  color: #fff;
+  align-items: baseline;
+  gap: 0.28rem;
+}
+
+.bwcost-scenarios__lockup-plus {
+  color: color-mix(in srgb, var(--bwcost-scenarios-red) 70%, #fff);
+  font-size: 0.72rem;
 }
 
 .bwcost-scenarios__card-name {
@@ -2995,108 +2987,187 @@ table.bwcost-sr-only td {
 
 .bwcost-scenarios__cta {
   display: grid;
-  gap: 1.15rem;
-  padding: 1.35rem 1.2rem;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 45%, transparent);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem 1rem;
+  padding: 0.9rem 0.85rem 0.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-accent) 42%, transparent);
   background:
-    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--bwcost-scenarios-red) 35%, transparent), transparent 55%),
-    linear-gradient(135deg, #1a0709, #0c0c0e 55%, #16080a);
-  box-shadow: 0 0 2rem color-mix(in srgb, var(--bwcost-scenarios-red) 18%, transparent);
+    radial-gradient(80% 140% at 0% 0%, color-mix(in srgb, var(--bwcost-accent) 16%, transparent), transparent 46%),
+    radial-gradient(50% 80% at 100% 100%, color-mix(in srgb, var(--bwcost-accent) 10%, transparent), transparent 50%),
+    linear-gradient(180deg, #121214 0%, #070708 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 1.4rem color-mix(in srgb, var(--bwcost-accent) 16%, transparent);
 }
 
-@media (min-width: 900px) {
-  .bwcost-scenarios__cta {
-    grid-template-columns: minmax(0, 1.4fr) minmax(14rem, 0.75fr);
-    align-items: center;
-    padding: 1.55rem 1.5rem;
-  }
+.bwcost-scenarios__cta-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  grid-column: 1 / -1;
 }
 
-.bwcost-scenarios__cta-eyebrow {
-  margin: 0 0 0.45rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--bwcost-scenarios-red) 75%, #fff);
-}
-
-.bwcost-scenarios__cta-title {
-  margin: 0 0 0.55rem;
-  font-family: var(--font-heading);
-  font-size: clamp(1.55rem, 3.2vw, 2.35rem);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  line-height: 1.05;
-  color: #fff;
-}
-
-.bwcost-scenarios__cta-body {
-  margin: 0 0 1rem;
-  max-width: 34rem;
-  color: color-mix(in srgb, #fff 78%, var(--muted));
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.bwcost-scenarios__cta-btn {
-  margin-bottom: 0.55rem;
-}
-
-.bwcost-scenarios__cta-qualify {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.bwcost-scenarios__cta-panel {
-  justify-self: stretch;
-  padding: 1.1rem 1rem;
-  border-radius: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 40%, transparent);
-  background: color-mix(in srgb, #000 40%, transparent);
-  text-align: center;
+.bwcost-scenarios__cta-mark-frame {
+  flex: none;
+  width: 2.45rem;
+  height: 1.35rem;
+  overflow: hidden;
 }
 
 .bwcost-scenarios__cta-mark {
-  width: 2.35rem;
-  height: 2.35rem;
-  object-fit: contain;
-  margin-bottom: 0.45rem;
+  display: block;
+  width: 2.45rem;
+  height: auto;
+  max-width: none;
 }
 
-.bwcost-scenarios__cta-panel-label {
-  margin: 0 0 0.35rem;
-  font-family: var(--font-heading);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fff;
+.bwcost-scenarios__cta-copy {
+  min-width: 0;
 }
 
-.bwcost-scenarios__cta-badge {
-  display: inline-block;
-  margin: 0 0 0.55rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--bwcost-scenarios-red) 50%, transparent);
-  color: color-mix(in srgb, var(--bwcost-scenarios-red) 80%, #fff);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+.bwcost-scenarios__cta-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.6rem;
 }
 
-.bwcost-scenarios__cta-panel-price {
+.bwcost-scenarios__cta-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 2.2rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   line-height: 1;
   color: #fff;
 }
 
-.bwcost-scenarios__cta-panel-price span {
-  font-size: 0.95rem;
+.bwcost-scenarios__cta-badge {
+  margin: 0;
+  padding: 0.16rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-accent) 70%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--bwcost-accent) 78%, #fff);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bwcost-scenarios__cta-line {
+  margin: 0.28rem 0 0;
+  color: color-mix(in srgb, #fff 72%, var(--muted));
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.bwcost-scenarios__cta-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem 0.7rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bwcost-scenarios__cta-features li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: color-mix(in srgb, #fff 82%, var(--muted));
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.bwcost-scenarios__cta-features li::before {
+  content: '';
+  width: 0.72rem;
+  height: 0.42rem;
+  border-left: 1.6px solid color-mix(in srgb, var(--bwcost-accent) 80%, #fff);
+  border-bottom: 1.6px solid color-mix(in srgb, var(--bwcost-accent) 80%, #fff);
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.bwcost-scenarios__cta-price {
+  min-width: 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bwcost-scenarios__cta-price-label,
+.bwcost-scenarios__cta-price-support {
+  margin: 0;
   color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.bwcost-scenarios__cta-price-figure {
+  margin: 0.1rem 0;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bwcost-scenarios__cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-left: auto;
+  border: 1px solid color-mix(in srgb, var(--bwcost-accent) 65%, transparent);
+  border-radius: 999px;
+  color: #fff;
+  background: color-mix(in srgb, var(--bwcost-accent) 12%, transparent);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.bwcost-scenarios__cta-arrow:hover {
+  background: color-mix(in srgb, var(--bwcost-accent) 22%, transparent);
+  border-color: var(--bwcost-accent);
+}
+
+.bwcost-scenarios__cta-arrow:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.bwcost-scenarios__cta-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #6c6c70;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 860px) {
+  .bwcost-scenarios__cta {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem 1.25rem;
+    padding: 0.85rem 0.95rem 0.7rem 1rem;
+  }
+
+  .bwcost-scenarios__cta-main {
+    grid-column: auto;
+  }
+
+  .bwcost-scenarios__cta-price {
+    padding: 0 1.1rem 0 1.15rem;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: right;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

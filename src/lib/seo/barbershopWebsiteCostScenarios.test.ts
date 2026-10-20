@@ -199,6 +199,8 @@ describe('barbershopWebsiteCostScenarios', () => {
     expect(astro).not.toContain('data-bwcost-breakdown');
     expect(script).not.toContain('renderBreakdown');
     expect(script).not.toContain('data-bwcost-breakdown');
+    expect(astro).not.toContain('bwcost-scenarios__wordmark');
+    expect(astro).not.toContain('£948');
   });
 
   it('shows a distinct VAT line on every provider card', () => {
@@ -217,6 +219,17 @@ describe('barbershopWebsiteCostScenarios', () => {
     const comparison = getScenarioComparison(4, '36');
     expect(comparison.kersivoSummary.amountGbp).toBe(1404);
     expect(comparison.kersivoSummary.displayFigure).toBe('£1,404');
+    expect(comparison.kersivoSummary.ctaLabel).toBe('Your 3-year subtotal');
+    expect(comparison.kersivoSummary.ctaSupport).toBe("At today's subscription rate");
+    expect(getScenarioComparison(4, '12').kersivoSummary).toMatchObject({
+      displayFigure: '£468',
+      ctaLabel: 'Your 1-year subtotal',
+    });
+    expect(getScenarioComparison(8, 'monthly').kersivoSummary).toMatchObject({
+      displayFigure: '£39',
+      ctaLabel: 'Monthly subscription',
+      ctaSupport: 'Per location',
+    });
     expect(comparison.chartTitle).toBe('36-month published / indicative subtotals');
     expect(comparison.chartSubheading).toBe('For 4 bookable barbers');
     expect(comparison.chartDescription).toContain('4 bookable barbers');

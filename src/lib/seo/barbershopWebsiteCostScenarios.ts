@@ -88,16 +88,6 @@ export const CARD_CHECKS: Record<WebsiteCostPrimaryId, readonly string[]> = {
   'full-kersivo': ['Branded website', 'Online booking', '2–8 barbers included', 'SMS reminders', 'Shop tools'],
 };
 
-/** Typographic wordmarks where no local logo file exists. KERSIVO uses the shipped mark. */
-export const CARD_WORDMARKS: Record<WebsiteCostPrimaryId, readonly string[]> = {
-  'vagaro-mysite': ['Vagaro'],
-  'fresha-team-smart-website': ['Fresha'],
-  'nearcut-subscription': ['Nearcut'],
-  'setora-core': ['Setora'],
-  'uxhm-salon-growth': ['UXHM', 'Booksy'],
-  'full-kersivo': ['KERSIVO'],
-};
-
 export type ScenarioComparison = {
   barbers: ScenarioBarberCount;
   period: ScenarioPeriod;
@@ -114,6 +104,8 @@ export type ScenarioComparison = {
     displayFigure: string;
     caption: string;
     scenarioLabel: string;
+    ctaLabel: string;
+    ctaSupport: string;
   };
 };
 
@@ -418,6 +410,13 @@ export function getScenarioComparison(
 
   const periodWord =
     period === 'monthly' ? 'Monthly' : period === '12' ? '12 months' : '36 months';
+  const ctaLabel =
+    period === 'monthly'
+      ? 'Monthly subscription'
+      : period === '12'
+        ? 'Your 1-year subtotal'
+        : 'Your 3-year subtotal';
+  const ctaSupport = period === 'monthly' ? 'Per location' : "At today's subscription rate";
   const chartTitle = chartTitleFor(period);
   const chartSubheading = `For ${bookableBarbers} bookable barbers`;
   const chartDescription = [
@@ -440,6 +439,8 @@ export function getScenarioComparison(
       displayFigure: kersivo.displayFigure,
       caption: `${formatScenarioGbp(SAAS_MONTHLY_GBP)}/month per location`,
       scenarioLabel: `${bookableBarbers} barbers · ${periodWord.toLowerCase()}`,
+      ctaLabel,
+      ctaSupport,
     },
   };
 }

@@ -2,7 +2,6 @@
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   CARD_CHECKS,
-  CARD_WORDMARKS,
   COST_SCENARIOS_SECTION_ID,
   SCENARIO_BARBER_COUNTS,
   SCENARIO_DEFAULT,
@@ -230,23 +229,18 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
             data-bwcost-card={row.id}
           >
             {
-              row.emphasized ? (
-                <img
-                  class="bwcost-scenarios__card-mark"
-                  src="/images/logo-kersivo-dynamic.svg"
-                  alt=""
-                  width="28"
-                  height="28"
-                  loading="lazy"
-                  decoding="async"
-                />
+              row.id === 'uxhm-salon-growth' ? (
+                <h3 class="bwcost-scenarios__card-name" aria-label="UXHM and Booksy">
+                  <span class="bwcost-scenarios__lockup" aria-hidden="true">
+                    <span>UXHM</span>
+                    <span class="bwcost-scenarios__lockup-plus">+</span>
+                    <span>Booksy</span>
+                  </span>
+                </h3>
               ) : (
-                <p class="bwcost-scenarios__wordmark" aria-hidden="true">
-                  {CARD_WORDMARKS[row.id].map((part) => <span>{part}</span>)}
-                </p>
+                <h3 class="bwcost-scenarios__card-name">{row.shortName}</h3>
               )
             }
-            <h3 class="bwcost-scenarios__card-name">{row.shortName}</h3>
             <p class="bwcost-scenarios__card-figure" data-bwcost-card-figure>
               {row.displayFigure}
             </p>
@@ -289,39 +283,57 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
     </div>
 
     <aside class="bwcost-scenarios__cta" aria-labelledby="bwcost-scenarios-cta-heading">
-      <div class="bwcost-scenarios__cta-copy">
-        <p class="bwcost-scenarios__cta-eyebrow">BUILT FOR GROWING BARBERSHOPS</p>
-        <h3 id="bwcost-scenarios-cta-heading" class="bwcost-scenarios__cta-title">
-          More barbers. Same price.
-        </h3>
-        <p class="bwcost-scenarios__cta-body">
-          From 2 to 8 barbers at one location, Full KERSIVO stays £{SAAS_MONTHLY_GBP}/month under the standard plan’s
-          fair-use terms.
-        </p>
-        <a
-          class="bwcost-btn bwcost-btn--primary bwcost-scenarios__cta-btn"
-          href={SUBSCRIBE_HREF}
-          data-track={SUBSCRIBE_TRACK}
-          data-track-placement={SUBSCRIBE_PLACEMENT}
-        >
-          Start for £{SAAS_MONTHLY_GBP}/month
-        </a>
-        <p class="bwcost-scenarios__cta-qualify">Standard payment-processing fees remain separate.</p>
+      <div class="bwcost-scenarios__cta-main">
+        <span class="bwcost-scenarios__cta-mark-frame">
+          <img
+            class="bwcost-scenarios__cta-mark"
+            src="/images/logo_nobg.png"
+            alt=""
+            width="72"
+            height="72"
+          />
+        </span>
+        <div class="bwcost-scenarios__cta-copy">
+          <div class="bwcost-scenarios__cta-title-row">
+            <h3 id="bwcost-scenarios-cta-heading" class="bwcost-scenarios__cta-title">Full KERSIVO</h3>
+            <p class="bwcost-scenarios__cta-badge">Flat per location</p>
+          </div>
+          <p class="bwcost-scenarios__cta-line">Your brand. Your bookings. One simple platform.</p>
+          <ul class="bwcost-scenarios__cta-features">
+            <li>Branded website</li>
+            <li>Online bookings</li>
+            <li>Team calendars</li>
+            <li>SMS reminders</li>
+            <li>Retail pickup</li>
+          </ul>
+        </div>
       </div>
-      <div class="bwcost-scenarios__cta-panel" aria-hidden="true">
-        <img
-          class="bwcost-scenarios__cta-mark"
-          src="/images/logo-kersivo-dynamic.svg"
-          alt=""
-          width="40"
-          height="40"
-          loading="lazy"
-          decoding="async"
-        />
-        <p class="bwcost-scenarios__cta-panel-label">Full KERSIVO</p>
-        <p class="bwcost-scenarios__cta-badge">FLAT PER LOCATION</p>
-        <p class="bwcost-scenarios__cta-panel-price">£{SAAS_MONTHLY_GBP}<span>/mo</span></p>
+      <div class="bwcost-scenarios__cta-price">
+        <p class="bwcost-scenarios__cta-price-label" data-bwcost-cta-label>{initial.kersivoSummary.ctaLabel}</p>
+        <p class="bwcost-scenarios__cta-price-figure" data-bwcost-cta-figure>{initial.kersivoSummary.displayFigure}</p>
+        <p class="bwcost-scenarios__cta-price-support" data-bwcost-cta-support>{initial.kersivoSummary.ctaSupport}</p>
       </div>
+      <a
+        class="bwcost-scenarios__cta-arrow"
+        href={SUBSCRIBE_HREF}
+        data-track={SUBSCRIBE_TRACK}
+        data-track-placement={SUBSCRIBE_PLACEMENT}
+      >
+        <span class="bwcost-sr-only">Start with Full KERSIVO from £{SAAS_MONTHLY_GBP} per month</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M5 12h14M13 6l6 6-6 6"
+          />
+        </svg>
+      </a>
+      <p class="bwcost-scenarios__cta-note">
+        Subscription subtotal at current rates. Payment-processing fees and optional extras are separate.
+      </p>
     </aside>
   </div>
 

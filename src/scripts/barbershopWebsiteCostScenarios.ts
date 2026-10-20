@@ -46,6 +46,9 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
   const summaryScenario = root.querySelector<HTMLElement>('[data-bwcost-summary-scenario]');
   const summaryFigure = root.querySelector<HTMLElement>('[data-bwcost-summary-figure]');
   const summaryCaption = root.querySelector<HTMLElement>('[data-bwcost-summary-caption]');
+  const ctaLabel = root.querySelector<HTMLElement>('[data-bwcost-cta-label]');
+  const ctaFigure = root.querySelector<HTMLElement>('[data-bwcost-cta-figure]');
+  const ctaSupport = root.querySelector<HTMLElement>('[data-bwcost-cta-support]');
   const a11yTable = root.querySelector<HTMLElement>('[data-bwcost-a11y-table]');
   const axisMax = root.querySelector<HTMLElement>('[data-bwcost-axis-max]');
   const axisMid = root.querySelector<HTMLElement>('[data-bwcost-axis-mid]');
@@ -61,6 +64,9 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
     if (summaryScenario) summaryScenario.textContent = state.kersivoSummary.scenarioLabel;
     if (summaryFigure) summaryFigure.textContent = state.kersivoSummary.displayFigure;
     if (summaryCaption) summaryCaption.textContent = state.kersivoSummary.caption;
+    if (ctaLabel) ctaLabel.textContent = state.kersivoSummary.ctaLabel;
+    if (ctaFigure) ctaFigure.textContent = state.kersivoSummary.displayFigure;
+    if (ctaSupport) ctaSupport.textContent = state.kersivoSummary.ctaSupport;
     if (axisMax) axisMax.textContent = formatAxis(state.chartMaxGbp);
     if (axisMid) axisMid.textContent = formatAxis(state.chartMaxGbp / 2);
 
