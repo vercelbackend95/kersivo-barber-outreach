@@ -165,8 +165,10 @@ export type WebsiteCostResearchedOffer = {
     ownerApprovedRecurringGbp?: number;
     conflictingPublishedRecurringGbp?: readonly number[];
     /**
-     * When booking is a separate Booksy subscription sized to the research buyer
-     * (e.g. UXHM website + Booksy). Use getBooksyMonthlyPriceGbp — do not hardcode.
+     * When set, Section 02 / future Section 04 pair this website offer with a
+     * separate Booksy Biz subscription. The stored number documents the research
+     * buyer default; getComparableWebsiteCostFigures sizes Booksy from its
+     * bookableBarbers argument.
      */
     externalBooksyUsers?: number;
   };
@@ -384,7 +386,7 @@ export const WEBSITE_COST_OFFERS = [
       pricingNotes: [
         'Salon Growth £499 one-off, includes up to eight pages and stylist team bios.',
         'Optional Essential Care £20/month for hosting, weekly backups, updates and 30 minutes of changes; first month free.',
-        'The price of an external booking platform is not included — Section 02 pairs this with Booksy via externalBooksyUsers.',
+        'The price of an external booking platform is not included — Section 02 pairs this with Booksy; user count follows bookableBarbers in getComparableWebsiteCostFigures.',
       ],
       possibleAdditionalCosts: [
         'hosting / care (supplier lists £20/month Essential Care)',
@@ -1226,9 +1228,11 @@ export type ComparableWebsiteCostFigures = {
   /** Primary recurring amount shown as the Section 02 figure when applicable. */
   recurringGbpPerMonth: number | null;
   recurringIncludingVatGbp: number | null;
-  /** Separate booking subscription when externalBooksyUsers is set (UXHM). */
+  /** Separate booking subscription when the offer pairs with Booksy (UXHM). */
   externalBooksyMonthlyExVatGbp: number | null;
   externalBooksyMonthlyIncVatGbp: number | null;
+  /** Booksy user count used for the Booksy line items (null when not paired). */
+  externalBooksyUsers: number | null;
   confidence: CostPricingConfidence;
   ownerApprovedRecurringGbp: number | null;
   conflictingPublishedRecurringGbp: readonly number[] | null;
@@ -1257,11 +1261,17 @@ export function getComparableWebsiteCostFigures(
     recurringGbpPerMonth = pricing.recurringGbpPerMonth;
   }
 
-  const booksyUsers = pricing.externalBooksyUsers ?? null;
+  // Pairing flag lives on the offer; Booksy seats follow the comparison argument.
+  const externalBooksyUsers =
+    pricing.externalBooksyUsers != null ? bookableBarbers : null;
   const externalBooksyMonthlyExVatGbp =
-    booksyUsers === null ? null : getBooksyMonthlyPriceGbp(booksyUsers, 'excluding');
+    externalBooksyUsers === null
+      ? null
+      : getBooksyMonthlyPriceGbp(externalBooksyUsers, 'excluding');
   const externalBooksyMonthlyIncVatGbp =
-    booksyUsers === null ? null : getBooksyMonthlyPriceGbp(booksyUsers, 'including');
+    externalBooksyUsers === null
+      ? null
+      : getBooksyMonthlyPriceGbp(externalBooksyUsers, 'including');
 
   return {
     offerId,
@@ -1270,6 +1280,7 @@ export function getComparableWebsiteCostFigures(
     recurringIncludingVatGbp,
     externalBooksyMonthlyExVatGbp,
     externalBooksyMonthlyIncVatGbp,
+    externalBooksyUsers,
     confidence: pricing.confidence ?? 'custom-quote',
     ownerApprovedRecurringGbp: pricing.ownerApprovedRecurringGbp ?? null,
     conflictingPublishedRecurringGbp: pricing.conflictingPublishedRecurringGbp ?? null,

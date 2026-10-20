@@ -45,6 +45,7 @@ import {
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import {
+  WEBSITE_SERVICE_COMPARISON_CARE_NOTE,
   WEBSITE_SERVICE_COMPARISON_OPTIONS,
   WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS,
   WEBSITE_SERVICE_COMPARISON_SECTION_ID,
@@ -260,6 +261,11 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(serviceComparison).toContain('Published offer');
     expect(serviceComparison).toContain('Scope snapshot');
     expect(serviceComparison).toContain('bwcost-svc__matrix');
+    expect(serviceComparison).toContain('WEBSITE_SERVICE_COMPARISON_CARE_NOTE');
+    expect(serviceComparison).toContain('bwcost-svc__care-note');
+    expect(WEBSITE_SERVICE_COMPARISON_CARE_NOTE).toBe(
+      'Care means supplier-managed website content updates, not hosting alone.',
+    );
     expect(WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS).toEqual([
       'vagaro-mysite',
       'fresha-team-smart-website',
@@ -331,6 +337,7 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).toContain('.bwcost-svc__delivery');
     expect(css).toContain('.bwcost-svc__delivery--self-build');
     expect(css).toContain('.bwcost-svc__delivery--done-for-you');
+    expect(css).toContain('.bwcost-svc__care-note');
     expect(css).toContain('.bwcost-svc__matrix');
     expect(css).toContain('.bwcost-svc__matrix-item--not-confirmed');
     expect(css).not.toContain('.bwcost-svc__chip');

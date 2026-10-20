@@ -2,6 +2,7 @@
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import {
   WEBSITE_SERVICE_COMPARISON_ASSUMPTION,
+  WEBSITE_SERVICE_COMPARISON_CARE_NOTE,
   WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL,
   WEBSITE_SERVICE_COMPARISON_SECTION_ID,
   getPrimaryWebsiteServiceComparisonOptions,
@@ -58,12 +59,14 @@ function padIndex(i: number): string {
     </header>
 
     <div class="bwcost-svc__desktop">
+      <p class="bwcost-svc__care-note">{WEBSITE_SERVICE_COMPARISON_CARE_NOTE}</p>
       <div class="bwcost-svc__table-wrap">
         <table class="bwcost-svc__table">
           <caption class="bwcost-sr-only">
             Barbershop website and booking comparison for four bookable barbers: Vagaro Pro + MySite,
             Fresha Team + Smart Website, Nearcut Subscription, Setora, UXHM + Booksy, and Full
             KERSIVO. Each row shows whether the website is self-build, configurable or done-for-you.
+            Care means supplier-managed website content updates, not hosting alone.
           </caption>
           <colgroup>
             <col class="bwcost-svc__col-offer" />
@@ -180,6 +183,7 @@ function padIndex(i: number): string {
     </div>
 
     <div class="bwcost-svc__mobile">
+      <p class="bwcost-svc__care-note">{WEBSITE_SERVICE_COMPARISON_CARE_NOTE}</p>
       <ul class="bwcost-svc__cards">
         {
           options.map((row, index) => (

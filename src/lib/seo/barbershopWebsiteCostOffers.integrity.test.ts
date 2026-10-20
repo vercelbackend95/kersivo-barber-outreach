@@ -44,11 +44,13 @@ describe('website cost catalogue data integrity', () => {
     expect(vagaro.recurringGbpPerMonth).toBe(vagaroUkPublishedMonthlySubtotalGbp(barbers));
     expect(vagaro.recurringGbpPerMonth).toBe(WEBSITE_COST_CURRENT_FINDINGS.vagaroUkFourBarbersPlusMySite);
     expect(vagaro.recurringGbpPerMonth).toBe(65);
+    expect(vagaro.confidence).toBe('published');
 
     expect(fresha.recurringGbpPerMonth).toBe(freshaUkIndicatedMonthlySubtotalGbp(barbers, false));
     expect(fresha.recurringGbpPerMonth).toBe(WEBSITE_COST_CURRENT_FINDINGS.freshaUkIndicativeFourExVat);
     expect(fresha.recurringGbpPerMonth).toBe(52.75);
     expect(fresha.recurringIncludingVatGbp).toBe(63.3);
+    expect(fresha.confidence).toBe('indicative');
 
     expect(nearcut.recurringGbpPerMonth).toBeNull();
     expect(nearcut.confidence).toBe('custom-quote');
@@ -65,12 +67,73 @@ describe('website cost catalogue data integrity', () => {
 
     expect(uxhm.setupGbp).toBe(WEBSITE_COST_CURRENT_FINDINGS.uxhmSalonGrowthSetupGbp);
     expect(uxhm.setupGbp).toBe(499);
+    expect(uxhm.externalBooksyUsers).toBe(barbers);
     expect(uxhm.externalBooksyMonthlyExVatGbp).toBe(getBooksyMonthlyPriceGbp(barbers, 'excluding'));
     expect(uxhm.externalBooksyMonthlyIncVatGbp).toBe(getBooksyMonthlyPriceGbp(barbers, 'including'));
     expect(uxhm.externalBooksyMonthlyIncVatGbp).toBe(66);
+    expect(uxhm.confidence).toBe('published');
 
     expect(kersivo.recurringGbpPerMonth).toBe(SAAS_MONTHLY_GBP);
     expect(kersivo.recurringGbpPerMonth).toBe(39);
+    expect(kersivo.confidence).toBe('published');
+  });
+
+  it('sizes Booksy and seat-based offers from bookableBarbers (4 vs 6)', () => {
+    const four = {
+      vagaro: getComparableWebsiteCostFigures('vagaro-mysite', 4),
+      fresha: getComparableWebsiteCostFigures('fresha-team-smart-website', 4),
+      setora: getComparableWebsiteCostFigures('setora-core', 4),
+      uxhm: getComparableWebsiteCostFigures('uxhm-salon-growth', 4),
+      kersivo: getComparableWebsiteCostFigures('full-kersivo', 4),
+      nearcut: getComparableWebsiteCostFigures('nearcut-subscription', 4),
+    };
+    const six = {
+      vagaro: getComparableWebsiteCostFigures('vagaro-mysite', 6),
+      fresha: getComparableWebsiteCostFigures('fresha-team-smart-website', 6),
+      setora: getComparableWebsiteCostFigures('setora-core', 6),
+      uxhm: getComparableWebsiteCostFigures('uxhm-salon-growth', 6),
+      kersivo: getComparableWebsiteCostFigures('full-kersivo', 6),
+      nearcut: getComparableWebsiteCostFigures('nearcut-subscription', 6),
+    };
+
+    // Verified / published seat maths — scales with team size.
+    expect(four.vagaro.confidence).toBe('published');
+    expect(four.vagaro.recurringGbpPerMonth).toBe(65);
+    expect(six.vagaro.recurringGbpPerMonth).toBe(85);
+    expect(six.vagaro.recurringGbpPerMonth).toBe(vagaroUkPublishedMonthlySubtotalGbp(6));
+    expect(six.vagaro.recurringGbpPerMonth).toBe(
+      WEBSITE_COST_CURRENT_FINDINGS.vagaroUkSixBarbersPlusMySite,
+    );
+
+    expect(four.uxhm.confidence).toBe('published');
+    expect(four.uxhm.externalBooksyUsers).toBe(4);
+    expect(four.uxhm.externalBooksyMonthlyIncVatGbp).toBe(66);
+    expect(six.uxhm.externalBooksyUsers).toBe(6);
+    expect(six.uxhm.externalBooksyMonthlyExVatGbp).toBe(getBooksyMonthlyPriceGbp(6, 'excluding'));
+    expect(six.uxhm.externalBooksyMonthlyIncVatGbp).toBe(78);
+    expect(six.uxhm.setupGbp).toBe(499);
+    expect(four.uxhm.setupGbp).toBe(six.uxhm.setupGbp);
+
+    expect(four.kersivo.confidence).toBe('published');
+    expect(four.kersivo.recurringGbpPerMonth).toBe(SAAS_MONTHLY_GBP);
+    expect(six.kersivo.recurringGbpPerMonth).toBe(SAAS_MONTHLY_GBP);
+
+    // Indicative — scales with team size but is not a checkout-verified quote.
+    expect(four.fresha.confidence).toBe('indicative');
+    expect(four.fresha.recurringGbpPerMonth).toBe(52.75);
+    expect(six.fresha.recurringGbpPerMonth).toBe(freshaUkIndicatedMonthlySubtotalGbp(6, false));
+    expect(six.fresha.recurringGbpPerMonth).toBe(72.65);
+    expect(six.fresha.recurringIncludingVatGbp).toBe(freshaUkIndicatedMonthlySubtotalGbp(6, true));
+
+    // Conflict / quote-only — not seat-scaled published totals.
+    expect(four.setora.confidence).toBe('conflict');
+    expect(four.setora.recurringGbpPerMonth).toBe(59);
+    expect(six.setora.recurringGbpPerMonth).toBe(59);
+    expect(four.setora.conflictingPublishedRecurringGbp).toEqual([39, 59]);
+
+    expect(four.nearcut.confidence).toBe('custom-quote');
+    expect(four.nearcut.recurringGbpPerMonth).toBeNull();
+    expect(six.nearcut.recurringGbpPerMonth).toBeNull();
   });
 
   it('exposes the same comparable figures for future Section 04 cost calculations', () => {

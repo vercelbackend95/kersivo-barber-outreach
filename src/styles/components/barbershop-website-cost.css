@@ -1298,6 +1298,20 @@
   color: color-mix(in srgb, var(--fg) 72%, var(--muted));
 }
 
+/* Care column definition — visible on desktop and mobile, no tooltip */
+.bwcost-svc__care-note {
+  margin: 0 0 0.85rem;
+  max-width: 42rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.bwcost-svc__mobile .bwcost-svc__care-note {
+  margin: 0 0 0.95rem;
+}
+
 /* Scope Snapshot — editorial capability status matrix (not buttons) */
 .bwcost-svc__matrix {
   list-style: none;

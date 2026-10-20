@@ -81,6 +81,13 @@ export const WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL =
 export const WEBSITE_SERVICE_COMPARISON_ASSUMPTION = COST_OFFERS_COMPARISON_ASSUMPTION;
 
 /**
+ * Visible Care-column definition for Section 02 (desktop + mobile).
+ * Hosting / platform uptime alone is not Care.
+ */
+export const WEBSITE_SERVICE_COMPARISON_CARE_NOTE =
+  'Care means supplier-managed website content updates, not hosting alone.';
+
+/**
  * Primary desktop/mobile table order (six providers).
  * Prices and identity come from WEBSITE_COST_OFFERS via the thin adapter.
  */
