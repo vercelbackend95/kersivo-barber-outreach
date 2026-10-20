@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "source": "editorial-staging/insights/barbershop-no-show-cost-when-deposit-makes-sense.md",
+  "output": "editorial-staging/insights/barbershop-no-show-cost-when-deposit-makes-sense-display.md",
+  "notionUrl": "https://app.notion.com/p/3fa7dbe5bbda81e2982bc9c20f746a2d",
+  "status": "Owner-directed legal-safe v5 release; reviewed statutory rights, no reliance on leisure exemption",
+  "researchApproved": true,
+  "writingApproved": true,
+  "publishApproved": true,
+  "seo": {
+    "title": "Barbershop No-Shows: True Cost & When Deposits Make Sense",
+    "description": "What a no-show really costs a UK barbershop once refills, card fees and deposits are counted, and when a deposit is fair, useful and worth asking for.",
+    "slug": "barbershop-no-show-cost-when-deposit-makes-sense",
+    "categoryId": "bookings-operations",
+    "category": "Bookings & Operations",
+    "format": "Guide"
+  },
+  "media": [
+    {
+      "kind": "hero",
+      "anchor": "# What a No-Show Really Costs a Barbershop — and When a Deposit Makes Sense",
+      "src": "https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=2200",
+      "width": 1600,
+      "height": 1000,
+      "alt": "Unoccupied brown leather barber chairs in a barbershop interior",
+      "caption": "An empty barber chair represents reserved capacity, but not necessarily the full price of a lost haircut",
+      "credit": "Jarrod Reed / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/empty-brown-leather-barber-chairs-_I4sDxMK2ls",
+      "rights": "Original Jarrod Reed photograph https://unsplash.com/photos/empty-brown-leather-barber-chairs-_I4sDxMK2ls, source page identifies 30 September 2019, Download free, Free to use under the Unsplash License https://unsplash.com/license. Image source URL taken from official image link. No identifiable people or asserted barbershop client relationship. Not present in 19 existing visual manifests reviewed on 20 October 2026.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "The busy Saturday no-show is the cheap one.",
+      "src": "https://images.unsplash.com/photo-1773904215697-e6c21fc27ac2?auto=format&fit=crop&fm=jpg&q=78&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "Rows of unoccupied vintage barber chairs and sinks in a dim salon interior",
+      "caption": "Unused barber chairs illustrate the capacity at stake; the worked figures above are hypothetical, not from the shop pictured",
+      "credit": "Tanya Barrow / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/luxurious-barber-chairs-and-sinks-in-a-dimly-lit-salon-fa0DqQ91dWU",
+      "rights": "Original Tanya Barrow photo https://unsplash.com/photos/luxurious-barber-chairs-and-sinks-in-a-dimly-lit-salon-fa0DqQ91dWU published 19 March 2026; official Unsplash page says Download free and Unsplash License https://unsplash.com/license. Official CDN photo-1773904215697 verified. No people or customer/product endorsement implied. Not among 19 existing article visual manifests checked 20 October 2026.",
+      "licenceReviewed": true
+    },
+    {
+      "kind": "photo",
+      "anchor": "## Before you set a policy",
+      "src": "https://images.unsplash.com/photo-1678356163587-6bb3afb89679?auto=format&fit=crop&fm=jpg&q=78&w=2000",
+      "width": 1500,
+      "height": 1000,
+      "alt": "A pair of professional barber scissors, combs and grooming tools arranged on a table",
+      "caption": "The service, price and client relationship should all inform a shop's approach to booking deposits",
+      "credit": "Federico Tonini / Unsplash",
+      "creditUrl": "https://unsplash.com/photos/a-close-up-of-a-table-with-a-hair-brush-and-a-pair-of-scissors-5WttPbwX73c",
+      "rights": "Federico Tonini original photo https://unsplash.com/photos/a-close-up-of-a-table-with-a-hair-brush-and-a-pair-of-scissors-5WttPbwX73c published 9 March 2023; official photo page says Download free and Free to use under the Unsplash License https://unsplash.com/license. Official CDN photo-1678356163587 verified. No person or endorsement depicted. Not reused among 19 checked article visual manifests.",
+      "licenceReviewed": true
+    }
+  ],
+  "editorialVersion": "ARTICLE DRAFT v5 — 20 October 2026 · targeted statutory 14-day cancellation-right correction, sources verified; prior v4 preserved in Notion.",
+  "editorialVisualDirection": "One real vacant-chair hero plus two distinct authentic detail/interior photographs. Free Unsplash License verified on each original page and image-ID uniqueness reviewed against 19 source manifests; no photographed shop is implied to use KERSIVO. Existing legal warning remains in copy; never publish while Hold=true.",
+  "publicationApproval": {
+    "approvedBy": "owner",
+    "approvedOn": "2026-10-20",
+    "recordUrl": "https://app.notion.com/p/3fa7dbe5-bbda-81e2-982b-c9c20f746a2d",
+    "note": "Owner explicitly and repeatedly instructed immediate main production publication of this no-show article on 20 October 2026 despite previously recorded legal hold. Scoped v5 correction treats any applicable 14-day statutory cancellation right conservatively and removes reliance on an unproven leisure exception; this is an owner release override, not an assertion of specialist solicitor review."
+  }
+}
