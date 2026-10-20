@@ -2253,23 +2253,33 @@
   }
 
   .bwcost-models__insight {
-    grid-template-columns: minmax(0, 1.45fr) minmax(10rem, 0.7fr);
+    /* Slightly wider media track so the larger graphic can breathe */
+    grid-template-columns: minmax(0, 1.25fr) minmax(12rem, 0.95fr);
     gap: 0.75rem 1.5rem;
     align-items: center;
     padding: 0.85rem 1.15rem;
   }
 
   .bwcost-models__insight-media {
+    position: relative;
     min-height: 0;
+    /* Layout slot unchanged — keeps panel height stable */
     height: 10.25rem;
     max-height: 10.25rem;
+    overflow: visible;
   }
 
   .bwcost-models__insight-img {
+    /* ~50% larger than the 10.25rem slot; panel overflow clips softly */
+    position: absolute;
+    right: 0;
+    top: 50%;
     width: auto;
-    max-width: 100%;
-    height: 100%;
-    max-height: 10.25rem;
+    height: 15.4rem;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    transform: translateY(-50%);
   }
 }
 
@@ -2303,7 +2313,7 @@
   }
 
   .bwcost-models__insight-img {
-    max-height: 10rem;
+    height: 15rem;
   }
 }
 
