@@ -44,7 +44,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     const copy = text(markup);
     expect(copy).toMatch(/^The client journey/i);
     expect(copy).toContain(
-      'Your brand sets the tone. Your website carries it through — from discovering your barbershop and choosing a barber to booking an appointment.',
+      'See how the fictional CUTSTATE shop example takes a client from its homepage to choosing a barber and booking an appointment.',
     );
     expect(markup.indexOf('<h2')).toBeLessThan(markup.indexOf('bsw-b2b__moments'));
   });

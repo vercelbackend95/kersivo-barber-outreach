@@ -21,89 +21,59 @@ type Faq = {
 const faqs: Faq[] = [
   {
     id: 'cost',
-    question: 'Is there a setup fee, and when do I start paying?',
+    question: 'What does Full KERSIVO cost, and when do I start paying?',
     answer: [
-      `There’s no separate fee for the standard website setup. Full KERSIVO is £${SAAS_MONTHLY_GBP} a month for each physical barbershop location.`,
-      'Your first payment is taken when you subscribe, then monthly from that date, including while we prepare your website.',
-    ],
-  },
-  {
-    id: 'commission',
-    question: 'Does KERSIVO take commission on my bookings?',
-    answer: [
-      'No. KERSIVO takes 0% commission on bookings and retail sales. You pay your Full subscription, and standard Stripe processing fees still apply to card payments.',
+      `Full KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location, with no separate standard setup fee. Your first payment is taken when you subscribe; monthly billing continues while we prepare your website.`,
+      'KERSIVO takes 0% commission on bookings and retail. Standard Stripe processing fees still apply to online card payments.',
     ],
   },
   {
     id: 'payments',
-    question: 'Can my clients pay a deposit or pay in full online?',
+    question: 'How do booking deposits work?',
     answer: [
-      `Yes. With Full KERSIVO, you choose how clients pay when they book: at the shop, with a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or the full amount online.`,
-      'Card payments go through your own connected Stripe account, so the money is paid to your shop.',
-    ],
-  },
-  {
-    id: 'manage',
-    question: 'Can I change my services, prices and opening hours myself?',
-    answer: [
-      'Yes. You manage your services, prices, barbers and working hours from your KERSIVO dashboard. There’s no need to contact us every time you change a haircut price or update your team’s availability.',
+      `Full KERSIVO supports an optional £${KERSIVO_BOOKING_DEPOSIT_GBP} booking deposit, capped at the service price for cheaper appointments. The deposit counts towards the final service price, and any remaining balance is paid at the shop.`,
+      'Deposits are processed through your shop’s connected Stripe account. Standard Stripe processing fees apply.',
     ],
   },
   {
     id: 'domain',
     question: 'Can I use my existing domain?',
     answer: [
-      'Yes. Your domain stays yours and you don’t need to transfer it to us. We’ll help connect it to your new website, and you keep renewing it with your current registrar.',
-      'No domain yet? One standard domain is included. Premium or unusually expensive names aren’t included as standard.',
+      'Yes. Your domain remains yours, and you do not need to transfer it to KERSIVO. We help connect it to the website while you continue renewing it with your existing registrar.',
+      'If you do not have a domain, one standard domain is included. Premium or unusually expensive names are not included as standard.',
     ],
   },
   {
     id: 'ownership',
     question: 'Do I own my website?',
     answer: [
-      'Your business name, brand, photos, content and domain stay yours, and you can export eligible business data under our terms.',
-      'The website runs on the KERSIVO platform, so the software, templates, code and hosting behind it aren’t transferred to you. Standard websites also carry a subtle “Powered by KERSIVO” mark.',
+      'Your business name, brand, photos, content and domain stay yours. You can export eligible business data under our terms.',
+      'The website runs on the KERSIVO platform: its software, templates, source code and hosting are not transferred to you. Standard websites include a subtle “Powered by KERSIVO” mark.',
     ],
   },
   {
     id: 'timing',
-    question: 'How long does it take to get my website live?',
+    question: 'How long does setup take, and can you help me switch?',
     answer: [
-      'Usually around 1–2 weeks after we’ve received everything we need. You’ll get a private preview in your dashboard to check before launch.',
-      'Domain access, missing details or moving data from another system can sometimes take longer. It’s an estimate, not a guaranteed launch date.',
-    ],
-  },
-  {
-    id: 'switching',
-    question: 'Can you help me switch from my current booking system?',
-    answer: [
-      'Yes. Help moving across is part of the standard setup.',
-      'What we can bring over depends on what your current provider lets you export, so some history may not transfer. Where possible, you can keep taking bookings through your current system while we build.',
-    ],
-  },
-  {
-    id: 'retail',
-    question: 'Can I sell products through my barbershop website?',
-    answer: [
-      'Yes. Full KERSIVO includes an online shop where clients can pay for grooming products and collect them from your barbershop. You manage products and orders from your dashboard.',
-      'Orders are for collection in the shop. Delivery and shipping aren’t included.',
+      'Setup typically takes 1–2 weeks after we receive the information needed. You will approve a private website preview before launch. This is an estimate, not a guaranteed date.',
+      'We can help move eligible information exported from your existing booking provider. Some history may not transfer, and domain access or data migration can take longer. Where possible, your current bookings can continue while we prepare the site.',
     ],
   },
   {
     id: 'cancel',
     question: 'Can I cancel Full KERSIVO at any time?',
     answer: [
-      'Yes. There’s no minimum term and no notice period. Full stays active until the end of your current paid billing period, and there’s no pro-rata refund for the time left.',
-      'When Full ends, your branded website and Full features end with it. Once you’ve scheduled the cancellation, you can choose to move to Starter before that date, as long as your shop meets its requirements. Nothing switches over automatically: you need to make that choice yourself.',
+      'Yes. There is no minimum term or notice period. Full stays active until the end of your current paid billing period, with no pro-rata refund for unused time.',
+      'Your branded website and Full-only features end when Full ends. You may be able to move to Starter before then if your shop meets its requirements. That change is not automatic.',
     ],
   },
   {
     id: 'starter',
-    question: 'What’s the difference between Starter and Full KERSIVO?',
+    question: 'What is the difference between Starter and Full?',
     answer: [
-      'Starter is our free booking plan: a KERSIVO-hosted booking page with the core booking tools. It isn’t a free version of the Full branded website.',
-      'Full KERSIVO adds your own branded website and standard domain, plus wider tools such as reports, retail and SMS reminders.',
-      'Starter is £0/month within its published limits. A payment-ready Stripe Connect Standard account is required before customers can book online. Standard Stripe processing fees apply.',
+      'Starter is a £0/month KERSIVO-hosted booking page within its published limits; it is not the Full branded website.',
+      'Full adds your own branded website and standard domain, plus wider tools including reports, retail pickup and SMS appointment reminders.',
+      'Starter requires a payment-ready Stripe Connect Standard account before customers can book online. Standard Stripe processing fees apply.',
     ],
   },
 ];
@@ -116,7 +86,7 @@ const faqs: Faq[] = [
         <p class="bsw-faq__eyebrow">Questions</p>
         <h2 id="bsw-faq-heading" class="bsw-faq__heading">Before you decide</h2>
         <p class="bsw-faq__lede">
-          Straight answers on cost, payments, domains, switching systems and what happens if you cancel.
+          Practical answers on pricing, deposits, domains, setup and cancellation.
         </p>
       </header>
 
@@ -144,7 +114,7 @@ const faqs: Faq[] = [
           Ready for a website that feels like <span class="bsw-final__accent">your shop?</span>
         </h2>
         <p class="bsw-final__lede">
-          Your own branded website with online booking built in, set up and looked after by KERSIVO.
+          Your branded website and connected booking setup, prepared and managed by KERSIVO.
         </p>
       </div>
 
