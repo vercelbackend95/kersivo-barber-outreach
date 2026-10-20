@@ -76,6 +76,8 @@ export type ScenarioProviderRow = {
   figureSecondary?: string;
   billingQualifier: string;
   vatBasisLabel: string;
+  /** Short VAT line shown on the provider card itself. */
+  cardVatLabel: string;
   status: ScenarioPricingStatus;
   statusLabel: string;
   explanation: string;
@@ -98,6 +100,8 @@ export type ScenarioComparison = {
   period: ScenarioPeriod;
   chartTitle: string;
   chartSubheading: string;
+  /** Updates with barber count and period for the chart's accessible name. */
+  chartDescription: string;
   providers: readonly ScenarioProviderRow[];
   /** Max numeric bar height basis; ignore null amounts. */
   chartMaxGbp: number;
@@ -161,10 +165,19 @@ function periodMonths(period: ScenarioPeriod): number | null {
 }
 
 function chartTitleFor(period: ScenarioPeriod): string {
-  if (period === 'monthly') return 'Monthly cost comparison';
-  if (period === '12') return 'Total cost over 12 months';
-  return 'Total cost over 36 months';
+  if (period === 'monthly') return 'Monthly published / indicative subtotals';
+  if (period === '12') return '12-month published / indicative subtotals';
+  return '36-month published / indicative subtotals';
 }
+
+const CARD_VAT_LABELS: Record<WebsiteCostPrimaryId, string> = {
+  'vagaro-mysite': 'VAT unconfirmed',
+  'fresha-team-smart-website': 'Indicative, excluding VAT',
+  'nearcut-subscription': 'Quote required',
+  'setora-core': 'VAT and price conflict',
+  'uxhm-salon-growth': 'Booksy includes VAT; website VAT unconfirmed',
+  'full-kersivo': 'No VAT currently added',
+};
 
 function assertBarberCount(n: number): asserts n is ScenarioBarberCount {
   if (!(SCENARIO_BARBER_COUNTS as readonly number[]).includes(n)) {
@@ -217,6 +230,7 @@ function buildProviderRow(
       displayFigure: 'Custom quote',
       billingQualifier: 'Shop-paid Subscription · quote by team size',
       vatBasisLabel: 'Quote required · Free for You £1.50 example is not this package',
+      cardVatLabel: CARD_VAT_LABELS['nearcut-subscription'],
       status: 'quote-required',
       statusLabel: STATUS_LABELS['quote-required'],
       explanation:
@@ -260,6 +274,7 @@ function buildProviderRow(
       displayFigure: 'Quote required',
       billingQualifier: 'Eight calendars not verified on the published UK tier',
       vatBasisLabel: 'Published subtotal · VAT unconfirmed',
+      cardVatLabel: CARD_VAT_LABELS['vagaro-mysite'],
       status: 'quote-required',
       statusLabel: STATUS_LABELS['quote-required'],
       explanation:
@@ -302,6 +317,7 @@ function buildProviderRow(
           ? 'Per month · published calendar + MySite subtotal'
           : `${months}-month published subscription subtotal`,
       vatBasisLabel: 'Published subtotal · VAT unconfirmed',
+      cardVatLabel: CARD_VAT_LABELS['vagaro-mysite'],
       status: 'published-subtotal',
       statusLabel: STATUS_LABELS['published-subtotal'],
       explanation:
@@ -360,6 +376,7 @@ function buildProviderRow(
           ? 'Indicative UK pricing / month · excl. VAT'
           : `Indicative ${months}-month subtotal · excl. VAT`,
       vatBasisLabel: 'Indicative · excl. VAT',
+      cardVatLabel: CARD_VAT_LABELS['fresha-team-smart-website'],
       status: 'indicative',
       statusLabel: STATUS_LABELS.indicative,
       explanation:
@@ -410,6 +427,7 @@ function buildProviderRow(
           ? 'Per month / location · owner-selected headline'
           : `${months}-month subtotal at owner-selected £59 headline`,
       vatBasisLabel: 'Published headline · tax unconfirmed',
+      cardVatLabel: CARD_VAT_LABELS['setora-core'],
       status: 'price-conflict',
       statusLabel: STATUS_LABELS['price-conflict'],
       explanation:
@@ -470,6 +488,7 @@ function buildProviderRow(
           ? 'Booksy monthly (inc. VAT) · website build separate'
           : `${months}-month known stack subtotal`,
       vatBasisLabel: 'Includes VAT on Booksy · website VAT unconfirmed',
+      cardVatLabel: CARD_VAT_LABELS['uxhm-salon-growth'],
       status: 'combined-stack',
       statusLabel: STATUS_LABELS['combined-stack'],
       explanation:
@@ -524,6 +543,7 @@ function buildProviderRow(
         ? 'Per month / location · no separate standard setup'
         : `${months}-month subscription subtotal · no VAT currently added`,
     vatBasisLabel: 'Subscription subtotal · no VAT currently added',
+    cardVatLabel: CARD_VAT_LABELS['full-kersivo'],
     status: 'per-location',
     statusLabel: STATUS_LABELS['per-location'],
     explanation:
@@ -598,12 +618,20 @@ export function getScenarioComparison(
 
   const periodWord =
     period === 'monthly' ? 'Monthly' : period === '12' ? '12 months' : '36 months';
+  const chartTitle = chartTitleFor(period);
+  const chartSubheading = `For ${bookableBarbers} bookable barbers`;
+  const chartDescription = [
+    `Vertical column chart of published or indicative package subtotals, not guaranteed complete costs.`,
+    `${chartTitle}. ${chartSubheading}. Period: ${periodWord}.`,
+    ...providers.map((row) => `${row.name}: ${row.displayFigure}. ${row.cardVatLabel}.`),
+  ].join(' ');
 
   return {
     barbers: bookableBarbers,
     period,
-    chartTitle: chartTitleFor(period),
-    chartSubheading: `For ${bookableBarbers} bookable barbers`,
+    chartTitle,
+    chartSubheading,
+    chartDescription,
     providers,
     chartMaxGbp,
     kersivoSummary: {

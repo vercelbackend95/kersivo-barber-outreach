@@ -48,6 +48,7 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
   const breakdown = root.querySelector<HTMLElement>('[data-bwcost-breakdown]');
   const chartTitle = root.querySelector<HTMLElement>('[data-bwcost-chart-title]');
   const chartSub = root.querySelector<HTMLElement>('[data-bwcost-chart-sub]');
+  const chartDesc = root.querySelector<HTMLElement>('[data-bwcost-chart-desc]');
   const summaryScenario = root.querySelector<HTMLElement>('[data-bwcost-summary-scenario]');
   const summaryFigure = root.querySelector<HTMLElement>('[data-bwcost-summary-figure]');
   const summaryCaption = root.querySelector<HTMLElement>('[data-bwcost-summary-caption]');
@@ -117,6 +118,7 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
   function render(state: ScenarioComparison): void {
     if (chartTitle) chartTitle.textContent = state.chartTitle;
     if (chartSub) chartSub.textContent = state.chartSubheading;
+    if (chartDesc) chartDesc.textContent = state.chartDescription;
     if (summaryScenario) summaryScenario.textContent = state.kersivoSummary.scenarioLabel;
     if (summaryFigure) summaryFigure.textContent = state.kersivoSummary.displayFigure;
     if (summaryCaption) summaryCaption.textContent = state.kersivoSummary.caption;
@@ -172,6 +174,7 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
       const figure = card.querySelector<HTMLElement>('[data-bwcost-card-figure]');
       const secondary = card.querySelector<HTMLElement>('[data-bwcost-card-secondary]');
       const qualifier = card.querySelector<HTMLElement>('[data-bwcost-card-qualifier]');
+      const vat = card.querySelector<HTMLElement>('[data-bwcost-card-vat]');
       const status = card.querySelector<HTMLElement>('[data-bwcost-card-status]');
       if (figure) figure.textContent = row.displayFigure;
       if (secondary) {
@@ -184,6 +187,7 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
         }
       }
       if (qualifier) qualifier.textContent = row.billingQualifier;
+      if (vat) vat.textContent = row.cardVatLabel;
       if (status) status.textContent = row.statusLabel;
       const selected = row.id === activeId;
       card.classList.toggle('is-active', selected);
@@ -202,24 +206,34 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
     renderBreakdown(state);
   }
 
+  const activateFromKey = (event: KeyboardEvent, activate: () => void) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    activate();
+  };
+
   for (const btn of barberButtons) {
-    btn.addEventListener('click', () => {
+    const activate = () => {
       const next = Number(btn.getAttribute('data-bwcost-barbers'));
       if (!payload.barberCounts.includes(next as ScenarioBarberCount)) return;
       barbers = next as ScenarioBarberCount;
       setPressed(barberButtons, 'data-bwcost-barbers', String(barbers));
       render(currentState());
-    });
+    };
+    btn.addEventListener('click', activate);
+    btn.addEventListener('keydown', (event) => activateFromKey(event, activate));
   }
 
   for (const btn of periodButtons) {
-    btn.addEventListener('click', () => {
+    const activate = () => {
       const next = btn.getAttribute('data-bwcost-period') as ScenarioPeriod;
       if (!payload.periods.includes(next)) return;
       period = next;
       setPressed(periodButtons, 'data-bwcost-period', period);
       render(currentState());
-    });
+    };
+    btn.addEventListener('click', activate);
+    btn.addEventListener('keydown', (event) => activateFromKey(event, activate));
   }
 
   for (const card of cards) {

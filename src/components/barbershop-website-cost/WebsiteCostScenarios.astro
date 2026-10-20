@@ -63,10 +63,8 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
             role="img"
             aria-labelledby="bwcost-scenarios-chart-desc"
           >
-            <p id="bwcost-scenarios-chart-desc" class="bwcost-sr-only">
-              Vertical cost comparison for {initial.barbers} bookable barbers over the selected period. Numeric bars
-              show published or indicative package subtotals — not complete total cost of ownership. Nearcut requires
-              a custom quote.
+            <p id="bwcost-scenarios-chart-desc" class="bwcost-sr-only" data-bwcost-chart-desc>
+              {initial.chartDescription}
             </p>
 
             <div class="bwcost-scenarios__axis" aria-hidden="true">
@@ -231,7 +229,7 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
       </aside>
     </div>
 
-    <div class="bwcost-scenarios__cards" role="list">
+    <div class="bwcost-scenarios__cards">
       {
         initial.providers.map((row) => (
           <button
@@ -241,7 +239,6 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
               row.emphasized && 'bwcost-scenarios__card--kersivo',
               row.id === activeId && 'is-active',
             ]}
-            role="listitem"
             data-bwcost-card={row.id}
             aria-pressed={row.id === activeId ? 'true' : 'false'}
             aria-controls="bwcost-scenarios-breakdown"
@@ -263,6 +260,7 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
             <span class="bwcost-scenarios__card-figure" data-bwcost-card-figure>
               {row.displayFigure}
             </span>
+            <span class="bwcost-scenarios__card-vat" data-bwcost-card-vat>{row.cardVatLabel}</span>
             <span
               class="bwcost-scenarios__card-secondary"
               data-bwcost-card-secondary

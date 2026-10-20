@@ -141,12 +141,30 @@ describe('barbershopWebsiteCostScenarios', () => {
     }
   });
 
+  it('shows a distinct VAT line on every provider card', () => {
+    const rows = Object.fromEntries(
+      getScenarioComparison(4, '36').providers.map((row) => [row.id, row.cardVatLabel]),
+    );
+    expect(rows['vagaro-mysite']).toBe('VAT unconfirmed');
+    expect(rows['fresha-team-smart-website']).toBe('Indicative, excluding VAT');
+    expect(rows['nearcut-subscription']).toBe('Quote required');
+    expect(rows['setora-core']).toBe('VAT and price conflict');
+    expect(rows['uxhm-salon-growth']).toBe('Booksy includes VAT; website VAT unconfirmed');
+    expect(rows['full-kersivo']).toBe('No VAT currently added');
+  });
+
   it('builds a KERSIVO summary that matches the Full KERSIVO row', () => {
     const comparison = getScenarioComparison(4, '36');
     expect(comparison.kersivoSummary.amountGbp).toBe(1404);
     expect(comparison.kersivoSummary.displayFigure).toBe('£1,404');
-    expect(comparison.chartTitle).toBe('Total cost over 36 months');
+    expect(comparison.chartTitle).toBe('36-month published / indicative subtotals');
     expect(comparison.chartSubheading).toBe('For 4 bookable barbers');
+    expect(comparison.chartDescription).toContain('4 bookable barbers');
+    expect(comparison.chartDescription).toContain('not guaranteed complete costs');
+    expect(getScenarioComparison(8, 'monthly').chartDescription).toContain('8 bookable barbers');
+    expect(getScenarioComparison(5, '12').chartTitle).toBe(
+      '12-month published / indicative subtotals',
+    );
     expect(comparison.providers.find((row) => row.id === 'full-kersivo')?.amountGbp).toBe(
       comparison.kersivoSummary.amountGbp,
     );

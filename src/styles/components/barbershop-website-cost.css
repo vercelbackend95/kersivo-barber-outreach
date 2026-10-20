@@ -18,8 +18,24 @@
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+table.bwcost-sr-only {
+  left: 0;
+  top: 0;
+  max-width: 1px;
+  table-layout: fixed;
+}
+
+table.bwcost-sr-only caption,
+table.bwcost-sr-only th,
+table.bwcost-sr-only td {
+  width: 1px;
+  max-width: 1px;
+  overflow: hidden;
 }
 
 .bwcost-section__inner {
@@ -2876,6 +2892,14 @@
   line-height: 1.05;
   color: #fff;
   font-variant-numeric: tabular-nums;
+}
+
+.bwcost-scenarios__card-vat {
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
 }
 
 .bwcost-scenarios__card-secondary,
