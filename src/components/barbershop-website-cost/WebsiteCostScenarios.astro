@@ -1,6 +1,8 @@
 ---
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
+  CARD_CHECKS,
+  CARD_WORDMARKS,
   COST_SCENARIOS_SECTION_ID,
   SCENARIO_BARBER_COUNTS,
   SCENARIO_DEFAULT,
@@ -12,8 +14,6 @@ import {
 
 const payload = buildScenarioPayload();
 const initial = getScenarioComparison(SCENARIO_DEFAULT.barbers, SCENARIO_DEFAULT.period);
-const activeId = 'full-kersivo';
-const activeRow = initial.providers.find((row) => row.id === activeId) ?? initial.providers[5]!;
 
 const SUBSCRIBE_HREF = '/admin/launch';
 const SUBSCRIBE_TRACK = 'saas_subscribe_click';
@@ -159,55 +159,45 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
       </div>
 
       <aside class="bwcost-scenarios__controls" aria-label="Scenario controls">
-        <div class="bwcost-scenarios__control-block">
-          <p class="bwcost-scenarios__control-label" id="bwcost-barbers-label">Number of barbers</p>
-          <div
-            class="bwcost-scenarios__segments bwcost-scenarios__segments--barbers"
-            role="group"
-            aria-labelledby="bwcost-barbers-label"
-          >
+        <fieldset class="bwcost-scenarios__control-block">
+          <legend class="bwcost-scenarios__control-label">Number of barbers</legend>
+          <div class="calc-segmented calc-segmented--small">
             {
               SCENARIO_BARBER_COUNTS.map((n) => (
-                <button
-                  type="button"
-                  class:list={[
-                    'bwcost-scenarios__seg',
-                    n === SCENARIO_DEFAULT.barbers && 'is-active',
-                  ]}
-                  data-bwcost-barbers={n}
-                  aria-pressed={n === SCENARIO_DEFAULT.barbers ? 'true' : 'false'}
-                >
-                  {n}
-                </button>
+                <label class="calc-segmented__option">
+                  <input
+                    type="radio"
+                    name="bwcost-barbers"
+                    value={n}
+                    data-bwcost-barbers={n}
+                    checked={n === SCENARIO_DEFAULT.barbers}
+                  />
+                  <span>{n}</span>
+                </label>
               ))
             }
           </div>
-        </div>
+        </fieldset>
 
-        <div class="bwcost-scenarios__control-block">
-          <p class="bwcost-scenarios__control-label" id="bwcost-period-label">Time period</p>
-          <div
-            class="bwcost-scenarios__segments"
-            role="group"
-            aria-labelledby="bwcost-period-label"
-          >
+        <fieldset class="bwcost-scenarios__control-block">
+          <legend class="bwcost-scenarios__control-label">Time period</legend>
+          <div class="calc-segmented">
             {
               SCENARIO_PERIODS.map((p) => (
-                <button
-                  type="button"
-                  class:list={[
-                    'bwcost-scenarios__seg',
-                    p === SCENARIO_DEFAULT.period && 'is-active',
-                  ]}
-                  data-bwcost-period={p}
-                  aria-pressed={p === SCENARIO_DEFAULT.period ? 'true' : 'false'}
-                >
-                  {periodLabels[p]}
-                </button>
+                <label class="calc-segmented__option">
+                  <input
+                    type="radio"
+                    name="bwcost-period"
+                    value={p}
+                    data-bwcost-period={p}
+                    checked={p === SCENARIO_DEFAULT.period}
+                  />
+                  <span>{periodLabels[p]}</span>
+                </label>
               ))
             }
           </div>
-        </div>
+        </fieldset>
 
         <div class="bwcost-scenarios__summary">
           <p class="bwcost-scenarios__summary-kicker">Selected scenario</p>
@@ -232,16 +222,12 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
     <div class="bwcost-scenarios__cards">
       {
         initial.providers.map((row) => (
-          <button
-            type="button"
+          <article
             class:list={[
               'bwcost-scenarios__card',
               row.emphasized && 'bwcost-scenarios__card--kersivo',
-              row.id === activeId && 'is-active',
             ]}
             data-bwcost-card={row.id}
-            aria-pressed={row.id === activeId ? 'true' : 'false'}
-            aria-controls="bwcost-scenarios-breakdown"
           >
             {
               row.emphasized ? (
@@ -254,91 +240,52 @@ const periodLabels: Record<(typeof SCENARIO_PERIODS)[number], string> = {
                   loading="lazy"
                   decoding="async"
                 />
-              ) : null
+              ) : (
+                <p class="bwcost-scenarios__wordmark" aria-hidden="true">
+                  {CARD_WORDMARKS[row.id].map((part) => <span>{part}</span>)}
+                </p>
+              )
             }
-            <span class="bwcost-scenarios__card-name">{row.shortName}</span>
-            <span class="bwcost-scenarios__card-figure" data-bwcost-card-figure>
+            <h3 class="bwcost-scenarios__card-name">{row.shortName}</h3>
+            <p class="bwcost-scenarios__card-figure" data-bwcost-card-figure>
               {row.displayFigure}
-            </span>
-            <span class="bwcost-scenarios__card-vat" data-bwcost-card-vat>{row.cardVatLabel}</span>
-            <span
+            </p>
+            <p class="bwcost-scenarios__card-vat" data-bwcost-card-vat>{row.cardVatLabel}</p>
+            <p
               class="bwcost-scenarios__card-secondary"
               data-bwcost-card-secondary
               hidden={!row.figureSecondary}
             >
               {row.figureSecondary ?? ''}
-            </span>
-            <span class="bwcost-scenarios__card-qualifier" data-bwcost-card-qualifier>
+            </p>
+            <p class="bwcost-scenarios__card-qualifier" data-bwcost-card-qualifier>
               {row.billingQualifier}
-            </span>
-            <span class="bwcost-scenarios__card-explain">{row.explanation}</span>
-            <span class="bwcost-scenarios__card-status" data-bwcost-card-status>
+            </p>
+            <ul class="bwcost-scenarios__checks">
+              {
+                CARD_CHECKS[row.id].map((item) => (
+                  <li>
+                    <svg class="bwcost-scenarios__check" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3.2 8.2 6.4 11.4 12.8 4.6"
+                      />
+                    </svg>
+                    <span>{item}</span>
+                  </li>
+                ))
+              }
+            </ul>
+            <p class="bwcost-scenarios__card-status" data-bwcost-card-status>
               {row.statusLabel}
-            </span>
-          </button>
+            </p>
+          </article>
         ))
       }
-    </div>
-
-    <div
-      class="bwcost-scenarios__breakdown"
-      id="bwcost-scenarios-breakdown"
-      data-bwcost-breakdown
-      tabindex="-1"
-    >
-      <div class="bwcost-scenarios__bd-head">
-        <p class="bwcost-scenarios__bd-kicker">Cost breakdown</p>
-        <h3 class="bwcost-scenarios__bd-title">{activeRow.name}</h3>
-        <p class="bwcost-scenarios__bd-meta">
-          {activeRow.vatBasisLabel} · {activeRow.statusLabel}
-        </p>
-      </div>
-      <dl class="bwcost-scenarios__bd-list">
-        {
-          activeRow.breakdown.map((line) => (
-            <div class="bwcost-scenarios__bd-row">
-              <dt>{line.label}</dt>
-              <dd>
-                <span class="bwcost-scenarios__bd-amount">{line.amountLabel}</span>
-                {line.note ? <span class="bwcost-scenarios__bd-note">{line.note}</span> : null}
-              </dd>
-            </div>
-          ))
-        }
-      </dl>
-      <div class="bwcost-scenarios__bd-foot">
-        <p class="bwcost-scenarios__bd-total">
-          <span>Selected scenario</span>
-          <strong>{activeRow.displayFigure}</strong>
-        </p>
-        {
-          activeRow.figureSecondary ? (
-            <p class="bwcost-scenarios__bd-sec">{activeRow.figureSecondary}</p>
-          ) : null
-        }
-        <p class="bwcost-scenarios__bd-incomplete">
-          Published or indicative package costs — not a complete like-for-like TCO.
-        </p>
-        <ul class="bwcost-scenarios__bd-missing">
-          {activeRow.missingFees.map((fee) => <li>{fee}</li>)}
-        </ul>
-        {
-          activeRow.sourceHref ? (
-            <p>
-              <a
-                class="bwcost-scenarios__bd-source"
-                href={activeRow.sourceHref}
-                {...(activeRow.sourceHref.startsWith('http')
-                  ? { target: '_blank', rel: 'noopener noreferrer' }
-                  : {})}
-              >
-                {activeRow.sourceLabel ?? 'View source'}
-                <span aria-hidden="true"> ↗</span>
-              </a>
-            </p>
-          ) : null
-        }
-      </div>
     </div>
 
     <aside class="bwcost-scenarios__cta" aria-labelledby="bwcost-scenarios-cta-heading">

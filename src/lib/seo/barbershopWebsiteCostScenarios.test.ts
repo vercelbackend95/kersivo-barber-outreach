@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
@@ -6,6 +9,7 @@ import {
   vagaroUkPublishedMonthlySubtotalGbp,
 } from '@/lib/seo/barbershopWebsiteCostOffers';
 import {
+  CARD_CHECKS,
   COST_SCENARIO_C_12,
   COST_SCENARIO_C_36,
   SCENARIO_BARBER_COUNTS,
@@ -139,6 +143,62 @@ describe('barbershopWebsiteCostScenarios', () => {
       const nearcut = state.providers.find((row) => row.id === 'nearcut-subscription');
       expect(nearcut?.amountGbp).toBeNull();
     }
+  });
+
+  it('shows static check lists and no expandable breakdown', () => {
+    expect(CARD_CHECKS['vagaro-mysite']).toEqual([
+      'Website builder',
+      'Online booking',
+      'Per-calendar pricing',
+      'Self-build setup',
+    ]);
+    expect(CARD_CHECKS['fresha-team-smart-website']).toEqual([
+      'Smart Website',
+      'Online booking',
+      'Team-based pricing',
+      'Indicative pricing',
+    ]);
+    expect(CARD_CHECKS['nearcut-subscription']).toEqual([
+      'Website + booking',
+      'Quote required',
+      'Subscription model',
+      'Custom pricing',
+    ]);
+    expect(CARD_CHECKS['setora-core']).toEqual([
+      'Platform website',
+      'Online booking',
+      'Per-location pricing',
+      'Price conflict',
+    ]);
+    expect(CARD_CHECKS['uxhm-salon-growth']).toEqual([
+      'Done-for-you website',
+      'Booksy booking',
+      '£499 setup',
+      'Separate booking cost',
+    ]);
+    expect(CARD_CHECKS['full-kersivo']).toEqual([
+      'Branded website',
+      'Online booking',
+      '2–8 barbers included',
+      'SMS reminders',
+      'Shop tools',
+    ]);
+
+    const sectionDir = dirname(fileURLToPath(import.meta.url));
+    const astro = readFileSync(
+      join(sectionDir, '../../components/barbershop-website-cost/WebsiteCostScenarios.astro'),
+      'utf8',
+    );
+    const script = readFileSync(
+      join(sectionDir, '../../scripts/barbershopWebsiteCostScenarios.ts'),
+      'utf8',
+    );
+    expect(astro).toContain('calc-segmented__option');
+    expect(astro).toContain('bwcost-scenarios__checks');
+    expect(astro).not.toContain('bwcost-scenarios-breakdown');
+    expect(astro).not.toContain('data-bwcost-breakdown');
+    expect(script).not.toContain('renderBreakdown');
+    expect(script).not.toContain('data-bwcost-breakdown');
   });
 
   it('shows a distinct VAT line on every provider card', () => {

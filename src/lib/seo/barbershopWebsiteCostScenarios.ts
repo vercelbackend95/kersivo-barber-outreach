@@ -9,12 +9,9 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   WEBSITE_COST_CURRENT_FINDINGS,
   WEBSITE_COST_PRIMARY_IDS,
-  formatWebsiteCostGbp,
   getComparableWebsiteCostFigures,
-  requireWebsiteCostOfferById,
   type CostPricingConfidence,
   type WebsiteCostPrimaryId,
-  type WebsiteDeliveryKind,
 } from '@/lib/seo/barbershopWebsiteCostOffers';
 
 /** Section 04 display amounts — grouped thousands for large period totals. */
@@ -58,13 +55,6 @@ export type ScenarioPricingStatus =
   | 'combined-stack'
   | 'per-location';
 
-export type ScenarioBreakdownLine = {
-  id: string;
-  label: string;
-  amountLabel: string;
-  note?: string;
-};
-
 export type ScenarioProviderRow = {
   id: WebsiteCostPrimaryId;
   name: string;
@@ -80,19 +70,32 @@ export type ScenarioProviderRow = {
   cardVatLabel: string;
   status: ScenarioPricingStatus;
   statusLabel: string;
-  explanation: string;
-  deliveryKind: WebsiteDeliveryKind;
-  deliveryLabel: string;
   confidence: CostPricingConfidence;
   isCompleteSubtotal: boolean;
-  missingFees: readonly string[];
-  breakdown: readonly ScenarioBreakdownLine[];
-  sourceHref?: string;
-  sourceLabel?: string;
   emphasized: boolean;
   monthlyRecurringGbp: number | null;
   setupGbpIncluded: number | null;
   periodMonths: number | null;
+};
+
+/** Static card scope lines. Not recomputed when the scenario changes. */
+export const CARD_CHECKS: Record<WebsiteCostPrimaryId, readonly string[]> = {
+  'vagaro-mysite': ['Website builder', 'Online booking', 'Per-calendar pricing', 'Self-build setup'],
+  'fresha-team-smart-website': ['Smart Website', 'Online booking', 'Team-based pricing', 'Indicative pricing'],
+  'nearcut-subscription': ['Website + booking', 'Quote required', 'Subscription model', 'Custom pricing'],
+  'setora-core': ['Platform website', 'Online booking', 'Per-location pricing', 'Price conflict'],
+  'uxhm-salon-growth': ['Done-for-you website', 'Booksy booking', '£499 setup', 'Separate booking cost'],
+  'full-kersivo': ['Branded website', 'Online booking', '2–8 barbers included', 'SMS reminders', 'Shop tools'],
+};
+
+/** Typographic wordmarks where no local logo file exists. KERSIVO uses the shipped mark. */
+export const CARD_WORDMARKS: Record<WebsiteCostPrimaryId, readonly string[]> = {
+  'vagaro-mysite': ['Vagaro'],
+  'fresha-team-smart-website': ['Fresha'],
+  'nearcut-subscription': ['Nearcut'],
+  'setora-core': ['Setora'],
+  'uxhm-salon-growth': ['UXHM', 'Booksy'],
+  'full-kersivo': ['KERSIVO'],
 };
 
 export type ScenarioComparison = {
@@ -200,26 +203,13 @@ function multiplyPeriod(monthly: number, period: ScenarioPeriod): number {
   return months === null ? monthly : roundGbp(monthly * months);
 }
 
-function sharedMissingFees(extra: readonly string[] = []): string[] {
-  return [
-    ...extra,
-    'Payment-processing fees (usage-dependent)',
-    'Domain registration or renewal where not confirmed',
-  ];
-}
-
 function buildProviderRow(
   offerId: WebsiteCostPrimaryId,
   barbers: ScenarioBarberCount,
   period: ScenarioPeriod,
 ): ScenarioProviderRow {
-  const offer = requireWebsiteCostOfferById(offerId);
   const figures = getComparableWebsiteCostFigures(offerId, barbers);
   const names = DISPLAY_NAMES[offerId];
-  const delivery = offer.websiteDelivery;
-  const deliveryKind = delivery?.kind ?? 'not-confirmed';
-  const deliveryLabel = delivery?.label ?? 'Website setup not confirmed';
-  const sourceHref = offer.sources[0];
   const months = periodMonths(period);
 
   if (offerId === 'nearcut-subscription') {
@@ -233,32 +223,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['nearcut-subscription'],
       status: 'quote-required',
       statusLabel: STATUS_LABELS['quote-required'],
-      explanation:
-        'Nearcut Subscription is quoted for shop needs and team size. No verified public fixed price for this configuration.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'custom-quote',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'UK Business Booster for product sales/stock (£7.50/month advertised) may apply',
-        'Retail pickup not publicly confirmed',
-      ]),
-      breakdown: [
-        {
-          id: 'subscription',
-          label: 'Subscription monthly',
-          amountLabel: 'Quote required',
-          note: 'Do not use Free for You customer booking-fee examples as the shop invoice',
-        },
-        {
-          id: 'booster',
-          label: 'Product sales Business Booster',
-          amountLabel: 'Additional quote',
-          note: `UK advertised ${formatWebsiteCostGbp(WEBSITE_COST_CURRENT_FINDINGS.nearcutProductBoosterUkAdvertisedMonthlyGbp)}/month where applicable`,
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'Nearcut pricing',
       emphasized: false,
       monthlyRecurringGbp: null,
       setupGbpIncluded: null,
@@ -277,26 +243,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['vagaro-mysite'],
       status: 'quote-required',
       statusLabel: STATUS_LABELS['quote-required'],
-      explanation:
-        'Published UK calendar + MySite maths is confirmed for up to seven calendars. Confirm the eight-calendar rate with Vagaro before budgeting.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'custom-quote',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'Optional professional MySite design (promotional / list price varies)',
-        'Marketplace / new-client connection fees where applicable',
-      ]),
-      breakdown: [
-        {
-          id: 'calendars-mysite',
-          label: 'Calendars + MySite',
-          amountLabel: 'Quote required',
-          note: 'Do not invent an eight-calendar total from the seven-calendar cap',
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'Vagaro UK pricing',
       emphasized: false,
       monthlyRecurringGbp: null,
       setupGbpIncluded: null,
@@ -320,37 +268,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['vagaro-mysite'],
       status: 'published-subtotal',
       statusLabel: STATUS_LABELS['published-subtotal'],
-      explanation:
-        'Self-build MySite plus bookable calendars. Optional professional design and marketplace fees are separate.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'published',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'Optional professional MySite design (promotional / list price varies)',
-        'Marketplace / new-client connection fees where applicable',
-      ]),
-      breakdown: [
-        {
-          id: 'subscription',
-          label: 'Calendars + MySite',
-          amountLabel: `${formatScenarioGbp(monthly)}/month`,
-          note: 'First calendar promotional UK rate + additional calendars + MySite £15',
-        },
-        {
-          id: 'setup',
-          label: 'Website build / professional design',
-          amountLabel: 'Not included',
-          note: 'Self-build MySite; optional design is separate',
-        },
-        {
-          id: 'vat',
-          label: 'VAT',
-          amountLabel: 'Not confirmed',
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'Vagaro UK pricing',
       emphasized: false,
       monthlyRecurringGbp: monthly,
       setupGbpIncluded: 0,
@@ -379,32 +298,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['fresha-team-smart-website'],
       status: 'indicative',
       statusLabel: STATUS_LABELS.indicative,
-      explanation:
-        'Self-configured Smart Website plus Team seats. Confirm official GBP checkout before treating as contracted rates.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'indicative',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'Marketplace new-client fees where applicable',
-        'SMS overages above allowance',
-      ]),
-      breakdown: [
-        {
-          id: 'team-smart',
-          label: 'Team seats + Smart Website',
-          amountLabel: `${formatScenarioGbp(monthly)}/month excl. VAT`,
-          note: `Illustrative with 20% VAT: ${formatScenarioGbp(monthlyInc)}/month`,
-        },
-        {
-          id: 'setup',
-          label: 'Website build',
-          amountLabel: 'Not a separate agency build',
-          note: 'Configurable Smart Website inside Fresha',
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'Fresha UK pricing',
       emphasized: false,
       monthlyRecurringGbp: monthly,
       setupGbpIncluded: 0,
@@ -430,37 +325,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['setora-core'],
       status: 'price-conflict',
       statusLabel: STATUS_LABELS['price-conflict'],
-      explanation:
-        'Per-location platform plan. Official sources also recorded a conflicting £39 figure — confirm the live charged rate.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'conflict',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'SMS credits billed separately',
-        'VAT status unresolved across Setora pages',
-      ]),
-      breakdown: [
-        {
-          id: 'location',
-          label: 'Platform per location',
-          amountLabel: `${formatScenarioGbp(monthly)}/month`,
-          note: `Owner-approved headline; conflicting official reading ${formatScenarioGbp(WEBSITE_COST_CURRENT_FINDINGS.setoraOfficialSourceConflictGbp)}`,
-        },
-        {
-          id: 'staff',
-          label: 'Additional barber seats',
-          amountLabel: '£0 in plan',
-          note: 'Unlimited staff seats advertised on the compared plan',
-        },
-        {
-          id: 'sms',
-          label: 'SMS reminders',
-          amountLabel: 'Usage-dependent',
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'Setora pricing',
       emphasized: false,
       monthlyRecurringGbp: monthly,
       setupGbpIncluded: null,
@@ -471,7 +337,6 @@ function buildProviderRow(
   if (offerId === 'uxhm-salon-growth') {
     const setup = figures.setupGbp ?? WEBSITE_COST_CURRENT_FINDINGS.uxhmSalonGrowthSetupGbp;
     const booksyMonthly = figures.externalBooksyMonthlyIncVatGbp!;
-    const booksyEx = figures.externalBooksyMonthlyExVatGbp!;
     const amount =
       period === 'monthly' ? booksyMonthly : roundGbp(setup + booksyMonthly * months!);
     return {
@@ -491,38 +356,8 @@ function buildProviderRow(
       cardVatLabel: CARD_VAT_LABELS['uxhm-salon-growth'],
       status: 'combined-stack',
       statusLabel: STATUS_LABELS['combined-stack'],
-      explanation:
-        'Done-for-you UXHM website plus separate Booksy Biz. Optional UXHM Essential Care is not included as mandatory.',
-      deliveryKind,
-      deliveryLabel,
       confidence: 'published',
       isCompleteSubtotal: false,
-      missingFees: sharedMissingFees([
-        'Optional UXHM Essential Care £20/month',
-        'Website VAT treatment and domain costs',
-        'Retail integration between UXHM and Booksy not confirmed',
-      ]),
-      breakdown: [
-        {
-          id: 'uxhm-build',
-          label: 'UXHM Salon Growth website',
-          amountLabel: `${formatScenarioGbp(setup)} one-off`,
-        },
-        {
-          id: 'booksy',
-          label: `Booksy Biz (${barbers} users)`,
-          amountLabel: `${formatScenarioGbp(booksyMonthly)}/month inc. VAT`,
-          note: `${formatScenarioGbp(booksyEx)}/month excl. VAT`,
-        },
-        {
-          id: 'care',
-          label: 'UXHM Essential Care',
-          amountLabel: 'Optional · £20/month',
-          note: 'Not included in the compared subtotal',
-        },
-      ],
-      sourceHref,
-      sourceLabel: 'UXHM / Booksy pricing',
       emphasized: false,
       monthlyRecurringGbp: booksyMonthly,
       setupGbpIncluded: period === 'monthly' ? null : setup,
@@ -546,43 +381,8 @@ function buildProviderRow(
     cardVatLabel: CARD_VAT_LABELS['full-kersivo'],
     status: 'per-location',
     statusLabel: STATUS_LABELS['per-location'],
-    explanation:
-      'Done-for-you branded website with integrated booking and shop tools. Flat per location for 2–8 barbers subject to fair use.',
-    deliveryKind,
-    deliveryLabel,
     confidence: 'published',
     isCompleteSubtotal: false,
-    missingFees: [
-      'Standard Stripe payment-processing fees',
-      'SMS reminders subject to monthly allowance',
-      'Premium domains and out-of-scope work may cost extra',
-    ],
-    breakdown: [
-      {
-        id: 'subscription',
-        label: 'Full KERSIVO location subscription',
-        amountLabel: `${formatScenarioGbp(monthly)}/month`,
-      },
-      {
-        id: 'setup',
-        label: 'Standard website setup',
-        amountLabel: '£0',
-        note: 'No separate standard setup fee',
-      },
-      {
-        id: 'seats',
-        label: 'Additional barber seats (2–8)',
-        amountLabel: '£0',
-        note: 'Same location · fair-use terms apply',
-      },
-      {
-        id: 'vat',
-        label: 'VAT',
-        amountLabel: 'No VAT currently added',
-      },
-    ],
-    sourceHref: sourceHref?.startsWith('http') ? sourceHref : '/pricing',
-    sourceLabel: 'KERSIVO pricing',
     emphasized: true,
     monthlyRecurringGbp: monthly,
     setupGbpIncluded: 0,

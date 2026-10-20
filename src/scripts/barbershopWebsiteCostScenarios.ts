@@ -36,16 +36,10 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
 
   let barbers = payload.defaults.barbers;
   let period = payload.defaults.period;
-  let activeId = 'full-kersivo';
 
-  const barberButtons = [
-    ...root.querySelectorAll<HTMLButtonElement>('[data-bwcost-barbers]'),
-  ];
-  const periodButtons = [
-    ...root.querySelectorAll<HTMLButtonElement>('[data-bwcost-period]'),
-  ];
+  const barberInputs = [...root.querySelectorAll<HTMLInputElement>('input[data-bwcost-barbers]')];
+  const periodInputs = [...root.querySelectorAll<HTMLInputElement>('input[data-bwcost-period]')];
   const cards = [...root.querySelectorAll<HTMLElement>('[data-bwcost-card]')];
-  const breakdown = root.querySelector<HTMLElement>('[data-bwcost-breakdown]');
   const chartTitle = root.querySelector<HTMLElement>('[data-bwcost-chart-title]');
   const chartSub = root.querySelector<HTMLElement>('[data-bwcost-chart-sub]');
   const chartDesc = root.querySelector<HTMLElement>('[data-bwcost-chart-desc]');
@@ -58,61 +52,6 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
 
   function currentState(): ScenarioComparison {
     return payload.states[`${barbers}:${period}`]!;
-  }
-
-  function setPressed(buttons: HTMLButtonElement[], attr: string, value: string): void {
-    for (const btn of buttons) {
-      const on = btn.getAttribute(attr) === value;
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.classList.toggle('is-active', on);
-    }
-  }
-
-  function renderBreakdown(state: ScenarioComparison): void {
-    if (!breakdown) return;
-    const row = state.providers.find((p) => p.id === activeId) ?? state.providers[5]!;
-    const missing = row.missingFees
-      .map((fee) => `<li>${fee}</li>`)
-      .join('');
-    const lines = row.breakdown
-      .map(
-        (line) => `
-        <div class="bwcost-scenarios__bd-row">
-          <dt>${line.label}</dt>
-          <dd>
-            <span class="bwcost-scenarios__bd-amount">${line.amountLabel}</span>
-            ${line.note ? `<span class="bwcost-scenarios__bd-note">${line.note}</span>` : ''}
-          </dd>
-        </div>`,
-      )
-      .join('');
-
-    breakdown.innerHTML = `
-      <div class="bwcost-scenarios__bd-head">
-        <p class="bwcost-scenarios__bd-kicker">Cost breakdown</p>
-        <h3 class="bwcost-scenarios__bd-title">${row.name}</h3>
-        <p class="bwcost-scenarios__bd-meta">${row.vatBasisLabel} · ${row.statusLabel}</p>
-      </div>
-      <dl class="bwcost-scenarios__bd-list">${lines}</dl>
-      <div class="bwcost-scenarios__bd-foot">
-        <p class="bwcost-scenarios__bd-total">
-          <span>Selected scenario</span>
-          <strong>${row.displayFigure}</strong>
-        </p>
-        ${row.figureSecondary ? `<p class="bwcost-scenarios__bd-sec">${row.figureSecondary}</p>` : ''}
-        <p class="bwcost-scenarios__bd-incomplete">Published or indicative package costs — not a complete like-for-like TCO.</p>
-        <ul class="bwcost-scenarios__bd-missing">${missing}</ul>
-        ${
-          row.sourceHref
-            ? `<p><a class="bwcost-scenarios__bd-source" href="${row.sourceHref}"${
-                row.sourceHref.startsWith('http')
-                  ? ' target="_blank" rel="noopener noreferrer"'
-                  : ''
-              }>${row.sourceLabel ?? 'View source'} <span aria-hidden="true">↗</span></a></p>`
-            : ''
-        }
-      </div>
-    `;
   }
 
   function render(state: ScenarioComparison): void {
@@ -189,9 +128,6 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
       if (qualifier) qualifier.textContent = row.billingQualifier;
       if (vat) vat.textContent = row.cardVatLabel;
       if (status) status.textContent = row.statusLabel;
-      const selected = row.id === activeId;
-      card.classList.toggle('is-active', selected);
-      card.setAttribute('aria-pressed', selected ? 'true' : 'false');
     }
 
     if (a11yTable) {
@@ -202,57 +138,27 @@ export function initWebsiteCostScenarios(root: HTMLElement): void {
         )
         .join('');
     }
-
-    renderBreakdown(state);
   }
 
-  const activateFromKey = (event: KeyboardEvent, activate: () => void) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    activate();
-  };
-
-  for (const btn of barberButtons) {
-    const activate = () => {
-      const next = Number(btn.getAttribute('data-bwcost-barbers'));
+  for (const input of barberInputs) {
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      const next = Number(input.getAttribute('data-bwcost-barbers'));
       if (!payload.barberCounts.includes(next as ScenarioBarberCount)) return;
       barbers = next as ScenarioBarberCount;
-      setPressed(barberButtons, 'data-bwcost-barbers', String(barbers));
       render(currentState());
-    };
-    btn.addEventListener('click', activate);
-    btn.addEventListener('keydown', (event) => activateFromKey(event, activate));
+    });
   }
 
-  for (const btn of periodButtons) {
-    const activate = () => {
-      const next = btn.getAttribute('data-bwcost-period') as ScenarioPeriod;
+  for (const input of periodInputs) {
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      const next = input.getAttribute('data-bwcost-period') as ScenarioPeriod;
       if (!payload.periods.includes(next)) return;
       period = next;
-      setPressed(periodButtons, 'data-bwcost-period', period);
       render(currentState());
-    };
-    btn.addEventListener('click', activate);
-    btn.addEventListener('keydown', (event) => activateFromKey(event, activate));
-  }
-
-  for (const card of cards) {
-    card.addEventListener('click', () => {
-      const id = card.getAttribute('data-bwcost-card');
-      if (!id) return;
-      activeId = id;
-      render(currentState());
-      breakdown?.focus({ preventScroll: false });
-    });
-    card.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      card.click();
     });
   }
 
-  setPressed(barberButtons, 'data-bwcost-barbers', String(barbers));
-  setPressed(periodButtons, 'data-bwcost-period', period);
   render(currentState());
 }
-
