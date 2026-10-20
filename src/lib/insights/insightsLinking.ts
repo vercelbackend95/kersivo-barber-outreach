@@ -3,6 +3,7 @@
  * Only published Insights URLs and verified marketing destinations appear here.
  */
 import {
+  INSIGHTS_NO_SHOW_DEPOSITS,
   INSIGHTS_CARD_FEES,
   INSIGHTS_MTD_BARBERS,
   INSIGHTS_OWNER_EARNINGS,
@@ -39,6 +40,23 @@ export type InsightsCommercialNext = {
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
+  [INSIGHTS_NO_SHOW_DEPOSITS.slug]: [
+    {
+      href: INSIGHTS_WALK_INS.path,
+      label: 'Walk-ins, appointments and where empty slots cost you',
+      kind: 'article',
+    },
+    {
+      href: INSIGHTS_CARD_FEES.path,
+      label: 'Why a deposit and balance can add card processing costs',
+      kind: 'article',
+    },
+    {
+      href: '/barbershop-online-booking',
+      label: 'See how online bookings work for independent shops',
+      kind: 'guide',
+    },
+  ],
   [INSIGHTS_MTD_BARBERS.slug]: [
     {
       href: INSIGHTS_OWNER_EARNINGS.path,
@@ -345,6 +363,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
 };
 
 const COMMERCIAL: Record<string, InsightsCommercialNext> = {
+  [INSIGHTS_NO_SHOW_DEPOSITS.slug]: {
+    href: '/starter',
+    label: 'See KERSIVO Starter booking and payment options',
+    note: 'A deposit can protect some missed-slot losses, but its terms must respect consumer rights and the shop\'s actual circumstances.',
+  },
   [INSIGHTS_SECOND_VISIT.slug]: {
     href: '/barbershop-online-booking',
     label: 'Explore barbershop online booking',
