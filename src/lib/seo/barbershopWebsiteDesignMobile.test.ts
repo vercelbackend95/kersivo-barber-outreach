@@ -42,7 +42,7 @@ describe('/barbershop-website-design — Section 04 mobile design', () => {
 
   it('opens with the approved introduction', () => {
     expect(text(markup.match(/<p class="bwm__lede">([\s\S]*?)<\/p>/)?.[1] ?? '')).toBe(
-      "A mobile-friendly barbershop website should make the shop name, services and booking route easy to use on a smaller screen. Text should stay readable, buttons should be easy to tap and important details shouldn't disappear behind visual effects.",
+      "Check your website on a real phone, from the first screen to the booking link. These three checks will help you spot problems that a desktop preview can miss.",
     );
   });
 
@@ -88,10 +88,7 @@ describe('/barbershop-website-design — Section 04 mobile design', () => {
   });
 
   it('describes the actions in the order the illustration shows them', () => {
-    expect(frontmatter).toContain(
-      "body: 'A full-width booking button follows the introduction, with ‘Explore services’ directly below. The header keeps booking and navigation easy to find.',",
-    );
-    expect(text(section).toLowerCase()).not.toMatch(/thumb|beside it|directly under the headline/);
+    expect(frontmatter).toContain('Find the booking link from the homepage, services and team pages.');
     const next = markup.match(/<span class="bwm-phone__block bwm-phone__block--next">([\s\S]*?)<\/span>\s*<\/span>/)?.[1] ?? '';
     expect(next.indexOf('Book an appointment')).toBeGreaterThan(-1);
     expect(next.indexOf('Explore services')).toBeGreaterThan(next.indexOf('Book an appointment'));

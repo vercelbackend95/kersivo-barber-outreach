@@ -35,7 +35,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH).toBe('/barbershop-website-design');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design UK: Branding & Layout | KERSIVO');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION).toBe(
-      'Learn what makes a barbershop website look professional, from branding and photography to mobile design. See how Full KERSIVO brings it together.',
+      'Explore barbershop website design through a fictional CUTSTATE demo, with practical advice on branding, photography, mobile layouts and clear booking routes.',
     );
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/barbershop-website-design',
@@ -84,7 +84,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     const full = links.find((tag) => tag.includes('href={BARBERSHOP_WEBSITES_PAGE_PATH}'));
     expect(full).toBeDefined();
     expect(full).not.toContain('data-track');
-    expect(hero).toContain('See Full KERSIVO');
+    expect(hero).toContain('Explore Full KERSIVO');
   });
 
   it('never labels an exploratory click as a checkout or subscription', () => {
@@ -106,11 +106,12 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(order.every((index) => index > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(hero).toContain('<li><a href="/">Home</a></li>');
-    expect(hero).toContain('<li><span aria-current="page">Barbershop website design</span></li>');
+    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>');
+    expect(hero).toContain('<li><span aria-current="page">Website design</span></li>');
     expect(hero).toContain('<span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>');
-    expect(hero).toContain('Barbershop website design for UK barbershops');
+    expect(hero).toContain('A practical guide for UK barbershop owners');
     expect(hero).toContain(
-      'Your barbershop has its own character. Your website should reflect it — from the first\n      image to the booking experience.',
+      'See how branding, photography and mobile design work together to make a barbershop\n      website easier to use — with examples from our fictional CUTSTATE demo.',
     );
     for (const meta of ['Branded barbershop websites', 'Connected online bookings', 'Built for independent UK barbershops']) {
       expect(hero).toContain(meta);
@@ -200,8 +201,27 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(jsonLd['@id']).toBe(`${siteUrl}/barbershop-website-design#webpage`);
     expect(jsonLd.isPartOf).toEqual({ '@id': getKersivoWebsiteId(siteUrl) });
     expect(jsonLd.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
-    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|BreadcrumbList|Review|AggregateRating/);
+    expect(jsonLd.breadcrumb).toEqual({
+      '@type': 'BreadcrumbList',
+      '@id': `${siteUrl}/barbershop-website-design#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}/barbershop-websites` },
+        { '@type': 'ListItem', position: 3, name: 'Website design', item: `${siteUrl}/barbershop-website-design` },
+      ],
+    });
+    expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating/);
     expect(page).toContain('jsonLd={buildBarbershopWebsiteDesignJsonLd()}');
+  });
+
+  it('keeps the global footer outside the main landmark', () => {
+    const mainOpen = page.indexOf('<main class="bwd-page">');
+    const mainClose = page.indexOf('</main>');
+    const footer = page.indexOf('<Footer50');
+    expect(mainOpen).toBeGreaterThan(-1);
+    expect(mainClose).toBeGreaterThan(mainOpen);
+    expect(footer).toBeGreaterThan(mainClose);
+    expect(page.match(/<main\b/g)).toHaveLength(1);
   });
 
   it('adds no other supporting SEO routes yet', () => {
