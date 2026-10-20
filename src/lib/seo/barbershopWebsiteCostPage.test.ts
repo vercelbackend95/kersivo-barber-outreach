@@ -261,11 +261,11 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(serviceComparison).toContain('Scope snapshot');
     expect(serviceComparison).toContain('bwcost-svc__matrix');
     expect(WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS).toEqual([
-      'vagaro-pro-mysite',
+      'vagaro-mysite',
       'fresha-team-smart-website',
       'nearcut-subscription',
-      'setora',
-      'uxhm-salon-growth-booksy',
+      'setora-core',
+      'uxhm-salon-growth',
       'full-kersivo',
     ]);
     const primary = getPrimaryWebsiteServiceComparisonOptions();
@@ -283,8 +283,10 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(primary[5]?.priceFigure).toBe(`£${SAAS_MONTHLY_GBP}`);
     expect(primary[5]?.deliveryMethodKind).toBe('done-for-you');
     expect(primary[5]?.deliveryMethodLabel.toLowerCase()).toContain('done-for-you');
+    expect(primary[0]?.id).toBe('vagaro-mysite');
     expect(primary[0]?.priceFigure).toBe('£65');
     expect(primary[0]?.deliveryMethodKind).toBe('self-build');
+    expect(primary[0]?.scopeChips.find((c) => c.key === 'care')?.status).toBe('not-in-tier');
     expect(primary[1]?.priceFigure).toBe('£52.75');
     expect(primary[1]?.priceFigureSecondary).toContain('£63.30');
     expect(primary[1]?.priceCaption.toLowerCase()).toContain('indicative');
@@ -294,13 +296,18 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(primary[2]?.pricePrimary.toLowerCase()).toContain('custom monthly quote');
     expect(primary[2]?.priceSecondary?.toLowerCase()).toContain('free for you');
     expect(primary[2]?.priceSecondary?.toLowerCase()).toContain('customer-fee');
+    expect(primary[3]?.id).toBe('setora-core');
     expect(primary[3]?.priceFigure).toBe('£59');
     expect(primary[3]?.pricingConfidence).toBe('conflict');
     expect(primary[3]?.priceSecondary).toContain('£39');
-    expect(offersData).toContain("id: 'setora'");
-    expect(offersData).toMatch(/conflicting £39/i);
+    expect(primary[3]?.scopeChips.find((c) => c.key === 'care')?.status).toBe('not-in-tier');
+    expect(researchOffersData).toContain("id: 'setora-core'");
+    expect(researchOffersData).toContain('ownerApprovedRecurringGbp');
     expect(researchOffersData).toContain('WEBSITE_COST_OFFERS');
     expect(researchOffersData).toContain('PRICE CONFLICT');
+    expect(offersData).toContain('getComparableWebsiteCostFigures');
+    expect(offersData).toContain('barbershopWebsiteCostOffers');
+    expect(primary[4]?.id).toBe('uxhm-salon-growth');
     expect(primary[4]?.priceFigure).toBe('£499');
     expect(primary[4]?.priceFigureSecondary).toContain('£66');
     expect(primary[4]?.deliveryMethodKind).toBe('done-for-you');
@@ -314,12 +321,12 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(primary.every((row) => row.whatToCheckShort.length > 0)).toBe(true);
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.length).toBeGreaterThanOrEqual(6);
     expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.some((row) => row.id === 'jones-digital')).toBe(true);
-    expect(offersData).toContain('https://www.vagaro.com/en-gb/pro/pricing');
-    expect(offersData).toContain('https://www.fresha.com/en-GB/pricing');
-    expect(offersData).toContain('https://www.setora.co.uk/pricing');
-    expect(offersData).toContain('https://biz.booksy.com/en-gb/pricing');
+    expect(researchOffersData).toContain('https://www.vagaro.com/en-gb/pro/pricing');
+    expect(researchOffersData).toContain('https://www.fresha.com/en-GB/pricing');
+    expect(researchOffersData).toContain('https://www.setora.co.uk/pricing');
+    expect(researchOffersData).toContain('https://biz.booksy.com/en-gb/pricing');
     expect(offersData).toContain('Custom quote');
-    expect(offersData).toContain('£39');
+    expect(researchOffersData).toContain('conflictingPublishedRecurringGbp');
     expect(css).toContain('.bwcost-svc__table');
     expect(css).toContain('.bwcost-svc__delivery');
     expect(css).toContain('.bwcost-svc__delivery--self-build');

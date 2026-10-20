@@ -1,25 +1,31 @@
 /**
- * KERSIVO /barbershop-website-cost-uk — supplier and package research source of truth.
+ * KERSIVO /barbershop-website-cost-uk — canonical supplier and package catalogue.
  *
- * STATUS: DRAFT — owner review required before using any record in public copy.
- * Checked: 20 October 2026. Primary sources are the suppliers' own pages.
+ * STATUS: DRAFT — owner review required before treating every reserve record as
+ * public copy. Checked: 20 October 2026. Primary sources are the suppliers' own pages.
  *
  * Scope: one physical UK barbershop location with four barbers. Compare what a
  * buyer needs to procure (website + bookings + operating tools), not an arbitrarily
  * cheap Starter tier or the highest-priced tier available.
  *
- * NOT YET WIRED TO WebsiteCostServiceComparison or WebsiteCostScenarios.
- * Section 02 and approved Section 03 remain untouched. Do not publish
- * comparison/price claims from this research before owner approval and QA.
+ * Section 02 reads this catalogue via a thin presentation adapter
+ * (`barbershopWebsiteCostComparisonOffers.ts`). Future Section 04 cost maths
+ * must reuse the same records and helpers — never a second price catalogue.
+ * Approved Section 03 is out of scope for this file.
  *
  * “not-confirmed” means no sufficient public evidence, NOT "the supplier
  * does not have this feature". A quoted price without an applicable module,
  * domain, VAT or hosting fee is NOT a complete comparable cost.
+ *
+ * Care (comparisonScope.care) means the supplier actively managing website
+ * content — not ordinary hosting / platform uptime alone. Self-build and
+ * self-setup websites do not automatically include done-for-you care.
  */
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 export const WEBSITE_COST_RESEARCH_CHECKED_AT = '2026-10-20';
 export const WEBSITE_COST_RESEARCH_PUBLICATION_STATE = 'draft-quote-required-before-publication' as const;
+export const WEBSITE_COST_RESEARCH_CHECKED_LABEL = '20 October 2026';
 
 export const WEBSITE_COST_COSTING_POLICY = {
   purpose: 'Calculate the full cost of the comparable package, not its entry price',
@@ -91,6 +97,49 @@ export type OfferDecision = 'primary-candidate' | 'reserve' | 'exclude-until-quo
 export type OfferKind = 'agency-website' | 'barber-website-service' | 'integrated-platform' | 'beauty-platform';
 export type CostFeatureCoverage = Record<CostFeatureKey, CostFeatureStatus>;
 
+/** How the public website is delivered for Section 02 badges. */
+export type WebsiteDeliveryKind =
+  | 'self-build'
+  | 'self-setup'
+  | 'platform-website'
+  | 'done-for-you'
+  | 'not-confirmed';
+
+export type CostPricingConfidence =
+  | 'published'
+  | 'indicative'
+  | 'custom-quote'
+  | 'conflict';
+
+/**
+ * Scope snapshot statuses for Section 02.
+ * Care = supplier-managed website content care, not hosting alone.
+ */
+export type ComparisonScopeStatus =
+  | 'included'
+  | 'external'
+  | 'separate'
+  | 'project'
+  | 'not-in-tier'
+  | 'not-confirmed';
+
+export type WebsiteCostPricingComponent = {
+  id: string;
+  label: string;
+  /** Null = quote required / not a fixed published amount. */
+  amountGbp: number | null;
+  cadence: 'one-off' | 'monthly';
+  vat: CostPriceVat;
+};
+
+export type WebsiteCostComparisonScope = {
+  website: ComparisonScopeStatus;
+  /** Supplier actively managing website content — distinct from hosting. */
+  care: ComparisonScopeStatus;
+  booking: ComparisonScopeStatus;
+  shopTools: ComparisonScopeStatus;
+};
+
 export type WebsiteCostResearchedOffer = {
   id: string;
   provider: string;
@@ -108,7 +157,26 @@ export type WebsiteCostResearchedOffer = {
     pricingNotes: readonly string[];
     /** Other real published charges, not silently folded into base price. */
     possibleAdditionalCosts: readonly string[];
+    /** Section 02 / future Section 04 confidence for the comparable headline. */
+    confidence?: CostPricingConfidence;
+    /** Structured line items used to derive displayed figures. */
+    components?: readonly WebsiteCostPricingComponent[];
+    /** When public sources disagree; owner-selected comparison headline. */
+    ownerApprovedRecurringGbp?: number;
+    conflictingPublishedRecurringGbp?: readonly number[];
+    /**
+     * When booking is a separate Booksy subscription sized to the research buyer
+     * (e.g. UXHM website + Booksy). Use getBooksyMonthlyPriceGbp — do not hardcode.
+     */
+    externalBooksyUsers?: number;
   };
+  /** Present for Section 02 primary rows; optional on research-only reserves. */
+  websiteDelivery?: {
+    kind: WebsiteDeliveryKind;
+    label: string;
+    summary: string;
+  };
+  comparisonScope?: WebsiteCostComparisonScope;
   scope: string;
   limits: readonly string[];
   features: CostFeatureCoverage;
@@ -130,6 +198,16 @@ export const WEBSITE_COST_OFFERS = [
       recurringGbpPerMonth: SAAS_MONTHLY_GBP,
       vat: 'no-VAT-currently-added',
       minimumTermMonths: null,
+      confidence: 'published',
+      components: [
+        {
+          id: 'location-subscription',
+          label: 'Full KERSIVO per physical location',
+          amountGbp: SAAS_MONTHLY_GBP,
+          cadence: 'monthly',
+          vat: 'no-VAT-currently-added',
+        },
+      ],
       pricingNotes: [
         '£39/month per physical shop location; billed from purchase rather than website launch.',
         'No separate standard setup fee; not a promise that £39 stays unchanged for 36 months.',
@@ -139,6 +217,18 @@ export const WEBSITE_COST_OFFERS = [
         'premium or above-standard domain where separately agreed',
         'out-of-scope work separately agreed',
       ],
+    },
+    websiteDelivery: {
+      kind: 'done-for-you',
+      label: 'Done-for-you branded website',
+      summary:
+        'KERSIVO prepares a branded barbershop website within standard scope, with integrated booking and shop tools — not unlimited bespoke development.',
+    },
+    comparisonScope: {
+      website: 'included',
+      care: 'included',
+      booking: 'included',
+      shopTools: 'included',
     },
     scope: 'Prepared branded website, own standard domain arrangement, booking, deposits, diary, CRM, email confirmations/reminders, SMS reminders, reporting and retail pickup.',
     limits: [
@@ -264,7 +354,7 @@ export const WEBSITE_COST_OFFERS = [
   {
     id: 'uxhm-salon-growth',
     provider: 'UXHM',
-    selectedPackage: 'Salon Growth website',
+    selectedPackage: 'Salon Growth website + separate Booksy Biz',
     kind: 'agency-website',
     decision: 'primary-candidate',
     rationale: 'Clear multi-page salon design with team page; realistic starting point for buying a separate Booksy subscription.',
@@ -273,10 +363,28 @@ export const WEBSITE_COST_OFFERS = [
       recurringGbpPerMonth: null,
       vat: 'not-confirmed',
       minimumTermMonths: null,
+      confidence: 'published',
+      externalBooksyUsers: WEBSITE_COST_RESEARCH_BUYER.bookableBarbers,
+      components: [
+        {
+          id: 'salon-growth-build',
+          label: 'UXHM Salon Growth website build',
+          amountGbp: 499,
+          cadence: 'one-off',
+          vat: 'not-confirmed',
+        },
+        {
+          id: 'essential-care-optional',
+          label: 'Optional UXHM Essential Care',
+          amountGbp: 20,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+      ],
       pricingNotes: [
         'Salon Growth £499 one-off, includes up to eight pages and stylist team bios.',
         'Optional Essential Care £20/month for hosting, weekly backups, updates and 30 minutes of changes; first month free.',
-        'The price of an external booking platform is not included.',
+        'The price of an external booking platform is not included — Section 02 pairs this with Booksy via externalBooksyUsers.',
       ],
       possibleAdditionalCosts: [
         'hosting / care (supplier lists £20/month Essential Care)',
@@ -285,6 +393,18 @@ export const WEBSITE_COST_OFFERS = [
         'VAT not confirmed',
         'retail / e-commerce beyond quoted website scope',
       ],
+    },
+    websiteDelivery: {
+      kind: 'done-for-you',
+      label: 'Done-for-you website',
+      summary:
+        'UXHM builds the website. Booksy Biz is a separate third-party booking subscription — Booksy does not build the multi-page site.',
+    },
+    comparisonScope: {
+      website: 'included',
+      care: 'separate',
+      booking: 'external',
+      shopTools: 'not-confirmed',
     },
     scope: 'Up to eight-page salon website including gallery, services, about and team; externally linked or integrated third-party booking link.',
     limits: [
@@ -307,7 +427,7 @@ export const WEBSITE_COST_OFFERS = [
       hosting: 'confirmed-external',
       customDomain: 'not-publicly-confirmed',
     },
-    sources: ['https://uxhm.co.uk/for-salons/'],
+    sources: ['https://uxhm.co.uk/for-salons/', 'https://biz.booksy.com/en-gb/pricing'],
     fullKersivoScopeEquivalenceConfirmed: false,
   },
   {
@@ -367,11 +487,32 @@ export const WEBSITE_COST_OFFERS = [
     rationale: 'Direct UK barber/salon booking and management competitor with a branded public Shop Website layer; include despite not having a full gallery/team-style website confirmed.',
     pricing: {
       setupGbp: null,
-      recurringGbpPerMonth: null,
+      /** Owner-approved comparison headline; conflicting £39 reading preserved below. */
+      recurringGbpPerMonth: 59,
       vat: 'not-confirmed',
       minimumTermMonths: null,
+      confidence: 'conflict',
+      ownerApprovedRecurringGbp: 59,
+      conflictingPublishedRecurringGbp: [39, 59],
+      components: [
+        {
+          id: 'location-subscription-owner-headline',
+          label: 'Platform subscription per location (owner-approved headline)',
+          amountGbp: 59,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+        {
+          id: 'location-subscription-alternate-reading',
+          label: 'Conflicting official pricing reading',
+          amountGbp: 39,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+      ],
       pricingNotes: [
         'PRICE CONFLICT — official /pricing states £39/month/location (including six barbers), whereas homepage, /ai-info and /terms-conditions state £59/month/location.',
+        'Owner decision (Oct 2026): show £59/month as the Section 02 headline while preserving the £39 official-source discrepancy.',
         'Terms disclose that Setora is not VAT-registered at the stated update, and a separate 2026 blog states no VAT currently added; this conflicts with generic “exclusive of VAT” price wording. Reconcile current invoice/tax status before publication.',
         'Unlimited staff; no Setora booking commission; 14-day free trial.',
         'No one-off setup fee appears in the public plan; do not silently assert a guaranteed £0.',
@@ -382,6 +523,19 @@ export const WEBSITE_COST_OFFERS = [
         'custom domain purchase/renewal not confirmed',
         'retail pickup not publicly confirmed',
       ],
+    },
+    websiteDelivery: {
+      kind: 'platform-website',
+      label: 'Platform Shop Website',
+      summary:
+        'Setora includes a Shop Website / branded booking-site layer. Do not imply a bespoke multi-page agency design service matching Full KERSIVO’s website scope.',
+    },
+    comparisonScope: {
+      website: 'included',
+      // Hosting is in-plan; supplier-managed content care is not evidenced.
+      care: 'not-in-tier',
+      booking: 'included',
+      shopTools: 'not-confirmed',
     },
     scope: 'Online bookings, staff diaries, client records, reports, email reminders, optional paid SMS and public Shop Website with homepage/location pages.',
     limits: [
@@ -504,6 +658,16 @@ export const WEBSITE_COST_OFFERS = [
       recurringGbpPerMonth: null,
       vat: 'ex-VAT',
       minimumTermMonths: 0,
+      confidence: 'custom-quote',
+      components: [
+        {
+          id: 'subscription-quote',
+          label: 'Subscription monthly quote for shop needs and team size',
+          amountGbp: null,
+          cadence: 'monthly',
+          vat: 'ex-VAT',
+        },
+      ],
       pricingNotes: [
         'Nearcut offers TWO publicly described models: (1) Free for You: £0 shop subscription, customers pay a separate checkout booking charge; Nearcut illustrates £1.50 on a £20 haircut, not a confirmed universal per-booking rate. (2) Subscription: shop pays a tailored monthly price excluding VAT, customers pay NO Nearcut booking charge.',
         'No third Nearcut plan charging the BARBERSHOP exactly £1.50 per booking has been verified; merchant-funding an equivalent amount is a modelling assumption, never an official Nearcut offer.',
@@ -517,6 +681,19 @@ export const WEBSITE_COST_OFFERS = [
         'payment processing fees, where applicable: Help Centre standard schedule 2.9% + £0.20 with volume reductions; Free for You advertising simultaneously mentions optional online payments at zero transaction fees, so plan-specific applicability needs confirmation',
         'other optional Business Boosters, where applicable',
       ],
+    },
+    websiteDelivery: {
+      kind: 'platform-website',
+      label: 'Personalised platform website',
+      summary:
+        'Nearcut advertises a personalised barbershop website with the Subscription package. Exact setup responsibility should be confirmed with Nearcut — not assumed to be a bespoke agency build.',
+    },
+    comparisonScope: {
+      website: 'included',
+      // Hosting confirmed; done-for-you content care not publicly confirmed.
+      care: 'not-confirmed',
+      booking: 'included',
+      shopTools: 'separate',
     },
     scope: 'Personalised/custom shop website, online booking, appointment diaries, email reminders, SMS where in selected plan, payments and optional product sales/stock management booster.',
     limits: [
@@ -560,9 +737,27 @@ export const WEBSITE_COST_OFFERS = [
     rationale: 'Strongest evidence of full operating stack: booking, calendars, CRM, reporting, SMS/email, Smart Website, online product store and in-store pickup. Keep it in comparison even if it is cheaper in some situations.',
     pricing: {
       setupGbp: null,
+      /** Derive live display via freshaUkIndicatedMonthlySubtotalGbp — do not hardcode a second catalogue. */
       recurringGbpPerMonth: null,
       vat: 'ex-VAT',
       minimumTermMonths: null,
+      confidence: 'indicative',
+      components: [
+        {
+          id: 'team-seat',
+          label: 'Fresha Team per bookable member',
+          amountGbp: 9.95,
+          cadence: 'monthly',
+          vat: 'ex-VAT',
+        },
+        {
+          id: 'smart-website',
+          label: 'Smart Website add-on',
+          amountGbp: 12.95,
+          cadence: 'monthly',
+          vat: 'ex-VAT',
+        },
+      ],
       pricingNotes: [
         'UK £9.95/bookable team member/month and Smart Website £12.95/month +20% VAT are corroborated in October 2026 UK research but cannot currently be verified on the location-adjusted official Fresha price page: it renders in non-GBP from remote browsing.',
         'Illustrative 4 bookable members: £39.80 + £12.95 = £52.75 ex VAT / £63.30 inc VAT. Six members: £59.70 + £12.95 = £72.65 ex VAT / £87.18 inc VAT. NOT a signed checkout quote.',
@@ -577,6 +772,19 @@ export const WEBSITE_COST_OFFERS = [
         'optional marketplace acquisition fees for qualified newly acquired clients',
         'online card processing (required for online product store)',
       ],
+    },
+    websiteDelivery: {
+      kind: 'self-setup',
+      label: 'Self-setup / configurable website',
+      summary:
+        'Smart Website is configured inside Fresha. Not a bespoke agency-built multi-page website.',
+    },
+    comparisonScope: {
+      website: 'included',
+      // Platform hosting ≠ done-for-you content care.
+      care: 'not-in-tier',
+      booking: 'included',
+      shopTools: 'included',
     },
     scope: 'Fresha Team scheduling, clients and reports, Smart Website content for team/services, optional retail inventory and product store with in-store pickup using Fresha Payments.',
     limits: [
@@ -601,6 +809,7 @@ export const WEBSITE_COST_OFFERS = [
     },
     sources: [
       'https://www.fresha.com/pricing',
+      'https://www.fresha.com/en-GB/pricing',
       'https://www.fresha.com/help-center/knowledge-base/online-presence',
       'https://www.fresha.com/help-center/knowledge-base/inventory/163-create-and-manage-an-online-product-store',
       'https://kersivo.co.uk/fresha-alternative',
@@ -612,15 +821,40 @@ export const WEBSITE_COST_OFFERS = [
   {
     id: 'vagaro-mysite',
     provider: 'Vagaro',
-    selectedPackage: 'Vagaro booking + MySite, one location (4 or 6 calendars)',
+    selectedPackage: 'Vagaro Pro + MySite, one location (4 or 6 calendars)',
     kind: 'integrated-platform',
     decision: 'primary-candidate',
     rationale: 'Very close feature model: branded customizable website, team/services/gallery, bookable calendars, reminders, reports, e-commerce products and shop pickup. UK provider also advertises an optional done-for-you website design service.',
     pricing: {
       setupGbp: null,
+      /** Derive live display via vagaroUkPublishedMonthlySubtotalGbp — do not hardcode a second catalogue. */
       recurringGbpPerMonth: null,
       vat: 'not-confirmed',
       minimumTermMonths: null,
+      confidence: 'published',
+      components: [
+        {
+          id: 'first-calendar',
+          label: 'First bookable calendar (advertised UK promotional rate)',
+          amountGbp: 20,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+        {
+          id: 'extra-calendar',
+          label: 'Each additional calendar',
+          amountGbp: 10,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+        {
+          id: 'mysite',
+          label: 'MySite after publish',
+          amountGbp: 15,
+          cadence: 'monthly',
+          vat: 'not-confirmed',
+        },
+      ],
       pricingNotes: [
         'Vagaro UK advertises MySite as a £15/month add-on.',
         'UK Vagaro Pro official FAQ explicitly states promotional £20/month for first calendar plus £10 per additional calendar, up to 7; independent of dynamic button rendering.',
@@ -639,6 +873,19 @@ export const WEBSITE_COST_OFFERS = [
         'merchant-services incentive conditions: free reader may entail a £100 early-exit charge if merchant processing is terminated before 12 months',
         'any optional marketing modules',
       ],
+    },
+    websiteDelivery: {
+      kind: 'self-build',
+      label: 'Self-build website',
+      summary:
+        'MySite is a website builder. Optional professional design exists as a separate or limited-time promotion — not a permanent done-for-you entitlement.',
+    },
+    comparisonScope: {
+      website: 'included',
+      // Self-build hosting is in-plan; done-for-you content care is not.
+      care: 'not-in-tier',
+      booking: 'included',
+      shopTools: 'included',
     },
     scope: 'Integrated bookings, client records, inventory and reports; MySite can show staff, gallery, services and integrated products, and online shop supports pickup.',
     limits: [
@@ -667,6 +914,7 @@ export const WEBSITE_COST_OFFERS = [
       'https://mysite.vagaro.com/vagaroukio/mysite',
       'https://www.vagaro.com/en-gb/pro/vagaro-customer-participation-agreement',
       'https://support.vagaro.com/hc/en-us/articles/35429794470555-MySite-FAQ',
+      'https://support.vagaro.com/hc/en-us/articles/26688722409243-Vagaro-MySite-Pricing',
       'https://www.vagaro.com/en-gb/pro/online-store',
       'https://mysite.vagaro.com/vagaroukio/mysite',
     ],
@@ -879,13 +1127,17 @@ export function nearcutIllustrativeMerchantOffsetGbp(
 export const WEBSITE_COST_CURRENT_FINDINGS = {
   vagaroUkFourBarbersPlusMySite: 65,
   vagaroUkSixBarbersPlusMySite: 85,
+  freshaUkIndicativeFourExVat: 52.75,
   freshaUkIndicativeFourIncVat: 63.30,
   freshaUkIndicativeSixIncVat: 87.18,
   nearcutMonthlySubscription: 'QUOTE_REQUIRED',
   nearcutProductBoosterUkAdvertisedMonthlyGbp: 7.50,
   nearcutPublishedCustomerBookingChargeIllustrationGbp: 1.50,
   nearcutMerchantBilledChargePerBooking: 'NOT_CONFIRMED',
+  setoraOwnerApprovedHeadlineGbp: 59,
+  setoraOfficialSourceConflictGbp: 39,
   setoraPublicPriceConflict: [39, 59],
+  uxhmSalonGrowthSetupGbp: 499,
   exact12And36MonthTcoStatus: 'BLOCKED_WITHOUT_ALL_MANDATORY_CHARGES_AND_USAGE',
   legalNote: 'UK CMA UCP price transparency rules are aimed at consumers; B2B suppliers can use bespoke quotations. Ads must still avoid misleading price presentation; ASA/CAP applies to prices in ads.',
 } as const;
@@ -929,8 +1181,8 @@ export function getPublishedPackageSubtotalGbp(
   return setupGbp + months * recurringGbpPerMonth;
 }
 
-/** Discussion shortlist, NOT permission to replace approved Section 02 yet. */
-export const WEBSITE_COST_PROPOSED_PRIMARY_IDS = [
+/** Section 02 primary order — shared with future Section 04 cost maths. */
+export const WEBSITE_COST_PRIMARY_IDS = [
   'vagaro-mysite',
   'fresha-team-smart-website',
   'nearcut-subscription',
@@ -939,14 +1191,100 @@ export const WEBSITE_COST_PROPOSED_PRIMARY_IDS = [
   'full-kersivo',
 ] as const;
 
+export type WebsiteCostPrimaryId = (typeof WEBSITE_COST_PRIMARY_IDS)[number];
+
+/** @deprecated Use WEBSITE_COST_PRIMARY_IDS — same order, now wired to Section 02. */
+export const WEBSITE_COST_PROPOSED_PRIMARY_IDS = WEBSITE_COST_PRIMARY_IDS;
+
+export function formatWebsiteCostGbp(amount: number): string {
+  return Number.isInteger(amount) ? `£${amount}` : `£${amount.toFixed(2)}`;
+}
+
+export function getWebsiteCostOfferById(id: string): WebsiteCostResearchedOffer | undefined {
+  return WEBSITE_COST_OFFERS.find((offer) => offer.id === id);
+}
+
+export function requireWebsiteCostOfferById(id: string): WebsiteCostResearchedOffer {
+  const offer = getWebsiteCostOfferById(id);
+  if (!offer) {
+    throw new Error(`Missing website cost offer: ${id}`);
+  }
+  return offer;
+}
+
+export function getPrimaryWebsiteCostOffers(): WebsiteCostResearchedOffer[] {
+  return WEBSITE_COST_PRIMARY_IDS.map((id) => requireWebsiteCostOfferById(id));
+}
+
+/**
+ * Comparable figures derived from the canonical catalogue for Section 02 and
+ * future Section 04. Never invent a second price list in presentation code.
+ */
+export type ComparableWebsiteCostFigures = {
+  offerId: string;
+  setupGbp: number | null;
+  /** Primary recurring amount shown as the Section 02 figure when applicable. */
+  recurringGbpPerMonth: number | null;
+  recurringIncludingVatGbp: number | null;
+  /** Separate booking subscription when externalBooksyUsers is set (UXHM). */
+  externalBooksyMonthlyExVatGbp: number | null;
+  externalBooksyMonthlyIncVatGbp: number | null;
+  confidence: CostPricingConfidence;
+  ownerApprovedRecurringGbp: number | null;
+  conflictingPublishedRecurringGbp: readonly number[] | null;
+  vat: CostPriceVat;
+};
+
+export function getComparableWebsiteCostFigures(
+  offerId: string,
+  bookableBarbers: number = WEBSITE_COST_RESEARCH_BUYER.bookableBarbers,
+): ComparableWebsiteCostFigures {
+  const offer = requireWebsiteCostOfferById(offerId);
+  const { pricing } = offer;
+
+  let recurringGbpPerMonth = pricing.recurringGbpPerMonth;
+  let recurringIncludingVatGbp: number | null = null;
+
+  if (offerId === 'vagaro-mysite') {
+    recurringGbpPerMonth = vagaroUkPublishedMonthlySubtotalGbp(bookableBarbers);
+  } else if (offerId === 'fresha-team-smart-website') {
+    recurringGbpPerMonth = freshaUkIndicatedMonthlySubtotalGbp(bookableBarbers, false);
+    recurringIncludingVatGbp = freshaUkIndicatedMonthlySubtotalGbp(bookableBarbers, true);
+  } else if (offerId === 'setora-core') {
+    recurringGbpPerMonth =
+      pricing.ownerApprovedRecurringGbp ?? pricing.recurringGbpPerMonth;
+  } else if (offerId === 'full-kersivo') {
+    recurringGbpPerMonth = pricing.recurringGbpPerMonth;
+  }
+
+  const booksyUsers = pricing.externalBooksyUsers ?? null;
+  const externalBooksyMonthlyExVatGbp =
+    booksyUsers === null ? null : getBooksyMonthlyPriceGbp(booksyUsers, 'excluding');
+  const externalBooksyMonthlyIncVatGbp =
+    booksyUsers === null ? null : getBooksyMonthlyPriceGbp(booksyUsers, 'including');
+
+  return {
+    offerId,
+    setupGbp: pricing.setupGbp,
+    recurringGbpPerMonth,
+    recurringIncludingVatGbp,
+    externalBooksyMonthlyExVatGbp,
+    externalBooksyMonthlyIncVatGbp,
+    confidence: pricing.confidence ?? 'custom-quote',
+    ownerApprovedRecurringGbp: pricing.ownerApprovedRecurringGbp ?? null,
+    conflictingPublishedRecurringGbp: pricing.conflictingPublishedRecurringGbp ?? null,
+    vat: pricing.vat,
+  };
+}
+
 /**
  * Publication gates:
- * 1) Approve which providers and packages belong in the public comparison.
+ * 1) Primary six IDs are fixed in WEBSITE_COST_PRIMARY_IDS for Section 02.
  * 2) Verify actual current KERSIVO feature delivery against Commercial Offer.
  * 3) Reconfirm pricing, VAT, setup/domain and contract conditions near publish.
  * 4) Never say every provider has equal scope or that missing features cost £0.
  * 5) Surface unknown costs as unknown; do not promise exact 12/36-month TCO.
- * 6) Keep Jones/UXHM/BarberFlow + Booksy composites separate and label add-ons.
- * 7) Record owner approval, then wire Section 02/04 to THIS catalogue.
+ * 6) Keep Jones/UXHM/BarberFlow + Booksy composites labelled as add-ons.
+ * 7) Section 04 must call getComparableWebsiteCostFigures — not a second catalogue.
  * 8) Do not edit approved Section 03 without owner instruction.
  */

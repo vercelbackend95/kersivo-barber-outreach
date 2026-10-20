@@ -1,7 +1,7 @@
 /**
  * Presentation adapter for Section 02.
- * Display rows: `barbershopWebsiteCostComparisonOffers.ts`
- * Deeper research draft: `barbershopWebsiteCostOffers.ts`
+ * Display wording: `barbershopWebsiteCostComparisonOffers.ts`
+ * Canonical catalogue: `barbershopWebsiteCostOffers.ts`
  */
 
 import {
@@ -82,12 +82,13 @@ export const WEBSITE_SERVICE_COMPARISON_ASSUMPTION = COST_OFFERS_COMPARISON_ASSU
 
 /**
  * Primary desktop/mobile table order (six providers).
- * Full research catalogue remains in BARBERSHOP_WEBSITE_COST_OFFERS.
+ * Prices and identity come from WEBSITE_COST_OFFERS via the thin adapter.
  */
 export const WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS = COST_OFFER_PRIMARY_IDS;
 
 export const SCOPE_CHIP_LABELS: Record<ScopeChipKey, string> = {
   website: 'Website',
+  /** Supplier-managed website content care — not ordinary hosting alone. */
   care: 'Care',
   booking: 'Booking',
   shopTools: 'Shop tools',
@@ -105,13 +106,41 @@ const STATUS_META: Record<
   'not-confirmed': { label: 'Not publicly confirmed', display: 'Not confirmed', symbol: '?' },
 };
 
+/** Care-column labels distinguish content care from hosting. */
+const CARE_STATUS_META: Partial<
+  Record<ScopeChipStatus, { label: string; display: string; symbol: string }>
+> = {
+  included: {
+    label: 'Supplier-managed website content care included',
+    display: 'Included',
+    symbol: '✓',
+  },
+  separate: {
+    label: 'Website content care available as a separate charge',
+    display: 'Extra',
+    symbol: '+',
+  },
+  'not-in-tier': {
+    label: 'No done-for-you website content care in this tier (hosting alone does not count)',
+    display: 'Not in tier',
+    symbol: '—',
+  },
+  'not-confirmed': {
+    label: 'Website content care not publicly confirmed',
+    display: 'Not confirmed',
+    symbol: '?',
+  },
+};
+
 function chips(statuses: CostOffer['features']): readonly ScopeChip[] {
   return (Object.keys(SCOPE_CHIP_LABELS) as ScopeChipKey[]).map((key) => {
-    const meta = STATUS_META[statuses[key]];
+    const status = statuses[key];
+    const meta =
+      key === 'care' ? (CARE_STATUS_META[status] ?? STATUS_META[status]) : STATUS_META[status];
     return {
       key,
       label: SCOPE_CHIP_LABELS[key],
-      status: statuses[key],
+      status,
       statusLabel: meta.label,
       statusDisplay: meta.display,
       statusSymbol: meta.symbol,
