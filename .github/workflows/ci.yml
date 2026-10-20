@@ -34,6 +34,9 @@ jobs:
       - name: Generate Prisma client
         run: npm run prisma:generate
 
+      - name: Validate Insights compositor output (release diagnostic)
+        run: npm run insights:check
+
       - name: Typecheck app
         run: npm run typecheck:app
 
