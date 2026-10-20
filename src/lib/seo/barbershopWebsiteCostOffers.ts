@@ -315,7 +315,7 @@ export const WEBSITE_COST_OFFERS = [
     provider: 'Barberque',
     selectedPackage: 'Book & Pay',
     kind: 'barber-website-service',
-    decision: 'primary-candidate',
+    decision: 'reserve',
     rationale: 'Most functionally relevant published Barberque plan: website, bookings, up to five staff calendars, deposits, email and SMS reminders.',
     pricing: {
       setupGbp: null,
@@ -809,8 +809,8 @@ export const WEBSITE_COST_PROPOSED_PRIMARY_IDS = [
   'vagaro-mysite',
   'fresha-team-smart-website',
   'nearcut-subscription',
+  'setora-core',
   'uxhm-salon-growth',
-  'barberque-book-pay',
   'full-kersivo',
 ] as const;
 
