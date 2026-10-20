@@ -355,12 +355,32 @@ export const INSIGHTS_COMMISSION_PAY = {
   ogImageAlt: 'Barber at work with a client in a hair salon in Doncaster, United Kingdom',
 } as const;
 
+export const INSIGHTS_NO_SHOW_DEPOSITS = {
+  slug: 'barbershop-no-show-cost-when-deposit-makes-sense',
+  path: '/insights/barbershop-no-show-cost-when-deposit-makes-sense',
+  headline: 'What a No-Show Really Costs a Barbershop — and When a Deposit Makes Sense',
+  seoTitle: 'Barbershop No-Shows: True Cost & When Deposits Make Sense',
+  description:
+    'What a no-show really costs a UK barbershop once refills, card fees and deposits are counted, and when a deposit is fair, useful and worth asking for.',
+  categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
+  publishedDate: '2026-10-20',
+  verifiedDate: '2026-10-20',
+  notionUrl: 'https://app.notion.com/p/3fa7dbe5bbda81e2982bc9c20f746a2d',
+  lead: 'Use realistic refill and card-fee maths to decide when a barbershop deposit protects income, and what UK cancellation rules require.',
+  heroImage:
+    'https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=2200',
+  ogImage:
+    'https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImageAlt: 'Unoccupied leather barber chairs in a barbershop, photographed by Jarrod Reed',
+} as const;
+
 /**
  * Single source of publication for owner-approved Insights articles.
  * Sitemap, hub cards and indexability must derive from this list only.
  * Order matches Latest Thinking / CollectionPage ItemList (newest-first editorial order).
  */
 export const INSIGHTS_PUBLISHED_ARTICLES = [
+  INSIGHTS_NO_SHOW_DEPOSITS,
   INSIGHTS_MTD_BARBERS,
   INSIGHTS_OWNER_EARNINGS,
   INSIGHTS_UNFAIR_DISMISSAL,
@@ -427,7 +447,7 @@ function absoluteAssetUrl(src: string): string {
 
 /** Newest editorial publishedDate among live articles — used for hub sitemap lastmod. */
 export function getInsightsIndexLastmod(): string {
-  return INSIGHTS_PUBLISHED_ARTICLES.reduce(
+  return INSIGHTS_PUBLISHED_ARTICLES.reduce<string>(
     (newest, article) => (article.publishedDate > newest ? article.publishedDate : newest),
     INSIGHTS_PUBLISHED_ARTICLES[0].publishedDate,
   );
