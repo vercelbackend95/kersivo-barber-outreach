@@ -2549,10 +2549,10 @@
 .bwcost-scenarios__chart {
   position: relative;
   display: grid;
-  grid-template-columns: 3.1rem minmax(22rem, 1fr);
+  grid-template-columns: 3.1rem minmax(0, 1fr);
   gap: 0.65rem;
   min-height: 18.5rem;
-  min-width: 28rem;
+  min-width: 0;
 }
 
 .bwcost-scenarios__axis {
