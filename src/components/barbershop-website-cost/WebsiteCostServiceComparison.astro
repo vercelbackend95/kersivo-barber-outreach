@@ -1,6 +1,7 @@
----
+﻿---
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import {
+  WEBSITE_SERVICE_COMPARISON_ASSUMPTION,
   WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL,
   WEBSITE_SERVICE_COMPARISON_SECTION_ID,
   getPrimaryWebsiteServiceComparisonOptions,
@@ -13,7 +14,7 @@ const sourced = options.filter(
     Boolean(row.sourceHref),
 );
 
-const SCENARIOS_HREF = '#cost-scenarios';
+const OPTIONS_HREF = '#cost-options';
 const EXPLORE_HREF = BARBERSHOP_WEBSITES_PAGE_PATH;
 
 function padIndex(i: number): string {
@@ -31,21 +32,23 @@ function padIndex(i: number): string {
       <div class="bwcost-svc__intro-main">
         <p class="bwcost-svc__eyebrow">
           <span class="bwcost-svc__eyebrow-dot" aria-hidden="true"></span>
-          01 / WEBSITE COST COMPARISON
+          01 / WEBSITE + BOOKING COMPARISON
         </p>
         <h2 id="bwcost-svc-heading" class="bwcost-svc__title">
-          What does a professionally built barbershop website actually cost?
+          What does a complete barbershop website and booking setup actually cost?
         </h2>
+        <p class="bwcost-svc__assumption">{WEBSITE_SERVICE_COMPARISON_ASSUMPTION}</p>
       </div>
 
       <div class="bwcost-svc__intro-aside">
         <p class="bwcost-svc__aside-copy">
-          Don't compare the number alone. Compare <strong>what you're paying for</strong> — the build, the
-          upkeep, the booking experience and the tools behind it.
+          A website is only one part of running a barbershop online. Compare the website, booking
+          system, staff calendars, reminders, client management and shop tools — not just the
+          headline price.
         </p>
         <div class="bwcost-svc__actions">
-          <a class="bwcost-btn bwcost-btn--primary bwcost-svc__btn" href={SCENARIOS_HREF}>
-            Compare the full costs <span aria-hidden="true">↗</span>
+          <a class="bwcost-btn bwcost-btn--primary bwcost-svc__btn" href={OPTIONS_HREF}>
+            See what affects the price <span aria-hidden="true">↗</span>
           </a>
           <a class="bwcost-btn bwcost-svc__btn bwcost-svc__btn--ghost" href={EXPLORE_HREF}>
             Explore KERSIVO <span aria-hidden="true">→</span>
@@ -58,8 +61,9 @@ function padIndex(i: number): string {
       <div class="bwcost-svc__table-wrap">
         <table class="bwcost-svc__table">
           <caption class="bwcost-sr-only">
-            Done-for-you barbershop website service comparison: Jones Digital, FadeFoundry, BarberFlow,
-            Barberque and Full KERSIVO
+            Barbershop website and booking comparison for four bookable barbers: Vagaro Pro + MySite,
+            Fresha Team + Smart Website, Nearcut Subscription, Setora, UXHM + Booksy, and Full
+            KERSIVO. Each row shows whether the website is self-build, configurable or done-for-you.
           </caption>
           <colgroup>
             <col class="bwcost-svc__col-offer" />
@@ -91,6 +95,14 @@ function padIndex(i: number): string {
                         <div class="bwcost-svc__offer-copy">
                           <span class="bwcost-svc__name">{row.name}</span>
                           <span class="bwcost-svc__scope">{row.scopeLabel}</span>
+                          <span
+                            class:list={[
+                              'bwcost-svc__delivery',
+                              `bwcost-svc__delivery--${row.deliveryMethodKind}`,
+                            ]}
+                          >
+                            <span class="bwcost-svc__delivery-label">{row.deliveryMethodLabel}</span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -141,9 +153,10 @@ function padIndex(i: number): string {
 
       <div class="bwcost-svc__footer">
         <p class="bwcost-svc__disclosure" role="note">
-          * Published supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}. Offers differ in
-          scope and conditions; figures are shown as published and may exclude VAT where not stated. KERSIVO
-          publishes this comparison as a provider with a commercial interest.
+          * Published and researched supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}.
+          Packages differ in website delivery method, scope and billing model. Some figures are indicative or
+          require checkout confirmation. Amounts may exclude VAT where not stated. KERSIVO publishes this
+          comparison as a provider with a commercial interest.
         </p>
         <ul class="bwcost-svc__sources">
           {
@@ -181,6 +194,14 @@ function padIndex(i: number): string {
                 <div>
                   <p class="bwcost-svc__card-name">{row.name}</p>
                   <p class="bwcost-svc__card-scope">{row.scopeLabel}</p>
+                  <p
+                    class:list={[
+                      'bwcost-svc__delivery',
+                      `bwcost-svc__delivery--${row.deliveryMethodKind}`,
+                    ]}
+                  >
+                    <span class="bwcost-svc__delivery-label">{row.deliveryMethodLabel}</span>
+                  </p>
                 </div>
               </div>
 
@@ -223,13 +244,14 @@ function padIndex(i: number): string {
                 <summary>More detail</summary>
                 <div class="bwcost-svc__details-body">
                   <p>
+                    <strong>Website delivery.</strong> {row.deliveryMethodSummary}{' '}
+                    {row.websiteDelivery}
+                  </p>
+                  <p>
                     <strong>Billing.</strong> {row.billingModel}
                   </p>
                   <p>
-                    <strong>Website delivery.</strong> {row.websiteDelivery}
-                  </p>
-                  <p>
-                    <strong>Bookings + retail.</strong> {row.bookingsRetail}
+                    <strong>Bookings + shop tools.</strong> {row.bookingsRetail}
                   </p>
                   <p>
                     <strong>What to check.</strong> {row.whatToCheck}
@@ -256,18 +278,19 @@ function padIndex(i: number): string {
       </ul>
 
       <p class="bwcost-svc__disclosure" role="note">
-        * Published supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}. Offers differ in
-        scope and conditions; figures are shown as published and may exclude VAT where not stated. KERSIVO
-        publishes this comparison as a provider with a commercial interest.
+        * Published and researched supplier prices checked {WEBSITE_SERVICE_COMPARISON_PRICES_CHECKED_LABEL}.
+        Packages differ in website delivery method, scope and billing model. Some figures are indicative or
+        require checkout confirmation. Amounts may exclude VAT where not stated. KERSIVO publishes this
+        comparison as a provider with a commercial interest.
       </p>
     </div>
 
     <aside class="bwcost-svc__diy" aria-labelledby="bwcost-svc-diy-heading">
-      <h3 id="bwcost-svc-diy-heading" class="bwcost-svc__diy-title">What about DIY website builders?</h3>
+      <h3 id="bwcost-svc-diy-heading" class="bwcost-svc__diy-title">Read the website delivery label first</h3>
       <p>
-        Platforms such as Wix and Squarespace let you build and manage your own website, with booking and retail
-        tools available depending on your plan and setup. They may be cheaper, but this comparison focuses on
-        website services where a provider prepares the site for you.
+        “Website included” does not always mean a supplier builds a complete site for you. Some rows are
+        self-build or configurable platform websites; others are done-for-you builds with booking software
+        attached separately. Use the delivery label under each provider name before comparing headline prices.
       </p>
     </aside>
   </div>

@@ -31,7 +31,7 @@ export const BARBERSHOP_WEBSITE_COST_BREADCRUMB_CURRENT = 'Website cost';
 /** Parent crumb (navigable) — matches cluster ownership. */
 export const BARBERSHOP_WEBSITE_COST_BREADCRUMB_PARENT = 'Barbershop websites';
 
-export const BARBERSHOP_WEBSITE_COST_PRICES_CHECKED_LABEL = '19 October 2026';
+export const BARBERSHOP_WEBSITE_COST_PRICES_CHECKED_LABEL = '20 October 2026';
 
 /** Hypothetical Section 03 inputs — not named-supplier quotes. */
 export const HYPOTHETICAL_BUILD_GBP = 300;

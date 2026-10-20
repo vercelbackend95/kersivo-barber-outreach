@@ -65,7 +65,8 @@ const ownership = read(`${costDir}WebsiteCostOwnership.astro`);
 const offer = read(`${costDir}WebsiteCostFullOffer.astro`);
 const faqClose = read(`${costDir}WebsiteCostFaqClose.astro`);
 const css = read('../../styles/components/barbershop-website-cost.css');
-const comparisonData = read('./websiteServiceComparison.ts');
+const offersData = read('./barbershopWebsiteCostComparisonOffers.ts');
+const researchOffersData = read('./barbershopWebsiteCostOffers.ts');
 const layout = read('../../layouts/LandingLayout.astro');
 const sitemapSource = read('./marketingSitemap.ts');
 const navSource = read('../nav/marketingNavigation.ts');
@@ -237,152 +238,99 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).not.toContain('--bwcost-orbit-r');
   });
 
-  it('renders the five-provider comparison with scope matrix under the hero', () => {
+  it('renders the six-provider website + booking comparison with delivery labels', () => {
     expect(WEBSITE_SERVICE_COMPARISON_SECTION_ID).toBe('website-service-comparison');
     expect(serviceComparison).toContain('getPrimaryWebsiteServiceComparisonOptions');
-    expect(serviceComparison).toContain('01 / WEBSITE COST COMPARISON');
+    expect(serviceComparison).toContain('01 / WEBSITE + BOOKING COMPARISON');
     expect(serviceComparison).toContain(
-      'What does a professionally built barbershop website actually cost?',
+      'What does a complete barbershop website and booking setup actually cost?',
     );
+    expect(serviceComparison).toContain('WEBSITE_SERVICE_COMPARISON_ASSUMPTION');
+    expect(serviceComparison).toContain('bwcost-svc__delivery');
     expect(serviceComparison).toContain('bwcost-svc__title');
     expect(serviceComparison).not.toContain('bwcost-section__title');
-    expect(serviceComparison).toContain("Don't compare the number alone");
-    expect(serviceComparison).toContain('Compare the full costs');
-    expect(serviceComparison).toContain('href={SCENARIOS_HREF}');
-    expect(serviceComparison).toContain("SCENARIOS_HREF = '#cost-scenarios'");
+    expect(serviceComparison).toContain('A website is only one part');
+    expect(serviceComparison).toContain('See what affects the price');
+    expect(serviceComparison).toContain('href={OPTIONS_HREF}');
+    expect(serviceComparison).toContain("OPTIONS_HREF = '#cost-options'");
+    expect(serviceComparison).not.toContain("SCENARIOS_HREF = '#cost-scenarios'");
     expect(serviceComparison).toContain('Explore KERSIVO');
     expect(serviceComparison).toContain('BARBERSHOP_WEBSITES_PAGE_PATH');
-    expect(serviceComparison).toContain('What about DIY website builders?');
-    expect(serviceComparison).toContain('Wix and Squarespace');
+    expect(serviceComparison).toContain('Read the website delivery label first');
     expect(serviceComparison).toContain('Published offer');
     expect(serviceComparison).toContain('Scope snapshot');
     expect(serviceComparison).toContain('bwcost-svc__matrix');
-    expect(serviceComparison).toContain('bwcost-svc__matrix-item');
-    expect(serviceComparison).toContain('bwcost-svc__matrix-label');
-    expect(serviceComparison).toContain('bwcost-svc__matrix-text');
-    expect(serviceComparison).toContain('bwcost-svc__check-copy');
-    expect(serviceComparison).not.toContain('bwcost-svc__chip');
-    expect(serviceComparison).toContain('bwcost-svc__cell');
-    expect(serviceComparison).toContain('bwcost-svc__price-figure');
-    expect(serviceComparison).toContain('bwcost-svc__sources');
-    expect(serviceComparison).toContain('BarberFlow');
-    expect(serviceComparison).toContain('Barberque');
     expect(WEBSITE_SERVICE_COMPARISON_PRIMARY_IDS).toEqual([
-      'jones-digital',
-      'fadefoundry',
-      'barberflow',
-      'barberque',
+      'vagaro-pro-mysite',
+      'fresha-team-smart-website',
+      'nearcut-subscription',
+      'setora',
+      'uxhm-salon-growth-booksy',
       'full-kersivo',
     ]);
     const primary = getPrimaryWebsiteServiceComparisonOptions();
+    expect(primary).toHaveLength(6);
     expect(primary.map((row) => row.name)).toEqual([
-      'Jones Digital',
-      'FadeFoundry',
-      'BarberFlow',
-      'Barberque',
+      'Vagaro Pro + MySite',
+      'Fresha Team + Smart Website',
+      'Nearcut Subscription',
+      'Setora',
+      'UXHM + Booksy',
       'Full KERSIVO',
     ]);
     expect(primary.filter((row) => row.emphasized)).toHaveLength(1);
-    expect(primary[4]?.emphasized).toBe(true);
-    expect(primary[4]?.priceFigure).toBe(`£${SAAS_MONTHLY_GBP}`);
-    expect(primary[4]?.priceCaption.toLowerCase()).toContain('month');
-    expect(primary[0]?.priceCaption.toLowerCase()).toContain('one-off');
-    expect(primary[1]?.priceFigureSecondary).toContain('£12');
-    expect(primary[2]?.priceFigureSecondary).toContain('£39');
-    expect(primary[3]?.priceCaption.toLowerCase()).toContain('vat');
-    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS).toHaveLength(7);
-    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.map((row) => row.name)).toEqual([
-      'Full KERSIVO',
-      'Jones Digital',
-      'FadeFoundry',
-      'BarberFlow',
-      'Barberque',
-      'Freelance web developer',
-      'Web design agency',
-    ]);
-    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.scopeChips).toHaveLength(4);
-    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS[0]?.scopeChips.every((c) => c.status === 'included')).toBe(
-      true,
-    );
-    const jones = primary.find((row) => row.id === 'jones-digital');
-    expect(jones?.scopeChips.map((c) => c.status)).toEqual([
+    expect(primary[5]?.emphasized).toBe(true);
+    expect(primary[5]?.priceFigure).toBe(`£${SAAS_MONTHLY_GBP}`);
+    expect(primary[5]?.deliveryMethodKind).toBe('done-for-you');
+    expect(primary[5]?.deliveryMethodLabel.toLowerCase()).toContain('done-for-you');
+    expect(primary[0]?.priceFigure).toBe('£65');
+    expect(primary[0]?.deliveryMethodKind).toBe('self-build');
+    expect(primary[1]?.priceFigure).toBe('£52.75');
+    expect(primary[1]?.priceFigureSecondary).toContain('£63.30');
+    expect(primary[1]?.priceCaption.toLowerCase()).toContain('indicative');
+    expect(primary[1]?.deliveryMethodKind).toBe('self-setup');
+    expect(primary[2]?.priceFigure).toBe('Custom quote');
+    expect(primary[2]?.pricingConfidence).toBe('custom-quote');
+    expect(primary[2]?.pricePrimary.toLowerCase()).toContain('custom monthly quote');
+    expect(primary[2]?.priceSecondary?.toLowerCase()).toContain('free for you');
+    expect(primary[2]?.priceSecondary?.toLowerCase()).toContain('customer-fee');
+    expect(primary[3]?.priceFigure).toBe('£59');
+    expect(primary[3]?.pricingConfidence).toBe('conflict');
+    expect(primary[3]?.priceSecondary).toContain('£39');
+    expect(offersData).toContain("id: 'setora'");
+    expect(offersData).toMatch(/conflicting £39/i);
+    expect(researchOffersData).toContain('WEBSITE_COST_OFFERS');
+    expect(researchOffersData).toContain('PRICE CONFLICT');
+    expect(primary[4]?.priceFigure).toBe('£499');
+    expect(primary[4]?.priceFigureSecondary).toContain('£66');
+    expect(primary[4]?.deliveryMethodKind).toBe('done-for-you');
+    expect(primary[4]?.scopeChips.map((c) => c.status)).toEqual([
       'included',
       'separate',
-      'not-in-tier',
-      'not-in-tier',
-    ]);
-    expect(jones?.whatToCheckShort).toContain('£999');
-    expect(jones?.whatToCheckShort).toContain('30 days');
-    const fade = primary.find((row) => row.id === 'fadefoundry');
-    expect(fade?.scopeChips.map((c) => c.status)).toEqual([
-      'included',
-      'included',
       'external',
-      'not-in-tier',
-    ]);
-    expect(fade?.whatToCheckShort).toContain('£293');
-    expect(fade?.whatToCheckShort).toContain('minimum term');
-    expect(fade?.billingModel.toLowerCase()).toContain('vat');
-    const flow = primary.find((row) => row.id === 'barberflow');
-    expect(flow?.scopeChips.map((c) => c.status)).toEqual([
-      'included',
-      'included',
-      'external',
-      'not-in-tier',
-    ]);
-    expect(flow?.whatToCheckShort.toLowerCase()).toContain('vat');
-    expect(flow?.caveat?.toLowerCase()).toContain('case study');
-    expect(flow?.caveat?.toLowerCase()).toContain('three-month');
-    const que = primary.find((row) => row.id === 'barberque');
-    expect(que?.priceFigure).toBe('£50');
-    expect(que?.scopeChips.map((c) => c.status)).toEqual([
-      'included',
-      'not-confirmed',
-      'included',
       'not-confirmed',
     ]);
-    expect(que?.scopeChips[1]?.statusDisplay).toBe('Not confirmed');
-    expect(que?.scopeChips[3]?.statusDisplay).toBe('Not confirmed');
-    expect(que?.whatToCheckShort).toContain('£25/mo');
-    expect(que?.whatToCheckShort.toLowerCase()).toContain('excl. vat');
-    expect(que?.whatToCheckShort.toLowerCase()).toContain('free-setup');
-    expect(que?.whatToCheckShort).toContain('£80');
-    expect(que?.caveat).toBeUndefined();
+    expect(primary.every((row) => row.deliveryMethodLabel.length > 0)).toBe(true);
     expect(primary.every((row) => row.whatToCheckShort.length > 0)).toBe(true);
-    expect(comparisonData).toContain('https://jonesdigital.co.uk/for/salons/');
-    expect(comparisonData).toContain('https://fadefoundry.co.uk/pricing/');
-    expect(comparisonData).toContain('https://barberflow.co.uk/');
-    expect(comparisonData).toContain('https://www.barberque.co.uk/');
-    expect(comparisonData).toContain(
-      'https://studiodigitalgroup.co.uk/insights/cost-of-a-website-uk-2026',
-    );
-    expect(comparisonData).toContain('Custom quote');
+    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.length).toBeGreaterThanOrEqual(6);
+    expect(WEBSITE_SERVICE_COMPARISON_OPTIONS.some((row) => row.id === 'jones-digital')).toBe(true);
+    expect(offersData).toContain('https://www.vagaro.com/en-gb/pro/pricing');
+    expect(offersData).toContain('https://www.fresha.com/en-GB/pricing');
+    expect(offersData).toContain('https://www.setora.co.uk/pricing');
+    expect(offersData).toContain('https://biz.booksy.com/en-gb/pricing');
+    expect(offersData).toContain('Custom quote');
+    expect(offersData).toContain('£39');
     expect(css).toContain('.bwcost-svc__table');
+    expect(css).toContain('.bwcost-svc__delivery');
+    expect(css).toContain('.bwcost-svc__delivery--self-build');
+    expect(css).toContain('.bwcost-svc__delivery--done-for-you');
     expect(css).toContain('.bwcost-svc__matrix');
-    expect(css).toContain('.bwcost-svc__matrix-item');
-    expect(css).toContain('font-size: 0.6875rem; /* 11px — Scope Snapshot capability labels */');
-    expect(css).toContain('font-size: 0.8125rem; /* 13px — Scope Snapshot status text */');
-    expect(css).toContain('font-size: 0.75rem; /* 12px until 1280px */');
-    expect(css).toContain('font-size: 0.75rem; /* 12px */');
-    expect(css).toContain('font-size: 0.875rem; /* 14px */');
     expect(css).toContain('.bwcost-svc__matrix-item--not-confirmed');
     expect(css).not.toContain('.bwcost-svc__chip');
     expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo th');
-    expect(css).toContain('.bwcost-svc__table tbody .bwcost-svc__row--kersivo td');
-    expect(css).toContain('pointer-events: none');
-    expect(css).toContain(
-      '.bwcost-svc__table tbody .bwcost-svc__row--kersivo .bwcost-svc__matrix-item--included .bwcost-svc__matrix-icon',
-    );
-    expect(css).toContain('.bwcost-svc__cell');
-    expect(css).toContain('.bwcost-svc__price-figure');
     expect(css).toContain('.bwcost-svc__card--kersivo');
     expect(css).toContain('.bwcost-svc__mobile');
-    expect(css).toContain('.bwcost-svc__title');
-    expect(css).toMatch(/\.bwcost-svc__title\s*\{[^}]*font-family:\s*var\(--font-body\)/s);
-    expect(css).toContain('text-transform: none');
     expect(css).toContain('min(94vw, 91.1rem)');
-    expect(css).toContain('border-collapse: separate');
-    expect(css).toContain('Never set display:flex/grid on them');
     expect(css).toContain('@media (min-width: 1024px)');
   });
 

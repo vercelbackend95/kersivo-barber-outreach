@@ -1002,14 +1002,23 @@
 
 .bwcost-svc__title {
   margin: 0;
-  max-width: 18ch;
+  max-width: 22ch;
   font-family: var(--font-body);
-  font-size: clamp(2.05rem, 3.6vw, 3.35rem);
+  font-size: clamp(1.85rem, 3.2vw, 3.05rem);
   font-weight: 700;
-  line-height: 1.06;
-  letter-spacing: -0.05em;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
   color: var(--fg);
   text-transform: none;
+}
+
+.bwcost-svc__assumption {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted) 88%, var(--bwcost-accent-text));
 }
 
 .bwcost-svc__intro-aside {
@@ -1196,6 +1205,55 @@
   color: var(--muted);
   line-height: 1.35;
   letter-spacing: 0;
+}
+
+.bwcost-svc__delivery {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.4rem;
+  max-width: 100%;
+}
+
+.bwcost-svc__delivery-label {
+  display: inline-block;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  border-radius: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.bwcost-svc__delivery--self-build .bwcost-svc__delivery-label,
+.bwcost-svc__delivery--self-setup .bwcost-svc__delivery-label {
+  border-color: color-mix(in srgb, #c4a574 42%, transparent);
+  color: color-mix(in srgb, #e8d2a8 88%, var(--fg));
+  background: color-mix(in srgb, #c4a574 10%, transparent);
+}
+
+.bwcost-svc__delivery--platform-website .bwcost-svc__delivery-label {
+  border-color: color-mix(in srgb, var(--fg) 22%, transparent);
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+}
+
+.bwcost-svc__delivery--done-for-you .bwcost-svc__delivery-label {
+  border-color: color-mix(in srgb, var(--bwcost-accent) 45%, transparent);
+  color: var(--bwcost-accent-text);
+  background: color-mix(in srgb, var(--bwcost-accent) 12%, transparent);
+}
+
+.bwcost-svc__delivery--not-confirmed .bwcost-svc__delivery-label {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.bwcost-svc__card .bwcost-svc__delivery {
+  margin-top: 0.35rem;
 }
 
 .bwcost-svc__price-figure {
