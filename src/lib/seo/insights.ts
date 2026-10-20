@@ -447,7 +447,7 @@ function absoluteAssetUrl(src: string): string {
 
 /** Newest editorial publishedDate among live articles — used for hub sitemap lastmod. */
 export function getInsightsIndexLastmod(): string {
-  return INSIGHTS_PUBLISHED_ARTICLES.reduce(
+  return INSIGHTS_PUBLISHED_ARTICLES.reduce<string>(
     (newest, article) => (article.publishedDate > newest ? article.publishedDate : newest),
     INSIGHTS_PUBLISHED_ARTICLES[0].publishedDate,
   );
