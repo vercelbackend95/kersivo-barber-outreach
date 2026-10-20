@@ -513,16 +513,18 @@ export const WEBSITE_COST_OFFERS = [
       possibleAdditionalCosts: [
         '4- and 6-barber subscription quotation needed',
         'product sales & stock management Business Booster listed at £7.50/month on the UK pricing page; verify applicability/terms (other locale versions may display $10)',
-        'custom domain and actual multi-page website structure not publicly confirmed',
-        'paid booking processing or other optional business boosters, as applicable',
+        'custom domain pricing and expanded standalone pages (beyond the confirmed Homepage and Gallery) not publicly confirmed',
+        'payment processing fees, where applicable: Help Centre standard schedule 2.9% + £0.20 with volume reductions; Free for You advertising simultaneously mentions optional online payments at zero transaction fees, so plan-specific applicability needs confirmation',
+        'other optional Business Boosters, where applicable',
       ],
     },
     scope: 'Personalised/custom shop website, online booking, appointment diaries, email reminders, SMS where in selected plan, payments and optional product sales/stock management booster.',
     limits: [
-      'The published £1.50 booking fee is an illustrative haircut transaction, not a universal tariff for all services.',
-      'Business Booster price examples appear with dollar amounts and must not be converted into UK fixed add-on prices.',
+      'The £1.50 charge is shown for a £20 haircut in Free for You, where the customer (NOT the shop) pays; it is not confirmed as the universal amount or as a shop-billed tariff.',
+      'UK Nearcut pricing page publicly displays Product sales & stock management at £7.50/month, while other localisations show different currencies. Only GBP UK source is relevant.',
       'Nearcut Help Centre confirms Homepage and separate Gallery page plus staff bios; separately navigable Team, About and Retail pages analogous to KERSIVO are not all established.',
       'Nearcut has online product sales and stock management via the Business Booster; click-and-collect checkout / pickup promise not confirmed.',
+      'Nearcut Free for You advertises optional deposits/online payments without transaction fees, but the generic Help Centre states ordinary online processing 2.9% + £0.20 with volume reductions. Do not present either as universal across both pricing models.',
     ],
     features: {
       multiPageWebsite: 'confirmed-in-plan',
