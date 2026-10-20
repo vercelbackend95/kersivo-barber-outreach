@@ -18,6 +18,12 @@ import {
   BARBERSHOP_WEBSITE_COST_PAGE_TITLE,
   BOOKING_SENSITIVITY_MONTHLY_GBP,
   COST_BUYING_MODELS,
+  COST_MODELS_EYEBROW,
+  COST_MODELS_INSIGHT_CTA_HREF,
+  COST_MODELS_INSIGHT_IMAGE_SRC,
+  COST_MODELS_INSIGHT_TITLE,
+  COST_MODELS_SECTION_ID,
+  COST_SCOPE_CARDS,
   COST_CHECKLIST_QUESTIONS,
   COST_PAGE_FAQS,
   COST_SCENARIO_A_12,
@@ -379,12 +385,64 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(css).toContain('@media (min-width: 1024px)');
   });
 
-  it('includes four buying models, four-chair inset and cost anatomy after the comparison', () => {
-    expect(COST_BUYING_MODELS).toHaveLength(4);
-    expect(models).toContain('id="cost-options"');
+  it('rebuilds Section 03 with scope cards, model fit cards and four-chair insight', () => {
+    expect(COST_MODELS_SECTION_ID).toBe('cost-options');
+    expect(models).toContain('id={COST_MODELS_SECTION_ID}');
     expect(models).toContain('What are you actually paying for?');
-    expect(models).toContain('What should a four-chair barbershop check?');
-    expect(models).toContain("What's included — and what could cost extra?");
+    expect(models).toContain('COST_MODELS_EYEBROW');
+    expect(models).toContain('COST_MODELS_INSIGHT_TITLE');
+    expect(COST_MODELS_EYEBROW).toBe('KERSIVO / WHAT YOU GET');
+    expect(COST_MODELS_INSIGHT_TITLE).toBe('What should a four-chair barbershop check?');
+    expect(models).toContain('bwcost-models__scope');
+    expect(models).toContain('bwcost-models__fit');
+    expect(models).toContain('bwcost-models__insight');
+    expect(models).toContain('row.badge');
+    expect(models).toContain('COST_MODELS_INSIGHT_CTA_HREF');
+    expect(models).toContain('COST_MODELS_INSIGHT_IMAGE_SRC');
+    expect(COST_MODELS_INSIGHT_CTA_HREF).toBe('/barbershop-online-booking');
+    expect(COST_MODELS_INSIGHT_IMAGE_SRC).toContain('four-chair-barbershop.webp');
+    expect(COST_SCOPE_CARDS).toHaveLength(4);
+    expect(COST_SCOPE_CARDS.map((card) => card.title)).toEqual([
+      'Building the site',
+      'Running the site',
+      'Taking bookings & payments',
+      'Control when leaving',
+    ]);
+    expect(COST_SCOPE_CARDS.every((card) => card.imageSrc.includes('/section-03/'))).toBe(true);
+    expect(COST_SCOPE_CARDS.map((card) => card.imageSrc)).toEqual([
+      '/images/barbershop-website-cost/section-03/building-the-site.webp',
+      '/images/barbershop-website-cost/section-03/running-the-site.webp',
+      '/images/barbershop-website-cost/section-03/taking-bookings-payments.webp',
+      '/images/barbershop-website-cost/section-03/control-when-leaving.webp',
+    ]);
+    expect(COST_BUYING_MODELS).toHaveLength(4);
+    expect(COST_BUYING_MODELS.map((row) => row.model)).toEqual([
+      'DIY builder',
+      'One-off project',
+      'Managed website',
+      'Integrated platform',
+    ]);
+    expect(COST_BUYING_MODELS[3]?.badge).toBe('WEBSITE + BOOKINGS');
+    expect(COST_BUYING_MODELS[3]?.emphasized).toBe(true);
+    expect(models).not.toContain("What's included — and what could cost extra?");
+    expect(models).not.toContain('bwcost-table');
+    expect(models).not.toContain('MOST COMPLETE');
+    expect(models).not.toContain('No lock-in');
+    expect(css).toContain('.bwcost-models__scope');
+    expect(css).toContain('.bwcost-models__fit-card--accent');
+    expect(css).toContain('--bwcost-models-display');
+    expect(css).not.toContain('.bwcost-anatomy__list');
+    expect(css).not.toContain('.bwcost-inset__title');
+    const section03Dir = join(here, '../../../public/images/barbershop-website-cost/section-03');
+    for (const file of [
+      'building-the-site.webp',
+      'running-the-site.webp',
+      'taking-bookings-payments.webp',
+      'control-when-leaving.webp',
+      'four-chair-barbershop.webp',
+    ]) {
+      expect(existsSync(join(section03Dir, file))).toBe(true);
+    }
   });
 
   it('keeps exactly seven FAQs and seven checklist questions', () => {

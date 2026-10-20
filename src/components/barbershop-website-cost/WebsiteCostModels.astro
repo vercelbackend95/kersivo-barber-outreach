@@ -1,89 +1,127 @@
 ---
-import { COST_BUYING_MODELS } from '@/lib/seo/barbershopWebsiteCostPage';
+import {
+  COST_BUYING_MODELS,
+  COST_MODELS_EYEBROW,
+  COST_MODELS_IMAGE_HEIGHT,
+  COST_MODELS_IMAGE_WIDTH,
+  COST_MODELS_INSIGHT_BODY,
+  COST_MODELS_INSIGHT_CTA_HREF,
+  COST_MODELS_INSIGHT_CTA_LABEL,
+  COST_MODELS_INSIGHT_EYEBROW,
+  COST_MODELS_INSIGHT_IMAGE_SRC,
+  COST_MODELS_INSIGHT_TITLE,
+  COST_MODELS_LEDE,
+  COST_MODELS_SECTION_ID,
+  COST_SCOPE_CARDS,
+} from '@/lib/seo/barbershopWebsiteCostPage';
 ---
 
-<section class="bwcost-section bwcost-models" id="cost-options" aria-labelledby="bwcost-models-heading">
-  <div class="bwcost-section__inner">
-    <header class="bwcost-section__header">
-      <h2 id="bwcost-models-heading" class="bwcost-section__title">What are you actually paying for?</h2>
-      <p class="bwcost-section__lede">
-        A one-page website and a booking-led shop platform solve different problems. Start with what your shop
-        needs, then compare the full price.
+<section
+  class="bwcost-section bwcost-models"
+  id={COST_MODELS_SECTION_ID}
+  aria-labelledby="bwcost-models-heading"
+>
+  <div class="bwcost-section__inner bwcost-models__inner">
+    <header class="bwcost-models__header">
+      <p class="bwcost-models__eyebrow">
+        <span class="bwcost-models__eyebrow-rule" aria-hidden="true"></span>
+        {COST_MODELS_EYEBROW}
       </p>
+      <h2 id="bwcost-models-heading" class="bwcost-models__title">
+        What are you actually paying for?
+      </h2>
+      <p class="bwcost-models__lede">{COST_MODELS_LEDE}</p>
     </header>
 
-    <div class="bwcost-table-wrap">
-      <table class="bwcost-table">
-        <caption class="bwcost-sr-only">
-          Four buying models for a barbershop website and what each is best suited to
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Buying model</th>
-            <th scope="col">Best suited to</th>
-            <th scope="col">Main question / limitation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            COST_BUYING_MODELS.map((row) => (
-              <tr>
-                <th scope="row">{row.model}</th>
-                <td data-label="Best suited to">{row.bestSuitedTo}</td>
-                <td data-label="Main question / limitation">{row.mainQuestion}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
+    <ul class="bwcost-models__scope">
+      {
+        COST_SCOPE_CARDS.map((card) => (
+          <li class="bwcost-models__scope-card">
+            <div class="bwcost-models__scope-top">
+              <span class="bwcost-models__index" aria-hidden="true">
+                {card.index}
+              </span>
+              <h3 class="bwcost-models__scope-title">{card.title}</h3>
+            </div>
+            <div class="bwcost-models__scope-body">
+              <div class="bwcost-models__scope-media">
+                <img
+                  class="bwcost-models__scope-img"
+                  src={card.imageSrc}
+                  alt=""
+                  width={card.imageWidth}
+                  height={card.imageHeight}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <ul class="bwcost-models__points">
+                {card.points.map((point) => (
+                  <li>
+                    <span class="bwcost-models__check" aria-hidden="true"></span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
 
-    <p class="bwcost-models__decision">
-      If you only need a simple brochure site, a separate website purchase may be cheaper. If you need customers
-      to choose services, barbers and time slots and want to manage the bookings too, compare the integrated
-      option.
-    </p>
+    <ul class="bwcost-models__fit">
+      {
+        COST_BUYING_MODELS.map((row) => (
+          <li
+            class:list={[
+              'bwcost-models__fit-card',
+              row.emphasized && 'bwcost-models__fit-card--accent',
+            ]}
+          >
+            {row.badge ? <span class="bwcost-models__fit-badge">{row.badge}</span> : null}
+            <span class="bwcost-models__index" aria-hidden="true">
+              {row.index}
+            </span>
+            <span
+              class:list={['bwcost-models__fit-icon', `bwcost-models__fit-icon--${row.icon}`]}
+              aria-hidden="true"
+            ></span>
+            <h3 class="bwcost-models__fit-title">{row.model}</h3>
+            <p class="bwcost-models__fit-best">
+              <span class="bwcost-models__fit-best-label">Best for:</span>
+              {row.bestSuitedTo}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
 
-    <aside class="bwcost-inset" aria-labelledby="bwcost-four-chair">
-      <h3 id="bwcost-four-chair" class="bwcost-inset__title">What should a four-chair barbershop check?</h3>
-      <p>
-        Imagine a barbershop with four active chairs. A basic site can show the team, prices and location. But if
-        customers need to choose a particular barber and an available appointment time, ask whether the quoted
-        price includes individual availability, online booking, confirmations and a usable shop diary — or whether
-        a separate subscription is required.
-      </p>
+    <aside class="bwcost-models__insight" aria-labelledby="bwcost-four-chair">
+      <div class="bwcost-models__insight-copy">
+        <p class="bwcost-models__eyebrow bwcost-models__eyebrow--insight">
+          <span class="bwcost-models__eyebrow-rule" aria-hidden="true"></span>
+          {COST_MODELS_INSIGHT_EYEBROW}
+        </p>
+        <h3 id="bwcost-four-chair" class="bwcost-models__insight-title">
+          {COST_MODELS_INSIGHT_TITLE}
+        </h3>
+        <p class="bwcost-models__insight-body">{COST_MODELS_INSIGHT_BODY}</p>
+        <a class="bwcost-models__insight-cta" href={COST_MODELS_INSIGHT_CTA_HREF}>
+          <span aria-hidden="true">→</span>
+          {COST_MODELS_INSIGHT_CTA_LABEL}
+        </a>
+      </div>
+      <div class="bwcost-models__insight-media" aria-hidden="true">
+        <img
+          class="bwcost-models__insight-img"
+          src={COST_MODELS_INSIGHT_IMAGE_SRC}
+          alt=""
+          width={COST_MODELS_IMAGE_WIDTH}
+          height={COST_MODELS_IMAGE_HEIGHT}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
     </aside>
-
-    <div class="bwcost-anatomy" aria-labelledby="bwcost-anatomy-heading">
-      <h3 id="bwcost-anatomy-heading" class="bwcost-anatomy__title">What's included — and what could cost extra?</h3>
-      <ol class="bwcost-anatomy__list">
-        <li>
-          <strong>Building the site</strong>
-          <span>Design or initial setup, pages, brand assets, content and revisions — one-off or included.</span>
-        </li>
-        <li>
-          <strong>Running the site</strong>
-          <span>Domain registration and renewals; hosting, SSL, updates, support and changes.</span>
-        </li>
-        <li>
-          <strong>Taking bookings and payments</strong>
-          <span>
-            Booking-button redirect versus integrated service/barber/time selection; standalone booking fees and
-            card-processing costs.
-          </span>
-        </li>
-        <li>
-          <strong>Control when leaving</strong>
-          <span>Domain and content rights, source code/templates, data export, term and post-cancellation hosting.</span>
-        </li>
-      </ol>
-      <p class="bwcost-anatomy__takeaway">
-        Ask for an itemised price covering the build, domain, hosting, booking software, payments, support and the
-        terms if you leave.
-      </p>
-      <p class="bwcost-anatomy__link">
-        <a href="/barbershop-online-booking">See how online booking works</a>
-      </p>
-    </div>
   </div>
 </section>

@@ -1,5 +1,6 @@
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -67,33 +68,145 @@ export const COST_SCENARIO_B_36_HIGH = websitePlusBookingTotalGbp(36, 40);
 export const COST_SCENARIO_C_12 = fullKersivoTotalGbp(12);
 export const COST_SCENARIO_C_36 = fullKersivoTotalGbp(36);
 
+export const COST_MODELS_SECTION_ID = 'cost-options';
+
+export const COST_MODELS_EYEBROW = 'KERSIVO / WHAT YOU GET';
+
+export const COST_MODELS_LEDE =
+  'Different website options solve different problems. Compare the real scope before you compare the number.';
+
+export const COST_MODELS_INSIGHT_EYEBROW = 'KERSIVO INSIGHT';
+
+export const COST_MODELS_INSIGHT_TITLE = 'What should a four-chair barbershop check?';
+
+export const COST_MODELS_INSIGHT_BODY =
+  'Make sure customers can choose their preferred barber, see individual availability and book a suitable time. Check whether the quoted package includes confirmations and a usable shop diary — or whether a separate booking subscription is needed.';
+
+export const COST_MODELS_INSIGHT_CTA_LABEL = 'See how online booking works';
+
+export const COST_MODELS_INSIGHT_CTA_HREF = BARBERSHOP_ONLINE_BOOKING_PAGE_PATH;
+
+export const COST_MODELS_INSIGHT_IMAGE_SRC =
+  '/images/barbershop-website-cost/section-03/four-chair-barbershop.webp';
+
+export const COST_MODELS_IMAGE_WIDTH = 1448;
+export const COST_MODELS_IMAGE_HEIGHT = 1086;
+
+export type CostScopeCard = {
+  id: string;
+  index: string;
+  title: string;
+  points: readonly [string, string, string];
+  imageSrc: string;
+  imageWidth: number;
+  imageHeight: number;
+};
+
+export const COST_SCOPE_CARDS: readonly CostScopeCard[] = [
+  {
+    id: 'building',
+    index: '01',
+    title: 'Building the site',
+    points: [
+      'Design and build your website',
+      'Structure your services and content',
+      'Make it work across devices',
+    ],
+    imageSrc: '/images/barbershop-website-cost/section-03/building-the-site.webp',
+    imageWidth: COST_MODELS_IMAGE_WIDTH,
+    imageHeight: COST_MODELS_IMAGE_HEIGHT,
+  },
+  {
+    id: 'running',
+    index: '02',
+    title: 'Running the site',
+    points: [
+      'Hosting, security and updates',
+      'Keeping your website reliable',
+      'Ongoing maintenance and support',
+    ],
+    imageSrc: '/images/barbershop-website-cost/section-03/running-the-site.webp',
+    imageWidth: COST_MODELS_IMAGE_WIDTH,
+    imageHeight: COST_MODELS_IMAGE_HEIGHT,
+  },
+  {
+    id: 'bookings',
+    index: '03',
+    title: 'Taking bookings & payments',
+    points: [
+      'Online appointment availability',
+      'Deposits and payment processing',
+      'Reminders and booking confirmations',
+    ],
+    imageSrc: '/images/barbershop-website-cost/section-03/taking-bookings-payments.webp',
+    imageWidth: COST_MODELS_IMAGE_WIDTH,
+    imageHeight: COST_MODELS_IMAGE_HEIGHT,
+  },
+  {
+    id: 'control',
+    index: '04',
+    title: 'Control when leaving',
+    points: [
+      'Domain and content ownership',
+      'Customer data and export options',
+      'Cancellation and transfer terms',
+    ],
+    imageSrc: '/images/barbershop-website-cost/section-03/control-when-leaving.webp',
+    imageWidth: COST_MODELS_IMAGE_WIDTH,
+    imageHeight: COST_MODELS_IMAGE_HEIGHT,
+  },
+] as const;
+
 export type CostBuyingModel = {
+  id: string;
+  index: string;
   model: string;
   bestSuitedTo: string;
+  /** Retained for research/FAQ context; not rendered in the Section 03 UI. */
   mainQuestion: string;
+  emphasized?: boolean;
+  badge?: string;
+  icon: 'diy' | 'project' | 'managed' | 'integrated';
 };
 
 export const COST_BUYING_MODELS: readonly CostBuyingModel[] = [
   {
+    id: 'diy',
+    index: '01',
     model: 'DIY builder',
-    bestSuitedTo: 'Owners happy to build and maintain their own site',
-    mainQuestion: 'Time cost, domain/hosting, booking add-ons and support',
-  },
-  {
-    model: 'One-off project',
-    bestSuitedTo: 'Shops wanting a separately commissioned website project',
-    mainQuestion: 'What files/source are delivered; hosting, changes and booking outside project',
-  },
-  {
-    model: 'Managed website',
-    bestSuitedTo: 'Owners who want a supplier to maintain a relatively simple site',
-    mainQuestion: 'Setup, term, monthly maintenance scope and external booking subscription',
-  },
-  {
-    model: 'Integrated website + booking (Full KERSIVO example)',
     bestSuitedTo:
-      'Barbershops wanting their branded website, bookings and daily management tools together',
+      'Owners who want a low-cost, hands-on option and are happy to build and maintain the site themselves.',
+    mainQuestion: 'Time cost, domain/hosting, booking add-ons and support',
+    icon: 'diy',
+  },
+  {
+    id: 'one-off',
+    index: '02',
+    model: 'One-off project',
+    bestSuitedTo:
+      'Shops commissioning a professional website with a defined project scope and upfront build cost.',
+    mainQuestion: 'What files/source are delivered; hosting, changes and booking outside project',
+    icon: 'project',
+  },
+  {
+    id: 'managed',
+    index: '03',
+    model: 'Managed website',
+    bestSuitedTo:
+      'Owners who want a supplier to handle hosting, maintenance and agreed website updates.',
+    mainQuestion: 'Setup, term, monthly maintenance scope and external booking subscription',
+    icon: 'managed',
+  },
+  {
+    id: 'integrated',
+    index: '04',
+    model: 'Integrated platform',
+    bestSuitedTo:
+      'Barbershops wanting a branded website, online bookings and everyday management tools together.',
     mainQuestion: 'Ongoing SaaS fee, platform dependence, domain/data transfer and exact included tools',
+    emphasized: true,
+    badge: 'WEBSITE + BOOKINGS',
+    icon: 'integrated',
   },
 ] as const;
 
