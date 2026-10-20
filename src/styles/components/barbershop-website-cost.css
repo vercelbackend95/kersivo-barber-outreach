@@ -1781,13 +1781,14 @@
 }
 
 .bwcost-models__inner {
+  width: min(94vw, 91.1rem);
   display: flex;
   flex-direction: column;
   gap: clamp(1.75rem, 3vw, 2.75rem);
 }
 
 .bwcost-models__header {
-  max-width: 40rem;
+  max-width: none;
 }
 
 .bwcost-models__eyebrow {
@@ -1828,7 +1829,7 @@
 
 .bwcost-models__lede {
   margin: 0;
-  max-width: 36rem;
+  max-width: 48rem;
   font-family: var(--font-body);
   font-size: clamp(0.95rem, 1.4vw, 1.05rem);
   line-height: 1.55;
@@ -1849,17 +1850,18 @@
   flex-direction: column;
   min-height: 100%;
   margin: 0;
-  padding: 1.15rem 1.15rem 1rem;
+  padding: 1.05rem 1.2rem 0.95rem;
   border: 1px solid var(--bwcost-models-line);
   border-radius: var(--radius-12);
-  background: var(--bwcost-models-card);
+  /* Near-black — only for the four large scope cards (not fit cards) */
+  background: color-mix(in srgb, #050505 94%, var(--surface-1));
 }
 
 .bwcost-models__scope-top {
   display: flex;
-  align-items: baseline;
-  gap: 0.7rem;
-  margin-bottom: 0.85rem;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.65rem;
 }
 
 .bwcost-models__index {
@@ -1870,6 +1872,22 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.bwcost-models__scope-top .bwcost-models__index {
+  position: relative;
+  padding-right: 0.85rem;
+}
+
+.bwcost-models__scope-top .bwcost-models__index::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 1px;
+  height: 1.9rem;
+  transform: translateY(-50%);
+  background: color-mix(in srgb, var(--fg) 18%, transparent);
 }
 
 .bwcost-models__scope-title {
@@ -2184,8 +2202,14 @@
 
 @media (min-width: 1024px) {
   .bwcost-models__scope-card {
-    padding: 1.25rem 1.25rem 1.1rem;
-    min-height: 17.5rem;
+    padding: 1.1rem 1.35rem 1rem;
+    min-height: 14rem;
+  }
+
+  .bwcost-models__scope-body {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr);
+    gap: 0.75rem 1.15rem;
+    align-items: center;
   }
 
   .bwcost-models__insight {
@@ -2207,8 +2231,12 @@
     gap: 0.85rem;
   }
 
+  .bwcost-models__scope-card {
+    min-height: 13.5rem;
+  }
+
   .bwcost-models__scope-img {
-    max-width: 18rem;
+    max-width: 17rem;
   }
 }
 
