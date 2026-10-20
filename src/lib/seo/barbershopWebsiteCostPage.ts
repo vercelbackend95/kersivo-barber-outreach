@@ -80,7 +80,7 @@ export const COST_MODELS_INSIGHT_EYEBROW = 'KERSIVO INSIGHT';
 export const COST_MODELS_INSIGHT_TITLE = 'What should a four-chair barbershop check?';
 
 export const COST_MODELS_INSIGHT_BODY =
-  'Make sure customers can choose their preferred barber, see individual availability and book a suitable time. Check whether the quoted package includes confirmations and a usable shop diary — or whether a separate booking subscription is needed.';
+  'For a four-chair shop, check that clients can choose their barber and an available time — and whether confirmations and the shop diary cost extra.';
 
 export const COST_MODELS_INSIGHT_CTA_LABEL = 'See how online booking works';
 

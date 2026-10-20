@@ -19,6 +19,7 @@ import {
   BOOKING_SENSITIVITY_MONTHLY_GBP,
   COST_BUYING_MODELS,
   COST_MODELS_EYEBROW,
+  COST_MODELS_INSIGHT_BODY,
   COST_MODELS_INSIGHT_CTA_HREF,
   COST_MODELS_INSIGHT_IMAGE_SRC,
   COST_MODELS_INSIGHT_TITLE,
@@ -432,9 +433,12 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(models).not.toContain('No lock-in');
     expect(css).toContain('.bwcost-models__scope');
     expect(css).toContain('.bwcost-models__fit-card--accent');
-    expect(css).toMatch(
-      /\.bwcost-models__fit-card\s*\{[^}]*background:\s*color-mix\(in srgb,\s*#050505 94%,\s*var\(--surface-1\)\)/s,
+    expect(css).toContain('--bwcost-models-surface');
+    expect(css).toContain('background: var(--bwcost-models-surface)');
+    expect(COST_MODELS_INSIGHT_BODY).toBe(
+      'For a four-chair shop, check that clients can choose their barber and an available time — and whether confirmations and the shop diary cost extra.',
     );
+    expect(COST_MODELS_INSIGHT_BODY).not.toContain('preferred barber');
     expect(css).toContain('--bwcost-models-display');
     expect(css).toMatch(
       /\.bwcost-models__inner\s*\{[^}]*width:\s*min\(94vw,\s*91\.1rem\)/s,
