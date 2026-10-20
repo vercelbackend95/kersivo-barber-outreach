@@ -361,22 +361,23 @@ export const WEBSITE_COST_OFFERS = [
   {
     id: 'setora-core',
     provider: 'Setora',
-    selectedPackage: 'Standard platform',
+    selectedPackage: 'One-location platform — published price conflict',
     kind: 'integrated-platform',
     decision: 'primary-candidate',
     rationale: 'Direct UK barber/salon booking and management competitor with a branded public Shop Website layer; include despite not having a full gallery/team-style website confirmed.',
     pricing: {
       setupGbp: null,
-      recurringGbpPerMonth: 59,
+      recurringGbpPerMonth: null,
       vat: 'ex-VAT',
       minimumTermMonths: null,
       pricingNotes: [
-        '£59/month per location before VAT where applicable.',
+        'PRICE CONFLICT — official /pricing states £39/month/location (including six barbers), whereas homepage, /ai-info and /terms-conditions state £59/month/location.',
+        'Terms also state VAT number not yet VAT-registered; final charged tax must be reconciled with actual terms/invoice.',
         'Unlimited staff; no Setora booking commission; 14-day free trial.',
         'No one-off setup fee appears in the public plan; do not silently assert a guaranteed £0.',
       ],
       possibleAdditionalCosts: [
-        'SMS reminders sold separately as credits',
+        'SMS reminders sold separately as credits; no dependable public unit price identified',
         'Stripe card processing',
         'custom domain purchase/renewal not confirmed',
         'retail pickup not publicly confirmed',
@@ -505,7 +506,7 @@ export const WEBSITE_COST_OFFERS = [
       ],
       possibleAdditionalCosts: [
         '4- and 6-barber subscription quotation needed',
-        'product sales & stock management Business Booster quotation needed',
+        'product sales & stock management Business Booster shown at £7.50/month on UK pricing page; verify applicability/terms',
         'custom domain and actual multi-page website structure not publicly confirmed',
         'paid booking processing or other optional business boosters, as applicable',
       ],
@@ -547,14 +548,16 @@ export const WEBSITE_COST_OFFERS = [
       vat: 'ex-VAT',
       minimumTermMonths: null,
       pricingNotes: [
-        'UK prices referenced by independent September/October 2026 audits: Team £9.95 per bookable barber/month and Smart Website £12.95/month, both excluding VAT.',
+        'UK £9.95/bookable team member/month and Smart Website £12.95/month +20% VAT are corroborated in October 2026 UK research but cannot currently be verified on the location-adjusted official Fresha price page: it renders in non-GBP from remote browsing.',
+        'Illustrative 4 bookable members: £39.80 + £12.95 = £52.75 ex VAT / £63.30 inc VAT. Six members: £59.70 + £12.95 = £72.65 ex VAT / £87.18 inc VAT. NOT a signed checkout quote.',
+        'Core reporting is included without paid Insights; do not force optional premium reporting add-on.',
         'The dynamic Fresha pricing page displayed non-GBP currencies when accessed remotely, so UK checkout prices and exact reminder allowance MUST be independently reconfirmed before publication.',
         'SMS usage above monthly free allowance, optional marketplace new-client fee, and online card processing are usage-dependent, not a single fixed monthly amount.',
       ],
       possibleAdditionalCosts: [
         'independently verify live UK Team and Smart Website rates',
         'custom domain purchase/renewal if required',
-        'out-of-allowance SMS usage',
+        'SMS allowance and per-text UK cost — independent October pricing references 20 included per bookable member then 6p each; reconfirm in official UK checkout',
         'optional marketplace acquisition fees for qualified newly acquired clients',
         'online card processing (required for online product store)',
       ],
@@ -585,6 +588,8 @@ export const WEBSITE_COST_OFFERS = [
       'https://www.fresha.com/help-center/knowledge-base/online-presence',
       'https://www.fresha.com/help-center/knowledge-base/inventory/163-create-and-manage-an-online-product-store',
       'https://kersivo.co.uk/fresha-alternative',
+      'https://cobbtree.com/blog/fresha-pricing-explained',
+      'https://www.fresha.com/help-center/knowledge-base/billing-and-fees/188-marketplace-new-client-fees',
     ],
     fullKersivoScopeEquivalenceConfirmed: false,
   },
@@ -602,13 +607,15 @@ export const WEBSITE_COST_OFFERS = [
       minimumTermMonths: null,
       pricingNotes: [
         'Vagaro UK advertises MySite as a £15/month add-on.',
-        'The UK pricing page displays £20/month promotional rate for one calendar (standard £30); prices for 4 and 6 bookable calendars are behind a dynamic selector and have not been verified.',
+        'UK Vagaro Pro official FAQ explicitly states promotional £20/month for first calendar plus £10 per additional calendar, up to 7; independent of dynamic button rendering.',
+        'Four calendars: £20 + 3×£10 + £15 MySite = £65/month; six: £20 + 5×£10 + £15 MySite = £85/month, before unverified VAT and domain.',
+        'The £20 calendar starting amount appears next to crossed-out £30 on the UK pricing page; long-term availability of promotion not guaranteed.',
         'UK MySite design service advertises a limited-time no-fee custom design (£699 stated value), subject to conditions/possible other fees. Never treat this as permanent setup £0.',
       ],
       possibleAdditionalCosts: [
-        'confirmed UK 4- and 6-calendar subscription prices and promotion expiration',
+        'promotion expiration or post-promotion first-calendar rate',
         'domain registration/renewal if purchased',
-        'whether optional designer-assisted multi-page setup is available free for the specific shop',
+        'whether limited-time promotional free designer-assisted multi-page setup (£699 stated value) is available for the specific shop; additional design/pages/copy may cost extra',
         'merchant payment processing',
         'any optional marketing modules',
       ],
@@ -617,7 +624,7 @@ export const WEBSITE_COST_OFFERS = [
     limits: [
       'Website builder is not identical to a managed custom build unless the design service is purchased/confirmed.',
       'Vagaro is a wider beauty/wellness system, rather than barber-exclusive software.',
-      'UK total charges for 4/6 bookable calendars not established on accessible public pricing page.',
+      '4/6-calendar base monthly formulas are publicly established; fixed total still excludes VAT where applicable, own-domain costs, payment fees and any design outside promotional scope.',
     ],
     features: {
       multiPageWebsite: 'confirmed-in-plan',
@@ -636,6 +643,9 @@ export const WEBSITE_COST_OFFERS = [
     },
     sources: [
       'https://www.vagaro.com/en-gb/pro/pricing',
+      'https://www.vagaro.com/en-gb/pro',
+      'https://mysite.vagaro.com/vagaroukio/mysite',
+      'https://www.vagaro.com/en-gb/pro/vagaro-customer-participation-agreement',
       'https://support.vagaro.com/hc/en-us/articles/35429794470555-MySite-FAQ',
       'https://www.vagaro.com/en-gb/pro/online-store',
       'https://mysite.vagaro.com/vagaroukio/mysite',
@@ -764,6 +774,46 @@ export const WEBSITE_COST_OFFERS = [
     fullKersivoScopeEquivalenceConfirmed: false,
   },
 ] as const satisfies readonly WebsiteCostResearchedOffer[];
+
+
+/** Public £15 UK MySite add-on, and UK official Vagaro Pro FAQ's £20+£10/extra calendar. */
+export function vagaroUkPublishedMonthlySubtotalGbp(bookableBarbers: number): number {
+  if (!Number.isInteger(bookableBarbers) || bookableBarbers < 1) {
+    throw new RangeError('bookableBarbers must be a positive integer');
+  }
+  // UK pricing FAQ: £20 initial calendar + £10 per extra up to seven; £80 at 7+.
+  const calendarsGbp = Math.min(80, 20 + 10 * (bookableBarbers - 1));
+  return calendarsGbp + 15;
+}
+
+/**
+ * SECONDARY-VERIFIED UK indication, NOT an officially verified UK checkout quote.
+ * VAT at 20% is the rate stated by UK secondary comparisons, not a guarantee
+ * about the merchant's tax invoice. Messaging/marketplace/processing excluded.
+ */
+export function freshaUkIndicatedMonthlySubtotalGbp(
+  bookableBarbers: number,
+  includeVat: boolean = false,
+): number {
+  if (!Number.isInteger(bookableBarbers) || bookableBarbers < 1) {
+    throw new RangeError('bookableBarbers must be a positive integer');
+  }
+  const exVat = bookableBarbers * 9.95 + 12.95;
+  return Math.round(exVat * (includeVat ? 1.2 : 1) * 100) / 100;
+}
+
+/** Research confidence record; not a public price quote. */
+export const WEBSITE_COST_CURRENT_FINDINGS = {
+  vagaroUkFourBarbersPlusMySite: 65,
+  vagaroUkSixBarbersPlusMySite: 85,
+  freshaUkIndicativeFourIncVat: 63.30,
+  freshaUkIndicativeSixIncVat: 87.18,
+  nearcutMonthlySubscription: 'QUOTE_REQUIRED',
+  nearcutProductBoosterUkAdvertisedMonthlyGbp: 7.50,
+  setoraPublicPriceConflict: [39, 59],
+  exact12And36MonthTcoStatus: 'BLOCKED_WITHOUT_ALL_MANDATORY_CHARGES_AND_USAGE',
+  legalNote: 'UK CMA UCP price transparency rules are aimed at consumers; B2B suppliers can use bespoke quotations. Ads must still avoid misleading price presentation; ASA/CAP applies to prices in ads.',
+} as const;
 
 /** Booksy is a separate real subscription, not assumed free/included with an agency website. */
 export const WEBSITE_COST_BOOKSY_UK = {
