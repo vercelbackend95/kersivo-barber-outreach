@@ -466,6 +466,21 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     ]);
     expect(getDemoProductBySlug('matte-clay')?.name).toBe('Matte Clay');
     expect(showcase).toContain("getDemoProductBySlug('matte-clay')");
+    expect(showcase).toContain('/demo/heroimg.webp');
+    expect(showcase).toContain('booking-date-carousel');
+    expect(showcase).toContain('booking-choice-card--barber');
+    expect(showcase).toContain('booking-slot');
+    expect(showcase).toContain('Available times');
+    expect(showcase).toContain('barber.image.src');
+    expect(showcase).toContain('clay.image.src');
+    expect(showcase).toContain('WebsiteCostReportsChart');
+    expect(showcase).toContain('buildAppointmentReminderBody');
+    expect(showcase).toContain('Alex Demo');
+    expect(showcase).toContain('Subject to the monthly allowance');
+    expect(showcase).toContain('Collect in shop');
+    expect(showcase).not.toContain('bwcost-showcase__chart');
+    const bento = showcase.split('bwcost-showcase__bento')[1] ?? '';
+    expect(bento).not.toContain('<button');
     for (const title of [
       'Website',
       'Bookings',
@@ -477,8 +492,6 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     ]) {
       expect(showcase).toContain(`<h3>${title}</h3>`);
     }
-    const bento = showcase.split('bwcost-showcase__bento')[1] ?? '';
-    expect(bento).not.toContain('<img');
   });
 
   it('uses scoped bwcost CSS tokens on design-system variables without hardcoded #FF1717', () => {

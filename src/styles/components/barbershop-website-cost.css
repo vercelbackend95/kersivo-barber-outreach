@@ -2438,7 +2438,7 @@ table.bwcost-sr-only td {
 }
 
 .bwcost-scenarios__inner {
-  width: min(94vw, 74rem);
+  width: min(94vw, 91.1rem);
 }
 
 .bwcost-scenarios__intro {
@@ -3531,6 +3531,10 @@ table.bwcost-sr-only td {
   }
 }
 
+.bwcost-showcase .bwcost-section__inner {
+  width: min(94vw, 91.1rem);
+}
+
 .bwcost-showcase__intro {
   max-width: 44rem;
   margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
@@ -3690,7 +3694,7 @@ table.bwcost-sr-only td {
 }
 
 .bwcost-showcase__laptop {
-  width: min(100%, 34rem);
+  width: 100%;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
   border-radius: 0.85rem 0.85rem 0.55rem 0.55rem;
@@ -3793,235 +3797,457 @@ table.bwcost-sr-only td {
   background: color-mix(in srgb, var(--bwcost-accent) 14%, transparent);
 }
 
-.bwcost-showcase__card p {
+.bwcost-showcase__card > p {
   margin: 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.4;
 }
 
-.bwcost-showcase__preview,
-.bwcost-showcase__roster,
-.bwcost-showcase__product,
-.bwcost-showcase__chart,
+.bwcost-showcase__browser,
+.bwcost-showcase__flow,
+.bwcost-showcase__client,
+.bwcost-showcase__retail,
+.bwcost-showcase__reports,
 .bwcost-showcase__sms {
-  margin-top: auto;
-}
-
-.bwcost-showcase__preview-label {
-  margin: 0 0 0.35rem;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .bwcost-showcase__browser {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
-  border-radius: 0.55rem;
-  background: #101114;
-}
-
-.bwcost-showcase__chrome,
-.bwcost-showcase__site-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.28rem;
+  border-radius: 0.7rem;
+  background: #0b0c0e;
 }
 
 .bwcost-showcase__chrome {
-  padding: 0.35rem 0.45rem;
-  background: color-mix(in srgb, #fff 5%, #111);
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.4rem 0.55rem;
+  background: #14161a;
 }
 
 .bwcost-showcase__chrome span {
-  width: 0.32rem;
-  height: 0.32rem;
+  width: 0.38rem;
+  height: 0.38rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--fg) 24%, transparent);
-}
-
-.bwcost-showcase__chrome em,
-.bwcost-showcase__site-nav span,
-.bwcost-showcase__site-hero span,
-.bwcost-showcase__slot,
-.bwcost-showcase__status,
-.bwcost-showcase__sample,
-.bwcost-showcase__client span,
-.bwcost-showcase__product em {
-  font-style: normal;
+  background: color-mix(in srgb, #f4f1ea 28%, transparent);
 }
 
 .bwcost-showcase__chrome em {
   margin-left: 0.35rem;
-  font-size: 0.62rem;
-  color: var(--muted);
-}
-
-.bwcost-showcase__site-nav {
-  gap: 0.55rem;
-  padding: 0.35rem 0.5rem;
-  font-size: 0.58rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
-}
-
-.bwcost-showcase__site-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  min-height: 3.4rem;
-  margin: 0.35rem;
-  padding: 0.55rem;
-  border-radius: 0.4rem;
-  background:
-    linear-gradient(160deg, color-mix(in srgb, var(--bwcost-accent) 28%, transparent), transparent 55%),
-    #17191e;
-}
-
-.bwcost-showcase__site-hero strong {
-  font-family: var(--font-heading);
-  font-size: 0.85rem;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-}
-
-.bwcost-showcase__site-hero span {
-  padding: 0.2rem 0.4rem;
-  border-radius: 999px;
-  background: var(--bwcost-accent);
-  color: var(--accent-contrast);
-  font-size: 0.58rem;
-  font-weight: 700;
-}
-
-.bwcost-showcase__slots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.bwcost-showcase__slot {
-  min-width: 2.7rem;
-  padding: 0.28rem 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
-  border-radius: 0.35rem;
-  color: var(--fg);
   font-size: 0.68rem;
-  text-align: center;
+  font-style: normal;
+  color: #a7abb2;
 }
 
-.bwcost-showcase__slot.is-selected {
-  border-color: var(--bwcost-accent);
-  background: color-mix(in srgb, var(--bwcost-accent) 18%, transparent);
-  color: var(--fg);
-}
-
-.bwcost-showcase__roster {
+.bwcost-showcase__site {
   display: grid;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  min-height: 11.5rem;
+  background: #0b0c0e;
 }
 
-.bwcost-showcase__roster li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.45rem;
-  align-items: center;
-}
-
-.bwcost-showcase__avatar {
-  display: inline-flex;
-  align-items: center;
+.bwcost-showcase__site-copy {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--fg) 10%, #111);
-  color: var(--fg);
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.85rem 0.75rem 0.9rem 0.85rem;
+}
+
+.bwcost-showcase__site-eyebrow,
+.bwcost-showcase__site-name,
+.bwcost-showcase__site-display {
+  margin: 0;
+}
+
+.bwcost-showcase__site-eyebrow {
+  color: #a7abb2;
   font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.bwcost-showcase__roster strong,
-.bwcost-showcase__client strong,
-.bwcost-showcase__product strong {
-  display: block;
-  color: var(--fg);
-  font-size: 0.75rem;
-  font-weight: 650;
-}
-
-.bwcost-showcase__roster em,
-.bwcost-showcase__client span,
-.bwcost-showcase__product em,
-.bwcost-showcase__sample {
-  display: block;
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.3;
-}
-
-.bwcost-showcase__status {
-  color: var(--bwcost-accent-text);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.bwcost-showcase__site-name {
+  color: #f4f1ea;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-transform: none;
+}
+
+.bwcost-showcase__site-display {
+  color: #f4f1ea;
+  font-family: var(--font-heading);
+  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.bwcost-showcase__site-book {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  padding: 0.38rem 0.65rem;
+  border-radius: 999px;
+  background: #315ef5;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.bwcost-showcase__site img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 11.5rem;
+  object-fit: cover;
+  object-position: 50% 28%;
+  filter: saturate(0.9) contrast(1.04) brightness(0.96);
+}
+
+.bwcost-showcase__flow {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.15rem 0 0;
+}
+
+.bwcost-showcase__flow .booking-choice,
+.bwcost-showcase__flow .booking-date-carousel__day {
+  cursor: default;
+  pointer-events: none;
+}
+
+.bwcost-showcase .booking-flow--wizard .booking-choice-grid--barbers {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.bwcost-showcase__flow .booking-choice-card--barber {
+  min-height: 3.15rem;
+  padding: 0.4rem 0.6rem;
+  gap: 0.55rem;
+}
+
+.bwcost-showcase__flow .booking-choice-card__avatar {
+  width: 2.35rem;
+  height: 2.35rem;
+}
+
+.bwcost-showcase__flow .booking-choice-card__avatar img {
+  object-fit: cover;
+}
+
+.bwcost-showcase .booking-flow--wizard .booking-choice-card--barber .booking-choice-card__title {
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 0.86rem;
+}
+
+.bwcost-showcase__flow .booking-date-carousel {
+  gap: 0.45rem;
+}
+
+.bwcost-showcase .booking-flow--wizard .booking-date-carousel__rail {
+  overflow: hidden;
+}
+
+.bwcost-showcase .booking-flow--wizard .booking-date-carousel__day {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 3.35rem;
+  padding: 0.35rem 0.1rem;
+}
+
+.bwcost-showcase__flow .booking-date-carousel__day > strong {
+  font-size: 1rem;
+}
+
+.bwcost-showcase__flow .booking-slots-section {
+  gap: 0.45rem;
+}
+
+.bwcost-showcase__flow .slot-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.bwcost-showcase__flow .booking-slot.booking-choice {
+  min-height: 2.35rem;
+  padding: 0.35rem 0.15rem;
+}
+
+.bwcost-showcase__flow .booking-slot__label {
+  font-size: 0.78rem;
 }
 
 .bwcost-showcase__client {
   display: grid;
-  gap: 0.15rem;
-  padding: 0.55rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, #fff 3%, transparent);
+  gap: 0.7rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--surface-1) 88%, #0a0a0a);
 }
 
-.bwcost-showcase__product {
-  display: flex;
+.bwcost-showcase__client-id {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.6rem;
   align-items: center;
-  gap: 0.55rem;
 }
 
-.bwcost-showcase__tin {
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 0.45rem;
-  background:
-    radial-gradient(circle at 35% 30%, color-mix(in srgb, #fff 35%, transparent), transparent 42%),
-    linear-gradient(160deg, #2a2d33, #121316);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 18%, transparent);
+.bwcost-showcase .admin-clients-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  background: color-mix(in srgb, var(--bwcost-accent) 22%, #111);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.bwcost-showcase__chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.35rem;
-  height: 3.2rem;
-}
-
-.bwcost-showcase__chart span {
-  flex: 1;
-  border-radius: 0.25rem 0.25rem 0.1rem 0.1rem;
-  background: linear-gradient(180deg, var(--bwcost-accent), color-mix(in srgb, var(--bwcost-accent) 35%, #111));
-}
-
-.bwcost-showcase__sms p {
-  margin: 0;
-  padding: 0.5rem 0.6rem;
-  border-radius: 0.7rem 0.7rem 0.7rem 0.2rem;
-  background: color-mix(in srgb, var(--fg) 8%, #111);
+.bwcost-showcase .admin-clients-avatar-initials {
   color: var(--fg);
-  font-size: 0.7rem;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bwcost-showcase__client-kicker,
+.bwcost-showcase__client-name,
+.bwcost-showcase__client-badge,
+.bwcost-showcase__sample,
+.bwcost-showcase__pickup,
+.bwcost-showcase__sms-kicker,
+.bwcost-showcase__sms-from,
+.bwcost-showcase__sms-meta,
+.bwcost-showcase__sms-bubble {
+  margin: 0;
+}
+
+.bwcost-showcase__client-kicker,
+.bwcost-showcase__sms-kicker,
+.bwcost-showcase__sample,
+.bwcost-showcase__pickup {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.bwcost-showcase__client-kicker,
+.bwcost-showcase__sms-kicker {
+  text-transform: uppercase;
+}
+
+.bwcost-showcase__pickup {
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.bwcost-showcase__client-name,
+.bwcost-showcase__sms-from {
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.bwcost-showcase__client-badge {
+  padding: 0.18rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--bwcost-accent) 45%, transparent);
+  border-radius: 999px;
+  color: var(--bwcost-accent-text);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bwcost-showcase__client-meta {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+.bwcost-showcase__client-meta div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.bwcost-showcase__client-meta dt {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bwcost-showcase__client-meta dd {
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.82rem;
+}
+
+.bwcost-showcase__retail {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  min-height: 6.6rem;
+  padding: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 0.85rem;
+  background: #14161a;
+}
+
+.bwcost-showcase__retail .sf-card-media {
+  overflow: hidden;
+  border-radius: 0.55rem;
+  background: #0b0c0e;
+}
+
+.bwcost-showcase__retail img {
+  display: block;
+  width: 100%;
+  height: 5.6rem;
+  object-fit: contain;
+  object-position: center;
+}
+
+.bwcost-showcase__retail .sf-card-category,
+.bwcost-showcase__retail .sf-card-name,
+.bwcost-showcase__retail .sf-card-price {
+  margin: 0;
+}
+
+.bwcost-showcase__retail .sf-card-category {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bwcost-showcase__retail .sf-card-name {
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.bwcost-showcase__retail .sf-card-price {
+  margin-top: 0.15rem;
+  color: var(--fg);
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.bwcost-showcase__reports {
+  min-height: 9.25rem;
+  padding: 0.2rem 0 0;
+}
+
+.bwcost-showcase .admin-sales-chart-inner,
+.bwcost-showcase .admin-sales-chart-canvas,
+.bwcost-showcase .admin-revenue-chart {
+  width: 100%;
+  min-width: 0;
+}
+
+.bwcost-showcase .admin-sales-chart-canvas {
+  position: relative;
+  height: 10.5rem !important;
+  min-height: 8.5rem;
+}
+
+.bwcost-showcase .admin-sales-chart-svg,
+.bwcost-showcase .admin-revenue-chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bwcost-showcase .admin-sales-grid-line {
+  stroke: color-mix(in srgb, var(--fg) 14%, transparent);
+  stroke-width: 1;
+}
+
+.bwcost-showcase .admin-sales-axis-label,
+.bwcost-showcase .admin-sales-axis-label--floating {
+  fill: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.bwcost-showcase .admin-chart-y-label-bg {
+  fill: color-mix(in srgb, #0b0c0e 82%, transparent);
+}
+
+.bwcost-showcase .admin-chart-line,
+.bwcost-showcase .admin-chart-line--draw {
+  stroke-dashoffset: 0 !important;
+  transition: none;
+}
+
+.bwcost-showcase .admin-chart-area--draw {
+  opacity: 1 !important;
+  transition: none;
+}
+
+.bwcost-showcase__sms-phone {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.7rem 0.75rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fg) 4%, transparent), transparent 40%),
+    #101114;
+}
+
+.bwcost-showcase__sms-meta {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.bwcost-showcase__sms-bubble {
+  max-width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.85rem 0.85rem 0.85rem 0.28rem;
+  background: color-mix(in srgb, var(--fg) 8%, #16181d);
+  color: var(--fg);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bwcost-showcase .admin-chart-line,
+  .bwcost-showcase .admin-chart-area--draw,
+  .bwcost-showcase__flow .booking-choice,
+  .bwcost-showcase__flow .booking-date-carousel__day {
+    transition: none;
+  }
 }
 
 .bwcost-showcase__benefits {
@@ -4058,7 +4284,7 @@ table.bwcost-sr-only td {
   }
 
   .bwcost-showcase__laptop {
-    width: min(100%, 36rem);
+    width: 100%;
   }
 }
 

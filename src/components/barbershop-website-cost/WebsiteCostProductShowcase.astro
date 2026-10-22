@@ -1,7 +1,12 @@
 ---
+import WebsiteCostReportsChart from '@/components/barbershop-website-cost/WebsiteCostReportsChart';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { getDemoProductBySlug } from '@/lib/demo/products';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
+import { buildAppointmentReminderBody } from '@/lib/sms/templates';
+import '@/styles/components/booking-flow.css';
 
 const DEMO_ADMIN_HREF = '/demo/admin';
 const DEMO_TRACK = 'view_live_demo_click';
@@ -18,17 +23,22 @@ const clayPrice =
         maximumFractionDigits: 2,
       }).format(clay.pricePence / 100);
 
-const team = DEMO_BARBERS.map((barber) => ({
-  name: barber.name,
-  detail: barber.specialisation,
-  initials: barber.name
-    .split(' ')
-    .map((part) => part[0] ?? '')
-    .join(''),
-}));
-
-const bookingSlots = ['09:00', '10:00', '11:00', '11:30', '14:00'] as const;
+const selectedBarberId = DEMO_BARBERS[0]?.id;
+const previewDays = [
+  { weekday: 'Thu', day: '22', label: 'Thursday 22 October 2026', selected: false },
+  { weekday: 'Fri', day: '23', label: 'Friday 23 October 2026', selected: true },
+  { weekday: 'Sat', day: '24', label: 'Saturday 24 October 2026', selected: false },
+  { weekday: 'Sun', day: '25', label: 'Sunday 25 October 2026', selected: false },
+] as const;
+/** Same illustrative slots as BookingFlow PREVIEW_STATIC_SLOTS. Not live availability. */
+const bookingSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30'] as const;
 const selectedSlot = '11:00';
+const smsPreview = buildAppointmentReminderBody({
+  shopName: DEMO_SHOP_NAME,
+  serviceName: 'Skin Fade',
+  startAt: new Date('2026-10-23T10:00:00Z'),
+  timezone: 'Europe/London',
+});
 ---
 
 <section class="bwcost-section bwcost-showcase" id="product-showcase" aria-labelledby="bwcost-showcase-heading">
@@ -110,13 +120,24 @@ const selectedSlot = '11:00';
             </span>
             <h3>Website</h3>
           </header>
-          <p>A branded website that showcases your barbershop and helps clients book.</p>
-          <div class="bwcost-showcase__preview bwcost-showcase__browser" aria-hidden="true">
-            <div class="bwcost-showcase__chrome"><span></span><span></span><span></span><em>cutstate.demo</em></div>
-            <div class="bwcost-showcase__site-nav"><span>Home</span><span>Services</span><span>Barbers</span></div>
-            <div class="bwcost-showcase__site-hero">
-              <strong>CUTSTATE</strong>
-              <span>Book now</span>
+          <p>The branded shop site clients actually see.</p>
+          <div class="bwcost-showcase__browser">
+            <div class="bwcost-showcase__chrome" aria-hidden="true"><span></span><span></span><span></span><em>cutstate.demo</em></div>
+            <div class="bwcost-showcase__site">
+              <div class="bwcost-showcase__site-copy">
+                <p class="bwcost-showcase__site-eyebrow">Manchester · Appointments & walk-ins</p>
+                <p class="bwcost-showcase__site-name">Cutstate Barbers</p>
+                <p class="bwcost-showcase__site-display">Precision in every detail.</p>
+                <span class="bwcost-showcase__site-book">Book an appointment</span>
+              </div>
+              <img
+                src="/demo/heroimg.webp"
+                alt="Barber using clippers and a comb in the CUTSTATE demonstration shop."
+                width="1800"
+                height="2700"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           </div>
         </article>
@@ -128,15 +149,41 @@ const selectedSlot = '11:00';
             </span>
             <h3>Bookings</h3>
           </header>
-          <p>Let clients choose services, barbers and available appointment times.</p>
-          <div class="bwcost-showcase__preview" aria-hidden="true">
-            <p class="bwcost-showcase__preview-label">Pick a time</p>
-            <div class="bwcost-showcase__slots">
-              {
-                bookingSlots.map((slot) => (
-                  <span class:list={['bwcost-showcase__slot', slot === selectedSlot && 'is-selected']}>{slot}</span>
-                ))
-              }
+          <p>Choose a day and an available time.</p>
+          <p class="bwcost-sr-only">Illustrative booking preview. Friday 23 October at 11:00 is shown selected. No appointment is created.</p>
+          <div class="booking-flow--wizard booking-shell bwcost-showcase__flow" aria-hidden="true">
+            <div class="booking-date-carousel">
+              <div class="booking-date-carousel__header">
+                <strong>October 2026</strong>
+              </div>
+              <div class="booking-date-carousel__rail">
+                {
+                  previewDays.map((day) => (
+                    <div class:list={['booking-date-carousel__day', day.selected && 'is-selected']}>
+                      <span>{day.weekday}</span>
+                      <strong>{day.day}</strong>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+            <div class="booking-slots-section">
+              <div class="booking-slots-section__head">
+                <label>Available times</label>
+                <span class="muted">Preview</span>
+              </div>
+              <div class="slot-grid">
+                {
+                  bookingSlots.map((slot) => (
+                    <div class:list={['booking-choice', 'booking-slot', slot === selectedSlot && 'is-selected']}>
+                      <span class="booking-slot__label">{slot}</span>
+                      <span class="booking-choice__mark booking-choice__mark--compact" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.2 6.4 11l6.1-6.4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
             </div>
           </div>
         </article>
@@ -148,21 +195,35 @@ const selectedSlot = '11:00';
             </span>
             <h3>Team</h3>
           </header>
-          <p>Manage barbers, services, working hours and individual calendars.</p>
-          <ul class="bwcost-showcase__roster">
-            {
-              team.map((barber) => (
-                <li>
-                  <span class="bwcost-showcase__avatar" aria-hidden="true">{barber.initials}</span>
-                  <span>
-                    <strong>{barber.name}</strong>
-                    <em>{barber.detail}</em>
-                  </span>
-                  <span class="bwcost-showcase__status">Available</span>
-                </li>
-              ))
-            }
-          </ul>
+          <p>Clients pick their barber.</p>
+          <p class="bwcost-sr-only">Barber selection preview for Ellis Ward, Noah Reid and Marcus Bell. Ellis Ward is shown selected.</p>
+          <div class="booking-flow--wizard booking-shell bwcost-showcase__flow" aria-hidden="true">
+            <div class="booking-choice-grid booking-choice-grid--barbers">
+              {
+                DEMO_BARBERS.map((barber) => (
+                  <div class:list={['booking-choice', 'booking-choice-card', 'booking-choice-card--barber', barber.id === selectedBarberId && 'is-selected']}>
+                    <span class="booking-choice-card__avatar">
+                      <img
+                        src={barber.image.src}
+                        alt=""
+                        width={barber.image.width}
+                        height={barber.image.height}
+                        style={`object-position: ${barber.rosterObjectPosition}`}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </span>
+                    <span class="booking-choice-card__content">
+                      <span class="booking-choice-card__title">{barber.name}</span>
+                    </span>
+                    <span class="booking-choice__mark" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.2 6.4 11l6.1-6.4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
         </article>
 
         <article class="bwcost-showcase__card bwcost-showcase__card--wide">
@@ -172,12 +233,28 @@ const selectedSlot = '11:00';
             </span>
             <h3>Client data</h3>
           </header>
-          <p>Keep client records and booking history organised.</p>
-          <div class="bwcost-showcase__preview bwcost-showcase__client">
-            <p class="bwcost-showcase__preview-label">Demonstration record</p>
-            <strong>Demo client</strong>
-            <span>Skin Fade · Ellis Ward</span>
-            <span>Next visit kept in the shop diary</span>
+          <p>A client record with visit history.</p>
+          <div class="bwcost-showcase__client">
+            <div class="bwcost-showcase__client-id">
+              <span class="admin-clients-avatar" aria-hidden="true">
+                <span class="admin-clients-avatar-initials">AD</span>
+              </span>
+              <div>
+                <p class="bwcost-showcase__client-kicker">Illustrative demo record</p>
+                <p class="bwcost-showcase__client-name">Alex Demo</p>
+              </div>
+              <span class="bwcost-showcase__client-badge">Demo</span>
+            </div>
+            <dl class="bwcost-showcase__client-meta">
+              <div>
+                <dt>Last visit</dt>
+                <dd>Skin Fade · Ellis Ward</dd>
+              </div>
+              <div>
+                <dt>Next booking</dt>
+                <dd>Fri 23 Oct · 11:00</dd>
+              </div>
+            </dl>
           </div>
         </article>
 
@@ -188,15 +265,29 @@ const selectedSlot = '11:00';
             </span>
             <h3>Retail pickup</h3>
           </header>
-          <p>Let clients order products for collection at your barbershop.</p>
-          <div class="bwcost-showcase__product" aria-hidden="true">
-            <span class="bwcost-showcase__tin"></span>
-            <span>
-              <strong>{clay?.name ?? 'Matte Clay'}</strong>
-              <em>{clayPrice}</em>
-              <em>Collect in shop</em>
-            </span>
-          </div>
+          <p>Products collected at the shop.</p>
+          {
+            clay ? (
+              <article class="sf-card bwcost-showcase__retail">
+                <div class="sf-card-media">
+                  <img
+                    src={clay.image.src}
+                    alt={clay.image.alt}
+                    width={clay.image.width}
+                    height={clay.image.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div class="sf-card-body">
+                  <p class="sf-card-category">{CATEGORY_LABELS[clay.category]}</p>
+                  <p class="sf-card-name">{clay.name}</p>
+                  <p class="sf-card-price">{clayPrice}</p>
+                  <p class="bwcost-showcase__pickup">Collect in shop</p>
+                </div>
+              </article>
+            ) : null
+          }
         </article>
 
         <article class="bwcost-showcase__card">
@@ -206,15 +297,11 @@ const selectedSlot = '11:00';
             </span>
             <h3>Reports</h3>
           </header>
-          <p>See booking activity and retail performance.</p>
-          <div class="bwcost-showcase__chart" aria-hidden="true">
-            <span style="height: 42%"></span>
-            <span style="height: 68%"></span>
-            <span style="height: 50%"></span>
-            <span style="height: 84%"></span>
-            <span style="height: 60%"></span>
+          <p>Bookings · Last 7 days</p>
+          <div class="bwcost-showcase__reports">
+            <WebsiteCostReportsChart client:visible />
           </div>
-          <p class="bwcost-showcase__sample">Sample view · not live results</p>
+          <p class="bwcost-showcase__sample">Demo data · not live results</p>
         </article>
 
         <article class="bwcost-showcase__card">
@@ -224,9 +311,14 @@ const selectedSlot = '11:00';
             </span>
             <h3>SMS reminders</h3>
           </header>
-          <p>Appointment reminders to help clients remember their bookings.</p>
-          <div class="bwcost-showcase__sms" aria-hidden="true">
-            <p>CUTSTATE: Skin Fade with Ellis Ward is tomorrow at 11:00.</p>
+          <p>A day-before appointment reminder.</p>
+          <div class="bwcost-showcase__sms">
+            <p class="bwcost-showcase__sms-kicker">Illustrative preview · not a sent message</p>
+            <div class="bwcost-showcase__sms-phone">
+              <p class="bwcost-showcase__sms-from">{DEMO_SHOP_NAME}</p>
+              <p class="bwcost-showcase__sms-meta">Reminder · Fri 23 Oct</p>
+              <p class="bwcost-showcase__sms-bubble">{smsPreview}</p>
+            </div>
           </div>
           <p class="bwcost-showcase__sample">Subject to the monthly allowance</p>
         </article>
