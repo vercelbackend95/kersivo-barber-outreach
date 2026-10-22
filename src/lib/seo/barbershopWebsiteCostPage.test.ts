@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import { SAAS_MONTHLY_GBP } from './defaults';
+import { DEMO_BARBERS } from '../demo/barbers';
+import { getDemoProductBySlug } from '../demo/products';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
 import {
   BARBERSHOP_WEBSITE_COST_BREADCRUMB_CURRENT,
@@ -58,7 +60,7 @@ const showroom = read(`${costDir}WebsiteCostShowroom.astro`);
 const serviceComparison = read(`${costDir}WebsiteCostServiceComparison.astro`);
 const models = read(`${costDir}WebsiteCostModels.astro`);
 const scenarios = read(`${costDir}WebsiteCostScenarios.astro`);
-const ownership = read(`${costDir}WebsiteCostOwnership.astro`);
+const showcase = read(`${costDir}WebsiteCostProductShowcase.astro`);
 const offer = read(`${costDir}WebsiteCostFullOffer.astro`);
 const faqClose = read(`${costDir}WebsiteCostFaqClose.astro`);
 const css = read('../../styles/components/barbershop-website-cost.css');
@@ -114,14 +116,14 @@ describe('/barbershop-website-cost-uk page shell', () => {
       'WebsiteCostServiceComparison',
       'WebsiteCostModels',
       'WebsiteCostScenarios',
-      'WebsiteCostOwnership',
+      'WebsiteCostProductShowcase',
       'WebsiteCostFullOffer',
       'WebsiteCostFaqClose',
     ]) {
       expect(page).toContain(name);
     }
     expect(page.indexOf('WebsiteCostServiceComparison')).toBeLessThan(page.indexOf('WebsiteCostModels'));
-    const combined = `${page}\n${hero}\n${serviceComparison}\n${models}\n${scenarios}\n${ownership}\n${offer}\n${faqClose}`;
+    const combined = `${page}\n${hero}\n${serviceComparison}\n${models}\n${scenarios}\n${showcase}\n${offer}\n${faqClose}`;
     expect((combined.match(/<h1\b/g) ?? [])).toHaveLength(1);
     expect(hero).toContain('BARBERSHOP_WEBSITE_COST_PAGE_H1');
   });
@@ -448,7 +450,35 @@ describe('/barbershop-website-cost-uk content and CTAs', () => {
     expect(offer).toContain('saas_subscribe_click');
     expect(offer).toContain('barbershop_website_cost_full_offer');
     expect(faqClose).toContain('barbershop_website_cost_final');
-    expect(ownership).toContain('underlying source code is not transferred');
+    const ownershipFaq = COST_PAGE_FAQS.find((item) => item.id === 'ownership-cancel');
+    expect(ownershipFaq?.answer.join(' ')).toContain('does not transfer the platform source code');
+    expect(ownershipFaq?.answer.join(' ')).toContain('hosting ends when the paid term ends');
+    expect(ownershipFaq?.answer.join(' ')).toContain('60-day');
+    expect(ownershipFaq?.answer.join(' ')).toContain('does not create an automatic pro-rated refund');
+    expect(showcase).toContain('View the working demo');
+    expect(showcase).toContain('href={DEMO_HOME_HREF}');
+    expect(showcase).toContain("DEMO_ADMIN_HREF = '/demo/admin'");
+    expect(showcase).toContain('DEMO_BARBERS');
+    expect(DEMO_BARBERS.map((barber) => barber.name)).toEqual([
+      'Ellis Ward',
+      'Noah Reid',
+      'Marcus Bell',
+    ]);
+    expect(getDemoProductBySlug('matte-clay')?.name).toBe('Matte Clay');
+    expect(showcase).toContain("getDemoProductBySlug('matte-clay')");
+    for (const title of [
+      'Website',
+      'Bookings',
+      'Team',
+      'Client data',
+      'Retail pickup',
+      'Reports',
+      'SMS reminders',
+    ]) {
+      expect(showcase).toContain(`<h3>${title}</h3>`);
+    }
+    const bento = showcase.split('bwcost-showcase__bento')[1] ?? '';
+    expect(bento).not.toContain('<img');
   });
 
   it('uses scoped bwcost CSS tokens on design-system variables without hardcoded #FF1717', () => {

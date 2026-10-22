@@ -227,6 +227,7 @@ export const COST_PAGE_FAQS: readonly CostFaqItem[] = [
     answer: [
       'Rights depend on the supplier. With Full KERSIVO your brand, content and domain rights stay with the shop; KERSIVO does not transfer the platform source code, and normal site hosting ends when the paid term ends.',
       'You may request one free CSV export of available business data within the Commercial Offer’s 60-day inactive retention window, subject to identity checks and technical limits.',
+      'Cancelling does not create an automatic pro-rated refund; paid access continues to the end of the current period.',
     ],
   },
   {

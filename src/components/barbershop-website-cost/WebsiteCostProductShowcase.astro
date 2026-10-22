@@ -1,0 +1,259 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { getDemoProductBySlug } from '@/lib/demo/products';
+
+const DEMO_ADMIN_HREF = '/demo/admin';
+const DEMO_TRACK = 'view_live_demo_click';
+const DEMO_PLACEMENT = 'barbershop_website_cost_showcase';
+
+const clay = getDemoProductBySlug('matte-clay');
+const clayPrice =
+  clay == null
+    ? ''
+    : new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(clay.pricePence / 100);
+
+const team = DEMO_BARBERS.map((barber) => ({
+  name: barber.name,
+  detail: barber.specialisation,
+  initials: barber.name
+    .split(' ')
+    .map((part) => part[0] ?? '')
+    .join(''),
+}));
+
+const bookingSlots = ['09:00', '10:00', '11:00', '11:30', '14:00'] as const;
+const selectedSlot = '11:00';
+---
+
+<section class="bwcost-section bwcost-showcase" id="product-showcase" aria-labelledby="bwcost-showcase-heading">
+  <div class="bwcost-section__inner">
+    <header class="bwcost-showcase__intro">
+      <p class="bwcost-showcase__eyebrow">
+        <span class="bwcost-showcase__eyebrow-dot" aria-hidden="true"></span>
+        05 / See what you're actually paying for
+      </p>
+      <h2 id="bwcost-showcase-heading" class="bwcost-showcase__title">
+        See what you're actually<br />
+        <span class="bwcost-showcase__title-accent">paying for.</span>
+      </h2>
+      <p class="bwcost-showcase__lede">
+        A professionally branded website for your customers. Online bookings and management tools for your
+        barbershop — connected in one platform.
+      </p>
+    </header>
+
+    <div class="bwcost-showcase__layout">
+      <article class="bwcost-showcase__hero" aria-labelledby="bwcost-showcase-hero-heading">
+        <p class="bwcost-showcase__kicker">The complete experience</p>
+        <h3 id="bwcost-showcase-hero-heading" class="bwcost-showcase__hero-title">
+          One platform, built for barbershops.
+        </h3>
+        <p class="bwcost-showcase__hero-copy">
+          Your branded website, online bookings, client management and everyday shop tools — working together in
+          one platform.
+        </p>
+        <ul class="bwcost-showcase__checks">
+          <li>Your website and bookings work together</li>
+          <li>Built for independent barbershops</li>
+          <li>No technical skills needed to use the core system</li>
+        </ul>
+        <div class="bwcost-showcase__actions">
+          <a
+            class="bwcost-btn bwcost-btn--primary"
+            href={DEMO_HOME_HREF}
+            data-track={DEMO_TRACK}
+            data-track-placement={DEMO_PLACEMENT}
+          >
+            View the working demo
+          </a>
+          <a class="bwcost-showcase__dash-link" href={DEMO_ADMIN_HREF}>Explore the owner dashboard</a>
+        </div>
+
+        <div class="bwcost-showcase__devices">
+          <figure class="bwcost-showcase__laptop">
+            <div class="bwcost-showcase__laptop-bar" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <img
+              src="/images/barbershop-website-cost/section-05/cutstate-desktop.webp"
+              alt="CUTSTATE BARBERS demonstration website, the customer-facing shop used to show Full KERSIVO."
+              width="1280"
+              height="800"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+          <figure class="bwcost-showcase__phone">
+            <img
+              src="/images/barbershop-website-cost/section-05/cutstate-booking-mobile.webp"
+              alt="CUTSTATE demonstration booking screen on a phone, choosing a service, barber and time."
+              width="390"
+              height="844"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
+      </article>
+
+      <div class="bwcost-showcase__bento">
+        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="4" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Website</h3>
+          </header>
+          <p>A branded website that showcases your barbershop and helps clients book.</p>
+          <div class="bwcost-showcase__preview bwcost-showcase__browser" aria-hidden="true">
+            <div class="bwcost-showcase__chrome"><span></span><span></span><span></span><em>cutstate.demo</em></div>
+            <div class="bwcost-showcase__site-nav"><span>Home</span><span>Services</span><span>Barbers</span></div>
+            <div class="bwcost-showcase__site-hero">
+              <strong>CUTSTATE</strong>
+              <span>Book now</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 3v4M16 3v4M4 10h16" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Bookings</h3>
+          </header>
+          <p>Let clients choose services, barbers and available appointment times.</p>
+          <div class="bwcost-showcase__preview" aria-hidden="true">
+            <p class="bwcost-showcase__preview-label">Pick a time</p>
+            <div class="bwcost-showcase__slots">
+              {
+                bookingSlots.map((slot) => (
+                  <span class:list={['bwcost-showcase__slot', slot === selectedSlot && 'is-selected']}>{slot}</span>
+                ))
+              }
+            </div>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="9" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 19c.6-2.6 2.6-4 5-4s4.4 1.4 5 4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="9" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Team</h3>
+          </header>
+          <p>Manage barbers, services, working hours and individual calendars.</p>
+          <ul class="bwcost-showcase__roster">
+            {
+              team.map((barber) => (
+                <li>
+                  <span class="bwcost-showcase__avatar" aria-hidden="true">{barber.initials}</span>
+                  <span>
+                    <strong>{barber.name}</strong>
+                    <em>{barber.detail}</em>
+                  </span>
+                  <span class="bwcost-showcase__status">Available</span>
+                </li>
+              ))
+            }
+          </ul>
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1-3 3.2-4.5 7-4.5S18 16 19 19" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Client data</h3>
+          </header>
+          <p>Keep client records and booking history organised.</p>
+          <div class="bwcost-showcase__preview bwcost-showcase__client">
+            <p class="bwcost-showcase__preview-label">Demonstration record</p>
+            <strong>Demo client</strong>
+            <span>Skin Fade · Ellis Ward</span>
+            <span>Next visit kept in the shop diary</span>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 8h12l-1 11H7L6 8z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8V7a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Retail pickup</h3>
+          </header>
+          <p>Let clients order products for collection at your barbershop.</p>
+          <div class="bwcost-showcase__product" aria-hidden="true">
+            <span class="bwcost-showcase__tin"></span>
+            <span>
+              <strong>{clay?.name ?? 'Matte Clay'}</strong>
+              <em>{clayPrice}</em>
+              <em>Collect in shop</em>
+            </span>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 16v-4M12 16V8M16 16v-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Reports</h3>
+          </header>
+          <p>See booking activity and retail performance.</p>
+          <div class="bwcost-showcase__chart" aria-hidden="true">
+            <span style="height: 42%"></span>
+            <span style="height: 68%"></span>
+            <span style="height: 50%"></span>
+            <span style="height: 84%"></span>
+            <span style="height: 60%"></span>
+          </div>
+          <p class="bwcost-showcase__sample">Sample view · not live results</p>
+        </article>
+
+        <article class="bwcost-showcase__card">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 6h14v9H8l-3 3V6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>SMS reminders</h3>
+          </header>
+          <p>Appointment reminders to help clients remember their bookings.</p>
+          <div class="bwcost-showcase__sms" aria-hidden="true">
+            <p>CUTSTATE: Skin Fade with Ellis Ward is tomorrow at 11:00.</p>
+          </div>
+          <p class="bwcost-showcase__sample">Subject to the monthly allowance</p>
+        </article>
+      </div>
+    </div>
+
+    <ul class="bwcost-showcase__benefits">
+      <li>
+        <span aria-hidden="true"></span>
+        <strong>Less admin</strong>
+        <em>Keep daily tasks organised.</em>
+      </li>
+      <li>
+        <span aria-hidden="true"></span>
+        <strong>Clearer bookings</strong>
+        <em>Manage appointments in one place.</em>
+      </li>
+      <li>
+        <span aria-hidden="true"></span>
+        <strong>A better client experience</strong>
+        <em>Branded, mobile-friendly booking.</em>
+      </li>
+      <li>
+        <span aria-hidden="true"></span>
+        <strong>Ready to grow</strong>
+        <em>Tools built for independent barbershops.</em>
+      </li>
+    </ul>
+  </div>
+</section>
