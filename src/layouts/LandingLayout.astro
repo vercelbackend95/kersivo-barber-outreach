@@ -21,6 +21,8 @@ interface Props extends PageSeo {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Insights pages preload editorial fonts via slot="head"; skip unused marketing preloads. */
   suppressMarketingFontPreloads?: boolean;
+  /** Skip preloading display fonts when first-screen headings use only Inter (homepage). */
+  deferDecorativeFontPreloads?: boolean;
 }
 
 const {
@@ -36,6 +38,7 @@ const {
   robotsFollow,
   jsonLd,
   suppressMarketingFontPreloads = false,
+  deferDecorativeFontPreloads = false,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -55,8 +58,12 @@ const jsonLdBlocks = jsonLd
       <>
         <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="/fonts/antonio-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+        {!deferDecorativeFontPreloads && (
+          <>
+            <link rel="preload" href="/fonts/antonio-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+            <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+          </>
+        )}
       </>
     )}
     <title>{title}</title>
