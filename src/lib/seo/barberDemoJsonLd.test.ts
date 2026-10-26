@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBarberDemoJsonLd,
   getKersivoOrganizationId,
+  getKersivoHomepageId,
   getKersivoSoftwareId,
   getKersivoWebsiteId,
   KERSIVO_SOFTWARE_FEATURE_LIST,
@@ -11,10 +12,10 @@ import {
   buildBarbershopBookingFaqJsonLd,
 } from './barbershopBookingFaq';
 import { getFooterSocialLinks } from './footerSocialLinks';
-import { SAAS_MONTHLY_GBP } from './defaults';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
 
 describe('buildBarberDemoJsonLd', () => {
-  it('emits a single valid @graph with Organization, WebSite, and SoftwareApplication', () => {
+  it('emits a single valid @graph with Organization, WebSite, WebPage, and SoftwareApplication', () => {
     const jsonLd = buildBarberDemoJsonLd();
     const serialized = JSON.stringify(jsonLd);
     expect(() => JSON.parse(serialized)).not.toThrow();
@@ -22,12 +23,13 @@ describe('buildBarberDemoJsonLd', () => {
     expect(jsonLd['@context']).toBe('https://schema.org');
     const graph = jsonLd['@graph'] as Array<Record<string, unknown>>;
     expect(Array.isArray(graph)).toBe(true);
-    expect(graph).toHaveLength(3);
+    expect(graph).toHaveLength(4);
 
     const types = graph.map((node) => node['@type']);
-    expect(types).toEqual(['Organization', 'WebSite', 'SoftwareApplication']);
+    expect(types).toEqual(['Organization', 'WebSite', 'WebPage', 'SoftwareApplication']);
     expect(types.filter((t) => t === 'Organization')).toHaveLength(1);
     expect(types.filter((t) => t === 'WebSite')).toHaveLength(1);
+    expect(types.filter((t) => t === 'WebPage')).toHaveLength(1);
     expect(types.filter((t) => t === 'SoftwareApplication')).toHaveLength(1);
 
     expect(serialized).not.toContain('LocalBusiness');
@@ -44,6 +46,7 @@ describe('buildBarberDemoJsonLd', () => {
 
     const organization = graph.find((node) => node['@type'] === 'Organization')!;
     const website = graph.find((node) => node['@type'] === 'WebSite')!;
+    const homepage = graph.find((node) => node['@type'] === 'WebPage')!;
     const software = graph.find((node) => node['@type'] === 'SoftwareApplication')!;
 
     expect(organization['@id']).toBe(getKersivoOrganizationId(siteUrl));
@@ -87,6 +90,16 @@ describe('buildBarberDemoJsonLd', () => {
     expect(website.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
     expect(website).not.toHaveProperty('potentialAction');
 
+    expect(homepage['@id']).toBe(getKersivoHomepageId(siteUrl));
+    expect(homepage.url).toBe(`${siteUrl}/`);
+    expect(homepage.name).toBe(DEFAULT_TITLE);
+    expect(homepage.description).toBe(DEFAULT_DESCRIPTION);
+    expect(homepage.inLanguage).toBe('en-GB');
+    expect(homepage.isPartOf).toEqual({ '@id': getKersivoWebsiteId(siteUrl) });
+    expect(homepage.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
+    expect(homepage.mainEntity).toEqual({ '@id': getKersivoSoftwareId(siteUrl) });
+    expect(homepage.hasPart).toEqual({ '@id': `${siteUrl}/#faq` });
+
     expect(software['@id']).toBe(getKersivoSoftwareId(siteUrl));
     expect(software.name).toBe('KERSIVO');
     expect(software.url).toBe(`${siteUrl}/`);
@@ -104,7 +117,7 @@ describe('buildBarberDemoJsonLd', () => {
         name: 'Full KERSIVO',
         price: String(SAAS_MONTHLY_GBP),
         priceCurrency: 'GBP',
-        url: `${siteUrl}/`,
+        url: `${siteUrl}/pricing#plan`,
       },
     ]);
     expect(software.offers).toMatchObject([{ price: '0' }, { price: '39', priceCurrency: 'GBP' }]);
