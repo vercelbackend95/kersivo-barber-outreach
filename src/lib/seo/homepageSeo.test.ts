@@ -191,6 +191,32 @@ describe('homepage SEO phase 1: internal links', () => {
   });
 });
 
+describe('homepage lower-funnel conversion controls', () => {
+  it('does not put a demo-email form between pricing and onboarding', () => {
+    expect(homepage).not.toMatch(/LandingDemoCapture/);
+    expect(homepage).toMatch(/<RateCard1 variant="landing" \/>\s*<LandingPostPurchaseSteps \/>/);
+    expect(homepage).toContain('<Contact16');
+    expect(homepage).toContain('submitLabel="Send my question"');
+  });
+
+  it('keeps transparent commercial conditions without the unrequested VAT-status claim', () => {
+    const layout = getRateCard1LandingLayout();
+    expect(layout.conditionsLine1).toContain('Stripe');
+    expect(layout.conditionsLine2).toBe(
+      'First payment at checkout, then billed monthly. Cancel anytime. No setup fee.',
+    );
+    expect(landingPricingMarkup).not.toMatch(/VAT registered|no VAT is added/i);
+    expect(landingPricingMarkup).toContain('href="/admin/launch"');
+  });
+
+  it('preserves a single primary CTA and contextual comparison links for switchers', () => {
+    expect((switcher.match(/class="btn btn--primary/g) ?? [])).toHaveLength(1);
+    expect(switcher).toContain('landing-switcher-reassurance__compare-links');
+    expect(switcher).toContain('href="/booksy-alternative"');
+    expect(switcher).toContain('href="/fresha-alternative"');
+  });
+});
+
 describe('homepage SEO phase 1: FAQ', () => {
   it('renders the three new questions in the visible FAQ and the FAQPage JSON-LD', () => {
     expect(homepage).toContain('faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}');
