@@ -56,6 +56,22 @@ export function initSystemChooser(): void {
     if (event.key === 'Escape') {
       event.preventDefault();
       handleClose();
+      return;
+    }
+    if (event.key !== 'Tab' || !isChooserOpen) return;
+
+    // aria-modal requires keyboard focus to stay inside until the chooser closes.
+    const focusables = [...chooser.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]')]
+      .filter((element) => element.getClientRects().length > 0);
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (!first || !last) return;
+    if (event.shiftKey && (document.activeElement === first || !chooser.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !chooser.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
     }
   });
 
@@ -85,20 +101,21 @@ export function initSystemChooser(): void {
     });
   };
 
-  const activateTile = async (tile: Element) => {
-    if (tileNavigationInFlight) {
-      return;
-    }
+  const activateTile = async (tile: HTMLAnchorElement) => {
+    if (tileNavigationInFlight) return;
+    const href = tile.getAttribute('href');
+    if (!href || !href.startsWith('/')) return;
 
-    const href = tile.getAttribute('data-tile-href');
-    if (!href) {
-      return;
-    }
     tileNavigationInFlight = true;
     setTileLoadingState(tile);
 
+    // Create the new tab within the trusted click/keyboard gesture. Waiting for
+    // session checks or a timeout before window.open can trigger popup blocking.
+    const newTab = window.open('about:blank', '_blank');
+    if (newTab) newTab.opener = null;
+
     let targetHref = href;
-    if (href.includes('/admin-demo')) {
+    if (href.startsWith('/admin-demo')) {
       try {
         const response = await fetch('/api/admin/session', { credentials: 'include' });
         if (response.ok) {
@@ -110,30 +127,34 @@ export function initSystemChooser(): void {
           }
         }
       } catch {
-        /* fall back to demo href */
+        // Continue to the public admin demo when no session lookup is available.
       }
     }
 
-    setTimeout(() => {
-      window.open(targetHref, '_blank', 'noopener');
-      setTimeout(resetTileLoadingState, 600);
-    }, 260);
+    if (newTab && !newTab.closed) {
+      newTab.location.replace(targetHref);
+    } else {
+      // Popup blockers must not make the demo completely inaccessible.
+      window.location.assign(targetHref);
+    }
+    setTimeout(resetTileLoadingState, 600);
   };
 
   tiles.forEach((tile) => {
-    if (!(tile instanceof HTMLElement)) {
-      return;
-    }
+    if (!(tile instanceof HTMLAnchorElement)) return;
 
-    tile.addEventListener('click', () => {
-      activateTile(tile);
+    tile.addEventListener('click', (event) => {
+      // Allow browser-native middle-click and modifier-click actions on real links.
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      void activateTile(tile);
     });
 
     tile.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        activateTile(tile);
-      }
+      // Enter triggers the native link click. Space is an additional keyboard shortcut.
+      if (event.key !== ' ') return;
+      event.preventDefault();
+      void activateTile(tile);
     });
   });
 }
