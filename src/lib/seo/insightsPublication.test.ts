@@ -42,7 +42,9 @@ describe('Insights publication safety', () => {
         const og = new URL(article.ogImage);
         const hero = new URL(article.heroImage);
         expect(og.protocol).toBe('https:');
-        expect(og.hostname).toBe('images.unsplash.com');
+        // Owner-approved editorial imagery may come from licensed Unsplash or Pexels sources.
+        expect(['images.unsplash.com', 'images.pexels.com']).toContain(og.hostname);
+        expect(og.hostname).toBe(hero.hostname);
         expect(og.pathname).toBe(hero.pathname);
         expect(og.searchParams.get('w')).toBe('1200');
         expect(og.searchParams.get('h')).toBe('630');
@@ -50,9 +52,17 @@ describe('Insights publication safety', () => {
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
           media: Array<{ kind: string; licenceReviewed: boolean; creditUrl?: string }>;
         };
-        expect(manifest.media.some((asset) =>
-          asset.kind === 'hero' && asset.licenceReviewed && asset.creditUrl?.startsWith('https://unsplash.com/')
-        )).toBe(true);
+        const approvedCreditHost = og.hostname === 'images.pexels.com'
+          ? 'www.pexels.com'
+          : 'unsplash.com';
+        expect(manifest.media.some((asset) => {
+          if (asset.kind !== 'hero' || !asset.licenceReviewed || !asset.creditUrl) return false;
+          try {
+            return new URL(asset.creditUrl).hostname === approvedCreditHost;
+          } catch {
+            return false;
+          }
+        })).toBe(true);
       }
       expect(existsSync(join(stagingDir, `${article.slug}-display.md`)), article.slug).toBe(true);
     }
