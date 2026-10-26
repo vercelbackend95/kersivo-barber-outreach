@@ -108,7 +108,7 @@ describe('homepage SEO phase 1: headings', () => {
   });
 
   it('opens the content with the barbershop software H2', () => {
-    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingValueCards \/>/);
+    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingValueCards \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
     expect(valueCards).toContain('<p class="landing-value-cards__eyebrow">WHAT KERSIVO INCLUDES</p>');
     expect(text(between(valueCards, '<h2 id="landing-value-cards-title"', '</h2>'))).toBe(
       'Barbershop software for bookings, clients and daily management',
