@@ -191,6 +191,8 @@
 
 .system-chooser__tile {
   position: relative;
+  text-decoration: none;
+  color: inherit;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
