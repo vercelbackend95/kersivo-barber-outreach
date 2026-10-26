@@ -197,6 +197,7 @@ describe('homepage lower-funnel conversion controls', () => {
     expect(homepage).toMatch(/<RateCard1 variant="landing" \/>\s*<LandingPostPurchaseSteps \/>/);
     expect(homepage).toContain('<Contact16');
     expect(homepage).toContain('submitLabel="Send my question"');
+    expect(homepage).toMatch(/<Contact16[\s\S]*?\/>\s*<LandingFinalCta \/>\s*<Footer50/);
   });
 
   it('keeps transparent commercial conditions without the unrequested VAT-status claim', () => {
