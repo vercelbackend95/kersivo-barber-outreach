@@ -154,6 +154,29 @@
   outline-offset: 2px;
 }
 
+.home-hero__full-path {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  line-height: 1.5;
+}
+
+.home-hero__full-path a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.home-hero__full-path a:hover {
+  color: var(--accent-text);
+}
+
+.home-hero__full-path a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
 .home-hero__meta {
   display: flex;
   flex-wrap: wrap;
