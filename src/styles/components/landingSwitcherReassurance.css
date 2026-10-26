@@ -353,3 +353,32 @@
     padding-inline: 1.75rem;
   }
 }
+
+/* Homepage: comparisons remain discoverable without competing with Full sign-up. */
+.landing-switcher-reassurance__compare-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.landing-switcher-reassurance__compare-links a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.landing-switcher-reassurance__compare-links a:hover {
+  color: var(--accent);
+}
+
+.landing-switcher-reassurance__compare-links a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
