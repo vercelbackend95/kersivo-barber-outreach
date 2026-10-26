@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -10,13 +10,26 @@ const starterCss = read('src/styles/components/starter-landing.css');
 const homepage = read('src/pages/index.astro');
 
 describe('homepage independent barbershops section: Starter design parity', () => {
-  it('keeps the reference starter-shell and a three-card editorial layout', () => {
+  it('keeps the reference starter-shell and a six-card editorial layout', () => {
     expect(difference).toContain('class="starter-shell landing-difference__shell"');
     expect(difference).toContain('BUILT FOR INDEPENDENT BARBERSHOPS');
     expect(difference).toContain('Your barbershop should be the destination. Not the marketplace.');
     expect(difference).toContain('Full KERSIVO brings your website and booking experience together on your own domain.');
     expect(difference).toContain('pillars.map((pillar)');
     expect(difference).toContain('class="landing-difference__card"');
+    // Six benefits (two rows of three on desktop) without duplicate icon or title.
+    const icons = [...difference.matchAll(/^\s+icon: '([^']+)'/gm)].map((match) => match[1]);
+    const titles = [...difference.matchAll(/^\s+title: '([^']+)'/gm)].map((match) => match[1]);
+    expect(icons).toHaveLength(6);
+    expect(new Set(icons).size).toBe(6);
+    expect(titles).toHaveLength(6);
+    expect(new Set(titles).size).toBe(6);
+    for (const icon of icons) {
+      expect(existsSync(join(process.cwd(), `public/images/svg/${icon}.svg`))).toBe(true);
+    }
+    expect(titles).toContain('Build direct client relationships.');
+    expect(titles).toContain('Payments on your terms.');
+    expect(titles).toContain('No KERSIVO cut of your bookings.');
     expect(difference).not.toMatch(/<h1\b/);
     expect(homepage).toMatch(/<LandingValueCards \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
   });
