@@ -182,12 +182,39 @@ describe('homepage SEO phase 1: internal links', () => {
     }
   });
 
-  it('keeps the Booksy and Fresha comparison links in the body', () => {
+  it('keeps a single compare hub link in the switching link row', () => {
     expect(homepage).toContain('<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />');
-    expect(switcher).toContain('href="/booksy-alternative"');
-    expect(switcher).toContain('href="/fresha-alternative"');
-    expect(switcher).toContain('Compare KERSIVO and Booksy');
-    expect(switcher).toContain('Compare KERSIVO and Fresha');
+    const nav = switcher.match(/<nav class="landing-switcher-reassurance__compare-links"[\\s\\S]*?<\\/nav>/)?.[0] ?? '';
+    expect(nav).toContain('<a href="/compare">Compare all booking systems</a>');
+    expect(nav.match(/<a\\b/g)).toHaveLength(1);
+    expect(nav).not.toContain('/booksy-alternative');
+    expect(nav).not.toContain('/fresha-alternative');
+  });
+});
+
+describe('homepage visual style parity with /starter', () => {
+  it('uses the same flat black as the homepage hero in What KERSIVO Includes', () => {
+    const hero = read('src/styles/components/homepage-hero.css');
+    const values = read('src/styles/components/landingValueCards.css');
+    expect(hero).toMatch(/\\.home-hero \\{[\\s\\S]*?background: #030303;/);
+    expect(values).toMatch(/\\.landing-value-cards \\{[\\s\\S]*?background: #030303;/);
+    expect(values).toMatch(/\\.landing-value-cards::before \\{[\\s\\S]*?background: transparent;/);
+  });
+
+  it('matches the /starter glance card surface, shadow and rounded edges while keeping price card layout', () => {
+    const starter = read('src/styles/components/starter-landing.css');
+    const pricing = read('src/styles/rateCard1.css');
+    const final = read('src/styles/components/landingFinalCta.css');
+    const reference = 'background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);';
+    const shadow = 'inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+    expect(starter).toContain('background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);');
+    expect(pricing).toContain(reference);
+    expect(final).toContain(reference);
+    expect(pricing).toContain(shadow);
+    expect(final).toContain(shadow);
+    expect(pricing).toMatch(/\\.rate-card1--landing \\.rate-card1__offer \\{[\\s\\S]*?max-width: 72\\.5rem;[\\s\\S]*?border-radius: 1\\.25rem;/);
+    expect(final).toContain('.landing-final-cta__panel::before');
+    expect(pricing).toContain('.rate-card1--landing .rate-card1__offer::before');
   });
 });
 
@@ -213,8 +240,9 @@ describe('homepage lower-funnel conversion controls', () => {
   it('preserves a single primary CTA and contextual comparison links for switchers', () => {
     expect((switcher.match(/class="btn btn--primary/g) ?? [])).toHaveLength(1);
     expect(switcher).toContain('landing-switcher-reassurance__compare-links');
-    expect(switcher).toContain('href="/booksy-alternative"');
-    expect(switcher).toContain('href="/fresha-alternative"');
+    const nav = switcher.match(/<nav class="landing-switcher-reassurance__compare-links"[\\s\\S]*?<\\/nav>/)?.[0] ?? '';
+    expect(nav).toContain('href="/compare"');
+    expect(nav.match(/<a\\b/g)).toHaveLength(1);
   });
 });
 
