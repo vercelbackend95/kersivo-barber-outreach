@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
+import { buildInsightsSitemapEntries, getInsightsIndexLastmod } from './insights';
 import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from '@/lib/legal/legalPageDates';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import {
@@ -13,22 +14,9 @@ import {
 import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
-  'https://kersivo.co.uk/insights',
-  'https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk',
-  'https://kersivo.co.uk/insights/barbershop-client-retention-second-visit',
-  'https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse',
-  'https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning',
-  'https://kersivo.co.uk/insights/how-to-price-haircut-uk-barber',
-  'https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk',
-  'https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk',
-  'https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk',
-  'https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules',
-  'https://kersivo.co.uk/insights/category/business-profit',
-  'https://kersivo.co.uk/insights/category/clients-growth',
-  'https://kersivo.co.uk/insights/category/brand-marketing',
-  'https://kersivo.co.uk/insights/category/bookings-operations',
-  'https://kersivo.co.uk/insights/category/tools-payments',
-  'https://kersivo.co.uk/insights/category/industry-people',
+  // Owner-approved Insights articles are published through one canonical registry.
+  // Keep this explicit route contract for the remaining marketing pages.
+  ...buildInsightsSitemapEntries().map(({ path }) => `https://kersivo.co.uk${path}`),
   'https://kersivo.co.uk/',
   'https://kersivo.co.uk/pricing',
   'https://kersivo.co.uk/starter',
@@ -76,7 +64,7 @@ describe('marketing sitemap', () => {
     expect(new Set(locs).size).toBe(EXPECTED_COUNT);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
-    expect(byLoc['https://kersivo.co.uk/insights']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights']).toBe(getInsightsIndexLastmod());
     expect(byLoc['https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-client-retention-second-visit']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse']).toBe('2026-10-17');
