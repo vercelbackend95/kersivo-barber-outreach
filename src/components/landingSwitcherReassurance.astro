@@ -118,29 +118,22 @@ const trustPoints = [
         href="/admin/launch"
         class="btn btn--primary btn--lg landing-switcher-reassurance__cta"
         data-track="saas_subscribe_click"
+        data-track-placement="homepage_switching"
       >
         Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
       </a>
-      {
-        showBooksyCompareLink ? (
-          <a
-            href="/booksy-alternative"
-            class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare"
-          >
-            Compare KERSIVO and Booksy
-          </a>
-        ) : null
-      }
-      {
-        showFreshaCompareLink ? (
-          <a
-            href="/fresha-alternative"
-            class="btn btn--secondary btn--lg landing-switcher-reassurance__cta landing-switcher-reassurance__cta--compare"
-          >
-            Compare KERSIVO and Fresha
-          </a>
-        ) : null
-      }
     </div>
+
+    {(showBooksyCompareLink || showFreshaCompareLink) && (
+      <nav class="landing-switcher-reassurance__compare-links" aria-label="Compare booking systems">
+        <span>Still comparing platforms?</span>
+        {showBooksyCompareLink && (
+          <a href="/booksy-alternative">Compare KERSIVO and Booksy</a>
+        )}
+        {showFreshaCompareLink && (
+          <a href="/fresha-alternative">Compare KERSIVO and Fresha</a>
+        )}
+      </nav>
+    )}
   </div>
 </section>
