@@ -54,7 +54,7 @@ describe('homepage SEO phase 1: head', () => {
   it('keeps the approved title and uses the new meta description from the shared default', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.',
+      'UK barbershop software with your own branded website, domain and online bookings. Full KERSIVO is £39/month per location, with 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('title={DEFAULT_TITLE}');
@@ -77,6 +77,7 @@ describe('homepage SEO phase 1: head', () => {
     expect([...graph.map((node) => node['@type']), faq['@type']]).toEqual([
       'Organization',
       'WebSite',
+      'WebPage',
       'SoftwareApplication',
       'FAQPage',
     ]);
@@ -112,9 +113,11 @@ describe('homepage SEO phase 1: headings', () => {
     expect(text(between(valueCards, '<h2 id="landing-value-cards-title"', '</h2>'))).toBe(
       'Barbershop software for bookings, clients and daily management',
     );
-    expect(text(between(valueCards, '<p class="landing-value-cards__lead">', '</p>'))).toBe(
-      'Start with the core booking operation on KERSIVO Starter for £0/month. Move to Full when you want your own branded website and domain, wider client tools, Reports, Retail and more control over the customer experience.',
+    expect(text(between(valueCards, '<p class="landing-value-cards__lead">', '</p>')).replace(/\s+([,.!?])/g, '$1')).toBe(
+      'Full KERSIVO combines your own branded barbershop website, online bookings, client management, Reports and Retail in one connected platform. KERSIVO Starter remains available for shops that want a free entry plan.',
     );
+    expect(valueCards).toContain('href="/barbershop-websites"');
+    expect(valueCards).toContain("guideHref: '/barbershop-online-booking'");
     expect(valueCards).toContain("heading: 'Online booking for barbers, without the marketplace detour'");
     expect(valueCards).toMatch(/heading: 'Manage your barbershop from one clear(?: |\\u00a0)system'/);
     expect(valueCards).toContain("heading: 'Payments and reminders that protect your time'");
