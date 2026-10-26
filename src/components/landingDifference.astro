@@ -1,41 +1,34 @@
 ---
 import '../styles/components/landingDifference.css';
 
-type PillarIcon = 'storefront' | 'users' | 'dashboard';
-
-interface Pillar {
-  label: string;
-  title: string;
-  body: string;
-  icon: PillarIcon;
-}
-
 interface Props {
   className?: string;
 }
 
 const { className = '' } = Astro.props as Props;
 
-const pillars: Pillar[] = [
+/**
+ * Homepage differentiation adopts the same editorial header + feature-card
+ * composition as the /starter page's starter-shell feature section.
+ * Icons reuse the already-shipped Starter icon assets.
+ */
+const pillars = [
   {
-    label: 'YOUR OWN DOMAIN',
-    title: 'Give clients one place to remember',
-    body: 'Your branded website brings services, prices, online bookings and retail together on your own domain with Full KERSIVO.',
-    icon: 'storefront',
+    icon: 'browser',
+    title: 'Your website. Your identity.',
+    body: 'Give your services, barbers, bookings and retail one branded home on your own domain — instead of relying on a marketplace profile.',
   },
   {
-    label: 'DIRECT CLIENT BOOKINGS',
-    title: 'Keep your shop at the centre',
-    body: 'Send clients straight to your own booking experience, without placing competing shops alongside yours.',
-    icon: 'users',
+    icon: 'calendar-time',
+    title: 'Bookings that lead to your shop.',
+    body: 'Clients choose a service, barber and time through a direct booking experience, without competing shops appearing alongside yours.',
   },
   {
-    label: 'CONTROL BEHIND THE CHAIR',
-    title: 'Run the shop, not just the diary',
-    body: 'Manage bookings, barbers, clients, payment options and retail pickup from one connected Full KERSIVO dashboard.',
-    icon: 'dashboard',
+    icon: 'users-four',
+    title: 'More control behind the chair.',
+    body: 'Manage bookings, clients, your team, payment options and retail pickup through one connected Full KERSIVO system.',
   },
-];
+] as const;
 ---
 
 <section
@@ -43,103 +36,30 @@ const pillars: Pillar[] = [
   class={`landing-difference ${className}`.trim()}
   aria-labelledby="landing-difference-title"
 >
-  <div class="landing-difference__glow" aria-hidden="true"></div>
-
-  <div class="container">
-    <header class="landing-difference__intro">
+  <div class="starter-shell landing-difference__shell">
+    <header class="landing-difference__header">
       <p class="landing-difference__eyebrow">BUILT FOR INDEPENDENT BARBERSHOPS</p>
-      <h2 id="landing-difference-title" class="landing-difference__heading">
+      <h2 id="landing-difference-title">
         Your barbershop should be the destination. Not the marketplace.
       </h2>
       <p class="landing-difference__lead">
-        Full KERSIVO puts your website, online bookings and client experience on your own domain.
-        Build recognition for the shop your clients actually visit.
+        Clients should find your shop, book your barbers and remember your name.
+        Full KERSIVO brings your website and booking experience together on your own domain.
       </p>
     </header>
 
-    <div class="landing-difference__panel">
-      <ul class="landing-difference__pillars">
-        {pillars.map((pillar) => (
-          <li class="landing-difference__pillar">
-            <article>
-              <span class="landing-difference__icon" aria-hidden="true">
-                {pillar.icon === 'storefront' && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.85"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                    <path d="M10 22V12h4v10"></path>
-                    <path d="M2 7h20"></path>
-                    <path d="M15 7v.01"></path>
-                    <path d="M9 7v.01"></path>
-                  </svg>
-                )}
-                {pillar.icon === 'users' && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.85"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                )}
-                {pillar.icon === 'dashboard' && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.85"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-                    <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-                    <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-                    <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-                  </svg>
-                )}
-              </span>
-              <p class="landing-difference__pillar-label">{pillar.label}</p>
-              <h3 class="landing-difference__pillar-title">{pillar.title}</h3>
-              <p class="landing-difference__pillar-body">{pillar.body}</p>
-            </article>
-          </li>
-        ))}
-      </ul>
-
-      <p class="landing-difference__close">
-        <span class="landing-difference__close-icon" aria-hidden="true">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.25"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M20 6 9 17l-5-5"></path>
-          </svg>
-        </span>
-        Your name above the door. Your brand behind every booking.
-      </p>
+    <div class="landing-difference__grid">
+      {pillars.map((pillar) => (
+        <article class="landing-difference__card">
+          <span
+            class="landing-difference__card-icon"
+            aria-hidden="true"
+            style={`--icon: url('/images/svg/${pillar.icon}.svg')`}
+          ></span>
+          <h3>{pillar.title}</h3>
+          <p>{pillar.body}</p>
+        </article>
+      ))}
     </div>
-
-    <p class="landing-difference__next">
-      <a href="#live-demo" class="landing-difference__next-link" data-track="view_live_demo_click" data-track-placement="homepage_difference">
-        See how KERSIVO works <span aria-hidden="true">→</span>
-      </a>
-    </p>
   </div>
 </section>
