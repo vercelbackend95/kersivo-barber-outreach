@@ -150,7 +150,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   ],
   conditionsLine1: 'Standard Stripe payment-processing fees apply.',
   conditionsLine2:
-    'Billed today, then monthly. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added.',
+    'First payment at checkout, then billed monthly. Cancel anytime. No setup fee.',
   calculatorLink: {
     before: 'Comparing platforms? See the real cost of Booksy, Fresha and KERSIVO with our ',
     label: 'Barber Software Cost Calculator',
