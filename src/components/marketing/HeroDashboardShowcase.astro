@@ -1,5 +1,12 @@
 ---
 import '@/styles/components/hero-dashboard-showcase.css';
+
+interface Props {
+  /** Set false only where the static phone image sits below the initial viewport. */
+  prioritizeMobileStill?: boolean;
+}
+
+const { prioritizeMobileStill = true } = Astro.props as Props;
 import {
   DESKTOP_BLANK,
   STILL_DIR,
@@ -40,8 +47,8 @@ import {
       alt="KERSIVO barbershop admin dashboard preview"
       width="800"
       height="900"
-      loading="eager"
-      fetchpriority="high"
+      loading={prioritizeMobileStill ? 'eager' : 'lazy'}
+      fetchpriority={prioritizeMobileStill ? 'high' : 'low'}
       decoding="async"
     />
   </picture>
