@@ -8,13 +8,6 @@ import {
   phoneSrcset,
   tabletSrcset,
 } from '@/lib/marketing/heroDashboardStill';
-
-interface Props {
-  /** Set false only where the static phone image sits below the initial viewport. */
-  prioritizeMobileStill?: boolean;
-}
-
-const { prioritizeMobileStill = true } = Astro.props as Props;
 ---
 
 <div class="hero-showcase">
@@ -47,8 +40,8 @@ const { prioritizeMobileStill = true } = Astro.props as Props;
       alt="KERSIVO barbershop admin dashboard preview"
       width="800"
       height="900"
-      loading={prioritizeMobileStill ? 'eager' : 'lazy'}
-      fetchpriority={prioritizeMobileStill ? 'high' : 'low'}
+      loading="eager"
+      fetchpriority="high"
       decoding="async"
     />
   </picture>
