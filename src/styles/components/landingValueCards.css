@@ -2,7 +2,7 @@
 
 .landing-value-cards {
   position: relative;
-  background: var(--bg);
+  background: #030303;
   padding: clamp(2.75rem, 5vw, 3.75rem) 0;
   border-top: 1px solid var(--border);
   overflow: hidden;
@@ -17,11 +17,8 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 85% 58% at 50% 0%,
-    color-mix(in srgb, var(--accent) 8%, transparent) 0%,
-    transparent 72%
-  );
+  /* Keep the full section flat black, like the homepage hero. */
+  background: transparent;
   pointer-events: none;
 }
 
