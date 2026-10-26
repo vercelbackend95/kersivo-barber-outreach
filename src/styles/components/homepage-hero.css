@@ -154,25 +154,25 @@
   outline-offset: 2px;
 }
 
-.home-hero__full-path {
+.home-hero__starter-path {
   margin: 0.75rem 0 0;
   color: var(--muted);
   font-size: clamp(0.8rem, 1vw, 0.9rem);
   line-height: 1.5;
 }
 
-.home-hero__full-path a {
+.home-hero__starter-path a {
   color: var(--fg);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
 
-.home-hero__full-path a:hover {
+.home-hero__starter-path a:hover {
   color: var(--accent-text);
 }
 
-.home-hero__full-path a:focus-visible {
+.home-hero__starter-path a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
