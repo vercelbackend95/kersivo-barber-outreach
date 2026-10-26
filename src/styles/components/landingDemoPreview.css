@@ -1,28 +1,5 @@
 /* Landing-only compact overrides for the Google Ads proof section. */
 
-.landing-demo-preview__guide {
-  margin: 0;
-  color: var(--muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-
-.landing-demo-preview__guide a {
-  color: var(--fg);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
-
-.landing-demo-preview__guide a:hover {
-  color: var(--accent-text);
-}
-
-.landing-demo-preview__guide a:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
-}
-
 .landing-demo-preview--compact {
   padding-block: clamp(2.5rem, 5vw, 4rem);
   border-bottom: 1px solid var(--border);
