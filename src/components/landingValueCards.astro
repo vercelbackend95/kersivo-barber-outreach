@@ -1,4 +1,6 @@
 ---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
 interface ValueBlock {
   heading: string;
   body: string;
@@ -67,11 +69,12 @@ const blocks: ValueBlock[] = [
 ];
 
 const includedItems = [
-  'Starter £0/month',
-  'Up to 4 bookable barbers on Starter',
-  'Hosted online booking',
-  'Admin dashboard',
-  'Clients Core',
+  `Full KERSIVO — £${SAAS_MONTHLY_GBP}/month per location`,
+  'Your own branded website',
+  'One standard domain included',
+  'Online bookings and payment control',
+  'Clients and Reports',
+  'Retail pickup',
   '0% KERSIVO commission',
 ];
 ---
@@ -127,7 +130,7 @@ const includedItems = [
     </ul>
 
     <div class="landing-value-cards__included">
-      <p class="landing-value-cards__included-label">KERSIVO STARTER — FREE ENTRY PLAN</p>
+      <p class="landing-value-cards__included-label">FULL KERSIVO — ONE CONNECTED PLATFORM</p>
       <ul class="landing-value-cards__included-items" role="list">
         {includedItems.map((item) => (
           <li class="landing-value-cards__included-chip">{item}</li>
