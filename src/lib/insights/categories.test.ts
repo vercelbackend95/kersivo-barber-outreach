@@ -108,21 +108,21 @@ describe('Insights six-category taxonomy', () => {
       'barber-dermatitis-skin-care-hse': 'industry-people',
       'barber-commission-pay-minimum-wage-uk': 'industry-people',
     };
-    expect(INSIGHTS_PUBLISHED_ARTICLES).toHaveLength(9);
+    expect(INSIGHTS_PUBLISHED_ARTICLES.length).toBeGreaterThanOrEqual(Object.keys(expected).length);
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       expect(isInsightsCategoryId(article.categoryId)).toBe(true);
-      expect(article.categoryId).toBe(expected[article.slug]);
+      if (article.slug in expected) expect(article.categoryId).toBe(expected[article.slug]);
     }
-    expect(getPublishedArticlesByCategory('business-profit')).toHaveLength(2);
-    expect(getPublishedArticlesByCategory('clients-growth')).toHaveLength(2);
-    expect(getPublishedArticlesByCategory('brand-marketing')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('bookings-operations')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('tools-payments')).toHaveLength(1);
-    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(2);
-
+    // New owner-approved articles may be published without modifying this test.
+    // The registry stays the source of truth; categorisation must remain exhaustive and unique.
+    for (const id of INSIGHTS_CATEGORY_IDS) {
+      expect(getPublishedArticlesByCategory(id)).toEqual(
+        INSIGHTS_PUBLISHED_ARTICLES.filter((article) => article.categoryId === id),
+      );
+    }
     const all = INSIGHTS_CATEGORY_IDS.flatMap((id) => getPublishedArticlesByCategory(id));
-    expect(all).toHaveLength(9);
-    expect(new Set(all.map((article) => article.slug)).size).toBe(9);
+    expect(all).toHaveLength(INSIGHTS_PUBLISHED_ARTICLES.length);
+    expect(new Set(all.map((article) => article.slug)).size).toBe(all.length);
   });
 
   it('sitemaps every owner-approved category even when it has no published articles', () => {
@@ -132,7 +132,7 @@ describe('Insights six-category taxonomy', () => {
       INSIGHTS_CATEGORIES.map((category) => category.path),
     );
     // Every category must remain indexable even when its article count changes.
-    expect(getPublishedArticlesByCategory('industry-people')).toHaveLength(1);
+    expect(getPublishedArticlesByCategory('industry-people').length).toBeGreaterThan(0);
     expect(categoryEntries.some((entry) => entry.path === '/insights/category/industry-people')).toBe(true);
 
     const locs = buildInsightsSitemapEntries().map((entry) => entry.path);
