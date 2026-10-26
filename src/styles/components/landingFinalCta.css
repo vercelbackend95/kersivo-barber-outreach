@@ -30,20 +30,30 @@
 }
 
 .landing-final-cta__panel {
+  position: relative;
   display: grid;
   gap: clamp(1.35rem, 3vw, 1.85rem);
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
-  border-radius: var(--radius-16);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
-    var(--surface-1) 100%
-  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 6%, transparent),
-    0 18px 40px color-mix(in srgb, var(--bg) 55%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 40px 90px -50px #000,
+    0 18px 40px -30px rgba(0, 0, 0, 0.9);
   padding: clamp(1.35rem, 3.5vw, 2.35rem);
   text-align: start;
+}
+
+/* Match the top-edge accent of /starter's glance card. */
+.landing-final-cta__panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 1.6rem;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), rgba(255, 23, 23, 0));
+  pointer-events: none;
 }
 
 .landing-final-cta__content {
