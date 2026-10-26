@@ -55,6 +55,7 @@ const currentYear = new Date().getFullYear();
     <SystemChooser />
     <HomepageHero />
     <LandingValueCards />
+    <LandingDifference />
     <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} />
     {SHOW_SETUP_PLAN_CARDS ? (
       <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
@@ -63,7 +64,6 @@ const currentYear = new Date().getFullYear();
     <LandingDemoCapture />
     <LandingPostPurchaseSteps />
     <LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />
-    <LandingDifference />
     <Faq4
       className="faq4--landing"
       heading="Questions before you start?"
