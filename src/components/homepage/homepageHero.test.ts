@@ -18,7 +18,7 @@ describe('homepage SEO', () => {
   it('uses the approved title and meta description', () => {
     expect(DEFAULT_TITLE).toBe('Barbershop Software & Barber Booking System UK | KERSIVO');
     expect(DEFAULT_DESCRIPTION).toBe(
-      'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.',
+      'UK barbershop software with your own branded website, domain and online bookings. Full KERSIVO is £39/month per location, with 0% KERSIVO commission.',
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(DEFAULT_DESCRIPTION.length).toBeLessThanOrEqual(165);
@@ -76,17 +76,19 @@ describe('homepage hero markup', () => {
   it('shows the approved eyebrow, lead, CTAs and meta row', () => {
     expect(text(between(hero, '<p class="home-hero__eyebrow">', '</p>'))).toBe('Built for independent UK barbershops');
     expect(text(between(hero, '<p class="home-hero__lead">', '</p>'))).toBe(
-      'A barber booking system for independent UK barbershops. Start with payment-powered bookings for £0/month, or choose Full KERSIVO to put the complete customer journey on your own website and domain.',
+      'A barber booking system with your own branded website, domain, client management and retail. Built for independent UK barbershops that want more control over their customer experience.',
     );
     expect(hero).toMatch(
-      /<a\s+href="\/admin"\s+class="home-hero__action home-hero__action--primary"\s+data-track="starter_signup_click"\s+data-track-placement="homepage_hero"\s*>\s*Start KERSIVO Starter — £0\/month\s*<\/a>/,
+      /<a\s+href="\/admin\/launch"\s+class="home-hero__action home-hero__action--primary"\s+data-track="saas_subscribe_click"\s+data-track-placement="homepage_hero"\s*>\s*Start Full KERSIVO — £\{SAAS_MONTHLY_GBP\}\/month\s*<\/a>/,
     );
     expect(hero).toMatch(
-      /<a href="#live-demo" class="home-hero__action home-hero__action--secondary">\s*See KERSIVO in action\s*<\/a>/,
+      /<a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">\s*See KERSIVO in action\s*<\/a>/,
     );
     const meta = between(hero, '<div class="home-hero__meta"', '</div>');
     expect(meta).toContain('aria-label="KERSIVO commercial model"');
-    expect(text(meta)).toBe('Starter £0/month · Full £{SAAS_MONTHLY_GBP}/month per location · 0% KERSIVO commission');
+    expect(text(meta)).toBe('One physical location per plan · Your own domain included · 0% KERSIVO commission');
+    expect(hero).toContain('href="/starter"');
+    expect(hero).toContain('starter_plan_explore_click');
     expect(read('src/components/landingDemoPreview.astro')).toContain("sectionId = 'live-demo'");
   });
 
@@ -105,7 +107,9 @@ describe('homepage hero styles', () => {
     const MOTION = '@media (prefers-reduced-motion: no-preference) {';
     const freshaHeroRules = freshaCss.slice(freshaCss.indexOf('.fresha-alt-hero {'), freshaCss.indexOf(MOTION));
     const homeRules = heroCss.slice(heroCss.indexOf('.home-hero {'), heroCss.indexOf(MOTION));
-    expect(homeRules.trim()).toBe(
+    // Homepage-only conversion link can add isolated CSS without changing shared Fresha hero rules.
+    const sharedHomeRules = homeRules.replace(/\.home-hero__starter-path(?: [^{]+)? \{[^}]*\}\s*/g, '');
+    expect(sharedHomeRules.trim()).toBe(
       freshaHeroRules.replaceAll('fresha-alt-hero', 'home-hero').replaceAll('freshaAltHeroRise', 'homeHeroRise').trim(),
     );
   });
