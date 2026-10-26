@@ -1,4 +1,4 @@
-import { SAAS_MONTHLY_GBP } from './defaults';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
 import {
   KERSIVO_BRAND_SCHEMA_NAME,
   buildKersivoOrganizationNode,
@@ -29,9 +29,14 @@ export function getKersivoSoftwareId(siteUrl: string): string {
   return `${siteUrl}/#software`;
 }
 
+export function getKersivoHomepageId(siteUrl: string): string {
+  return `${siteUrl}/#webpage`;
+}
+
 /**
- * Marketing homepage @graph: Organization + WebSite + SoftwareApplication.
- * Keep FAQPage as a separate JSON-LD block on the homepage.
+ * Marketing homepage @graph: Organization + WebSite + WebPage + SoftwareApplication.
+ * The homepage WebPage links directly to the software and to the separately rendered FAQPage.
+ * Keep FAQ questions in their visible homepage source rather than duplicating FAQ contents here.
  */
 export function buildBarberDemoJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
@@ -43,6 +48,18 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
     '@graph': [
       buildKersivoOrganizationNode(siteUrl),
       buildKersivoWebsiteNode(siteUrl),
+      {
+        '@type': 'WebPage',
+        '@id': getKersivoHomepageId(siteUrl),
+        url: `${siteUrl}/`,
+        name: DEFAULT_TITLE,
+        description: DEFAULT_DESCRIPTION,
+        inLanguage: 'en-GB',
+        isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
+        publisher: { '@id': organizationId },
+        mainEntity: { '@id': softwareId },
+        hasPart: { '@id': `${siteUrl}/#faq` },
+      },
       {
         '@type': 'SoftwareApplication',
         '@id': softwareId,
@@ -66,7 +83,7 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
             name: 'Full KERSIVO',
             price: String(SAAS_MONTHLY_GBP),
             priceCurrency: 'GBP',
-            url: `${siteUrl}/`,
+            url: `${siteUrl}/pricing#plan`,
           },
         ],
       },
