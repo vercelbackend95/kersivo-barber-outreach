@@ -212,7 +212,8 @@ describe('homepage visual style parity with /starter', () => {
     expect(final).toContain(reference);
     expect(pricing).toContain(shadow);
     expect(final).toContain(shadow);
-    expect(pricing).toContain('max-width: 72.5rem;');\n    expect(pricing).toContain('border-radius: 1.25rem;');
+    expect(pricing).toContain('max-width: 72.5rem;');
+    expect(pricing).toContain('border-radius: 1.25rem;');
     expect(final).toContain('.landing-final-cta__panel::before');
     expect(pricing).toContain('.rate-card1--landing .rate-card1__offer::before');
   });
