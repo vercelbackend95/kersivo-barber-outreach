@@ -8,7 +8,7 @@ export const DEFAULT_OG_IMAGE_PATH = '/images/og/kersivo-og.jpg';
 export const DEFAULT_OG_IMAGE_WIDTH = 1200;
 export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 export const DEFAULT_OG_IMAGE_ALT =
-  'Kersivo — UK barbershop booking software. Starter £0/month, Full £39/month. 0% KERSIVO commission';
+  'KERSIVO — UK barbershop software. Full £39/month with your own branded website and domain, Starter £0/month. 0% KERSIVO commission';
 
 export const ONGOING_CARE_MONTHLY_GBP = 39;
 
@@ -16,7 +16,7 @@ export const ONGOING_CARE_MONTHLY_GBP = 39;
 export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
 
 export const DEFAULT_DESCRIPTION =
-  'Barbershop software for independent UK barbershops. Starter £0/month; Full £39/month per location with your own website and domain. 0% KERSIVO commission.';
+  'UK barbershop software with your own branded website, domain and online bookings. Full KERSIVO is £39/month per location, with 0% KERSIVO commission.';
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 
