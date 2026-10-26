@@ -18,37 +18,33 @@ import '@/styles/components/homepage-hero.css';
     </h1>
 
     <p class="home-hero__lead">
-      A barber booking system for independent UK barbershops. Start with payment-powered bookings
-      for £0/month, or choose Full KERSIVO to put the complete customer journey on your own website and domain.
+      A barber booking system with your own branded website, domain, client management and retail.
+      Built for independent UK barbershops that want more control over their customer experience.
     </p>
 
     <div class="home-hero__actions">
       <a
-        href="/admin"
+        href="/admin/launch"
         class="home-hero__action home-hero__action--primary"
-        data-track="starter_signup_click"
+        data-track="saas_subscribe_click"
         data-track-placement="homepage_hero"
       >
-        Start KERSIVO Starter — £0/month
+        Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
       </a>
-      <a href="#live-demo" class="home-hero__action home-hero__action--secondary">
+      <a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">
         See KERSIVO in action
       </a>
     </div>
 
-    <p class="home-hero__full-path">
-      Need a website on your own domain?
-      <a
-        href="/barbershop-websites"
-        data-track="full_kersivo_explore_click"
-        data-track-placement="homepage_hero"
-      >Explore Full KERSIVO — £{SAAS_MONTHLY_GBP}/month per location</a>.
+    <p class="home-hero__starter-path">
+      Looking for a free option?
+      <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="homepage_hero">Explore KERSIVO Starter</a>.
     </p>
 
     <div class="home-hero__meta" aria-label="KERSIVO commercial model">
-      <span><strong>Starter £0/month</strong></span>
+      <span><strong>One physical location per plan</strong></span>
       <span aria-hidden="true">·</span>
-      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span>
+      <span>Your own domain included</span>
       <span aria-hidden="true">·</span>
       <span>0% KERSIVO commission</span>
     </div>
