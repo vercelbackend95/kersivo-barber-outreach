@@ -323,21 +323,30 @@
 }
 
 .rate-card1--landing .rate-card1__offer {
+  position: relative;
   width: 100%;
   max-width: 72.5rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
-  border-radius: var(--radius-12, 12px);
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--surface-1) 94%, var(--accent)) 0%,
-      color-mix(in srgb, var(--surface-1) 92%, var(--bg)) 42%,
-      color-mix(in srgb, var(--surface-2) 70%, var(--bg)) 100%
-    );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
   box-shadow:
-    0 1px 0 color-mix(in srgb, var(--border) 45%, transparent),
-    0 18px 42px color-mix(in srgb, var(--accent) 9%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 40px 90px -50px #000,
+    0 18px 40px -30px rgba(0, 0, 0, 0.9);
   overflow: hidden;
+}
+
+/* The same restrained red hairline as /starter's glance card. */
+.rate-card1--landing .rate-card1__offer::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 1.6rem;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), rgba(255, 23, 23, 0));
+  pointer-events: none;
 }
 
 .rate-card1--landing .rate-card1__offer-body {
@@ -351,7 +360,7 @@
   align-content: start;
   gap: 0.7rem;
   padding: clamp(1.25rem, 3vw, 1.75rem);
-  background: color-mix(in srgb, var(--bg) 35%, transparent);
+  background: transparent;
 }
 
 .rate-card1--landing .rate-card1__offer-decision .rate-card1__price {
@@ -490,7 +499,7 @@
   margin: 0;
   padding: 0.85rem clamp(1rem, 2.5vw, 1.5rem);
   border-top: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  background: color-mix(in srgb, var(--bg) 42%, transparent);
+  background: transparent;
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 1.25rem;
@@ -551,13 +560,8 @@
   }
 
   .rate-card1--landing .rate-card1__offer-decision {
-    border-right: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--bg) 48%, transparent) 0%,
-        color-mix(in srgb, var(--bg) 22%, transparent) 100%
-      );
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    background: transparent;
     height: 100%;
   }
 
