@@ -3771,6 +3771,11 @@ table.bwcost-sr-only td {
   grid-column: span 2;
 }
 
+.bwcost-showcase__card--lower {
+  gap: 0.32rem;
+  padding: 0.62rem 0.72rem 0.68rem;
+}
+
 .bwcost-showcase__card-head {
   display: flex;
   align-items: center;
@@ -3807,9 +3812,9 @@ table.bwcost-sr-only td {
 .bwcost-showcase__browser,
 .bwcost-showcase__flow,
 .bwcost-showcase__client,
-.bwcost-showcase__retail,
-.bwcost-showcase__reports,
-.bwcost-showcase__sms {
+.bwcost-showcase__order,
+.bwcost-showcase__report,
+.bwcost-showcase__thread {
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -3938,6 +3943,21 @@ table.bwcost-sr-only td {
   gap: 0.55rem;
 }
 
+.bwcost-showcase__card--lower .bwcost-showcase__flow .booking-choice-card--barber {
+  min-height: 3.15rem;
+  padding: 0.35rem 0.5rem;
+  gap: 0.5rem;
+}
+
+.bwcost-showcase__card--lower .bwcost-showcase__flow .booking-choice-card__avatar {
+  width: 2.65rem;
+  height: 2.65rem;
+}
+
+.bwcost-showcase__card--lower .booking-flow--wizard .booking-choice-card--barber .booking-choice-card__title {
+  font-size: 0.78rem;
+}
+
 .bwcost-showcase__flow .booking-choice-card__avatar {
   width: 2.35rem;
   height: 2.35rem;
@@ -3993,6 +4013,17 @@ table.bwcost-sr-only td {
   font-size: 0.78rem;
 }
 
+.bwcost-showcase .booking-flow--wizard .booking-slot.booking-choice.is-selected {
+  background: var(--booking-choice-accent);
+  border-color: var(--booking-choice-accent);
+  color: var(--booking-choice-accent-contrast);
+  box-shadow: none;
+}
+
+.bwcost-showcase .booking-flow--wizard .booking-slot.booking-choice.is-selected .booking-slot__label {
+  color: var(--booking-choice-accent-contrast);
+}
+
 .bwcost-showcase__client {
   display: grid;
   gap: 0.7rem;
@@ -4004,7 +4035,7 @@ table.bwcost-sr-only td {
 
 .bwcost-showcase__client-id {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.6rem;
   align-items: center;
 }
@@ -4030,19 +4061,17 @@ table.bwcost-sr-only td {
 .bwcost-showcase__client-kicker,
 .bwcost-showcase__client-name,
 .bwcost-showcase__client-badge,
-.bwcost-showcase__sample,
 .bwcost-showcase__pickup,
-.bwcost-showcase__sms-kicker,
 .bwcost-showcase__sms-from,
 .bwcost-showcase__sms-meta,
-.bwcost-showcase__sms-bubble {
+.bwcost-showcase__sms-bubble,
+.bwcost-showcase__report-period {
   margin: 0;
 }
 
 .bwcost-showcase__client-kicker,
-.bwcost-showcase__sms-kicker,
-.bwcost-showcase__sample,
-.bwcost-showcase__pickup {
+.bwcost-showcase__pickup,
+.bwcost-showcase__report-period {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 650;
@@ -4051,11 +4080,15 @@ table.bwcost-sr-only td {
 }
 
 .bwcost-showcase__client-kicker,
-.bwcost-showcase__sms-kicker {
+.bwcost-showcase__report-period {
   text-transform: uppercase;
 }
 
 .bwcost-showcase__pickup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  margin-top: 0.18rem;
   text-transform: none;
   letter-spacing: 0;
   white-space: nowrap;
@@ -4107,143 +4140,178 @@ table.bwcost-sr-only td {
   font-size: 0.82rem;
 }
 
-.bwcost-showcase__retail {
-  display: grid;
-  grid-template-columns: 4.75rem minmax(0, 1fr);
-  gap: 0.65rem;
-  align-items: center;
-  min-height: 6.6rem;
-  padding: 0.45rem;
-  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
-  border-radius: 0.85rem;
-  background: #14161a;
+.bwcost-showcase__order,
+.bwcost-showcase__report,
+.bwcost-showcase__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 
-.bwcost-showcase__retail .sf-card-media {
+.bwcost-showcase__order .sf-card.shop-card {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  border-radius: 0.55rem;
-  background: #0b0c0e;
+  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  border-radius: 1.15rem;
+  background: #14161a;
+  box-shadow: 0 8px 22px color-mix(in srgb, #000 28%, transparent);
 }
 
-.bwcost-showcase__retail img {
+.bwcost-showcase__order .sf-card-media.shop-media.sf-card-media--cover {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: color-mix(in srgb, #0b0c0e 40%, #1a1c22);
+}
+
+.bwcost-showcase__order .sf-media-img {
   display: block;
   width: 100%;
-  height: 5.6rem;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   object-position: center;
 }
 
-.bwcost-showcase__retail .sf-card-category,
-.bwcost-showcase__retail .sf-card-name,
-.bwcost-showcase__retail .sf-card-price {
+.bwcost-showcase__order .sf-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  padding: 0.7rem 0.75rem 0.75rem;
+}
+
+.bwcost-showcase__order .sf-card-category,
+.bwcost-showcase__order .sf-card-name,
+.bwcost-showcase__order .sf-card-price {
   margin: 0;
 }
 
-.bwcost-showcase__retail .sf-card-category {
+.bwcost-showcase__order .sf-card-category {
   color: var(--muted);
   font-size: 0.62rem;
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.bwcost-showcase__retail .sf-card-name {
+.bwcost-showcase__order .sf-card-name {
   color: var(--fg);
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 650;
+  line-height: 1.15;
 }
 
-.bwcost-showcase__retail .sf-card-price {
-  margin-top: 0.15rem;
+.bwcost-showcase__order .sf-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.bwcost-showcase__order .sf-card-price {
   color: var(--fg);
-  font-size: 0.88rem;
-  font-weight: 650;
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
-.bwcost-showcase__reports {
-  min-height: 9.25rem;
-  padding: 0.2rem 0 0;
+.bwcost-showcase__order .sf-card-actions.shop-card-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.7rem;
+  background: var(--bwcost-accent);
+  color: #fff;
 }
 
-.bwcost-showcase .admin-sales-chart-inner,
-.bwcost-showcase .admin-sales-chart-canvas,
-.bwcost-showcase .admin-revenue-chart {
-  width: 100%;
+.bwcost-showcase__bag {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+}
+
+.bwcost-showcase__report-plot {
+  display: flex;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 13.5rem;
 }
 
-.bwcost-showcase .admin-sales-chart-canvas {
-  position: relative;
-  height: 10.5rem !important;
-  min-height: 8.5rem;
-}
-
-.bwcost-showcase .admin-sales-chart-svg,
-.bwcost-showcase .admin-revenue-chart-svg {
+.bwcost-showcase__report-plot .admin-sales-chart-svg {
   display: block;
   width: 100%;
   height: 100%;
+  min-height: 13.5rem;
 }
 
 .bwcost-showcase .admin-sales-grid-line {
+  stroke: color-mix(in srgb, var(--fg) 22%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+}
+
+.bwcost-showcase .admin-chart-y-label-bg {
+  fill: color-mix(in srgb, #101114 86%, transparent);
   stroke: color-mix(in srgb, var(--fg) 14%, transparent);
   stroke-width: 1;
 }
 
-.bwcost-showcase .admin-sales-axis-label,
-.bwcost-showcase .admin-sales-axis-label--floating {
+.bwcost-showcase .admin-sales-axis-label {
   fill: var(--muted);
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
 }
 
-.bwcost-showcase .admin-chart-y-label-bg {
-  fill: color-mix(in srgb, #0b0c0e 82%, transparent);
+.bwcost-showcase .admin-chart-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.bwcost-showcase .admin-chart-line,
-.bwcost-showcase .admin-chart-line--draw {
-  stroke-dashoffset: 0 !important;
-  transition: none;
+.bwcost-showcase .admin-chart-line--bookings {
+  stroke: var(--bwcost-accent);
+  stroke-width: 2.4;
 }
 
-.bwcost-showcase .admin-chart-area--draw {
-  opacity: 1 !important;
-  transition: none;
+.bwcost-showcase .admin-chart-line--retail {
+  stroke: color-mix(in srgb, var(--fg) 46%, transparent);
+  stroke-width: 1.5;
 }
 
-.bwcost-showcase__sms-phone {
-  display: grid;
-  gap: 0.28rem;
-  padding: 0.7rem 0.75rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
-  border-radius: 1rem;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--fg) 4%, transparent), transparent 40%),
-    #101114;
+.bwcost-showcase__thread-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .bwcost-showcase__sms-meta {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
 }
 
 .bwcost-showcase__sms-bubble {
-  max-width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 0.85rem 0.85rem 0.85rem 0.28rem;
-  background: color-mix(in srgb, var(--fg) 8%, #16181d);
+  padding: 0.5rem 0.62rem;
+  border-radius: 0.2rem 0.7rem 0.7rem 0.7rem;
+  background: color-mix(in srgb, var(--fg) 7%, #181a20);
   color: var(--fg);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bwcost-showcase .admin-chart-line,
-  .bwcost-showcase .admin-chart-area--draw,
   .bwcost-showcase__flow .booking-choice,
   .bwcost-showcase__flow .booking-date-carousel__day {
     transition: none;

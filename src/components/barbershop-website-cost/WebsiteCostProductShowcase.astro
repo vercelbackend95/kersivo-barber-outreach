@@ -1,9 +1,9 @@
 ---
-import WebsiteCostReportsChart from '@/components/barbershop-website-cost/WebsiteCostReportsChart';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { getDemoProductBySlug } from '@/lib/demo/products';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { buildAreaPath, buildSmoothPath, niceTicks } from '@/lib/admin/chartUtils';
 import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
 import { buildAppointmentReminderBody } from '@/lib/sms/templates';
 import '@/styles/components/booking-flow.css';
@@ -33,12 +33,46 @@ const previewDays = [
 /** Same illustrative slots as BookingFlow PREVIEW_STATIC_SLOTS. Not live availability. */
 const bookingSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30'] as const;
 const selectedSlot = '11:00';
-const smsPreview = buildAppointmentReminderBody({
+const approvedReminder = buildAppointmentReminderBody({
   shopName: DEMO_SHOP_NAME,
   serviceName: 'Skin Fade',
   startAt: new Date('2026-10-23T10:00:00Z'),
   timezone: 'Europe/London',
 });
+const reminderOptOut = approvedReminder.match(/Reply STOP to opt out\./)?.[0] ?? 'Reply STOP to opt out.';
+/** Short illustrative preview. Live reminders use buildAppointmentReminderBody, including this opt-out. */
+const smsPreview = `Skin Fade with Ellis Ward at 11:00. ${reminderOptOut}`;
+
+/** Illustrative last-7-days counts. Daily figures sum to the KPI totals. Not live results. */
+const reportDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+const reportBookings = [4, 6, 5, 8, 7, 9, 6] as const;
+const reportRetailOrders = [1, 0, 2, 1, 1, 2, 1] as const;
+const reportBookingTotal = reportBookings.reduce((sum: number, value) => sum + value, 0);
+const reportRetailTotal = reportRetailOrders.reduce((sum: number, value) => sum + value, 0);
+const REPORT_SVG = { width: 520, height: 240, left: 8, right: 8, top: 10, bottom: 10 } as const;
+const reportInnerW = REPORT_SVG.width - REPORT_SVG.left - REPORT_SVG.right;
+const reportInnerH = REPORT_SVG.height - REPORT_SVG.top - REPORT_SVG.bottom;
+const reportAxis = niceTicks(0, Math.max(...reportBookings, ...reportRetailOrders, 1), 3);
+const reportYRange = Math.max(1, reportAxis.max - reportAxis.min);
+const reportX = (index: number) =>
+  REPORT_SVG.left + (index / Math.max(1, reportDays.length - 1)) * reportInnerW;
+const reportY = (value: number) =>
+  REPORT_SVG.top + (1 - (value - reportAxis.min) / reportYRange) * reportInnerH;
+const reportBookingPoints = reportBookings.map((value, index) => ({ x: reportX(index), y: reportY(value) }));
+const reportRetailPoints = reportRetailOrders.map((value, index) => ({ x: reportX(index), y: reportY(value) }));
+const reportBookingLine = buildSmoothPath(reportBookingPoints);
+const reportRetailLine = buildSmoothPath(reportRetailPoints);
+const reportBookingArea = buildAreaPath(
+  reportBookingLine,
+  reportBookingPoints[0]?.x ?? REPORT_SVG.left,
+  reportBookingPoints[reportBookingPoints.length - 1]?.x ?? REPORT_SVG.right,
+  reportY(reportAxis.min),
+);
+const reportSummary = `Illustrative last 7 days, not live results. Bookings: ${reportDays
+  .map((day, index) => `${day} ${reportBookings[index]}`)
+  .join(', ')}, total ${reportBookingTotal}. Retail orders: ${reportDays
+  .map((day, index) => `${day} ${reportRetailOrders[index]}`)
+  .join(', ')}, total ${reportRetailTotal}.`;
 ---
 
 <section class="bwcost-section bwcost-showcase" id="product-showcase" aria-labelledby="bwcost-showcase-heading">
@@ -177,9 +211,6 @@ const smsPreview = buildAppointmentReminderBody({
                   bookingSlots.map((slot) => (
                     <div class:list={['booking-choice', 'booking-slot', slot === selectedSlot && 'is-selected']}>
                       <span class="booking-slot__label">{slot}</span>
-                      <span class="booking-choice__mark booking-choice__mark--compact" aria-hidden="true">
-                        <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.2 6.4 11l6.1-6.4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      </span>
                     </div>
                   ))
                 }
@@ -189,6 +220,122 @@ const smsPreview = buildAppointmentReminderBody({
         </article>
 
         <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 19h16M5 16l4.2-4.2 2.8 2.2L19 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Reports</h3>
+          </header>
+          <p>See bookings and shop performance at a glance.</p>
+          <div class="bwcost-showcase__report">
+            <div class="bwcost-showcase__report-plot admin-analytics-studio__chart">
+              <svg
+                class="admin-sales-chart-svg"
+                viewBox={`0 0 ${REPORT_SVG.width} ${REPORT_SVG.height}`}
+                role="img"
+                aria-label={reportSummary}
+              >
+                <title>Illustrative bookings and retail orders for the last 7 days</title>
+                <defs>
+                  <linearGradient id="bwcost-report-bookings-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--bwcost-accent)" stop-opacity="0.28"></stop>
+                    <stop offset="100%" stop-color="var(--bwcost-accent)" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                {
+                  reportAxis.ticks.map((tick) => (
+                    <line
+                      class="admin-sales-grid-line"
+                      x1={REPORT_SVG.left}
+                      y1={reportY(tick)}
+                      x2={REPORT_SVG.width - REPORT_SVG.right}
+                      y2={reportY(tick)}
+                    />
+                  ))
+                }
+                <path class="admin-chart-area" d={reportBookingArea} fill="url(#bwcost-report-bookings-fill)"></path>
+                <path class="admin-chart-line admin-chart-line--retail" d={reportRetailLine}></path>
+                <path class="admin-chart-line admin-chart-line--bookings" d={reportBookingLine}></path>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1-3 3.2-4.5 7-4.5S18 16 19 19" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Client data</h3>
+          </header>
+          <p>A client record with visit history.</p>
+          <div class="bwcost-showcase__client">
+            <div class="bwcost-showcase__client-id">
+              <span class="admin-clients-avatar" aria-hidden="true">
+                <span class="admin-clients-avatar-initials">AD</span>
+              </span>
+              <div>
+                <p class="bwcost-showcase__client-kicker">Illustrative demo record</p>
+                <p class="bwcost-showcase__client-name">Alex Demo</p>
+              </div>
+            </div>
+            <dl class="bwcost-showcase__client-meta">
+              <div>
+                <dt>Last visit</dt>
+                <dd>Skin Fade · Ellis Ward</dd>
+              </div>
+              <div>
+                <dt>Next booking</dt>
+                <dd>Fri 23 Oct · 11:00</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--lower">
+          <header class="bwcost-showcase__card-head">
+            <span class="bwcost-showcase__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 8h12l-1 11H7L6 8z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8V7a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            </span>
+            <h3>Retail pickup</h3>
+          </header>
+          <p>Sell products for collection at your shop.</p>
+          {
+            clay ? (
+              <div class="bwcost-showcase__order">
+                <article class="sf-card shop-card">
+                  <div class="sf-card-media shop-media sf-card-media--cover">
+                    <img
+                      class="sf-media-img"
+                      src={clay.image.src}
+                      alt={clay.image.alt}
+                      width={clay.image.width}
+                      height={clay.image.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div class="sf-card-body">
+                    <p class="sf-card-category">{CATEGORY_LABELS[clay.category]}</p>
+                    <p class="sf-card-name">{clay.name}</p>
+                    <div class="sf-card-footer">
+                      <p class="sf-card-price">{clayPrice}</p>
+                      <div class="sf-card-actions shop-card-actions" aria-hidden="true">
+                        <svg class="bwcost-showcase__bag" viewBox="0 0 24 24">
+                          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                          <circle cx="8" cy="21" r="1" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                          <circle cx="19" cy="21" r="1" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            ) : null
+          }
+        </article>
+
+        <article class="bwcost-showcase__card bwcost-showcase__card--lower">
           <header class="bwcost-showcase__card-head">
             <span class="bwcost-showcase__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="9" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 19c.6-2.6 2.6-4 5-4s4.4 1.4 5 4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="9" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -216,9 +363,6 @@ const smsPreview = buildAppointmentReminderBody({
                     <span class="booking-choice-card__content">
                       <span class="booking-choice-card__title">{barber.name}</span>
                     </span>
-                    <span class="booking-choice__mark" aria-hidden="true">
-                      <svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.2 6.4 11l6.1-6.4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </span>
                   </div>
                 ))
               }
@@ -226,101 +370,21 @@ const smsPreview = buildAppointmentReminderBody({
           </div>
         </article>
 
-        <article class="bwcost-showcase__card bwcost-showcase__card--wide">
-          <header class="bwcost-showcase__card-head">
-            <span class="bwcost-showcase__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19c1-3 3.2-4.5 7-4.5S18 16 19 19" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            </span>
-            <h3>Client data</h3>
-          </header>
-          <p>A client record with visit history.</p>
-          <div class="bwcost-showcase__client">
-            <div class="bwcost-showcase__client-id">
-              <span class="admin-clients-avatar" aria-hidden="true">
-                <span class="admin-clients-avatar-initials">AD</span>
-              </span>
-              <div>
-                <p class="bwcost-showcase__client-kicker">Illustrative demo record</p>
-                <p class="bwcost-showcase__client-name">Alex Demo</p>
-              </div>
-              <span class="bwcost-showcase__client-badge">Demo</span>
-            </div>
-            <dl class="bwcost-showcase__client-meta">
-              <div>
-                <dt>Last visit</dt>
-                <dd>Skin Fade · Ellis Ward</dd>
-              </div>
-              <div>
-                <dt>Next booking</dt>
-                <dd>Fri 23 Oct · 11:00</dd>
-              </div>
-            </dl>
-          </div>
-        </article>
-
-        <article class="bwcost-showcase__card">
-          <header class="bwcost-showcase__card-head">
-            <span class="bwcost-showcase__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 8h12l-1 11H7L6 8z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8V7a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            </span>
-            <h3>Retail pickup</h3>
-          </header>
-          <p>Products collected at the shop.</p>
-          {
-            clay ? (
-              <article class="sf-card bwcost-showcase__retail">
-                <div class="sf-card-media">
-                  <img
-                    src={clay.image.src}
-                    alt={clay.image.alt}
-                    width={clay.image.width}
-                    height={clay.image.height}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <div class="sf-card-body">
-                  <p class="sf-card-category">{CATEGORY_LABELS[clay.category]}</p>
-                  <p class="sf-card-name">{clay.name}</p>
-                  <p class="sf-card-price">{clayPrice}</p>
-                  <p class="bwcost-showcase__pickup">Collect in shop</p>
-                </div>
-              </article>
-            ) : null
-          }
-        </article>
-
-        <article class="bwcost-showcase__card">
-          <header class="bwcost-showcase__card-head">
-            <span class="bwcost-showcase__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 16v-4M12 16V8M16 16v-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </span>
-            <h3>Reports</h3>
-          </header>
-          <p>Bookings · Last 7 days</p>
-          <div class="bwcost-showcase__reports">
-            <WebsiteCostReportsChart client:visible />
-          </div>
-          <p class="bwcost-showcase__sample">Demo data · not live results</p>
-        </article>
-
-        <article class="bwcost-showcase__card">
+        <article class="bwcost-showcase__card bwcost-showcase__card--lower">
           <header class="bwcost-showcase__card-head">
             <span class="bwcost-showcase__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 6h14v9H8l-3 3V6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
             </span>
             <h3>SMS reminders</h3>
           </header>
-          <p>A day-before appointment reminder.</p>
-          <div class="bwcost-showcase__sms">
-            <p class="bwcost-showcase__sms-kicker">Illustrative preview · not a sent message</p>
-            <div class="bwcost-showcase__sms-phone">
+          <p>Appointment reminders, sent automatically.</p>
+          <div class="bwcost-showcase__thread">
+            <div class="bwcost-showcase__thread-head">
               <p class="bwcost-showcase__sms-from">{DEMO_SHOP_NAME}</p>
-              <p class="bwcost-showcase__sms-meta">Reminder · Fri 23 Oct</p>
-              <p class="bwcost-showcase__sms-bubble">{smsPreview}</p>
+              <p class="bwcost-showcase__sms-meta">24 hours before</p>
             </div>
+            <p class="bwcost-showcase__sms-bubble">{smsPreview}</p>
           </div>
-          <p class="bwcost-showcase__sample">Subject to the monthly allowance</p>
         </article>
       </div>
     </div>
