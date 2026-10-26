@@ -79,6 +79,32 @@
   text-wrap: pretty;
 }
 
+.landing-value-cards__lead a,
+.landing-value-cards__guide {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.landing-value-cards__lead a:hover,
+.landing-value-cards__guide:hover {
+  color: var(--accent);
+}
+
+.landing-value-cards__lead a:focus-visible,
+.landing-value-cards__guide:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.landing-value-cards__guide {
+  display: inline-block;
+  margin-top: 0.7rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 /* ── Illustration blocks ──────────────────────────────────── */
 
 .landing-value-cards__blocks {
