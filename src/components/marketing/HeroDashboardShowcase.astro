@@ -1,12 +1,5 @@
 ---
 import '@/styles/components/hero-dashboard-showcase.css';
-
-interface Props {
-  /** Set false only where the static phone image sits below the initial viewport. */
-  prioritizeMobileStill?: boolean;
-}
-
-const { prioritizeMobileStill = true } = Astro.props as Props;
 import {
   DESKTOP_BLANK,
   STILL_DIR,
@@ -15,6 +8,13 @@ import {
   phoneSrcset,
   tabletSrcset,
 } from '@/lib/marketing/heroDashboardStill';
+
+interface Props {
+  /** Set false only where the static phone image sits below the initial viewport. */
+  prioritizeMobileStill?: boolean;
+}
+
+const { prioritizeMobileStill = true } = Astro.props as Props;
 ---
 
 <div class="hero-showcase">
