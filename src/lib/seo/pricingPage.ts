@@ -12,7 +12,7 @@ export const PRICING_PAGE_PATH = '/pricing';
 
 export const PRICING_PAGE_TITLE = `KERSIVO Pricing | Starter £0 & Full £${SAAS_MONTHLY_GBP}/Month`;
 
-export const PRICING_PAGE_DESCRIPTION = `KERSIVO pricing: Starter £0/month with £5 deposits or full payment. Full £${SAAS_MONTHLY_GBP}/month per location adds your website, domain and payment control. 0% commission.`;
+export const PRICING_PAGE_DESCRIPTION = `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location with your website, domain and online booking. No setup fee, no VAT added. Starter is £0/month. Stripe fees apply.`;
 
 export const PRICING_PAGE_H1 = 'KERSIVO pricing for independent barbershops';
 
@@ -65,7 +65,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
       'Reports',
       'Retail pickup shop for products paid online and collected in your shop',
       `${SMS_INCLUDED_WITH_ALLOWANCE_CLAIM}`,
-      'Live KERSIVO Assistant',
+      'KERSIVO Assistant — AI guidance on using KERSIVO and running your shop',
       'Migration assistance from your current booking system',
     ],
   },
@@ -109,7 +109,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   },
   {
     question: 'What does Full KERSIVO add?',
-    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, editable booking-payment controls including Pay at shop, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders and the live KERSIVO Assistant.`,
+    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, editable booking-payment controls including Pay at shop, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop.`,
   },
   {
     question: 'Is there a setup fee?',

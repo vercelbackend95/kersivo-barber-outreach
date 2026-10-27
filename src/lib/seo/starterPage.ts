@@ -68,7 +68,7 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   },
   {
     question: 'Can I upgrade from Starter to Full KERSIVO later?',
-    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders, the live KERSIVO Assistant and control over how customers pay when they book.`,
+    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders, the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop and control over how customers pay when they book.`,
   },
 ];
 

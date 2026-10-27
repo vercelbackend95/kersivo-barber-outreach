@@ -193,7 +193,7 @@ export const PLAN_SCOPE_HIGHLIGHTS = [
   'Booking flow + admin dashboard',
   'Retail pickup shop',
   'Client database + booking deposits',
-  'Email and SMS confirmations and reminders',
+  'Email confirmations and reminders, plus SMS reminders within a monthly allowance',
   'Hosting, SSL, updates and support',
 ] as const;
 

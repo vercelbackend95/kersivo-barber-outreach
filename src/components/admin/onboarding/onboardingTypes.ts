@@ -172,7 +172,7 @@ export const FULL_PLAN_CARD = {
     'Reports',
     'Retail',
     'SMS reminders',
-    'Live KERSIVO Assistant',
+    'KERSIVO Assistant — AI guidance on using KERSIVO and running your shop',
     '0% KERSIVO commission',
   ],
   cta: 'Choose Full KERSIVO',

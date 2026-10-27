@@ -1,16 +1,10 @@
 ---
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
-import { buildAfterBookingExample } from '@/lib/barbershopOnlineBooking/afterBookingExample';
 import '@/styles/components/barbershop-online-booking-after.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_online_booking_after';
 const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');
-
-const example = buildAfterBookingExample();
-const thanks = example.moments.find((moment) => moment.id === 'thanks')!;
-const review = example.moments.find((moment) => moment.id === 'review')!;
-const rebook = example.moments.find((moment) => moment.id === 'rebook')!;
 
 const ARROW =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
@@ -20,107 +14,13 @@ const ARROW =
   <div class="bob-ab__inner">
     <header class="bob-ab__head">
       <p class="bob-ab__eyebrow">After a booking</p>
-      <h2 id="bob-ab-title" class="bob-ab__title">Booking Confirmations and What Comes Next.</h2>
+      <h2 id="bob-ab-title" class="bob-ab__title">Booking confirmations and reminders</h2>
       <p class="bob-ab__lead">
-        Today, KERSIVO provides booking confirmation emails and appointment reminders. Clients can use links
-        in their confirmation email to request a change or cancellation. The post-visit examples below are planned
-        concepts, not features available today.
+        KERSIVO sends booking confirmation emails and appointment reminders. Clients can use the links
+        in their confirmation email to request a change or cancellation, subject to your shop's policies.
+        See what's included in each plan on the <a href="/pricing#plan">pricing page</a>.
       </p>
     </header>
-
-    <div class="bob-ab-showcase" aria-label="Planned post-visit communication concepts — not currently live">
-      <div class="bob-ab-showcase__banner">
-        <p class="bob-ab-concept">{example.conceptStatus}</p>
-        <p class="bob-ab-showcase__note">{example.disclosure}</p>
-      </div>
-
-      <!-- Moment 01: Thank-you email -->
-      <article class="bob-ab-beat bob-ab-beat--thanks" aria-label="Thank you after the visit">
-        <div class="bob-ab-beat__copy">
-          <span class="bob-ab-beat__index">{thanks.index}</span>
-          <p class="bob-ab-display">{thanks.display}</p>
-          {thanks.support && <p class="bob-ab-beat__support">{thanks.support}</p>}
-        </div>
-
-        {thanks.thanksPreview && (
-          <div class="bob-ab-mail" aria-hidden="true">
-            <div class="bob-ab-mail__chrome">
-              <span class="bob-ab-mail__dot"></span>
-              <span class="bob-ab-mail__dot"></span>
-              <span class="bob-ab-mail__dot"></span>
-              <span class="bob-ab-mail__kind">Email</span>
-            </div>
-            <dl class="bob-ab-mail__meta">
-              <div class="bob-ab-mail__row">
-                <dt>{thanks.thanksPreview.fromLabel}</dt>
-                <dd>{thanks.thanksPreview.from}</dd>
-              </div>
-              <div class="bob-ab-mail__row">
-                <dt>{thanks.thanksPreview.subjectLabel}</dt>
-                <dd>{thanks.thanksPreview.subject}</dd>
-              </div>
-            </dl>
-            <p class="bob-ab-mail__body">{thanks.thanksPreview.message}</p>
-          </div>
-        )}
-      </article>
-
-      <!-- Moment 02: Google review -->
-      <article class="bob-ab-beat bob-ab-beat--review" aria-label="Google review invitation">
-        <div class="bob-ab-beat__copy">
-          {review.stageLabel && <p class="bob-ab-beat__stage">{review.stageLabel}</p>}
-          <p class="bob-ab-display bob-ab-display--review">{review.display}</p>
-        </div>
-
-        {review.reviewPreview && (
-          <div class="bob-ab-invite" aria-hidden="true">
-            <img
-              class="bob-ab-invite__mark"
-              src={example.googleMarkSrc}
-              alt=""
-              width="40"
-              height="40"
-              decoding="async"
-              loading="lazy"
-            />
-            <p class="bob-ab-invite__heading">{review.reviewPreview.heading}</p>
-            <p class="bob-ab-invite__body">{review.reviewPreview.body}</p>
-            <p class="bob-ab-invite__cta">
-              <img
-                class="bob-ab-invite__cta-mark"
-                src={example.googleMarkSrc}
-                alt=""
-                width="18"
-                height="18"
-                decoding="async"
-                loading="lazy"
-              />
-              <span>{review.reviewPreview.ctaLabel}</span>
-            </p>
-          </div>
-        )}
-      </article>
-
-      <!-- Moment 03: Rebook -->
-      <article class="bob-ab-beat bob-ab-beat--rebook" aria-label="Book again">
-        <div class="bob-ab-beat__copy">
-          <span class="bob-ab-beat__index">{rebook.index}</span>
-          <p class="bob-ab-display bob-ab-display--climax">{rebook.display}</p>
-          {rebook.support && <p class="bob-ab-beat__support">{rebook.support}</p>}
-        </div>
-
-        {rebook.rebookPreview && (
-          <div class="bob-ab-return" aria-hidden="true">
-            <p class="bob-ab-return__shop">{rebook.rebookPreview.shopName}</p>
-            <p class="bob-ab-return__heading">{rebook.rebookPreview.heading}</p>
-            <p class="bob-ab-return__cta">
-              <span>{rebook.rebookPreview.ctaLabel}</span>
-              <span class="bob-ab-return__arrow" set:html={ARROW} />
-            </p>
-          </div>
-        )}
-      </article>
-    </div>
 
     <footer class="bob-ab-end">
       <a

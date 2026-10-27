@@ -79,11 +79,11 @@ describe('Barbershop online booking page — Section 07 plan choice + FAQ', () =
     expect(pay?.answer[1]).toContain('Standard Stripe payment-processing fees still apply.');
   });
 
-  it('keeps Section 06 unchanged on the published page', () => {
+  it('keeps Section 06 as confirmations and reminders, separate from plan choice', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
-    expect(afterComponent).toContain('bob-ab-showcase');
-    expect(afterComponent).toContain('bob-ab-beat--thanks');
-    expect(afterComponent).toContain('{thanks.display}');
+    expect(afterComponent).toContain('Booking confirmations and reminders');
+    expect(afterComponent).not.toContain('bob-ab-showcase');
+    expect(afterComponent).not.toMatch(/planned|concept/i);
     expect(component).not.toContain('bob-ab-');
     expect(css).not.toContain('.bob-ab');
   });

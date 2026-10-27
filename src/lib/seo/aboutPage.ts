@@ -9,7 +9,7 @@ export const ABOUT_PAGE_PATH = '/about';
 export const ABOUT_PAGE_TITLE = 'About KERSIVO | Booking Software for UK Barbershops';
 
 export const ABOUT_PAGE_DESCRIPTION =
-  'Booking software for independent UK barbershops. Starter is £0/month; Full KERSIVO is £39/month with your own website, domain and retail. 0% commission.';
+  `Booking software and branded websites for independent UK barbershops. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location; Starter is £0/month. Stripe fees apply.`;
 
 export const ABOUT_PAGE_H1 = 'About KERSIVO';
 

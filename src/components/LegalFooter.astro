@@ -1,5 +1,6 @@
 ---
 import Footer50 from '@/components/footer50.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 
 const currentYear = new Date().getFullYear();
@@ -7,16 +8,16 @@ const currentYear = new Date().getFullYear();
 
 <Footer50
   showIntro={true}
-  heading="Your booking. Your brand. Zero KERSIVO commission."
-  description="Whether you are switching from a marketplace profile or starting your first system, we set you up in about two weeks — with 0% KERSIVO commission on bookings and retail."
-  ctaText="PLAN MY SETUP"
-  ctaHref="/#pricing"
+  heading="Your brand. Your bookings. 0% KERSIVO commission."
+  description={`Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location. Your website is typically ready 1–2 weeks after we receive all required information. Standard Stripe processing fees apply to online payments.`}
+  ctaText="See pricing"
+  ctaHref="/pricing"
   ctaIsDemo={false}
   ctaTrack="plan_my_setup_click"
   brandName="KERSIVO"
   copyright={`© ${currentYear} KERSIVO`}
   navigation={[
-    { name: 'Pricing', href: '/#pricing' },
+    { name: 'Pricing', href: '/pricing' },
     { name: 'FAQ', href: '/#faq' },
     { name: 'Contact', href: '/#contact' },
   ]}
