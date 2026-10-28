@@ -407,8 +407,10 @@ describe('/barbershop-online-booking Section 01 hero', () => {
   });
 
   it('places the global footer outside main and links the three website guides', () => {
-    expect(page).toContain('href: BARBERSHOP_WEBSITES_PAGE_PATH');
-    expect(page).toContain('href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
+    const sharedFooter = read('../../lib/nav/footerNavigation.ts');
+    expect(sharedFooter).toContain("href: '/barbershop-websites'");
+    expect(sharedFooter).toContain("href: '/barbershop-website-design'");
+    expect(sharedFooter).toContain("href: '/barbershop-online-booking'");
     const mainOpen = page.indexOf('<main class="bob-page">');
     const mainClose = page.indexOf('</main>');
     const footer = page.indexOf('<Footer50');

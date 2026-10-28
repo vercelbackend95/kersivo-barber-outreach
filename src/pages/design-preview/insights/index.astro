@@ -23,7 +23,6 @@ import {
   GATE1_TOPICS,
 } from '@/lib/insights/gate1Preview';
 import {
-  FOOTER_LEGAL_LINKS,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fonts-insights.css';
@@ -103,13 +102,6 @@ const currentYear = new Date().getFullYear();
       brandLine="Own your brand. Own your bookings."
       copyright={`© ${currentYear} KERSIVO`}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

@@ -89,13 +89,27 @@ describe('POST /api/contact', () => {
     });
   });
 
-  it('returns 400 when shopName is missing', async () => {
-    const { shopName: _shopName, ...body } = validBody;
+  it('sends email when only an email address is provided', async () => {
+    const res = await POST({ request: makeRequest({ email: 'alex@example.com' }) } as never);
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data).toEqual({ ok: true, delivered: true });
+    expect(sendContactInquiryEmail).toHaveBeenCalledWith({
+      name: '',
+      email: 'alex@example.com',
+      shopName: '',
+      message: '',
+      intent: undefined,
+      currentStack: '',
+    });
+  });
+
+  it('returns 400 when email is missing', async () => {
+    const { email: _email, ...body } = validBody;
     const res = await POST({ request: makeRequest(body) } as never);
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.ok).toBe(false);
-    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -110,16 +124,14 @@ describe('POST /api/contact', () => {
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
-  it('rejects legacy shopSize without shopName', async () => {
-    const { shopName: _shopName, ...rest } = validBody;
+  it('ignores a legacy shopSize field and still accepts an email-only enquiry', async () => {
     const res = await POST({
-      request: makeRequest({ ...rest, shopSize: '1-2' }),
+      request: makeRequest({ email: 'alex@example.com', shopSize: '1-2' }),
     } as never);
     const data = await res.json();
-    expect(res.status).toBe(400);
-    expect(data.ok).toBe(false);
-    expect(data.delivered).not.toBe(true);
-    expect(sendContactInquiryEmail).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(data).toEqual({ ok: true, delivered: true });
+    expect(sendContactInquiryEmail).toHaveBeenCalledOnce();
   });
 
   it('returns 400 for invalid email', async () => {

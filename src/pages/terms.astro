@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
 import {
   BILLING_CYCLE_CLAIM,
@@ -49,8 +49,8 @@ import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
 
-<MainLayout
-  title="Terms of Service | Kersivo"
+<LandingLayout
+  title="Terms of Service | KERSIVO"
   description={PAGE_DESCRIPTIONS.terms}
   canonicalPath="/terms"
 >
@@ -320,10 +320,9 @@ import '@/styles/legal-pages.css';
         our <a href="/privacy">Privacy Policy</a>.
       </p>
 
-      <h2 id="qr-kit">Starter QR Kit</h2>
+      <h2 id="qr-kit">QR Kit</h2>
       <p>
-        One initial physical KERSIVO QR Kit may be requested for an eligible verified UK physical location using
-        KERSIVO Starter. The kit is subject to shop-detail verification before print, has no cash alternative, and
+        One initial physical KERSIVO QR Kit may be requested for an eligible verified UK physical location using KERSIVO Starter or Full KERSIVO. Only one kit is available per location in total; moving between plans does not create a further entitlement. The kit is subject to shop-detail verification before print, has no cash alternative, and
         dispatch or delivery timing is not guaranteed unless KERSIVO expressly states otherwise in writing.
         Replacement or reorder kits may be subject to a separate policy or charge.
       </p>
@@ -412,4 +411,4 @@ import '@/styles/legal-pages.css';
     </article>
   </main>
   <LegalFooter />
-</MainLayout>
+</LandingLayout>

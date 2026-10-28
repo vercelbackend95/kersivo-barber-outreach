@@ -48,7 +48,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
       'Fixed public booking payments: £5 deposit or Pay in full',
       'Connected Stripe account required before public bookings go live',
       'Guided Google Business Profile booking-link setup',
-      'Included initial QR Kit for eligible verified UK Starter locations',
+      'Included initial QR Kit for an eligible verified UK location',
     ],
   },
   {
@@ -67,6 +67,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
       `${SMS_INCLUDED_WITH_ALLOWANCE_CLAIM}`,
       'KERSIVO Assistant — AI guidance on using KERSIVO and running your shop',
       'Migration assistance from your current booking system',
+      'Included initial QR Kit for an eligible verified UK location',
     ],
   },
   {
@@ -100,7 +101,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'What is included in KERSIVO Starter?',
     answer:
-      'KERSIVO Starter is £0/month and includes a KERSIVO-hosted booking page, up to 4 active bookable barbers, bookings, team, services and availability, manual bookings, rolling 90-day booking history, Clients Core, automated email reminders, guided Google booking-link setup and, for eligible verified UK Starter locations, the included initial QR Kit. Public bookings require a connected Stripe account and use the fixed £5-deposit-or-Pay-in-full payment flow.',
+      'KERSIVO Starter is £0/month and includes a KERSIVO-hosted booking page, up to 4 active bookable barbers, bookings, team, services and availability, manual bookings, rolling 90-day booking history, Clients Core, automated email reminders, guided Google booking-link setup and, for an eligible verified UK location, the included initial QR Kit. Public bookings require a connected Stripe account and use the fixed £5-deposit-or-Pay-in-full payment flow.',
   },
   {
     question: 'How do payments work on KERSIVO Starter?',
@@ -109,7 +110,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   },
   {
     question: 'What does Full KERSIVO add?',
-    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, editable booking-payment controls including Pay at shop, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop.`,
+    answer: `Full KERSIVO is ${PRICE}/month per physical location. It adds your branded website and own domain, more than 4 active bookable barbers, editable booking-payment controls including Pay at shop, full booking history, Advanced Clients / CRM, Reports, Retail, SMS reminders within a monthly allowance and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop.`,
   },
   {
     question: 'Is there a setup fee?',

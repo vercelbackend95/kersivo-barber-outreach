@@ -1,5 +1,7 @@
 import type { InsightCardItem } from '@/lib/editorial/insightIcons';
+import { WEBSITE_UPDATE_SUPPORT_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { formatGbp } from '@/lib/seo/freshaFacts';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -14,14 +16,14 @@ export const ABOUT_PAGE_DESCRIPTION =
 export const ABOUT_PAGE_H1 = 'About KERSIVO';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-10-02';
-export const ABOUT_PAGE_LAST_UPDATED_LABEL = '2 October 2026';
+export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-10-27';
+export const ABOUT_PAGE_LAST_UPDATED_LABEL = '27 October 2026';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
 /** Opening entity definition — must stay the first paragraph under the H1. */
 export const ABOUT_ENTITY_DEFINITION =
-  'KERSIVO is booking and management software built specifically for independent UK barbershops. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders. Full KERSIVO (£39/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders, reports and retail pickup.';
+  `KERSIVO is booking and management software built specifically for independent UK barbershops. Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders within a monthly allowance, reports and retail pickup. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders.`;
 
 export const ABOUT_WHAT_IT_IS_LEAD =
   'KERSIVO is one system for the public side and the daily running of a barbershop. Clients find the shop online, choose a service and barber, and book directly. The shop manages bookings, clients, barbers, services and working hours from one admin dashboard; Full KERSIVO adds retail orders.';
@@ -31,7 +33,7 @@ export const ABOUT_WHAT_IT_IS_DETAIL =
 
 export const ABOUT_FACTS: readonly { label: string; value: string }[] = [
   { label: 'Built for', value: 'Independent UK barbershops' },
-  { label: 'Plans', value: `Starter £0/month · Full ${PRICE}/month per location` },
+  { label: 'Plans', value: `Full ${PRICE}/month per location · Starter £0/month` },
   { label: 'Commission', value: '0% KERSIVO commission on both plans' },
 ];
 
@@ -75,7 +77,7 @@ export const ABOUT_INCLUDED_ITEMS = [
   'Email confirmations and reminders',
   'Full KERSIVO: a branded barbershop website on your own standard domain',
   'Full KERSIVO: editable booking payment controls, including Pay at shop',
-  'Full KERSIVO: SMS appointment reminders, booking and product sales reports',
+  'Full KERSIVO: SMS appointment reminders within a monthly allowance, booking and product sales reports',
   'Full KERSIVO: a retail pickup shop for products paid online and collected in store',
   'Hosting, SSL, platform updates and support; Full KERSIVO adds migration assistance',
 ] as const;
@@ -95,7 +97,14 @@ export const ABOUT_MODEL_POINTS: readonly { title: string; body: string }[] = [
   },
 ];
 
-export const ABOUT_PRICING_SUMMARY = `KERSIVO Starter is £0/month and Full KERSIVO is ${PRICE} per month per physical barbershop location, with no setup fee and 0% KERSIVO commission on both plans. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
+export const ABOUT_PRICING_SUMMARY = `Full KERSIVO is ${PRICE} per month per physical barbershop location and KERSIVO Starter is £0/month, with no setup fee and 0% KERSIVO commission on both plans. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
+
+export const ABOUT_SETUP_PARAGRAPH =
+  'You subscribe to Full KERSIVO and send us your shop details, branding, photos, services and team. We configure your website, booking flow and payment settings. Your site is typically ready 1–2 weeks after we receive all required information — that’s an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it. You can keep taking bookings on your current system until then.';
+
+export const ABOUT_SUPPORT_PARAGRAPH = `Email hello@kersivo.co.uk for questions before or after you subscribe. Full KERSIVO subscribers have a first-response target of one business day. Day-to-day changes such as services, prices, barbers and opening hours are made by you in the dashboard. ${WEBSITE_UPDATE_SUPPORT_CLAIM}`;
+
+export const ABOUT_DATA_PARAGRAPH = `Your business owns its domain, brand, content and client relationship. KERSIVO doesn’t sell your clients’ data. You can cancel anytime; Full KERSIVO stays active until the end of the month you’ve paid for. A free CSV export of client contact details and booking history is available while your service is active and for ${SAAS_EXPORT_RETENTION_DAYS} days after you leave KERSIVO completely, and Full KERSIVO owners can also download it once from the dashboard settings.`;
 
 export function buildAboutPageJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();

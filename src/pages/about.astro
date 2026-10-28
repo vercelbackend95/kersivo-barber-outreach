@@ -9,7 +9,10 @@ import {
   ABOUT_AUDIENCE_INTRO,
   ABOUT_ENTITY_DEFINITION,
   ABOUT_FACTS,
+  ABOUT_DATA_PARAGRAPH,
   ABOUT_INCLUDED_ITEMS,
+  ABOUT_SETUP_PARAGRAPH,
+  ABOUT_SUPPORT_PARAGRAPH,
   ABOUT_MODEL_POINTS,
   ABOUT_PAGE_DESCRIPTION,
   ABOUT_PAGE_H1,
@@ -27,7 +30,6 @@ import {
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
@@ -122,6 +124,35 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
+    <section id="setup" class="fresha-alt__section" aria-labelledby="about-setup-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <h2 id="about-setup-title" class="fresha-alt__h2">How setup works</h2>
+        </header>
+        <p>{ABOUT_SETUP_PARAGRAPH}</p>
+      </div>
+    </section>
+
+    <section id="support" class="fresha-alt__section" aria-labelledby="about-support-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <h2 id="about-support-title" class="fresha-alt__h2">Support and contact</h2>
+        </header>
+        <p>{ABOUT_SUPPORT_PARAGRAPH}</p>
+      </div>
+    </section>
+
+    <section id="your-data" class="fresha-alt__section" aria-labelledby="about-data-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <h2 id="about-data-title" class="fresha-alt__h2">Your data and leaving</h2>
+        </header>
+        <p>
+          {ABOUT_DATA_PARAGRAPH} Read the <a href="/terms#subscription">Terms &amp; Cancellation</a> and <a href="/privacy">Privacy Policy</a> for the details.
+        </p>
+      </div>
+    </section>
+
     <section id="own-brand" class="fresha-alt__section" aria-labelledby="about-model-title">
       <div class="container">
         <header class="fresha-alt__intro">
@@ -146,7 +177,7 @@ const currentYear = new Date().getFullYear();
       <div class="container">
         <header class="fresha-alt__intro">
           <p class="fresha-alt__eyebrow">PRICING</p>
-          <h2 id="about-pricing-title" class="fresha-alt__h2">Two plans. Starter £0 or Full £{SAAS_MONTHLY_GBP} a month.</h2>
+          <h2 id="about-pricing-title" class="fresha-alt__h2">Two plans. Full KERSIVO £{SAAS_MONTHLY_GBP} a month, or Starter £0.</h2>
         </header>
         <div class="company-summary">
           <p class="company-summary__text">{ABOUT_PRICING_SUMMARY}</p>
@@ -197,21 +228,7 @@ const currentYear = new Date().getFullYear();
       contactEmail={KERSIVO_CONTACT_EMAIL}
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Home', href: '/' },
-        { name: 'Live demo', href: '/demo' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'Contact', href: '#contact' },
-        { name: 'Start subscription', href: '/admin/launch' },
-      ]}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

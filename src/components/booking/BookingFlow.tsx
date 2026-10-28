@@ -1054,7 +1054,7 @@ export default function BookingFlow({
           }))
         : confirmation.type === 'demo'
           ? [
-              { label: 'See pricing', href: '/#pricing', variant: 'secondary' as const },
+              { label: 'See pricing', href: '/pricing', variant: 'secondary' as const },
               { label: 'Ask about my setup', href: '/#contact', variant: 'secondary' as const },
             ]
           : []),

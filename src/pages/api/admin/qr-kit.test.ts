@@ -112,11 +112,16 @@ describe('/api/admin/qr-kit', () => {
     expect(body.prefill).toMatchObject({ shopName: 'Fade Room', contactEmail: 'sam@example.co.uk' });
   });
 
-  it('GET for a SETUP shop reports NOT_STARTER', async () => {
+  it('GET for a SETUP shop reports PLAN_NOT_ELIGIBLE and a Full shop stays eligible', async () => {
     loadQrKitShopFacts.mockResolvedValue({ ...facts, productState: 'SETUP' });
-    const body = await (await GET(ctx())).json();
-    expect(body.eligible).toBe(false);
-    expect(body.blockers.map((b: { code: string }) => b.code)).toContain('NOT_STARTER');
+    const setupBody = await (await GET(ctx())).json();
+    expect(setupBody.eligible).toBe(false);
+    expect(setupBody.blockers.map((b: { code: string }) => b.code)).toContain('PLAN_NOT_ELIGIBLE');
+
+    loadQrKitShopFacts.mockResolvedValue({ ...facts, productState: 'FULL_KERSIVO' });
+    const fullBody = await (await GET(ctx())).json();
+    expect(fullBody.eligible).toBe(true);
+    expect(fullBody.blockers).toEqual([]);
   });
 
   it('GET after a request only says it was received — no tracker, status or costs', async () => {

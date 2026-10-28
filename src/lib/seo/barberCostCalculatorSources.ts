@@ -165,7 +165,7 @@ export const COST_CALCULATOR_SOURCES: readonly CostCalculatorSource[] = [
     provider: 'KERSIVO',
     label: 'KERSIVO pricing',
     supports: 'the flat monthly price per location, included barbers and 0% KERSIVO commission',
-    url: '/#pricing',
+    url: '/pricing',
     external: false,
   },
 ];

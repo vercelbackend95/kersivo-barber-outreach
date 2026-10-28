@@ -171,7 +171,7 @@ export const FULL_PLAN_CARD = {
     'Advanced Clients / CRM',
     'Reports',
     'Retail',
-    'SMS reminders',
+    'SMS reminders within a monthly allowance',
     'KERSIVO Assistant — AI guidance on using KERSIVO and running your shop',
     '0% KERSIVO commission',
   ],

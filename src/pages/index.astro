@@ -17,7 +17,6 @@ import {
   buildBarbershopBookingFaqJsonLd,
 } from '@/lib/seo/barbershopBookingFaq';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
@@ -86,24 +85,7 @@ const currentYear = new Date().getFullYear();
       contactEmail={KERSIVO_CONTACT_EMAIL}
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Inside the system', href: '#live-demo' },
-        { name: 'Starter', href: '/starter' },
-        { name: 'Compare booking systems', href: '/compare' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'FAQ', href: '#faq' },
-        { name: 'About', href: '/about' },
-        { name: 'Contact', href: '#contact' },
-        { name: 'Start Full KERSIVO', href: '/admin/launch' },
-      ]}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

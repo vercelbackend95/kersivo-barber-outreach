@@ -3,7 +3,10 @@
  * Bump this when Terms content changes in a material way.
  * Material DPA updates also require a Terms bump because /dpa is incorporated by reference.
  */
-export const CURRENT_TERMS_VERSION = '2026-10-06';
+export const CURRENT_TERMS_VERSION = '2026-10-27';
+
+/** Terms versions already accepted by shops. A later bump must not invalidate these. */
+export const ACCEPTED_PRIOR_TERMS_VERSIONS = ['2026-10-06'] as const;
 
 /**
  * Migration-only marker for a Full -> Starter continuation that was already EFFECTIVE before
@@ -16,6 +19,7 @@ export const LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION =
 export function postFullStarterTermsAllowService(version: string | null | undefined): boolean {
   return (
     version === CURRENT_TERMS_VERSION ||
+    (ACCEPTED_PRIOR_TERMS_VERSIONS as readonly string[]).includes(version ?? '') ||
     version === LEGACY_EFFECTIVE_POST_FULL_STARTER_TERMS_VERSION
   );
 }

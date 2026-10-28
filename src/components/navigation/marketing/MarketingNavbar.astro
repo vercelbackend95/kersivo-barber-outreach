@@ -21,6 +21,7 @@ const resolvedCta = Astro.locals.navbarPreviewCta;
 const primary: MarketingNavAction = resolvedCta
   ? { label: resolvedCta.label, href: resolvedCta.href, track: resolvedCta.track }
   : MARKETING_NAV_PRIMARY_ACTION;
+const compactLabel = primary.label.replace(/\s*—\s*£\d+\/month$/, '');
 const groupIsCurrent = (group: (typeof groups)[number]) =>
   [...group.featured, ...group.sections.flatMap((section) => section.items)].some((item) =>
     isMarketingNavItemCurrent(item, pathname),
@@ -79,6 +80,18 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
       </nav>
 
       <MarketingNavActions class="mnav__actions" primary={primary} secondary={MARKETING_NAV_SECONDARY_ACTION} />
+
+      {
+        primary.href ? (
+          <a class="mnav-btn mnav-btn--primary mnav__compact-cta" href={primary.href} data-track={primary.track}>
+            {compactLabel}
+          </a>
+        ) : (
+          <button type="button" class="mnav-btn mnav-btn--primary mnav__compact-cta">
+            {compactLabel}
+          </button>
+        )
+      }
 
       <button type="button" class="mnav__menu" aria-expanded="false" aria-controls="mnav-hub" data-mnav-menu>
         <span class="mnav__menu-label" data-mnav-menu-label>Menu</span>

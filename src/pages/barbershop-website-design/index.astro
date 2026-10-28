@@ -16,7 +16,6 @@ import {
   buildBarbershopWebsiteDesignJsonLd,
 } from '@/lib/seo/barbershopWebsiteDesignPage';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
@@ -48,21 +47,6 @@ const currentYear = new Date().getFullYear();
     contactEmail={KERSIVO_CONTACT_EMAIL}
     brandName="KERSIVO"
     copyright={`© ${currentYear} KERSIVO`}
-    navigation={[
-      { name: 'Home', href: '/' },
-      { name: 'Starter', href: '/starter' },
-      { name: 'Pricing', href: '/pricing' },
-      { name: 'Live demo', href: '/demo' },
-      { name: 'Booksy comparison', href: '/booksy-alternative' },
-      { name: 'Fresha comparison', href: '/fresha-alternative' },
-    ]}
     social={getFooterSocialLinks()}
-    legal={[
-      FOOTER_LEGAL_LINKS.privacy,
-      FOOTER_LEGAL_LINKS.cookies,
-      FOOTER_LEGAL_LINKS.cookieSettings,
-      FOOTER_LEGAL_LINKS.dpa,
-      FOOTER_LEGAL_LINKS.termsAndCancellation,
-    ]}
   />
 </LandingLayout>

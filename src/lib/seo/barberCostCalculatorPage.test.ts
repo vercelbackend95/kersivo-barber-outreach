@@ -368,7 +368,7 @@ describe('barber software cost calculator content safety', () => {
     expect(urls).toContain(BOOKSY_SOURCE_PRICING);
     expect(urls).toContain(BOOKSY_SOURCE_BOOST);
     expect(urls).toContain('https://www.fresha.com/en-GB/pricing');
-    expect(urls).toContain('/#pricing');
+    expect(urls).toContain('/pricing');
     expect(urls).toEqual(
       expect.arrayContaining([
         'https://biz.booksy.com/en-gb/features/no-show-protection',

@@ -39,7 +39,7 @@ export type QrKitShopFacts = {
 };
 
 export type QrKitShopBlocker =
-  | 'NOT_STARTER'
+  | 'PLAN_NOT_ELIGIBLE'
   | 'SHOP_NAME_MISSING'
   | 'EMAIL_NOT_VERIFIED'
   | 'NO_BOOKABLE_BARBER'
@@ -49,7 +49,7 @@ export type QrKitShopBlocker =
   | 'TERMS_NOT_ACCEPTED';
 
 export const QR_KIT_BLOCKER_MESSAGES: Record<QrKitShopBlocker, string> = {
-  NOT_STARTER: 'The QR Kit is available to shops on KERSIVO Starter.',
+  PLAN_NOT_ELIGIBLE: 'The QR Kit is available to shops on KERSIVO Starter or Full KERSIVO.',
   SHOP_NAME_MISSING: 'Add your shop name in settings.',
   EMAIL_NOT_VERIFIED: 'Verify your email address first.',
   NO_BOOKABLE_BARBER: 'Add at least one barber taking online bookings.',
@@ -62,7 +62,9 @@ export const QR_KIT_BLOCKER_MESSAGES: Record<QrKitShopBlocker, string> = {
 /** Server-side shop eligibility. Deliberately no Stripe, Companies House, reviews or first booking. */
 export function evaluateQrKitShopEligibility(facts: QrKitShopFacts): QrKitShopBlocker[] {
   const blockers: QrKitShopBlocker[] = [];
-  if (facts.productState !== 'FREE_BOOKING') blockers.push('NOT_STARTER');
+  if (facts.productState !== 'FREE_BOOKING' && facts.productState !== 'FULL_KERSIVO') {
+    blockers.push('PLAN_NOT_ELIGIBLE');
+  }
   if (!facts.shopName.trim()) blockers.push('SHOP_NAME_MISSING');
   if (!facts.emailVerified) blockers.push('EMAIL_NOT_VERIFIED');
   if (facts.activeBookableBarbers < 1) blockers.push('NO_BOOKABLE_BARBER');
@@ -98,6 +100,7 @@ export async function loadQrKitShopFacts(
             in: [
               TERMS_ACCEPTANCE_PURPOSES.FREE_BOOKING_ACTIVATION,
               TERMS_ACCEPTANCE_PURPOSES.FULL_TO_STARTER,
+              TERMS_ACCEPTANCE_PURPOSES.SAAS_CHECKOUT,
             ],
           },
         },

@@ -9,7 +9,7 @@ import {
   TRADING_NAME,
 } from './businessIdentity';
 import { termsAcceptanceStripeMetadata } from './requireTermsAcceptance';
-import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from './termsVersion';
+import { ACCEPTED_PRIOR_TERMS_VERSIONS, CURRENT_TERMS_VERSION, formatTermsLastUpdated, postFullStarterTermsAllowService } from './termsVersion';
 import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO, formatLegalPageDate } from './legalPageDates';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -78,9 +78,9 @@ describe('legal page identity wording', () => {
 });
 
 describe('terms version and acceptance metadata', () => {
-  it('CURRENT_TERMS_VERSION is 2026-10-06 and formats the human-readable date', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
-    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('6 October 2026');
+  it('CURRENT_TERMS_VERSION is 2026-10-27 and formats the human-readable date', () => {
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
+    expect(formatTermsLastUpdated(CURRENT_TERMS_VERSION)).toBe('27 October 2026');
   });
 
   it('Stripe terms acceptance metadata derives from CURRENT_TERMS_VERSION', () => {
@@ -88,7 +88,14 @@ describe('terms version and acceptance metadata', () => {
       terms_accepted: '1',
       terms_version: CURRENT_TERMS_VERSION,
     });
-    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-10-06');
+    expect(termsAcceptanceStripeMetadata().terms_version).toBe('2026-10-27');
+  });
+
+  it('still accepts shops that agreed to the previous Terms version', () => {
+    expect(ACCEPTED_PRIOR_TERMS_VERSIONS).toEqual(['2026-10-06']);
+    expect(postFullStarterTermsAllowService('2026-10-06')).toBe(true);
+    expect(postFullStarterTermsAllowService(CURRENT_TERMS_VERSION)).toBe(true);
+    expect(postFullStarterTermsAllowService('2020-01-01')).toBe(false);
   });
 });
 

@@ -52,7 +52,7 @@ describe('navbar17 CTA fallbacks', () => {
 
   it('keeps default variant fallbacks unchanged', () => {
     expect(getNavbar17CtaLabel('default')).toBe('Get started');
-    expect(getNavbar17CtaHref('default')).toBe('/#pricing');
+    expect(getNavbar17CtaHref('default')).toBe('/pricing');
   });
 });
 

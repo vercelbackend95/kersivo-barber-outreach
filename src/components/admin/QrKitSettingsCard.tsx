@@ -83,7 +83,7 @@ export default function QrKitSettingsCard() {
     return null;
   }
   // The initial QR Kit is a KERSIVO Starter benefit; hide the card for other plans.
-  if (view && !view.requestReceived && view.blockers.some((b) => b.code === 'NOT_STARTER')) {
+  if (view && !view.requestReceived && view.blockers.some((b) => b.code === 'PLAN_NOT_ELIGIBLE')) {
     return null;
   }
 
@@ -128,7 +128,7 @@ export default function QrKitSettingsCard() {
         QR Kit
       </h2>
       <p className="admin-barbershop-settings__card-copy">
-        Your KERSIVO Starter QR Kit contains two printed QR codes for your shop: a WINDOW booking QR
+        Your KERSIVO QR Kit contains two printed QR codes for your shop: a WINDOW booking QR
         for inside the shop glass (“Book online — scan to book”) and a REBOOK QR for the counter
         (“Rebook before you leave — scan to book”). Both open your KERSIVO booking page and keep
         working if your plan changes.

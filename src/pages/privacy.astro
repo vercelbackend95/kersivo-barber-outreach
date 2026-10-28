@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
 import {
   LEGAL_OPERATOR_LOCATION,
@@ -12,8 +12,8 @@ import { formatLegalPageDate, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/lega
 import '@/styles/legal-pages.css';
 ---
 
-<MainLayout
-  title="Privacy Policy | Kersivo"
+<LandingLayout
+  title="Privacy Policy | KERSIVO"
   description={PAGE_DESCRIPTIONS.privacy}
   canonicalPath="/privacy"
 >
@@ -210,7 +210,7 @@ import '@/styles/legal-pages.css';
           to staff or migration content controlled by the barbershop once live.)
         </li>
         <li>
-          <strong>QR Kit fulfilment</strong> — where an eligible UK Starter location requests the included initial QR
+          <strong>QR Kit fulfilment</strong> — where an eligible UK location on Starter or Full requests the included initial QR
           Kit, {TRADING_NAME} processes the responsible contact name, email, phone, delivery/address details, postcode,
           verification/fulfilment status and, where used, supplier, carrier or tracking references needed to verify,
           print and dispatch the kit. Internal print/postage unit-cost data is operational business data and is not
@@ -451,4 +451,4 @@ import '@/styles/legal-pages.css';
     </article>
   </main>
   <LegalFooter />
-</MainLayout>
+</LandingLayout>

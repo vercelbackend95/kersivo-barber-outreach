@@ -20,7 +20,6 @@ import {
   INSIGHTS_PUBLISHED_ARTICLES,
 } from '@/lib/seo/insights';
 import {
-  FOOTER_LEGAL_LINKS,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fonts-insights.css';
@@ -154,13 +153,6 @@ const countLabel =
       brandLine="Own your brand. Own your bookings."
       copyright={`© ${currentYear} KERSIVO`}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

@@ -621,19 +621,23 @@ export async function sendContactInquiryEmail(input: {
     'mixed-manual': 'Manual bookings / mixed tools',
     none: 'No booking system',
   };
-  const currentStackLabel = stackLabels[input.currentStack] ?? input.currentStack;
+  const provided = (value: string) => value.trim() || 'Not provided';
+  const currentStackLabel = input.currentStack.trim()
+    ? (stackLabels[input.currentStack] ?? input.currentStack)
+    : 'Not provided';
+  const shopLabel = provided(input.shopName);
 
   const html = `<p><strong>New landing page enquiry</strong></p>
-  <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
+  <p><strong>Name:</strong> ${escapeHtml(provided(input.name))}</p>
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
-  <p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>
+  <p><strong>Barbershop:</strong> ${escapeHtml(shopLabel)}</p>
   <p><strong>Current booking system:</strong> ${escapeHtml(currentStackLabel)}</p>
   ${input.intent ? `<p><strong>Intent:</strong> ${escapeHtml(input.intent)}</p>` : ''}
-  <p><strong>Message:</strong></p><p>${escapeHtml(input.message).replace(/\n/g, '<br/>')}</p>`;
+  <p><strong>Message:</strong></p><p>${escapeHtml(provided(input.message)).replace(/\n/g, '<br/>')}</p>`;
 
   return sendEmail({
     to: inbox,
-    subject: `New KERSIVO enquiry — ${input.shopName}`,
+    subject: `New KERSIVO enquiry — ${shopLabel}`,
     html,
     replyTo: input.email,
     devLogLabel: '[DEV EMAIL] Contact inquiry',
@@ -718,7 +722,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   const bookingFlowUrl = 'https://kersivo.co.uk/book';
   const adminDemoUrl = 'https://kersivo.co.uk/admin-demo?section=bookings_dashboard';
   const retailDemoUrl = 'https://kersivo.co.uk/shop';
-  const pricingUrl = 'https://kersivo.co.uk/#pricing';
+  const pricingUrl = 'https://kersivo.co.uk/pricing';
   const replyTo = getContactInboxEmail();
 
   const html = `<p>Hi,</p>

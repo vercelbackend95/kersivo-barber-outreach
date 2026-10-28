@@ -87,7 +87,7 @@ describe('marketing sitemap', () => {
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
       expect(byLoc[`https://kersivo.co.uk${path}`]).toBeUndefined(); // No fabricated editorial lastmod
     }
-    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-02');
+    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-27');
     expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-09');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
@@ -105,7 +105,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
 
     expect(EXPECTED_LOCS.some((loc) => loc === 'https://kersivo.co.uk/')).toBe(true);
     for (const loc of EXPECTED_LOCS) {
@@ -145,7 +145,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain('<lastmod>2026-10-17</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
-    expect(xml).toContain('<lastmod>2026-10-02</lastmod>');
+    expect(xml).toContain('<lastmod>2026-10-27</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
     // Homepage, six Insights categories and three Websites cluster pages have no source-backed lastmod.
     expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT - 10);

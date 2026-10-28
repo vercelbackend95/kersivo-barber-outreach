@@ -59,7 +59,7 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(profileSource).toContain('Back to Kersivo');
     expect(profileSource).toContain('href={createShopHref}');
     expect(CREATE_OWN_BARBERSHOP_HREF).toBe('/admin/onboarding');
-    expect(KERSIVO_PLANS_HREF).toBe('/#pricing');
+    expect(KERSIVO_PLANS_HREF).toBe('/pricing');
   });
 
   it('wires banner navigation between customer and owner views', () => {

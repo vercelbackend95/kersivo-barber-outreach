@@ -176,7 +176,7 @@ describe('KERSIVO Starter landing page structure and claims', () => {
   });
 
   it('is linked from the homepage and pricing page and links back to pricing', () => {
-    expect(read('pages/index.astro')).toContain("{ name: 'Starter', href: '/starter' }");
+    expect(read('lib/nav/footerNavigation.ts')).toContain("href: '/starter'");
     expect(read('pages/pricing.astro')).toContain('href="/starter"');
     expect(page).toContain('href="/pricing"');
   });

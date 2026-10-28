@@ -81,7 +81,7 @@ describe('v1.19 legal/product alignment', () => {
     expect(terms).toContain('rolling <strong>90-day</strong>');
     expect(terms).toContain('<strong>Clients Core</strong>');
     expect(terms).toContain('<strong>OFFLINE</strong>');
-    expect(terms).toContain('Starter QR Kit');
+    expect(terms).toContain('id="qr-kit">QR Kit');
     expect(terms).toContain('Google Business Profile booking link');
     expect(terms).toContain('does not claim to edit Google automatically');
     expect(privacy).toContain('QR Kit fulfilment');
@@ -111,7 +111,7 @@ describe('v1.19 legal/product alignment', () => {
   });
 
   it('bumps the material legal package versions together', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
     expect(privacy).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
     expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('6 October 2026');

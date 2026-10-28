@@ -230,6 +230,10 @@ export const EMAIL_REMINDERS_CLAIM = 'Email appointment confirmations and remind
  */
 export const SMS_INCLUDED_CLAIM = 'SMS appointment reminders';
 
+/** One complimentary initial QR Kit per location, on Starter or Full. */
+export const QR_KIT_ELIGIBILITY_CLAIM =
+  "Eligible verified UK barbershops on Starter or Full can request one complimentary initial QR Kit per location, subject to verification and booking readiness. Dispatch timing isn't guaranteed.";
+
 /** Approved pricing-page qualifier: names the allowance without publishing its size. */
 export const SMS_INCLUDED_WITH_ALLOWANCE_CLAIM =
   'SMS appointment reminders are included, subject to the plan’s monthly SMS allowance.';

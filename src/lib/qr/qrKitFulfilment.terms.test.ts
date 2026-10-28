@@ -55,9 +55,19 @@ describe('QR Kit Terms requirement across Terms version bumps', () => {
     expect(facts.termsAccepted).toBe(true);
   });
 
-  it('a shop that never accepted Starter Terms stays blocked', async () => {
+  it('a Full SAAS_CHECKOUT acceptance satisfies the QR Kit', async () => {
     const db = dbWith([
       { shopId: 'shop-1', purpose: 'SAAS_CHECKOUT', termsVersion: CURRENT_TERMS_VERSION },
+    ]);
+    const facts = await loadQrKitShopFacts('shop-1', { emailVerified: true, db: db as never });
+    expect(facts.termsAccepted).toBe(true);
+    expect(evaluateQrKitShopEligibility({ ...facts, productState: 'FULL_KERSIVO' })).not.toContain(
+      'TERMS_NOT_ACCEPTED',
+    );
+  });
+
+  it('a shop that never accepted Terms stays blocked', async () => {
+    const db = dbWith([
       { shopId: 'other-shop', purpose: 'FREE_BOOKING_ACTIVATION', termsVersion: CURRENT_TERMS_VERSION },
     ]);
 

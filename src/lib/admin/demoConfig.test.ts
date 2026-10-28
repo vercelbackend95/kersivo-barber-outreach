@@ -58,7 +58,7 @@ describe('public admin demo capabilities', () => {
     expect(caps.conversionAccountMenu).toBe(true);
     expect(caps.createShopHref).toBe(CREATE_OWN_BARBERSHOP_HREF);
     expect(CREATE_OWN_BARBERSHOP_HREF).toBe('/admin/onboarding');
-    expect(KERSIVO_PLANS_HREF).toBe('/#pricing');
+    expect(KERSIVO_PLANS_HREF).toBe('/pricing');
     expect(caps.previewWebsiteHref).toBe('/demo');
     expect(caps.kersivoHomeHref).toBe('/');
     expect(caps.showLaunchCta).toBe(false);

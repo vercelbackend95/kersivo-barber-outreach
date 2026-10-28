@@ -98,7 +98,7 @@ const LANDING_COPY: Pricing36Copy = {
     'Hosting + SSL included while Care is active',
     `Ongoing Care (£${SAAS_MONTHLY_GBP}/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, and website update support`,
   ],
-  launchNewcomerAnchor: `Typical go-live: around two weeks after onboarding. ${KERSIVO_COMMISSION_CLAIM}`,
+  launchNewcomerAnchor: `Your site is typically ready 1–2 weeks after we receive all required information. ${KERSIVO_COMMISSION_CLAIM}`,
   launchSwitcherAnchor:
     'Switch from a marketplace profile to a booking experience built around your brand — with predictable setup and flat monthly Care.',
   prioritySubtext: `Same £${SAAS_MONTHLY_GBP}/month Care as Launch — extra dedicated pages and deeper catalogue polish in the setup.`,
@@ -120,7 +120,7 @@ const LANDING_COPY: Pricing36Copy = {
   saasBullets: SAAS_BULLETS_LANDING,
   saasSwitcherAnchor:
     'Switch from a marketplace profile to a booking experience built around your brand — flat monthly fee, no setup fee.',
-  saasNewcomerAnchor: `Typical go-live: around two weeks after onboarding. ${KERSIVO_COMMISSION_CLAIM}`,
+  saasNewcomerAnchor: `Your site is typically ready 1–2 weeks after we receive all required information. ${KERSIVO_COMMISSION_CLAIM}`,
   saasCtaLabel: `Get started — £${SAAS_MONTHLY_GBP}/mo`,
 };
 
