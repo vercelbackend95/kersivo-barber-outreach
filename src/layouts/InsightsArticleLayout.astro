@@ -31,7 +31,7 @@ interface Props {
   headline: string;
   publishedDate: string;
   verifiedDate: string;
-  modifiedDate?: string;
+  updatedDate?: string;
   heroImage: string;
   ogImage?: string;
   ogImageAlt?: string;
@@ -51,7 +51,7 @@ const {
   headline,
   publishedDate,
   verifiedDate,
-  modifiedDate,
+  updatedDate,
   heroImage,
   ogImage,
   ogImageAlt,
@@ -66,6 +66,9 @@ const isPublic = published && isInsightsArticlePublished(slug);
 const related = getInsightsRelatedLinks(slug);
 const commercialNext = getInsightsCommercialNext(slug);
 const resolvedDateLabel = dateLabel ?? formatInsightsDateLabel(publishedDate);
+/** Visible only when an editorial revision date differs from the publication date. */
+const updatedDateLabel =
+  updatedDate && updatedDate !== publishedDate ? `Updated ${formatInsightsDateLabel(updatedDate)}` : undefined;
 const socialImage = ogImage ?? coverImage;
 const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
 ---
@@ -89,7 +92,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
           description,
           publishedDate,
           verifiedDate,
-          modifiedDate,
+          updatedDate,
           heroImage,
           ogImage,
           categoryId,
@@ -111,6 +114,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
       category={categoryLabel}
       categoryHref={taxonomy.path}
       dateLabel={resolvedDateLabel}
+      updatedLabel={updatedDateLabel}
       currentLabel={headline}
     />
     <div class="insights-paper">

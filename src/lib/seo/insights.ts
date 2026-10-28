@@ -10,6 +10,12 @@ import {
   type InsightsCategoryId,
 } from '@/lib/insights/categories';
 import { buildAbsoluteUrl } from './meta';
+import {
+  buildKersivoEntityJsonLd,
+  getKersivoOrganizationId,
+  getKersivoWebsiteId,
+} from './kersivoEntityJsonLd';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const INSIGHTS_INDEX_PATH = '/insights';
 export const INSIGHTS_INDEX_TITLE = 'Barbershop Business Insights & Guides UK | KERSIVO';
@@ -403,9 +409,27 @@ export const INSIGHTS_PUBLISHED_ARTICLES = [
 ] as const;
 
 export type InsightsPublishedArticle = (typeof INSIGHTS_PUBLISHED_ARTICLES)[number] & {
-  /** Set only when an editorial revision meaningfully changes published copy. */
-  modifiedDate?: string;
+  /**
+   * ISO date (YYYY-MM-DD). Set only when an editorial revision meaningfully changes published copy.
+   * Drives Article dateModified, the visible "Updated …" line and sitemap lastmod.
+   */
+  updatedDate?: string;
 };
+
+/** Content date of an article: updatedDate when set, otherwise publishedDate. Never the build date. */
+export function getInsightsArticleDateModified(article: { publishedDate: string; updatedDate?: string }): string {
+  return article.updatedDate && article.updatedDate.length > 0 ? article.updatedDate : article.publishedDate;
+}
+
+/** Newest content date among the given articles (category archives, hub). */
+export function getNewestInsightsDateModified(
+  articles: readonly { publishedDate: string; updatedDate?: string }[],
+): string | undefined {
+  return articles.reduce<string | undefined>((newest, article) => {
+    const modified = getInsightsArticleDateModified(article);
+    return !newest || modified > newest ? modified : newest;
+  }, undefined);
+}
 
 export function getInsightsArticleCategoryId(article: { categoryId: InsightsCategoryId }): InsightsCategoryId {
   return article.categoryId;
@@ -445,27 +469,18 @@ function absoluteAssetUrl(src: string): string {
   return buildAbsoluteUrl(src.startsWith('/') ? src : `/${src}`);
 }
 
-/** Newest editorial publishedDate among live articles — used for hub sitemap lastmod. */
+/** Newest article dateModified among live articles — used for hub sitemap lastmod. */
 export function getInsightsIndexLastmod(): string {
-  return INSIGHTS_PUBLISHED_ARTICLES.reduce<string>(
-    (newest, article) => (article.publishedDate > newest ? article.publishedDate : newest),
-    INSIGHTS_PUBLISHED_ARTICLES[0].publishedDate,
-  );
+  return getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[])!;
 }
 
 export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod?: string }> {
   return [
     { path: INSIGHTS_INDEX_PATH, lastmod: getInsightsIndexLastmod() },
-    ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => {
-      const modified =
-        'modifiedDate' in article && typeof article.modifiedDate === 'string'
-          ? article.modifiedDate
-          : undefined;
-      return {
-        path: article.path,
-        lastmod: modified && modified.length > 0 ? modified : article.publishedDate,
-      };
-    }),
+    ...(INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[]).map((article) => ({
+      path: article.path,
+      lastmod: getInsightsArticleDateModified(article),
+    })),
     ...getIndexableInsightsCategorySitemapEntries(),
   ];
 }
@@ -563,11 +578,13 @@ export function buildInsightsArticleJsonLd(article: {
   description: string;
   publishedDate: string;
   verifiedDate: string;
-  modifiedDate?: string;
+  updatedDate?: string;
   heroImage: string;
   ogImage?: string;
   categoryId: InsightsCategoryId;
 }) {
+  const siteUrl = getPublicSiteUrl();
+  const organizationId = getKersivoOrganizationId(siteUrl);
   const url = buildAbsoluteUrl(article.path);
   const imageUrl = absoluteAssetUrl(article.ogImage ?? article.heroImage);
   const categoryName = getInsightsCategoryName(article.categoryId);
@@ -580,24 +597,22 @@ export function buildInsightsArticleJsonLd(article: {
     description: article.description,
     image: [imageUrl],
     datePublished: article.publishedDate,
+    dateModified: getInsightsArticleDateModified(article),
     inLanguage: 'en-GB',
-    author: { '@type': 'Organization', name: 'KERSIVO', url: buildAbsoluteUrl('/') },
-    publisher: {
+    author: {
       '@type': 'Organization',
+      '@id': organizationId,
       name: 'KERSIVO',
-      url: buildAbsoluteUrl('/'),
-      logo: {
-        '@type': 'ImageObject',
-        url: buildAbsoluteUrl('/images/logo-kersivo.png'),
-      },
+      url: buildAbsoluteUrl('/about'),
     },
+    /** Resolves to the shared Organization node (logo_nobg.png) emitted alongside the article. */
+    publisher: { '@id': organizationId },
+    isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     articleSection: categoryName,
     isAccessibleForFree: true,
   };
-  if (article.modifiedDate && article.modifiedDate !== article.publishedDate) {
-    payload.dateModified = article.modifiedDate;
-  }
   return [
+    buildKersivoEntityJsonLd(),
     payload,
     buildInsightsBreadcrumbs({
       path: article.path,

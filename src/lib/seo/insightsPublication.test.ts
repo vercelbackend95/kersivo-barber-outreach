@@ -134,9 +134,9 @@ describe('Insights publication safety', () => {
     expect(layout).toContain('InsightsRelatedReading');
   });
 
-  it('omits dateModified when no meaningful editorial revision is recorded', () => {
+  it('falls back to datePublished for dateModified and links publisher, author and site by @id', () => {
     const article = INSIGHTS_PUBLISHED_ARTICLES[0];
-    const [jsonLd] = buildInsightsArticleJsonLd({
+    const input = {
       path: article.path,
       headline: article.headline,
       description: article.description,
@@ -145,9 +145,28 @@ describe('Insights publication safety', () => {
       heroImage: article.heroImage,
       ogImage: article.ogImage,
       categoryId: article.categoryId,
-    });
-    expect(jsonLd).not.toHaveProperty('dateModified');
+    };
+    const [entity, jsonLd] = buildInsightsArticleJsonLd(input) as Record<string, any>[];
+    expect(entity['@graph'].map((node: Record<string, unknown>) => node['@id'])).toEqual([
+      'https://kersivo.co.uk/#organization',
+      'https://kersivo.co.uk/#website',
+    ]);
+    expect(entity['@graph'][0].logo.url).toBe('https://kersivo.co.uk/images/logo_nobg.png');
+    expect(jsonLd['@type']).toBe('Article');
     expect(jsonLd).toHaveProperty('datePublished', article.publishedDate);
+    expect(jsonLd).toHaveProperty('dateModified', article.publishedDate);
+    expect(jsonLd.publisher).toEqual({ '@id': 'https://kersivo.co.uk/#organization' });
+    expect(jsonLd.author).toEqual({
+      '@type': 'Organization',
+      '@id': 'https://kersivo.co.uk/#organization',
+      name: 'KERSIVO',
+      url: 'https://kersivo.co.uk/about',
+    });
+    expect(jsonLd.isPartOf).toEqual({ '@id': 'https://kersivo.co.uk/#website' });
+    expect(JSON.stringify(jsonLd)).not.toContain('logo-kersivo.png');
+
+    const [, revised] = buildInsightsArticleJsonLd({ ...input, updatedDate: '2026-10-28' }) as Record<string, any>[];
+    expect(revised).toHaveProperty('dateModified', '2026-10-28');
   });
 
   it('keeps related links on published destinations only', () => {
