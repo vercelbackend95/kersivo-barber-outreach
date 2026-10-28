@@ -14,14 +14,24 @@ const PRIVATE_PATH_RULES = [
   'Disallow: /q/',
 ] as const;
 
+/**
+ * AI search and answer crawlers get explicit allow groups with the same private-path rules.
+ * Training-only crawlers (GPTBot, CCBot, Google-Extended) are deliberately not named: they fall under `*`.
+ */
+export const AI_SEARCH_CRAWLERS = [
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'Claude-SearchBot',
+  'Claude-User',
+  'PerplexityBot',
+  'Perplexity-User',
+] as const;
+
 export const GET: APIRoute = () => {
   const siteUrl = getPublicSiteUrl();
 
   const body = [
-    'User-agent: OAI-SearchBot',
-    'Allow: /',
-    ...PRIVATE_PATH_RULES,
-    '',
+    ...AI_SEARCH_CRAWLERS.flatMap((agent) => [`User-agent: ${agent}`, 'Allow: /', ...PRIVATE_PATH_RULES, '']),
     'User-agent: *',
     'Allow: /',
     ...PRIVATE_PATH_RULES,
