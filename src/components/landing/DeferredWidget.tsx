@@ -54,37 +54,7 @@ async function loadWidget(kind: DeferredWidgetKind): Promise<ReactNode> {
     const { default: LandingBookingsReportsWidget } = await import('@/components/LandingBookingsReportsWidget');
     return <LandingBookingsReportsWidget forcePassive />;
   }
-  const [{ ProductRail }, { getLandingDemoCarouselProducts }, { DEMO_SHOP_NAME }] = await Promise.all([
-    import('@/components/shop/ProductRail'),
-    import('@/lib/shop/landingDemoCarouselProducts'),
-    import('@/lib/demo/site'),
-    import('@/styles/components/shopProductCards6.css'),
-    import('@/styles/components/storefront.css'),
-    import('@/styles/components/productRail.css'),
-  ]);
-  return (
-    <ProductRail
-      products={getLandingDemoCarouselProducts()}
-      className="feature261-retail-carousel"
-      eagerImages={false}
-      productHrefBase="/demo/shop"
-      variant="storefront"
-      imageFallback="wordmark"
-      priceFormat="demo"
-      density="compact"
-      showAction="add-to-cart"
-      showControls={false}
-      showProgress={false}
-      showCategory={true}
-      showPrice={true}
-      fallbackBrandMark="CS"
-      shopName={DEMO_SHOP_NAME}
-      addToBagLabel="Add to bag"
-      addToBagShortLabel="Add"
-      addedLabel="Added"
-      chooseOptionsLabel="Choose options"
-      soldOutLabel="Sold out"
-      ariaLabel={`${DEMO_SHOP_NAME} products`}
-    />
-  );
+  // Stylesheets are static imports inside RetailDemoRail. Never load a .css file with a dynamic import here.
+  const { RetailDemoRail } = await import('@/components/landing/RetailDemoRail');
+  return <RetailDemoRail />;
 }
