@@ -1,4 +1,6 @@
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_CONTACT_EMAIL } from '@/lib/seo/footerSocialLinks';
+import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 type LandingFaqItem = {
@@ -82,6 +84,84 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   },
 ];
 
+/**
+ * Homepage FAQ. Question 1 is renamed from the brief's "How much does KERSIVO cost?"
+ * because `/pricing` already uses that question verbatim.
+ * The contact answer adds the claims-policy line that the one-business-day figure is a response target.
+ */
+export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
+  {
+    question: 'How much does Full KERSIVO cost a shop?',
+    answer: `Full KERSIVO is £${SAAS_MONTHLY_GBP} a month per physical location and includes your branded website, one standard domain and every barber at that location, subject to fair use. There's no setup fee, no VAT added and no KERSIVO commission. Stripe charges its standard processing fees on online payments. If you only need online bookings for up to 4 barbers, KERSIVO Starter is £0 a month.`,
+  },
+  {
+    question: 'When do I pay, and how long until my website is live?',
+    answer: `Your first £${SAAS_MONTHLY_GBP} payment is taken when you subscribe, then monthly on the same day. Your website is typically ready 1–2 weeks after we receive all the required information — that's an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it.`,
+  },
+  {
+    question: 'Can I choose how clients pay when they book?',
+    answer: `Yes. On Full KERSIVO you choose Pay at shop, a required £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront. Online payments go through your own connected Stripe account.`,
+  },
+  {
+    question: 'Who pays the Stripe fees?',
+    answer: 'Your shop does, through its own connected Stripe account, at the rates on your Stripe agreement. KERSIVO adds no commission on top.',
+  },
+  {
+    question: 'Can I switch from Booksy, Fresha or Treatwell without losing bookings?',
+    answer:
+      "Yes. Keep taking bookings on your current system while we set up KERSIVO. We help migrate the usable business data available from your current system, including supported CSV exports — what can be moved depends on what your current provider lets you export. You switch your booking links once you've approved the preview.",
+  },
+  {
+    question: 'Is the website custom-designed?',
+    answer:
+      'It\'s a professional website configured around your shop\'s brand, photos and team — not an unlimited bespoke build. Reasonable small website updates are included; redesigns and custom features aren\'t. Your site carries a subtle "Powered by KERSIVO" mark.',
+  },
+  {
+    question: 'Do I keep my domain?',
+    answer:
+      'Yes. Your business owns its domain. One standard domain is included while Full KERSIVO is active, or we connect the one you already have. If you leave, the domain can be transferred or pointed elsewhere; the KERSIVO platform and code stay with KERSIVO.',
+  },
+  {
+    question: 'Do my clients need an app?',
+    answer:
+      "No. Clients book in their browser on your website. There's nothing to download and no account to create.",
+  },
+  {
+    question: 'Can I cancel?',
+    answer: `Yes, anytime. Full KERSIVO stays active until the end of the paid month. You then choose to continue on KERSIVO Starter or leave. If you leave completely, a free CSV export of client contact details and booking history is available for ${SAAS_EXPORT_RETENTION_DAYS} days, and Full KERSIVO owners can also download it once from the dashboard settings.`,
+  },
+  {
+    question: 'How do I contact KERSIVO?',
+    answer: `Email ${KERSIVO_CONTACT_EMAIL}, or use the form below. Full KERSIVO subscribers have a first-response target of one business day. This is a response target, not a guaranteed resolution time.`,
+  },
+];
+
+export const ONLINE_BOOKING_MOVED_FAQ_ITEMS: LandingFaqItem[] = [
+  BARBERSHOP_BOOKING_FAQ_ITEMS[0],
+  BARBERSHOP_BOOKING_FAQ_ITEMS[1],
+  BARBERSHOP_BOOKING_FAQ_ITEMS[12],
+  BARBERSHOP_BOOKING_FAQ_ITEMS[13],
+  {
+    question: 'Does KERSIVO replace my card reader?',
+    answer:
+      "No. KERSIVO isn't a till or card-reader system. Any balance after a deposit is paid in the shop the way you take payments today.",
+  },
+];
+
+export function buildOnlineBookingFaqJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${siteUrl}/barbershop-online-booking#faq`,
+    mainEntity: ONLINE_BOOKING_MOVED_FAQ_ITEMS.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  };
+}
+
 export function buildBarbershopBookingFaqJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
 
@@ -89,7 +169,7 @@ export function buildBarbershopBookingFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}/#faq`,
-    mainEntity: BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => ({
+    mainEntity: HOMEPAGE_FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

@@ -65,15 +65,19 @@ export function LandingBookingWidget({
   shopDetails,
   categoryOrder,
   presentation,
+  forcePassive = false,
 }: {
   services: WidgetService[];
   barbers: WidgetBarber[];
   shopDetails?: WidgetShopDetails;
   categoryOrder?: readonly string[];
   presentation?: BookingFlowPresentation;
+  /** Frozen preview at every width. The row CTA still opens the working demo. */
+  forcePassive?: boolean;
 }) {
   const [phase, setPhase] = useState<OverlayPhase>('idle');
-  const isPassive = useMaxWidthPassive();
+  const viewportPassive = useMaxWidthPassive();
+  const isPassive = forcePassive || viewportPassive;
   const isPassiveRef = useRef(isPassive);
   isPassiveRef.current = isPassive;
   const isDimmed = !isPassive && phase !== 'idle';

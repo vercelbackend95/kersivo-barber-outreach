@@ -7,12 +7,9 @@ import {
   getKersivoWebsiteId,
   KERSIVO_SOFTWARE_FEATURE_LIST,
 } from './barberDemoJsonLd';
-import {
-  BARBERSHOP_BOOKING_FAQ_ITEMS,
-  buildBarbershopBookingFaqJsonLd,
-} from './barbershopBookingFaq';
+import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
 import { getFooterSocialLinks } from './footerSocialLinks';
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
+import { DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, HOMEPAGE_LAST_UPDATED_ISO, SAAS_MONTHLY_GBP } from './defaults';
 
 describe('buildBarberDemoJsonLd', () => {
   it('emits a single valid @graph with Organization, WebSite, WebPage, and SoftwareApplication', () => {
@@ -35,7 +32,7 @@ describe('buildBarberDemoJsonLd', () => {
     expect(serialized).not.toContain('LocalBusiness');
     expect(serialized).not.toContain('SearchAction');
     expect(serialized).not.toContain('aggregateRating');
-    expect(serialized).not.toContain('InStock');
+    expect(serialized).toContain('https://schema.org/InStock');
     expect(serialized).not.toContain('"@type":"Service"');
   });
 
@@ -80,7 +77,14 @@ describe('buildBarberDemoJsonLd', () => {
     });
     expect(JSON.stringify(organization.logo)).not.toContain('logo.jpg');
     expect(organization.sameAs).toEqual(getFooterSocialLinks().map((link) => link.href));
-    expect(organization).not.toHaveProperty('contactPoint');
+    expect(organization.contactPoint).toMatchObject({
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'hello@kersivo.co.uk',
+      areaServed: 'GB',
+      availableLanguage: 'en-GB',
+    });
+    expect(organization.alternateName).toBe('Kersivo');
     expect(organization).not.toHaveProperty('legalName');
     expect(organization).not.toHaveProperty('founder');
 
@@ -93,7 +97,8 @@ describe('buildBarberDemoJsonLd', () => {
     expect(homepage['@id']).toBe(getKersivoHomepageId(siteUrl));
     expect(homepage.url).toBe(`${siteUrl}/`);
     expect(homepage.name).toBe(DEFAULT_TITLE);
-    expect(homepage.description).toBe(DEFAULT_DESCRIPTION);
+    expect(homepage.description).toBe(HOMEPAGE_DESCRIPTION);
+    expect(homepage.dateModified).toBe(HOMEPAGE_LAST_UPDATED_ISO);
     expect(homepage.inLanguage).toBe('en-GB');
     expect(homepage.isPartOf).toEqual({ '@id': getKersivoWebsiteId(siteUrl) });
     expect(homepage.publisher).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
@@ -104,23 +109,15 @@ describe('buildBarberDemoJsonLd', () => {
     expect(software.name).toBe('KERSIVO');
     expect(software.url).toBe(`${siteUrl}/`);
     expect(software.applicationCategory).toBe('BusinessApplication');
-    expect(software.operatingSystem).toBe('Web');
-    expect(software.description).toBe(
-      'Barbershop booking and management software for independent UK barbershops.',
-    );
+    expect(software.operatingSystem).toBe('Web browser');
+    expect(software.applicationSubCategory).toBe('Barbershop booking software and websites');
+    expect(software.description).toContain('0% KERSIVO commission');
     expect(software.provider).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
     expect(software.featureList).toEqual([...KERSIVO_SOFTWARE_FEATURE_LIST]);
-    expect(software.offers).toEqual([
-      { '@type': 'Offer', name: 'KERSIVO Starter', price: '0', priceCurrency: 'GBP', url: `${siteUrl}/starter` },
-      {
-        '@type': 'Offer',
-        name: 'Full KERSIVO',
-        price: String(SAAS_MONTHLY_GBP),
-        priceCurrency: 'GBP',
-        url: `${siteUrl}/pricing#plan`,
-      },
+    expect(software.offers).toMatchObject([
+      { name: 'Full KERSIVO', price: SAAS_MONTHLY_GBP.toFixed(2), priceCurrency: 'GBP' },
+      { name: 'KERSIVO Starter', price: '0', priceCurrency: 'GBP' },
     ]);
-    expect(software.offers).toMatchObject([{ price: '0' }, { price: '39', priceCurrency: 'GBP' }]);
 
     const serialized = JSON.stringify(jsonLd);
     expect(serialized).not.toContain('legalName');
@@ -147,22 +144,11 @@ describe('buildBarbershopBookingFaqJsonLd', () => {
       name: string;
       acceptedAnswer: { '@type': string; text: string };
     }>;
-    expect(entities.map((entity) => entity.name)).toEqual(
-      BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => item.question),
-    );
+    expect(entities.map((entity) => entity.name)).toEqual(HOMEPAGE_FAQ_ITEMS.map((item) => item.question));
     expect(entities.map((entity) => entity.acceptedAnswer.text)).toEqual(
-      BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => item.answer),
+      HOMEPAGE_FAQ_ITEMS.map((item) => item.answer),
     );
-    const names = entities.map((entity) => entity.name);
-    expect(names).toContain('What is barbershop software?');
-    expect(names).toContain('What should a barber booking system include?');
-    expect(names).toContain('Does KERSIVO charge more when I add more barbers?');
-    const barbersAnswer = entities.find(
-      (entity) => entity.name === 'Does KERSIVO charge more when I add more barbers?',
-    )!.acceptedAnswer.text;
-    expect(barbersAnswer).toBe(
-      `Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location rather than per barber; additional barbers within that location are included subject to reasonable fair use.`,
-    );
+    expect(entities.map((entity) => entity.name)).toContain('How much does Full KERSIVO cost a shop?');
     expect(JSON.stringify(faq)).not.toMatch(/Review|AggregateRating|aggregateRating/);
   });
 });

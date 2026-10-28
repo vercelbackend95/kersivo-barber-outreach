@@ -309,3 +309,35 @@
     font-size: 0.62rem;
   }
 }
+
+.deferred-widget {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Reserved size from the live widgets at 375, 768 and 1440. Kept after mount so the swap does not move the page. */
+.deferred-widget--admin { aspect-ratio: 343 / 360; }
+.deferred-widget--booking { aspect-ratio: 343 / 416; }
+.deferred-widget--retail { aspect-ratio: 343 / 253; }
+.deferred-widget--reports { aspect-ratio: 343 / 573; }
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .deferred-widget--admin { aspect-ratio: 736 / 396; }
+  .deferred-widget--booking { aspect-ratio: 736 / 576; }
+  .deferred-widget--retail { aspect-ratio: 736 / 422; }
+  .deferred-widget--reports { aspect-ratio: 736 / 641; }
+}
+
+@media (min-width: 900px) {
+  .deferred-widget--admin { aspect-ratio: 516 / 396; }
+  .deferred-widget--booking { aspect-ratio: 605 / 576; }
+  .deferred-widget--retail { aspect-ratio: 560 / 351; }
+  .deferred-widget--reports { aspect-ratio: 605 / 601; }
+}
+
+.landing-demo-still__caption {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}

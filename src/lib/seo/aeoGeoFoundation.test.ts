@@ -152,14 +152,14 @@ describe('/pricing page', () => {
   const text = pricingRenderedText();
 
   it('has the approved title, H1, description and quick answer', () => {
-    expect(PRICING_PAGE_TITLE).toBe('KERSIVO Pricing | Starter £0 & Full £39/Month');
+    expect(PRICING_PAGE_TITLE).toBe('KERSIVO Pricing: Full £39/Month or Starter £0 | UK Barbers');
     expect(PRICING_PAGE_TITLE.length).toBeLessThanOrEqual(60);
     expect(PRICING_PAGE_H1).toBe('KERSIVO pricing for independent barbershops');
     expect(PRICING_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(170);
     expect(PRICING_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month');
     expect(PRICING_QUICK_ANSWER).toContain('Full KERSIVO is £39/month per physical location');
     expect(PRICING_QUICK_ANSWER).toContain('0% commission on both plans');
-    expect(PRICING_QUICK_ANSWER).toContain('Standard Stripe processing fees');
+    expect(PRICING_QUICK_ANSWER).toContain('Stripe processing fees apply');
     expect(page).toContain('canonicalPath={PRICING_PAGE_PATH}');
     expect(page.match(/<h1\b/g)).toHaveLength(1);
   });
@@ -212,7 +212,7 @@ describe('/pricing page', () => {
   });
 
   it('links to the demo, the checkout and the comparison pages without fake urgency', () => {
-    expect(page).toContain('See KERSIVO in action');
+    expect(page).toContain('see the demo');
     expect(page).toContain('href="/demo"');
     expect(page).toContain('<RateCard1Offer />');
     expect(page).toContain('href="/admin/launch"');

@@ -105,6 +105,12 @@
   mask: var(--icon) center / contain no-repeat;
 }
 
+@media (max-width: 767px) {
+  .landing-difference__card--desktop-only {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .landing-difference__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -123,4 +129,17 @@
   .landing-difference__grid {
     grid-template-columns: 1fr;
   }
+}
+
+.landing-difference__card a,
+.landing-difference__compare a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.landing-difference__compare {
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
 }

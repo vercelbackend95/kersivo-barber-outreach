@@ -1,0 +1,44 @@
+---
+import { SAAS_MONTHLY_GBP, KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import {
+  BOOKSY_ADDITIONAL_USER_GBP,
+  BOOKSY_BASE_PRICE_GBP,
+  BOOKSY_FACTS_CHECKED_DATE,
+  BOOKSY_SOURCE_PRICING,
+  estimateBooksyMonthlySubscription,
+} from '@/lib/seo/booksyFacts';
+
+const example = estimateBooksyMonthlySubscription(5);
+const money = (amount: number) =>
+  Number.isInteger(amount) ? `£${amount}` : `£${amount.toFixed(2)}`;
+---
+
+<div class="homepage-pricing-notes">
+  <p>
+    <strong>Example: a 5-barber shop.</strong> Full KERSIVO: {money(SAAS_MONTHLY_GBP)}/month. Booksy lists {money(BOOKSY_BASE_PRICE_GBP)}/month plus {money(BOOKSY_ADDITIONAL_USER_GBP)} for each additional user, before VAT — {money(example.exVatGbp)}/month + VAT for five users ({money(example.incVatGbp)} including VAT). Booksy prices checked {BOOKSY_FACTS_CHECKED_DATE} on <a href={BOOKSY_SOURCE_PRICING}>Booksy's UK pricing page</a>. Card processing fees apply on both. <a href="/barber-software-cost-calculator">Compare the full cost →</a>
+  </p>
+  <p>
+    Only need online bookings for up to 4 barbers? KERSIVO Starter is £0/month — clients pay a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or in full online through your Stripe account. <a href="/pricing#plan">Compare plans →</a>
+  </p>
+</div>
+
+<style>
+  .homepage-pricing-notes {
+    width: min(100% - 2rem, 72rem);
+    margin: 0 auto 2rem;
+    display: grid;
+    gap: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .homepage-pricing-notes p {
+    margin: 0;
+  }
+
+  .homepage-pricing-notes a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+</style>

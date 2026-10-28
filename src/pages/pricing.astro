@@ -55,23 +55,24 @@ const currentYear = new Date().getFullYear();
           </span>
         </h1>
         <p class="fresha-alt-hero__lead">
-          Two plans for one barbershop location. Starter gives you a payment-powered booking
-          system for £0/month. Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location and adds your
-          branded website, own domain, wider business toolkit and control over how customers pay.
-          0% KERSIVO commission on both.
+          Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location — your branded website, own domain, online booking with payment control, clients, reports and retail pickup. KERSIVO Starter is £0/month for shops that only need online bookings. 0% KERSIVO commission on both; Stripe fees apply.
         </p>
         <div class="fresha-alt-hero__actions">
           <a
-            href="/demo"
+            href="/admin/launch"
             class="fresha-alt-hero__action fresha-alt-hero__action--primary"
-            data-track="view_live_demo_click"
+            data-track="saas_subscribe_click"
+            data-track-placement="pricing_hero"
           >
-            See KERSIVO in action
+            Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
           </a>
           <a href="#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
-            Compare Starter and Full
+            Compare the two plans
           </a>
         </div>
+        <p class="company-hero__updated">
+          Or <a href="/demo">see the demo</a> first.
+        </p>
         <p class="company-hero__updated">
           Last updated <time datetime={PRICING_PAGE_LAST_UPDATED_ISO}>{PRICING_PAGE_LAST_UPDATED_LABEL}</time>
         </p>
@@ -93,7 +94,7 @@ const currentYear = new Date().getFullYear();
         <header class="fresha-alt__intro">
           <p class="fresha-alt__eyebrow">WHAT’S INCLUDED</p>
           <h2 id="pricing-included-title" class="fresha-alt__h2">
-            What each plan includes
+            Barbershop software pricing: what each plan includes
           </h2>
         </header>
         <ul class="company-groups">
@@ -119,9 +120,17 @@ const currentYear = new Date().getFullYear();
         <header class="fresha-alt__intro">
           <p class="fresha-alt__eyebrow">TWO PLANS</p>
           <h2 id="pricing-plan-title" class="fresha-alt__h2">
-            Start on Starter. Move to Full when you want the complete brand.
+            Which plan fits your shop?
           </h2>
         </header>
+        <p class="fresha-alt__eyebrow pricing-full-offer__label">RECOMMENDED FOR YOUR OWN BRAND</p>
+        <div class="rate-card1--landing fresha-alt-pricing__offer-host">
+          <RateCard1Offer />
+          <div class="rate-card1__landing-conditions">
+            <p>{layout.conditionsLine1}</p>
+            <p>{layout.conditionsLine2}</p>
+          </div>
+        </div>
         <article class="pricing-starter-offer" aria-labelledby="pricing-starter-title">
           <div class="pricing-starter-offer__head">
             <p class="pricing-starter-offer__label">KERSIVO STARTER</p>
@@ -146,12 +155,23 @@ const currentYear = new Date().getFullYear();
             <a href="/starter" class="company-link">What’s in KERSIVO Starter →</a>
           </div>
         </article>
-        <p class="fresha-alt__eyebrow pricing-full-offer__label">FULL KERSIVO</p>
-        <div class="rate-card1--landing fresha-alt-pricing__offer-host">
-          <RateCard1Offer />
-          <div class="rate-card1__landing-conditions">
-            <p>{layout.conditionsLine1}</p>
-            <p>{layout.conditionsLine2}</p>
+        <div class="pricing-chooser">
+          <div>
+            <h3>Choose Full KERSIVO if…</h3>
+            <ul>
+              <li>you want your own website and domain</li>
+              <li>you want Pay at shop or your own payment rules</li>
+              <li>you have more than 4 barbers</li>
+              <li>you want reports, retail pickup and SMS reminders</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Choose Starter if…</h3>
+            <ul>
+              <li>you want online booking now at no monthly cost</li>
+              <li>you have up to 4 barbers</li>
+              <li>you're happy for every online booking to be paid with a £5 deposit or in full through Stripe</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -167,7 +187,7 @@ const currentYear = new Date().getFullYear();
           {PRICING_FEES_POINTS.map((point) => <li>{point}</li>)}
         </ul>
         <p class="company-note">
-          Looking for the £0 entry plan? <a href="/starter" class="company-link">Explore KERSIVO Starter</a>.
+          Not sure yet? <a href="/compare" class="company-link">Compare UK booking systems</a> or try the <a href="/barber-software-cost-calculator" class="company-link">cost calculator</a>.
           Comparing platforms? See how KERSIVO compares with
           <a href="/booksy-alternative" class="company-link">Booksy</a> and
           <a href="/fresha-alternative" class="company-link">Fresha</a>.
@@ -195,19 +215,17 @@ const currentYear = new Date().getFullYear();
               See what KERSIVO can do for your barbershop
             </h2>
             <p class="landing-final-cta__subheadline">
-              Start on KERSIVO Starter for £0/month, or go straight to Full KERSIVO for
-              £{SAAS_MONTHLY_GBP}/month when you want your own website, domain and payment control.
-              The live demo shows the wider KERSIVO experience before you decide.
+              Full KERSIVO gives your shop its own website, domain and booking system for £{SAAS_MONTHLY_GBP}/month per location. Only need online bookings? Start on Starter for £0/month.
             </p>
           </div>
           <div class="landing-final-cta__conversion">
             <div class="fresha-alt-final__actions">
               <a
-                href="/demo"
+                href="/admin/launch"
                 class="btn btn--primary btn--lg landing-final-cta__button"
-                data-track="view_live_demo_click"
+                data-track="saas_subscribe_click"
               >
-                See KERSIVO in action
+                {layout.ctaLabel}
               </a>
               <a
                 href="/admin"
@@ -217,13 +235,7 @@ const currentYear = new Date().getFullYear();
               >
                 Start KERSIVO Starter
               </a>
-              <a
-                href="/admin/launch"
-                class="btn btn--secondary btn--lg landing-final-cta__button"
-                data-track="saas_subscribe_click"
-              >
-                {layout.ctaLabel}
-              </a>
+              <a href="/demo" class="company-link">See the demo</a>
             </div>
           </div>
         </div>
@@ -252,6 +264,29 @@ const currentYear = new Date().getFullYear();
 <style is:global>
   .landing-overflow-guard {
     overflow-x: clip;
+  }
+
+  .pricing-chooser {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+
+  .pricing-chooser h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  .pricing-chooser ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  @media (min-width: 720px) {
+    .pricing-chooser {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .pricing-starter-offer {

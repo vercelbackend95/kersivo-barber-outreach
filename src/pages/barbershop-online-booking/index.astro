@@ -1,5 +1,6 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import OnlineBookingHero from '@/components/barbershop-online-booking/OnlineBookingHero.astro';
 import OnlineBookingJourney from '@/components/barbershop-online-booking/OnlineBookingJourney.astro';
@@ -15,6 +16,10 @@ import {
   BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
   buildBarbershopOnlineBookingJsonLd,
 } from '@/lib/seo/barbershopOnlineBookingPage';
+import {
+  ONLINE_BOOKING_MOVED_FAQ_ITEMS,
+  buildOnlineBookingFaqJsonLd,
+} from '@/lib/seo/barbershopBookingFaq';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import {
@@ -31,7 +36,7 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}
   noindex={!BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={buildBarbershopOnlineBookingJsonLd()}
+  jsonLd={[buildBarbershopOnlineBookingJsonLd(), buildOnlineBookingFaqJsonLd()]}
 >
   <main class="bob-page">
     <OnlineBookingHero />
@@ -41,6 +46,16 @@ const currentYear = new Date().getFullYear();
     <OnlineBookingEntryPoints />
     <OnlineBookingAfterBooking />
     <OnlineBookingPlanChoice />
+    <Faq4
+      className="faq4--landing"
+      heading="Questions about barbershop online booking"
+      subHeading="What the software covers, the dashboard, and what it does not replace."
+      supportHeading="Still have a question?"
+      supportText="Tell us about your shop and we’ll reply by email."
+      supportLinkLabel="Contact KERSIVO"
+      supportLinkHref="/#contact"
+      faqs={ONLINE_BOOKING_MOVED_FAQ_ITEMS}
+    />
   </main>
 
   <Footer50

@@ -1,23 +1,11 @@
 ---
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { ProductRail } from '@/components/shop/ProductRail';
-import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
-import { LandingBookingWidget } from '@/components/LandingBookingWidget';
-import type { CarouselProduct } from '@/lib/shop/carouselProducts';
-import type { LandingBarber } from '@/lib/landing/liveTimelineData';
-import {
-  BLACKLINE_LANDING_BOOKING_DATA,
-  type BlacklineLandingBookingData,
-} from '@/lib/landing/blacklineLandingBookingData';
+import { DeferredWidget } from '@/components/landing/DeferredWidget';
 import Feature261MonetizationRow from '@/components/feature261/Feature261MonetizationRow.astro';
-import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIncluded';
+import Feature261MoreIncluded from '@/components/feature261/Feature261MoreIncluded.astro';
 import '../styles/components/feature261.css';
 import '../styles/components/landingDemoPreview.css';
-import '../styles/components/shopProductCards6.css';
-import '../styles/components/storefront.css';
-import '../styles/components/productRail.css';
 
 type LandingDemoPreviewRow = {
   kicker: string;
@@ -38,9 +26,6 @@ type PreviewIntro = {
 
 interface Props {
   className?: string;
-  retailProducts?: CarouselProduct[];
-  barbers?: LandingBarber[];
-  bookingData?: BlacklineLandingBookingData;
   intro?: PreviewIntro;
   rows?: LandingDemoPreviewRow[];
   showReports?: boolean;
@@ -95,9 +80,6 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
 
 const {
   className = '',
-  retailProducts = [],
-  barbers = [],
-  bookingData = BLACKLINE_LANDING_BOOKING_DATA,
   intro = DEFAULT_INTRO,
   rows = DEFAULT_ROWS,
   showReports = true,
@@ -134,46 +116,19 @@ const {
           {row.media === 'carousel' ? (
             <div class="feature261__media feature261__media--carousel">
               <div class="sf-shop sf-shop--blackline" data-sf-theme="blackline">
-                <ProductRail
-                  client:visible={{ rootMargin: '200px' }}
-                  products={retailProducts}
-                  className="feature261-retail-carousel"
-                  eagerImages={false}
-                  productHrefBase="/demo/shop"
-                  variant="storefront"
-                  imageFallback="wordmark"
-                  priceFormat="demo"
-                  density="compact"
-                  showAction="add-to-cart"
-                  showControls={false}
-                  showProgress={false}
-                  showCategory={true}
-                  showPrice={true}
-                  fallbackBrandMark="CS"
-                  shopName={DEMO_SHOP_NAME}
-                  addToBagLabel="Add to bag"
-                  addToBagShortLabel="Add"
-                  addedLabel="Added"
-                  chooseOptionsLabel="Choose options"
-                  soldOutLabel="Sold out"
-                  ariaLabel={`${DEMO_SHOP_NAME} products`}
-                />
+                <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="retail" />
               </div>
+              <p class="landing-demo-still__caption">Example shop – fictional data</p>
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
-              <InsideSystemLiveWidget barbers={barbers} client:visible={{ rootMargin: '200px' }} />
+              <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="admin" />
+              <p class="landing-demo-still__caption">Example shop – fictional data</p>
             </div>
           ) : (
             <div class="feature261__media feature261__media--widget">
-              <LandingBookingWidget
-                services={[...bookingData.services]}
-                barbers={[...bookingData.barbers]}
-                shopDetails={bookingData.shopDetails}
-                categoryOrder={bookingData.categoryOrder}
-                presentation={bookingData.presentation}
-                client:visible={{ rootMargin: '200px' }}
-              />
+              <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="booking" />
+              <p class="landing-demo-still__caption">Example shop – fictional data</p>
             </div>
           )}
 
@@ -196,14 +151,12 @@ const {
       ))}
       {showReports ? <Feature261MonetizationRow /> : null}
     </ul>
-    {showMoreIncluded ? (
-      <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
-    ) : null}
+    {showMoreIncluded ? <Feature261MoreIncluded /> : null}
 
     {showFooterNote ? (
       <div class="landing-demo-preview__footer">
         <p class="landing-demo-preview__footer-note">
-          Previews use example barbershop data. No signup required.
+          Screens show an example barbershop with fictional data. Open the demo to click around — no sign-up needed.
         </p>
       </div>
     ) : null}

@@ -1,11 +1,9 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/seo/defaults';
+import { DEFAULT_TITLE, HOMEPAGE_DESCRIPTION } from '@/lib/seo/defaults';
 import Faq4 from '@/components/faq4.astro';
 import Contact16 from '@/components/contact16.astro';
 import LandingFinalCta from '@/components/landingFinalCta.astro';
-import SystemChooser from '@/components/SystemChooser.astro';
-import LandingValueCards from '@/components/landingValueCards.astro';
 import LandingDemoPreview from '@/components/landingDemoPreview.astro';
 import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astro';
 import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
@@ -13,32 +11,23 @@ import LandingDifference from '@/components/landingDifference.astro';
 import Footer50 from '@/components/footer50.astro';
 import { buildBarberDemoJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import {
-  BARBERSHOP_BOOKING_FAQ_ITEMS,
+  HOMEPAGE_FAQ_ITEMS,
   buildBarbershopBookingFaqJsonLd,
 } from '@/lib/seo/barbershopBookingFaq';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
-import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
-import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
-import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
-import { SHOW_SETUP_PLAN_CARDS } from '@/lib/pricing/offerMode';
 import HomepageHero from '@/components/homepage/HomepageHero.astro';
-import '../styles/components/system-chooser.css';
-import '../styles/components/landingValueCards.css';
+import HomepagePricingNotes from '@/components/homepage/HomepagePricingNotes.astro';
 
-const [carouselProducts, demoBarbers] = await Promise.all([
-  resolveLandingDemoCarouselProducts(),
-  resolveLandingDemoBarbers(),
-]);
 const currentYear = new Date().getFullYear();
 ---
 
 <LandingLayout
   title={DEFAULT_TITLE}
-  description={DEFAULT_DESCRIPTION}
+  description={HOMEPAGE_DESCRIPTION}
   canonicalPath="/"
   deferDecorativeFontPreloads
   jsonLd={[buildBarberDemoJsonLd(), buildBarbershopBookingFaqJsonLd()]}
@@ -50,26 +39,22 @@ const currentYear = new Date().getFullYear();
     href="/images/brand/logo-navbar-228.webp"
   />
   <main class="landing-overflow-guard">
-    <SystemChooser />
     <HomepageHero />
-    <LandingValueCards />
     <LandingDifference />
-    <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} />
-    {SHOW_SETUP_PLAN_CARDS ? (
-      <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
-    ) : null}
+    <LandingDemoPreview />
     <RateCard1 variant="landing" />
+    <HomepagePricingNotes />
     <LandingPostPurchaseSteps />
     <LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />
     <Faq4
       className="faq4--landing"
       heading="Questions about Full KERSIVO?"
-      subHeading="Pricing, payments, setup, switching and cancellation — the details before you decide."
+      subHeading="Price, payments, setup, switching, your domain and cancelling."
       supportHeading="Still have a question?"
       supportText="Send us a message and we’ll give you a clear answer about your shop."
       supportLinkLabel="Ask a question"
       supportLinkHref="#contact"
-      faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}
+      faqs={HOMEPAGE_FAQ_ITEMS}
     />
     <Contact16
       eyebrow="CONTACT KERSIVO"
@@ -91,26 +76,6 @@ const currentYear = new Date().getFullYear();
 </LandingLayout>
 
 <script>
-  import { initSystemChooser } from '@/lib/initSystemChooser';
-
-  const scheduleInit = () => {
-    requestAnimationFrame(() => {
-      const chooser = document.querySelector('[data-system-chooser]');
-      if (!(chooser instanceof HTMLElement) || chooser.dataset.systemChooserBound === 'true') return;
-      chooser.dataset.systemChooserBound = 'true';
-      initSystemChooser();
-    });
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
-  } else {
-    scheduleInit();
-  }
-  document.addEventListener('astro:page-load', scheduleInit);
-</script>
-
-<script>
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
 
   const scheduleInit = () => {
@@ -128,18 +93,6 @@ const currentYear = new Date().getFullYear();
     scheduleInit();
   }
   document.addEventListener('astro:page-load', scheduleInit);
-</script>
-
-<script>
-  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
-
-  const bootProductRails = () => {
-    destroyProductRails();
-    initProductRails();
-  };
-
-  bootProductRails();
-  document.addEventListener('astro:page-load', bootProductRails);
 </script>
 
 <style>

@@ -13,25 +13,31 @@ describe('homepage independent barbershops section: Starter design parity', () =
   it('keeps the reference starter-shell and a six-card editorial layout', () => {
     expect(difference).toContain('class="starter-shell landing-difference__shell"');
     expect(difference).toContain('BUILT FOR INDEPENDENT BARBERSHOPS');
-    expect(difference).toContain('Your barbershop should be the destination. Not the marketplace.');
+    expect(difference).toContain(
+      'Barbershop software that sends clients to your shop, not a marketplace',
+    );
     expect(difference).toContain('Full KERSIVO brings your website and booking experience together on your own domain.');
     expect(difference).toContain('pillars.map((pillar)');
-    expect(difference).toContain('class="landing-difference__card"');
-    // Six benefits (two rows of three on desktop) without duplicate icon or title.
+    expect(difference).toContain("'landing-difference__card'");
     const icons = [...difference.matchAll(/^\s+icon: '([^']+)'/gm)].map((match) => match[1]);
     const titles = [...difference.matchAll(/^\s+title: '([^']+)'/gm)].map((match) => match[1]);
     expect(icons).toHaveLength(6);
     expect(new Set(icons).size).toBe(6);
     expect(titles).toHaveLength(6);
     expect(new Set(titles).size).toBe(6);
+    expect(difference).toContain('landing-difference__card--desktop-only');
+    expect(differenceCss).toContain('.landing-difference__card--desktop-only');
     for (const icon of icons) {
       expect(existsSync(join(process.cwd(), `public/images/svg/${icon}.svg`))).toBe(true);
     }
+    expect(titles).toContain('More control behind the chair.');
     expect(titles).toContain('Build direct client relationships.');
+    expect(titles).toContain('Your website. Your identity.');
     expect(titles).toContain('Payments on your terms.');
     expect(titles).toContain('No KERSIVO cut of your bookings.');
+    expect(difference).toContain("linkHref: '/barbershop-online-booking'");
     expect(difference).not.toMatch(/<h1\b/);
-    expect(homepage).toMatch(/<LandingValueCards \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
+    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
   });
 
   it('matches Starter shell dimensions, card finish and 3/2/1 breakpoints', () => {
