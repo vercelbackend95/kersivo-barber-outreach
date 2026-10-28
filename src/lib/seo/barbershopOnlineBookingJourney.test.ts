@@ -116,7 +116,7 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     );
   });
 
-  it('shows the Starter payment choice only as a labelled live-page example and makes no Full payment claims', () => {
+  it('shows the Starter and Full payment steps as labelled live-page examples', () => {
     expect(flow).toContain('<strong>Pay £5 deposit</strong>');
     expect(flow).toContain('<strong>Pay in full</strong>');
     expect(flow).toContain('now · nothing to pay at the shop</small>');
@@ -126,7 +126,12 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     expect(markup).toContain('<span class="boj-live__name">Pay in full</span>');
     expect(markup).toContain('0% KERSIVO commission. Stripe processing fees apply.');
     expect(journey).toContain('The fictional demo takes no payment.');
-    expect(journey).not.toMatch(/pay at shop|full upfront|upfront payment|require £5|Full KERSIVO (offers|lets|supports)/i);
+    expect(markup).toContain('<span class="boj-live__tag">On a live Full KERSIVO booking page</span>');
+    expect(markup).toContain('Payment · the client chooses');
+    expect(markup).toContain('Payment · the shop sets one rule');
+    expect(journey).toContain("{ name: 'Pay at shop', sub: `Nothing online · ${servicePrice} at the shop` }");
+    expect(journey).toContain('on Full KERSIVO, the shop decides whether clients pay at the shop, pay a £5 deposit or pay in full.');
+    expect(journey).not.toMatch(/full upfront|upfront payment|require £5|pay at shop on starter/i);
   });
 
   it('never presents the demo as a real booking, charge or result', () => {

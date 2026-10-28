@@ -1,11 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
-import { SAAS_MONTHLY_GBP } from './defaults';
-import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
@@ -15,7 +13,7 @@ const frontmatter = section.split('---')[1] ?? '';
 const markup = section.split('---').slice(2).join('---');
 const styles = read('../../styles/components/barbershop-website-design-process.css').replace(/\/\*[\s\S]*?\*\//g, '');
 const text = (source: string) => source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-const rendered = text(markup.replace(/\{SAAS_MONTHLY_GBP\}/g, String(SAAS_MONTHLY_GBP)));
+const rendered = text(markup);
 
 describe('/barbershop-website-design — Section 06 how KERSIVO brings your brand online', () => {
   it('renders after Section 05 and before the footer', () => {
@@ -68,39 +66,12 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
     }
   });
 
-  it('shows the canonical price per physical location from the pricing source of truth', () => {
-    expect(SAAS_MONTHLY_GBP).toBe(39);
-    expect(frontmatter).toContain("import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';");
-    expect(section).not.toMatch(/£\s?39/);
-    expect(rendered).toContain(`£${SAAS_MONTHLY_GBP} per month, per physical location`);
-    expect(rendered.match(new RegExp(`£${SAAS_MONTHLY_GBP}`, 'g')) ?? []).toHaveLength(1);
-  });
-
-  it('states the included scope, setup fee, billing timing and Stripe fees in plain view', () => {
-    const facts = [...frontmatter.matchAll(/\{ term: '([^']+)', detail: '([^']+)' \}/g)].map((match) => `${match[1]}: ${match[2]}`);
-    expect(facts).toEqual([
-      'Website setup: Standard branded',
-      'Domain: One standard domain',
-      'Hosting: Hosting and SSL',
-      'Bookings: Connected online',
-    ]);
-    expect(markup).toMatch(/<dt>Setup fee<\/dt>\s*<dd>No separate standard setup fee<\/dd>/);
-    expect(rendered).toContain(
-      'Your first payment is taken when you subscribe, including while your website is being prepared. Standard Stripe processing fees apply to online card payments.',
-    );
-    expect(markup).not.toMatch(/<details\b|\shidden[\s>=]|title=|data-tooltip|sr-only|visually-hidden/);
-    const billing = markup.match(/<p class="bwk-card__billing">[\s\S]*?<\/p>/)?.[0] ?? '';
-    expect(billing).not.toBe('');
-    expect(billing).not.toContain('aria-hidden');
-  });
-
-  it('styles the summary as a static Starter glance-card adaptation without importing the Starter stylesheet', () => {
-    expect(markup).toContain('<aside class="bwk-card" aria-labelledby="bwk-card-title">');
-    expect(styles).toMatch(/\.bwk-card \{[^}]*border-radius: 1\.25rem;[^}]*background: linear-gradient\(180deg, #0d0d0e 0%, #080809 100%\);/);
-    expect(styles).toMatch(/\.bwk-card::before \{[^}]*top: -1px;/);
-    expect(styles).toMatch(/\.bwk-card__label::before \{[^}]*border-radius: 999px;/);
-    expect(styles).not.toMatch(/sticky/);
-    expect(section).not.toMatch(/starter-landing\.css|starter-glance|process-timeline/);
+  it('has no price card or sales link: the page closes with one offer block (Batch 5)', () => {
+    expect(section).not.toMatch(/£|SAAS_MONTHLY_GBP|bwk-card/);
+    expect(markup.match(/<a/g) ?? []).toHaveLength(0);
+    expect(styles).not.toContain('bwk-card');
+    const close = read('../../components/barbershop-website-design/WebsiteDesignFaqClose.astro');
+    expect(close).toContain("const OFFER_HREF = '/barbershop-websites';");
   });
 
   it('explains the managed service boundary and the Powered by KERSIVO mark', () => {
@@ -108,24 +79,6 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
     expect(rendered).toContain(
       'Your business keeps its brand, domain and content. KERSIVO provides the software, templates, code and hosting, and keeps them running and updated while Full KERSIVO is active. Standard websites carry a subtle “Powered by KERSIVO” mark.',
     );
-  });
-
-  it('links once to the Full KERSIVO offer as an informational click, not a checkout', () => {
-    const links = markup.match(/<a\b[\s\S]*?>/g) ?? [];
-    expect(links).toHaveLength(1);
-    expect(links[0]).toContain('href={OFFER_HREF}');
-    expect(links[0]).toContain('data-track={TRACK_EVENT}');
-    expect(links[0]).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(frontmatter).toContain("const OFFER_HREF = '/barbershop-websites';");
-    expect(existsSync(join(here, '../../pages/barbershop-websites.astro')) || existsSync(join(here, '../../pages/barbershop-websites/index.astro'))).toBe(true);
-    expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.primary_cta_clicked}';`);
-    expect(frontmatter).toContain("const TRACK_PLACEMENT = 'barbershop_website_design_parent_offer';");
-    expect(text(markup.match(/<a\b[\s\S]*?<\/a>/)?.[0] ?? '')).toBe('See what’s included in Full KERSIVO');
-    for (const forbidden of ['/admin/launch', 'saas_subscribe_click', 'checkout_started', 'checkout_completed', 'plan_selected']) {
-      expect(section).not.toContain(forbidden);
-    }
-    expect(styles).toMatch(/\.bwk-card__link \{[^}]*min-height: 2\.75rem;/);
-    expect(styles).toMatch(/\.bwk-card__link:focus-visible \{[^}]*outline: 2px solid/);
   });
 
   it('makes no bespoke, price-lock, trial, timing, dashboard or source-code claims', () => {
@@ -149,7 +102,7 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
     expect(section).not.toMatch(/<script\b|client:|<img\b|<svg\b|lucide/);
     expect(styles).not.toMatch(/@keyframes|animation:|transition: (?!color 160ms ease|none)/);
     const gradientRules = [...styles.matchAll(/([^{}]+)\{[^}]*gradient\(/g)].map((match) => match[1].trim());
-    expect(gradientRules).toEqual(['.bwk-timeline__step:first-child::before', '.bwk-card', '.bwk-card::before']);
+    expect(gradientRules).toEqual(['.bwk-timeline__step:first-child::before']);
   });
 
   it('adds no extra structured data and keeps the released page in the sitemap', () => {

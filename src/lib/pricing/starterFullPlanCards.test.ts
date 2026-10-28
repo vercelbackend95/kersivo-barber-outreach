@@ -20,11 +20,11 @@ const bobPlan = read('components/barbershop-online-booking/OnlineBookingPlanChoi
 const css = read('styles/components/starter-full-plan-cards.css');
 
 describe('Shared StarterFullPlanCards', () => {
-  it('is the single plan-card source used by /starter and Section 07', () => {
+  it('is the single plan-card source used by /starter; Section 07 uses the intent chooser', () => {
     expect(starterPage).toContain("import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro'");
     expect(starterPage).toContain('<StarterFullPlanCards placement="starter_compare" />');
-    expect(bobPlan).toContain("import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro'");
-    expect(bobPlan).toContain('<StarterFullPlanCards placement="barbershop_online_booking_final" />');
+    expect(bobPlan).not.toContain('StarterFullPlanCards');
+    expect(bobPlan).toContain('PLAN_CHOICE_INTENTS');
     expect(starterPage).not.toContain('starter-plan-card--active');
     expect(bobPlan).not.toContain('bob-pc-path--starter');
   });

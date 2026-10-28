@@ -35,7 +35,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH).toBe('/barbershop-website-design');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design UK: Branding & Layout | KERSIVO');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION).toBe(
-      'Explore barbershop website design through a fictional CUTSTATE demo, with practical advice on branding, photography, mobile layouts and clear booking routes.',
+      'Explore barbershop website design through a fictional CUTSTATE demo: practical advice on branding, photography, mobile layouts and clear booking routes.',
     );
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/barbershop-website-design',

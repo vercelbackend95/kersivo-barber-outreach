@@ -5,15 +5,33 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const STARTER_PAGE_PATH = '/starter';
 
 export const STARTER_PAGE_TITLE =
-  'KERSIVO Starter | £0/Month for UK Barbershops';
+  'Free Barber Booking System UK – £0/Month | KERSIVO Starter';
 
 export const STARTER_PAGE_DESCRIPTION =
-  'KERSIVO Starter for UK barbershops: £0/month, 0% KERSIVO commission, hosted online booking, up to 4 barbers, £5 deposits or full payment, reminders and QR Kit.';
+  'Free barber booking for UK shops: £0/month, 0% KERSIVO commission. Clients pay a £5 deposit or in full via your Stripe; Stripe fees apply. Up to 4 barbers.';
 
 export const STARTER_PAGE_H1 = 'A free booking system for UK barbershops — £0/month.';
 
-export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-06';
-export const STARTER_PAGE_LAST_UPDATED_LABEL = '6 October 2026';
+export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-28';
+export const STARTER_PAGE_LAST_UPDATED_LABEL = '28 October 2026';
+
+/** Directly under the H1: "free" never appears without the £5 / Stripe qualifier. */
+export const STARTER_FREE_QUALIFIER =
+  'Free means £0/month and 0% KERSIVO commission. Every public booking is secured by a £5 deposit or paid in full through your own connected Stripe account; standard Stripe processing fees apply.';
+
+/** "When Full is the better fit" box — Full-only scope from STARTER_FULL_PLAN_FULL_ONLY. */
+export const STARTER_FULL_FIT = {
+  heading: 'When Full is the better fit',
+  lead: `Starter is a real plan, not a trial. Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) is the better fit if any of these is true:`,
+  points: [
+    'You have more than 4 active bookable barbers.',
+    'You want clients to book on your own branded website and domain, not a KERSIVO-hosted page.',
+    'You want to offer Pay at shop, or choose which payment options clients see.',
+    'You want full booking history, Reports, Retail and SMS reminders within a monthly allowance.',
+  ],
+  note: 'Full also has 0% KERSIVO commission. Standard Stripe payment-processing fees still apply.',
+  link: { label: 'See Full KERSIVO pricing', href: '/pricing#plan' },
+} as const;
 
 export type StarterFaqItem = {
   question: string;

@@ -30,6 +30,24 @@ export const INSIGHTS_LINK_OVERLAYS = {
       href: '/barber-software-cost-calculator',
     },
   ],
+  'barbershop-walk-ins-vs-appointments': [
+    {
+      phrase: 'like being able to book without phoning',
+      href: '/barbershop-online-booking',
+    },
+  ],
+  'google-business-profile-booking-link-barbershop': [
+    {
+      phrase: 'paste the address of your booking page',
+      href: '/barbershop-online-booking',
+    },
+  ],
+  'barbershop-client-retention-second-visit': [
+    {
+      phrase: 'A booking system that keeps client history',
+      href: '/barbershop-online-booking',
+    },
+  ],
   'barbershop-gift-vouchers-uk': [
     {
       phrase: 'A voucher sold in December is a client you might gain in February',

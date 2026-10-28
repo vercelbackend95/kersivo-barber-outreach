@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_TITLE } from './defaults';
 import {
   STARTER_FAQ_ITEMS,
+  STARTER_FREE_QUALIFIER,
+  STARTER_FULL_FIT,
   STARTER_PAGE_DESCRIPTION,
   STARTER_PAGE_H1,
   STARTER_PAGE_PATH,
@@ -98,7 +100,31 @@ describe('KERSIVO Starter landing page structure and claims', () => {
 
   it('uses the KERSIVO Starter name, not the old Free Booking naming', () => {
     expect(allCopy).not.toMatch(/Free Booking/);
-    expect((allCopy.match(/free barber booking/gi) ?? []).length).toBe(0);
+    // The keyword phrase is allowed only in the title and meta description, never in body copy.
+    expect(`${page} ${planCards} ${faqText}`).not.toMatch(/free barber booking/i);
+    expect(STARTER_PAGE_TITLE).toBe('Free Barber Booking System UK – £0/Month | KERSIVO Starter');
+  });
+
+  it('never says free without the £5 deposit / Stripe qualifier nearby', () => {
+    expect(STARTER_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(155);
+    expect(STARTER_PAGE_DESCRIPTION).toMatch(/Free[^.]*£0\/month[\s\S]*£5 deposit[\s\S]*Stripe fees apply/);
+    expect(STARTER_FREE_QUALIFIER).toContain('£5 deposit');
+    expect(STARTER_FREE_QUALIFIER).toContain('Stripe processing fees apply');
+    const h1At = page.indexOf('<h1');
+    const leadAt = page.indexOf('{STARTER_FREE_QUALIFIER}');
+    expect(leadAt).toBeGreaterThan(h1At);
+    expect(page.slice(h1At, leadAt)).toContain('</h1>');
+    expect(page.slice(page.indexOf('</h1>', h1At), leadAt).match(/<p /g) ?? []).toHaveLength(1);
+  });
+
+  it('has a "When Full is the better fit" box linking to Full pricing, not checkout', () => {
+    expect(STARTER_FULL_FIT.heading).toBe('When Full is the better fit');
+    expect(page).toContain('{STARTER_FULL_FIT.heading}');
+    expect(STARTER_FULL_FIT.link.href).toBe('/pricing#plan');
+    expect(STARTER_FULL_FIT.note).toContain('0% KERSIVO commission');
+    expect(STARTER_FULL_FIT.note).toContain('Stripe payment-processing fees');
+    expect(STARTER_FULL_FIT.points.join(' ')).toContain('within a monthly allowance');
+    expect(page.indexOf('starter-fit')).toBeGreaterThan(page.indexOf('<StarterFullPlanCards'));
   });
 
   it('states the 4-barber limit and never offers unlimited barbers on Starter', () => {

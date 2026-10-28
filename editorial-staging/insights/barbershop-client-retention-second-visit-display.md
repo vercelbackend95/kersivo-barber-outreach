@@ -43,7 +43,7 @@ A second visit isn't the same as long-term retention. Some clients come back onc
 
 **Typical gap between visits.** If your regulars usually come every four to six weeks, a client who hasn't been back in ten may have gone somewhere else. That is the moment to notice, not six months later.
 
-None of these need special software. A booking system that keeps client history will make them easier, but a notebook and a monthly count will do.
+None of these need special software. [A booking system that keeps client history](/barbershop-online-booking) will make them easier, but a notebook and a monthly count will do.
 
 <figure class="insights-figure insights-figure--diagram"><img src="/images/insights/second-visit/three-retention-metrics.svg" width="1200" height="750" loading="lazy" decoding="async" alt="Three numbers for barber client retention: second-visit rate, rebooking before leaving and typical gap between visits" />
 <figcaption>Three shop-level retention measures described in the article; no fabricated performance figures.</figcaption></figure>

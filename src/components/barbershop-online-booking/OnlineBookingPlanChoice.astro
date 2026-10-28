@@ -1,9 +1,9 @@
 ---
-import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro';
-import { buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
+import { PLAN_CHOICE_INTENTS, buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
 import '@/styles/components/barbershop-online-booking-plan-choice.css';
 
 const content = buildPlanChoiceContent();
+const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
 ---
 
 <section class="bob-pc" id={content.sectionId} aria-labelledby="bob-pc-title">
@@ -14,7 +14,43 @@ const content = buildPlanChoiceContent();
       <p class="bob-pc__lead">{content.lead}</p>
     </header>
 
-    <StarterFullPlanCards placement="barbershop_online_booking_final" />
+    <div class="bob-pc-intents">
+      {PLAN_CHOICE_INTENTS.map((option) => (
+        <article
+          class:list={['bob-pc-intent', `bob-pc-intent--${option.id}`]}
+          aria-labelledby={`bob-pc-intent-${option.id}`}
+        >
+          <p class="bob-pc-intent__label">
+            <span>{option.label}</span>
+            <span class="bob-pc-intent__price">{option.price}</span>
+          </p>
+          <h3 id={`bob-pc-intent-${option.id}`} class="bob-pc-intent__heading">{option.heading}</h3>
+          <ul class="bob-pc-intent__list">
+            {option.intents.map((intent) => <li>{intent}</li>)}
+          </ul>
+          <div class="bob-pc-intent__actions">
+            <a
+              href={option.primary.href}
+              class:list={['bob-pc-intent__cta', { 'bob-pc-intent__cta--primary': option.id === 'full' }]}
+              data-track={option.primary.trackEvent}
+              data-track-placement={PLAN_CHOICE_TRACK_PLACEMENT}
+            >
+              {option.primary.label}{option.id === 'starter' && <span aria-hidden="true">→</span>}
+            </a>
+            {option.secondary && (
+              <a
+                href={option.secondary.href}
+                class="bob-pc-intent__cta"
+                data-track={option.secondary.trackEvent}
+                data-track-placement={PLAN_CHOICE_TRACK_PLACEMENT}
+              >
+                {option.secondary.label} <span aria-hidden="true">→</span>
+              </a>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
 
     <div class="bob-pc-disclosure">
       <p class="bob-pc-disclosure__label">Before you choose</p>

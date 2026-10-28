@@ -125,7 +125,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(cssRule('.bob-hero__eyebrow')).toContain('text-transform: uppercase;');
     expect(cssRule('.bob-hero__head')).toContain('text-align: center;');
     expect(hero).toContain('<li><a href="/">Home</a></li>');
-    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>');
+    expect(hero).not.toContain('Barbershop websites</a></li>');
     expect(hero).toContain('<li><span aria-current="page">Online booking</span></li>');
   });
 
@@ -184,7 +184,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
 
   it('states the commercial terms with the Stripe processing-fee qualifier', () => {
     expect(hero).toContain(
-      "const terms = ['KERSIVO Starter £0/month', 'Full £39/month per location', '0% KERSIVO commission'];",
+      "const terms = ['Full KERSIVO £39/month per location', 'KERSIVO Starter £0/month', '0% KERSIVO commission'];",
     );
     expect(heroMarkup).toContain('<p class="bob-hero__fees">Stripe processing fees apply to card payments.</p>');
   });
@@ -386,8 +386,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
       '@id': `${siteUrl}/barbershop-online-booking#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}/barbershop-websites` },
-        { '@type': 'ListItem', position: 3, name: 'Online booking', item: `${siteUrl}/barbershop-online-booking` },
+        { '@type': 'ListItem', position: 2, name: 'Online booking', item: `${siteUrl}/barbershop-online-booking` },
       ],
     });
     expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating|Offer/);

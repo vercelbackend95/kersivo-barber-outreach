@@ -25,6 +25,12 @@ import {
   INSIGHTS_LOCAL_CLIENTS,
   type InsightsPublishedArticle,
 } from '@/lib/seo/insights';
+import {
+  KERSIVO_COMMISSION_CLAIM,
+  KERSIVO_COMMISSION_WITH_STRIPE,
+  STRIPE_FEES_NOTE,
+} from '@/lib/pricing/claimsPolicy';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 export type InsightsRelatedLink = {
   href: string;
@@ -51,11 +57,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'Why a deposit and balance can add card processing costs',
       kind: 'article',
     },
-    {
-      href: '/barbershop-online-booking',
-      label: 'See how online bookings work for independent shops',
-      kind: 'guide',
-    },
   ],
   [INSIGHTS_MTD_BARBERS.slug]: [
     {
@@ -67,11 +68,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       href: INSIGHTS_CARD_FEES.path,
       label: 'Where barbershop card processing fees go',
       kind: 'article',
-    },
-    {
-      href: '/barbershop-online-booking',
-      label: 'Understand your barbershop booking journey',
-      kind: 'guide',
     },
   ],
   [INSIGHTS_OWNER_EARNINGS.slug]: [
@@ -102,11 +98,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'Commission pay and minimum wage for barbers',
       kind: 'article',
     },
-    {
-      href: '/barbershop-websites',
-      label: 'Explore a branded website for your barbershop',
-      kind: 'guide',
-    },
   ],
   [INSIGHTS_APPRENTICE_BARBER.slug]: [
     {
@@ -119,11 +110,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'Why a busy diary may not mean more shop profit',
       kind: 'article',
     },
-    {
-      href: '/barbershop-websites',
-      label: 'Explore a branded website for your shop',
-      kind: 'guide',
-    },
   ],
   [INSIGHTS_BUSINESS_RATES.slug]: [
     {
@@ -135,11 +121,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       href: INSIGHTS_HAIRCUT_PRICING.path,
       label: 'How to price a haircut from real costs',
       kind: 'article',
-    },
-    {
-      href: '/barbershop-websites',
-      label: 'Explore independent barbershop websites',
-      kind: 'guide',
     },
   ],
   [INSIGHTS_LOYALTY_SCHEMES.slug]: [
@@ -183,11 +164,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       kind: 'article',
     },
     {
-      href: '/barbershop-online-booking',
-      label: 'How online booking works for barbershops',
-      kind: 'guide',
-    },
-    {
       href: INSIGHTS_SECOND_VISIT.path,
       label: 'Why the second visit matters to a barbershop',
       kind: 'article',
@@ -204,11 +180,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'Google Reviews for barbershops: what UK rules allow',
       kind: 'article',
     },
-    {
-      href: '/barbershop-online-booking',
-      label: 'Explore online booking for independent barbershops',
-      kind: 'guide',
-    },
   ],
   [INSIGHTS_WEBSITE_NEED.slug]: [
     {
@@ -220,11 +191,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       href: INSIGHTS_LOCAL_CLIENTS.path,
       label: 'A practical guide to winning more local barbershop clients',
       kind: 'article',
-    },
-    {
-      href: '/barbershop-websites',
-      label: 'Explore what a barbershop website should include',
-      kind: 'guide',
     },
   ],
   [INSIGHTS_COMMISSION_PAY.slug]: [
@@ -244,11 +210,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       href: INSIGHTS_LOCAL_CLIENTS.path,
       label: 'The real cost of finding new local barbershop clients',
       kind: 'article',
-    },
-    {
-      href: '/barbershop-online-booking',
-      label: 'How barbershop online booking works',
-      kind: 'guide',
     },
   ],
   [INSIGHTS_BARBERS_HANDS.slug]: [
@@ -303,11 +264,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'How to get more barbershop clients locally',
       kind: 'article',
     },
-    {
-      href: '/barbershop-websites',
-      label: 'What a barbershop website should do',
-      kind: 'guide',
-    },
   ],
   [INSIGHTS_LOCAL_CLIENTS.slug]: [
     {
@@ -321,22 +277,12 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       kind: 'article',
     },
     {
-      href: '/barbershop-online-booking',
-      label: 'Online booking for barbershops',
-      kind: 'guide',
-    },
-    {
       href: '/barbershop-website-design',
       label: 'Barbershop website design that earns trust',
       kind: 'guide',
     },
   ],
   [INSIGHTS_CARD_FEES.slug]: [
-    {
-      href: '/barber-software-cost-calculator',
-      label: 'Barber software cost calculator',
-      kind: 'tool',
-    },
     {
       href: INSIGHTS_GIFT_VOUCHERS.path,
       label: 'Gift vouchers: cash now, haircut later',
@@ -354,24 +300,40 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       label: 'How card fees really work for a barbershop',
       kind: 'article',
     },
-    {
-      href: '/barbershop-online-booking',
-      label: 'Online booking for barbershops',
-      kind: 'guide',
-    },
   ],
 };
 
+/**
+ * Buyer-adjacent articles only: one end box each, pointing at the product cluster
+ * (Full first). Off-buyer articles (tax, employment, rates, pay, skin care, vouchers)
+ * get no commercial box. Body links + related tools/guides + this box stay ≤ 3 per article
+ * (see COMMERCIAL_LINK_LIMIT and insightsLinking.test.ts).
+ */
 const COMMERCIAL: Record<string, InsightsCommercialNext> = {
   [INSIGHTS_NO_SHOW_DEPOSITS.slug]: {
-    href: '/starter',
-    label: 'See KERSIVO Starter booking and payment options',
-    note: 'A deposit can protect some missed-slot losses, but its terms must respect consumer rights and the shop\'s actual circumstances.',
+    href: '/barbershop-online-booking',
+    label: 'See how deposits and payment options work in KERSIVO online booking',
+    note: `Starter takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking; on Full KERSIVO the shop chooses Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment. ${STRIPE_FEES_NOTE} Your cancellation policy is still yours to set.`,
+  },
+  [INSIGHTS_WALK_INS.slug]: {
+    href: '/barbershop-websites',
+    label: 'Show clients how to book, and how walk-ins work, on your own website',
+    note: `Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) includes a branded website with online booking. Whether you take walk-ins is still your call.`,
+  },
+  [INSIGHTS_BOOKING_LINK.slug]: {
+    href: '/barbershop-websites',
+    label: 'Point your Google booking link at your own branded website',
+    note: 'Full KERSIVO includes a branded website and booking page on your own domain. Google controls whether and where booking links appear.',
+  },
+  [INSIGHTS_WEBSITE_NEED.slug]: {
+    href: '/barbershop-websites',
+    label: 'See what a KERSIVO barbershop website includes',
+    note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, including one standard domain. Run the test above first: not every shop needs a website.`,
   },
   [INSIGHTS_SECOND_VISIT.slug]: {
-    href: '/barbershop-online-booking',
-    label: 'Explore barbershop online booking',
-    note: 'A booking system can help record appointments and client history; retention outcomes depend on the shop and clients.',
+    href: '/pricing#plan',
+    label: 'See what Full KERSIVO includes for client history',
+    note: 'Full KERSIVO includes Advanced Clients and full booking history. Retention outcomes depend on the shop and its clients.',
   },
   [INSIGHTS_DECEMBER_HOURS.slug]: {
     href: '/barbershop-online-booking',
@@ -386,24 +348,33 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
   [INSIGHTS_GOOGLE_REVIEWS.slug]: {
     href: '/barbershop-websites',
     label: 'See how KERSIVO websites present a shop',
-    note: 'Editorial next step — not a claim that reviews increase bookings.',
+    note: 'Editorial next step. This is not a claim that reviews increase bookings.',
   },
   [INSIGHTS_LOCAL_CLIENTS.slug]: {
-    href: '/barbershop-online-booking',
-    label: 'Read how online booking fits a high-street shop',
-    note: 'Useful when the article’s findability gap is “they found you, then couldn’t book”.',
+    href: '/barbershop-websites',
+    label: 'See what a KERSIVO barbershop website includes',
+    note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, with your own domain and online booking. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   },
   [INSIGHTS_CARD_FEES.slug]: {
-    href: '/barber-software-cost-calculator',
-    label: 'Compare software subscription costs separately from card fees',
-    note: 'KERSIVO platform pricing is not Stripe processing. Card fees are charged by the payment provider.',
-  },
-  [INSIGHTS_GIFT_VOUCHERS.slug]: {
-    href: '/pricing',
-    label: 'See current KERSIVO plans',
-    note: 'KERSIVO does not sell gift vouchers as a product feature in this article — this is a general business guide.',
+    href: '/barbershop-online-booking',
+    label: 'See how online deposits and payments work in KERSIVO',
+    note: `${KERSIVO_COMMISSION_CLAIM} Card fees are charged by Stripe, not KERSIVO: ${STRIPE_FEES_NOTE.charAt(0).toLowerCase()}${STRIPE_FEES_NOTE.slice(1)}`,
   },
 };
+
+/** Max commercial links per article: body links + related tools/guides + end box. */
+export const COMMERCIAL_LINK_LIMIT = 3;
+
+/** Marketing paths that count as commercial links in Insights. */
+export function isInsightsCommercialHref(href: string): boolean {
+  const path = href.replace(/^https?:\/\/(www\.)?kersivo\.co\.uk/, '').split('#')[0];
+  return (
+    ['/pricing', '/starter', '/barbershop-websites', '/barbershop-online-booking', '/barbershop-website-design',
+      '/barber-software-cost-calculator', '/compare', '/demo'].includes(path) ||
+    path.startsWith('/admin') ||
+    path.endsWith('-alternative')
+  );
+}
 
 export function getInsightsRelatedLinks(slug: string): InsightsRelatedLink[] {
   return RELATED[slug] ?? [];

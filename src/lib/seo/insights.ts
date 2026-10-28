@@ -157,7 +157,7 @@ export const INSIGHTS_MTD_BARBERS = {
   headline: 'Making Tax Digital for Barbers: What Changes When Your Takings Pass £30,000',
   seoTitle: 'Making Tax Digital for Barbers: The £30,000 Test Explained',
   description:
-    'Making Tax Digital for Income Tax reaches self-employed barbers above £30,000 of takings from April 2027. Who is in scope, what to record, and the deadlines.',
+    'Making Tax Digital reaches self-employed barbers above £30,000 of takings from April 2027: who is in scope, what to record and the deadlines.',
   categoryId: 'tools-payments' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-19',
   verifiedDate: '2026-10-19',
@@ -252,7 +252,7 @@ export const INSIGHTS_LOYALTY_SCHEMES = {
   headline: 'Barbershop Loyalty Schemes: Who Are You Rewarding, and What Does It Buy?',
   seoTitle: 'Barbershop Loyalty Schemes: Do Stamp Cards Pay? (UK)',
   description:
-    "A free tenth cut costs about 10% of a regular's spend. How to work out whether a barbershop loyalty scheme pays, the UK rules on 'free', and a better design.",
+    "A free tenth cut costs about 10% of a regular's spend. How to tell if a barbershop loyalty scheme pays, the UK rules on 'free', and a better design.",
   categoryId: 'clients-growth' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-18',
   verifiedDate: '2026-10-16',
@@ -307,7 +307,7 @@ export const INSIGHTS_BOOKING_LINK = {
   slug: 'google-business-profile-booking-link-barbershop',
   path: '/insights/google-business-profile-booking-link-barbershop',
   headline: 'Your Google Profile Has a Booking Button. Do You Know Where It Sends People?',
-  seoTitle: "Google Business Profile Booking Link: A Barbershop Owner's Check",
+  seoTitle: 'Google Business Profile Booking Link: A Barbershop Check',
   description:
     "Your Google profile's Book button may send new clients to a system you don't use. How UK barbershops can check, choose and measure their booking link.",
   categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
@@ -328,7 +328,7 @@ export const INSIGHTS_WEBSITE_NEED = {
   headline: 'Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google',
   seoTitle: 'Do Barbers Need a Website? An Honest UK Test',
   description:
-    "Some barbershops don't need a website. A four-question test, what Google and Instagram already cover, and the UK rules on prices and company details online.",
+    "Some barbershops don't need a website. A four-question test, what Google and Instagram cover, and the UK rules on prices and company details online.",
   categoryId: 'tools-payments' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-18',
   verifiedDate: '2026-10-16',
@@ -344,7 +344,7 @@ export const INSIGHTS_COMMISSION_PAY = {
   path: '/insights/barber-commission-pay-minimum-wage-uk',
   headline: 'Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage',
   seoTitle: 'Commission Pay for Barbers: UK Minimum Wage Rules (2026)',
-  description: 'Commission-only or a base plus percentage? Check UK minimum wage rates, hours and pay reference periods for employed barbers — with a worked £2,198.83 example.',
+  description: 'Commission-only or base plus percentage? UK minimum wage rates, hours and pay reference periods for employed barbers, with a worked £2,198.83 example.',
   categoryId: 'industry-people' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',

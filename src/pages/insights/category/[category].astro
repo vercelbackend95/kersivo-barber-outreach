@@ -81,6 +81,11 @@ const countLabel =
         <p class="insights-category__eyebrow">{category.descriptor}</p>
         <h1 class="insights-category__title">{category.name}</h1>
         <p class="insights-category__intro">{category.intro}</p>
+        {category.productLink && (
+          <p class="insights-category__product">
+            {category.productLink.lead} <a href={category.productLink.href}>{category.productLink.label}</a>.
+          </p>
+        )}
         <p class="insights-category__count">{countLabel}</p>
       </header>
 
