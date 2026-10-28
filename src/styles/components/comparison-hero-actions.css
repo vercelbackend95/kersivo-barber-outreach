@@ -1,0 +1,72 @@
+/* ============================================================
+   comparison-hero-actions — hero CTA pair on comparison pages.
+   BEM: .comparison-hero-actions__*
+   ============================================================ */
+
+.comparison-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.comparison-hero-actions__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.comparison-hero-actions__link--primary {
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
+.comparison-hero-actions__link--primary:hover,
+.comparison-hero-actions__link--primary:focus-visible {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 90%, #fff 10%);
+}
+
+.comparison-hero-actions__link--primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.comparison-hero-actions__link--secondary {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.comparison-hero-actions__link--secondary:hover,
+.comparison-hero-actions__link--secondary:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.comparison-hero-actions__link--secondary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 40rem) {
+  .comparison-hero-actions__link {
+    flex: 1 1 100%;
+  }
+}

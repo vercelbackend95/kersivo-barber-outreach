@@ -12,7 +12,7 @@ import BooksyProof from '@/components/booksyAlternative/BooksyProof.astro';
 import BooksyFit from '@/components/booksyAlternative/BooksyFit.astro';
 import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
 import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
-import BooksyFinalCta from '@/components/booksyAlternative/BooksyFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import BooksySources from '@/components/booksyAlternative/BooksySources.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={BOOKSY_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <BooksyFinalCta />
+    <ComparisonFinalCta placement="booksy" competitor="Booksy" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

@@ -7,7 +7,7 @@ import NearcutHero from '@/components/nearcutAlternative/NearcutHero.astro';
 import NearcutCompare from '@/components/nearcutAlternative/NearcutCompare.astro';
 import NearcutProof from '@/components/nearcutAlternative/NearcutProof.astro';
 import NearcutPricing from '@/components/nearcutAlternative/NearcutPricing.astro';
-import NearcutFinalCta from '@/components/nearcutAlternative/NearcutFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import NearcutQuickAnswer from '@/components/nearcutAlternative/NearcutQuickAnswer.astro';
 import NearcutWhy from '@/components/nearcutAlternative/NearcutWhy.astro';
 import NearcutCosts from '@/components/nearcutAlternative/NearcutCosts.astro';
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={NEARCUT_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <NearcutFinalCta />
+    <ComparisonFinalCta placement="nearcut" competitor="Nearcut" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

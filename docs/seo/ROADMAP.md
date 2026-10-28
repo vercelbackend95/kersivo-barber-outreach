@@ -11,6 +11,7 @@ Commercial source of truth: Commercial Offer v2.0 (founder decisions FD01–FD12
 | 1 — commercial truth & safety | #128 | `docs/seo/batch-1-changelog.md` |
 | 2 — brand trust, shared footer, measurement tag, QR Kit for Full | #128 | `docs/seo/batch-2-changelog.md` |
 | 3 — Full-first homepage + `/pricing`, deferred demo widgets, FAQ/JSON-LD | #129, #130 | `docs/seo/batch-3-changelog.md` |
+| 4 — comparison engine: shared CTAs, `/compare` answer + FAQ, tier-1 titles/PAA, calculator worked examples | this PR | `docs/seo/batch-4-changelog.md` |
 
 Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 100; `/pricing` mobile 98, desktop 100.
 
@@ -18,12 +19,11 @@ Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 1
 
 | Batch | Name | Size | Priority |
 |---|---|---|---|
-| 4 | Comparison engine | Large | Highest — the only pages with real commercial search traffic |
 | 5 | Cluster & content linking | Medium | High |
 | 6 | Technical hygiene | Medium | Medium |
 | 7 | Optional refinements | Small | Low |
 
-### Batch 4 — Comparison engine (P1-11, P2-04, P2-06, P2-07, P2-09, P2-15)
+### Batch 4 — Comparison engine (P1-11, P2-04, P2-06, P2-07, P2-09, P2-15) — DONE, see `docs/seo/batch-4-changelog.md`
 Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`, `fresha`, `treatwell`, `nearcut`, `vagaro`, `timely`, `phorest`, `square-appointments`, `squire`, `setora`).
 
 1. **One shared closing CTA.** Today there are 11 near-identical files (`src/components/*Alternative/*FinalCta.astro`, `alternativesHub/HubFinalCta.astro`) that lead with "Start KERSIVO Starter" + "Compare Starter and Full". Replace them with one component:

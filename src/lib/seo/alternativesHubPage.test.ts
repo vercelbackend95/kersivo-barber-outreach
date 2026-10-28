@@ -55,9 +55,9 @@ describe('Alternatives hub: metadata and indexability', () => {
   it('uses /compare as the canonical with unique title, description and H1', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
     expect(resolveCanonicalUrl(ALTERNATIVES_HUB_PAGE_PATH)).toBe(pageUrl);
-    expect(ALTERNATIVES_HUB_TITLE).toBe('Compare 11 Barber Booking Systems in the UK | KERSIVO');
-    expect(ALTERNATIVES_HUB_TITLE.length).toBeLessThanOrEqual(65);
-    expect(ALTERNATIVES_HUB_DESCRIPTION.length).toBeLessThanOrEqual(165);
+    expect(ALTERNATIVES_HUB_TITLE).toBe('Best Barber Booking Software UK: 11 Systems Compared');
+    expect(ALTERNATIVES_HUB_TITLE.length).toBeLessThanOrEqual(60);
+    expect(ALTERNATIVES_HUB_DESCRIPTION.length).toBeLessThanOrEqual(155);
     expect(ALTERNATIVES_HUB_H1).toBe('Find the right barber booking system');
   });
 
@@ -173,7 +173,7 @@ describe('Alternatives hub: structured data', () => {
   it('mirrors the visible FAQ in FAQPage and never fabricates ratings or reviews', () => {
     const faq = buildAlternativesHubFaqJsonLd() as { mainEntity: { name: string }[] };
     expect(faq.mainEntity.map((q) => q.name)).toEqual(ALTERNATIVES_HUB_FAQ_ITEMS.map((i) => i.question));
-    expect(ALTERNATIVES_HUB_FAQ_ITEMS).toHaveLength(6);
+    expect(ALTERNATIVES_HUB_FAQ_ITEMS).toHaveLength(7);
     const all = JSON.stringify([
       buildAlternativesHubCollectionPageJsonLd(siteUrl),
       buildAlternativesHubItemListJsonLd(siteUrl),

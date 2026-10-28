@@ -89,7 +89,6 @@ const componentNames = [
   'BooksyFit',
   'BooksySwitching',
   'BooksyPricing',
-  'BooksyFinalCta',
   'BooksySources',
 ] as const;
 
@@ -148,7 +147,7 @@ const renderedCorpus = [visibleCopy, ...bodySources].join('\n');
 describe('booksy-alternative: metadata and URL', () => {
   it('keeps the existing URL, title and H1 and uses the new SERP-length meta description', () => {
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
-    expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative for UK Barbershops | KERSIVO');
+    expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative UK: No Per-Barber Fees | KERSIVO');
     expect(BOOKSY_ALTERNATIVE_H1).toBe('A Booksy Alternative Built Around Your Barbershop');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(
       'Looking for a Booksy alternative in the UK? Compare KERSIVO and Booksy pricing, Boost fees, branding, bookings and switching for independent barbershops.',
@@ -196,7 +195,7 @@ describe('booksy-alternative: Fresha template structure', () => {
       '<BooksySwitching',
       '<BooksyPricing',
       '<Faq4',
-      '<BooksyFinalCta',
+      '<ComparisonFinalCta',
       '<Contact16',
       '<BooksySources',
       '<Footer50',
@@ -230,8 +229,7 @@ describe('booksy-alternative: Fresha template structure', () => {
   it('hero uses the approved eyebrow, CTAs and price meta', () => {
     const hero = components.BooksyHero;
     expect(hero).toContain('Booksy alternative for UK barbershops');
-    expect(hero).toMatch(/href="\/demo"[\s\S]*?data-track="view_live_demo_click"[\s\S]*?See KERSIVO in Action/);
-    expect(hero).toMatch(/href="#comparison"[\s\S]*?Compare KERSIVO and Booksy/);
+    expect(hero).toContain('<ComparisonHeroActions placement="booksy" />');
     expect(hero).toContain('£{SAAS_MONTHLY_GBP}/month');
     expect(hero).toContain('0% KERSIVO commission');
     expect(hero).not.toMatch(/iframe/i);
@@ -249,8 +247,7 @@ describe('booksy-alternative: Fresha template structure', () => {
     expect(components.BooksyPricing).toContain('href="/starter"');
     expect(components.BooksyPricing).toContain('{layout.conditionsLine1}');
     expect(components.BooksyPricing).not.toContain('barber-software-cost-calculator');
-    expect(components.BooksyFinalCta).toContain('Start KERSIVO Starter');
-    expect(components.BooksyFinalCta).toContain('Compare Starter and Full');
+    expect(pageSource).toContain('<ComparisonFinalCta placement="booksy" competitor="Booksy" />');
     expect(pageSource).toContain('title="Still comparing KERSIVO and Booksy?"');
     expect(pageSource).not.toMatch(/id=["']contact["']/);
   });
@@ -461,8 +458,8 @@ describe('booksy-alternative: comparison, fit, switching', () => {
 });
 
 describe('booksy-alternative: FAQ and schema', () => {
-  it('has 10 FAQs covering the required questions with no "best" claims', () => {
-    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS).toHaveLength(10);
+  it('has 11 FAQs covering the required questions with no "best" claims', () => {
+    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS).toHaveLength(11);
     const questions = BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => item.question.toLowerCase()).join('\n');
     for (const topic of [
       'good booksy alternative',
@@ -537,8 +534,8 @@ describe('booksy-alternative: freshness, sources and sitemap', () => {
   it('uses the real verification and update dates, never build time', () => {
     expect(BOOKSY_FACTS_CHECKED_DATE).toBe('2 October 2026');
     expect(BOOKSY_FACTS_CHECKED_ISO).toBe('2026-10-02');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-06');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('6 October 2026');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-28');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('28 October 2026');
     for (const source of [faqSource, factsSource, ...bodySources]) {
       expect(source).not.toMatch(/new Date\(\)\.toISOString|Date\.now\(\)/);
     }

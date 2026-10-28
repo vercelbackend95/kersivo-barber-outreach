@@ -1,0 +1,75 @@
+---
+/**
+ * Shared closing CTA for /compare, the cost calculator and every *-alternative page.
+ * Full KERSIVO leads; Starter and the switching question are secondary text links.
+ */
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  COMPARISON_FINAL_CTA_HEADING,
+  comparisonFinalCtaSwitchLabel,
+  COMPARISON_FINAL_CTA_STARTER_LABEL,
+} from '@/lib/seo/comparisonCtas';
+import '@/styles/components/landingFinalCta.css';
+
+interface Props {
+  /** Analytics placement prefix, e.g. "booksy" → "booksy_final". */
+  placement: string;
+  /** Competitor name for the switching link; omit on pages without a #contact section. */
+  competitor?: string;
+}
+
+const { placement, competitor } = Astro.props as Props;
+const trackPlacement = `${placement}_final`;
+const titleId = `${placement}-final-cta-title`;
+const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
+---
+
+<section class="landing-final-cta comparison-final-cta" aria-labelledby={titleId}>
+  <div class="container">
+    <div class="landing-final-cta__panel">
+      <div class="landing-final-cta__content">
+        <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
+        <h2 id={titleId} class="landing-final-cta__heading">{COMPARISON_FINAL_CTA_HEADING}</h2>
+        <p class="landing-final-cta__subheadline">
+          Full KERSIVO is {monthlyPriceLabel} per location, with your branded website, domain and
+          online booking. 0% KERSIVO commission. {STRIPE_FEES_NOTE}
+        </p>
+      </div>
+
+      <div class="landing-final-cta__conversion">
+        <a
+          href="/admin/launch"
+          class="btn btn--primary btn--lg landing-final-cta__button"
+          data-track="saas_subscribe_click"
+          data-track-placement={trackPlacement}
+        >
+          Start Full KERSIVO — {monthlyPriceLabel}
+        </a>
+        <p class="landing-final-cta__starter">
+          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement={trackPlacement}>
+            {COMPARISON_FINAL_CTA_STARTER_LABEL}
+          </a>
+        </p>
+        {
+          competitor && (
+            <p class="landing-final-cta__starter comparison-final-cta__switch">
+              <a href="#contact">{comparisonFinalCtaSwitchLabel(competitor)}</a>
+            </p>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .comparison-final-cta .landing-final-cta__heading {
+    font-size: clamp(1.55rem, 3.4vw, 2.75rem);
+    overflow-wrap: anywhere;
+  }
+
+  .comparison-final-cta__switch {
+    margin-top: 0;
+  }
+</style>

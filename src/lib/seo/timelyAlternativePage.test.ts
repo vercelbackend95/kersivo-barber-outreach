@@ -54,7 +54,7 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(comparison).toContain('data-comparison-reveal');
     expect(comparison).toContain('data-comparison-trigger');
     expect(TIMELY_COMPARE_SECTIONS).toHaveLength(6);
-    expect(page).toContain('href="/demo"');
+    expect(page).toContain('<ComparisonHeroActions placement="timely" />');
     expect(page).toContain('href="/barber-software-cost-calculator"');
   });
 
@@ -106,6 +106,6 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(page).toContain('not a confirmed UK GBP subscription');
     expect(comparison).not.toContain('Nearcut');
     expect(page).toContain('TIMELY_TRADEMARK_DISCLAIMER');
-    expect(read('../../components/timelyAlternative/TimelyFinalCta.astro')).toContain('timely_final');
+    expect(page).toContain('<ComparisonFinalCta placement="timely" competitor="Timely" />');
   });
 });

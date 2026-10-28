@@ -1,4 +1,5 @@
 ---
+import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
 import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { requireVerifiedSetoraFact } from '@/lib/seo/setoraFacts';
@@ -26,16 +27,11 @@ const setoraMonthly = requireVerifiedSetoraFact('canonicalMonthlyGbp').value;
       a branded website and standard domain. Or start with KERSIVO Starter at £0/month for up to four
       active bookable barbers; all public Starter bookings require at least £{KERSIVO_BOOKING_DEPOSIT_GBP} paid online through Stripe. Stripe processing fees apply.
     </p>
-    <div class="fresha-alt-hero__actions">
-      <a href="/demo" class="fresha-alt-hero__action fresha-alt-hero__action--primary" data-track="view_live_demo_click">
-        Open the full demo
-      </a>
-      <a href="#comparison" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">Compare KERSIVO and Setora</a>
-    </div>
+    <ComparisonHeroActions placement="setora" />
     <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
       <span><strong>Starter £0/month</strong></span><span aria-hidden="true">·</span>
       <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span><span aria-hidden="true">·</span>
-      <span>0% KERSIVO commission</span><span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission (Stripe fees apply)</span><span aria-hidden="true">·</span>
       <span>Independent UK barbershops</span>
     </div>
   </div>

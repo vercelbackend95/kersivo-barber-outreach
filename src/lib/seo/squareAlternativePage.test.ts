@@ -38,7 +38,7 @@ describe('Square Appointments alternative', () => {
    expect(structured.map(x=>x.acceptedAnswer.text)).toEqual(SQUARE_ALTERNATIVE_FAQ_ITEMS.map(x=>x.answer));
  });
  it('reuses the same design sections in the right order', () => {
-   const order=['<SquareHero','<SquareQuickAnswer','<SquareWhy','<SquareCosts','<SquareCompare','<SquareProof','<SquareFit','<SquareSwitching','<SquarePricing','<Faq4','<SquareFinalCta','<SquareSources'].map(token=>page.indexOf(token));
+   const order=['<SquareHero','<SquareQuickAnswer','<SquareWhy','<SquareCosts','<SquareCompare','<SquareProof','<SquareFit','<SquareSwitching','<SquarePricing','<Faq4','<ComparisonFinalCta','<SquareSources'].map(token=>page.indexOf(token));
    expect(order.every(value=>value>=0)).toBe(true);
    expect(order).toEqual([...order].sort((a,b)=>a-b));
    expect(page).toContain("fresha-alternative.css");

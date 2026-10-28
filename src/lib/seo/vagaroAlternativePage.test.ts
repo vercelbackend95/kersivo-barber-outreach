@@ -76,7 +76,7 @@ describe('Vagaro Alternative UK SEO foundation', () => {
   });
 
   it('reuses the Nearcut layout with exactly one visible H1 and no copied competitor branding', () => {
-    const components = ['VagaroHero','VagaroQuickAnswer','VagaroWhy','VagaroCosts','VagaroCompare','VagaroProof','VagaroFit','VagaroSwitching','VagaroPricing','Faq4','VagaroFinalCta','VagaroSources'];
+    const components = ['VagaroHero','VagaroQuickAnswer','VagaroWhy','VagaroCosts','VagaroCompare','VagaroProof','VagaroFit','VagaroSwitching','VagaroPricing','Faq4','ComparisonFinalCta','VagaroSources'];
     const indexes = components.map((name) => page.indexOf('<' + name));
     expect(indexes.every((index) => index >= 0)).toBe(true);
     expect(indexes).toEqual([...indexes].sort((a,b) => a-b));

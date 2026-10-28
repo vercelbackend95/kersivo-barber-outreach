@@ -7,6 +7,10 @@ import {
   estimateTreatwellPublishedBookingFees,
 } from '@/lib/seo/treatwellFacts';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  TREATWELL_COMMISSION_EXAMPLES,
+  TREATWELL_COMMISSION_EXAMPLES_NOTE,
+} from '@/lib/seo/treatwellAlternativeContent';
 
 const pricingUrl = getTreatwellSource('pricingUk').url;
 const termsUrl = getTreatwellSource('partnerTerms').url;
@@ -81,6 +85,35 @@ const gbp = (n: number) => `£${n.toFixed(2)}`;
         </ul>
       </li>
     </ul>
+
+    <div class="fresha-alt-costs__examples">
+      <div class="fresha-alt-costs__table-wrap">
+        <h3 id="treatwell-alt-costs-examples-title" class="fresha-alt-costs__h3">
+          Published commission per month: a worked example
+        </h3>
+        <table class="fresha-alt-costs__table" aria-labelledby="treatwell-alt-costs-examples-title">
+          <thead>
+            <tr>
+              <th scope="col">Per month</th>
+              <th scope="col">Treatwell commission</th>
+              <th scope="col">KERSIVO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              TREATWELL_COMMISSION_EXAMPLES.map((row) => (
+                <tr>
+                  <th scope="row">{row.label}</th>
+                  <td data-label="Treatwell commission">{row.treatwellExVat}</td>
+                  <td data-label="KERSIVO" class="fresha-alt-costs__kersivo-cell">{row.kersivo}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <p class="fresha-alt-costs__note">{TREATWELL_COMMISSION_EXAMPLES_NOTE}</p>
+      </div>
+    </div>
 
     <div class="fresha-alt-card fresha-alt-costs__marketplace">
       <div class="fresha-alt-costs__marketplace-body">

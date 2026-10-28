@@ -88,14 +88,14 @@ describe('marketing sitemap', () => {
       expect(byLoc[`https://kersivo.co.uk${path}`]).toBeUndefined(); // No fabricated editorial lastmod
     }
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-27');
-    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-09');
-    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-06');
-    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-28');
+    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-28');
+    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');

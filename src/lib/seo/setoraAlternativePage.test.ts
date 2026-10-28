@@ -31,7 +31,7 @@ describe('Setora Alternative landing page', () => {
     expect(schema.breadcrumb).toEqual({'@id':'https://kersivo.co.uk/setora-alternative#breadcrumb'});
   });
   it('contains exactly one visible H1 and the mature comparison structure', () => {
-    const ordered=['SetoraHero','SetoraQuickAnswer','SetoraWhy','SetoraCosts','SetoraCompare','SetoraProof','SetoraFit','SetoraSwitching','SetoraPricing','Faq4','SetoraFinalCta','SetoraSources'].map(x=>page.indexOf('<'+x));
+    const ordered=['SetoraHero','SetoraQuickAnswer','SetoraWhy','SetoraCosts','SetoraCompare','SetoraProof','SetoraFit','SetoraSwitching','SetoraPricing','Faq4','ComparisonFinalCta','SetoraSources'].map(x=>page.indexOf('<'+x));
     expect(ordered.every(x=>x>=0)).toBe(true);
     expect(ordered).toEqual([...ordered].sort((a,b)=>a-b));
     const hero=read(prefix+'SetoraHero.astro');

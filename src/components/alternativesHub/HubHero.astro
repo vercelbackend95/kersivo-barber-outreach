@@ -1,5 +1,7 @@
 ---
+import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
 import {
+  ALTERNATIVES_HUB_DIRECT_ANSWER,
   ALTERNATIVES_HUB_H1_ACCENT,
   ALTERNATIVES_HUB_H1_LEAD,
   ALTERNATIVES_HUB_LAST_UPDATED_ISO,
@@ -20,12 +22,11 @@ import {
       <h1 id="alt-hub-title" class="alt-hub-hero__title">
         {ALTERNATIVES_HUB_H1_LEAD} <span class="alt-hub-hero__accent">{ALTERNATIVES_HUB_H1_ACCENT}</span>
       </h1>
-      <p class="alt-hub-hero__lead">
+      <p class="alt-hub-hero__lead alt-hub-hero__answer">{ALTERNATIVES_HUB_DIRECT_ANSWER}</p>
+      <p class="alt-hub-hero__sub">
         Compare 11 booking systems for UK barbershops, including KERSIVO, Booksy, Fresha, Nearcut and more — then filter by what matters to your business.
       </p>
-      <p class="alt-hub-hero__sub">
-        Built for independent UK barbershops that want more control, clearer costs and a stronger brand.
-      </p>
+      <ComparisonHeroActions placement="compare_hub" />
       <p class="alt-hub-hero__meta">
         Published by KERSIVO · Last updated <time datetime={ALTERNATIVES_HUB_LAST_UPDATED_ISO}>{ALTERNATIVES_HUB_LAST_UPDATED_LABEL}</time>
       </p>

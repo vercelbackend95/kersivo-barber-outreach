@@ -9,7 +9,7 @@ import SquireCompare from '@/components/squireAlternative/SquireCompare.astro';
 import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
 import SquireFit from '@/components/squireAlternative/SquireFit.astro';
 import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
-import SquireFinalCta from '@/components/squireAlternative/SquireFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import SquireSources from '@/components/squireAlternative/SquireSources.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
@@ -42,7 +42,7 @@ const currentYear = new Date().getFullYear();
       supportLinkLabel="Ask KERSIVO a question"
       supportLinkHref="#contact"
       faqs={SQUIRE_ALTERNATIVE_FAQ_ITEMS} />
-    <SquireFinalCta />
+    <ComparisonFinalCta placement="squire" competitor="SQUIRE" />
     <Contact16 eyebrow="CONTACT KERSIVO" title="Still comparing KERSIVO and SQUIRE?"
       description="Tell us what you use today and what you want to change. We’ll reply with a practical answer for your barbershop."
       note="We’ll reply by email — no sales call required."
