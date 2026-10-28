@@ -24,16 +24,20 @@ const money = (amount: number) =>
 
 <style>
   .homepage-pricing-notes {
-    width: min(100% - 2rem, 72rem);
+    width: min(100% - 2rem, 46rem);
     margin: 0 auto 2rem;
     display: grid;
+    justify-items: center;
     gap: 0.85rem;
     color: var(--muted);
     line-height: 1.5;
+    text-align: center;
   }
 
   .homepage-pricing-notes p {
     margin: 0;
+    max-width: 100%;
+    text-wrap: pretty;
   }
 
   .homepage-pricing-notes a {
