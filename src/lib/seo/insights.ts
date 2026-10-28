@@ -588,7 +588,9 @@ export function buildInsightsArticleJsonLd(article: {
       url: buildAbsoluteUrl('/'),
       logo: {
         '@type': 'ImageObject',
-        url: buildAbsoluteUrl('/images/logo-kersivo.png'),
+        url: buildAbsoluteUrl('/images/brand/kersivo-mark.png'),
+        width: 512,
+        height: 512,
       },
     },
     articleSection: categoryName,
