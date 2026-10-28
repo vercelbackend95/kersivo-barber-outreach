@@ -108,7 +108,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-28');
 
     expect(EXPECTED_LOCS.some((loc) => loc === 'https://kersivo.co.uk/')).toBe(true);
     for (const loc of EXPECTED_LOCS) {
