@@ -100,7 +100,7 @@ export const ABOUT_MODEL_POINTS: readonly { title: string; body: string }[] = [
 export const ABOUT_PRICING_SUMMARY = `Full KERSIVO is ${PRICE} per month per physical barbershop location and KERSIVO Starter is £0/month, with no setup fee and 0% KERSIVO commission on both plans. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
 
 export const ABOUT_SETUP_PARAGRAPH =
-  'You subscribe to Full KERSIVO and send us your shop details, branding, photos, services and team. We configure your website, booking flow and payment settings. Your site is typically ready 1–2 weeks after we receive all required information — that’s an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it. You can keep taking bookings on your current system until then.';
+  'You subscribe to Full KERSIVO and send us your shop details, branding, photos, services and team. We configure your website, booking flow and payment settings. Your site is typically ready in a few days once we receive all required information — that’s an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it. You can keep taking bookings on your current system until then.';
 
 export const ABOUT_SUPPORT_PARAGRAPH = `Email hello@kersivo.co.uk for questions before or after you subscribe. Full KERSIVO subscribers have a first-response target of one business day. Day-to-day changes such as services, prices, barbers and opening hours are made by you in the dashboard. ${WEBSITE_UPDATE_SUPPORT_CLAIM}`;
 
