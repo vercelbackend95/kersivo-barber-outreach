@@ -51,7 +51,7 @@ describe('Admin AI assistant compliance surfaces', () => {
   });
 
   it('keeps explicit Terms and DPA versions for the v1.19 legal package', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-28');
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
   });
 
