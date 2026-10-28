@@ -1,13 +1,14 @@
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const BARBERSHOP_WEBSITES_PAGE_PATH = '/barbershop-websites';
 
 export const BARBERSHOP_WEBSITES_PAGE_TITLE =
-  'Barbershop Websites UK | Design & Booking | KERSIVO';
+  'Barbershop Website with Online Booking UK | KERSIVO';
 
 export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
-  'Professional barbershop websites on your own domain, with online booking and business tools. Full KERSIVO costs £39/month with no setup fee.';
+  `Your branded barbershop website on your own domain, with online booking built in. Set up for you for £${SAAS_MONTHLY_GBP}/month per location. No setup fee, no VAT added.`;
 
 export const BARBERSHOP_WEBSITES_PAGE_H1 = 'Barbershop Websites with Online Booking';
 

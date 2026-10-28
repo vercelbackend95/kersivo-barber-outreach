@@ -82,7 +82,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBeUndefined();
     expect(byLoc['https://kersivo.co.uk/']).toBeUndefined();
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-06');
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-10-06');
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
       expect(byLoc[`https://kersivo.co.uk${path}`]).toBeUndefined(); // No fabricated editorial lastmod

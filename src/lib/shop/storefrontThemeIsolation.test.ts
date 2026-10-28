@@ -108,7 +108,7 @@ describe('storefront theme isolation', () => {
     expect(demoShop).toMatch(/addToBagShortLabel="Add"/);
 
     const landingDemo = fs.readFileSync(
-      path.join(ROOT, 'src/components/landingDemoPreview.astro'),
+      path.join(ROOT, 'src/components/landing/DeferredWidget.tsx'),
       'utf8',
     );
     expect(landingDemo).toMatch(/addToBagShortLabel="Add"/);

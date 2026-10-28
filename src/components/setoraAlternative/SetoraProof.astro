@@ -2,14 +2,6 @@
 import { blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
 import LandingDemoPreview from '@/components/landingDemoPreview.astro';
-import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
-import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
-
-const [retailProducts, barbers] = await Promise.all([
-  resolveLandingDemoCarouselProducts(),
-  resolveLandingDemoBarbers(),
-]);
-
 const rows = [
   {
     kicker: 'ADMIN SYSTEM',
@@ -61,6 +53,4 @@ const rows = [
       'Explore the booking journey and admin system, plus the retail pickup shop included with Full KERSIVO.',
   }}
   rows={rows}
-  retailProducts={retailProducts}
-  barbers={barbers}
 />

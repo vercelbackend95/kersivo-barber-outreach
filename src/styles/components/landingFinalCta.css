@@ -117,6 +117,18 @@
   text-align: center;
 }
 
+.landing-final-cta__starter {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.landing-final-cta__starter a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .landing-final-cta__reassurance {
   margin: 0;
   max-width: 36ch;

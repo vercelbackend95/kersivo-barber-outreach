@@ -23,9 +23,9 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(hero).toContain('STRIPE_FEES_NOTE');
     expect(hero).toContain('CUTSTATE BARBERS is a fictional demonstration shop');
     expect(hero).toContain('data-track="view_live_demo_click"');
-    expect(hero).toContain('data-track="plan_my_setup_click"');
+    expect(hero).toContain('data-track="saas_subscribe_click"');
     expect(hero).toContain('data-track-placement="barbershop_websites_hero"');
-    expect(hero).toContain('href="/pricing#plan"');
+    expect(hero).toContain('href="/admin/launch"');
   });
 
   it('advertises the three owner-controlled Full modes actually supported by the payment API', () => {

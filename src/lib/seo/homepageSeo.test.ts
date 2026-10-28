@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { RateCard1 } from '@/components/rateCard1';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { buildBarberDemoJsonLd } from './barberDemoJsonLd';
-import { BARBERSHOP_BOOKING_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from './defaults';
+import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, SAAS_MONTHLY_GBP } from './defaults';
 import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
 
 const ROOT = process.cwd();
@@ -19,16 +19,16 @@ const between = (source: string, start: string, end: string) => {
 };
 
 const homepage = read('src/pages/index.astro');
-const valueCards = read('src/components/landingValueCards.astro');
+const difference = read('src/components/landingDifference.astro');
 const demoPreview = read('src/components/landingDemoPreview.astro');
 const switcher = read('src/components/landingSwitcherReassurance.astro');
 const rateCard1Source = read('src/components/rateCard1.tsx');
 const landingPricingMarkup = renderToStaticMarkup(createElement(RateCard1, { variant: 'landing' }));
 
 const NEW_FAQ_QUESTIONS = [
-  'What is barbershop software?',
-  'What should a barber booking system include?',
-  'Does KERSIVO charge more when I add more barbers?',
+  'How much does Full KERSIVO cost a shop?',
+  'When do I pay, and how long until my website is live?',
+  'Can I cancel?',
 ];
 
 /** Local .astro/.tsx components reachable from the homepage and its layout. */
@@ -58,7 +58,9 @@ describe('homepage SEO phase 1: head', () => {
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('title={DEFAULT_TITLE}');
-    expect(homepage).toContain('description={DEFAULT_DESCRIPTION}');
+    expect(homepage).toContain('description={HOMEPAGE_DESCRIPTION}');
+    expect(HOMEPAGE_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
+    expect(HOMEPAGE_DESCRIPTION.length).toBeLessThanOrEqual(165);
   });
 
   it('is canonical at the root, indexable and has no keywords meta', () => {
@@ -92,35 +94,21 @@ describe('homepage SEO phase 1: headings', () => {
       .filter((file) => /<h1\b/.test(read(file.replace(ROOT, ''))))
       .map((file) => file.replace(ROOT, '').replaceAll('\\', '/'))
       .sort();
-    expect(withH1).toEqual([
-      '/src/components/booking/BookingFlow.tsx',
-      '/src/components/homepage/HomepageHero.astro',
-    ]);
-    // The embedded homepage booking demo uses BookingFlow's preview branch, which renders an H2.
-    expect(read('src/components/LandingBookingWidget.tsx')).toMatch(/<BookingFlow\s+previewMode\b/);
-    expect(read('src/components/booking/BookingFlow.tsx')).toMatch(
-      /\{previewMode \? \(\s*<h2 className="booking-flow__title">[\s\S]{0,200}?<\/h2>\s*\) : \(\s*<h1 className="booking-flow__title">/,
-    );
+    expect(withH1).toEqual(['/src/components/homepage/HomepageHero.astro']);
     const hero = read('src/components/homepage/HomepageHero.astro');
     expect(hero.match(/<h1\b/g)).toHaveLength(1);
-    expect(text(between(hero, '<h1', '</h1>'))).toBe('Barbershop software built around your brand.');
+    expect(text(between(hero, '<h1', '</h1>'))).toBe(
+      'Your own barbershop website and booking system. Not a marketplace listing.',
+    );
     expect(landingPricingMarkup).not.toMatch(/<h1\b/);
   });
 
   it('opens the content with the barbershop software H2', () => {
-    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingValueCards \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
-    expect(valueCards).toContain('<p class="landing-value-cards__eyebrow">WHAT KERSIVO INCLUDES</p>');
-    expect(text(between(valueCards, '<h2 id="landing-value-cards-title"', '</h2>'))).toBe(
-      'Barbershop software for bookings, clients and daily management',
+    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
+    expect(text(between(difference, '<h2 id="landing-difference-title"', '</h2>'))).toBe(
+      'Barbershop software that sends clients to your shop, not a marketplace',
     );
-    expect(text(between(valueCards, '<p class="landing-value-cards__lead">', '</p>')).replace(/\s+([,.!?])/g, '$1')).toBe(
-      'Full KERSIVO combines your own branded barbershop website, online bookings, client management, Reports and Retail in one connected platform. KERSIVO Starter remains available for shops that want a free entry plan.',
-    );
-    expect(valueCards).toContain('href="/barbershop-websites"');
-    expect(valueCards).toContain("guideHref: '/barbershop-online-booking'");
-    expect(valueCards).toContain("heading: 'Online booking for barbers, without the marketplace detour'");
-    expect(valueCards).toMatch(/heading: 'Manage your barbershop from one clear(?: |\\u00a0)system'/);
-    expect(valueCards).toContain("heading: 'Payments and reminders that protect your time'");
+    expect(difference).toContain("linkHref: '/barbershop-online-booking'");
   });
 
   it('names the inside-the-system section as barbershop management software', () => {
@@ -132,19 +120,15 @@ describe('homepage SEO phase 1: headings', () => {
   it('renders the pricing H2 with the dynamic monthly price per location', () => {
     const layout = getRateCard1LandingLayout();
     expect(layout.eyebrow).toBe('BARBERSHOP SOFTWARE PRICING');
-    expect(layout.lead).toBe(
-      'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
-    );
+    expect(layout.heading).toBe('One price per shop. Every barber included.');
+    expect(layout.lead).toContain(`£${SAAS_MONTHLY_GBP}/month per physical location`);
+    expect(layout.lead).toContain('no VAT added');
     expect(rateCard1Source).toMatch(
       /\{layout\.headingBeforePrice\}\s*\{SAAS_MONTHLY_GBP\}\s*\{layout\.headingAfterPrice\}/,
     );
     const h2 = landingPricingMarkup.match(/<h2 id="rate-card1-heading"[^>]*>([\s\S]*?)<\/h2>/)?.[1] ?? '';
-    expect(text(h2).replace(/\s+/g, '')).toBe(
-      `Barbershopsoftwarepricing:£${SAAS_MONTHLY_GBP}/monthperlocation`,
-    );
-    expect(landingPricingMarkup.replace(/<!-- -->/g, '')).toContain(
-      `Barbershop software pricing: £${SAAS_MONTHLY_GBP}/month per location</h2>`,
-    );
+    expect(text(h2)).toBe('One price per shop. Every barber included.');
+    expect(landingPricingMarkup).toContain(`£${SAAS_MONTHLY_GBP}`);
   });
 
   it('keeps the switcher eyebrow and uses the platform-switch H2', () => {
@@ -202,12 +186,10 @@ describe('homepage SEO phase 1: internal links', () => {
 });
 
 describe('homepage visual style parity with /starter', () => {
-  it('uses the same flat black as the homepage hero in What KERSIVO Includes', () => {
+  it('keeps the homepage hero on the flat black product background', () => {
     const hero = read('src/styles/components/homepage-hero.css');
-    const values = read('src/styles/components/landingValueCards.css');
     expect(hero).toContain('background: #030303;');
-    expect(values).toContain('.landing-value-cards {\n  position: relative;\n  background: #030303;');
-    expect(values).toContain('/* Keep the full section flat black, like the homepage hero. */');
+    expect(homepage).not.toContain('LandingValueCards');
   });
 
   it('matches the /starter glance card surface, shadow and rounded edges while keeping price card layout', () => {
@@ -231,7 +213,9 @@ describe('homepage visual style parity with /starter', () => {
 describe('homepage lower-funnel conversion controls', () => {
   it('does not put a demo-email form between pricing and onboarding', () => {
     expect(homepage).not.toMatch(/LandingDemoCapture/);
-    expect(homepage).toMatch(/<RateCard1 variant="landing" \/>\s*<LandingPostPurchaseSteps \/>/);
+    expect(homepage).toMatch(
+      /<RateCard1 variant="landing" \/>\s*<HomepagePricingNotes \/>\s*<LandingPostPurchaseSteps \/>/,
+    );
     expect(homepage).toContain('<Contact16');
     expect(homepage).toContain('submitLabel="Send my question"');
     expect(homepage).toMatch(/<Contact16[\s\S]*?\/>\s*<LandingFinalCta \/>\s*<Footer50/);
@@ -240,10 +224,10 @@ describe('homepage lower-funnel conversion controls', () => {
   it('keeps transparent commercial conditions without the unrequested VAT-status claim', () => {
     const layout = getRateCard1LandingLayout();
     expect(layout.conditionsLine1).toContain('Stripe');
-    expect(layout.conditionsLine2).toBe(
-      'First payment at checkout, then billed monthly. Cancel anytime. No setup fee.',
+    expect(layout.conditionsLine2).toContain(
+      `we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment`,
     );
-    expect(landingPricingMarkup).not.toMatch(/VAT registered|no VAT is added/i);
+    expect(landingPricingMarkup).toMatch(/not VAT registered/);
     expect(landingPricingMarkup).toContain('href="/admin/launch"');
   });
 
@@ -258,8 +242,8 @@ describe('homepage lower-funnel conversion controls', () => {
 
 describe('homepage SEO phase 1: FAQ', () => {
   it('renders the three new questions in the visible FAQ and the FAQPage JSON-LD', () => {
-    expect(homepage).toContain('faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}');
-    const visible = BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => item.question);
+    expect(homepage).toContain('faqs={HOMEPAGE_FAQ_ITEMS}');
+    const visible = HOMEPAGE_FAQ_ITEMS.map((item) => item.question);
     const structured = (buildBarbershopBookingFaqJsonLd().mainEntity as Array<{ name: string }>).map(
       (entity) => entity.name,
     );
@@ -271,16 +255,14 @@ describe('homepage SEO phase 1: FAQ', () => {
     expect(visible.length).toBe(new Set(visible).size);
   });
 
-  it('qualifies the extra-barbers answer with fair use and the dynamic price, in both FAQ and JSON-LD', () => {
-    const question = 'Does KERSIVO charge more when I add more barbers?';
-    const expected = `Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location rather than per barber; additional barbers within that location are included subject to reasonable fair use.`;
-    expect(BARBERSHOP_BOOKING_FAQ_ITEMS.find((item) => item.question === question)?.answer).toBe(expected);
+  it('keeps the homepage FAQ answers and JSON-LD on the same Full KERSIVO questions', () => {
+    const question = 'How much does Full KERSIVO cost a shop?';
     const entity = (
       buildBarbershopBookingFaqJsonLd().mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>
     ).find((e) => e.name === question);
-    expect(entity?.acceptedAnswer.text).toBe(expected);
-    expect(read('src/lib/seo/barbershopBookingFaq.ts')).toContain(
-      'Starter supports up to 4 active bookable barbers at £0/month. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location',
+    expect(entity?.acceptedAnswer.text).toContain(`£${SAAS_MONTHLY_GBP} a month per physical location`);
+    expect(entity?.acceptedAnswer.text).toBe(
+      HOMEPAGE_FAQ_ITEMS.find((item) => item.question === question)?.answer,
     );
   });
 });

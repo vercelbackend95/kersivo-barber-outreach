@@ -166,9 +166,13 @@ function RateCard1Landing({ className }: { className?: string }) {
         <header className="rate-card1__landing-intro">
           <p className="rate-card1__eyebrow">{layout.eyebrow}</p>
           <h2 id="rate-card1-heading" className="rate-card1__landing-heading">
-            {layout.headingBeforePrice}
-            {SAAS_MONTHLY_GBP}
-            {layout.headingAfterPrice}
+            {layout.heading ?? (
+              <>
+                {layout.headingBeforePrice}
+                {SAAS_MONTHLY_GBP}
+                {layout.headingAfterPrice}
+              </>
+            )}
           </h2>
           <p className="rate-card1__landing-lead">{layout.lead}</p>
         </header>

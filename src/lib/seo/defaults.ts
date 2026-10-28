@@ -18,6 +18,11 @@ export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
 export const DEFAULT_DESCRIPTION =
   'UK barbershop software with your own branded website, domain and online bookings. Full KERSIVO is £39/month per location, with 0% KERSIVO commission.';
 
+/** Homepage-only description. Other pages fall back to DEFAULT_DESCRIPTION via meta.ts. */
+export const HOMEPAGE_DESCRIPTION = `Your own branded barbershop website, domain and online booking for £${SAAS_MONTHLY_GBP}/month per location, not per barber. No setup fee, no VAT added. Stripe fees apply.`;
+
+export const HOMEPAGE_LAST_UPDATED_ISO = '2026-10-28';
+
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 
 /** KERSIVO does not currently add VAT to its subscription. */

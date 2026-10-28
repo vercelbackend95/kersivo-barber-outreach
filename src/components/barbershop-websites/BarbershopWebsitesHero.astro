@@ -5,6 +5,7 @@ import WebsiteFeaturesPanel from './WebsiteFeaturesPanel.astro';
 import HeroBenefits from './HeroBenefits.astro';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { BARBERSHOP_WEBSITES_PAGE_H1 } from '@/lib/seo/barbershopWebsitesPage';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/barbershop-websites-hero.css';
@@ -49,22 +50,23 @@ const lines = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt 
       <span>0% KERSIVO commission</span>
     </p>
     <p class="bsw-hero__price-note">{STRIPE_FEES_NOTE}</p>
+    <p class="bsw-hero__price-note">{getRateCard1LandingLayout().conditionsLine2}</p>
     <div class="bsw-hero__actions">
       <a
-        href="/demo"
+        href="/admin/launch"
         class="fresha-alt-hero__action fresha-alt-hero__action--primary bsw-hero__action"
+        data-track="saas_subscribe_click"
+        data-track-placement="barbershop_websites_hero"
+      >
+        Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+      </a>
+      <a
+        href="/demo"
+        class="fresha-alt-hero__action fresha-alt-hero__action--secondary bsw-hero__action"
         data-track="view_live_demo_click"
         data-track-placement="barbershop_websites_hero"
       >
-        Explore the working demo <span aria-hidden="true">→</span>
-      </a>
-      <a
-        href="/pricing#plan"
-        class="fresha-alt-hero__action fresha-alt-hero__action--secondary bsw-hero__action"
-        data-track="plan_my_setup_click"
-        data-track-placement="barbershop_websites_hero"
-      >
-        Explore Full KERSIVO
+        See a demo website
       </a>
     </div>
 

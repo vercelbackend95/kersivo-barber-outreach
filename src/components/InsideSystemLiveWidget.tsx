@@ -46,13 +46,17 @@ function readTimeLabel(node: HTMLElement): string {
 
 export function InsideSystemLiveWidget({
   barbers,
+  forcePassive = false,
 }: {
   barbers?: LandingBarber[];
+  /** Frozen preview at every width. The row CTA still opens the working demo. */
+  forcePassive?: boolean;
 } = {}) {
   const [lockOpen, setLockOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const isPassive = useMaxWidthPassive();
+  const viewportPassive = useMaxWidthPassive();
+  const isPassive = forcePassive || viewportPassive;
   const isPassiveRef = useRef(isPassive);
   isPassiveRef.current = isPassive;
 
@@ -125,7 +129,7 @@ export function InsideSystemLiveWidget({
         rowOffsetTop,
         rowRect.height,
       );
-      const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+      const behavior: ScrollBehavior = forcePassive || prefersReducedMotion() ? 'auto' : 'smooth';
       container.scrollTo({ top, behavior });
     };
 
@@ -146,7 +150,7 @@ export function InsideSystemLiveWidget({
       observer.disconnect();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
-  }, []);
+  }, [forcePassive]);
 
   useEffect(() => {
     if (!lockOpen) return;

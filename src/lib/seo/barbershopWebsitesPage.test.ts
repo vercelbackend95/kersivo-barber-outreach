@@ -33,7 +33,7 @@ describe('/barbershop-websites pillar hero', () => {
   it('uses the approved metadata and canonical URL', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_PATH).toBe('/barbershop-websites');
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-websites');
-    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Websites UK | Design & Booking | KERSIVO');
+    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website with Online Booking UK | KERSIVO');
     expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION).toContain('£39/month');
     expect(page).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
   });

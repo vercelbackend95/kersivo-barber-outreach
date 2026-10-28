@@ -391,7 +391,8 @@ describe('/barbershop-online-booking Section 01 hero', () => {
       ],
     });
     expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating|Offer/);
-    expect(page).toContain('jsonLd={buildBarbershopOnlineBookingJsonLd()}');
+    expect(page).toContain('jsonLd={[buildBarbershopOnlineBookingJsonLd(), buildOnlineBookingFaqJsonLd()]}');
+    expect(page).toContain('faqs={ONLINE_BOOKING_MOVED_FAQ_ITEMS}');
   });
 
   it('shares the marketing route family for page transitions', () => {

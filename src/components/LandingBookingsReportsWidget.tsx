@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react';
 
 import BookingsReportsAnalyticsStudio from '@/components/admin/BookingsReportsAnalyticsStudio';
 import { useCompactReportsLayout } from '@/components/admin/useCompactReportsLayout';
@@ -25,7 +25,12 @@ const DEMO_BARBERS: Barber[] = landingBookingsReportsBarbers;
 /** Landing preview defaults to 1 Week so the chart reads as a week trend, not a single day. */
 const LANDING_REPORTS_DEFAULT_PRESET: Exclude<ReportsRangeKey, 'custom'> = '7d';
 
-export default function LandingBookingsReportsWidget() {
+export default function LandingBookingsReportsWidget({
+  forcePassive = false,
+}: {
+  /** Frozen preview: no clicks and no chart interaction. */
+  forcePassive?: boolean;
+} = {}) {
   const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(
     () => LANDING_REPORTS_DEFAULT_PRESET,
   );
@@ -128,7 +133,8 @@ export default function LandingBookingsReportsWidget() {
   }, []);
 
   return (
-    <div className="lbrw landing-bookings-reports-widget">
+    <div className={`lbrw landing-bookings-reports-widget${forcePassive ? ' lbrw--passive' : ''}`}>
+      <div {...(forcePassive ? ({ inert: true } as HTMLAttributes<HTMLDivElement>) : {})}>
       <BookingsReportsAnalyticsStudio
         ref={studioRef}
         reports={reports}
@@ -148,6 +154,7 @@ export default function LandingBookingsReportsWidget() {
         useServiceValueLabels
         className="admin-analytics-studio--bookings-reports"
       />
+      </div>
     </div>
   );
 }

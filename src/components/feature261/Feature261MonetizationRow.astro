@@ -1,5 +1,5 @@
 ---
-import LandingBookingsReportsWidget from '@/components/LandingBookingsReportsWidget';
+import { DeferredWidget } from '@/components/landing/DeferredWidget';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
 
 interface Props {
@@ -16,7 +16,8 @@ const { kicker, heading, description, ctaLabel, ctaHref, ctaTrack, ctaSameTab } 
   class:list={['feature261__row', reverse && 'feature261__row--reverse']}
 >
   <div class="feature261__media feature261__media--widget">
-    <LandingBookingsReportsWidget client:visible={{ rootMargin: '200px' }} />
+    <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="reports" />
+    <p class="landing-demo-still__caption">Example shop – fictional data</p>
   </div>
 
   <div class="feature261__copy">

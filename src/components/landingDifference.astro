@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingDifference.css';
 
 interface Props {
@@ -7,41 +8,50 @@ interface Props {
 
 const { className = '' } = Astro.props as Props;
 
-/**
- * Homepage differentiation adopts the same editorial header + feature-card
- * composition as the /starter page's starter-shell feature section.
- * Icons reuse the already-shipped Starter icon assets.
- */
 const pillars = [
   {
     icon: 'browser',
     title: 'Your website. Your identity.',
-    body: 'Give your services, barbers, bookings and retail one branded home on your own domain — instead of relying on a marketplace profile.',
+    body: 'Give your services, barbers and bookings one branded home on your own domain, instead of a marketplace profile next to other shops.',
+    linkHref: '/insights/do-barbers-need-a-website-uk',
+    linkLabel: 'Do barbers need a website?',
+    desktopOnly: false,
   },
   {
     icon: 'calendar-time',
     title: 'Bookings that lead to your shop.',
-    body: 'Clients choose a service, barber and time through a direct booking experience, without competing shops appearing alongside yours.',
+    body: 'Clients choose a service, barber and time in the browser — no app download — and you can add walk-ins and phone bookings to the same diary.',
+    linkHref: '/barbershop-online-booking',
+    linkLabel: 'How online booking works for barbershops',
+    desktopOnly: false,
   },
   {
     icon: 'users-four',
     title: 'More control behind the chair.',
-    body: 'Keep barbers, services, working hours and daily activity in one Full KERSIVO dashboard — built around how your shop runs.',
+    body: 'Keep barbers, services, working hours and daily activity in one Full KERSIVO dashboard, built around how your shop runs.',
+    desktopOnly: true,
   },
   {
     icon: 'address-book',
     title: 'Build direct client relationships.',
-    body: 'Keep client contact details and booking context in your own shop system, so customers deal with your barbershop rather than a marketplace.',
+    body: 'Keep client contact details and booking history in your own shop system, so clients deal with your barbershop rather than a marketplace.',
+    desktopOnly: true,
   },
   {
     icon: 'wallet',
     title: 'Payments on your terms.',
-    body: 'With Full KERSIVO, choose Pay at shop, require a £5 deposit or take payment in full upfront. Standard Stripe fees apply online.',
+    body: `Choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront to help reduce no-shows. Standard Stripe fees apply online.`,
+    linkHref: '/insights/barbershop-no-show-cost-when-deposit-makes-sense',
+    linkLabel: `When a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit makes sense`,
+    desktopOnly: false,
   },
   {
     icon: 'percentage',
     title: 'No KERSIVO cut of your bookings.',
-    body: 'Full KERSIVO costs £39/month per physical location. KERSIVO charges 0% commission on bookings and retail; Stripe fees still apply online.',
+    body: `£${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail. Add your booking link to your Google Business Profile with guided setup.`,
+    linkHref: '/insights/google-business-profile-booking-link-barbershop',
+    linkLabel: 'Adding a Google booking link',
+    desktopOnly: false,
   },
 ] as const;
 ---
@@ -55,7 +65,7 @@ const pillars = [
     <header class="landing-difference__header">
       <p class="landing-difference__eyebrow">BUILT FOR INDEPENDENT BARBERSHOPS</p>
       <h2 id="landing-difference-title">
-        Your barbershop should be the destination. Not the marketplace.
+        Barbershop software that sends clients to your shop, not a marketplace
       </h2>
       <p class="landing-difference__lead">
         Clients should find your shop, book your barbers and remember your name.
@@ -65,16 +75,22 @@ const pillars = [
 
     <div class="landing-difference__grid">
       {pillars.map((pillar) => (
-        <article class="landing-difference__card">
+        <article class:list={['landing-difference__card', pillar.desktopOnly && 'landing-difference__card--desktop-only']}>
           <span
             class="landing-difference__card-icon"
             aria-hidden="true"
             style={`--icon: url('/images/svg/${pillar.icon}.svg')`}
           ></span>
           <h3>{pillar.title}</h3>
-          <p>{pillar.body}</p>
+          <p>
+            {pillar.body}{' '}
+            {'linkHref' in pillar ? <a href={pillar.linkHref}>{pillar.linkLabel}</a> : null}
+          </p>
         </article>
       ))}
     </div>
+    <p class="landing-difference__compare">
+      Comparing options? <a href="/compare">Compare UK barber booking software</a> or work out the numbers with the <a href="/barber-software-cost-calculator">barber software cost calculator</a>.
+    </p>
   </div>
 </section>

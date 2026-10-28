@@ -1,6 +1,6 @@
 ---
 import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/components/homepage-hero.css';
 ---
 
@@ -8,18 +8,19 @@ import '@/styles/components/homepage-hero.css';
   <div class="home-hero__content">
     <p class="home-hero__eyebrow">
       <span class="home-hero__eyebrow-dot" aria-hidden="true"></span>
-      Built for independent UK barbershops
+      Barbershop software for independent UK shops
     </p>
 
     <h1 id="home-hero-title" class="home-hero__title">
-      <span class="home-hero__title-line home-hero__title-line--primary">Barbershop software</span><br />
-      <span class="home-hero__title-line">built around your</span><br />
-      <span class="home-hero__title-line">brand.</span>
+      <span class="home-hero__title-line home-hero__title-line--primary">Your own barbershop</span><br />
+      <span class="home-hero__title-line">website and booking system.</span><br />
+      <span class="home-hero__title-line">Not a marketplace listing.</span>
     </h1>
 
     <p class="home-hero__lead">
-      A barber booking system with your own branded website, domain, client management and retail.
-      Built for independent UK barbershops that want more control over their customer experience.
+      Full KERSIVO gives your shop a branded website on its own domain, online booking,
+      client records and retail pickup — set up for you, for £{SAAS_MONTHLY_GBP} a month
+      per location, not per barber.
     </p>
 
     <div class="home-hero__actions">
@@ -32,22 +33,30 @@ import '@/styles/components/homepage-hero.css';
         Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
       </a>
       <a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">
-        See KERSIVO in action
+        See it working
       </a>
     </div>
 
-    <p class="home-hero__starter-path">
-      Looking for a free option?
-      <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="homepage_hero">Explore KERSIVO Starter</a>.
+    <div class="home-hero__meta" aria-label="KERSIVO commercial model">
+      <span>No setup fee</span>
+      <span aria-hidden="true">·</span>
+      <span>No VAT added</span>
+      <span aria-hidden="true">·</span>
+      <span>0% KERSIVO commission (Stripe fees apply)</span>
+      <span aria-hidden="true">·</span>
+      <span>Cancel anytime</span>
+    </div>
+
+    <p class="home-hero__honesty">
+      Your first payment is taken when you subscribe. Your site is typically ready 1–2 weeks
+      after we receive all required information, and nothing goes live until you approve it.
     </p>
 
-    <div class="home-hero__meta" aria-label="KERSIVO commercial model">
-      <span><strong>One physical location per plan</strong></span>
-      <span aria-hidden="true">·</span>
-      <span>Your own domain included</span>
-      <span aria-hidden="true">·</span>
-      <span>0% KERSIVO commission</span>
-    </div>
+    <p class="home-hero__starter-path">
+      Just need online bookings? KERSIVO Starter is £0/month for up to 4 barbers, with every
+      online booking secured by a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through
+      Stripe. <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="homepage_hero">Explore KERSIVO Starter</a>
+    </p>
   </div>
 
   <HeroDashboardShowcase />

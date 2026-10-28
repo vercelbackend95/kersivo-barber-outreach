@@ -41,6 +41,8 @@ export type RateCard1LandingIncludedItem = {
 
 export type RateCard1LandingLayout = {
   eyebrow: string;
+  /** Plain landing heading. When set, the price stays in the offer card. */
+  heading?: string;
   /** Heading before dynamic £price/month */
   headingBeforePrice: string;
   /** Heading after dynamic £price (e.g. "/month") */
@@ -94,9 +96,10 @@ const LANDING_COPY: RateCard1Copy = {
 
 const LANDING_LAYOUT: RateCard1LandingLayout = {
   eyebrow: 'BARBERSHOP SOFTWARE PRICING',
+  heading: 'One price per shop. Every barber included.',
   headingBeforePrice: 'Barbershop software pricing: £',
   headingAfterPrice: '/month per location',
-  lead: 'Full KERSIVO is one flat monthly price per location for your branded website, booking system, payment control, client management, admin, retail and support. Extra barbers are included subject to fair use.',
+  lead: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per physical location — your branded website, own domain, booking system, payment control, clients, retail and support. Every barber at that location is included, subject to fair use. No setup fee, and no VAT added: KERSIVO is not VAT registered.`,
   planLabel: 'FULL KERSIVO',
   planValueLine: 'Your branded website and wider business toolkit. No setup fee.',
   trustPoints: [
@@ -148,9 +151,9 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     'Website update support included',
     '0% KERSIVO commission on bookings and retail',
   ],
-  conditionsLine1: 'Standard Stripe payment-processing fees apply.',
-  conditionsLine2:
-    'First payment at checkout, then billed monthly. Cancel anytime. No setup fee.',
+  conditionsLine1:
+    'Standard Stripe payment-processing fees apply to online payments. Your first payment is taken when you subscribe; your site is typically ready 1–2 weeks after we receive all required information.',
+  conditionsLine2: `Cancel anytime — Full KERSIVO stays active until the end of the paid month. If we're unable to deliver your Full KERSIVO service due to a failure on our side, we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment.`,
   calculatorLink: {
     before: 'Comparing platforms? See the real cost of Booksy, Fresha and KERSIVO with our ',
     label: 'Barber Software Cost Calculator',

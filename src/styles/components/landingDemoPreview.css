@@ -309,3 +309,40 @@
     font-size: 0.62rem;
   }
 }
+
+.deferred-widget {
+  width: 100%;
+}
+
+/*
+ * Reserved height before the widget mounts, measured from the live widgets.
+ * The admin, booking and reports widgets have fixed heights per breakpoint (they do not scale with
+ * width), so this is a min-height, not an aspect-ratio. No overflow clipping: if a widget is taller
+ * than the reservation it grows instead of being cut off. Widgets mount ~200px before they scroll
+ * into view, so any growth happens off-screen.
+ */
+.deferred-widget--admin { min-height: 360px; }
+.deferred-widget--booking { min-height: 416px; }
+.deferred-widget--retail { min-height: 250px; }
+.deferred-widget--reports { min-height: 615px; }
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .deferred-widget--admin { min-height: 396px; }
+  .deferred-widget--booking { min-height: 576px; }
+  .deferred-widget--retail { min-height: 410px; }
+  .deferred-widget--reports { min-height: 646px; }
+}
+
+@media (min-width: 900px) {
+  .deferred-widget--admin { min-height: 396px; }
+  .deferred-widget--booking { min-height: 576px; }
+  .deferred-widget--retail { min-height: 315px; }
+  .deferred-widget--reports { min-height: 601px; }
+}
+
+.landing-demo-still__caption {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}

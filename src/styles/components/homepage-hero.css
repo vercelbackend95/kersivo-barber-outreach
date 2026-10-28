@@ -154,6 +154,14 @@
   outline-offset: 2px;
 }
 
+.home-hero__honesty {
+  margin: 0.75rem 0 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  line-height: 1.5;
+}
+
 .home-hero__starter-path {
   margin: 0.75rem 0 0;
   color: var(--muted);

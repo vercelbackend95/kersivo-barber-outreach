@@ -25,8 +25,16 @@ export function buildKersivoOrganizationNode(siteUrl = getPublicSiteUrl()): Reco
     '@type': 'Organization',
     '@id': getKersivoOrganizationId(siteUrl),
     name: KERSIVO_BRAND_SCHEMA_NAME,
+    alternateName: 'Kersivo',
     url: `${siteUrl}/`,
     description: KERSIVO_ORGANIZATION_DESCRIPTION,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: KERSIVO_CONTACT_EMAIL,
+      areaServed: 'GB',
+      availableLanguage: 'en-GB',
+    },
     logo: {
       '@type': 'ImageObject',
       url: `${siteUrl}/images/logo_nobg.png`,

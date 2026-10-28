@@ -82,11 +82,12 @@ describe('landing booking preview zero-DB wiring', () => {
 
   it('landingDemoPreview defaults to BLACKLINE data and /demo/book CTA', () => {
     const previewSrc = readSrc('src/components/landingDemoPreview.astro');
-    expect(previewSrc).toContain('BLACKLINE_LANDING_BOOKING_DATA');
     expect(previewSrc).toContain('ctaHref: DEMO_BOOK_HREF');
     expect(DEMO_BOOK_HREF).toBe('/demo/book');
-    expect(previewSrc).toContain('categoryOrder={bookingData.categoryOrder}');
-    expect(previewSrc).toContain('presentation={bookingData.presentation}');
+    expect(previewSrc).toContain('kind="booking"');
+    const deferred = readSrc('src/components/landing/DeferredWidget.tsx');
+    expect(deferred).toContain('BLACKLINE_LANDING_BOOKING_DATA');
+    expect(deferred).toContain('forcePassive');
     expect(previewSrc).not.toContain('getLandingDemoBookingFallback');
   });
 });

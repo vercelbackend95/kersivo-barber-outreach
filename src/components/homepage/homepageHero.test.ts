@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const read = (...parts: string[]) => readFileSync(join(process.cwd(), ...parts), 'utf8');
 
@@ -26,7 +26,8 @@ describe('homepage SEO', () => {
 
   it('keeps the canonical root, structured data and layout', () => {
     expect(homepage).toContain('title={DEFAULT_TITLE}');
-    expect(homepage).toContain('description={DEFAULT_DESCRIPTION}');
+    expect(homepage).toContain('description={HOMEPAGE_DESCRIPTION}');
+    expect(HOMEPAGE_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('canonicalPath="/"');
     expect(homepage).toContain('jsonLd={[buildBarberDemoJsonLd(), buildBarbershopBookingFaqJsonLd()]}');
     expect(homepage).not.toMatch(/noindex/);
@@ -36,7 +37,8 @@ describe('homepage SEO', () => {
 describe('homepage hero markup', () => {
   it('renders the product-first hero in place of the phone hero', () => {
     expect(homepage).toContain("import HomepageHero from '@/components/homepage/HomepageHero.astro';");
-    expect(homepage).toMatch(/<SystemChooser \/>\s*<HomepageHero \/>\s*<LandingValueCards \/>/);
+    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>/);
+    expect(homepage).not.toMatch(/SystemChooser|LandingValueCards/);
     expect(homepage).not.toMatch(/BarbershopBookingHero|hero227|phone-5|iphonemockup|fetchpriority/);
     expect(existsSync(join(process.cwd(), 'src/components/barbershopBookingHero.astro'))).toBe(false);
     expect(existsSync(join(process.cwd(), 'src/components/barbershopBookingHero.tsx'))).toBe(false);
@@ -50,14 +52,14 @@ describe('homepage hero markup', () => {
     expect(hero.match(/<h1\b/g)).toHaveLength(1);
     const h1 = between(hero, '<h1', '</h1>');
     expect(h1).toContain('id="home-hero-title"');
-    expect(text(h1)).toBe('Barbershop software built around your brand.');
+    expect(text(h1)).toBe('Your own barbershop website and booking system. Not a marketplace listing.');
     expect(h1.match(/class="home-hero__title-line[^"]*"/g)).toEqual([
       'class="home-hero__title-line home-hero__title-line--primary"',
       'class="home-hero__title-line"',
       'class="home-hero__title-line"',
     ]);
     expect(h1).toMatch(
-      />Barbershop software<\/span><br \/>\s+<span[^>]*>built around your<\/span><br \/>\s+<span[^>]*>brand\.<\/span>/,
+      />Your own barbershop<\/span><br \/>\s+<span[^>]*>website and booking system\.<\/span><br \/>\s+<span[^>]*>Not a marketplace listing\.<\/span>/,
     );
     expect(hero).not.toMatch(/sr-only|visually-hidden|display: none|aria-hidden="true">[A-Za-z]/);
   });
@@ -74,19 +76,23 @@ describe('homepage hero markup', () => {
   });
 
   it('shows the approved eyebrow, lead, CTAs and meta row', () => {
-    expect(text(between(hero, '<p class="home-hero__eyebrow">', '</p>'))).toBe('Built for independent UK barbershops');
-    expect(text(between(hero, '<p class="home-hero__lead">', '</p>'))).toBe(
-      'A barber booking system with your own branded website, domain, client management and retail. Built for independent UK barbershops that want more control over their customer experience.',
+    expect(text(between(hero, '<p class="home-hero__eyebrow">', '</p>'))).toBe(
+      'Barbershop software for independent UK shops',
+    );
+    expect(text(between(hero, '<p class="home-hero__lead">', '</p>'))).toContain(
+      `a month per location, not per barber`,
     );
     expect(hero).toMatch(
       /<a\s+href="\/admin\/launch"\s+class="home-hero__action home-hero__action--primary"\s+data-track="saas_subscribe_click"\s+data-track-placement="homepage_hero"\s*>\s*Start Full KERSIVO — £\{SAAS_MONTHLY_GBP\}\/month\s*<\/a>/,
     );
     expect(hero).toMatch(
-      /<a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">\s*See KERSIVO in action\s*<\/a>/,
+      /<a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">\s*See it working\s*<\/a>/,
     );
     const meta = between(hero, '<div class="home-hero__meta"', '</div>');
     expect(meta).toContain('aria-label="KERSIVO commercial model"');
-    expect(text(meta)).toBe('One physical location per plan · Your own domain included · 0% KERSIVO commission');
+    expect(text(meta)).toBe(
+      'No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) · Cancel anytime',
+    );
     expect(hero).toContain('href="/starter"');
     expect(hero).toContain('starter_plan_explore_click');
     expect(read('src/components/landingDemoPreview.astro')).toContain("sectionId = 'live-demo'");
@@ -108,7 +114,9 @@ describe('homepage hero styles', () => {
     const freshaHeroRules = freshaCss.slice(freshaCss.indexOf('.fresha-alt-hero {'), freshaCss.indexOf(MOTION));
     const homeRules = heroCss.slice(heroCss.indexOf('.home-hero {'), heroCss.indexOf(MOTION));
     // Homepage-only conversion link can add isolated CSS without changing shared Fresha hero rules.
-    const sharedHomeRules = homeRules.replace(/\.home-hero__starter-path(?: [^{]+)? \{[^}]*\}\s*/g, '');
+    const sharedHomeRules = homeRules
+      .replace(/\.home-hero__honesty \{[^}]*\}\s*/g, '')
+      .replace(/\.home-hero__starter-path(?: [^{]+)? \{[^}]*\}\s*/g, '');
     expect(sharedHomeRules.trim()).toBe(
       freshaHeroRules.replaceAll('fresha-alt-hero', 'home-hero').replaceAll('freshaAltHeroRise', 'homeHeroRise').trim(),
     );
