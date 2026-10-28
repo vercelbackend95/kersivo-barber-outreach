@@ -1,13 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { getLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 
 export type DeferredWidgetKind = 'admin' | 'booking' | 'retail' | 'reports';
 
 /**
  * Server HTML and the first client render are an empty sized box.
- * Widget code and styles load after this island hydrates, so demo text stays out of the document.
+ * Widget code, demo data and styles load after this island hydrates, so demo text stays out of the document.
+ *
+ * Everything here runs in the browser. Only import client-safe modules (no Prisma, no `@/lib/db/*`,
+ * no module-level `process.env`). `src/lib/seo/deferredWidgetClientSafe.test.ts` enforces this.
  */
 export function DeferredWidget({ kind }: { kind: DeferredWidgetKind }) {
   const [node, setNode] = useState<ReactNode>(null);
@@ -35,8 +35,10 @@ async function loadWidget(kind: DeferredWidgetKind): Promise<ReactNode> {
     return <InsideSystemLiveWidget forcePassive />;
   }
   if (kind === 'booking') {
-    const { LandingBookingWidget } = await import('@/components/LandingBookingWidget');
-    const booking = BLACKLINE_LANDING_BOOKING_DATA;
+    const [{ LandingBookingWidget }, { BLACKLINE_LANDING_BOOKING_DATA: booking }] = await Promise.all([
+      import('@/components/LandingBookingWidget'),
+      import('@/lib/landing/blacklineLandingBookingData'),
+    ]);
     return (
       <LandingBookingWidget
         services={[...booking.services]}
@@ -52,8 +54,10 @@ async function loadWidget(kind: DeferredWidgetKind): Promise<ReactNode> {
     const { default: LandingBookingsReportsWidget } = await import('@/components/LandingBookingsReportsWidget');
     return <LandingBookingsReportsWidget forcePassive />;
   }
-  const [{ ProductRail }] = await Promise.all([
+  const [{ ProductRail }, { getLandingDemoCarouselProducts }, { DEMO_SHOP_NAME }] = await Promise.all([
     import('@/components/shop/ProductRail'),
+    import('@/lib/shop/landingDemoCarouselProducts'),
+    import('@/lib/demo/site'),
     import('@/styles/components/shopProductCards6.css'),
     import('@/styles/components/storefront.css'),
     import('@/styles/components/productRail.css'),

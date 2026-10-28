@@ -312,27 +312,32 @@
 
 .deferred-widget {
   width: 100%;
-  overflow: hidden;
 }
 
-/* Reserved size from the live widgets at 375, 768 and 1440. Kept after mount so the swap does not move the page. */
-.deferred-widget--admin { aspect-ratio: 343 / 360; }
-.deferred-widget--booking { aspect-ratio: 343 / 416; }
-.deferred-widget--retail { aspect-ratio: 343 / 253; }
-.deferred-widget--reports { aspect-ratio: 343 / 573; }
+/*
+ * Reserved height before the widget mounts, measured from the live widgets.
+ * The admin, booking and reports widgets have fixed heights per breakpoint (they do not scale with
+ * width), so this is a min-height, not an aspect-ratio. No overflow clipping: if a widget is taller
+ * than the reservation it grows instead of being cut off. Widgets mount ~200px before they scroll
+ * into view, so any growth happens off-screen.
+ */
+.deferred-widget--admin { min-height: 360px; }
+.deferred-widget--booking { min-height: 416px; }
+.deferred-widget--retail { min-height: 250px; }
+.deferred-widget--reports { min-height: 615px; }
 
 @media (min-width: 768px) and (max-width: 899px) {
-  .deferred-widget--admin { aspect-ratio: 736 / 396; }
-  .deferred-widget--booking { aspect-ratio: 736 / 576; }
-  .deferred-widget--retail { aspect-ratio: 736 / 422; }
-  .deferred-widget--reports { aspect-ratio: 736 / 641; }
+  .deferred-widget--admin { min-height: 396px; }
+  .deferred-widget--booking { min-height: 576px; }
+  .deferred-widget--retail { min-height: 410px; }
+  .deferred-widget--reports { min-height: 646px; }
 }
 
 @media (min-width: 900px) {
-  .deferred-widget--admin { aspect-ratio: 516 / 396; }
-  .deferred-widget--booking { aspect-ratio: 605 / 576; }
-  .deferred-widget--retail { aspect-ratio: 560 / 351; }
-  .deferred-widget--reports { aspect-ratio: 605 / 601; }
+  .deferred-widget--admin { min-height: 396px; }
+  .deferred-widget--booking { min-height: 576px; }
+  .deferred-widget--retail { min-height: 315px; }
+  .deferred-widget--reports { min-height: 601px; }
 }
 
 .landing-demo-still__caption {

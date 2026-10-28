@@ -1,8 +1,10 @@
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
+// Client-safe import: this module is loaded in the browser by DeferredWidget, so it must not
+// pull in blacklineShop.ts (which imports the Prisma client).
 import {
   selectBlacklineLandingRailProducts,
   toBlacklineCarouselProducts,
-} from '@/lib/demo/blacklineShop';
+} from '@/lib/demo/blacklineLandingRail';
 import { DEMO_PRODUCTS } from '@/lib/demo/products';
 
 function resolveBlacklineLandingCarouselProducts(): CarouselProduct[] {

@@ -4,7 +4,6 @@ import {
   isPrismaQuotaExceededError,
   logPrismaQuotaFallback,
 } from '@/lib/db/resilience';
-import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import {
   BLACKLINE_SHOP_ID,
   DEMO_PRODUCTS,
@@ -13,40 +12,8 @@ import {
   type DemoProduct,
 } from './products';
 
-/** Map BLACKLINE retail products onto the shared ProductRail product shape. */
-export function toBlacklineCarouselProducts(products: readonly DemoProduct[]): CarouselProduct[] {
-  return products.map((product) => ({
-    id: product.id,
-    name: product.name,
-    category: product.category,
-    pricePence: product.pricePence,
-    imageUrl: product.image.src?.trim() ? product.image.src : null,
-    available: true,
-    requiresOptions: false,
-  }));
-}
-
-const DEFAULT_LANDING_RAIL_COUNT = 10;
-
-/** Featured first, then remaining catalogue order; unique IDs; capped for the landing rail. */
-export function selectBlacklineLandingRailProducts(
-  products: readonly DemoProduct[],
-  limit = DEFAULT_LANDING_RAIL_COUNT,
-): DemoProduct[] {
-  const featured = products.filter((product) => product.featured);
-  const rest = products.filter((product) => !product.featured);
-  const seen = new Set<string>();
-  const ordered: DemoProduct[] = [];
-
-  for (const product of [...featured, ...rest]) {
-    if (seen.has(product.id)) continue;
-    seen.add(product.id);
-    ordered.push(product);
-    if (ordered.length >= limit) break;
-  }
-
-  return ordered;
-}
+// Pure landing-rail helpers live in a client-safe module; re-exported here for existing callers.
+export { selectBlacklineLandingRailProducts, toBlacklineCarouselProducts } from './blacklineLandingRail';
 
 type ProductClient = {
   shopSettings: PrismaClient['shopSettings'];
