@@ -25,4 +25,6 @@ SEO/CRO roadmap with the remaining batches: **`docs/seo/ROADMAP.md`**. Changelog
 - The dev server hides some production-only problems (CSS chunks, client bundles). For anything touching islands or dynamic imports, verify with `npm run build` or the Vercel preview.
 
 ## Workflow
-Branch from `main`, open a PR, wait for both Vercel previews (`kersivo-production`, `kersivo-barber-outreach`) to pass. The founder merges.
+Branch from `main`, open a PR, wait for the GitHub Actions `build` check and the Vercel preview (`kersivo-barber-outreach`, the only project deploying this repo and serving kersivo.co.uk) to pass. The founder merges.
+- Do the loop yourself (commit, push, PR, wait for checks, rerun known-flaky CI jobs); don't hand these steps back to the founder.
+- Never run `vercel` / `vercel link` / `vercel build` in a folder that is not linked to `kersivo-barber-outreach`: the CLI creates a new Vercel project named after the folder and connects it to this repo (that is how the deleted `kersivo-production` project appeared).
