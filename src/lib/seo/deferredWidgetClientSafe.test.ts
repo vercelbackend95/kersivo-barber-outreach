@@ -74,4 +74,9 @@ describe('DeferredWidget client bundle', () => {
   it('never imports Prisma, the database layer, dotenv or Node built-ins', () => {
     expect(collectViolations()).toEqual([]);
   });
+
+  it('never loads stylesheets with a dynamic import (404s as a CSS-only chunk in production)', () => {
+    const source = readFileSync(entry, 'utf8');
+    expect(source).not.toMatch(/import\(\s*['"][^'"]+\.css['"]\s*\)/);
+  });
 });
