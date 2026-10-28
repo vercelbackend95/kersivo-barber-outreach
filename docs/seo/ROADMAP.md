@@ -13,6 +13,7 @@ Commercial source of truth: Commercial Offer v2.0 (founder decisions FD01–FD12
 | 3 — Full-first homepage + `/pricing`, deferred demo widgets, FAQ/JSON-LD | #129, #130 | `docs/seo/batch-3-changelog.md` |
 | 4 — comparison engine: shared CTAs, `/compare` answer + FAQ, tier-1 titles/PAA, calculator worked examples | #132 | `docs/seo/batch-4-changelog.md` |
 | 5 — cluster & content linking: `/starter` free qualifier + Full fit box, online-booking breadcrumb/payment flows/intent chooser, design page trim, Insights link budget + category links | #135 | `docs/seo/batch-5-changelog.md` |
+| 6 — technical hygiene: vercel.app → apex, trailing-slash 308, asset/font cache headers, client Sentry off, no ClientRouter on marketing, AI crawler groups, a11y (100/100/100/97) | #136 | `docs/seo/batch-6-changelog.md` |
 
 Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 100; `/pricing` mobile 98, desktop 100.
 
@@ -20,7 +21,6 @@ Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 1
 
 | Batch | Name | Size | Priority |
 |---|---|---|---|
-| 6 | Technical hygiene | Medium | Medium |
 | 7 | Optional refinements | Small | Low |
 
 ### Batch 4 — Comparison engine (P1-11, P2-04, P2-06, P2-07, P2-09, P2-15) — DONE, see `docs/seo/batch-4-changelog.md`
@@ -45,7 +45,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 - Insights: 1–2 contextual product links + one end box per buyer-adjacent article (max 3 commercial links per article; none forced into off-buyer articles); category intros link the relevant product page.
 - Verify Article (author = Organization KERSIVO, no Person) and BreadcrumbList JSON-LD on one article and one inner page.
 
-### Batch 6 — Technical hygiene (P3)
+### Batch 6 — Technical hygiene (P3) — DONE except static HTML, GSC 404s and server-side signup_completed (founder input), see `docs/seo/batch-6-changelog.md`
 - Redirect `kersivo-barber-outreach.vercel.app` → apex (first confirm no Stripe webhook, cron or OAuth callback uses that host; `vercel.json` has 9 crons).
 - Trailing-slash 308s; delete the dead `www` rule in `vercel.json` if Cloudflare handles it.
 - Long-lived cache headers for hashed `/_astro/*` and fonts.

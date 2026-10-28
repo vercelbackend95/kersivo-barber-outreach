@@ -11,13 +11,14 @@ const navbar = readFileSync(new URL('../../components/navbar17.astro', import.me
 const motion = readFileSync(new URL('../../styles/motion.css', import.meta.url), 'utf8');
 
 describe('KERSIVO route transition families', () => {
-  it('opts each layout family into ClientRouter without experimental flags', () => {
+  it('opts the app layout families into ClientRouter; marketing pages use full page loads (Batch 6)', () => {
     expect(astroConfig).not.toMatch(/experimental\s*:/);
     expect(astroConfig).not.toContain('viewTransitions');
-    expect(landingLayout).toContain('ClientRouter');
+    // Marketing: no ClientRouter, so GA4 counts one page_view per real page load.
+    expect(landingLayout).not.toContain('ClientRouter');
     expect(mainLayout).toContain('ClientRouter');
     expect(minimalLayout).toContain('ClientRouter');
-    expect(landingLayout).toContain('fallback="swap"');
+    expect(mainLayout).toContain('fallback="swap"');
     expect(mainLayout).toContain("data-app=\"marketing\"");
     expect(minimalLayout).toContain('data-app={app}');
     expect(demoLayout).toContain("data-theme=\"blackline\"");

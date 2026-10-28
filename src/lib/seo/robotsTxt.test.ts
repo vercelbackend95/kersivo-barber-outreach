@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { GET } from '../../pages/robots.txt';
+import { AI_SEARCH_CRAWLERS, GET } from '../../pages/robots.txt';
 
 async function readRobots(): Promise<string> {
   const response = await GET({} as Parameters<typeof GET>[0]);
@@ -74,5 +74,29 @@ describe('robots.txt', () => {
     expect(src).toContain("Disallow: /shop/cancelled'");
     expect(src).toContain("Disallow: /shop/*/success'");
     expect(src).toContain("Disallow: /shop/*/cancelled'");
+  });
+});
+
+describe('robots.txt AI search crawler groups', () => {
+  it('gives every AI search/answer crawler an explicit allow group identical to *', async () => {
+    const body = await readRobots();
+    const all = groupFor(body, '*');
+    expect([...AI_SEARCH_CRAWLERS]).toEqual([
+      'OAI-SearchBot',
+      'ChatGPT-User',
+      'Claude-SearchBot',
+      'Claude-User',
+      'PerplexityBot',
+      'Perplexity-User',
+    ]);
+    for (const agent of AI_SEARCH_CRAWLERS) {
+      const group = groupFor(body, agent);
+      expect(group.split('\n').slice(1), agent).toEqual(all.split('\n').slice(1));
+      expect(group, agent).not.toMatch(/^Disallow: \/$/m);
+    }
+  });
+
+  it('never blocks /seo-growth (Google OAuth app homepage must stay crawlable)', async () => {
+    expect(await readRobots()).not.toContain('seo-growth');
   });
 });

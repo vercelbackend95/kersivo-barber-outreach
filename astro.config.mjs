@@ -15,6 +15,8 @@ export default defineConfig({
   integrations: [
     react(),
     sentry({
+      // Server only. No public DSN is configured, so the browser SDK was shipped to every page without ever sending events.
+      enabled: { client: false, server: true },
       sourceMapsUploadOptions: {
         enabled: false,
       },
