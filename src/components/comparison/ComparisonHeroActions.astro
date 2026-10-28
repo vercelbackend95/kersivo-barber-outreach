@@ -1,0 +1,37 @@
+---
+/** Hero CTAs shared by every comparison page: Full pricing first, the demo second. */
+import {
+  COMPARISON_HERO_PRIMARY_HREF,
+  COMPARISON_HERO_PRIMARY_LABEL,
+  COMPARISON_HERO_SECONDARY_HREF,
+  COMPARISON_HERO_SECONDARY_LABEL,
+} from '@/lib/seo/comparisonCtas';
+import '@/styles/components/comparison-hero-actions.css';
+
+interface Props {
+  /** Analytics placement prefix, e.g. "booksy" → "booksy_hero". */
+  placement: string;
+}
+
+const { placement } = Astro.props as Props;
+const trackPlacement = `${placement}_hero`;
+---
+
+<div class="comparison-hero-actions">
+  <a
+    href={COMPARISON_HERO_PRIMARY_HREF}
+    class="comparison-hero-actions__link comparison-hero-actions__link--primary"
+    data-track="view_pricing_click"
+    data-track-placement={trackPlacement}
+  >
+    {COMPARISON_HERO_PRIMARY_LABEL}
+  </a>
+  <a
+    href={COMPARISON_HERO_SECONDARY_HREF}
+    class="comparison-hero-actions__link comparison-hero-actions__link--secondary"
+    data-track="view_live_demo_click"
+    data-track-placement={trackPlacement}
+  >
+    {COMPARISON_HERO_SECONDARY_LABEL}
+  </a>
+</div>

@@ -21,7 +21,7 @@ const repoSrc = join(dirname(fileURLToPath(import.meta.url)), '../..');
 describe('Alternatives Hub discovery and search intent', () => {
   it('uses UK barber-booking comparison wording without third-party awards or rankings', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
-    expect(ALTERNATIVES_HUB_TITLE).toMatch(/compare.*barber booking.*UK/i);
+    expect(ALTERNATIVES_HUB_TITLE).toMatch(/barber booking software UK.*compared/i);
     expect(ALTERNATIVES_HUB_DESCRIPTION).toMatch(/UK barbershops/i);
     expect(ALTERNATIVES_HUB_DESCRIPTION).toMatch(/Booksy.*Fresha.*Nearcut/);
     expect(ALTERNATIVES_HUB_TITLE).not.toMatch(/#1|award|rated/i);

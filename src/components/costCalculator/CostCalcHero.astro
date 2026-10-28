@@ -1,4 +1,5 @@
 ---
+import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
 import CostCalcPanel from '@/components/costCalculator/CostCalcPanel.astro';
 import {
   BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
@@ -22,6 +23,7 @@ import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePa
 
       <p class="cost-calc-hero__lead">{COST_CALC_HERO.lead}</p>
       <p class="cost-calc-hero__supporting">{COST_CALC_HERO.supporting}</p>
+      <ComparisonHeroActions placement="cost_calculator" />
 
       <ul class="cost-calc-hero__trust" aria-label="About this cost comparison">
         {

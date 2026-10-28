@@ -7,7 +7,7 @@ import FreshaHero from '@/components/freshaAlternative/FreshaHero.astro';
 import FreshaCompare from '@/components/freshaAlternative/FreshaCompare.astro';
 import FreshaProof from '@/components/freshaAlternative/FreshaProof.astro';
 import FreshaPricing from '@/components/freshaAlternative/FreshaPricing.astro';
-import FreshaFinalCta from '@/components/freshaAlternative/FreshaFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import FreshaQuickAnswer from '@/components/freshaAlternative/FreshaQuickAnswer.astro';
 import FreshaWhy from '@/components/freshaAlternative/FreshaWhy.astro';
 import FreshaCosts from '@/components/freshaAlternative/FreshaCosts.astro';
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={FRESHA_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <FreshaFinalCta />
+    <ComparisonFinalCta placement="fresha" competitor="Fresha" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

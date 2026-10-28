@@ -9,7 +9,7 @@ import {
   BARBER_COST_CALCULATOR_TITLE,
   COST_AT_A_GLANCE_MODELS,
   COST_CALC_HERO,
-  COST_SCENARIOS,
+  SCENARIOS_NOTE,
   METHODOLOGY_INTRO,
   PAYMENTS_INTRO,
   PAYMENTS_POINTS,
@@ -351,16 +351,11 @@ describe('barber software cost calculator content safety', () => {
     expect(contentSource).toContain('does not provide marketplace client acquisition');
   });
 
-  it('keeps scenarios as structure only, with no totals', () => {
-    expect(COST_SCENARIOS.map((scenario) => scenario.label)).toEqual([
-      'Solo barber',
-      '3-barber shop',
-      '5-barber shop',
-      '8-barber shop',
-    ]);
-    for (const scenario of COST_SCENARIOS) {
-      expect(scenario.body).not.toMatch(/£|\d+(\.\d+)?%/);
-    }
+  it('renders the worked examples from the engine, with no placeholder copy', () => {
+    expect(SCENARIOS_NOTE).not.toMatch(/will be generated/i);
+    const scenarios = readFileSync(join(process.cwd(), 'src/components/costCalculator/CostScenarios.astro'), 'utf8');
+    expect(scenarios).toContain('COST_SCENARIO_TABLES');
+    expect(scenarios).not.toMatch(/£\d/);
   });
 
   it('lists official sources with checked dates, including the deposit payment sources', () => {

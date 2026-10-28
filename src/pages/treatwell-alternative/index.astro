@@ -8,7 +8,7 @@ import TreatwellHero from '@/components/treatwellAlternative/TreatwellHero.astro
 import TreatwellCompare from '@/components/treatwellAlternative/TreatwellCompare.astro';
 import TreatwellProof from '@/components/treatwellAlternative/TreatwellProof.astro';
 import TreatwellPricing from '@/components/treatwellAlternative/TreatwellPricing.astro';
-import TreatwellFinalCta from '@/components/treatwellAlternative/TreatwellFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import TreatwellQuickAnswer from '@/components/treatwellAlternative/TreatwellQuickAnswer.astro';
 import TreatwellWhy from '@/components/treatwellAlternative/TreatwellWhy.astro';
 import TreatwellCosts from '@/components/treatwellAlternative/TreatwellCosts.astro';
@@ -64,7 +64,7 @@ const currentYear = new Date().getFullYear();
       faqs={TREATWELL_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <TreatwellFinalCta />
+    <ComparisonFinalCta placement="treatwell" competitor="Treatwell" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

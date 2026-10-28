@@ -45,7 +45,7 @@ describe('Treatwell Alternative UK marketing page',()=>{
   expect(TREATWELL_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(8);
  });
  it('reuses the existing Nearcut page flow without stray Nearcut copy',()=>{
-  const order=['<TreatwellHero','<TreatwellQuickAnswer','<TreatwellWhy','<TreatwellCosts','<TreatwellCompare','<TreatwellProof','<TreatwellFit','<TreatwellSwitching','<TreatwellPricing','<Faq4','<TreatwellFinalCta','<TreatwellSources'].map(x=>page.indexOf(x));
+  const order=['<TreatwellHero','<TreatwellQuickAnswer','<TreatwellWhy','<TreatwellCosts','<TreatwellCompare','<TreatwellProof','<TreatwellFit','<TreatwellSwitching','<TreatwellPricing','<Faq4','<ComparisonFinalCta','<TreatwellSources'].map(x=>page.indexOf(x));
   expect(order.every(x=>x>=0)).toBe(true);
   expect(order).toEqual([...order].sort((a,b)=>a-b));
   const compare=read('../../components/treatwellAlternative/TreatwellCompare.astro');
@@ -67,7 +67,7 @@ describe('Treatwell Alternative UK marketing page',()=>{
  it('is linked from marketing navigation, routing and sitemap',()=>{
   expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/treatwell-alternative')).toMatchObject({group:'compare',section:'alternatives'});
   expect(getRouteFamily('/treatwell-alternative')).toBe('marketing');
-  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-10-08')).toBe(true);
+  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-10-28')).toBe(true);
   for(const other of ['booksyAlternative/BooksyFit.astro','freshaAlternative/FreshaFit.astro','nearcutAlternative/NearcutFit.astro']) {
     expect(read('../../components/'+other)).toContain('/treatwell-alternative');
   }

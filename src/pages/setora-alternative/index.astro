@@ -7,7 +7,7 @@ import SetoraHero from '@/components/setoraAlternative/SetoraHero.astro';
 import SetoraCompare from '@/components/setoraAlternative/SetoraCompare.astro';
 import SetoraProof from '@/components/setoraAlternative/SetoraProof.astro';
 import SetoraPricing from '@/components/setoraAlternative/SetoraPricing.astro';
-import SetoraFinalCta from '@/components/setoraAlternative/SetoraFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import SetoraQuickAnswer from '@/components/setoraAlternative/SetoraQuickAnswer.astro';
 import SetoraWhy from '@/components/setoraAlternative/SetoraWhy.astro';
 import SetoraCosts from '@/components/setoraAlternative/SetoraCosts.astro';
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={SETORA_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <SetoraFinalCta />
+    <ComparisonFinalCta placement="setora" competitor="Setora" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

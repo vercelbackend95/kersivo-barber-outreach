@@ -62,7 +62,7 @@ const heroSource = readRepoFile(componentDir, 'FreshaHero.astro');
 const compareSource = readRepoFile(componentDir, 'FreshaCompare.astro');
 const pricingSource = readRepoFile(componentDir, 'FreshaPricing.astro');
 const proofSource = readRepoFile(componentDir, 'FreshaProof.astro');
-const finalCtaSource = readRepoFile(componentDir, 'FreshaFinalCta.astro');
+const finalCtaSource = readRepoFile('../../components/comparison/ComparisonFinalCta.astro');
 const quickAnswerSource = readRepoFile(componentDir, 'FreshaQuickAnswer.astro');
 const editorialIntroSource = readRepoFile('../../components/editorial/EditorialIntro.astro');
 const editorialIntroCss = readRepoFile('../../styles/components/editorial-intro.css');
@@ -139,7 +139,7 @@ describe('fresha-alternative page SEO foundation', () => {
     );
     expect(pageSource).not.toContain('noindex');
     expect(FRESHA_ALTERNATIVE_PAGE_PATH).toBe('/fresha-alternative');
-    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative for UK Barbershops | KERSIVO');
+    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative UK: Own Website & Flat Price | KERSIVO');
     expect(resolveCanonicalUrl(FRESHA_ALTERNATIVE_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/fresha-alternative',
     );
@@ -181,7 +181,7 @@ describe('fresha-alternative page SEO foundation', () => {
       '<FreshaSwitching',
       '<FreshaPricing',
       '<Faq4',
-      '<FreshaFinalCta',
+      '<ComparisonFinalCta',
       '<Contact16',
       '<FreshaSources',
       '<Footer50',
@@ -334,7 +334,7 @@ describe('fresha-alternative page SEO foundation', () => {
   it('renders the visible FAQ from the same data used for FAQPage JSON-LD', () => {
     expect(pageSource).toContain('faqs={FRESHA_ALTERNATIVE_FAQ_ITEMS}');
     expect(FRESHA_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(9);
-    expect(FRESHA_ALTERNATIVE_FAQ_ITEMS.length).toBeLessThanOrEqual(10);
+    expect(FRESHA_ALTERNATIVE_FAQ_ITEMS.length).toBeLessThanOrEqual(11);
 
     const faqLd = buildFreshaAlternativeFaqJsonLd();
     expect(faqLd['@type']).toBe('FAQPage');
@@ -397,9 +397,9 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-10-06');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-06');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('6 October 2026');
+    expect(matches[0].lastmod).toBe('2026-10-28');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-28');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('28 October 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');
     expect(sourcesSource).toContain('datetime={FRESHA_ALTERNATIVE_LAST_UPDATED_ISO}');
   });

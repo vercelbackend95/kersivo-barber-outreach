@@ -7,7 +7,7 @@ import PhorestHero from '@/components/phorestAlternative/PhorestHero.astro';
 import PhorestCompare from '@/components/phorestAlternative/PhorestCompare.astro';
 import PhorestProof from '@/components/phorestAlternative/PhorestProof.astro';
 import PhorestPricing from '@/components/phorestAlternative/PhorestPricing.astro';
-import PhorestFinalCta from '@/components/phorestAlternative/PhorestFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import PhorestQuickAnswer from '@/components/phorestAlternative/PhorestQuickAnswer.astro';
 import PhorestWhy from '@/components/phorestAlternative/PhorestWhy.astro';
 import PhorestCosts from '@/components/phorestAlternative/PhorestCosts.astro';
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={PHOREST_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <PhorestFinalCta />
+    <ComparisonFinalCta placement="phorest" competitor="Phorest" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

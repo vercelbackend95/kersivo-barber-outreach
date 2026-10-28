@@ -7,7 +7,7 @@ import VagaroHero from '@/components/vagaroAlternative/VagaroHero.astro';
 import VagaroCompare from '@/components/vagaroAlternative/VagaroCompare.astro';
 import VagaroProof from '@/components/vagaroAlternative/VagaroProof.astro';
 import VagaroPricing from '@/components/vagaroAlternative/VagaroPricing.astro';
-import VagaroFinalCta from '@/components/vagaroAlternative/VagaroFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import VagaroQuickAnswer from '@/components/vagaroAlternative/VagaroQuickAnswer.astro';
 import VagaroWhy from '@/components/vagaroAlternative/VagaroWhy.astro';
 import VagaroCosts from '@/components/vagaroAlternative/VagaroCosts.astro';
@@ -63,7 +63,7 @@ const currentYear = new Date().getFullYear();
       faqs={VAGARO_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <VagaroFinalCta />
+    <ComparisonFinalCta placement="vagaro" competitor="Vagaro" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

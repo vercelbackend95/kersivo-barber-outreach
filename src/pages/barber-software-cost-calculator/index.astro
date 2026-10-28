@@ -21,6 +21,7 @@ import CostPayments from '@/components/costCalculator/CostPayments.astro';
 import CostScenarios from '@/components/costCalculator/CostScenarios.astro';
 import CostMethodology from '@/components/costCalculator/CostMethodology.astro';
 import CostSources from '@/components/costCalculator/CostSources.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   BARBER_COST_CALCULATOR_DESCRIPTION,
@@ -77,6 +78,8 @@ const currentYear = new Date().getFullYear();
       supportLinkHref="/pricing"
       faqs={BARBER_COST_CALCULATOR_FAQ_ITEMS}
     />
+
+    <ComparisonFinalCta placement="cost_calculator" />
 
     <Footer50
       showIntro={false}

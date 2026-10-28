@@ -15,7 +15,7 @@ export type BooksyAlternativeFaqItem = {
 
 export const BOOKSY_ALTERNATIVE_PAGE_PATH = '/booksy-alternative';
 
-export const BOOKSY_ALTERNATIVE_TITLE = 'Booksy Alternative for UK Barbershops | KERSIVO';
+export const BOOKSY_ALTERNATIVE_TITLE = 'Booksy Alternative UK: No Per-Barber Fees | KERSIVO';
 
 export const BOOKSY_ALTERNATIVE_DESCRIPTION =
   'Looking for a Booksy alternative in the UK? Compare KERSIVO and Booksy pricing, Boost fees, branding, bookings and switching for independent barbershops.';
@@ -30,8 +30,8 @@ export const BOOKSY_ALTERNATIVE_H1_LINES = [
 export const BOOKSY_ALTERNATIVE_H1 = BOOKSY_ALTERNATIVE_H1_LINES.join(' ');
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
-export const BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-06';
-export const BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL = '6 October 2026';
+export const BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-28';
+export const BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL = '28 October 2026';
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const STARTER_PRICE = formatGbp(0);
@@ -52,7 +52,7 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
   {
     question: 'What is a good Booksy alternative for UK barbers?',
     answer:
-      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want a more direct booking relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you a hosted booking page where public bookings use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full, plus Clients Core and email reminders. Full KERSIVO adds your branded website and domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS and the live Assistant. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
+      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want a more direct booking relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you a hosted booking page where public bookings use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full, plus Clients Core and email reminders. Full KERSIVO adds your branded website and domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS reminders within a monthly allowance and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
   },
   {
     question: 'How much does Booksy cost in the UK?',
@@ -86,9 +86,13 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
       'Yes. Keep Booksy live while your KERSIVO setup is prepared. You review a private preview first, and your public booking links (and, on Full, your domain routing) are only switched once you approve.',
   },
   {
+    question: 'Can clients book Booksy without the app?',
+    answer: `Yes. Booksy’s UK Help Centre covers booking without the Booksy for Customers app, and Booksy lists booking through your Booksy Profile and direct booking link, Instagram and Facebook buttons, Reserve with Google and a widget on your own website. The customer app and Marketplace are still part of how Booksy presents your business. Checked against Booksy’s UK pages on ${BOOKSY_FACTS_CHECKED_DATE}.`,
+  },
+  {
     question: 'Do clients need to download an app to book?',
     answer:
-      'No. KERSIVO clients book in the browser without downloading a customer app: through a hosted KERSIVO booking page on Starter, or your own branded website on Full KERSIVO.',
+      'No. KERSIVO has no customer app: clients book in the browser, through a hosted KERSIVO booking page on Starter or your own branded website on Full KERSIVO, so there is nothing to download. The trade-off is that there is no KERSIVO app or marketplace where new clients can discover your shop.',
   },
   {
     question: 'Does KERSIVO have a marketplace like Booksy?',

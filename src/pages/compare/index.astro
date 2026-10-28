@@ -6,7 +6,7 @@ import HubHero from '@/components/alternativesHub/HubHero.astro';
 import HubComparison from '@/components/alternativesHub/HubComparison.astro';
 import HubMethodology from '@/components/alternativesHub/HubMethodology.astro';
 import HubGuide from '@/components/alternativesHub/HubGuide.astro';
-import HubFinalCta from '@/components/alternativesHub/HubFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import HubSources from '@/components/alternativesHub/HubSources.astro';
 import {
   ALTERNATIVES_HUB_DESCRIPTION,
@@ -53,7 +53,7 @@ const currentYear = new Date().getFullYear();
       faqs={ALTERNATIVES_HUB_FAQ_ITEMS}
     />
 
-    <HubFinalCta />
+    <ComparisonFinalCta placement="compare_hub" />
     <HubSources />
 
     <Footer50

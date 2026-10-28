@@ -1,5 +1,6 @@
 ---
-import { COST_SCENARIOS, SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
+import { COST_SCENARIO_TABLES } from '@/lib/costCalculator/costScenarios';
+import { SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
 ---
 
 <section id="cost-examples" class="cost-calc__section" aria-labelledby="cost-calc-scenarios-title">
@@ -12,11 +13,28 @@ import { COST_SCENARIOS, SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barbe
 
     <ul class="cost-calc-scenarios">
       {
-        COST_SCENARIOS.map((scenario) => (
+        COST_SCENARIO_TABLES.map((scenario) => (
           <li class="cost-calc-scenarios__item">
-            <h3 class="cost-calc-scenarios__title">{scenario.label}</h3>
-            <p class="cost-calc-scenarios__barbers">{scenario.barbers}</p>
-            <p class="cost-calc-scenarios__body">{scenario.body}</p>
+            <h3 id={`cost-calc-scenario-${scenario.barbers}`} class="cost-calc-scenarios__title">{scenario.label}</h3>
+            <p class="cost-calc-scenarios__barbers">{scenario.inputs}</p>
+            <table class="cost-calc-scenarios__table" aria-labelledby={`cost-calc-scenario-${scenario.barbers}`}>
+              <thead>
+                <tr>
+                  <th scope="col">Provider</th>
+                  <th scope="col">Per month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  scenario.rows.map((row) => (
+                    <tr data-provider={row.providerId} data-state={row.state}>
+                      <th scope="row">{row.name}</th>
+                      <td>{row.monthlyTotal}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
           </li>
         ))
       }

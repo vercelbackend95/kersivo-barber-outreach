@@ -7,7 +7,7 @@ import SquareHero from '@/components/squareAlternative/SquareHero.astro';
 import SquareCompare from '@/components/squareAlternative/SquareCompare.astro';
 import SquareProof from '@/components/squareAlternative/SquareProof.astro';
 import SquarePricing from '@/components/squareAlternative/SquarePricing.astro';
-import SquareFinalCta from '@/components/squareAlternative/SquareFinalCta.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import SquareQuickAnswer from '@/components/squareAlternative/SquareQuickAnswer.astro';
 import SquareWhy from '@/components/squareAlternative/SquareWhy.astro';
 import SquareCosts from '@/components/squareAlternative/SquareCosts.astro';
@@ -60,7 +60,7 @@ const currentYear = new Date().getFullYear();
       faqs={SQUARE_ALTERNATIVE_FAQ_ITEMS}
     />
 
-    <SquareFinalCta />
+    <ComparisonFinalCta placement="square" competitor="Square Appointments" />
 
     <Contact16
       eyebrow="CONTACT KERSIVO"

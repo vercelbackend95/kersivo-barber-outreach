@@ -49,7 +49,7 @@ describe('Phorest Alternative SEO page', () => {
       '<PhorestHero', '<PhorestQuickAnswer', '<PhorestWhy',
       '<PhorestCosts', '<PhorestCompare', '<PhorestProof',
       '<PhorestFit', '<PhorestSwitching', '<PhorestPricing',
-      '<Faq4', '<PhorestFinalCta', '<PhorestSources',
+      '<Faq4', '<ComparisonFinalCta', '<PhorestSources',
     ].map(tag => page.indexOf(tag));
     expect(flow.every(index=>index>=0)).toBe(true);
     expect(flow).toEqual([...flow].sort((a,b)=>a-b));

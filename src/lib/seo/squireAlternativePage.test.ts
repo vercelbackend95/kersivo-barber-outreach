@@ -102,7 +102,7 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
  it('renders one H1 and preserves the complete shared visual-section sequence',()=>{
    expect(hero.match(/<h1\b/g)?.length).toBe(1);
    for(const src of [intro,compare,fit,sources,page]) expect(src).not.toMatch(/<h1\b/);
-   const tags=['<SquireHero','<SquireIntro','<SquireCompare','<FreshaProof','<SquireFit','<FreshaPricing','<Faq4','<SquireFinalCta','<Contact16','<SquireSources','<Footer50'];
+   const tags=['<SquireHero','<SquireIntro','<SquireCompare','<FreshaProof','<SquireFit','<FreshaPricing','<Faq4','<ComparisonFinalCta','<Contact16','<SquireSources','<Footer50'];
    const order=tags.map(tag=>page.indexOf(tag));
    expect(order.every(n=>n>=0)).toBe(true);
    expect(order).toEqual([...order].sort((a,b)=>a-b));

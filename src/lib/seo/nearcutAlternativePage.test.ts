@@ -32,7 +32,7 @@ describe('Nearcut Alternative marketing page',()=>{
   expect(page).toContain('faqs={NEARCUT_ALTERNATIVE_FAQ_ITEMS}');
  });
  it('reuses the mature visual page flow without additional h1 elements',()=>{
-  const order=['<NearcutHero','<NearcutQuickAnswer','<NearcutWhy','<NearcutCosts','<NearcutCompare','<NearcutProof','<NearcutFit','<NearcutSwitching','<NearcutPricing','<Faq4','<NearcutFinalCta','<NearcutSources'].map(x=>page.indexOf(x));
+  const order=['<NearcutHero','<NearcutQuickAnswer','<NearcutWhy','<NearcutCosts','<NearcutCompare','<NearcutProof','<NearcutFit','<NearcutSwitching','<NearcutPricing','<Faq4','<ComparisonFinalCta','<NearcutSources'].map(x=>page.indexOf(x));
   expect(order.every(x=>x>=0)).toBe(true);
   expect(order).toEqual([...order].sort((a,b)=>a-b));
   const hero=read('../../components/nearcutAlternative/NearcutHero.astro');
@@ -45,7 +45,7 @@ describe('Nearcut Alternative marketing page',()=>{
   expect(facts).toContain('Free for You');
   expect(costs).toContain('Quote');
   expect(costs).toContain('customer booking charge');
-  expect(costs).toContain('£5 deposit');
+  expect(costs).toContain('£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit');
   expect(costs).toContain('Stripe processing fees');
   expect(NEARCUT_COMPARE_SECTIONS).toHaveLength(6);
   expect(NEARCUT_SOURCES.every(x=>x.url.startsWith('https://'))).toBe(true);
