@@ -20,15 +20,21 @@
     {
       "kind": "hero",
       "anchor": "# What Does a UK Barbershop Owner Actually Earn? A Model Profit and Loss, Chair by Chair",
-      "src": "https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "/images/insights/barbershop-owner-earnings/red-barber-chair-london-1600.jpg",
       "width": 1600,
-      "height": 1000,
+      "height": 900,
       "alt": "Red barber chair and grooming workstations in a real London salon interior",
       "caption": "A grooming salon interior photographed in London. Editorial illustration only — the premises are not KERSIVO customers or the invented shops in the model",
       "credit": "Jennifer Latham / Pexels",
       "creditUrl": "https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/",
       "rights": "Original Pexels photo #9703068 by Jennifer Latham, source https://www.pexels.com/photo/red-armchair-at-hairdresser-9703068/, with London, England, United Kingdom location and Free to use licence https://www.pexels.com/license/ permitting commercial editorial blog display/crops. Photo ID audited against all 17 production Insights manifests on 19 Oct 2026: unique. Subject premises/brands/people not endorsed by or associated with KERSIVO, with no claims of their finances.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600,
+        2400
+      ]
     },
     {
       "kind": "diagram",
@@ -55,15 +61,20 @@
     {
       "kind": "photo",
       "anchor": "A shop mixing both arrangements needs a separate revenue and cost view",
-      "src": "https://images.pexels.com/photos/4163939/pexels-photo-4163939.jpeg?auto=compress&cs=tinysrgb&w=2000",
-      "width": 1500,
-      "height": 1000,
+      "src": "/images/insights/barbershop-owner-earnings/neon-sign-interior-manchester-1600.jpg",
+      "width": 1600,
+      "height": 842,
       "alt": "Illuminated neon sign photographed inside a commercial interior in Manchester, England",
       "caption": "An illuminated retail interior in Manchester, England, photographed by Aldrich. Scene-setting only; this business's staffing arrangements and finances are unknown",
       "credit": "Aldrich / Pexels",
       "creditUrl": "https://www.pexels.com/photo/illuminated-text-sign-on-the-wall-4163939/",
       "rights": "Original Pexels photo #4163939 by Aldrich, original https://www.pexels.com/photo/illuminated-text-sign-on-the-wall-4163939/, location Manchester, England, United Kingdom; free use under Pexels licence https://www.pexels.com/license/. Used as general British retail ambiance not proof of a working barbershop or staffing model. Image ID independently audited against all 17 current production Insights visual manifests: not used. No endorsement/customer link asserted.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     }
   ],
   "editorialVersion": "Original editorial DRAFT v1 prepared 19 Oct 2026 using Notion IDEA-011 validation model (not approved for writing yet) and rechecked UK gov rules and arithmetic; publication requires separate owner/editorial approval.",

@@ -1,6 +1,6 @@
 # Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Barber at work with a client seated in a Doncaster UK hair salon" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Barber at work with a client seated in a Doncaster UK hair salon" />
 <figcaption>Editorial barbering photograph from Doncaster; the person pictured is not a KERSIVO employee or customer — <a href="https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI" target="_blank" rel="noopener noreferrer">Osama Madlom / Unsplash</a>.</figcaption></figure>
 
 "Forty per cent of what you take" sounds like the fairest pay deal in a barbershop. The barber who builds a following earns more, the shop's wage bill rises and falls with its takings, and nobody is paid to stand around. Some shops pay employed barbers this way, either commission only or a base plus commission.

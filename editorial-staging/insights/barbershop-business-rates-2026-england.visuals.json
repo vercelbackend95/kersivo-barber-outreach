@@ -17,15 +17,21 @@
     {
       "kind": "hero",
       "anchor": "# Lower Rates, Higher Bill? What the 2026 Business Rates Changes Mean for Barbershops in England",
-      "src": "https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "/images/insights/business-rates-2026/barbershop-penny-lane-liverpool-1600.jpg",
       "width": 1600,
-      "height": 1000,
+      "height": 900,
       "alt": "Black-and-white street view of Tony Slavin's barbershop and neighbouring businesses on Penny Lane, Liverpool, England",
       "caption": "An independent barbershop on Liverpool's Penny Lane. Documentary illustration, not a KERSIVO client or evidence about this shop's business rates",
       "credit": "Phil Evenden / Pexels",
       "creditUrl": "https://www.pexels.com/photo/view-of-the-tony-slavin-barber-shop-a-store-and-a-restaurant-in-liverpool-england-20692738/",
       "rights": "Original Phil Evenden photo Pexels #20692738 at https://www.pexels.com/photo/view-of-the-tony-slavin-barber-shop-a-store-and-a-restaurant-in-liverpool-england-20692738/ lists Liverpool, England, UK, and Free to use. Pexels Licence https://www.pexels.com/license/ allows commercial/editorial website/blog display and crops. Photo is used only as editorial context, no endorsement, customer relationship or claim about depicted shop's tax payments. Separate business/trademark/private-property rights not independently audited. Photo ID checked unique against all 14 published Insights visual manifests on 18 Oct 2026.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600,
+        2400
+      ]
     },
     {
       "kind": "diagram",

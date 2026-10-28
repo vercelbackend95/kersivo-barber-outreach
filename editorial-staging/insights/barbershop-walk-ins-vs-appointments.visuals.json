@@ -52,15 +52,20 @@
     {
       "kind": "photo",
       "anchor": "Some owners will push back on all of this. For many barbershops",
-      "src": "https://images.pexels.com/photos/16815780/pexels-photo-16815780.jpeg?auto=compress&cs=tinysrgb&w=1800",
-      "width": 1200,
-      "height": 800,
+      "src": "/images/insights/walk-ins-vs-appointments/london-barber-shopfront-pole-1600.jpg",
+      "width": 1600,
+      "height": 842,
       "alt": "Real London barber shopfront with a barber pole, lettering on the window and an outdoor table and chairs",
       "caption": "A traditional barber shopfront in London. The image illustrates high-street barbering, not this particular shop's appointment policy",
       "credit": "Tony Zohari / Pexels",
       "creditUrl": "https://www.pexels.com/photo/table-with-chairs-by-a-barber-window-16815780/",
       "rights": "Photo #16815780 by Tony Zohari, https://www.pexels.com/photo/table-with-chairs-by-a-barber-window-16815780/ explicitly records London, England, United Kingdom, Free license, original dimensions 3648×5472. Pexels License https://www.pexels.com/license/ permits commercial editorial blog use. Named shop signage and other proprietary symbols shown for editorial scene-setting only; any model/property/trademark clearances have not been independently established. No affiliation, endorsement or claims about photographed business operations.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     }
   ],
   "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026 (audit batch 3 corrections); unchanged article copy, structural H1 adaptation only.",

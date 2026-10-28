@@ -105,7 +105,7 @@ export const INSIGHTS_DECEMBER_HOURS = {
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81e9ae9eeadf5007f087',
   lead: 'Use break-even maths to decide whether longer December opening hours actually add revenue — and plan for January before it comes.',
   heroImage: 'https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=2400',
-  ogImage: 'https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=1200&h=630',
+  ogImage: '/images/insights/og/barbershop-christmas-opening-hours-planning-1200x630.jpg',
   ogImageAlt: 'Empty vintage barbershop with chairs, mirrors and brick walls',
 } as const;
 
@@ -121,7 +121,7 @@ export const INSIGHTS_HAIRCUT_PRICING = {
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda817688dee88a79cd9d00',
   lead: 'Find the cost-recovery floor, compare your local market, then test the numbers before you raise haircut prices.',
   heroImage: 'https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  ogImage: 'https://images.unsplash.com/photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImage: '/images/insights/og/how-to-price-haircut-uk-barber-1200x630.jpg',
   ogImageAlt: 'Vintage barber chairs and mirrors in a classic barbershop',
 } as const;
 
@@ -137,7 +137,7 @@ export const INSIGHTS_BARBERS_HANDS = {
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8188a0dcc982ec96541a',
   lead: "How UK barbers can protect their hands from work-related skin damage, and what responsible shops should put in place.",
   heroImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&ixid=NHwxMjA3fDA%3D&ixlib=rb-4.1.0&q=75&w=2400',
-  ogImage: 'https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImage: '/images/insights/og/barber-dermatitis-skin-care-hse-1200x630.jpg',
   ogImageAlt: "A barber's hands working with scissors and a comb",
 } as const;
 
@@ -153,7 +153,7 @@ export const INSIGHTS_SECOND_VISIT = {
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8171a198c0ca613b14e0',
   lead: 'Learn to measure first-to-second visit retention, improve rebooking habits and distinguish service reminders from marketing texts.',
   heroImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=2400',
-  ogImage: 'https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImage: '/images/insights/og/barbershop-client-retention-second-visit-1200x630.jpg',
   ogImageAlt: 'Vintage barbershop chairs in Camberley, United Kingdom',
 } as const;
 
@@ -171,8 +171,7 @@ export const INSIGHTS_MTD_BARBERS = {
   lead: 'Making Tax Digital for Income Tax uses gross qualifying income, not the profit a chair renter takes home. Check the £30,000 test and the 2027 deadlines.',
   heroImage:
     'https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=2400',
-  ogImage:
-    'https://images.unsplash.com/photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=1200&h=630',
+  ogImage: '/images/insights/og/making-tax-digital-barbers-1200x630.jpg',
   ogImageAlt: "A barber cutting a client's hair under colourful lights in a Liverpool barbershop, photographed by Mitchell Orr",
 } as const;
 
@@ -188,10 +187,8 @@ export const INSIGHTS_OWNER_EARNINGS = {
   verifiedDate: '2026-10-19',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8181b1ffc7d5f1063a5d',
   lead: 'Two hypothetical four-chair UK barbershops make £180,000 in annual sales yet deliver very different owner cash after costs, taxes and debt.',
-  heroImage:
-    'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=2400',
-  ogImage:
-    'https://images.pexels.com/photos/9703068/pexels-photo-9703068.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  heroImage: '/images/insights/barbershop-owner-earnings/red-barber-chair-london-1600.jpg',
+  ogImage: '/images/insights/og/how-much-do-barbershop-owners-make-uk-1200x630.jpg',
   ogImageAlt: 'A red barber chair photographed in London by Jennifer Latham',
 } as const;
 
@@ -207,10 +204,8 @@ export const INSIGHTS_UNFAIR_DISMISSAL = {
   verifiedDate: '2026-10-19',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8192882de0d7f653e7dc',
   lead: 'The 2027 change to six months of qualifying service brings dismissal-process and probation decisions forward for employers of small barbershop teams.',
-  heroImage:
-    'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=2400',
-  ogImage:
-    'https://images.pexels.com/photos/35903164/pexels-photo-35903164.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  heroImage: '/images/insights/unfair-dismissal-2027/red-barbershop-sign-abergele-wales-1600.jpg',
+  ogImage: '/images/insights/og/unfair-dismissal-six-months-barbershop-employers-1200x630.jpg',
   ogImageAlt: 'Traditional barbershop sign in Abergele, Wales, photographed by Lisa from Pexels',
 } as const;
 
@@ -228,8 +223,7 @@ export const INSIGHTS_APPRENTICE_BARBER = {
   lead: 'Weigh funding, wages and lost senior chair time before hiring an apprentice barber in a small England shop.',
   heroImage:
     'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=2400',
-  ogImage:
-    'https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImage: '/images/insights/og/apprentice-barber-funding-costs-2026-1200x630.jpg',
   ogImageAlt: 'Barber and client in Liverpool, England, photographed by Mitchell Orr',
 } as const;
 
@@ -245,10 +239,8 @@ export const INSIGHTS_BUSINESS_RATES = {
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81a89758c88641f937c9',
   lead: 'Why a lower business rates multiplier may still mean a bigger bill for an England barbershop, plus three practical checks owners can make.',
-  heroImage:
-    'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=2400',
-  ogImage:
-    'https://images.pexels.com/photos/20692738/pexels-photo-20692738.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  heroImage: '/images/insights/business-rates-2026/barbershop-penny-lane-liverpool-1600.jpg',
+  ogImage: '/images/insights/og/barbershop-business-rates-2026-england-1200x630.jpg',
   ogImageAlt: 'Barbershop on Liverpool Penny Lane, England, photographed by Phil Evenden',
 } as const;
 
@@ -266,8 +258,7 @@ export const INSIGHTS_LOYALTY_SCHEMES = {
   lead: 'Why a free tenth cut may cost more than it earns, and a way to test whether the loyalty scheme changes real repeat-visit behaviour.',
   heroImage:
     'https://images.unsplash.com/photo-1640301133543-41fe25ad6450?auto=format&fit=crop&fm=jpg&q=80&w=2200',
-  ogImage:
-    'https://images.unsplash.com/photo-1640301133543-41fe25ad6450?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImage: '/images/insights/og/barbershop-loyalty-scheme-uk-1200x630.jpg',
   ogImageAlt: 'Barber cutting hair in Liverpool, England, photographed by Mitchell Orr',
 } as const;
 
@@ -285,8 +276,7 @@ export const INSIGHTS_BUSY_DIARY = {
   lead: 'Why a full appointment diary can hide low contribution per chair-hour, and how service mix and unsold minutes change the result.',
   heroImage:
     'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=78&w=2200',
-  ogImage:
-    'https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImage: '/images/insights/og/busy-barbershop-low-profit-chair-hour-1200x630.jpg',
   ogImageAlt: 'An Edinburgh barbershop worker cleaning the floor, photographed by Bruno BD',
 } as const;
 
@@ -304,8 +294,7 @@ export const INSIGHTS_WALK_INS = {
   lead: 'When a barbershop gets busier, queues and lost capacity do not rise evenly. Compare walk-ins, appointments and hybrid with a two-week owner audit.',
   heroImage:
     'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=78&w=2200',
-  ogImage:
-    'https://images.unsplash.com/photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImage: '/images/insights/og/barbershop-walk-ins-vs-appointments-1200x630.jpg',
   ogImageAlt: 'People inside a barbershop in Manchester, UK, photographed by beth d',
 } as const;
 
@@ -321,10 +310,8 @@ export const INSIGHTS_BOOKING_LINK = {
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fa7dbe5bbda81b780dcf7a9ae55f731',
   lead: 'Check whether your Google booking button sends clients to the right system, which providers control the links, and how to measure completed bookings.',
-  heroImage:
-    'https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=2400',
-  ogImage:
-    'https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  heroImage: '/images/insights/google-booking-link/london-barber-shop-window-1600.jpg',
+  ogImage: '/images/insights/og/google-business-profile-booking-link-barbershop-1200x630.jpg',
   ogImageAlt: 'London barbershop seen through its front window, photographed by pierre matile',
 } as const;
 
@@ -340,8 +327,8 @@ export const INSIGHTS_WEBSITE_NEED = {
   verifiedDate: '2026-10-16',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda81938916eff2052db502',
   lead: 'A four-question test for UK barbershops deciding whether Google, Instagram and a booking page already do enough.',
-  heroImage: 'https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=2400',
-  ogImage: 'https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop',
+  heroImage: '/images/insights/do-barbers-need-website/barbershop-storefront-neon-manchester-1600.jpg',
+  ogImage: '/images/insights/og/do-barbers-need-a-website-uk-1200x630.jpg',
   ogImageAlt: 'Barbershop frontage with warm lights and neon signage in Manchester, England',
 } as const;
 
@@ -357,7 +344,7 @@ export const INSIGHTS_COMMISSION_PAY = {
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d',
   lead: 'What commission-based pay means for employed UK barbers, with the minimum wage test across busy and quiet months.',
   heroImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=2400',
-  ogImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630',
+  ogImage: '/images/insights/og/barber-commission-pay-minimum-wage-uk-1200x630.jpg',
   ogImageAlt: 'Barber at work with a client in a hair salon in Doncaster, United Kingdom',
 } as const;
 
@@ -375,8 +362,7 @@ export const INSIGHTS_NO_SHOW_DEPOSITS = {
   lead: 'Use realistic refill and card-fee maths to decide when a barbershop deposit protects income, and what UK cancellation rules require.',
   heroImage:
     'https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=2200',
-  ogImage:
-    'https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630',
+  ogImage: '/images/insights/og/barbershop-no-show-cost-when-deposit-makes-sense-1200x630.jpg',
   ogImageAlt: 'Unoccupied leather barber chairs in a barbershop, photographed by Jarrod Reed',
 } as const;
 

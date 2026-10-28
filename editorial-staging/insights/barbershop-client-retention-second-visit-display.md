@@ -1,6 +1,6 @@
 # The Second Visit: Why a Barbershop's Growth Is Decided After the First Haircut
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Atmospheric vintage barber chairs inside a UK barbershop in Camberley" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1772657850401-a15d99f505d4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Atmospheric vintage barber chairs inside a UK barbershop in Camberley" />
 <figcaption>Barbershop interior in Camberley, UK. Editorial photography; not a KERSIVO customer — <a href="https://unsplash.com/photos/vintage-barber-chairs-in-a-dimly-lit-salon-38ZCvdHMmyk" target="_blank" rel="noopener noreferrer">Bruce Barrow / Unsplash</a>.</figcaption></figure>
 
 New clients are easy to count. They're visible, they feel like progress, and most marketing is aimed at them. The number that decides whether a barbershop grows is quieter: how many of those new clients come back for a second cut.
