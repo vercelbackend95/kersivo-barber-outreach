@@ -68,11 +68,13 @@ describe('marketing CTAs route to the live BLACKLINE demo', () => {
   it('presents the shared marketing demo as CUTSTATE BARBERS', () => {
     const preview = SOURCES.homepage;
     const deferred = read('components/landing/DeferredWidget.tsx');
+    const retailRail = read('components/landing/RetailDemoRail.tsx');
     expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
     expect(preview).toContain('data-sf-theme="blackline"');
-    expect(deferred).toContain('fallbackBrandMark="CS"');
-    expect(deferred).toContain('shopName={DEMO_SHOP_NAME}');
-    expect(deferred).toContain('ariaLabel={`${DEMO_SHOP_NAME} products`}');
+    expect(deferred).toContain("import('@/components/landing/RetailDemoRail')");
+    expect(retailRail).toContain('fallbackBrandMark="CS"');
+    expect(retailRail).toContain('shopName={DEMO_SHOP_NAME}');
+    expect(retailRail).toContain('ariaLabel={`${DEMO_SHOP_NAME} products`}');
     expect(preview).not.toMatch(/BLACKLINE"|Blackline products|fallbackBrandMark="BL"/);
     expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.eyebrow).toBe('Cutstate Barbers');
     expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.confirmCtas?.[0]?.label).toBe('Back to Cutstate');
