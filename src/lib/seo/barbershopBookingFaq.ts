@@ -96,7 +96,7 @@ export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
   },
   {
     question: 'When do I pay, and how long until my website is live?',
-    answer: `Your first £${SAAS_MONTHLY_GBP} payment is taken when you subscribe, then monthly on the same day. Your website is typically ready 1–2 weeks after we receive all the required information — that's an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it.`,
+    answer: `Your first £${SAAS_MONTHLY_GBP} payment is taken when you subscribe, then monthly on the same day. Your website is typically ready in a few days once we receive all the required information — that's an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it.`,
   },
   {
     question: 'Can I choose how clients pay when they book?',

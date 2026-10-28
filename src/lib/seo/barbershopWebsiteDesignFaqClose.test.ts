@@ -89,7 +89,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
       'A gallery can be included when you have suitable photographs, but it isn’t required. Your services are presented in the booking flow, so clients can see what you offer and choose an appointment. A separate services page isn’t guaranteed as part of the standard website package.',
     );
     expect(timing).toBe(
-      'Standard setup typically takes around 1–2 weeks after we receive all the required information. Missing details, domain access or migration work can take longer. This is an estimate, not a guaranteed launch date.',
+      'Standard setup typically takes a few days once we receive all the required information. Missing details, domain access or migration work can take longer. This is an estimate, not a guaranteed launch date.',
     );
   });
 
@@ -106,7 +106,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
   });
 
   it('makes no bespoke, unlimited, revision-count, guarantee, trial, timing or builder claims', () => {
-    const timingEstimate = 'standard setup typically takes around 1–2 weeks after we receive all the required information.';
+    const timingEstimate = 'standard setup typically takes a few days once we receive all the required information.';
     const copy = text(section)
       .toLowerCase()
       .replace(timingEstimate, '')

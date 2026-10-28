@@ -72,7 +72,8 @@ describe('/barbershop-websites — section 06 setup process', () => {
 
   it('shows the setup estimate once, as an estimate with its conditions', () => {
     expect(ONBOARDING_TIMELINE_CLAIM).toMatch(/Roughly 1–2 weeks after we receive all required information/);
-    expect(copy.match(/1–2 weeks/g) ?? []).toHaveLength(1);
+    expect(copy.match(/A few days/g) ?? []).toHaveLength(1);
+    expect(copy).not.toMatch(/1–2 weeks/);
     expect(copy).toMatch(/From receipt of all required details/);
     expect(copy).toMatch(/Domain access, missing information or migration may/);
     expect(copy).not.toMatch(/guarantee|within \d+ (days|hours)|same[- ]day|instant(ly)?/i);

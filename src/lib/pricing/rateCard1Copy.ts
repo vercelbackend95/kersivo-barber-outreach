@@ -152,7 +152,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     '0% KERSIVO commission on bookings and retail',
   ],
   conditionsLine1:
-    'Standard Stripe payment-processing fees apply to online payments. Your first payment is taken when you subscribe; your site is typically ready 1–2 weeks after we receive all required information.',
+    'Standard Stripe payment-processing fees apply to online payments. Your first payment is taken when you subscribe; your site is typically ready in a few days once we receive all required information.',
   conditionsLine2: `Cancel anytime — Full KERSIVO stays active until the end of the paid month. If we're unable to deliver your Full KERSIVO service due to a failure on our side, we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment.`,
   calculatorLink: {
     before: 'Comparing platforms? See the real cost of Booksy, Fresha and KERSIVO with our ',

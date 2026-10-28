@@ -105,7 +105,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'When does billing start?',
     answer:
-      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready 1–2 weeks after we receive all required information.',
+      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready in a few days once we receive all required information.',
   },
   {
     question: "What if you can't deliver Full KERSIVO?",

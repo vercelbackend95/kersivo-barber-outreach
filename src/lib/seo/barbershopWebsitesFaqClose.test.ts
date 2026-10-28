@@ -157,7 +157,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
 
   it('gives the setup time as an estimate, not a promise', () => {
     const a = answer('timing');
-    expect(a).toContain('Setup typically takes 1–2 weeks after we receive the information needed');
+    expect(a).toContain('Setup typically takes a few days once we receive the information needed');
     expect(ONBOARDING_TIMELINE_CLAIM).toMatch(/Roughly 1–2 weeks after we receive all required information/);
     expect(a).toContain('approve a private website preview before launch');
     expect(a).toContain('an estimate, not a guaranteed date');

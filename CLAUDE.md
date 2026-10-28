@@ -10,7 +10,7 @@ SEO/CRO roadmap with the remaining batches: **`docs/seo/ROADMAP.md`**. Changelog
 - **Full KERSIVO (£39/month per location) is the primary offer**; Starter (£0) is a visible secondary option, never the primary CTA (except on `/starter`).
 - KERSIVO is presented as a brand. No founder name, photo, "our team", "Ltd" or "founded by" on marketing pages. Legal identity lives only in `src/lib/legal/businessIdentity.ts` and the legal pages (sole trader).
 - Never invent claims, numbers, reviews, testimonials or customers. Approved wording lives in `src/lib/pricing/claimsPolicy.ts`; competitor figures in `src/lib/seo/*Facts.ts` with a checked date.
-- "0% KERSIVO commission" always with "Stripe fees apply" nearby. Setup time: "typically 1–2 weeks after we receive all required information". SMS reminders: "within a monthly allowance" (no number).
+- "0% KERSIVO commission" always with "Stripe fees apply" nearby. Setup time on marketing pages: "a few days" (e.g. "typically ready in a few days once we receive all required information") — never a fixed number of days or "1–2 weeks". The Terms timeline (`ONBOARDING_TIMELINE_CLAIM`) is separate legal text. SMS reminders: "within a monthly allowance" (no number).
 - `/seo-growth` must stay public, `noindex, follow` (Google OAuth app homepage). Do not put it behind auth.
 - Terms changes: bump `CURRENT_TERMS_VERSION` and keep old versions valid via `ACCEPTED_PRIOR_TERMS_VERSIONS` (`src/lib/legal/termsVersion.ts`).
 
