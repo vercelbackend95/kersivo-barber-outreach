@@ -13,6 +13,7 @@ import {
   STARTER_PAGE_LAST_UPDATED_LABEL,
   STARTER_PAGE_PATH,
   STARTER_PAGE_TITLE,
+  buildStarterBreadcrumbJsonLd,
   buildStarterFaqJsonLd,
   buildStarterWebPageJsonLd,
 } from '@/lib/seo/starterPage';
@@ -21,6 +22,8 @@ import {
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
+import { STARTER_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { CreditCard, UserRound, UsersRound } from 'lucide-react';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/starter-landing.css';
@@ -77,12 +80,13 @@ const starterFeatures = [
   title={STARTER_PAGE_TITLE}
   description={STARTER_PAGE_DESCRIPTION}
   canonicalPath={STARTER_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterBreadcrumbJsonLd(), buildStarterFaqJsonLd()]}
 >
   <main class="starter-landing">
     <section class="starter-hero" aria-labelledby="starter-hero-title">
       <div class="starter-shell starter-hero__grid">
         <div class="starter-hero__copy">
+          <PageBreadcrumbs trail={STARTER_BREADCRUMBS} />
           <p class="starter-kicker starter-hero__eyebrow">
             <span class="starter-kicker__dot" aria-hidden="true"></span>
             KERSIVO STARTER · BUILT FOR UK BARBERSHOPS

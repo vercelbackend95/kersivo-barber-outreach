@@ -5,6 +5,7 @@ import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { formatGbp } from '@/lib/seo/freshaFacts';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ABOUT_BREADCRUMBS, buildBreadcrumbListJsonLd } from '@/lib/seo/breadcrumbs';
 
 export const ABOUT_PAGE_PATH = '/about';
 
@@ -124,5 +125,10 @@ export function buildAboutPageJsonLd(): Record<string, unknown> {
     publisher: { '@id': organizationId },
     about: { '@id': organizationId },
     mainEntity: { '@id': organizationId },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
   };
+}
+
+export function buildAboutBreadcrumbJsonLd(): Record<string, unknown> {
+  return buildBreadcrumbListJsonLd(ABOUT_BREADCRUMBS);
 }
