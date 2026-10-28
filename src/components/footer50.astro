@@ -1,6 +1,7 @@
 ---
+import { footerTradingNameLine } from '@/lib/legal/footerTradingName';
+import { FOOTER_COLUMNS, type FooterColumnLink } from '@/lib/nav/footerNavigation';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
   type FooterSocialLink,
@@ -44,21 +45,7 @@ const {
   brandLine = 'Own your brand. Own your bookings.',
   contactEmail = KERSIVO_CONTACT_EMAIL,
   copyright = `© ${currentYear} KERSIVO`,
-  navigation = [
-    { name: 'Inside the system', href: '/#live-demo' },
-    { name: 'Insights', href: '/insights' },
-    { name: 'Pricing', href: '/#pricing' },
-    { name: 'FAQ', href: '/#faq' },
-    { name: 'Contact', href: '/#contact' },
-    { name: 'Start subscription', href: '/admin/launch' },
-  ],
   social = getFooterSocialLinks(),
-  legal = [
-    FOOTER_LEGAL_LINKS.privacy,
-    FOOTER_LEGAL_LINKS.cookies,
-    FOOTER_LEGAL_LINKS.cookieSettings,
-    FOOTER_LEGAL_LINKS.termsAndCancellation,
-  ],
   brandName = 'KERSIVO',
   className = '',
 } = Astro.props as Footer50Props;
@@ -73,8 +60,10 @@ function isExternalHref(href: string): boolean {
   return /^https?:\/\//i.test(href);
 }
 
-function isSubscribeNavItem(item: NavItem): boolean {
-  return /subscription/i.test(item.name) || item.href.includes('/admin/launch');
+const tradingNameLine = footerTradingNameLine();
+
+function isCookieSettings(item: FooterColumnLink): boolean {
+  return item.href === '#cookie-settings';
 }
 
 function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string {
@@ -117,53 +106,31 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
     </div>
 
     <nav class="footer50__navigation" aria-label="Footer navigation">
-      <div class="footer50__group">
-        <p class="footer50__group-title">Explore</p>
-        <ul class="footer50__menu">
-          {navigation.map((item) => (
-            <li>
-              <a
-                class:list={[
-                  'footer50__nav-link',
-                  isSubscribeNavItem(item) && 'footer50__nav-link--accent',
-                ]}
-                href={item.href}
-              >
-                {item.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div class="footer50__group">
-        <p class="footer50__group-title">Legal</p>
-        <ul class="footer50__legal">
-          {legal.map((item) => (
-            <li>
-              {item.href === '#cookie-settings' ? (
-                <button
-                  type="button"
-                  class="footer50__cookie-settings"
-                  data-cookie-settings
-                >
-                  {item.name}
-                </button>
-              ) : (
-                <a
-                  class="footer50__nav-link"
-                  href={item.href}
-                  {...(isExternalHref(item.href)
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {})}
-                >
-                  {item.name}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {FOOTER_COLUMNS.map((column) => (
+        <div class:list={['footer50__group', column.title === 'Legal' && 'footer50__group--legal']}>
+          <p class="footer50__group-title">{column.title}</p>
+          <ul class:list={['footer50__menu', column.title === 'Legal' && 'footer50__legal']}>
+            {column.links.map((item) => (
+              <li>
+                {isCookieSettings(item) ? (
+                  <button type="button" class="footer50__cookie-settings" data-cookie-settings>
+                    {item.name}
+                  </button>
+                ) : (
+                  <a
+                    class:list={['footer50__nav-link', item.accent && 'footer50__nav-link--accent']}
+                    href={item.href}
+                    data-track={item.track}
+                    {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  >
+                    {item.name}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </nav>
   </div>
 
@@ -213,5 +180,6 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
       </ul>
     ) : null}
     {copyright ? <p class="footer50__copyright">{copyright}</p> : null}
+    {tradingNameLine ? <p class="footer50__trading-name">{tradingNameLine}</p> : null}
   </div>
 </footer>

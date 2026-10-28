@@ -94,6 +94,13 @@ html.mnav-locked body::before {
   display: none;
 }
 
+.mnav__compact-cta {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 44px;
+  padding-inline: 0.7rem;
+}
+
 .mnav a:focus-visible,
 .mnav button:focus-visible {
   outline: 2px solid var(--focus);
@@ -473,6 +480,23 @@ html.mnav-locked body::before {
   white-space: normal;
 }
 
+@media (max-width: 420px) {
+  .mnav__inner {
+    gap: 0.4rem;
+    width: min(100% - 1rem, 80rem);
+  }
+
+  .mnav__compact-cta {
+    padding-inline: 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  .mnav__menu {
+    gap: 0.4rem;
+    padding-inline: 0.65rem;
+  }
+}
+
 @media (min-width: 26rem) {
   .mnav-hub__actions {
     grid-template-columns: auto minmax(0, 1fr);
@@ -505,7 +529,8 @@ html.mnav-locked body::before {
   }
 
   .mnav__menu,
-  .mnav-hub {
+  .mnav-hub,
+  .mnav__compact-cta {
     display: none !important;
   }
 

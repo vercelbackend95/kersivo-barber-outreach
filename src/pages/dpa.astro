@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
 import {
   LEGAL_OPERATOR_LOCATION,
@@ -12,7 +12,7 @@ import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
 
-<MainLayout
+<LandingLayout
   title="Data Processing Agreement | KERSIVO"
   description={PAGE_DESCRIPTIONS.dpa}
   canonicalPath="/dpa"
@@ -642,4 +642,4 @@ import '@/styles/legal-pages.css';
   </main>
 
   <LegalFooter />
-</MainLayout>
+</LandingLayout>

@@ -1,5 +1,4 @@
 ---
-import { FAQ_ITEMS } from '@/lib/seo/faqItems';
 import '../styles/components/faq4.css';
 
 interface FaqItem {
@@ -32,7 +31,7 @@ const {
   supportLinkHref = "#contact",
   supportSecondaryLinkLabel,
   supportSecondaryLinkOpensDemo = false,
-  faqs = FAQ_ITEMS,
+  faqs = [],
   className = '',
 } = Astro.props as Props;
 ---

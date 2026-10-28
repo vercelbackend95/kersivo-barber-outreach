@@ -136,13 +136,13 @@ describe('QR Kit eligibility', () => {
     expect(evaluateQrKitShopEligibility(eligibleFacts)).toEqual([]);
   });
 
-  it('SETUP is blocked and Full is not eligible', () => {
+  it('SETUP is blocked and Full is eligible', () => {
     expect(evaluateQrKitShopEligibility({ ...eligibleFacts, productState: 'SETUP' })).toContain(
-      'NOT_STARTER',
+      'PLAN_NOT_ELIGIBLE',
     );
     expect(
       evaluateQrKitShopEligibility({ ...eligibleFacts, productState: 'FULL_KERSIVO' }),
-    ).toContain('NOT_STARTER');
+    ).not.toContain('PLAN_NOT_ELIGIBLE');
   });
 
   it('does not require Stripe, Companies House, reviews or a first booking', () => {
@@ -231,6 +231,20 @@ describe('requestInitialQrKit', () => {
     const html = String((emails[0]!.payload as { html: string }).html);
     expect(html).toContain('will verify the shop details before it goes to print');
     expect(html).not.toMatch(/deliver(ed|y) (by|within|in)|working days/i);
+  });
+
+  it('a shop that requested on Starter cannot request again after moving to Full', async () => {
+    const { db, kits } = fakeDb();
+    const params = { shopId: 'shop-1', userId: 'u1', input: validInput };
+    const first = await requestInitialQrKit({ ...params, facts: eligibleFacts }, { db });
+    const afterUpgrade = await requestInitialQrKit(
+      { ...params, facts: { ...eligibleFacts, productState: 'FULL_KERSIVO' } },
+      { db },
+    );
+
+    expect(first).toMatchObject({ ok: true, created: true });
+    expect(afterUpgrade).toMatchObject({ ok: true, created: false });
+    expect(kits).toHaveLength(1);
   });
 
   it('the internal KERSIVO email carries contact and delivery details, escaped, with reply-to the contact', async () => {

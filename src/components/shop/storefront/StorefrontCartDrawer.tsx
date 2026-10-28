@@ -481,7 +481,7 @@ export default function StorefrontCartDrawer({
                   </div>
                 </dl>
                 <div className="sf-cart-cta-row">
-                  <a className="sf-cart-cta sf-cart-cta--primary" href="/#pricing">
+                  <a className="sf-cart-cta sf-cart-cta--primary" href="/pricing">
                     View KERSIVO pricing
                   </a>
                   <a className="sf-cart-cta sf-cart-cta--quiet" href="/#contact">

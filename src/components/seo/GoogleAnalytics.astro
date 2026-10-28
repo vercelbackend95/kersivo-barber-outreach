@@ -100,9 +100,50 @@ const gaSiteSection = siteSection.trim();
       document.head.appendChild(script);
     }
 
-    function gaConfig() {
+    function readInternalCookie() {
+      var parts = document.cookie.split(';');
+      for (var i = 0; i < parts.length; i++) {
+        var part = parts[i].trim();
+        if (part.indexOf('kersivo_internal=') === 0) {
+          return decodeURIComponent(part.slice('kersivo_internal='.length));
+        }
+      }
+      return '';
+    }
+
+    function writeInternalCookie(maxAge) {
+      var value = maxAge > 0 ? '1' : '';
+      var secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie =
+        'kersivo_internal=' +
+        value +
+        '; Path=/; Max-Age=' +
+        maxAge +
+        '; SameSite=Lax' +
+        secure;
+    }
+
+    try {
+      var internalUrl = new URL(window.location.href);
+      var internalFlag = internalUrl.searchParams.get('internal');
+      if (internalFlag === '1' || internalFlag === '0') {
+        writeInternalCookie(internalFlag === '1' ? 60 * 60 * 24 * 365 : 0);
+        internalUrl.searchParams.delete('internal');
+        history.replaceState(
+          history.state,
+          '',
+          internalUrl.pathname + internalUrl.search + internalUrl.hash,
+        );
+      }
+    } catch (e) {}
+
+    function gaConfig(extra) {
       var cfg = { anonymize_ip: true };
       if (gaSiteSection) cfg.site_section = gaSiteSection;
+      if (readInternalCookie() === '1') cfg.traffic_type = 'internal';
+      if (extra) {
+        for (var key in extra) cfg[key] = extra[key];
+      }
       return cfg;
     }
 
@@ -145,12 +186,10 @@ const gaSiteSection = siteSection.trim();
       if (!gaSiteSection || typeof gtag !== 'function' || !gaMeasurementId) return;
       var prefs = readPrefs();
       if (!prefs || !prefs.analytics) return;
-      gtag('config', gaMeasurementId, {
+      gtag('config', gaMeasurementId, gaConfig({
         page_path: window.location.pathname + window.location.search,
         page_title: document.title,
-        site_section: gaSiteSection,
-        anonymize_ip: true,
-      });
+      }));
     }
 
     var spaPageLoadSeen = false;

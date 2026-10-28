@@ -109,9 +109,11 @@ describe('/about page', () => {
     expect(ABOUT_PAGE_H1).toBe('About KERSIVO');
     expect(ABOUT_PAGE_DESCRIPTION.length).toBeGreaterThan(70);
     expect(ABOUT_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(170);
-    expect(ABOUT_ENTITY_DEFINITION).toBe(
-      'KERSIVO is booking and management software built specifically for independent UK barbershops. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders. Full KERSIVO (£39/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders, reports and retail pickup.',
+    expect(ABOUT_ENTITY_DEFINITION).toContain('Full KERSIVO (£39/month per location)');
+    expect(ABOUT_ENTITY_DEFINITION.indexOf('Full KERSIVO')).toBeLessThan(
+      ABOUT_ENTITY_DEFINITION.indexOf('KERSIVO Starter'),
     );
+    expect(ABOUT_ENTITY_DEFINITION).toContain('SMS reminders within a monthly allowance');
     expect(page).not.toContain('One plan.');
     expect(ABOUT_PAGE_DESCRIPTION).toContain('Starter is £0/month');
     expect(page).toContain('canonicalPath={ABOUT_PAGE_PATH}');
@@ -308,8 +310,11 @@ describe('barberdemo subdomain redirect', () => {
 describe('internal links, routes and comparison FAQ schema', () => {
   it('links the homepage footer to /pricing and /about', () => {
     const homepage = read('src/pages/index.astro');
-    expect(homepage).toContain("{ name: 'Pricing', href: '/pricing' }");
-    expect(homepage).toContain("{ name: 'About', href: '/about' }");
+    const footer = read('src/lib/nav/footerNavigation.ts');
+    expect(homepage).toContain('<Footer50');
+    expect(homepage).not.toContain('navigation={');
+    expect(footer).toContain("name: 'Pricing', href: '/pricing'");
+    expect(footer).toContain("name: 'About KERSIVO', href: '/about'");
   });
 
   it('points every global Pricing nav link at /pricing', () => {
@@ -320,18 +325,21 @@ describe('internal links, routes and comparison FAQ schema', () => {
   });
 
   it('links Pricing to /pricing and About to /about in every marketing footer', () => {
+    const footer = read('src/lib/nav/footerNavigation.ts');
+    expect(footer).toContain("name: 'Pricing', href: '/pricing'");
+    expect(footer).toContain("name: 'About KERSIVO', href: '/about'");
     for (const page of [
       'src/pages/index.astro',
       'src/pages/booksy-alternative/index.astro',
       'src/pages/fresha-alternative/index.astro',
       'src/pages/barber-software-cost-calculator/index.astro',
+      'src/pages/about.astro',
+      'src/pages/pricing.astro',
     ]) {
       const source = read(page);
-      expect(source, page).toContain("{ name: 'Pricing', href: '/pricing' }");
-      expect(source, page).toContain("{ name: 'About', href: '/about' }");
+      expect(source, page).toContain('<Footer50');
+      expect(source, page).not.toContain('navigation={');
     }
-    expect(read('src/pages/about.astro')).toContain("{ name: 'Pricing', href: '/pricing' }");
-    expect(read('src/pages/pricing.astro')).toContain("{ name: 'About', href: '/about' }");
   });
 
   it('lets the assistant name the SMS allowance without its size', () => {

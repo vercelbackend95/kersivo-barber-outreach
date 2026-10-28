@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
 import { LEGAL_OPERATOR_NAME, TRADING_NAME } from '@/lib/legal/businessIdentity';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
@@ -10,8 +10,8 @@ import '@/styles/legal-pages.css';
 const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
 ---
 
-<MainLayout
-  title="Cookie Policy | Kersivo"
+<LandingLayout
+  title="Cookie Policy | KERSIVO"
   description={PAGE_DESCRIPTIONS.cookies}
   canonicalPath="/cookies"
 >
@@ -59,7 +59,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
         barbershop admin signed in so you can manage your workspace securely without logging in on every visit. When a
         valid admin session cookie is present, opening the Admin &amp; Shop product preview takes you straight to your
         signed-in workspace (without signing in with Google again). These cannot be switched off through the preference
-        tool.
+        tool. The first-party cookie <code>kersivo_internal</code> marks visits from the KERSIVO team so they can be excluded from analytics.
       </p>
       <h3>Analytics</h3>
       <p>
@@ -207,4 +207,4 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
     </article>
   </main>
   <LegalFooter />
-</MainLayout>
+</LandingLayout>

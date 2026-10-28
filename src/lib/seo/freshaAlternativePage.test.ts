@@ -574,7 +574,7 @@ describe('comparison cluster internal links', () => {
     );
     expect(switcherSource).toContain('showFreshaCompareLink');
     expect(countLinks(switcherSource, '/fresha-alternative')).toBe(1);
-    expect(switcherSource).toContain('Compare KERSIVO and Fresha');
+    expect(switcherSource).toContain('href="/fresha-alternative">Fresha</a>');
   });
 
   it('links /booksy-alternative to /fresha-alternative once, from the fit section', () => {

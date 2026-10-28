@@ -122,7 +122,7 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
     {
       heading: 'Clients, deposits + reminders',
       description:
-        'Keep client records and choose Pay at shop, a £5 deposit or full payment, with email confirmations and SMS appointment reminders.',
+        'Keep client records and choose Pay at shop, a £5 deposit or full payment, with email confirmations, plus SMS appointment reminders within a monthly allowance.',
       icon: 'users',
     },
     {

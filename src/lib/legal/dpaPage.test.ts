@@ -31,7 +31,7 @@ describe('dpaVersion', () => {
   });
 
   it('keeps Terms and DPA on the same v1.19 material legal-package version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
   });
 
   it('documents that material DPA updates require a Terms bump', () => {
@@ -111,7 +111,7 @@ describe('Data Processing Agreement page', () => {
     expect(notListedBlock).toMatch(/Google OAuth/);
     expect(notListedBlock).toMatch(/account\/auth/);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
   });
 
   it('lists OpenAI as conditional Sub-processor and does not exclude it from CPD Sub-processors', () => {
@@ -138,7 +138,7 @@ describe('Data Processing Agreement page', () => {
     expect(dpaSource).not.toMatch(/End User Messaging/i);
     expect(dpaSource).not.toMatch(/\bAWS\b/);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
   });
 
   it('does not list Stripe Connect as a normal KERSIVO Sub-processor', () => {
@@ -164,7 +164,7 @@ describe('Data Processing Agreement page', () => {
 
 describe('Terms / checkout / footer DPA integration', () => {
   it('Terms incorporate /dpa and share the bumped Terms version', () => {
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-06');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-27');
     expect(termsSource).toContain('href="/dpa"');
     expect(termsSource).toContain('forms part of these Terms');
     expect(termsSource).toContain('Client is the Controller');
@@ -205,7 +205,10 @@ describe('Terms / checkout / footer DPA integration', () => {
   });
 
   it('LegalFooter links to /dpa', () => {
-    expect(legalFooterSource).toContain("href: '/dpa'");
-    expect(legalFooterSource).toContain('Data Processing Agreement');
+    const footerNav = readRepoFile('../nav/footerNavigation.ts');
+    expect(legalFooterSource).toContain('<Footer50');
+    expect(legalFooterSource).not.toContain('navigation={');
+    expect(footerNav).toContain('FOOTER_LEGAL_LINKS.dpa');
+    expect(readRepoFile('../seo/footerSocialLinks.ts')).toContain("name: 'Data Processing Agreement', href: '/dpa'");
   });
 });

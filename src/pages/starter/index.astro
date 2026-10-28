@@ -15,7 +15,6 @@ import {
   buildStarterWebPageJsonLd,
 } from '@/lib/seo/starterPage';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
@@ -209,9 +208,9 @@ const starterFeatures = [
             <span class="starter-dist__step" aria-hidden="true" data-dist-item style="--i: 1">02</span>
             <h3 data-dist-item style="--i: 2">Included initial QR Kit</h3>
             <p data-dist-item style="--i: 3">
-              Eligible verified UK Starter locations can request one initial kit with two separate
-              QR codes: WINDOW for inside the shop glass and REBOOK for the counter. Both open your
-              booking page and keep working if you later move to Full.
+              Eligible verified UK locations on Starter or Full can request one initial kit with two
+              separate QR codes: WINDOW for inside the shop glass and REBOOK for the counter. Both
+              open your booking page. It's one kit per location, so moving to Full doesn't add a second.
             </p>
             <p class="starter-note" data-dist-item style="--i: 4">
               Shop details are verified before the kit goes to print. Replacements and reorders are
@@ -390,22 +389,7 @@ const starterFeatures = [
       contactEmail={KERSIVO_CONTACT_EMAIL}
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Home', href: '/' },
-        { name: 'Starter', href: '/starter' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'Live demo', href: '/demo' },
-        { name: 'Booksy comparison', href: '/booksy-alternative' },
-        { name: 'Fresha comparison', href: '/fresha-alternative' },
-      ]}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

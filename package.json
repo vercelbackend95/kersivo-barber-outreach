@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node scripts/generate-favicons.mjs && node scripts/generate-demo-barber-thumbnails.mjs && astro dev",
     "dev:fresh": "npm run prisma:generate && node scripts/generate-favicons.mjs && node scripts/generate-demo-barber-thumbnails.mjs && astro dev",
-    "build": "node scripts/insights/check-all.mjs && node scripts/build.mjs",
+    "build": "node scripts/claims-guard.mjs && node scripts/insights/check-all.mjs && node scripts/build.mjs",
+    "claims:check": "node scripts/claims-guard.mjs",
     "insights:check": "node scripts/insights/check-all.mjs",
     "build:plan": "node scripts/build.mjs --dry-run",
     "prisma:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",

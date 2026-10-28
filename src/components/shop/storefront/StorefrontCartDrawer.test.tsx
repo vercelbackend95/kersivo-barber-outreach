@@ -98,7 +98,7 @@ describe('StorefrontCartDrawer publicDemo', () => {
     expect(
       screen.getByText(/This was a demonstration only. No payment was taken and no order was created./i),
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'View KERSIVO pricing' }).getAttribute('href')).toBe('/#pricing');
+    expect(screen.getByRole('link', { name: 'View KERSIVO pricing' }).getAttribute('href')).toBe('/pricing');
     expect(screen.getByRole('link', { name: 'Talk to KERSIVO' }).getAttribute('href')).toBe('/#contact');
 
     expect(fetchSpy).not.toHaveBeenCalled();

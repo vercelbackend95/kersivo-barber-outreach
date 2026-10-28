@@ -25,8 +25,8 @@ export const STARTER_FULL_PLAN_FULL_ONLY = [
   'Advanced Clients / CRM',
   'Reports',
   'Retail, Products, Orders and Sales',
-  'SMS reminders',
-  'Live KERSIVO Assistant',
+  'SMS reminders within a monthly allowance',
+  'KERSIVO Assistant — AI guidance on using KERSIVO and running your shop',
   'Owner-controlled payments: Pay at shop, £5 deposit or Pay in full',
 ] as const;
 

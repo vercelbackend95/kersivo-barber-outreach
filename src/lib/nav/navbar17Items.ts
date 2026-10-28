@@ -27,9 +27,9 @@ const DEFAULT_NAV_ITEMS: Navbar17Item[] = [
   },
   {
     name: 'Pricing',
-    link: '/#pricing',
-    sectionId: 'pricing',
-    isPage: false,
+    link: '/pricing',
+    sectionId: null,
+    isPage: true,
     icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   },
   {
@@ -58,9 +58,9 @@ const DEFAULT_NAV_ITEMS: Navbar17Item[] = [
 const SHOP_NAV_ITEMS: Navbar17Item[] = [
   {
     name: 'Pricing',
-    link: '/#pricing',
-    sectionId: 'pricing',
-    isPage: false,
+    link: '/pricing',
+    sectionId: null,
+    isPage: true,
     icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   },
   {
@@ -113,7 +113,7 @@ export function getNavbar17CtaHref(variant: Navbar17Variant = 'default'): string
   if (variant === 'shop' || variant === 'testShop') {
     return '/admin/launch';
   }
-  return '/#pricing';
+  return '/pricing';
 }
 
 export function navbar17ShowsCart(variant: Navbar17Variant = 'default'): boolean {

@@ -68,8 +68,9 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     for (const route of ['DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) {
       expect(panel).toContain(route);
     }
-    expect(page).toContain("{ name: 'Website design guide', href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH }");
-    expect(page).toContain("{ name: 'Online booking guide', href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH }");
+    const footer = read('../../lib/nav/footerNavigation.ts');
+    expect(footer).toContain("name: 'Website design guide', href: '/barbershop-website-design'");
+    expect(footer).toContain("name: 'Online booking', href: '/barbershop-online-booking'");
   });
 
   it('keeps global footer outside main and does not add a second primary landmark', () => {

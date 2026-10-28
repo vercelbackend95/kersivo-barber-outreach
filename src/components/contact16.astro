@@ -51,11 +51,10 @@ const {
 
         <div class="contact16__field-grid">
           <label>
-            <span class="contact16__field-label">Your name</span>
+            <span class="contact16__field-label">Your name (optional)</span>
             <input
               type="text"
               name="name"
-              required
               autocomplete="name"
               maxlength="200"
               placeholder="Alex Smith"
@@ -77,19 +76,18 @@ const {
 
         <div class="contact16__field-grid">
           <label>
-            <span class="contact16__field-label">Barbershop name</span>
+            <span class="contact16__field-label">Barbershop name (optional)</span>
             <input
               type="text"
               name="shopName"
-              required
               autocomplete="organization"
               maxlength="160"
               placeholder="Your barbershop name"
             />
           </label>
           <label>
-            <span class="contact16__field-label">Current booking system</span>
-            <select name="currentStack" required>
+            <span class="contact16__field-label">Current booking system (optional)</span>
+            <select name="currentStack">
               <option value="">Select your current system</option>
               <option value="booksy">Booksy</option>
               <option value="fresha">Fresha</option>
@@ -103,10 +101,9 @@ const {
         </div>
 
         <label>
-          <span class="contact16__field-label">What would you like help with?</span>
+          <span class="contact16__field-label">What would you like help with? (optional)</span>
           <textarea
             name="message"
-            required
             rows="5"
             maxlength="8000"
             data-demo-message
@@ -114,9 +111,10 @@ const {
           ></textarea>
         </label>
 
-        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
+        <button type="submit" class="btn btn--primary contact16__submit" data-contact-submit>
           {submitLabel}
         </button>
+        <p class="contact16__note">We’ll reply by email to the address you enter.</p>
       </form>
     </div>
   </div>
@@ -216,7 +214,7 @@ const {
           // Track only when the API explicitly confirms that the enquiry email was delivered.
           trackConsentedEvent(FUNNEL_EVENTS.setup_enquiry_submit, undefined, 'analytics');
           statusEl.textContent =
-            'Thanks — we’ve received your message. We’ll reply by email shortly.';
+            'Thanks — we’ve received your message. We’ll reply by email to the address you entered.';
           statusEl.className = 'contact16__status contact16__status--success';
           form.reset();
         } catch {

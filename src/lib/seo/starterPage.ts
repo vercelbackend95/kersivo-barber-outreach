@@ -59,7 +59,7 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   {
     question: 'What is included in the KERSIVO QR Kit?',
     answer:
-      'Eligible verified UK Starter locations can request one included initial QR Kit with two printed QR codes: a WINDOW code for inside the shop glass and a REBOOK code for the counter. Both open your booking page and keep working if you later move to Full KERSIVO. KERSIVO verifies the shop details before the kit goes to print. Replacements and reorders are handled separately.',
+      'Eligible verified UK locations on Starter or Full can request one included initial QR Kit with two printed QR codes: a WINDOW code for inside the shop glass and a REBOOK code for the counter. Both open your booking page and keep working if you later move to Full KERSIVO. It\'s one kit per location, so moving to Full doesn\'t add a second. KERSIVO verifies the shop details before the kit goes to print. Replacements and reorders are handled separately.',
   },
   {
     question: 'Can customers book from my Google Business Profile?',
@@ -68,7 +68,7 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
   },
   {
     question: 'Can I upgrade from Starter to Full KERSIVO later?',
-    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders, the live KERSIVO Assistant and control over how customers pay when they book.`,
+    answer: `Yes. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, also with 0% KERSIVO commission. Upgrade when you want your own branded website and domain, more than 4 bookable barbers, full booking history, Advanced Clients, Reports, Retail, SMS reminders within a monthly allowance, the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop and control over how customers pay when they book.`,
   },
 ];
 

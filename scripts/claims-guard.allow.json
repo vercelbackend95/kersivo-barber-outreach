@@ -1,0 +1,22 @@
+[
+  {
+    "file": "src/lib/seo/nearcutAlternativeFaq.ts",
+    "pattern": "zero (kersivo )?commission",
+    "reason": "Describes Nearcut's advertised zero commission. The same answer says KERSIVO charges 0% KERSIVO commission and that Stripe fees apply."
+  },
+  {
+    "file": "src/lib/pricing/claimsPolicy.ts",
+    "pattern": "£39 forever",
+    "reason": "Header comment listing banned phrasing for authors. It is not customer-facing copy."
+  },
+  {
+    "file": "src/components/nearcutAlternative/NearcutCosts.astro",
+    "pattern": "unlimited sms",
+    "reason": "Describes Nearcut Free for You unlimited SMS reminders, not a KERSIVO allowance."
+  },
+  {
+    "file": "src/lib/seo/nearcutFacts.ts",
+    "pattern": "unlimited sms",
+    "reason": "Verified Nearcut Free for You fact. KERSIVO's own point on the same card says SMS reminders are added with Full, not unlimited."
+  }
+]

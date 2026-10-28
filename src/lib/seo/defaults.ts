@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Kersivo';
+export const SITE_NAME = 'KERSIVO';
 
 export const DEFAULT_TITLE = 'Barbershop Software & Barber Booking System UK | KERSIVO';
 
@@ -31,19 +31,19 @@ export const KERSIVO_BOOKING_DEPOSIT_GBP = 5;
 
 export const PAGE_DESCRIPTIONS = {
   privacy:
-    'Privacy policy for Kersivo barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',
+    'Privacy policy for KERSIVO barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',
   cookies:
-    'Cookie policy for Kersivo. How we use necessary cookies, analytics and advertising measurement, and how to change your choices.',
+    'Cookie policy for KERSIVO. How we use necessary cookies, analytics and advertising measurement, and how to change your choices.',
   terms:
-    'Terms of service for Kersivo barbershop website, booking, and retail pickup software for UK business customers.',
+    'Terms of service for KERSIVO barbershop website, booking, and retail pickup software for UK business customers.',
   dpa:
-    'Data Processing Agreement for Kersivo. How KERSIVO processes Customer Personal Data as a processor for UK barbershop clients.',
+    'Data Processing Agreement for KERSIVO. How KERSIVO processes Customer Personal Data as a processor for UK barbershop clients.',
   shop:
     'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
-    'Your Kersivo subscription is confirmed. Continue your setup to prepare your barbershop for launch.',
+    'Your KERSIVO subscription is confirmed. Continue your setup to prepare your barbershop for launch.',
   setupCancel:
-    'Kersivo subscription checkout was cancelled. No payment was taken.',
+    'KERSIVO subscription checkout was cancelled. No payment was taken.',
   book:
     'Try the KERSIVO interactive booking demo — choose a service, barber, and time. No appointment is created and nothing you enter is stored.',
   bookConfirm:
@@ -53,13 +53,13 @@ export const PAGE_DESCRIPTIONS = {
   bookReschedule:
     'Reschedule your barbershop appointment — pick a new date and time slot online.',
   admin:
-    'Kersivo admin panel for barbershops — manage bookings, team, services, clients, and retail orders.',
+    'KERSIVO admin panel for barbershops — manage bookings, team, services, clients, and retail orders.',
   adminDemo:
     'Safe preview of the KERSIVO admin dashboard with example barbershop data — no signup or password required.',
   shopSuccess:
     'Your grooming product pickup order is confirmed. Collect your items on your next barbershop visit.',
   shopCancelled:
-    'Your Kersivo shop checkout was cancelled. No payment was taken.',
+    'Your KERSIVO shop checkout was cancelled. No payment was taken.',
   barbershopBookingSystem:
     'Booking and admin for independent UK barbershops. Starter £0/month; Full £39/month adds your own domain and retail pickup. 0% KERSIVO commission.',
   booksyAlternative:

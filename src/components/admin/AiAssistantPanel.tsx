@@ -276,7 +276,7 @@ export default function AiAssistantPanel({ isPublicDemo = false, showcaseMode = 
               </span>
               <h3 className="admin-assistant-soon-title">Assistant offline</h3>
               <p className="admin-assistant-soon-copy">
-                Activate the live KERSIVO Assistant with Full KERSIVO.
+                The KERSIVO Assistant — AI guidance on using KERSIVO and running your shop — is included with Full KERSIVO.
               </p>
               <button
                 type="button"

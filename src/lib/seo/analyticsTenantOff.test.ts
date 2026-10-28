@@ -105,9 +105,9 @@ describe('KERSIVO marketing analytics gating (DPA hardening)', () => {
     }
   });
 
-  it('keeps marketing privacy page on MainLayout analytics default (not forced off)', () => {
+  it('keeps marketing privacy page on the marketing layout analytics default (not forced off)', () => {
     const src = readPage('../../pages/privacy.astro');
-    expect(src).toContain('MainLayout');
+    expect(src).toContain('LandingLayout');
     expect(src).not.toContain('enableAnalytics={false}');
   });
 

@@ -67,9 +67,11 @@ describe('Websites three-page integrated cluster release gates', () => {
     expect(design).toContain('id="your-team"');
     for (const href of ['DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) expect(panel).toContain(href);
     const pillar = read('../../pages/barbershop-websites/index.astro');
+    const footer = read('../../lib/nav/footerNavigation.ts');
     expect(pillar).toContain('buildBarbershopWebsitesJsonLd()');
-    expect(pillar).toContain("name: 'Website design guide'");
-    expect(pillar).toContain("name: 'Online booking guide'");
+    expect(pillar).toContain('<Footer50');
+    expect(footer).toContain("name: 'Website design guide'");
+    expect(footer).toContain("name: 'Online booking', href: '/barbershop-online-booking'");
   });
 
   it('keeps a single main landmark per page with global footers outside content', () => {

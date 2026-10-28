@@ -23,7 +23,7 @@ export type PublicAdminDemoTenant = 'generic' | 'blackline';
 export const CREATE_OWN_BARBERSHOP_HREF = '/admin/onboarding' as const;
 
 /** Canonical pricing destination on the marketing site. */
-export const KERSIVO_PLANS_HREF = '/#pricing' as const;
+export const KERSIVO_PLANS_HREF = '/pricing' as const;
 
 export function getPublicAdminDemoCapabilities(tenant: PublicAdminDemoTenant = 'generic') {
   const isBlackline = tenant === 'blackline';

@@ -27,7 +27,6 @@ import {
   buildNearcutAlternativeWebPageJsonLd,
 } from '@/lib/seo/nearcutAlternativeJsonLd';
 import {
-  FOOTER_LEGAL_LINKS,
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
@@ -84,23 +83,7 @@ const currentYear = new Date().getFullYear();
       contactEmail={KERSIVO_CONTACT_EMAIL}
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
-      navigation={[
-        { name: 'Home', href: '/' },
-        { name: 'Live demo', href: '/demo' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'FAQ', href: '#faq' },
-        { name: 'About', href: '/about' },
-        { name: 'Contact', href: '#contact' },
-        { name: 'Start KERSIVO Starter', href: '/admin' },
-      ]}
       social={getFooterSocialLinks()}
-      legal={[
-        FOOTER_LEGAL_LINKS.privacy,
-        FOOTER_LEGAL_LINKS.cookies,
-        FOOTER_LEGAL_LINKS.cookieSettings,
-        FOOTER_LEGAL_LINKS.dpa,
-        FOOTER_LEGAL_LINKS.termsAndCancellation,
-      ]}
     />
   </main>
 </LandingLayout>

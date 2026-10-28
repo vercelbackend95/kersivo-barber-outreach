@@ -69,20 +69,20 @@ export const POST: APIRoute = async ({ request }) => {
   const currentStack =
     typeof record.currentStack === 'string' ? record.currentStack.trim() : '';
 
-  if (!name || name.length > MAX_NAME) {
-    return badRequest('Please enter your name.');
+  if (name.length > MAX_NAME) {
+    return badRequest('Please enter a shorter name.');
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return badRequest('Please enter a valid email address.');
   }
-  if (!shopName || shopName.length > MAX_SHOP_NAME) {
-    return badRequest('Please enter your barbershop name.');
+  if (shopName.length > MAX_SHOP_NAME) {
+    return badRequest('Please enter a shorter barbershop name.');
   }
-  if (!CURRENT_STACK_VALUES.has(currentStack)) {
+  if (currentStack && !CURRENT_STACK_VALUES.has(currentStack)) {
     return badRequest('Please select your current booking system.');
   }
-  if (!message || message.length > MAX_MESSAGE) {
-    return badRequest('Please enter a message.');
+  if (message.length > MAX_MESSAGE) {
+    return badRequest('Please enter a shorter message.');
   }
 
   try {

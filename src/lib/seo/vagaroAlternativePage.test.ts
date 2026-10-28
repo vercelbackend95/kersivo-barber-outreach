@@ -109,7 +109,8 @@ describe('Vagaro Alternative UK SEO foundation', () => {
 
   it('links from homepage and competitor pages, with desktop/mobile navigation parity', () => {
     // The homepage links to the comparison hub; Vagaro remains reachable within global navigation.
-    expect(read('../../pages/index.astro')).toContain("href: '/compare'");
+    expect(read('../../lib/nav/footerNavigation.ts')).toContain("href: '/compare'");
+    expect(read('../../pages/index.astro')).toContain('<Footer50');
     expect(MARKETING_NAV_ITEMS.some((item) => item.href === '/vagaro-alternative')).toBe(true);
     for (const linkFrom of [
       '../../components/booksyAlternative/BooksyFit.astro',

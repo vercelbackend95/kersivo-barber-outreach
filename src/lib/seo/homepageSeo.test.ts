@@ -152,10 +152,19 @@ describe('homepage SEO phase 1: headings', () => {
     expect(text(between(switcher, '<h2 id="landing-switcher-reassurance-title"', '</h2>'))).toBe(
       'Switch barber booking platforms without interrupting bookings',
     );
-    const switcherLead = text(between(switcher, '<p class="landing-switcher-reassurance__lead">', '</p>'));
-    expect(switcherLead).toContain(
-      'Already using Booksy, Fresha, Setora or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
+    const switcherLeadSource = between(switcher, '<p class="landing-switcher-reassurance__lead">', '</p>');
+    const switcherLead = text(
+      switcherLeadSource
+        .replace(/\{showBooksyCompareLink \? <a href="\/booksy-alternative">Booksy<\/a> : 'Booksy'\}/g, 'Booksy')
+        .replace(/\{showFreshaCompareLink \? <a href="\/fresha-alternative">Fresha<\/a> : 'Fresha'\}/g, 'Fresha')
+        .replace(/<\/?a\b[^>]*>/g, ''),
     );
+    expect(switcherLead).toContain(
+      'Already using Booksy, Fresha, Treatwell, Setora or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
+    );
+    expect(switcherLeadSource).toContain('href="/booksy-alternative"');
+    expect(switcherLeadSource).toContain('href="/fresha-alternative"');
+    expect(switcherLeadSource).toContain('href="/treatwell-alternative"');
     expect(switcherLead).toContain('Before you switch, compare UK barber booking systems side by side');
     expect(switcher).toContain('href="/compare"');
   });
