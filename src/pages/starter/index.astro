@@ -5,6 +5,8 @@ import Footer50 from '@/components/footer50.astro';
 import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro';
 import {
   STARTER_FAQ_ITEMS,
+  STARTER_FREE_QUALIFIER,
+  STARTER_FULL_FIT,
   STARTER_PAGE_DESCRIPTION,
   STARTER_PAGE_H1,
   STARTER_PAGE_LAST_UPDATED_ISO,
@@ -88,11 +90,7 @@ const starterFeatures = [
           <h1 id="starter-hero-title" class="starter-hero__title">{heroTitleLines.map((line, index) => (
             <span class:list={['starter-hero__title-line', { 'starter-hero__title-line--primary': index === 0 }]}>{line}</span>
           ))}</h1>
-          <p class="starter-hero__lead">
-            A serious booking system for independent UK barbershops. Set up your diary, team,
-            services and clients, then connect Stripe to launch a booking flow where every public
-            appointment is secured by £5 or paid in full.
-          </p>
+          <p class="starter-hero__lead">{STARTER_FREE_QUALIFIER}</p>
 
           <div class="starter-hero__actions">
             <a
@@ -115,8 +113,8 @@ const starterFeatures = [
           </div>
 
           <p class="starter-hero__fine">
-            A connected Stripe account is required before public bookings go live. Standard Stripe
-            processing fees apply. KERSIVO adds 0% platform fee.
+            Set up your diary, team, services and clients first. A connected Stripe account is
+            required before public bookings go live. KERSIVO adds 0% platform fee.
           </p>
 
           <p class="starter-updated">
@@ -291,6 +289,23 @@ const starterFeatures = [
         </header>
 
         <StarterFullPlanCards placement="starter_compare" />
+
+        <aside class="starter-fit" aria-labelledby="starter-fit-title">
+          <h3 id="starter-fit-title" class="starter-fit__title">{STARTER_FULL_FIT.heading}</h3>
+          <p class="starter-fit__lead">{STARTER_FULL_FIT.lead}</p>
+          <ul class="starter-fit__list">
+            {STARTER_FULL_FIT.points.map((point) => <li>{point}</li>)}
+          </ul>
+          <p class="starter-fit__note">{STARTER_FULL_FIT.note}</p>
+          <a
+            href={STARTER_FULL_FIT.link.href}
+            class="starter-text-link starter-fit__link"
+            data-track="plan_my_setup_click"
+            data-track-placement="starter_full_fit"
+          >
+            {STARTER_FULL_FIT.link.label} <span aria-hidden="true">→</span>
+          </a>
+        </aside>
       </div>
     </section>
 

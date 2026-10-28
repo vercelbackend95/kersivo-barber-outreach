@@ -1,5 +1,4 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
-import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
@@ -39,8 +38,7 @@ export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {
       '@id': `${pageUrl}#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}${BARBERSHOP_WEBSITES_PAGE_PATH}` },
-        { '@type': 'ListItem', position: 3, name: 'Online booking', item: pageUrl },
+        { '@type': 'ListItem', position: 2, name: 'Online booking', item: pageUrl },
       ],
     },
   };

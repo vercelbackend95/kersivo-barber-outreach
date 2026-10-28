@@ -39,6 +39,20 @@
   line-height: 1.7;
 }
 
+.insights-category__product {
+  margin: 0.75rem 0 0;
+  color: #4f555c;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.insights-category__product a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .insights-category__count {
   margin: 1rem 0 0;
   color: #6a7077;

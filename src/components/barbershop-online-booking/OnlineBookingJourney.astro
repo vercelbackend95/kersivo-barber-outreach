@@ -67,6 +67,14 @@ const addMinutes = (time: string, minutes: number) => {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 const endsAt = addMinutes(SELECTED_SLOT, selectedService.durationMinutes);
+const balanceAfterDeposit = formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE);
+
+// Full KERSIVO: the owner sets one booking-payment mode for the shop (NONE / DEPOSIT / FULL in bookingPaymentPolicy).
+const FULL_PAYMENT_MODES = [
+  { name: 'Pay at shop', sub: `Nothing online · ${servicePrice} at the shop` },
+  { name: '£5 deposit', sub: `£5 now · ${balanceAfterDeposit} at the shop` },
+  { name: 'Pay in full', sub: `${servicePrice} now · nothing to pay at the shop` },
+];
 
 const summaryRows = [
   ['Service', selectedService.name],
@@ -119,9 +127,9 @@ const stages = [
   {
     tab: 'Details',
     title: 'Add details and the payment step',
-    client: 'Name and email are required; phone is optional. On a live KERSIVO Starter booking page, clients then choose to pay a £5 deposit or the full price.',
+    client: 'Name and email are required; phone is optional. The payment step depends on the plan: on KERSIVO Starter, clients choose a £5 deposit or the full price; on Full KERSIVO, the shop decides whether clients pay at the shop, pay a £5 deposit or pay in full.',
     shop: "Booking details include the client's contact information and any required payment. The fictional demo takes no payment.",
-    summary: `${STEP_COPY.details.title}: Name, Email, Phone (optional). On a live KERSIVO Starter booking page the Payment choice reads Pay £5 deposit, £5 now and ${formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE)} at the shop, or Pay in full, ${servicePrice} now and nothing to pay at the shop.`,
+    summary: `${STEP_COPY.details.title}: Name, Email, Phone (optional). On a live KERSIVO Starter booking page the Payment choice reads Pay £5 deposit, £5 now and ${balanceAfterDeposit} at the shop, or Pay in full, ${servicePrice} now and nothing to pay at the shop. On a live Full KERSIVO booking page the shop sets one rule: ${FULL_PAYMENT_MODES.map((mode) => `${mode.name}, ${mode.sub.replace(' · ', ' and ')}`).join('; or ')}.`,
   },
   {
     tab: 'Confirm',
@@ -333,23 +341,37 @@ const stepState = (stageIndex: number, stepIndex: number) =>
                       </span>
                       <span class="boj-screen__note">{presentation.sandboxNote}</span>
                     </span>
-                    <span class="boj-live">
-                      <span class="boj-live__tag">On a live KERSIVO Starter booking page</span>
-                      <span class="boj-live__legend">Payment</span>
-                      <span class="boj-live__options">
-                        <span class="boj-live__option is-selected">
-                          <span class="boj-live__radio"></span>
-                          <span class="boj-live__copy">
-                            <span class="boj-live__name">Pay £5 deposit</span>
-                            <span class="boj-live__sub">£5 now · {formatDemoPriceGbp(selectedService.pricePence - STARTER_DEPOSIT_PENCE)} at the shop</span>
+                    <span class="boj-lives">
+                      <span class="boj-live">
+                        <span class="boj-live__tag">On a live KERSIVO Starter booking page</span>
+                        <span class="boj-live__legend">Payment · the client chooses</span>
+                        <span class="boj-live__options">
+                          <span class="boj-live__option is-selected">
+                            <span class="boj-live__radio"></span>
+                            <span class="boj-live__copy">
+                              <span class="boj-live__name">Pay £5 deposit</span>
+                              <span class="boj-live__sub">£5 now · {balanceAfterDeposit} at the shop</span>
+                            </span>
+                          </span>
+                          <span class="boj-live__option">
+                            <span class="boj-live__radio"></span>
+                            <span class="boj-live__copy">
+                              <span class="boj-live__name">Pay in full</span>
+                              <span class="boj-live__sub">{servicePrice} now · nothing to pay at the shop</span>
+                            </span>
                           </span>
                         </span>
-                        <span class="boj-live__option">
-                          <span class="boj-live__radio"></span>
-                          <span class="boj-live__copy">
-                            <span class="boj-live__name">Pay in full</span>
-                            <span class="boj-live__sub">{servicePrice} now · nothing to pay at the shop</span>
-                          </span>
+                      </span>
+                      <span class="boj-live boj-live--full">
+                        <span class="boj-live__tag">On a live Full KERSIVO booking page</span>
+                        <span class="boj-live__legend">Payment · the shop sets one rule</span>
+                        <span class="boj-live__modes">
+                          {FULL_PAYMENT_MODES.map((mode) => (
+                            <span class="boj-live__mode">
+                              <span class="boj-live__name">{mode.name}</span>
+                              <span class="boj-live__sub">{mode.sub}</span>
+                            </span>
+                          ))}
                         </span>
                       </span>
                       <span class="boj-live__note">0% KERSIVO commission. Stripe processing fees apply.</span>

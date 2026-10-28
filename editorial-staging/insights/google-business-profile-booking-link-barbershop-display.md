@@ -11,7 +11,7 @@ The booking link on your Google Business Profile isn't a small piece of admin. I
 
 Google's own help pages describe two kinds of booking link, and the difference matters.
 
-The first is a link you add yourself. In your Business Profile you choose Booking, then "Add link", paste the address of your booking page and save. Google allows up to ten links per category, so a profile can carry several booking links at once. If there's more than one, you can mark one as "Business preferred", which puts it at the top.
+The first is a link you add yourself. In your Business Profile you choose Booking, then "Add link", [paste the address of your booking page](/barbershop-online-booking) and save. Google allows up to ten links per category, so a profile can carry several booking links at once. If there's more than one, you can mark one as "Business preferred", which puts it at the top.
 
 The second kind arrives without you doing anything. Google works with selected third-party providers, and links to their services "can automatically appear" on Business Profiles in Search and Maps. These are supplied and updated by the providers or by Google's automated data, not by you.
 

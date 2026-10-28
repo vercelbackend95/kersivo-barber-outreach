@@ -65,7 +65,7 @@ Some owners will push back on all of this. For many barbershops, the walk-in cul
 
 That's a fair point, and nothing in the queue model argues against it. What the model says is that a walk-in shop protects that culture by managing how busy it gets, not by ignoring it. A sociable 15-minute wait is part of the experience. A 90-minute wait drives away the people the culture depends on. A walk-in shop that wants to last needs some way of keeping the queue in check, whether that's an extra barber at peak, a "come back at 3" habit, or simply the owner telling people honestly how long it will be.
 
-There's a counterpoint for appointment-only shops too. Some clients, especially new ones, like being able to book without phoning, and dislike turning up to find a queue. But "booking only" can come across as unwelcoming to someone standing at the door with a free half-hour. Even a strict booking shop gains from saying clearly on the door and online how a walk-in can get a slot.
+There's a counterpoint for appointment-only shops too. Some clients, especially new ones, [like being able to book without phoning](/barbershop-online-booking), and dislike turning up to find a queue. But "booking only" can come across as unwelcoming to someone standing at the door with a free half-hour. Even a strict booking shop gains from saying clearly on the door and online how a walk-in can get a slot.
 
 ## The short version
 

@@ -31,6 +31,8 @@ export type InsightsCategory = {
   icon: InsightsCategoryIcon;
   /** Short archive intro for owners — distinct per category. */
   intro: string;
+  /** One relevant product page linked under the intro; none for off-buyer topics. */
+  productLink?: { lead: string; label: string; href: string };
   seoTitle: string;
   seoDescription: string;
   /**
@@ -51,6 +53,11 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'chart',
     intro:
       'Money decisions that decide whether the shop stays healthy: pricing, revenue, margins, VAT and the commercial trade-offs behind everyday offers.',
+    productLink: {
+      lead: 'Booking software is one cost among many: compare it with the',
+      label: 'barber software cost calculator',
+      href: '/barber-software-cost-calculator',
+    },
     seoTitle: 'Business & Profit for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Guides for UK barbershop owners on pricing, revenue, margins, VAT and the commercial decisions that shape a profitable shop.',
@@ -65,6 +72,11 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'users',
     intro:
       'How independent shops attract the next client, earn a second visit and build loyalty without chasing every new channel at once.',
+    productLink: {
+      lead: 'When new clients look you up, give them one place to book:',
+      label: 'barbershop websites with online booking',
+      href: '/barbershop-websites',
+    },
     seoTitle: 'Clients & Growth for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Practical guidance for UK barbershop owners on client acquisition, retention, referrals and lifetime value.',
@@ -79,6 +91,11 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'megaphone',
     intro:
       'Reputation, local visibility and brand presence — from Google Reviews and Business Profile discipline to storytelling that fits an independent shop.',
+    productLink: {
+      lead: 'Putting your brand online? Read our guide to',
+      label: 'barbershop website design',
+      href: '/barbershop-website-design',
+    },
     seoTitle: 'Brand & Marketing for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'UK barbershop guidance on reputation, Google Reviews, local visibility, brand identity and marketing that stays credible.',
@@ -93,6 +110,11 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'calendar',
     intro:
       'The diary, the team and the policies that keep a busy floor running: appointments, no-shows, deposits and day-to-day shop operations.',
+    productLink: {
+      lead: 'See how clients choose a barber, time and payment in',
+      label: 'barbershop online booking',
+      href: '/barbershop-online-booking',
+    },
     seoTitle: 'Bookings & Operations for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Operational guides for UK barbershop owners on scheduling, no-shows, deposits, team availability and shop processes.',
@@ -107,6 +129,11 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'laptop',
     intro:
       'The systems behind the chair: booking software, websites, payment processing and the real cost of digital tools — without confusing them with shop profit strategy.',
+    productLink: {
+      lead: 'Comparing tools for your shop? See what is included in',
+      label: 'Full KERSIVO pricing',
+      href: '/pricing#plan',
+    },
     seoTitle: 'Tools & Payments for UK Barbershops | KERSIVO Insights',
     seoDescription:
       'Guides for UK barbershop owners on booking software, websites, card fees and payment technology costs.',

@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { KERSIVO_COMMISSION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, '../..');
@@ -94,16 +93,16 @@ describe('Barbershop online booking page — Section 04 deposits and payment opt
     expect(source).toContain("is an illustrative example, not a real shop's service.");
   });
 
-  it('has one tracked link to /starter and stays static', () => {
+  it('has one tracked Full pricing link and stays static', () => {
     const anchors = markup.match(/<a\b[\s\S]*?>/g) ?? [];
     expect(anchors).toHaveLength(1);
-    expect(anchors[0]).toContain('href={STARTER_PAGE_PATH}');
+    expect(anchors[0]).toContain('href={FULL_PRICING_HREF}');
+    expect(frontmatter).toContain("const FULL_PRICING_HREF = '/pricing#plan';");
     expect(anchors[0]).toContain('data-track={TRACK_EVENT}');
     expect(anchors[0]).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(STARTER_PAGE_PATH).toBe('/starter');
     expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.primary_cta_clicked}';`);
     expect(frontmatter).toContain("const TRACK_PLACEMENT = 'barbershop_online_booking_payments';");
-    expect(markup).toContain('Explore KERSIVO Starter');
+    expect(markup).toContain('See Full KERSIVO pricing');
     expect(component).not.toMatch(/<script\b|<form\b|<input\b|<button\b|<iframe\b|client:/);
   });
 

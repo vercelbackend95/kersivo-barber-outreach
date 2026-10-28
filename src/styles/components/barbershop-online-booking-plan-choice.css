@@ -1,5 +1,5 @@
 /* /barbershop-online-booking Section 07: plan choice chrome + FAQ.
-   Plan cards come from shared StarterFullPlanCards. */
+   Intent-based chooser: Full first, Starter second. */
 
 .bob-pc {
   --bob-pc-red: var(--accent);
@@ -68,8 +68,146 @@
   text-wrap: pretty;
 }
 
-.bob-pc .starter-plan-grid {
+/* Intent chooser */
+
+.bob-pc-intents {
+  display: grid;
+  gap: 1rem;
   margin-top: 2.35rem;
+}
+
+.bob-pc-intent {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 1.35rem 1.25rem 1.4rem;
+  border: 1px solid var(--bob-pc-line);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.02);
+}
+
+.bob-pc-intent--full {
+  border-color: color-mix(in srgb, var(--bob-pc-red) 55%, transparent);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(215 38 56 / 0.12), transparent 22rem),
+    rgb(255 255 255 / 0.025);
+}
+
+.bob-pc-intent__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  color: var(--fg);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bob-pc-intent__price {
+  color: var(--bob-pc-muted);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.85rem;
+}
+
+.bob-pc-intent__heading {
+  margin: 0;
+  color: var(--fg);
+  font-size: 1.3rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.bob-pc-intent__list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bob-pc-intent__list li {
+  position: relative;
+  padding-left: 1.5rem;
+  color: color-mix(in srgb, var(--muted) 85%, var(--fg));
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.bob-pc-intent__list li::before {
+  content: '';
+  position: absolute;
+  left: 0.15rem;
+  top: 0.3em;
+  width: 0.45rem;
+  height: 0.75rem;
+  border: solid var(--bob-pc-red-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.bob-pc-intent__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.35rem;
+}
+
+.bob-pc-intent__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-height: 2.75rem;
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.bob-pc-intent__cta:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.bob-pc-intent__cta--primary {
+  justify-content: center;
+  padding: 0 1.3rem;
+  border-radius: 0.75rem;
+  background: var(--bob-pc-red);
+  color: #fff;
+}
+
+.bob-pc-intent__cta--primary:hover {
+  text-decoration: none;
+  filter: brightness(1.08);
+}
+
+.bob-pc-intent__cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 47.99rem) {
+  .bob-pc-intent__cta--primary {
+    width: 100%;
+  }
+}
+
+@media (min-width: 48rem) {
+  .bob-pc-intents {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .bob-pc-intent {
+    padding: 1.75rem 1.75rem 1.8rem;
+  }
 }
 
 /* Disclosure */
@@ -205,10 +343,6 @@
 }
 
 @media (min-width: 48rem) {
-  .bob-pc .starter-plan-grid {
-    margin-top: 2.75rem;
-  }
-
   .bob-pc-disclosure {
     margin-top: 1.85rem;
     padding: 1.35rem 1.5rem;

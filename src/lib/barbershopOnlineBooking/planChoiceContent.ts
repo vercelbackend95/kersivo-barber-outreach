@@ -1,6 +1,5 @@
 /**
- * Section 07 section chrome for /barbershop-online-booking — heading, disclosure, FAQ.
- * Plan cards are rendered by the shared StarterFullPlanCards component.
+ * Section 07 for /barbershop-online-booking — heading, intent-based plan chooser, disclosure, FAQ.
  */
 import {
   BILLING_CYCLE_SHORT,
@@ -16,9 +15,54 @@ export const PLAN_CHOICE_SECTION_ID = 'booking-options';
 export const PLAN_CHOICE_H2 = 'Choose the Booking Setup That Fits Your Shop.';
 
 export const PLAN_CHOICE_LEAD =
-  'Starter provides a hosted booking page. Full adds your branded website and broader shop-management tools.';
+  'Start from what you need online booking to do for your shop. Full adds your branded website and broader shop-management tools; Starter is a hosted booking page for smaller teams.';
 
-export const PLAN_CHOICE_CLOSE = 'Choose Starter or explore what Full KERSIVO includes.';
+export const PLAN_CHOICE_CLOSE =
+  'Not sure yet? Starter and Full run on the same KERSIVO platform, so you can start on Starter and move to Full later.';
+
+export type PlanChoiceIntentOption = {
+  id: 'full' | 'starter';
+  label: string;
+  price: string;
+  heading: string;
+  intents: string[];
+  primary: { label: string; href: string; trackEvent: string };
+  secondary?: { label: string; href: string; trackEvent: string };
+};
+
+/** Intent-based chooser: Full first, Starter as the secondary path. */
+export const PLAN_CHOICE_INTENTS: PlanChoiceIntentOption[] = [
+  {
+    id: 'full',
+    label: 'Full KERSIVO',
+    price: `£${SAAS_MONTHLY_GBP}/month per location`,
+    heading: 'Choose Full if you want…',
+    intents: [
+      'Clients to book on your own branded website and domain',
+      'More than 4 active bookable barbers',
+      'To offer Pay at shop, or set the payment rule yourself',
+      'Full booking history, Reports, Retail and SMS reminders within a monthly allowance',
+    ],
+    primary: {
+      label: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
+      href: '/admin/launch',
+      trackEvent: 'saas_subscribe_click',
+    },
+    secondary: { label: 'See what Full includes', href: '/pricing#plan', trackEvent: 'plan_my_setup_click' },
+  },
+  {
+    id: 'starter',
+    label: 'KERSIVO Starter',
+    price: '£0/month',
+    heading: 'Starter fits if…',
+    intents: [
+      'A KERSIVO-hosted booking page is enough for now',
+      'You have up to 4 active bookable barbers',
+      `Every online booking can take a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through your own Stripe account`,
+    ],
+    primary: { label: 'Start on Starter (£0/month)', href: '/starter', trackEvent: 'starter_plan_explore_click' },
+  },
+];
 
 export type PlanChoiceFaq = {
   id: string;

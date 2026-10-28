@@ -18,7 +18,8 @@ describe('Websites three-page integrated cluster release gates', () => {
     const cases = [
       [buildBarbershopWebsitesJsonLd(), '/barbershop-websites', 2],
       [buildBarbershopWebsiteDesignJsonLd(), '/barbershop-website-design', 3],
-      [buildBarbershopOnlineBookingJsonLd(), '/barbershop-online-booking', 3],
+      // Online booking is its own pillar: Home › Online booking (not under websites).
+      [buildBarbershopOnlineBookingJsonLd(), '/barbershop-online-booking', 2],
     ] as const;
     for (const [schema, path, breadcrumbCount] of cases) {
       expect(schema).toMatchObject({ '@type': 'WebPage', '@id': site + path + '#webpage', url: site + path });

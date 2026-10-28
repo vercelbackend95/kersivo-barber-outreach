@@ -1,10 +1,5 @@
 ---
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/components/barbershop-website-design-process.css';
-
-const OFFER_HREF = '/barbershop-websites';
-const TRACK_EVENT = 'primary_cta_clicked';
-const TRACK_PLACEMENT = 'barbershop_website_design_parent_offer';
 
 // A short version of the parent page's setup process; the full onboarding steps and terms stay there.
 const stages = [
@@ -28,12 +23,6 @@ const stages = [
   },
 ];
 
-const included = [
-  { term: 'Website setup', detail: 'Standard branded' },
-  { term: 'Domain', detail: 'One standard domain' },
-  { term: 'Hosting', detail: 'Hosting and SSL' },
-  { term: 'Bookings', detail: 'Connected online' },
-];
 ---
 
 <section class="bwk" aria-labelledby="bwk-heading">
@@ -60,41 +49,14 @@ const included = [
         ))}
       </ol>
 
-      <aside class="bwk-card" aria-labelledby="bwk-card-title">
-        <p id="bwk-card-title" class="bwk-card__label">Full KERSIVO</p>
-        <p class="bwk-card__price">
-          <span class="bwk-card__amount">£{SAAS_MONTHLY_GBP}</span>
-          <span class="bwk-card__per">per month, per physical location</span>
+      <div class="bwk-managed">
+        <p class="bwk-managed__title">A managed subscription, not a one-off build</p>
+        <p class="bwk-managed__body">
+          Your business keeps its brand, domain and content. KERSIVO provides the software, templates,
+          code and hosting, and keeps them running and updated while Full KERSIVO is active. Standard
+          websites carry a subtle “Powered by KERSIVO” mark.
         </p>
-        <dl class="bwk-card__facts">
-          {included.map((item) => (
-            <div class="bwk-card__fact">
-              <dt>{item.term}</dt>
-              <dd>{item.detail}</dd>
-            </div>
-          ))}
-          <div class="bwk-card__fact bwk-card__fact--wide">
-            <dt>Setup fee</dt>
-            <dd>No separate standard setup fee</dd>
-          </div>
-        </dl>
-        <p class="bwk-card__billing">
-          Your first payment is taken when you subscribe, including while your website is being
-          prepared. Standard Stripe processing fees apply to online card payments.
-        </p>
-        <a class="bwk-card__link" href={OFFER_HREF} data-track={TRACK_EVENT} data-track-placement={TRACK_PLACEMENT}>
-          See what’s included in Full KERSIVO
-        </a>
-      </aside>
-    </div>
-
-    <div class="bwk-managed">
-      <p class="bwk-managed__title">A managed subscription, not a one-off build</p>
-      <p class="bwk-managed__body">
-        Your business keeps its brand, domain and content. KERSIVO provides the software, templates,
-        code and hosting, and keeps them running and updated while Full KERSIVO is active. Standard
-        websites carry a subtle “Powered by KERSIVO” mark.
-      </p>
+      </div>
     </div>
   </div>
 </section>

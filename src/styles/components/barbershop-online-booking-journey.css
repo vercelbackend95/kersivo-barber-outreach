@@ -884,6 +884,41 @@
   font-size: 0.74em;
 }
 
+/* Starter and Full payment steps, stacked in one column. */
+.boj-lives {
+  display: grid;
+  align-content: start;
+  gap: 0.6em;
+  min-width: 0;
+  margin-top: 1.1em;
+}
+
+.boj-lives > .boj-live {
+  margin-top: 0;
+}
+
+.boj-live--full {
+  border-color: rgb(255 255 255 / 0.14);
+}
+
+.boj-live__modes {
+  display: grid;
+  gap: 0.35em;
+}
+
+.boj-live__mode {
+  display: grid;
+  gap: 0.1em;
+  padding: 0.5em 0.7em;
+  border: 1px solid var(--boj-line);
+  border-radius: 0.6em;
+  background: #121214;
+}
+
+.boj-lives > .boj-live__note {
+  padding-inline: 0.2em;
+}
+
 /* Confirmation */
 
 .boj-confirm {
@@ -1233,7 +1268,8 @@
   }
 
   .boj-screen__body--split > .boj-summary,
-  .boj-screen__body--split > .boj-live {
+  .boj-screen__body--split > .boj-live,
+  .boj-screen__body--split > .boj-lives {
     margin-top: 0;
   }
 }

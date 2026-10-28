@@ -12,6 +12,7 @@ Commercial source of truth: Commercial Offer v2.0 (founder decisions FD01–FD12
 | 2 — brand trust, shared footer, measurement tag, QR Kit for Full | #128 | `docs/seo/batch-2-changelog.md` |
 | 3 — Full-first homepage + `/pricing`, deferred demo widgets, FAQ/JSON-LD | #129, #130 | `docs/seo/batch-3-changelog.md` |
 | 4 — comparison engine: shared CTAs, `/compare` answer + FAQ, tier-1 titles/PAA, calculator worked examples | #132 | `docs/seo/batch-4-changelog.md` |
+| 5 — cluster & content linking: `/starter` free qualifier + Full fit box, online-booking breadcrumb/payment flows/intent chooser, design page trim, Insights link budget + category links | (this PR) | `docs/seo/batch-5-changelog.md` |
 
 Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 100; `/pricing` mobile 98, desktop 100.
 
@@ -19,7 +20,6 @@ Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 1
 
 | Batch | Name | Size | Priority |
 |---|---|---|---|
-| 5 | Cluster & content linking | Medium | High |
 | 6 | Technical hygiene | Medium | Medium |
 | 7 | Optional refinements | Small | Low |
 
@@ -38,7 +38,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 6. **Calculator:** remove or finish the unfinished "Worked examples" text (`src/lib/seo/barberCostCalculatorPage.ts` ~line 537: "Scenario figures will be generated…"); preferred = generate the four scenarios from the engine and publish them as static tables; add the Full closing CTA.
 7. **Competitor facts:** every price must come from the `src/lib/seo/*Facts.ts` files with a checked date; re-verify against the official UK page before changing any figure (90-day freshness rule).
 
-### Batch 5 — Cluster & content linking (P2-02, P2-03, P2-10, P2-11, P2-12)
+### Batch 5 — Cluster & content linking (P2-02, P2-03, P2-10, P2-11, P2-12) — DONE, see `docs/seo/batch-5-changelog.md`
 - `/starter`: title `Free Barber Booking System UK – £0/Month | KERSIVO Starter`; "free" always next to the £5 deposit / Stripe qualifier; "When Full is the better fit" box.
 - `/barbershop-online-booking`: breadcrumb Home › Online booking (not under websites); show both payment flows (Starter vs Full) in the main walkthrough; intent-based plan chooser.
 - `/barbershop-website-design`: trim sales blocks to one closing block linking `/barbershop-websites`; commercial anchors always point to `/barbershop-websites`.
@@ -62,7 +62,6 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 
 ## Small leftovers
 - Homepage Booksy example: stray space before "." after "Booksy's UK pricing page".
-- Insights title over 60 characters: "Google Business Profile Booking Link: A Barbershop Owner's Check".
 - New OG image (no "ZERO COMMISSION"; needs a design).
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).
 

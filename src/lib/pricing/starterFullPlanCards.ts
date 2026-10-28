@@ -1,6 +1,5 @@
 /**
- * Shared Starter vs Full plan-card content for /starter and
- * /barbershop-online-booking Section 07.
+ * Shared Starter vs Full plan-card content for /starter.
  */
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 

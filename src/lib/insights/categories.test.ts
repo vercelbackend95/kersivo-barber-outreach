@@ -165,3 +165,19 @@ describe('Insights six-category taxonomy', () => {
     expect(page).toContain('Elsewhere in Insights');
   });
 });
+
+describe('Insights category intros link the relevant product page', () => {
+  it('links one product page per buyer-relevant category and none for Industry & People', () => {
+    const links = Object.fromEntries(INSIGHTS_CATEGORIES.map((category) => [category.id, category.productLink?.href]));
+    expect(links).toEqual({
+      'business-profit': '/barber-software-cost-calculator',
+      'clients-growth': '/barbershop-websites',
+      'brand-marketing': '/barbershop-website-design',
+      'bookings-operations': '/barbershop-online-booking',
+      'tools-payments': '/pricing#plan',
+      'industry-people': undefined,
+    });
+    const page = readFileSync(join(here, '../../pages/insights/category/[category].astro'), 'utf8');
+    expect(page).toContain('<a href={category.productLink.href}>{category.productLink.label}</a>');
+  });
+});

@@ -1,8 +1,9 @@
 ---
 import { buildPaymentExample, formatGbp } from '@/lib/barbershopOnlineBooking/paymentExample';
 import { KERSIVO_COMMISSION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
 import '@/styles/components/barbershop-online-booking-payments.css';
+
+const FULL_PRICING_HREF = '/pricing#plan';
 
 const TRACK_EVENT = 'primary_cta_clicked';
 const TRACK_PLACEMENT = 'barbershop_online_booking_payments';
@@ -52,8 +53,8 @@ const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
       <p class="bop__eyebrow">Deposits and payment options</p>
       <h2 id="bop-title" class="bop__title">What Does a Customer Pay When They Book?</h2>
       <p class="bop__lead">
-        Every public booking on KERSIVO Starter (£0/month) requires an online payment. Here is how a client
-        can pay for an illustrative {price} service.
+        On KERSIVO Starter (£0/month), every public booking requires an online payment. On Full KERSIVO, the shop
+        chooses the payment rule. Here is how a client can pay for an illustrative {price} service on each plan.
       </p>
     </header>
 
@@ -121,8 +122,8 @@ const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
         Pay at shop (no online payment), a {deposit} deposit, or full payment online. Deposits count towards the
         service price, with the balance paid at the shop. Standard Stripe processing fees apply to online card payments.
       </p>
-      <a class="bop__cta" href={STARTER_PAGE_PATH} data-track={TRACK_EVENT} data-track-placement={TRACK_PLACEMENT}>
-        Explore KERSIVO Starter
+      <a class="bop__cta" href={FULL_PRICING_HREF} data-track={TRACK_EVENT} data-track-placement={TRACK_PLACEMENT}>
+        See Full KERSIVO pricing
         <span class="bop__cta-icon" set:html={ARROW} />
       </a>
     </div>
