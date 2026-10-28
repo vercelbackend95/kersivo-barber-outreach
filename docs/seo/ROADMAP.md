@@ -13,7 +13,7 @@ Commercial source of truth: Commercial Offer v2.0 (founder decisions FD01–FD12
 | 3 — Full-first homepage + `/pricing`, deferred demo widgets, FAQ/JSON-LD | #129, #130 | `docs/seo/batch-3-changelog.md` |
 | 4 — comparison engine: shared CTAs, `/compare` answer + FAQ, tier-1 titles/PAA, calculator worked examples | #132 | `docs/seo/batch-4-changelog.md` |
 | 5 — cluster & content linking: `/starter` free qualifier + Full fit box, online-booking breadcrumb/payment flows/intent chooser, design page trim, Insights link budget + category links | #135 | `docs/seo/batch-5-changelog.md` |
-| 6 — technical hygiene: vercel.app → apex, trailing-slash 308, asset/font cache headers, client Sentry off, no ClientRouter on marketing, AI crawler groups, a11y (100/100/100/97) | (this PR) | `docs/seo/batch-6-changelog.md` |
+| 6 — technical hygiene: vercel.app → apex, trailing-slash 308, asset/font cache headers, client Sentry off, no ClientRouter on marketing, AI crawler groups, a11y (100/100/100/97) | #136 | `docs/seo/batch-6-changelog.md` |
 
 Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 100; `/pricing` mobile 98, desktop 100.
 
