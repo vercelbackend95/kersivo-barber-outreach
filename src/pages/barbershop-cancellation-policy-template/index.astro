@@ -1,0 +1,162 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import PolicyTool from '@/components/cancellationPolicy/PolicyTool.astro';
+import {
+  CANCELLATION_POLICY_BREADCRUMB_NAME,
+  CANCELLATION_POLICY_CTA,
+  CANCELLATION_POLICY_DEPOSITS,
+  CANCELLATION_POLICY_DESCRIPTION,
+  CANCELLATION_POLICY_DISPLAY,
+  CANCELLATION_POLICY_FAIR,
+  CANCELLATION_POLICY_FAQ_ITEMS,
+  CANCELLATION_POLICY_H1,
+  CANCELLATION_POLICY_LAST_UPDATED_ISO,
+  CANCELLATION_POLICY_LAST_UPDATED_LABEL,
+  CANCELLATION_POLICY_LEAD,
+  CANCELLATION_POLICY_OG_IMAGE_ALT,
+  CANCELLATION_POLICY_OG_IMAGE_PATH,
+  CANCELLATION_POLICY_PAGE_PATH,
+  CANCELLATION_POLICY_RELATED_LINKS,
+  CANCELLATION_POLICY_TITLE,
+  CANCELLATION_POLICY_WHY,
+  GOOGLE_BUSINESS_PROFILE_GUIDE_PATH,
+  buildCancellationPolicyJsonLd,
+} from '@/lib/seo/cancellationPolicyTemplatePage';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/cancellation-policy-template.css';
+
+const currentYear = new Date().getFullYear();
+const TRACK_PLACEMENT = 'cancellation_policy_template';
+const cta = CANCELLATION_POLICY_CTA;
+---
+
+<LandingLayout
+  title={CANCELLATION_POLICY_TITLE}
+  description={CANCELLATION_POLICY_DESCRIPTION}
+  canonicalPath={CANCELLATION_POLICY_PAGE_PATH}
+  ogImagePath={CANCELLATION_POLICY_OG_IMAGE_PATH}
+  ogImageWidth={1200}
+  ogImageHeight={630}
+  ogImageAlt={CANCELLATION_POLICY_OG_IMAGE_ALT}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildCancellationPolicyJsonLd()]}
+>
+  <main class="cpt-page landing-overflow-guard">
+    <header class="cpt-hero">
+      <div class="cpt-shell">
+        <nav class="cpt-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{CANCELLATION_POLICY_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="cpt-hero__eyebrow"><span class="cpt-hero__dot" aria-hidden="true"></span>Free tool for UK barbershops</p>
+        <h1 class="cpt-hero__title">{CANCELLATION_POLICY_H1}</h1>
+        <p class="cpt-hero__lead">{CANCELLATION_POLICY_LEAD}</p>
+        <p class="cpt-hero__updated">
+          Last updated <time datetime={CANCELLATION_POLICY_LAST_UPDATED_ISO}>{CANCELLATION_POLICY_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </header>
+
+    <div class="cpt-shell">
+      <PolicyTool />
+    </div>
+
+    <section class="cpt-cta" aria-labelledby="cpt-cta-title">
+      <div class="cpt-shell cpt-cta__inner">
+        <h2 id="cpt-cta-title">{cta.heading}</h2>
+        <p class="cpt-cta__body">{cta.body}</p>
+        <div class="cpt-cta__actions">
+          <a class="btn btn--primary btn--md" href={cta.primary.href} data-track="cta_starter_click" data-track-placement={TRACK_PLACEMENT}>
+            {cta.primary.label}
+          </a>
+          <a class="btn btn--secondary btn--md" href={cta.secondary.href}>{cta.secondary.label}</a>
+        </div>
+        <p class="cpt-cta__full">
+          {cta.fullLink.lead} <a class="cpt-link" href={cta.fullLink.href}>{cta.fullLink.label}</a>
+        </p>
+      </div>
+    </section>
+
+    <div class="cpt-shell cpt-guide">
+      <section aria-labelledby="cpt-why">
+        <h2 id="cpt-why">{CANCELLATION_POLICY_WHY.heading}</h2>
+        <p>{CANCELLATION_POLICY_WHY.body}</p>
+      </section>
+
+      <section aria-labelledby="cpt-fair">
+        <h2 id="cpt-fair">{CANCELLATION_POLICY_FAIR.heading}</h2>
+        <ul>
+          {CANCELLATION_POLICY_FAIR.bullets.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section aria-labelledby="cpt-display">
+        <h2 id="cpt-display">{CANCELLATION_POLICY_DISPLAY.heading}</h2>
+        <p>{CANCELLATION_POLICY_DISPLAY.body}</p>
+        <ul>
+          <li>Your booking page and confirmation emails.</li>
+          <li>Your website, linked from the booking button.</li>
+          <li>
+            Your <a class="cpt-link" href={GOOGLE_BUSINESS_PROFILE_GUIDE_PATH}>Google Business Profile</a> and your Instagram
+            bio or highlights.
+          </li>
+          <li>A printed note at the front desk.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="cpt-deposits">
+        <h2 id="cpt-deposits">{CANCELLATION_POLICY_DEPOSITS.heading}</h2>
+        <p>
+          {CANCELLATION_POLICY_DEPOSITS.body}
+          {' '}{CANCELLATION_POLICY_DEPOSITS.linkLead}{' '}
+          <a class="cpt-link" href={CANCELLATION_POLICY_DEPOSITS.linkHref}>{CANCELLATION_POLICY_DEPOSITS.linkLabel}</a>.
+        </p>
+      </section>
+    </div>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Cancellation policy questions"
+      subHeading="Notice periods, deposits, no-shows and how KERSIVO handles booking payments."
+      supportHeading="Want deposits taken for you?"
+      supportText="KERSIVO Starter is £0/month, with a £5 deposit or full payment on every public booking."
+      supportLinkLabel="See KERSIVO Starter"
+      supportLinkHref="/starter"
+      faqs={CANCELLATION_POLICY_FAQ_ITEMS}
+    />
+
+    <nav class="cpt-shell cpt-related" aria-labelledby="cpt-related-title">
+      <h2 id="cpt-related-title">Related</h2>
+      <ul>
+        {CANCELLATION_POLICY_RELATED_LINKS.map((link) => (
+          <li>
+            <a href={link.href}>
+              <span class="cpt-related__label">{link.label}</span>
+              <span class="cpt-related__desc">{link.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

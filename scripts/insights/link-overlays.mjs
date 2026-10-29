@@ -24,6 +24,12 @@ export const INSIGHTS_LINK_OVERLAYS = {
       href: '/barbershop-online-booking',
     },
   ],
+  'barbershop-no-show-cost-when-deposit-makes-sense': [
+    {
+      phrase: 'cancellation and refund policy',
+      href: '/barbershop-cancellation-policy-template',
+    },
+  ],
   'barbershop-card-payment-fees-uk': [
     {
       phrase: 'what does a card payment actually cost me per service?',

@@ -37,6 +37,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/squire-alternative',
   'https://kersivo.co.uk/setora-alternative',
   'https://kersivo.co.uk/barber-software-cost-calculator',
+  'https://kersivo.co.uk/barbershop-cancellation-policy-template',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/dpa',
@@ -103,6 +104,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);

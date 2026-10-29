@@ -1,4 +1,5 @@
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from './barberCostCalculatorPage';
+import { CANCELLATION_POLICY_PAGE_PATH } from './cancellationPolicyTemplatePage';
 import { BOOKSY_ALTERNATIVE_PAGE_PATH } from './booksyAlternativeFaq';
 import { FRESHA_ALTERNATIVE_PAGE_PATH } from './freshaAlternativeFaq';
 import { VAGARO_ALTERNATIVE_PAGE_PATH } from './vagaroAlternativeFaq';
@@ -66,6 +67,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(SQUIRE_ALTERNATIVE_PAGE_PATH),
   staticPage(SETORA_ALTERNATIVE_PAGE_PATH),
   staticPage(BARBER_COST_CALCULATOR_PAGE_PATH),
+  staticPage(CANCELLATION_POLICY_PAGE_PATH),
   staticPage('/privacy'),
   staticPage('/cookies'),
   staticPage('/dpa'),

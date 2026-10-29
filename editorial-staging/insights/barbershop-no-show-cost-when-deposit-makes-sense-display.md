@@ -120,7 +120,7 @@ If no-shows cluster in a few slots or among a few clients, a targeted rule, such
 
 ## Where KERSIVO fits
 
-KERSIVO's deposit option is a fixed £5; you can't set the amount. On Starter (£0/month), online bookings are paid by a £5 deposit or in full through your own Stripe account. On Full KERSIVO (£39/month per location), you choose which options to offer: Pay at shop, a £5 deposit or full payment. Standard Stripe fees apply. Your cancellation and refund policy is still yours to set and apply. See [Starter](https://kersivo.co.uk/starter) and [pricing](https://kersivo.co.uk/pricing).
+KERSIVO's deposit option is a fixed £5; you can't set the amount. On Starter (£0/month), online bookings are paid by a £5 deposit or in full through your own Stripe account. On Full KERSIVO (£39/month per location), you choose which options to offer: Pay at shop, a £5 deposit or full payment. Standard Stripe fees apply. Your [cancellation and refund policy](/barbershop-cancellation-policy-template) is still yours to set and apply. See [Starter](https://kersivo.co.uk/starter) and [pricing](https://kersivo.co.uk/pricing).
 
 ## The decision
 

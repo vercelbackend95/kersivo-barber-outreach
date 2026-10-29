@@ -267,6 +267,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
+    id: 'resources-cancellation-policy',
+    label: 'Cancellation Policy Template',
+    description: 'Create a free deposit and no-show policy for your shop.',
+    href: '/barbershop-cancellation-policy-template',
+    group: 'resources',
+    section: 'tools',
+    icon: 'policy',
+  },
+  {
     id: 'resources-website-design',
     label: 'Barbershop Website Design',
     description: 'Practical tips for barbershop branding, photography and mobile website design.',

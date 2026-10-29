@@ -30,6 +30,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/treatwell-alternative',
   '/setora-alternative',
   '/barber-software-cost-calculator',
+  '/barbershop-cancellation-policy-template',
   '/pricing',
   '/starter',
   '/about',
