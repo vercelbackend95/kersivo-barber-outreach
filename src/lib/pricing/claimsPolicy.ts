@@ -134,7 +134,7 @@ export const ONBOARDING_BILLING_INDEPENDENT_CLAIM =
 
 /** §6 — delivery timeline (no hard go-live date without complete materials). */
 export const ONBOARDING_TIMELINE_CLAIM =
-  'Standard delivery is communicated as: Roughly 1–2 weeks after we receive all required information. Timing can depend on completeness of information, your availability, migration, domain access and the quality of exported data. We do not guarantee a specific go-live date if you have not provided all required information.';
+  'Standard delivery is communicated as: typically a few days after we receive all required information. Timing can depend on completeness of information, your availability, migration, domain access, the quality of exported data and the number of setups in progress. We do not guarantee a specific go-live date if you have not provided all required information.';
 
 /**
  * §6 — private preview, Approve and launch, approval records, existing site / DNS.

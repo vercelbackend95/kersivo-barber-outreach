@@ -1,5 +1,6 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
 
@@ -33,13 +34,6 @@ export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {
     inLanguage: 'en-GB',
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      '@id': `${pageUrl}#breadcrumb`,
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Online booking', item: pageUrl },
-      ],
-    },
+    breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS, { siteUrl, withContext: false }),
   };
 }

@@ -29,7 +29,7 @@ describe('homepage SEO', () => {
     expect(homepage).toContain('description={HOMEPAGE_DESCRIPTION}');
     expect(HOMEPAGE_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('canonicalPath="/"');
-    expect(homepage).toContain('jsonLd={[buildBarberDemoJsonLd(), buildBarbershopBookingFaqJsonLd()]}');
+    expect(homepage).toContain('jsonLd={buildHomepageJsonLd()}');
     expect(homepage).not.toMatch(/noindex/);
   });
 });

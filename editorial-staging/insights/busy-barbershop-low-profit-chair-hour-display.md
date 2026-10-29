@@ -1,6 +1,6 @@
 # Your Diary Is Full. So Why Isn't Your Barbershop Making More Money?
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" decoding="async" alt="A worker cleaning the floor inside a real barbershop photographed in Edinburgh, Scotland" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1786057424913-6954b0f424af?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="A worker cleaning the floor inside a real barbershop photographed in Edinburgh, Scotland" />
 <figcaption>The working day behind the chair: a real barbershop interior photographed in Edinburgh. Editorial imagery, not a KERSIVO customer or a claim about this shop's profit — <a href="https://unsplash.com/photos/a-man-cleans-the-modern-barbershop-floor-zi2Er8Q5y2Y" target="_blank" rel="noopener noreferrer">Bruno BD / Unsplash</a>.</figcaption></figure>
 
 A full diary feels like proof that the business works. Every slot taken, clients waiting on the bench, no time for a cup of tea. Then the month closes and the money doesn't match the effort.

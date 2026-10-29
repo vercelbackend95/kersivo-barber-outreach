@@ -1,6 +1,6 @@
 # What a No-Show Really Costs a Barbershop — and When a Deposit Makes Sense
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" decoding="async" alt="Unoccupied brown leather barber chairs in a barbershop interior" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Unoccupied brown leather barber chairs in a barbershop interior" />
 <figcaption>An empty barber chair represents reserved capacity, but not necessarily the full price of a lost haircut — <a href="https://unsplash.com/photos/empty-brown-leather-barber-chairs-_I4sDxMK2ls" target="_blank" rel="noopener noreferrer">Jarrod Reed / Unsplash</a>.</figcaption></figure>
 
 *General information for UK barbershop owners, not legal advice. UK law and CMA guidance reviewed 20 October 2026. Online-booking cancellation rights are addressed using a conservative approach: do not assume every haircut is exempt from statutory cancellation rights.*

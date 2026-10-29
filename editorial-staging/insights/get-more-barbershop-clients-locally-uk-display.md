@@ -1,6 +1,6 @@
 # How to Get More Barbershop Clients Locally: Price the Channel Before You Pick It
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1125" loading="eager" decoding="async" alt="Vintage leather barber chairs and mirrors inside an empty barbershop" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1781455793310-8427c96454c7?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1800" height="1125" loading="eager" fetchpriority="high" decoding="async" alt="Vintage leather barber chairs and mirrors inside an empty barbershop" />
 <figcaption>Editorial photograph of an empty barbershop; no models pictured, not a KERSIVO client. — <a href="https://unsplash.com/photos/an-empty-barbershop-interior-with-several-chairs-and-mirrors-AXurvQTtO3Y" target="_blank" rel="noopener noreferrer">Barney Goodman / Unsplash</a>.</figcaption></figure>
 
 Most advice on getting more clients is a list of channels: Instagram, leaflets, Google, a referral scheme, a deal site. The lists aren't wrong. What they leave out is the question an owner should ask first. **What does a new client cost through this channel, and how many of them come back?**

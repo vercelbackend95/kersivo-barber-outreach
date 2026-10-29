@@ -1,36 +1,22 @@
-import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
-import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
-import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
-import {
-  BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
-  BARBER_COST_CALCULATOR_PAGE_PATH,
-} from './barberCostCalculatorPage';
-import {
-  BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
-  BOOKSY_ALTERNATIVE_PAGE_PATH,
-} from './booksyAlternativeFaq';
-import {
-  FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,
-  FRESHA_ALTERNATIVE_PAGE_PATH,
-} from './freshaAlternativeFaq';
-import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } from './vagaroAlternativeFaq';
-import { SQUARE_ALTERNATIVE_LAST_UPDATED_ISO, SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
-import { TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO, TREATWELL_ALTERNATIVE_PAGE_PATH } from './treatwellAlternativeFaq';
-import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
-import { TIMELY_ALTERNATIVE_LAST_UPDATED_ISO, TIMELY_ALTERNATIVE_PAGE_PATH } from './timelyAlternativeFaq';
-import { PHOREST_ALTERNATIVE_LAST_UPDATED_ISO, PHOREST_ALTERNATIVE_PAGE_PATH } from './phorestAlternativeFaq';
-import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
-import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
-import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
-import {
-  CANCELLATION_POLICY_LAST_UPDATED_ISO,
-  CANCELLATION_POLICY_PAGE_PATH,
-} from './cancellationPolicyTemplatePage';
-import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
+import { BARBER_COST_CALCULATOR_PAGE_PATH } from './barberCostCalculatorPage';
+import { CANCELLATION_POLICY_PAGE_PATH } from './cancellationPolicyTemplatePage';
+import { BOOKSY_ALTERNATIVE_PAGE_PATH } from './booksyAlternativeFaq';
+import { FRESHA_ALTERNATIVE_PAGE_PATH } from './freshaAlternativeFaq';
+import { VAGARO_ALTERNATIVE_PAGE_PATH } from './vagaroAlternativeFaq';
+import { SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
+import { TREATWELL_ALTERNATIVE_PAGE_PATH } from './treatwellAlternativeFaq';
+import { NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
+import { TIMELY_ALTERNATIVE_PAGE_PATH } from './timelyAlternativeFaq';
+import { PHOREST_ALTERNATIVE_PAGE_PATH } from './phorestAlternativeFaq';
+import { SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
+import { SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
+import { ABOUT_PAGE_PATH } from './aboutPage';
+import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
 import { buildInsightsSitemapEntries } from './insights';
-import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
-import { STARTER_PAGE_LAST_UPDATED_ISO, STARTER_PAGE_PATH } from './starterPage';
+import { getStaticPageLastModified } from './pageDates';
+import { PRICING_PAGE_PATH } from './pricingPage';
+import { STARTER_PAGE_PATH } from './starterPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from './barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
@@ -40,64 +26,52 @@ import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAG
  * Do not query the product table here — owner/tenant product URLs belong on
  * future per-shop sitemaps (shopId + customer domain), not the marketing domain.
  *
- * lastmod is optional and must be a reliable significant-modification date
- * (editorial "Last updated" / terms version). Omit when no such date exists.
+ * Every URL carries lastmod = the date its content last changed:
+ * - static pages: src/lib/seo/pageDates.ts (visible "Last updated" constants or a maintained date)
+ * - Insights: updatedDate ?? publishedDate; hub and archives use their newest article.
  * Never derive lastmod from deploy/build/current/file times.
+ * noindex routes (/demo*, /book, /admin*, /seo-growth) are never listed.
  */
 export type MarketingSitemapEntry = {
   path: string;
-  /** ISO date (YYYY-MM-DD). Omit when no reliable significant-modification date exists. */
-  lastmod?: string;
+  /** ISO date (YYYY-MM-DD). */
+  lastmod: string;
 };
+
+const staticPage = (path: string): MarketingSitemapEntry => ({ path, lastmod: getStaticPageLastModified(path) });
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** KERSIVO Insights hub + owner-approved published articles only. */
   ...buildInsightsSitemapEntries(),
-  { path: '/' },
-  /** Matches the visible "Last updated" date on src/pages/pricing.astro. */
-  { path: PRICING_PAGE_PATH, lastmod: PRICING_PAGE_LAST_UPDATED_ISO },
+  staticPage('/'),
+  staticPage(PRICING_PAGE_PATH),
   /** KERSIVO Starter product-led acquisition page. */
-  { path: STARTER_PAGE_PATH, lastmod: STARTER_PAGE_LAST_UPDATED_ISO },
-  /** Published Websites pillar and supporting guides (no fabricated lastmod dates). */
-  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE ? [{ path: BARBERSHOP_WEBSITES_PAGE_PATH }] : []),
+  staticPage(STARTER_PAGE_PATH),
+  /** Published Websites pillar and supporting guides. */
+  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE ? [staticPage(BARBERSHOP_WEBSITES_PAGE_PATH)] : []),
   ...(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-    ? [{ path: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH }] : []),
+    ? [staticPage(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)] : []),
   ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-    ? [{ path: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH }] : []),
-  /** Matches the visible "Last updated" date on src/pages/about.astro. */
-  { path: ABOUT_PAGE_PATH, lastmod: ABOUT_PAGE_LAST_UPDATED_ISO },
-  /** Alternatives Hub; matches the visible "Last updated" date on src/pages/compare/index.astro. */
-  { path: ALTERNATIVES_HUB_PAGE_PATH, lastmod: ALTERNATIVES_HUB_LAST_UPDATED_ISO },
-  /** Matches the visible "Last updated" date on src/pages/booksy-alternative/index.astro. */
-  { path: BOOKSY_ALTERNATIVE_PAGE_PATH, lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Matches the visible "Last updated" date on src/pages/fresha-alternative/index.astro. */
-  { path: FRESHA_ALTERNATIVE_PAGE_PATH, lastmod: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO },
-  { path: VAGARO_ALTERNATIVE_PAGE_PATH, lastmod: VAGARO_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Square Appointments alternative editorial last updated date. */
-  { path: SQUARE_ALTERNATIVE_PAGE_PATH, lastmod: SQUARE_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Nearcut Alternative editorial last updated date. */
-  { path: NEARCUT_ALTERNATIVE_PAGE_PATH, lastmod: NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO },
-  { path: TIMELY_ALTERNATIVE_PAGE_PATH, lastmod: TIMELY_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Treatwell UK editorial comparison. */
-  { path: TREATWELL_ALTERNATIVE_PAGE_PATH, lastmod: TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Phorest UK comparison updated 8 October 2026. */
-  { path: PHOREST_ALTERNATIVE_PAGE_PATH, lastmod: PHOREST_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** SQUIRE comparison editorial facts checked 8 October 2026. */
-  { path: SQUIRE_ALTERNATIVE_PAGE_PATH, lastmod: SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Setora UK comparison editorial update. */
-  { path: SETORA_ALTERNATIVE_PAGE_PATH, lastmod: SETORA_ALTERNATIVE_LAST_UPDATED_ISO },
-  /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
-  { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
-  /** Matches the visible "Last updated" date on src/pages/barbershop-cancellation-policy-template/index.astro. */
-  { path: CANCELLATION_POLICY_PAGE_PATH, lastmod: CANCELLATION_POLICY_LAST_UPDATED_ISO },
-  /** Matches "Last updated" on src/pages/privacy.astro. */
-  { path: '/privacy', lastmod: PRIVACY_POLICY_LAST_UPDATED_ISO },
-  /** Matches "Last updated" on src/pages/cookies.astro. */
-  { path: '/cookies', lastmod: COOKIE_POLICY_LAST_UPDATED_ISO },
-  /** Canonical DPA version = "Last updated" on /dpa. */
-  { path: '/dpa', lastmod: CURRENT_DPA_VERSION },
-  /** Canonical Terms version = "Last updated" on /terms. */
-  { path: '/terms', lastmod: CURRENT_TERMS_VERSION },
+    ? [staticPage(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)] : []),
+  staticPage(ABOUT_PAGE_PATH),
+  /** Alternatives Hub. */
+  staticPage(ALTERNATIVES_HUB_PAGE_PATH),
+  staticPage(BOOKSY_ALTERNATIVE_PAGE_PATH),
+  staticPage(FRESHA_ALTERNATIVE_PAGE_PATH),
+  staticPage(VAGARO_ALTERNATIVE_PAGE_PATH),
+  staticPage(SQUARE_ALTERNATIVE_PAGE_PATH),
+  staticPage(NEARCUT_ALTERNATIVE_PAGE_PATH),
+  staticPage(TIMELY_ALTERNATIVE_PAGE_PATH),
+  staticPage(TREATWELL_ALTERNATIVE_PAGE_PATH),
+  staticPage(PHOREST_ALTERNATIVE_PAGE_PATH),
+  staticPage(SQUIRE_ALTERNATIVE_PAGE_PATH),
+  staticPage(SETORA_ALTERNATIVE_PAGE_PATH),
+  staticPage(BARBER_COST_CALCULATOR_PAGE_PATH),
+  staticPage(CANCELLATION_POLICY_PAGE_PATH),
+  staticPage('/privacy'),
+  staticPage('/cookies'),
+  staticPage('/dpa'),
+  staticPage('/terms'),
 ] as const;
 
 export const SITEMAP_CONTENT_TYPE = 'application/xml; charset=utf-8';
@@ -114,7 +88,7 @@ function escapeXml(value: string): string {
 export function buildMarketingSitemapEntries(): Array<{ loc: string; lastmod?: string }> {
   return MARKETING_SITEMAP_ENTRIES.map((entry) => ({
     loc: buildAbsoluteUrl(entry.path),
-    ...(entry.lastmod ? { lastmod: entry.lastmod } : {}),
+    lastmod: entry.lastmod,
   }));
 }
 

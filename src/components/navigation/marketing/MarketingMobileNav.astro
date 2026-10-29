@@ -23,6 +23,11 @@ const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
 ---
 
 <div id={id} class="mnav-hub" data-mnav-hub hidden inert>
+  {/*
+    Inert until the menu is first opened (marketingNavController mounts it), so ~235 duplicate
+    nodes stay out of the live DOM on every page. The desktop nav carries the same links for crawlers.
+  */}
+  <template data-mnav-hub-content>
   <div class="mnav-hub__scroll">
     <p class="mnav-hub__context">Booking software for UK barbershops</p>
     <nav class="mnav-hub__nav" aria-label="Main">
@@ -92,4 +97,5 @@ const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
     </nav>
   </div>
   <MarketingNavActions class="mnav-hub__actions" primary={primary} secondary={secondary} />
+  </template>
 </div>

@@ -126,7 +126,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(cssRule('.bob-hero__head')).toContain('text-align: center;');
     expect(hero).toContain('<li><a href="/">Home</a></li>');
     expect(hero).not.toContain('Barbershop websites</a></li>');
-    expect(hero).toContain('<li><span aria-current="page">Online booking</span></li>');
+    expect(hero).toContain('<li><span aria-current="page">Online Booking for Barbershops</span></li>');
   });
 
   it('keeps the verified lead instead of unsupported growth copy', () => {
@@ -386,7 +386,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
       '@id': `${siteUrl}/barbershop-online-booking#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Online booking', item: `${siteUrl}/barbershop-online-booking` },
+        { '@type': 'ListItem', position: 2, name: 'Online Booking for Barbershops', item: `${siteUrl}/barbershop-online-booking` },
       ],
     });
     expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating|Offer/);
