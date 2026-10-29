@@ -1,0 +1,212 @@
+/* Private free website preview (/preview/{token}). */
+.fp-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky but in normal flow: it takes its own space, so it never covers the content below it. */
+.fp-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-surface, #0b0b0b);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: max(10px, env(safe-area-inset-top, 0px)) 16px 10px;
+}
+
+.fp-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.fp-bar__identity {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.fp-bar__title {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.fp-bar__note {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.fp-bar__views {
+  display: flex;
+  gap: 4px;
+}
+
+.fp-bar__view {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.fp-bar__view[aria-current='page'] {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+.fp-bar__view:focus-visible,
+.fp-bar .btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.fp-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fp-bar__operator {
+  max-width: 1280px;
+  margin: 6px auto 0;
+  font-size: 0.8rem;
+  color: #f5c46b;
+}
+
+/* Phones: keep the sticky bar compact so it never takes over the screen. */
+@media (max-width: 640px) {
+  .fp-bar {
+    padding-bottom: 8px;
+  }
+
+  .fp-bar__inner {
+    gap: 6px 10px;
+  }
+
+  .fp-bar__title {
+    font-size: 0.85rem;
+  }
+
+  .fp-bar__note {
+    font-size: 0.72rem;
+  }
+
+  .fp-bar__view {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  .fp-bar__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 6px;
+  }
+
+  .fp-bar__actions .btn {
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+}
+
+.fp-site {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-site__frame {
+  flex: 1;
+  width: 100%;
+  min-height: 75dvh;
+  border: 0;
+  background: #fff;
+}
+
+.fp-site__fallback {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.fp-dialog {
+  /* The global reset zeroes margins; restore the native centring of a modal dialog. */
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 0;
+  background: #111;
+  color: inherit;
+}
+
+.fp-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.fp-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.fp-dialog__title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.fp-dialog__label {
+  font-weight: 600;
+}
+
+.fp-dialog__textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.fp-dialog__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.fp-dialog__summary {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.fp-dialog__check {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+}
+
+.fp-dialog__error {
+  margin: 0;
+  color: #ff8a8a;
+}
+
+.fp-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fp-expired {
+  max-width: 640px;
+  padding-top: 64px;
+}

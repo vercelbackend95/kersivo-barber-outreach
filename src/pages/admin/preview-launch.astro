@@ -1,0 +1,44 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PreviewLaunchOnboarding from '@/components/freePreview/PreviewLaunchOnboarding';
+import { resolveAdminAccess } from '@/lib/admin/auth';
+import { accessCan } from '@/lib/admin/rbac/can';
+import { PREVIEW_ONBOARDING_PATH } from '@/lib/freePreview/config';
+import { loadPreviewOnboarding } from '@/lib/freePreview/previewOnboarding';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/free-preview-onboarding.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const access = await resolveAdminAccess(Astro);
+if (!access || access.via !== 'session' || !accessCan(access, 'billing.manage')) {
+  return Astro.redirect('/admin');
+}
+
+// Only shops adopted from a free preview get the shortened onboarding.
+const prefill = await loadPreviewOnboarding(access.shopId);
+if (!prefill) {
+  return Astro.redirect('/admin/client-onboarding');
+}
+---
+
+<MinimalLayout
+  title="Finish launching your website | KERSIVO"
+  description="Confirm your details, domain and payments to launch your KERSIVO website."
+  canonicalPath={PREVIEW_ONBOARDING_PATH}
+  noindex={true}
+  enableAnalytics={false}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    <PreviewLaunchOnboarding client:load prefill={prefill} />
+  </main>
+</MinimalLayout>

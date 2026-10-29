@@ -16,6 +16,8 @@ import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '@/lib/setup/saasSubscription';
 import { markShopPaid } from '@/lib/shop/markShopPaid';
 import { retrieveCheckoutSession, retrieveSubscription } from '@/lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { adoptPreviewDraftShop } from '@/lib/freePreview/conversion';
+import { PREVIEW_ONBOARDING_PATH } from '@/lib/freePreview/config';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -211,32 +213,81 @@ export const POST: APIRoute = async (ctx) => {
     return json({ error: 'Subscription record not found for this session.' }, 404);
   }
 
-  // Belonging to another shop — never steal.
+  // The shop this claim settles on. Normally the signed-in user's own shop; after a free preview purchase,
+  // the KERSIVO-built draft shop handed over to this user.
+  let ownerShopId = access.shopId;
+  let previewDraftShop = false;
+
+  // Belonging to another shop — never steal. The one exception is a free-preview draft shop bought with
+  // this exact email, which is adopted (not rebuilt) into this account.
   if (record.shopId != null && record.shopId !== access.shopId) {
-    return json(
-      {
-        error: 'This subscription is already linked to another shop.',
-        code: 'ALREADY_OWNED',
-      },
-      409,
+    const draftShopId = record.shopId;
+    const isPreviewDraft = Boolean(
+      access.userId &&
+        (await prisma.previewRequest.findUnique({ where: { draftShopId }, select: { id: true } })),
+    );
+    if (!isPreviewDraft || !access.userId) {
+      return json(
+        {
+          error: 'This subscription is already linked to another shop.',
+          code: 'ALREADY_OWNED',
+        },
+        409,
+      );
+    }
+
+    const adoptionGate = await checkClaimEntitlement(record, session);
+    if ('error' in adoptionGate) return adoptionGate.error;
+
+    const adoption = await adoptPreviewDraftShop({
+      draftShopId,
+      userId: access.userId,
+      currentShopId: access.shopId,
+      checkoutEmail: paidEmail,
+    });
+    if (!adoption.ok) {
+      if (adoption.code === 'CURRENT_SHOP_NOT_EMPTY') {
+        return json(
+          {
+            error: 'This account already has a KERSIVO workspace. Contact us and we will move your new website across.',
+            code: 'PREVIEW_ADOPTION_BLOCKED',
+          },
+          409,
+        );
+      }
+      return json(
+        {
+          error: 'This subscription is already linked to another shop.',
+          code: 'ALREADY_OWNED',
+        },
+        409,
+      );
+    }
+    ownerShopId = adoption.shopId;
+    previewDraftShop = true;
+  } else if (record.shopId != null) {
+    previewDraftShop = Boolean(
+      await prisma.previewRequest.findUnique({ where: { draftShopId: record.shopId }, select: { id: true } }),
     );
   }
+  // Only free-preview purchases get the shortened onboarding; every other response is unchanged.
+  const previewRedirect = previewDraftShop ? { redirectTo: PREVIEW_ONBOARDING_PATH } : {};
 
   // Already owned by this shop — entitlement, persist PENDING→ACTIVE snapshot, then heal paid.
-  if (record.shopId != null && record.shopId === access.shopId) {
+  if (record.shopId != null && record.shopId === ownerShopId) {
     const gate = await checkClaimEntitlement(record, session);
     if ('error' in gate) return gate.error;
 
     if (gate.verifiedLive) {
       const persisted = await persistVerifiedLiveWhilePending({
         id: record.id,
-        shopId: access.shopId,
+        shopId: ownerShopId,
         shopIdWasNull: false,
         verifiedLive: gate.verifiedLive,
       });
       if (!persisted) {
         const again = await prisma.saasSubscription.findUnique({ where: { id: record.id } });
-        if (!again || again.shopId !== access.shopId) {
+        if (!again || again.shopId !== ownerShopId) {
           return json(
             {
               error: 'This subscription is already linked to another shop.',
@@ -251,14 +302,15 @@ export const POST: APIRoute = async (ctx) => {
       }
     }
 
-    const healError = await ensurePaidMarker(access.shopId);
+    const healError = await ensurePaidMarker(ownerShopId);
     if (healError) return healError;
     return json({
       ok: true,
       claimed: false,
       idempotent: true,
-      shopId: access.shopId,
+      shopId: ownerShopId,
       subscriptionId: record.id,
+      ...previewRedirect,
     });
   }
 
@@ -269,30 +321,30 @@ export const POST: APIRoute = async (ctx) => {
   if (gate.verifiedLive) {
     const persisted = await persistVerifiedLiveWhilePending({
       id: record.id,
-      shopId: access.shopId,
+      shopId: ownerShopId,
       shopIdWasNull: true,
       verifiedLive: gate.verifiedLive,
     });
     if (!persisted) {
       const again = await prisma.saasSubscription.findUnique({ where: { id: record.id } });
-      if (again?.shopId === access.shopId) {
+      if (again?.shopId === ownerShopId) {
         const againGate = await checkClaimEntitlement(again, session);
         if ('error' in againGate) return againGate.error;
         if (againGate.verifiedLive) {
           await persistVerifiedLiveWhilePending({
             id: record.id,
-            shopId: access.shopId,
+            shopId: ownerShopId,
             shopIdWasNull: false,
             verifiedLive: againGate.verifiedLive,
           });
         }
-        const healError = await ensurePaidMarker(access.shopId);
+        const healError = await ensurePaidMarker(ownerShopId);
         if (healError) return healError;
         return json({
           ok: true,
           claimed: false,
           idempotent: true,
-          shopId: access.shopId,
+          shopId: ownerShopId,
           subscriptionId: record.id,
         });
       }
@@ -308,23 +360,23 @@ export const POST: APIRoute = async (ctx) => {
     // Non-PENDING entitled guest row: link shopId only (race-safe).
     const claimed = await prisma.saasSubscription.updateMany({
       where: { id: record.id, shopId: null },
-      data: { shopId: access.shopId },
+      data: { shopId: ownerShopId },
     });
 
     if (claimed.count === 0) {
       const again = await prisma.saasSubscription.findUnique({
         where: { id: record.id },
       });
-      if (again?.shopId === access.shopId) {
+      if (again?.shopId === ownerShopId) {
         const againGate = await checkClaimEntitlement(again, session);
         if ('error' in againGate) return againGate.error;
-        const healError = await ensurePaidMarker(access.shopId);
+        const healError = await ensurePaidMarker(ownerShopId);
         if (healError) return healError;
         return json({
           ok: true,
           claimed: false,
           idempotent: true,
-          shopId: access.shopId,
+          shopId: ownerShopId,
           subscriptionId: record.id,
         });
       }
@@ -338,14 +390,15 @@ export const POST: APIRoute = async (ctx) => {
     }
   }
 
-  const paidError = await ensurePaidMarker(access.shopId);
+  const paidError = await ensurePaidMarker(ownerShopId);
   if (paidError) return paidError;
 
   return json({
     ok: true,
     claimed: true,
     idempotent: false,
-    shopId: access.shopId,
+    shopId: ownerShopId,
     subscriptionId: record.id,
+    ...previewRedirect,
   });
 };

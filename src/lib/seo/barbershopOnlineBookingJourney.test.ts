@@ -78,7 +78,7 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     }
     expect(flow).toContain('<span>Phone <em>(optional)</em></span>');
     expect(markup).toContain('Phone <em>(optional)</em>');
-    expect(flow).toContain("if (publicDemoMode) return 'Complete demo booking';");
+    expect(flow).toContain("if (publicDemoMode) return presentation?.submitLabel ?? 'Complete demo booking';");
     expect(markup).toContain("'Complete demo booking'");
     for (const item of ['No real appointment will be created', 'No confirmation email will be sent', 'Times shown follow the Cutstate owner timeline']) {
       expect(flow).toContain(`{ label: '${item}' }`);

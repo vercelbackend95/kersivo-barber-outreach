@@ -45,6 +45,8 @@ import {
 import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
+import { markPreviewRequestConverted } from '../../../lib/freePreview/conversion';
+import { PREVIEW_REQUEST_METADATA_KEY } from '../../../lib/freePreview/launchCheckout';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
@@ -686,6 +688,19 @@ async function handleSaasSubscriptionCheckout(
       },
     });
     logSaasSubscriptionStage('marked_active', { sessionId, id: record.id });
+  }
+
+  // Free preview launch (spec §7): only checkouts started from a preview carry previewRequestId.
+  const previewRequestId = metadata[PREVIEW_REQUEST_METADATA_KEY]?.trim() || null;
+  if (previewRequestId) {
+    const conversion = await markPreviewRequestConverted({
+      previewRequestId,
+      draftShopId: metadataShopId || record.shopId,
+      stripeCustomerId: stripeCustomerId || record.stripeCustomerId,
+      stripeSubscriptionId: stripeSubscriptionId || record.stripeSubscriptionId,
+      stripeSessionId: sessionId,
+    });
+    logSaasSubscriptionStage('free_preview_conversion', { sessionId, result: conversion });
   }
 
   try {

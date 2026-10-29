@@ -24,6 +24,8 @@ export type BookingFlowPresentation = {
   confirmCtas?: readonly BookingDemoConfirmCta[];
   demoReferencePrefix?: string;
   skipCompletionAnalytics?: boolean;
+  /** Public-demo submit button label. Defaults to "Complete demo booking". */
+  submitLabel?: string;
   wholePoundPrices?: boolean;
 };
 

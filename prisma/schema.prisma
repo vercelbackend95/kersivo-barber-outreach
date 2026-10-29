@@ -88,6 +88,12 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_REQUEST_ACKNOWLEDGEMENT
   /// Free website preview: internal notification of a new request (E2).
   FREE_PREVIEW_REQUEST_INTERNAL
+  /// Free website preview: preview ready (E3).
+  FREE_PREVIEW_READY
+  /// Free website preview: preview updated after changes (E4).
+  FREE_PREVIEW_UPDATED
+  /// Free website preview: internal notification that the owner requested changes.
+  FREE_PREVIEW_CHANGES_REQUESTED_INTERNAL
 }
 
 enum EmailOutboundStatus {
@@ -1532,10 +1538,12 @@ enum PreviewRequestStatus {
 
 /// "Free preview before you pay" request. Rules in src/lib/freePreview/*.
 model PreviewRequest {
-  id          String               @id @default(cuid())
+  id              String               @id @default(cuid())
   /// Capability token for the private preview URL. 256-bit base64url; stored plaintext so ops can copy the link.
-  publicToken String               @unique
-  status      PreviewRequestStatus @default(REQUESTED)
+  publicToken     String               @unique
+  /// SHA-256 (hex) of publicToken: the lookup key. The plaintext is then compared in constant time.
+  publicTokenHash String               @unique
+  status          PreviewRequestStatus @default(REQUESTED)
 
   firstName              String?
   email                  String
