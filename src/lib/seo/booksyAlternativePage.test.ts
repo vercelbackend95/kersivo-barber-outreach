@@ -220,7 +220,7 @@ describe('booksy-alternative: Fresha template structure', () => {
     expect(components.BooksyFit).toContain('<ModelComparison');
     expect(components.BooksySwitching).toContain('<ProcessTimeline');
     expect(components.BooksyProof).toContain('<LandingDemoPreview');
-    expect(components.BooksyPricing).toContain('<RateCard1Offer />');
+    expect(components.BooksyPricing).toContain('<RateCard1Offer freePreview={freePreview} />');
     for (const name of ['BooksyApproaches', 'BooksyJourney', 'BooksyDecision']) {
       expect(existsSync(join(here, componentDir, `${name}.astro`))).toBe(false);
     }

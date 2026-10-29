@@ -427,3 +427,12 @@
     font-size: 0.95rem;
   }
 }
+
+/* Free-preview CTA pair (FREE_PREVIEW_FLOW_ENABLED): keep the sticky panel within a 900px-high viewport. */
+.bsw-offer-panel__free-preview {
+  gap: 0.5rem;
+}
+
+.bsw-offer-panel__free-preview + .bsw-offer-panel__payment {
+  margin-top: 0.85rem;
+}

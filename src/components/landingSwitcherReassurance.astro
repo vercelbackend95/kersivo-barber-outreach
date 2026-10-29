@@ -1,4 +1,6 @@
 ---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingSwitcherReassurance.css';
 
@@ -89,6 +91,12 @@ const trustPoints = [
     </ul>
 
     <div class="landing-switcher-reassurance__ctas">
+      {isFreePreviewFlowEnabled() ? (
+        <FullPlanCta
+          primaryClass="btn btn--primary btn--lg landing-switcher-reassurance__cta"
+          placement="homepage_switching"
+        />
+      ) : (
       <a
         href="/admin/launch"
         class="btn btn--primary btn--lg landing-switcher-reassurance__cta"
@@ -97,6 +105,7 @@ const trustPoints = [
       >
         Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
       </a>
+      )}
     </div>
 
     {(showBooksyCompareLink || showFreshaCompareLink) && (

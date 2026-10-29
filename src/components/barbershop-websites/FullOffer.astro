@@ -1,6 +1,8 @@
 ---
 import { ArrowRight, Check } from 'lucide-react';
 import '@/styles/components/barbershop-websites-full-offer.css';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   NO_SETUP_FEE_SHORT,
   PLAN_SCOPE_SHORT,
@@ -93,6 +95,11 @@ const payment = [
           ))}
         </ul>
 
+        {isFreePreviewFlowEnabled() ? (
+          <FullPlanCta part="all" primaryClass="bsw-offer-panel__cta" placement={TRACK_PLACEMENT} class="bsw-offer-panel__free-preview">
+            <ArrowRight slot="icon" className="bsw-offer-panel__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
+          </FullPlanCta>
+        ) : (
         <a
           class="bsw-offer-panel__cta"
           href={FULL_LAUNCH_HREF}
@@ -102,6 +109,7 @@ const payment = [
           Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
           <ArrowRight className="bsw-offer-panel__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
         </a>
+        )}
 
         <div class="bsw-offer-panel__payment">
           <p class="bsw-offer-panel__label">How payment works</p>

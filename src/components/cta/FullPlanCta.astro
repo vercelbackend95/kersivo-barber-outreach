@@ -1,0 +1,66 @@
+---
+/**
+ * Shared Full KERSIVO CTA for the free-preview flow (docs/free-preview-spec.md §10.2):
+ * primary "Get my free preview" button + secondary "Or subscribe now — £39/month" text link.
+ * Callers render it only when FREE_PREVIEW_FLOW_ENABLED is on; with the flag off they keep their
+ * original markup so the public site is unchanged.
+ *
+ * part="all" renders both inside a wrapper; "primary" / "subscribe" render one piece so a caller
+ * can keep the primary inside an existing button row (e.g. next to "See it working").
+ * The default slot is shown next to the subscribe link (e.g. billing notes); the "icon" slot is
+ * appended inside the primary button (e.g. an arrow the replaced button had).
+ */
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import '@/styles/components/full-plan-cta.css';
+
+interface Props {
+  /** Analytics placement, kept from the CTA this replaces. */
+  placement?: string;
+  /** Classes of the button this replaces, so it keeps the surface's look (unused for part="subscribe"). */
+  primaryClass?: string;
+  part?: 'all' | 'primary' | 'subscribe';
+  class?: string;
+}
+
+const { placement, primaryClass, part = 'all', class: className } = Astro.props;
+const hasNotes = Astro.slots.has('default');
+---
+
+{
+  part === 'primary' ? (
+    <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track-placement={placement}>
+      {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
+    </a>
+  ) : null
+}
+{
+  part === 'subscribe' ? (
+    <div class:list={['full-plan-cta__subscribe', className]}>
+      <a href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
+        {SUBSCRIBE_NOW_CTA_LABEL}
+      </a>
+      {hasNotes && <div class="full-plan-cta__notes"><slot /></div>}
+    </div>
+  ) : null
+}
+{
+  part === 'all' ? (
+    <div class:list={['full-plan-cta', className]}>
+      <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track-placement={placement}>
+        {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
+      </a>
+      <div class="full-plan-cta__subscribe">
+        <a href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
+          {SUBSCRIBE_NOW_CTA_LABEL}
+        </a>
+        {hasNotes && <div class="full-plan-cta__notes"><slot /></div>}
+      </div>
+    </div>
+  ) : null
+}

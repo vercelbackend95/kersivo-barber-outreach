@@ -3,6 +3,8 @@
  * Shared closing CTA for /compare, the cost calculator and every *-alternative page.
  * Full KERSIVO leads; Starter and the switching question are secondary text links.
  */
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
@@ -38,6 +40,12 @@ const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
       </div>
 
       <div class="landing-final-cta__conversion">
+        {isFreePreviewFlowEnabled() ? (
+          <FullPlanCta
+            primaryClass="btn btn--primary btn--lg landing-final-cta__button"
+            placement={trackPlacement}
+          />
+        ) : (
         <a
           href="/admin/launch"
           class="btn btn--primary btn--lg landing-final-cta__button"
@@ -46,6 +54,7 @@ const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
         >
           Start Full KERSIVO — {monthlyPriceLabel}
         </a>
+        )}
         <p class="landing-final-cta__starter">
           <a href="/starter" data-track="starter_plan_explore_click" data-track-placement={trackPlacement}>
             {COMPARISON_FINAL_CTA_STARTER_LABEL}

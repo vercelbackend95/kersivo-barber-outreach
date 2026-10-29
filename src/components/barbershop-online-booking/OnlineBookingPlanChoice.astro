@@ -1,9 +1,13 @@
 ---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { PLAN_CHOICE_INTENTS, buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
 import '@/styles/components/barbershop-online-booking-plan-choice.css';
 
 const content = buildPlanChoiceContent();
 const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
+// FREE_PREVIEW_FLOW_ENABLED replaces the Full primary CTA (docs/free-preview-spec.md §10.2).
+const freePreview = isFreePreviewFlowEnabled();
 ---
 
 <section class="bob-pc" id={content.sectionId} aria-labelledby="bob-pc-title">
@@ -29,6 +33,13 @@ const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
             {option.intents.map((intent) => <li>{intent}</li>)}
           </ul>
           <div class="bob-pc-intent__actions">
+            {freePreview && option.id === 'full' ? (
+              <FullPlanCta
+                part="primary"
+                primaryClass="bob-pc-intent__cta bob-pc-intent__cta--primary"
+                placement={PLAN_CHOICE_TRACK_PLACEMENT}
+              />
+            ) : (
             <a
               href={option.primary.href}
               class:list={['bob-pc-intent__cta', { 'bob-pc-intent__cta--primary': option.id === 'full' }]}
@@ -37,6 +48,7 @@ const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
             >
               {option.primary.label}{option.id === 'starter' && <span aria-hidden="true">→</span>}
             </a>
+            )}
             {option.secondary && (
               <a
                 href={option.secondary.href}
@@ -48,6 +60,9 @@ const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
               </a>
             )}
           </div>
+          {freePreview && option.id === 'full' && (
+            <FullPlanCta part="subscribe" placement={PLAN_CHOICE_TRACK_PLACEMENT} />
+          )}
         </article>
       ))}
     </div>

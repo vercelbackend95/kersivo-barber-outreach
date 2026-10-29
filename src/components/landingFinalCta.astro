@@ -1,4 +1,6 @@
 ---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingFinalCta.css';
 
@@ -31,6 +33,12 @@ const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
       </div>
 
       <div class="landing-final-cta__conversion">
+        {isFreePreviewFlowEnabled() ? (
+          <FullPlanCta
+            primaryClass="btn btn--primary btn--lg landing-final-cta__button"
+            placement="homepage_final"
+          />
+        ) : (
         <a
           href="/admin/launch"
           class="btn btn--primary btn--lg landing-final-cta__button"
@@ -39,6 +47,7 @@ const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
         >
           Start Full KERSIVO — {monthlyPriceLabel}
         </a>
+        )}
 
         <p class="landing-final-cta__reassurance">
           0% KERSIVO commission. Standard Stripe processing fees apply to online card payments.

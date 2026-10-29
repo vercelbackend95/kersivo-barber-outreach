@@ -26,10 +26,10 @@ describe('homepage SEO', () => {
 
   it('keeps the canonical root, structured data and layout', () => {
     expect(homepage).toContain('title={DEFAULT_TITLE}');
-    expect(homepage).toContain('description={HOMEPAGE_DESCRIPTION}');
+    expect(homepage).toContain('description={getHomepageDescription(freePreview)}');
     expect(HOMEPAGE_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('canonicalPath="/"');
-    expect(homepage).toContain('jsonLd={buildHomepageJsonLd()}');
+    expect(homepage).toContain('jsonLd={buildHomepageJsonLd(freePreview)}');
     expect(homepage).not.toMatch(/noindex/);
   });
 });

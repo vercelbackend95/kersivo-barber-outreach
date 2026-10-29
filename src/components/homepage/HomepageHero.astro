@@ -1,7 +1,12 @@
 ---
 import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/components/homepage-hero.css';
+
+// Flag off: the original hero below renders unchanged (docs/free-preview-spec.md §10.3).
+const freePreview = isFreePreviewFlowEnabled();
 ---
 
 <section id="hero" class="home-hero" aria-labelledby="home-hero-title">
@@ -17,12 +22,31 @@ import '@/styles/components/homepage-hero.css';
       <span class="home-hero__title-line">Not a marketplace listing.</span>
     </h1>
 
+    {freePreview ? (
+      <p class="home-hero__lead">
+        Full KERSIVO gives your shop a branded website on its own domain, online booking,
+        client records and retail pickup — designed individually for your shop, for £{SAAS_MONTHLY_GBP} a month
+        per location, not per barber.
+      </p>
+    ) : (
     <p class="home-hero__lead">
       Full KERSIVO gives your shop a branded website on its own domain, online booking,
       client records and retail pickup — set up for you, for £{SAAS_MONTHLY_GBP} a month
       per location, not per barber.
     </p>
+    )}
 
+    {freePreview ? (
+      <>
+        <div class="home-hero__actions">
+          <FullPlanCta part="primary" primaryClass="home-hero__action home-hero__action--primary" placement="homepage_hero" />
+          <a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">
+            See it working
+          </a>
+        </div>
+        <FullPlanCta part="subscribe" placement="homepage_hero" />
+      </>
+    ) : (
     <div class="home-hero__actions">
       <a
         href="/admin/launch"
@@ -36,6 +60,7 @@ import '@/styles/components/homepage-hero.css';
         See it working
       </a>
     </div>
+    )}
 
     <div class="home-hero__meta" aria-label="KERSIVO commercial model">
       <span>No setup fee</span>
@@ -47,10 +72,17 @@ import '@/styles/components/homepage-hero.css';
       <span>Cancel anytime</span>
     </div>
 
+    {freePreview ? (
+      <p class="home-hero__honesty">
+        We design a private preview of your website first — no card, no call. You only pay if
+        you decide to launch.
+      </p>
+    ) : (
     <p class="home-hero__honesty">
       Your first payment is taken when you subscribe. Your site is typically ready in a few days
       once we receive all required information, and nothing goes live until you approve it.
     </p>
+    )}
 
     <p class="home-hero__starter-path">
       Just need online bookings? KERSIVO Starter is £0/month for up to 4 barbers, with every

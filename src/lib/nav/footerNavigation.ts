@@ -1,5 +1,12 @@
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { FOOTER_LEGAL_LINKS, type FooterNavItem } from '@/lib/seo/footerSocialLinks';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
 
 export type FooterColumnLink = FooterNavItem & {
   track?: string;
@@ -65,3 +72,18 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     ],
   },
 ];
+
+/** Product-column links that replace FOOTER_PRODUCT_CTA while FREE_PREVIEW_FLOW_ENABLED is on (spec §10.2). */
+export const FOOTER_FREE_PREVIEW_LINKS: readonly FooterColumnLink[] = [
+  { name: FREE_PREVIEW_CTA_LABEL, href: FREE_PREVIEW_CTA_HREF, accent: true },
+  { name: SUBSCRIBE_NOW_CTA_LABEL, href: SUBSCRIBE_NOW_CTA_HREF, track: SUBSCRIBE_NOW_CTA_TRACK },
+];
+
+/** Footer columns for the current flag state; with the flag off this is FOOTER_COLUMNS unchanged. */
+export function getFooterColumns(freePreviewEnabled: boolean): readonly FooterColumn[] {
+  if (!freePreviewEnabled) return FOOTER_COLUMNS;
+  return FOOTER_COLUMNS.map((column) => ({
+    ...column,
+    links: column.links.flatMap((link) => (link === FOOTER_PRODUCT_CTA ? FOOTER_FREE_PREVIEW_LINKS : [link])),
+  }));
+}

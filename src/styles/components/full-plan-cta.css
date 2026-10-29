@@ -1,0 +1,44 @@
+/* Shared Full KERSIVO free-preview CTA (src/components/cta/FullPlanCta.astro, rateCard1.tsx). */
+.full-plan-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  gap: 0.6rem;
+}
+
+.full-plan-cta__subscribe {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.full-plan-cta .full-plan-cta__subscribe {
+  margin-top: 0;
+}
+
+.full-plan-cta__subscribe > a {
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.full-plan-cta__subscribe > a:hover {
+  color: var(--accent-text, var(--fg));
+}
+
+.full-plan-cta__subscribe > a:focus-visible {
+  outline: 2px solid var(--focus, currentColor);
+  outline-offset: 3px;
+}
+
+.full-plan-cta__notes {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+}
+
+.full-plan-cta__notes p {
+  margin: 0;
+}

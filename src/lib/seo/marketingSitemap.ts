@@ -22,6 +22,7 @@ import { STARTER_PAGE_PATH } from './starterPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from './barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
+import { FREE_PREVIEW_PAGE_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 
 /**
  * Marketing-domain sitemap for kersivo.co.uk only.
@@ -56,6 +57,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
     ? [staticPage(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)] : []),
   staticPage(ABOUT_PAGE_PATH),
+  /** /free-preview 404s while FREE_PREVIEW_FLOW_ENABLED is off; the sitemap follows the flag at build time. */
+  ...(isFreePreviewFlowEnabled() ? [staticPage(FREE_PREVIEW_PAGE_PATH)] : []),
   /** Alternatives Hub. */
   staticPage(ALTERNATIVES_HUB_PAGE_PATH),
   staticPage(BOOKSY_ALTERNATIVE_PAGE_PATH),

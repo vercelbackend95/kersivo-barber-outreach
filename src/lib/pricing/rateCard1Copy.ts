@@ -166,8 +166,15 @@ export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCar
   return variant === 'landing' ? LANDING_COPY : DEFAULT_COPY;
 }
 
-export function getRateCard1LandingLayout(): RateCard1LandingLayout {
-  return LANDING_LAYOUT;
+/** Pricing-card conditions while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
+const FREE_PREVIEW_LANDING_LAYOUT: RateCard1LandingLayout = {
+  ...LANDING_LAYOUT,
+  conditionsLine1:
+    'Standard Stripe payment-processing fees apply to online payments. See your free preview first. If you subscribe, your first payment is taken at checkout, then monthly on the same day.',
+};
+
+export function getRateCard1LandingLayout(freePreview = false): RateCard1LandingLayout {
+  return freePreview ? FREE_PREVIEW_LANDING_LAYOUT : LANDING_LAYOUT;
 }
 
 export { SHARED as rateCard1SharedCopy };

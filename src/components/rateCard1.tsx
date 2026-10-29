@@ -28,9 +28,17 @@ import {
   type RateCard1LandingIcon,
   type RateCard1Variant,
 } from "@/lib/pricing/rateCard1Copy";
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from "@/lib/freePreview/fullPlanCta";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
 import "@/styles/rateCard1.css";
+import "@/styles/components/full-plan-cta.css";
 
 type CareFeature = {
   title: string;
@@ -41,6 +49,12 @@ type CareFeature = {
 interface RateCard1Props {
   className?: string;
   variant?: RateCard1Variant;
+  /** FREE_PREVIEW_FLOW_ENABLED, resolved on the server by the caller. */
+  freePreview?: boolean;
+}
+
+interface RateCard1OfferProps {
+  freePreview?: boolean;
 }
 
 const LANDING_ICONS: Record<RateCard1LandingIcon, LucideIcon> = {
@@ -84,8 +98,8 @@ function buildCareFeatures(variant: RateCard1Variant): CareFeature[] {
   ];
 }
 
-function RateCard1Offer() {
-  const layout = getRateCard1LandingLayout();
+function RateCard1Offer({ freePreview = false }: RateCard1OfferProps) {
+  const layout = getRateCard1LandingLayout(freePreview);
 
   return (
     <div className="rate-card1__offer">
@@ -106,15 +120,32 @@ function RateCard1Offer() {
               </li>
             ))}
           </ul>
-          <a
-            href="/admin/launch"
-            className="btn btn--primary rate-card1__cta"
-            data-track="saas_subscribe_click"
-          >
-            {layout.ctaLabel}
-          </a>
-          <p className="rate-card1__offer-checkout">{layout.checkoutNote}</p>
-          <p className="rate-card1__offer-billing">{layout.billingNote}</p>
+          {freePreview ? (
+            <>
+              <a href={FREE_PREVIEW_CTA_HREF} className="btn btn--primary rate-card1__cta">
+                {FREE_PREVIEW_CTA_LABEL}
+              </a>
+              <div className="full-plan-cta__subscribe rate-card1__offer-subscribe">
+                <a href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK}>
+                  {SUBSCRIBE_NOW_CTA_LABEL}
+                </a>
+                <p className="rate-card1__offer-checkout">{layout.checkoutNote}</p>
+                <p className="rate-card1__offer-billing">{layout.billingNote}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <a
+                href="/admin/launch"
+                className="btn btn--primary rate-card1__cta"
+                data-track="saas_subscribe_click"
+              >
+                {layout.ctaLabel}
+              </a>
+              <p className="rate-card1__offer-checkout">{layout.checkoutNote}</p>
+              <p className="rate-card1__offer-billing">{layout.billingNote}</p>
+            </>
+          )}
         </div>
 
         <div className="rate-card1__offer-included">
@@ -152,8 +183,8 @@ function RateCard1Offer() {
   );
 }
 
-function RateCard1Landing({ className }: { className?: string }) {
-  const layout = getRateCard1LandingLayout();
+function RateCard1Landing({ className, freePreview = false }: { className?: string; freePreview?: boolean }) {
+  const layout = getRateCard1LandingLayout(freePreview);
 
   return (
     <section
@@ -177,7 +208,7 @@ function RateCard1Landing({ className }: { className?: string }) {
           <p className="rate-card1__landing-lead">{layout.lead}</p>
         </header>
 
-        <RateCard1Offer />
+        <RateCard1Offer freePreview={freePreview} />
 
         <div className="rate-card1__landing-conditions">
           <p>{layout.conditionsLine1}</p>
@@ -275,9 +306,9 @@ function RateCard1Default({ className }: { className?: string }) {
   );
 }
 
-const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
+const RateCard1 = ({ className, variant = "default", freePreview = false }: RateCard1Props) => {
   if (variant === "landing") {
-    return <RateCard1Landing className={className} />;
+    return <RateCard1Landing className={className} freePreview={freePreview} />;
   }
   return <RateCard1Default className={className} />;
 };

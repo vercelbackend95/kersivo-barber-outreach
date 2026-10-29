@@ -573,3 +573,14 @@
     justify-content: space-between;
   }
 }
+/* Free-preview flow: billing notes sit with the "Or subscribe now" link (spec §10.3). */
+.rate-card1--landing .rate-card1__offer-subscribe {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  text-align: center;
+}
+
+.rate-card1--landing .rate-card1__offer-subscribe .rate-card1__offer-billing {
+  margin-top: 0;
+}

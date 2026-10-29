@@ -4,8 +4,16 @@ export const prerender = false;
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import FreePreviewForm from '@/components/freePreview/FreePreviewForm.astro';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
-import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import {
+  FREE_PREVIEW_BREADCRUMBS,
+  FREE_PREVIEW_PAGE,
+  buildFreePreviewBreadcrumbJsonLd,
+  buildFreePreviewFaqJsonLd,
+  buildFreePreviewWebPageJsonLd,
+} from '@/lib/seo/freePreviewPage';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/free-preview.css';
 
@@ -19,10 +27,17 @@ if (!isFreePreviewFlowEnabled()) {
   title={FREE_PREVIEW_PAGE.title}
   description={FREE_PREVIEW_PAGE.description}
   canonicalPath={FREE_PREVIEW_PAGE.path}
+  jsonLd={[
+    buildKersivoEntityJsonLd(),
+    buildFreePreviewWebPageJsonLd(),
+    buildFreePreviewBreadcrumbJsonLd(),
+    buildFreePreviewFaqJsonLd(),
+  ]}
 >
   <main class="free-preview">
     <section class="free-preview__hero" aria-labelledby="free-preview-title">
       <div class="free-preview__shell">
+        <PageBreadcrumbs trail={FREE_PREVIEW_BREADCRUMBS} />
         <h1 id="free-preview-title" class="free-preview__title">{FREE_PREVIEW_PAGE.h1}</h1>
         <p class="free-preview__intro">{FREE_PREVIEW_PAGE.intro}</p>
         <ul class="free-preview__trust" aria-label="What to expect">
@@ -31,10 +46,47 @@ if (!isFreePreviewFlowEnabled()) {
       </div>
     </section>
 
-    <section class="free-preview__form-section" aria-labelledby="free-preview-form-title">
+    <section class="free-preview__section" aria-labelledby="free-preview-get-title">
+      <div class="free-preview__shell">
+        <h2 id="free-preview-get-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.whatYouGetHeading}</h2>
+        <ul class="free-preview__get">
+          {FREE_PREVIEW_PAGE.whatYouGet.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section class="free-preview__section" aria-labelledby="free-preview-how-title">
+      <div class="free-preview__shell">
+        <h2 id="free-preview-how-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.howItWorksHeading}</h2>
+        <ol class="free-preview__steps">
+          {FREE_PREVIEW_PAGE.steps.map((step) => (
+            <li class="free-preview__step">
+              <h3 class="free-preview__step-title">{step.title}</h3>
+              <p class="free-preview__step-body">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section id="request" class="free-preview__form-section" aria-labelledby="free-preview-form-title">
       <div class="free-preview__shell">
         <h2 id="free-preview-form-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.formHeading}</h2>
         <FreePreviewForm />
+      </div>
+    </section>
+
+    <section id="faq" class="free-preview__section free-preview__faq" aria-labelledby="free-preview-faq-title">
+      <div class="free-preview__shell">
+        <h2 id="free-preview-faq-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.faqHeading}</h2>
+        <div class="free-preview__faq-list">
+          {FREE_PREVIEW_PAGE.faqs.map((faq) => (
+            <details class="free-preview__faq-item">
+              <summary>{faq.question}</summary>
+              <p>{faq.answer}</p>
+            </details>
+          ))}
+        </div>
         <p class="free-preview__starter">
           <a href="/starter">{FREE_PREVIEW_PAGE.starterLine}</a>
         </p>
