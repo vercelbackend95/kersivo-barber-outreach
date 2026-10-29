@@ -25,6 +25,8 @@ vi.mock('@/lib/db/client', () => ({
       findUnique: (...args: unknown[]) => findUnique(...args),
       updateMany: (...args: unknown[]) => updateMany(...args),
     },
+    // Not a free-preview draft shop: the claim behaves exactly as before.
+    previewRequest: { findUnique: async () => null },
   },
 }));
 

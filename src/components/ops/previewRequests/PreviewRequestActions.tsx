@@ -15,6 +15,12 @@ type Props = {
   status: Status;
   draftShopId: string | null;
   internalNotes: string;
+  /** Private /preview/{token} URL for "Copy preview link". */
+  previewUrl: string;
+  sitePreviewUrl: string | null;
+  sitePreviewVersion: string | null;
+  /** FREE_PREVIEW_FLOW_ENABLED: previews 404 and "Mark ready and send" is refused while it is off. */
+  flowEnabled: boolean;
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -24,18 +30,37 @@ const ERROR_MESSAGES: Record<string, string> = {
   SHOP_HAS_OWNER: 'That shop already has an owner. Only ownerless draft shops can be linked.',
   SHOP_LINKED_ELSEWHERE: 'That shop is already linked to another preview request.',
   NOT_FOUND: 'This request no longer exists.',
+  NO_DRAFT_SHOP: 'Create or link a draft shop first.',
+  INVALID_PREVIEW_URL: 'The website preview URL must be a valid https:// URL.',
+  SITE_PREVIEW_MISSING: 'Set the website preview URL before sending.',
+  PREVIEW_FLOW_DISABLED: 'FREE_PREVIEW_FLOW_ENABLED is off, so the preview link would 404. Nothing was sent.',
 };
+
+const MARK_READY_FROM: readonly Status[] = ['REQUESTED', 'IN_PROGRESS', 'CHANGES_REQUESTED'];
 
 const FINAL: readonly Status[] = ['CONVERTED', 'REJECTED'];
 
 export default function PreviewRequestActions(props: Props) {
   const [notes, setNotes] = useState(props.internalNotes);
   const [linkShopId, setLinkShopId] = useState('');
+  const [siteUrl, setSiteUrl] = useState(props.sitePreviewUrl ?? '');
+  const [siteVersion, setSiteVersion] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
 
   const isFinal = FINAL.includes(props.status);
   const canToggleProgress = props.status === 'REQUESTED' || props.status === 'IN_PROGRESS';
+  const canMarkReady = MARK_READY_FROM.includes(props.status) && Boolean(props.draftShopId);
+  const readyEmail = props.status === 'CHANGES_REQUESTED' ? 'E4 “We’ve updated your preview”' : 'E3 “Your preview is ready”';
+
+  async function copyPreviewLink() {
+    try {
+      await navigator.clipboard.writeText(props.previewUrl);
+      setMessage({ kind: 'ok', text: 'Preview link copied.' });
+    } catch {
+      window.prompt('Copy the preview link:', props.previewUrl);
+    }
+  }
 
   async function run(body: Record<string, unknown>, successText: string, reload = true) {
     setBusy(true);
@@ -102,9 +127,91 @@ export default function PreviewRequestActions(props: Props) {
             </button>
           ) : null}
         </div>
-        <p className="ops-pr-actions__hint">
-          “Mark ready and send” and “Copy preview link” arrive with the preview page (Batch 2).
-        </p>
+      </section>
+
+      <section className="ops-pr-actions__block" aria-labelledby="ops-pr-preview-title">
+        <h2 id="ops-pr-preview-title" className="ops-pr-actions__title">
+          Preview
+        </h2>
+        {!props.flowEnabled ? (
+          <p className="ops-pr-actions__hint">
+            FREE_PREVIEW_FLOW_ENABLED is off: the preview link returns 404 and nothing can be sent.
+          </p>
+        ) : null}
+        <div className="ops-pr-actions__row">
+          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void copyPreviewLink()}>
+            Copy preview link
+          </button>
+          {props.draftShopId ? (
+            <a className="btn btn--secondary btn--sm" href={props.previewUrl} target="_blank" rel="noopener noreferrer">
+              Open preview
+            </a>
+          ) : null}
+        </div>
+        {props.draftShopId && !isFinal ? (
+          <form
+            className="ops-pr-actions__stack"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void run(
+                { action: 'set_site_preview', previewUrl: siteUrl.trim(), siteVersion: siteVersion.trim() },
+                'Website preview saved.',
+              );
+            }}
+          >
+            <label className="ops-pr-actions__hint" htmlFor="ops-pr-site-url">
+              Website preview URL (https, frameable from kersivo.co.uk, sends noindex)
+            </label>
+            <input
+              id="ops-pr-site-url"
+              className="input"
+              type="url"
+              value={siteUrl}
+              onChange={(event) => setSiteUrl(event.target.value)}
+              placeholder="https://…"
+              maxLength={2000}
+              required
+            />
+            <label className="ops-pr-actions__hint" htmlFor="ops-pr-site-version">
+              Site version{props.sitePreviewVersion ? ` (current: ${props.sitePreviewVersion})` : ''}
+            </label>
+            <input
+              id="ops-pr-site-version"
+              className="input"
+              value={siteVersion}
+              onChange={(event) => setSiteVersion(event.target.value)}
+              placeholder="v1"
+              maxLength={80}
+              required
+            />
+            <div className="ops-pr-actions__row">
+              <button
+                type="submit"
+                className="btn btn--secondary btn--sm"
+                disabled={busy || !siteUrl.trim() || !siteVersion.trim()}
+              >
+                Save website preview
+              </button>
+            </div>
+          </form>
+        ) : null}
+        {canMarkReady ? (
+          <div className="ops-pr-actions__row">
+            <button
+              type="button"
+              className="btn btn--primary btn--sm"
+              disabled={busy || !props.flowEnabled || !props.sitePreviewUrl}
+              onClick={() => {
+                if (window.confirm(`Mark ready and email the owner (${readyEmail})?`)) {
+                  void run({ action: 'mark_ready_and_send' }, `Marked ready and sent ${readyEmail}.`);
+                }
+              }}
+            >
+              Mark ready and send
+            </button>
+          </div>
+        ) : null}
+        {canMarkReady ? <p className="ops-pr-actions__hint">Sends {readyEmail} with the preview link and expiry date.</p> : null}
       </section>
 
       <section className="ops-pr-actions__block" aria-labelledby="ops-pr-draft-title">

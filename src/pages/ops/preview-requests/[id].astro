@@ -8,7 +8,8 @@ import {
   OpsAccessDenied,
   OpsAccessUnconfigured,
 } from '@/components/ops/recommendations/OpsPageGates';
-import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
+import { OPS_PREVIEW_REQUESTS_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { previewPageUrl } from '@/lib/freePreview/emails';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
   FREE_PREVIEW_BOOKING_SYSTEMS,
@@ -78,6 +79,7 @@ const fields: Array<[string, string]> = request
       ['Email opt-out', request.emailOptOut ? formatDate(request.emailOptOutAt) : 'No'],
       ['Draft shop', request.draftShop ? `${request.draftShop.name} (${request.draftShop.id})` : '—'],
       ['Site preview URL', request.draftShop?.sitePreviewUrl ?? '—'],
+      ['Site version', request.draftShop?.sitePreviewVersion ?? '—'],
     ]
   : [];
 ---
@@ -176,6 +178,10 @@ const fields: Array<[string, string]> = request
                 status={request.status}
                 draftShopId={request.draftShopId}
                 internalNotes={request.internalNotes ?? ''}
+                previewUrl={previewPageUrl(request.publicToken)}
+                sitePreviewUrl={request.draftShop?.sitePreviewUrl ?? null}
+                sitePreviewVersion={request.draftShop?.sitePreviewVersion ?? null}
+                flowEnabled={isFreePreviewFlowEnabled()}
               />
             </aside>
           </div>

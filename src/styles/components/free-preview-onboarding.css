@@ -1,0 +1,66 @@
+/* Shortened onboarding after a free preview purchase (/admin/preview-launch). */
+.fpo {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 0 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fpo h1 {
+  margin: 0;
+}
+
+.fpo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+}
+
+.fpo-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.fpo-card p {
+  margin: 0;
+}
+
+.fpo-card label,
+.fpo-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.fpo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.fpo-card .fpo-check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.fpo-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fpo-errors {
+  margin: 0;
+  padding-left: 20px;
+  color: #ff8a8a;
+}

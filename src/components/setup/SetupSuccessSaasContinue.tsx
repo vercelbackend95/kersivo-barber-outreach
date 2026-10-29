@@ -20,7 +20,15 @@ type ClaimResponseBody = {
   ok?: boolean;
   code?: string;
   error?: string;
+  /** Free preview purchases continue to the shortened onboarding. */
+  redirectTo?: string;
 };
+
+function claimRedirectTarget(body: ClaimResponseBody): string {
+  const target = body.redirectTo?.trim() ?? '';
+  // Same-origin admin paths only.
+  return target.startsWith('/admin/') && !target.startsWith('//') ? target : '/admin/client-onboarding';
+}
 
 async function postClaim(stripeSessionId: string): Promise<{ status: number; body: ClaimResponseBody }> {
   const res = await fetch('/api/setup/claim-paid-subscription', {
@@ -61,7 +69,7 @@ export default function SetupSuccessSaasContinue({
           setUx({ kind: 'idle' });
           return;
         }
-        window.location.assign('/admin/client-onboarding');
+        window.location.assign(claimRedirectTarget(body));
         return;
       }
       const next = mapClaimHttpError(status, body.code ?? null);

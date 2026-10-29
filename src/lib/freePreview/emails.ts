@@ -3,7 +3,9 @@ import {
   OPS_PREVIEW_REQUESTS_PATH,
   PREVIEW_REPLY_TO_EMAIL,
   PREVIEW_TURNAROUND_TEXT,
+  formatPreviewExpiryDate,
   getPreviewNotifyEmail,
+  previewPagePath,
 } from './config';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
@@ -111,5 +113,75 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
           `<tr><th align="left" valign="top">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`,
       )
       .join('')}</table>`,
+  };
+}
+
+export function previewPageUrl(token: string): string {
+  return `${getPublicSiteUrl()}${previewPagePath(token)}`;
+}
+
+function linkBlock(url: string): string {
+  const safe = escapeHtml(url);
+  return `<a href="${safe}">${safe}</a>`;
+}
+
+export type PreviewLinkEmailInput = {
+  to: string;
+  firstName: string | null;
+  shopName: string;
+  previewUrl: string;
+  expiresAt: Date;
+};
+
+/** E3 — preview ready (spec §9). */
+export function buildPreviewReadyEmail(input: PreviewLinkEmailInput): FreePreviewEmail {
+  const shop = escapeHtml(input.shopName);
+  return {
+    to: input.to,
+    subject: `Your website preview for ${input.shopName} is ready`,
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      `Your private website preview for ${shop} is ready:<br>${linkBlock(input.previewUrl)}`,
+      'Open it on your phone, try the booking flow and see it the way your clients would. Bookings on the preview are for testing only — no payments are taken.',
+      "Want something changed? Use 'Request changes' on the preview or reply to this email. One round of changes is included before you decide.",
+      "Happy with it? Launch it for £39/month per location — no setup fee, 0% KERSIVO commission (Stripe fees apply). We'll connect your domain, and nothing goes live until you approve it.",
+      `Your preview link works until ${escapeHtml(formatPreviewExpiryDate(input.expiresAt))}.`,
+      SIGN_OFF,
+    ]),
+  };
+}
+
+/** E4 — preview updated after changes (spec §9). */
+export function buildPreviewUpdatedEmail(input: PreviewLinkEmailInput): FreePreviewEmail {
+  return {
+    to: input.to,
+    subject: `We've updated your ${input.shopName} preview`,
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      `We've made your changes. Take another look:<br>${linkBlock(input.previewUrl)}`,
+      `If it's right, you can launch it from the preview for £39/month. Your link works until ${escapeHtml(formatPreviewExpiryDate(input.expiresAt))}.`,
+      SIGN_OFF,
+    ]),
+  };
+}
+
+/** Internal notification: the owner asked for changes on their preview (spec §6). */
+export function buildPreviewChangesRequestedInternalEmail(input: {
+  id: string;
+  email: string;
+  shopName: string;
+  townCity: string;
+  changesText: string;
+}): FreePreviewEmail {
+  const opsUrl = opsPreviewRequestUrl(input.id);
+  return {
+    to: getPreviewNotifyEmail(),
+    subject: `Preview changes requested: ${input.shopName}, ${input.townCity}`,
+    replyTo: input.email,
+    html: `<p>${escapeHtml(input.shopName)} (${escapeHtml(input.email)}) asked for changes to their preview.</p>
+<p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a></p>
+<blockquote style="white-space:pre-wrap;margin:0;padding:8px 12px;border-left:3px solid #ccc">${escapeHtml(input.changesText)}</blockquote>`,
   };
 }

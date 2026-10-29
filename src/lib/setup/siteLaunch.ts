@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConstruction';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -98,6 +99,7 @@ export async function approveSiteLaunch(input: {
       sitePreviewVersion: true,
       launchApprovedAt: true,
       launchApprovedVersion: true,
+      publicActivityPauseReason: true,
     },
   });
 
@@ -120,6 +122,17 @@ export async function approveSiteLaunch(input: {
       launchApprovedByEmail: input.email.trim().toLowerCase(),
       launchApprovedVersion: shop.sitePreviewVersion,
       goLiveAt: now,
+      // A KERSIVO-built draft shop (free preview) stays "under construction" until this approval.
+      // Owner-set pauses are left alone.
+      ...(isGuestPreviewConstructionPause(shop.publicActivityPauseReason)
+        ? {
+            publicActivityPaused: false,
+            publicActivityPausedAt: null,
+            publicActivityPauseFrom: null,
+            publicActivityPauseUntil: null,
+            publicActivityPauseReason: null,
+          }
+        : {}),
     },
   });
 

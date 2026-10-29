@@ -1,0 +1,182 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import BookingFlow from '@/components/booking/BookingFlow';
+import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
+import {
+  FREE_PREVIEW_PAGE_PATH,
+  PREVIEW_EXPIRY_DAYS,
+  PREVIEW_REPLY_TO_EMAIL,
+  isFreePreviewFlowEnabled,
+  previewPagePath,
+} from '@/lib/freePreview/config';
+import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
+import {
+  loadPreviewDraftShop,
+  recordPreviewView,
+  resolvePreviewPageState,
+  resolvePreviewRequestByToken,
+  shouldRecordOwnerView,
+} from '@/lib/freePreview/previewAccess';
+import { previewBookingPresentation } from '@/lib/freePreview/previewBooking';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
+import '@/styles/tokens.css';
+import '@/styles/fonts.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/booking-review.css';
+import '@/styles/components/free-preview-page.css';
+
+/**
+ * Private, tokenised preview of a shop's draft website and booking page (spec §6).
+ * noindex/nofollow by header and meta; never in the sitemap; deliberately not blocked in robots.txt.
+ */
+const PRIVATE_HEADERS: Record<string, string> = {
+  'X-Robots-Tag': 'noindex, nofollow',
+  'Cache-Control': 'private, no-store',
+  // The token is in the URL: never send it to the framed site or to any link target.
+  'Referrer-Policy': 'no-referrer',
+  Vary: 'Cookie',
+};
+for (const [name, value] of Object.entries(PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
+
+function notFound() {
+  return new Response('Not found', { status: 404, headers: { ...PRIVATE_HEADERS, 'Content-Type': 'text/plain' } });
+}
+
+if (!isFreePreviewFlowEnabled()) return notFound();
+
+const limited = await enforceIpRateLimit(
+  Astro.request,
+  PREVIEW_PAGE_RATE.action,
+  PREVIEW_PAGE_RATE.limit,
+  PREVIEW_PAGE_RATE.windowMs,
+);
+if (limited) return limited;
+
+const token = (Astro.params.token ?? '').trim();
+const now = new Date();
+const operator = await resolveOperatorAccess(Astro.request);
+const state = resolvePreviewPageState({
+  request: await resolvePreviewRequestByToken(token),
+  isOperator: operator.ok,
+  now,
+});
+if (state.kind === 'not_found') return notFound();
+
+const preview = state.kind === 'preview' ? state : null;
+const draft = preview ? await loadPreviewDraftShop(preview.draftShopId) : null;
+if (preview && !draft) return notFound();
+
+// Owner views only: operator views are excluded, and converted previews are no longer counted.
+if (preview && shouldRecordOwnerView(state)) {
+  await recordPreviewView(preview.request.id, now).catch((error) =>
+    console.error('[free-preview] view tracking failed', error instanceof Error ? error.message : error),
+  );
+}
+
+if (state.kind === 'expired') Astro.response.status = 410;
+
+const view: 'website' | 'booking' =
+  Astro.url.searchParams.get('view') === 'booking' || !draft?.shop.sitePreviewUrl ? 'booking' : 'website';
+const basePath = previewPagePath(token);
+// Let the CSP frame the shop's externally hosted website (and nothing else).
+if (view === 'website' && draft?.shop.sitePreviewUrl) {
+  Astro.response.headers.set(EXTRA_FRAME_SRC_HEADER, draft.shop.sitePreviewUrl);
+}
+const shopName = draft?.shop.name ?? preview?.request.shopName ?? 'your shop';
+---
+
+<MinimalLayout
+  title={preview ? `Private preview — ${shopName} | KERSIVO` : 'This preview has expired | KERSIVO'}
+  description="A private KERSIVO website preview."
+  canonicalPath={FREE_PREVIEW_PAGE_PATH}
+  noindex={true}
+  robotsFollow={false}
+  bodyClass="admin-theme-premium-black fp-page-body"
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  {
+    state.kind === 'expired' ? (
+      <main class="container page-wrap fp-expired">
+        <h1>This preview has expired</h1>
+        <p>
+          Previews stay available for {PREVIEW_EXPIRY_DAYS} days. Want another look? Email{' '}
+          <a href={`mailto:${PREVIEW_REPLY_TO_EMAIL}`}>{PREVIEW_REPLY_TO_EMAIL}</a> and we'll help.
+        </p>
+        <p>
+          <a class="btn btn--primary" href={FREE_PREVIEW_PAGE_PATH}>
+            Request a free preview
+          </a>
+        </p>
+      </main>
+    ) : preview && draft ? (
+      <div class="fp-page">
+        <PreviewTopBar
+          client:load
+          token={token}
+          shopName={shopName}
+          firstName={preview.request.firstName}
+          checkoutEmail={preview.request.email}
+          isOperator={preview.isOperator}
+          converted={preview.request.status === 'CONVERTED'}
+          activeView={view}
+          websiteHref={basePath}
+          bookingHref={`${basePath}?view=booking`}
+        />
+        {
+          view === 'website' && draft.shop.sitePreviewUrl ? (
+            <main class="fp-site" id="preview-content">
+              <iframe
+                class="fp-site__frame"
+                src={draft.shop.sitePreviewUrl}
+                title={`Website preview for ${shopName}`}
+                referrerpolicy="no-referrer"
+                loading="eager"
+              />
+              <p class="fp-site__fallback">
+                Website not showing?{' '}
+                <a href={draft.shop.sitePreviewUrl} target="_blank" rel="noopener noreferrer">
+                  Open it in a new tab
+                </a>
+                .
+              </p>
+            </main>
+          ) : (
+            <main class="container page-wrap booking-page-wrap fp-booking" id="preview-content">
+              {draft.services.length && draft.barbers.length ? (
+                <BookingFlow
+                  client:load
+                  mode="create"
+                  publicDemoMode={true}
+                  services={draft.services}
+                  barbers={draft.barbers}
+                  shopDetails={{
+                    timezone: draft.shop.timezone,
+                    name: shopName,
+                    cancellationWindowHours: draft.shop.cancellationWindowHours,
+                    rescheduleWindowHours: draft.shop.rescheduleWindowHours,
+                  }}
+                  presentation={previewBookingPresentation(shopName)}
+                />
+              ) : (
+                <p class="muted">We're still adding services and barbers to this booking page.</p>
+              )}
+            </main>
+          )
+        }
+      </div>
+    ) : null
+  }
+</MinimalLayout>

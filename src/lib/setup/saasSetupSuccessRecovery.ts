@@ -68,6 +68,14 @@ export function mapClaimHttpError(status: number, code?: string | null): ClaimUx
       retryable: false,
     };
   }
+  if (status === 409 && code === 'PREVIEW_ADOPTION_BLOCKED') {
+    return {
+      kind: 'error',
+      message:
+        'Your payment is confirmed. This account already has a KERSIVO workspace, so we will move your new website across for you. Contact hello@kersivo.co.uk and we will sort it out.',
+      retryable: false,
+    };
+  }
   if (status === 409 && code === 'CLAIM_RACE') {
     return {
       kind: 'error',

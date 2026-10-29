@@ -1,8 +1,12 @@
-import { Prisma, type PreviewRequestStatus } from '@prisma/client';
+import { EmailOutboundPurpose, Prisma, type PreviewRequestStatus } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/client';
+import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { createDraftShop } from '@/lib/preview/shopPreviewSession';
+import { SITE_VERSION_MAX, applySitePreview, normalizeSitePreviewUrl } from '@/lib/setup/sitePreview';
+import { isFreePreviewFlowEnabled, previewExpiryFrom } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
+import { buildPreviewReadyEmail, buildPreviewUpdatedEmail, previewPageUrl } from './emails';
 
 /** Statuses ops can set by hand in Batch 1. READY / CHANGES_REQUESTED come from "Mark ready and send". */
 export const OPS_SETTABLE_STATUSES = ['REQUESTED', 'IN_PROGRESS'] as const satisfies readonly PreviewRequestStatus[];
@@ -18,7 +22,16 @@ export const previewRequestOpsActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('reject') }),
   z.object({ action: z.literal('create_draft_shop') }),
   z.object({ action: z.literal('link_draft_shop'), shopId: z.string().trim().min(1).max(64) }),
+  z.object({
+    action: z.literal('set_site_preview'),
+    previewUrl: z.string().trim().min(1).max(2000),
+    siteVersion: z.string().trim().min(1).max(SITE_VERSION_MAX),
+  }),
+  z.object({ action: z.literal('mark_ready_and_send') }),
 ]);
+
+/** "Mark ready and send" applies from these statuses; CHANGES_REQUESTED sends E4, the others E3. */
+export const MARK_READY_FROM_STATUSES: readonly PreviewRequestStatus[] = ['REQUESTED', 'IN_PROGRESS', 'CHANGES_REQUESTED'];
 
 export type PreviewRequestOpsAction = z.infer<typeof previewRequestOpsActionSchema>;
 
@@ -28,10 +41,14 @@ export type OpsActionErrorCode =
   | 'DRAFT_SHOP_ALREADY_LINKED'
   | 'SHOP_NOT_FOUND'
   | 'SHOP_HAS_OWNER'
-  | 'SHOP_LINKED_ELSEWHERE';
+  | 'SHOP_LINKED_ELSEWHERE'
+  | 'NO_DRAFT_SHOP'
+  | 'INVALID_PREVIEW_URL'
+  | 'SITE_PREVIEW_MISSING'
+  | 'PREVIEW_FLOW_DISABLED';
 
 export type OpsActionResult =
-  | { ok: true; status: PreviewRequestStatus; draftShopId: string | null }
+  | { ok: true; status: PreviewRequestStatus; draftShopId: string | null; emailSent?: 'E3' | 'E4' }
   | { ok: false; code: OpsActionErrorCode; httpStatus: number };
 
 function fail(code: OpsActionErrorCode, httpStatus = 409): OpsActionResult {
@@ -44,7 +61,17 @@ async function lockRequest(tx: Tx, id: string) {
   await tx.$queryRaw(Prisma.sql`SELECT id FROM "PreviewRequest" WHERE id = ${id} FOR UPDATE`);
   return tx.previewRequest.findUnique({
     where: { id },
-    select: { id: true, status: true, draftShopId: true, shopName: true, townCity: true },
+    select: {
+      id: true,
+      status: true,
+      draftShopId: true,
+      shopName: true,
+      townCity: true,
+      email: true,
+      firstName: true,
+      publicToken: true,
+      draftShop: { select: { sitePreviewUrl: true } },
+    },
   });
 }
 
@@ -58,7 +85,12 @@ export async function executePreviewRequestOpsAction(input: {
   const now = input.now ?? new Date();
   const { action, actorEmail } = input;
 
-  return prisma.$transaction(async (tx) => {
+  if (action.action === 'set_site_preview') {
+    return setSitePreview({ id: input.id, previewUrl: action.previewUrl, siteVersion: action.siteVersion, actorEmail });
+  }
+
+  const outboxIds: string[] = [];
+  const result = await prisma.$transaction(async (tx): Promise<OpsActionResult> => {
     const request = await lockRequest(tx, input.id);
     if (!request) return fail('NOT_FOUND', 404);
 
@@ -160,6 +192,87 @@ export async function executePreviewRequestOpsAction(input: {
         });
         return done(request.status, shop.id);
       }
+
+      case 'mark_ready_and_send': {
+        if (!isFreePreviewFlowEnabled()) return fail('PREVIEW_FLOW_DISABLED');
+        if (!MARK_READY_FROM_STATUSES.includes(request.status)) return fail('INVALID_TRANSITION');
+        if (!request.draftShopId) return fail('NO_DRAFT_SHOP');
+        if (!request.draftShop?.sitePreviewUrl) return fail('SITE_PREVIEW_MISSING');
+
+        const isUpdate = request.status === 'CHANGES_REQUESTED';
+        const expiresAt = previewExpiryFrom(now);
+        const event = await tx.previewRequestEvent.create({
+          data: {
+            previewRequestId: request.id,
+            action: PREVIEW_REQUEST_ACTIONS.MARKED_READY,
+            fromStatus: request.status,
+            toStatus: 'READY',
+            actorEmail,
+            meta: { email: isUpdate ? 'E4' : 'E3', expiresAt: expiresAt.toISOString() },
+          },
+          select: { id: true },
+        });
+        await tx.previewRequest.update({
+          where: { id: request.id },
+          data: { status: 'READY', previewReadyAt: now, expiresAt },
+        });
+
+        const emailInput = {
+          to: request.email,
+          firstName: request.firstName,
+          shopName: request.shopName,
+          previewUrl: previewPageUrl(request.publicToken),
+          expiresAt,
+        };
+        const email = isUpdate ? buildPreviewUpdatedEmail(emailInput) : buildPreviewReadyEmail(emailInput);
+        const row = await enqueueEmail(tx, {
+          shopId: null,
+          purpose: isUpdate ? EmailOutboundPurpose.FREE_PREVIEW_UPDATED : EmailOutboundPurpose.FREE_PREVIEW_READY,
+          ...email,
+          dedupeKey: `free-preview:${isUpdate ? 'updated' : 'ready'}:${request.id}:${event.id}`,
+        });
+        outboxIds.push(row.id);
+        return { ok: true, status: 'READY', draftShopId: request.draftShopId, emailSent: isUpdate ? 'E4' : 'E3' };
+      }
     }
   });
+
+  await Promise.all(outboxIds.map((id) => tryDeliverOutboxEmail(id)));
+  return result;
+}
+
+async function setSitePreview(input: {
+  id: string;
+  previewUrl: string;
+  siteVersion: string;
+  actorEmail: string;
+}): Promise<OpsActionResult> {
+  const previewUrl = normalizeSitePreviewUrl(input.previewUrl);
+  if (!previewUrl) return fail('INVALID_PREVIEW_URL', 400);
+
+  const request = await prisma.previewRequest.findUnique({
+    where: { id: input.id },
+    select: { id: true, status: true, draftShopId: true },
+  });
+  if (!request) return fail('NOT_FOUND', 404);
+  if (FINAL_PREVIEW_STATUSES.includes(request.status)) return fail('INVALID_TRANSITION');
+  if (!request.draftShopId) return fail('NO_DRAFT_SHOP');
+
+  const applied = await applySitePreview({
+    shopId: request.draftShopId,
+    previewUrl,
+    siteVersion: input.siteVersion.trim(),
+    email: input.actorEmail,
+  });
+  if (!applied.ok) return fail('SHOP_NOT_FOUND', 404);
+
+  await prisma.previewRequestEvent.create({
+    data: {
+      previewRequestId: request.id,
+      action: PREVIEW_REQUEST_ACTIONS.SITE_PREVIEW_SET,
+      actorEmail: input.actorEmail,
+      meta: { previewUrl, siteVersion: input.siteVersion.trim() },
+    },
+  });
+  return { ok: true, status: request.status, draftShopId: request.draftShopId };
 }

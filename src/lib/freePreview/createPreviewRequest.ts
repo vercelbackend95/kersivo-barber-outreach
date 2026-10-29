@@ -1,7 +1,7 @@
 import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
-import { mintPreviewToken } from '@/lib/preview/shopPreviewSession';
+import { hashPreviewToken, mintPreviewToken } from '@/lib/preview/shopPreviewSession';
 import { buildPreviewRequestAcknowledgementEmail, buildPreviewRequestInternalEmail } from './emails';
 import type { FreePreviewRequestInput } from './intake';
 
@@ -12,6 +12,12 @@ export const PREVIEW_REQUEST_ACTIONS = {
   DRAFT_SHOP_CREATED: 'DRAFT_SHOP_CREATED',
   DRAFT_SHOP_LINKED: 'DRAFT_SHOP_LINKED',
   REJECTED: 'REJECTED',
+  SITE_PREVIEW_SET: 'SITE_PREVIEW_SET',
+  MARKED_READY: 'MARKED_READY',
+  CHANGES_REQUESTED: 'CHANGES_REQUESTED',
+  CHECKOUT_STARTED: 'CHECKOUT_STARTED',
+  CONVERTED: 'CONVERTED',
+  DRAFT_SHOP_ADOPTED: 'DRAFT_SHOP_ADOPTED',
 } as const;
 
 /**
@@ -22,10 +28,12 @@ export async function createPreviewRequest(
   input: FreePreviewRequestInput,
   now: Date = new Date(),
 ): Promise<{ id: string }> {
+  const publicToken = mintPreviewToken();
   const { request, outboxIds } = await prisma.$transaction(async (tx) => {
     const request = await tx.previewRequest.create({
       data: {
-        publicToken: mintPreviewToken(),
+        publicToken,
+        publicTokenHash: hashPreviewToken(publicToken),
         firstName: input.firstName,
         email: input.email,
         shopName: input.shopName,

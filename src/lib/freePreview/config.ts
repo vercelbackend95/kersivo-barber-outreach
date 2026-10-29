@@ -36,3 +36,22 @@ export const PREVIEW_REPLY_TO_EMAIL = 'hello@kersivo.co.uk';
 
 export const FREE_PREVIEW_PAGE_PATH = '/free-preview';
 export const OPS_PREVIEW_REQUESTS_PATH = '/ops/preview-requests';
+
+/** Private preview page: /preview/{token}. The static /preview/onboarding and /preview/dashboard routes win. */
+export const PREVIEW_PAGE_PATH_PREFIX = '/preview/';
+
+export function previewPagePath(token: string): string {
+  return `${PREVIEW_PAGE_PATH_PREFIX}${encodeURIComponent(token)}`;
+}
+
+export function previewExpiryFrom(readyAt: Date): Date {
+  return new Date(readyAt.getTime() + PREVIEW_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+}
+
+/** Shown in E3/E4 and on the preview, e.g. "28 November 2026" (UK time). */
+export function formatPreviewExpiryDate(value: Date): string {
+  return value.toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** Shortened onboarding after a free preview purchase (spec §7). */
+export const PREVIEW_ONBOARDING_PATH = '/admin/preview-launch';

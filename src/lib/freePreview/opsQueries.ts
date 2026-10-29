@@ -85,7 +85,9 @@ export async function getPreviewRequestDetail(id: string) {
   return prisma.previewRequest.findUnique({
     where: { id },
     include: {
-      draftShop: { select: { id: true, name: true, ownerUserId: true, sitePreviewUrl: true } },
+      draftShop: {
+        select: { id: true, name: true, ownerUserId: true, sitePreviewUrl: true, sitePreviewVersion: true },
+      },
       events: { orderBy: { createdAt: 'desc' }, take: 50 },
     },
   });

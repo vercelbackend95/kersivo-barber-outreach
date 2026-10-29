@@ -1005,7 +1005,7 @@ export default function BookingFlow({
       return 'Reschedule booking';
     }
     if (wizardStep < maxStep) return 'Continue';
-    if (publicDemoMode) return 'Complete demo booking';
+    if (publicDemoMode) return presentation?.submitLabel ?? 'Complete demo booking';
     if (effectiveBookingPaymentMode !== 'NONE' && publicCreateUrl && selectedService) {
       const paymentLabel = bookingPaymentSubmitLabel(effectiveBookingPaymentMode, selectedService.pricePence);
       if (paymentLabel) return paymentLabel;
@@ -1471,7 +1471,7 @@ export default function BookingFlow({
                 }
                 trustItems={trustItems}
                 maxTrustItems={publicDemoMode ? 4 : 3}
-                submitLabel={publicDemoMode ? 'Complete demo booking' : undefined}
+                submitLabel={publicDemoMode ? (presentation?.submitLabel ?? 'Complete demo booking') : undefined}
                 alwaysVisible
               />
             </div>
