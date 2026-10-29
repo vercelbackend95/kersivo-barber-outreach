@@ -1,0 +1,41 @@
+---
+import { DEFAULT_INPUTS, NUMERIC_LIMITS, type NumericInputKey } from '@/lib/chairRentVsCommission/engine';
+
+interface Props {
+  name: NumericInputKey;
+  label: string;
+  helper?: string;
+  prefix?: string;
+  suffix?: string;
+  step?: number;
+  /** Hidden until the named checkbox is on (e.g. only shown when VAT registered). */
+  showWhen?: string;
+  compact?: boolean;
+}
+
+const { name, label, helper, prefix, suffix, step = 1, showWhen, compact = false } = Astro.props;
+const id = `crc-${name}`;
+const limit = NUMERIC_LIMITS[name];
+const helperId = helper ? `${id}-helper` : undefined;
+const hidden = showWhen ? !(DEFAULT_INPUTS as Record<string, unknown>)[showWhen] : false;
+---
+
+<div class:list={['calc-field', 'crc-field', { 'crc-field--compact': compact }]} data-show-when={showWhen} hidden={hidden}>
+  <label class="calc-field__label" for={id}>{label}</label>
+  <div class:list={['calc-input', 'calc-input--currency', 'crc-input', { 'crc-input--suffix': suffix }]}>
+    {prefix ? <span class="calc-input__prefix" aria-hidden="true">{prefix}</span> : null}
+    <input
+      id={id}
+      type="number"
+      inputmode="decimal"
+      name={name}
+      value={DEFAULT_INPUTS[name]}
+      min={limit.min}
+      max={limit.max}
+      step={limit.integer ? 1 : step}
+      aria-describedby={helperId}
+    />
+    {suffix ? <span class="crc-input__suffix" aria-hidden="true">{suffix}</span> : null}
+  </div>
+  {helper ? <p id={helperId} class="calc-field__helper">{helper}</p> : null}
+</div>

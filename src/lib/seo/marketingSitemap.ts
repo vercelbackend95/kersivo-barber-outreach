@@ -6,6 +6,10 @@ import {
   BARBER_COST_CALCULATOR_PAGE_PATH,
 } from './barberCostCalculatorPage';
 import {
+  CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO,
+  CHAIR_RENT_CALCULATOR_PAGE_PATH,
+} from './chairRentCalculatorPage';
+import {
   BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
   BOOKSY_ALTERNATIVE_PAGE_PATH,
 } from './booksyAlternativeFaq';
@@ -84,6 +88,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: SETORA_ALTERNATIVE_PAGE_PATH, lastmod: SETORA_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
+  /** Matches the visible "Last updated" date on src/pages/chair-rent-vs-commission-calculator/index.astro. */
+  { path: CHAIR_RENT_CALCULATOR_PAGE_PATH, lastmod: CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: PRIVACY_POLICY_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/cookies.astro. */

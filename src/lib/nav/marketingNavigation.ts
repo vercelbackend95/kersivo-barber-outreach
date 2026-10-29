@@ -267,6 +267,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
+    id: 'resources-chair-rent-calculator',
+    label: 'Chair Rent vs Commission',
+    description: 'Compare employing a barber with renting out a chair.',
+    href: '/chair-rent-vs-commission-calculator',
+    group: 'resources',
+    section: 'tools',
+    icon: 'calculator',
+  },
+  {
     id: 'resources-website-design',
     label: 'Barbershop Website Design',
     description: 'Practical tips for barbershop branding, photography and mobile website design.',

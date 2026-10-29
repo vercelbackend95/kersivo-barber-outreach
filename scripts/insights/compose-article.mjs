@@ -114,6 +114,17 @@ function figure(item) {
   if (!(width >= 600 && width <= 6000 && height >= 300 && height <= 6000)) fail('invalid visual dimensions');
   return `<figure class="${cls}"><img src="${escapeHtml(item.src)}" width="${width}" height="${height}" loading="${item.kind === 'hero' ? 'eager' : 'lazy'}" decoding="async" alt="${escapeHtml(item.alt)}" />\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
 }
+// Optional links to KERSIVO tools, placed after an anchored block (after any figure on that block).
+// Like figures, they are stripped before the text-fidelity check, so article copy stays verbatim.
+const toolLinks = Array.isArray(manifest.toolLinks) ? manifest.toolLinks : [];
+function toolLink(item) {
+  requiredString(item.anchor, 'tool link anchor');
+  requiredString(item.text, 'tool link text');
+  requiredString(item.label, 'tool link label');
+  if (!/^\/[a-z0-9-]+$/.test(requiredString(item.href, 'tool link href'))) fail('tool links must point to a KERSIVO page path');
+  return `<aside class="insights-tool-link"><p>${escapeHtml(item.text)} <a href="${escapeHtml(item.href)}">${escapeHtml(item.label)} →</a></p></aside>`;
+}
+const seenTools = new Set();
 const seen = new Set();
 const result = [];
 for (const block of blocks) {
@@ -126,13 +137,23 @@ for (const block of blocks) {
       result.push(figure(asset));
     }
   }
+  for (const [i, item] of toolLinks.entries()) {
+    if (seenTools.has(i) || !block.markdown.startsWith(item.anchor)) continue;
+    if (item.anchor.length < 24) fail('tool link anchor too short to identify an article section reliably');
+    seenTools.add(i);
+    result.push(toolLink(item));
+  }
+}
+if (seenTools.size !== toolLinks.length) {
+  fail(`tool link anchors missing: ${toolLinks.filter((_, index) => !seenTools.has(index)).map((a) => a.anchor).join(' | ')}`);
 }
 if (seen.size !== media.length) {
   fail(`visual anchors missing or ambiguous: ${media.filter((_, index) => !seen.has(index)).map((a) => a.anchor).join(' | ')}`);
 }
 const renderedWithFigures = result.join('\n\n') + '\n';
 const canonical = blocks.map((block) => block.markdown).join('\n\n');
-const stripFigures = (html) => html.replace(/<figure class="insights-figure[^]*?<\/figure>/g, '');
+const stripFigures = (html) =>
+  html.replace(/<figure class="insights-figure[^]*?<\/figure>/g, '').replace(/<aside class="insights-tool-link">[^]*?<\/aside>/g, '');
 if (stripFigures(renderedWithFigures).trim().replace(/\n{3,}/g, '\n\n') !== canonical.trim()) {
   fail('article text changed during visual insertion');
 }

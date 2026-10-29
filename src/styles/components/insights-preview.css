@@ -118,6 +118,17 @@ a.insights-article-meta__category:hover { color: #dc4e5b; }
   line-height: 1.79;
 }
 .insights-article__body > p { margin-top: 0; margin-bottom: 1.58rem; }
+/* Link to a KERSIVO tool, inserted by the compositor after an anchored paragraph (toolLinks in the manifest). */
+.insights-article__body > .insights-tool-link {
+  max-width: var(--insights-copy);
+  margin: 0 0 1.9rem;
+  padding: 1.05rem 1.25rem;
+  border-left: 4px solid var(--insights-accent);
+  background: #fff;
+}
+.insights-tool-link p { margin: 0; color: var(--insights-ink); font-size: 1.05rem; font-weight: 600; line-height: 1.5; }
+.insights-tool-link a { color: var(--insights-ink); text-decoration: underline; text-underline-offset: .2em; }
+.insights-tool-link a:focus-visible { outline: 2px solid var(--insights-ink); outline-offset: 2px; }
 .insights-article__body > p:first-of-type {
   max-width: min(var(--insights-copy), 100%);
   margin-top: 3rem;

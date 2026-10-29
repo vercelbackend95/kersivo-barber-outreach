@@ -180,6 +180,8 @@ export const INSIGHTS_OWNER_EARNINGS = {
   categoryId: 'business-profit' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-19',
   verifiedDate: '2026-10-19',
+  /** Calculator link box added after a section; no article copy changed. */
+  modifiedDate: '2026-10-29',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda8181b1ffc7d5f1063a5d',
   lead: 'Two hypothetical four-chair UK barbershops make £180,000 in annual sales yet deliver very different owner cash after costs, taxes and debt.',
   heroImage:
@@ -348,6 +350,8 @@ export const INSIGHTS_COMMISSION_PAY = {
   categoryId: 'industry-people' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-17',
   verifiedDate: '2026-10-16',
+  /** Calculator link box added after a section; no article copy changed. */
+  modifiedDate: '2026-10-29',
   notionUrl: 'https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d',
   lead: 'What commission-based pay means for employed UK barbers, with the minimum wage test across busy and quiet months.',
   heroImage: 'https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=2400',

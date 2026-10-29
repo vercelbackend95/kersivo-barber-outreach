@@ -115,6 +115,8 @@ A shop mixing both arrangements needs a separate revenue and cost view for emplo
 <figure class="insights-figure insights-figure--photo"><img src="https://images.pexels.com/photos/4163939/pexels-photo-4163939.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2000" width="1500" height="1000" loading="lazy" decoding="async" alt="Illuminated neon sign photographed inside a commercial interior in Manchester, England" />
 <figcaption>An illuminated retail interior in Manchester, England, photographed by Aldrich. Scene-setting only; this business's staffing arrangements and finances are unknown — <a href="https://www.pexels.com/photo/illuminated-text-sign-on-the-wall-4163939/" target="_blank" rel="noopener noreferrer">Aldrich / Pexels</a>.</figcaption></figure>
 
+<aside class="insights-tool-link"><p>Compare both models with your own numbers <a href="/chair-rent-vs-commission-calculator">Chair Rent vs Commission Calculator →</a></p></aside>
+
 ## The three checks worth making in your own shop
 
 For the next four weeks, record **net sales per working chair-hour** (excluding VAT where appropriate), **true staff cost per paid hour** (including pension, holiday and employer charges) and **all-in premises and booking costs**. Track cancellations or unsold slots too. A headline diary occupancy percentage tells you less than actual income per available hour.

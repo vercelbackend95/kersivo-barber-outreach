@@ -370,7 +370,7 @@ export function isInsightsCommercialHref(href: string): boolean {
   const path = href.replace(/^https?:\/\/(www\.)?kersivo\.co\.uk/, '').split('#')[0];
   return (
     ['/pricing', '/starter', '/barbershop-websites', '/barbershop-online-booking', '/barbershop-website-design',
-      '/barber-software-cost-calculator', '/compare', '/demo'].includes(path) ||
+      '/barber-software-cost-calculator', '/chair-rent-vs-commission-calculator', '/compare', '/demo'].includes(path) ||
     path.startsWith('/admin') ||
     path.endsWith('-alternative')
   );

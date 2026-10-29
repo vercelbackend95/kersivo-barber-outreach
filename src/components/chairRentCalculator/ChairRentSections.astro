@@ -1,0 +1,117 @@
+---
+import {
+  CHAIR_RENT_CTA,
+  METHOD_SECTION,
+  RATES_FOOTNOTE,
+  RELATED_LINKS,
+  STATUS_SECTION,
+  TRADE_OFFS_SECTION,
+} from '@/lib/seo/chairRentCalculatorPage';
+import { INSIGHTS_COMMISSION_PAY, INSIGHTS_OWNER_EARNINGS } from '@/lib/seo/insights';
+import { UK_RATE_SOURCES } from '@/data/uk-rates-2026-27';
+
+const rateSourceLinks = [...new Set(Object.values(UK_RATE_SOURCES).map((entry) => entry.source))];
+---
+
+<section id="employment-status" class="cost-calc__section crc-status" aria-labelledby="crc-status-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Employment status</p>
+      <h2 id="crc-status-title" class="cost-calc__h2">{STATUS_SECTION.heading}</h2>
+      <p class="cost-calc__prose">{STATUS_SECTION.body}</p>
+    </header>
+    <div class="cost-calc-columns">
+      <div class="cost-calc-columns__item">
+        <h3 class="cost-calc-columns__title">{STATUS_SECTION.selfEmployedHeading}</h3>
+        <ul class="cost-calc__list">{STATUS_SECTION.selfEmployed.map((item) => <li>{item}</li>)}</ul>
+      </div>
+      <div class="cost-calc-columns__item">
+        <h3 class="cost-calc-columns__title">{STATUS_SECTION.employeeHeading}</h3>
+        <ul class="cost-calc__list">{STATUS_SECTION.employee.map((item) => <li>{item}</li>)}</ul>
+      </div>
+    </div>
+    <ul class="crc-links">
+      <li><a href={STATUS_SECTION.cestHref} rel="noopener noreferrer" target="_blank">{STATUS_SECTION.cestLabel}<span class="sr-only"> (opens in a new tab)</span></a></li>
+      <li><a href={STATUS_SECTION.articleHref}>{STATUS_SECTION.articleLabel}</a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="cost-calc__section crc-cta" aria-labelledby="crc-cta-title">
+  <div class="container">
+    <div class="cost-calc-callout crc-cta__box">
+      <h2 id="crc-cta-title" class="cost-calc__h3">{CHAIR_RENT_CTA.heading}</h2>
+      <p class="cost-calc__prose">{CHAIR_RENT_CTA.body}</p>
+      <div class="crc-cta__actions">
+        <a class="btn btn--secondary btn--md" href={CHAIR_RENT_CTA.primary.href} data-track="cta_click" data-track-placement="chair_rent_calculator_starter">{CHAIR_RENT_CTA.primary.label}</a>
+        <a class="btn btn--secondary btn--md" href={CHAIR_RENT_CTA.secondary.href} data-track="cta_click" data-track-placement="chair_rent_calculator_pricing">{CHAIR_RENT_CTA.secondary.label}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="cost-calc__section" aria-labelledby="crc-method-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Methodology</p>
+      <h2 id="crc-method-title" class="cost-calc__h2">{METHOD_SECTION.heading}</h2>
+    </header>
+    <dl class="cost-calc-rows">
+      {METHOD_SECTION.steps.map((step) => (
+        <div class="cost-calc-rows__row">
+          <dt>{step.title}</dt>
+          <dd>{step.body}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="cost-calc__prose crc-method__articles">
+      {METHOD_SECTION.articlesIntro}{' '}
+      <a href={INSIGHTS_COMMISSION_PAY.path}>{INSIGHTS_COMMISSION_PAY.headline}</a> and{' '}
+      <a href={INSIGHTS_OWNER_EARNINGS.path}>{INSIGHTS_OWNER_EARNINGS.headline}</a>.
+    </p>
+    <p class="cost-calc__checked">
+      {RATES_FOOTNOTE} Sources:
+      {rateSourceLinks.map((href, index) => (
+        <>
+          {index > 0 ? ', ' : ' '}
+          <a href={href} rel="noopener noreferrer" target="_blank">{new URL(href).hostname.replace('www.', '')}{new URL(href).pathname}</a>
+        </>
+      ))}.
+    </p>
+  </div>
+</section>
+
+<section class="cost-calc__section" aria-labelledby="crc-tradeoffs-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">Trade-offs</p>
+      <h2 id="crc-tradeoffs-title" class="cost-calc__h2">{TRADE_OFFS_SECTION.heading}</h2>
+    </header>
+    <div class="cost-calc-columns">
+      <div class="cost-calc-columns__item">
+        <h3 class="cost-calc-columns__title">{TRADE_OFFS_SECTION.commissionHeading}</h3>
+        <ul class="cost-calc__list">{TRADE_OFFS_SECTION.commission.map((item) => <li>{item}</li>)}</ul>
+      </div>
+      <div class="cost-calc-columns__item">
+        <h3 class="cost-calc-columns__title">{TRADE_OFFS_SECTION.rentHeading}</h3>
+        <ul class="cost-calc__list">{TRADE_OFFS_SECTION.rent.map((item) => <li>{item}</li>)}</ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cost-calc__section" aria-labelledby="crc-related-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <h2 id="crc-related-title" class="cost-calc__h2">Related guides and tools</h2>
+    </header>
+    <ul class="crc-related">
+      {RELATED_LINKS.map((link) => (
+        <li>
+          <a href={link.href}>{link.label}</a>
+          <span>{link.description}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

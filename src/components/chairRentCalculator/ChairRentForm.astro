@@ -1,0 +1,116 @@
+---
+import ChairRentField from '@/components/chairRentCalculator/ChairRentField.astro';
+import ChairRentSwitch from '@/components/chairRentCalculator/ChairRentSwitch.astro';
+import { DEFAULT_INPUTS } from '@/lib/chairRentVsCommission/engine';
+import { WAGE_BAND_LABELS } from '@/lib/chairRentVsCommission/view';
+import { CHAIR_RENT_HERO, FORM_COPY } from '@/lib/seo/chairRentCalculatorPage';
+import { MINIMUM_WAGE_BANDS, NATIONAL_MINIMUM_WAGE, STATUTORY_ANNUAL_LEAVE } from '@/data/uk-rates-2026-27';
+
+const bandOption = (band: (typeof MINIMUM_WAGE_BANDS)[number]) =>
+  `${WAGE_BAND_LABELS[band]} (£${NATIONAL_MINIMUM_WAGE.hourlyGbp[band].toFixed(2)} an hour)`;
+---
+
+<form id="calculator" class="cost-calc-surface calc-panel crc-form" aria-labelledby="crc-form-title" data-crc-form novalidate>
+  <div class="calc-panel__head">
+    <h2 id="crc-form-title" class="calc-panel__label">Your numbers</h2>
+  </div>
+  <p class="crc-form__examples">{CHAIR_RENT_HERO.examples}</p>
+
+  <fieldset class="crc-fieldset">
+    <legend class="calc-panel__group-title">{FORM_COPY.chairLegend}</legend>
+    <ChairRentField name="monthlyTakingsGbp" label="Typical monthly takings from this chair, as paid by clients" prefix="£" step={50} />
+    <div class="calc-panel__pair">
+      <ChairRentField name="quietMonths" label="Quiet months per year" compact />
+      <ChairRentField name="quietMonthPercent" label="Quiet month takings, % of typical" suffix="%" compact />
+    </div>
+    <ChairRentSwitch name="shopVatRegistered" label="Is the shop VAT registered?" />
+    <ChairRentField
+      name="averageServicePriceGbp"
+      label="Average service price"
+      prefix="£"
+      step={0.5}
+      helper="Used only to count card transactions."
+    />
+  </fieldset>
+
+  <div class="crc-tabs" role="tablist" aria-label="Choose which model to edit" data-crc-tabs hidden>
+    <button type="button" role="tab" id="crc-tab-a" aria-controls="crc-panel-a" aria-selected="true" data-crc-tab="a">{FORM_COPY.commissionTab}</button>
+    <button type="button" role="tab" id="crc-tab-b" aria-controls="crc-panel-b" aria-selected="false" tabindex="-1" data-crc-tab="b">{FORM_COPY.rentTab}</button>
+  </div>
+
+  <div class="crc-models">
+    <fieldset id="crc-panel-a" class="crc-fieldset crc-model" data-crc-panel="a">
+      <legend class="calc-panel__group-title">{FORM_COPY.commissionLegend}</legend>
+      <ChairRentField name="commissionPercent" label="Commission rate" suffix="%" step={0.5} />
+
+      <fieldset class="calc-fieldset crc-basis" data-show-when="shopVatRegistered" hidden={!DEFAULT_INPUTS.shopVatRegistered}>
+        <legend class="calc-field__label">Commission calculated on</legend>
+        <div class="calc-segmented calc-segmented--small">
+          <label class="calc-segmented__option">
+            <input type="radio" name="commissionOnGross" value="0" checked={!DEFAULT_INPUTS.commissionOnGross} />
+            <span>Takings excluding VAT</span>
+          </label>
+          <label class="calc-segmented__option">
+            <input type="radio" name="commissionOnGross" value="1" checked={DEFAULT_INPUTS.commissionOnGross} />
+            <span>Takings including VAT</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="calc-panel__pair">
+        <ChairRentField name="weeklyHours" label="Hours per week at work or available" suffix="hrs" step={0.5} helper={FORM_COPY.hoursHelper} />
+        <ChairRentField name="monthlyHoursOverride" label="Monthly hours (optional)" suffix="hrs" step={0.5} helper={FORM_COPY.monthlyHoursHelper} />
+      </div>
+
+      <div class="calc-field">
+        <label class="calc-field__label" for="crc-wageBand">Age band for minimum wage</label>
+        <select id="crc-wageBand" name="wageBand" class="calc-input crc-select">
+          {MINIMUM_WAGE_BANDS.map((band) => <option value={band} selected={band === DEFAULT_INPUTS.wageBand}>{bandOption(band)}</option>)}
+        </select>
+      </div>
+      <ChairRentSwitch name="apprenticeUnder25" label="Apprentice aged under 25" helper={FORM_COPY.apprenticeHelper} />
+      <ChairRentSwitch name="includeHolidayPay" label={`Include statutory holiday pay (${STATUTORY_ANNUAL_LEAVE.weeks} weeks at average pay)`} />
+      <ChairRentSwitch name="pensionEnrolled" label="Enrolled in a workplace pension" />
+      <ChairRentSwitch name="employmentAllowanceAvailable" label="Employment Allowance available" helper={FORM_COPY.employmentAllowanceHelper} />
+      <ChairRentField name="employmentAllowanceGbp" label="Allowance left for this employee" prefix="£" step={100} showWhen="employmentAllowanceAvailable" />
+
+      <fieldset class="calc-fieldset crc-costs">
+        <legend class="calc-field__label">Shop’s costs for this chair</legend>
+        <div class="crc-grid">
+          <ChairRentField name="productsPercent" label="Products and consumables, % of net takings" suffix="%" step={0.5} compact />
+          <ChairRentField name="cardSharePercent" label="Share of payments by card" suffix="%" compact />
+          <ChairRentField name="cardFeePercent" label="Card fee, %" suffix="%" step={0.05} compact />
+          <ChairRentField name="cardFeeFixedPence" label="Card fee per transaction" suffix="p" compact />
+          <ChairRentField name="softwareMonthlyGbp" label="Booking software per barber per month" prefix="£" step={1} compact />
+        </div>
+      </fieldset>
+      <p class="calc-field__helper crc-note">{FORM_COPY.tipsNote}</p>
+    </fieldset>
+
+    <fieldset id="crc-panel-b" class="crc-fieldset crc-model" data-crc-panel="b">
+      <legend class="calc-panel__group-title">{FORM_COPY.rentLegend}</legend>
+      <div class="calc-panel__pair">
+        <ChairRentField name="weeklyRentGbp" label="Chair rent per week" prefix="£" step={5} />
+        <ChairRentField name="rentWeeksPerYear" label="Weeks rent is paid per year" />
+      </div>
+      <ChairRentField name="extraCostsWeeklyGbp" label="Extra shop costs per renter per week, e.g. towels, utilities" prefix="£" step={1} />
+      <ChairRentSwitch name="chargeVatOnRent" label="Charge VAT on chair rent?" helper={FORM_COPY.rentVatHelper} showWhen="shopVatRegistered" />
+
+      <fieldset class="calc-fieldset crc-costs">
+        <legend class="calc-field__label">Renter’s own costs (for the barber’s view)</legend>
+        <div class="crc-grid">
+          <ChairRentField name="renterProductsPercent" label="Products, % of takings" suffix="%" step={0.5} compact />
+          <ChairRentField name="renterCardSharePercent" label="Share of payments by card" suffix="%" compact />
+          <ChairRentField name="renterCardFeePercent" label="Card fee, %" suffix="%" step={0.05} compact />
+          <ChairRentField name="renterCardFeeFixedPence" label="Card fee per transaction" suffix="p" compact />
+          <ChairRentField name="renterSoftwareMonthlyGbp" label="Booking software per month" prefix="£" compact />
+          <ChairRentField name="renterOtherMonthlyGbp" label="Insurance and other costs per month" prefix="£" compact />
+        </div>
+      </fieldset>
+    </fieldset>
+  </div>
+
+  <div class="crc-fieldset crc-advanced">
+    <ChairRentSwitch name="showBarberSide" label={FORM_COPY.barberSide} />
+  </div>
+</form>

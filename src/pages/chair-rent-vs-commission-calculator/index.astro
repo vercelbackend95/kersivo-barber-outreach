@@ -1,0 +1,81 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ChairRentHero from '@/components/chairRentCalculator/ChairRentHero.astro';
+import ChairRentForm from '@/components/chairRentCalculator/ChairRentForm.astro';
+import ChairRentResults from '@/components/chairRentCalculator/ChairRentResults.astro';
+import ChairRentSections from '@/components/chairRentCalculator/ChairRentSections.astro';
+import {
+  CHAIR_RENT_CALCULATOR_DESCRIPTION,
+  CHAIR_RENT_CALCULATOR_OG_IMAGE,
+  CHAIR_RENT_CALCULATOR_OG_IMAGE_ALT,
+  CHAIR_RENT_CALCULATOR_PAGE_PATH,
+  CHAIR_RENT_CALCULATOR_TITLE,
+} from '@/lib/seo/chairRentCalculatorPage';
+import { CHAIR_RENT_FAQ_ITEMS } from '@/lib/seo/chairRentCalculatorFaq';
+import { buildChairRentCalculatorJsonLd } from '@/lib/seo/chairRentCalculatorJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/barber-cost-calculator.css';
+import '@/styles/components/barber-cost-calculator-tool.css';
+import '@/styles/components/chair-rent-calculator.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={CHAIR_RENT_CALCULATOR_TITLE}
+  description={CHAIR_RENT_CALCULATOR_DESCRIPTION}
+  canonicalPath={CHAIR_RENT_CALCULATOR_PAGE_PATH}
+  ogImagePath={CHAIR_RENT_CALCULATOR_OG_IMAGE}
+  ogImageWidth={1200}
+  ogImageHeight={630}
+  ogImageAlt={CHAIR_RENT_CALCULATOR_OG_IMAGE_ALT}
+  jsonLd={buildChairRentCalculatorJsonLd()}
+>
+  <main class="cost-calc crc landing-overflow-guard">
+    <ChairRentHero />
+
+    <section class="crc-tool" aria-label="Calculator">
+      <div class="crc-tool__grid">
+        <ChairRentForm />
+        <ChairRentResults />
+      </div>
+    </section>
+
+    <ChairRentSections />
+
+    <Faq4
+      className="faq4--landing"
+      heading="Chair rent vs commission: FAQ"
+      subHeading="Short answers for UK barbershop owners comparing employed barbers with chair renters."
+      supportHeading="Running the numbers on your shop?"
+      supportText="See how KERSIVO’s flat per-location pricing works for an independent UK barbershop."
+      supportLinkLabel="View KERSIVO pricing"
+      supportLinkHref="/pricing"
+      faqs={[...CHAIR_RENT_FAQ_ITEMS]}
+    />
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initChairRentCalculator } from '@/lib/chairRentVsCommission/initChairRentCalculator';
+
+  initChairRentCalculator(document);
+  document.addEventListener('astro:page-load', () => initChairRentCalculator(document));
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

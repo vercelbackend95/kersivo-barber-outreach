@@ -47,6 +47,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { name: 'Insights', href: '/insights' },
       { name: 'Website design guide', href: '/barbershop-website-design' },
+      { name: 'Chair rent vs commission calculator', href: '/chair-rent-vs-commission-calculator' },
       { name: 'About KERSIVO', href: '/about' },
       { name: 'Contact', href: '/#contact' },
     ],
