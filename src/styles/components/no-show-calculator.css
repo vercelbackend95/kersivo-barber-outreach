@@ -20,6 +20,10 @@
 .ns-hero__inner {
   display: grid;
   justify-items: start;
+}
+
+/* Align the hero with the full-width calculator, retaining its readable title line length. */
+.ns-hero__inner > .cost-calc-hero__title {
   max-width: 60rem;
 }
 
