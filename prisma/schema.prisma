@@ -84,6 +84,10 @@ enum EmailOutboundPurpose {
   USER_REGISTRATION_INTERNAL
   /// Internal KERSIVO notification: first SETUP → FREE_BOOKING (KERSIVO Starter) activation.
   STARTER_ACTIVATION_INTERNAL
+  /// Free website preview: acknowledgement to the shop owner (E1).
+  FREE_PREVIEW_REQUEST_ACKNOWLEDGEMENT
+  /// Free website preview: internal notification of a new request (E2).
+  FREE_PREVIEW_REQUEST_INTERNAL
 }
 
 enum EmailOutboundStatus {
@@ -312,6 +316,7 @@ model ShopSettings {
   departure                          ShopDeparture?
   fullBookingDestination             FullBookingDestination?
   fullBookingDestinationEvents       FullBookingDestinationEvent[]
+  previewRequest                     PreviewRequest?
 }
 
 enum FullBookingDestinationStatus {
@@ -1508,4 +1513,93 @@ model ShopPreviewSession {
 
   @@index([shopId])
   @@index([expiresAt])
+}
+
+/// Free website preview lifecycle (docs/free-preview-spec.md §4). `changes_requested` returns to `READY`
+/// when ops sends the updated preview.
+enum PreviewRequestStatus {
+  REQUESTED
+  IN_PROGRESS
+  READY
+  CHANGES_REQUESTED
+  CONVERTED
+  /// Owner said no thanks.
+  DECLINED
+  EXPIRED
+  /// Not eligible (set by ops; no email is sent).
+  REJECTED
+}
+
+/// "Free preview before you pay" request. Rules in src/lib/freePreview/*.
+model PreviewRequest {
+  id          String               @id @default(cuid())
+  /// Capability token for the private preview URL. 256-bit base64url; stored plaintext so ops can copy the link.
+  publicToken String               @unique
+  status      PreviewRequestStatus @default(REQUESTED)
+
+  firstName              String?
+  email                  String
+  shopName               String
+  townCity               String
+  bookingPageUrl         String?
+  instagramUrl           String?
+  googleListingUrl       String?
+  websiteUrl             String?
+  /// One of FREE_PREVIEW_BARBER_COUNTS ("1", "2-3", "4-6", "7+").
+  barberCount            String
+  /// One of FREE_PREVIEW_BOOKING_SYSTEMS.
+  currentBookingSystem   String
+  /// "yes" | "no" | "not_sure".
+  hasOwnDomain           String
+  notes                  String?   @db.Text
+  authorisationConsentAt DateTime
+  marketingOptInAt       DateTime?
+  /// Which KERSIVO CTA sent the visitor (internal `?from=` value). No campaign attribution is stored.
+  entryPoint             String?
+
+  draftShopId String?       @unique
+  draftShop   ShopSettings? @relation(fields: [draftShopId], references: [id], onDelete: SetNull)
+
+  previewReadyAt       DateTime?
+  firstViewedAt        DateTime?
+  lastViewedAt         DateTime?
+  viewCount            Int       @default(0)
+  changesRequestedText String?   @db.Text
+  changesRequestedAt   DateTime?
+  expiresAt            DateTime?
+  convertedAt          DateTime?
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  declinedAt           DateTime?
+  rejectedAt           DateTime?
+  /// Follow-up log: each scheduled email is sent at most once.
+  followupSentAt       DateTime?
+  expiryReminderSentAt DateTime?
+  emailOptOut          Boolean   @default(false)
+  emailOptOutAt        DateTime?
+  internalNotes        String?   @db.Text
+
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  events    PreviewRequestEvent[]
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+/// Audit trail of status changes and ops actions on a preview request.
+model PreviewRequestEvent {
+  id               String                @id @default(cuid())
+  previewRequestId String
+  action           String
+  fromStatus       PreviewRequestStatus?
+  toStatus         PreviewRequestStatus?
+  actorEmail       String?
+  meta             Json?
+  createdAt        DateTime              @default(now())
+
+  previewRequest PreviewRequest @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
+
+  @@index([previewRequestId, createdAt])
 }

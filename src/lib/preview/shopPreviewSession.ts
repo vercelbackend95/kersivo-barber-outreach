@@ -80,19 +80,18 @@ export async function requirePreviewOnboardingAccess(
   return access;
 }
 
-/** Create provisional shop + preview session; returns plaintext token for cookie. */
-export async function createPreviewShopSession(): Promise<{
-  shopId: string;
-  token: string;
-  expiresAt: Date;
-}> {
-  const token = mintPreviewToken();
-  const tokenHash = hashPreviewToken(token);
-  const expiresAt = new Date(Date.now() + PREVIEW_TTL_MS);
-
-  const shop = await prisma.shopSettings.create({
+/**
+ * Ownerless draft shop: public activity paused under the construction reason, so it cannot take
+ * public bookings until it is claimed and subscribed. Shared by guest preview and free preview.
+ */
+export async function createDraftShop(
+  input: { name?: string; townCity?: string | null } = {},
+  db: Pick<typeof prisma, 'shopSettings'> = prisma,
+): Promise<{ id: string }> {
+  return db.shopSettings.create({
     data: {
-      name: 'My Barbershop',
+      name: input.name?.trim() || 'My Barbershop',
+      townCity: input.townCity?.trim() || null,
       timezone: 'Europe/London',
       ownerUserId: null,
       onboardingCompleted: false,
@@ -103,6 +102,19 @@ export async function createPreviewShopSession(): Promise<{
     },
     select: { id: true },
   });
+}
+
+/** Create provisional shop + preview session; returns plaintext token for cookie. */
+export async function createPreviewShopSession(): Promise<{
+  shopId: string;
+  token: string;
+  expiresAt: Date;
+}> {
+  const token = mintPreviewToken();
+  const tokenHash = hashPreviewToken(token);
+  const expiresAt = new Date(Date.now() + PREVIEW_TTL_MS);
+
+  const shop = await createDraftShop();
 
   await prisma.shopPreviewSession.create({
     data: {

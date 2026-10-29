@@ -1,0 +1,199 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import {
+  OpsAccessDenied,
+  OpsAccessUnconfigured,
+} from '@/components/ops/recommendations/OpsPageGates';
+import {
+  FREE_PREVIEW_BARBER_COUNTS,
+  FREE_PREVIEW_BOOKING_SYSTEMS,
+  labelFor,
+} from '@/lib/freePreview/intake';
+import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
+import {
+  PREVIEW_REQUEST_STATUSES,
+  PREVIEW_STATUS_LABELS,
+  countPreviewRequestsLast30Days,
+  formatAge,
+  listPreviewRequests,
+  parsePreviewRequestListQuery,
+  previewRequestLinks,
+} from '@/lib/freePreview/opsQueries';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/table.css';
+import '@/styles/components/ops-recommendations.css';
+import '@/styles/components/ops-preview-requests.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+
+const query = parsePreviewRequestListQuery(Astro.url.searchParams);
+const [requests, counts] =
+  view === 'dashboard'
+    ? await Promise.all([listPreviewRequests(query), countPreviewRequestsLast30Days()])
+    : [[], null];
+const now = new Date();
+
+function filterHref(status: string | null, sort = query.sort) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status.toLowerCase());
+  if (sort !== 'newest') params.set('sort', sort);
+  const qs = params.toString();
+  return qs ? `${OPS_PREVIEW_REQUESTS_PATH}?${qs}` : OPS_PREVIEW_REQUESTS_PATH;
+}
+---
+
+<MinimalLayout
+  title="Free preview requests | KERSIVO Ops"
+  description="Internal list of free website preview requests."
+  canonicalPath={OPS_PREVIEW_REQUESTS_PATH}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Free preview requests</h1>
+          <p class="ops-gate__body">Sign in with an authorized operator account to continue.</p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={Astro.url.pathname + Astro.url.search}
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+            showGoogle={false}
+            allowSignup={false}
+            passwordResetRedirectTo="/ops/reset-password"
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {
+      view === 'dashboard' ? (
+        <div class="ops-cr ops-pr">
+          <header class="ops-cr__header">
+            <div class="ops-cr__brand">
+              <p class="ops-cr__brand-kicker">KERSIVO Ops</p>
+              <h1 class="ops-cr__title">Free preview requests</h1>
+              <p class="ops-cr__subtitle">Newest {requests.length} shown. Counts cover the last 30 days.</p>
+            </div>
+          </header>
+
+          {counts ? (
+            <section class="ops-summary" aria-label="Requests by status, last 30 days">
+              {PREVIEW_REQUEST_STATUSES.map((status) => (
+                <div class="ops-summary__card">
+                  <p class="ops-summary__label">{PREVIEW_STATUS_LABELS[status]}</p>
+                  <p class="ops-summary__value">{counts[status]}</p>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
+          <nav class="ops-filters" aria-label="Filter by status">
+            <div class="ops-filters__rail">
+              <a
+                class:list={['ops-filters__chip', { 'ops-filters__chip--active': !query.status }]}
+                href={filterHref(null)}
+                aria-current={!query.status ? 'page' : undefined}
+              >
+                All
+              </a>
+              {PREVIEW_REQUEST_STATUSES.map((status) => (
+                <a
+                  class:list={['ops-filters__chip', { 'ops-filters__chip--active': query.status === status }]}
+                  href={filterHref(status)}
+                  aria-current={query.status === status ? 'page' : undefined}
+                >
+                  {PREVIEW_STATUS_LABELS[status]}
+                </a>
+              ))}
+            </div>
+            <p class="ops-filters__note">
+              Sorted {query.sort === 'newest' ? 'newest first' : 'oldest first'} ·{' '}
+              <a href={filterHref(query.status, query.sort === 'newest' ? 'oldest' : 'newest')}>
+                {query.sort === 'newest' ? 'Show oldest first' : 'Show newest first'}
+              </a>
+            </p>
+          </nav>
+
+          {requests.length === 0 ? (
+            <p class="ops-pr__empty">No preview requests{query.status ? ` with status ${PREVIEW_STATUS_LABELS[query.status]}` : ''}.</p>
+          ) : (
+            <div class="ops-table-wrap">
+              <table class="ops-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Shop</th>
+                    <th scope="col">Links</th>
+                    <th scope="col">Barbers</th>
+                    <th scope="col">System</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Viewed</th>
+                    <th scope="col">Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((request) => (
+                    <tr>
+                      <td>
+                        <a class="ops-table__name" href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}`}>
+                          {request.shopName}
+                        </a>
+                        <div class="ops-table__muted">{request.townCity}</div>
+                      </td>
+                      <td>
+                        <ul class="ops-pr__links">
+                          {previewRequestLinks(request).map((link) => (
+                            <li>
+                              <a href={link.url} target="_blank" rel="noopener noreferrer nofollow">
+                                {link.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td>{labelFor(FREE_PREVIEW_BARBER_COUNTS, request.barberCount)}</td>
+                      <td>{labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, request.currentBookingSystem)}</td>
+                      <td>
+                        <span class={`ops-pr__status ops-pr__status--${request.status.toLowerCase()}`}>
+                          {PREVIEW_STATUS_LABELS[request.status]}
+                        </span>
+                      </td>
+                      <td>{request.firstViewedAt ? `${request.viewCount}×` : 'Not yet'}</td>
+                      <td title={request.createdAt.toISOString()}>{formatAge(request.createdAt, now)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : null
+    }
+  </main>
+</MinimalLayout>
