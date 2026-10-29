@@ -324,11 +324,9 @@
   font-weight: 600;
 }
 
-.crc .crc-warning a,
-.crc .crc-vat-note a,
-.crc .crc-links a,
-.crc .crc-related a,
-.crc .crc-method__articles a {
+/* The site link red is below 4.5:1 on the warning tint, so this one link uses the foreground colour.
+   Needs to outrank html[data-app='marketing'] a:not([class]). */
+.crc.cost-calc .crc-warning a {
   color: var(--fg);
   text-decoration: underline;
   text-underline-offset: 0.2em;
