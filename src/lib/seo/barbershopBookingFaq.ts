@@ -1,3 +1,5 @@
+import { PREVIEW_TURNAROUND_TEXT_SHORT } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { KERSIVO_CONTACT_EMAIL } from '@/lib/seo/footerSocialLinks';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
@@ -136,6 +138,21 @@ export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
   },
 ];
 
+/** Homepage FAQ answers that change while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
+const HOMEPAGE_FREE_PREVIEW_ANSWERS: Readonly<Record<string, string>> = {
+  'When do I pay, and how long until my website is live?': `You don't pay anything for your preview, which we usually send ${PREVIEW_TURNAROUND_TEXT_SHORT}. If you decide to launch, your first £${SAAS_MONTHLY_GBP} payment is taken when you subscribe, then monthly on the same day. We then connect your domain and payments — typically within a few days of receiving everything we need, which is an estimate, not a guaranteed date — and nothing goes live until you approve it.`,
+  'Is the website custom-designed?': FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM,
+};
+
+/** Visible homepage FAQ and its FAQPage JSON-LD; with the flag off this is HOMEPAGE_FAQ_ITEMS unchanged. */
+export function getHomepageFaqItems(freePreview = false): LandingFaqItem[] {
+  if (!freePreview) return HOMEPAGE_FAQ_ITEMS;
+  return HOMEPAGE_FAQ_ITEMS.map((item) => {
+    const answer = HOMEPAGE_FREE_PREVIEW_ANSWERS[item.question];
+    return answer ? { ...item, answer } : item;
+  });
+}
+
 export const ONLINE_BOOKING_MOVED_FAQ_ITEMS: LandingFaqItem[] = [
   BARBERSHOP_BOOKING_FAQ_ITEMS[0],
   BARBERSHOP_BOOKING_FAQ_ITEMS[1],
@@ -162,14 +179,14 @@ export function buildOnlineBookingFaqJsonLd(): Record<string, unknown> {
   };
 }
 
-export function buildBarbershopBookingFaqJsonLd(): Record<string, unknown> {
+export function buildBarbershopBookingFaqJsonLd(freePreview = false): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
 
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}/#faq`,
-    mainEntity: HOMEPAGE_FAQ_ITEMS.map((item) => ({
+    mainEntity: getHomepageFaqItems(freePreview).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

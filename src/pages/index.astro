@@ -1,6 +1,6 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
-import { DEFAULT_TITLE, HOMEPAGE_DESCRIPTION } from '@/lib/seo/defaults';
+import { DEFAULT_TITLE, getHomepageDescription } from '@/lib/seo/defaults';
 import Faq4 from '@/components/faq4.astro';
 import Contact16 from '@/components/contact16.astro';
 import LandingFinalCta from '@/components/landingFinalCta.astro';
@@ -10,7 +10,8 @@ import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.
 import LandingDifference from '@/components/landingDifference.astro';
 import Footer50 from '@/components/footer50.astro';
 import { buildHomepageJsonLd } from '@/lib/seo/barberDemoJsonLd';
-import { HOMEPAGE_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
+import { getHomepageFaqItems } from '@/lib/seo/barbershopBookingFaq';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -20,14 +21,17 @@ import HomepageHero from '@/components/homepage/HomepageHero.astro';
 import HomepagePricingNotes from '@/components/homepage/HomepagePricingNotes.astro';
 
 const currentYear = new Date().getFullYear();
+// FREE_PREVIEW_FLOW_ENABLED (docs/free-preview-spec.md §10.3); off renders the page unchanged.
+const freePreview = isFreePreviewFlowEnabled();
+const faqItems = getHomepageFaqItems(freePreview);
 ---
 
 <LandingLayout
   title={DEFAULT_TITLE}
-  description={HOMEPAGE_DESCRIPTION}
+  description={getHomepageDescription(freePreview)}
   canonicalPath="/"
   deferDecorativeFontPreloads
-  jsonLd={buildHomepageJsonLd()}
+  jsonLd={buildHomepageJsonLd(freePreview)}
 >
   <link
     slot="head"
@@ -39,7 +43,7 @@ const currentYear = new Date().getFullYear();
     <HomepageHero />
     <LandingDifference />
     <LandingDemoPreview />
-    <RateCard1 variant="landing" />
+    <RateCard1 variant="landing" freePreview={freePreview} />
     <HomepagePricingNotes />
     <LandingPostPurchaseSteps />
     <LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />
@@ -51,7 +55,7 @@ const currentYear = new Date().getFullYear();
       supportText="Send us a message and we’ll give you a clear answer about your shop."
       supportLinkLabel="Ask a question"
       supportLinkHref="#contact"
-      faqs={HOMEPAGE_FAQ_ITEMS}
+      faqs={faqItems}
     />
     <Contact16
       eyebrow="CONTACT KERSIVO"

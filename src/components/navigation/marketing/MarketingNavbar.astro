@@ -5,6 +5,7 @@ import MarketingNavbarClient from '@/components/navigation/marketing/MarketingNa
 import MarketingNavPanel from '@/components/navigation/marketing/MarketingNavPanel.astro';
 import {
   MARKETING_NAV_DIRECT_LINKS,
+  MARKETING_NAV_FREE_PREVIEW_ACTION,
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
@@ -13,6 +14,7 @@ import {
   isMarketingDirectLinkCurrent,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 
 const groups = buildMarketingNavigation();
 const navEntries = buildMarketingNavTopLevelEntries(groups, MARKETING_NAV_DIRECT_LINKS);
@@ -20,7 +22,9 @@ const pathname = Astro.url.pathname;
 const resolvedCta = Astro.locals.navbarPreviewCta;
 const primary: MarketingNavAction = resolvedCta
   ? { label: resolvedCta.label, href: resolvedCta.href, track: resolvedCta.track }
-  : MARKETING_NAV_PRIMARY_ACTION;
+  : isFreePreviewFlowEnabled()
+    ? MARKETING_NAV_FREE_PREVIEW_ACTION
+    : MARKETING_NAV_PRIMARY_ACTION;
 const compactLabel = primary.label.replace(/\s*—\s*£\d+\/month$/, '');
 const groupIsCurrent = (group: (typeof groups)[number]) =>
   [...group.featured, ...group.sections.flatMap((section) => section.items)].some((item) =>

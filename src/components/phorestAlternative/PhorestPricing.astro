@@ -2,9 +2,11 @@
 import { RateCard1Offer } from '@/components/rateCard1';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import '@/styles/rateCard1.css';
 
-const layout = getRateCard1LandingLayout();
+const freePreview = isFreePreviewFlowEnabled();
+const layout = getRateCard1LandingLayout(freePreview);
 ---
 
 <section
@@ -37,7 +39,7 @@ const layout = getRateCard1LandingLayout();
     </header>
 
     <div class="rate-card1--landing fresha-alt-pricing__offer-host">
-      <RateCard1Offer />
+      <RateCard1Offer freePreview={freePreview} />
       <div class="rate-card1__landing-conditions">
         <p>{layout.conditionsLine1}</p>
         <p>{layout.conditionsLine2}</p>

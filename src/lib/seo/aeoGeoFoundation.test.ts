@@ -214,7 +214,7 @@ describe('/pricing page', () => {
   it('links to the demo, the checkout and the comparison pages without fake urgency', () => {
     expect(page).toContain('see the demo');
     expect(page).toContain('href="/demo"');
-    expect(page).toContain('<RateCard1Offer />');
+    expect(page).toContain('<RateCard1Offer freePreview={freePreview} />');
     expect(page).toContain('href="/admin/launch"');
     expect(page).toContain('href="/booksy-alternative"');
     expect(page).toContain('href="/fresha-alternative"');

@@ -58,7 +58,7 @@ describe('homepage SEO phase 1: head', () => {
     );
     expect(DEFAULT_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(homepage).toContain('title={DEFAULT_TITLE}');
-    expect(homepage).toContain('description={HOMEPAGE_DESCRIPTION}');
+    expect(homepage).toContain('description={getHomepageDescription(freePreview)}');
     expect(HOMEPAGE_DESCRIPTION).toContain(`£${SAAS_MONTHLY_GBP}/month`);
     expect(HOMEPAGE_DESCRIPTION.length).toBeLessThanOrEqual(165);
   });
@@ -162,7 +162,7 @@ describe('homepage SEO phase 1: internal links', () => {
     );
     expect(paragraph).toContain('<a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a>');
     expect(paragraph).not.toMatch(/nofollow|target=/);
-    expect(homepage).toMatch(/<RateCard1 variant="landing" \/>/);
+    expect(homepage).toMatch(/<RateCard1 variant="landing" freePreview=\{freePreview\} \/>/);
     expect(homepage).not.toMatch(/<RateCard1[^>]*client:/);
   });
 
@@ -214,7 +214,7 @@ describe('homepage lower-funnel conversion controls', () => {
   it('does not put a demo-email form between pricing and onboarding', () => {
     expect(homepage).not.toMatch(/LandingDemoCapture/);
     expect(homepage).toMatch(
-      /<RateCard1 variant="landing" \/>\s*<HomepagePricingNotes \/>\s*<LandingPostPurchaseSteps \/>/,
+      /<RateCard1 variant="landing" freePreview=\{freePreview\} \/>\s*<HomepagePricingNotes \/>\s*<LandingPostPurchaseSteps \/>/,
     );
     expect(homepage).toContain('<Contact16');
     expect(homepage).toContain('submitLabel="Send my question"');
@@ -242,7 +242,8 @@ describe('homepage lower-funnel conversion controls', () => {
 
 describe('homepage SEO phase 1: FAQ', () => {
   it('renders the three new questions in the visible FAQ and the FAQPage JSON-LD', () => {
-    expect(homepage).toContain('faqs={HOMEPAGE_FAQ_ITEMS}');
+    expect(homepage).toContain('faqs={faqItems}');
+    expect(homepage).toContain('const faqItems = getHomepageFaqItems(freePreview);');
     const visible = HOMEPAGE_FAQ_ITEMS.map((item) => item.question);
     const structured = (buildBarbershopBookingFaqJsonLd().mainEntity as Array<{ name: string }>).map(
       (entity) => entity.name,

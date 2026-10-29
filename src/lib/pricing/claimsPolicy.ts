@@ -87,6 +87,13 @@ export const STANDARD_SITE_NOT_BESPOKE_CLAIM =
   'Your site is tailored to your shop’s name, visual identity, logo, photos, team, content and contact details. This is not a full, unlimited bespoke web-development service.';
 
 /**
+ * Free-preview flow (docs/free-preview-spec.md §10.1, "Is my website a template?"; reused on the homepage FAQ).
+ * Approved because it qualifies itself as not an unlimited bespoke build (see STANDARD_SITE_NOT_BESPOKE_CLAIM).
+ */
+export const FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM =
+  "No. We design each website individually around your shop — your name, photos, barbers, services and style. It runs on the KERSIVO platform, so booking, payments and your dashboard work reliably for every shop. It isn't an unlimited bespoke build: after launch, reasonable small updates are included, while redesigns and custom features aren't.";
+
+/**
  * §4 — Powered by KERSIVO on the customer’s barbershop site only (ops attaches manually at delivery).
  * Never claim or place this badge on the kersivo.co.uk marketing site.
  */

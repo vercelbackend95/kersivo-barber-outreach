@@ -1,6 +1,8 @@
 ---
 import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-faq-close.css';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { NO_SETUP_FEE_SHORT, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -123,6 +125,11 @@ const faqs: Faq[] = [
           <span class="bsw-final__amount">£{SAAS_MONTHLY_GBP}</span>
           <span class="bsw-final__period">/month per location</span>
         </p>
+        {isFreePreviewFlowEnabled() ? (
+          <FullPlanCta part="primary" primaryClass="bsw-final__cta" placement={FULL_TRACK_PLACEMENT}>
+            <ArrowRight slot="icon" className="bsw-final__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
+          </FullPlanCta>
+        ) : (
         <a
           class="bsw-final__cta"
           href={FULL_LAUNCH_HREF}
@@ -132,6 +139,7 @@ const faqs: Faq[] = [
           Start Full KERSIVO
           <ArrowRight className="bsw-final__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
         </a>
+        )}
         <a
           class="bsw-final__demo"
           href={DEMO_HOME_HREF}
@@ -141,6 +149,7 @@ const faqs: Faq[] = [
           Explore the working demo
           <ArrowRight className="bsw-final__demo-icon" size={15} strokeWidth={2} aria-hidden="true" />
         </a>
+        {isFreePreviewFlowEnabled() && <FullPlanCta part="subscribe" class="bsw-final__subscribe" placement={FULL_TRACK_PLACEMENT} />}
         <p class="bsw-final__fine">
           {NO_SETUP_FEE_SHORT} 0% KERSIVO commission. {STRIPE_FEES_NOTE} The demo uses CUTSTATE
           Barbers, a fictional shop.

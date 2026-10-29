@@ -3,8 +3,8 @@ import {
   DEFAULT_OG_IMAGE_PATH,
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_TITLE,
-  HOMEPAGE_DESCRIPTION,
   HOMEPAGE_LAST_UPDATED_ISO,
+  getHomepageDescription,
   KERSIVO_BOOKING_DEPOSIT_GBP,
   SAAS_MONTHLY_GBP,
 } from './defaults';
@@ -47,13 +47,13 @@ export function getKersivoHomepageId(siteUrl: string): string {
  * Keep FAQ questions in their visible homepage source rather than duplicating FAQ contents here.
  */
 /** Homepage JSON-LD: the main @graph plus the FAQPage node (#faq), as one block. */
-export function buildHomepageJsonLd(): Record<string, unknown> {
-  const graph = buildBarberDemoJsonLd();
-  const { '@context': _context, ...faq } = buildBarbershopBookingFaqJsonLd();
+export function buildHomepageJsonLd(freePreview = false): Record<string, unknown> {
+  const graph = buildBarberDemoJsonLd(freePreview);
+  const { '@context': _context, ...faq } = buildBarbershopBookingFaqJsonLd(freePreview);
   return { ...graph, '@graph': [...(graph['@graph'] as Record<string, unknown>[]), faq] };
 }
 
-export function buildBarberDemoJsonLd(): Record<string, unknown> {
+export function buildBarberDemoJsonLd(freePreview = false): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
   const organizationId = getKersivoOrganizationId(siteUrl);
   const softwareId = getKersivoSoftwareId(siteUrl);
@@ -68,7 +68,7 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         '@id': getKersivoHomepageId(siteUrl),
         url: `${siteUrl}/`,
         name: DEFAULT_TITLE,
-        description: HOMEPAGE_DESCRIPTION,
+        description: getHomepageDescription(freePreview),
         inLanguage: 'en-GB',
         dateModified: HOMEPAGE_LAST_UPDATED_ISO,
         primaryImageOfPage: {

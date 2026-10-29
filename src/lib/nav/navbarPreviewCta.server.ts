@@ -7,6 +7,8 @@ import {
   NAVBAR_SUBSCRIBE_CTA_LABEL,
   type Navbar17CtaTrack,
 } from '@/lib/nav/navbar17Items';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_CTA_HREF, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
 import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
 import { isBlockingSaasStatus } from '@/lib/setup/saasCheckoutGuard';
 
@@ -30,6 +32,13 @@ const GET_STARTED: NavbarPreviewCta = {
   label: NAVBAR_SUBSCRIBE_CTA_LABEL,
   href: '/admin/launch',
   track: 'saas_subscribe_click',
+};
+
+/** Guest CTA while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.2). */
+const FREE_PREVIEW: NavbarPreviewCta = {
+  state: 'get_started',
+  label: NAVBAR_FREE_PREVIEW_CTA_LABEL,
+  href: FREE_PREVIEW_CTA_HREF,
 };
 
 const CONTINUE_SETUP: NavbarPreviewCta = {
@@ -65,7 +74,7 @@ export async function resolveNavbarPreviewCta(
 ): Promise<NavbarPreviewCta> {
   const access = await resolveAdminAccess(context);
   if (!access || access.via !== 'session') {
-    return GET_STARTED;
+    return isFreePreviewFlowEnabled() ? FREE_PREVIEW : GET_STARTED;
   }
 
   const shop = await prisma.shopSettings.findUnique({

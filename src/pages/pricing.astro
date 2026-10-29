@@ -5,6 +5,8 @@ import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
 import { RateCard1Offer } from '@/components/rateCard1';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import {
   PRICING_FAQ_ITEMS,
@@ -35,7 +37,9 @@ import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/company-pages.css';
 import '@/styles/components/landingFinalCta.css';
 
-const layout = getRateCard1LandingLayout();
+// FREE_PREVIEW_FLOW_ENABLED (docs/free-preview-spec.md §10.4); off renders the page unchanged.
+const freePreview = isFreePreviewFlowEnabled();
+const layout = getRateCard1LandingLayout(freePreview);
 const currentYear = new Date().getFullYear();
 ---
 
@@ -61,6 +65,21 @@ const currentYear = new Date().getFullYear();
         <p class="fresha-alt-hero__lead">
           Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location — your branded website, own domain, online booking with payment control, clients, reports and retail pickup. KERSIVO Starter is £0/month for shops that only need online bookings. 0% KERSIVO commission on both; Stripe fees apply.
         </p>
+        {freePreview ? (
+          <>
+            <div class="fresha-alt-hero__actions">
+              <FullPlanCta
+                part="primary"
+                primaryClass="fresha-alt-hero__action fresha-alt-hero__action--primary"
+                placement="pricing_hero"
+              />
+              <a href="#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
+                Compare the two plans
+              </a>
+            </div>
+            <FullPlanCta part="subscribe" placement="pricing_hero" />
+          </>
+        ) : (
         <div class="fresha-alt-hero__actions">
           <a
             href="/admin/launch"
@@ -74,6 +93,7 @@ const currentYear = new Date().getFullYear();
             Compare the two plans
           </a>
         </div>
+        )}
         <p class="company-hero__updated">
           Or <a href="/demo">see the demo</a> first.
         </p>
@@ -129,11 +149,16 @@ const currentYear = new Date().getFullYear();
         </header>
         <p class="fresha-alt__eyebrow pricing-full-offer__label">RECOMMENDED FOR YOUR OWN BRAND</p>
         <div class="rate-card1--landing fresha-alt-pricing__offer-host">
-          <RateCard1Offer />
+          <RateCard1Offer freePreview={freePreview} />
           <div class="rate-card1__landing-conditions">
             <p>{layout.conditionsLine1}</p>
             <p>{layout.conditionsLine2}</p>
           </div>
+          {freePreview && (
+            <p class="pricing-free-preview-note">
+              <a href="/free-preview">Not sure yet? Get a free preview of your website first — no card needed.</a>
+            </p>
+          )}
         </div>
         <article class="pricing-starter-offer" aria-labelledby="pricing-starter-title">
           <div class="pricing-starter-offer__head">
@@ -224,6 +249,9 @@ const currentYear = new Date().getFullYear();
           </div>
           <div class="landing-final-cta__conversion">
             <div class="fresha-alt-final__actions">
+              {freePreview ? (
+                <FullPlanCta part="primary" primaryClass="btn btn--primary btn--lg landing-final-cta__button" />
+              ) : (
               <a
                 href="/admin/launch"
                 class="btn btn--primary btn--lg landing-final-cta__button"
@@ -231,6 +259,7 @@ const currentYear = new Date().getFullYear();
               >
                 {layout.ctaLabel}
               </a>
+              )}
               <a
                 href="/admin"
                 class="btn btn--secondary btn--lg landing-final-cta__button"
@@ -241,6 +270,7 @@ const currentYear = new Date().getFullYear();
               </a>
               <a href="/demo" class="company-link">See the demo</a>
             </div>
+            {freePreview && <FullPlanCta part="subscribe" class="pricing-final-subscribe" />}
           </div>
         </div>
       </div>
@@ -315,6 +345,24 @@ const currentYear = new Date().getFullYear();
 
   .pricing-full-offer__label {
     margin-bottom: 1rem;
+  }
+
+  .pricing-free-preview-note {
+    margin: 1rem auto 0;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .pricing-free-preview-note a {
+    color: var(--fg);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pricing-final-subscribe {
+    margin-top: 1rem;
+    text-align: center;
   }
 
   .pricing-starter-offer__price {

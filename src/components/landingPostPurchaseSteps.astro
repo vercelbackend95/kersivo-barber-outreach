@@ -1,5 +1,8 @@
 ---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { FREE_PREVIEW_STEPS } from '@/lib/seo/freePreviewPage';
 import '../styles/components/landingPostPurchaseSteps.css';
 
 interface Props {
@@ -13,7 +16,10 @@ interface Step {
 
 const { className = '' } = Astro.props as Props;
 
-const steps: Step[] = [
+// FREE_PREVIEW_FLOW_ENABLED swaps in the §10.3 copy; off keeps the original section.
+const freePreview = isFreePreviewFlowEnabled();
+
+const subscriptionSteps: Step[] = [
   {
     title: 'Start your Full KERSIVO subscription',
     body: `Subscribe to Full KERSIVO for £${SAAS_MONTHLY_GBP}/month securely through Stripe. No setup fee.`,
@@ -31,6 +37,8 @@ const steps: Step[] = [
     body: 'Check your private preview and confirm the details. When you are ready, approve the launch and we publish your new site on your domain.',
   },
 ];
+
+const steps: Step[] = freePreview ? [...FREE_PREVIEW_STEPS] : subscriptionSteps;
 ---
 
 <section
@@ -42,6 +50,17 @@ const steps: Step[] = [
     <div class="landing-post-purchase-steps__layout">
       <header class="landing-post-purchase-steps__intro">
         <p class="landing-post-purchase-steps__eyebrow">GETTING STARTED</p>
+        {freePreview ? (
+          <>
+            <h2 id="landing-post-purchase-steps-title" class="landing-post-purchase-steps__heading">
+              From free preview to launch in four steps
+            </h2>
+            <p class="landing-post-purchase-steps__lead">
+              We design your website first. You decide after you've seen it.
+            </p>
+          </>
+        ) : (
+          <>
         <h2 id="landing-post-purchase-steps-title" class="landing-post-purchase-steps__heading">
           From subscription to launch in four steps
         </h2>
@@ -49,6 +68,8 @@ const steps: Step[] = [
           We prepare your branded KERSIVO setup after you send us the information we need. You
           review a private preview before anything goes live.
         </p>
+          </>
+        )}
         <p class="landing-post-purchase-steps__reassurance">
           Nothing goes live until you approve it.
         </p>
@@ -105,6 +126,12 @@ const steps: Step[] = [
           dashboard.
         </p>
 
+        {freePreview ? (
+          <FullPlanCta
+            primaryClass="btn btn--primary landing-post-purchase-steps__cta"
+            placement="homepage_getting_started"
+          />
+        ) : (
         <a
           href="/admin/launch"
           class="btn btn--primary landing-post-purchase-steps__cta"
@@ -112,6 +139,7 @@ const steps: Step[] = [
         >
           Start my KERSIVO subscription
         </a>
+        )}
       </div>
     </div>
   </div>

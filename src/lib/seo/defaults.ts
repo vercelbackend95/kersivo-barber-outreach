@@ -21,6 +21,13 @@ export const DEFAULT_DESCRIPTION =
 /** Homepage-only description. Other pages fall back to DEFAULT_DESCRIPTION via meta.ts. */
 export const HOMEPAGE_DESCRIPTION = `Your own branded barbershop website, domain and online booking for £${SAAS_MONTHLY_GBP}/month per location, not per barber. No setup fee, no VAT added. Stripe fees apply.`;
 
+/** Homepage meta description while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
+export const HOMEPAGE_FREE_PREVIEW_DESCRIPTION = `Your own branded barbershop website, domain and online booking for £${SAAS_MONTHLY_GBP}/month per location. See a free personalised preview first — no card needed.`;
+
+export function getHomepageDescription(freePreview = false): string {
+  return freePreview ? HOMEPAGE_FREE_PREVIEW_DESCRIPTION : HOMEPAGE_DESCRIPTION;
+}
+
 export const HOMEPAGE_LAST_UPDATED_ISO = '2026-10-28';
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
