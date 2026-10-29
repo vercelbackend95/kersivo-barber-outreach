@@ -1,0 +1,52 @@
+---
+export const prerender = false;
+
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import FreePreviewForm from '@/components/freePreview/FreePreviewForm.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/free-preview.css';
+
+// Flag off: the page does not exist (docs/free-preview-discovery.md §13).
+if (!isFreePreviewFlowEnabled()) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+---
+
+<LandingLayout
+  title={FREE_PREVIEW_PAGE.title}
+  description={FREE_PREVIEW_PAGE.description}
+  canonicalPath={FREE_PREVIEW_PAGE.path}
+>
+  <main class="free-preview">
+    <section class="free-preview__hero" aria-labelledby="free-preview-title">
+      <div class="free-preview__shell">
+        <h1 id="free-preview-title" class="free-preview__title">{FREE_PREVIEW_PAGE.h1}</h1>
+        <p class="free-preview__intro">{FREE_PREVIEW_PAGE.intro}</p>
+        <ul class="free-preview__trust" aria-label="What to expect">
+          {FREE_PREVIEW_PAGE.trustLine.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section class="free-preview__form-section" aria-labelledby="free-preview-form-title">
+      <div class="free-preview__shell">
+        <h2 id="free-preview-form-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.formHeading}</h2>
+        <FreePreviewForm />
+        <p class="free-preview__starter">
+          <a href="/starter">{FREE_PREVIEW_PAGE.starterLine}</a>
+        </p>
+      </div>
+    </section>
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${new Date().getFullYear()} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>

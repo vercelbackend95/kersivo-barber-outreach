@@ -1,0 +1,239 @@
+---
+import {
+  FREE_PREVIEW_AUTHORISATION_LABEL,
+  FREE_PREVIEW_BARBER_COUNTS,
+  FREE_PREVIEW_BOOKING_SYSTEMS,
+  FREE_PREVIEW_DOMAIN_OPTIONS,
+  FREE_PREVIEW_MARKETING_LABEL,
+  FREE_PREVIEW_NOTES_MAX,
+} from '@/lib/freePreview/intake';
+import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+
+const linkFields = [
+  { name: 'bookingPageUrl', label: 'Current booking page', placeholder: 'booksy.com/…' },
+  { name: 'instagramUrl', label: 'Instagram', placeholder: 'instagram.com/yourshop' },
+  { name: 'googleListingUrl', label: 'Google listing', placeholder: 'maps.app.goo.gl/…' },
+  { name: 'websiteUrl', label: 'Website', placeholder: 'yourshop.co.uk' },
+];
+---
+
+<div class="free-preview-form-wrap" data-free-preview>
+  <form class="free-preview-form" data-free-preview-form novalidate>
+    <div class="hp-field" aria-hidden="true">
+      <label>
+        Company website
+        <input type="text" name="companyWebsite" tabindex="-1" autocomplete="off" />
+      </label>
+    </div>
+
+    <div class="free-preview-form__grid">
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">First name (optional)</span>
+        <input name="firstName" type="text" autocomplete="given-name" maxlength="80" />
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Email address</span>
+        <input name="email" type="email" autocomplete="email" required maxlength="254" aria-describedby="fp-error-email" />
+        <span class="free-preview-form__error" id="fp-error-email" data-error-for="email"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Barbershop name</span>
+        <input name="shopName" type="text" autocomplete="organization" required maxlength="120" aria-describedby="fp-error-shopName" />
+        <span class="free-preview-form__error" id="fp-error-shopName" data-error-for="shopName"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Town or city</span>
+        <input name="townCity" type="text" autocomplete="address-level2" required maxlength="120" aria-describedby="fp-error-townCity" />
+        <span class="free-preview-form__error" id="fp-error-townCity" data-error-for="townCity"></span>
+      </label>
+    </div>
+
+    <fieldset class="free-preview-form__group" aria-describedby="fp-links-hint fp-error-links">
+      <legend class="free-preview-form__label">Links to your shop</legend>
+      <p class="free-preview-form__hint" id="fp-links-hint">Add at least one so we can see your services, prices and style.</p>
+      <div class="free-preview-form__grid">
+        {
+          linkFields.map((field) => (
+            <label class="free-preview-form__field">
+              <span class="free-preview-form__label">{field.label}</span>
+              <input
+                name={field.name}
+                type="text"
+                inputmode="url"
+                autocomplete="url"
+                placeholder={field.placeholder}
+                maxlength="500"
+                aria-describedby={`fp-error-${field.name}`}
+              />
+              <span class="free-preview-form__error" id={`fp-error-${field.name}`} data-error-for={field.name} />
+            </label>
+          ))
+        }
+      </div>
+      <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
+    </fieldset>
+
+    <div class="free-preview-form__grid free-preview-form__grid--three">
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Number of barbers</span>
+        <select name="barberCount" required aria-describedby="fp-error-barberCount">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_BARBER_COUNTS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-barberCount" data-error-for="barberCount"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Current booking system</span>
+        <select name="currentBookingSystem" required aria-describedby="fp-error-currentBookingSystem">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_BOOKING_SYSTEMS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-currentBookingSystem" data-error-for="currentBookingSystem"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Own domain?</span>
+        <select name="hasOwnDomain" required aria-describedby="fp-error-hasOwnDomain">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_DOMAIN_OPTIONS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-hasOwnDomain" data-error-for="hasOwnDomain"></span>
+      </label>
+    </div>
+
+    <label class="free-preview-form__field">
+      <span class="free-preview-form__label">Anything else we should know? (optional)</span>
+      <textarea name="notes" maxlength={FREE_PREVIEW_NOTES_MAX} rows="4" aria-describedby="fp-error-notes"></textarea>
+      <span class="free-preview-form__error" id="fp-error-notes" data-error-for="notes"></span>
+    </label>
+
+    <label class="free-preview-form__check">
+      <input type="checkbox" name="authorisationConsent" required aria-describedby="fp-error-authorisationConsent" />
+      <span>{FREE_PREVIEW_AUTHORISATION_LABEL}</span>
+    </label>
+    <span class="free-preview-form__error" id="fp-error-authorisationConsent" data-error-for="authorisationConsent"></span>
+
+    <label class="free-preview-form__check">
+      <input type="checkbox" name="marketingOptIn" />
+      <span>{FREE_PREVIEW_MARKETING_LABEL}</span>
+    </label>
+
+    <p class="free-preview-form__status" data-free-preview-status role="status" aria-live="polite"></p>
+
+    <button type="submit" class="btn btn--primary free-preview-form__submit" data-free-preview-submit>
+      {FREE_PREVIEW_PAGE.submitLabel}
+    </button>
+    <p class="free-preview-form__note">
+      {FREE_PREVIEW_PAGE.submitNote} <a href="/privacy">{FREE_PREVIEW_PAGE.privacyLabel}</a>
+    </p>
+  </form>
+
+  <div class="free-preview-confirmation" data-free-preview-confirmation hidden tabindex="-1">
+    <h2 class="free-preview-confirmation__title">{FREE_PREVIEW_PAGE.confirmationHeading}</h2>
+    <p class="free-preview-confirmation__text" data-free-preview-confirmation-text data-template={FREE_PREVIEW_PAGE.confirmationText}></p>
+    <a class="free-preview-confirmation__link" href="/demo">{FREE_PREVIEW_PAGE.demoLinkLabel}</a>
+  </div>
+</div>
+
+<script>
+  const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
+
+  function initFreePreviewForm(root: HTMLElement) {
+    const form = root.querySelector<HTMLFormElement>('[data-free-preview-form]');
+    const status = root.querySelector<HTMLElement>('[data-free-preview-status]');
+    const submit = root.querySelector<HTMLButtonElement>('[data-free-preview-submit]');
+    const confirmation = root.querySelector<HTMLElement>('[data-free-preview-confirmation]');
+    const confirmationText = root.querySelector<HTMLElement>('[data-free-preview-confirmation-text]');
+    if (!form || !status || !submit || !confirmation || !confirmationText) return;
+
+    const clearErrors = () => {
+      root.querySelectorAll<HTMLElement>('[data-error-for]').forEach((el) => {
+        el.textContent = '';
+      });
+      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+    };
+
+    const showErrors = (fieldErrors: Record<string, string>) => {
+      let first: HTMLElement | null = null;
+      for (const [name, message] of Object.entries(fieldErrors)) {
+        const target = root.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+        if (target) target.textContent = message;
+        const input =
+          name === 'links'
+            ? form.querySelector<HTMLElement>('[name="bookingPageUrl"]')
+            : form.querySelector<HTMLElement>(`[name="${name}"]`);
+        if (input) {
+          input.setAttribute('aria-invalid', 'true');
+          first ??= input;
+        }
+      }
+      first?.focus();
+    };
+
+    const fillConfirmation = (shopName: string, email: string) => {
+      const template = confirmationText.dataset.template ?? '';
+      confirmationText.textContent = template.replace('{shopName}', shopName).replace('{email}', email);
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearErrors();
+      status.textContent = '';
+
+      const fd = new FormData(form);
+      const text = (name: string) => String(fd.get(name) ?? '').trim();
+      const fromParam = new URLSearchParams(window.location.search).get('from')?.trim().toLowerCase() ?? '';
+      const payload = {
+        companyWebsite: text('companyWebsite'),
+        firstName: text('firstName'),
+        email: text('email'),
+        shopName: text('shopName'),
+        townCity: text('townCity'),
+        bookingPageUrl: text('bookingPageUrl'),
+        instagramUrl: text('instagramUrl'),
+        googleListingUrl: text('googleListingUrl'),
+        websiteUrl: text('websiteUrl'),
+        barberCount: text('barberCount'),
+        currentBookingSystem: text('currentBookingSystem'),
+        hasOwnDomain: text('hasOwnDomain'),
+        notes: text('notes'),
+        authorisationConsent: fd.get('authorisationConsent') === 'on',
+        marketingOptIn: fd.get('marketingOptIn') === 'on',
+        ...(ENTRY_POINT_PATTERN.test(fromParam) ? { entryPoint: fromParam } : {}),
+      };
+
+      submit.disabled = true;
+      form.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch('/api/free-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = (await response.json().catch(() => ({}))) as {
+          ok?: boolean;
+          error?: string;
+          fieldErrors?: Record<string, string>;
+        };
+        if (response.ok && data.ok) {
+          fillConfirmation(payload.shopName, payload.email);
+          form.hidden = true;
+          confirmation.hidden = false;
+          confirmation.focus();
+          return;
+        }
+        if (data.fieldErrors) showErrors(data.fieldErrors);
+        status.textContent =
+          response.status === 429
+            ? 'Too many requests. Please try again a little later.'
+            : data.error || 'Something went wrong. Please try again.';
+      } catch {
+        status.textContent = 'We could not send your request. Check your connection and try again.';
+      } finally {
+        submit.disabled = false;
+        form.removeAttribute('aria-busy');
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-free-preview]').forEach(initFreePreviewForm);
+</script>

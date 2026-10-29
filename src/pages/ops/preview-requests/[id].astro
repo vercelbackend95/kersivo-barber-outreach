@@ -1,0 +1,186 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import PreviewRequestActions from '@/components/ops/previewRequests/PreviewRequestActions';
+import {
+  OpsAccessDenied,
+  OpsAccessUnconfigured,
+} from '@/components/ops/recommendations/OpsPageGates';
+import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_BARBER_COUNTS,
+  FREE_PREVIEW_BOOKING_SYSTEMS,
+  FREE_PREVIEW_DOMAIN_OPTIONS,
+  labelFor,
+} from '@/lib/freePreview/intake';
+import {
+  PREVIEW_STATUS_LABELS,
+  getPreviewRequestDetail,
+  previewRequestLinks,
+} from '@/lib/freePreview/opsQueries';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/ops-recommendations.css';
+import '@/styles/components/ops-preview-requests.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+
+const id = (Astro.params.id ?? '').trim();
+const request = view === 'dashboard' && id && id.length <= 64 ? await getPreviewRequestDetail(id) : null;
+if (view === 'dashboard' && !request) {
+  return new Response('Preview request not found', {
+    status: 404,
+    headers: { 'Cache-Control': 'private, no-store' },
+  });
+}
+
+function formatDate(value: Date | null | undefined): string {
+  if (!value) return '—';
+  return value.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' });
+}
+
+const fields: Array<[string, string]> = request
+  ? [
+      ['Status', PREVIEW_STATUS_LABELS[request.status]],
+      ['First name', request.firstName ?? '—'],
+      ['Email', request.email],
+      ['Shop', request.shopName],
+      ['Town / city', request.townCity],
+      ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, request.barberCount)],
+      ['Booking system', labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, request.currentBookingSystem)],
+      ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, request.hasOwnDomain)],
+      ['Notes', request.notes ?? '—'],
+      ['Authorisation consent', formatDate(request.authorisationConsentAt)],
+      ['Marketing opt-in', request.marketingOptInAt ? formatDate(request.marketingOptInAt) : 'No'],
+      ['Entry point', request.entryPoint ?? '—'],
+      ['Requested', formatDate(request.createdAt)],
+      ['Preview ready', formatDate(request.previewReadyAt)],
+      ['Expires', formatDate(request.expiresAt)],
+      ['First viewed', formatDate(request.firstViewedAt)],
+      ['Last viewed', formatDate(request.lastViewedAt)],
+      ['Views', String(request.viewCount)],
+      ['Changes requested', request.changesRequestedText ? `${formatDate(request.changesRequestedAt)} — ${request.changesRequestedText}` : '—'],
+      ['Converted', formatDate(request.convertedAt)],
+      ['Declined', formatDate(request.declinedAt)],
+      ['Rejected', formatDate(request.rejectedAt)],
+      ['Email opt-out', request.emailOptOut ? formatDate(request.emailOptOutAt) : 'No'],
+      ['Draft shop', request.draftShop ? `${request.draftShop.name} (${request.draftShop.id})` : '—'],
+      ['Site preview URL', request.draftShop?.sitePreviewUrl ?? '—'],
+    ]
+  : [];
+---
+
+<MinimalLayout
+  title="Preview request | KERSIVO Ops"
+  description="Internal free website preview request."
+  canonicalPath={OPS_PREVIEW_REQUESTS_PATH}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Preview request</h1>
+          <p class="ops-gate__body">Sign in with an authorized operator account to continue.</p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={Astro.url.pathname}
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+            showGoogle={false}
+            allowSignup={false}
+            passwordResetRedirectTo="/ops/reset-password"
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {
+      view === 'dashboard' && request ? (
+        <div class="ops-cr ops-pr">
+          <header class="ops-cr__header">
+            <div class="ops-cr__brand">
+              <p class="ops-cr__brand-kicker">
+                <a href={OPS_PREVIEW_REQUESTS_PATH}>← Free preview requests</a>
+              </p>
+              <h1 class="ops-cr__title">{request.shopName}</h1>
+              <p class="ops-cr__subtitle">
+                {request.townCity} · {PREVIEW_STATUS_LABELS[request.status]}
+              </p>
+            </div>
+          </header>
+
+          <div class="ops-pr-detail">
+            <section class="ops-pr-detail__fields" aria-label="Request details">
+              <h2 class="ops-pr-actions__title">Links</h2>
+              <ul class="ops-pr__links ops-pr__links--stacked">
+                {previewRequestLinks(request).map((link) => (
+                  <li>
+                    {link.label}:{' '}
+                    <a href={link.url} target="_blank" rel="noopener noreferrer nofollow">
+                      {link.url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <dl class="ops-pr-detail__list">
+                {fields.map(([label, value]) => (
+                  <div class="ops-pr-detail__item">
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <h2 class="ops-pr-actions__title">History</h2>
+              <ol class="ops-pr-detail__events">
+                {request.events.map((event) => (
+                  <li>
+                    <span class="ops-pr-detail__event-time">{formatDate(event.createdAt)}</span>{' '}
+                    {event.action}
+                    {event.fromStatus || event.toStatus
+                      ? ` (${event.fromStatus ?? '—'} → ${event.toStatus ?? '—'})`
+                      : ''}
+                    {event.actorEmail ? ` · ${event.actorEmail}` : ''}
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <aside class="ops-pr-detail__actions">
+              <PreviewRequestActions
+                client:load
+                requestId={request.id}
+                status={request.status}
+                draftShopId={request.draftShopId}
+                internalNotes={request.internalNotes ?? ''}
+              />
+            </aside>
+          </div>
+        </div>
+      ) : null
+    }
+  </main>
+</MinimalLayout>
