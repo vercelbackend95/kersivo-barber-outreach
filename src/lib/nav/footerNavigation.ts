@@ -36,6 +36,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { name: 'Compare booking systems', href: '/compare' },
       { name: 'Cost calculator', href: '/barber-software-cost-calculator' },
+      { name: 'No-show cost calculator', href: '/barbershop-no-show-calculator' },
       { name: 'Booksy alternative', href: '/booksy-alternative' },
       { name: 'Fresha alternative', href: '/fresha-alternative' },
       { name: 'Treatwell alternative', href: '/treatwell-alternative' },

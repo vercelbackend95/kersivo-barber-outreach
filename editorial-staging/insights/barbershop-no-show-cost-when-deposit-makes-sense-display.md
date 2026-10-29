@@ -63,6 +63,8 @@ The busy Saturday no-show is the cheap one. The quiet weekday is where the money
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1773904215697-e6c21fc27ac2?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2000" width="1500" height="1000" loading="lazy" decoding="async" alt="Rows of unoccupied vintage barber chairs and sinks in a dim salon interior" />
 <figcaption>Unused barber chairs illustrate the capacity at stake; the worked figures above are hypothetical, not from the shop pictured — <a href="https://unsplash.com/photos/luxurious-barber-chairs-and-sinks-in-a-dimly-lit-salon-fa0DqQ91dWU" target="_blank" rel="noopener noreferrer">Tanya Barrow / Unsplash</a>.</figcaption></figure>
 
+<aside class="insights-tool-callout" aria-label="No-show cost calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/barbershop-no-show-calculator">Run these numbers for your own shop → No-Show Cost Calculator</a></p></aside>
+
 ## Who carries the loss
 
 How the chair is run decides who loses.

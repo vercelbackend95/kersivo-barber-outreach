@@ -106,6 +106,9 @@ export const CANCELLATION_POLICY_DEPOSITS = {
   linkLead: 'Work through the numbers to see',
   linkLabel: 'when a deposit makes sense for your shop',
   linkHref: INSIGHTS_NO_SHOW_DEPOSITS.path,
+  calculatorLead: 'To try it with your own prices and no-show numbers, use the',
+  calculatorLabel: 'no-show cost calculator',
+  calculatorHref: '/barbershop-no-show-calculator',
 } as const;
 
 /* ----------------------------------- FAQ ----------------------------------- */

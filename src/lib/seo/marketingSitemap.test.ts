@@ -38,6 +38,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/setora-alternative',
   'https://kersivo.co.uk/barber-software-cost-calculator',
   'https://kersivo.co.uk/barbershop-cancellation-policy-template',
+  'https://kersivo.co.uk/barbershop-no-show-calculator',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/dpa',
@@ -81,7 +82,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBe('2026-10-19');
     expect(byLoc['https://kersivo.co.uk/insights/category/clients-growth']).toBe('2026-10-18');
     expect(byLoc['https://kersivo.co.uk/insights/category/brand-marketing']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/category/bookings-operations']).toBe('2026-10-20');
+    expect(byLoc['https://kersivo.co.uk/insights/category/bookings-operations']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBe('2026-10-19');
     expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-19');
     // Same constant as the homepage WebPage dateModified.
@@ -105,6 +106,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-10-29');
+    expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);

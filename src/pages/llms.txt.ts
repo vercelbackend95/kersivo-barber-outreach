@@ -39,6 +39,11 @@ export function buildLlmsTxt(siteUrl: string): string {
       'Cancellation policy template',
       'free generator for a barbershop cancellation, deposit and no-show policy in three lengths',
     ),
+    link(
+      '/barbershop-no-show-calculator',
+      'No-show cost calculator',
+      'yearly cost of missed appointments and whether a deposit pays for itself',
+    ),
     '',
     '## Insights',
     ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => link(article.path, article.headline, article.description)),

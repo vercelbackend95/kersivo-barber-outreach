@@ -358,6 +358,8 @@ export const INSIGHTS_NO_SHOW_DEPOSITS = {
   categoryId: 'bookings-operations' as const satisfies InsightsCategoryId,
   publishedDate: '2026-10-20',
   verifiedDate: '2026-10-20',
+  /** Added the link to the no-show cost calculator after the worked example. */
+  updatedDate: '2026-10-29',
   notionUrl: 'https://app.notion.com/p/3fa7dbe5bbda81e2982bc9c20f746a2d',
   lead: 'Use realistic refill and card-fee maths to decide when a barbershop deposit protects income, and what UK cancellation rules require.',
   heroImage:

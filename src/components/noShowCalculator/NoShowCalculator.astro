@@ -1,0 +1,207 @@
+---
+/**
+ * The calculator: server-rendered with the example inputs and their results so
+ * the page carries real numbers without JavaScript; initNoShowCalculator then
+ * recalculates live in the browser. No backend, storage or cookies.
+ */
+import NoShowNumberField from '@/components/noShowCalculator/NoShowNumberField.astro';
+import { DEFAULT_NO_SHOW_INPUTS as D } from '@/lib/noShowCalculator/noShowCalculator';
+import { numericField } from '@/lib/noShowCalculator/noShowInputs';
+import { buildNoShowView } from '@/lib/noShowCalculator/noShowView';
+import {
+  NO_SHOW_ARTICLE_LEGAL_ANCHOR,
+  NO_SHOW_ESTIMATE_HELPER,
+  NO_SHOW_HERO,
+  NO_SHOW_KEPT_WARNING,
+  NO_SHOW_RESULTS_DISCLAIMER,
+} from '@/lib/seo/noShowCalculatorPage';
+
+const v = buildNoShowView(D);
+const f = numericField;
+---
+
+<form id="ns-form" class="ns-tool" aria-label="No-show cost calculator" novalidate data-ns-form>
+  <div class="ns-tool__quick cost-calc-surface calc-panel">
+    <fieldset class="calc-fieldset ns-fieldset">
+      <legend class="calc-panel__group-title">YOUR NUMBERS</legend>
+      <p class="ns-examples">{NO_SHOW_HERO.examplesNote}</p>
+      <div class="ns-grid">
+        <NoShowNumberField field={f('price')} value={D.price} />
+        <NoShowNumberField field={f('appointments')} value={D.appointments} />
+        <NoShowNumberField field={f('noShows')} value={D.noShows} asideKey="noShowRate" aside={v.noShowRate} />
+        <NoShowNumberField field={f('weeksOpen')} value={D.weeksOpen} />
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="ns-tool__results" aria-label="Results">
+    <section class="calc-card ns-card ns-card--headline" aria-labelledby="ns-headline">
+      <div class="calc-card__inner">
+        <p class="ns-card__kicker">WHAT NO-SHOWS COST</p>
+        <div aria-live="polite" aria-atomic="true">
+          <h2 id="ns-headline" class="ns-headline" data-ns="headlineTitle">{v.headlineTitle}</h2>
+          <p class="ns-headline__sub" data-ns="headlineSub">{v.headlineSub}</p>
+        </div>
+        <p class="ns-carrier" data-ns="carrier">{v.carrier}</p>
+      </div>
+    </section>
+
+    <section class="calc-card ns-card" aria-labelledby="ns-bands-title">
+      <div class="calc-card__inner">
+        <h3 id="ns-bands-title" class="ns-card__title">Busy vs quiet slots</h3>
+        <dl class="calc-card__summary">
+          <div class="calc-card__row"><dt>Loss per busy-time no-show</dt><dd data-ns="busyLoss">{v.busyLoss}</dd></div>
+          <div class="calc-card__row"><dt>Loss per quiet-time no-show</dt><dd data-ns="quietLoss">{v.quietLoss}</dd></div>
+        </dl>
+        <p class="ns-card__note" data-ns="busyQuietSentence">{v.busyQuietSentence}</p>
+      </div>
+    </section>
+
+    <section class={`calc-card ns-card ns-card--deposit ns-tone--${v.depositTone}`} aria-labelledby="ns-deposit-title" data-ns-deposit-card>
+      <div class="calc-card__inner">
+        <h3 id="ns-deposit-title" class="ns-card__title" data-ns="depositHeading">{v.depositHeading}</h3>
+        <div aria-live="polite" aria-atomic="true">
+          <p class="ns-deposit__net" data-ns="depositNet">{v.depositNet}</p>
+          <p class="ns-card__note" data-ns="depositSentence">{v.depositSentence}</p>
+        </div>
+        <dl class="calc-card__summary">
+          <div class="calc-card__row"><dt>Deposits kept from no-shows (after card fees)</dt><dd data-ns="depositsRetained">{v.depositsRetained}</dd></div>
+          <div class="calc-card__row"><dt>Extra card fees from split payments</dt><dd data-ns="extraCardFees">{v.extraCardFees}</dd></div>
+          <div class="calc-card__row"><dt>Value of fewer no-shows</dt><dd data-ns="fewerNoShows">{v.fewerNoShows}</dd></div>
+          <div class="calc-card__row"><dt>Value of bookings lost</dt><dd data-ns="lostBookings">{v.lostBookings}</dd></div>
+        </dl>
+        <p class="ns-card__note ns-breakeven" data-ns="breakEven">{v.breakEven}</p>
+        <p class="ns-card__note" data-ns="depositNote" hidden={!v.depositNote}>{v.depositNote}</p>
+        <div class="ns-fairness">
+          <p class="ns-fairness__title">Fairness check: estimated net loss per no-show</p>
+          <p class="ns-fairness__values">Quiet slot <strong data-ns="fairnessQuiet">{v.fairnessQuiet}</strong> · Busy slot <strong data-ns="fairnessBusy">{v.fairnessBusy}</strong></p>
+          <p class="ns-fairness__warning" data-ns="fairnessWarning" hidden={!v.fairnessWarning}>{v.fairnessWarning}</p>
+        </div>
+      </div>
+    </section>
+
+    <figure class="calc-card ns-card ns-chart" aria-labelledby="ns-chart-caption">
+      <div class="calc-card__inner">
+        <figcaption id="ns-chart-caption" class="ns-card__title">What no-shows cost you each year</figcaption>
+        <svg class="ns-chart__svg" viewBox="0 0 320 96" role="img" aria-label={v.chart.ariaLabel} data-ns-chart preserveAspectRatio="none">
+          <rect class="ns-chart__track" x="0" y="8" width="320" height="28" rx="4"></rect>
+          <rect class="ns-chart__bar ns-chart__bar--without" x="0" y="8" width={(v.chart.withoutWidth * 320).toFixed(1)} height="28" rx="4" data-ns-bar="without"></rect>
+          <rect class="ns-chart__track" x="0" y="60" width="320" height="28" rx="4"></rect>
+          <rect class="ns-chart__bar ns-chart__bar--with" x="0" y="60" width={(v.chart.withWidth * 320).toFixed(1)} height="28" rx="4" data-ns-bar="with"></rect>
+        </svg>
+        <div class="ns-chart__legend" aria-hidden="true">
+          <span><i class="ns-chart__key ns-chart__key--without"></i>Without a deposit <strong data-ns="chartWithout">{v.chart.withoutLabel}</strong></span>
+          <span><i class="ns-chart__key ns-chart__key--with"></i><span data-ns="chartWithName">{v.chart.withName}</span> <strong data-ns="chartWith">{v.chart.withLabel}</strong></span>
+        </div>
+        <table class="sr-only">
+          <caption>Yearly cost of no-shows</caption>
+          <thead><tr><th scope="col">Scenario</th><th scope="col">Yearly cost</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Without a deposit</th><td data-ns="chartWithout">{v.chart.withoutLabel}</td></tr>
+            <tr><th scope="row" data-ns="chartWithName">{v.chart.withName}</th><td data-ns="chartWith">{v.chart.withLabel}</td></tr>
+          </tbody>
+        </table>
+        <p class="ns-card__note">With a deposit, this includes the extra card fees and any bookings lost.</p>
+      </div>
+    </figure>
+
+    <p class="ns-disclaimer">{NO_SHOW_RESULTS_DISCLAIMER}</p>
+
+    <div class="ns-actions">
+      <button type="button" class="ns-action" data-ns-copy>Copy summary</button>
+      <button type="button" class="ns-action" data-ns-print>Print</button>
+      <button type="button" class="ns-action" data-ns-share>Copy link to these numbers</button>
+      <span class="ns-actions__status" role="status" data-ns-status></span>
+    </div>
+  </div>
+
+  <div class="ns-tool__detailed cost-calc-surface calc-panel">
+    <details class="calc-advanced" data-ns-details>
+      <summary class="calc-advanced__summary">
+        <span>Fine-tune your numbers</span>
+        <span class="calc-advanced__hint">Products, card fees, busy and quiet slots, chair model</span>
+        <span class="calc-advanced__chevron" aria-hidden="true"></span>
+      </summary>
+      <div class="calc-advanced__body">
+        <div class="ns-grid">
+          <NoShowNumberField field={f('products')} value={D.products} />
+          <NoShowNumberField field={f('cardFeePercent')} value={D.cardFeePercent} helper="Check your own provider’s rates." />
+          <NoShowNumberField field={f('cardFeeFixedPence')} value={D.cardFeeFixedPence} />
+        </div>
+
+        <fieldset class="calc-fieldset">
+          <legend class="calc-field__label">How clients pay in the shop</legend>
+          <div class="calc-segmented">
+            <label class="calc-segmented__option"><input type="radio" name="shopPayment" value="card" checked /><span>Card</span></label>
+            <label class="calc-segmented__option"><input type="radio" name="shopPayment" value="cash" /><span>Cash</span></label>
+          </div>
+          <p class="calc-field__helper">Cash means no card fee on payments taken in the shop.</p>
+        </fieldset>
+
+        <div class="ns-grid">
+          <NoShowNumberField field={f('busySharePercent')} value={D.busySharePercent} />
+          <NoShowNumberField field={f('busyRefillPercent')} value={D.busyRefillPercent} />
+          <NoShowNumberField field={f('quietRefillPercent')} value={D.quietRefillPercent} />
+        </div>
+
+        <fieldset class="calc-fieldset">
+          <legend class="calc-field__label">Chair model</legend>
+          <div class="ns-radio-list">
+            <label class="ns-radio"><input type="radio" name="chairModel" value="owner" checked /><span>Owner or employed barbers</span></label>
+            <label class="ns-radio"><input type="radio" name="chairModel" value="commission" /><span>Commission</span></label>
+            <label class="ns-radio"><input type="radio" name="chairModel" value="rent" /><span>Self-employed chair renters</span></label>
+          </div>
+          <div data-ns-show="commission" hidden>
+            <NoShowNumberField field={f('barberCommissionPercent')} value={D.barberCommissionPercent} compact />
+          </div>
+        </fieldset>
+      </div>
+    </details>
+
+    <fieldset class="calc-fieldset calc-panel__group ns-fieldset">
+      <legend class="calc-panel__group-title">WHAT IF YOU TOOK A DEPOSIT?</legend>
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">Deposit type</legend>
+        <div class="ns-radio-list">
+          <label class="ns-radio"><input type="radio" name="depositType" value="fixed5" checked /><span>Fixed deposit £5</span></label>
+          <label class="ns-radio"><input type="radio" name="depositType" value="custom" /><span>Custom fixed amount (£1–£50)</span></label>
+          <label class="ns-radio"><input type="radio" name="depositType" value="full" /><span>Full payment at booking</span></label>
+        </div>
+        <div data-ns-show="custom" hidden>
+          <NoShowNumberField field={f('customDeposit')} value={D.customDeposit} compact helper="KERSIVO’s own deposit is a fixed £5. Use this to test other amounts." />
+        </div>
+      </fieldset>
+
+      <fieldset class="calc-fieldset" data-ns-hide="full">
+        <legend class="calc-field__label">Balance paid in the shop by</legend>
+        <div class="ns-radio-list">
+          <label class="ns-radio"><input type="radio" name="balancePayment" value="same" checked /><span>Same as “How clients pay in the shop”</span></label>
+          <label class="ns-radio"><input type="radio" name="balancePayment" value="card" /><span>Card</span></label>
+          <label class="ns-radio"><input type="radio" name="balancePayment" value="cash" /><span>Cash</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="calc-fieldset">
+        <legend class="calc-field__label">Is the deposit kept if the slot is refilled?</legend>
+        <div class="calc-segmented">
+          <label class="calc-segmented__option"><input type="radio" name="keepDepositWhenRefilled" value="yes" checked /><span>Yes</span></label>
+          <label class="calc-segmented__option"><input type="radio" name="keepDepositWhenRefilled" value="no" /><span>No — refund it</span></label>
+        </div>
+        <p class="calc-field__helper" data-ns-show-kept>
+          {NO_SHOW_KEPT_WARNING} <a href={NO_SHOW_ARTICLE_LEGAL_ANCHOR}>Read why</a>
+        </p>
+      </fieldset>
+
+      <div class="ns-grid">
+        <NoShowNumberField field={f('noShowReductionPercent')} value={D.noShowReductionPercent} helper={NO_SHOW_ESTIMATE_HELPER} />
+        <NoShowNumberField field={f('lostBookingsPercent')} value={D.lostBookingsPercent} helper={NO_SHOW_ESTIMATE_HELPER} />
+      </div>
+    </fieldset>
+  </div>
+</form>
+
+<script>
+  import { initNoShowCalculator } from '@/lib/noShowCalculator/initNoShowCalculator';
+  initNoShowCalculator();
+</script>

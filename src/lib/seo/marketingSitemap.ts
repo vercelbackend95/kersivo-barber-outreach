@@ -13,6 +13,7 @@ import { SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { ABOUT_PAGE_PATH } from './aboutPage';
 import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
+import { NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
 import { buildInsightsSitemapEntries } from './insights';
 import { getStaticPageLastModified } from './pageDates';
 import { PRICING_PAGE_PATH } from './pricingPage';
@@ -68,6 +69,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(SETORA_ALTERNATIVE_PAGE_PATH),
   staticPage(BARBER_COST_CALCULATOR_PAGE_PATH),
   staticPage(CANCELLATION_POLICY_PAGE_PATH),
+  staticPage(NO_SHOW_CALCULATOR_PAGE_PATH),
   staticPage('/privacy'),
   staticPage('/cookies'),
   staticPage('/dpa'),

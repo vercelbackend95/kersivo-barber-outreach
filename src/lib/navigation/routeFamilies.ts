@@ -31,6 +31,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/setora-alternative',
   '/barber-software-cost-calculator',
   '/barbershop-cancellation-policy-template',
+  '/barbershop-no-show-calculator',
   '/pricing',
   '/starter',
   '/about',
