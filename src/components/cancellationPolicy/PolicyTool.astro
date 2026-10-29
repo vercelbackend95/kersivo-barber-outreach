@@ -1,6 +1,7 @@
 ---
 import {
   DEFAULT_POLICY_OPTIONS,
+  FULL_PAYMENT_KEPT_GBP,
   GRACE_MINUTES,
   MAX_DEPOSIT_GBP,
   MIN_DEPOSIT_GBP,
@@ -19,7 +20,7 @@ const d = DEFAULT_POLICY_OPTIONS;
 
 const outcomeOptions = [
   { value: 'keep_deposit', label: 'Deposit is kept', only: 'fixed' },
-  { value: 'keep_payment', label: 'Full prepayment is kept', only: 'full' },
+  { value: 'keep_payment', label: `£${FULL_PAYMENT_KEPT_GBP} of the prepayment is kept, the rest refunded`, only: 'full' },
   { value: 'future_deposit', label: 'No charge, but a deposit is required for future bookings', only: null },
 ] as const;
 

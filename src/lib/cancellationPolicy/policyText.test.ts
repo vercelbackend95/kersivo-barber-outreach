@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_POLICY_OPTIONS,
+  FULL_PAYMENT_KEPT_GBP,
   GRACE_MINUTES,
   NOTICE_HOURS,
   ONE_LINE_MAX_CHARS,
@@ -17,6 +18,7 @@ import {
   type PolicyTone,
 } from './policyText';
 import { decodePolicyHash, encodePolicyHash } from './policyHashState';
+import { FULL_PAYMENT_RETAINED_CAP_PENCE } from '@/lib/booking/bookingPaymentPolicy';
 
 const DEPOSITS: DepositType[] = ['none', 'fixed', 'full'];
 const OUTCOMES: PaymentOutcome[] = ['keep_deposit', 'keep_payment', 'future_deposit'];
@@ -150,6 +152,24 @@ describe('buildPolicy — default policy', () => {
     expect(v.bullets.at(-1)).toBe(
       'To cancel or rebook, use the link in your confirmation email, call us on 01234 567890 or send us a message on Instagram.',
     );
+  });
+});
+
+describe('full prepayment wording matches KERSIVO settlement', () => {
+  it('keeps the same amount KERSIVO retains and refunds the rest, never "non-refundable"', () => {
+    expect(FULL_PAYMENT_KEPT_GBP * 100).toBe(FULL_PAYMENT_RETAINED_CAP_PENCE);
+    for (const tone of TONES) {
+      const v = buildPolicy({ deposit: 'full', lateCancel: 'keep_payment', noShow: 'keep_payment', tone });
+      const text = [v.website, v.short, v.oneLine].join('\n');
+      expect(text).not.toMatch(/non-refundable|not refunded|no refund/i);
+      expect(v.website).toMatch(/£5 of (your|the) payment is kept|keep £5 of your payment/);
+      expect(v.short).toContain('£5 is kept, the rest refunded');
+      expect(v.oneLine).toContain('£5 kept, the rest refunded');
+    }
+    expect(buildPolicy({ deposit: 'full', lateCancel: 'keep_payment', noShow: 'keep_payment' }).bullets.slice(2, 4)).toEqual([
+      'If you cancel within 24 hours, we keep £5 of your payment and refund the rest.',
+      'If you don’t turn up, we keep £5 of your payment and refund the rest.',
+    ]);
   });
 });
 

@@ -6,6 +6,8 @@
  * grammatical, rather than one hardcoded paragraph per combination.
  */
 
+import { FULL_PAYMENT_RETAINED_CAP_PENCE } from '@/lib/booking/bookingPaymentPolicy';
+
 export type DepositType = 'none' | 'fixed' | 'full';
 export type PaymentOutcome = 'keep_deposit' | 'keep_payment' | 'future_deposit';
 export type LateAction = 'shorten' | 'no_show';
@@ -31,6 +33,13 @@ export const SHORT_VERSION_MAX_CHARS = 500;
 export const ONE_LINE_MAX_CHARS = 160;
 
 export const POLICY_HEADING = 'Cancellation & No-Show Policy';
+
+/**
+ * Full prepayment, late cancellation or no-show: KERSIVO keeps at most this amount and refunds
+ * the rest, so the generated wording matches what the booking system actually does.
+ */
+export const FULL_PAYMENT_KEPT_GBP = FULL_PAYMENT_RETAINED_CAP_PENCE / 100;
+const KEPT = `£${FULL_PAYMENT_KEPT_GBP}`;
 
 export type PolicyOptions = {
   shopName: string;
@@ -176,7 +185,9 @@ function lateCancelBlock(c: Ctx): string {
     case 'keep_deposit':
       return `${lead} the deposit is kept.`;
     case 'keep_payment':
-      return `${lead} the payment is non-refundable.`;
+      return c.friendly
+        ? `${lead} we keep ${KEPT} of your payment and refund the rest.`
+        : `${lead} ${KEPT} of the payment is kept; the rest is refunded.`;
     default:
       return c.friendly
         ? `${lead} we may ask for a deposit on your future bookings.`
@@ -189,7 +200,9 @@ function noShowBlock(c: Ctx): string {
     case 'keep_deposit':
       return c.friendly ? 'If you don’t turn up, the deposit is kept.' : 'No-shows lose the deposit.';
     case 'keep_payment':
-      return c.friendly ? 'If you don’t turn up, the payment is non-refundable.' : 'No-shows are not refunded.';
+      return c.friendly
+        ? `If you don’t turn up, we keep ${KEPT} of your payment and refund the rest.`
+        : `No-shows: ${KEPT} of the payment is kept; the rest is refunded.`;
     default:
       return c.friendly
         ? 'If you don’t turn up, we’ll ask for a deposit on future bookings.'
@@ -285,12 +298,12 @@ function shortVersion(c: Ctx): string {
   const freeCancel = `Free cancellation or rebooking up to ${h} hours before${c.deposit === 'none' ? '' : `; your ${c.paid} is refunded or moved`}.`;
   const late = {
     keep_deposit: `Cancel within ${h} hours and the deposit is kept.`,
-    keep_payment: `Cancel within ${h} hours and the payment is non-refundable.`,
+    keep_payment: `Cancel within ${h} hours and ${KEPT} is kept, the rest refunded.`,
     future_deposit: `Cancel within ${h} hours and we may ask for a deposit next time.`,
   }[c.lateCancel];
   const noShow = {
     keep_deposit: 'No-shows lose the deposit.',
-    keep_payment: 'No-shows are not refunded.',
+    keep_payment: `No-shows: ${KEPT} is kept, the rest refunded.`,
     future_deposit: 'No-shows will need a deposit for future bookings.',
   }[c.noShow];
   const lateness =
@@ -322,7 +335,7 @@ function shortVersion(c: Ctx): string {
 
 const ONE_LINE_OUTCOME: Record<PaymentOutcome, string> = {
   keep_deposit: 'deposit kept',
-  keep_payment: 'no refund',
+  keep_payment: `${KEPT} kept, rest refunded`,
   future_deposit: 'deposit needed next time',
 };
 
@@ -332,7 +345,7 @@ function oneLineVersion(c: Ctx): string {
   if (c.lateCancel === c.noShow) {
     outcome = {
       keep_deposit: 'Later cancellations and no-shows lose the deposit.',
-      keep_payment: 'Later cancellations and no-shows are non-refundable.',
+      keep_payment: `Later cancellations and no-shows: ${KEPT} kept, the rest refunded.`,
       future_deposit: 'Late cancellations and no-shows need a deposit next time.',
     }[c.lateCancel];
   } else {
