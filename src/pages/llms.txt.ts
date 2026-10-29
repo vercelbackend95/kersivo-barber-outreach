@@ -33,6 +33,13 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),
     link('/treatwell-alternative', 'Treatwell alternative', 'KERSIVO compared with Treatwell'),
     '',
+    '## Free tools',
+    link(
+      '/barbershop-cancellation-policy-template',
+      'Cancellation policy template',
+      'free generator for a barbershop cancellation, deposit and no-show policy in three lengths',
+    ),
+    '',
     '## Insights',
     ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => link(article.path, article.headline, article.description)),
     '',
