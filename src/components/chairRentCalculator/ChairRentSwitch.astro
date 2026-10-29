@@ -1,0 +1,38 @@
+---
+import { DEFAULT_INPUTS, type BooleanInputKey } from '@/lib/chairRentVsCommission/engine';
+
+interface Props {
+  name: BooleanInputKey;
+  label: string;
+  helper?: string;
+  showWhen?: string;
+}
+
+const { name, label, helper, showWhen } = Astro.props;
+const id = `crc-${name}`;
+const helperId = helper ? `${id}-helper` : undefined;
+const hidden = showWhen ? !(DEFAULT_INPUTS as Record<string, unknown>)[showWhen] : false;
+---
+
+<div class="calc-field calc-field--inline crc-switch-row" data-show-when={showWhen} hidden={hidden}>
+  <div class="calc-field__text">
+    <label class="calc-field__label" for={id}>{label}</label>
+    {helper ? <p id={helperId} class="calc-field__helper">{helper}</p> : null}
+  </div>
+  <span class="calc-switch">
+    <input
+      id={id}
+      class="calc-switch__input"
+      type="checkbox"
+      role="switch"
+      name={name}
+      checked={DEFAULT_INPUTS[name]}
+      aria-describedby={helperId}
+    />
+    <span class="calc-switch__track" aria-hidden="true"><span class="calc-switch__thumb"></span></span>
+    <span class="calc-switch__state" aria-hidden="true">
+      <span class="calc-switch__off">No</span>
+      <span class="calc-switch__on">Yes</span>
+    </span>
+  </span>
+</div>

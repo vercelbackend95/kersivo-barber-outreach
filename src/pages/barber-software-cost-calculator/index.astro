@@ -23,6 +23,7 @@ import CostMethodology from '@/components/costCalculator/CostMethodology.astro';
 import CostSources from '@/components/costCalculator/CostSources.astro';
 import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
+import ChairRentToolLink from '@/components/chairRentCalculator/ChairRentToolLink.astro';
 import {
   BARBER_COST_CALCULATOR_DESCRIPTION,
   BARBER_COST_CALCULATOR_PAGE_PATH,
@@ -76,6 +77,7 @@ const currentYear = new Date().getFullYear();
         </a>
       </div>
     </aside>
+    <ChairRentToolLink />
     <CostSources />
 
     <Faq4

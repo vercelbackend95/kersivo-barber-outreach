@@ -49,6 +49,8 @@ The arrangement that looked generous in December is unlawful in January unless t
 
 The same arithmetic shows something about the shop's costs. Commission looks like a **variable** cost, but the minimum wage turns part of it into a **fixed** one. In practice, the shop is paying at least the floor for that rota (£2,198.83 on 173 hours), whatever the barber takes. Below the break-even takings, the barber's pay doesn't fall any further. Only the shop's contribution does.
 
+<aside class="insights-tool-callout" aria-label="Chair rent vs commission calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/chair-rent-vs-commission-calculator">Check the minimum wage line for your own barber → Chair Rent vs Commission Calculator</a></p></aside>
+
 ## Three traps that reduce minimum-wage pay
 
 **1. Tips don't count.** [GOV.UK](http://GOV.UK) lists tips, gratuities and service charges among the payments that **don't** count towards minimum wage pay. A barber whose commission falls short can't be "made up" by their tips. (Card tips also have to be passed on in full under separate rules.)

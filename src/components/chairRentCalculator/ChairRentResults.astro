@@ -1,0 +1,149 @@
+---
+import { DEFAULT_INPUTS, compareModels } from '@/lib/chairRentVsCommission/engine';
+import { RESULTS_DISCLAIMER, buildResultView } from '@/lib/chairRentVsCommission/view';
+import {
+  COMMISSION_ARTICLE_PATH,
+  OWNER_EARNINGS_VAT_SECTION,
+  RESULTS_COPY,
+} from '@/lib/seo/chairRentCalculatorPage';
+
+const result = compareModels(DEFAULT_INPUTS);
+const { text, hidden } = buildResultView(result);
+
+const commissionRows = [
+  { label: 'Net takings', slot: 'a-takings' },
+  { label: 'Commission', slot: 'a-commission' },
+  { label: 'Holiday pay', slot: 'a-holiday', hide: 'row-holiday' },
+  { label: 'Minimum wage top-ups', slot: 'a-topups', hide: 'row-topups' },
+  { label: 'Employer’s NI', slot: 'a-ni', note: 'a-ni-note' },
+  { label: 'Employer pension', slot: 'a-pension', hide: 'row-pension' },
+  { label: 'Products and consumables', slot: 'a-products' },
+  { label: 'Card fees', slot: 'a-cardfees' },
+  { label: 'Booking software', slot: 'a-software', hide: 'row-software' },
+];
+const rentRows = [
+  { label: 'Rent income (excluding VAT)', slot: 'b-rent' },
+  { label: 'Extra costs the shop covers', slot: 'b-extra', hide: 'row-extra' },
+];
+---
+
+<section id="results" class="crc-results" aria-labelledby="crc-results-title">
+  <div class="crc-results__head">
+    <h2 id="crc-results-title" class="calc-results__title crc-results__title">{RESULTS_COPY.heading}</h2>
+    <div class="crc-actions" data-crc-actions>
+      <button type="button" class="calc-share__button" data-crc-copy>{RESULTS_COPY.copy}</button>
+      <button type="button" class="calc-share__button" data-crc-share>{RESULTS_COPY.share}</button>
+      <button type="button" class="calc-share__button" data-crc-print>{RESULTS_COPY.print}</button>
+      <p class="calc-share__status" data-crc-status role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="crc-results__body">
+    <p class="sr-only" aria-live="polite" aria-atomic="true" data-crc-announce></p>
+    <p class="crc-verdict" data-slot="verdict">{text.verdict}</p>
+
+    <ol class="calc-results__cards crc-cards">
+      <li class="calc-card">
+        <article class="calc-card__inner" aria-labelledby="crc-card-a">
+          <h3 id="crc-card-a" class="calc-card__name">{RESULTS_COPY.commissionCard}</h3>
+          <p class="calc-card__period">{RESULTS_COPY.yearly}</p>
+          <p class="calc-card__total crc-total"><span data-slot="a-yearly">{text['a-yearly']}</span></p>
+          <p class="crc-monthly"><span data-slot="a-monthly">{text['a-monthly']}</span> {RESULTS_COPY.perMonth}</p>
+          <dl class="calc-card__breakdown-list">
+            {commissionRows.map((row) => (
+              <div class="calc-card__row" data-hide={row.hide} hidden={row.hide ? hidden[row.hide] : undefined}>
+                <dt>
+                  {row.label}
+                  {row.note ? <span class="crc-row-note" data-slot={row.note}>{text[row.note]}</span> : null}
+                </dt>
+                <dd data-slot={row.slot}>{text[row.slot]}</dd>
+              </div>
+            ))}
+          </dl>
+        </article>
+      </li>
+      <li class="calc-card">
+        <article class="calc-card__inner" aria-labelledby="crc-card-b">
+          <h3 id="crc-card-b" class="calc-card__name">{RESULTS_COPY.rentCard}</h3>
+          <p class="calc-card__period">{RESULTS_COPY.yearly}</p>
+          <p class="calc-card__total crc-total"><span data-slot="b-yearly">{text['b-yearly']}</span></p>
+          <p class="crc-monthly"><span data-slot="b-monthly">{text['b-monthly']}</span> {RESULTS_COPY.perMonth}</p>
+          <dl class="calc-card__breakdown-list">
+            {rentRows.map((row) => (
+              <div class="calc-card__row" data-hide={row.hide} hidden={row.hide ? hidden[row.hide] : undefined}>
+                <dt>{row.label}</dt>
+                <dd data-slot={row.slot}>{text[row.slot]}</dd>
+              </div>
+            ))}
+          </dl>
+        </article>
+      </li>
+    </ol>
+
+    <div class="crc-panels">
+      <article class="crc-panel" aria-labelledby="crc-breakeven-title">
+        <h3 id="crc-breakeven-title" class="crc-panel__title">{RESULTS_COPY.breakEvenHeading}</h3>
+        <p data-slot="be-rent">{text['be-rent']}</p>
+        <p data-slot="be-commission">{text['be-commission']}</p>
+      </article>
+
+      <article class="crc-panel" aria-labelledby="crc-mw-title">
+        <h3 id="crc-mw-title" class="crc-panel__title">{RESULTS_COPY.minimumWageHeading}</h3>
+        <dl class="calc-card__breakdown-list">
+          <div class="calc-card__row"><dt>Minimum wage floor<span class="crc-row-note" data-slot="mw-floor-note">{text['mw-floor-note']}</span></dt><dd data-slot="mw-floor">{text['mw-floor']}</dd></div>
+          <div class="calc-card__row"><dt>Commission per hour, typical month</dt><dd data-slot="mw-typical-hourly">{text['mw-typical-hourly']}</dd></div>
+          <div class="calc-card__row" data-hide="row-quiet-hourly" hidden={hidden['row-quiet-hourly']}><dt>Commission per hour, quiet month</dt><dd data-slot="mw-quiet-hourly">{text['mw-quiet-hourly']}</dd></div>
+          <div class="calc-card__row"><dt>Months needing a top-up</dt><dd data-slot="mw-months">{text['mw-months']}</dd></div>
+          <div class="calc-card__row"><dt>Yearly top-up total</dt><dd data-slot="mw-topups">{text['mw-topups']}</dd></div>
+          <div class="calc-card__row"><dt>Takings for commission alone to meet the floor</dt><dd data-slot="mw-takings">{text['mw-takings']}</dd></div>
+        </dl>
+        <p class="crc-warning" data-hide="mw-warning" hidden={hidden['mw-warning']}>
+          <span data-slot="mw-warning-text">{text['mw-warning-text']}</span> <a href={COMMISSION_ARTICLE_PATH}>{RESULTS_COPY.minimumWageLink}</a>.
+        </p>
+      </article>
+    </div>
+
+    <article class="crc-panel crc-panel--wide" aria-labelledby="crc-sens-title">
+      <h3 id="crc-sens-title" class="crc-panel__title">{RESULTS_COPY.sensitivityHeading}</h3>
+      <p class="crc-panel__note">{RESULTS_COPY.sensitivityNote}</p>
+      <div class="crc-table-wrap">
+        <table class="crc-table">
+          <caption class="sr-only">Shop’s yearly result if takings are 20% lower, as entered or 20% higher</caption>
+          <thead>
+            <tr>
+              <th scope="col">Takings</th>
+              <th scope="col">Commission</th>
+              <th scope="col">Chair rent</th>
+              <th scope="col">Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.sensitivity.map((row, index) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td data-slot={`sens-${index}-a`}>{text[`sens-${index}-a`]}</td>
+                <td data-slot={`sens-${index}-b`}>{text[`sens-${index}-b`]}</td>
+                <td data-slot={`sens-${index}-diff`}>{text[`sens-${index}-diff`]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="crc-panel crc-panel--wide" aria-labelledby="crc-barber-title" data-hide="barber-side" hidden={hidden['barber-side']}>
+      <h3 id="crc-barber-title" class="crc-panel__title">{RESULTS_COPY.barberHeading}</h3>
+      <dl class="calc-card__breakdown-list">
+        <div class="calc-card__row"><dt>Employed: gross pay before tax</dt><dd data-slot="barber-employed">{text['barber-employed']}</dd></div>
+        <div class="calc-card__row"><dt>Renter: profit before tax<span class="crc-row-note">after <span data-slot="barber-renter-rent">{text['barber-renter-rent']}</span> rent and their own costs</span></dt><dd data-slot="barber-renter">{text['barber-renter']}</dd></div>
+      </dl>
+      <p class="crc-panel__note">{RESULTS_COPY.barberNote}</p>
+    </article>
+
+    <p class="crc-vat-note" data-hide="vat-note" hidden={hidden['vat-note']}>
+      {RESULTS_COPY.vatNote} <a href={OWNER_EARNINGS_VAT_SECTION}>{RESULTS_COPY.vatLink}</a>.
+    </p>
+  </div>
+
+  <p class="crc-disclaimer">{RESULTS_DISCLAIMER}</p>
+</section>

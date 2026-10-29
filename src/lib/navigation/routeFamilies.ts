@@ -32,6 +32,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barber-software-cost-calculator',
   '/barbershop-cancellation-policy-template',
   '/barbershop-no-show-calculator',
+  '/chair-rent-vs-commission-calculator',
   '/pricing',
   '/starter',
   '/about',

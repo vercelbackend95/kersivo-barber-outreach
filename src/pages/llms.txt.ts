@@ -44,6 +44,11 @@ export function buildLlmsTxt(siteUrl: string): string {
       'No-show cost calculator',
       'yearly cost of missed appointments and whether a deposit pays for itself',
     ),
+    link(
+      '/chair-rent-vs-commission-calculator',
+      'Chair rent vs commission calculator',
+      'what one chair leaves the shop with an employed barber on commission or a self-employed renter, with UK minimum wage and employer costs',
+    ),
     '',
     '## Insights',
     ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => link(article.path, article.headline, article.description)),

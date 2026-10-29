@@ -116,6 +116,7 @@ export const NO_SHOW_FAQ_ITEMS: readonly NoShowFaqItem[] = [
 export const NO_SHOW_RELATED_LINKS = [
   { label: 'Cancellation Policy Template', href: CANCELLATION_POLICY_PAGE_PATH, description: 'Create a free deposit and no-show policy to show clients before they book.' },
   { label: 'Barber Software Cost Calculator', href: '/barber-software-cost-calculator', description: 'Compare booking software costs using your shop’s numbers.' },
+  { label: 'Chair Rent vs Commission Calculator', href: '/chair-rent-vs-commission-calculator', description: 'Compare employing a barber on commission with renting out the chair.' },
   { label: 'What a no-show really costs — and when a deposit makes sense', href: NO_SHOW_ARTICLE_PATH, description: 'The full method, worked example and UK rules behind this calculator.' },
   { label: 'KERSIVO Starter', href: '/starter', description: `£0/month booking with a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on public bookings.` },
 ] as const;

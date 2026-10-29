@@ -39,6 +39,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barber-software-cost-calculator',
   'https://kersivo.co.uk/barbershop-cancellation-policy-template',
   'https://kersivo.co.uk/barbershop-no-show-calculator',
+  'https://kersivo.co.uk/chair-rent-vs-commission-calculator',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/dpa',
@@ -68,7 +69,7 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/insights']).toBe(getInsightsIndexLastmod());
-    expect(byLoc['https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk']).toBe('2026-10-17');
+    expect(byLoc['https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-client-retention-second-visit']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning']).toBe('2026-10-17');
@@ -79,12 +80,12 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules']).toBe('2026-10-17');
     // Every URL has a content date. Archives use the newest dateModified of the articles they list.
     for (const entry of entries) expect(entry.lastmod, entry.loc).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBe('2026-10-19');
+    expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/insights/category/clients-growth']).toBe('2026-10-18');
     expect(byLoc['https://kersivo.co.uk/insights/category/brand-marketing']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/category/bookings-operations']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBe('2026-10-19');
-    expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-19');
+    expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-29');
     // Same constant as the homepage WebPage dateModified.
     expect(byLoc['https://kersivo.co.uk/']).toBe(HOMEPAGE_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-28');
@@ -107,6 +108,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-10-29');
+    expect(byLoc['https://kersivo.co.uk/chair-rent-vs-commission-calculator']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);

@@ -1,0 +1,465 @@
+/* ============================================================
+   Chair Rent vs Commission Calculator.
+   Builds on barber-cost-calculator(.css|-tool.css): same canvas, inputs,
+   switches and result cards. Only layout and tool-specific pieces live here.
+   ============================================================ */
+
+/* ---------------------------------- Hero ---------------------------------- */
+
+.crc-hero {
+  padding-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+
+.crc-hero__inner {
+  display: grid;
+  gap: 1rem;
+  width: var(--cost-calc-width);
+  max-width: 62rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .crc-hero__inner {
+    margin-inline: max(1rem, calc((100% - 80rem) / 2));
+  }
+}
+
+.crc-hero .cost-calc-hero__eyebrow {
+  justify-self: start;
+}
+
+.crc a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------- Tool ---------------------------------- */
+
+.crc-tool {
+  padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(2.5rem, 5vw, 4.5rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.crc-tool__grid {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  align-items: start;
+  width: var(--cost-calc-width);
+  margin-inline: auto;
+}
+
+@media (min-width: 1100px) {
+  .crc-tool__grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+}
+
+.crc-form {
+  container-type: inline-size;
+}
+
+.crc-form__examples {
+  margin: -0.5rem 0 0;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.crc-fieldset {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.crc-fieldset > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0;
+}
+
+.crc-fieldset > legend + * {
+  clear: both;
+}
+
+.crc-field[hidden],
+.crc-switch-row[hidden],
+.crc-basis[hidden],
+.crc [hidden] {
+  display: none !important;
+}
+
+.crc-models {
+  display: grid;
+  gap: clamp(1.25rem, 2.4vw, 1.6rem);
+}
+
+@container (min-width: 46rem) {
+  .crc-models {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+.crc-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@container (min-width: 24rem) {
+  .crc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.crc-input--suffix input {
+  padding-right: 0.25rem;
+}
+
+.crc-input__suffix {
+  flex: none;
+  padding-right: 0.85rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.crc-select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding-inline: 0.85rem;
+  color: var(--fg);
+  font: inherit;
+  background-color: #0d0e11;
+}
+
+.crc-select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.crc-note {
+  margin: 0;
+}
+
+.crc-advanced {
+  padding-top: 1rem;
+}
+
+/* Mobile tabs between model A and B (added by the script; without JS both stay stacked). */
+.crc-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #050506;
+}
+
+.crc-tabs[hidden] {
+  display: none;
+}
+
+.crc-tabs button {
+  flex: 1;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 80%, var(--muted));
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.crc-tabs button[aria-selected='true'] {
+  background: var(--fg);
+  color: #050506;
+}
+
+.crc-tabs button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.crc-form.is-tabbed .crc-model[data-active='false'] {
+  display: none;
+}
+
+.crc-model {
+  min-width: 0;
+}
+
+.crc-form.is-tabbed .crc-model > .crc-fieldset {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* --------------------------------- Results -------------------------------- */
+
+.crc-results {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.crc-results__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.crc-results__title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+
+.crc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1.1rem;
+}
+
+.crc-actions .calc-share__status {
+  flex-basis: 100%;
+  text-align: left;
+}
+
+.crc-results__body {
+  display: grid;
+  gap: 1rem;
+}
+
+.crc-verdict {
+  margin: 0;
+  min-height: 3em;
+  padding: 1rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  background: #0a0b0d;
+  color: var(--fg);
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.crc-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+.crc-total {
+  margin-bottom: 0.2rem;
+  color: var(--fg);
+}
+
+.crc-monthly {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.crc-row-note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.crc-panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+.crc-panel {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: clamp(1.1rem, 2vw, 1.4rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-16);
+  background: #0a0b0d;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+}
+
+.crc-panel p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.crc-panel__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: var(--tracking-heading);
+  color: var(--fg);
+}
+
+.crc-panel__note {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.crc-panel .calc-card__row dd {
+  text-align: right;
+}
+
+.crc .calc-card__row dd {
+  white-space: nowrap;
+}
+
+.crc-warning {
+  padding: 0.75rem 0.9rem;
+  border-left: 2px solid var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, #0a0b0d);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* The site link red is below 4.5:1 on the warning tint, so this one link uses the foreground colour.
+   Needs to outrank html[data-app='marketing'] a:not([class]). */
+.crc.cost-calc .crc-warning a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.crc-table-wrap {
+  overflow-x: auto;
+}
+
+.crc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.crc-table th,
+.crc-table td {
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.crc-table th:first-child {
+  text-align: left;
+}
+
+.crc-table thead th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.crc-table tbody th {
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  font-weight: 400;
+}
+
+.crc-vat-note,
+.crc-disclaimer {
+  margin: 0;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.crc-disclaimer {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ------------------------------ Content sections ------------------------------ */
+
+.crc-links,
+.crc-related {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crc-related li {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.crc-related span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.crc-cta__box {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.crc-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.crc-method__articles {
+  margin-top: 1.5rem;
+}
+
+/* ---------------------------------- Print ---------------------------------- */
+
+@media print {
+  body > *:not(main),
+  .crc > :not(.crc-hero):not(.crc-tool),
+  .crc-hero .cost-calc-hero__note,
+  .crc-hero .cost-calc-hero__supporting,
+  .page-breadcrumb,
+  .crc-actions,
+  .crc-tabs,
+  .cost-calc-hero::before,
+  .cost-calc-surface::before {
+    display: none !important;
+  }
+
+  .cost-calc,
+  .cost-calc-hero,
+  .crc-tool,
+  .cost-calc-surface,
+  .calc-card__inner,
+  .crc-panel,
+  .crc-verdict {
+    background: #fff !important;
+    box-shadow: none !important;
+    color: #000 !important;
+  }
+
+  .crc * {
+    color: #000 !important;
+    border-color: #999 !important;
+  }
+
+  .crc-tool__grid {
+    display: block;
+  }
+
+  .crc-form.is-tabbed .crc-model[data-active='false'] {
+    display: block;
+  }
+
+  .crc-form {
+    break-after: page;
+  }
+
+  .crc-panel,
+  .calc-card {
+    break-inside: avoid;
+  }
+}
