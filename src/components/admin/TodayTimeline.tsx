@@ -1453,6 +1453,9 @@ const BarberAvatarPin = memo(function BarberAvatarPin({
           src={barber.avatarUrl}
           alt={barber.name}
           className="admin-vtl-avatar-img"
+          // Square slot sized by CSS (object-fit: cover); attributes reserve the box before load.
+          width={PROGRESS_AVATAR_SIZE}
+          height={PROGRESS_AVATAR_SIZE}
           loading="lazy"
           onError={() => setImgError(true)}
         />

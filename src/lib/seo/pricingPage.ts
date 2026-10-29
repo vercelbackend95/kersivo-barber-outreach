@@ -7,6 +7,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { formatGbp } from '@/lib/seo/freshaFacts';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, PRICING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const PRICING_PAGE_PATH = '/pricing';
 
@@ -105,7 +106,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'When does billing start?',
     answer:
-      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready 1–2 weeks after we receive all required information.',
+      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready in a few days once we receive all required information.',
   },
   {
     question: "What if you can't deliver Full KERSIVO?",
@@ -171,7 +172,12 @@ export function buildPricingWebPageJsonLd(): Record<string, unknown> {
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
     about: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
   };
+}
+
+export function buildPricingBreadcrumbJsonLd(): Record<string, unknown> {
+  return buildBreadcrumbListJsonLd(PRICING_BREADCRUMBS);
 }
 
 export function buildPricingFaqJsonLd(): Record<string, unknown> {

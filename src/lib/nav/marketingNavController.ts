@@ -175,6 +175,15 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
 
   const isHubOpen = () => menuButton?.getAttribute('aria-expanded') === 'true';
 
+  /** The hub ships as an inert <template>; build its DOM the first time it is needed. */
+  const mountHub = () => {
+    const template = hub?.querySelector<HTMLTemplateElement>(':scope > template[data-mnav-hub-content]');
+    if (!hub || !template) return;
+    hub.replaceChildren(template.content.cloneNode(true));
+    sectionLinks.push(...hub.querySelectorAll<HTMLAnchorElement>('a[data-mnav-section]'));
+    applyMarketingNavCurrent(root, win.location);
+  };
+
   const closeHub = ({ returnFocus = false } = {}) => {
     if (!menuButton || !hub || !isHubOpen()) return;
     menuButton.setAttribute('aria-expanded', 'false');
@@ -190,6 +199,7 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
 
   const openHub = () => {
     if (!menuButton || !hub || isHubOpen()) return;
+    mountHub();
     closePanel();
     doc.body.style.setProperty(FLOW_HEIGHT_VAR, `${root.getBoundingClientRect().height}px`);
     // Pin the header before the hub is shown: an in-flow hub would grow the page and let scroll anchoring move it.
@@ -206,24 +216,21 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
 
   menuButton?.addEventListener('click', () => (isHubOpen() ? closeHub({ returnFocus: true }) : openHub()), { signal });
 
-  hub?.querySelectorAll<HTMLButtonElement>('[data-mnav-accordion]').forEach((button) => {
-    button.addEventListener(
-      'click',
-      () => {
+  // Delegated: hub content is mounted lazily from its template.
+  hub?.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target as Element | null;
+      const button = target?.closest<HTMLButtonElement>('[data-mnav-accordion]');
+      if (button && hub.contains(button)) {
         const section = panelOf(button);
         if (!section) return;
         const expand = button.getAttribute('aria-expanded') !== 'true';
         button.setAttribute('aria-expanded', String(expand));
         section.hidden = !expand;
-      },
-      { signal },
-    );
-  });
-
-  hub?.addEventListener(
-    'click',
-    (event) => {
-      if ((event.target as Element | null)?.closest('a[href]')) closeHub();
+        return;
+      }
+      if (target?.closest('a[href]')) closeHub();
     },
     { signal },
   );

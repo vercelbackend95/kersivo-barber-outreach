@@ -1,6 +1,6 @@
 # The Extra Hour Test: Planning a Barbershop's December Without Fooling Yourself
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&amp;fit=crop&amp;q=78&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Empty vintage barbershop with copper-toned chairs, mirrors and brick walls, photographed in Bratislava" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1672257493626-038f96997ade?auto=format&amp;fit=crop&amp;q=78&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Empty vintage barbershop with copper-toned chairs, mirrors and brick walls, photographed in Bratislava" />
 <figcaption>Editorial barbershop photograph; no association with KERSIVO or a UK customer — <a href="https://unsplash.com/photos/a-barber-shop-with-a-brick-wall-and-lots-of-chairs-tX5JNBNSJic" target="_blank" rel="noopener noreferrer">František Čaník / Unsplash</a>.</figcaption></figure>
 
 Every barbershop owner knows what December looks like. Everyone wants a cut in the same three weeks, the diary fills by the end of November, and the phone keeps ringing anyway. The usual response is to open longer: earlier mornings, late evenings, an extra Sunday. Sometimes it's the best decision of the year. Sometimes it's two weeks of exhaustion that, once you work out the numbers, made very little money.

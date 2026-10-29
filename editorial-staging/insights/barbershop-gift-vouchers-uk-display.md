@@ -1,6 +1,6 @@
 # Barbershop Gift Vouchers: Cash in December, a Haircut You Owe in March
 
-<figure class="insights-figure insights-figure--hero"><img src="/images/insights/gift-vouchers/voucher-hero.svg" width="1600" height="900" loading="eager" decoding="async" alt="Original editorial illustration of a fictional thirty-pound gift voucher and the words cash today, a cut tomorrow." />
+<figure class="insights-figure insights-figure--hero"><img src="/images/insights/gift-vouchers/voucher-hero.svg" width="1600" height="900" loading="eager" fetchpriority="high" decoding="async" alt="Original editorial illustration of a fictional thirty-pound gift voucher and the words cash today, a cut tomorrow." />
 <figcaption>Original KERSIVO Insights illustration. The fictional voucher is not a KERSIVO product and cannot be redeemed.</figcaption></figure>
 
 Every December, the same thing happens at the counter. Someone's partner, mother or best mate wants to buy a haircut as a present, and the shop either has something to sell them or doesn't. Gift vouchers look like easy money: paid in full and up front, at a time of year when plenty of people walk past the window.

@@ -25,9 +25,12 @@ import {
   ABOUT_WHAT_IT_IS_LEAD,
   ABOUT_WHY_PARAGRAPHS,
   ABOUT_WHY_TITLE,
+  buildAboutBreadcrumbJsonLd,
   buildAboutPageJsonLd,
 } from '@/lib/seo/aboutPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
+import { ABOUT_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   KERSIVO_CONTACT_EMAIL,
@@ -44,11 +47,12 @@ const currentYear = new Date().getFullYear();
   title={ABOUT_PAGE_TITLE}
   description={ABOUT_PAGE_DESCRIPTION}
   canonicalPath={ABOUT_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildAboutPageJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildAboutPageJsonLd(), buildAboutBreadcrumbJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <section class="fresha-alt-hero company-hero" aria-labelledby="about-hero-title">
       <div class="fresha-alt-hero__content">
+        <PageBreadcrumbs trail={ABOUT_BREADCRUMBS} />
         <p class="fresha-alt-hero__eyebrow">
           <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
           Booking software for UK barbershops

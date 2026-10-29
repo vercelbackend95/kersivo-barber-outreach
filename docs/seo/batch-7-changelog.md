@@ -1,6 +1,6 @@
 # Batch 7 changelog — optional refinements
 
-Branch: `claude/seo-batch-7-optional`, from `main` at `ffe52f23` (after #136). Roadmap section “Batch 7 — Optional”. No pricing, legal text or competitor figure changed. The setup-time change (“a few days”) is a separate PR (#137).
+Branch: `claude/seo-batch-7-optional`, from `main` at `ffe52f23` (after #136), merged with `main` at `d8ff3f97` (#137, #139). Roadmap section “Batch 7 — Optional”. No pricing, legal text or competitor figure changed. The setup-time change (“a few days”) is a separate PR (#137).
 
 ## Done
 
@@ -8,8 +8,8 @@ Branch: `claude/seo-batch-7-optional`, from `main` at `ffe52f23` (after #136). R
    - Every claim comes from `claimsPolicy.ts` and `defaults.ts`: £39/month per location, Starter £0/month with the £5 deposit / full payment through the shop’s Stripe, “0% KERSIVO commission. Standard Stripe payment-processing fees still apply.”, no setup fee, no VAT added.
    - No setup-time figure. `/seo-growth` is not listed.
    - Served as `text/plain`, cached for 1 hour. Tests check that every linked route exists.
-2. **Square 512px logo in schema.** Organization `logo` (all marketing pages) and the Insights Article `publisher.logo` now use `/images/brand/kersivo-mark.png` (512×512, transparent K mark).
-   - Before: the 796×555 wordmark `logo_nobg.png` on the Organization and the 488×335 `logo-kersivo.png` without dimensions in articles.
+2. **Square 512px logo in schema.** The Organization `logo` now uses `/images/brand/kersivo-mark.png` (512×512, transparent K mark) instead of the 796×555 wordmark `logo_nobg.png`.
+   - Insights articles pick it up automatically: since #139 the Article `publisher` is a reference to the same Organization node.
    - The mark is written by `scripts/generate-favicons.mjs` on every build. It is already served on production (200, 512×512).
 3. **Homepage FAQPage merged into the main `@graph`.** The homepage now emits one JSON-LD block: Organization, WebSite, WebPage, SoftwareApplication and FAQPage (`#faq`). Before, there were two blocks. FAQ questions and answers are unchanged and still render from `HOMEPAGE_FAQ_ITEMS`.
 
