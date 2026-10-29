@@ -1,6 +1,6 @@
 # What a No-Show Really Costs a Barbershop — and When a Deposit Makes Sense
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" decoding="async" alt="Unoccupied brown leather barber chairs in a barbershop interior" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1569832947682-77c9164611df?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2200" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Unoccupied brown leather barber chairs in a barbershop interior" />
 <figcaption>An empty barber chair represents reserved capacity, but not necessarily the full price of a lost haircut — <a href="https://unsplash.com/photos/empty-brown-leather-barber-chairs-_I4sDxMK2ls" target="_blank" rel="noopener noreferrer">Jarrod Reed / Unsplash</a>.</figcaption></figure>
 
 *General information for UK barbershop owners, not legal advice. UK law and CMA guidance reviewed 20 October 2026. Online-booking cancellation rights are addressed using a conservative approach: do not assume every haircut is exempt from statutory cancellation rights.*
@@ -63,6 +63,8 @@ The busy Saturday no-show is the cheap one. The quiet weekday is where the money
 <figure class="insights-figure insights-figure--photo"><img src="https://images.unsplash.com/photo-1773904215697-e6c21fc27ac2?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2000" width="1500" height="1000" loading="lazy" decoding="async" alt="Rows of unoccupied vintage barber chairs and sinks in a dim salon interior" />
 <figcaption>Unused barber chairs illustrate the capacity at stake; the worked figures above are hypothetical, not from the shop pictured — <a href="https://unsplash.com/photos/luxurious-barber-chairs-and-sinks-in-a-dimly-lit-salon-fa0DqQ91dWU" target="_blank" rel="noopener noreferrer">Tanya Barrow / Unsplash</a>.</figcaption></figure>
 
+<aside class="insights-tool-callout" aria-label="No-show cost calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/barbershop-no-show-calculator">Run these numbers for your own shop → No-Show Cost Calculator</a></p></aside>
+
 ## Who carries the loss
 
 How the chair is run decides who loses.
@@ -120,7 +122,7 @@ If no-shows cluster in a few slots or among a few clients, a targeted rule, such
 
 ## Where KERSIVO fits
 
-KERSIVO's deposit option is a fixed £5; you can't set the amount. On Starter (£0/month), online bookings are paid by a £5 deposit or in full through your own Stripe account. On Full KERSIVO (£39/month per location), you choose which options to offer: Pay at shop, a £5 deposit or full payment. Standard Stripe fees apply. Your cancellation and refund policy is still yours to set and apply. See [Starter](https://kersivo.co.uk/starter) and [pricing](https://kersivo.co.uk/pricing).
+KERSIVO's deposit option is a fixed £5; you can't set the amount. On Starter (£0/month), online bookings are paid by a £5 deposit or in full through your own Stripe account. On Full KERSIVO (£39/month per location), you choose which options to offer: Pay at shop, a £5 deposit or full payment. Standard Stripe fees apply. Your [cancellation and refund policy](/barbershop-cancellation-policy-template) is still yours to set and apply. See [Starter](https://kersivo.co.uk/starter) and [pricing](https://kersivo.co.uk/pricing).
 
 ## The decision
 

@@ -12,7 +12,7 @@
  *
  * The production release gate is always separate from composition/review.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { applyInsightsLinkOverlays } from './link-overlays.mjs';
@@ -100,6 +100,31 @@ if (!blocks.some((block) => block.type === 'table') && !media.some((item) => ite
   fail('a table or informative, source-backed diagram is required');
 }
 const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** Rendered widths from insights-preview.css (--insights-hero / --insights-breakout / --insights-inline). */
+const FIGURE_SIZES = {
+  hero: '(min-width: 1250px) 1210px, 100vw',
+  breakout: '(min-width: 1140px) 1100px, 100vw',
+  photo: '(min-width: 1140px) 1100px, 100vw',
+  diagram: '(min-width: 1140px) 1100px, 100vw',
+  inline: '(min-width: 930px) 890px, 100vw',
+};
+/**
+ * Self-hosted photos (scripts/insights/self-host-pexels.mjs) list their `responsive` widths;
+ * AVIF and WebP variants sit next to the JPG fallback as <name>-<width>.<format>.
+ */
+function responsiveSources(item) {
+  if (item.responsive === undefined) return '';
+  const match = /^(\/images\/insights\/.+)-\d+\.jpg$/.exec(item.src);
+  if (!match || !Array.isArray(item.responsive) || !item.responsive.length) fail(`invalid responsive image: ${item.src}`);
+  return ['avif', 'webp'].map((format) => {
+    const srcset = item.responsive.map((w) => {
+      const file = `${match[1]}-${w}.${format}`;
+      if (!existsSync(path.join(root, 'public', file))) fail(`missing responsive variant ${file}`);
+      return `${file} ${w}w`;
+    }).join(', ');
+    return `<source type="image/${format}" srcset="${srcset}" sizes="${FIGURE_SIZES[item.kind]}" />`;
+  }).join('');
+}
 function figure(item) {
   requiredString(item.anchor, 'visual anchor');
   requiredString(item.alt, 'visual alt');
@@ -112,20 +137,26 @@ function figure(item) {
   const cls = `insights-figure insights-figure--${item.kind}`;
   const width = Number(item.width), height = Number(item.height);
   if (!(width >= 600 && width <= 6000 && height >= 300 && height <= 6000)) fail('invalid visual dimensions');
-  return `<figure class="${cls}"><img src="${escapeHtml(item.src)}" width="${width}" height="${height}" loading="${item.kind === 'hero' ? 'eager' : 'lazy'}" decoding="async" alt="${escapeHtml(item.alt)}" />\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
+  if (item.src.startsWith('/images/') && !existsSync(path.join(root, 'public', item.src))) fail(`missing local image ${item.src}`);
+  // The hero is the LCP element: load it eagerly at high priority; everything else lazily.
+  const loading = item.kind === 'hero' ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  const img = `<img src="${escapeHtml(item.src)}" width="${width}" height="${height}" ${loading} decoding="async" alt="${escapeHtml(item.alt)}" />`;
+  const sources = responsiveSources(item);
+  return `<figure class="${cls}">${sources ? `<picture>${sources}${img}</picture>` : img}\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
 }
-// Optional links to KERSIVO tools, placed after an anchored block (after any figure on that block).
-// Like figures, they are stripped before the text-fidelity check, so article copy stays verbatim.
-const toolLinks = Array.isArray(manifest.toolLinks) ? manifest.toolLinks : [];
-function toolLink(item) {
-  requiredString(item.anchor, 'tool link anchor');
-  requiredString(item.text, 'tool link text');
-  requiredString(item.label, 'tool link label');
-  if (!/^\/[a-z0-9-]+$/.test(requiredString(item.href, 'tool link href'))) fail('tool links must point to a KERSIVO page path');
-  return `<aside class="insights-tool-link"><p>${escapeHtml(item.text)} <a href="${escapeHtml(item.href)}">${escapeHtml(item.label)} →</a></p></aside>`;
+// Optional internal-tool callouts (KERSIVO pages only): a link box after an anchor block, never new claims.
+const callouts = manifest.callouts ?? [];
+if (!Array.isArray(callouts)) fail('callouts must be an array');
+function callout(item) {
+  requiredString(item.anchor, 'callout anchor');
+  requiredString(item.kicker, 'callout kicker');
+  requiredString(item.text, 'callout text');
+  requiredString(item.href, 'callout href');
+  if (!/^\/[a-z0-9/-]+$/.test(item.href)) fail('callout href must be an internal KERSIVO path');
+  return `<aside class="insights-tool-callout" aria-label="${escapeHtml(item.label ?? item.text)}"><p class="insights-tool-callout__kicker">${escapeHtml(item.kicker)}</p><p class="insights-tool-callout__text"><a href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a></p></aside>`;
 }
-const seenTools = new Set();
 const seen = new Set();
+const seenCallouts = new Set();
 const result = [];
 for (const block of blocks) {
   result.push(block.markdown);
@@ -137,23 +168,24 @@ for (const block of blocks) {
       result.push(figure(asset));
     }
   }
-  for (const [i, item] of toolLinks.entries()) {
-    if (seenTools.has(i) || !block.markdown.startsWith(item.anchor)) continue;
-    if (item.anchor.length < 24) fail('tool link anchor too short to identify an article section reliably');
-    seenTools.add(i);
-    result.push(toolLink(item));
+  for (const [i, item] of callouts.entries()) {
+    if (seenCallouts.has(i)) continue;
+    if (item.anchor === block.markdown || block.markdown.startsWith(item.anchor)) {
+      if (item.anchor.length < 24) fail('callout anchor too short to identify an article section reliably');
+      seenCallouts.add(i);
+      result.push(callout(item));
+    }
   }
 }
-if (seenTools.size !== toolLinks.length) {
-  fail(`tool link anchors missing: ${toolLinks.filter((_, index) => !seenTools.has(index)).map((a) => a.anchor).join(' | ')}`);
-}
+if (seenCallouts.size !== callouts.length) fail('callout anchors missing or ambiguous');
 if (seen.size !== media.length) {
   fail(`visual anchors missing or ambiguous: ${media.filter((_, index) => !seen.has(index)).map((a) => a.anchor).join(' | ')}`);
 }
 const renderedWithFigures = result.join('\n\n') + '\n';
 const canonical = blocks.map((block) => block.markdown).join('\n\n');
-const stripFigures = (html) =>
-  html.replace(/<figure class="insights-figure[^]*?<\/figure>/g, '').replace(/<aside class="insights-tool-link">[^]*?<\/aside>/g, '');
+const stripFigures = (html) => html
+  .replace(/<figure class="insights-figure[^]*?<\/figure>/g, '')
+  .replace(/<aside class="insights-tool-callout"[^]*?<\/aside>/g, '');
 if (stripFigures(renderedWithFigures).trim().replace(/\n{3,}/g, '\n\n') !== canonical.trim()) {
   fail('article text changed during visual insertion');
 }

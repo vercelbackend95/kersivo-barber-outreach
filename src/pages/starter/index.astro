@@ -13,6 +13,7 @@ import {
   STARTER_PAGE_LAST_UPDATED_LABEL,
   STARTER_PAGE_PATH,
   STARTER_PAGE_TITLE,
+  buildStarterBreadcrumbJsonLd,
   buildStarterFaqJsonLd,
   buildStarterWebPageJsonLd,
 } from '@/lib/seo/starterPage';
@@ -21,6 +22,8 @@ import {
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
+import { STARTER_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { CreditCard, UserRound, UsersRound } from 'lucide-react';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/starter-landing.css';
@@ -77,12 +80,13 @@ const starterFeatures = [
   title={STARTER_PAGE_TITLE}
   description={STARTER_PAGE_DESCRIPTION}
   canonicalPath={STARTER_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterBreadcrumbJsonLd(), buildStarterFaqJsonLd()]}
 >
   <main class="starter-landing">
     <section class="starter-hero" aria-labelledby="starter-hero-title">
       <div class="starter-shell starter-hero__grid">
         <div class="starter-hero__copy">
+          <PageBreadcrumbs trail={STARTER_BREADCRUMBS} />
           <p class="starter-kicker starter-hero__eyebrow">
             <span class="starter-kicker__dot" aria-hidden="true"></span>
             KERSIVO STARTER · BUILT FOR UK BARBERSHOPS
@@ -251,6 +255,15 @@ const starterFeatures = [
             For services above £5, clients choose a £5 deposit or Pay in full. A £5 service is paid
             in full. Starter keeps this payment rule fixed so there is nothing to configure; Full
             KERSIVO unlocks control over how customers pay when they book.
+          </p>
+          <p class="starter-section__body">
+            Need wording for clients? Use our free
+            <a href="/barbershop-cancellation-policy-template">cancellation policy template</a>.
+          </p>
+          <p class="starter-section__body">
+            Not sure a deposit is worth it for your shop? The
+            <a href="/barbershop-no-show-calculator">no-show cost calculator</a> shows what missed
+            appointments cost you and whether a deposit would pay for itself.
           </p>
         </div>
         <div class="starter-glance-card starter-payment-card">

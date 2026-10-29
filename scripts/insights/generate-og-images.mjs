@@ -38,6 +38,21 @@ const jobs = [
     src: 'public/images/insights/gift-vouchers/voucher-hero.svg',
     ext: 'png',
   },
+  // Self-hosted copies of the approved 1200x630 Unsplash hero crops, so og:image and the
+  // Article image live on kersivo.co.uk. Pexels heroes are handled by self-host-pexels.mjs.
+  ...[
+    ['barbershop-christmas-opening-hours-planning', 'photo-1672257493626-038f96997ade?auto=format&fit=crop&q=78&w=1200&h=630'],
+    ['how-to-price-haircut-uk-barber', 'photo-1769034260387-39fa07f0c0fa?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630'],
+    ['barber-dermatitis-skin-care-hse', 'photo-1761931403671-d020a14928d9?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'],
+    ['barbershop-client-retention-second-visit', 'photo-1772657850401-a15d99f505d4?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'],
+    ['making-tax-digital-barbers', 'photo-1739302493888-6f96cbc37105?auto=format&fit=crop&fm=jpg&q=80&w=1200&h=630'],
+    ['apprentice-barber-funding-costs-2026', 'photo-1640301133857-c4bc5789c1bb?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630'],
+    ['barbershop-loyalty-scheme-uk', 'photo-1640301133543-41fe25ad6450?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630'],
+    ['busy-barbershop-low-profit-chair-hour', 'photo-1786057424913-6954b0f424af?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'],
+    ['barbershop-walk-ins-vs-appointments', 'photo-1578853283498-cc994096481b?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'],
+    ['barber-commission-pay-minimum-wage-uk', 'photo-1722635255984-827851ba91be?auto=format&fit=crop&fm=jpg&q=75&w=1200&h=630'],
+    ['barbershop-no-show-cost-when-deposit-makes-sense', 'photo-1569832947682-77c9164611df?auto=format&fit=crop&fm=jpg&q=78&w=1200&h=630'],
+  ].map(([slug, photo]) => ({ slug, type: 'remote', src: `https://images.unsplash.com/${photo}`, ext: 'jpg' })),
 ];
 
 async function rasteriseSvg(relativePath) {

@@ -11,6 +11,8 @@ import {
 } from '@/data/uk-rates-2026-27';
 import { INSIGHTS_COMMISSION_PAY, INSIGHTS_OWNER_EARNINGS } from '@/lib/seo/insights';
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberCostCalculatorPage';
+import { NO_SHOW_CALCULATOR_PAGE_PATH } from '@/lib/seo/noShowCalculatorPage';
+import type { BreadcrumbTrailItem } from '@/lib/seo/breadcrumbs';
 
 /**
  * Visible copy and SEO metadata for /chair-rent-vs-commission-calculator.
@@ -23,6 +25,11 @@ export const CHAIR_RENT_CALCULATOR_DESCRIPTION =
   "Compare renting a chair with paying an employed barber commission. See your shop's profit, break-even rent, minimum wage top-ups and employer costs.";
 export const CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME = 'Chair Rent vs Commission Calculator';
 export const CHAIR_RENT_CALCULATOR_APP_NAME = 'Chair Rent vs Commission Calculator';
+
+/** Drives both the visible breadcrumb and the BreadcrumbList JSON-LD. */
+export const CHAIR_RENT_CALCULATOR_BREADCRUMBS: readonly BreadcrumbTrailItem[] = [
+  { name: CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME, path: CHAIR_RENT_CALCULATOR_PAGE_PATH },
+];
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
 export const CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO = '2026-10-29';
@@ -198,6 +205,11 @@ export const RELATED_LINKS = [
     label: INSIGHTS_COMMISSION_PAY.headline,
     href: INSIGHTS_COMMISSION_PAY.path,
     description: 'Minimum wage rates, hours and pay reference periods for employed barbers.',
+  },
+  {
+    label: 'No-Show Cost Calculator',
+    href: NO_SHOW_CALCULATOR_PAGE_PATH,
+    description: 'Work out what missed appointments cost and whether a deposit pays for itself.',
   },
   {
     label: 'Barber Software Cost Calculator',

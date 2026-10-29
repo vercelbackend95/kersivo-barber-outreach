@@ -9,11 +9,8 @@ import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astr
 import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
 import LandingDifference from '@/components/landingDifference.astro';
 import Footer50 from '@/components/footer50.astro';
-import { buildBarberDemoJsonLd } from '@/lib/seo/barberDemoJsonLd';
-import {
-  HOMEPAGE_FAQ_ITEMS,
-  buildBarbershopBookingFaqJsonLd,
-} from '@/lib/seo/barbershopBookingFaq';
+import { buildHomepageJsonLd } from '@/lib/seo/barberDemoJsonLd';
+import { HOMEPAGE_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -30,7 +27,7 @@ const currentYear = new Date().getFullYear();
   description={HOMEPAGE_DESCRIPTION}
   canonicalPath="/"
   deferDecorativeFontPreloads
-  jsonLd={[buildBarberDemoJsonLd(), buildBarbershopBookingFaqJsonLd()]}
+  jsonLd={buildHomepageJsonLd()}
 >
   <link
     slot="head"

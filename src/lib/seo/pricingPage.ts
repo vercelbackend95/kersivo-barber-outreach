@@ -7,6 +7,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { formatGbp } from '@/lib/seo/freshaFacts';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, PRICING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const PRICING_PAGE_PATH = '/pricing';
 
@@ -171,7 +172,12 @@ export function buildPricingWebPageJsonLd(): Record<string, unknown> {
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
     about: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
   };
+}
+
+export function buildPricingBreadcrumbJsonLd(): Record<string, unknown> {
+  return buildBreadcrumbListJsonLd(PRICING_BREADCRUMBS);
 }
 
 export function buildPricingFaqJsonLd(): Record<string, unknown> {

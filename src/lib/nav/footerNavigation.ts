@@ -36,6 +36,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { name: 'Compare booking systems', href: '/compare' },
       { name: 'Cost calculator', href: '/barber-software-cost-calculator' },
+      { name: 'No-show cost calculator', href: '/barbershop-no-show-calculator' },
       { name: 'Booksy alternative', href: '/booksy-alternative' },
       { name: 'Fresha alternative', href: '/fresha-alternative' },
       { name: 'Treatwell alternative', href: '/treatwell-alternative' },
@@ -47,6 +48,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { name: 'Insights', href: '/insights' },
       { name: 'Website design guide', href: '/barbershop-website-design' },
+      { name: 'Cancellation policy template', href: '/barbershop-cancellation-policy-template' },
       { name: 'Chair rent vs commission calculator', href: '/chair-rent-vs-commission-calculator' },
       { name: 'About KERSIVO', href: '/about' },
       { name: 'Contact', href: '/#contact' },

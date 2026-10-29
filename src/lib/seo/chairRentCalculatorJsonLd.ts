@@ -1,9 +1,10 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/barberDemoJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd } from '@/lib/seo/breadcrumbs';
 import { buildChairRentFaqJsonLd } from './chairRentCalculatorFaq';
 import {
   CHAIR_RENT_CALCULATOR_APP_NAME,
-  CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME,
+  CHAIR_RENT_CALCULATOR_BREADCRUMBS,
   CHAIR_RENT_CALCULATOR_DESCRIPTION,
   CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO,
   CHAIR_RENT_CALCULATOR_PAGE_PATH,
@@ -54,17 +55,7 @@ export function buildChairRentWebApplicationJsonLd(): Record<string, unknown> {
 }
 
 export function buildChairRentBreadcrumbJsonLd(): Record<string, unknown> {
-  const siteUrl = getPublicSiteUrl();
-  const pageUrl = pageUrlFor(siteUrl);
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    '@id': `${pageUrl}#breadcrumb`,
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-      { '@type': 'ListItem', position: 2, name: CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME, item: pageUrl },
-    ],
-  };
+  return buildBreadcrumbListJsonLd(CHAIR_RENT_CALCULATOR_BREADCRUMBS, { siteUrl: getPublicSiteUrl() });
 }
 
 export function buildChairRentCalculatorJsonLd(): Record<string, unknown>[] {

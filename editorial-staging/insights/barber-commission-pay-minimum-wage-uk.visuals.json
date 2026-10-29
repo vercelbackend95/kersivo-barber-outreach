@@ -58,11 +58,12 @@
     "recordUrl": "https://app.notion.com/p/3fb7dbe5bbda813c8ce9e6758d32585d",
     "note": "The owner explicitly approved the ready Preview for production publication on 17 October 2026."
   },
-  "toolLinks": [
+  "callouts": [
     {
       "anchor": "The same arithmetic shows something about the shop's costs.",
-      "text": "Check the minimum wage line for your own barber",
-      "label": "Chair Rent vs Commission Calculator",
+      "kicker": "FREE TOOL",
+      "label": "Chair rent vs commission calculator",
+      "text": "Check the minimum wage line for your own barber → Chair Rent vs Commission Calculator",
       "href": "/chair-rent-vs-commission-calculator"
     }
   ]

@@ -28,30 +28,6 @@
   justify-self: start;
 }
 
-.crc-breadcrumb ol {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.crc-breadcrumb li + li::before {
-  content: '/';
-  margin-right: 0.35rem;
-  color: color-mix(in srgb, var(--muted) 70%, transparent);
-}
-
-.crc-breadcrumb a {
-  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.crc-breadcrumb a:focus-visible,
 .crc a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -447,7 +423,7 @@
   .crc > :not(.crc-hero):not(.crc-tool),
   .crc-hero .cost-calc-hero__note,
   .crc-hero .cost-calc-hero__supporting,
-  .crc-breadcrumb,
+  .page-breadcrumb,
   .crc-actions,
   .crc-tabs,
   .cost-calc-hero::before,

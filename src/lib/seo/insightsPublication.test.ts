@@ -31,40 +31,16 @@ describe('Insights publication safety', () => {
       expect(isInsightsArticlePublished(article.slug)).toBe(true);
       expect(article.publishedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(article.categoryId).toBeTruthy();
-      // OG assets are either committed raster files or exact licensed Unsplash
-      // photo crops matched to the approved source hero (never an arbitrary URL).
-      if (article.ogImage.startsWith('/')) {
-        expect(article.ogImage).toMatch(/^\/images\/insights\/og\//);
-        expect(existsSync(join(here, '../../../public', article.ogImage.replace(/^\//, ''))), article.ogImage).toBe(
-          true,
-        );
-      } else {
-        const og = new URL(article.ogImage);
-        const hero = new URL(article.heroImage);
-        expect(og.protocol).toBe('https:');
-        // Owner-approved editorial imagery may come from licensed Unsplash or Pexels sources.
-        expect(['images.unsplash.com', 'images.pexels.com']).toContain(og.hostname);
-        expect(og.hostname).toBe(hero.hostname);
-        expect(og.pathname).toBe(hero.pathname);
-        expect(og.searchParams.get('w')).toBe('1200');
-        expect(og.searchParams.get('h')).toBe('630');
-        const manifestPath = join(stagingDir, `${article.slug}.visuals.json`);
-        const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
-          media: Array<{ kind: string; licenceReviewed: boolean; creditUrl?: string }>;
-        };
-        const approvedCreditHost = og.hostname === 'images.pexels.com'
-          ? 'www.pexels.com'
-          : 'unsplash.com';
-        expect(manifest.media.some((asset) => {
-          if (asset.kind !== 'hero' || !asset.licenceReviewed || !asset.creditUrl) return false;
-          try {
-            return new URL(asset.creditUrl).hostname === approvedCreditHost;
-          } catch {
-            return false;
-          }
-        })).toBe(true);
-      }
-      expect(existsSync(join(stagingDir, `${article.slug}-display.md`)), article.slug).toBe(true);
+      // OG assets are committed 1200x630 crops on kersivo.co.uk (og:image, twitter:image and
+      // the Article image), derived from the approved hero by generate-og-images.mjs or
+      // self-host-pexels.mjs — never a hotlinked third-party URL.
+      expect(article.ogImage).toMatch(new RegExp(`^/images/insights/og/${article.slug}-1200x630\\.(jpg|png)$`));
+      expect(existsSync(join(here, '../../../public', article.ogImage.replace(/^\//, ''))), article.ogImage).toBe(true);
+      // Pexels photos are self-hosted; the visible credit links (www.pexels.com) stay in the article.
+      expect(article.heroImage).not.toContain('images.pexels.com');
+      const display = readFileSync(join(stagingDir, `${article.slug}-display.md`), 'utf8');
+      expect(display, article.slug).not.toContain('images.pexels.com');
+      expect(display, article.slug).toMatch(/insights-figure--hero">(?:<picture>.*?)?<img [^>]*fetchpriority="high"/);
     }
     expect(isInsightsArticlePublished('not-a-real-article')).toBe(false);
   });
@@ -134,9 +110,9 @@ describe('Insights publication safety', () => {
     expect(layout).toContain('InsightsRelatedReading');
   });
 
-  it('omits dateModified when no meaningful editorial revision is recorded', () => {
+  it('falls back to datePublished for dateModified and links publisher, author and site by @id', () => {
     const article = INSIGHTS_PUBLISHED_ARTICLES[0];
-    const [jsonLd] = buildInsightsArticleJsonLd({
+    const input = {
       path: article.path,
       headline: article.headline,
       description: article.description,
@@ -145,9 +121,28 @@ describe('Insights publication safety', () => {
       heroImage: article.heroImage,
       ogImage: article.ogImage,
       categoryId: article.categoryId,
-    });
-    expect(jsonLd).not.toHaveProperty('dateModified');
+    };
+    const [entity, jsonLd] = buildInsightsArticleJsonLd(input) as Record<string, any>[];
+    expect(entity['@graph'].map((node: Record<string, unknown>) => node['@id'])).toEqual([
+      'https://kersivo.co.uk/#organization',
+      'https://kersivo.co.uk/#website',
+    ]);
+    expect(entity['@graph'][0].logo.url).toBe('https://kersivo.co.uk/images/brand/kersivo-mark.png');
+    expect(jsonLd['@type']).toBe('Article');
     expect(jsonLd).toHaveProperty('datePublished', article.publishedDate);
+    expect(jsonLd).toHaveProperty('dateModified', article.publishedDate);
+    expect(jsonLd.publisher).toEqual({ '@id': 'https://kersivo.co.uk/#organization' });
+    expect(jsonLd.author).toEqual({
+      '@type': 'Organization',
+      '@id': 'https://kersivo.co.uk/#organization',
+      name: 'KERSIVO',
+      url: 'https://kersivo.co.uk/about',
+    });
+    expect(jsonLd.isPartOf).toEqual({ '@id': 'https://kersivo.co.uk/#website' });
+    expect(JSON.stringify(jsonLd)).not.toContain('logo-kersivo.png');
+
+    const [, revised] = buildInsightsArticleJsonLd({ ...input, updatedDate: '2026-10-28' }) as Record<string, any>[];
+    expect(revised).toHaveProperty('dateModified', '2026-10-28');
   });
 
   it('keeps related links on published destinations only', () => {

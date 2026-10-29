@@ -16,6 +16,7 @@ import {
   getKersivoWebsiteId,
 } from './kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBarbershopBookingFaqJsonLd } from '@/lib/seo/barbershopBookingFaq';
 
 export { getKersivoOrganizationId, getKersivoWebsiteId };
 
@@ -45,6 +46,13 @@ export function getKersivoHomepageId(siteUrl: string): string {
  * The homepage WebPage links directly to the software and to the separately rendered FAQPage.
  * Keep FAQ questions in their visible homepage source rather than duplicating FAQ contents here.
  */
+/** Homepage JSON-LD: the main @graph plus the FAQPage node (#faq), as one block. */
+export function buildHomepageJsonLd(): Record<string, unknown> {
+  const graph = buildBarberDemoJsonLd();
+  const { '@context': _context, ...faq } = buildBarbershopBookingFaqJsonLd();
+  return { ...graph, '@graph': [...(graph['@graph'] as Record<string, unknown>[]), faq] };
+}
+
 export function buildBarberDemoJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
   const organizationId = getKersivoOrganizationId(siteUrl);

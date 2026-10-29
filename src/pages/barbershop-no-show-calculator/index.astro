@@ -1,0 +1,141 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import NoShowCalculator from '@/components/noShowCalculator/NoShowCalculator.astro';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
+import {
+  NO_SHOW_ARTICLE_CANCELLATION_ANCHOR,
+  NO_SHOW_ARTICLE_LEGAL_ANCHOR,
+  NO_SHOW_ARTICLE_PATH,
+  NO_SHOW_CALCULATOR_BREADCRUMBS,
+  NO_SHOW_CALCULATOR_DESCRIPTION,
+  NO_SHOW_CALCULATOR_H1,
+  NO_SHOW_CALCULATOR_LAST_UPDATED_ISO,
+  NO_SHOW_CALCULATOR_LAST_UPDATED_LABEL,
+  NO_SHOW_CALCULATOR_OG_IMAGE_ALT,
+  NO_SHOW_CALCULATOR_OG_IMAGE_PATH,
+  NO_SHOW_CALCULATOR_PAGE_PATH,
+  NO_SHOW_CALCULATOR_TITLE,
+  NO_SHOW_CTA,
+  NO_SHOW_FAQ_ITEMS,
+  NO_SHOW_HERO,
+  NO_SHOW_HOW_IT_WORKS,
+  NO_SHOW_LAW_PARAGRAPHS,
+  NO_SHOW_NOT_INCLUDED,
+  NO_SHOW_RELATED_LINKS,
+  NO_SHOW_SECONDARY_CTA,
+  buildNoShowCalculatorJsonLd,
+} from '@/lib/seo/noShowCalculatorPage';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/barber-cost-calculator.css';
+import '@/styles/components/barber-cost-calculator-tool.css';
+import '@/styles/components/no-show-calculator.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={NO_SHOW_CALCULATOR_TITLE}
+  description={NO_SHOW_CALCULATOR_DESCRIPTION}
+  canonicalPath={NO_SHOW_CALCULATOR_PAGE_PATH}
+  ogImagePath={NO_SHOW_CALCULATOR_OG_IMAGE_PATH}
+  ogImageWidth={1200}
+  ogImageHeight={630}
+  ogImageAlt={NO_SHOW_CALCULATOR_OG_IMAGE_ALT}
+  jsonLd={buildNoShowCalculatorJsonLd()}
+>
+  <main class="cost-calc ns-page landing-overflow-guard">
+    <section class="cost-calc-hero ns-hero" aria-labelledby="ns-title">
+      <div class="ns-hero__inner">
+        <PageBreadcrumbs trail={NO_SHOW_CALCULATOR_BREADCRUMBS} />
+        <p class="cost-calc-hero__eyebrow">
+          <span class="cost-calc-hero__eyebrow-dot" aria-hidden="true"></span>
+          {NO_SHOW_HERO.eyebrow}
+        </p>
+        <h1 id="ns-title" class="cost-calc-hero__title">{NO_SHOW_CALCULATOR_H1}</h1>
+        <p class="cost-calc-hero__lead">{NO_SHOW_HERO.lead}</p>
+        <p class="cost-calc-hero__note">
+          <span>Uses the method from our guide <a href={NO_SHOW_ARTICLE_PATH}>What a no-show really costs a barbershop</a>.</span>
+          <span class="cost-calc-hero__updated">
+            Last updated <time datetime={NO_SHOW_CALCULATOR_LAST_UPDATED_ISO}>{NO_SHOW_CALCULATOR_LAST_UPDATED_LABEL}</time>
+          </span>
+        </p>
+      </div>
+      <div class="ns-hero__tool">
+        <NoShowCalculator />
+      </div>
+    </section>
+
+    <section class="cost-calc__section ns-cta" aria-labelledby="ns-cta-title">
+      <div class="container">
+        <div class="ns-cta__box">
+          <h2 id="ns-cta-title" class="cost-calc__h2">{NO_SHOW_CTA.heading}</h2>
+          <p class="cost-calc__lead">{NO_SHOW_CTA.text}</p>
+          <div class="ns-cta__actions">
+            <a class="btn btn--primary btn--md" href={NO_SHOW_CTA.primaryHref} data-track="cta_starter_click" data-track-placement="no_show_calculator">{NO_SHOW_CTA.primaryLabel}</a>
+            <a class="btn btn--secondary btn--md" href={NO_SHOW_SECONDARY_CTA.href}>{NO_SHOW_SECONDARY_CTA.label}</a>
+          </div>
+          <p class="ns-cta__small"><a href={NO_SHOW_CTA.fullLinkHref}>{NO_SHOW_CTA.fullLinkLabel}</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cost-calc__section ns-prose" aria-labelledby="ns-how-title">
+      <div class="container">
+        <h2 id="ns-how-title" class="cost-calc__h2">How this calculator works</h2>
+        {NO_SHOW_HOW_IT_WORKS.map((p) => <p class="cost-calc__lead">{p}</p>)}
+        <p class="cost-calc__lead"><a href={NO_SHOW_ARTICLE_PATH}>Read the full method and worked example</a></p>
+
+        <h2 class="cost-calc__h2">What it doesn’t include</h2>
+        <ul class="ns-list">
+          {NO_SHOW_NOT_INCLUDED.map((item) => <li>{item}</li>)}
+        </ul>
+
+        <h2 class="cost-calc__h2">Deposits and the law</h2>
+        {NO_SHOW_LAW_PARAGRAPHS.map((p) => <p class="cost-calc__lead">{p}</p>)}
+        <p class="cost-calc__lead">
+          More detail: <a href={NO_SHOW_ARTICLE_LEGAL_ANCHOR}>when keeping a deposit is fair</a> and
+          <a href={NO_SHOW_ARTICLE_CANCELLATION_ANCHOR}>online bookings and 14-day cancellation rights</a>.
+        </p>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="No-show and deposit questions"
+      subHeading="Short answers for UK barbershop owners. General information, not financial or legal advice."
+      supportHeading="Want the full method?"
+      supportText="The guide behind this calculator walks through a worked example and the UK rules on keeping deposits."
+      supportLinkLabel="Read the no-show and deposits guide"
+      supportLinkHref={NO_SHOW_ARTICLE_PATH}
+      faqs={[...NO_SHOW_FAQ_ITEMS]}
+    />
+
+    <section class="cost-calc__section ns-related" aria-labelledby="ns-related-title">
+      <div class="container">
+        <h2 id="ns-related-title" class="cost-calc__h2">Related tools and guides</h2>
+        <ul class="ns-related__list">
+          {NO_SHOW_RELATED_LINKS.map((link) => (
+            <li><a href={link.href}>{link.label}</a><span>{link.description}</span></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

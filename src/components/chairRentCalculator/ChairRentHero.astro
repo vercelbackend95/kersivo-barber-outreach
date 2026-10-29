@@ -1,6 +1,7 @@
 ---
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import {
-  CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME,
+  CHAIR_RENT_CALCULATOR_BREADCRUMBS,
   CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO,
   CHAIR_RENT_CALCULATOR_LAST_UPDATED_LABEL,
   CHAIR_RENT_HERO,
@@ -9,12 +10,7 @@ import {
 
 <header class="cost-calc-hero crc-hero" aria-labelledby="crc-hero-title">
   <div class="crc-hero__inner">
-    <nav class="crc-breadcrumb" aria-label="Breadcrumb">
-      <ol>
-        <li><a href="/">Home</a></li>
-        <li aria-current="page">{CHAIR_RENT_CALCULATOR_BREADCRUMB_NAME}</li>
-      </ol>
-    </nav>
+    <PageBreadcrumbs trail={CHAIR_RENT_CALCULATOR_BREADCRUMBS} />
     <p class="cost-calc-hero__eyebrow">
       <span class="cost-calc-hero__eyebrow-dot" aria-hidden="true"></span>
       {CHAIR_RENT_HERO.eyebrow}

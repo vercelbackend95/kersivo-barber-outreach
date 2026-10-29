@@ -53,9 +53,10 @@ describe('Barbershop online booking page — Section 06 confirmations and remind
   it('keeps one tracked admin demo CTA and leaves Section 05 files untouched', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
     const anchors = markup.match(/<a\b[\s\S]*?>/g) ?? [];
-    expect(anchors).toHaveLength(2);
+    expect(anchors).toHaveLength(3);
     expect(anchors[0]).toContain('href="/pricing#plan"');
-    expect(anchors[1]).toContain('href={OWNER_TIMELINE_HREF}');
+    expect(anchors[1]).toContain('href="/barbershop-cancellation-policy-template"');
+    expect(anchors[2]).toContain('href={OWNER_TIMELINE_HREF}');
     expect(frontmatter).toContain("const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');");
     expect(blacklineAdminHref('bookings_dashboard')).toBe('/demo/admin?section=bookings_dashboard');
     expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.view_live_demo_click}';`);

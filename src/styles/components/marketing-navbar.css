@@ -524,8 +524,10 @@ html.mnav-locked body::before {
     width: min(100% - 2.5rem, 80rem);
   }
 
+  /* max-width: none keeps the global img reset from letting the grid squeeze the logo column. */
   .mnav__logo {
     height: 2.6rem;
+    max-width: none;
   }
 
   .mnav__menu,
@@ -712,6 +714,28 @@ html.mnav-locked body::before {
   .mnav-panel__surface[data-columns='1'] .mnav-panel__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.25rem 1rem;
+  }
+}
+
+/* Narrow desktop bars cannot fit the full CTA beside the links; the price stays in the mega panels and on /pricing. */
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  .mnav__inner {
+    gap: 1rem;
+  }
+
+  .mnav__trigger,
+  .mnav__link {
+    padding-inline: 0.6rem;
+  }
+
+  .mnav__trigger[data-current]::after,
+  .mnav__link[aria-current]::after {
+    right: 0.6rem;
+    left: 0.6rem;
+  }
+
+  .mnav__actions .mnav-btn__price {
+    display: none;
   }
 }
 

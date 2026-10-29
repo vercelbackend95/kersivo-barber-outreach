@@ -1,6 +1,6 @@
 # Commission Pay for Barbers: The Minimum Wage Line Under Every Percentage
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Barber at work with a client seated in a Doncaster UK hair salon" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1722635255984-827851ba91be?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Barber at work with a client seated in a Doncaster UK hair salon" />
 <figcaption>Editorial barbering photograph from Doncaster; the person pictured is not a KERSIVO employee or customer — <a href="https://unsplash.com/photos/a-man-sitting-in-a-chair-in-a-hair-salon-MMidGD98uDI" target="_blank" rel="noopener noreferrer">Osama Madlom / Unsplash</a>.</figcaption></figure>
 
 "Forty per cent of what you take" sounds like the fairest pay deal in a barbershop. The barber who builds a following earns more, the shop's wage bill rises and falls with its takings, and nobody is paid to stand around. Some shops pay employed barbers this way, either commission only or a base plus commission.
@@ -49,7 +49,7 @@ The arrangement that looked generous in December is unlawful in January unless t
 
 The same arithmetic shows something about the shop's costs. Commission looks like a **variable** cost, but the minimum wage turns part of it into a **fixed** one. In practice, the shop is paying at least the floor for that rota (£2,198.83 on 173 hours), whatever the barber takes. Below the break-even takings, the barber's pay doesn't fall any further. Only the shop's contribution does.
 
-<aside class="insights-tool-link"><p>Check the minimum wage line for your own barber <a href="/chair-rent-vs-commission-calculator">Chair Rent vs Commission Calculator →</a></p></aside>
+<aside class="insights-tool-callout" aria-label="Chair rent vs commission calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/chair-rent-vs-commission-calculator">Check the minimum wage line for your own barber → Chair Rent vs Commission Calculator</a></p></aside>
 
 ## Three traps that reduce minimum-wage pay
 
