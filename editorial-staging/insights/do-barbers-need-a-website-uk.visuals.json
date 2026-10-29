@@ -17,15 +17,21 @@
     {
       "kind": "hero",
       "anchor": "# Do Barbers Need a Website? A Test for Shops That Already Have Instagram and Google",
-      "src": "https://images.pexels.com/photos/5464697/pexels-photo-5464697.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "/images/insights/do-barbers-need-website/barbershop-storefront-neon-manchester-1600.jpg",
       "width": 1600,
-      "height": 1000,
+      "height": 900,
       "alt": "A barbershop storefront with warm lighting and neon details in Manchester, England",
       "caption": "Barbershop frontage photographed in Manchester, England. Editorial imagery; the business is not affiliated with KERSIVO",
       "credit": "Aldrich / Pexels",
       "creditUrl": "https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/",
       "rights": "Pexels photo #5464697 by Aldrich. Original photo listing https://www.pexels.com/photo/store-front-of-a-barber-shop-5464697/ confirms Manchester, England, United Kingdom, licence Free, and original dimensions 5645 x 3763. Pexels License https://www.pexels.com/license/ permits commercial/editorial website and blog usage, including crops; credit is voluntarily provided. This is editorial photography of a real barbershop setting, not an endorsement, KERSIVO customer, or product installation. Identifiable trade marks, property ownership and any property/model releases were not independently cleared by KERSIVO; avoid implying sponsorship or association.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600,
+        2400
+      ]
     },
     {
       "kind": "diagram",
@@ -41,15 +47,20 @@
     {
       "kind": "photo",
       "anchor": "This is a rule of thumb, not a scoring system. It's a quick way to see whether a website would do a job you actually need done.",
-      "src": "https://images.pexels.com/photos/7192863/pexels-photo-7192863.jpeg?auto=compress&cs=tinysrgb&w=2200",
+      "src": "/images/insights/do-barbers-need-website/traditional-barbershop-client-london-1600.jpg",
       "width": 1600,
-      "height": 1000,
+      "height": 842,
       "alt": "Stylist attending an older client in a traditional barbershop in London, England",
       "caption": "Traditional barbershop in London, England, photographed for editorial context; no KERSIVO affiliation is claimed",
       "credit": "Bence Szemerey / Pexels",
       "creditUrl": "https://www.pexels.com/photo/elderly-man-sitting-in-the-chair-with-blue-apron-in-barbershop-7192863/",
       "rights": "Pexels photo #7192863 by Bence Szemerey. Original photo listing describes a traditional barbershop and confirms London, England, UK. Free to use under Pexels License: https://www.pexels.com/legal-pages/license/. No endorsement by photographed business or people; third-party model/property releases not independently verified. Standard Pexels photo-CDN URL should be visually checked for availability on Preview before publication.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     },
     {
       "kind": "diagram",

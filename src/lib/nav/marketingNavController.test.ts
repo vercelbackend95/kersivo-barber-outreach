@@ -41,10 +41,12 @@ function render() {
         <span data-mnav-menu-label>Menu</span>
       </button>
       <div id="mnav-hub" data-mnav-hub hidden inert>
-        <ul>
-          ${accordion('compare', compareLinks)}
-          ${accordion('resources', resourceLinks)}
-        </ul>
+        <template data-mnav-hub-content>
+          <ul>
+            ${accordion('compare', compareLinks)}
+            ${accordion('resources', resourceLinks)}
+          </ul>
+        </template>
       </div>
     </header>
     <main id="main"><button id="outside">Outside</button></main>
@@ -185,6 +187,25 @@ describe('desktop disclosure panels', () => {
 });
 
 describe('mobile navigation hub', () => {
+  it('keeps hub content out of the live DOM until the menu is first opened', () => {
+    window.history.replaceState(null, '', '/booksy-alternative');
+    cleanup = initMarketingNav(render());
+    expect(hub().querySelector('[data-mnav-accordion]')).toBeNull();
+    expect(hub().querySelector('template[data-mnav-hub-content]')).not.toBeNull();
+
+    menu().click();
+    expect(hub().querySelector('template')).toBeNull();
+    expect(hub().querySelectorAll('[data-mnav-accordion]')).toHaveLength(2);
+    // Current-page state is applied to the freshly mounted links and their accordion.
+    expect(hub().querySelector('a[href="/booksy-alternative"]')?.getAttribute('aria-current')).toBe('page');
+    expect($('[data-mnav-accordion="compare"]').hasAttribute('data-current')).toBe(true);
+
+    press('Escape');
+    menu().click();
+    expect(hub().querySelectorAll('[data-mnav-accordion]')).toHaveLength(2);
+    window.history.replaceState(null, '', '/');
+  });
+
   it('opens with scroll lock, inert page content and focus in the hub', () => {
     const root = render();
     cleanup = initMarketingNav(root);
@@ -351,7 +372,7 @@ describe('lifecycle and current state', () => {
     const booksy = root.querySelectorAll('a[href="/booksy-alternative"]');
     booksy.forEach((link) => expect(link.getAttribute('aria-current')).toBe('page'));
     expect(trigger('compare').hasAttribute('data-current')).toBe(true);
-    expect($('[data-mnav-accordion="compare"]').hasAttribute('data-current')).toBe(true);
+    // Hub accordions are not live until mounted; they get their state at mount (see the hub tests).
     expect(trigger('resources').hasAttribute('data-current')).toBe(false);
 
     applyMarketingNavCurrent(root, { pathname: '/barber-software-cost-calculator/' });

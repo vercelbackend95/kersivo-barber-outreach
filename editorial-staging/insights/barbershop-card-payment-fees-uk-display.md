@@ -1,6 +1,6 @@
 # The 20p You Don't Notice: How Card Fees Really Work for a Barbershop
 
-<figure class="insights-figure insights-figure--hero"><img src="/images/insights/card-fees/card-fees-hero.svg" width="1600" height="900" loading="eager" decoding="async" alt="Graphic of a twenty-pence fixed processing fee on every card payment, with editorial KERSIVO typography." />
+<figure class="insights-figure insights-figure--hero"><img src="/images/insights/card-fees/card-fees-hero.svg" width="1600" height="900" loading="eager" fetchpriority="high" decoding="async" alt="Graphic of a twenty-pence fixed processing fee on every card payment, with editorial KERSIVO typography." />
 <figcaption>Original KERSIVO Insights illustration. The 20p refers to the published example online card processing fee..</figcaption></figure>
 
 For many barbershops, card is now the normal way clients pay, and most owners can quote their card rate from memory. It's usually a percentage. That number is only half the story, and for a business selling £12 to £40 services, often the less important half.

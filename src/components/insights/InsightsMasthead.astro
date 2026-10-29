@@ -4,9 +4,11 @@ interface Props {
   category?: string;
   categoryHref?: string;
   dateLabel?: string;
+  /** e.g. "Updated 28 October 2026"; omitted when the article has no later revision. */
+  updatedLabel?: string;
   currentLabel?: string;
 }
-const { page, category, categoryHref, dateLabel, currentLabel = 'Article' } = Astro.props;
+const { page, category, categoryHref, dateLabel, updatedLabel, currentLabel = 'Article' } = Astro.props;
 ---
 <header class="insights-masthead">
   <div class="insights-shell">
@@ -50,6 +52,12 @@ const { page, category, categoryHref, dateLabel, currentLabel = 'Article' } = As
         )}
         <span class="insights-article-meta__dot" aria-hidden="true"></span>
         <span>{dateLabel}</span>
+        {updatedLabel && (
+          <>
+            <span class="insights-article-meta__dot" aria-hidden="true"></span>
+            <span>{updatedLabel}</span>
+          </>
+        )}
       </div>
     ) : page === 'category' ? (
       <p class="insights-article-meta">Topic archive for independent UK barbershop owners.</p>

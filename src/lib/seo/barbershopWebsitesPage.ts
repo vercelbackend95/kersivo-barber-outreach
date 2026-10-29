@@ -1,6 +1,7 @@
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, BARBERSHOP_WEBSITES_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const BARBERSHOP_WEBSITES_PAGE_PATH = '/barbershop-websites';
 
@@ -29,13 +30,6 @@ export function buildBarbershopWebsitesJsonLd(): Record<string, unknown> {
     inLanguage: 'en-GB',
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      '@id': `${pageUrl}#breadcrumb`,
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: pageUrl },
-      ],
-    },
+    breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_WEBSITES_BREADCRUMBS, { siteUrl, withContext: false }),
   };
 }

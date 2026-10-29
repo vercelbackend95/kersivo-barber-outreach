@@ -17,15 +17,21 @@
     {
       "kind": "hero",
       "anchor": "# Your Google Profile Has a Booking Button. Do You Know Where It Sends People?",
-      "src": "https://images.pexels.com/photos/35430743/pexels-photo-35430743.jpeg?auto=compress&cs=tinysrgb&w=2400",
+      "src": "/images/insights/google-booking-link/london-barber-shop-window-1600.jpg",
       "width": 1600,
-      "height": 1000,
+      "height": 900,
       "alt": "View through the window of a real barber shop in London, United Kingdom, with barbering equipment and an interior scene",
       "caption": "An independent barbershop photographed from the street in London. Editorial photography; no connection to KERSIVO is implied",
       "credit": "pierre matile / Pexels",
       "creditUrl": "https://www.pexels.com/photo/window-view-of-barber-shop-interior-in-uk-35430743/",
       "rights": "Pexels photo #35430743 by pierre matile. Photo listing https://www.pexels.com/photo/window-view-of-barber-shop-interior-in-uk-35430743/ specifically records London, United Kingdom, Free to use, 5700 × 3592. Pexels License https://www.pexels.com/license/ permits commercial blog and website use and modification/crop; attribution supplied for editorial clarity. Third-party rights (people, property, signs) are not separately released or verified by KERSIVO; photo is only illustrating independent barbering and must not imply endorsement, partnership or customer status.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600,
+        2400
+      ]
     },
     {
       "kind": "diagram",
@@ -41,15 +47,20 @@
     {
       "kind": "photo",
       "anchor": "If the link goes to a marketplace you've left, or one that lists your shop without your involvement",
-      "src": "https://images.pexels.com/photos/37328594/pexels-photo-37328594.jpeg?auto=compress&cs=tinysrgb&w=1800",
-      "width": 1200,
-      "height": 800,
+      "src": "/images/insights/google-booking-link/vintage-london-barbershop-brickwork-1600.jpg",
+      "width": 1600,
+      "height": 842,
       "alt": "Vintage London barbershop with dark brickwork and a barber pole, photographed from the pavement",
       "caption": "Barbershop on a London street. A real UK shop pictured for editorial context, not a KERSIVO client",
       "credit": "Ivo Sousa Martins / Pexels",
       "creditUrl": "https://www.pexels.com/photo/vintage-barbershop-front-in-london-street-37328594/",
       "rights": "Pexels photo #37328594, Ivo Sousa Martins, original listing https://www.pexels.com/photo/vintage-barbershop-front-in-london-street-37328594/ records London, England, United Kingdom and Free to use. Pexels License https://www.pexels.com/license/ permits commercial blog use. Photograph depicts the third-party Hobbs Barber Shop frontage: trademark/property rights and any identifiable passer-by releases are not independently established by KERSIVO. Editorial scene only, without any claim about this business's Google bookings, consent, affiliation or software.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     },
     {
       "kind": "diagram",

@@ -106,8 +106,8 @@ describe('/barbershop-website-design Section 01 hero', () => {
     expect(order.every((index) => index > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(hero).toContain('<li><a href="/">Home</a></li>');
-    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>');
-    expect(hero).toContain('<li><span aria-current="page">Website design</span></li>');
+    expect(hero).toContain('<li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop Websites</a></li>');
+    expect(hero).toContain('<li><span aria-current="page">Barbershop Website Design</span></li>');
     expect(hero).toContain('<span class="bwd-hero__eyebrow-dot" aria-hidden="true"></span>');
     expect(hero).toContain('A practical guide for UK barbershop owners');
     expect(hero).toContain(
@@ -206,8 +206,8 @@ describe('/barbershop-website-design Section 01 hero', () => {
       '@id': `${siteUrl}/barbershop-website-design#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}/barbershop-websites` },
-        { '@type': 'ListItem', position: 3, name: 'Website design', item: `${siteUrl}/barbershop-website-design` },
+        { '@type': 'ListItem', position: 2, name: 'Barbershop Websites', item: `${siteUrl}/barbershop-websites` },
+        { '@type': 'ListItem', position: 3, name: 'Barbershop Website Design', item: `${siteUrl}/barbershop-website-design` },
       ],
     });
     expect(JSON.stringify(jsonLd)).not.toMatch(/FAQPage|Review|AggregateRating/);

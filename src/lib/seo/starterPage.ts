@@ -1,6 +1,7 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, STARTER_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const STARTER_PAGE_PATH = '/starter';
 
@@ -106,7 +107,12 @@ export function buildStarterWebPageJsonLd(): Record<string, unknown> {
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
     about: { '@id': getKersivoOrganizationId(siteUrl) },
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
   };
+}
+
+export function buildStarterBreadcrumbJsonLd(): Record<string, unknown> {
+  return buildBreadcrumbListJsonLd(STARTER_BREADCRUMBS);
 }
 
 export function buildStarterFaqJsonLd(): Record<string, unknown> {

@@ -1,6 +1,6 @@
 # Is an Apprentice Barber Worth It? The 2026 Numbers for Small Shops in England
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="A real barber carrying out a haircut in a Liverpool barbershop in England" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1640301133857-c4bc5789c1bb?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=78&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="A real barber carrying out a haircut in a Liverpool barbershop in England" />
 <figcaption>A working barber and client in Liverpool, UK. Editorial photography; this is not a KERSIVO customer or a documented apprenticeship training session — <a href="https://unsplash.com/photos/a-man-getting-his-hair-cut-at-a-barber-shop-X03HwElKqfM" target="_blank" rel="noopener noreferrer">Mitchell Orr / Unsplash</a>.</figcaption></figure>
 
 *Apprenticeship funding described here applies in England. Figures checked on *[*GOV.UK*](http://GOV.UK)* on 16 October 2026.*

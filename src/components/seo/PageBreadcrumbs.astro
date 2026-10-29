@@ -1,0 +1,52 @@
+---
+/**
+ * Visible breadcrumb trail for marketing heroes. Pass the same trail used for the
+ * BreadcrumbList JSON-LD (src/lib/seo/breadcrumbs.ts) so schema matches visible content.
+ * Styling mirrors the comparison-page breadcrumb (e.g. /booksy-alternative).
+ */
+import { BREADCRUMB_HOME_LABEL, type BreadcrumbTrailItem } from '@/lib/seo/breadcrumbs';
+
+interface Props {
+  trail: readonly BreadcrumbTrailItem[];
+}
+
+const { trail } = Astro.props;
+const parents = trail.slice(0, -1);
+const current = trail[trail.length - 1];
+---
+
+<nav class="page-breadcrumb" aria-label="Breadcrumb">
+  <a href="/">{BREADCRUMB_HOME_LABEL}</a>
+  {parents.map((crumb) => (
+    <>
+      <span aria-hidden="true">/</span>
+      <a href={crumb.path}>{crumb.name}</a>
+    </>
+  ))}
+  <span aria-hidden="true">/</span>
+  <span aria-current="page">{current.name}</span>
+</nav>
+
+<style>
+  .page-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .page-breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .page-breadcrumb a:hover,
+  .page-breadcrumb a:focus-visible {
+    color: #f9fafb;
+    text-decoration: underline;
+  }
+</style>

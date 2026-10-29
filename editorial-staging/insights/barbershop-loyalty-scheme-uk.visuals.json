@@ -52,15 +52,20 @@
     {
       "kind": "photo",
       "anchor": "Some owners will find this approach too calculating.",
-      "src": "https://images.pexels.com/photos/20231931/pexels-photo-20231931.jpeg?auto=compress&cs=tinysrgb&w=2000",
-      "width": 1500,
-      "height": 1000,
+      "src": "/images/insights/loyalty-schemes/corner-barber-shop-bangor-wales-1600.jpg",
+      "width": 1600,
+      "height": 842,
       "alt": "A traditional barber shop on a street corner in Bangor, Wales",
       "caption": "A real barber shop on a Bangor, Wales, street corner. Editorial setting only; no claim that the shop uses KERSIVO or runs any loyalty offer",
       "credit": "Lisa from Pexels / Pexels",
       "creditUrl": "https://www.pexels.com/photo/building-with-barber-salloon-20231931/",
       "rights": "Original image by Lisa from Pexels, Pexels image #20231931, https://www.pexels.com/photo/building-with-barber-salloon-20231931/. Original photo page explicitly identifies Bangor, Wales, United Kingdom and 'Free to use'. Pexels License https://www.pexels.com/license/ permits commercial editorial website/blog use and cropping; credit is voluntary. Checked 18 October 2026 against all 13 published KERSIVO Insights visual manifests: Pexels photo #20231931 NOT USED. Third-party shop signage and property/trademark rights are not independently cleared; editorial context only with no implied endorsement or connection to KERSIVO or a loyalty scheme.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     }
   ],
   "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026. Source copy kept, H1 marker and heading levels only structurally normalised.",

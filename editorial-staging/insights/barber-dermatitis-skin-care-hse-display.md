@@ -1,6 +1,6 @@
 # Barbers' Hands: The Skin Problem That Builds Slowly and Costs Quietly
 
-<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" decoding="async" alt="Professional barber's hands cutting hair with scissors and a comb" />
+<figure class="insights-figure insights-figure--hero"><img src="https://images.unsplash.com/photo-1761931403671-d020a14928d9?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixid=NHwxMjA3fDA%3D&amp;ixlib=rb-4.1.0&amp;q=75&amp;w=2400" width="1600" height="1000" loading="eager" fetchpriority="high" decoding="async" alt="Professional barber's hands cutting hair with scissors and a comb" />
 <figcaption>Editorial photo of barbering craft, not a KERSIVO client or endorsement — <a href="https://unsplash.com/photos/barber-cutting-hair-with-scissors-and-comb-sdh4g0H-uXg" target="_blank" rel="noopener noreferrer">Josh Marty / Unsplash</a>.</figcaption></figure>
 
 Ask a barber what they need to do the job and they'll talk about clippers, scissors and a steady eye. Hands rarely come up, until they start to crack.

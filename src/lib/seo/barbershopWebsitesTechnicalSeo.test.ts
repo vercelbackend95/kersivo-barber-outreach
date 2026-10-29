@@ -42,7 +42,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
         '@id': url + '#breadcrumb',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl + '/' },
-          { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: url },
+          { '@type': 'ListItem', position: 2, name: 'Barbershop Websites', item: url },
         ],
       },
     });
@@ -55,8 +55,8 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     const breadcrumb = hero.match(/<nav class="bsw-hero__breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? '';
     expect(breadcrumb).toContain('aria-label="Breadcrumb"');
     expect(breadcrumb).toContain('<li><a href="/">Home</a></li>');
-    expect(breadcrumb).toContain('<li><span aria-current="page">Barbershop websites</span></li>');
-    expect(breadcrumb.indexOf('Home')).toBeLessThan(breadcrumb.indexOf('Barbershop websites'));
+    expect(breadcrumb).toContain('<li><span aria-current="page">Barbershop Websites</span></li>');
+    expect(breadcrumb.indexOf('Home')).toBeLessThan(breadcrumb.indexOf('Barbershop Websites'));
     expect(css).toContain('.bsw-hero__breadcrumb a:focus-visible');
   });
 
