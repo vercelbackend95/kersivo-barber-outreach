@@ -13,7 +13,7 @@ describe('/llms.txt', () => {
     const response = await GET({} as Parameters<typeof GET>[0]);
     expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
     expect(body.startsWith('# KERSIVO\n\n> ')).toBe(true);
-    for (const heading of ['## Product', '## Comparisons', '## Insights', '## Optional']) {
+    for (const heading of ['## Product', '## Comparisons', '## Free tools', '## Insights', '## Optional']) {
       expect(body).toContain(heading);
     }
   });

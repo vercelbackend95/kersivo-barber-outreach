@@ -28,8 +28,8 @@ export const CANCELLATION_POLICY_BREADCRUMB_NAME = 'Cancellation Policy Template
 export const CANCELLATION_POLICY_APP_NAME = 'Barbershop Cancellation Policy Template';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const CANCELLATION_POLICY_LAST_UPDATED_ISO = '2026-10-28';
-export const CANCELLATION_POLICY_LAST_UPDATED_LABEL = '28 October 2026';
+export const CANCELLATION_POLICY_LAST_UPDATED_ISO = '2026-10-29';
+export const CANCELLATION_POLICY_LAST_UPDATED_LABEL = '29 October 2026';
 
 export const CANCELLATION_POLICY_OG_IMAGE_PATH = '/images/og/barbershop-cancellation-policy-template.jpg';
 export const CANCELLATION_POLICY_OG_IMAGE_ALT = 'Free Cancellation Policy Template for Barbershops — KERSIVO';
