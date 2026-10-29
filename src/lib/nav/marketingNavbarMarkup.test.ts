@@ -59,6 +59,7 @@ describe('marketing navbar markup', () => {
     expect(navbar).toContain('<nav class="mnav__desktop" aria-label="Main">');
     expect(mobile).toContain('aria-controls={`${id}-${entry.group.id}`}');
     expect(mobile).toMatch(/class="mnav-hub"[^>]*hidden inert/);
+    expect(mobile).toContain('<template data-mnav-hub-content>');
     expect(panel).toMatch(/data-mnav-panel[^>]*hidden/);
   });
 
