@@ -5,6 +5,7 @@ import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineB
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberCostCalculatorPage';
 import { STARTER_PAGE_PATH } from '@/lib/seo/starterPage';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ONE_LINE_MAX_CHARS, SHORT_VERSION_MAX_CHARS } from '@/lib/cancellationPolicy/policyText';
 
 /**
  * Visible copy, SEO metadata and JSON-LD for /barbershop-cancellation-policy-template.
@@ -35,6 +36,27 @@ export const CANCELLATION_POLICY_OG_IMAGE_ALT = 'Free Cancellation Policy Templa
 
 export const CANCELLATION_POLICY_LEAD =
   'Choose a few options and get a ready-to-paste cancellation, deposit and no-show policy for your website, Instagram or Google Business Profile and booking confirmations. Free, no sign-up, and nothing you enter is stored.';
+
+export const CANCELLATION_POLICY_EYEBROW = 'Free tool for UK barbershops';
+
+/** Hero check marks: each one restates what the tool already does. */
+export const CANCELLATION_POLICY_TRUST_SIGNALS = [
+  'Free, no sign-up',
+  'Nothing you enter is stored',
+  'Updates as you choose',
+  'Copy, download or print',
+] as const;
+
+/** Hero summary of the three versions; limits come from the generator itself. */
+export const CANCELLATION_POLICY_VERSIONS = [
+  { letter: 'A', name: 'Website version', use: 'The full policy for your website and booking page.' },
+  {
+    letter: 'B',
+    name: 'Short version',
+    use: `Up to ${SHORT_VERSION_MAX_CHARS} characters for Instagram, Google Business Profile or a booking page.`,
+  },
+  { letter: 'C', name: 'One line', use: `Up to ${ONE_LINE_MAX_CHARS} characters for booking confirmations.` },
+] as const;
 
 export const CANCELLATION_POLICY_DISCLAIMER =
   'This template is general information, not legal advice. Your policy should be fair, clear and shown to clients before they book. If you’re unsure, check with a legal adviser.';

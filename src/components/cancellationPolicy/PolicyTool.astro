@@ -18,6 +18,12 @@ import { CANCELLATION_POLICY_DISCLAIMER } from '@/lib/seo/cancellationPolicyTemp
 const policy = buildPolicy(DEFAULT_POLICY_OPTIONS);
 const d = DEFAULT_POLICY_OPTIONS;
 
+const depositTypes = [
+  { value: 'none', label: 'No deposit', detail: 'Clients pay nothing when booking.' },
+  { value: 'fixed', label: 'Fixed deposit', detail: 'A set amount when booking.' },
+  { value: 'full', label: 'Full payment', detail: 'The full price when booking.' },
+] as const;
+
 const outcomeOptions = [
   { value: 'keep_deposit', label: 'Deposit is kept', only: 'fixed' },
   { value: 'keep_payment', label: `£${FULL_PAYMENT_KEPT_GBP} of the prepayment is kept, the rest refunded`, only: 'full' },
@@ -39,97 +45,153 @@ const methods = [
 <section class="cpt-tool" id="policy-tool" aria-labelledby="cpt-tool-title">
   <h2 id="cpt-tool-title" class="cpt-visually-hidden">Create your cancellation policy</h2>
   <div class="cpt-tool__grid">
-    <form class="cpt-form" id="cpt-form" aria-labelledby="cpt-form-title" novalidate>
-      <h3 id="cpt-form-title" class="cpt-form__title">Choose your options</h3>
+    <form class="cpt-surface cpt-form" id="cpt-form" aria-labelledby="cpt-form-title" novalidate>
+      <div class="cpt-form__head">
+        <h3 id="cpt-form-title" class="cpt-form__label">Your options</h3>
+        <span class="cpt-form__meta" aria-hidden="true">The policy updates as you choose</span>
+      </div>
       <noscript><p class="cpt-form__noscript">Turn on JavaScript to change the options. The example policy uses the defaults shown.</p></noscript>
 
       <div class="cpt-field">
-        <label for="cpt-shop">Barbershop name <span class="cpt-optional">(optional)</span></label>
-        <input id="cpt-shop" name="shop" type="text" maxlength={SHOP_NAME_MAX_LENGTH} autocomplete="off" aria-describedby="cpt-shop-hint" />
+        <label class="cpt-label" for="cpt-shop">Barbershop name <span class="cpt-optional">(optional)</span></label>
+        <input id="cpt-shop" class="cpt-input" name="shop" type="text" maxlength={SHOP_NAME_MAX_LENGTH} autocomplete="off" aria-describedby="cpt-shop-hint" />
         <p class="cpt-hint" id="cpt-shop-hint">Shown in the policy heading. Leave blank to use “we” and “us”.</p>
       </div>
 
-      <fieldset class="cpt-group">
-        <legend>Deposit</legend>
-        <label class="cpt-choice"><input type="radio" name="deposit" value="none" checked={d.deposit === 'none'} /> No deposit</label>
-        <label class="cpt-choice"><input type="radio" name="deposit" value="fixed" checked={d.deposit === 'fixed'} /> Fixed deposit</label>
-        <label class="cpt-choice"><input type="radio" name="deposit" value="full" checked={d.deposit === 'full'} /> Full payment when booking</label>
+      <div class="cpt-form__group">
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-group-title">Deposit</legend>
+          <div class="cpt-tiles">
+            {depositTypes.map((type) => (
+              <label class="cpt-tile">
+                <input class="cpt-tile__input" type="radio" name="deposit" value={type.value} checked={d.deposit === type.value} />
+                <span class="cpt-tile__body">
+                  <span class="cpt-tile__label">{type.label}</span>
+                  <span class="cpt-tile__detail">{type.detail}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <div class="cpt-sub" data-show-for="fixed">
-          <fieldset class="cpt-group cpt-group--inline">
-            <legend>Deposit amount</legend>
-            <label class="cpt-choice"><input type="radio" name="amount" value="5" checked={d.depositAmount === 5} /> £5</label>
-            <label class="cpt-choice"><input type="radio" name="amount" value="10" /> £10</label>
-            <label class="cpt-choice"><input type="radio" name="amount" value="custom" /> Custom</label>
+          <fieldset class="cpt-fieldset">
+            <legend class="cpt-label">Deposit amount</legend>
+            <div class="cpt-segmented">
+              <label class="cpt-segmented__option"><input type="radio" name="amount" value="5" checked={d.depositAmount === 5} /><span>£5</span></label>
+              <label class="cpt-segmented__option"><input type="radio" name="amount" value="10" /><span>£10</span></label>
+              <label class="cpt-segmented__option"><input type="radio" name="amount" value="custom" /><span>Custom</span></label>
+            </div>
           </fieldset>
-          <div class="cpt-field cpt-field--custom" data-show-for-amount="custom" hidden>
-            <label for="cpt-amount">Custom amount in pounds (£{MIN_DEPOSIT_GBP}–£{MAX_DEPOSIT_GBP})</label>
-            <input id="cpt-amount" name="customAmount" type="number" inputmode="numeric" min={MIN_DEPOSIT_GBP} max={MAX_DEPOSIT_GBP} step="1" value="15" />
+          <div class="cpt-field" data-show-for-amount="custom" hidden>
+            <label class="cpt-label" for="cpt-amount">Custom amount (£{MIN_DEPOSIT_GBP}–£{MAX_DEPOSIT_GBP})</label>
+            <div class="cpt-input cpt-input--currency">
+              <span class="cpt-input__prefix" aria-hidden="true">£</span>
+              <input id="cpt-amount" name="customAmount" type="number" inputmode="numeric" min={MIN_DEPOSIT_GBP} max={MAX_DEPOSIT_GBP} step="1" value="15" />
+            </div>
           </div>
-          <label class="cpt-choice cpt-choice--check">
-            <input type="checkbox" name="deducted" checked={d.depositDeducted} /> Deposit comes off the price of the service
-          </label>
+          <div class="cpt-inline">
+            <label class="cpt-label" for="cpt-deducted">Deposit comes off the price of the service</label>
+            <span class="cpt-switch">
+              <input id="cpt-deducted" class="cpt-switch__input" type="checkbox" role="switch" name="deducted" checked={d.depositDeducted} />
+              <span class="cpt-switch__track" aria-hidden="true"><span class="cpt-switch__thumb"></span></span>
+              <span class="cpt-switch__state" aria-hidden="true">
+                <span class="cpt-switch__off">Off</span>
+                <span class="cpt-switch__on">On</span>
+              </span>
+            </span>
+          </div>
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset class="cpt-group cpt-group--inline">
-        <legend>Free cancellation or rebooking notice</legend>
-        {NOTICE_HOURS.map((h) => (
-          <label class="cpt-choice"><input type="radio" name="notice" value={String(h)} checked={d.noticeHours === h} /> {h} hours</label>
+      <div class="cpt-form__group">
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-group-title">Free cancellation or rebooking notice</legend>
+          <div class="cpt-segmented">
+            {NOTICE_HOURS.map((h) => (
+              <label class="cpt-segmented__option"><input type="radio" name="notice" value={String(h)} checked={d.noticeHours === h} /><span>{h} hours</span></label>
+            ))}
+          </div>
+        </fieldset>
+
+        {outcomeFieldsets.map((set) => (
+          <fieldset class="cpt-fieldset">
+            <legend class="cpt-label">{set.legend}</legend>
+            <div class="cpt-options">
+              {outcomeOptions.map((option) => (
+                <label class="cpt-option" data-outcome-only={option.only ?? undefined} hidden={option.only !== null && option.only !== d.deposit}>
+                  <input
+                    class="cpt-option__input"
+                    type="radio"
+                    name={set.name}
+                    value={option.value}
+                    checked={set.checked === option.value}
+                    disabled={option.only !== null && option.only !== d.deposit}
+                  />
+                  <span class="cpt-option__mark" aria-hidden="true"></span>
+                  <span class="cpt-option__label">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         ))}
-      </fieldset>
+      </div>
 
-      {outcomeFieldsets.map((set) => (
-        <fieldset class="cpt-group">
-          <legend>{set.legend}</legend>
-          {outcomeOptions.map((option) => (
-            <label class="cpt-choice" data-outcome-only={option.only ?? undefined} hidden={option.only !== null && option.only !== d.deposit}>
-              <input
-                type="radio"
-                name={set.name}
-                value={option.value}
-                checked={set.checked === option.value}
-                disabled={option.only !== null && option.only !== d.deposit}
-              />
-              {option.label}
+      <div class="cpt-form__group">
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-group-title">Running late: grace period</legend>
+          <div class="cpt-segmented">
+            {GRACE_MINUTES.map((m) => (
+              <label class="cpt-segmented__option"><input type="radio" name="grace" value={String(m)} checked={d.graceMinutes === m} /><span>{m} minutes</span></label>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-label">After that</legend>
+          <div class="cpt-options">
+            <label class="cpt-option">
+              <input class="cpt-option__input" type="radio" name="after" value="shorten" checked={d.lateAction === 'shorten'} />
+              <span class="cpt-option__mark" aria-hidden="true"></span>
+              <span class="cpt-option__label">We may shorten the service or ask the client to rebook</span>
             </label>
-          ))}
+            <label class="cpt-option">
+              <input class="cpt-option__input" type="radio" name="after" value="no_show" checked={d.lateAction === 'no_show'} />
+              <span class="cpt-option__mark" aria-hidden="true"></span>
+              <span class="cpt-option__label">It is treated as a no-show</span>
+            </label>
+          </div>
         </fieldset>
-      ))}
+      </div>
 
-      <fieldset class="cpt-group">
-        <legend>Running late: grace period</legend>
-        <div class="cpt-row">
-          {GRACE_MINUTES.map((m) => (
-            <label class="cpt-choice"><input type="radio" name="grace" value={String(m)} checked={d.graceMinutes === m} /> {m} minutes</label>
-          ))}
-        </div>
-        <fieldset class="cpt-group cpt-group--nested">
-          <legend>After that</legend>
-          <label class="cpt-choice"><input type="radio" name="after" value="shorten" checked={d.lateAction === 'shorten'} /> We may shorten the service or ask the client to rebook</label>
-          <label class="cpt-choice"><input type="radio" name="after" value="no_show" checked={d.lateAction === 'no_show'} /> It is treated as a no-show</label>
+      <div class="cpt-form__group">
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-group-title">How clients should cancel <span class="cpt-optional">(choose one or more)</span></legend>
+          <div class="cpt-options">
+            {methods.map((method) => (
+              <label class="cpt-option">
+                <input class="cpt-option__input" type="checkbox" name="cancel" value={method.value} checked={d.cancelMethods.includes(method.value)} />
+                <span class="cpt-option__mark cpt-option__mark--check" aria-hidden="true"></span>
+                <span class="cpt-option__label">{method.label}</span>
+              </label>
+            ))}
+          </div>
         </fieldset>
-      </fieldset>
-
-      <fieldset class="cpt-group">
-        <legend>How clients should cancel <span class="cpt-optional">(choose one or more)</span></legend>
-        {methods.map((method) => (
-          <label class="cpt-choice cpt-choice--check">
-            <input type="checkbox" name="cancel" value={method.value} checked={d.cancelMethods.includes(method.value)} /> {method.label}
-          </label>
-        ))}
         <div class="cpt-field" data-show-for-method="phone" hidden>
-          <label for="cpt-phone">Phone number <span class="cpt-optional">(optional)</span></label>
-          <input id="cpt-phone" name="phone" type="tel" maxlength={PHONE_MAX_LENGTH} autocomplete="off" aria-describedby="cpt-phone-hint" />
+          <label class="cpt-label" for="cpt-phone">Phone number <span class="cpt-optional">(optional)</span></label>
+          <input id="cpt-phone" class="cpt-input" name="phone" type="tel" maxlength={PHONE_MAX_LENGTH} autocomplete="off" aria-describedby="cpt-phone-hint" />
           <p class="cpt-hint" id="cpt-phone-hint">Only used in the text below. It isn’t saved or added to the page address.</p>
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset class="cpt-group cpt-group--inline">
-        <legend>Tone</legend>
-        <label class="cpt-choice"><input type="radio" name="tone" value="friendly" checked={d.tone === 'friendly'} /> Friendly</label>
-        <label class="cpt-choice"><input type="radio" name="tone" value="direct" checked={d.tone === 'direct'} /> Straight to the point</label>
-      </fieldset>
+      <div class="cpt-form__group">
+        <fieldset class="cpt-fieldset">
+          <legend class="cpt-group-title">Tone</legend>
+          <div class="cpt-segmented">
+            <label class="cpt-segmented__option"><input type="radio" name="tone" value="friendly" checked={d.tone === 'friendly'} /><span>Friendly</span></label>
+            <label class="cpt-segmented__option"><input type="radio" name="tone" value="direct" checked={d.tone === 'direct'} /><span>Straight to the point</span></label>
+          </div>
+        </fieldset>
+      </div>
 
       <div class="cpt-warnings" id="cpt-warnings" aria-live="polite"></div>
 
@@ -137,45 +199,57 @@ const methods = [
     </form>
 
     <div class="cpt-outputs" id="cpt-outputs" aria-labelledby="cpt-outputs-title">
-      <h3 id="cpt-outputs-title" class="cpt-outputs__title">Your policy</h3>
+      <div class="cpt-outputs__head">
+        <h3 id="cpt-outputs-title" class="cpt-outputs__title">Your policy</h3>
+        <p class="cpt-outputs__meta">Three versions, ready to paste.</p>
+      </div>
 
       <section class="cpt-card" aria-labelledby="cpt-a-title">
         <header class="cpt-card__head">
-          <h4 id="cpt-a-title">A) Website version</h4>
+          <div class="cpt-card__titles">
+            <h4 id="cpt-a-title" class="cpt-card__name"><span class="cpt-card__letter">A</span> Website version</h4>
+            <p class="cpt-card__use">For your website and booking page</p>
+          </div>
           <button type="button" class="cpt-copy" data-copy="A" aria-describedby="cpt-a-title">Copy</button>
         </header>
-        <div class="cpt-policy" id="cpt-out-a" aria-live="polite">
-          <p class="cpt-policy__heading" data-out="heading">{policy.heading}</p>
-          <ul class="cpt-policy__list" data-out="bullets">
+        <div class="cpt-doc" id="cpt-out-a" aria-live="polite">
+          <p class="cpt-doc__heading" data-out="heading">{policy.heading}</p>
+          <ul class="cpt-doc__list" data-out="bullets">
             {policy.bullets.map((line) => <li>{line}</li>)}
           </ul>
-          <p class="cpt-policy__closing" data-out="closing" hidden={!policy.closing}>{policy.closing ?? ''}</p>
+          <p class="cpt-doc__closing" data-out="closing" hidden={!policy.closing}>{policy.closing ?? ''}</p>
         </div>
       </section>
 
       <section class="cpt-card" aria-labelledby="cpt-b-title">
         <header class="cpt-card__head">
-          <h4 id="cpt-b-title">B) Short version for Instagram, Google Business Profile or a booking page</h4>
+          <div class="cpt-card__titles">
+            <h4 id="cpt-b-title" class="cpt-card__name"><span class="cpt-card__letter">B</span> Short version</h4>
+            <p class="cpt-card__use">For Instagram, Google Business Profile or a booking page</p>
+          </div>
           <button type="button" class="cpt-copy" data-copy="B" aria-describedby="cpt-b-title">Copy</button>
         </header>
-        <p class="cpt-policy cpt-policy--plain" id="cpt-out-b" aria-live="polite">{policy.short}</p>
+        <p class="cpt-text" id="cpt-out-b" aria-live="polite">{policy.short}</p>
         <p class="cpt-count"><span id="cpt-count-b">{policy.short.length}</span> / {SHORT_VERSION_MAX_CHARS} characters</p>
       </section>
 
       <section class="cpt-card" aria-labelledby="cpt-c-title">
         <header class="cpt-card__head">
-          <h4 id="cpt-c-title">C) One line for booking confirmations</h4>
+          <div class="cpt-card__titles">
+            <h4 id="cpt-c-title" class="cpt-card__name"><span class="cpt-card__letter">C</span> One line</h4>
+            <p class="cpt-card__use">For booking confirmations</p>
+          </div>
           <button type="button" class="cpt-copy" data-copy="C" aria-describedby="cpt-c-title">Copy</button>
         </header>
-        <p class="cpt-policy cpt-policy--plain" id="cpt-out-c" aria-live="polite">{policy.oneLine}</p>
+        <p class="cpt-text" id="cpt-out-c" aria-live="polite">{policy.oneLine}</p>
         <p class="cpt-count"><span id="cpt-count-c">{policy.oneLine.length}</span> / {ONE_LINE_MAX_CHARS} characters</p>
       </section>
 
       <div class="cpt-actions">
         <button type="button" class="btn btn--secondary btn--sm" id="cpt-download">Download as .txt</button>
         <button type="button" class="btn btn--secondary btn--sm" id="cpt-print">Print</button>
+        <p class="cpt-status" id="cpt-status" role="status" aria-live="polite"></p>
       </div>
-      <p class="cpt-status" id="cpt-status" role="status" aria-live="polite"></p>
 
       <p class="cpt-disclaimer">{CANCELLATION_POLICY_DISCLAIMER}</p>
     </div>

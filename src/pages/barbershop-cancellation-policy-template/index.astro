@@ -9,6 +9,7 @@ import {
   CANCELLATION_POLICY_DEPOSITS,
   CANCELLATION_POLICY_DESCRIPTION,
   CANCELLATION_POLICY_DISPLAY,
+  CANCELLATION_POLICY_EYEBROW,
   CANCELLATION_POLICY_FAIR,
   CANCELLATION_POLICY_FAQ_ITEMS,
   CANCELLATION_POLICY_H1,
@@ -20,6 +21,8 @@ import {
   CANCELLATION_POLICY_PAGE_PATH,
   CANCELLATION_POLICY_RELATED_LINKS,
   CANCELLATION_POLICY_TITLE,
+  CANCELLATION_POLICY_TRUST_SIGNALS,
+  CANCELLATION_POLICY_VERSIONS,
   CANCELLATION_POLICY_WHY,
   GOOGLE_BUSINESS_PROFILE_GUIDE_PATH,
   buildCancellationPolicyJsonLd,
@@ -45,20 +48,43 @@ const cta = CANCELLATION_POLICY_CTA;
 >
   <main class="cpt-page landing-overflow-guard">
     <header class="cpt-hero">
-      <div class="cpt-shell">
-        <nav class="cpt-breadcrumb" aria-label="Breadcrumb">
-          <ol>
-            <li><a href="/">Home</a></li>
-            <li aria-hidden="true">/</li>
-            <li><span aria-current="page">{CANCELLATION_POLICY_BREADCRUMB_NAME}</span></li>
+      <div class="cpt-shell cpt-hero__grid">
+        <div class="cpt-hero__content">
+          <nav class="cpt-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              <li><a class="cpt-breadcrumb__link" href="/">Home</a></li>
+              <li aria-hidden="true">/</li>
+              <li><span aria-current="page">{CANCELLATION_POLICY_BREADCRUMB_NAME}</span></li>
+            </ol>
+          </nav>
+          <p class="cpt-hero__eyebrow"><span class="cpt-hero__dot" aria-hidden="true"></span>{CANCELLATION_POLICY_EYEBROW}</p>
+          <h1 class="cpt-hero__title">{CANCELLATION_POLICY_H1}</h1>
+          <p class="cpt-hero__lead">{CANCELLATION_POLICY_LEAD}</p>
+          <ul class="cpt-hero__trust" aria-label="About this template">
+            {CANCELLATION_POLICY_TRUST_SIGNALS.map((signal) => (
+              <li><span class="cpt-hero__check" aria-hidden="true"></span>{signal}</li>
+            ))}
+          </ul>
+          <p class="cpt-hero__updated">
+            Last updated <time datetime={CANCELLATION_POLICY_LAST_UPDATED_ISO}>{CANCELLATION_POLICY_LAST_UPDATED_LABEL}</time>
+          </p>
+        </div>
+
+        <aside class="cpt-surface cpt-glance" aria-labelledby="cpt-glance-title">
+          <h2 id="cpt-glance-title" class="cpt-glance__label">What you get</h2>
+          <ol class="cpt-glance__list">
+            {CANCELLATION_POLICY_VERSIONS.map((version) => (
+              <li class="cpt-glance__item">
+                <span class="cpt-glance__letter" aria-hidden="true">{version.letter}</span>
+                <span class="cpt-glance__text">
+                  <span class="cpt-glance__name">{version.name}</span>
+                  <span class="cpt-glance__use">{version.use}</span>
+                </span>
+              </li>
+            ))}
           </ol>
-        </nav>
-        <p class="cpt-hero__eyebrow"><span class="cpt-hero__dot" aria-hidden="true"></span>Free tool for UK barbershops</p>
-        <h1 class="cpt-hero__title">{CANCELLATION_POLICY_H1}</h1>
-        <p class="cpt-hero__lead">{CANCELLATION_POLICY_LEAD}</p>
-        <p class="cpt-hero__updated">
-          Last updated <time datetime={CANCELLATION_POLICY_LAST_UPDATED_ISO}>{CANCELLATION_POLICY_LAST_UPDATED_LABEL}</time>
-        </p>
+          <a class="btn btn--primary btn--md cpt-glance__action" href="#policy-tool">Create your policy</a>
+        </aside>
       </div>
     </header>
 
@@ -67,55 +93,70 @@ const cta = CANCELLATION_POLICY_CTA;
     </div>
 
     <section class="cpt-cta" aria-labelledby="cpt-cta-title">
-      <div class="cpt-shell cpt-cta__inner">
-        <h2 id="cpt-cta-title">{cta.heading}</h2>
-        <p class="cpt-cta__body">{cta.body}</p>
-        <div class="cpt-cta__actions">
-          <a class="btn btn--primary btn--md" href={cta.primary.href} data-track="cta_starter_click" data-track-placement={TRACK_PLACEMENT}>
-            {cta.primary.label}
-          </a>
-          <a class="btn btn--secondary btn--md" href={cta.secondary.href}>{cta.secondary.label}</a>
+      <div class="cpt-shell">
+        <div class="cpt-cta__panel">
+          <div class="cpt-cta__content">
+            <p class="cpt-cta__eyebrow">Own your brand. Own your bookings.</p>
+            <h2 id="cpt-cta-title" class="cpt-cta__heading">{cta.heading}</h2>
+            <p class="cpt-cta__body">{cta.body}</p>
+          </div>
+          <div class="cpt-cta__actions">
+            <a class="btn btn--primary btn--lg" href={cta.primary.href} data-track="cta_starter_click" data-track-placement={TRACK_PLACEMENT}>
+              {cta.primary.label}
+            </a>
+            <a class="btn btn--secondary btn--lg" href={cta.secondary.href}>{cta.secondary.label}</a>
+            <p class="cpt-cta__full">
+              {cta.fullLink.lead} <a class="cpt-link" href={cta.fullLink.href}>{cta.fullLink.label}</a>
+            </p>
+          </div>
         </div>
-        <p class="cpt-cta__full">
-          {cta.fullLink.lead} <a class="cpt-link" href={cta.fullLink.href}>{cta.fullLink.label}</a>
-        </p>
       </div>
     </section>
 
     <div class="cpt-shell cpt-guide">
-      <section aria-labelledby="cpt-why">
-        <h2 id="cpt-why">{CANCELLATION_POLICY_WHY.heading}</h2>
-        <p>{CANCELLATION_POLICY_WHY.body}</p>
+      <p class="cpt-eyebrow">Policy guide</p>
+
+      <section class="cpt-guide__item" aria-labelledby="cpt-why">
+        <h2 id="cpt-why" class="cpt-h2">{CANCELLATION_POLICY_WHY.heading}</h2>
+        <div class="cpt-guide__body">
+          <p>{CANCELLATION_POLICY_WHY.body}</p>
+        </div>
       </section>
 
-      <section aria-labelledby="cpt-fair">
-        <h2 id="cpt-fair">{CANCELLATION_POLICY_FAIR.heading}</h2>
-        <ul>
-          {CANCELLATION_POLICY_FAIR.bullets.map((item) => <li>{item}</li>)}
-        </ul>
+      <section class="cpt-guide__item" aria-labelledby="cpt-fair">
+        <h2 id="cpt-fair" class="cpt-h2">{CANCELLATION_POLICY_FAIR.heading}</h2>
+        <div class="cpt-guide__body">
+          <ul class="cpt-list">
+            {CANCELLATION_POLICY_FAIR.bullets.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
       </section>
 
-      <section aria-labelledby="cpt-display">
-        <h2 id="cpt-display">{CANCELLATION_POLICY_DISPLAY.heading}</h2>
-        <p>{CANCELLATION_POLICY_DISPLAY.body}</p>
-        <ul>
-          <li>Your booking page and confirmation emails.</li>
-          <li>Your website, linked from the booking button.</li>
-          <li>
-            Your <a class="cpt-link" href={GOOGLE_BUSINESS_PROFILE_GUIDE_PATH}>Google Business Profile</a> and your Instagram
-            bio or highlights.
-          </li>
-          <li>A printed note at the front desk.</li>
-        </ul>
+      <section class="cpt-guide__item" aria-labelledby="cpt-display">
+        <h2 id="cpt-display" class="cpt-h2">{CANCELLATION_POLICY_DISPLAY.heading}</h2>
+        <div class="cpt-guide__body">
+          <p>{CANCELLATION_POLICY_DISPLAY.body}</p>
+          <ul class="cpt-list">
+            <li>Your booking page and confirmation emails.</li>
+            <li>Your website, linked from the booking button.</li>
+            <li>
+              Your <a class="cpt-link" href={GOOGLE_BUSINESS_PROFILE_GUIDE_PATH}>Google Business Profile</a> and your Instagram
+              bio or highlights.
+            </li>
+            <li>A printed note at the front desk.</li>
+          </ul>
+        </div>
       </section>
 
-      <section aria-labelledby="cpt-deposits">
-        <h2 id="cpt-deposits">{CANCELLATION_POLICY_DEPOSITS.heading}</h2>
-        <p>
-          {CANCELLATION_POLICY_DEPOSITS.body}
-          {' '}{CANCELLATION_POLICY_DEPOSITS.linkLead}{' '}
-          <a class="cpt-link" href={CANCELLATION_POLICY_DEPOSITS.linkHref}>{CANCELLATION_POLICY_DEPOSITS.linkLabel}</a>.
-        </p>
+      <section class="cpt-guide__item" aria-labelledby="cpt-deposits">
+        <h2 id="cpt-deposits" class="cpt-h2">{CANCELLATION_POLICY_DEPOSITS.heading}</h2>
+        <div class="cpt-guide__body">
+          <p>
+            {CANCELLATION_POLICY_DEPOSITS.body}
+            {' '}{CANCELLATION_POLICY_DEPOSITS.linkLead}{' '}
+            <a class="cpt-link" href={CANCELLATION_POLICY_DEPOSITS.linkHref}>{CANCELLATION_POLICY_DEPOSITS.linkLabel}</a>.
+          </p>
+        </div>
       </section>
     </div>
 
@@ -130,18 +171,22 @@ const cta = CANCELLATION_POLICY_CTA;
       faqs={CANCELLATION_POLICY_FAQ_ITEMS}
     />
 
-    <nav class="cpt-shell cpt-related" aria-labelledby="cpt-related-title">
-      <h2 id="cpt-related-title">Related</h2>
-      <ul>
-        {CANCELLATION_POLICY_RELATED_LINKS.map((link) => (
-          <li>
-            <a href={link.href}>
-              <span class="cpt-related__label">{link.label}</span>
-              <span class="cpt-related__desc">{link.description}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+    <nav class="cpt-related" aria-labelledby="cpt-related-title">
+      <div class="cpt-shell">
+        <p class="cpt-eyebrow">Keep going</p>
+        <h2 id="cpt-related-title" class="cpt-h2">Related</h2>
+        <ul class="cpt-related__list">
+          {CANCELLATION_POLICY_RELATED_LINKS.map((link) => (
+            <li>
+              <a class="cpt-related__card" href={link.href}>
+                <span class="cpt-related__label">{link.label}</span>
+                <span class="cpt-related__desc">{link.description}</span>
+                <span class="cpt-related__arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
 
     <Footer50
