@@ -1,6 +1,6 @@
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
-import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { buildBreadcrumbListJsonLd, BARBERSHOP_WEBSITE_DESIGN_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH = '/barbershop-website-design';
 
@@ -28,14 +28,6 @@ export function buildBarbershopWebsiteDesignJsonLd(): Record<string, unknown> {
     inLanguage: 'en-GB',
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      '@id': `${pageUrl}#breadcrumb`,
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Barbershop websites', item: `${siteUrl}${BARBERSHOP_WEBSITES_PAGE_PATH}` },
-        { '@type': 'ListItem', position: 3, name: 'Website design', item: pageUrl },
-      ],
-    },
+    breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_WEBSITE_DESIGN_BREADCRUMBS, { siteUrl, withContext: false }),
   };
 }

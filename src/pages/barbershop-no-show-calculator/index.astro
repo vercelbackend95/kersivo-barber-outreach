@@ -3,11 +3,12 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import NoShowCalculator from '@/components/noShowCalculator/NoShowCalculator.astro';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import {
   NO_SHOW_ARTICLE_CANCELLATION_ANCHOR,
   NO_SHOW_ARTICLE_LEGAL_ANCHOR,
   NO_SHOW_ARTICLE_PATH,
-  NO_SHOW_CALCULATOR_BREADCRUMB_NAME,
+  NO_SHOW_CALCULATOR_BREADCRUMBS,
   NO_SHOW_CALCULATOR_DESCRIPTION,
   NO_SHOW_CALCULATOR_H1,
   NO_SHOW_CALCULATOR_LAST_UPDATED_ISO,
@@ -47,11 +48,7 @@ const currentYear = new Date().getFullYear();
   <main class="cost-calc ns-page landing-overflow-guard">
     <section class="cost-calc-hero ns-hero" aria-labelledby="ns-title">
       <div class="ns-hero__inner">
-        <nav class="ns-breadcrumb" aria-label="Breadcrumb">
-          <a href="/">Home</a>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">{NO_SHOW_CALCULATOR_BREADCRUMB_NAME}</span>
-        </nav>
+        <PageBreadcrumbs trail={NO_SHOW_CALCULATOR_BREADCRUMBS} />
         <p class="cost-calc-hero__eyebrow">
           <span class="cost-calc-hero__eyebrow-dot" aria-hidden="true"></span>
           {NO_SHOW_HERO.eyebrow}

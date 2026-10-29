@@ -267,6 +267,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
+    id: 'resources-cancellation-policy',
+    label: 'Cancellation Policy Template',
+    description: 'Create a free deposit and no-show policy for your shop.',
+    href: '/barbershop-cancellation-policy-template',
+    group: 'resources',
+    section: 'tools',
+    icon: 'policy',
+  },
+  {
     id: 'resources-no-show-calculator',
     label: 'No-Show Cost Calculator',
     description: 'See what missed appointments cost and whether a deposit pays.',

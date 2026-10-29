@@ -4,6 +4,8 @@
  * The method mirrors the Insights article INSIGHTS_NO_SHOW_DEPOSITS.
  */
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/barberDemoJsonLd';
+import { buildBreadcrumbListJsonLd, type BreadcrumbTrailItem } from '@/lib/seo/breadcrumbs';
+import { CANCELLATION_POLICY_PAGE_PATH } from '@/lib/seo/cancellationPolicyTemplatePage';
 import { INSIGHTS_NO_SHOW_DEPOSITS } from '@/lib/seo/insights';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -15,6 +17,10 @@ export const NO_SHOW_CALCULATOR_DESCRIPTION =
 export const NO_SHOW_CALCULATOR_H1 = 'Barbershop No-Show Cost Calculator';
 export const NO_SHOW_CALCULATOR_APP_NAME = 'Barbershop No-Show Cost Calculator';
 export const NO_SHOW_CALCULATOR_BREADCRUMB_NAME = 'No-Show Cost Calculator';
+/** Drives both the visible breadcrumb and the BreadcrumbList JSON-LD. */
+export const NO_SHOW_CALCULATOR_BREADCRUMBS: readonly BreadcrumbTrailItem[] = [
+  { name: NO_SHOW_CALCULATOR_BREADCRUMB_NAME, path: '/barbershop-no-show-calculator' },
+];
 
 /** Visible "Last updated", WebPage dateModified and sitemap lastmod. */
 export const NO_SHOW_CALCULATOR_LAST_UPDATED_ISO = '2026-10-29';
@@ -30,10 +36,9 @@ export const NO_SHOW_ARTICLE_LEGAL_ANCHOR = `${INSIGHTS_NO_SHOW_DEPOSITS.path}#i
 /** Article H2 on online bookings and the 14-day cancellation right. */
 export const NO_SHOW_ARTICLE_CANCELLATION_ANCHOR = `${INSIGHTS_NO_SHOW_DEPOSITS.path}#online-bookings-14-day-cancellation-rights-and-deposits`;
 
-/** Secondary CTA: the cancellation policy template is not published yet. */
 export const NO_SHOW_SECONDARY_CTA = {
-  label: 'See how online booking works',
-  href: '/barbershop-online-booking',
+  label: 'Create your cancellation policy',
+  href: CANCELLATION_POLICY_PAGE_PATH,
 } as const;
 
 export const NO_SHOW_HERO = {
@@ -109,6 +114,7 @@ export const NO_SHOW_FAQ_ITEMS: readonly NoShowFaqItem[] = [
 ];
 
 export const NO_SHOW_RELATED_LINKS = [
+  { label: 'Cancellation Policy Template', href: CANCELLATION_POLICY_PAGE_PATH, description: 'Create a free deposit and no-show policy to show clients before they book.' },
   { label: 'Barber Software Cost Calculator', href: '/barber-software-cost-calculator', description: 'Compare booking software costs using your shop’s numbers.' },
   { label: 'What a no-show really costs — and when a deposit makes sense', href: NO_SHOW_ARTICLE_PATH, description: 'The full method, worked example and UK rules behind this calculator.' },
   { label: 'KERSIVO Starter', href: '/starter', description: `£0/month booking with a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on public bookings.` },
@@ -151,15 +157,7 @@ export function buildNoShowCalculatorJsonLd(): Record<string, unknown>[] {
       provider: { '@id': getKersivoOrganizationId(siteUrl) },
       isPartOf: { '@id': `${url}#webpage` },
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      '@id': `${url}#breadcrumb`,
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: NO_SHOW_CALCULATOR_BREADCRUMB_NAME, item: url },
-      ],
-    },
+    buildBreadcrumbListJsonLd(NO_SHOW_CALCULATOR_BREADCRUMBS, { siteUrl }),
     {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',

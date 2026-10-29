@@ -11,6 +11,9 @@ interface Props {
 const { primary, secondary, class: className } = Astro.props;
 const family = getRouteFamily(Astro.url.pathname);
 const leavesFamily = (href: string | null) => (href ? getRouteFamily(new URL(href, Astro.url).pathname) !== family : false);
+// The price suffix sits in its own span so narrow desktop bars can drop it (see marketing-navbar.css).
+const priceSuffix = primary.label.match(/\s*—\s*£\d+\/month$/)?.[0] ?? '';
+const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : primary.label;
 ---
 
 <div class:list={['mnav-actions', className]}>
@@ -29,10 +32,12 @@ const leavesFamily = (href: string | null) => (href ? getRouteFamily(new URL(hre
         data-track={primary.track}
         data-astro-reload={leavesFamily(primary.href) ? '' : undefined}
       >
-        {primary.label}
+        {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </a>
     ) : (
-      <button type="button" class="mnav-btn mnav-btn--primary">{primary.label}</button>
+      <button type="button" class="mnav-btn mnav-btn--primary">
+        {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
+      </button>
     )
   }
 </div>

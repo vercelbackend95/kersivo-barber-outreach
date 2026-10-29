@@ -55,15 +55,20 @@
     {
       "kind": "photo",
       "anchor": "For barbershop owners managing several chairs",
-      "src": "https://images.pexels.com/photos/27306926/pexels-photo-27306926.jpeg?auto=compress&cs=tinysrgb&w=2000",
-      "width": 1500,
-      "height": 1000,
+      "src": "/images/insights/making-tax-digital-barbers/two-men-outside-london-shop-1600.jpg",
+      "width": 1600,
+      "height": 842,
       "alt": "Two men sitting and talking outside a London shop photographed in daylight",
       "caption": "London independent retail streetscape. Editorial context for small business owners; the subjects' business, tax status and relationship to KERSIVO are unknown",
       "credit": "Gonzalo Mendiola / Pexels",
       "creditUrl": "https://www.pexels.com/photo/two-people-sitting-on-a-bench-in-front-of-a-store-27306926/",
       "rights": "Original Pexels photograph #27306926 by Gonzalo Mendiola. Original https://www.pexels.com/photo/two-people-sitting-on-a-bench-in-front-of-a-store-27306926/ tagged London, England, UK, free commercial editorial licence https://www.pexels.com/license/. Unique ID verified against all 18 published KERSIVO Insights manifests on 19 October 2026. People portrayed are not identified as barbers, tax advisers, or KERSIVO clients; no implication of their income or personal situation.",
-      "licenceReviewed": true
+      "licenceReviewed": true,
+      "responsive": [
+        640,
+        1024,
+        1600
+      ]
     }
   ],
   "editorialVersion": "Original DRAFT v1 authored 19 October 2026 from Notion IDEA-010 and validated against HMRC published guidance (last updated September/October 2026). No separate Notion research or writing approval asserted.",

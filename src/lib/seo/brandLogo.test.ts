@@ -67,14 +67,15 @@ describe('KERSIVO approved brand identity', () => {
     }
   });
 
-  it('uses the complete approved transparent wordmark in Organization JSON-LD', () => {
+  it('uses the square 512px K mark in Organization JSON-LD (Batch 7)', () => {
     const organization = buildKersivoOrganizationNode('https://kersivo.co.uk');
     expect(organization.logo).toEqual({
       '@type': 'ImageObject',
-      url: 'https://kersivo.co.uk/images/logo_nobg.png',
-      width: 796,
-      height: 555,
+      url: 'https://kersivo.co.uk/images/brand/kersivo-mark.png',
+      width: 512,
+      height: 512,
     });
+    expect(read('scripts/generate-favicons.mjs')).toContain("const CANVAS = 512;");
     expect(read('src/components/navigation/marketing/MarketingNavbar.astro'))
       .toContain('src="/images/brand/logo-navbar-228.webp"');
   });

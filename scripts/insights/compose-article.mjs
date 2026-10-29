@@ -12,7 +12,7 @@
  *
  * The production release gate is always separate from composition/review.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { applyInsightsLinkOverlays } from './link-overlays.mjs';
@@ -100,6 +100,31 @@ if (!blocks.some((block) => block.type === 'table') && !media.some((item) => ite
   fail('a table or informative, source-backed diagram is required');
 }
 const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** Rendered widths from insights-preview.css (--insights-hero / --insights-breakout / --insights-inline). */
+const FIGURE_SIZES = {
+  hero: '(min-width: 1250px) 1210px, 100vw',
+  breakout: '(min-width: 1140px) 1100px, 100vw',
+  photo: '(min-width: 1140px) 1100px, 100vw',
+  diagram: '(min-width: 1140px) 1100px, 100vw',
+  inline: '(min-width: 930px) 890px, 100vw',
+};
+/**
+ * Self-hosted photos (scripts/insights/self-host-pexels.mjs) list their `responsive` widths;
+ * AVIF and WebP variants sit next to the JPG fallback as <name>-<width>.<format>.
+ */
+function responsiveSources(item) {
+  if (item.responsive === undefined) return '';
+  const match = /^(\/images\/insights\/.+)-\d+\.jpg$/.exec(item.src);
+  if (!match || !Array.isArray(item.responsive) || !item.responsive.length) fail(`invalid responsive image: ${item.src}`);
+  return ['avif', 'webp'].map((format) => {
+    const srcset = item.responsive.map((w) => {
+      const file = `${match[1]}-${w}.${format}`;
+      if (!existsSync(path.join(root, 'public', file))) fail(`missing responsive variant ${file}`);
+      return `${file} ${w}w`;
+    }).join(', ');
+    return `<source type="image/${format}" srcset="${srcset}" sizes="${FIGURE_SIZES[item.kind]}" />`;
+  }).join('');
+}
 function figure(item) {
   requiredString(item.anchor, 'visual anchor');
   requiredString(item.alt, 'visual alt');
@@ -112,7 +137,12 @@ function figure(item) {
   const cls = `insights-figure insights-figure--${item.kind}`;
   const width = Number(item.width), height = Number(item.height);
   if (!(width >= 600 && width <= 6000 && height >= 300 && height <= 6000)) fail('invalid visual dimensions');
-  return `<figure class="${cls}"><img src="${escapeHtml(item.src)}" width="${width}" height="${height}" loading="${item.kind === 'hero' ? 'eager' : 'lazy'}" decoding="async" alt="${escapeHtml(item.alt)}" />\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
+  if (item.src.startsWith('/images/') && !existsSync(path.join(root, 'public', item.src))) fail(`missing local image ${item.src}`);
+  // The hero is the LCP element: load it eagerly at high priority; everything else lazily.
+  const loading = item.kind === 'hero' ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  const img = `<img src="${escapeHtml(item.src)}" width="${width}" height="${height}" ${loading} decoding="async" alt="${escapeHtml(item.alt)}" />`;
+  const sources = responsiveSources(item);
+  return `<figure class="${cls}">${sources ? `<picture>${sources}${img}</picture>` : img}\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
 }
 // Optional internal-tool callouts (KERSIVO pages only): a link box after an anchor block, never new claims.
 const callouts = manifest.callouts ?? [];
