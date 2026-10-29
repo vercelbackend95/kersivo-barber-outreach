@@ -14,6 +14,7 @@ Commercial source of truth: Commercial Offer v2.0 (founder decisions FD01–FD12
 | 4 — comparison engine: shared CTAs, `/compare` answer + FAQ, tier-1 titles/PAA, calculator worked examples | #132 | `docs/seo/batch-4-changelog.md` |
 | 5 — cluster & content linking: `/starter` free qualifier + Full fit box, online-booking breadcrumb/payment flows/intent chooser, design page trim, Insights link budget + category links | #135 | `docs/seo/batch-5-changelog.md` |
 | 6 — technical hygiene: vercel.app → apex, trailing-slash 308, asset/font cache headers, client Sentry off, no ClientRouter on marketing, AI crawler groups, a11y (100/100/100/97) | #136 | `docs/seo/batch-6-changelog.md` |
+| 7 — optional: `/llms.txt`, square 512px logo in schema, homepage FAQPage in the main @graph | #138 | `docs/seo/batch-7-changelog.md` |
 
 Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 100; `/pricing` mobile 98, desktop 100.
 
@@ -21,7 +22,6 @@ Production Lighthouse after Batch 3: `/` mobile 96 (LCP 2.4 s, CLS 0), desktop 1
 
 | Batch | Name | Size | Priority |
 |---|---|---|---|
-| 7 | Optional refinements | Small | Low |
 
 ### Batch 4 — Comparison engine (P1-11, P2-04, P2-06, P2-07, P2-09, P2-15) — DONE, see `docs/seo/batch-4-changelog.md`
 Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`, `fresha`, `treatwell`, `nearcut`, `vagaro`, `timely`, `phorest`, `square-appointments`, `squire`, `setora`).
@@ -57,11 +57,10 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 - Accessibility: contrast on red buttons, skip link, focus ring (target a11y ≥ 95).
 - Server-side `signup_completed` (Starter account created) — currently defined but never fired.
 
-### Batch 7 — Optional
+### Batch 7 — Optional — DONE except sameAs URLs, H2 typeface, nav (founder input), see `docs/seo/batch-7-changelog.md`
 `/llms.txt`, square 512px logo for schema/OG, Facebook vanity URL in `sameAs`, one display typeface for H2s, nav simplification (only with GA4 click data), merge FAQPage into the main `@graph`.
 
 ## Small leftovers
-- Homepage Booksy example: stray space before "." after "Booksy's UK pricing page".
 - New OG image (no "ZERO COMMISSION"; needs a design).
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).
 

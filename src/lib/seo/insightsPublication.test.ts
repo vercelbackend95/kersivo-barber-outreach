@@ -127,7 +127,7 @@ describe('Insights publication safety', () => {
       'https://kersivo.co.uk/#organization',
       'https://kersivo.co.uk/#website',
     ]);
-    expect(entity['@graph'][0].logo.url).toBe('https://kersivo.co.uk/images/logo_nobg.png');
+    expect(entity['@graph'][0].logo.url).toBe('https://kersivo.co.uk/images/brand/kersivo-mark.png');
     expect(jsonLd['@type']).toBe('Article');
     expect(jsonLd).toHaveProperty('datePublished', article.publishedDate);
     expect(jsonLd).toHaveProperty('dateModified', article.publishedDate);

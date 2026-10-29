@@ -35,11 +35,12 @@ export function buildKersivoOrganizationNode(siteUrl = getPublicSiteUrl()): Reco
       areaServed: 'GB',
       availableLanguage: 'en-GB',
     },
+    // Square 512px K mark, written to public/ by scripts/generate-favicons.mjs on every build.
     logo: {
       '@type': 'ImageObject',
-      url: `${siteUrl}/images/logo_nobg.png`,
-      width: 796,
-      height: 555,
+      url: `${siteUrl}/images/brand/kersivo-mark.png`,
+      width: 512,
+      height: 512,
     },
     email: KERSIVO_CONTACT_EMAIL,
     areaServed: { '@type': 'Country', name: 'United Kingdom', identifier: 'GB' },

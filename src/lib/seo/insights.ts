@@ -599,7 +599,7 @@ export function buildInsightsArticleJsonLd(article: {
       name: 'KERSIVO',
       url: buildAbsoluteUrl('/about'),
     },
-    /** Resolves to the shared Organization node (logo_nobg.png) emitted alongside the article. */
+    /** Resolves to the shared Organization node (square kersivo-mark.png logo) emitted alongside the article. */
     publisher: { '@id': organizationId },
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     articleSection: categoryName,
