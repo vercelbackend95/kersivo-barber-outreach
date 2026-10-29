@@ -22,6 +22,10 @@ import { PHOREST_ALTERNATIVE_LAST_UPDATED_ISO, PHOREST_ALTERNATIVE_PAGE_PATH } f
 import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
 import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
+import {
+  CANCELLATION_POLICY_LAST_UPDATED_ISO,
+  CANCELLATION_POLICY_PAGE_PATH,
+} from './cancellationPolicyTemplatePage';
 import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
 import { buildInsightsSitemapEntries } from './insights';
@@ -84,6 +88,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: SETORA_ALTERNATIVE_PAGE_PATH, lastmod: SETORA_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
+  /** Matches the visible "Last updated" date on src/pages/barbershop-cancellation-policy-template/index.astro. */
+  { path: CANCELLATION_POLICY_PAGE_PATH, lastmod: CANCELLATION_POLICY_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: PRIVACY_POLICY_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/cookies.astro. */
