@@ -460,14 +460,22 @@ export function getInsightsIndexLastmod(): string {
   return getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[])!;
 }
 
-export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod?: string }> {
+export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: string }> {
+  const articles = INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[];
   return [
     { path: INSIGHTS_INDEX_PATH, lastmod: getInsightsIndexLastmod() },
-    ...(INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[]).map((article) => ({
+    ...articles.map((article) => ({
       path: article.path,
       lastmod: getInsightsArticleDateModified(article),
     })),
-    ...getIndexableInsightsCategorySitemapEntries(),
+    /** Archives change when an article they list does; an empty archive follows the hub. */
+    ...getIndexableInsightsCategorySitemapEntries().map((entry) => ({
+      path: entry.path,
+      lastmod:
+        getNewestInsightsDateModified(
+          articles.filter((article) => getInsightsCategory(article.categoryId).path === entry.path),
+        ) ?? getInsightsIndexLastmod(),
+    })),
   ];
 }
 
