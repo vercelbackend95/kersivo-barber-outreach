@@ -1,0 +1,52 @@
+---
+import type { NumericField } from '@/lib/noShowCalculator/noShowInputs';
+
+interface Props {
+  field: NumericField;
+  value: number;
+  helper?: string;
+  /** Extra text shown next to the input, updated live (e.g. derived no-show rate). */
+  aside?: string;
+  asideKey?: string;
+  compact?: boolean;
+}
+
+const { field, value, helper = field.helper, aside, asideKey, compact = false } = Astro.props as Props;
+const helperId = `${field.id}-helper`;
+const errorId = `${field.id}-error`;
+const describedBy = [helper ? helperId : null, asideKey ? `${field.id}-aside` : null, errorId]
+  .filter(Boolean)
+  .join(' ');
+const affixed = Boolean(field.prefix || field.suffix);
+---
+
+<div class={`calc-field ns-field${compact ? ' ns-field--compact' : ''}`}>
+  <label class="calc-field__label" for={field.id}>
+    {field.label}{field.suffix === 'p' ? ' (pence)' : ''}
+  </label>
+  <div class="ns-field__row">
+    <div class={affixed ? 'calc-input calc-input--currency ns-input' : 'ns-input-wrap'}>
+      {field.prefix && <span class="calc-input__prefix" aria-hidden="true">{field.prefix}</span>}
+      <input
+        id={field.id}
+        class={affixed ? undefined : 'calc-input ns-input'}
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        spellcheck="false"
+        name={field.key}
+        value={String(value)}
+        data-ns-field={field.key}
+        data-min={field.min}
+        data-max={field.max}
+        aria-describedby={describedBy}
+      />
+      {field.suffix && <span class="calc-input__prefix ns-input__suffix" aria-hidden="true">{field.suffix}</span>}
+    </div>
+    {asideKey && (
+      <span id={`${field.id}-aside`} class="ns-field__aside" data-ns={asideKey}>{aside}</span>
+    )}
+  </div>
+  {helper && <p id={helperId} class="calc-field__helper">{helper}</p>}
+  <p id={errorId} class="calc-field__error" data-ns-error={field.key} hidden></p>
+</div>

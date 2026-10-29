@@ -24,6 +24,7 @@ import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } fro
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
+import { NO_SHOW_CALCULATOR_LAST_UPDATED_ISO, NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
 import { buildInsightsSitemapEntries } from './insights';
 import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
 import { STARTER_PAGE_LAST_UPDATED_ISO, STARTER_PAGE_PATH } from './starterPage';
@@ -84,6 +85,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: SETORA_ALTERNATIVE_PAGE_PATH, lastmod: SETORA_ALTERNATIVE_LAST_UPDATED_ISO },
   /** Matches the visible "Last updated" date on src/pages/barber-software-cost-calculator/index.astro. */
   { path: BARBER_COST_CALCULATOR_PAGE_PATH, lastmod: BARBER_COST_CALCULATOR_LAST_UPDATED_ISO },
+  /** Matches the visible "Last updated" date on src/pages/barbershop-no-show-calculator/index.astro. */
+  { path: NO_SHOW_CALCULATOR_PAGE_PATH, lastmod: NO_SHOW_CALCULATOR_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/privacy.astro. */
   { path: '/privacy', lastmod: PRIVACY_POLICY_LAST_UPDATED_ISO },
   /** Matches "Last updated" on src/pages/cookies.astro. */

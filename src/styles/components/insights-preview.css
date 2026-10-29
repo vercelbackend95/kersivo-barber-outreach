@@ -150,6 +150,13 @@ a.insights-article-meta__category:hover { color: #dc4e5b; }
 .insights-article__body strong { color: #1a1d22; font-weight: 790; }
 .insights-article__body a { color: #88242f; text-decoration-color: #ac6c72; text-underline-offset: .2em; overflow-wrap: anywhere; }
 .insights-article__body a:hover { color: #5e1119; }
+.insights-article__body > .insights-tool-callout {
+  max-width: var(--insights-copy); margin: 0.5rem 0 2.4rem; padding: 1.15rem 1.35rem;
+  border: 1px solid #c9c7c1; border-left: 4px solid var(--insights-accent); background: #fbfaf6;
+}
+.insights-tool-callout p { margin: 0; }
+.insights-tool-callout__kicker { color: #5b5f66; font-size: .74rem; font-weight: 700; letter-spacing: .14em; }
+.insights-tool-callout__text { margin-top: .3rem !important; font-size: 1.12rem; font-weight: 700; line-height: 1.4; }
 .insights-article__body > :is(ul, ol) { padding-left: 1.65rem; margin-top: .8rem; margin-bottom: 2rem; }
 .insights-article__body li { padding-left: .35rem; margin-bottom: .75rem; max-width: none; }
 .insights-article__body li::marker { color: #a62b37; }

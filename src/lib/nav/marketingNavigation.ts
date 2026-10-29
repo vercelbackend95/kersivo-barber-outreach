@@ -267,6 +267,15 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
+    id: 'resources-no-show-calculator',
+    label: 'No-Show Cost Calculator',
+    description: 'See what missed appointments cost and whether a deposit pays.',
+    href: '/barbershop-no-show-calculator',
+    group: 'resources',
+    section: 'tools',
+    icon: 'calculator',
+  },
+  {
     id: 'resources-website-design',
     label: 'Barbershop Website Design',
     description: 'Practical tips for barbershop branding, photography and mobile website design.',

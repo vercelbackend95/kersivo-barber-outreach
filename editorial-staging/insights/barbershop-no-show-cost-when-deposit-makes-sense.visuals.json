@@ -56,6 +56,15 @@
       "licenceReviewed": true
     }
   ],
+  "callouts": [
+    {
+      "anchor": "The busy Saturday no-show is the cheap one.",
+      "kicker": "FREE TOOL",
+      "label": "No-show cost calculator",
+      "text": "Run these numbers for your own shop → No-Show Cost Calculator",
+      "href": "/barbershop-no-show-calculator"
+    }
+  ],
   "editorialVersion": "ARTICLE DRAFT v5 — 20 October 2026 · targeted statutory 14-day cancellation-right correction, sources verified; prior v4 preserved in Notion.",
   "editorialVisualDirection": "One real vacant-chair hero plus two distinct authentic detail/interior photographs. Free Unsplash License verified on each original page and image-ID uniqueness reviewed against 19 source manifests; no photographed shop is implied to use KERSIVO. Existing legal warning remains in copy; never publish while Hold=true.",
   "publicationApproval": {

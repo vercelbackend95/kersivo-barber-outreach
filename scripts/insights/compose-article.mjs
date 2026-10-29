@@ -114,7 +114,19 @@ function figure(item) {
   if (!(width >= 600 && width <= 6000 && height >= 300 && height <= 6000)) fail('invalid visual dimensions');
   return `<figure class="${cls}"><img src="${escapeHtml(item.src)}" width="${width}" height="${height}" loading="${item.kind === 'hero' ? 'eager' : 'lazy'}" decoding="async" alt="${escapeHtml(item.alt)}" />\n<figcaption>${escapeHtml(item.caption)}${item.creditUrl ? ` — <a href="${escapeHtml(item.creditUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.credit || 'Source')}</a>` : ''}.</figcaption></figure>`;
 }
+// Optional internal-tool callouts (KERSIVO pages only): a link box after an anchor block, never new claims.
+const callouts = manifest.callouts ?? [];
+if (!Array.isArray(callouts)) fail('callouts must be an array');
+function callout(item) {
+  requiredString(item.anchor, 'callout anchor');
+  requiredString(item.kicker, 'callout kicker');
+  requiredString(item.text, 'callout text');
+  requiredString(item.href, 'callout href');
+  if (!/^\/[a-z0-9/-]+$/.test(item.href)) fail('callout href must be an internal KERSIVO path');
+  return `<aside class="insights-tool-callout" aria-label="${escapeHtml(item.label ?? item.text)}"><p class="insights-tool-callout__kicker">${escapeHtml(item.kicker)}</p><p class="insights-tool-callout__text"><a href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a></p></aside>`;
+}
 const seen = new Set();
+const seenCallouts = new Set();
 const result = [];
 for (const block of blocks) {
   result.push(block.markdown);
@@ -126,13 +138,24 @@ for (const block of blocks) {
       result.push(figure(asset));
     }
   }
+  for (const [i, item] of callouts.entries()) {
+    if (seenCallouts.has(i)) continue;
+    if (item.anchor === block.markdown || block.markdown.startsWith(item.anchor)) {
+      if (item.anchor.length < 24) fail('callout anchor too short to identify an article section reliably');
+      seenCallouts.add(i);
+      result.push(callout(item));
+    }
+  }
 }
+if (seenCallouts.size !== callouts.length) fail('callout anchors missing or ambiguous');
 if (seen.size !== media.length) {
   fail(`visual anchors missing or ambiguous: ${media.filter((_, index) => !seen.has(index)).map((a) => a.anchor).join(' | ')}`);
 }
 const renderedWithFigures = result.join('\n\n') + '\n';
 const canonical = blocks.map((block) => block.markdown).join('\n\n');
-const stripFigures = (html) => html.replace(/<figure class="insights-figure[^]*?<\/figure>/g, '');
+const stripFigures = (html) => html
+  .replace(/<figure class="insights-figure[^]*?<\/figure>/g, '')
+  .replace(/<aside class="insights-tool-callout"[^]*?<\/aside>/g, '');
 if (stripFigures(renderedWithFigures).trim().replace(/\n{3,}/g, '\n\n') !== canonical.trim()) {
   fail('article text changed during visual insertion');
 }
