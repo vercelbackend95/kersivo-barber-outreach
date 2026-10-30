@@ -44,6 +44,13 @@ export function mapClaimHttpError(status: number, code?: string | null): ClaimUx
       retryable: true,
     };
   }
+  if (status === 403 && code === 'EMAIL_NOT_VERIFIED') {
+    return {
+      kind: 'error',
+      message: 'Verify your email address before continuing. Check your inbox for a verification link.',
+      retryable: true,
+    };
+  }
   if (status === 403) {
     return {
       kind: 'error',

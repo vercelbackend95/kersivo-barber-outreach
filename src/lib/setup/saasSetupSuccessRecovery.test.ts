@@ -40,6 +40,15 @@ describe('saasSetupSuccessRecovery', () => {
     });
   });
 
+  it('maps EMAIL_NOT_VERIFIED to a prompt to verify, not a subscription error', () => {
+    const ux = mapClaimHttpError(403, 'EMAIL_NOT_VERIFIED');
+    expect(ux).toEqual({
+      kind: 'error',
+      message: 'Verify your email address before continuing. Check your inbox for a verification link.',
+      retryable: true,
+    });
+  });
+
   it('maps 401 to need_auth', () => {
     expect(mapClaimHttpError(401)).toEqual({ kind: 'need_auth' });
   });
