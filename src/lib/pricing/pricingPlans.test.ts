@@ -8,7 +8,6 @@ import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import {
   BILLING_CYCLE_SHORT,
   KERSIVO_COMMISSION_CLAIM,
-  NO_SETUP_FEE_SHORT,
 } from '@/lib/pricing/claimsPolicy';
 import {
   compareCellText,
@@ -16,10 +15,13 @@ import {
   getRenderableCompareGroups,
   PRICING_BILLING_COLUMNS,
   PRICING_COMPARE_GROUPS,
+  PRICING_FACTS_STRIPE_NOTE,
   PRICING_FULL_FEATURES,
   PRICING_PLAN_CARDS,
   PRICING_REFUND_SENTENCE,
+  PRICING_STARTER_DESCRIPTION,
   PRICING_STARTER_FEATURES,
+  STARTER_KEY_FACTS,
 } from './pricingPlans';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -30,15 +32,35 @@ const includedBlob = PRICING_INCLUDED_GROUPS.flatMap((group) => [group.title, ..
 const layout = getRateCard1LandingLayout();
 
 describe('/pricing plan cards', () => {
-  it('uses the shared Price component for both plans and keeps Full visually primary', () => {
+  it('uses the shared key facts for both plans and keeps Full visually primary', () => {
     const card = read('components/pricing/PlanCard.astro');
-    expect(card).toContain('import { Price } from \'@/components/ui/Price\'');
-    expect(PRICING_PLAN_CARDS.full.amount).toBe(SAAS_MONTHLY_GBP);
-    expect(PRICING_PLAN_CARDS.starter.amount).toBe(0);
-    expect(PRICING_PLAN_CARDS.full.priceSize).toBe('lg');
-    expect(PRICING_PLAN_CARDS.starter.priceSize).toBe('md');
+    expect(card).toContain('<KeyFacts facts={plan.keyFacts} />');
+    expect(PRICING_PLAN_CARDS.full.keyFacts.values[0]).toEqual({
+      label: 'Monthly fee, per location',
+      value: `£${SAAS_MONTHLY_GBP}`,
+    });
+    expect(PRICING_PLAN_CARDS.starter.keyFacts.values[0]).toEqual({ label: 'Monthly fee', value: '£0' });
     expect(card).toContain('class="btn btn--primary btn--lg"');
     expect(card).toContain('class="btn btn--outline btn--lg"');
+  });
+
+  it('shares one surface and facts source with the /starter hero card', () => {
+    const card = read('components/pricing/PlanCard.astro');
+    const starterPage = read('pages/starter/index.astro');
+    expect(card).toContain("isFull ? 'ks-glass-card--accent' : 'ks-glass-card--plain'");
+    expect(starterPage).toContain('ks-glass-card ks-glass-card--accent starter-glance-card starter-hero__card');
+    expect(starterPage).toContain('<KeyFacts facts={STARTER_KEY_FACTS} />');
+    expect(PRICING_PLAN_CARDS.starter.keyFacts).toBe(STARTER_KEY_FACTS);
+    expect(read('components/pricing/PricingPlans.astro')).toContain(
+      'pricing-billing__item ks-glass-card ks-glass-card--plain',
+    );
+  });
+
+  it('keeps Stripe fees next to the 0% tile and the tile facts out of the Starter line', () => {
+    expect(read('components/pricing/PlanCard.astro')).toContain('{PRICING_FACTS_STRIPE_NOTE}');
+    expect(PRICING_FACTS_STRIPE_NOTE).toBe('Stripe fees apply.');
+    expect(PRICING_STARTER_DESCRIPTION).not.toMatch(/£5|Up to 4|0%|hosted/i);
+    expect(PRICING_STARTER_DESCRIPTION.length).toBeLessThanOrEqual(85);
   });
 
   it('keeps Full as the first card and Starter as the outline CTA', () => {
@@ -47,7 +69,7 @@ describe('/pricing plan cards', () => {
     expect(plans).toContain('id="plan"');
     expect(PRICING_PLAN_CARDS.starter.primaryCta.track).toBe('starter_signup_click');
     expect(PRICING_PLAN_CARDS.full.chips).toContain(KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''));
-    expect(PRICING_PLAN_CARDS.full.qualifier).toContain(NO_SETUP_FEE_SHORT.replace(/\.$/, '').toLowerCase());
+    expect(PRICING_PLAN_CARDS.full.keyFacts.details[0]).toEqual({ label: 'Setup fee', value: 'None' });
   });
 
   it('takes Full checklist titles from the existing landing included items', () => {
@@ -161,6 +183,18 @@ describe('/pricing comparison table', () => {
     }
     expect(compareCellText({ kind: 'included' })).toBe('Included');
     expect(compareCellText({ kind: 'excluded' })).toBe('Not included');
+  });
+
+  it('draws the Full column as one outline, not a border per row', () => {
+    const css = read('styles/components/pricing-compare.css');
+    expect(css).not.toContain('box-shadow: inset 0 2px 0 var(--color-brand)');
+    expect(css).toContain('.pricing-compare__wrap::after');
+    expect(css.slice(css.indexOf('.pricing-compare__wrap {'), css.indexOf('.pricing-compare__wrap::after'))).not.toContain(
+      'overflow',
+    );
+    const table = read('components/pricing/PricingCompareTable.astro');
+    expect(table).toContain('<CheckIcon label="Included" />');
+    expect(table).toContain('<span class="sr-only">Not included</span>');
   });
 
   it('keeps a mobile plan switcher with a radio group', () => {

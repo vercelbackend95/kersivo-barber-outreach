@@ -1,8 +1,9 @@
 ---
 import CheckIcon from '@/components/pricing/CheckIcon.astro';
+import KeyFacts from '@/components/pricing/KeyFacts.astro';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
-import { Price } from '@/components/ui/Price';
-import { PRICING_PLAN_CARDS, type PricingPlanVariant } from '@/lib/pricing/pricingPlans';
+import { PRICING_FACTS_STRIPE_NOTE, PRICING_PLAN_CARDS, type PricingPlanVariant } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/pricing-plans.css';
 
 interface Props {
@@ -16,30 +17,41 @@ const isFull = variant === 'full';
 const headingId = `pricing-${variant}-title`;
 ---
 
-<article class:list={['plan-card', `plan-card--${variant}`]} aria-labelledby={headingId}>
-  {plan.badge ? <p class="plan-card__badge">{plan.badge}</p> : null}
-  <p class="plan-card__name" id={headingId}>{plan.name}</p>
-  <Price className="plan-card__price" amount={plan.amount} qualifier={plan.qualifier} size={plan.priceSize} />
+<article
+  class:list={['plan-card', `plan-card--${variant}`, 'ks-glass-card', isFull ? 'ks-glass-card--accent' : 'ks-glass-card--plain']}
+  aria-labelledby={headingId}
+>
+  <div class="plan-card__header">
+    <p class:list={['ks-eyebrow', { 'ks-eyebrow--neutral': !isFull }]} id={headingId}>{plan.name}</p>
+    {plan.badge ? <p class="plan-card__badge">{plan.badge}</p> : null}
+  </div>
+
+  <KeyFacts facts={plan.keyFacts} />
+  <p class="plan-card__facts-note">{PRICING_FACTS_STRIPE_NOTE}</p>
+
   <p class="plan-card__description">{plan.description}</p>
 
   <div class="plan-card__cta">
     {
-      isFull && freePreview ? (
+      isFull ? (
         <>
-          <FullPlanCta part="all" placement={plan.primaryCta.placement} primaryClass="btn btn--primary btn--lg" />
-          {plan.checkoutNote ? <p class="plan-card__checkout">{plan.checkoutNote}</p> : null}
-        </>
-      ) : isFull ? (
-        <>
-          <a
-            href={plan.primaryCta.href}
-            class="btn btn--primary btn--lg"
-            data-track={plan.primaryCta.track}
-            data-track-placement={plan.primaryCta.placement}
-          >
-            {plan.primaryCta.label}
-          </a>
-          {plan.checkoutNote ? <p class="plan-card__checkout">{plan.checkoutNote}</p> : null}
+          {freePreview ? (
+            <FullPlanCta part="primary" placement={plan.primaryCta.placement} primaryClass="btn btn--primary btn--lg" />
+          ) : (
+            <a
+              href={plan.primaryCta.href}
+              class="btn btn--primary btn--lg"
+              data-track={plan.primaryCta.track}
+              data-track-placement={plan.primaryCta.placement}
+            >
+              {plan.primaryCta.label}
+            </a>
+          )}
+          <div class="plan-card__cta-row">
+            {freePreview ? <FullPlanCta part="subscribe" placement={plan.primaryCta.placement} /> : null}
+            {freePreview && plan.checkoutNote ? <span class="plan-card__cta-sep" aria-hidden="true">·</span> : null}
+            {plan.checkoutNote ? <p class="plan-card__checkout">{plan.checkoutNote}</p> : null}
+          </div>
         </>
       ) : (
         <>
@@ -61,12 +73,12 @@ const headingId = `pricing-${variant}-title`;
 
   <hr class="plan-card__divider" />
 
-  <h3 class="plan-card__included-title">What’s included</h3>
+  <h3 class="plan-card__section-title">What’s included</h3>
   <ul class="pricing-checklist pricing-checklist--features">
     {
       plan.features.map((item) => (
         <li class="pricing-checklist__item">
-          <CheckIcon />
+          <CheckIcon class="pricing-check--circle" />
           <div>
             <h4 class="pricing-checklist__title">{item.title}</h4>
             <p class="pricing-checklist__desc">{item.description}</p>
@@ -87,12 +99,12 @@ const headingId = `pricing-${variant}-title`;
   }
 
   <div class="plan-card__best">
-    <h3 class="plan-card__best-title">{plan.bestForTitle}</h3>
+    <h3 class="plan-card__section-title">{plan.bestForTitle}</h3>
     <ul class="pricing-checklist pricing-checklist--best">
       {
         plan.bestFor.map((item) => (
           <li class="pricing-checklist__item">
-            <CheckIcon />
+            <CheckIcon class="pricing-check--circle" />
             <span>{item}</span>
           </li>
         ))

@@ -2,6 +2,7 @@
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import PlanCard from '@/components/pricing/PlanCard.astro';
 import { PRICING_BILLING_COLUMNS, PRICING_PLAN_LEAD } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/pricing-plans.css';
 
 interface Props {
@@ -29,7 +30,7 @@ const { freePreview = false } = Astro.props;
     <div class="pricing-billing">
       {
         PRICING_BILLING_COLUMNS.map((column) => (
-          <article class="pricing-billing__item">
+          <article class="pricing-billing__item ks-glass-card ks-glass-card--plain">
             <span class="pricing-billing__icon" aria-hidden="true">
               {column.icon === 'billing' ? (
                 <svg viewBox="0 0 24 24" fill="none">

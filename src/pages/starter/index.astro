@@ -2,7 +2,9 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
+import KeyFacts from '@/components/pricing/KeyFacts.astro';
 import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astro';
+import { STARTER_KEY_FACTS } from '@/lib/pricing/pricingPlans';
 import {
   STARTER_FAQ_ITEMS,
   STARTER_FREE_QUALIFIER,
@@ -26,6 +28,7 @@ import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { STARTER_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { CreditCard, UserRound, UsersRound } from 'lucide-react';
 import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/starter-landing.css';
 
 const currentYear = new Date().getFullYear();
@@ -126,30 +129,9 @@ const starterFeatures = [
           </p>
         </div>
 
-        <aside class="starter-glance-card starter-hero__card" aria-label="KERSIVO Starter quick facts">
-          <p class="starter-card__eyebrow starter-glance__label">STARTER AT A GLANCE</p>
-          <dl class="starter-glance">
-            <div class="starter-glance__value">
-              <dt>Monthly fee</dt>
-              <dd>£0</dd>
-            </div>
-            <div class="starter-glance__value">
-              <dt>KERSIVO commission</dt>
-              <dd>0%</dd>
-            </div>
-            <div class="starter-glance__detail">
-              <dt>Bookable barbers</dt>
-              <dd>Up to 4</dd>
-            </div>
-            <div class="starter-glance__detail">
-              <dt>Booking page</dt>
-              <dd>KERSIVO hosted</dd>
-            </div>
-            <div class="starter-glance__detail starter-glance__detail--wide">
-              <dt>Public booking payment</dt>
-              <dd>£5 deposit or Pay in full</dd>
-            </div>
-          </dl>
+        <aside class="ks-glass-card ks-glass-card--accent starter-glance-card starter-hero__card" aria-label="KERSIVO Starter quick facts">
+          <p class="ks-eyebrow starter-glance__label">STARTER AT A GLANCE</p>
+          <KeyFacts facts={STARTER_KEY_FACTS} />
         </aside>
       </div>
     </section>
@@ -266,21 +248,21 @@ const starterFeatures = [
             appointments cost you and whether a deposit would pay for itself.
           </p>
         </div>
-        <div class="starter-glance-card starter-payment-card">
-          <dl class="starter-glance">
-            <div class="starter-glance__value starter-glance__value--term">
+        <div class="ks-glass-card ks-glass-card--accent starter-glance-card starter-payment-card">
+          <dl class="ks-facts">
+            <div class="ks-facts__value ks-facts__value--term">
               <dt>£5 deposit</dt>
               <dd>Available on services above £5</dd>
             </div>
-            <div class="starter-glance__value starter-glance__value--term">
+            <div class="ks-facts__value ks-facts__value--term">
               <dt>Pay in full</dt>
               <dd>Available on every public booking</dd>
             </div>
-            <div class="starter-glance__detail">
+            <div class="ks-facts__detail">
               <dt>Public Pay at shop</dt>
               <dd>Unlocked with Full KERSIVO</dd>
             </div>
-            <div class="starter-glance__detail">
+            <div class="ks-facts__detail">
               <dt>KERSIVO fee</dt>
               <dd>0%</dd>
             </div>

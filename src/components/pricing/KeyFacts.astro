@@ -1,0 +1,33 @@
+---
+import type { PlanKeyFacts } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/ks-glass-card.css';
+
+interface Props {
+  facts: PlanKeyFacts;
+}
+
+const { facts } = Astro.props;
+---
+
+<dl class="ks-facts">
+  {
+    facts.values.map((fact) => (
+      <div class="ks-facts__value">
+        <dt>{fact.label}</dt>
+        <dd>{fact.value}</dd>
+      </div>
+    ))
+  }
+  {
+    facts.details.map((fact) => (
+      <div class="ks-facts__detail">
+        <dt>{fact.label}</dt>
+        <dd>{fact.value}</dd>
+      </div>
+    ))
+  }
+  <div class="ks-facts__detail ks-facts__detail--wide">
+    <dt>{facts.wide.label}</dt>
+    <dd>{facts.wide.value}</dd>
+  </div>
+</dl>
