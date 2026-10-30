@@ -84,9 +84,9 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
 
 export const PRICING_FEES_POINTS = [
   'KERSIVO takes 0% commission on booking payments with Starter and Full KERSIVO, and 0% on Full retail sales.',
-  'Standard Stripe payment-processing fees apply to online card payments. Starter public bookings require a connected Stripe account.',
+  'Starter public bookings require a connected Stripe account.',
   'Starter public bookings use a fixed £5-deposit-or-Pay-in-full model. Full KERSIVO unlocks editable payment controls, including Pay at shop.',
-  `Full KERSIVO is billed today, then monthly on the same billing-cycle day. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added to the ${PRICE} price.`,
+  `KERSIVO is not currently VAT registered, so no VAT is added to the ${PRICE} price.`,
 ] as const;
 
 export type PricingFaqItem = {

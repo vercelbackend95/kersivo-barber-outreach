@@ -1,0 +1,32 @@
+---
+import CheckIcon from '@/components/pricing/CheckIcon.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import { PRICING_FEES_POINTS } from '@/lib/seo/pricingPage';
+import '@/styles/components/pricing-plans.css';
+---
+
+<section id="fees" class="pricing-page-section" aria-labelledby="pricing-fees-title">
+  <div class="container">
+    <SectionHeader
+      eyebrow="Fees and billing"
+      title="What you pay, and what you don’t"
+      titleId="pricing-fees-title"
+    />
+    <ul class="pricing-checklist pricing-fees__list">
+      {
+        PRICING_FEES_POINTS.map((point) => (
+          <li class="pricing-checklist__item pricing-fees__item">
+            <CheckIcon />
+            <span>{point}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="pricing-fees__note">
+      Not sure yet? <a href="/compare" class="company-link">Compare UK booking systems</a> or try the <a href="/barber-software-cost-calculator" class="company-link">cost calculator</a>.
+      Comparing platforms? See how KERSIVO compares with
+      <a href="/booksy-alternative" class="company-link">Booksy</a> and
+      <a href="/fresha-alternative" class="company-link">Fresha</a>.
+    </p>
+  </div>
+</section>

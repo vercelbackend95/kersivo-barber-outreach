@@ -3,7 +3,7 @@
    ================================================================ */
 
 .mnav {
-  --mnav-h: 3.75rem;
+  --mnav-h: var(--nav-sticky-offset);
   --mnav-bg: #0b0d10;
   --mnav-surface: #111419;
   --mnav-line: color-mix(in srgb, var(--border) 78%, transparent);

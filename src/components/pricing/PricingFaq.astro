@@ -1,0 +1,34 @@
+---
+import Accordion from '@/components/ui/Accordion.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import { getPricingFaqItems } from '@/lib/seo/pricingPage';
+import '@/styles/components/pricing-plans.css';
+
+interface Props {
+  freePreview?: boolean;
+}
+
+const { freePreview = false } = Astro.props;
+const items = getPricingFaqItems(freePreview).map((faq, index) => ({
+  id: `pricing-faq-${index + 1}`,
+  title: faq.question,
+  body: faq.answer,
+}));
+---
+
+<section id="faq" class="pricing-page-section" aria-labelledby="pricing-faq-title">
+  <div class="container">
+    <SectionHeader
+      eyebrow="FAQ"
+      title="Questions about KERSIVO pricing?"
+      lead="Clear answers on Starter and Full KERSIVO, fees, VAT, SMS reminders and cancelling."
+      titleId="pricing-faq-title"
+    />
+    <Accordion items={items} />
+    <div class="pricing-faq__support">
+      <h3>Still have a question?</h3>
+      <p>Tell us about your barbershop and we’ll give you a clear answer.</p>
+      <a href="#contact" class="company-link">Ask a question</a>
+    </div>
+  </div>
+</section>
