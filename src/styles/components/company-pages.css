@@ -171,12 +171,18 @@
   color: var(--fg);
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
 
-.company-link:hover,
+.company-link:hover {
+  color: var(--accent-text);
+  text-decoration-color: var(--accent-text);
+}
+
 .company-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
   text-decoration-color: var(--accent);
 }
 

@@ -159,7 +159,7 @@
   margin: 1.25rem 0 0;
   max-width: 52ch;
   color: color-mix(in srgb, var(--muted) 90%, var(--fg));
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 

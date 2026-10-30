@@ -2,6 +2,29 @@
    Contrast figures are WCAG ratios measured against the page background (#0b0d10 / #030303).
    App surfaces (admin, booking flow) keep the shared tokens unchanged. */
 
+html[data-app='marketing'] {
+  --text-xs: 0.875rem;
+  --section-space-y: 4rem;
+}
+
+@media (min-width: 64rem) {
+  html[data-app='marketing'] {
+    --section-space-y: 6rem;
+  }
+}
+
+html[data-app='marketing'] a[target='_blank']:not(.btn)::after {
+  content: '\00a0↗';
+  font-size: 0.85em;
+  font-weight: 600;
+  color: currentColor;
+}
+
+html[data-app='marketing'] .section-header__lead,
+html[data-app='marketing'] .faq4__footer p {
+  max-width: var(--prose-max);
+}
+
 /* Skip link: hidden until focused, then pinned above the sticky navbar. */
 .skip-link {
   position: fixed;

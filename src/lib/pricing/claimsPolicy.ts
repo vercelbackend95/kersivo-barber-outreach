@@ -9,14 +9,14 @@
  * - fully bespoke / fully custom-built / built entirely from scratch / unlimited design / unlimited redesigns
  */
 
+import { offer } from '@/content/offer';
 import {
   SAAS_EXPORT_RETENTION_DAYS,
   SAAS_GRACE_DAYS,
 } from '@/lib/setup/saasEntitlement';
 
 /** Amount charged today — not a forever price lock. */
-export const PRICE_VAT_DISCLAIMER =
-  'You pay exactly the price shown. KERSIVO is not currently VAT registered, so no VAT is added.';
+export const PRICE_VAT_DISCLAIMER = `You pay exactly the price shown. ${offer.fees.vat}`;
 
 /** One standard plan covers one physical location; no auto multi-location discount. */
 export const PLAN_SCOPE_CLAIM =
@@ -28,8 +28,7 @@ export const PLAN_SCOPE_SHORT = 'Covers one physical barbershop location.';
 export const BILLING_CYCLE_CLAIM =
   'The first payment is taken immediately when you subscribe. Renewals are charged monthly on the same billing-cycle day. There is no annual, quarterly or prepaid plan.';
 
-export const BILLING_CYCLE_SHORT =
-  'Billed today, then monthly on the same billing-cycle day.';
+export const BILLING_CYCLE_SHORT = offer.billing.cycleShort;
 
 /** Billing wording while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
 export const FREE_PREVIEW_BILLING_CLAIM =
@@ -53,7 +52,7 @@ export const PRICE_CHANGE_NOTICE_CLAIM =
 export const NO_SETUP_FEE_CLAIM =
   'KERSIVO does not charge a separate installation or setup fee.';
 
-export const NO_SETUP_FEE_SHORT = 'No setup fee.';
+export const NO_SETUP_FEE_SHORT = `${offer.fees.setup}.`;
 
 /**
  * §3 — what the £39/month plan includes as standard configuration (ops delivery, not a DIY site builder).
@@ -200,7 +199,7 @@ export const PLAN_SCOPE_FULL_LIST = [
 /** §8 — pricing card highlight bullets (~7; SMS in highlight, not only a pill). */
 export const PLAN_SCOPE_HIGHLIGHTS = [
   'Professional barbershop website',
-  'Your own standard domain',
+  'Your own domain',
   'Booking flow + admin dashboard',
   'Retail pickup shop',
   'Client database + booking deposits',
@@ -221,10 +220,10 @@ export const PLAN_SCOPE_PILLS = [
 ] as const;
 
 /** Preferred short commission framing. */
-export const KERSIVO_COMMISSION_CLAIM = '0% KERSIVO commission.';
+export const KERSIVO_COMMISSION_CLAIM = `${offer.fees.commission}.`;
 
 /** Stripe qualification — use near commission claims. */
-export const STRIPE_FEES_NOTE = 'Standard Stripe payment-processing fees still apply.';
+export const STRIPE_FEES_NOTE = offer.fees.stripe;
 
 export const KERSIVO_COMMISSION_WITH_STRIPE = `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`;
 

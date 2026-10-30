@@ -27,7 +27,7 @@ const faqs: Faq[] = [
     question: 'What does Full KERSIVO cost, and when do I start paying?',
     answer: [
       `Full KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location, with no separate standard setup fee. Your first payment is taken when you subscribe; monthly billing continues while we prepare your website.`,
-      'KERSIVO takes 0% commission on bookings and retail. Standard Stripe processing fees still apply to online card payments.',
+      `KERSIVO takes 0% commission on bookings and retail. ${STRIPE_FEES_NOTE}`,
     ],
   },
   {
@@ -35,7 +35,7 @@ const faqs: Faq[] = [
     question: 'Can I choose how clients pay when booking?',
     answer: [
       `Yes. In Full KERSIVO, the shop owner chooses Pay at shop (no online payment), a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit capped at the service price, or full payment online. The deposit counts towards the service price, with any remaining balance paid at the shop.`,
-      'The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account. Standard Stripe processing fees apply to online payments.',
+      `The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account. ${STRIPE_FEES_NOTE}`,
     ],
   },
   {
@@ -75,8 +75,8 @@ const faqs: Faq[] = [
     question: 'What is the difference between Starter and Full?',
     answer: [
       'Starter is a £0/month KERSIVO-hosted booking page within its published limits; it is not the Full branded website.',
-      'Full adds your own branded website and standard domain, plus wider tools including reports, retail pickup and SMS appointment reminders within a monthly allowance.',
-      'Starter requires a payment-ready Stripe Connect Standard account before customers can book online. Standard Stripe processing fees apply.',
+      'Full adds your own branded website and your own domain, plus wider tools including reports, retail pickup and SMS appointment reminders within a monthly allowance.',
+      `Starter requires a payment-ready Stripe Connect Standard account before customers can book online. ${STRIPE_FEES_NOTE}`,
     ],
   },
 ];

@@ -80,7 +80,7 @@ export const FRESHA_ALTERNATIVE_FAQ_ITEMS: FreshaAlternativeFaqItem[] = [
   },
   {
     question: 'Can KERSIVO run on my barbershop’s own domain?',
-    answer: `Yes, with Full KERSIVO. Full KERSIVO (${KERSIVO_PRICE}/month per location) includes one standard domain for your branded barbershop website and booking journey. KERSIVO Starter uses a hosted KERSIVO booking page, not your own domain.`,
+    answer: `Yes, with Full KERSIVO. Full KERSIVO (${KERSIVO_PRICE}/month per location) includes your own domain for your branded barbershop website and booking journey. KERSIVO Starter uses a hosted KERSIVO booking page, not your own domain.`,
   },
   {
     question: 'Can I see the booking experience before subscribing?',

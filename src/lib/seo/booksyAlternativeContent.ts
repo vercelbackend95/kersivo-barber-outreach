@@ -75,7 +75,7 @@ export const BOOKSY_WHY_THEMES: readonly InsightCardItem[] = [
   {
     icon: 'stack',
     title: 'Own-brand website or platform ecosystem',
-    body: 'Booksy gives every business a Booksy Profile inside its ecosystem, and a widget can add booking to a website you run separately. Full KERSIVO includes a branded barbershop website and one standard domain, so the website and booking journey arrive together. KERSIVO Starter uses a hosted KERSIVO booking page instead.',
+    body: 'Booksy gives every business a Booksy Profile inside its ecosystem, and a widget can add booking to a website you run separately. Full KERSIVO includes a branded barbershop website and your own domain, so the website and booking journey arrive together. KERSIVO Starter uses a hosted KERSIVO booking page instead.',
   },
 ];
 

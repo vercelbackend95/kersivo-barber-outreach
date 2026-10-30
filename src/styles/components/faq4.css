@@ -1,5 +1,5 @@
 .faq4 {
-  padding-block: clamp(3rem, 8vw, 6rem);
+  padding-block: var(--section-space-y);
   background: var(--bg);
 }
 
@@ -18,7 +18,7 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--fg);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -168,7 +168,8 @@
   color: var(--muted);
 }
 
-.faq4__support-link {
+.faq4__support-link,
+.faq4 a.btn.btn--link.faq4__support-link {
   justify-self: start;
   display: inline-flex;
   align-items: center;

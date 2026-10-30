@@ -115,7 +115,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
   it('says 0% commission without implying card processing is free', () => {
     const a = answer('cost');
     expect(a).toContain('KERSIVO takes 0% commission on bookings and retail');
-    expect(a).toContain('Standard Stripe processing fees still apply');
+    expect(a).toContain('{STRIPE_FEES_NOTE}');
     expect(FULL_KERSIVO_PLATFORM_FEE_BPS).toBe(0);
     expect(section).not.toMatch(/free (card|payment) processing|no (card|Stripe|processing) fees/i);
   });
@@ -199,9 +199,9 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     const a = answer('starter');
     expect(a).toContain('Starter is a £0/month KERSIVO-hosted booking page within its published limits');
     expect(a).toContain('it is not the Full branded website');
-    expect(a).toContain('Full adds your own branded website and standard domain');
+    expect(a).toContain('Full adds your own branded website and your own domain');
     expect(a).toContain('payment-ready Stripe Connect Standard account');
-    expect(a).toContain('Standard Stripe processing fees apply');
+    expect(a).toContain('{STRIPE_FEES_NOTE}');
     expect(terms).toMatch(/Starter is a genuine <strong>£0\/month<\/strong>/);
     expect(terms).toMatch(/Stripe Connect Standard<\/strong> account is required/);
   });
@@ -243,7 +243,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(fine).toContain('{NO_SETUP_FEE_SHORT}');
     expect(NO_SETUP_FEE_SHORT).toBe('No setup fee.');
     expect(fine).toMatch(/0% KERSIVO commission\. \{STRIPE_FEES_NOTE\}/);
-    expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
+    expect(STRIPE_FEES_NOTE).toBe('Standard Stripe payment-processing fees apply to online payments.');
     expect(fine).toMatch(/CUTSTATE\s+Barbers, a fictional shop/);
     expect(markup).toContain('amount={SAAS_MONTHLY_GBP}');
     expect(markup).toContain('qualifier="per location"');

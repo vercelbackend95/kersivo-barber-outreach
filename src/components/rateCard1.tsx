@@ -20,6 +20,7 @@ import {
   OWNER_SELF_CONFIG_SHORT,
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
+  STRIPE_FEES_NOTE,
 } from "@/lib/pricing/claimsPolicy";
 import {
   getRateCard1Copy,
@@ -251,8 +252,7 @@ function RateCard1Default({ className }: { className?: string }) {
             <p className="rate-card1__lead">
               One flat <strong>£{SAAS_MONTHLY_GBP}/month</strong> per physical location, billed automatically. Booking,
               shop, admin, hosting, SSL, domain renewal, support and platform updates —{' '}
-              <strong>{copy.leadCommissionLabel}</strong> on bookings and retail. Standard Stripe payment-processing
-              fees still apply.
+              <strong>{copy.leadCommissionLabel}</strong> on bookings and retail. {STRIPE_FEES_NOTE}
             </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />

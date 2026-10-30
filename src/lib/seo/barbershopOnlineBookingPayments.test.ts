@@ -48,7 +48,7 @@ describe('Barbershop online booking page — Section 04 deposits and payment opt
     expect(frontmatter).toContain('DEPOSIT: `The ${deposit} is part of the ${price} price, not an extra fee.`');
     expect(frontmatter).toContain('{ lead: KERSIVO_COMMISSION_CLAIM, body: STRIPE_FEES_NOTE }');
     expect(KERSIVO_COMMISSION_CLAIM).toBe('0% KERSIVO commission.');
-    expect(STRIPE_FEES_NOTE).toBe('Standard Stripe payment-processing fees still apply.');
+    expect(STRIPE_FEES_NOTE).toBe('Standard Stripe payment-processing fees apply to online payments.');
     expect(source).toContain('Connect Stripe first.');
     expect(source).toContain("Public Starter bookings need the shop's own connected, payment-ready Stripe account.");
     expect(source).toContain('Choose how to pay.');
@@ -66,7 +66,7 @@ describe('Barbershop online booking page — Section 04 deposits and payment opt
     const text = textOf(markup);
     expect(text).toContain('The shop owner can choose Pay at shop (no online payment), a {deposit} deposit, or full payment online.');
     expect(text).toContain('Deposits count towards the service price, with the balance paid at the shop.');
-    expect(text).toContain('Standard Stripe processing fees apply to online card payments.');
+    expect(source).toContain('{STRIPE_FEES_NOTE}');
     expect(source).toContain('No pay-at-shop option for public Starter bookings.');
     expect(markup).not.toMatch(/href=["{]?["']?\/pricing/);
   });

@@ -94,7 +94,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
 export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'How much does Full KERSIVO cost a shop?',
-    answer: `Full KERSIVO is £${SAAS_MONTHLY_GBP} a month per physical location and includes your branded website, one standard domain and every barber at that location, subject to fair use. There's no setup fee, no VAT added and no KERSIVO commission. Stripe charges its standard processing fees on online payments. If you only need online bookings for up to 4 barbers, KERSIVO Starter is £0 a month.`,
+    answer: `Full KERSIVO is £${SAAS_MONTHLY_GBP} a month per physical location and includes your branded website, your own domain and every barber at that location, subject to fair use. There's no setup fee, no VAT added and no KERSIVO commission. Stripe charges its standard processing fees on online payments. If you only need online bookings for up to 4 barbers, KERSIVO Starter is £0 a month.`,
   },
   {
     question: 'When do I pay, and how long until my website is live?',

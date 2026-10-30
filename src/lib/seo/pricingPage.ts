@@ -1,7 +1,9 @@
+import { offer } from '@/content/offer';
 import {
   NO_PAUSE_CLAIM,
   PRICE_VAT_DISCLAIMER,
   SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
+  STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { formatGbp } from '@/lib/seo/freshaFacts';
@@ -41,7 +43,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
     items: [
       'The complete Starter booking operation',
       'Your own branded barbershop website',
-      'Your own standard domain included',
+      'Your own domain included',
       'Hosting, SSL and platform updates',
       'More than 4 bookable barbers and dashboard users at the same location, subject to reasonable fair use',
       'Editable booking payment controls, including Pay at shop, £5 deposit or full payment',
@@ -76,7 +78,7 @@ export const PRICING_INCLUDED_GROUPS: readonly PricingFactGroup[] = [
     items: [
       'No setup fee',
       '0% KERSIVO commission',
-      'Standard Stripe payment-processing fees apply to online card payments',
+      STRIPE_FEES_NOTE,
       'Each plan covers one physical barbershop location',
     ],
   },
@@ -86,7 +88,7 @@ export const PRICING_FEES_POINTS = [
   'KERSIVO takes 0% commission on booking payments with Starter and Full KERSIVO, and 0% on Full retail sales.',
   'Starter public bookings require a connected Stripe account.',
   'Starter public bookings use a fixed £5-deposit-or-Pay-in-full model. Full KERSIVO unlocks editable payment controls, including Pay at shop.',
-  `KERSIVO is not currently VAT registered, so no VAT is added to the ${PRICE} price.`,
+  `${offer.fees.vat} The Full KERSIVO price is ${PRICE}.`,
 ] as const;
 
 export type PricingFaqItem = {
@@ -106,11 +108,11 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'When does billing start?',
     answer:
-      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready in a few days once we receive all required information.',
+      'Your first Full KERSIVO payment is taken when you subscribe, then monthly on the same day. Your site is typically ready in a few days once we receive all required information.',
   },
   {
     question: "What if you can't deliver Full KERSIVO?",
-    answer: `If we're unable to deliver your Full KERSIVO service due to a failure on our side, we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment.`,
+    answer: offer.billing.refund,
   },
   {
     question: 'Is there a setup fee?',
@@ -129,7 +131,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'What fees still apply?',
     answer:
-      'KERSIVO takes 0% commission on both Starter and Full. Standard Stripe processing fees apply when clients pay online. Payments are processed through the barbershop’s connected Stripe account.',
+      `KERSIVO takes 0% commission on both Starter and Full. ${STRIPE_FEES_NOTE} Payments are processed through the barbershop’s connected Stripe account.`,
   },
   {
     question: 'Is VAT added to Full KERSIVO?',
@@ -152,7 +154,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
   {
     question: 'How do payments work on KERSIVO Starter?',
     answer:
-      'For services above £5, the customer chooses a £5 deposit or Pay in full. A £5 service is paid £5 in full. Public Pay at shop is not available on Starter, although staff-created manual bookings may still be paid at the shop. Standard Stripe processing fees apply.',
+      `For services above £5, the customer chooses a £5 deposit or Pay in full. A £5 service is paid £5 in full. Public Pay at shop is not available on Starter, although staff-created manual bookings may still be paid at the shop. ${STRIPE_FEES_NOTE}`,
   },
 ];
 
@@ -182,7 +184,7 @@ export function buildPricingBreadcrumbJsonLd(): Record<string, unknown> {
 
 const FREE_PREVIEW_PRICING_ANSWERS: Record<string, string> = {
   'When does billing start?':
-    "You don't pay anything for your preview. If you decide to launch, your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready in a few days once we receive all required information.",
+    "You don't pay anything for your preview. If you decide to launch, your first Full KERSIVO payment is taken when you subscribe, then monthly on the same day. Your site is typically ready in a few days once we receive all required information.",
 };
 
 /** FAQ with the free preview answers while FREE_PREVIEW_FLOW_ENABLED is on. */

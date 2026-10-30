@@ -108,7 +108,7 @@
   align-items: center;
   margin-top: 0.85rem;
   color: #6f6f72;
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
@@ -154,13 +154,13 @@
   max-width: 52ch;
   margin: 1.35rem 0 0;
   color: #8a8a8f;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .starter-hero .starter-updated {
   margin: 0.45rem 0 0;
   color: #8a8a8f;
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
 }
 
 .starter-updated {
@@ -322,7 +322,7 @@
 
 .starter-glance__value--term dd {
   color: #8a8a8e;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -571,7 +571,7 @@
   gap: 0.8rem;
   margin-bottom: 1.4rem;
   color: var(--accent-text);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.16em;
   font-variant-numeric: tabular-nums;

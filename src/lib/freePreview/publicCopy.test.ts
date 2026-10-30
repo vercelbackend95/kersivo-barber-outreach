@@ -95,7 +95,7 @@ describe('free preview public copy (spec §10)', () => {
     expect(links.map((link) => [link.name, link.href])).toEqual(
       expect.arrayContaining([
         ['Get my free preview', '/free-preview'],
-        ['Or subscribe now — £39/month', '/admin/launch'],
+        ['Start Full KERSIVO — £39/month', '/admin/launch'],
       ]),
     );
   });
@@ -121,7 +121,7 @@ describe('pay-first wording while the flag is on', () => {
 
   it('gates the /barbershop-websites and design page wording on the flag', () => {
     const setup = read('src/components/barbershop-websites/SetupProcess.astro');
-    expect(setup).toContain('const shownStages = freePreview ? previewStages : stages;');
+    expect(setup).toContain('const shownStages: Stage[] = getSetupSteps(freePreview).map');
     expect(setup).toContain('{shownStages.map(');
     expect(setup).toContain('{billingNote}');
     const offer = read('src/components/barbershop-websites/FullOffer.astro');

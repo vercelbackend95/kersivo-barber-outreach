@@ -90,7 +90,7 @@
 .alt-hub-hero__eyebrow {
   margin: 0 0 0.55rem;
   color: var(--hub-red-text);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -129,7 +129,7 @@
 
 .alt-hub-hero__meta {
   margin: 0.9rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: color-mix(in srgb, var(--hub-muted) 80%, transparent);
 }
 
@@ -259,7 +259,7 @@
 
 .alt-hub-panel__suggested {
   margin: 0.5rem 0 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: color-mix(in srgb, var(--hub-muted) 85%, transparent);
 }
 
@@ -296,7 +296,7 @@
 .alt-hub-pill[aria-pressed='true'] {
   border-color: var(--hub-red-text);
   background: var(--hub-red-fill);
-  color: #090a0c;
+  color: var(--color-on-brand);
   box-shadow: 0 6px 22px color-mix(in srgb, var(--hub-red) 28%, transparent);
 }
 
@@ -401,7 +401,7 @@
   flex: 1 1 26rem;
   max-width: 62ch;
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--hub-muted);
 }
@@ -495,8 +495,8 @@
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   background: var(--hub-red-fill);
-  color: #090a0c;
-  font-size: 0.74rem;
+  color: var(--color-on-brand);
+  font-size: var(--text-xs);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -735,15 +735,16 @@
 }
 
 .alt-hub-card__cta--primary {
-  border-color: var(--hub-red-text);
-  background: var(--hub-red-fill);
-  color: #090a0c;
+  border-color: var(--btn-primary-bg);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   box-shadow: 0 8px 26px color-mix(in srgb, var(--hub-red) 35%, transparent);
 }
 
 .alt-hub-card__cta--primary:hover {
-  border-color: var(--hub-red-text);
-  background: var(--hub-red-fill-hover);
+  border-color: var(--btn-primary-hover);
+  background: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
 }
 
 .alt-hub-card__arrow {
@@ -990,7 +991,7 @@
 }
 
 .alt-hub-sources__group h3 span {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 500;
   color: var(--hub-muted);
 }
@@ -1298,10 +1299,10 @@
   background: rgb(0 0 0 / 0.1);
 }
 .alt-hub-pill[aria-pressed='true'] .alt-hub-pill__check {
-  stroke: #090a0c;
+  stroke: var(--color-on-brand);
 }
 .alt-hub-card__badge svg {
-  fill: #090a0c;
+  fill: var(--color-on-brand);
 }
 
 /* 6 quick criteria + All filters in the same wrap/bento area.
@@ -1527,7 +1528,7 @@
     min-height: 40px;
     padding: 0.5rem 0.75rem 0.5rem 0.55rem;
     border-radius: 12px;
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
   }
   .alt-hub-panel[data-filters-expanded='true'] .alt-hub-pill[data-quick-filter='false'] {
     display: inline-flex;
@@ -1560,7 +1561,7 @@
     border: 1px solid var(--hub-red);
     border-radius: 12px;
     background: var(--hub-red);
-    color: #090a0c;
+    color: var(--color-on-brand);
     font: inherit;
     font-size: 0.92rem;
     font-weight: 800;

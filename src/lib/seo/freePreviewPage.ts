@@ -1,3 +1,4 @@
+import { FREE_PREVIEW_STEPS, type SetupStep, type SetupStepOwner } from '@/content/setupSteps';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   FREE_PREVIEW_PAGE_PATH,
@@ -10,6 +11,10 @@ import { buildBreadcrumbListJsonLd, type BreadcrumbTrailItem } from '@/lib/seo/b
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
+export type FreePreviewStepOwner = SetupStepOwner;
+export type FreePreviewStep = SetupStep;
+export { FREE_PREVIEW_STEPS };
+
 /** Content date of the /free-preview copy (sitemap lastmod via pageDates.ts). */
 export const FREE_PREVIEW_PAGE_LAST_UPDATED_ISO = '2026-10-29';
 
@@ -17,33 +22,7 @@ export const FREE_PREVIEW_BREADCRUMBS: readonly BreadcrumbTrailItem[] = [
   { name: 'Free website preview', path: FREE_PREVIEW_PAGE_PATH },
 ];
 
-export type FreePreviewStepOwner = 'You' | 'KERSIVO';
-export type FreePreviewStep = { title: string; body: string; owner: FreePreviewStepOwner };
 export type FreePreviewFaqItem = { question: string; answer: string };
-
-/** "How it works" (spec §10.1). Also the homepage "Getting started" steps (§10.3). */
-export const FREE_PREVIEW_STEPS: readonly FreePreviewStep[] = [
-  {
-    title: 'Request your free preview',
-    body: 'Send your shop name and a link to your current booking page, Instagram, Google listing or website. No card, no call.',
-    owner: 'You',
-  },
-  {
-    title: 'We design your website',
-    body: `We build a private preview individually for your shop — your services, barbers, photos and style. ${PREVIEW_TURNAROUND_TEXT_CAPITALISED}.`,
-    owner: 'KERSIVO',
-  },
-  {
-    title: 'Review it and ask for changes',
-    body: 'Open your private link, try the booking flow and tell us what to change. One round of changes is included before you decide.',
-    owner: 'You',
-  },
-  {
-    title: 'Subscribe and launch',
-    body: `Happy with it? Subscribe for £${SAAS_MONTHLY_GBP}/month and we'll turn your preview into your live website, connect your domain and go live once you approve. Not for you? You owe nothing.`,
-    owner: 'You',
-  },
-];
 
 /** Visible FAQ and its FAQPage JSON-LD (one source, so they always match). */
 export const FREE_PREVIEW_FAQ_ITEMS: readonly FreePreviewFaqItem[] = [

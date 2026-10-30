@@ -106,7 +106,7 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     const facts = list('facts');
     expect(facts).toMatch(/Standard website setup included\. \$\{NO_SETUP_FEE_SHORT\}/);
     expect(NO_SETUP_FEE_SHORT).toBe('No setup fee.');
-    expect(facts).toContain('Your own standard domain included.');
+    expect(facts).toContain('Your own domain included.');
     expect(facts).toContain('0% KERSIVO commission on bookings and retail.');
     expect(markup.indexOf('bsw-offer-panel__facts')).toBeLessThan(markup.indexOf('bsw-offer-panel__cta'));
   });
@@ -114,11 +114,11 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
   it('keeps every payment condition and the VAT position visible beside the CTA', () => {
     const payment = list('payment');
     expect(payment).toContain('STRIPE_FEES_NOTE');
-    expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
+    expect(STRIPE_FEES_NOTE).toBe('Standard Stripe payment-processing fees apply to online payments.');
     expect(payment).toContain(
-      'You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same billing-cycle day.',
+      'You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same day.',
     );
-    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly on the same billing-cycle day/);
+    expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly on the same day/);
     expect(payment).toContain('Billing runs while we prepare your website and doesn’t pause if your materials arrive late.');
     expect(payment).toContain('landingConditionsLine2');
     expect(list('previewPayment')).toContain('landingConditionsLine2');

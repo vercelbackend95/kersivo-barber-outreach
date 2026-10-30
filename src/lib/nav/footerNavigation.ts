@@ -1,11 +1,10 @@
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { offer } from '@/content/offer';
 import { FOOTER_LEGAL_LINKS, type FooterNavItem } from '@/lib/seo/footerSocialLinks';
 import {
   FREE_PREVIEW_CTA_HREF,
   FREE_PREVIEW_CTA_TRACK,
   FREE_PREVIEW_CTA_LABEL,
   SUBSCRIBE_NOW_CTA_HREF,
-  SUBSCRIBE_NOW_CTA_LABEL,
   SUBSCRIBE_NOW_CTA_TRACK,
 } from '@/lib/freePreview/fullPlanCta';
 
@@ -20,7 +19,7 @@ export type FooterColumn = {
 };
 
 export const FOOTER_PRODUCT_CTA: FooterColumnLink = {
-  name: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
+  name: offer.cta.subscribeDirect,
   href: '/admin/launch',
   track: 'saas_subscribe_click',
   accent: true,
@@ -74,10 +73,13 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
   },
 ];
 
-/** Product-column links that replace FOOTER_PRODUCT_CTA while FREE_PREVIEW_FLOW_ENABLED is on (spec §10.2). */
+/** Product-column links that replace FOOTER_PRODUCT_CTA while FREE_PREVIEW_FLOW_ENABLED is on (spec §10.2).
+ *  The subscribe label is the direct Full CTA, not "Or subscribe now", so the restricted phrase
+ *  stays on hero / main pricing card / final CTA only.
+ */
 export const FOOTER_FREE_PREVIEW_LINKS: readonly FooterColumnLink[] = [
   { name: FREE_PREVIEW_CTA_LABEL, href: FREE_PREVIEW_CTA_HREF, accent: true, track: FREE_PREVIEW_CTA_TRACK },
-  { name: SUBSCRIBE_NOW_CTA_LABEL, href: SUBSCRIBE_NOW_CTA_HREF, track: SUBSCRIBE_NOW_CTA_TRACK },
+  { name: FOOTER_PRODUCT_CTA.name, href: SUBSCRIBE_NOW_CTA_HREF, track: SUBSCRIBE_NOW_CTA_TRACK },
 ];
 
 /** Footer columns for the current flag state; with the flag off this is FOOTER_COLUMNS unchanged. */

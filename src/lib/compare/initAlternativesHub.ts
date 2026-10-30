@@ -164,7 +164,7 @@ export function initAlternativesHub(doc: Document = document): void {
       panel.removeAttribute('aria-label');
     }
     moreFilters?.setAttribute('aria-expanded', 'false');
-    moreFilters?.setAttribute('aria-label', 'Open all comparison filters');
+    moreFilters?.setAttribute('aria-label', 'All filters');
     if (moreFiltersLabel) moreFiltersLabel.textContent = 'All filters';
     if (mobileSheetQuery?.matches) doc.documentElement.style.overflow = previousOverflow;
     if (restoreFocus) lastFocus?.focus();

@@ -2,7 +2,8 @@
  * /pricing plan cards, comparison table and billing row.
  * Cell values are taken from pricingPage / claimsPolicy / rateCard1Copy. Do not invent.
  */
-import { BILLING_CYCLE_SHORT, KERSIVO_COMMISSION_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { offer } from '@/content/offer';
+import { KERSIVO_COMMISSION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
@@ -107,9 +108,9 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
   full: {
     variant: 'full',
     badge: 'Recommended for your own brand',
-    name: 'Full KERSIVO',
+    name: offer.plans.full,
     amount: SAAS_MONTHLY_GBP,
-    qualifier: 'per location · no setup fee',
+    qualifier: `${offer.price.fullQualifier} · no setup fee`,
     priceSize: 'lg',
     description: PRICING_FULL_VALUE_STATEMENT,
     features: PRICING_FULL_FEATURES,
@@ -117,13 +118,13 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
     bestForTitle: 'Best for',
     bestFor: PRICING_FULL_BEST_FOR,
     primaryCta: {
-      label: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
+      label: offer.cta.subscribeDirect,
       href: '/admin/launch',
       track: 'saas_subscribe_click',
       placement: 'pricing_plans',
     },
     secondaryCta: {
-      label: `Or subscribe now — £${SAAS_MONTHLY_GBP}/month`,
+      label: offer.cta.subscribe,
       href: '/admin/launch',
       track: 'saas_subscribe_click',
       placement: 'pricing_plans',
@@ -132,7 +133,7 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
   },
   starter: {
     variant: 'starter',
-    name: 'KERSIVO Starter',
+    name: offer.plans.starter,
     amount: 0,
     qualifier: 'up to 4 barbers · one location',
     priceSize: 'md',
@@ -153,20 +154,20 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
   },
 };
 
-export const PRICING_REFUND_SENTENCE = `If we're unable to deliver your Full KERSIVO service due to a failure on our side, we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment.`;
+export const PRICING_REFUND_SENTENCE = offer.billing.refund;
 
 export const PRICING_BILLING_COLUMNS = [
   {
     id: 'billing',
     title: 'Billing',
     icon: 'billing' as const,
-    body: `${BILLING_CYCLE_SHORT} Cancel anytime.`,
+    body: offer.billing.cycle,
   },
   {
     id: 'fees',
     title: 'Fees',
     icon: 'fees' as const,
-    body: `${KERSIVO_COMMISSION_CLAIM} Standard Stripe payment-processing fees apply to online payments.`,
+    body: `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   },
   {
     id: 'refund',

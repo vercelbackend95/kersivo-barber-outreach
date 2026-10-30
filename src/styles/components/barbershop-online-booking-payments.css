@@ -325,7 +325,7 @@
   gap: 0.8rem;
   margin: 0;
   color: var(--bop-ink-muted);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;

@@ -4,9 +4,9 @@
  * Full KERSIVO leads; Starter and the switching question are secondary text links.
  */
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { offer } from '@/content/offer';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   COMPARISON_FINAL_CTA_HEADING,
   comparisonFinalCtaSwitchLabel,
@@ -24,7 +24,7 @@ interface Props {
 const { placement, competitor } = Astro.props as Props;
 const trackPlacement = `${placement}_final`;
 const titleId = `${placement}-final-cta-title`;
-const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
+const monthlyPriceLabel = offer.price.full;
 ---
 
 <section class="landing-final-cta comparison-final-cta" aria-labelledby={titleId}>

@@ -1,4 +1,6 @@
 ---
+import Accordion from '@/components/ui/Accordion.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
 import '../styles/components/faq4.css';
 
 interface FaqItem {
@@ -34,40 +36,19 @@ const {
   faqs = [],
   className = '',
 } = Astro.props as Props;
+
+const items = faqs.map((faq, index) => ({
+  id: `faq-${index + 1}`,
+  title: faq.question,
+  body: faq.details ? `${faq.answer} ${faq.details}` : faq.answer,
+}));
 ---
 
 <section id="faq" class={`faq4 ${className}`.trim()} aria-labelledby="faq4-title">
   <div class="container faq4__container">
-    <div class="faq4__header">
-      <p class="faq4__badge">FAQ</p>
-      <h2 id="faq4-title">{heading}</h2>
-      <p>{subHeading}</p>
-    </div>
+    <SectionHeader eyebrow="FAQ" title={heading} lead={subHeading} titleId="faq4-title" />
 
-    <div class="faq4__list">
-      {
-        faqs.map((faq) => (
-          <details class="faq4__item" name="faq4-group">
-            <summary>
-              <span>{faq.question}</span>
-              <span class="faq4__icon" aria-hidden="true">
-                <span class="faq4__icon-plus">+</span>
-                <span class="faq4__icon-minus">−</span>
-              </span>
-            </summary>
-            <div class="faq4__answer">
-              <p>{faq.answer}</p>
-              {faq.details ? (
-                <details class="faq4__more">
-                  <summary>More detail</summary>
-                  <p>{faq.details}</p>
-                </details>
-              ) : null}
-            </div>
-          </details>
-        ))
-      }
-    </div>
+    <Accordion items={items} />
 
     <hr class="faq4__separator" />
 
@@ -77,14 +58,14 @@ const {
         <p>{supportText}</p>
       </div>
       <div class="faq4__footer-actions">
-        <a href={supportLinkHref} class="faq4__support-link">
+        <a href={supportLinkHref} class="btn btn--link faq4__support-link">
           {supportLinkLabel}
           <span aria-hidden="true">→</span>
         </a>
         {
           supportSecondaryLinkLabel ? (
             supportSecondaryLinkOpensDemo ? (
-              <button type="button" class="faq4__support-link faq4__support-link--secondary" data-system-chooser-open>
+              <button type="button" class="btn btn--link faq4__support-link faq4__support-link--secondary" data-system-chooser-open>
                 {supportSecondaryLinkLabel}
                 <span aria-hidden="true">→</span>
               </button>

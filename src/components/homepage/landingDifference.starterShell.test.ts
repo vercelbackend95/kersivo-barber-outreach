@@ -14,7 +14,7 @@ describe('homepage independent barbershops section: Starter design parity', () =
     expect(difference).toContain('class="starter-shell landing-difference__shell"');
     expect(difference).toContain('BUILT FOR INDEPENDENT BARBERSHOPS');
     expect(difference).toContain(
-      'Barbershop software that sends clients to your shop, not a marketplace',
+      'Clients book your shop, not a marketplace',
     );
     expect(difference).toContain('Full KERSIVO brings your website and booking experience together on your own domain.');
     expect(difference).toContain('pillars.map((pillar)');

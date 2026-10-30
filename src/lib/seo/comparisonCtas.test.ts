@@ -36,7 +36,7 @@ const PAGES = [
 
 describe('comparison engine CTAs', () => {
   it('leads the closing CTA with Full KERSIVO and keeps Starter as a text link', () => {
-    expect(COMPARISON_FINAL_CTA_HEADING).toBe('Ready to move your bookings onto your own website?');
+    expect(COMPARISON_FINAL_CTA_HEADING).toBe('Move bookings onto your own website');
     expect(finalCta).toContain('{COMPARISON_FINAL_CTA_HEADING}');
     const primary = finalCta.indexOf('href="/admin/launch"');
     const starter = finalCta.indexOf('href="/starter"');

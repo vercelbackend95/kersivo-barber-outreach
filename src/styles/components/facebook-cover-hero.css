@@ -246,7 +246,7 @@ html.facebook-cover-page body {
 
 .hero227-root.hero227-root--facebook-cover .hero227-trust-line__sep {
   display: inline;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .hero227-root.hero227-root--facebook-cover .hero227-mock-stack {

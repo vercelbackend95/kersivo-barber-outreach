@@ -56,7 +56,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
   },
   {
     kicker: 'ONLINE BOOKING FOR BARBERS',
-    heading: 'Service, barber, time — built around your barbershop, not an app.',
+    heading: 'Service, barber, time — not an app.',
     description:
       'Clients choose a service, barber and available time through a booking experience built around your barbershop — with no app download. Full KERSIVO adds your own branded website and domain.',
     ctaLabel: 'Try the booking experience',
@@ -67,7 +67,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
   },
   {
     kicker: 'RETAIL PICKUP SHOP',
-    heading: 'Full KERSIVO: sell retail products through your own website',
+    heading: 'Sell retail through your own website',
     description:
       'Let clients browse products online, place pickup orders and collect them from your barbershop.',
     ctaLabel: 'Explore the retail shop',
@@ -118,17 +118,17 @@ const {
               <div class="sf-shop sf-shop--blackline" data-sf-theme="blackline">
                 <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="retail" />
               </div>
-              <p class="landing-demo-still__caption">Example shop – fictional data</p>
+              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
               <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="admin" />
-              <p class="landing-demo-still__caption">Example shop – fictional data</p>
+              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
             </div>
           ) : (
             <div class="feature261__media feature261__media--widget">
               <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="booking" />
-              <p class="landing-demo-still__caption">Example shop – fictional data</p>
+              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
             </div>
           )}
 
@@ -156,7 +156,7 @@ const {
     {showFooterNote ? (
       <div class="landing-demo-preview__footer">
         <p class="landing-demo-preview__footer-note">
-          Screens show an example barbershop with fictional data. Open the demo to click around — no sign-up needed.
+          CUTSTATE is a fictional demonstration shop. Open the demo to click around — no sign-up needed.
         </p>
       </div>
     ) : null}

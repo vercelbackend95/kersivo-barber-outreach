@@ -184,7 +184,7 @@ describe('Alternatives hub: structured data', () => {
   it('answers the commission FAQ by separating processing fees', () => {
     const answer = ALTERNATIVES_HUB_FAQ_ITEMS.find((i) => i.question.startsWith('Does 0% commission'))!.answer;
     expect(answer).toMatch(/^No\./);
-    expect(answer).toContain('Standard Stripe payment-processing fees still apply.');
+    expect(answer).toContain('Standard Stripe payment-processing fees apply to online payments.');
     const exportAnswer = ALTERNATIVES_HUB_FAQ_ITEMS.find((i) => i.question.startsWith('Can I move my client data'))!.answer;
     expect(exportAnswer).toContain('With KERSIVO you may request a free CSV export');
   });

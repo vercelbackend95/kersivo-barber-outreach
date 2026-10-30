@@ -91,7 +91,7 @@ describe('homepage hero markup', () => {
     const meta = between(hero, '<div class="home-hero__meta"', '</div>');
     expect(meta).toContain('aria-label="KERSIVO commercial model"');
     expect(text(meta)).toBe(
-      'No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) · Cancel anytime',
+      'No setup fee · No VAT added · 0% KERSIVO commission · Cancel anytime',
     );
     expect(hero).toContain('href="/starter"');
     expect(hero).toContain('starter_plan_explore_click');

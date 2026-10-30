@@ -180,7 +180,7 @@ describe('/pricing page', () => {
       'Editable booking payment controls, including Pay at shop, £5 deposit or full payment',
       'No setup fee',
       'subject to reasonable fair use',
-      'Your own standard domain included',
+      'Your own domain included',
       'Your own branded barbershop website',
       'SMS appointment reminders are included, subject to the plan’s monthly SMS allowance.',
       'Retail pickup shop',
