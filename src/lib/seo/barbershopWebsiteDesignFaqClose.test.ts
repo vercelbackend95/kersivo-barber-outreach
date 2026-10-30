@@ -160,8 +160,10 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
     expect(frontmatter).toContain("import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';");
     expect(section).not.toMatch(/£\s?39/);
     expect(rendered).toContain(
-      `Full KERSIVO: £${SAAS_MONTHLY_GBP}/month per physical location. Standard website setup included. The first payment is taken when you subscribe, before your website goes live. CUTSTATE is a fictional demonstration shop. Subscription terms`,
+      `Full KERSIVO: £${SAAS_MONTHLY_GBP}/month per physical location. Standard website setup included. {BILLING_NOTE} CUTSTATE is a fictional demonstration shop. Subscription terms`,
     );
+    expect(frontmatter).toContain('The first payment is taken when you subscribe, before your website goes live.');
+    expect(frontmatter).toContain('FREE_PREVIEW_BILLING_CLAIM');
     expect(frontmatter).toContain("const SUBSCRIPTION_TERMS_HREF = '/terms#subscription';");
     expect(frontmatter).toContain("const UPDATE_SUPPORT_TERMS_HREF = '/terms#website-update-support';");
     const terms = read('../../pages/terms.astro');

@@ -79,6 +79,21 @@ const faqs: Faq[] = [
     ],
   },
 ];
+
+// FREE_PREVIEW_FLOW_ENABLED swaps in the preview-first billing answer; off keeps the original FAQ.
+const shownFaqs: Faq[] = isFreePreviewFlowEnabled()
+  ? faqs.map((faq) =>
+      faq.id === 'cost'
+        ? {
+            ...faq,
+            answer: [
+              `Full KERSIVO costs £${SAAS_MONTHLY_GBP}/month per physical location, with no separate standard setup fee. You don't pay anything for your preview. If you decide to launch, your first £${SAAS_MONTHLY_GBP} payment is taken when you subscribe, then monthly on the same day.`,
+              ...faq.answer.slice(1),
+            ],
+          }
+        : faq,
+    )
+  : faqs;
 ---
 
 <div class="bsw-close-wrap">
@@ -93,7 +108,7 @@ const faqs: Faq[] = [
       </header>
 
       <div class="bsw-faq__list">
-        {faqs.map((faq, index) => (
+        {shownFaqs.map((faq, index) => (
           <details class="bsw-faq-item" id={`bsw-faq-${faq.id}`}>
             <summary class="bsw-faq-item__summary">
               <span class="bsw-faq-item__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>

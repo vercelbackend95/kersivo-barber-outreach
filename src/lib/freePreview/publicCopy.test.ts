@@ -12,7 +12,14 @@ import { PREVIEW_TURNAROUND_TEXT_CAPITALISED } from './config';
 import { FOOTER_COLUMNS, FOOTER_PRODUCT_CTA, getFooterColumns } from '@/lib/nav/footerNavigation';
 import { MARKETING_NAV_FREE_PREVIEW_ACTION } from '@/lib/nav/marketingNavigation';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
-import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
+import {
+  BILLING_CYCLE_SHORT,
+  FREE_PREVIEW_BILLING_CLAIM,
+  FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
+} from '@/lib/pricing/claimsPolicy';
+import { buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
+import { PRICING_FAQ_ITEMS, buildPricingFaqJsonLd, getPricingFaqItems } from '@/lib/seo/pricingPage';
 import { buildHomepageJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd, getHomepageFaqItems } from '@/lib/seo/barbershopBookingFaq';
 import { HOMEPAGE_DESCRIPTION, HOMEPAGE_FREE_PREVIEW_DESCRIPTION, getHomepageDescription } from '@/lib/seo/defaults';
@@ -85,6 +92,40 @@ describe('free preview public copy (spec §10)', () => {
         ['Or subscribe now — £39/month', '/admin/launch'],
       ]),
     );
+  });
+});
+
+describe('pay-first wording while the flag is on', () => {
+  it('swaps the billing answer on /pricing, in the FAQ and its JSON-LD', () => {
+    expect(getPricingFaqItems()).toBe(PRICING_FAQ_ITEMS);
+    const billing = getPricingFaqItems(true).find((item) => item.question === 'When does billing start?');
+    expect(billing?.answer).toMatch(/^You don't pay anything for your preview\. If you decide to launch,/);
+    expect(billing?.answer).toContain('typically ready in a few days once we receive all required information');
+    const faq = buildPricingFaqJsonLd(true) as { mainEntity: Array<{ acceptedAnswer: { text: string } }> };
+    expect(faq.mainEntity.map((q) => q.acceptedAnswer.text)).toEqual(getPricingFaqItems(true).map((item) => item.answer));
+  });
+
+  it('swaps the /barbershop-online-booking disclosure and keeps the original when off', () => {
+    expect(buildPlanChoiceContent().disclosure[1]).toContain(BILLING_CYCLE_SHORT);
+    const on = buildPlanChoiceContent(true).disclosure;
+    expect(on[1]).toContain(FREE_PREVIEW_BILLING_CLAIM);
+    expect(on[1]).not.toContain(BILLING_CYCLE_SHORT);
+    expect(on).toContain(ONBOARDING_BILLING_INDEPENDENT_CLAIM);
+  });
+
+  it('gates the /barbershop-websites and design page wording on the flag', () => {
+    const setup = read('src/components/barbershop-websites/SetupProcess.astro');
+    expect(setup).toContain('const shownStages = freePreview ? previewStages : stages;');
+    expect(setup).toContain('{shownStages.map(');
+    expect(setup).toContain('{billingNote}');
+    const offer = read('src/components/barbershop-websites/FullOffer.astro');
+    expect(offer).toContain('const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;');
+    expect(offer).toContain('{shownPayment.map(');
+    const close = read('src/components/barbershop-websites/FaqAndClose.astro');
+    expect(close).toContain('{shownFaqs.map(');
+    expect(close).toContain("You don't pay anything for your preview. If you decide to launch");
+    const design = read('src/components/barbershop-website-design/WebsiteDesignFaqClose.astro');
+    expect(design).toContain('{BILLING_NOTE}');
   });
 });
 

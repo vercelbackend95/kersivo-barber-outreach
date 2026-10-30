@@ -31,6 +31,10 @@ export const BILLING_CYCLE_CLAIM =
 export const BILLING_CYCLE_SHORT =
   'Billed today, then monthly on the same billing-cycle day.';
 
+/** Billing wording while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
+export const FREE_PREVIEW_BILLING_CLAIM =
+  'See your free preview first. If you subscribe, your first payment is taken at checkout, then monthly on the same day.';
+
 /** No pause; cancel anytime through end of paid month. */
 export const NO_PAUSE_CLAIM =
   'Subscriptions cannot be paused. You may cancel at any time; service stays active until the end of the paid month.';

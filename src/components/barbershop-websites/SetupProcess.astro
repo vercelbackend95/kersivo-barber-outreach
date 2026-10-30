@@ -1,7 +1,10 @@
 ---
 import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-setup.css';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_BILLING_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { FREE_PREVIEW_STEPS } from '@/lib/seo/freePreviewPage';
 
 const SETUP_TERMS_HREF = '/terms#onboarding-and-launch';
 const DOMAIN_TERMS_HREF = '/terms#domain';
@@ -73,6 +76,30 @@ const notes: Note[] = [
     link: { href: SETUP_TERMS_HREF, label: 'Setup and launch terms' },
   },
 ];
+
+// FREE_PREVIEW_FLOW_ENABLED shows the preview-first journey; off keeps the original stages.
+const freePreview = isFreePreviewFlowEnabled();
+const previewStages: Stage[] = [
+  { number: '01', owner: 'You', title: FREE_PREVIEW_STEPS[0].title, copy: FREE_PREVIEW_STEPS[0].body },
+  { number: '02', owner: 'We', title: FREE_PREVIEW_STEPS[1].title, copy: FREE_PREVIEW_STEPS[1].body },
+  { number: '03', owner: 'You', title: FREE_PREVIEW_STEPS[2].title, copy: FREE_PREVIEW_STEPS[2].body },
+  {
+    number: '04',
+    owner: 'You',
+    title: FREE_PREVIEW_STEPS[3].title,
+    copy: `Happy with it? Subscribe for £${SAAS_MONTHLY_GBP}/month. Not for you? You owe nothing.`,
+  },
+  {
+    number: '05',
+    owner: 'We',
+    title: 'Go live',
+    copy: 'Once you’ve approved the site and the final technical checks are done, we publish it.',
+  },
+];
+const shownStages = freePreview ? previewStages : stages;
+const billingNote = freePreview
+  ? FREE_PREVIEW_BILLING_CLAIM
+  : 'Your subscription starts when you buy, including while we prepare your site.';
 ---
 
 <section class="bsw-setup" aria-labelledby="bsw-setup-heading">
@@ -95,13 +122,13 @@ const notes: Note[] = [
           extend the timeline.
         </p>
         <p class="bsw-setup__timing-billing">
-          Your subscription starts when you buy, including while we prepare your site.
+          {billingNote}
         </p>
       </div>
     </header>
 
     <ol class="bsw-setup__stages" role="list">
-      {stages.map((stage) => (
+      {shownStages.map((stage) => (
         <li class={`bsw-setup-stage bsw-setup-stage--${stage.owner === 'You' ? 'you' : 'we'}`}>
           <p class="bsw-setup-stage__meta">
             <span class="bsw-setup-stage__number">{stage.number}</span>

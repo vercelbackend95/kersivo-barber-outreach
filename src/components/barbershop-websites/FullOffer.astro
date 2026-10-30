@@ -4,7 +4,9 @@ import '@/styles/components/barbershop-websites-full-offer.css';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
+  FREE_PREVIEW_BILLING_CLAIM,
   NO_SETUP_FEE_SHORT,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
   SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
@@ -62,6 +64,9 @@ const payment = [
   `You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same billing-cycle day.`,
   'Billing runs while we prepare your website and doesn’t pause if your materials arrive late.',
 ];
+
+const previewPayment = [STRIPE_FEES_NOTE, FREE_PREVIEW_BILLING_CLAIM, ONBOARDING_BILLING_INDEPENDENT_CLAIM];
+const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;
 ---
 
 <section class="bsw-offer" aria-labelledby="bsw-offer-heading">
@@ -114,7 +119,7 @@ const payment = [
         <div class="bsw-offer-panel__payment">
           <p class="bsw-offer-panel__label">How payment works</p>
           <ul class="bsw-offer-panel__conditions" role="list">
-            {payment.map((line) => <li>{line}</li>)}
+            {shownPayment.map((line) => <li>{line}</li>)}
           </ul>
         </div>
 

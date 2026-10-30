@@ -3,6 +3,7 @@
  */
 import {
   BILLING_CYCLE_SHORT,
+  FREE_PREVIEW_BILLING_CLAIM,
   EMAIL_REMINDERS_CLAIM,
   KERSIVO_COMMISSION_CLAIM,
   ONBOARDING_BILLING_INDEPENDENT_CLAIM,
@@ -82,10 +83,10 @@ export type PlanChoiceContent = {
 const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
 const fullPrice = `£${SAAS_MONTHLY_GBP}`;
 
-export function buildPlanChoiceContent(): PlanChoiceContent {
+export function buildPlanChoiceContent(freePreview = false): PlanChoiceContent {
   const disclosure = [
     STRIPE_FEES_NOTE,
-    `Full KERSIVO costs ${fullPrice}/month per physical location. ${BILLING_CYCLE_SHORT}`,
+    `Full KERSIVO costs ${fullPrice}/month per physical location. ${freePreview ? FREE_PREVIEW_BILLING_CLAIM : BILLING_CYCLE_SHORT}`,
     ONBOARDING_BILLING_INDEPENDENT_CLAIM,
     `Starter public online bookings require a connected Stripe account and at least ${deposit} paid online.`,
     KERSIVO_COMMISSION_CLAIM,

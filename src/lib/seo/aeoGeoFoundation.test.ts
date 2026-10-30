@@ -222,7 +222,8 @@ describe('/pricing page', () => {
   });
 
   it('builds visible FAQ and FAQPage schema from the same data', () => {
-    expect(page).toContain('faqs={PRICING_FAQ_ITEMS}');
+    expect(page).toContain('faqs={getPricingFaqItems(freePreview)}');
+    expect(page).toContain('buildPricingFaqJsonLd(freePreview)');
     const faq = buildPricingFaqJsonLd();
     const entities = faq.mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
     expect(faq['@type']).toBe('FAQPage');
