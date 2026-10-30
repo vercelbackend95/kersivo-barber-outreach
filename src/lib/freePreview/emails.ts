@@ -8,9 +8,9 @@ import {
   getPreviewNotifyEmail,
   previewPagePath,
 } from './config';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
-  FREE_PREVIEW_BOOKING_SYSTEMS,
   FREE_PREVIEW_DOMAIN_OPTIONS,
   labelFor,
 } from './intake';
@@ -98,7 +98,7 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
     ['Google listing', input.googleListingUrl ?? '—'],
     ['Website', input.websiteUrl ?? '—'],
     ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, input.barberCount)],
-    ['Booking system', labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, input.currentBookingSystem)],
+    ['Booking system', currentBookingSystemLabel(input.currentBookingSystem)],
     ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, input.hasOwnDomain)],
     ['Notes', input.notes ?? '—'],
     ['Marketing opt-in', input.marketingOptIn ? 'Yes' : 'No'],

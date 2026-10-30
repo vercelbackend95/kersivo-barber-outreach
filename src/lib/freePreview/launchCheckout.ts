@@ -6,7 +6,8 @@ import { runGuestSaasCheckout } from '@/lib/setup/guestSaasCheckout';
 import { parseCheckoutAttemptId } from '@/lib/setup/saasCheckoutGuard';
 import { previewPagePath } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
-import { FREE_PREVIEW_BARBER_COUNTS, FREE_PREVIEW_BOOKING_SYSTEMS, labelFor } from './intake';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
+import { FREE_PREVIEW_BARBER_COUNTS, labelFor } from './intake';
 import { ownerCanActOnPreview, resolvePreviewRequestByToken } from './previewAccess';
 
 /** Stripe Checkout metadata key carrying the PreviewRequest id (shopId carries the draft shop). */
@@ -67,7 +68,7 @@ export async function startPreviewLaunchCheckout(input: {
     email: preview.email.trim().toLowerCase(),
     shopName: preview.shopName,
     shopSize: labelFor(FREE_PREVIEW_BARBER_COUNTS, preview.barberCount),
-    currentStack: `free_preview:${labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, preview.currentBookingSystem)}`.slice(0, 120),
+    currentStack: `free_preview:${currentBookingSystemLabel(preview.currentBookingSystem)}`.slice(0, 120),
     checkoutAttemptId,
     previewShopId: preview.draftShopId,
     extraMetadata: {

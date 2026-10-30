@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db/client';
-import { FREE_PREVIEW_BOOKING_SYSTEMS, labelFor } from './intake';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 
 export type PreviewOnboardingPrefill = {
   shopName: string;
@@ -83,7 +83,7 @@ export async function loadPreviewOnboarding(shopId: string): Promise<PreviewOnbo
     existingDomain: knownDomain,
     preferredDomain1: onboarding?.preferredDomain1 || '',
     migrationRequested: onboarding?.migrationRequested ?? null,
-    currentBookingSystemLabel: system && system !== 'none' ? labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, system) : null,
+    currentBookingSystemLabel: system && system !== 'none' ? currentBookingSystemLabel(system) : null,
     submitted: onboarding?.status === 'SUBMITTED' || onboarding?.status === 'READY_FOR_BUILD',
     stripeConnected: Boolean(
       shop.stripeConnectAccountId && shop.stripeConnectChargesEnabled && !shop.stripeConnectDisconnectedAt,

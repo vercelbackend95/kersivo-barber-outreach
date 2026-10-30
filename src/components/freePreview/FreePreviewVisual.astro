@@ -1,0 +1,39 @@
+---
+import { CalendarDays, ChevronDown } from 'lucide-react';
+import BlacklineWebsitePreview from '@/components/barbershop-websites/BlacklineWebsitePreview.astro';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import '@/styles/components/barbershop-websites-hero.css';
+
+const service = DEMO_SERVICES.find((item) => item.slug === 'skin-fade') ?? DEMO_SERVICES[0];
+---
+
+<figure class="fp-visual">
+  <div class="fp-visual__stack">
+    <div class="fp-visual__site">
+      <BlacklineWebsitePreview compact imageLoading="lazy" imageFetchPriority="low" />
+    </div>
+    <aside class="fp-visual__booking" aria-label="Example booking step from the CUTSTATE demo">
+      <p class="fp-visual__booking-kicker">Booking step</p>
+      <p class="fp-visual__booking-label">Select a service</p>
+      <div class="fp-visual__booking-field">
+        <span>
+          <span class="fp-visual__booking-name">{service.name}</span>
+          <span class="fp-visual__booking-meta">{service.durationMinutes} mins · {formatDemoPriceGbp(service.pricePence)}</span>
+        </span>
+        <ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" />
+      </div>
+      <p class="fp-visual__booking-label">Choose a time</p>
+      <ul class="fp-visual__slots" role="list">
+        <li>10:00</li>
+        <li class="is-selected">11:00</li>
+        <li>12:00</li>
+      </ul>
+      <p class="fp-visual__booking-note">
+        <CalendarDays size={12} strokeWidth={1.8} aria-hidden="true" />
+        Example times from the demo
+      </p>
+    </aside>
+  </div>
+  <figcaption class="fp-visual__caption">{FREE_PREVIEW_PAGE.visualCaption}</figcaption>
+</figure>

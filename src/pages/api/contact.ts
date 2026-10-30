@@ -2,21 +2,12 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { EmailDeliveryError, sendContactInquiryEmail } from '../../lib/email/sender';
+import { CURRENT_BOOKING_SYSTEM_VALUE_SET } from '@/lib/forms/currentBookingSystems';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 const MAX_MESSAGE = 8000;
 const MAX_NAME = 200;
 const MAX_SHOP_NAME = 160;
-
-const CURRENT_STACK_VALUES = new Set([
-  'booksy',
-  'fresha',
-  'nearcut',
-  'setora',
-  'other-platform',
-  'mixed-manual',
-  'none',
-]);
 
 function badRequest(message: string) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -78,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (shopName.length > MAX_SHOP_NAME) {
     return badRequest('Please enter a shorter barbershop name.');
   }
-  if (currentStack && !CURRENT_STACK_VALUES.has(currentStack)) {
+  if (currentStack && !CURRENT_BOOKING_SYSTEM_VALUE_SET.has(currentStack)) {
     return badRequest('Please select your current booking system.');
   }
   if (message.length > MAX_MESSAGE) {

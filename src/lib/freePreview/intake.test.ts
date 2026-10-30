@@ -34,6 +34,12 @@ describe('parseFreePreviewRequest', () => {
     expect(result).toEqual({ ok: false, fieldErrors: { links: FREE_PREVIEW_LINKS_REQUIRED_MESSAGE } });
   });
 
+  it('accepts the shared booking-system list including mixed tools', () => {
+    expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'mixed-manual' }).ok).toBe(true);
+    expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'other-platform' }).ok).toBe(true);
+    expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'other' }).ok).toBe(false);
+  });
+
   it('rejects invalid links, select values and missing consent', () => {
     const result = parseFreePreviewRequest({
       ...valid,

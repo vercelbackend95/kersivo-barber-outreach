@@ -17,7 +17,8 @@ export const FREE_PREVIEW_BREADCRUMBS: readonly BreadcrumbTrailItem[] = [
   { name: 'Free website preview', path: FREE_PREVIEW_PAGE_PATH },
 ];
 
-export type FreePreviewStep = { title: string; body: string };
+export type FreePreviewStepOwner = 'You' | 'KERSIVO';
+export type FreePreviewStep = { title: string; body: string; owner: FreePreviewStepOwner };
 export type FreePreviewFaqItem = { question: string; answer: string };
 
 /** "How it works" (spec §10.1). Also the homepage "Getting started" steps (§10.3). */
@@ -25,18 +26,22 @@ export const FREE_PREVIEW_STEPS: readonly FreePreviewStep[] = [
   {
     title: 'Request your free preview',
     body: 'Send your shop name and a link to your current booking page, Instagram, Google listing or website. No card, no call.',
+    owner: 'You',
   },
   {
     title: 'We design your website',
     body: `We build a private preview individually for your shop — your services, barbers, photos and style. ${PREVIEW_TURNAROUND_TEXT_CAPITALISED}.`,
+    owner: 'KERSIVO',
   },
   {
     title: 'Review it and ask for changes',
     body: 'Open your private link, try the booking flow and tell us what to change. One round of changes is included before you decide.',
+    owner: 'You',
   },
   {
     title: 'Subscribe and launch',
     body: `Happy with it? Subscribe for £${SAAS_MONTHLY_GBP}/month and we'll turn your preview into your live website, connect your domain and go live once you approve. Not for you? You owe nothing.`,
+    owner: 'You',
   },
 ];
 
@@ -84,8 +89,12 @@ export const FREE_PREVIEW_PAGE = {
   title: 'Free Website Preview for UK Barbershops | KERSIVO',
   description: `See your barbershop website before you pay. We design a free private preview for your shop — no card, no call. Launch for £${SAAS_MONTHLY_GBP}/month if you like it.`,
   h1: 'See your barbershop website before you pay',
+  eyebrow: 'Free website preview',
   intro: `Send us a few details about your shop. We'll design a private preview of your website and booking page individually for you — your name, services, barbers, photos and style. Like it? Launch it for £${SAAS_MONTHLY_GBP}/month. Not for you? You owe nothing.`,
   trustLine: ['No card', 'No sales call', 'Private link, hidden from search engines'],
+  visualCaption:
+    'Example: CUTSTATE Barbers, a fictional demo shop. Your preview is designed for your shop.',
+  formReadyLine: `${PREVIEW_TURNAROUND_TEXT_CAPITALISED}.`,
   whatYouGetHeading: "What you'll get",
   whatYouGet: [
     'A website designed for your shop, not a theme picked from a gallery',
@@ -96,16 +105,28 @@ export const FREE_PREVIEW_PAGE = {
   howItWorksHeading: 'How it works',
   steps: FREE_PREVIEW_STEPS,
   formHeading: 'Request your free preview',
+  formGroupShop: 'Your shop',
+  formGroupLinks: 'Where we can see your work',
+  formGroupContact: 'How we reach you',
+  formLinksHint: 'Add at least one so we can see your services, prices and style.',
   submitLabel: 'Request my free preview',
   submitNote: "No card needed. We'll only use your details to create and send your preview.",
   privacyLabel: 'Privacy Policy',
-  confirmationHeading: "Thanks — we've got your details",
+  confirmationHeading: "Thanks — we've got your details.",
+  confirmationNextHeading: 'What happens next',
+  confirmationNext: [
+    'We start designing your private preview.',
+    `We'll email you a private link, ${PREVIEW_TURNAROUND_TEXT}.`,
+    'You review it, ask for changes if you want, and only pay if you launch.',
+  ],
   /** `{shopName}` and `{email}` are filled in on the client with textContent. */
   confirmationText: `We'll start on the preview for {shopName} and email you at {email}, ${PREVIEW_TURNAROUND_TEXT}. Got photos, a logo or anything you'd like us to include? Just reply to our confirmation email.`,
-  demoLinkLabel: 'Explore the KERSIVO demo in the meantime',
+  demoLinkLabel: 'Explore the demo while you wait',
   faqHeading: 'Questions about the free preview',
   faqs: FREE_PREVIEW_FAQ_ITEMS,
   starterLine: 'Just need online bookings for up to 4 barbers? KERSIVO Starter is £0/month.',
+  starterBefore: 'Just need online bookings for up to 4 barbers?',
+  starterLink: 'KERSIVO Starter is £0/month.',
 } as const;
 
 function pageUrl(siteUrl: string): string {

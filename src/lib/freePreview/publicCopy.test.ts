@@ -144,6 +144,7 @@ describe('/free-preview page (spec §10.1)', () => {
       'Review it and ask for changes',
       'Subscribe and launch',
     ]);
+    expect(FREE_PREVIEW_STEPS.map((step) => step.owner)).toEqual(['You', 'KERSIVO', 'You', 'You']);
     expect(FREE_PREVIEW_STEPS[1].body).toContain(`${PREVIEW_TURNAROUND_TEXT_CAPITALISED}.`);
     expect(FREE_PREVIEW_FAQ_ITEMS).toHaveLength(8);
     expect(FREE_PREVIEW_FAQ_ITEMS[2].answer).toBe(
@@ -160,7 +161,8 @@ describe('/free-preview page (spec §10.1)', () => {
       FREE_PREVIEW_FAQ_ITEMS.map((item) => [item.question, item.answer]),
     );
     const page = read('src/pages/free-preview/index.astro');
-    expect(page).toContain('FREE_PREVIEW_PAGE.faqs.map');
+    expect(page).toContain("import Accordion from '@/components/ui/Accordion.astro'");
+    expect(page).toContain('FREE_PREVIEW_FAQ_ITEMS.map');
     expect(page).toContain('canonicalPath={FREE_PREVIEW_PAGE.path}');
   });
 });

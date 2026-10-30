@@ -11,6 +11,7 @@ import {
 } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { BLACKLINE_DEMO_CONTACT_SOURCE } from '@/lib/demo/kersivoContact';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 
 const RESEND_API_KEY = import.meta.env.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
 const FROM_EMAIL = import.meta.env.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
@@ -613,17 +614,9 @@ export async function sendContactInquiryEmail(input: {
 }) {
   const inbox = getContactInboxEmail();
 
-  const stackLabels: Record<string, string> = {
-    booksy: 'Booksy',
-    fresha: 'Fresha',
-    nearcut: 'Nearcut',
-    'other-platform': 'Other booking platform',
-    'mixed-manual': 'Manual bookings / mixed tools',
-    none: 'No booking system',
-  };
   const provided = (value: string) => value.trim() || 'Not provided';
   const currentStackLabel = input.currentStack.trim()
-    ? (stackLabels[input.currentStack] ?? input.currentStack)
+    ? currentBookingSystemLabel(input.currentStack)
     : 'Not provided';
   const shopLabel = provided(input.shopName);
 

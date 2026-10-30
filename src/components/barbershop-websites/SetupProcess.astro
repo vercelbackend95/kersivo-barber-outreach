@@ -79,10 +79,9 @@ const notes: Note[] = [
 
 // FREE_PREVIEW_FLOW_ENABLED shows the preview-first journey; off keeps the original stages.
 const freePreview = isFreePreviewFlowEnabled();
-const previewOwners: Array<Stage['owner']> = ['You', 'We', 'You', 'You'];
 const previewStages: Stage[] = FREE_PREVIEW_STEPS.map((step, index) => ({
   number: String(index + 1).padStart(2, '0'),
-  owner: previewOwners[index] ?? 'You',
+  owner: step.owner === 'KERSIVO' ? 'We' : 'You',
   title: step.title,
   copy: step.body,
 }));
