@@ -3,16 +3,23 @@
  * Shared closing CTA for /compare, the cost calculator and every *-alternative page.
  * Full KERSIVO leads; Starter and the switching question are secondary text links.
  */
-import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import FinalCta from '@/components/FinalCta.astro';
 import { offer } from '@/content/offer';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import {
   COMPARISON_FINAL_CTA_HEADING,
   comparisonFinalCtaSwitchLabel,
   COMPARISON_FINAL_CTA_STARTER_LABEL,
 } from '@/lib/seo/comparisonCtas';
-import '@/styles/components/landingFinalCta.css';
 
 interface Props {
   /** Analytics placement prefix, e.g. "booksy" → "booksy_final". */
@@ -25,60 +32,49 @@ const { placement, competitor } = Astro.props as Props;
 const trackPlacement = `${placement}_final`;
 const titleId = `${placement}-final-cta-title`;
 const monthlyPriceLabel = offer.price.full;
+const freePreview = isFreePreviewFlowEnabled();
 ---
 
-<section class="landing-final-cta comparison-final-cta" aria-labelledby={titleId}>
-  <div class="container">
-    <div class="landing-final-cta__panel">
-      <div class="landing-final-cta__content">
-        <p class="landing-final-cta__eyebrow">OWN YOUR BRAND. OWN YOUR BOOKINGS.</p>
-        <h2 id={titleId} class="landing-final-cta__heading">{COMPARISON_FINAL_CTA_HEADING}</h2>
-        <p class="landing-final-cta__subheadline">
-          Full KERSIVO is {monthlyPriceLabel} per location, with your branded website, domain and
-          online booking. 0% KERSIVO commission. {STRIPE_FEES_NOTE}
-        </p>
-      </div>
-
-      <div class="landing-final-cta__conversion">
-        {isFreePreviewFlowEnabled() ? (
-          <FullPlanCta
-            primaryClass="btn btn--primary btn--lg landing-final-cta__button"
-            placement={trackPlacement}
-          />
-        ) : (
-        <a
-          href="/admin/launch"
-          class="btn btn--primary btn--lg landing-final-cta__button"
-          data-track="saas_subscribe_click"
-          data-track-placement={trackPlacement}
-        >
-          Start Full KERSIVO — {monthlyPriceLabel}
-        </a>
-        )}
-        <p class="landing-final-cta__starter">
-          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement={trackPlacement}>
-            {COMPARISON_FINAL_CTA_STARTER_LABEL}
-          </a>
-        </p>
-        {
-          competitor && (
-            <p class="landing-final-cta__starter comparison-final-cta__switch">
-              <a href="#contact">{comparisonFinalCtaSwitchLabel(competitor)}</a>
-            </p>
-          )
+<FinalCta
+  class="comparison-final-cta"
+  eyebrow="OWN YOUR BRAND. OWN YOUR BOOKINGS."
+  heading={COMPARISON_FINAL_CTA_HEADING}
+  headingId={titleId}
+  text={`Full KERSIVO is ${monthlyPriceLabel} per location, with your branded website, domain and online booking. 0% KERSIVO commission. ${STRIPE_FEES_NOTE}`}
+  primary={
+    freePreview
+      ? {
+          href: FREE_PREVIEW_CTA_HREF,
+          label: FREE_PREVIEW_CTA_LABEL,
+          track: FREE_PREVIEW_CTA_TRACK,
+          placement: trackPlacement,
         }
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-  .comparison-final-cta .landing-final-cta__heading {
-    font-size: clamp(1.55rem, 3.4vw, 2.75rem);
-    overflow-wrap: anywhere;
+      : {
+          href: '/admin/launch',
+          label: `Start Full KERSIVO — ${monthlyPriceLabel}`,
+          track: 'saas_subscribe_click',
+          placement: trackPlacement,
+        }
   }
-
-  .comparison-final-cta__switch {
-    margin-top: 0;
-  }
-</style>
+  links={[
+    ...(freePreview
+      ? [
+          {
+            href: SUBSCRIBE_NOW_CTA_HREF,
+            label: SUBSCRIBE_NOW_CTA_LABEL,
+            track: SUBSCRIBE_NOW_CTA_TRACK,
+            placement: trackPlacement,
+          },
+        ]
+      : []),
+    {
+      href: '/starter',
+      label: COMPARISON_FINAL_CTA_STARTER_LABEL,
+      track: 'starter_plan_explore_click',
+      placement: trackPlacement,
+    },
+    ...(competitor
+      ? [{ href: '#contact', label: comparisonFinalCtaSwitchLabel(competitor) }]
+      : []),
+  ]}
+/>

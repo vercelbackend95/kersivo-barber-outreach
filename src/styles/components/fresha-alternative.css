@@ -1102,66 +1102,6 @@
   text-wrap: balance;
 }
 
-/* Final CTA */
-.fresha-alt-final .landing-final-cta__panel {
-  gap: clamp(1.15rem, 2.5vw, 1.85rem);
-  padding: clamp(1.2rem, 3vw, 2.35rem);
-}
-
-.fresha-alt-final .landing-final-cta__conversion {
-  gap: 0.75rem;
-  align-content: start;
-  align-items: stretch;
-  justify-items: stretch;
-}
-
-.fresha-alt-final .landing-final-cta__heading {
-  font-size: clamp(1.55rem, 3.4vw, 2.75rem);
-  overflow-wrap: anywhere;
-}
-
-.fresha-alt-final__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  width: 100%;
-  align-items: stretch;
-}
-
-.fresha-alt-final__actions .btn {
-  min-width: 0;
-  flex: 1 1 auto;
-  height: auto;
-  padding: 0.95rem 1.25rem;
-  text-align: center;
-}
-
-@media (max-width: 40rem) {
-  .fresha-alt-final__actions {
-    flex-direction: column;
-  }
-
-  .fresha-alt-final__actions .btn {
-    width: 100%;
-    flex: 0 0 auto;
-  }
-}
-
-@media (min-width: 56.25rem) {
-  .fresha-alt-final .landing-final-cta__conversion {
-    align-self: center;
-  }
-
-  .fresha-alt-final__actions {
-    flex-direction: column;
-  }
-
-  .fresha-alt-final__actions .btn {
-    width: 100%;
-    flex: 0 0 auto;
-  }
-}
-
 .fresha-alt-compare__footnote a {
   color: inherit;
   text-decoration: underline;

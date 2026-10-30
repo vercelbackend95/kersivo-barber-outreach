@@ -1,63 +1,64 @@
 ---
-import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import FinalCta from '@/components/FinalCta.astro';
 import { offer } from '@/content/offer';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import '../styles/components/landingFinalCta.css';
 
 interface Props {
   className?: string;
 }
 
 const { className = '' } = Astro.props as Props;
+const freePreview = isFreePreviewFlowEnabled();
+const placement = 'homepage_final';
 ---
 
-<section
-  class={`landing-final-cta ${className}`.trim()}
-  aria-labelledby="landing-final-cta-title"
->
-  <div class="container">
-    <div class="landing-final-cta__panel">
-      <div class="landing-final-cta__content">
-        <p class="landing-final-cta__eyebrow">READY WHEN YOU ARE</p>
-
-        <h2 id="landing-final-cta-title" class="landing-final-cta__heading">
-          Own your brand, bookings and website
-        </h2>
-
-        <p class="landing-final-cta__subheadline">
-          Full KERSIVO brings your branded website, domain, online bookings, clients and retail
-          into one platform for {offer.price.full} per location. We prepare your setup and
-          you approve it before it goes live.
-        </p>
-      </div>
-
-      <div class="landing-final-cta__conversion">
-        {isFreePreviewFlowEnabled() ? (
-          <FullPlanCta
-            primaryClass="btn btn--primary btn--lg landing-final-cta__button"
-            placement="homepage_final"
-          />
-        ) : (
-        <a
-          href="/admin/launch"
-          class="btn btn--primary btn--lg landing-final-cta__button"
-          data-track="saas_subscribe_click"
-          data-track-placement="homepage_final"
-        >
-          Start Full KERSIVO — {offer.price.full}
-        </a>
-        )}
-
-        <p class="landing-final-cta__reassurance">
-          {offer.fees.commission}. {STRIPE_FEES_NOTE}
-        </p>
-        <p class="landing-final-cta__starter">
-          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="homepage_final">
-            Only need online bookings? Start on KERSIVO Starter (£0/month) →
-          </a>
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
+<FinalCta
+  class={className}
+  eyebrow="READY WHEN YOU ARE"
+  heading="Own your brand, bookings and website"
+  headingId="landing-final-cta-title"
+  text={`Full KERSIVO brings your branded website, domain, online bookings, clients and retail into one platform for ${offer.price.full} per location. We prepare your setup and you approve it before it goes live.`}
+  primary={
+    freePreview
+      ? {
+          href: FREE_PREVIEW_CTA_HREF,
+          label: FREE_PREVIEW_CTA_LABEL,
+          track: FREE_PREVIEW_CTA_TRACK,
+          placement,
+        }
+      : {
+          href: '/admin/launch',
+          label: `Start Full KERSIVO — ${offer.price.full}`,
+          track: 'saas_subscribe_click',
+          placement,
+        }
+  }
+  links={[
+    ...(freePreview
+      ? [
+          {
+            href: SUBSCRIBE_NOW_CTA_HREF,
+            label: SUBSCRIBE_NOW_CTA_LABEL,
+            track: SUBSCRIBE_NOW_CTA_TRACK,
+            placement,
+          },
+        ]
+      : []),
+    {
+      href: '/starter',
+      label: 'Only need online bookings? Start on KERSIVO Starter (£0/month) →',
+      track: 'starter_plan_explore_click',
+      placement,
+    },
+  ]}
+  smallPrint={`${offer.fees.commission}. ${STRIPE_FEES_NOTE}`}
+/>

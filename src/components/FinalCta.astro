@@ -1,0 +1,91 @@
+---
+/**
+ * Shared closing conversion panel for marketing pages.
+ * Callers keep their own copy, hrefs and data-track values.
+ */
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/landingFinalCta.css';
+
+export interface FinalCtaLink {
+  href: string;
+  label: string;
+  track?: string;
+  placement?: string;
+}
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  text: string;
+  headingId?: string;
+  primary: FinalCtaLink;
+  secondary?: FinalCtaLink;
+  links?: FinalCtaLink[];
+  smallPrint?: string;
+  class?: string;
+}
+
+const {
+  eyebrow,
+  heading,
+  text,
+  headingId = 'final-cta-title',
+  primary,
+  secondary,
+  links = [],
+  smallPrint,
+  class: className = '',
+} = Astro.props as Props;
+---
+
+<section class:list={['landing-final-cta', className]} aria-labelledby={headingId}>
+  <div class="container">
+    <div class="landing-final-cta__panel ks-glass-card ks-glass-card--accent">
+      <div class="landing-final-cta__content">
+        <p class="ks-eyebrow">{eyebrow}</p>
+        <h2 id={headingId} class="landing-final-cta__heading">{heading}</h2>
+        <p class="landing-final-cta__text">{text}</p>
+      </div>
+
+      <div class="landing-final-cta__conversion">
+        <a
+          href={primary.href}
+          class="btn btn--primary btn--lg landing-final-cta__button"
+          data-track={primary.track}
+          data-track-placement={primary.placement}
+        >
+          {primary.label}
+        </a>
+        {
+          secondary && (
+            <a
+              href={secondary.href}
+              class="btn btn--outline btn--lg landing-final-cta__button"
+              data-track={secondary.track}
+              data-track-placement={secondary.placement}
+            >
+              {secondary.label}
+            </a>
+          )
+        }
+        {
+          links.length > 0 && (
+            <p class="landing-final-cta__links">
+              {links.map((link, index) => (
+                <>
+                  {index > 0 ? (
+                    <span class="landing-final-cta__sep" aria-hidden="true">
+                      {' '}·{' '}
+                    </span>
+                  ) : null}
+                  <a href={link.href} data-track={link.track} data-track-placement={link.placement}>{link.label}</a>
+                </>
+              ))}
+            </p>
+          )
+        }
+        {smallPrint ? <p class="landing-final-cta__smallprint">{smallPrint}</p> : null}
+      </div>
+    </div>
+  </div>
+</section>
