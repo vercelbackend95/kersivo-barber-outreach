@@ -193,7 +193,7 @@ describe('homepage visual style parity with /starter', () => {
   });
 
   it('matches the /starter glance card surface, shadow and rounded edges while keeping price card layout', () => {
-    const starter = read('src/styles/components/starter-landing.css');
+    const starter = read('src/styles/components/ks-glass-card.css');
     const pricing = read('src/styles/rateCard1.css');
     const final = read('src/styles/components/landingFinalCta.css');
     const reference = 'background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);';

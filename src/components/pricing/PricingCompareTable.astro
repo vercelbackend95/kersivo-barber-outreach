@@ -44,13 +44,14 @@ const groups = getRenderableCompareGroups();
           <caption class="sr-only">{PRICING_COMPARE_CAPTION}</caption>
           <thead>
             <tr>
-              <th scope="col">Feature</th>
+              <th scope="col" class="pricing-compare__feature-head">Feature</th>
               <th scope="col" data-plan-col="starter">
                 <div class="pricing-compare__plan-head">
-                  <span class="pricing-compare__plan-name">KERSIVO Starter (£0/month)</span>
+                  <span class="pricing-compare__plan-name">KERSIVO Starter</span>
+                  <span class="pricing-compare__plan-price">£0/month</span>
                   <a
                     href="/admin"
-                    class="pricing-compare__cta-link"
+                    class="btn btn--outline btn--sm pricing-compare__cta"
                     data-track="starter_signup_click"
                     data-track-placement="pricing_compare"
                   >
@@ -61,7 +62,8 @@ const groups = getRenderableCompareGroups();
               <th scope="col" class="pricing-compare__plan--full" data-plan-col="full">
                 <div class="pricing-compare__plan-head">
                   <span class="pricing-compare__pill">Recommended</span>
-                  <span class="pricing-compare__plan-name">Full KERSIVO (£{SAAS_MONTHLY_GBP}/month)</span>
+                  <span class="pricing-compare__plan-name">Full KERSIVO</span>
+                  <span class="pricing-compare__plan-price">£{SAAS_MONTHLY_GBP}/month</span>
                   {
                     freePreview ? (
                       <a

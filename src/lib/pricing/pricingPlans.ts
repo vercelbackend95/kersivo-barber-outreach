@@ -14,13 +14,22 @@ export type PlanCardFeature = {
 
 export type PricingPlanVariant = 'full' | 'starter';
 
+export type PlanKeyFact = {
+  label: string;
+  value: string;
+};
+
+export type PlanKeyFacts = {
+  values: readonly [PlanKeyFact, PlanKeyFact];
+  details: readonly [PlanKeyFact, PlanKeyFact];
+  wide: PlanKeyFact;
+};
+
 export type PricingPlanCardCopy = {
   variant: PricingPlanVariant;
   badge?: string;
   name: string;
-  amount: number;
-  qualifier: string;
-  priceSize: 'md' | 'lg';
+  keyFacts: PlanKeyFacts;
   description: string;
   features: readonly PlanCardFeature[];
   chips?: readonly string[];
@@ -50,8 +59,37 @@ export const PRICING_PLAN_LEAD =
 export const PRICING_FULL_VALUE_STATEMENT =
   'Your branded website, own domain, booking system and shop tools — designed individually for your shop.';
 
+/** The facts in the tiles stay out of this line. */
 export const PRICING_STARTER_DESCRIPTION =
-  'A real booking system for one shop: hosted booking page, up to 4 active bookable barbers, Clients Core and email reminders. Public bookings use a £5 deposit or Pay in full through your connected Stripe account. 0% KERSIVO commission.';
+  'A real booking system for one shop. Clients pay via your connected Stripe account.';
+
+export const PRICING_FULL_KEY_FACTS: PlanKeyFacts = {
+  values: [
+    { label: 'Monthly fee, per location', value: `£${SAAS_MONTHLY_GBP}` },
+    { label: 'KERSIVO commission', value: '0%' },
+  ],
+  details: [
+    { label: 'Setup fee', value: 'None' },
+    { label: 'Your own domain', value: 'Included' },
+  ],
+  wide: { label: 'Booking payments', value: 'Pay at shop, £5 deposit or full payment' },
+};
+
+/** Also rendered by the /starter hero card. */
+export const STARTER_KEY_FACTS: PlanKeyFacts = {
+  values: [
+    { label: 'Monthly fee', value: '£0' },
+    { label: 'KERSIVO commission', value: '0%' },
+  ],
+  details: [
+    { label: 'Bookable barbers', value: 'Up to 4' },
+    { label: 'Booking page', value: 'KERSIVO hosted' },
+  ],
+  wide: { label: 'Public booking payment', value: '£5 deposit or Pay in full' },
+};
+
+/** The 0% tile always carries this nearby (CLAUDE.md marketing copy rules). */
+export const PRICING_FACTS_STRIPE_NOTE = 'Stripe fees apply.';
 
 export const PRICING_FULL_FEATURES: readonly PlanCardFeature[] = fullLayout.includedItems.map((item) => ({
   title: item.heading,
@@ -109,9 +147,7 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
     variant: 'full',
     badge: 'Recommended for your own brand',
     name: offer.plans.full,
-    amount: SAAS_MONTHLY_GBP,
-    qualifier: `${offer.price.fullQualifier} · no setup fee`,
-    priceSize: 'lg',
+    keyFacts: PRICING_FULL_KEY_FACTS,
     description: PRICING_FULL_VALUE_STATEMENT,
     features: PRICING_FULL_FEATURES,
     chips: PRICING_FULL_CHIPS,
@@ -134,9 +170,7 @@ export const PRICING_PLAN_CARDS: Record<PricingPlanVariant, PricingPlanCardCopy>
   starter: {
     variant: 'starter',
     name: offer.plans.starter,
-    amount: 0,
-    qualifier: 'up to 4 barbers · one location',
-    priceSize: 'md',
+    keyFacts: STARTER_KEY_FACTS,
     description: PRICING_STARTER_DESCRIPTION,
     features: PRICING_STARTER_FEATURES,
     bestForTitle: 'Best for',

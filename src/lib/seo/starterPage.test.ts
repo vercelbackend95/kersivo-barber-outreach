@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { STARTER_KEY_FACTS } from '@/lib/pricing/pricingPlans';
 import { DEFAULT_TITLE } from './defaults';
 import {
   STARTER_FAQ_ITEMS,
@@ -128,7 +129,8 @@ describe('KERSIVO Starter landing page structure and claims', () => {
   });
 
   it('states the 4-barber limit and never offers unlimited barbers on Starter', () => {
-    expect(page).toContain('Up to 4');
+    expect(page).toContain('<KeyFacts facts={STARTER_KEY_FACTS} />');
+    expect(STARTER_KEY_FACTS.details[0]).toEqual({ label: 'Bookable barbers', value: 'Up to 4' });
     expect(faqText).toContain('up to 4 active bookable barbers');
     expect(allCopy).not.toMatch(/unlimited barbers/i);
   });
