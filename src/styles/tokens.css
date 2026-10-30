@@ -5,11 +5,17 @@
   --muted: #b7bdc7;
   --border: #252c36;
 
-  /* Surface scale (3 levels) */
+  /* Surface scale (3 levels) — admin, booking and storefront. Marketing cards
+     use --ks-glass-* / --ks-tile instead of this blue-grey range. */
   --surface-1: #11151b;
   --surface-2: #171c23;
   --surface-3: #1d2430;
   --surface: var(--surface-1);
+
+  /* Marketing cards: glass gradient plus one flat near-black for low-emphasis tiles. */
+  --ks-glass-top: #0d0d0e;
+  --ks-glass-bottom: #080809;
+  --ks-tile: #0d0d0e;
 
   /* Brand colors.
      --color-brand is the only KERSIVO red fill. White text on it is 4.97:1.

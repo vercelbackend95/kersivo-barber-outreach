@@ -7,7 +7,7 @@ const read = (...parts: string[]) => readFileSync(join(process.cwd(), ...parts),
 
 const hero = read('src/components/homepage/HomepageHero.astro');
 const heroCss = read('src/styles/components/homepage-hero.css');
-const freshaCss = read('src/styles/components/fresha-alternative.css');
+const freshaCss = read('src/styles/components/ks-hero.css');
 const homepage = read('src/pages/index.astro');
 
 const text = (source: string) => source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -76,7 +76,7 @@ describe('homepage hero markup', () => {
   });
 
   it('shows the approved eyebrow, lead, CTAs and meta row', () => {
-    expect(text(between(hero, '<p class="home-hero__eyebrow">', '</p>'))).toBe(
+    expect(text(between(hero, '<p class="ks-eyebrow">', '</p>'))).toBe(
       'Barbershop software for independent UK shops',
     );
     expect(text(between(hero, '<p class="home-hero__lead">', '</p>'))).toContain(
@@ -108,7 +108,7 @@ describe('homepage hero markup', () => {
   });
 });
 
-const FRESHA_HERO_END = '/* Fresha Alternative — isolated draft page styles.';
+const FRESHA_HERO_END = '/* End of shared product hero';
 const HOME_HERO_END = '/*\n * One text block for LCP';
 
 describe('homepage hero styles', () => {

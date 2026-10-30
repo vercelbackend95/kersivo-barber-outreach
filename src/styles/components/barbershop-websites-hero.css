@@ -91,6 +91,10 @@
   text-decoration: underline;
 }
 
+.bsw-hero__head .ks-eyebrow {
+  margin: 0 0 0.85rem;
+}
+
 .bsw-hero__title {
   max-width: 100%;
   margin: 0;

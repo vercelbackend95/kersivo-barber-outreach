@@ -1,0 +1,43 @@
+/*
+ * Site-wide marketing eyebrow: pill with an optional red dot.
+ * --neutral greys the dot; --plain hides it.
+ */
+.ks-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #b9b9b9;
+  font-family: var(--font-body);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ks-eyebrow::before {
+  content: '';
+  flex: none;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--color-brand);
+  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--color-brand) 10%, transparent);
+}
+
+.ks-eyebrow--neutral::before {
+  background: #8e8e92;
+  box-shadow: none;
+}
+
+.ks-eyebrow--plain::before {
+  content: none;
+}

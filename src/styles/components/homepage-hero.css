@@ -22,34 +22,6 @@
   text-align: left;
 }
 
-.home-hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0 0 0.85rem;
-  padding: 0.48rem 0.72rem;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
-  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
-  font-family: var(--font-body);
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
-  backdrop-filter: blur(12px);
-}
-
-.home-hero__eyebrow-dot {
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
 .home-hero__title {
   margin: 0;
   max-width: none;
@@ -262,4 +234,8 @@
  */
 .home-hero__title-line {
   display: inline;
+}
+
+.home-hero .ks-eyebrow {
+  margin: 0 0 0.85rem;
 }

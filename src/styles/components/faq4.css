@@ -16,7 +16,7 @@
 .faq4__badge {
   justify-self: start;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--ks-tile);
   color: var(--fg);
   font-size: var(--text-xs);
   font-weight: 700;

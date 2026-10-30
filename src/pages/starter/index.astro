@@ -27,7 +27,6 @@ import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { STARTER_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { CreditCard, UserRound, UsersRound } from 'lucide-react';
-import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/starter-landing.css';
 
@@ -90,8 +89,7 @@ const starterFeatures = [
       <div class="starter-shell starter-hero__grid">
         <div class="starter-hero__copy">
           <PageBreadcrumbs trail={STARTER_BREADCRUMBS} />
-          <p class="starter-kicker starter-hero__eyebrow">
-            <span class="starter-kicker__dot" aria-hidden="true"></span>
+          <p class="ks-eyebrow starter-hero__eyebrow">
             KERSIVO STARTER · BUILT FOR UK BARBERSHOPS
           </p>
           <h1 id="starter-hero-title" class="starter-hero__title">{heroTitleLines.map((line, index) => (
@@ -102,13 +100,13 @@ const starterFeatures = [
           <div class="starter-hero__actions">
             <a
               href="/admin"
-              class="btn btn--primary btn--lg fresha-alt-hero__action fresha-alt-hero__action--primary"
+              class="btn btn--primary btn--lg"
               data-track="starter_signup_click"
               data-track-placement="starter_hero"
             >
               Start KERSIVO Starter
             </a>
-            <a href="/demo" class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary" data-track="view_live_demo_click">
+            <a href="/demo" class="btn btn--outline btn--lg" data-track="view_live_demo_click">
               See KERSIVO in action
             </a>
           </div>
@@ -139,7 +137,7 @@ const starterFeatures = [
     <section class="starter-section" aria-labelledby="starter-core-title">
       <div class="starter-shell">
         <header class="starter-section__header">
-          <p class="starter-section__eyebrow">RUN THE DIARY</p>
+          <p class="ks-eyebrow">RUN THE DIARY</p>
           <h2 id="starter-core-title">The core tools to take bookings and run the day.</h2>
           <p>
             Starter is not a temporary trial. It is a real operating plan for independent shops that
@@ -166,7 +164,7 @@ const starterFeatures = [
     <section class="starter-dist" aria-labelledby="starter-distribution-title" data-dist>
       <div class="starter-shell">
         <header class="starter-dist__scene starter-dist__intro" data-dist-scene>
-          <p class="starter-section__eyebrow starter-dist__eyebrow" data-dist-item style="--i: 0">GET FOUND. GET SCANNED. GET BOOKED.</p>
+          <p class="ks-eyebrow starter-dist__eyebrow" data-dist-item style="--i: 0">GET FOUND. GET SCANNED. GET BOOKED.</p>
           <h2 id="starter-distribution-title" class="starter-dist__title" data-dist-item data-dist-keep style="--i: 1">Turn Google, your window and your shop into booking entry points.</h2>
           <p class="starter-dist__lead" data-dist-item style="--i: 2">
             Starter is built to help clients reach your booking page from places they already use.
@@ -231,7 +229,7 @@ const starterFeatures = [
     <section class="starter-section" aria-labelledby="starter-payments-title">
       <div class="starter-shell starter-split">
         <div>
-          <p class="starter-section__eyebrow">PAYMENT-POWERED STARTER</p>
+          <p class="ks-eyebrow">PAYMENT-POWERED STARTER</p>
           <h2 id="starter-payments-title">Every public booking starts with at least £5 online.</h2>
           <p class="starter-section__body">
             For services above £5, clients choose a £5 deposit or Pay in full. A £5 service is paid
@@ -275,7 +273,7 @@ const starterFeatures = [
     <section class="starter-section starter-section--compare" aria-labelledby="starter-compare-title">
       <div class="starter-shell">
         <header class="starter-section__header">
-          <p class="starter-section__eyebrow">START SMALL. UPGRADE FOR OWNERSHIP.</p>
+          <p class="ks-eyebrow">START SMALL. UPGRADE FOR OWNERSHIP.</p>
           <h2 id="starter-compare-title">Starter runs the core booking operation. Full builds the complete brand.</h2>
           <p>
             Upgrade when your shop needs more capacity, deeper client tools or a complete branded
@@ -311,7 +309,7 @@ const starterFeatures = [
     >
       <div class="starter-shell" data-dist-scene>
         <header class="starter-flow__intro">
-          <p class="starter-section__eyebrow starter-flow__eyebrow" data-dist-item style="--i: 0">START IN THREE STEPS</p>
+          <p class="ks-eyebrow starter-flow__eyebrow" data-dist-item style="--i: 0">START IN THREE STEPS</p>
           <h2 id="starter-steps-title" class="starter-flow__title" data-dist-item data-dist-keep style="--i: 1">Set up first. Connect Stripe when you are ready to launch.</h2>
           <p class="starter-flow__lead" data-dist-item style="--i: 2">
             Build the workspace before taking any public bookings. Starter stays £0/month; public
@@ -372,7 +370,7 @@ const starterFeatures = [
     <section class="starter-final" aria-labelledby="starter-final-title">
       <div class="starter-shell starter-final__panel">
         <div>
-          <p class="starter-section__eyebrow">KERSIVO STARTER</p>
+          <p class="ks-eyebrow">KERSIVO STARTER</p>
           <h2 id="starter-final-title">Start taking payment-backed bookings without a monthly software bill.</h2>
           <p>
             £0/month. 0% KERSIVO commission. £5 deposit or Pay in full on every public booking.
@@ -382,7 +380,7 @@ const starterFeatures = [
         <div class="starter-final__actions">
           <a
             href="/admin"
-            class="btn btn--primary btn--lg fresha-alt-hero__action fresha-alt-hero__action--primary"
+            class="btn btn--primary btn--lg"
             data-track="starter_signup_click"
             data-track-placement="starter_final"
           >

@@ -201,7 +201,7 @@ function RateCard1Landing({ className, freePreview = false }: { className?: stri
     >
       <div id="ongoing-care" className="container rate-card1__landing">
         <header className="rate-card1__landing-intro">
-          <p className="rate-card1__eyebrow">{layout.eyebrow}</p>
+          <p className="ks-eyebrow">{layout.eyebrow}</p>
           <h2 id="rate-card1-heading" className="rate-card1__landing-heading">
             {layout.heading ?? (
               <>
@@ -245,7 +245,7 @@ function RateCard1Default({ className }: { className?: string }) {
       <div id="ongoing-care" className="container rate-card1__layout">
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
-            <p className="rate-card1__eyebrow">WHAT&apos;S INCLUDED</p>
+            <p className="ks-eyebrow">WHAT&apos;S INCLUDED</p>
             <h2 id="rate-card1-heading" className="rate-card1__heading">
               WHAT YOUR SUBSCRIPTION BUYS EACH MONTH
             </h2>

@@ -40,8 +40,7 @@ import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
-import '@/styles/components/fresha-alternative.css';
-import '@/styles/components/company-pages.css';
+import '@/styles/components/ks-hero.css';
 
 // FREE_PREVIEW_FLOW_ENABLED (docs/free-preview-spec.md §10.4); off renders the page unchanged.
 const freePreview = isFreePreviewFlowEnabled();
@@ -59,10 +58,7 @@ const currentYear = new Date().getFullYear();
     <section class="fresha-alt-hero company-hero" aria-labelledby="pricing-hero-title">
       <div class="fresha-alt-hero__content">
         <PageBreadcrumbs trail={PRICING_BREADCRUMBS} />
-        <p class="fresha-alt-hero__eyebrow">
-          <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
-          KERSIVO pricing
-        </p>
+        <p class="ks-eyebrow">KERSIVO pricing</p>
         <h1 id="pricing-hero-title" class="fresha-alt-hero__title">
           <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">
             {PRICING_PAGE_H1}

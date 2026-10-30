@@ -159,7 +159,7 @@
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-16);
-  background: var(--surface-1);
+  background: var(--ks-tile);
 }
 
 .bsw-essentials-test::before {
