@@ -16,8 +16,7 @@ export interface PriceProps {
 export function Price({ amount, qualifier, size = 'lg', className, amountClassName }: PriceProps) {
   return (
     <span className={cn('price', `price--${size}`, className)}>
-      <span className={cn('price__amount', amountClassName)}>£{amount}</span>
-      <span className="price__period">/month</span>
+      <span className={cn('price__amount', amountClassName)}>£{amount}</span><span className="price__period">/month</span>
       {qualifier ? <span className="price__qualifier">{qualifier}</span> : null}
     </span>
   );
