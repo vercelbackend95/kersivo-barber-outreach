@@ -40,6 +40,11 @@
   white-space: nowrap;
 }
 
+.ops-pr__status--over-cap {
+  margin-left: 0.35rem;
+  background: var(--warning-subtle);
+}
+
 .ops-pr__status--ready,
 .ops-pr__status--converted {
   background: var(--success-subtle);

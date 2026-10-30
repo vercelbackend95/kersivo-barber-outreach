@@ -42,6 +42,18 @@ describe('ensureSentryServerInitialized', () => {
     expect(typeof options.beforeSend).toBe('function');
   });
 
+  it('uses the deployment commit SHA as the release', async () => {
+    isInitialized.mockReturnValue(false);
+    process.env.VERCEL_GIT_COMMIT_SHA = 'abc123';
+
+    const { ensureSentryServerInitialized } = await import('../../../sentry.server.config');
+    init.mockClear();
+    ensureSentryServerInitialized();
+    delete process.env.VERCEL_GIT_COMMIT_SHA;
+
+    expect((init.mock.calls[0]?.[0] as Record<string, unknown>).release).toBe('abc123');
+  });
+
   it('does not initialize again when already initialized', async () => {
     isInitialized.mockReturnValue(true);
 

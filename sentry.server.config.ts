@@ -19,6 +19,8 @@ export function ensureSentryServerInitialized(): void {
       (import.meta.env.SENTRY_ENVIRONMENT ?? process.env.SENTRY_ENVIRONMENT ?? process.env.VERCEL_ENV ?? 'development')
         .toString()
         .trim() || 'development',
+    // Commit SHA fixed at build time (astro.config.mjs); the runtime value covers tests and dev.
+    release: (import.meta.env.SENTRY_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA || '').toString().trim() || undefined,
     tracesSampleRate: 0.05,
     beforeSend(event) {
       return scrubSentryEvent(event);

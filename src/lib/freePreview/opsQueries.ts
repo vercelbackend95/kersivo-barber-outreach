@@ -1,5 +1,6 @@
 import type { PreviewRequestStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 
 export const PREVIEW_REQUEST_STATUSES: readonly PreviewRequestStatus[] = [
   'REQUESTED',
@@ -61,8 +62,14 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       viewCount: true,
       firstViewedAt: true,
       createdAt: true,
+      events: { where: { action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }, select: { action: true }, take: 1 },
     },
   });
+}
+
+/** True when the request arrived over the daily cap, so the owner was told it may take longer. */
+export function isOverDailyCap(request: { events: Array<{ action: string }> }): boolean {
+  return request.events.some((event) => event.action === PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP);
 }
 
 /** Counts per status for requests created in the last 30 days. */

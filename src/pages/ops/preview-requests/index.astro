@@ -20,6 +20,7 @@ import {
   previewFunnelLast30Days,
   previewFunnelRates,
   formatAge,
+  isOverDailyCap,
   listPreviewRequests,
   parsePreviewRequestListQuery,
   previewRequestLinks,
@@ -207,6 +208,7 @@ function filterHref(status: string | null, sort = query.sort) {
                         <span class={`ops-pr__status ops-pr__status--${request.status.toLowerCase()}`}>
                           {PREVIEW_STATUS_LABELS[request.status]}
                         </span>
+                        {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
                       </td>
                       <td>{request.firstViewedAt ? `${request.viewCount}×` : 'Not yet'}</td>
                       <td title={request.createdAt.toISOString()}>{formatAge(request.createdAt, now)}</td>
