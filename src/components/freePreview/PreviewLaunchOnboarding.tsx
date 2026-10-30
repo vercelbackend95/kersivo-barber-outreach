@@ -1,9 +1,8 @@
 import { useState } from 'react';
+import DomainSearcher, { type DomainDecisionMode } from '@/components/domains/DomainSearcher';
 import type { PreviewOnboardingPrefill } from '@/lib/freePreview/previewOnboarding';
 
 type Props = { prefill: PreviewOnboardingPrefill };
-
-type DomainMode = 'EXISTING' | 'KERSIVO_REGISTER';
 
 /**
  * Shortened onboarding after a free preview purchase (spec §7). The website and workspace already
@@ -22,8 +21,8 @@ export default function PreviewLaunchOnboarding({ prefill }: Props) {
     existingDomain: prefill.existingDomain,
     preferredDomain1: prefill.preferredDomain1,
   });
-  const [domainMode, setDomainMode] = useState<DomainMode | null>(prefill.domainMode);
-  const [domainAuthorised, setDomainAuthorised] = useState(false);
+  const [domainMode, setDomainMode] = useState<DomainDecisionMode | null>(prefill.domainMode);
+  const [domainAuthorised, setDomainAuthorised] = useState(prefill.domainRegistrationAuthorised);
   const [migrationRequested, setMigrationRequested] = useState<boolean>(prefill.migrationRequested ?? false);
   const [contentRights, setContentRights] = useState(false);
   const [accuracy, setAccuracy] = useState(false);
@@ -169,41 +168,27 @@ export default function PreviewLaunchOnboarding({ prefill }: Props) {
       </section>
 
       <section className="fpo-card" aria-labelledby="fpo-domain-title">
-        <h2 id="fpo-domain-title">Your domain</h2>
-        <fieldset className="fpo-fieldset">
-          <legend className="sr-only">Domain option</legend>
-          <label className="fpo-check">
-            <input type="radio" name="domainMode" checked={domainMode === 'EXISTING'} onChange={() => setDomainMode('EXISTING')} />
-            <span>I already have a domain</span>
-          </label>
-          <label className="fpo-check">
-            <input
-              type="radio"
-              name="domainMode"
-              checked={domainMode === 'KERSIVO_REGISTER'}
-              onChange={() => setDomainMode('KERSIVO_REGISTER')}
-            />
-            <span>Register a new domain for me</span>
-          </label>
-        </fieldset>
-        {domainMode === 'EXISTING' ? (
-          <label>
-            Domain
-            <input className="input" value={form.existingDomain} onChange={set('existingDomain')} placeholder="yourshop.co.uk" />
-          </label>
-        ) : null}
-        {domainMode === 'KERSIVO_REGISTER' ? (
-          <>
-            <label>
-              Domain you'd like
-              <input className="input" value={form.preferredDomain1} onChange={set('preferredDomain1')} placeholder="yourshop.co.uk" />
-            </label>
-            <label className="fpo-check">
-              <input type="checkbox" checked={domainAuthorised} onChange={(event) => setDomainAuthorised(event.target.checked)} />
-              <span>I authorise KERSIVO to register and manage this domain for my shop.</span>
-            </label>
-          </>
-        ) : null}
+        <h2 id="fpo-domain-title" className="sr-only">
+          Your domain
+        </h2>
+        <DomainSearcher
+          shopName={prefill.shopName}
+          townCity={form.townCity}
+          searchEndpoint="/api/admin/client-onboarding/domain-search"
+          mode={domainMode}
+          onModeChange={setDomainMode}
+          selectedDomain={form.preferredDomain1 || null}
+          onSelectDomain={(domain) =>
+            setForm((current) => ({ ...current, preferredDomain1: domain ?? '' }))
+          }
+          existingDomain={form.existingDomain}
+          onExistingDomainChange={(value) =>
+            setForm((current) => ({ ...current, existingDomain: value }))
+          }
+          authorised={domainAuthorised}
+          onAuthorisedChange={setDomainAuthorised}
+          disabled={busy !== null}
+        />
       </section>
 
       {stripeBlock}

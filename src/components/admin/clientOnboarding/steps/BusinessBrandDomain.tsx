@@ -1,5 +1,6 @@
 import React from 'react';
 import { ClientOnboardingDomainMode } from '@prisma/client';
+import DomainSearcher from '@/components/domains/DomainSearcher';
 import { TextArea, TextInput } from '../fields';
 import { PrivateAssetUploader } from '../PrivateAssetUploader';
 import {
@@ -335,7 +336,7 @@ export function BrandStep({ draft, state, disabled, updateDraft, upsertAsset, re
   );
 }
 
-export function DomainStep({ draft, disabled, updateDraft }: StepCommon) {
+export function DomainStep({ draft, state, disabled, updateDraft }: StepCommon) {
   const modes: ClientOnboardingDomainMode[] = [
     ClientOnboardingDomainMode.EXISTING,
     ClientOnboardingDomainMode.KERSIVO_REGISTER,
@@ -368,7 +369,7 @@ export function DomainStep({ draft, disabled, updateDraft }: StepCommon) {
               ) : null}
               {mode === ClientOnboardingDomainMode.KERSIVO_REGISTER ? (
                 <p className="client-onboarding__choice-body">
-                  Share your preferred domain names and authorise registration.
+                  Search for a standard domain and authorise registration.
                 </p>
               ) : null}
               {mode === ClientOnboardingDomainMode.UNDECIDED ? (
@@ -408,51 +409,27 @@ export function DomainStep({ draft, disabled, updateDraft }: StepCommon) {
       ) : null}
 
       {draft.domainMode === ClientOnboardingDomainMode.KERSIVO_REGISTER ? (
-        <div className="client-onboarding__section">
-          <TextInput
-            id="preferredDomain1"
-            label="1st choice domain"
-            disabled={disabled}
-            value={draft.preferredDomain1 ?? ''}
-            onChange={(v) =>
-              updateDraft({ preferredDomain1: v.trim() ? v.trim() : null })
-            }
-          />
-          <TextInput
-            id="preferredDomain2"
-            label="2nd choice domain"
-            optional
-            disabled={disabled}
-            value={draft.preferredDomain2 ?? ''}
-            onChange={(v) =>
-              updateDraft({ preferredDomain2: v.trim() ? v.trim() : null })
-            }
-          />
-          <TextInput
-            id="preferredDomain3"
-            label="3rd choice domain"
-            optional
-            disabled={disabled}
-            value={draft.preferredDomain3 ?? ''}
-            onChange={(v) =>
-              updateDraft({ preferredDomain3: v.trim() ? v.trim() : null })
-            }
-          />
-          <label className="client-onboarding__check-row">
-            <input
-              type="checkbox"
-              checked={draft.domainRegistrationAuthorised}
-              disabled={disabled}
-              onChange={(e) =>
-                updateDraft({ domainRegistrationAuthorised: e.target.checked })
-              }
-            />
-            <span>
-              I authorise KERSIVO to register and manage the selected domain name on behalf of my
-              business using the details provided.
-            </span>
-          </label>
-        </div>
+        <DomainSearcher
+          shopName={state.shop?.name || state.workspace.shopName || ''}
+          townCity={draft.townCity || state.shop?.townCity || ''}
+          searchEndpoint="/api/admin/client-onboarding/domain-search"
+          mode="KERSIVO_REGISTER"
+          onModeChange={() => undefined}
+          selectedDomain={draft.preferredDomain1}
+          onSelectDomain={(domain) =>
+            updateDraft({
+              preferredDomain1: domain,
+              preferredDomain2: null,
+              preferredDomain3: null,
+            })
+          }
+          existingDomain={draft.existingDomain ?? ''}
+          onExistingDomainChange={() => undefined}
+          authorised={draft.domainRegistrationAuthorised}
+          onAuthorisedChange={(value) => updateDraft({ domainRegistrationAuthorised: value })}
+          disabled={disabled}
+          showModeToggle={false}
+        />
       ) : null}
     </section>
   );

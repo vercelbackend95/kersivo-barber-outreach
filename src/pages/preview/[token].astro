@@ -35,6 +35,8 @@ import '@/styles/components/booking.css';
 import '@/styles/components/booking-flow.css';
 import '@/styles/components/booking-mobile.css';
 import '@/styles/components/booking-review.css';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/domain-searcher.css';
 import '@/styles/components/free-preview-page.css';
 
 /**
@@ -102,6 +104,15 @@ if (view === 'website' && draft?.shop.sitePreviewUrl) {
   Astro.response.headers.set(EXTRA_FRAME_SRC_HEADER, draft.shop.sitePreviewUrl);
 }
 const shopName = draft?.shop.name ?? preview?.request.shopName ?? 'your shop';
+
+function hostnameOf(url: string | null | undefined): string {
+  if (!url) return '';
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
 ---
 
 <MinimalLayout
@@ -136,8 +147,11 @@ const shopName = draft?.shop.name ?? preview?.request.shopName ?? 'your shop';
           client:load
           token={token}
           shopName={shopName}
+          townCity={preview.request.townCity}
           firstName={preview.request.firstName}
           checkoutEmail={preview.request.email}
+          hasOwnDomain={preview.request.hasOwnDomain}
+          existingWebsiteHost={hostnameOf(preview.request.websiteUrl)}
           isOperator={preview.isOperator}
           converted={preview.request.status === 'CONVERTED'}
           activeView={view}

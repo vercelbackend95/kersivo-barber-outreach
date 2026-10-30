@@ -102,8 +102,9 @@ Link: "Explore the KERSIVO demo in the meantime" → /demo
 ## 7. Conversion
 - "Launch this website — £39/month" → Stripe Checkout for the existing Full KERSIVO price. Email prefilled; preview request id and draft shop id in metadata.
 - Directly above the redirect, show a short confirmation panel: "£39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) · Cancel anytime. Nothing goes live until you approve it." with button "Continue to secure checkout".
+- Domain **choice** (existing hostname, or one standard name to register) is collected on that panel and written to ClientOnboarding on the draft shop plus Stripe metadata **before** checkout. KERSIVO does not register, buy or attach the domain at this step.
 - On successful payment (webhook, idempotent): mark the request converted, create or link the customer account, and attach the draft shop to that account without rebuilding it.
-- Onboarding then asks only for what is still missing: Stripe Connect, domain, and confirmation of details. Prefill everything known from the preview request and draft shop.
+- Onboarding then asks only for what is still missing: Stripe Connect, confirmation of details, and a chance to change the already-chosen domain. Prefill everything known from the preview request and draft shop. DNS / SSL / go-live stay after approval.
 - The direct /admin/launch route keeps working unchanged.
 
 ## 8. Ops (/ops, existing auth)

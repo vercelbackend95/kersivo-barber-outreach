@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import DomainSearcher, { type DomainDecisionMode } from '@/components/domains/DomainSearcher';
+import { normalizeAndValidateDomainInput } from '@/lib/domains/hostname';
 import {
   getOrCreateSaasCheckoutAttemptId,
   rotateSaasCheckoutAttemptId,
@@ -8,9 +10,12 @@ import { runSaasCheckoutWithSingleRotate } from '@/lib/setup/saasCheckoutPayFlow
 export type PreviewTopBarProps = {
   token: string;
   shopName: string;
+  townCity: string;
   /** Prefill for the checkout name; the checkout email is fixed to the request email. */
   firstName: string | null;
   checkoutEmail: string;
+  hasOwnDomain: 'yes' | 'no' | 'not_sure' | string;
+  existingWebsiteHost: string;
   /** Operators see the bar but cannot act as the owner. */
   isOperator: boolean;
   converted: boolean;
@@ -18,6 +23,12 @@ export type PreviewTopBarProps = {
   websiteHref: string;
   bookingHref: string;
 };
+
+function initialMode(hasOwnDomain: string): DomainDecisionMode | null {
+  if (hasOwnDomain === 'yes') return 'EXISTING';
+  if (hasOwnDomain === 'no') return 'KERSIVO_REGISTER';
+  return null;
+}
 
 export const PREVIEW_CHANGES_MAX = 2000;
 
@@ -31,6 +42,10 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   const [changesSent, setChangesSent] = useState(false);
   const [name, setName] = useState(props.firstName ?? '');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [domainMode, setDomainMode] = useState<DomainDecisionMode | null>(() => initialMode(props.hasOwnDomain));
+  const [existingDomain, setExistingDomain] = useState(props.existingWebsiteHost);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [domainAuthorised, setDomainAuthorised] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -80,6 +95,24 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
       setError('Please enter your name.');
       return;
     }
+    if (!domainMode) {
+      setError('Choose how you would like to handle your domain.');
+      return;
+    }
+    const chosen =
+      domainMode === 'EXISTING'
+        ? normalizeAndValidateDomainInput(existingDomain)
+        : selectedDomain
+          ? normalizeAndValidateDomainInput(selectedDomain)
+          : { ok: false as const, error: 'Choose an available standard domain.' };
+    if (!chosen.ok || !chosen.value) {
+      setError(!chosen.ok ? chosen.error : 'Choose a domain before continuing.');
+      return;
+    }
+    if (domainMode === 'KERSIVO_REGISTER' && !domainAuthorised) {
+      setError('Authorise KERSIVO to register and manage the selected domain before continuing.');
+      return;
+    }
     if (!termsAccepted) {
       setError('Please agree to the Terms of Service to continue.');
       return;
@@ -94,7 +127,14 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
           fetch(`/api/free-preview/${encodeURIComponent(props.token)}/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name.trim(), termsAccepted: true, checkoutAttemptId }),
+            body: JSON.stringify({
+              name: name.trim(),
+              termsAccepted: true,
+              checkoutAttemptId,
+              domainMode,
+              domain: chosen.value,
+              domainRegistrationAuthorised: domainMode === 'KERSIVO_REGISTER' ? domainAuthorised : false,
+            }),
           }),
       });
       if (response.ok && data.url) {
@@ -257,6 +297,20 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
           <p className="fp-dialog__hint">
             Checkout email: <strong>{props.checkoutEmail}</strong>. Use this email to sign in after checkout.
           </p>
+          <DomainSearcher
+            shopName={props.shopName}
+            townCity={props.townCity}
+            searchEndpoint={`/api/free-preview/${encodeURIComponent(props.token)}/domain-search`}
+            mode={domainMode}
+            onModeChange={setDomainMode}
+            selectedDomain={selectedDomain}
+            onSelectDomain={setSelectedDomain}
+            existingDomain={existingDomain}
+            onExistingDomainChange={setExistingDomain}
+            authorised={domainAuthorised}
+            onAuthorisedChange={setDomainAuthorised}
+            disabled={busy}
+          />
           <label className="fp-dialog__check">
             <input
               type="checkbox"
