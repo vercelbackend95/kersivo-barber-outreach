@@ -1,0 +1,70 @@
+---
+import { CalendarDays } from 'lucide-react';
+import BlacklineWebsitePreview from '@/components/barbershop-websites/BlacklineWebsitePreview.astro';
+import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import '@/styles/components/barbershop-websites-hero.css';
+
+const services = ['skin-fade', 'haircut-finish'].flatMap((slug) => DEMO_SERVICES.filter((item) => item.slug === slug));
+const barbers = DEMO_BARBERS.slice(0, 2);
+---
+
+<figure class="fp-showcase" data-fp-reveal>
+  <div class="fp-showcase__stage">
+    <!-- Illustration only: the mock's links must not pull people off the request page. -->
+    <div class="fp-showcase__browser" inert>
+      <BlacklineWebsitePreview imageLoading="lazy" imageFetchPriority="low" />
+    </div>
+
+    <div class="fp-phone">
+      <div class="fp-phone__screen" role="group" aria-label="Example booking step from the CUTSTATE demo">
+        <span class="fp-phone__notch" aria-hidden="true"></span>
+        <img
+          class="fp-phone__logo"
+          src={CUTSTATE_LOGO_SRC}
+          alt="CUTSTATE Barbers"
+          width={CUTSTATE_LOGO_WIDTH}
+          height={CUTSTATE_LOGO_HEIGHT}
+          loading="lazy"
+          decoding="async"
+        />
+        <p class="fp-phone__label">Select a service</p>
+        <ul class="fp-phone__services" role="list">
+          {services.map((service, index) => (
+            <li class:list={{ 'is-selected': index === 0 }}>
+              <span class="fp-phone__service-name">{service.name}</span>
+              <span class="fp-phone__service-meta">{service.durationMinutes} mins · {formatDemoPriceGbp(service.pricePence)}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="fp-phone__label">Choose a barber</p>
+        <ul class="fp-phone__options" role="list">
+          {barbers.map((barber, index) => <li class:list={{ 'is-selected': index === 0 }}>{barber.name}</li>)}
+        </ul>
+        <p class="fp-phone__label">Choose a time</p>
+        <ul class="fp-phone__options fp-phone__options--slots" role="list">
+          <li>10:00</li>
+          <li class="is-selected">11:00</li>
+          <li>12:00</li>
+        </ul>
+        <p class="fp-phone__note">
+          <CalendarDays size={12} strokeWidth={1.8} aria-hidden="true" />
+          Example times from the demo
+        </p>
+      </div>
+    </div>
+
+    <ul class="fp-showcase__pins" role="list">
+      {FREE_PREVIEW_PAGE.showcasePins.map((pin, index) => (
+        <li class={`fp-pin fp-pin--${index + 1}`}>
+          <span class="fp-pin__text">{pin}</span>
+          <span class="fp-pin__line" aria-hidden="true"></span>
+          <span class="fp-pin__dot" aria-hidden="true"></span>
+        </li>
+      ))}
+    </ul>
+  </div>
+  <figcaption class="fp-showcase__caption">{FREE_PREVIEW_PAGE.visualCaption}</figcaption>
+</figure>
