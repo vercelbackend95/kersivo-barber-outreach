@@ -140,6 +140,11 @@
   opacity: 0.72;
 }
 
+.domain-searcher__row.is-dimmed,
+.domain-searcher__row.is-dimmed:disabled {
+  opacity: 0.48;
+}
+
 .domain-searcher__name {
   overflow: hidden;
   font-size: 0.92rem;
