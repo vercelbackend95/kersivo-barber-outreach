@@ -19,20 +19,41 @@ const cleanups = new WeakMap<HTMLElement, () => void>();
 
 const normalizePath = (path: string) => (path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path || '/');
 
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  const path = normalizePath(pathname);
+  const base = normalizePath(prefix);
+  return Boolean(base) && (path === base || path.startsWith(`${base}/`));
+}
+
 /** Re-derives aria-current from the live URL; the persisted header otherwise keeps the previous page's state. */
 export function applyMarketingNavCurrent(root: HTMLElement, location: Pick<Location, 'pathname'>): void {
   const pathname = normalizePath(location.pathname);
-  root.querySelectorAll<HTMLAnchorElement>('a[data-mnav-match]').forEach((link) => {
-    const exact = normalizePath(link.dataset.mnavMatch ?? '') === pathname;
-    const prefix = link.dataset.mnavMatchPrefix ? normalizePath(link.dataset.mnavMatchPrefix) : '';
-    const inSection = Boolean(prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`)));
+  root.querySelectorAll<HTMLAnchorElement>('a[data-mnav-match], a[data-mnav-match-prefix]').forEach((link) => {
+    const exact = link.dataset.mnavMatch ? normalizePath(link.dataset.mnavMatch) === pathname : false;
+    const prefix = link.dataset.mnavMatchPrefix ?? '';
+    const inSection = prefix ? matchesPrefix(pathname, prefix) : false;
     if (exact || inSection) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
   root.querySelectorAll<HTMLElement>('[data-mnav-trigger], [data-mnav-accordion]').forEach((control) => {
     const target = control.ownerDocument.getElementById(control.getAttribute('aria-controls') ?? '');
-    control.toggleAttribute('data-current', Boolean(target?.querySelector('a[aria-current="page"]')));
+    const childCurrent = Boolean(target?.querySelector('a[aria-current="page"]'));
+    const prefixes = (control.dataset.mnavCurrentPrefix ?? '').split(/\s+/).filter(Boolean);
+    const prefixCurrent = prefixes.some((prefix) => matchesPrefix(pathname, prefix));
+    control.toggleAttribute('data-current', childCurrent || prefixCurrent);
   });
+}
+
+function isFocusable(el: HTMLElement): boolean {
+  if (el.closest('[hidden]') || el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true') return false;
+  const view = el.ownerDocument.defaultView;
+  if (!view) return true;
+  const style = view.getComputedStyle(el);
+  return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+function focusableIn(container: ParentNode): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')].filter(isFocusable);
 }
 
 export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions = {}): () => void {
@@ -242,9 +263,62 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
   doc.addEventListener(
     'keydown',
     (event) => {
-      if (event.key !== 'Escape') return;
-      if (openTrigger) closePanel({ returnFocus: true });
-      else if (isHubOpen()) closeHub({ returnFocus: true });
+      if (event.key === 'Escape') {
+        if (openTrigger) closePanel({ returnFocus: true });
+        else if (isHubOpen()) closeHub({ returnFocus: true });
+        return;
+      }
+
+      const active = doc.activeElement;
+      if (!(active instanceof HTMLElement) || !root.contains(active)) return;
+
+      if (event.key === 'Tab' && isHubOpen()) {
+        const items = focusableIn(root);
+        if (items.length === 0) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
+      if (isHubOpen() || desktopMedia?.matches === false) return;
+      const onTrigger = active.matches('[data-mnav-trigger]');
+      if ((event.key === 'ArrowRight' || event.key === 'ArrowLeft') && onTrigger) {
+        event.preventDefault();
+        const index = triggers.indexOf(active as HTMLButtonElement);
+        if (index < 0) return;
+        const delta = event.key === 'ArrowRight' ? 1 : -1;
+        const next = triggers[(index + delta + triggers.length) % triggers.length];
+        next.focus();
+        openPanel(next, false);
+        return;
+      }
+
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      const trigger = onTrigger ? (active as HTMLButtonElement) : openTrigger;
+      if (!trigger || !triggers.includes(trigger)) return;
+      const panel = panelOf(trigger);
+      if (!panel) return;
+      if (onTrigger) {
+        if (event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        openPanel(trigger, false);
+        focusableIn(panel)[0]?.focus();
+        return;
+      }
+      if (!panel.contains(active)) return;
+      const items = focusableIn(panel);
+      const index = items.indexOf(active);
+      if (index < 0 || items.length === 0) return;
+      event.preventDefault();
+      const delta = event.key === 'ArrowDown' ? 1 : -1;
+      items[(index + delta + items.length) % items.length]?.focus();
     },
     { signal },
   );

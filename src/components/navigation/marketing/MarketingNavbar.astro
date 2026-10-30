@@ -10,11 +10,13 @@ import {
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
   buildMarketingNavTopLevelEntries,
-  isMarketingNavItemCurrent,
   isMarketingDirectLinkCurrent,
+  isMarketingNavGroupCurrent,
+  isMarketingNavSelfHref,
   type MarketingNavAction,
 } from '@/lib/nav/marketingNavigation';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { NAVBAR_FREE_PREVIEW_COMPACT_LABEL, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
 
 const groups = buildMarketingNavigation();
 const navEntries = buildMarketingNavTopLevelEntries(groups, MARKETING_NAV_DIRECT_LINKS);
@@ -25,11 +27,11 @@ const primary: MarketingNavAction = resolvedCta
   : isFreePreviewFlowEnabled()
     ? MARKETING_NAV_FREE_PREVIEW_ACTION
     : MARKETING_NAV_PRIMARY_ACTION;
-const compactLabel = primary.label.replace(/\s*—\s*£\d+\/month$/, '');
-const groupIsCurrent = (group: (typeof groups)[number]) =>
-  [...group.featured, ...group.sections.flatMap((section) => section.items)].some((item) =>
-    isMarketingNavItemCurrent(item, pathname),
-  );
+const compactLabel =
+  primary.label === NAVBAR_FREE_PREVIEW_CTA_LABEL
+    ? NAVBAR_FREE_PREVIEW_COMPACT_LABEL
+    : primary.label.replace(/\s*—\s*£\d+\/month$/, '');
+const showPrimary = !isMarketingNavSelfHref(primary.href, pathname);
 ---
 
 <header class="mnav" data-mnav transition:persist="ks-nav-marketing">
@@ -58,7 +60,8 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
                   aria-expanded="false"
                   aria-controls={`mnav-panel-${entry.group.id}`}
                   data-mnav-trigger={entry.group.id}
-                  data-current={groupIsCurrent(entry.group) ? '' : undefined}
+                  data-mnav-current-prefix={entry.group.currentPrefixes?.join(' ') || undefined}
+                  data-current={isMarketingNavGroupCurrent(entry.group, pathname) ? '' : undefined}
                 >
                   {entry.group.label}
                   <span class="mnav__chevron" aria-hidden="true" />
@@ -86,15 +89,17 @@ const groupIsCurrent = (group: (typeof groups)[number]) =>
       <MarketingNavActions class="mnav__actions" primary={primary} secondary={MARKETING_NAV_SECONDARY_ACTION} />
 
       {
-        primary.href ? (
-          <a class="btn btn--primary btn--sm mnav-btn mnav-btn--primary mnav__compact-cta" href={primary.href} data-track={primary.track} data-track-placement={primary.track === 'preview_cta_click' ? 'navbar' : undefined}>
-            {compactLabel}
-          </a>
-        ) : (
-          <button type="button" class="btn btn--primary btn--sm mnav-btn mnav-btn--primary mnav__compact-cta">
-            {compactLabel}
-          </button>
-        )
+        showPrimary ? (
+          primary.href ? (
+            <a class="btn btn--primary btn--sm mnav-btn mnav-btn--primary mnav__compact-cta" href={primary.href} data-track={primary.track} data-track-placement={primary.track === 'preview_cta_click' ? 'navbar' : undefined}>
+              {compactLabel}
+            </a>
+          ) : (
+            <button type="button" class="btn btn--primary btn--sm mnav-btn mnav-btn--primary mnav__compact-cta">
+              {compactLabel}
+            </button>
+          )
+        ) : null
       }
 
       <button type="button" class="mnav__menu" aria-expanded="false" aria-controls="mnav-hub" data-mnav-menu>

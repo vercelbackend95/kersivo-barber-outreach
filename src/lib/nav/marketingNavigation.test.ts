@@ -9,8 +9,9 @@ import {
   MARKETING_NAV_SECONDARY_ACTION,
   buildMarketingNavigation,
   buildMarketingNavTopLevelEntries,
-  isMarketingDirectLinkCurrent,
+  isMarketingNavGroupCurrent,
   isMarketingNavItemCurrent,
+  isMarketingNavSelfHref,
   isPublicMarketingHref,
   marketingNavItemMatch,
   type MarketingNavGroup,
@@ -44,23 +45,14 @@ const allHrefs = [
 describe('marketing navigation config', () => {
   it('exposes the approved top-level IA in order', () => {
     const groups = buildMarketingNavigation();
-    expect(groups.map((group) => group.label)).toEqual(['Platform', 'Compare', 'Resources']);
-    expect(MARKETING_NAV_DIRECT_LINKS.map((link) => link.label)).toEqual(
-      BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Websites', 'Insights', 'Starter', 'Pricing']
-        : ['Insights', 'Starter', 'Pricing'],
-    );
-    expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights')).toEqual({
-      id: 'insights',
-      label: 'Insights',
-      href: '/insights',
-      matchPrefix: '/insights',
-    });
-    expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'starter')).toEqual({
-      id: 'starter',
-      label: 'Starter',
-      href: '/starter',
-    });
+    expect(groups.map((group) => group.label)).toEqual(['Product', 'Compare', 'Resources']);
+    expect(MARKETING_NAV_DIRECT_LINKS).toEqual([{ id: 'pricing', label: 'Pricing', href: '/pricing' }]);
+    expect(buildMarketingNavTopLevelEntries().map((entry) => (entry.kind === 'group' ? entry.group.label : entry.link.label))).toEqual([
+      'Product',
+      'Compare',
+      'Resources',
+      'Pricing',
+    ]);
     expect(MARKETING_NAV_SECONDARY_ACTION).toMatchObject({ label: 'See live demo', href: '/demo' });
     expect(MARKETING_NAV_PRIMARY_ACTION).toMatchObject({
       label: NAVBAR_SUBSCRIBE_CTA_LABEL,
@@ -69,49 +61,58 @@ describe('marketing navigation config', () => {
     });
   });
 
-  it('keeps pre-release navigation unchanged and never globally links a noindex pillar', () => {
-    const entries = buildMarketingNavTopLevelEntries();
-    const labels = entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label);
-    expect(labels).toEqual(
-      BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-        ? ['Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing']
-        : ['Platform', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing'],
+  it('keeps websites, booking, starter and insights inside panels, not as top-level links', () => {
+    expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites' || link.id === 'insights' || link.id === 'starter')).toBe(
+      false,
     );
-    expect(MARKETING_NAV_DIRECT_LINKS.some((link) => link.id === 'websites')).toBe(
-      BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
-    );
-    expect(MARKETING_NAV_ITEMS.some((item) => item.href === '/barbershop-websites')).toBe(false);
+    const product = buildMarketingNavigation().find((group) => group.id === 'product')!;
+    const included = product.sections.find((section) => section.id === 'included')!;
+    expect(included.items.map((item) => item.href)).toEqual([
+      '/barbershop-websites',
+      '/barbershop-online-booking',
+      '/demo/admin?section=bookings_dashboard',
+      '/demo/shop',
+      '/starter',
+    ]);
+    expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
+    expect(product.sections.find((section) => section.id === 'demo')?.items.map((item) => item.href)).toEqual([
+      '/demo',
+      '/demo/book',
+      '/demo/admin?section=bookings_dashboard',
+    ]);
+    expect(product).toMatchObject({
+      eyebrow: 'KERSIVO',
+      heading: 'Your website, bookings and shop in one system.',
+      defaultOpen: true,
+      currentPrefixes: ['/demo'],
+      featuredAction: { label: 'See KERSIVO in action', href: '/#live-demo' },
+    });
     const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
+    expect(resources.sections.map((section) => section.id)).toEqual(['guides', 'tools', 'help']);
     expect(resources.sections.find((section) => section.id === 'help')?.items.map((item) => item.id)).toEqual([
       'resources-faq',
       'resources-contact',
     ]);
   });
 
-  it('renders a future released Websites link after Platform on desktop and mobile without duplicate guide links', () => {
-    // Simulate the approved launch without changing INDEXABLE in this branch.
-    const releasedDirectLinks = [
-      { id: 'websites', label: 'Websites', href: '/barbershop-websites' },
-      { id: 'insights', label: 'Insights', href: '/insights', matchPrefix: '/insights' },
-      { id: 'starter', label: 'Starter', href: '/starter' },
-      { id: 'pricing', label: 'Pricing', href: '/pricing' },
-    ];
-    const entries = buildMarketingNavTopLevelEntries(buildMarketingNavigation(), releasedDirectLinks);
-    expect(entries.map((entry) => entry.kind === 'group' ? entry.group.label : entry.link.label)).toEqual([
-      'Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing',
-    ]);
-    expect(entries.filter((entry) => entry.kind === 'link' && entry.link.id === 'websites')).toHaveLength(1);
-    expect(entries.filter((entry) => entry.kind === 'link' && entry.link.id === 'insights')).toHaveLength(1);
+  it('puts guides, tools and help in Resources and keeps compare tools out of it', () => {
     const readyGuides = MARKETING_NAV_ITEMS.map((item) =>
-      item.id === 'resources-online-booking' || item.id === 'resources-website-design'
-        ? { ...item, visible: true }
-        : item,
+      item.id === 'resources-online-booking' || item.id === 'resources-website-design' ? { ...item, visible: true } : item,
     );
     const resources = buildMarketingNavigation(readyGuides).find((group) => group.id === 'resources')!;
     expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
       '/barbershop-website-design',
       '/barbershop-online-booking',
+      '/insights',
     ]);
+    expect(resources.sections.find((section) => section.id === 'tools')?.items.map((item) => item.href)).toEqual([
+      '/barbershop-no-show-calculator',
+      '/chair-rent-vs-commission-calculator',
+      '/barbershop-cancellation-policy-template',
+    ]);
+    const flat = [...resources.featured, ...resources.sections.flatMap((section) => section.items)].map((item) => item.href);
+    expect(flat).not.toContain('/compare');
+    expect(flat).not.toContain('/barber-software-cost-calculator');
   });
 
   it('links only to destinations that exist today', () => {
@@ -156,12 +157,34 @@ describe('marketing navigation config', () => {
   });
 
   it('marks Insights as current for hub and descendant article paths', () => {
-    const insights = MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'insights')!;
-    expect(isMarketingDirectLinkCurrent(insights, '/insights')).toBe(true);
-    expect(isMarketingDirectLinkCurrent(insights, '/insights/')).toBe(true);
-    expect(isMarketingDirectLinkCurrent(insights, '/insights/barbershop-gift-vouchers-uk')).toBe(true);
-    expect(isMarketingDirectLinkCurrent(insights, '/compare')).toBe(false);
-    expect(isMarketingDirectLinkCurrent(insights, '/design-preview/insights')).toBe(false);
+    const insights = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-insights')!;
+    expect(isMarketingNavItemCurrent(insights, '/insights')).toBe(true);
+    expect(isMarketingNavItemCurrent(insights, '/insights/')).toBe(true);
+    expect(isMarketingNavItemCurrent(insights, '/insights/barbershop-gift-vouchers-uk')).toBe(true);
+    expect(isMarketingNavItemCurrent(insights, '/compare')).toBe(false);
+    expect(isMarketingNavItemCurrent(insights, '/design-preview/insights')).toBe(false);
+    const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
+    expect(isMarketingNavGroupCurrent(resources, '/insights/barbershop-gift-vouchers-uk')).toBe(true);
+  });
+
+  it('marks Product current on product pages and any demo path', () => {
+    const product = buildMarketingNavigation().find((group) => group.id === 'product')!;
+    for (const path of ['/barbershop-websites', '/barbershop-online-booking', '/starter', '/demo', '/demo/book', '/demo/gallery']) {
+      expect(isMarketingNavGroupCurrent(product, path), path).toBe(true);
+    }
+    expect(isMarketingNavGroupCurrent(product, '/pricing')).toBe(false);
+    const overview = MARKETING_NAV_ITEMS.find((item) => item.id === 'product-demo')!;
+    expect(isMarketingNavItemCurrent(overview, '/demo')).toBe(true);
+    expect(isMarketingNavItemCurrent(overview, '/demo/book')).toBe(false);
+    expect(isMarketingNavItemCurrent(MARKETING_NAV_ITEMS.find((item) => item.id === 'platform-booking')!, '/demo/book')).toBe(true);
+  });
+
+  it('hides a primary action that points at the current page and keeps hash links', () => {
+    expect(isMarketingNavSelfHref('/free-preview', '/free-preview')).toBe(true);
+    expect(isMarketingNavSelfHref('/free-preview/', '/free-preview')).toBe(true);
+    expect(isMarketingNavSelfHref('/free-preview', '/pricing')).toBe(false);
+    expect(isMarketingNavSelfHref('/#faq', '/')).toBe(false);
+    expect(isMarketingNavSelfHref(null, '/free-preview')).toBe(false);
   });
 
   it('gives every item a unique id, a description, a known icon and a configured section', () => {
@@ -214,8 +237,8 @@ describe('marketing navigation config', () => {
     expect(compare.featured.map((item) => item.id)).toEqual(['compare-cost-calculator', 'compare-hub']);
     expect(compare.sections.flatMap((section) => section.items).map((item) => item.id)).not.toContain('compare-hub');
     const tools = resources.sections.find((section) => section.id === 'tools');
-    expect(tools?.items.map((item) => item.href)).toContain('/barber-software-cost-calculator');
-    expect(tools?.items.map((item) => item.href)).toContain('/compare');
+    expect(tools?.items.map((item) => item.href)).not.toContain('/barber-software-cost-calculator');
+    expect(tools?.items.map((item) => item.href)).not.toContain('/compare');
     const guides = resources.sections.find((section) => section.id === 'guides');
     const guideReady = BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE;
     expect(guides?.items.some((item) => item.href === '/barbershop-website-design') ?? false).toBe(guideReady);
@@ -239,7 +262,7 @@ describe('current page matching', () => {
 
 describe('future scale', () => {
   const groups: MarketingNavGroup[] = [
-    { id: 'platform', label: 'Platform', eyebrow: 'P', heading: 'P', sections: [{ id: 'explore', label: null }] },
+    { id: 'product', label: 'Product', eyebrow: 'P', heading: 'P', sections: [{ id: 'included', label: 'What you get' }] },
     { id: 'compare', label: 'Compare', eyebrow: 'C', heading: 'C', sections: [{ id: 'alternatives', label: 'Alternatives' }] },
     {
       id: 'resources',

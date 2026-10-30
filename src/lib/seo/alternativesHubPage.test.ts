@@ -86,10 +86,9 @@ describe('Alternatives hub: metadata and indexability', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0].lastmod).toBe(ALTERNATIVES_HUB_LAST_UPDATED_ISO);
     const navItems = MARKETING_NAV_ITEMS.filter((item) => item.href === '/compare');
-    // The hub is intentionally discoverable from both Compare and Resources > Tools.
-    expect(navItems).toHaveLength(2);
-    expect(navItems.map((item) => item.group).sort()).toEqual(['compare', 'resources']);
-    expect(new Set(navItems.map((item) => item.id)).size).toBe(2);
+    expect(navItems).toHaveLength(1);
+    expect(navItems.map((item) => item.group)).toEqual(['compare']);
+    expect(new Set(navItems.map((item) => item.id)).size).toBe(1);
     expect(getRouteFamily('/compare')).toBe('marketing');
     const robots = await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
     expect(robots).not.toContain('Disallow: /compare');

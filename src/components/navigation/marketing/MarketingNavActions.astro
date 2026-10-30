@@ -1,5 +1,5 @@
 ---
-import type { MarketingNavAction } from '@/lib/nav/marketingNavigation';
+import { isMarketingNavSelfHref, type MarketingNavAction } from '@/lib/nav/marketingNavigation';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 }
 
 const { primary, secondary, class: className } = Astro.props;
+const showPrimary = !isMarketingNavSelfHref(primary.href, Astro.url.pathname);
 const family = getRouteFamily(Astro.url.pathname);
 const leavesFamily = (href: string | null) => (href ? getRouteFamily(new URL(href, Astro.url).pathname) !== family : false);
 // The price suffix sits in its own span so narrow desktop bars can drop it (see marketing-navbar.css).
@@ -25,7 +26,7 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
     ) : null
   }
   {
-    primary.href ? (
+    showPrimary && primary.href ? (
       <a
         class="btn btn--primary btn--sm mnav-btn mnav-btn--primary"
         href={primary.href}
@@ -35,10 +36,10 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
       >
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </a>
-    ) : (
+    ) : showPrimary ? (
       <button type="button" class="btn btn--primary btn--sm mnav-btn mnav-btn--primary">
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </button>
-    )
+    ) : null
   }
 </div>

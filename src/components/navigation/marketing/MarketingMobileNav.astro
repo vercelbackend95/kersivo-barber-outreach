@@ -2,7 +2,11 @@
 import MarketingNavActions from '@/components/navigation/marketing/MarketingNavActions.astro';
 import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
 import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
-import { buildMarketingNavTopLevelEntries, isMarketingDirectLinkCurrent } from '@/lib/nav/marketingNavigation';
+import {
+  buildMarketingNavTopLevelEntries,
+  isMarketingDirectLinkCurrent,
+  isMarketingNavGroupCurrent,
+} from '@/lib/nav/marketingNavigation';
 import type {
   MarketingNavAction,
   MarketingNavDirectLink,
@@ -38,14 +42,16 @@ const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
               <button
                 type="button"
                 class="mnav-hub__row mnav-hub__row--toggle"
-                aria-expanded="false"
+                aria-expanded={entry.group.defaultOpen ? 'true' : 'false'}
                 aria-controls={`${id}-${entry.group.id}`}
                 data-mnav-accordion={entry.group.id}
+                data-mnav-current-prefix={entry.group.currentPrefixes?.join(' ') || undefined}
+                data-current={isMarketingNavGroupCurrent(entry.group, pathname) ? '' : undefined}
               >
                 <span class="mnav-hub__row-label">{entry.group.label}</span>
                 <span class="mnav-hub__chevron" aria-hidden="true" />
               </button>
-              <div id={`${id}-${entry.group.id}`} class="mnav-hub__section" hidden>
+              <div id={`${id}-${entry.group.id}`} class="mnav-hub__section" hidden={entry.group.defaultOpen ? undefined : true}>
                 {entry.group.description ? <p class="mnav-hub__lead">{entry.group.description}</p> : null}
                 {entry.group.featured.length ? (
                   <ul class="mnav-hub__items mnav-hub__items--featured" role="list">

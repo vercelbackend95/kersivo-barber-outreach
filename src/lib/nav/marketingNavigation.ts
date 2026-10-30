@@ -11,7 +11,7 @@ import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAG
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 
-export type MarketingNavGroupId = 'platform' | 'compare' | 'resources';
+export type MarketingNavGroupId = 'product' | 'compare' | 'resources';
 
 export type MarketingNavItem = {
   id: string;
@@ -28,6 +28,10 @@ export type MarketingNavItem = {
   external?: boolean;
   /** Pathname that marks this item as the current page. Defaults to the href pathname when the href has no hash. */
   match?: string;
+  /** Marks this item current on the prefix and its descendants, e.g. /insights/slug. */
+  matchPrefix?: string;
+  /** Secondary items stay in the list but read lighter than the primary offer. */
+  emphasis?: 'quiet';
   /** Set false to keep a configured item out of the rendered navigation. */
   visible?: boolean;
 };
@@ -41,6 +45,10 @@ export type MarketingNavGroup = {
   heading: string;
   description?: string;
   featuredAction?: { label: string; href: string };
+  /** Path prefixes that mark the group trigger current even when no child link matches. */
+  currentPrefixes?: readonly string[];
+  /** Mobile accordion starts expanded. Desktop panels stay closed until opened. */
+  defaultOpen?: boolean;
   sections: readonly MarketingNavSection[];
 };
 
@@ -65,13 +73,18 @@ export type ResolvedMarketingNavGroup = Omit<MarketingNavGroup, 'sections'> & {
 
 export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
   {
-    id: 'platform',
-    label: 'Platform',
-    eyebrow: 'KERSIVO PLATFORM',
-    heading: 'Your brand. Your bookings. One connected system.',
-    description: 'Explore the booking experience your clients see and the system your shop uses behind it.',
+    id: 'product',
+    label: 'Product',
+    eyebrow: 'KERSIVO',
+    heading: 'Your website, bookings and shop in one system.',
+    description: 'A branded website, online bookings and the shop tools behind them.',
     featuredAction: { label: 'See KERSIVO in action', href: '/#live-demo' },
-    sections: [{ id: 'explore', label: null }],
+    currentPrefixes: ['/demo'],
+    defaultOpen: true,
+    sections: [
+      { id: 'included', label: 'What you get' },
+      { id: 'demo', label: 'See it working' },
+    ],
   },
   {
     id: 'compare',
@@ -86,8 +99,8 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     eyebrow: 'RESOURCES',
     heading: 'Tools and answers for your barbershop.',
     sections: [
-      { id: 'tools', label: 'Tools' },
       { id: 'guides', label: 'Guides' },
+      { id: 'tools', label: 'Tools' },
       { id: 'help', label: 'Help' },
     ],
   },
@@ -95,49 +108,83 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
 
 export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   {
-    id: 'platform-overview',
-    label: 'KERSIVO Overview',
-    description: 'Branded website, bookings, deposits, clients and retail.',
-    href: '/',
-    group: 'platform',
-    section: 'explore',
+    id: 'product-websites',
+    label: 'Barbershop websites',
+    description: 'Your branded site on your own domain.',
+    href: BARBERSHOP_WEBSITES_PAGE_PATH,
+    group: 'product',
+    section: 'included',
     icon: 'overview',
+    visible: BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
-    id: 'platform-inside',
-    label: 'Inside the System',
-    description: 'See the admin, booking flow, retail and reports.',
-    href: '/#live-demo',
-    group: 'platform',
-    section: 'explore',
+    id: 'product-online-booking',
+    label: 'Online booking & deposits',
+    description: 'Service, barber, time — with Pay at shop, £5 deposit or full payment.',
+    href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
+    group: 'product',
+    section: 'included',
+    icon: 'booking',
+    visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE,
+  },
+  {
+    id: 'platform-admin',
+    label: 'Admin & reports',
+    description: 'Bookings, clients, team and performance.',
+    href: '/demo/admin?section=bookings_dashboard',
+    group: 'product',
+    section: 'included',
+    icon: 'admin',
+    matchPrefix: '/demo/admin',
+  },
+  {
+    id: 'platform-retail',
+    label: 'Retail pickup',
+    description: 'Sell products for collection in your shop.',
+    href: '/demo/shop',
+    group: 'product',
+    section: 'included',
+    icon: 'retail',
+    matchPrefix: '/demo/shop',
+  },
+  {
+    id: 'product-starter',
+    label: 'KERSIVO Starter',
+    description: '£0/month online bookings for up to 4 barbers.',
+    href: '/starter',
+    group: 'product',
+    section: 'included',
+    icon: 'pricing',
+    emphasis: 'quiet',
+  },
+  {
+    id: 'product-demo',
+    label: 'Live demo overview',
+    description: 'Website, booking and shop in the live demo.',
+    href: '/demo',
+    group: 'product',
+    section: 'demo',
     icon: 'system',
   },
   {
     id: 'platform-booking',
-    label: 'Client Booking Experience',
+    label: 'Client booking experience',
     description: 'Try the booking journey from the client side.',
     href: '/demo/book',
-    group: 'platform',
-    section: 'explore',
+    group: 'product',
+    section: 'demo',
     icon: 'booking',
+    matchPrefix: '/demo/book',
   },
   {
-    id: 'platform-admin',
-    label: 'Admin & Shop System',
+    id: 'product-admin-demo',
+    label: 'Admin demo',
     description: 'Explore bookings, clients, reports and shop tools.',
     href: '/demo/admin?section=bookings_dashboard',
-    group: 'platform',
-    section: 'explore',
+    group: 'product',
+    section: 'demo',
     icon: 'admin',
-  },
-  {
-    id: 'platform-retail',
-    label: 'Retail Pickup Shop',
-    description: 'See how online retail pickup works.',
-    href: '/demo/shop',
-    group: 'platform',
-    section: 'explore',
-    icon: 'retail',
+    matchPrefix: '/demo/admin',
   },
   {
     id: 'compare-booksy',
@@ -250,31 +297,34 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     featured: true,
   },
   {
-    id: 'resources-compare-hub',
-    label: 'Compare Booking Systems',
-    description: 'Filter and compare KERSIVO with ten booking platforms for UK barbershops.',
-    href: '/compare',
+    id: 'resources-website-design',
+    label: 'Barbershop Website Design',
+    description: 'Practical tips for barbershop branding, photography and mobile website design.',
+    href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
     group: 'resources',
-    section: 'tools',
-    icon: 'compare',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
-    id: 'resources-cost-calculator',
-    label: 'Barber Software Cost Calculator',
-    description: 'Model subscriptions, team fees, marketplace costs, VAT and booking deposits.',
-    href: '/barber-software-cost-calculator',
+    id: 'resources-online-booking',
+    label: 'Online Booking for Barbershops',
+    description: 'Booking steps, availability, deposits and the shop diary explained.',
+    href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
     group: 'resources',
-    section: 'tools',
-    icon: 'calculator',
+    section: 'guides',
+    icon: 'guide',
+    visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   },
   {
-    id: 'resources-cancellation-policy',
-    label: 'Cancellation Policy Template',
-    description: 'Create a free deposit and no-show policy for your shop.',
-    href: '/barbershop-cancellation-policy-template',
+    id: 'resources-insights',
+    label: 'Insights',
+    description: 'Practical notes on bookings, clients, costs and running a UK barbershop.',
+    href: '/insights',
     group: 'resources',
-    section: 'tools',
-    icon: 'policy',
+    section: 'guides',
+    icon: 'guide',
+    matchPrefix: '/insights',
   },
   {
     id: 'resources-no-show-calculator',
@@ -295,24 +345,13 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'calculator',
   },
   {
-    id: 'resources-website-design',
-    label: 'Barbershop Website Design',
-    description: 'Practical tips for barbershop branding, photography and mobile website design.',
-    href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
+    id: 'resources-cancellation-policy',
+    label: 'Cancellation Policy Template',
+    description: 'Create a free deposit and no-show policy for your shop.',
+    href: '/barbershop-cancellation-policy-template',
     group: 'resources',
-    section: 'guides',
-    icon: 'guide',
-    visible: BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
-  },
-  {
-    id: 'resources-online-booking',
-    label: 'Online Booking for Barbershops',
-    description: 'Booking steps, availability, deposits and the shop diary explained.',
-    href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
-    group: 'resources',
-    section: 'guides',
-    icon: 'guide',
-    visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
+    section: 'tools',
+    icon: 'policy',
   },
   {
     id: 'resources-faq',
@@ -334,18 +373,9 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
 ];
 
-/** Websites takes the global FAQ slot only once the pillar has been approved for indexing.
- * Until then the existing navbar stays exactly as published.
- * FAQ always remains accessible via Resources > Help.
- */
+/** Pricing is the only top-level link. Websites, booking, Starter and Insights live inside the panels. */
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
-  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE
-    ? [{ id: 'websites', label: 'Websites', href: BARBERSHOP_WEBSITES_PAGE_PATH }]
-    : []),
-  { id: 'insights', label: 'Insights', href: '/insights', matchPrefix: '/insights' },
-  { id: 'starter', label: 'Starter', href: '/starter' },
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
-  // FAQ stays accessible via Resources > Help. Insights takes this top-level slot.
 ];
 
 export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
@@ -373,18 +403,25 @@ export function isPublicMarketingHref(href: string): boolean {
   return !PRIVATE_PATH.test(pathname);
 }
 
+function normalizeNavPath(path: string): string {
+  return path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path || '/';
+}
+
+/** True when pathname is the prefix itself or a descendant. `/demo` does not match `/demonstration`. */
+export function pathMatchesNavPrefix(pathname: string, prefix: string): boolean {
+  const path = normalizeNavPath(pathname);
+  const base = normalizeNavPath(prefix);
+  return path === base || path.startsWith(`${base}/`);
+}
+
 export function isMarketingDirectLinkCurrent(
   link: Pick<MarketingNavDirectLink, 'href' | 'matchPrefix' | 'sectionId'>,
   pathname: string,
 ): boolean {
   if (link.sectionId) return false;
-  const normal = (value: string) => value.length > 1 && value.endsWith('/') ? value.slice(0, -1) : value;
-  const path = normal(pathname);
-  const hrefPath = normal(link.href.split('#')[0]);
-  if (link.matchPrefix) {
-    const prefix = normal(link.matchPrefix);
-    return path === prefix || path.startsWith(`${prefix}/`);
-  }
+  const path = normalizeNavPath(pathname);
+  const hrefPath = normalizeNavPath(link.href.split('#')[0] || '/');
+  if (link.matchPrefix) return pathMatchesNavPrefix(path, link.matchPrefix);
   return path === hrefPath;
 }
 
@@ -395,11 +432,31 @@ export function marketingNavItemMatch(item: Pick<MarketingNavItem, 'href' | 'mat
   return new URL(item.href, 'https://kersivo.co.uk').pathname;
 }
 
-export function isMarketingNavItemCurrent(item: Pick<MarketingNavItem, 'href' | 'match'>, pathname: string): boolean {
+export function isMarketingNavItemCurrent(
+  item: Pick<MarketingNavItem, 'href' | 'match' | 'matchPrefix'>,
+  pathname: string,
+): boolean {
+  if (item.matchPrefix && pathMatchesNavPrefix(pathname, item.matchPrefix)) return true;
   const match = marketingNavItemMatch(item);
   if (!match) return false;
-  const normalize = (path: string) => (path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path);
-  return normalize(pathname) === normalize(match);
+  return normalizeNavPath(pathname) === normalizeNavPath(match);
+}
+
+export function isMarketingNavGroupCurrent(
+  group: Pick<ResolvedMarketingNavGroup, 'featured' | 'sections' | 'currentPrefixes'>,
+  pathname: string,
+): boolean {
+  const items = [...group.featured, ...group.sections.flatMap((section) => section.items)];
+  if (items.some((item) => isMarketingNavItemCurrent(item, pathname))) return true;
+  return (group.currentPrefixes ?? []).some((prefix) => pathMatchesNavPrefix(pathname, prefix));
+}
+
+/** True when a navbar action would navigate to the page already on screen. Hash links stay available. */
+export function isMarketingNavSelfHref(href: string | null, pathname: string): boolean {
+  if (!href || href.startsWith('#')) return false;
+  const target = new URL(href, 'https://kersivo.co.uk');
+  if (target.hash) return false;
+  return normalizeNavPath(target.pathname) === normalizeNavPath(pathname);
 }
 
 export function buildMarketingNavigation(
@@ -424,9 +481,7 @@ export function buildMarketingNavigation(
     .filter((group) => group.featured.length > 0 || group.sections.length > 0);
 }
 
-/** One top-level order for the desktop navbar and mobile hub.
- * Published: Platform → [Websites] → Compare → Insights → Resources → Starter → Pricing.
- */
+/** One top-level order for the desktop navbar and mobile hub: Product, Compare, Resources, then direct links. */
 export type MarketingNavTopLevelEntry =
   | { kind: 'group'; group: ResolvedMarketingNavGroup }
   | { kind: 'link'; link: MarketingNavDirectLink };
@@ -435,23 +490,8 @@ export function buildMarketingNavTopLevelEntries(
   groups: readonly ResolvedMarketingNavGroup[] = buildMarketingNavigation(),
   directLinks: readonly MarketingNavDirectLink[] = MARKETING_NAV_DIRECT_LINKS,
 ): MarketingNavTopLevelEntry[] {
-  const websitesLink = directLinks.find((link) => link.id === 'websites');
-  const insightsLink = directLinks.find((link) => link.id === 'insights');
-  const entries: MarketingNavTopLevelEntry[] = [];
-  for (const group of groups) {
-    entries.push({ kind: 'group', group });
-    if (group.id === 'platform' && websitesLink) entries.push({ kind: 'link', link: websitesLink });
-    if (group.id === 'compare' && insightsLink) entries.push({ kind: 'link', link: insightsLink });
-  }
-  // Preserve an explicitly supplied Websites destination in configurations without Platform.
-  if (websitesLink && !groups.some((group) => group.id === 'platform')) {
-    entries.unshift({ kind: 'link', link: websitesLink });
-  }
-  if (insightsLink && !groups.some((group) => group.id === 'compare')) {
-    entries.push({ kind: 'link', link: insightsLink });
-  }
-  for (const link of directLinks) {
-    if (link.id !== 'websites' && link.id !== 'insights') entries.push({ kind: 'link', link });
-  }
-  return entries;
+  return [
+    ...groups.map((group): MarketingNavTopLevelEntry => ({ kind: 'group', group })),
+    ...directLinks.map((link): MarketingNavTopLevelEntry => ({ kind: 'link', link })),
+  ];
 }

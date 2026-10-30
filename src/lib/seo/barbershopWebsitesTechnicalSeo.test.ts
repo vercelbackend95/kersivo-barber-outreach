@@ -70,7 +70,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     }
     const footer = read('../../lib/nav/footerNavigation.ts');
     expect(footer).toContain("name: 'Website design guide', href: '/barbershop-website-design'");
-    expect(footer).toContain("name: 'Online booking', href: '/barbershop-online-booking'");
+    expect(footer).toContain("name: 'Online booking & deposits', href: '/barbershop-online-booking'");
   });
 
   it('keeps global footer outside main and does not add a second primary landmark', () => {
@@ -92,19 +92,19 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
       expect(urls).toContain(`https://kersivo.co.uk${path}`);
     }
-    // The pillar is promoted to a direct Websites link, not duplicated inside Resources.
-    expect(MARKETING_NAV_ITEMS.some((entry) => entry.href === BARBERSHOP_WEBSITES_PAGE_PATH)).toBe(false);
-    expect(MARKETING_NAV_DIRECT_LINKS.find((entry) => entry.id === 'websites')).toMatchObject({
-      label: 'Websites',
-      href: BARBERSHOP_WEBSITES_PAGE_PATH,
+    expect(MARKETING_NAV_ITEMS.find((entry) => entry.href === BARBERSHOP_WEBSITES_PAGE_PATH)).toMatchObject({
+      group: 'product',
+      label: 'Barbershop websites',
     });
+    expect(MARKETING_NAV_DIRECT_LINKS.find((entry) => entry.id === 'websites')).toBeUndefined();
     expect(buildMarketingNavTopLevelEntries().map((entry) =>
       entry.kind === 'group' ? entry.group.label : entry.link.label,
-    )).toEqual(['Platform', 'Websites', 'Compare', 'Insights', 'Resources', 'Starter', 'Pricing']);
+    )).toEqual(['Product', 'Compare', 'Resources', 'Pricing']);
     const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
     expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
       '/barbershop-website-design',
       '/barbershop-online-booking',
+      '/insights',
     ]);
   });
 });
