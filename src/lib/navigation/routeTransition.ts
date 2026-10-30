@@ -5,14 +5,15 @@ export type NavigationType = 'push' | 'replace' | 'traverse' | string;
 
 export const ROUTE_COVER_MS = 140;
 export const ROUTE_REVEAL_MS = 220;
-export const ROUTE_SAFETY_MS = 4000;
+export const ROUTE_SAFETY_MS = 10000;
 export const ROUTE_PENDING_DELAY_MS = 250;
+export const ROUTE_PENDING_FINISH_MS = 220;
 
 export const VARIANT_TIMING: Record<
   Extract<RouteTransitionVariant, 'marketing' | 'flow' | 'themed-demo'>,
   { coverMs: number; revealMs: number }
 > = {
-  marketing: { coverMs: 160, revealMs: 220 },
+  marketing: { coverMs: 120, revealMs: 200 },
   flow: { coverMs: 80, revealMs: 180 },
   'themed-demo': { coverMs: ROUTE_COVER_MS, revealMs: ROUTE_REVEAL_MS },
 };
@@ -23,6 +24,7 @@ type PrepLike = {
   navigationType: NavigationType;
   loader: () => Promise<void>;
   signal?: AbortSignal;
+  formData?: FormData;
 };
 
 export function prefersReducedMotion(win: Window = window): boolean {
@@ -113,8 +115,10 @@ export function focusRouteContent(root: HTMLElement): void {
   const doc = root.ownerDocument;
   const active = doc.activeElement;
   if (active instanceof HTMLElement && active !== doc.body && root.contains(active)) return;
+  const hash = doc.defaultView?.location.hash.slice(1);
+  const hashTarget = hash ? doc.getElementById(decodeURIComponent(hash)) : null;
   const heading = root.querySelector<HTMLElement>('h1');
-  const target = heading ?? root;
+  const target = hashTarget ?? heading ?? root;
   if (!target.hasAttribute('tabindex')) target.tabIndex = -1;
   target.focus({ preventScroll: true });
 }
@@ -135,7 +139,10 @@ export function markCrossFamilyReloadLinks(root: ParentNode, current: { href: st
       try {
         const next = new URL(href, current.href);
         if (next.origin === current.origin && getRouteFamily(next.pathname) !== family) {
+          // A different family has a different layout and head, so it needs a real page load.
+          // No hover prefetch either: those targets include sessions, checkout and API routes.
           node.setAttribute('data-astro-reload', '');
+          node.setAttribute('data-astro-prefetch', 'false');
         }
       } catch {
         /* ignore */
@@ -195,19 +202,49 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
   let generation = 0;
   let safetyTimer: ReturnType<typeof setTimeout> | null = null;
   let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+  let pendingFinishTimer: ReturnType<typeof setTimeout> | null = null;
+  let navigating = false;
+  let focusAfterLoad = false;
   let phase: RouteTransitionPhase = (veil.dataset[phaseDataset] as RouteTransitionPhase) || 'idle';
 
   const getMain = () => doc.querySelector<HTMLElement>(mainSelector);
 
-  const setPendingVisible = (visible: boolean) => {
+  const clearPendingFinish = () => {
+    if (!pendingFinishTimer) return;
+    clearTimeout(pendingFinishTimer);
+    pendingFinishTimer = null;
+  };
+
+  const hidePending = () => {
     if (!pending) return;
-    if (!visible || reducedMotion()) {
-      pending.hidden = true;
-      pending.removeAttribute('data-active');
-      return;
-    }
+    clearPendingFinish();
+    pending.hidden = true;
+    pending.removeAttribute('data-active');
+    pending.removeAttribute('data-done');
+    pending.style.removeProperty('transform');
+  };
+
+  const showPending = () => {
+    if (!pending) return;
+    hidePending();
     pending.hidden = false;
     pending.setAttribute('data-active', '');
+  };
+
+  /** Runs on from wherever the bar has got to, up to 100%, then fades out. A bar that never showed stays hidden. */
+  const finishPending = () => {
+    if (!pending || !pending.hasAttribute('data-active') || reducedMotion()) {
+      hidePending();
+      return;
+    }
+    const view = doc.defaultView;
+    const current = view ? view.getComputedStyle(pending).transform : 'none';
+    pending.removeAttribute('data-active');
+    pending.style.transform = current;
+    void pending.offsetWidth;
+    pending.setAttribute('data-done', '');
+    pending.style.transform = 'scaleX(1)';
+    pendingFinishTimer = setTimeout(hidePending, ROUTE_PENDING_FINISH_MS);
   };
 
   const clearPendingTimer = () => {
@@ -222,7 +259,6 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
     if (next === 'idle') {
       veil.style.removeProperty('will-change');
       clearPendingTimer();
-      setPendingVisible(false);
     } else {
       veil.style.willChange = 'opacity';
     }
@@ -236,8 +272,10 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
 
   const resetIdle = () => {
     generation += 1;
+    navigating = false;
     clearSafety();
     clearPendingTimer();
+    hidePending();
     setPhase('idle');
   };
 
@@ -250,17 +288,14 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
 
   const armPending = (gen: number) => {
     clearPendingTimer();
-    if (reducedMotion() || !pending) return;
+    if (!pending) return;
     pendingTimer = setTimeout(() => {
-      if (generation !== gen) return;
-      if (phase === 'covering' || phase === 'navigating') setPendingVisible(true);
+      if (generation === gen && navigating) showPending();
     }, pendingDelayMs);
   };
 
   const beginCover = (gen: number) => {
     setPhase('covering');
-    armSafety(gen);
-    armPending(gen);
     return waitMs(coverMs).then(() => {
       if (generation !== gen) return;
       if (phase === 'covering') setPhase('navigating');
@@ -269,8 +304,6 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
 
   const beginReveal = (gen: number) => {
     if (generation !== gen) return;
-    clearPendingTimer();
-    setPendingVisible(false);
     setPhase('revealing');
     void waitMs(revealMs).then(() => {
       if (generation !== gen) return;
@@ -292,6 +325,18 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
     const prep = asPrepEvent(event);
     if (!prep) return;
 
+    // Links get data-astro-reload up front; this catches the rest (islands rendered later, a click before the script ran).
+    // The router turns a cancelled preparation into a normal page load.
+    if (
+      variant === 'marketing' &&
+      prep.navigationType !== 'traverse' &&
+      !prep.formData &&
+      getRouteFamily(prep.to.pathname) !== family
+    ) {
+      event.preventDefault();
+      return;
+    }
+
     const cover = shouldCoverTransition({
       from: prep.from,
       to: prep.to,
@@ -300,12 +345,14 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
       family: family ?? undefined,
     });
 
-    if (!cover) return;
-
     const gen = ++generation;
+    navigating = true;
+    focusAfterLoad = prep.navigationType !== 'traverse';
     const originalLoader = prep.loader.bind(prep);
     prep.loader = async () => {
-      const covered = beginCover(gen);
+      armSafety(gen);
+      armPending(gen);
+      const covered = cover ? beginCover(gen) : Promise.resolve();
       try {
         await Promise.all([originalLoader(), covered]);
       } catch (error) {
@@ -327,23 +374,35 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
   const onAfterSwapEvent = () => {
     markCrossFamilyReloadLinks(doc, currentLocation());
     onAfterSwap?.(doc);
+    navigating = false;
+    clearPendingTimer();
+    finishPending();
     if (phase === 'covering' || phase === 'navigating') {
       beginReveal(generation);
+    } else if (phase === 'idle') {
+      clearSafety();
     }
   };
 
   const onPageLoad = () => {
     markCrossFamilyReloadLinks(doc, currentLocation());
-    if (phase === 'idle') return;
     if (phase === 'covering' || phase === 'navigating') beginReveal(generation);
+    if (!focusAfterLoad) return;
+    focusAfterLoad = false;
     const main = getMain();
     if (main) focusRouteContent(main);
+  };
+
+  // Back to a page frozen mid-navigation (bfcache) must not come back covered.
+  const onPageShow = (event: PageTransitionEvent) => {
+    if (event.persisted) resetIdle();
   };
 
   doc.addEventListener('astro:before-preparation', onBeforePreparation);
   doc.addEventListener('astro:before-swap', onBeforeSwapEvent);
   doc.addEventListener('astro:after-swap', onAfterSwapEvent);
   doc.addEventListener('astro:page-load', onPageLoad);
+  doc.defaultView?.addEventListener('pageshow', onPageShow);
 
   setPhase('idle');
   markCrossFamilyReloadLinks(doc, currentLocation());
@@ -354,6 +413,7 @@ export function bindRouteTransition(options: BindRouteTransitionOptions): () => 
     doc.removeEventListener('astro:before-swap', onBeforeSwapEvent);
     doc.removeEventListener('astro:after-swap', onAfterSwapEvent);
     doc.removeEventListener('astro:page-load', onPageLoad);
+    doc.defaultView?.removeEventListener('pageshow', onPageShow);
     resetIdle();
   };
 }

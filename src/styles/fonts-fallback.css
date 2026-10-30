@@ -1,0 +1,43 @@
+/*
+ * Metric-matched fallbacks: until the web font arrives, text is set in a local font resized to the
+ * same advance width and line box, so font-display: swap causes no reflow.
+ * Values measured against public/fonts (1000px canvas, weighted body/heading text):
+ *   size-adjust = web width / local width; ascent/descent = web metric / size-adjust; line-gap 0.
+ */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 107.07%;
+  ascent-override: 90.5%;
+  descent-override: 22.51%;
+  line-gap-override: 0%;
+}
+
+/* Android ships Roboto, not Arial. */
+@font-face {
+  font-family: 'Inter Fallback Android';
+  src: local('Roboto');
+  size-adjust: 107.3%;
+  ascent-override: 90.31%;
+  descent-override: 22.46%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Bebas Neue Fallback';
+  src: local('Impact');
+  size-adjust: 76.62%;
+  ascent-override: 123.99%;
+  descent-override: 45.68%;
+  line-gap-override: 0%;
+}
+
+/* Android: no Impact. */
+@font-face {
+  font-family: 'Bebas Neue Fallback Android';
+  src: local('Roboto Condensed');
+  size-adjust: 72.53%;
+  ascent-override: 130.98%;
+  descent-override: 48.26%;
+  line-gap-override: 0%;
+}

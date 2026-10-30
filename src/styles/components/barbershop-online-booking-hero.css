@@ -127,7 +127,7 @@
   color: var(--fg);
   font-family: var(--font-body);
   font-size: clamp(2.15rem, 9.6vw, 3.2rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.04;
   letter-spacing: -0.045em;
   text-wrap: balance;
@@ -1164,43 +1164,3 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .bob-hero__head,
-  .bob-stage,
-  .bob-strip {
-    animation: bobRise 760ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
-  }
-
-  .bob-stage {
-    animation-delay: 140ms;
-  }
-
-  .bob-strip {
-    animation-delay: 260ms;
-  }
-
-  .bob-callout,
-  .bob-connectors {
-    animation: bobFade 600ms ease-out 620ms both;
-  }
-
-  @keyframes bobRise {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes bobFade {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-}

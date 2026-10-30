@@ -92,7 +92,7 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(2.35rem, 4.4vw, 4.4rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 0.95;
   letter-spacing: -0.05em;
   color: var(--fg);

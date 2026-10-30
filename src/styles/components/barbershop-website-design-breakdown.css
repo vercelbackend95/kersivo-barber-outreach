@@ -67,7 +67,7 @@
   max-width: 16ch;
   margin: 0;
   font-size: clamp(2rem, 4.2vw, 3.6rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.045em;
   text-wrap: balance;
@@ -174,7 +174,7 @@
   max-width: 18ch;
   margin: 0.35rem 0 0;
   font-size: clamp(1.6rem, 2.7vw, 2.5rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.08;
   letter-spacing: -0.035em;
   text-wrap: balance;
@@ -228,7 +228,7 @@
 @font-face {
   font-family: 'BWD Blackline Display';
   font-style: normal;
-  font-weight: 700;
+  font-weight: 800;
   font-display: swap;
   src: url('/fonts/barlow-condensed-latin-700-normal.woff2') format('woff2');
 }
@@ -511,14 +511,14 @@
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.18em;
 }
 
 .bwd-spec-cta__heading {
   font-family: var(--bl-display);
   font-size: clamp(2rem, 9cqi, 3.35rem);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 0.92;
 }
@@ -571,7 +571,7 @@
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
   font-size: var(--text-xs);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.16em;
   font-variant-numeric: tabular-nums;
 }
@@ -722,7 +722,7 @@
   color: #7d9bff;
   font-family: var(--bl-display);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -730,7 +730,7 @@
 .bwd-spec-services__name {
   font-family: var(--bl-display);
   font-size: clamp(2.5rem, 11cqi, 3.75rem);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.03em;
   text-transform: uppercase;
@@ -771,7 +771,7 @@
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.16em;
 }
 
@@ -785,7 +785,7 @@
 .bwd-spec-services__title {
   font-family: var(--bl-display);
   font-size: clamp(1.75rem, 7.5cqi, 2.4rem);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.035em;
   text-transform: uppercase;
@@ -807,7 +807,7 @@
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -838,7 +838,7 @@
   grid-area: price;
   font-family: var(--bl-display);
   font-size: clamp(2rem, 8cqi, 2.6rem);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
   text-align: right;
@@ -1309,7 +1309,7 @@
   color: #2449cb;
   font-family: var(--bl-display);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }

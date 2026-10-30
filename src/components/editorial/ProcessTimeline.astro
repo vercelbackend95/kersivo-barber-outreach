@@ -67,10 +67,12 @@ const hasNoteLink = Astro.slots.has('default');
 </div>
 
 <script>
+  import { onPageReady } from '@/lib/navigation/pageReady';
+
   const ANCHOR_RATIO = 0.62;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  function enhance(root: HTMLElement) {
+  function enhance(root: HTMLElement, signal: AbortSignal) {
     const path = root.querySelector<HTMLElement>('.process-timeline__path');
     const steps = Array.from(root.querySelectorAll<HTMLElement>('.process-timeline__step'));
     const nodes = steps.map((step) => step.querySelector<HTMLElement>('.process-timeline__node'));
@@ -135,11 +137,19 @@ const hasNoteLink = Astro.slots.has('default');
 
     measure();
     update();
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', remeasure);
-    reduceMotion.addEventListener('change', remeasure);
-    if ('ResizeObserver' in window) new ResizeObserver(remeasure).observe(path);
+    window.addEventListener('scroll', schedule, { passive: true, signal });
+    window.addEventListener('resize', remeasure, { signal });
+    reduceMotion.addEventListener('change', remeasure, { signal });
+    if ('ResizeObserver' in window) {
+      const resize = new ResizeObserver(remeasure);
+      resize.observe(path);
+      signal.addEventListener('abort', () => resize.disconnect());
+    }
   }
 
-  document.querySelectorAll<HTMLElement>('[data-process-timeline]').forEach(enhance);
+  onPageReady(() => {
+    const controller = new AbortController();
+    document.querySelectorAll<HTMLElement>('[data-process-timeline]').forEach((root) => enhance(root, controller.signal));
+    return () => controller.abort();
+  });
 </script>

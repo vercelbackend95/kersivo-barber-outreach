@@ -68,8 +68,8 @@
   --pricing-base-end: #11151b;
 
   /* Typography */
-  --font-heading: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
-  --font-body: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: "Bebas Neue", "Bebas Neue Fallback", "Bebas Neue Fallback Android", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Inter", "Inter Fallback", "Inter Fallback Android", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --tracking-heading: 0.04em;
   --line-body: 1.6;
 

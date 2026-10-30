@@ -182,6 +182,10 @@ const gaSiteSection = siteSection.trim();
       });
     }
 
+    // Pages without siteSection (marketing, /shop): the page_view for a client-side navigation comes from
+    // GA4 enhanced measurement ("page changes based on browser history events", on for this data stream).
+    // Batch A measured it with the real gtag.js: exactly one hit per navigation, with the new page's title.
+    // Turning that setting off in GA4 would stop those page views, so keep it on or fire them here instead.
     function trackSpaPageView() {
       if (!gaSiteSection || typeof gtag !== 'function' || !gaMeasurementId) return;
       var prefs = readPrefs();

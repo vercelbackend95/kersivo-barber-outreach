@@ -115,7 +115,7 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function initNoShowCalculator(): void {
+export function initNoShowCalculator(): void | (() => void) {
   const form = document.querySelector<HTMLFormElement>('[data-ns-form]');
   if (!form || form.dataset.nsReady) return;
   form.dataset.nsReady = 'true';
@@ -165,14 +165,19 @@ export function initNoShowCalculator(): void {
   });
   form.addEventListener('submit', (event) => event.preventDefault());
   // replaceState never fires this, so it only reacts to a pasted or edited link.
-  window.addEventListener('hashchange', () => {
-    const next = decodeHash(window.location.hash);
-    if (!next) return;
-    inputs = next;
-    writeInputs(form, inputs);
-    validate(form);
-    view = render(form, inputs);
-  });
+  const listeners = new AbortController();
+  window.addEventListener(
+    'hashchange',
+    () => {
+      const next = decodeHash(window.location.hash);
+      if (!next) return;
+      inputs = next;
+      writeInputs(form, inputs);
+      validate(form);
+      view = render(form, inputs);
+    },
+    { signal: listeners.signal },
+  );
 
   form.querySelector('[data-ns-copy]')?.addEventListener('click', async () => {
     window.clearTimeout(timer);
@@ -193,4 +198,6 @@ export function initNoShowCalculator(): void {
     if (details) details.open = true;
     window.print();
   });
+
+  return () => listeners.abort();
 }

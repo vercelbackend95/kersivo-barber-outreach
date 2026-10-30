@@ -14,6 +14,21 @@
   --route-accent: var(--color-brand);
 }
 
+/*
+ * Crossfade for navigations that stay full page loads (marketing <-> demo/admin). Client-side
+ * navigation (html[data-astro-transition]) turns its root animation off in route-transition.css.
+ * Browsers without support just navigate normally.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 180ms;
+}
+
 [data-app='admin'],
 [data-app='flow'],
 body.admin-theme-premium-black {
@@ -32,6 +47,10 @@ body.admin-theme-premium-black {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
   .ks-route-veil,
   .ks-route-pending,
   .ks-main,

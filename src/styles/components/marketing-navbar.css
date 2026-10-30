@@ -12,6 +12,8 @@
   top: 0;
   z-index: 50;
   font-family: var(--font-body);
+  /* Own layer in a cross-document view transition, so the header does not fade with the page. */
+  view-transition-name: ks-site-header;
 }
 
 /*
@@ -178,6 +180,10 @@ html.mnav-locked body::before {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.mnav-btn[hidden] {
+  display: none;
 }
 
 .mnav-btn {
@@ -497,7 +503,11 @@ html.mnav-locked body::before {
   background: color-mix(in srgb, var(--fg) 2%, var(--mnav-bg));
 }
 
-.mnav-hub__actions .mnav-btn {
+.mnav-hub__actions .mnav-btn[hidden] {
+  display: none;
+}
+
+.mnav-btn {
   min-height: 48px;
   white-space: normal;
 }

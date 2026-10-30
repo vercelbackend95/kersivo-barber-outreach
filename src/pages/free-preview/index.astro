@@ -141,6 +141,8 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
 </LandingLayout>
 
 <script>
+  import { onPageReady } from '@/lib/navigation/pageReady';
+
   function initFreePreviewPage() {
     const bar = document.querySelector('[data-fp-sticky-bar]');
     const form = document.querySelector('#request');
@@ -152,9 +154,9 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
         { threshold: 0.2 },
       );
       io.observe(form);
+      return () => io.disconnect();
     }
   }
 
-  initFreePreviewPage();
-  document.addEventListener('astro:page-load', initFreePreviewPage);
+  onPageReady(initFreePreviewPage);
 </script>

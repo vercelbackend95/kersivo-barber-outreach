@@ -139,7 +139,7 @@ describe('/barbershop-website-design Section 01 hero', () => {
     const title = rule('.bwd-hero__title');
     expect(title).toContain('font-family: var(--font-body);');
     expect(title).toContain('font-size: clamp(2.85rem, 5.25vw, 5.55rem);');
-    expect(title).toContain('font-weight: 650;');
+    expect(title).toContain('font-weight: 600;');
     expect(title).toContain('line-height: 1.04;');
     expect(title).toContain('letter-spacing: -0.062em;');
     const lead = rule('.bwd-hero__lead');

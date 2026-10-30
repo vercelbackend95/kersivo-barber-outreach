@@ -11,11 +11,11 @@ const navbar = readFileSync(new URL('../../components/navbar17.astro', import.me
 const motion = readFileSync(new URL('../../styles/motion.css', import.meta.url), 'utf8');
 
 describe('KERSIVO route transition families', () => {
-  it('opts the app layout families into ClientRouter; marketing pages use full page loads (Batch 6)', () => {
+  it('opts every layout family into ClientRouter (GA4 page_view per navigation: see GoogleAnalytics.astro)', () => {
     expect(astroConfig).not.toMatch(/experimental\s*:/);
     expect(astroConfig).not.toContain('viewTransitions');
-    // Marketing: no ClientRouter, so GA4 counts one page_view per real page load.
-    expect(landingLayout).not.toContain('ClientRouter');
+    // Marketing: browsers without view transitions keep normal page loads rather than a JS swap.
+    expect(landingLayout).toContain('<ClientRouter fallback="none" />');
     expect(mainLayout).toContain('ClientRouter');
     expect(minimalLayout).toContain('ClientRouter');
     expect(mainLayout).toContain('fallback="swap"');
@@ -34,6 +34,30 @@ describe('KERSIVO route transition families', () => {
     expect(landingLayout).not.toContain('key={Astro.url.pathname}');
     expect(minimalLayout).toContain('background: #030303');
     expect(mainLayout).toContain('background: #0b0d10');
+  });
+
+  it('crossfades full page loads only, and only when motion is allowed', () => {
+    const routeCss = readFileSync(new URL('../../styles/components/route-transition.css', import.meta.url), 'utf8');
+    expect(motion).toMatch(/@view-transition \{\s*navigation: auto;\s*\}/);
+    expect(motion).toMatch(/prefers-reduced-motion: reduce\) \{\s*@view-transition \{\s*navigation: none;/);
+    expect(routeCss).toContain('html[data-astro-transition]::view-transition-old(root)');
+    expect(routeCss).not.toMatch(/html\[data-app='marketing'\]::view-transition/);
+  });
+
+  it('keeps the progress bar and veil fixed to the viewport, the veil below the navbar', () => {
+    const routeCss = readFileSync(new URL('../../styles/components/route-transition.css', import.meta.url), 'utf8');
+    expect(routeCss).toMatch(/\.ks-route-pending \{\s*position: fixed;/);
+    expect(routeCss).toMatch(/\.ks-route-veil \{\s*position: fixed;\s*inset: var\(--nav-sticky-offset, 0px\) 0 0;/);
+  });
+
+  it('preloads only the variable Inter and Bebas Neue on marketing pages', () => {
+    const fonts = readFileSync(new URL('../../styles/fonts-landing.css', import.meta.url), 'utf8');
+    expect(landingLayout).toContain('/fonts/inter-latin-variable.woff2');
+    expect(landingLayout).toContain('/fonts/bebas-neue-latin-400-normal.woff2');
+    expect(landingLayout).not.toContain('antonio');
+    expect(mainLayout).not.toContain('antonio');
+    expect(fonts).not.toContain('Antonio');
+    expect(fonts).toMatch(/font-weight: 100 900;/);
   });
 
   it('keeps BLACKLINE on its own coordinator and shared motion tokens', () => {

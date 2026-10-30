@@ -2,6 +2,7 @@
  * One-shot scroll reveal for editorial scenes ([data-dist-scene] inside a section).
  * Content is only hidden once the section carries data-dist-enhanced, so it stays visible without JS.
  * Each scene flips data-dist-visible to "true" the first time it enters the viewport; CSS owns the motion.
+ * Scenes already in the first viewport are never hidden, so they cannot fade in over the page's first paint.
  */
 export const SCENE_REVEAL_OPTIONS: IntersectionObserverInit = {
   threshold: 0.18,
@@ -19,18 +20,20 @@ export function initScrollSceneReveal(
     scene.dataset.distVisible = 'true';
   };
 
-  section.dataset.distEnhanced = 'true';
-
   const prefersReducedMotion =
     typeof win.matchMedia === 'function' && win.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReducedMotion || typeof win.IntersectionObserver !== 'function') {
     scenes.forEach(reveal);
+    section.dataset.distEnhanced = 'true';
     return () => {};
   }
 
   scenes.forEach((scene) => {
-    if (scene.dataset.distVisible !== 'true') scene.dataset.distVisible = 'false';
+    if (scene.dataset.distVisible === 'true') return;
+    if (scene.getBoundingClientRect().top < win.innerHeight) reveal(scene);
+    else scene.dataset.distVisible = 'false';
   });
+  section.dataset.distEnhanced = 'true';
 
   const observer = new win.IntersectionObserver((entries) => {
     for (const entry of entries) {

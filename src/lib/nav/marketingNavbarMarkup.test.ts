@@ -65,7 +65,7 @@ describe('marketing navbar markup', () => {
 
   it('persists across marketing swaps and boots the controller on page-load', () => {
     expect(navbar).toContain('transition:persist="ks-nav-marketing"');
-    expect(client).toContain("import { initMarketingNav } from '@/lib/nav/marketingNavController'");
+    expect(client).toContain("import { applyMarketingNavCurrent, initMarketingNav } from '@/lib/nav/marketingNavController'");
     expect(client).toContain('astro:page-load');
   });
 

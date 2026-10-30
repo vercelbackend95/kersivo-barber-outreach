@@ -112,7 +112,7 @@
   max-width: none;
   font-family: var(--font-body);
   font-size: clamp(2.85rem, 5.25vw, 5.55rem);
-  font-weight: 650;
+  font-weight: 600;
   /* Booksy's 0.84 lets the "g" of "Design" touch "Your" in this headline; 1.04 clears the ink at every width. */
   line-height: 1.04;
   letter-spacing: -0.062em;
@@ -274,39 +274,3 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .bwd-hero__eyebrow,
-  .bwd-hero__title,
-  .bwd-hero__lead,
-  .bwd-hero__actions,
-  .bwd-hero__meta {
-    animation: bwdHeroRise 720ms cubic-bezier(0.18, 0.82, 0.2, 1) both;
-  }
-
-  .bwd-hero__title {
-    animation-delay: 70ms;
-  }
-
-  .bwd-hero__lead {
-    animation-delay: 130ms;
-  }
-
-  .bwd-hero__actions {
-    animation-delay: 190ms;
-  }
-
-  .bwd-hero__meta {
-    animation-delay: 240ms;
-  }
-
-  @keyframes bwdHeroRise {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}

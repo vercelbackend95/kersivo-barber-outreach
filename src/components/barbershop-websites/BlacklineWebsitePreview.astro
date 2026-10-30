@@ -99,6 +99,7 @@ const siteNav = [
     <ul class="bsw-site__services" role="list">
       {serviceCards.map((card) => (
         <li>
+          {/* Full load: the demo has its own layout, fonts and router. */}
           <a
             class="bsw-service"
             href={demoBookingHref(card.slug)}

@@ -1,9 +1,6 @@
-html[data-app='marketing']::view-transition-old(root),
-html[data-app='marketing']::view-transition-new(root),
-html[data-app='flow']::view-transition-old(root),
-html[data-app='flow']::view-transition-new(root),
-html[data-app='admin']::view-transition-old(root),
-html[data-app='admin']::view-transition-new(root) {
+/* Client-side navigation: rendering stays on the old page until the swap, then the main content fades in. */
+html[data-astro-transition]::view-transition-old(root),
+html[data-astro-transition]::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
@@ -16,59 +13,50 @@ html[data-app='admin']::view-transition-new(root) {
 
 .ks-main {
   min-width: 0;
+  transition: opacity 120ms ease-out;
 }
 
+/* Programmatic focus target after client-side navigation, not a control. */
+.ks-main h1[tabindex='-1']:focus {
+  outline: none;
+}
+
+/*
+ * Transparent click guard over the content only: the crossfade itself is on .ks-main, and the
+ * persisted navbar above it (z-index 50) stays usable and never dims.
+ */
 .ks-route-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 12;
-  background: var(--route-surface);
+  position: fixed;
+  inset: var(--nav-sticky-offset, 0px) 0 0;
+  z-index: 40;
   pointer-events: none;
-  opacity: 0;
   visibility: hidden;
+}
+
+[data-ks-route-variant='flow'] .ks-route-veil {
+  top: 0;
 }
 
 .ks-route-veil[data-ks-route-phase='covering'],
 .ks-route-veil[data-ks-route-phase='navigating'] {
   visibility: visible;
-  opacity: 1;
   pointer-events: auto;
-  transition: opacity var(--motion-duration-interaction) var(--motion-ease-standard);
-}
-
-.ks-route-veil[data-ks-route-phase='revealing'] {
-  visibility: visible;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-duration-flow) var(--motion-ease-out);
-}
-
-[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='covering'],
-[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='navigating'] {
-  transition-duration: 160ms;
-}
-
-[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='revealing'] {
-  transition-duration: 220ms;
 }
 
 .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='covering']) .ks-main,
 .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='navigating']) .ks-main {
-  opacity: 0.92;
-  transform: translateY(-6px);
-  transition:
-    opacity var(--motion-duration-interaction) var(--motion-ease-standard),
-    transform var(--motion-duration-interaction) var(--motion-ease-standard);
+  opacity: 0.6;
 }
 
 .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='revealing']) .ks-main {
-  animation: ks-route-in var(--motion-duration-flow) var(--motion-ease-out);
+  transition: none;
+  animation: ks-route-in 200ms ease-out;
 }
 
 @keyframes ks-route-in {
   from {
-    opacity: 0.92;
-    transform: translateY(8px);
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -76,31 +64,46 @@ html[data-app='admin']::view-transition-new(root) {
   }
 }
 
+/* Above the sticky navbar (50) and its open mobile hub (95). Shown only for slow navigations. */
 .ks-route-pending {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 14;
+  z-index: 100;
   height: 2px;
   pointer-events: none;
   background: var(--route-accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--route-accent) 30%, transparent);
   transform: scaleX(0);
   transform-origin: left center;
   opacity: 0;
 }
 
 .ks-route-pending[data-active] {
-  opacity: 1;
-  animation: ks-route-pending-in 800ms var(--motion-ease-standard) forwards;
+  opacity: 0.9;
+  animation: ks-route-pending-in 12s linear forwards;
 }
 
+.ks-route-pending[data-done] {
+  opacity: 0;
+  transition:
+    transform 120ms ease-out,
+    opacity 200ms ease-out;
+}
+
+/* Quickly to ~30%, then easing towards ~85% for as long as the wait lasts. */
 @keyframes ks-route-pending-in {
-  from {
-    transform: scaleX(0.12);
+  0% {
+    transform: scaleX(0);
+    animation-timing-function: ease-out;
   }
-  to {
-    transform: scaleX(0.72);
+  3% {
+    transform: scaleX(0.3);
+    animation-timing-function: cubic-bezier(0.1, 0.6, 0.2, 1);
+  }
+  100% {
+    transform: scaleX(0.85);
   }
 }
 
@@ -124,7 +127,16 @@ html[data-app='admin']::view-transition-new(root) {
 
 .admin-route-pending[data-active] {
   opacity: 1;
-  animation: ks-route-pending-in 800ms var(--motion-ease-standard) forwards;
+  animation: admin-route-pending-in 800ms var(--motion-ease-standard) forwards;
+}
+
+@keyframes admin-route-pending-in {
+  from {
+    transform: scaleX(0.12);
+  }
+  to {
+    transform: scaleX(0.72);
+  }
 }
 
 .admin-main-panel[data-entering='true'] {
@@ -147,15 +159,25 @@ html[data-app='admin']::view-transition-new(root) {
     display: none;
   }
 
-  .ks-route-pending,
+  /* Instant swap; a slow navigation still gets the bar, static at full width. */
+  .ks-route-pending[data-active],
+  .ks-route-pending[data-done],
   .admin-route-pending,
+  .ks-main,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='covering']) .ks-main,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='navigating']) .ks-main,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='revealing']) .ks-main,
+  .admin-main-panel[data-entering='true'] {
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+
+  .ks-main,
   .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='covering']) .ks-main,
   .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='navigating']) .ks-main,
   .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='revealing']) .ks-main,
   .admin-main-panel[data-entering='true'] {
     opacity: 1;
-    transform: none;
-    animation: none;
-    transition: none;
   }
 }

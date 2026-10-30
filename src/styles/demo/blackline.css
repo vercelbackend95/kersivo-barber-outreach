@@ -156,8 +156,9 @@ html[data-theme='blackline'] body {
   font-family: var(--bl-font-body);
 }
 
-html[data-theme='blackline']::view-transition-old(root),
-html[data-theme='blackline']::view-transition-new(root) {
+/* Client-side navigation only; a full page load into the demo keeps the crossfade in motion.css. */
+html[data-theme='blackline'][data-astro-transition]::view-transition-old(root),
+html[data-theme='blackline'][data-astro-transition]::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }

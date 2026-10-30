@@ -18,7 +18,7 @@
   margin: 0 0 0.85rem;
   color: #88242f;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -129,7 +129,7 @@
 .insights-category__cta {
   color: #88242f;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .insights-category__empty,
@@ -171,7 +171,7 @@
 
 .insights-category__elsewhere-list a {
   color: #88242f;
-  font-weight: 750;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -186,7 +186,7 @@
   margin-top: 1.25rem;
   color: #88242f;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
 }
 

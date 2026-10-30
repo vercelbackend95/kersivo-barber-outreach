@@ -196,7 +196,7 @@ function fileName(o: PolicyOptions): string {
   return `${slug ? `${slug}-` : ''}cancellation-policy.txt`;
 }
 
-export function initPolicyTool(): void {
+export function initPolicyTool(): void | (() => void) {
   const form = document.getElementById('cpt-form');
   if (!(form instanceof HTMLFormElement) || form.dataset.ready === 'true') return;
   form.dataset.ready = 'true';
@@ -265,9 +265,14 @@ export function initPolicyTool(): void {
     event.preventDefault();
     update({ writeHash: true, track: true });
   });
-  window.addEventListener('hashchange', () => {
-    if (applyHash()) update({ writeHash: false });
-  });
+  const listeners = new AbortController();
+  window.addEventListener(
+    'hashchange',
+    () => {
+      if (applyHash()) update({ writeHash: false });
+    },
+    { signal: listeners.signal },
+  );
 
   $('cpt-generate')?.addEventListener('click', () => {
     window.clearTimeout(textTimer);
@@ -310,4 +315,6 @@ export function initPolicyTool(): void {
   });
 
   $('cpt-print')?.addEventListener('click', () => window.print());
+
+  return () => listeners.abort();
 }

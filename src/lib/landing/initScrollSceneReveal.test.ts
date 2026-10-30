@@ -44,7 +44,13 @@ function mountSection(): { section: HTMLElement; scenes: HTMLElement[] } {
       <div data-dist-scene></div>
     </section>`;
   const section = document.querySelector<HTMLElement>('[data-dist]')!;
-  return { section, scenes: Array.from(section.querySelectorAll<HTMLElement>('[data-dist-scene]')) };
+  const scenes = Array.from(section.querySelectorAll<HTMLElement>('[data-dist-scene]'));
+  scenes.forEach((scene) => placeAt(scene, 5000));
+  return { section, scenes };
+}
+
+function placeAt(scene: HTMLElement, top: number) {
+  scene.getBoundingClientRect = () => ({ top }) as DOMRect;
 }
 
 function fakeWindow(reducedMotion: boolean, withObserver = true) {
@@ -72,6 +78,17 @@ describe('initScrollSceneReveal', () => {
     const [observer] = FakeIntersectionObserver.instances;
     expect(observer.options).toBe(SCENE_REVEAL_OPTIONS);
     expect(observer.observed.size).toBe(3);
+  });
+
+  it('never hides a scene that is already in the first viewport', () => {
+    const { section, scenes } = mountSection();
+    placeAt(scenes[0], 100);
+    initScrollSceneReveal(section, fakeWindow(false));
+
+    expect(scenes.map((scene) => scene.dataset.distVisible)).toEqual(['true', 'false', 'false']);
+    const [observer] = FakeIntersectionObserver.instances;
+    expect(observer.observed.has(scenes[0])).toBe(false);
+    expect(observer.observed.size).toBe(2);
   });
 
   it('reveals each scene once, the first time it intersects', () => {
