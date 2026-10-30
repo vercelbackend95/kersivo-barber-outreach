@@ -28,3 +28,24 @@ SEO/CRO roadmap with the remaining batches: **`docs/seo/ROADMAP.md`**. Changelog
 Branch from `main`, open a PR, wait for the GitHub Actions `build` check and the Vercel preview (`kersivo-barber-outreach`, the only project deploying this repo and serving kersivo.co.uk) to pass. The founder merges.
 - Do the loop yourself (commit, push, PR, wait for checks, rerun known-flaky CI jobs); don't hand these steps back to the founder.
 - Never run `vercel` / `vercel link` / `vercel build` in a folder that is not linked to `kersivo-barber-outreach`: the CLI creates a new Vercel project named after the folder and connects it to this repo (that is how the deleted `kersivo-production` project appeared).
+
+## KERSIVO marketing site — working rules
+
+Product: kersivo.co.uk, Astro marketing site for KERSIVO (booking software + branded websites for independent UK barbershops). Dark UI, one brand red token, Inter for UI and display, Bebas Neue for section headings.
+
+Visual reference for "premium KERSIVO style": the card .starter-glance-card.starter-hero__card on /starter — near-black vertical gradient (#0D0D0E -> #080809), 1px border rgba(255,255,255,0.08), 20px radius, inset top highlight rgba(255,255,255,0.05), deep soft shadow, 1px red-to-transparent gradient line on the top edge (::before), small uppercase eyebrow with a red dot, large Inter numerals, hairline dividers, inner detail tile. Reuse its tokens instead of inventing new ones.
+
+Non-negotiables:
+- Public copy in British English. Do not change commercial terms (Full KERSIVO £39/month per location, KERSIVO Starter £0/month up to 4 barbers, 0% KERSIVO commission, no setup fee, not VAT registered, refund wording). Move or shorten placement only; flag anything unclear.
+- Full KERSIVO is primary, Starter secondary. "Get my free preview" is the primary CTA.
+- No invented stats, reviews, testimonials, customer logos or founder photos.
+- Do not change URLs, titles, meta, canonical, JSON-LD, form field names, form endpoints or data-track attributes unless the task says so.
+- WCAG 2.2 AA, visible :focus-visible, keyboard support, prefers-reduced-motion respected.
+- Verify at 375, 768, 1024, 1440 px. No horizontal scroll.
+
+Workflow for every task:
+1. Read the relevant files first and state the plan (files, approach) before editing.
+2. Work on a new git branch named after the batch.
+3. Run the dev server and take Playwright screenshots before and after at 375 and 1440 px for every page you touch; save them in /tmp/kersivo-shots/<batch>/ and list them in your summary.
+4. Run the build and fix errors you introduced.
+5. End with a summary: files changed, what and why, open questions. Commit, push the branch, do not merge to main.
