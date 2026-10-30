@@ -8,7 +8,7 @@ import {
   type Navbar17CtaTrack,
 } from '@/lib/nav/navbar17Items';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
-import { FREE_PREVIEW_CTA_HREF, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_TRACK, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
 import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
 import { isBlockingSaasStatus } from '@/lib/setup/saasCheckoutGuard';
 
@@ -39,6 +39,7 @@ const FREE_PREVIEW: NavbarPreviewCta = {
   state: 'get_started',
   label: NAVBAR_FREE_PREVIEW_CTA_LABEL,
   href: FREE_PREVIEW_CTA_HREF,
+  track: FREE_PREVIEW_CTA_TRACK,
 };
 
 const CONTINUE_SETUP: NavbarPreviewCta = {

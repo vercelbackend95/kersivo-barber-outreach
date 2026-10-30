@@ -30,8 +30,11 @@ export const previewRequestOpsActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('mark_ready_and_send') }),
 ]);
 
-/** "Mark ready and send" applies from these statuses; CHANGES_REQUESTED sends E4, the others E3. */
-export const MARK_READY_FROM_STATUSES: readonly PreviewRequestStatus[] = ['REQUESTED', 'IN_PROGRESS', 'CHANGES_REQUESTED'];
+/**
+ * "Mark ready and send" applies from these statuses; CHANGES_REQUESTED sends E4, the others E3.
+ * EXPIRED is how ops honours "Want another look? Email us" on the expired page: a new link period.
+ */
+export const MARK_READY_FROM_STATUSES: readonly PreviewRequestStatus[] = ['REQUESTED', 'IN_PROGRESS', 'CHANGES_REQUESTED', 'EXPIRED'];
 
 export type PreviewRequestOpsAction = z.infer<typeof previewRequestOpsActionSchema>;
 
@@ -70,6 +73,7 @@ async function lockRequest(tx: Tx, id: string) {
       email: true,
       firstName: true,
       publicToken: true,
+      anonymisedAt: true,
       draftShop: { select: { sitePreviewUrl: true } },
     },
   });
@@ -93,6 +97,8 @@ export async function executePreviewRequestOpsAction(input: {
   const result = await prisma.$transaction(async (tx): Promise<OpsActionResult> => {
     const request = await lockRequest(tx, input.id);
     if (!request) return fail('NOT_FOUND', 404);
+    // The retention job has removed the personal data; nothing may be written back onto the record.
+    if (request.anonymisedAt) return fail('INVALID_TRANSITION');
 
     const isFinal = FINAL_PREVIEW_STATUSES.includes(request.status);
     const done = (status: PreviewRequestStatus, draftShopId: string | null): OpsActionResult => ({

@@ -94,6 +94,10 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_UPDATED
   /// Free website preview: internal notification that the owner requested changes.
   FREE_PREVIEW_CHANGES_REQUESTED_INTERNAL
+  /// Free website preview: follow-up after the preview was sent (E5).
+  FREE_PREVIEW_FOLLOWUP
+  /// Free website preview: expiry reminder (E6).
+  FREE_PREVIEW_EXPIRY_REMINDER
 }
 
 enum EmailOutboundStatus {
@@ -1586,6 +1590,8 @@ model PreviewRequest {
   emailOptOut          Boolean   @default(false)
   emailOptOutAt        DateTime?
   internalNotes        String?   @db.Text
+  /// Set by the retention job: personal data is gone; status and dates stay for metrics.
+  anonymisedAt         DateTime?
 
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt

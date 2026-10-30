@@ -1,0 +1,92 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { PREVIEW_NO_THANKS_RATE } from '@/lib/freePreview/previewApi';
+import { type NoThanksState, declinePreviewByToken, resolveNoThanksState } from '@/lib/freePreview/noThanks';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import '@/styles/tokens.css';
+import '@/styles/fonts.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/free-preview-page.css';
+
+/**
+ * One-click "no thanks" link from E5/E6 (spec §9). The GET never changes anything: mail scanners open links
+ * by themselves, so the page submits itself in the owner's browser (with a button if scripts are off).
+ * Works with the flow flag off too: an opt-out link that was sent must keep working.
+ */
+const PRIVATE_HEADERS: Record<string, string> = {
+  'X-Robots-Tag': 'noindex, nofollow',
+  'Cache-Control': 'private, no-store',
+  // Not no-referrer: that would send "Origin: null" on the form POST. There are no external links here.
+  'Referrer-Policy': 'same-origin',
+};
+for (const [name, value] of Object.entries(PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
+
+const limited = await enforceIpRateLimit(
+  Astro.request,
+  PREVIEW_NO_THANKS_RATE.action,
+  PREVIEW_NO_THANKS_RATE.limit,
+  PREVIEW_NO_THANKS_RATE.windowMs,
+);
+if (limited) return limited;
+
+const token = (Astro.params.token ?? '').trim();
+let state: NoThanksState;
+let declined = false;
+if (Astro.request.method === 'POST') {
+  state = await declinePreviewByToken(token);
+  declined = state === 'can_decline';
+  if (declined) {
+    await sendServerAnalyticsEvent({
+      name: FUNNEL_EVENTS.preview_declined,
+      clientId: analyticsClientIdFromRequest(Astro.request),
+    });
+  }
+} else {
+  state = await resolveNoThanksState(token);
+}
+
+if (state === 'not_found') {
+  return new Response('Not found', { status: 404, headers: { ...PRIVATE_HEADERS, 'Content-Type': 'text/plain' } });
+}
+const showThanks = declined || state === 'already_declined';
+---
+
+<MinimalLayout
+  title="Your preview | KERSIVO"
+  description="Manage emails about your KERSIVO website preview."
+  canonicalPath="/free-preview"
+  noindex={true}
+  robotsFollow={false}
+  bodyClass="admin-theme-premium-black fp-page-body"
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+>
+  <main class="container page-wrap fp-expired">
+    {
+      showThanks ? (
+        <p>Thanks for letting us know. We won't email you about your preview again.</p>
+      ) : state === 'converted' ? (
+        <p>Your website is already with us, so there's nothing to do here. You can manage it from your dashboard.</p>
+      ) : (
+        <form method="post" data-no-thanks-form>
+          <p>Stop emails about your preview?</p>
+          <p>
+            <button type="submit" class="btn btn--primary">
+              Yes, no thanks
+            </button>
+          </p>
+        </form>
+      )
+    }
+  </main>
+</MinimalLayout>
+
+<script>
+  document.querySelector<HTMLFormElement>('[data-no-thanks-form]')?.requestSubmit();
+</script>

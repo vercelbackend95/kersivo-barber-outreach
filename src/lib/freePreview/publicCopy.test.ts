@@ -39,7 +39,7 @@ describe('free preview public copy (spec §10)', () => {
     expect(SUBSCRIBE_NOW_CTA_LABEL).toBe('Or subscribe now — £39/month');
     expect(SUBSCRIBE_NOW_CTA_HREF).toBe('/admin/launch');
     expect(NAVBAR_FREE_PREVIEW_CTA_LABEL).toBe('Free preview');
-    expect(MARKETING_NAV_FREE_PREVIEW_ACTION).toEqual({ label: 'Free preview', href: '/free-preview' });
+    expect(MARKETING_NAV_FREE_PREVIEW_ACTION).toEqual({ label: 'Free preview', href: '/free-preview', track: 'preview_cta_click' });
   });
 
   it('keeps flag-off defaults identical to the original copy', () => {

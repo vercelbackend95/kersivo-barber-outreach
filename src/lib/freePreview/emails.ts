@@ -185,3 +185,55 @@ export function buildPreviewChangesRequestedInternalEmail(input: {
 <blockquote style="white-space:pre-wrap;margin:0;padding:8px 12px;border-left:3px solid #ccc">${escapeHtml(input.changesText)}</blockquote>`,
   };
 }
+
+/** One-click "no thanks" page: /preview/{token}/no-thanks (spec §9). */
+export function previewNoThanksUrl(token: string): string {
+  return `${previewPageUrl(token)}/no-thanks`;
+}
+
+function noThanksLink(url: string): string {
+  return `<a href="${escapeHtml(url)}">Click here</a>`;
+}
+
+export type PreviewFollowupEmailInput = {
+  to: string;
+  firstName: string | null;
+  shopName: string;
+  previewUrl: string;
+  noThanksUrl: string;
+};
+
+/** E5 — follow-up after the preview was sent (spec §9). */
+export function buildPreviewFollowupEmail(input: PreviewFollowupEmailInput): FreePreviewEmail {
+  return {
+    to: input.to,
+    subject: `Had a chance to look at your ${input.shopName} preview?`,
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      `Just checking you saw the website preview we made for ${escapeHtml(input.shopName)}:<br>${linkBlock(input.previewUrl)}`,
+      "If something isn't quite right, tell us and we'll change it.",
+      `Not for you? No problem — ${noThanksLink(input.noThanksUrl)} and we won't email you about it again.`,
+      SIGN_OFF,
+    ]),
+  };
+}
+
+/** E6 — expiry reminder (spec §9). */
+export function buildPreviewExpiryReminderEmail(
+  input: PreviewFollowupEmailInput & { expiresAt: Date },
+): FreePreviewEmail {
+  const expiryDate = formatPreviewExpiryDate(input.expiresAt);
+  return {
+    to: input.to,
+    subject: `Your ${input.shopName} preview expires on ${expiryDate}`,
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      `Your private website preview for ${escapeHtml(input.shopName)} will expire on ${escapeHtml(expiryDate)}:<br>${linkBlock(input.previewUrl)}`,
+      "Want to launch it, or need more time? Reply to this email and we'll help.",
+      `${noThanksLink(input.noThanksUrl)} if you'd rather we didn't email you about it again.`,
+      SIGN_OFF,
+    ]),
+  };
+}

@@ -12,6 +12,7 @@
  */
 import {
   FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_TRACK,
   FREE_PREVIEW_CTA_LABEL,
   SUBSCRIBE_NOW_CTA_HREF,
   SUBSCRIBE_NOW_CTA_LABEL,
@@ -34,7 +35,7 @@ const hasNotes = Astro.slots.has('default');
 
 {
   part === 'primary' ? (
-    <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track-placement={placement}>
+    <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
       {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
     </a>
   ) : null
@@ -52,7 +53,7 @@ const hasNotes = Astro.slots.has('default');
 {
   part === 'all' ? (
     <div class:list={['full-plan-cta', className]}>
-      <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track-placement={placement}>
+      <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
         {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
       </a>
       <div class="full-plan-cta__subscribe">

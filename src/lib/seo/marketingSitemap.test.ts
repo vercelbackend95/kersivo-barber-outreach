@@ -114,7 +114,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);
     expect(byLoc['https://kersivo.co.uk/terms']).toBe(CURRENT_TERMS_VERSION);
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
-    expect(CURRENT_TERMS_VERSION).toBe('2026-10-28');
+    expect(CURRENT_TERMS_VERSION).toBe('2026-10-30');
 
     expect(EXPECTED_LOCS.some((loc) => loc === 'https://kersivo.co.uk/')).toBe(true);
     for (const loc of EXPECTED_LOCS) {
@@ -130,7 +130,7 @@ describe('marketing sitemap', () => {
     const cookies = readFileSync(join(here, '../../pages/cookies.astro'), 'utf8');
     expect(privacy).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
     expect(cookies).toContain('Last updated: {formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)}');
-    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('6 October 2026');
+    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('30 October 2026');
     expect(formatLegalPageDate(COOKIE_POLICY_LAST_UPDATED_ISO)).toBe('25 September 2026');
     const byLoc = Object.fromEntries(buildMarketingSitemapEntries().map(({loc,lastmod})=>[loc,lastmod]));
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);

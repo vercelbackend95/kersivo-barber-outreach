@@ -38,6 +38,10 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
 
   function open(next: Exclude<Panel, null>) {
     setError('');
+    if (next === 'launch') {
+      // Analytics only; never blocks the panel. The server applies the visitor's consent.
+      void fetch(`/api/free-preview/${encodeURIComponent(props.token)}/event`, { method: 'POST', keepalive: true }).catch(() => {});
+    }
     setPanel(next);
     (next === 'changes' ? changesDialog : launchDialog).current?.showModal();
   }

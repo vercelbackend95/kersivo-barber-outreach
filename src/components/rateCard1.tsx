@@ -30,6 +30,7 @@ import {
 } from "@/lib/pricing/rateCard1Copy";
 import {
   FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_TRACK,
   FREE_PREVIEW_CTA_LABEL,
   SUBSCRIBE_NOW_CTA_HREF,
   SUBSCRIBE_NOW_CTA_LABEL,
@@ -122,7 +123,12 @@ function RateCard1Offer({ freePreview = false }: RateCard1OfferProps) {
           </ul>
           {freePreview ? (
             <>
-              <a href={FREE_PREVIEW_CTA_HREF} className="btn btn--primary rate-card1__cta">
+              <a
+                href={FREE_PREVIEW_CTA_HREF}
+                className="btn btn--primary rate-card1__cta"
+                data-track={FREE_PREVIEW_CTA_TRACK}
+                data-track-placement="rate_card"
+              >
                 {FREE_PREVIEW_CTA_LABEL}
               </a>
               <div className="full-plan-cta__subscribe rate-card1__offer-subscribe">

@@ -45,6 +45,7 @@ import {
   TRADING_NAME,
 } from '@/lib/legal/businessIdentity';
 import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from '@/lib/legal/termsVersion';
+import { FREE_PREVIEW_TERMS_TEXT } from '@/lib/freePreview/legalCopy';
 import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
@@ -257,6 +258,9 @@ import '@/styles/legal-pages.css';
       <p>
         The KERSIVO platform software is <strong>not</strong> transferred with the domain when the engagement ends.
       </p>
+
+      <h2 id="free-website-preview">Free website preview</h2>
+      <p>{FREE_PREVIEW_TERMS_TEXT}</p>
 
       <h2 id="onboarding-and-launch">Onboarding, preparation and launch</h2>
       <p>{ONBOARDING_MATERIALS_CLAIM}</p>

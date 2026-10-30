@@ -17,6 +17,8 @@ import {
   PREVIEW_REQUEST_STATUSES,
   PREVIEW_STATUS_LABELS,
   countPreviewRequestsLast30Days,
+  previewFunnelLast30Days,
+  previewFunnelRates,
   formatAge,
   listPreviewRequests,
   parsePreviewRequestListQuery,
@@ -42,10 +44,12 @@ const auth = await resolveOperatorAccess(Astro.request);
 const view = resolveOpsPageView(auth);
 
 const query = parsePreviewRequestListQuery(Astro.url.searchParams);
-const [requests, counts] =
+const [requests, counts, funnel] =
   view === 'dashboard'
-    ? await Promise.all([listPreviewRequests(query), countPreviewRequestsLast30Days()])
-    : [[], null];
+    ? await Promise.all([listPreviewRequests(query), countPreviewRequestsLast30Days(), previewFunnelLast30Days()])
+    : [[], null, null];
+const funnelRates = funnel ? previewFunnelRates(funnel) : null;
+const formatRate = (value: number | null) => (value === null ? '—' : `${Math.round(value * 100)}%`);
 const now = new Date();
 
 function filterHref(status: string | null, sort = query.sort) {
@@ -111,6 +115,26 @@ function filterHref(status: string | null, sort = query.sort) {
                   <p class="ops-summary__value">{counts[status]}</p>
                 </div>
               ))}
+            </section>
+          ) : null}
+
+          {funnel && funnelRates ? (
+            <section class="ops-summary" aria-label="Conversion rates, requests from the last 30 days">
+              <div class="ops-summary__card">
+                <p class="ops-summary__label">Requested → ready</p>
+                <p class="ops-summary__value">{formatRate(funnelRates.requestedToReady)}</p>
+                <p class="ops-summary__label">{funnel.ready} of {funnel.requested}</p>
+              </div>
+              <div class="ops-summary__card">
+                <p class="ops-summary__label">Ready → viewed</p>
+                <p class="ops-summary__value">{formatRate(funnelRates.readyToViewed)}</p>
+                <p class="ops-summary__label">{funnel.viewed} of {funnel.ready}</p>
+              </div>
+              <div class="ops-summary__card">
+                <p class="ops-summary__label">Viewed → converted</p>
+                <p class="ops-summary__value">{formatRate(funnelRates.viewedToConverted)}</p>
+                <p class="ops-summary__label">{funnel.converted} of {funnel.viewed}</p>
+              </div>
             </section>
           ) : null}
 

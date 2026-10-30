@@ -69,6 +69,17 @@ export const FUNNEL_EVENTS = {
   recommendation_set_served: 'recommendation_set_served',
   recommendation_rail_impression: 'recommendation_rail_impression',
   recommendation_product_click: 'recommendation_product_click',
+  /** Free website preview funnel (docs/free-preview-spec.md §11). */
+  preview_cta_click: 'preview_cta_click',
+  preview_form_start: 'preview_form_start',
+  preview_request_submitted: 'preview_request_submitted',
+  /** The rest are sent from the server: see src/lib/analytics/serverEvents.ts. */
+  preview_viewed: 'preview_viewed',
+  preview_changes_requested: 'preview_changes_requested',
+  preview_launch_click: 'preview_launch_click',
+  preview_checkout_started: 'preview_checkout_started',
+  preview_converted: 'preview_converted',
+  preview_declined: 'preview_declined',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

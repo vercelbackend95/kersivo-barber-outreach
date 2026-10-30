@@ -86,6 +86,10 @@
       "schedule": "*/2 * * * *"
     },
     {
+      "path": "/api/cron/free-preview-lifecycle",
+      "schedule": "20 * * * *"
+    },
+    {
       "path": "/api/cron/saas-lifecycle",
       "schedule": "0 6 * * *"
     },

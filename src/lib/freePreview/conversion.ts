@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db/client';
 import { purgeShopData } from '@/lib/setup/purgeShopData';
 import { normalizeSaasCheckoutIdentity } from '@/lib/setup/saasCheckoutGuard';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
+import { suppressPendingPreviewFollowups } from './followups';
 
 export type MarkConvertedResult = 'converted' | 'already_converted' | 'not_found';
 
@@ -41,6 +42,9 @@ export async function markPreviewRequestConverted(input: {
         meta: { stripeSessionId: input.stripeSessionId },
       },
     });
+    await suppressPendingPreviewFollowups(input.previewRequestId).catch((error) =>
+      console.error('[free-preview] follow-up suppression failed', { id: input.previewRequestId, error }),
+    );
     return 'converted';
   }
 

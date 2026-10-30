@@ -7,6 +7,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
  */
 export const FREE_PREVIEW_CTA_LABEL = 'Get my free preview';
 export const FREE_PREVIEW_CTA_HREF = FREE_PREVIEW_PAGE_PATH;
+export const FREE_PREVIEW_CTA_TRACK = 'preview_cta_click';
 
 /** The direct paid route stays available as a secondary text link. */
 export const SUBSCRIBE_NOW_CTA_LABEL = `Or subscribe now — £${SAAS_MONTHLY_GBP}/month`;
