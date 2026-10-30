@@ -37,16 +37,16 @@ const PAGES = [
 describe('comparison engine CTAs', () => {
   it('leads the closing CTA with Full KERSIVO and keeps Starter as a text link', () => {
     expect(COMPARISON_FINAL_CTA_HEADING).toBe('Move bookings onto your own website');
+    expect(finalCta).toContain("import FinalCta from '@/components/FinalCta.astro'");
     expect(finalCta).toContain('{COMPARISON_FINAL_CTA_HEADING}');
-    const primary = finalCta.indexOf('href="/admin/launch"');
-    const starter = finalCta.indexOf('href="/starter"');
-    expect(primary).toBeGreaterThan(-1);
-    expect(starter).toBeGreaterThan(primary);
-    expect(finalCta).toMatch(/href="\/admin\/launch"[\s\S]*?data-track="saas_subscribe_click"/);
-    expect(finalCta).toContain('Start Full KERSIVO — {monthlyPriceLabel}');
-    expect(finalCta).toContain('data-track="starter_plan_explore_click"');
-    expect(finalCta).not.toMatch(/href="\/starter"[^>]*class="btn/);
-    expect(finalCta).toContain('0% KERSIVO commission. {STRIPE_FEES_NOTE}');
+    expect(finalCta).toContain("href: '/admin/launch'");
+    expect(finalCta).toContain('Start Full KERSIVO — ${monthlyPriceLabel}');
+    expect(finalCta.indexOf("href: '/admin/launch'")).toBeLessThan(finalCta.indexOf("href: '/starter'"));
+    expect(finalCta).toContain("track: 'saas_subscribe_click'");
+    expect(finalCta).toContain("track: 'starter_plan_explore_click'");
+    expect(finalCta).toContain('COMPARISON_FINAL_CTA_STARTER_LABEL');
+    expect(finalCta).not.toContain('secondary=');
+    expect(finalCta).toContain('0% KERSIVO commission. ${STRIPE_FEES_NOTE}');
     expect(comparisonFinalCtaSwitchLabel('Booksy')).toBe('Ask us about switching from Booksy →');
   });
 

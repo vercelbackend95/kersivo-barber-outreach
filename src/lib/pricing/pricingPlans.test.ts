@@ -223,6 +223,7 @@ describe('/pricing billing and page clean-up', () => {
     expect(page).not.toContain('company-groups');
     expect(page).not.toContain('company-checks');
     expect(page).not.toContain('fresha-alt__section');
+    expect(page).not.toContain('fresha-alt-final');
     expect(page).not.toContain('pricing-starter-offer');
     expect(page).not.toContain('<Faq4');
     expect(page).toContain('<PricingFaq');
