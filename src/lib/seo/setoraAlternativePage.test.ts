@@ -77,7 +77,7 @@ describe('Setora Alternative landing page', () => {
     expect(robots).not.toContain('Disallow: /setora');
     expect(read(prefix+'SetoraFit.astro')).toContain('/nearcut-alternative');
     expect(read('../../components/landingSwitcherReassurance.astro')).toContain('<a href="/setora-alternative">Setora</a>');
-    expect(read('../../components/contact16.astro')).toContain('<option value="setora">Setora</option>');
-    expect(read('../../pages/api/contact.ts')).toContain("'setora'");
+    expect(read('../../components/contact16.astro')).toContain('CURRENT_BOOKING_SYSTEMS');
+    expect(read('../../pages/api/contact.ts')).toContain('CURRENT_BOOKING_SYSTEM_VALUE_SET');
   });
 });

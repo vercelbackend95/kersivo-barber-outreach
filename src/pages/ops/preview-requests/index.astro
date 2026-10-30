@@ -7,9 +7,9 @@ import {
   OpsAccessDenied,
   OpsAccessUnconfigured,
 } from '@/components/ops/recommendations/OpsPageGates';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
-  FREE_PREVIEW_BOOKING_SYSTEMS,
   labelFor,
 } from '@/lib/freePreview/intake';
 import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
@@ -203,7 +203,7 @@ function filterHref(status: string | null, sort = query.sort) {
                         </ul>
                       </td>
                       <td>{labelFor(FREE_PREVIEW_BARBER_COUNTS, request.barberCount)}</td>
-                      <td>{labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, request.currentBookingSystem)}</td>
+                      <td>{currentBookingSystemLabel(request.currentBookingSystem)}</td>
                       <td>
                         <span class={`ops-pr__status ops-pr__status--${request.status.toLowerCase()}`}>
                           {PREVIEW_STATUS_LABELS[request.status]}

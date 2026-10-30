@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CURRENT_BOOKING_SYSTEMS } from '@/lib/forms/currentBookingSystems';
 
 /** Select options (spec §4). Values are stored; labels are shown. */
 export const FREE_PREVIEW_BARBER_COUNTS = [
@@ -8,16 +9,8 @@ export const FREE_PREVIEW_BARBER_COUNTS = [
   { value: '7+', label: '7+' },
 ] as const;
 
-export const FREE_PREVIEW_BOOKING_SYSTEMS = [
-  { value: 'booksy', label: 'Booksy' },
-  { value: 'fresha', label: 'Fresha' },
-  { value: 'treatwell', label: 'Treatwell' },
-  { value: 'nearcut', label: 'Nearcut' },
-  { value: 'setora', label: 'Setora' },
-  { value: 'square', label: 'Square' },
-  { value: 'other', label: 'Other' },
-  { value: 'none', label: 'None' },
-] as const;
+/** Same list as the site-wide contact form (`CURRENT_BOOKING_SYSTEMS`). */
+export const FREE_PREVIEW_BOOKING_SYSTEMS = CURRENT_BOOKING_SYSTEMS;
 
 export const FREE_PREVIEW_DOMAIN_OPTIONS = [
   { value: 'yes', label: 'Yes' },

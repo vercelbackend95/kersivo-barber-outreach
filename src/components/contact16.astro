@@ -1,4 +1,5 @@
 ---
+import { CURRENT_BOOKING_SYSTEMS } from '@/lib/forms/currentBookingSystems';
 import '../styles/components/contact16.css';
 
 interface Contact16Props {
@@ -89,13 +90,9 @@ const {
             <span class="contact16__field-label">Current booking system (optional)</span>
             <select name="currentStack">
               <option value="">Select your current system</option>
-              <option value="booksy">Booksy</option>
-              <option value="fresha">Fresha</option>
-              <option value="nearcut">Nearcut</option>
-              <option value="setora">Setora</option>
-              <option value="other-platform">Other booking platform</option>
-              <option value="mixed-manual">Manual bookings / mixed tools</option>
-              <option value="none">No booking system</option>
+              {CURRENT_BOOKING_SYSTEMS.map((option) => (
+                <option value={option.value}>{option.label}</option>
+              ))}
             </select>
           </label>
         </div>

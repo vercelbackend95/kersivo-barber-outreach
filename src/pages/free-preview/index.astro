@@ -1,13 +1,18 @@
 ---
 export const prerender = false;
 
+import { CreditCard, EyeOff, LayoutTemplate, CalendarCheck, PenLine, PhoneOff, Smartphone } from 'lucide-react';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
+import Accordion from '@/components/ui/Accordion.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FreePreviewForm from '@/components/freePreview/FreePreviewForm.astro';
+import FreePreviewVisual from '@/components/freePreview/FreePreviewVisual.astro';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   FREE_PREVIEW_BREADCRUMBS,
+  FREE_PREVIEW_FAQ_ITEMS,
   FREE_PREVIEW_PAGE,
   buildFreePreviewBreadcrumbJsonLd,
   buildFreePreviewFaqJsonLd,
@@ -21,6 +26,14 @@ import '@/styles/components/free-preview.css';
 if (!isFreePreviewFlowEnabled()) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
+
+const trustIcons = [CreditCard, PhoneOff, EyeOff] as const;
+const getIcons = [LayoutTemplate, CalendarCheck, Smartphone, PenLine] as const;
+const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
+  id: `free-preview-faq-${index + 1}`,
+  title: faq.question,
+  body: faq.answer,
+}));
 ---
 
 <LandingLayout
@@ -36,31 +49,64 @@ if (!isFreePreviewFlowEnabled()) {
 >
   <main class="free-preview">
     <section class="free-preview__hero" aria-labelledby="free-preview-title">
-      <div class="free-preview__shell">
-        <PageBreadcrumbs trail={FREE_PREVIEW_BREADCRUMBS} />
-        <h1 id="free-preview-title" class="free-preview__title">{FREE_PREVIEW_PAGE.h1}</h1>
-        <p class="free-preview__intro">{FREE_PREVIEW_PAGE.intro}</p>
-        <ul class="free-preview__trust" aria-label="What to expect">
-          {FREE_PREVIEW_PAGE.trustLine.map((item) => <li>{item}</li>)}
-        </ul>
+      <div class="container free-preview__hero-grid">
+        <div class="free-preview__copy">
+          <PageBreadcrumbs trail={FREE_PREVIEW_BREADCRUMBS} />
+          <p class="free-preview__eyebrow">{FREE_PREVIEW_PAGE.eyebrow}</p>
+          <h1 id="free-preview-title" class="free-preview__title">{FREE_PREVIEW_PAGE.h1}</h1>
+          <p class="free-preview__intro">{FREE_PREVIEW_PAGE.intro}</p>
+          <ul class="free-preview__trust" aria-label="What to expect">
+            {FREE_PREVIEW_PAGE.trustLine.map((item, index) => {
+              const Icon = trustIcons[index] ?? CreditCard;
+              return (
+                <li>
+                  <span class="free-preview__trust-icon" aria-hidden="true">
+                    <Icon size={16} strokeWidth={1.8} />
+                  </span>
+                  {item}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div id="request" class="free-preview__form-col" aria-labelledby="free-preview-form-title">
+          <FreePreviewForm />
+        </div>
+
+        <div class="free-preview__visual">
+          <FreePreviewVisual />
+        </div>
       </div>
     </section>
 
     <section class="free-preview__section" aria-labelledby="free-preview-get-title">
-      <div class="free-preview__shell">
-        <h2 id="free-preview-get-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.whatYouGetHeading}</h2>
+      <div class="container">
+        <SectionHeader title={FREE_PREVIEW_PAGE.whatYouGetHeading} titleId="free-preview-get-title" />
         <ul class="free-preview__get">
-          {FREE_PREVIEW_PAGE.whatYouGet.map((item) => <li>{item}</li>)}
+          {FREE_PREVIEW_PAGE.whatYouGet.map((item, index) => {
+            const Icon = getIcons[index] ?? LayoutTemplate;
+            return (
+              <li class="free-preview__get-card">
+                <span class="free-preview__get-icon" aria-hidden="true">
+                  <Icon size={22} strokeWidth={1.6} />
+                </span>
+                <p>{item}</p>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>
 
     <section class="free-preview__section" aria-labelledby="free-preview-how-title">
-      <div class="free-preview__shell">
-        <h2 id="free-preview-how-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.howItWorksHeading}</h2>
+      <div class="container">
+        <SectionHeader title={FREE_PREVIEW_PAGE.howItWorksHeading} titleId="free-preview-how-title" />
         <ol class="free-preview__steps">
-          {FREE_PREVIEW_PAGE.steps.map((step) => (
-            <li class="free-preview__step">
+          {FREE_PREVIEW_PAGE.steps.map((step, index) => (
+            <li class:list={['free-preview__step', `free-preview__step--${step.owner === 'KERSIVO' ? 'kersivo' : 'you'}`]}>
+              <span class="free-preview__step-node" aria-hidden="true">{index + 1}</span>
+              <p class="free-preview__step-owner">{step.owner}</p>
               <h3 class="free-preview__step-title">{step.title}</h3>
               <p class="free-preview__step-body">{step.body}</p>
             </li>
@@ -69,29 +115,20 @@ if (!isFreePreviewFlowEnabled()) {
       </div>
     </section>
 
-    <section id="request" class="free-preview__form-section" aria-labelledby="free-preview-form-title">
-      <div class="free-preview__shell">
-        <h2 id="free-preview-form-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.formHeading}</h2>
-        <FreePreviewForm />
-      </div>
-    </section>
-
     <section id="faq" class="free-preview__section free-preview__faq" aria-labelledby="free-preview-faq-title">
-      <div class="free-preview__shell">
-        <h2 id="free-preview-faq-title" class="free-preview__section-title">{FREE_PREVIEW_PAGE.faqHeading}</h2>
-        <div class="free-preview__faq-list">
-          {FREE_PREVIEW_PAGE.faqs.map((faq) => (
-            <details class="free-preview__faq-item">
-              <summary>{faq.question}</summary>
-              <p>{faq.answer}</p>
-            </details>
-          ))}
-        </div>
+      <div class="container">
+        <SectionHeader title={FREE_PREVIEW_PAGE.faqHeading} titleId="free-preview-faq-title" />
+        <Accordion items={faqItems} />
         <p class="free-preview__starter">
-          <a href="/starter">{FREE_PREVIEW_PAGE.starterLine}</a>
+          {FREE_PREVIEW_PAGE.starterBefore} <a href="/starter">{FREE_PREVIEW_PAGE.starterLink}</a>
         </p>
       </div>
     </section>
+
+    <a class="free-preview__sticky-bar" href="#request" data-fp-sticky-bar>
+      {FREE_PREVIEW_PAGE.submitLabel}
+    </a>
+
     <Footer50
       showIntro={false}
       brandLine="Own your brand. Own your bookings."
@@ -102,3 +139,22 @@ if (!isFreePreviewFlowEnabled()) {
     />
   </main>
 </LandingLayout>
+
+<script>
+  function initFreePreviewPage() {
+    const bar = document.querySelector('[data-fp-sticky-bar]');
+    const form = document.querySelector('#request');
+    if (bar instanceof HTMLElement && form instanceof HTMLElement && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          bar.toggleAttribute('hidden', entry.isIntersecting);
+        },
+        { threshold: 0.2 },
+      );
+      io.observe(form);
+    }
+  }
+
+  initFreePreviewPage();
+  document.addEventListener('astro:page-load', initFreePreviewPage);
+</script>

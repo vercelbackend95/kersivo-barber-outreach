@@ -4,6 +4,21 @@ import { DEMO_SERVICES, demoBookingHref, formatDemoPriceGbp } from '@/lib/demo/s
 import { DEMO_BOOK_HREF, DEMO_CONTACT_HREF, DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
 import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
 
+interface Props {
+  /** Hero-only frame without the service strip; used at reduced scale on /free-preview. */
+  compact?: boolean;
+  imageLoading?: 'eager' | 'lazy';
+  imageFetchPriority?: 'high' | 'low' | 'auto';
+}
+
+const {
+  compact = false,
+  imageLoading,
+  imageFetchPriority,
+} = Astro.props;
+const loading = imageLoading ?? (compact ? 'lazy' : undefined);
+const fetchPriority = imageFetchPriority ?? (compact ? 'low' : 'high');
+
 const IMG = '/images/barbershop-websites';
 
 const serviceImages = {
@@ -61,11 +76,12 @@ const siteNav = [
       <picture class="bsw-site__photo">
         <source media="(max-width: 640px)" srcset={`${IMG}/site-hero-640.webp`} />
         <img
-          src={`${IMG}/site-hero-1100.webp`}
+          src={compact ? `${IMG}/site-hero-640.webp` : `${IMG}/site-hero-1100.webp`}
           alt="A CUTSTATE demo barber cutting a client's hair with clippers"
-          width="1100"
-          height="900"
-          fetchpriority="high"
+          width={compact ? 640 : 1100}
+          height={compact ? 524 : 900}
+          loading={loading}
+          fetchpriority={fetchPriority}
           decoding="async"
         />
       </picture>
@@ -79,6 +95,7 @@ const siteNav = [
       </div>
     </div>
 
+    {!compact && (
     <ul class="bsw-site__services" role="list">
       {serviceCards.map((card) => (
         <li>
@@ -104,5 +121,6 @@ const siteNav = [
         </li>
       ))}
     </ul>
+    )}
   </div>
 </figure>

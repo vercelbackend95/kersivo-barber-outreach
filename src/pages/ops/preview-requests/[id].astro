@@ -10,9 +10,9 @@ import {
 } from '@/components/ops/recommendations/OpsPageGates';
 import { OPS_PREVIEW_REQUESTS_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { previewPageUrl } from '@/lib/freePreview/emails';
+import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
-  FREE_PREVIEW_BOOKING_SYSTEMS,
   FREE_PREVIEW_DOMAIN_OPTIONS,
   labelFor,
 } from '@/lib/freePreview/intake';
@@ -64,7 +64,7 @@ const fields: Array<[string, string]> = request
       ['Shop', request.shopName],
       ['Town / city', request.townCity],
       ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, request.barberCount)],
-      ['Booking system', labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, request.currentBookingSystem)],
+      ['Booking system', currentBookingSystemLabel(request.currentBookingSystem)],
       ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, request.hasOwnDomain)],
       ['Notes', request.notes ?? '—'],
       ['Authorisation consent', formatDate(request.authorisationConsentAt)],
