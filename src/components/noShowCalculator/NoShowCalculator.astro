@@ -203,5 +203,6 @@ const f = numericField;
 
 <script>
   import { initNoShowCalculator } from '@/lib/noShowCalculator/initNoShowCalculator';
-  initNoShowCalculator();
+  import { onPageReady } from '@/lib/navigation/pageReady';
+  onPageReady(initNoShowCalculator);
 </script>

@@ -108,17 +108,19 @@ describe('homepage hero markup', () => {
   });
 });
 
+const FRESHA_HERO_END = '/* Fresha Alternative — isolated draft page styles.';
+const HOME_HERO_END = '/*\n * One text block for LCP';
+
 describe('homepage hero styles', () => {
   it('match the Fresha Alternative hero rule for rule, so both heroes share one visual language', () => {
-    const MOTION = '@media (prefers-reduced-motion: no-preference) {';
-    const freshaHeroRules = freshaCss.slice(freshaCss.indexOf('.fresha-alt-hero {'), freshaCss.indexOf(MOTION));
-    const homeRules = heroCss.slice(heroCss.indexOf('.home-hero {'), heroCss.indexOf(MOTION));
+    const freshaHeroRules = freshaCss.slice(freshaCss.indexOf('.fresha-alt-hero {'), freshaCss.indexOf(FRESHA_HERO_END));
+    const homeRules = heroCss.slice(heroCss.indexOf('.home-hero {'), heroCss.indexOf(HOME_HERO_END));
     // Homepage-only conversion link can add isolated CSS without changing shared Fresha hero rules.
     const sharedHomeRules = homeRules
       .replace(/\.home-hero__honesty \{[^}]*\}\s*/g, '')
       .replace(/\.home-hero__starter-path(?: [^{]+)? \{[^}]*\}\s*/g, '');
     expect(sharedHomeRules.trim()).toBe(
-      freshaHeroRules.replaceAll('fresha-alt-hero', 'home-hero').replaceAll('freshaAltHeroRise', 'homeHeroRise').trim(),
+      freshaHeroRules.replaceAll('fresha-alt-hero', 'home-hero').trim(),
     );
   });
 
@@ -134,24 +136,8 @@ describe('homepage hero styles', () => {
     );
   });
 
-  it('staggers the text entrance only when motion is allowed, and never per letter', () => {
-    const motion = heroCss.slice(heroCss.indexOf('@media (prefers-reduced-motion: no-preference) {'));
-    expect(motion).toMatch(/animation: homeHeroRise 720ms cubic-bezier\(0\.18, 0\.82, 0\.2, 1\) both;/);
-    const delays = [...motion.matchAll(/\.home-hero__(\w+) \{\s*animation-delay: (\d+)ms;/g)].map((m) => `${m[1]}:${m[2]}`);
-    expect(delays).toEqual(['title:70', 'lead:130', 'actions:190', 'meta:240']);
-    expect(motion).toMatch(/\.home-hero__eyebrow,\s*\.home-hero__lead,\s*\.home-hero__actions,\s*\.home-hero__meta \{\s*animation: homeHeroRise /);
-    const outside = heroCss.slice(0, heroCss.indexOf('@media (prefers-reduced-motion: no-preference) {'));
-    expect(outside).not.toMatch(/animation|@keyframes|(?<!text-)transform/);
-    expect(heroCss).not.toMatch(/title-line[^{]*\{[^}]*animation|char|letter-\d/);
-  });
-
-  it('keeps the H1 fully visible from first paint so it can be the LCP element', () => {
-    const titleAnimations = [...heroCss.matchAll(/\.home-hero__title\s*(?:,[^{]*)?\{[^}]*animation(?:-name)?: (\w+)/g)].map((m) => m[1]);
-    expect(titleAnimations).toEqual(['homeHeroTitleRise']);
-    expect(heroCss).not.toMatch(/(?:^|[\s,])\.home-hero__title\s*,/m);
-    const keyframes = heroCss.match(/@keyframes homeHeroTitleRise \{[\s\S]*?\n {2}\}/)?.[0] ?? '';
-    expect(keyframes).toMatch(/from \{\s*transform: translateY\(14px\);\s*\}\s*to \{\s*transform: translateY\(0\);\s*\}/);
-    expect(keyframes).not.toContain('opacity');
+  it('paints the first viewport immediately: no entrance animation on any hero text', () => {
+    expect(heroCss).not.toMatch(/animation|@keyframes/);
     expect(heroCss.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/\.home-hero__title[^-{]*\{[^}]*(?:opacity|visibility)/);
   });
 

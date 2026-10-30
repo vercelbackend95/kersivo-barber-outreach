@@ -167,7 +167,7 @@
   align-self: center;
   font-family: var(--font-body);
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   border-radius: var(--radius-full);
@@ -256,7 +256,7 @@
   justify-content: center;
   font-family: var(--font-body);
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
@@ -324,7 +324,7 @@
   flex-shrink: 0;
   margin-top: 0.05rem;
   font-size: 0.6rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--success);
   background: color-mix(in srgb, var(--success) 14%, transparent);
   border-radius: var(--radius-full);

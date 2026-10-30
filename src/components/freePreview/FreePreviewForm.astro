@@ -209,6 +209,7 @@ const linkFields = [
 <script>
   import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
   import { trackConsentedEvent } from '@/lib/consent/events';
+  import { onPageReady } from '@/lib/navigation/pageReady';
 
   const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
 
@@ -335,5 +336,7 @@ const linkFields = [
     });
   }
 
-  document.querySelectorAll<HTMLElement>('[data-free-preview]').forEach(initFreePreviewForm);
+  onPageReady(() => {
+    document.querySelectorAll<HTMLElement>('[data-free-preview]').forEach(initFreePreviewForm);
+  });
 </script>

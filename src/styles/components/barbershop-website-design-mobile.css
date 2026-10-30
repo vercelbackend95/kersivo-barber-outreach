@@ -59,7 +59,7 @@
   max-width: 16ch;
   margin: 0;
   font-size: clamp(2rem, 4.2vw, 3.6rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.045em;
   text-wrap: balance;
@@ -341,7 +341,7 @@
 .bwm-phone__service-name {
   font-family: var(--bwm-display);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.1;
   text-transform: uppercase;
@@ -403,7 +403,7 @@
 .bwm-principle__title {
   margin: 0;
   font-size: clamp(1.125rem, 1.5vw, 1.3rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
@@ -436,7 +436,7 @@
   min-height: 2.75rem;
   color: var(--fg);
   font-size: var(--text-sm);
-  font-weight: 650;
+  font-weight: 600;
   text-decoration: underline;
   text-decoration-color: var(--accent);
   text-decoration-thickness: 2px;

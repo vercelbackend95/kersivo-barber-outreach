@@ -42,6 +42,10 @@ export function applyMarketingNavCurrent(root: HTMLElement, location: Pick<Locat
     const prefixCurrent = prefixes.some((prefix) => matchesPrefix(pathname, prefix));
     control.toggleAttribute('data-current', childCurrent || prefixCurrent);
   });
+  root.querySelectorAll<HTMLElement>('[data-mnav-self-hide]').forEach((cta) => {
+    const target = new URL(cta.getAttribute('href') ?? '', 'https://kersivo.co.uk');
+    cta.hidden = !target.hash && normalizePath(target.pathname) === pathname;
+  });
 }
 
 function isFocusable(el: HTMLElement): boolean {
@@ -369,6 +373,15 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     delete root.dataset.mnavBound;
   };
 
+  // Close menus when the click lands, not when the next page arrives.
+  doc.addEventListener(
+    'astro:before-preparation',
+    () => {
+      closePanel();
+      closeHub();
+    },
+    { signal },
+  );
   doc.addEventListener('astro:before-swap', cleanup, { once: true, signal });
   root.dataset.mnavBound = 'true';
   cleanups.set(root, cleanup);

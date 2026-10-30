@@ -58,7 +58,7 @@
   color: var(--fg);
   font-family: var(--font-body);
   font-size: clamp(1.75rem, 6.8vw, 2.55rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.04em;
   text-wrap: balance;
@@ -129,7 +129,7 @@
 .bob-ep-source__name {
   color: var(--fg);
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
@@ -190,7 +190,7 @@
   background: #2a62f0;
   color: #fff;
   font-size: 0.56rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   box-shadow: 0 6px 16px rgb(0 0 0 / 0.35);
@@ -204,7 +204,7 @@
   z-index: 2;
   color: #fff;
   font-size: clamp(0.72rem, 2.6vw, 0.88rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
   text-shadow: 0 1px 14px rgb(0 0 0 / 0.7);
@@ -281,7 +281,7 @@
 .bob-ep-ig__name {
   color: #fff;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
   white-space: nowrap;
@@ -309,7 +309,7 @@
   background: #fff;
   color: #111;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1;
   box-shadow: 0 6px 14px rgb(0 0 0 / 0.35);

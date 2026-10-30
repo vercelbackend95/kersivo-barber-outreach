@@ -196,7 +196,7 @@ describe('/barbershop-website-design — Section 07 design FAQ and final call to
   it('sets the closing heading and lead in the /starter hero type scale without importing its stylesheet', () => {
     expect(closeSection).toContain('See What Your KERSIVO');
     expect(closeSection).toContain('Website Includes.');
-    expect(styles).toMatch(/\.bwc__heading \{[^}]*font-size: clamp\(2\.85rem, 5\.25vw, 4\.4rem\);[^}]*font-weight: 650;[^}]*line-height: 0\.9;[^}]*letter-spacing: -0\.062em;/);
+    expect(styles).toMatch(/\.bwc__heading \{[^}]*font-size: clamp\(2\.85rem, 5\.25vw, 4\.4rem\);[^}]*font-weight: 600;[^}]*line-height: 0\.9;[^}]*letter-spacing: -0\.062em;/);
     expect(styles).toMatch(/\.bwc__line \{[^}]*color: #d4d4d7;/);
     expect(styles).toMatch(/\.bwc__line--primary \{[^}]*color: #fff;/);
     expect(styles).toMatch(/\.bwc__lede \{[^}]*max-width: 46ch;[^}]*color: #9d9d9f;[^}]*font-size: clamp\(0\.95rem, 1\.1vw, 1\.05rem\);[^}]*line-height: 1\.6;/);

@@ -154,6 +154,7 @@ export default function DemoActionLock({ variant = 'generic' }: DemoActionLockPr
                 <a
                   className="admin-demo-lock__create"
                   href={OWNER_LAUNCH_HREF}
+                  // Full load: leaves the demo admin for the /admin/launch checkout flow.
                   data-astro-reload=""
                   onClick={onCreateClick}
                 >

@@ -365,13 +365,11 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(cssRule('.bob-screen')).toContain("font-family: 'BOB Cutstate Body'");
   });
 
-  it('keeps focus visible, CTAs touch-sized and motion behind reduced-motion', () => {
+  it('keeps focus visible, CTAs touch-sized and the hero free of entrance animation', () => {
     expect(heroCss).toMatch(/\n\.bob-hero__action:focus-visible \{\s*outline: 2px solid var\(--focus\);/);
     expect(heroCss).toMatch(/\n\.bob-device__live:focus-visible \{\s*outline: 2px solid var\(--focus\);/);
     expect(cssRule('.bob-hero__action')).toContain('min-height: 3rem;');
-    const reducedStart = heroCss.indexOf('@media (prefers-reduced-motion');
-    expect(reducedStart).toBeGreaterThan(-1);
-    expect(heroCss.slice(0, reducedStart)).not.toMatch(/animation:/);
+    expect(heroCss).not.toMatch(/animation:|@keyframes/);
   });
 
   it('uses a WebPage node with matching three-level BreadcrumbList and existing entity identifiers', () => {

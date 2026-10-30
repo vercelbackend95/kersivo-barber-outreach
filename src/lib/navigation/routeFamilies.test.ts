@@ -73,6 +73,16 @@ describe('route families', () => {
     expect(isSameRouteFamily('/', '/insights')).toBe(true);
   });
 
+  it('covers every top-level page built on LandingLayout', () => {
+    const pages = import.meta.glob('../../pages/**/*.astro', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+    const landing = Object.entries(pages)
+      .filter(([, source]) => source.includes("from '@/layouts/LandingLayout.astro'"))
+      .map(([file]) => file.replace('../../pages', '').replace(/(\/index)?\.astro$/, '') || '/')
+      .filter((path) => !path.includes('[') && !path.startsWith('/design-preview'));
+    expect(landing).toContain('/free-preview');
+    for (const path of landing) expect(getRouteFamily(path), path).toBe('marketing');
+  });
+
   it('classifies live tenant storefront routes as tenant', () => {
     expect(isLiveTenantShopPath('/shop/live-shop-id')).toBe(true);
     expect(isLiveTenantShopPath('/shop/live-shop-id/product-id')).toBe(true);

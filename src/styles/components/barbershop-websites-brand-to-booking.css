@@ -525,7 +525,7 @@
 
 .bsw-b2b-carried__value {
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -564,7 +564,7 @@
   gap: 0.1rem 0.5rem;
   margin-bottom: 0.15rem;
   font-size: var(--text-sm);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -658,7 +658,7 @@
   color: var(--fg);
   font-family: var(--font-body);
   font-size: clamp(1.1rem, 1.4vw, 1.25rem);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.025em;
 }

@@ -29,6 +29,9 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/timely-alternative',
   '/treatwell-alternative',
   '/setora-alternative',
+  '/phorest-alternative',
+  '/squire-alternative',
+  '/square-appointments-alternative',
   '/barber-software-cost-calculator',
   '/barbershop-cancellation-policy-template',
   '/barbershop-no-show-calculator',
@@ -39,6 +42,9 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barbershop-websites',
   '/barbershop-website-design',
   '/barbershop-online-booking',
+  '/free-preview',
+  '/dpa',
+  '/seo-growth',
 ];
 
 export function getRouteFamily(pathname: string): RouteFamily {

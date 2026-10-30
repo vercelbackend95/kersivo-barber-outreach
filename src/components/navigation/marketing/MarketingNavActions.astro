@@ -9,8 +9,10 @@ interface Props {
 }
 
 const { primary, secondary, class: className } = Astro.props;
-const showPrimary = !isMarketingNavSelfHref(primary.href, Astro.url.pathname);
+// Rendered even on its own page: the header persists across client-side navigation, so the controller toggles [hidden].
+const isSelf = isMarketingNavSelfHref(primary.href, Astro.url.pathname);
 const family = getRouteFamily(Astro.url.pathname);
+// A full reload is only needed when the target is outside this family (demo, admin, checkout): different layout and head.
 const leavesFamily = (href: string | null) => (href ? getRouteFamily(new URL(href, Astro.url).pathname) !== family : false);
 // The price suffix sits in its own span so narrow desktop bars can drop it (see marketing-navbar.css).
 const priceSuffix = primary.label.match(/\s*—\s*£\d+\/month$/)?.[0] ?? '';
@@ -26,17 +28,19 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
     ) : null
   }
   {
-    showPrimary && primary.href ? (
+    primary.href ? (
       <a
         class="btn btn--primary btn--sm mnav-btn mnav-btn--primary"
         href={primary.href}
+        hidden={isSelf}
+        data-mnav-self-hide
         data-track={primary.track}
         data-track-placement={primary.track === 'preview_cta_click' ? 'navbar' : undefined}
         data-astro-reload={leavesFamily(primary.href) ? '' : undefined}
       >
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </a>
-    ) : showPrimary ? (
+    ) : !isSelf ? (
       <button type="button" class="btn btn--primary btn--sm mnav-btn mnav-btn--primary">
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </button>

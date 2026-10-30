@@ -285,3 +285,12 @@ html.facebook-cover-page body {
   width: var(--hero227-mock-max-w) !important;
   margin: 0 auto;
 }
+
+/* Only this internal noindex cover page uses Antonio, so the face lives here rather than in the site fonts. */
+@font-face {
+  font-family: 'Antonio';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('/fonts/antonio-latin-700-normal.woff2') format('woff2');
+}

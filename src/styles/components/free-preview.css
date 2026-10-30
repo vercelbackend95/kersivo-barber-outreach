@@ -1,8 +1,6 @@
 /* /free-preview intake page (docs/free-preview-spec.md §5). */
 
 .free-preview {
-  --fp-reveal-duration: 300ms;
-  --fp-reveal-offset: 8px;
   --fp-input-bg: var(--surface-2);
   --fp-card-pad: 1.25rem;
   background: var(--bg);
@@ -217,7 +215,7 @@
 .fp-visual__booking-name {
   color: var(--fg);
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .fp-visual__booking-meta {
@@ -329,7 +327,7 @@
   gap: 0.5rem;
   color: var(--fg);
   font-size: var(--text-sm);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -576,7 +574,7 @@
   margin: 0 0 0.45rem;
   color: var(--fg);
   font-size: var(--text-sm);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .free-preview-confirmation__next {
@@ -684,7 +682,7 @@
   color: var(--fg);
   font-family: var(--font-body);
   font-size: 1.05rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -808,49 +806,7 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .free-preview__copy,
-  .fp-card,
-  .free-preview__visual,
-  .free-preview__get,
-  .free-preview__steps,
-  .free-preview__faq .accordion {
-    animation: fp-reveal var(--fp-reveal-duration) var(--motion-ease-out) both;
-  }
-
-  .fp-card {
-    animation-delay: 60ms;
-  }
-
-  .free-preview__visual {
-    animation-delay: 90ms;
-  }
-}
-
-@keyframes fp-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(var(--fp-reveal-offset));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .free-preview__copy,
-  .fp-card,
-  .free-preview__visual,
-  .free-preview__get,
-  .free-preview__steps,
-  .free-preview__faq .accordion,
-  .fp-visual__site,
-  .fp-visual__booking {
-    animation: none;
-    transform: none;
-  }
-
   .free-preview-form input,
   .free-preview-form select,
   .free-preview-form textarea {

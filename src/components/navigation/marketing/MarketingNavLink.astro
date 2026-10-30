@@ -13,6 +13,7 @@ const pathname = Astro.url.pathname;
 const match = marketingNavItemMatch(item);
 const current = isMarketingNavItemCurrent(item, pathname);
 const target = new URL(item.href, Astro.url);
+// Full reload only when leaving this family (demo, admin): the target has a different layout and head.
 const leavesFamily =
   !item.external && target.origin === Astro.url.origin && getRouteFamily(target.pathname) !== getRouteFamily(pathname);
 ---

@@ -126,7 +126,7 @@
   max-width: 22ch;
   font-family: var(--font-body);
   font-size: clamp(1.3rem, 1.05rem + 0.75vw, 1.6rem);
-  font-weight: 620;
+  font-weight: 600;
   line-height: 1.18;
   letter-spacing: -0.026em;
   text-transform: none;

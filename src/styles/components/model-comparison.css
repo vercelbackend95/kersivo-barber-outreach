@@ -97,7 +97,7 @@
 .model-panel__summary dd {
   margin: 0;
   font-size: clamp(0.98rem, 0.93rem + 0.2vw, 1.075rem);
-  font-weight: 580;
+  font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.012em;
   color: var(--fg);
@@ -137,7 +137,7 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: clamp(1.6rem, 1.3rem + 0.9vw, 2rem);
-  font-weight: 640;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.035em;
   color: var(--fg);
@@ -164,7 +164,7 @@
   margin: 0 0 0.6rem;
   font-family: var(--font-body);
   font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem);
-  font-weight: 560;
+  font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.012em;
   text-transform: none;
@@ -266,7 +266,7 @@
   margin: 0;
   max-width: 52ch;
   font-size: clamp(1.125rem, 1rem + 0.45vw, 1.35rem);
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.55;
   letter-spacing: -0.012em;
   color: color-mix(in srgb, var(--fg) 86%, var(--muted));
@@ -284,7 +284,7 @@
   display: inline-block;
   margin-left: 0.2rem;
   padding-block: 0.5rem;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--fg);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--fg) 50%, transparent);

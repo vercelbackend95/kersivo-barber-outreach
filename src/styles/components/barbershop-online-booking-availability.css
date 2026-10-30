@@ -70,7 +70,7 @@
   color: var(--fg);
   font-family: var(--font-body);
   font-size: clamp(1.85rem, 7.4vw, 2.6rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.06;
   letter-spacing: -0.04em;
   text-wrap: balance;

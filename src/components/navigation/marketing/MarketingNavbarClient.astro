@@ -1,5 +1,5 @@
 <script>
-  import { initMarketingNav } from '@/lib/nav/marketingNavController';
+  import { applyMarketingNavCurrent, initMarketingNav } from '@/lib/nav/marketingNavController';
 
   const boot = () => {
     const root = document.querySelector('[data-mnav]');
@@ -8,4 +8,9 @@
 
   boot();
   document.addEventListener('astro:page-load', boot);
+  // Before the new page is painted, so the persisted header never shows the previous page's state.
+  document.addEventListener('astro:after-swap', () => {
+    const root = document.querySelector('[data-mnav]');
+    if (root instanceof HTMLElement) applyMarketingNavCurrent(root, location);
+  });
 </script>

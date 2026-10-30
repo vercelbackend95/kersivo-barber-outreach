@@ -61,6 +61,7 @@ export default function AdminLaunchCtaButton({
         href={href}
         aria-label={ariaLabel}
         data-track={dataTrack}
+        // Full load: /admin/launch is a checkout flow that must get fresh server state.
         data-astro-reload=""
         onClick={onClick}
       >

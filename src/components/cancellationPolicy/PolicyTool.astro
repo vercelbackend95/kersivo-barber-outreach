@@ -258,6 +258,7 @@ const methods = [
 
 <script>
   import { initPolicyTool } from '@/lib/cancellationPolicy/initPolicyTool';
+  import { onPageReady } from '@/lib/navigation/pageReady';
 
-  initPolicyTool();
+  onPageReady(initPolicyTool);
 </script>
