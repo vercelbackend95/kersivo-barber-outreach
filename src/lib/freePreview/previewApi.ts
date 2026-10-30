@@ -28,5 +28,7 @@ export function previewApiGuard(request: Request): Response | null {
 export const PREVIEW_CHANGES_RATE = { action: 'free_preview_changes', limit: 10, windowMs: 60 * 60 * 1000 };
 export const PREVIEW_CHECKOUT_RATE = { action: 'free_preview_checkout', limit: 10, windowMs: 15 * 60 * 1000 };
 export const PREVIEW_EVENT_RATE = { action: 'free_preview_event', limit: 30, windowMs: 60 * 60 * 1000 };
+/** Typeahead after ~150ms debounce — generous for an owner, useless for guessing tokens. */
+export const PREVIEW_DOMAIN_SEARCH_RATE = { action: 'free_preview_domain_search', limit: 40, windowMs: 10 * 60 * 1000 };
 export const PREVIEW_NO_THANKS_RATE = { action: 'free_preview_no_thanks', limit: 30, windowMs: 60 * 60 * 1000 };
 export const PREVIEW_PAGE_RATE = { action: 'free_preview_view', limit: 120, windowMs: 60 * 60 * 1000 };

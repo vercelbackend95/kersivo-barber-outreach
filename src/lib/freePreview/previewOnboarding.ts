@@ -13,6 +13,7 @@ export type PreviewOnboardingPrefill = {
   domainMode: 'EXISTING' | 'KERSIVO_REGISTER' | null;
   existingDomain: string;
   preferredDomain1: string;
+  domainRegistrationAuthorised: boolean;
   migrationRequested: boolean | null;
   currentBookingSystemLabel: string | null;
   submitted: boolean;
@@ -82,6 +83,7 @@ export async function loadPreviewOnboarding(shopId: string): Promise<PreviewOnbo
     domainMode,
     existingDomain: knownDomain,
     preferredDomain1: onboarding?.preferredDomain1 || '',
+    domainRegistrationAuthorised: onboarding?.domainRegistrationAuthorised === true,
     migrationRequested: onboarding?.migrationRequested ?? null,
     currentBookingSystemLabel: system && system !== 'none' ? currentBookingSystemLabel(system) : null,
     submitted: onboarding?.status === 'SUBMITTED' || onboarding?.status === 'READY_FOR_BUILD',

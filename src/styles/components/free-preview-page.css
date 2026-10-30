@@ -142,8 +142,9 @@
 .fp-dialog {
   /* The global reset zeroes margins; restore the native centring of a modal dialog. */
   margin: auto;
-  width: min(560px, calc(100vw - 32px));
+  width: min(640px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
+  overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 14px;
   padding: 0;

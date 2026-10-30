@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const resolvePreviewRequestByToken = vi.fn();
 const findShop = vi.fn();
+const upsertOnboarding = vi.fn(async () => ({}));
 const createEvent = vi.fn(async () => ({}));
 const findSaas = vi.fn(async () => null);
 const findFirstSaas = vi.fn(async () => null);
@@ -16,6 +17,7 @@ vi.mock('./previewAccess', async (importOriginal) => ({
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     shopSettings: { findUnique: (...a: unknown[]) => findShop(...a) },
+    clientOnboarding: { upsert: (...a: unknown[]) => upsertOnboarding(...(a as [])) },
     previewRequestEvent: { create: () => createEvent() },
     saasSubscription: {
       findUnique: () => findSaas(),
@@ -50,6 +52,9 @@ const ready = {
   email: 'Sam@Example.com',
   shopName: 'Sharp Cuts',
   townCity: 'Leeds',
+  instagramUrl: null,
+  websiteUrl: null,
+  hasOwnDomain: 'no',
   barberCount: '2-3',
   currentBookingSystem: 'booksy',
   draftShopId: 'shop_draft',
@@ -59,13 +64,19 @@ const ready = {
   changesRequestedAt: null,
 };
 
-function start() {
+function start(
+  overrides: Partial<Parameters<typeof startPreviewLaunchCheckout>[0]> = {},
+) {
   return startPreviewLaunchCheckout({
     request: new Request('https://kersivo.co.uk/api/free-preview/x/checkout', { method: 'POST' }),
     token: TOKEN,
     name: 'Sam Barber',
     checkoutAttemptId: ATTEMPT,
+    domainMode: 'KERSIVO_REGISTER',
+    domain: 'sharpcuts.co.uk',
+    domainRegistrationAuthorised: true,
     now: NOW,
+    ...overrides,
   });
 }
 
@@ -96,12 +107,51 @@ describe('startPreviewLaunchCheckout', () => {
       checkoutAttemptId: ATTEMPT,
       shopId: 'shop_draft',
       previewRequestId: 'req_1',
+      domainMode: 'KERSIVO_REGISTER',
+      preferredDomain: 'sharpcuts.co.uk',
     });
+    expect(upsertOnboarding).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { shopId: 'shop_draft' },
+        create: expect.objectContaining({
+          preferredDomain1: 'sharpcuts.co.uk',
+          preferredDomain2: null,
+          preferredDomain3: null,
+          domainRegistrationAuthorised: true,
+        }),
+      }),
+    );
     expect(createSaas).toHaveBeenCalledWith({
       data: expect.objectContaining({ shopId: 'shop_draft', customerEmail: 'sam@example.com', status: 'PENDING' }),
     });
     expect(recordTermsAcceptance).toHaveBeenCalledTimes(1);
     expect(createEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses checkout without a domain decision or register authorisation and never calls Stripe', async () => {
+    expect(
+      (await start({ domain: '', domainRegistrationAuthorised: true })).status,
+    ).toBe(400);
+    expect(
+      (
+        await start({
+          domainMode: 'KERSIVO_REGISTER',
+          domain: 'sharpcuts.co.uk',
+          domainRegistrationAuthorised: false,
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await start({
+          domainMode: 'KERSIVO_REGISTER',
+          domain: 'sharpcuts.uk.com',
+          domainRegistrationAuthorised: true,
+        })
+      ).status,
+    ).toBe(400);
+    expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    expect(upsertOnboarding).not.toHaveBeenCalled();
   });
 
   it('returns a uniform 404 for unknown tokens and never calls Stripe', async () => {
