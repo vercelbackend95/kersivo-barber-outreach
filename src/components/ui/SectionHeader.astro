@@ -1,0 +1,26 @@
+---
+/**
+ * Shared section heading: eyebrow pill, heading, optional lead.
+ * Spacing is eyebrow -> 16px -> heading -> 16px -> lead -> 48px -> content.
+ * Pages are not migrated in Batch 0.
+ */
+import '@/styles/components/section-header.css';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  titleId?: string;
+  as?: 'h1' | 'h2';
+  class?: string;
+}
+
+const { eyebrow, title, lead, titleId, as = 'h2', class: className } = Astro.props;
+const Heading = as;
+---
+
+<header class:list={['section-header', className]}>
+  {eyebrow ? <p class="section-header__eyebrow">{eyebrow}</p> : null}
+  <Heading id={titleId} class="section-header__title">{title}</Heading>
+  {lead ? <p class="section-header__lead">{lead}</p> : null}
+</header>

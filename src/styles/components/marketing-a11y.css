@@ -22,19 +22,26 @@
   transform: none;
 }
 
-/* Red primary buttons: dark text on #d72638 was 3.91:1. White text is 4.97:1;
-   the hover red is darker (6.43:1) instead of the lighter #ff2e45. */
+/* Primary buttons use white on the brand red (4.97:1). The shared button
+   tokens already do this; these rules keep marketing pages on that pair
+   if a later stylesheet resets the fill. */
 html[data-app='marketing'] .btn--primary {
-  color: #fff;
+  color: var(--btn-primary-fg);
 }
 
 html[data-app='marketing'] .btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
-  background: #b91c2c;
-  border-color: #b91c2c;
-  color: #fff;
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
 }
 
-/* Plain text links: #d72638 is 3.91:1 on the page background; --accent-text is 4.90:1.
+html[data-app='marketing'] .btn--primary:active:not(:disabled):not([aria-disabled='true']) {
+  background: var(--btn-primary-pressed);
+  border-color: var(--btn-primary-pressed);
+  color: var(--btn-primary-fg);
+}
+
+/* Plain text links use --accent-text so small red type clears 4.5:1 on the page background.
    Links inside running text are underlined so they don't rely on colour alone. */
 html[data-app='marketing'] a:not([class]) {
   color: var(--accent-text);
@@ -50,10 +57,10 @@ html[data-app='marketing'] .landing-post-purchase-steps__eyebrow {
   color: var(--accent-text);
 }
 
-/* On the dark-red tinted pill (#25171e–#29171e) --accent-text is only 4.3:1; #e8646f is 5.25:1. */
+/* On the dark-red tinted pill, --accent-text is only 4.3:1; --color-brand-on-tint is 5.25:1. */
 html[data-app='marketing'] .landing-switcher-reassurance__connector-badge,
 html[data-app='marketing'] .landing-switcher-reassurance__panel-tag--after {
-  color: #e8646f;
+  color: var(--color-brand-on-tint);
 }
 
 /* Cookie banner policy link: 24px minimum target size. */

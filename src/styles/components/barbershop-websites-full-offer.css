@@ -174,7 +174,7 @@
   text-transform: uppercase;
 }
 
-.bsw-offer-panel__price {
+.bsw-offer-panel__price.price {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -233,20 +233,15 @@
 
 .bsw-offer-panel__cta {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  gap: var(--btn-gap);
   width: 100%;
-  min-height: 3.25rem;
+  min-height: var(--btn-height-lg);
   margin-top: 1.6rem;
-  padding: 0.9rem 1.25rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-12);
-  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
-  color: var(--fg);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.25;
+  border-radius: var(--btn-radius);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-font-md);
+  font-weight: var(--btn-weight);
   text-align: center;
   text-decoration: none;
 }
@@ -256,7 +251,8 @@
 }
 
 .bsw-offer-panel__cta:hover {
-  background: color-mix(in srgb, var(--accent) 76%, var(--bg));
+  background: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
 }
 
 /* Essential payment conditions: readable, never folded away. */
@@ -422,9 +418,7 @@
   }
 
   .bsw-offer-panel__cta {
-    gap: 0.45rem;
-    padding-inline: 0.75rem;
-    font-size: 0.95rem;
+    gap: var(--btn-gap);
   }
 }
 

@@ -196,7 +196,7 @@
 
 .landing-post-purchase-steps__cta {
   justify-self: stretch;
-  min-height: 44px;
+  min-height: var(--btn-height-lg);
   width: 100%;
   text-align: center;
 }

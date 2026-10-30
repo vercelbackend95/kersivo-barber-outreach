@@ -341,7 +341,7 @@
 }
 
 .landing-switcher-reassurance__cta {
-  min-height: 44px;
+  min-height: var(--btn-height-lg);
   width: 100%;
   text-align: center;
 }

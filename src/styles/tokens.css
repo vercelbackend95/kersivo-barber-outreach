@@ -11,13 +11,39 @@
   --surface-3: #1d2430;
   --surface: var(--surface-1);
 
-  /* Brand colors */
-  --accent: #d72638;
+  /* Brand colors.
+     --color-brand is the only KERSIVO red fill. White text on it is 4.97:1.
+     Hover and pressed are darker so white text stays above 4.5:1.
+     --accent-hover stays lighter for text-link hovers (a light fill fails with white type).
+     --accent-text is the small-text red on dark surfaces (4.90:1). */
+  --color-brand: #d72638;
+  --color-brand-hover: #b91c2c;
+  --color-brand-pressed: #8e1624;
+  --color-on-brand: #ffffff;
+  --accent: var(--color-brand);
   --accent-contrast: #0b0d10;
   --accent-hover: #ff2e45;
-  /* Accent for small text on dark surfaces; meets WCAG AA (4.5:1) on --bg and footer. */
   --accent-text: #dc4e5b;
+  /* Small red label on a dark-red tinted pill; --accent-text is only 4.3:1 there. */
+  --color-brand-on-tint: #e8646f;
   --focus: #6366f1;
+
+  /* Button metrics. sm = navbar, md = default, lg = hero and section CTAs. */
+  --btn-radius: var(--radius-lg);
+  --btn-gap: 0.5rem;
+  --btn-weight: 600;
+  --btn-height-sm: 2.75rem;
+  --btn-height-md: 3rem;
+  --btn-height-lg: 3.5rem;
+  --btn-font-sm: var(--text-sm);
+  --btn-font-md: var(--text-md);
+  --btn-pad-x-sm: 0.9rem;
+  --btn-pad-x-md: 1.15rem;
+  --btn-pad-x-lg: 1.35rem;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-fg: var(--color-on-brand);
+  --btn-primary-hover: var(--color-brand-hover);
+  --btn-primary-pressed: var(--color-brand-pressed);
 
   /* Semantic colors */
   --success: #22c55e;
@@ -77,6 +103,8 @@
   --shadow-sm: 0 4px 10px rgb(0 0 0 / 0.24);
   --shadow-md: 0 10px 24px rgb(0 0 0 / 0.28);
   --shadow-lg: 0 18px 40px rgb(0 0 0 / 0.32);
+  --shadow-card: var(--shadow-md);
+  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--focus) 55%, transparent);
 
   /*
    * Admin premium surfaces — shared with .admin-bookings-ops--dash-hero and admin nav shell.
@@ -107,4 +135,5 @@
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
+  --space-2xl: 3rem;
 }

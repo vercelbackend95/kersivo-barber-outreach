@@ -2,6 +2,7 @@
 import { ArrowRight, Check } from 'lucide-react';
 import '@/styles/components/barbershop-websites-full-offer.css';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { Price } from '@/components/ui/Price';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   FREE_PREVIEW_BILLING_CLAIM,
@@ -85,10 +86,13 @@ const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;
     <div class="bsw-offer__panel-wrap">
       <div class="bsw-offer-panel">
         <p class="bsw-offer-panel__plan">Full KERSIVO</p>
-        <p class="bsw-offer-panel__price">
-          <span class="bsw-offer-panel__amount">£{SAAS_MONTHLY_GBP}</span>
-          <span class="bsw-offer-panel__period">/month per location</span>
-        </p>
+        <Price
+          className="bsw-offer-panel__price"
+          amountClassName="bsw-offer-panel__amount"
+          amount={SAAS_MONTHLY_GBP}
+          qualifier="per location"
+          size="lg"
+        />
         <p class="bsw-offer-panel__scope">{PLAN_SCOPE_SHORT}</p>
 
         <ul class="bsw-offer-panel__facts" role="list">
@@ -101,12 +105,12 @@ const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;
         </ul>
 
         {isFreePreviewFlowEnabled() ? (
-          <FullPlanCta part="all" primaryClass="bsw-offer-panel__cta" placement={TRACK_PLACEMENT} class="bsw-offer-panel__free-preview">
+          <FullPlanCta part="all" primaryClass="btn btn--primary btn--lg bsw-offer-panel__cta" placement={TRACK_PLACEMENT} class="bsw-offer-panel__free-preview">
             <ArrowRight slot="icon" className="bsw-offer-panel__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
           </FullPlanCta>
         ) : (
         <a
-          class="bsw-offer-panel__cta"
+          class="btn btn--primary btn--lg bsw-offer-panel__cta"
           href={FULL_LAUNCH_HREF}
           data-track={TRACK_EVENT}
           data-track-placement={TRACK_PLACEMENT}

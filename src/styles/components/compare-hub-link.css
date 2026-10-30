@@ -13,7 +13,7 @@
   padding: 1.1rem 1.35rem;
   border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
   border-radius: var(--radius-16, 16px);
-  background: linear-gradient(135deg, rgb(255 23 23 / 0.07), transparent 55%), var(--surface-1, #11151b);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-brand) 7%, transparent), transparent 55%), var(--surface-1, #11151b);
 }
 
 .compare-hub-link__text {
@@ -30,7 +30,7 @@
   gap: 0.45rem;
   min-height: 44px;
   padding: 0.55rem 1rem;
-  border: 1px solid rgb(255 23 23 / 0.55);
+  border: 1px solid color-mix(in srgb, var(--color-brand) 55%, transparent);
   border-radius: var(--radius-full, 9999px);
   color: var(--fg);
   font-weight: 600;
@@ -40,8 +40,8 @@
 }
 
 .compare-hub-link__cta:hover {
-  background: rgb(255 23 23 / 0.12);
-  border-color: #ff1717;
+  background: color-mix(in srgb, var(--color-brand) 12%, transparent);
+  border-color: var(--color-brand);
 }
 
 .compare-hub-link__cta:focus-visible {

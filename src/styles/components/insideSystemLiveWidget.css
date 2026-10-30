@@ -22,7 +22,7 @@
   --status-confirmed: #22c55e;
   --status-pending: #eab308;
   --status-rescheduled: #a855f7;
-  --status-cancelled: #d72638;
+  --status-cancelled: var(--color-brand);
   --info: #38bdf8;
   --focus: #6366f1;
   --admin-premium-surface-bg: color-mix(in srgb, var(--surface-2) 76%, var(--surface));

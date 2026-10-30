@@ -19,7 +19,7 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
 <div class:list={['mnav-actions', className]}>
   {
     secondary.href ? (
-      <a class="mnav-btn mnav-btn--secondary" href={secondary.href} data-astro-reload={leavesFamily(secondary.href) ? '' : undefined}>
+      <a class="btn btn--outline btn--sm mnav-btn mnav-btn--secondary" href={secondary.href} data-astro-reload={leavesFamily(secondary.href) ? '' : undefined}>
         {secondary.label}
       </a>
     ) : null
@@ -27,7 +27,7 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
   {
     primary.href ? (
       <a
-        class="mnav-btn mnav-btn--primary"
+        class="btn btn--primary btn--sm mnav-btn mnav-btn--primary"
         href={primary.href}
         data-track={primary.track}
         data-track-placement={primary.track === 'preview_cta_click' ? 'navbar' : undefined}
@@ -36,7 +36,7 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </a>
     ) : (
-      <button type="button" class="mnav-btn mnav-btn--primary">
+      <button type="button" class="btn btn--primary btn--sm mnav-btn mnav-btn--primary">
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}
       </button>
     )

@@ -116,7 +116,7 @@ html[data-app='admin']::view-transition-new(root) {
   z-index: 6;
   height: 2px;
   pointer-events: none;
-  background: var(--route-accent, #ff1717);
+  background: var(--route-accent, var(--color-brand));
   transform: scaleX(0);
   transform-origin: left center;
   opacity: 0;

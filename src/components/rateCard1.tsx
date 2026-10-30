@@ -37,6 +37,7 @@ import {
   SUBSCRIBE_NOW_CTA_TRACK,
 } from "@/lib/freePreview/fullPlanCta";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
+import { Price } from "@/components/ui/Price";
 import { cn } from "@/lib/utils";
 import "@/styles/rateCard1.css";
 import "@/styles/components/full-plan-cta.css";
@@ -107,9 +108,7 @@ function RateCard1Offer({ freePreview = false }: RateCard1OfferProps) {
       <div className="rate-card1__offer-body">
         <div className="rate-card1__offer-decision" aria-label="Monthly subscription">
           <p className="rate-card1__plan-title">{layout.planLabel}</p>
-          <p className="rate-card1__price">
-            £{SAAS_MONTHLY_GBP} <span>/ month</span>
-          </p>
+          <Price amount={SAAS_MONTHLY_GBP} size="xl" className="rate-card1__price" />
           <p className="rate-card1__offer-value">{layout.planValueLine}</p>
           <ul className="rate-card1__offer-trust">
             {layout.trustPoints.map((point) => (
@@ -125,7 +124,7 @@ function RateCard1Offer({ freePreview = false }: RateCard1OfferProps) {
             <>
               <a
                 href={FREE_PREVIEW_CTA_HREF}
-                className="btn btn--primary rate-card1__cta"
+                className="btn btn--primary btn--md rate-card1__cta"
                 data-track={FREE_PREVIEW_CTA_TRACK}
                 data-track-placement="rate_card"
               >
@@ -143,7 +142,7 @@ function RateCard1Offer({ freePreview = false }: RateCard1OfferProps) {
             <>
               <a
                 href="/admin/launch"
-                className="btn btn--primary rate-card1__cta"
+                className="btn btn--primary btn--md rate-card1__cta"
                 data-track="saas_subscribe_click"
               >
                 {layout.ctaLabel}
@@ -265,9 +264,7 @@ function RateCard1Default({ className }: { className?: string }) {
               aria-label="Monthly subscription"
             >
               <p className="rate-card1__plan-title">Monthly subscription</p>
-              <p className="rate-card1__price">
-                £{SAAS_MONTHLY_GBP} <span>/ month</span>
-              </p>
+              <Price amount={SAAS_MONTHLY_GBP} size="xl" className="rate-card1__price" />
               <p className="rate-card1__plan-subtext">{copy.planSubtext}</p>
               <ul className="rate-card1__conditions">
                 {copy.ongoingCareBullets.map((condition) => (
@@ -276,7 +273,7 @@ function RateCard1Default({ className }: { className?: string }) {
               </ul>
               <a
                 href="/admin/launch"
-                className="btn btn--primary rate-card1__cta"
+                className="btn btn--primary btn--md rate-card1__cta"
                 data-track="saas_subscribe_click"
               >
                 {copy.ctaLabel}

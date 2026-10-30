@@ -216,13 +216,19 @@ html.mnav-locked body::before {
 }
 
 .mnav-btn--primary {
-  background: var(--accent);
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-radius: var(--btn-radius);
 }
 
 .mnav-btn--primary:hover {
-  background: var(--accent-hover);
-  color: #fff;
+  background: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
+}
+
+.mnav-btn--primary:active {
+  background: var(--btn-primary-pressed);
+  color: var(--btn-primary-fg);
 }
 
 /* ------------------------------ Shared link row ------------------------------ */
@@ -486,7 +492,7 @@ html.mnav-locked body::before {
     width: min(100% - 1rem, 80rem);
   }
 
-  .mnav__compact-cta {
+  .mnav__compact-cta.btn {
     padding-inline: 0.55rem;
     font-size: 0.78rem;
   }

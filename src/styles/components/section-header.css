@@ -1,0 +1,50 @@
+/* eyebrow -> 16px -> heading -> 16px -> lead -> 48px -> content */
+.section-header {
+  display: grid;
+  justify-items: start;
+  margin: 0 0 var(--space-2xl);
+}
+
+.section-header__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 0 0 var(--space-md);
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-1);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.section-header__title {
+  margin: 0;
+  color: var(--fg);
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 400;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.section-header__lead {
+  margin: var(--space-md) 0 0;
+  max-width: 65ch;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--line-body);
+  text-wrap: pretty;
+}
+
+.section-header:not(:has(.section-header__eyebrow)) .section-header__title {
+  margin-top: 0;
+}

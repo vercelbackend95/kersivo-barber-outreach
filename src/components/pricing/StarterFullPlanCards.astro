@@ -10,6 +10,7 @@ import {
   STARTER_FULL_PLAN_STARTER_CTA,
   STARTER_FULL_PLAN_STARTER_FEATURES,
 } from '@/lib/pricing/starterFullPlanCards';
+import { Price } from '@/components/ui/Price';
 import '@/styles/components/starter-full-plan-cards.css';
 
 interface Props {
@@ -23,18 +24,13 @@ const { placement } = Astro.props;
 <div class="starter-plan-grid">
   <article class="starter-plan-card starter-plan-card--active">
     <p class="starter-plan-card__label">KERSIVO STARTER</p>
-    <p class="starter-plan-card__price">
-      <span class="starter-plan-card__amount">£0</span>
-      <span class="starter-plan-card__billing">
-        <span class="starter-plan-card__period">/month</span>
-      </span>
-    </p>
+    <Price className="starter-plan-card__price" amount={0} size="md" />
     <ul>
       {STARTER_FULL_PLAN_STARTER_FEATURES.map((item) => <li>{item}</li>)}
     </ul>
     <a
       href={STARTER_FULL_PLAN_STARTER_CTA.href}
-      class="starter-plan-card__cta starter-plan-card__cta--primary"
+      class="btn btn--primary btn--md starter-plan-card__cta starter-plan-card__cta--primary"
       data-track={STARTER_FULL_PLAN_STARTER_CTA.trackEvent}
       data-track-placement={placement}
     >
@@ -44,20 +40,19 @@ const { placement } = Astro.props;
 
   <article class="starter-plan-card">
     <p class="starter-plan-card__label">FULL KERSIVO</p>
-    <p class="starter-plan-card__price">
-      <span class="starter-plan-card__amount">£{STARTER_FULL_PLAN_MONTHLY_GBP}</span>
-      <span class="starter-plan-card__billing">
-        <span class="starter-plan-card__period">/month</span>
-        <span class="starter-plan-card__scope">per location</span>
-      </span>
-    </p>
+    <Price
+      className="starter-plan-card__price"
+      amount={STARTER_FULL_PLAN_MONTHLY_GBP}
+      qualifier="per location"
+      size="md"
+    />
     <p class="starter-plan-card__intro">{STARTER_FULL_PLAN_INTRO}</p>
     <ul>
       {STARTER_FULL_PLAN_FULL_ONLY.map((item) => <li>{item}</li>)}
     </ul>
     <a
       href={STARTER_FULL_PLAN_FULL_CTA.href}
-      class="starter-plan-card__cta starter-plan-card__cta--secondary"
+      class="btn btn--outline btn--md starter-plan-card__cta starter-plan-card__cta--secondary"
       data-track={STARTER_FULL_PLAN_FULL_CTA.trackEvent}
       data-track-placement={placement}
     >

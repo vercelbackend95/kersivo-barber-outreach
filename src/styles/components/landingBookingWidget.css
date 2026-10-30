@@ -102,7 +102,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #d72638;
+  color: var(--color-brand);
 }
 
 .lbw-lock__title {

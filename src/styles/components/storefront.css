@@ -25,8 +25,8 @@
   --sf-surface-hover: color-mix(in srgb, var(--sf-surface-2) 82%, #fff 8%);
   --sf-text: var(--fg, #f1eee8);
   --sf-muted: var(--muted, #b7bdc7);
-  --sf-accent: var(--accent, #d72638);
-  --sf-accent-hover: var(--accent-hover, #ff2e45);
+  --sf-accent: var(--accent);
+  --sf-accent-hover: var(--accent-hover);
   --sf-border: var(--border, #252c36);
   --sf-border-hover: color-mix(in srgb, var(--sf-text) 28%, transparent);
   --sf-radius: var(--radius-md, 8px);

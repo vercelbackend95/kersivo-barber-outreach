@@ -212,12 +212,12 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(constant('FULL_LAUNCH_HREF')).toBe('/admin/launch');
     expect(existsSync(join(root, 'src/pages/admin/launch.astro'))).toBe(true);
     expect(full).toContain('href={FULL_LAUNCH_HREF}');
-    expect(full).toContain('class="bsw-final__cta"');
+    expect(full).toContain('class="btn btn--primary btn--lg bsw-final__cta"');
     expect(text(full)).toBe('Start Full KERSIVO');
     expect(demo).toContain('href={DEMO_HOME_HREF}');
     expect(DEMO_HOME_HREF).toBe('/demo');
     expect(text(demo)).toBe('Explore the working demo');
-    expect(markup.match(/class="bsw-final__cta"/g) ?? []).toHaveLength(1);
+    expect(markup.match(/class="btn btn--primary btn--lg bsw-final__cta"/g) ?? []).toHaveLength(1);
     expect(termsLink).toContain('href={SUBSCRIPTION_TERMS_HREF}');
     expect(constant('SUBSCRIPTION_TERMS_HREF')).toBe('/terms#subscription');
     expect(terms).toContain('id="subscription"');
@@ -245,7 +245,9 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(fine).toMatch(/0% KERSIVO commission\. \{STRIPE_FEES_NOTE\}/);
     expect(STRIPE_FEES_NOTE).toMatch(/Stripe payment-processing fees still apply/);
     expect(fine).toMatch(/CUTSTATE\s+Barbers, a fictional shop/);
-    expect(markup).toMatch(/£\{SAAS_MONTHLY_GBP\}<\/span>\s*<span class="bsw-final__period">\/month per location/);
+    expect(markup).toContain('amount={SAAS_MONTHLY_GBP}');
+    expect(markup).toContain('qualifier="per location"');
+    expect(readFileSync(join(root, 'src/components/ui/Price.tsx'), 'utf8')).toContain('/month');
     expect(section).not.toMatch(/£\s?39\b/);
   });
 

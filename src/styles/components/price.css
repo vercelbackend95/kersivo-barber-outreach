@@ -1,0 +1,50 @@
+/* Commercial price: Bebas Neue amount, Inter period at 30% of that size, shared baseline. */
+.price {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  margin: 0;
+  color: var(--fg);
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  line-height: 0.9;
+}
+
+.price--md {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.price--lg {
+  font-size: clamp(2.4rem, 5vw, 4.25rem);
+}
+
+.price--xl {
+  font-size: clamp(3rem, 8vw, 4.25rem);
+}
+
+.price > .price__amount {
+  font-family: var(--font-heading);
+  font-size: 1em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.9;
+}
+
+.price > .price__period {
+  font-family: var(--font-body);
+  font-size: 0.3em;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.price > .price__qualifier {
+  flex-basis: 100%;
+  margin-top: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--muted);
+}

@@ -5,6 +5,7 @@ import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
 import { RateCard1Offer } from '@/components/rateCard1';
+import { Price } from '@/components/ui/Price';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
@@ -73,7 +74,7 @@ const currentYear = new Date().getFullYear();
                 primaryClass="fresha-alt-hero__action fresha-alt-hero__action--primary"
                 placement="pricing_hero"
               />
-              <a href="#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
+              <a href="#plan" class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary">
                 Compare the two plans
               </a>
             </div>
@@ -83,13 +84,13 @@ const currentYear = new Date().getFullYear();
         <div class="fresha-alt-hero__actions">
           <a
             href="/admin/launch"
-            class="fresha-alt-hero__action fresha-alt-hero__action--primary"
+            class="btn btn--primary btn--lg fresha-alt-hero__action fresha-alt-hero__action--primary"
             data-track="saas_subscribe_click"
             data-track-placement="pricing_hero"
           >
             Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
           </a>
-          <a href="#plan" class="fresha-alt-hero__action fresha-alt-hero__action--secondary">
+          <a href="#plan" class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary">
             Compare the two plans
           </a>
         </div>
@@ -164,7 +165,7 @@ const currentYear = new Date().getFullYear();
           <div class="pricing-starter-offer__head">
             <p class="pricing-starter-offer__label">KERSIVO STARTER</p>
             <h3 id="pricing-starter-title" class="pricing-starter-offer__price">
-              £0<span>/month</span>
+              <Price amount={0} size="md" />
             </h3>
             <p class="pricing-starter-offer__lead">
               A real booking system for one shop: hosted booking page, up to 4 active bookable
@@ -175,7 +176,7 @@ const currentYear = new Date().getFullYear();
           <div class="pricing-starter-offer__actions">
             <a
               href="/admin"
-              class="btn btn--primary"
+              class="btn btn--primary btn--md"
               data-track="starter_signup_click"
               data-track-placement="pricing_plans"
             >
@@ -262,7 +263,7 @@ const currentYear = new Date().getFullYear();
               )}
               <a
                 href="/admin"
-                class="btn btn--secondary btn--lg landing-final-cta__button"
+                class="btn btn--outline btn--lg landing-final-cta__button"
                 data-track="starter_signup_click"
                 data-track-placement="pricing_final"
               >
@@ -367,17 +368,8 @@ const currentYear = new Date().getFullYear();
 
   .pricing-starter-offer__price {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 750;
-    letter-spacing: -0.04em;
+    font-weight: 400;
     line-height: 1;
-  }
-
-  .pricing-starter-offer__price span {
-    margin-left: 0.3rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    opacity: 0.7;
   }
 
   .pricing-starter-offer__lead {

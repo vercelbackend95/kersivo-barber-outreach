@@ -181,7 +181,7 @@
 
 .free-preview-form__submit {
   width: 100%;
-  min-height: 48px;
+  min-height: var(--btn-height-md);
 }
 
 .free-preview-form__submit:disabled {

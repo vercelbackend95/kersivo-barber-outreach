@@ -192,8 +192,8 @@
 
 /* Kersivo red ATC on landing/Booksy embeds; keep Blackline /demo cobalt */
 .landing-demo-preview .feature261__media--carousel .sf-shop--blackline {
-  --sf-accent: var(--accent, #d72638);
-  --sf-accent-hover: var(--accent-hover, #ff2e45);
+  --sf-accent: var(--accent);
+  --sf-accent-hover: var(--accent-hover);
   --shop-accent: var(--sf-accent);
   --shop-accent-hover: var(--sf-accent-hover);
 }

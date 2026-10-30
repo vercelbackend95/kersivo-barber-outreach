@@ -73,7 +73,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     const [cta = '', ...rest] = anchors();
     expect(rest).toHaveLength(0);
     expect(cta).toContain('href={DEMO_HOME_HREF}');
-    expect(cta).toContain('class="bsw-b2b__cta"');
+    expect(cta).toContain('class="btn btn--primary btn--lg bsw-b2b__cta"');
     expect(text(cta)).toBe('Explore the working demo');
     expect(DEMO_HOME_HREF).toBe('/demo');
     expect(demoRouteExists(DEMO_HOME_HREF)).toBe(true);
