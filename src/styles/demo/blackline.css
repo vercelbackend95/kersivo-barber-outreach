@@ -1707,6 +1707,9 @@ html[data-theme='blackline']::view-transition-new(root) {
   --accent: var(--bl-cobalt);
   --accent-hover: var(--bl-cobalt-hover);
   --accent-contrast: var(--bl-on-accent);
+  --btn-primary-hover: var(--bl-cobalt-hover);
+  --btn-primary-pressed: var(--bl-cobalt-hover);
+  --btn-primary-fg: var(--bl-on-accent);
   --focus: var(--bl-focus);
   --success: #22c55e;
   --success-subtle: color-mix(in srgb, #22c55e 16%, transparent);

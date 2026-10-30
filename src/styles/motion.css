@@ -11,7 +11,7 @@
   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --route-surface: #0b0d10;
   --route-surface-secondary: #11151b;
-  --route-accent: #ff1717;
+  --route-accent: var(--color-brand);
 }
 
 [data-app='admin'],

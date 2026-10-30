@@ -32,16 +32,18 @@ describe('Shared StarterFullPlanCards', () => {
   it('keeps £0 and £39 with structured /month and per location typography', () => {
     expect(STARTER_FULL_PLAN_MONTHLY_GBP).toBe(SAAS_MONTHLY_GBP);
     expect(STARTER_FULL_PLAN_MONTHLY_GBP).toBe(39);
-    expect(component).toContain('starter-plan-card__amount');
-    expect(component).toContain('>£0</span>');
-    expect(component).toContain('>£{STARTER_FULL_PLAN_MONTHLY_GBP}</span>');
-    expect(component).toContain('starter-plan-card__period');
-    expect(component).toContain('>/month</span>');
-    expect(component).toContain('starter-plan-card__scope');
-    expect(component).toContain('>per location</span>');
+    expect(component).toContain('<Price className="starter-plan-card__price" amount={0} size="md" />');
+    expect(component).toContain('amount={STARTER_FULL_PLAN_MONTHLY_GBP}');
+    expect(component).toContain('qualifier="per location"');
     expect(component).not.toContain('/month per location');
-    expect(css).toContain('.starter-plan-card__billing');
-    expect(css).toContain('flex-direction: column');
+    const price = read('components/ui/Price.tsx');
+    expect(price).toContain('/month');
+    expect(price).not.toMatch(/\/\s+month/);
+    const priceCss = read('styles/components/price.css');
+    expect(priceCss).toContain('font-family: var(--font-heading)');
+    expect(priceCss).toContain('.price > .price__period');
+    expect(priceCss).toContain('font-size: 0.3em');
+    expect(priceCss).toContain('align-items: baseline');
   });
 
   it('preserves Starter and Full CTA destinations without launch checkout', () => {

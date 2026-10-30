@@ -213,7 +213,7 @@
   max-width: 26rem;
 }
 
-.bsw-final__price {
+.bsw-final__price.price {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -238,20 +238,15 @@
 
 .bsw-final__cta {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  gap: var(--btn-gap);
   width: 100%;
-  min-height: 3.25rem;
+  min-height: var(--btn-height-lg);
   margin-top: 0.35rem;
-  padding: 0.9rem 1.25rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-12);
-  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
-  color: var(--fg);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.25;
+  border-radius: var(--btn-radius);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-font-md);
+  font-weight: var(--btn-weight);
   text-decoration: none;
 }
 
@@ -261,7 +256,8 @@
 }
 
 .bsw-final__cta:hover {
-  background: color-mix(in srgb, var(--accent) 76%, var(--bg));
+  background: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
 }
 
 .bsw-final__demo {

@@ -217,7 +217,7 @@
   left: clamp(1.4rem, 3.5cqi, 2.75rem);
   width: min(12rem, 34%);
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 85%, transparent), transparent);
   pointer-events: none;
 }
 
@@ -246,7 +246,7 @@
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 999px;
-  background: #ff1717;
+  background: var(--color-brand);
 }
 
 /* Heading and lead use the /starter hero type scale (.starter-hero__title / __title-line / __lead). */

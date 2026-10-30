@@ -31,11 +31,19 @@ interface Props {
 
 const { placement, primaryClass, part = 'all', class: className } = Astro.props;
 const hasNotes = Astro.slots.has('default');
+
+function buttonClass(extra: string | undefined, base: string) {
+  const tokens = `${base} ${extra ?? ''}`.split(/\s+/).filter(Boolean);
+  return [...new Set(tokens)].join(' ');
+}
+
+const primaryButtonClass = buttonClass(primaryClass, 'btn btn--primary btn--lg');
+const subscribeLinkClass = 'btn btn--link';
 ---
 
 {
   part === 'primary' ? (
-    <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
+    <a href={FREE_PREVIEW_CTA_HREF} class={primaryButtonClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
       {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
     </a>
   ) : null
@@ -43,7 +51,7 @@ const hasNotes = Astro.slots.has('default');
 {
   part === 'subscribe' ? (
     <div class:list={['full-plan-cta__subscribe', className]}>
-      <a href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
+      <a class={subscribeLinkClass} href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
         {SUBSCRIBE_NOW_CTA_LABEL}
       </a>
       {hasNotes && <div class="full-plan-cta__notes"><slot /></div>}
@@ -53,11 +61,11 @@ const hasNotes = Astro.slots.has('default');
 {
   part === 'all' ? (
     <div class:list={['full-plan-cta', className]}>
-      <a href={FREE_PREVIEW_CTA_HREF} class={primaryClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
+      <a href={FREE_PREVIEW_CTA_HREF} class={primaryButtonClass} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
         {FREE_PREVIEW_CTA_LABEL}<slot name="icon" />
       </a>
       <div class="full-plan-cta__subscribe">
-        <a href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
+        <a class={subscribeLinkClass} href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
           {SUBSCRIBE_NOW_CTA_LABEL}
         </a>
         {hasNotes && <div class="full-plan-cta__notes"><slot /></div>}

@@ -11,8 +11,8 @@
   --sf-header-text: var(--fg, #f1eee8);
   --sf-header-muted: var(--muted, #b7bdc7);
   --sf-header-divider: var(--border, #252c36);
-  --sf-header-accent: var(--accent, #d72638);
-  --sf-header-accent-hover: var(--accent-hover, #ff2e45);
+  --sf-header-accent: var(--accent);
+  --sf-header-accent-hover: var(--accent-hover);
   --sf-header-on-accent: #ffffff;
   --sf-header-focus: var(--focus, #6366f1);
   --sf-header-max: 82.5rem;
@@ -48,10 +48,10 @@
   --sf-header-text: var(--fg, #f1eee8);
   --sf-header-muted: var(--muted, #b7bdc7);
   --sf-header-divider: var(--border, #252c36);
-  --sf-header-accent: var(--accent, #d72638);
-  --sf-header-accent-hover: var(--accent-hover, #ff2e45);
+  --sf-header-accent: var(--accent);
+  --sf-header-accent-hover: var(--accent-hover);
   --sf-header-on-accent: #ffffff;
-  --sf-header-focus: color-mix(in srgb, var(--accent, #d72638) 70%, #fff);
+  --sf-header-focus: color-mix(in srgb, var(--accent) 70%, #fff);
 }
 
 .sf-header[data-scrolled] {

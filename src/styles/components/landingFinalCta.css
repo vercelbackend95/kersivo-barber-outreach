@@ -52,7 +52,7 @@
   left: 1.6rem;
   width: 38%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), rgba(255, 23, 23, 0));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 85%, transparent), transparent);
   pointer-events: none;
 }
 
@@ -113,7 +113,7 @@
 
 .landing-final-cta__button {
   width: 100%;
-  min-height: 48px;
+  min-height: var(--btn-height-lg);
   text-align: center;
 }
 

@@ -108,7 +108,7 @@
 }
 
 .alt-hub-hero__accent {
-  color: #d72638;
+  color: var(--color-brand);
 }
 
 .alt-hub-hero__lead {

@@ -2,6 +2,7 @@
 import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-faq-close.css';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { Price } from '@/components/ui/Price';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { NO_SETUP_FEE_SHORT, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
@@ -136,17 +137,14 @@ const shownFaqs: Faq[] = isFreePreviewFlowEnabled()
       </div>
 
       <div class="bsw-final__actions">
-        <p class="bsw-final__price">
-          <span class="bsw-final__amount">£{SAAS_MONTHLY_GBP}</span>
-          <span class="bsw-final__period">/month per location</span>
-        </p>
+        <Price className="bsw-final__price" amount={SAAS_MONTHLY_GBP} qualifier="per location" size="md" />
         {isFreePreviewFlowEnabled() ? (
-          <FullPlanCta part="primary" primaryClass="bsw-final__cta" placement={FULL_TRACK_PLACEMENT}>
+          <FullPlanCta part="primary" primaryClass="btn btn--primary btn--lg bsw-final__cta" placement={FULL_TRACK_PLACEMENT}>
             <ArrowRight slot="icon" className="bsw-final__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
           </FullPlanCta>
         ) : (
         <a
-          class="bsw-final__cta"
+          class="btn btn--primary btn--lg bsw-final__cta"
           href={FULL_LAUNCH_HREF}
           data-track={FULL_TRACK_EVENT}
           data-track-placement={FULL_TRACK_PLACEMENT}

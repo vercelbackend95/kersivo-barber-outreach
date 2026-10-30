@@ -698,16 +698,13 @@
 .bsw-b2b__cta {
   display: inline-flex;
   flex: none;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.9rem 1.35rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-12);
-  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
-  color: var(--fg);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.2;
+  gap: var(--btn-gap);
+  min-height: var(--btn-height-lg);
+  border-radius: var(--btn-radius);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  font-size: var(--btn-font-md);
+  font-weight: var(--btn-weight);
   text-decoration: none;
 }
 
@@ -716,7 +713,8 @@
 }
 
 .bsw-b2b__cta:hover {
-  background: color-mix(in srgb, var(--accent) 76%, var(--bg));
+  background: var(--btn-primary-hover);
+  color: var(--btn-primary-fg);
 }
 
 .bsw-b2b__cta:focus-visible {

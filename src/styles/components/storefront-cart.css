@@ -1,8 +1,8 @@
 /* Shared KERSIVO storefront cart. Import from cart mounts only. */
 
 .sf-cart-root {
-  --sf-cart-accent: var(--accent, #ff1717);
-  --sf-cart-accent-hover: var(--accent-hover, #d72638);
+  --sf-cart-accent: var(--accent);
+  --sf-cart-accent-hover: var(--accent-hover);
   --sf-cart-on-accent: var(--accent-contrast, #ffffff);
   --sf-cart-bg: var(--sf-bg, var(--bg, #0b0d10));
   --sf-cart-surface: var(--sf-surface, var(--surface, #11151b));
@@ -18,8 +18,8 @@
 }
 
 .sf-cart-root[data-sf-cart-theme='kersivo'] {
-  --sf-cart-accent: var(--accent, #ff1717);
-  --sf-cart-accent-hover: var(--accent-hover, #d72638);
+  --sf-cart-accent: var(--accent);
+  --sf-cart-accent-hover: var(--accent-hover);
   --sf-cart-on-accent: var(--accent-contrast, #0b0d10);
   --sf-cart-bg: var(--bg, #0b0d10);
   --sf-cart-surface: var(--surface-2, #171c23);

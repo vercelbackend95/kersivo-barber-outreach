@@ -1,0 +1,73 @@
+---
+/**
+ * Accessible FAQ accordion. One button + region per item, plus/minus icon,
+ * height transition removed under prefers-reduced-motion.
+ * Pages are not migrated in Batch 0.
+ */
+import '@/styles/components/accordion.css';
+
+export interface AccordionItem {
+  id: string;
+  title: string;
+  body: string;
+}
+
+interface Props {
+  items: AccordionItem[];
+  class?: string;
+}
+
+const { items, class: className } = Astro.props;
+---
+
+<div class:list={['accordion', className]} data-accordion>
+  {
+    items.map((item) => (
+      <div class="accordion__item">
+        <h3 class="accordion__heading">
+          <button
+            type="button"
+            class="accordion__trigger"
+            id={`${item.id}-button`}
+            aria-expanded="false"
+            aria-controls={item.id}
+          >
+            <span>{item.title}</span>
+            <span class="accordion__icon" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="accordion__panel" id={item.id} role="region" aria-labelledby={`${item.id}-button`} inert>
+          <div class="accordion__panel-inner">{item.body}</div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  function initAccordions() {
+    document.querySelectorAll('[data-accordion]').forEach((root) => {
+      if (!(root instanceof HTMLElement) || root.dataset.accordionReady === 'true') return;
+      root.dataset.accordionReady = 'true';
+      root.querySelectorAll('.accordion__trigger').forEach((trigger) => {
+        if (!(trigger instanceof HTMLButtonElement)) return;
+        trigger.addEventListener('click', () => {
+          const expanded = trigger.getAttribute('aria-expanded') === 'true';
+          const next = !expanded;
+          const panelId = trigger.getAttribute('aria-controls');
+          const panel = panelId ? document.getElementById(panelId) : null;
+          const item = trigger.closest('.accordion__item');
+          trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+          item?.classList.toggle('is-open', next);
+          if (panel) {
+            if (next) panel.removeAttribute('inert');
+            else panel.setAttribute('inert', '');
+          }
+        });
+      });
+    });
+  }
+
+  initAccordions();
+  document.addEventListener('astro:page-load', initAccordions);
+</script>

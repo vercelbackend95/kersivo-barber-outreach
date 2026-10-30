@@ -120,20 +120,9 @@
   text-decoration: none;
 }
 
-.rate-card1__price {
+.rate-card1__price.price {
   margin: 0.35rem 0 0;
-  font-family: "Bebas Neue", sans-serif;
-  letter-spacing: 0.03em;
-  font-size: clamp(2.5rem, 9vw, 4.75rem);
   color: var(--fg);
-  line-height: 1;
-}
-
-.rate-card1__price span {
-  font-family: Inter, sans-serif;
-  letter-spacing: normal;
-  font-size: clamp(1rem, 2.6vw, 1.15rem);
-  color: var(--muted);
 }
 
 .rate-card1__conditions {
@@ -345,7 +334,7 @@
   left: 1.6rem;
   width: 38%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 23, 23, 0.85), rgba(255, 23, 23, 0));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 85%, transparent), transparent);
   pointer-events: none;
 }
 
@@ -363,7 +352,7 @@
   background: transparent;
 }
 
-.rate-card1--landing .rate-card1__offer-decision .rate-card1__price {
+.rate-card1--landing .rate-card1__offer-decision .rate-card1__price.price {
   margin: 0.1rem 0 0;
   font-size: clamp(3rem, 8vw, 4.25rem);
 }
@@ -409,7 +398,7 @@
 
 .rate-card1--landing .rate-card1__offer-decision .rate-card1__cta {
   margin-top: 0.55rem;
-  min-height: 2.85rem;
+  min-height: var(--btn-height-md);
   width: 100%;
 }
 

@@ -83,10 +83,10 @@ describe('homepage hero markup', () => {
       `a month per location, not per barber`,
     );
     expect(hero).toMatch(
-      /<a\s+href="\/admin\/launch"\s+class="home-hero__action home-hero__action--primary"\s+data-track="saas_subscribe_click"\s+data-track-placement="homepage_hero"\s*>\s*Start Full KERSIVO — £\{SAAS_MONTHLY_GBP\}\/month\s*<\/a>/,
+      /<a\s+href="\/admin\/launch"\s+class="btn btn--primary btn--lg home-hero__action home-hero__action--primary"\s+data-track="saas_subscribe_click"\s+data-track-placement="homepage_hero"\s*>\s*Start Full KERSIVO — £\{SAAS_MONTHLY_GBP\}\/month\s*<\/a>/,
     );
     expect(hero).toMatch(
-      /<a href="#live-demo" class="home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">\s*See it working\s*<\/a>/,
+      /<a href="#live-demo" class="btn btn--outline btn--lg home-hero__action home-hero__action--secondary" data-track="view_live_demo_click" data-track-placement="homepage_hero">\s*See it working\s*<\/a>/,
     );
     const meta = between(hero, '<div class="home-hero__meta"', '</div>');
     expect(meta).toContain('aria-label="KERSIVO commercial model"');
@@ -125,7 +125,7 @@ describe('homepage hero styles', () => {
   it('uses the black product background and the shared content width', () => {
     expect(heroCss).toMatch(/^\.home-hero \{[^}]*background: #030303;/m);
     expect(heroCss).toMatch(/\.home-hero__content \{[^}]*width: min\(94vw, 91\.1rem\);/);
-    expect(heroCss).toMatch(/\.home-hero__action \{[^}]*min-height: 2\.75rem;/);
+    expect(heroCss).toMatch(/\.home-hero__action \{[^}]*min-height: var\(--btn-height-lg\);/);
   });
 
   it('stacks the CTAs full width on phones', () => {

@@ -76,7 +76,7 @@
 }
 
 .pricing36 .bg-primary {
-  background: #d72638;
+  background: var(--color-brand);
 }
 
 .pricing36 .bg-background {
