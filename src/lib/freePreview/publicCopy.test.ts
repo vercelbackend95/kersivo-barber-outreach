@@ -165,6 +165,44 @@ describe('/free-preview page (spec §10.1)', () => {
     expect(page).toContain('FREE_PREVIEW_FAQ_ITEMS.map');
     expect(page).toContain('canonicalPath={FREE_PREVIEW_PAGE.path}');
   });
+
+  it('keeps the form contract: field names, endpoint, honeypot and consent wording', () => {
+    const form = read('src/components/freePreview/FreePreviewForm.astro');
+    for (const name of [
+      'companyWebsite',
+      'shopName',
+      'townCity',
+      'barberCount',
+      'currentBookingSystem',
+      'hasOwnDomain',
+      'firstName',
+      'email',
+      'notes',
+      'authorisationConsent',
+      'marketingOptIn',
+    ]) {
+      expect(form).toContain(`name="${name}"`);
+    }
+    for (const name of ['bookingPageUrl', 'instagramUrl', 'googleListingUrl', 'websiteUrl']) {
+      expect(form).toContain(`name: '${name}'`);
+    }
+    expect(form).toContain("fetch('/api/free-preview'");
+    expect(form).toContain('class="hp-field"');
+    expect(form).toContain('{FREE_PREVIEW_AUTHORISATION_LABEL}');
+    expect(form).toContain('{FREE_PREVIEW_MARKETING_LABEL}');
+  });
+
+  it('renders the redesigned hero, form card and showcase copy', () => {
+    expect(FREE_PREVIEW_PAGE.h1Lines).toEqual(['See your website', 'before you pay.']);
+    expect(FREE_PREVIEW_PAGE.formHeading).toBe('Tell us about your shop');
+    expect(FREE_PREVIEW_PAGE.formReadyLine).toBe('Usually ready within a few working days.');
+    const page = read('src/pages/free-preview/index.astro');
+    expect(page.indexOf('<FreePreviewForm />')).toBeLessThan(page.indexOf('free-preview__timeline'));
+    expect(page.indexOf('free-preview__timeline')).toBeLessThan(page.indexOf('<FreePreviewShowcase />'));
+    expect(page.indexOf('<FreePreviewShowcase />')).toBeLessThan(page.indexOf('<Accordion'));
+    expect(read('src/components/freePreview/FreePreviewForm.astro')).toContain('ks-glass-card--accent');
+    expect(read('src/styles/components/free-preview.css')).not.toContain('fp-visual');
+  });
 });
 
 describe('sitemap follows the flag at build time', () => {

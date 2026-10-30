@@ -7,7 +7,7 @@ import Footer50 from '@/components/footer50.astro';
 import Accordion from '@/components/ui/Accordion.astro';
 import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FreePreviewForm from '@/components/freePreview/FreePreviewForm.astro';
-import FreePreviewVisual from '@/components/freePreview/FreePreviewVisual.astro';
+import FreePreviewShowcase from '@/components/freePreview/FreePreviewShowcase.astro';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/lib/seo/freePreviewPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/free-preview.css';
 
 // Flag off: the page does not exist (docs/free-preview-discovery.md §13).
@@ -52,8 +53,14 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
       <div class="container free-preview__hero-grid">
         <div class="free-preview__copy">
           <PageBreadcrumbs trail={FREE_PREVIEW_BREADCRUMBS} />
-          <p class="free-preview__eyebrow">{FREE_PREVIEW_PAGE.eyebrow}</p>
-          <h1 id="free-preview-title" class="free-preview__title">{FREE_PREVIEW_PAGE.h1}</h1>
+          <p class="free-preview__eyebrow">
+            <span class="free-preview__eyebrow-dot" aria-hidden="true"></span>
+            {FREE_PREVIEW_PAGE.eyebrow}
+          </p>
+          <h1 id="free-preview-title" class="free-preview__title">
+            <span class="free-preview__title-line free-preview__title-line--primary">{FREE_PREVIEW_PAGE.h1Lines[0]}</span>{' '}
+            <span class="free-preview__title-line">{FREE_PREVIEW_PAGE.h1Lines[1]}</span>
+          </h1>
           <p class="free-preview__intro">{FREE_PREVIEW_PAGE.intro}</p>
           <ul class="free-preview__trust" aria-label="What to expect">
             {FREE_PREVIEW_PAGE.trustLine.map((item, index) => {
@@ -61,7 +68,7 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
               return (
                 <li>
                   <span class="free-preview__trust-icon" aria-hidden="true">
-                    <Icon size={16} strokeWidth={1.8} />
+                    <Icon size={14} strokeWidth={1.8} />
                   </span>
                   {item}
                 </li>
@@ -74,9 +81,29 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
           <FreePreviewForm />
         </div>
 
-        <div class="free-preview__visual">
-          <FreePreviewVisual />
-        </div>
+        <section class="free-preview__timeline ks-glass-card" aria-labelledby="free-preview-next-title">
+          <h2 id="free-preview-next-title" class="free-preview__timeline-title">{FREE_PREVIEW_PAGE.timelineHeading}</h2>
+          <ol class="free-preview__steps">
+            {FREE_PREVIEW_PAGE.steps.map((step, index) => (
+              <li class:list={['free-preview__step', `free-preview__step--${step.owner === 'KERSIVO' ? 'kersivo' : 'you'}`]}>
+                <span class="free-preview__step-node" aria-hidden="true">{index + 1}</span>
+                <span class="free-preview__step-title">{step.title}</span>
+                <span class="free-preview__step-owner">{step.owner}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+    </section>
+
+    <section class="free-preview__section free-preview__section--showcase" aria-labelledby="free-preview-showcase-title">
+      <div class="container">
+        <SectionHeader
+          eyebrow={FREE_PREVIEW_PAGE.showcaseEyebrow}
+          title={FREE_PREVIEW_PAGE.showcaseHeading}
+          titleId="free-preview-showcase-title"
+        />
+        <FreePreviewShowcase />
       </div>
     </section>
 
@@ -87,31 +114,15 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
           {FREE_PREVIEW_PAGE.whatYouGet.map((item, index) => {
             const Icon = getIcons[index] ?? LayoutTemplate;
             return (
-              <li class="free-preview__get-card">
+              <li class="free-preview__get-card ks-glass-card">
                 <span class="free-preview__get-icon" aria-hidden="true">
-                  <Icon size={22} strokeWidth={1.6} />
+                  <Icon size={18} strokeWidth={1.7} />
                 </span>
                 <p>{item}</p>
               </li>
             );
           })}
         </ul>
-      </div>
-    </section>
-
-    <section class="free-preview__section" aria-labelledby="free-preview-how-title">
-      <div class="container">
-        <SectionHeader title={FREE_PREVIEW_PAGE.howItWorksHeading} titleId="free-preview-how-title" />
-        <ol class="free-preview__steps">
-          {FREE_PREVIEW_PAGE.steps.map((step, index) => (
-            <li class:list={['free-preview__step', `free-preview__step--${step.owner === 'KERSIVO' ? 'kersivo' : 'you'}`]}>
-              <span class="free-preview__step-node" aria-hidden="true">{index + 1}</span>
-              <p class="free-preview__step-owner">{step.owner}</p>
-              <h3 class="free-preview__step-title">{step.title}</h3>
-              <p class="free-preview__step-body">{step.body}</p>
-            </li>
-          ))}
-        </ol>
       </div>
     </section>
 
@@ -125,7 +136,7 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
       </div>
     </section>
 
-    <a class="free-preview__sticky-bar" href="#request" data-fp-sticky-bar>
+    <a class="free-preview__sticky-bar" href="#request" data-fp-sticky-bar hidden>
       {FREE_PREVIEW_PAGE.submitLabel}
     </a>
 
@@ -141,22 +152,100 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
 </LandingLayout>
 
 <script>
-  import { onPageReady } from '@/lib/navigation/pageReady';
+  let teardown: AbortController | null = null;
 
   function initFreePreviewPage() {
+    teardown?.abort();
+    teardown = null;
+
+    const card = document.querySelector('[data-free-preview]');
+    const column = document.querySelector('#request');
+    if (!(card instanceof HTMLElement) || !(column instanceof HTMLElement)) return;
+
+    const controller = new AbortController();
+    teardown = controller;
+    const { signal } = controller;
+    const observe = (observer: IntersectionObserver | ResizeObserver, target: Element) => {
+      observer.observe(target);
+      signal.addEventListener('abort', () => observer.disconnect());
+    };
+
+    // Sticky only when the whole card fits in the viewport; a validation error can change that.
+    const desktop = window.matchMedia('(min-width: 64rem)');
+    const updateSticky = () => {
+      column.toggleAttribute('data-fp-sticky', desktop.matches && card.offsetHeight < window.innerHeight - 48);
+    };
+    updateSticky();
+    observe(new ResizeObserver(updateSticky), card);
+    window.addEventListener('resize', updateSticky, { signal });
+
+    // Mobile bar: only once the card is fully off screen, never over the footer or a focused field.
     const bar = document.querySelector('[data-fp-sticky-bar]');
-    const form = document.querySelector('#request');
-    if (bar instanceof HTMLElement && form instanceof HTMLElement && 'IntersectionObserver' in window) {
-      const io = new IntersectionObserver(
-        ([entry]) => {
-          bar.toggleAttribute('hidden', entry.isIntersecting);
-        },
-        { threshold: 0.2 },
+    const form = card.querySelector('[data-free-preview-form]');
+    const footer = document.querySelector('.free-preview footer');
+    if (bar instanceof HTMLElement && form instanceof HTMLElement) {
+      let cardVisible = true;
+      let footerVisible = false;
+      let fieldFocused = false;
+      const updateBar = () => {
+        bar.hidden = cardVisible || footerVisible || fieldFocused || form.hidden;
+      };
+      observe(
+        new IntersectionObserver(([entry]) => {
+          cardVisible = entry.isIntersecting;
+          updateBar();
+        }),
+        card,
       );
-      io.observe(form);
-      return () => io.disconnect();
+      if (footer) {
+        observe(
+          new IntersectionObserver(([entry]) => {
+            footerVisible = entry.isIntersecting;
+            updateBar();
+          }),
+          footer,
+        );
+      }
+      const isField = (target: EventTarget | null) =>
+        target instanceof Element && target.matches('input, select, textarea');
+      document.addEventListener(
+        'focusin',
+        (event) => {
+          fieldFocused = isField(event.target);
+          updateBar();
+        },
+        { signal },
+      );
+      document.addEventListener(
+        'focusout',
+        () => {
+          fieldFocused = false;
+          updateBar();
+        },
+        { signal },
+      );
+    }
+
+    // Showcase fade-in: only when it starts below the fold, so nothing in the first viewport waits.
+    const reveal = document.querySelector('[data-fp-reveal]');
+    if (
+      reveal instanceof HTMLElement &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      reveal.getBoundingClientRect().top > window.innerHeight
+    ) {
+      reveal.classList.add('is-pending');
+      const revealObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          reveal.classList.remove('is-pending');
+          revealObserver.disconnect();
+        },
+        { rootMargin: '0px 0px -10% 0px' },
+      );
+      observe(revealObserver, reveal);
     }
   }
 
-  onPageReady(initFreePreviewPage);
+  initFreePreviewPage();
+  document.addEventListener('astro:page-load', initFreePreviewPage);
 </script>

@@ -10,6 +10,7 @@ import {
 } from '@/lib/freePreview/intake';
 import { PREVIEW_OVER_CAP_MESSAGE } from '@/lib/freePreview/config';
 import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import '@/styles/components/ks-glass-card.css';
 
 const linkFields = [
   { name: 'bookingPageUrl', label: 'Current booking page', placeholder: 'booksy.com/…', Icon: Link2 },
@@ -19,9 +20,10 @@ const linkFields = [
 ] as const;
 ---
 
-<div class="fp-card" data-free-preview>
+<div class="fp-card ks-glass-card ks-glass-card--accent" data-free-preview>
   <form class="free-preview-form" data-free-preview-form novalidate>
     <header class="fp-card__header">
+      <p class="fp-card__eyebrow">{FREE_PREVIEW_PAGE.formEyebrow}</p>
       <h2 id="free-preview-form-title" class="fp-card__title">{FREE_PREVIEW_PAGE.formHeading}</h2>
       <p class="fp-card__ready">{FREE_PREVIEW_PAGE.formReadyLine}</p>
     </header>
@@ -33,61 +35,46 @@ const linkFields = [
       </label>
     </div>
 
-    <fieldset class="fp-group">
-      <legend class="fp-group__legend">
-        <span class="fp-group__num" aria-hidden="true">1</span>
-        {FREE_PREVIEW_PAGE.formGroupShop}
-      </legend>
-      <div class="fp-fields">
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Barbershop name</span>
-          <input
-            name="shopName"
-            type="text"
-            autocomplete="organization"
-            required
-            maxlength="120"
-            placeholder="e.g. Northside Barbers"
-            aria-describedby="fp-error-shopName"
-          />
-          <span class="free-preview-form__error" id="fp-error-shopName" data-error-for="shopName"></span>
-        </label>
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Town or city</span>
-          <input
-            name="townCity"
-            type="text"
-            autocomplete="address-level2"
-            required
-            maxlength="120"
-            placeholder="e.g. Leeds"
-            aria-describedby="fp-error-townCity"
-          />
-          <span class="free-preview-form__error" id="fp-error-townCity" data-error-for="townCity"></span>
-        </label>
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Number of barbers</span>
-          <select name="barberCount" required aria-describedby="fp-error-barberCount">
-            <option value="" selected disabled>Choose</option>
-            {FREE_PREVIEW_BARBER_COUNTS.map((option) => <option value={option.value}>{option.label}</option>)}
-          </select>
-          <span class="free-preview-form__error" id="fp-error-barberCount" data-error-for="barberCount"></span>
-        </label>
-      </div>
-    </fieldset>
+    <div class="fp-fields fp-fields--two">
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Barbershop name</span>
+        <input
+          name="shopName"
+          type="text"
+          autocomplete="organization"
+          required
+          maxlength="120"
+          placeholder="e.g. Northside Barbers"
+          aria-describedby="fp-error-shopName"
+        />
+        <span class="free-preview-form__error" id="fp-error-shopName" data-error-for="shopName"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Town or city</span>
+        <input
+          name="townCity"
+          type="text"
+          autocomplete="address-level2"
+          required
+          maxlength="120"
+          placeholder="e.g. Leeds"
+          aria-describedby="fp-error-townCity"
+        />
+        <span class="free-preview-form__error" id="fp-error-townCity" data-error-for="townCity"></span>
+      </label>
+    </div>
 
     <fieldset class="fp-group" aria-describedby="fp-links-hint fp-error-links">
       <legend class="fp-group__legend">
-        <span class="fp-group__num" aria-hidden="true">2</span>
         {FREE_PREVIEW_PAGE.formGroupLinks}
+        <span class="fp-group__hint" id="fp-links-hint">{FREE_PREVIEW_PAGE.formLinksHint}</span>
       </legend>
-      <p class="free-preview-form__hint" id="fp-links-hint">{FREE_PREVIEW_PAGE.formLinksHint}</p>
-      <div class="fp-fields fp-fields--links">
+      <div class="fp-fields fp-fields--two">
         {
           linkFields.map((field) => {
             const Icon = field.Icon;
             return (
-            <label class="free-preview-form__field free-preview-form__field--icon">
+            <label class="free-preview-form__field">
               <span class="free-preview-form__label">{field.label}</span>
               <span class="free-preview-form__control">
                 <span class="free-preview-form__icon" aria-hidden="true">
@@ -112,89 +99,110 @@ const linkFields = [
       <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
     </fieldset>
 
-    <fieldset class="fp-group">
-      <legend class="fp-group__legend">
-        <span class="fp-group__num" aria-hidden="true">3</span>
-        {FREE_PREVIEW_PAGE.formGroupContact}
-      </legend>
-      <div class="fp-fields">
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">First name (optional)</span>
-          <input name="firstName" type="text" autocomplete="given-name" maxlength="80" placeholder="e.g. Alex" />
-        </label>
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Email address</span>
-          <input
-            name="email"
-            type="email"
-            autocomplete="email"
-            required
-            maxlength="254"
-            placeholder="alex@yourshop.co.uk"
-            aria-describedby="fp-error-email"
-          />
-          <span class="free-preview-form__error" id="fp-error-email" data-error-for="email"></span>
-        </label>
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Current booking system</span>
-          <select name="currentBookingSystem" required aria-describedby="fp-error-currentBookingSystem">
-            <option value="" selected disabled>Choose</option>
-            {FREE_PREVIEW_BOOKING_SYSTEMS.map((option) => <option value={option.value}>{option.label}</option>)}
-          </select>
-          <span class="free-preview-form__error" id="fp-error-currentBookingSystem" data-error-for="currentBookingSystem"></span>
-        </label>
-        <label class="free-preview-form__field">
-          <span class="free-preview-form__label">Own domain?</span>
-          <select name="hasOwnDomain" required aria-describedby="fp-error-hasOwnDomain">
-            <option value="" selected disabled>Choose</option>
-            {FREE_PREVIEW_DOMAIN_OPTIONS.map((option) => <option value={option.value}>{option.label}</option>)}
-          </select>
-          <span class="free-preview-form__error" id="fp-error-hasOwnDomain" data-error-for="hasOwnDomain"></span>
-        </label>
-        <label class="free-preview-form__field free-preview-form__field--notes">
-          <span class="free-preview-form__label">Anything else we should know? (optional)</span>
-          <textarea
-            name="notes"
-            maxlength={FREE_PREVIEW_NOTES_MAX}
-            rows="3"
-            data-fp-autogrow
-            placeholder="e.g. photos, a logo, or anything you'd like us to include"
-            aria-describedby="fp-error-notes"
-          ></textarea>
-          <span class="free-preview-form__error" id="fp-error-notes" data-error-for="notes"></span>
-        </label>
-      </div>
-    </fieldset>
+    <div class="fp-fields fp-fields--three">
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Number of barbers</span>
+        <select name="barberCount" required aria-describedby="fp-error-barberCount">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_BARBER_COUNTS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-barberCount" data-error-for="barberCount"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Current booking system</span>
+        <select name="currentBookingSystem" required aria-describedby="fp-error-currentBookingSystem">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_BOOKING_SYSTEMS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-currentBookingSystem" data-error-for="currentBookingSystem"></span>
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Own domain?</span>
+        <select name="hasOwnDomain" required aria-describedby="fp-error-hasOwnDomain">
+          <option value="" selected disabled>Choose</option>
+          {FREE_PREVIEW_DOMAIN_OPTIONS.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+        <span class="free-preview-form__error" id="fp-error-hasOwnDomain" data-error-for="hasOwnDomain"></span>
+      </label>
+    </div>
 
-    <label class="free-preview-form__check">
-      <input type="checkbox" name="authorisationConsent" required aria-describedby="fp-error-authorisationConsent" />
-      <span>{FREE_PREVIEW_AUTHORISATION_LABEL}</span>
-    </label>
-    <span class="free-preview-form__error" id="fp-error-authorisationConsent" data-error-for="authorisationConsent"></span>
+    <div class="fp-fields fp-fields--two">
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">First name (optional)</span>
+        <input name="firstName" type="text" autocomplete="given-name" maxlength="80" placeholder="e.g. Alex" />
+      </label>
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">Email address</span>
+        <input
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          maxlength="254"
+          placeholder="alex@yourshop.co.uk"
+          aria-describedby="fp-error-email"
+        />
+        <span class="free-preview-form__error" id="fp-error-email" data-error-for="email"></span>
+      </label>
+    </div>
 
-    <label class="free-preview-form__check">
-      <input type="checkbox" name="marketingOptIn" />
-      <span>{FREE_PREVIEW_MARKETING_LABEL}</span>
-    </label>
+    <div class="fp-note">
+      <button
+        type="button"
+        class="fp-note__toggle"
+        data-fp-note-toggle
+        aria-expanded="false"
+        aria-controls="fp-note-field"
+      >
+        {FREE_PREVIEW_PAGE.addNoteLabel}
+      </button>
+      <label class="free-preview-form__field" id="fp-note-field" data-fp-note-field hidden>
+        <span class="free-preview-form__label">Anything else we should know? (optional)</span>
+        <textarea
+          name="notes"
+          maxlength={FREE_PREVIEW_NOTES_MAX}
+          rows="3"
+          data-fp-autogrow
+          placeholder="e.g. photos, a logo, or anything you'd like us to include"
+          aria-describedby="fp-error-notes"
+        ></textarea>
+        <span class="free-preview-form__error" id="fp-error-notes" data-error-for="notes"></span>
+      </label>
+    </div>
+
+    <div class="fp-checks">
+      <label class="free-preview-form__check">
+        <input type="checkbox" name="authorisationConsent" required aria-describedby="fp-error-authorisationConsent" />
+        <span>{FREE_PREVIEW_AUTHORISATION_LABEL}</span>
+      </label>
+      <span class="free-preview-form__error" id="fp-error-authorisationConsent" data-error-for="authorisationConsent"></span>
+
+      <label class="free-preview-form__check">
+        <input type="checkbox" name="marketingOptIn" />
+        <span>{FREE_PREVIEW_MARKETING_LABEL}</span>
+      </label>
+    </div>
 
     <p class="free-preview-form__status" data-free-preview-status role="status" aria-live="polite"></p>
 
-    <button
-      type="submit"
-      class="btn btn--primary btn--lg free-preview-form__submit"
-      data-free-preview-submit
-    >
-      <span class="btn-spinner" data-fp-spinner hidden aria-hidden="true"></span>
-      <span data-fp-submit-label>{FREE_PREVIEW_PAGE.submitLabel}</span>
-    </button>
-    <p class="free-preview-form__note">
-      {FREE_PREVIEW_PAGE.submitNote} <a href="/privacy">{FREE_PREVIEW_PAGE.privacyLabel}</a>
-    </p>
+    <div class="fp-submit">
+      <button
+        type="submit"
+        class="btn btn--primary btn--lg free-preview-form__submit"
+        data-free-preview-submit
+      >
+        <span class="btn-spinner" data-fp-spinner hidden aria-hidden="true"></span>
+        <span data-fp-submit-label>{FREE_PREVIEW_PAGE.submitLabel}</span>
+      </button>
+      <p class="free-preview-form__note">
+        {FREE_PREVIEW_PAGE.submitNote} <a href="/privacy">{FREE_PREVIEW_PAGE.privacyLabel}</a>
+      </p>
+    </div>
   </form>
 
   <div class="free-preview-confirmation" data-free-preview-confirmation hidden tabindex="-1">
     <span class="free-preview-confirmation__icon" aria-hidden="true">
-      <Check size={28} strokeWidth={2.2} />
+      <Check size={24} strokeWidth={2.2} />
     </span>
     <h2 class="free-preview-confirmation__title">{FREE_PREVIEW_PAGE.confirmationHeading}</h2>
     <p class="free-preview-confirmation__text" data-free-preview-confirmation-text data-template={FREE_PREVIEW_PAGE.confirmationText} data-over-cap-text={PREVIEW_OVER_CAP_MESSAGE}></p>
@@ -209,7 +217,6 @@ const linkFields = [
 <script>
   import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
   import { trackConsentedEvent } from '@/lib/consent/events';
-  import { onPageReady } from '@/lib/navigation/pageReady';
 
   const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
 
@@ -221,15 +228,32 @@ const linkFields = [
     const confirmation = root.querySelector<HTMLElement>('[data-free-preview-confirmation]');
     const confirmationText = root.querySelector<HTMLElement>('[data-free-preview-confirmation-text]');
     if (!form || !status || !submit || !confirmation || !confirmationText) return;
+    if (root.dataset.fpReady === 'true') return;
+    root.dataset.fpReady = 'true';
 
     const autogrow = root.querySelector<HTMLTextAreaElement>('[data-fp-autogrow]');
-    if (autogrow) {
-      const grow = () => {
-        autogrow.style.height = 'auto';
-        autogrow.style.height = `${autogrow.scrollHeight}px`;
-      };
-      autogrow.addEventListener('input', grow);
-    }
+    const grow = () => {
+      if (!autogrow) return;
+      autogrow.style.height = 'auto';
+      autogrow.style.height = `${autogrow.scrollHeight}px`;
+    };
+    autogrow?.addEventListener('input', grow);
+
+    // The textarea stays in the form while collapsed, so it still submits when empty.
+    const noteToggle = root.querySelector<HTMLButtonElement>('[data-fp-note-toggle]');
+    const noteField = root.querySelector<HTMLElement>('[data-fp-note-field]');
+    const revealNote = () => {
+      if (!noteToggle || !noteField) return;
+      noteField.hidden = false;
+      noteToggle.hidden = true;
+      noteToggle.setAttribute('aria-expanded', 'true');
+      grow();
+    };
+    noteToggle?.addEventListener('click', () => {
+      revealNote();
+      autogrow?.focus();
+    });
+    if (autogrow?.value) revealNote();
 
     const clearErrors = () => {
       root.querySelectorAll<HTMLElement>('[data-error-for]').forEach((el) => {
@@ -241,6 +265,7 @@ const linkFields = [
     const showErrors = (fieldErrors: Record<string, string>) => {
       let first: HTMLElement | null = null;
       for (const [name, message] of Object.entries(fieldErrors)) {
+        if (name === 'notes') revealNote();
         const target = root.querySelector<HTMLElement>('[data-error-for="' + name + '"]');
         if (target) target.textContent = message;
         const input =
@@ -318,6 +343,8 @@ const linkFields = [
         if (response.ok && data.ok) {
           trackConsentedEvent(FUNNEL_EVENTS.preview_request_submitted);
           fillConfirmation(payload.shopName, payload.email, Boolean(data.overDailyCap));
+          // Hold the card's height so nothing below it jumps when the form is swapped out.
+          root.style.minHeight = `${root.offsetHeight}px`;
           form.hidden = true;
           confirmation.hidden = false;
           confirmation.focus();
@@ -336,7 +363,9 @@ const linkFields = [
     });
   }
 
-  onPageReady(() => {
+  const initFreePreviewForms = () =>
     document.querySelectorAll<HTMLElement>('[data-free-preview]').forEach(initFreePreviewForm);
-  });
+
+  initFreePreviewForms();
+  document.addEventListener('astro:page-load', initFreePreviewForms);
 </script>
