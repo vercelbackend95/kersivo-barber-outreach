@@ -1,17 +1,16 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
-import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
-import { RateCard1Offer } from '@/components/rateCard1';
-import { Price } from '@/components/ui/Price';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import PricingCompareTable from '@/components/pricing/PricingCompareTable.astro';
+import PricingPlans from '@/components/pricing/PricingPlans.astro';
+import PricingFees from '@/components/pricing/PricingFees.astro';
+import PricingFaq from '@/components/pricing/PricingFaq.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import {
-  PRICING_FEES_POINTS,
-  PRICING_INCLUDED_GROUPS,
   PRICING_PAGE_DESCRIPTION,
   PRICING_PAGE_H1,
   PRICING_PAGE_LAST_UPDATED_ISO,
@@ -23,7 +22,6 @@ import {
   buildPricingBreadcrumbJsonLd,
   buildPricingFaqJsonLd,
   buildPricingWebPageJsonLd,
-  getPricingFaqItems,
 } from '@/lib/seo/pricingPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
@@ -33,7 +31,6 @@ import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
-import '@/styles/rateCard1.css';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/company-pages.css';
 import '@/styles/components/landingFinalCta.css';
@@ -114,127 +111,13 @@ const currentYear = new Date().getFullYear();
       facts={PRICING_QUICK_FACTS}
     />
 
-    <section id="included" class="fresha-alt__section" aria-labelledby="pricing-included-title">
-      <div class="container">
-        <header class="fresha-alt__intro">
-          <p class="fresha-alt__eyebrow">WHAT’S INCLUDED</p>
-          <h2 id="pricing-included-title" class="fresha-alt__h2">
-            Barbershop software pricing: what each plan includes
-          </h2>
-        </header>
-        <ul class="company-groups">
-          {
-            PRICING_INCLUDED_GROUPS.map((group) => (
-              <li class="company-group">
-                <h3 class="company-group__title">{group.title}</h3>
-                <ul class="company-checks">
-                  {group.items.map((item) => (
-                    <li>{item}</li>
-                  ))}
-                </ul>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </section>
+    <PricingPlans freePreview={freePreview} />
 
-    <section id="plan" class="fresha-alt__section scroll-mt-24" aria-labelledby="pricing-plan-title">
-      <div class="fresha-alt__glow" aria-hidden="true"></div>
-      <div class="container">
-        <header class="fresha-alt__intro">
-          <p class="fresha-alt__eyebrow">TWO PLANS</p>
-          <h2 id="pricing-plan-title" class="fresha-alt__h2">
-            Which plan fits your shop?
-          </h2>
-        </header>
-        <p class="fresha-alt__eyebrow pricing-full-offer__label">RECOMMENDED FOR YOUR OWN BRAND</p>
-        <div class="rate-card1--landing fresha-alt-pricing__offer-host">
-          <RateCard1Offer freePreview={freePreview} />
-          <div class="rate-card1__landing-conditions">
-            <p>{layout.conditionsLine1}</p>
-            <p>{layout.conditionsLine2}</p>
-          </div>
-          {freePreview && (
-            <p class="pricing-free-preview-note">
-              <a href="/free-preview" data-track="preview_cta_click" data-track-placement="pricing_full_plan">Not sure yet? Get a free preview of your website first — no card needed.</a>
-            </p>
-          )}
-        </div>
-        <article class="pricing-starter-offer" aria-labelledby="pricing-starter-title">
-          <div class="pricing-starter-offer__head">
-            <p class="pricing-starter-offer__label">KERSIVO STARTER</p>
-            <h3 id="pricing-starter-title" class="pricing-starter-offer__price">
-              <Price amount={0} size="md" />
-            </h3>
-            <p class="pricing-starter-offer__lead">
-              A real booking system for one shop: hosted booking page, up to 4 active bookable
-              barbers, Clients Core and email reminders. Public bookings use a £5 deposit or Pay in
-              full through your connected Stripe account. 0% KERSIVO commission.
-            </p>
-          </div>
-          <div class="pricing-starter-offer__actions">
-            <a
-              href="/admin"
-              class="btn btn--primary btn--md"
-              data-track="starter_signup_click"
-              data-track-placement="pricing_plans"
-            >
-              Start KERSIVO Starter
-            </a>
-            <a href="/starter" class="company-link">What’s in KERSIVO Starter →</a>
-          </div>
-        </article>
-        <div class="pricing-chooser">
-          <div>
-            <h3>Choose Full KERSIVO if…</h3>
-            <ul>
-              <li>you want your own website and domain</li>
-              <li>you want Pay at shop or your own payment rules</li>
-              <li>you have more than 4 barbers</li>
-              <li>you want reports, retail pickup and SMS reminders</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Choose Starter if…</h3>
-            <ul>
-              <li>you want online booking now at no monthly cost</li>
-              <li>you have up to 4 barbers</li>
-              <li>you're happy for every online booking to be paid with a £5 deposit or in full through Stripe</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
+    <PricingCompareTable freePreview={freePreview} />
 
-    <section id="fees" class="fresha-alt__section" aria-labelledby="pricing-fees-title">
-      <div class="container">
-        <header class="fresha-alt__intro">
-          <p class="fresha-alt__eyebrow">FEES AND BILLING</p>
-          <h2 id="pricing-fees-title" class="fresha-alt__h2">What you pay, and what you don’t</h2>
-        </header>
-        <ul class="company-checks company-checks--columns">
-          {PRICING_FEES_POINTS.map((point) => <li>{point}</li>)}
-        </ul>
-        <p class="company-note">
-          Not sure yet? <a href="/compare" class="company-link">Compare UK booking systems</a> or try the <a href="/barber-software-cost-calculator" class="company-link">cost calculator</a>.
-          Comparing platforms? See how KERSIVO compares with
-          <a href="/booksy-alternative" class="company-link">Booksy</a> and
-          <a href="/fresha-alternative" class="company-link">Fresha</a>.
-        </p>
-      </div>
-    </section>
+    <PricingFees />
 
-    <Faq4
-      className="faq4--landing"
-      heading="Questions about KERSIVO pricing?"
-      subHeading="Clear answers on Starter and Full KERSIVO, fees, VAT, SMS reminders and cancelling."
-      supportHeading="Still have a question?"
-      supportText="Tell us about your barbershop and we’ll give you a clear answer."
-      supportLinkLabel="Ask a question"
-      supportLinkHref="#contact"
-      faqs={getPricingFaqItems(freePreview)}
-    />
+    <PricingFaq freePreview={freePreview} />
 
     <section class="landing-final-cta fresha-alt-final" aria-labelledby="pricing-final-title">
       <div class="container">
@@ -301,95 +184,8 @@ const currentYear = new Date().getFullYear();
     overflow-x: clip;
   }
 
-  .pricing-chooser {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-    margin-top: 2rem;
-  }
-
-  .pricing-chooser h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1.05rem;
-  }
-
-  .pricing-chooser ul {
-    margin: 0;
-    padding-left: 1.1rem;
-  }
-
-  @media (min-width: 720px) {
-    .pricing-chooser {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .pricing-starter-offer {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 1.5rem 2rem;
-    align-items: center;
-    margin: 0 auto 2.5rem;
-    padding: clamp(1.25rem, 3vw, 2rem);
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-    border-radius: 1.15rem;
-    background: color-mix(in srgb, var(--fg) 4%, transparent);
-  }
-
-  .pricing-starter-offer__label,
-  .pricing-full-offer__label {
-    margin: 0 0 0.6rem;
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-  }
-
-  .pricing-full-offer__label {
-    margin-bottom: 1rem;
-  }
-
-  .pricing-free-preview-note {
-    margin: 1rem auto 0;
-    text-align: center;
-    font-size: 0.95rem;
-  }
-
-  .pricing-free-preview-note a {
-    color: var(--fg);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
   .pricing-final-subscribe {
     margin-top: 1rem;
     text-align: center;
-  }
-
-  .pricing-starter-offer__price {
-    margin: 0;
-    font-weight: 400;
-    line-height: 1;
-  }
-
-  .pricing-starter-offer__lead {
-    margin: 0.85rem 0 0;
-    max-width: 44rem;
-    line-height: 1.6;
-    opacity: 0.82;
-  }
-
-  .pricing-starter-offer__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
-    text-align: center;
-  }
-
-  @media (max-width: 720px) {
-    .pricing-starter-offer {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

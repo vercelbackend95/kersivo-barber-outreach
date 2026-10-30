@@ -1,0 +1,73 @@
+---
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import PlanCard from '@/components/pricing/PlanCard.astro';
+import { PRICING_BILLING_COLUMNS, PRICING_PLAN_LEAD } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/pricing-plans.css';
+
+interface Props {
+  freePreview?: boolean;
+}
+
+const { freePreview = false } = Astro.props;
+---
+
+<section id="plan" class="pricing-page-section scroll-mt-24" aria-labelledby="pricing-plan-title">
+  <div class="container">
+    <SectionHeader
+      eyebrow="Two plans"
+      title="Which plan fits your shop?"
+      lead={PRICING_PLAN_LEAD}
+      titleId="pricing-plan-title"
+    />
+
+    <div class="pricing-plans">
+      <PlanCard variant="full" freePreview={freePreview} />
+      <PlanCard variant="starter" freePreview={freePreview} />
+    </div>
+
+    <h3 class="pricing-billing__heading">How billing works</h3>
+    <div class="pricing-billing">
+      {
+        PRICING_BILLING_COLUMNS.map((column) => (
+          <article class="pricing-billing__item">
+            <span class="pricing-billing__icon" aria-hidden="true">
+              {column.icon === 'billing' ? (
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.85"></rect>
+                  <path d="M2 10h20" stroke="currentColor" stroke-width="1.85"></path>
+                </svg>
+              ) : column.icon === 'fees' ? (
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.85"></circle>
+                  <path
+                    d="M16 8l-8 8M9.5 9.5h.01M14.5 14.5h.01"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linecap="round"></path>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linejoin="round"></path>
+                  <path
+                    d="M9 12l2 2 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"></path>
+                </svg>
+              )}
+            </span>
+            <div>
+              <h4 class="pricing-billing__title">{column.title}</h4>
+              <p class="pricing-billing__body">{column.body}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

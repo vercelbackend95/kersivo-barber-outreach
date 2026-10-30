@@ -1,0 +1,102 @@
+---
+import CheckIcon from '@/components/pricing/CheckIcon.astro';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { Price } from '@/components/ui/Price';
+import { PRICING_PLAN_CARDS, type PricingPlanVariant } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/pricing-plans.css';
+
+interface Props {
+  variant: PricingPlanVariant;
+  freePreview?: boolean;
+}
+
+const { variant, freePreview = false } = Astro.props;
+const plan = PRICING_PLAN_CARDS[variant];
+const isFull = variant === 'full';
+const headingId = `pricing-${variant}-title`;
+---
+
+<article class:list={['plan-card', `plan-card--${variant}`]} aria-labelledby={headingId}>
+  {plan.badge ? <p class="plan-card__badge">{plan.badge}</p> : null}
+  <p class="plan-card__name" id={headingId}>{plan.name}</p>
+  <Price className="plan-card__price" amount={plan.amount} qualifier={plan.qualifier} size={plan.priceSize} />
+  <p class="plan-card__description">{plan.description}</p>
+
+  <div class="plan-card__cta">
+    {
+      isFull && freePreview ? (
+        <>
+          <FullPlanCta part="all" placement={plan.primaryCta.placement} primaryClass="btn btn--primary btn--lg" />
+          {plan.checkoutNote ? <p class="plan-card__checkout">{plan.checkoutNote}</p> : null}
+        </>
+      ) : isFull ? (
+        <>
+          <a
+            href={plan.primaryCta.href}
+            class="btn btn--primary btn--lg"
+            data-track={plan.primaryCta.track}
+            data-track-placement={plan.primaryCta.placement}
+          >
+            {plan.primaryCta.label}
+          </a>
+          {plan.checkoutNote ? <p class="plan-card__checkout">{plan.checkoutNote}</p> : null}
+        </>
+      ) : (
+        <>
+          <a
+            href={plan.primaryCta.href}
+            class="btn btn--outline btn--lg"
+            data-track={plan.primaryCta.track}
+            data-track-placement={plan.primaryCta.placement}
+          >
+            {plan.primaryCta.label}
+          </a>
+          <a href={plan.secondaryCta.href} class="plan-card__link">
+            {plan.secondaryCta.label}
+          </a>
+        </>
+      )
+    }
+  </div>
+
+  <hr class="plan-card__divider" />
+
+  <h3 class="plan-card__included-title">What’s included</h3>
+  <ul class="pricing-checklist pricing-checklist--features">
+    {
+      plan.features.map((item) => (
+        <li class="pricing-checklist__item">
+          <CheckIcon />
+          <div>
+            <h4 class="pricing-checklist__title">{item.title}</h4>
+            <p class="pricing-checklist__desc">{item.description}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    plan.chips?.length ? (
+      <ul class="plan-card__chips" aria-label="Also included">
+        {plan.chips.map((chip) => (
+          <li class="plan-card__chip">{chip}</li>
+        ))}
+      </ul>
+    ) : null
+  }
+
+  <div class="plan-card__best">
+    <h3 class="plan-card__best-title">{plan.bestForTitle}</h3>
+    <ul class="pricing-checklist pricing-checklist--best">
+      {
+        plan.bestFor.map((item) => (
+          <li class="pricing-checklist__item">
+            <CheckIcon />
+            <span>{item}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</article>

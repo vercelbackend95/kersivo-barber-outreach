@@ -136,4 +136,12 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   --space-2xl: 3rem;
+
+  /* Marketing navbar height — sticky page chrome sits under this. */
+  --nav-sticky-offset: 3.75rem;
+
+  /* Checklists (plan cards, comparison table, fees). */
+  --check-icon-size: 1rem;
+  --check-gap: 0.75rem;
+  --check-row-gap: 1.25rem;
 }

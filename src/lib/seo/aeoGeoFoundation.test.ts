@@ -19,6 +19,7 @@ import {
   buildPricingFaqJsonLd,
   buildPricingWebPageJsonLd,
 } from './pricingPage';
+import { PRICING_BILLING_COLUMNS, PRICING_PLAN_CARDS } from '@/lib/pricing/pricingPlans';
 import {
   buildKersivoEntityJsonLd,
   getKersivoOrganizationId,
@@ -47,6 +48,7 @@ function pricingRenderedText(): string {
     PRICING_QUICK_ANSWER,
     ...PRICING_INCLUDED_GROUPS.flatMap((group) => [group.title, ...group.items]),
     ...PRICING_FEES_POINTS,
+    ...PRICING_BILLING_COLUMNS.map((column) => column.body),
     ...PRICING_FAQ_ITEMS.flatMap((item) => [item.question, item.answer]),
   ].join('\n');
 }
@@ -149,6 +151,9 @@ describe('/about page', () => {
 
 describe('/pricing page', () => {
   const page = read('src/pages/pricing.astro');
+  const plans = read('src/components/pricing/PricingPlans.astro');
+  const planCard = read('src/components/pricing/PlanCard.astro');
+  const faqSource = read('src/components/pricing/PricingFaq.astro');
   const text = pricingRenderedText();
 
   it('has the approved title, H1, description and quick answer', () => {
@@ -199,9 +204,15 @@ describe('/pricing page', () => {
 
   it('no longer presents a single £39 plan as the only option', () => {
     expect(page).not.toMatch(/One plan for one barbershop location|ONE PLAN|One plan\. One barbershop location|Everything in the £/);
-    expect(page).toContain('TWO PLANS');
-    expect(page).toContain('href="/starter"');
-    expect(page).toMatch(/href="\/admin"[\s\S]*?data-track="starter_signup_click"[\s\S]*?Start KERSIVO Starter/);
+    expect(plans).toContain('Two plans');
+    expect(PRICING_PLAN_CARDS.starter.primaryCta).toMatchObject({
+      href: '/admin',
+      track: 'starter_signup_click',
+      label: 'Start KERSIVO Starter',
+    });
+    expect(PRICING_PLAN_CARDS.starter.secondaryCta.href).toBe('/starter');
+    expect(planCard).toContain('href={plan.primaryCta.href}');
+    expect(planCard).toContain('data-track={plan.primaryCta.track}');
     expect(text).not.toMatch(/\b1%|application fee|platform fee|Free Booking/i);
   });
 
@@ -214,15 +225,15 @@ describe('/pricing page', () => {
   it('links to the demo, the checkout and the comparison pages without fake urgency', () => {
     expect(page).toContain('see the demo');
     expect(page).toContain('href="/demo"');
-    expect(page).toContain('<RateCard1Offer freePreview={freePreview} />');
+    expect(page).toContain('<PricingPlans freePreview={freePreview} />');
     expect(page).toContain('href="/admin/launch"');
-    expect(page).toContain('href="/booksy-alternative"');
-    expect(page).toContain('href="/fresha-alternative"');
+    expect(read('src/components/pricing/PricingFees.astro')).toContain('href="/booksy-alternative"');
+    expect(read('src/components/pricing/PricingFees.astro')).toContain('href="/fresha-alternative"');
     expect(page).not.toMatch(/limited time|only \d+ (spots|places)|hurry|join \d+/i);
   });
 
   it('builds visible FAQ and FAQPage schema from the same data', () => {
-    expect(page).toContain('faqs={getPricingFaqItems(freePreview)}');
+    expect(faqSource).toContain('getPricingFaqItems(freePreview)');
     expect(page).toContain('buildPricingFaqJsonLd(freePreview)');
     const faq = buildPricingFaqJsonLd();
     const entities = faq.mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;

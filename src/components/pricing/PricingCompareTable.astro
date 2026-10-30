@@ -1,0 +1,206 @@
+---
+import CheckIcon from '@/components/pricing/CheckIcon.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { getRenderableCompareGroups, PRICING_COMPARE_CAPTION } from '@/lib/pricing/pricingPlans';
+import '@/styles/components/pricing-compare.css';
+import '@/styles/components/pricing-plans.css';
+
+interface Props {
+  freePreview?: boolean;
+}
+
+const { freePreview = false } = Astro.props;
+const groups = getRenderableCompareGroups();
+---
+
+<section id="included" class="pricing-page-section" aria-labelledby="pricing-included-title">
+  <div class="container">
+    <SectionHeader
+      eyebrow="What’s included"
+      title="Barbershop software pricing: what each plan includes"
+      titleId="pricing-included-title"
+    />
+
+    <div class="pricing-compare" data-pricing-compare data-plan="full" data-expanded="false">
+      <div class="pricing-compare__switch" role="radiogroup" aria-label="Show plan in the comparison table">
+        <label class="pricing-compare__option">
+          <input type="radio" name="pricing-compare-plan" value="starter" />
+          Starter
+        </label>
+        <label class="pricing-compare__option">
+          <input type="radio" name="pricing-compare-plan" value="full" checked />
+          Full
+        </label>
+      </div>
+
+      <div class="pricing-compare__wrap">
+        <table class="pricing-compare__table">
+          <caption class="sr-only">{PRICING_COMPARE_CAPTION}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col" data-plan-col="starter">
+                <div class="pricing-compare__plan-head">
+                  <span class="pricing-compare__plan-name">KERSIVO Starter (£0/month)</span>
+                  <a
+                    href="/admin"
+                    class="pricing-compare__cta-link"
+                    data-track="starter_signup_click"
+                    data-track-placement="pricing_compare"
+                  >
+                    Start free
+                  </a>
+                </div>
+              </th>
+              <th scope="col" class="pricing-compare__plan--full" data-plan-col="full">
+                <div class="pricing-compare__plan-head">
+                  <span class="pricing-compare__pill">Recommended</span>
+                  <span class="pricing-compare__plan-name">Full KERSIVO (£{SAAS_MONTHLY_GBP}/month)</span>
+                  {
+                    freePreview ? (
+                      <a
+                        href={FREE_PREVIEW_CTA_HREF}
+                        class="btn btn--primary btn--sm pricing-compare__cta"
+                        data-track={FREE_PREVIEW_CTA_TRACK}
+                        data-track-placement="pricing_compare"
+                      >
+                        {FREE_PREVIEW_CTA_LABEL}
+                      </a>
+                    ) : (
+                      <a
+                        href="/admin/launch"
+                        class="btn btn--primary btn--sm pricing-compare__cta"
+                        data-track="saas_subscribe_click"
+                        data-track-placement="pricing_compare"
+                      >
+                        Start Full KERSIVO
+                      </a>
+                    )
+                  }
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              groups.map((group) => (
+                <>
+                  <tr class="pricing-compare__group" data-compare-collapse={group.collapseOnMobile ? '' : undefined}>
+                    <th scope="colgroup" colspan="3" data-group-span>
+                      {group.title}
+                    </th>
+                  </tr>
+                  {group.rows.map((row) => (
+                    <tr data-compare-collapse={group.collapseOnMobile ? '' : undefined}>
+                      <th scope="row">
+                        <span class="pricing-compare__feature-name">{row.feature}</span>
+                        {row.help ? <span class="pricing-compare__help">{row.help}</span> : null}
+                      </th>
+                      <td data-plan-col="starter">
+                        {row.starter.kind === 'included' ? (
+                          <CheckIcon label="Included" />
+                        ) : row.starter.kind === 'excluded' ? (
+                          <>
+                            <span class="pricing-compare__dash" aria-hidden="true">—</span>
+                            <span class="sr-only">Not included</span>
+                          </>
+                        ) : (
+                          row.starter.value
+                        )}
+                      </td>
+                      <td class="pricing-compare__plan--full" data-plan-col="full">
+                        {row.full.kind === 'included' ? (
+                          <CheckIcon label="Included" />
+                        ) : row.full.kind === 'excluded' ? (
+                          <>
+                            <span class="pricing-compare__dash" aria-hidden="true">—</span>
+                            <span class="sr-only">Not included</span>
+                          </>
+                        ) : (
+                          row.full.value
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn btn--outline btn--sm pricing-compare__more" data-pricing-compare-more aria-expanded="false">
+        Show all features
+      </button>
+      <p class="sr-only pricing-compare__status" data-pricing-compare-status aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initPricingCompare() {
+    const found = document.querySelector('[data-pricing-compare]');
+    if (!(found instanceof HTMLElement) || found.dataset.ready === 'true') return;
+    const host = found;
+    host.dataset.ready = 'true';
+
+    const radios = host.querySelectorAll('input[name="pricing-compare-plan"]');
+    const more = host.querySelector('[data-pricing-compare-more]');
+    const status = host.querySelector('[data-pricing-compare-status]');
+    const groupSpans = host.querySelectorAll('[data-group-span]');
+    const mq = window.matchMedia('(max-width: 47.99rem)');
+
+    function setColspan() {
+      const span = mq.matches ? 2 : 3;
+      groupSpans.forEach((cell) => {
+        if (cell instanceof HTMLTableCellElement) cell.colSpan = span;
+      });
+    }
+
+    function setPlan(plan: string) {
+      host.dataset.plan = plan;
+      radios.forEach((radio) => {
+        if (radio instanceof HTMLInputElement) radio.checked = radio.value === plan;
+      });
+      if (status) {
+        status.textContent =
+          plan === 'starter' ? 'Showing KERSIVO Starter in the comparison table.' : 'Showing Full KERSIVO in the comparison table.';
+      }
+      setColspan();
+    }
+
+    function setExpanded(expanded: boolean) {
+      host.dataset.expanded = expanded ? 'true' : 'false';
+      if (!(more instanceof HTMLButtonElement)) return;
+      more.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      more.textContent = expanded ? 'Show fewer features' : 'Show all features';
+    }
+
+    radios.forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (radio instanceof HTMLInputElement && radio.checked) setPlan(radio.value);
+      });
+    });
+
+    more?.addEventListener('click', () => {
+      setExpanded(host.dataset.expanded !== 'true');
+    });
+
+    mq.addEventListener('change', () => {
+      setColspan();
+      setExpanded(!mq.matches);
+    });
+
+    setPlan(host.dataset.plan || 'full');
+    setExpanded(!mq.matches);
+  }
+
+  initPricingCompare();
+  document.addEventListener('astro:page-load', initPricingCompare);
+</script>
