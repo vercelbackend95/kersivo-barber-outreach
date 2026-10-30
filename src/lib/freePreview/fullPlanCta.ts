@@ -14,5 +14,8 @@ export const SUBSCRIBE_NOW_CTA_LABEL = `Or subscribe now — £${SAAS_MONTHLY_GB
 export const SUBSCRIBE_NOW_CTA_HREF = '/admin/launch';
 export const SUBSCRIBE_NOW_CTA_TRACK = 'saas_subscribe_click';
 
-/** Navbar replaces "Get started — £39/month" (desktop and mobile). */
-export const NAVBAR_FREE_PREVIEW_CTA_LABEL = 'Free preview';
+/** Desktop navbar and the mobile sheet. The compact bar uses the shorter label. */
+export const NAVBAR_FREE_PREVIEW_CTA_LABEL = 'Get my free preview';
+
+/** Fits beside the menu control below the desktop breakpoint. */
+export const NAVBAR_FREE_PREVIEW_COMPACT_LABEL = 'Free preview';

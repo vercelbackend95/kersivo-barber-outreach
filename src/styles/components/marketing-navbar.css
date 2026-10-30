@@ -310,6 +310,22 @@ html.mnav-locked body::before {
   text-transform: uppercase;
 }
 
+.mnav-link--quiet .mnav-link__label {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+}
+
+.mnav-link--quiet .mnav-link__icon {
+  background: transparent;
+}
+
+.mnav-panel__list > li:has(> .mnav-link--quiet),
+.mnav-hub__items > li:has(> .mnav-link--quiet) {
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--mnav-line);
+}
+
 .mnav-link--featured {
   border: 1px solid var(--mnav-line);
   background: color-mix(in srgb, var(--fg) 3%, var(--mnav-surface));

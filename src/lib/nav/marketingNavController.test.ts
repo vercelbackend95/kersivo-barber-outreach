@@ -108,6 +108,28 @@ describe('desktop disclosure panels', () => {
     expect(root.dataset.mnavPanel).toBeUndefined();
   });
 
+  it('moves between triggers with the arrow keys and through the open links', () => {
+    stubMatchMedia((query) => query.includes('min-width'));
+    cleanup = initMarketingNav(render());
+    trigger('compare').focus();
+    press('ArrowRight');
+    expect(document.activeElement).toBe(trigger('resources'));
+    expect(trigger('resources').getAttribute('aria-expanded')).toBe('true');
+    expect(trigger('compare').getAttribute('aria-expanded')).toBe('false');
+
+    trigger('compare').focus();
+    press('ArrowDown');
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('#mnav-panel-compare a')];
+    expect(trigger('compare').getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(links[0]);
+    press('ArrowDown');
+    expect(document.activeElement).toBe(links[1]);
+    press('ArrowUp');
+    expect(document.activeElement).toBe(links[0]);
+    press('Escape');
+    expect(document.activeElement).toBe(trigger('compare'));
+  });
+
   it('closes on Escape and returns focus to the trigger', () => {
     cleanup = initMarketingNav(render());
     trigger('compare').click();
@@ -364,6 +386,16 @@ describe('lifecycle and current state', () => {
     cleanup = initMarketingNav(root);
     trigger('compare').click();
     expect(trigger('compare').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('marks a group current from a path prefix when no child link matches', () => {
+    const root = render();
+    trigger('compare').dataset.mnavCurrentPrefix = '/demo';
+    applyMarketingNavCurrent(root, { pathname: '/demo/gallery' });
+    expect(trigger('compare').hasAttribute('data-current')).toBe(true);
+    expect($('#mnav-panel-compare a')?.hasAttribute('aria-current')).toBe(false);
+    applyMarketingNavCurrent(root, { pathname: '/pricing' });
+    expect(trigger('compare').hasAttribute('data-current')).toBe(false);
   });
 
   it('derives aria-current from the live URL and clears stale state', () => {

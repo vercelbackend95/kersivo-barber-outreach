@@ -19,9 +19,10 @@ const leavesFamily =
 
 <a
   href={item.href}
-  class:list={['mnav-link', { 'mnav-link--featured': featured }]}
+  class:list={['mnav-link', { 'mnav-link--featured': featured, 'mnav-link--quiet': item.emphasis === 'quiet' }]}
   aria-current={current ? 'page' : undefined}
   data-mnav-match={match ?? undefined}
+  data-mnav-match-prefix={item.matchPrefix}
   data-astro-reload={leavesFamily ? '' : undefined}
   target={item.external ? '_blank' : undefined}
   rel={item.external ? 'noopener' : undefined}

@@ -32,7 +32,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { name: 'Full KERSIVO', href: '/pricing#plan' },
       { name: 'Barbershop websites', href: '/barbershop-websites' },
-      { name: 'Online booking', href: '/barbershop-online-booking' },
+      { name: 'Online booking & deposits', href: '/barbershop-online-booking' },
       { name: 'KERSIVO Starter', href: '/starter' },
       { name: 'Pricing', href: '/pricing' },
       { name: 'Live demo', href: '/demo' },
