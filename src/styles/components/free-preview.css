@@ -228,7 +228,7 @@
   .free-preview__steps {
     display: grid;
     flex: 1;
-    grid-auto-rows: minmax(5.5rem, 1fr);
+    grid-auto-rows: minmax(6rem, 1fr);
   }
 
   .free-preview__form-col {
@@ -575,6 +575,14 @@
 }
 
 /* ---------- Confirmation ---------- */
+
+/* Focus moves here and to invalid fields: keep them clear of the sticky navbar. */
+.free-preview-confirmation,
+.free-preview-form input,
+.free-preview-form select,
+.free-preview-form textarea {
+  scroll-margin-top: 6rem;
+}
 
 .free-preview-confirmation {
   margin-block: auto;
