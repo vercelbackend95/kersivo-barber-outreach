@@ -510,7 +510,7 @@ html.mnav-locked body::before {
 
   .mnav__compact-cta.btn {
     padding-inline: 0.55rem;
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
   }
 
   .mnav__menu {

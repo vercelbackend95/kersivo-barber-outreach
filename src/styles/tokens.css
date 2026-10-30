@@ -83,6 +83,12 @@
   --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
   --text-5xl: 3rem;
+  --line-display: 1.1;
+  --prose-max: 70ch;
+
+  /* Marketing section rhythm: 64px mobile / 96px desktop. */
+  --section-space-y: 4rem;
+  --section-space-y-lg: 6rem;
 
   /* Radius scale */
   --radius-4: 4px;

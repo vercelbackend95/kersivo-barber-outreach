@@ -118,7 +118,7 @@
 .bwb-board__plate-label,
 .bwb-row__label {
   font-family: var(--bwb-display);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.2em;
   line-height: 1.2;
@@ -724,7 +724,7 @@
   }
 
   .bwb-palette__name {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
   }
 
   .bwb-palette__hex {
@@ -792,7 +792,7 @@
   }
 
   .bwb-facts__label {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
   }
 
   .bwb-facts__value {

@@ -1,5 +1,6 @@
 import type { InsightCardItem } from '@/lib/editorial/insightIcons';
-import { WEBSITE_UPDATE_SUPPORT_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { STRIPE_FEES_NOTE, WEBSITE_UPDATE_SUPPORT_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { offer } from '@/content/offer';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { formatGbp } from '@/lib/seo/freshaFacts';
@@ -76,7 +77,7 @@ export const ABOUT_INCLUDED_ITEMS = [
   'Client list with booking history',
   'Team, service and working-hours management',
   'Email confirmations and reminders',
-  'Full KERSIVO: a branded barbershop website on your own standard domain',
+  'Full KERSIVO: a branded barbershop website on your own domain',
   'Full KERSIVO: editable booking payment controls, including Pay at shop',
   'Full KERSIVO: SMS appointment reminders within a monthly allowance, booking and product sales reports',
   'Full KERSIVO: a retail pickup shop for products paid online and collected in store',
@@ -90,7 +91,7 @@ export const ABOUT_MODEL_POINTS: readonly { title: string; body: string }[] = [
   },
   {
     title: 'Your own domain (Full KERSIVO)',
-    body: 'Full KERSIVO includes one standard domain per location. If you already own a domain, you keep ownership of it.',
+    body: 'Full KERSIVO includes your own domain per location. If you already own a domain, you keep ownership of it.',
   },
   {
     title: 'Direct booking',
@@ -98,7 +99,7 @@ export const ABOUT_MODEL_POINTS: readonly { title: string; body: string }[] = [
   },
 ];
 
-export const ABOUT_PRICING_SUMMARY = `Full KERSIVO is ${PRICE} per month per physical barbershop location and KERSIVO Starter is £0/month, with no setup fee and 0% KERSIVO commission on both plans. Standard Stripe payment-processing fees apply. KERSIVO is not currently VAT registered, so no VAT is added.`;
+export const ABOUT_PRICING_SUMMARY = `Full KERSIVO is ${PRICE} per month per physical barbershop location and KERSIVO Starter is £0/month, with no setup fee and 0% KERSIVO commission on both plans. ${STRIPE_FEES_NOTE} ${offer.fees.vat}`;
 
 export const ABOUT_SETUP_PARAGRAPH =
   'You subscribe to Full KERSIVO and send us your shop details, branding, photos, services and team. We configure your website, booking flow and payment settings. Your site is typically ready in a few days once we receive all required information — that’s an estimate, not a guaranteed date. You review a private preview, and nothing goes live until you approve it. You can keep taking bookings on your current system until then.';

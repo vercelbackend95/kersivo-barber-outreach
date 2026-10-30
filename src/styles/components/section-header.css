@@ -37,7 +37,7 @@
 
 .section-header__lead {
   margin: var(--space-md) 0 0;
-  max-width: 65ch;
+  max-width: var(--prose-max);
   color: var(--muted);
   font-family: var(--font-body);
   font-size: var(--text-md);

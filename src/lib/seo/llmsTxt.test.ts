@@ -21,7 +21,7 @@ describe('/llms.txt', () => {
   it('states prices with the Stripe qualifier and no banned claims', () => {
     expect(body).toContain('£39/month per location');
     expect(body).toContain('£0/month');
-    expect(body).toMatch(/0% KERSIVO commission\. Standard Stripe payment-processing fees still apply\./);
+    expect(body).toMatch(/0% KERSIVO commission\. Standard Stripe payment-processing fees apply to online payments\./);
     expect(body).not.toMatch(/zero commission|free forever|unlimited|guarantee|1–2 weeks|\d+\s*[–-]\s*\d+ days/i);
   });
 

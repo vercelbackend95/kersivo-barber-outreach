@@ -1,35 +1,21 @@
 ---
+import { getSetupSteps } from '@/content/setupSteps';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import '@/styles/components/barbershop-website-design-process.css';
 
-// A short version of the parent page's setup process; the full onboarding steps and terms stay there.
-const stages = [
-  {
-    owner: 'you',
-    role: 'You provide',
-    title: 'Your shop, your details',
-    body: 'Share your shop details, services, opening hours and branding, along with any photographs and team information you have.',
-  },
-  {
-    owner: 'kersivo',
-    role: 'KERSIVO prepares',
-    title: 'We prepare your website',
-    body: 'KERSIVO prepares your standard branded website, connects online bookings and helps with your domain setup.',
-  },
-  {
-    owner: 'you',
-    role: 'You review',
-    title: 'Review before launch',
-    body: 'Check a private preview, confirm your details and test the booking journey. Your website goes live after your approval and the final technical checks.',
-  },
-];
-
+const stages = getSetupSteps(isFreePreviewFlowEnabled()).map((step) => ({
+  owner: step.owner === 'KERSIVO' ? 'kersivo' : 'you',
+  role: step.owner === 'KERSIVO' ? 'KERSIVO prepares' : 'You',
+  title: step.title,
+  body: step.body,
+}));
 ---
 
 <section class="bwk" aria-labelledby="bwk-heading">
   <div class="bwk__inner">
     <header class="bwk__intro">
       <p class="bwk__kicker"><span class="bwk__kicker-mark" aria-hidden="true"></span>From design to your website</p>
-      <h2 id="bwk-heading" class="bwk__heading">How KERSIVO Brings Your Brand Online</h2>
+        <h2 id="bwk-heading" class="bwk__heading">How KERSIVO brings your brand online</h2>
       <p class="bwk__lede">
         Here’s what you provide, what KERSIVO prepares and what you review before launch.
       </p>

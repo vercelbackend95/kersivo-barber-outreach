@@ -612,7 +612,7 @@
 
 .fresha-alt-compare__summary-copy > span {
   color: color-mix(in srgb, var(--muted) 82%, transparent);
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -1026,7 +1026,7 @@
   }
 
   .fresha-alt-compare__summary-copy > span {
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
   }
 
   .fresha-alt-compare__panel {
@@ -1070,7 +1070,7 @@
   }
 
   .fresha-alt-compare__points li {
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
   }
 
   .fresha-alt-compare__demo-cta {

@@ -296,11 +296,11 @@
   }
 
   .landing-demo-preview .feature261__media--carousel .sf-card-name {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
   }
 
   .landing-demo-preview .feature261__media--carousel .sf-card-price {
-    font-size: 0.78rem;
+    font-size: var(--text-sm);
   }
 
   .landing-demo-preview .feature261__media--carousel .sf-atc {

@@ -328,7 +328,7 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
   [INSIGHTS_WEBSITE_NEED.slug]: {
     href: '/barbershop-websites',
     label: 'See what a KERSIVO barbershop website includes',
-    note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, including one standard domain. Run the test above first: not every shop needs a website.`,
+    note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, including your own domain. Run the test above first: not every shop needs a website.`,
   },
   [INSIGHTS_SECOND_VISIT.slug]: {
     href: '/pricing#plan',

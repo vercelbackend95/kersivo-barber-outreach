@@ -246,7 +246,7 @@ a.ins-mosaic__stack-card--link {
 .ins-mosaic__cta {
   margin-top: 0.85rem;
   align-self: flex-start;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--ins-accent-text);
   text-decoration: none;
@@ -742,7 +742,7 @@ a.ins-mosaic__stack-card--link {
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.7rem;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--ins-accent-text);

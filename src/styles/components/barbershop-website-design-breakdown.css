@@ -312,7 +312,7 @@
 .bwd-spec-first__eyebrow {
   max-width: 22ch;
   color: var(--bl-silver);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.16em;
   line-height: 1.5;
@@ -570,7 +570,7 @@
   margin-top: 0.5rem;
   color: var(--bl-cobalt);
   font-family: var(--bl-display);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.16em;
   font-variant-numeric: tabular-nums;
@@ -1109,7 +1109,7 @@
 
 .bwd-spec-menu__num {
   color: var(--bl-silver);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
@@ -1186,7 +1186,7 @@
   padding-top: 1rem;
   border-top: 1px solid var(--bl-line-dark);
   color: var(--bl-silver);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1490,7 +1490,7 @@
 
 .bwd-spec-flow__choice-helper {
   color: var(--bl-silver);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .bwd-spec-flow__check {

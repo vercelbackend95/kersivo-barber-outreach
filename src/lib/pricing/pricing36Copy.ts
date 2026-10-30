@@ -72,7 +72,7 @@ const DEFAULT_COPY: Pricing36Copy = {
   priorityNewcomerAnchor:
     'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
-    'Flat Care keeps margin predictable as chairs and volume grow. Standard Stripe payment-processing fees still apply.',
+    `Flat Care keeps margin predictable as chairs and volume grow. ${STRIPE_FEES_NOTE}`,
   launchCtaLabel: 'Plan my setup on Launch',
   priorityCtaLabel: 'Plan my setup on Priority Growth',
   saasTitle: 'KERSIVO',
@@ -111,7 +111,7 @@ const LANDING_COPY: Pricing36Copy = {
   priorityNewcomerAnchor:
     'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
-    'Flat Care keeps margin predictable as chairs and volume grow. Standard Stripe payment-processing fees still apply.',
+    `Flat Care keeps margin predictable as chairs and volume grow. ${STRIPE_FEES_NOTE}`,
   launchCtaLabel: 'Plan My Setup — Launch',
   priorityCtaLabel: 'Plan My Setup — Priority Growth',
   saasTitle: 'KERSIVO',

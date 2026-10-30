@@ -3,7 +3,7 @@
   position: relative;
   overflow: hidden;
   background: var(--feature261-bg);
-  padding-block: 3.5rem;
+  padding-block: var(--section-space-y);
 }
 
 .feature261__glow {
@@ -713,7 +713,7 @@
 
 @media (min-width: 768px) {
   .feature261 {
-    padding-block: 6rem;
+    padding-block: var(--section-space-y);
   }
 }
 

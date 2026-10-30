@@ -1,3 +1,4 @@
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -30,7 +31,7 @@ export const STARTER_FULL_FIT = {
     'You want to offer Pay at shop, or choose which payment options clients see.',
     'You want full booking history, Reports, Retail and SMS reminders within a monthly allowance.',
   ],
-  note: 'Full also has 0% KERSIVO commission. Standard Stripe payment-processing fees still apply.',
+  note: `Full also has 0% KERSIVO commission. ${STRIPE_FEES_NOTE}`,
   link: { label: 'See Full KERSIVO pricing', href: '/pricing#plan' },
 } as const;
 

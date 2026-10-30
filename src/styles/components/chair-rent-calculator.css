@@ -267,7 +267,7 @@
 .crc-row-note {
   display: block;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .crc-panels {

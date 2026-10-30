@@ -2,7 +2,7 @@
 
 .pricing-page-section {
   position: relative;
-  padding-block: clamp(2.1rem, 5vw, 4.5rem);
+  padding-block: var(--section-space-y);
   border-top: 1px solid var(--border);
   scroll-margin-top: calc(var(--nav-sticky-offset) + 1rem);
 }

@@ -106,7 +106,7 @@ describe('homepage SEO phase 1: headings', () => {
   it('opens the content with the barbershop software H2', () => {
     expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
     expect(text(between(difference, '<h2 id="landing-difference-title"', '</h2>'))).toBe(
-      'Barbershop software that sends clients to your shop, not a marketplace',
+      'Clients book your shop, not a marketplace',
     );
     expect(difference).toContain("linkHref: '/barbershop-online-booking'");
   });
@@ -227,7 +227,7 @@ describe('homepage lower-funnel conversion controls', () => {
     expect(layout.conditionsLine2).toContain(
       `we'll refund your initial £${SAAS_MONTHLY_GBP} subscription payment`,
     );
-    expect(landingPricingMarkup).toMatch(/not VAT registered/);
+    expect(landingPricingMarkup).toMatch(/not currently VAT registered/);
     expect(landingPricingMarkup).toContain('href="/admin/launch"');
   });
 

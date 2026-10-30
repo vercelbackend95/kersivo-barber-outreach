@@ -136,7 +136,7 @@
   border-radius: 50%;
   background: var(--bg);
   color: color-mix(in srgb, var(--fg) 72%, transparent);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   line-height: 1;

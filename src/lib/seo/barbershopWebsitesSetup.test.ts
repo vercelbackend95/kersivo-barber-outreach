@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FREE_PREVIEW_STEPS, FULL_SETUP_STEPS } from '@/content/setupSteps';
 import {
   DOMAIN_EXISTING_CLAIM,
   DOMAIN_LIMIT_CLAIM,
@@ -24,10 +25,7 @@ const [, frontmatter = '', markup = ''] = section.split(/^---$/m);
 const text = (source: string) =>
   source.replace(/<[^>]+>/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
 const constant = (name: string) => frontmatter.match(new RegExp(`const ${name} = '([^']+)'`))?.[1];
-const stagesSource = frontmatter.slice(frontmatter.indexOf('const stages'), frontmatter.indexOf('type Note'));
-const stageField = (field: string) =>
-  [...stagesSource.matchAll(new RegExp(`${field}: [\`']([^\`']+)[\`']`, 'g'))].map((m) => m[1]);
-const copy = `${frontmatter}\n${text(markup)}`;
+const copy = `${frontmatter}\n${text(markup)}\n${FULL_SETUP_STEPS.map((step) => `${step.title} ${step.body}`).join(' ')}`;
 
 describe('/barbershop-websites — section 06 setup process', () => {
   it('renders after section 05 and before the footer', () => {
@@ -46,28 +44,25 @@ describe('/barbershop-websites — section 06 setup process', () => {
   });
 
   it('uses the shared four-step preview journey and keeps the subscribe-first stages', () => {
-    expect(frontmatter).toContain('const previewStages: Stage[] = FREE_PREVIEW_STEPS.map');
+    expect(frontmatter).toContain('getSetupSteps(freePreview)');
     expect(markup).toContain('data-stages={shownStages.length}');
-    const previewBlock = frontmatter.slice(frontmatter.indexOf('const previewStages'));
-    expect(previewBlock).not.toContain("title: 'Go live'");
+    expect(FREE_PREVIEW_STEPS).toHaveLength(4);
+    expect(FULL_SETUP_STEPS.map((step) => step.title)).not.toContain('Go live');
   });
 
-  it('walks through the five stages in order', () => {
-    expect(stageField('title')).toEqual([
-      'Choose Full KERSIVO',
+  it('walks through the four stages in order', () => {
+    expect(FULL_SETUP_STEPS.map((step) => step.title)).toEqual([
+      'Start your Full KERSIVO subscription',
       'Tell us about your shop',
-      'We prepare your website',
-      'Check it before launch',
-      'Go live',
+      'We prepare your KERSIVO setup',
+      'Review, approve and launch',
     ]);
-    expect(stageField('number')).toEqual(['01', '02', '03', '04', '05']);
     expect(markup).toMatch(/<ol class="bsw-setup__stages"/);
   });
 
   it('keeps stage copy short and balanced', () => {
-    const lengths = stageField('copy').map((c) => c.length);
-    expect(lengths).toHaveLength(5);
-    for (const length of lengths) expect(length).toBeLessThanOrEqual(120);
+    expect(FULL_SETUP_STEPS).toHaveLength(4);
+    for (const step of FULL_SETUP_STEPS) expect(step.body.length).toBeLessThanOrEqual(140);
   });
 
   it('is honest about when billing starts', () => {
@@ -87,12 +82,11 @@ describe('/barbershop-websites — section 06 setup process', () => {
   });
 
   it('describes the real preview and approval step', () => {
-    expect(copy).toMatch(/Preview it in your KERSIVO dashboard and try a booking\. Nothing goes live until you approve it/);
+    expect(copy).toMatch(/Check your private preview and confirm the details\. Nothing goes live until you approve it/);
     expect(PREVIEW_LAUNCH_CLAIM).toMatch(/private preview/);
     expect(PREVIEW_LAUNCH_CLAIM).toMatch(/only after your explicit approval/);
     expect(existsSync(join(root, 'src/pages/admin/site-preview.astro'))).toBe(true);
     expect(existsSync(join(root, 'src/pages/api/admin/site-launch/approve.ts'))).toBe(true);
-    expect(copy).toMatch(/Once you’ve approved the site and the final technical checks are done, we publish it/);
   });
 
   it('does not make every optional asset a blocker', () => {

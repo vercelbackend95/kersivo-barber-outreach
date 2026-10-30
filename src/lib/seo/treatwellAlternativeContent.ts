@@ -17,12 +17,12 @@ export const TREATWELL_WHY_INTRO='Treatwell combines booking software with salon
 export const TREATWELL_WHY_THEMES: readonly InsightCardItem[]=[
 {icon:'discovery',title:'Marketplace discovery versus direct clients',body:'Treatwell can bring new customers through its marketplace. KERSIVO does not offer marketplace discovery; bookings come via your own channels.'},
 {icon:'seats',title:'Which bookings trigger commission?',body:`Treatwell advertises ${NEW_CLIENT} commission for qualifying first visits by new marketplace customers, and ${REPEAT} marketplace commission on repeat/direct bookings. Individual agreements can differ.`},
-{icon:'storefront',title:'Your own branded website',body:`Treatwell supports direct booking integrations with your existing online presence. Full KERSIVO adds a branded barbershop website and standard domain for ${FULL}/month per location.`},
+{icon:'storefront',title:'Your own branded website',body:`Treatwell supports direct booking integrations with your existing online presence. Full KERSIVO adds a branded barbershop website and your own domain for ${FULL}/month per location.`},
 {icon:'stack',title:'What is included in the system?',body:'Treatwell offers a broad salon ecosystem, including POS and marketing capabilities. Full KERSIVO focuses on barbershop bookings, clients, reports and retail pickup.'},
 ];
 export const TREATWELL_FIT_PATHS: readonly [ModelComparisonItem,ModelComparisonItem]=[
 {label:'Treatwell',descriptor:'Marketplace discovery and salon management',icon:'network',summary:[{label:'Discovery',value:'Treatwell marketplace'},{label:'Commission',value:`${NEW_CLIENT} eligible first marketplace booking`}],heading:'Treatwell may suit your shop if…',points:['You value new-client discovery through an established marketplace','You want salon-oriented POS, marketing and reviews tools','You can justify acquisition fees with profitable first appointments and repeat visits','Your current Treatwell business already benefits from marketplace discovery']},
-{label:'KERSIVO',descriptor:'Own-brand direct booking for barbers',icon:'direct',summary:[{label:'Pricing',value:`£0 Starter or ${FULL}/month Full`},{label:'Commission',value:'0% KERSIVO commission · Stripe fees apply'}],heading:'KERSIVO may suit your shop if…',points:['Your customers find you through Google, Instagram or personal referrals',`You want a £0 core booking plan with a mandatory ${DEPOSIT} online deposit or full payment`,`You want a branded website and standard domain on a flat ${FULL}/month Full plan`,'You want retail pickup, reports, advanced clients and flexible Full payment settings']},
+{label:'KERSIVO',descriptor:'Own-brand direct booking for barbers',icon:'direct',summary:[{label:'Pricing',value:`£0 Starter or ${FULL}/month Full`},{label:'Commission',value:'0% KERSIVO commission · Stripe fees apply'}],heading:'KERSIVO may suit your shop if…',points:['Your customers find you through Google, Instagram or personal referrals',`You want a £0 core booking plan with a mandatory ${DEPOSIT} online deposit or full payment`,`You want a branded website and your own domain on a flat ${FULL}/month Full plan`,'You want retail pickup, reports, advanced clients and flexible Full payment settings']},
 ];
 export const TREATWELL_FIT_CLOSING='Marketplace reach can be valuable. Choose based on new-client acquisition, total charges and the customer journey, rather than commission headlines alone.';
 export const TREATWELL_SWITCHING_REASSURANCE='Prepare KERSIVO while keeping Treatwell appointments accessible. Check your Treatwell agreement before taking live bookings in two systems.';
@@ -30,7 +30,7 @@ export const TREATWELL_SWITCHING_STEPS=[
 {title:'Keep your bookings running',body:'Continue using Treatwell for public bookings while preparing KERSIVO privately. Check your contract for any restrictions on parallel booking software.'},
 {title:'Check the available data export',body:'Ask Treatwell which customer, service and appointment fields your account can export.'},
 {title:'Review compatible data',body:'KERSIVO can help assess migration of usable compatible exports, including supported CSV files.'},
-{title:'Configure KERSIVO',body:'Set up barbers, services and availability. Full includes your branded website and standard domain.'},
+{title:'Configure KERSIVO',body:'Set up barbers, services and availability. Full includes your branded website and your own domain.'},
 {title:'Verify future bookings',body:'Cross-check upcoming appointments and client records before announcing a switch.'},
 {title:'Switch public links when ready',body:'Update Google, website and social booking links only after approving the new journey and checking Treatwell contractual obligations.'},
 ];

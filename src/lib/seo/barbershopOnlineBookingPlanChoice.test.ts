@@ -43,7 +43,7 @@ describe('Barbershop online booking page — Section 07 plan choice + FAQ', () =
     expect(component).not.toContain('<StarterFullPlanCards');
     expect(markup).toContain('PLAN_CHOICE_INTENTS.map');
     expect(markup).toContain('bob-pc-faq');
-    expect(markup).toContain('A Few Things Worth Knowing.');
+    expect(markup).toContain('A few things worth knowing');
     expect(markup).toContain('{content.close}');
     expect(component).not.toMatch(/<script\b|client:/);
     expect(css).not.toContain('240vh');
@@ -76,7 +76,7 @@ describe('Barbershop online booking page — Section 07 plan choice + FAQ', () =
     expect(pay?.answer[0]).toContain('customer chooses');
     expect(pay?.answer[1]).toContain('the shop owner chooses Pay at shop');
     expect(pay?.answer[1]).toContain('deposit, or payment in full online');
-    expect(pay?.answer[1]).toContain('Standard Stripe payment-processing fees still apply.');
+    expect(pay?.answer[1]).toContain('Standard Stripe payment-processing fees apply to online payments.');
   });
 
   it('puts Full first with the subscribe CTA and keeps Starter as a text link', () => {

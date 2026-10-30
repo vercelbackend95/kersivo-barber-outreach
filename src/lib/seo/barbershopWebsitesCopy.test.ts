@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FULL_SETUP_STEPS } from '@/content/setupSteps';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const component = (name: string) =>
@@ -38,7 +39,7 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(paymentMarketing).toContain('full payment online');
     expect(closing).toContain('Can I choose how clients pay when booking?');
     expect(closing).toContain('The deposit and full-payment modes require your shop’s connected, payment-ready Stripe account.');
-    expect(closing).toContain('Standard Stripe processing fees apply');
+    expect(closing).toContain('{STRIPE_FEES_NOTE}');
   });
 
   it('keeps material Full terms and non-bespoke delivery limits', () => {
@@ -50,8 +51,9 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(offer).toContain('Powered by KERSIVO');
     expect(setup).toContain('Your subscription starts when you buy');
     expect(setup).toContain('Domain access, missing information or migration');
-    expect(setup).toContain('Nothing goes live until you approve it');
-    expect(setup).toContain('standard branded website');
+    expect(setup).toContain('getSetupSteps(freePreview)');
+    expect(FULL_SETUP_STEPS.some((step) => step.body.includes('Nothing goes live until you approve it'))).toBe(true);
+    expect(setup).toContain("Premium or unusually expensive names aren’t included as standard");
     expect(closing).toContain('no pro-rata refund');
   });
 

@@ -1,12 +1,12 @@
 import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
 export const SQUARE_QUICK_ANSWER_KICKER='The short version';
 export const SQUARE_QUICK_ANSWER_TITLE='Square Appointments vs KERSIVO: the short answer.';
-export const SQUARE_QUICK_ANSWER_LEAD='KERSIVO is a Square Appointments alternative for independent UK barbershops. Square offers Free (£0), Plus (£29/month) and Premium (£69/month) appointment plans per location, plus payment-processing fees. KERSIVO Starter is £0/month for up to four bookable barbers; Full KERSIVO is £39/month per location and includes a complete branded website on your own standard domain.';
+export const SQUARE_QUICK_ANSWER_LEAD='KERSIVO is a Square Appointments alternative for independent UK barbershops. Square offers Free (£0), Plus (£29/month) and Premium (£69/month) appointment plans per location, plus payment-processing fees. KERSIVO Starter is £0/month for up to four bookable barbers; Full KERSIVO is £39/month per location and includes a complete branded website on your own domain.';
 export const SQUARE_QUICK_ANSWER_DETAIL='Square is particularly strong when appointments, point of sale and in-person payments are part of the same workflow. KERSIVO focuses on a barber-specific digital experience. Square already offers a customisable booking site, a free full-service Square Online website option, deposits and SMS reminders; this is a comparison of business models, not a claim that those functions are missing.';
 export const SQUARE_QUICK_ANSWER_FACTS=[{label:'Square Appointments Free',value:'£0/month · processing fees apply'},{label:'Square Appointments Plus',value:'£29/month per location'},{label:'Square Appointments Premium',value:'£69/month per location'},{label:'Full KERSIVO',value:'£39/month per location'}];
 export const SQUARE_WHY_INTRO='Square Appointments is a serious scheduling and payments platform that Square explicitly markets to barbershops. For a barber, the question is whether its broad POS ecosystem or KERSIVO’s own-domain barber experience better matches the way the shop operates.';
 export const SQUARE_WHY_THEMES: readonly InsightCardItem[]=[
-{icon:'storefront',title:'One complete brand experience',body:'Square provides both booking websites and a full-service Square Online website. Full KERSIVO bundles a standard domain, barbershop website, bookings and retail pickup in its barber-specific £39/month platform.'},
+{icon:'storefront',title:'One complete brand experience',body:'Square provides both booking websites and a full-service Square Online website. Full KERSIVO bundles your own domain, barbershop website, bookings and retail pickup in its barber-specific £39/month platform.'},
 {icon:'stack',title:'POS versus an online-first platform',body:'Square is strong in point-of-sale hardware and integrated card acceptance. KERSIVO focuses on online bookings and shop operations, not replacing the physical till or card terminal.'},
 {icon:'seats',title:'Which features justify a paid plan?',body:'Square Free already offers unlimited staff calendars, reminders, deposits and a booking website. Compare Square Plus and Premium features with the Full KERSIVO platform rather than judging by price alone.'},
 {icon:'direct',title:'What your clients experience',body:'KERSIVO Starter uses a hosted booking page; Full centres bookings on your shop website and domain. Choose the model that fits where customers find, rebook and buy from your shop.'},
@@ -21,7 +21,7 @@ export const SQUARE_SWITCHING_STEPS=[
 {title:'Keep Square appointments live',body:'Continue serving existing clients and taking bookings in Square during preparation.'},
 {title:'Export your Customer Directory',body:'Square provides a Customer Directory CSV export. Review its fields and permissions before sharing business data.'},
 {title:'Check future appointments separately',body:'Do not assume all upcoming appointments or historic booking data can be imported automatically; check export availability and map any gaps.'},
-{title:'Set up KERSIVO',body:'Configure services, team and availability. For Full, prepare your branded website and standard domain.'},
+{title:'Set up KERSIVO',body:'Configure services, team and availability. For Full, prepare your branded website and your own domain.'},
 {title:'Review and approve',body:'Test the new booking journey. On Full, approve your private site preview before switching.'},
 {title:'Move your public booking links',body:'Update your Google, social and website booking destinations only when the new setup is ready.'},
 ];

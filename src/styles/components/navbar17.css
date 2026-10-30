@@ -361,7 +361,7 @@ button.navbar17__mobile-bar-cta {
   .navbar17__mobile-bar-cta {
     display: inline-flex;
     min-height: 44px;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     padding-inline: 0.65rem;
     flex: 0 1 auto;
   }
@@ -383,7 +383,7 @@ button.navbar17__mobile-bar-cta {
 
   .navbar17__mobile-bar-cta {
     padding-inline: 0.5rem;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     letter-spacing: 0.01em;
   }
 

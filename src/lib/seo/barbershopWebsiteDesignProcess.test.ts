@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FULL_SETUP_STEPS } from '@/content/setupSteps';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
 
@@ -25,17 +26,15 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
     expect(page.match(/<WebsiteDesignProcess \/>/g) ?? []).toHaveLength(1);
   });
 
-  it('has one H2 with the approved heading, three stage H3s in an ordered list and no H1', () => {
+  it('has one H2 with the approved heading, four shared stage H3s in an ordered list and no H1', () => {
     expect(markup).toContain('<section class="bwk" aria-labelledby="bwk-heading">');
     expect(markup.match(/<h2\b/g) ?? []).toHaveLength(1);
-    expect(text(markup.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '')).toBe('How KERSIVO Brings Your Brand Online');
+    expect(text(markup.match(/<h2[\s\S]*?<\/h2>/)?.[0] ?? '')).toBe('How KERSIVO brings your brand online');
     expect(markup).not.toMatch(/<h1\b/);
     expect(markup.match(/<h3\b/g) ?? []).toHaveLength(1);
     expect(markup).toMatch(/<ol class="bwk-timeline">[\s\S]*?\{stages\.map\([\s\S]*?<h3 class="bwk-timeline__title">/);
-    const titles = [...frontmatter.matchAll(/title: '([^']+)'/g)].map((match) => match[1]);
-    expect(titles).toEqual(['Your shop, your details', 'We prepare your website', 'Review before launch']);
-    const roles = [...frontmatter.matchAll(/role: '([^']+)'/g)].map((match) => match[1]);
-    expect(roles).toEqual(['You provide', 'KERSIVO prepares', 'You review']);
+    expect(frontmatter).toContain('getSetupSteps(isFreePreviewFlowEnabled())');
+    expect(FULL_SETUP_STEPS).toHaveLength(4);
     expect(markup).toMatch(/<p class="bwk-timeline__role">\{stage\.role\}<\/p>\s*<h3 class="bwk-timeline__title">\{stage\.title\}<\/h3>\s*<p class="bwk-timeline__body">\{stage\.body\}<\/p>/);
   });
 
@@ -57,13 +56,13 @@ describe('/barbershop-website-design — Section 06 how KERSIVO brings your bran
     expect(text(markup.match(/<p class="bwk__lede">([\s\S]*?)<\/p>/)?.[1] ?? '')).toBe(
       'Here’s what you provide, what KERSIVO prepares and what you review before launch.',
     );
-    for (const body of [
-      'Share your shop details, services, opening hours and branding, along with any photographs and team information you have.',
-      'KERSIVO prepares your standard branded website, connects online bookings and helps with your domain setup.',
-      'Check a private preview, confirm your details and test the booking journey. Your website goes live after your approval and the final technical checks.',
-    ]) {
-      expect(frontmatter).toContain(body);
-    }
+    expect(frontmatter).toContain('getSetupSteps');
+    expect(FULL_SETUP_STEPS.map((step) => step.title)).toEqual([
+      'Start your Full KERSIVO subscription',
+      'Tell us about your shop',
+      'We prepare your KERSIVO setup',
+      'Review, approve and launch',
+    ]);
   });
 
   it('has no price card or sales link: the page closes with one offer block (Batch 5)', () => {

@@ -115,7 +115,7 @@ export const KERSIVO_HUB_PLATFORM: HubPlatform = {
   sources: KERSIVO_SOURCES,
   attributes: {
     zeroCommission: yes('0% KERSIVO commission. Standard Stripe processing fees apply separately.', 'pricing'),
-    ownDomain: yes('Full KERSIVO includes your own branded website and one standard domain per location.', 'pricing'),
+    ownDomain: yes('Full KERSIVO includes your own branded website and your own domain per location.', 'pricing'),
     clientDataExport: yes(`${DATA_EXPORT_RETENTION_CLAIM} Full KERSIVO owners can also download it once from the dashboard settings.`, 'pricing'),
     builtForBarbers: yes('Built specifically for independent UK barbershops.', 'pricing'),
     biggerTeams: yes('Full KERSIVO supports more than 4 bookable barbers per location, subject to fair use.', 'pricing'),

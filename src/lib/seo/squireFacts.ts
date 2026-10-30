@@ -56,7 +56,7 @@ export const SQUIRE_COMPARE_SECTIONS:readonly SquireCompareSection[]=[
    squireLead:'Hosted booking discovery and branded experiences, with features depending on plan.',
    squirePoints:['Public SQUIRE-hosted shop booking pages','Google and Instagram booking on Pro','Branded landing pages offered as an Executive add-on','Branded apps are advertised on eligible plans'],
    kersivoLead:'Full KERSIVO places the complete website and booking flow on your own shop domain.',
-   kersivoPoints:['Full: branded website and standard domain included','Your brand, services, team and booking steps in one experience','Starter: KERSIVO-hosted booking page with shop name and logo','No consumer marketplace required for direct booking']},
+   kersivoPoints:['Full: branded website and your own domain included','Your brand, services, team and booking steps in one experience','Starter: KERSIVO-hosted booking page with shop name and logo','No consumer marketplace required for direct booking']},
   {id:'retail',title:'Retail & POS',subtitle:'Online products versus physical retail operations.',
    squireLead:'Broad in-shop POS capabilities plus inventory tools on higher tiers.',
    squirePoints:['In-shop register for walk-ins and checkout','Card and contactless payment support','Inventory tracking and purchase orders on Titan','Integrated staff payment workflows'],

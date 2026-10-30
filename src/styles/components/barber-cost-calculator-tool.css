@@ -36,7 +36,7 @@
 
 .calc-panel__models {
   color: color-mix(in srgb, var(--muted) 85%, transparent);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.04em;
 }
 
@@ -104,7 +104,7 @@
   margin: 0;
   max-width: 52ch;
   color: color-mix(in srgb, var(--muted) 92%, transparent);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -533,7 +533,7 @@
 
 .calc-advanced__hint {
   color: color-mix(in srgb, var(--muted) 88%, transparent);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 400;
 }
 
@@ -945,7 +945,7 @@ details[open] > summary .calc-advanced__chevron {
 
 .calc-card__detail {
   color: color-mix(in srgb, var(--muted) 92%, transparent);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .calc-card__detail:empty {

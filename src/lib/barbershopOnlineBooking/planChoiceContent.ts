@@ -128,7 +128,7 @@ export function buildPlanChoiceContent(freePreview = false): PlanChoiceContent {
       id: 'upgrade',
       question: 'Can I start with Starter and upgrade to Full later?',
       answer: [
-        'Yes. Starter and Full share the same underlying KERSIVO platform. Full adds a branded website, standard domain arrangement, support for larger teams and wider business tools.',
+        'Yes. Starter and Full share the same underlying KERSIVO platform. Full adds a branded website, your own domain arrangement, support for larger teams and wider business tools.',
         `Full KERSIVO is ${fullPrice}/month per physical location. Website preparation follows standard onboarding; it is not an instant launch.`,
       ],
     },

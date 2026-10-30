@@ -1,10 +1,9 @@
 ---
 import { ArrowRight } from 'lucide-react';
+import { getSetupSteps } from '@/content/setupSteps';
 import '@/styles/components/barbershop-websites-setup.css';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { FREE_PREVIEW_BILLING_CLAIM } from '@/lib/pricing/claimsPolicy';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
-import { FREE_PREVIEW_STEPS } from '@/lib/seo/freePreviewPage';
 
 const SETUP_TERMS_HREF = '/terms#onboarding-and-launch';
 const DOMAIN_TERMS_HREF = '/terms#domain';
@@ -15,39 +14,6 @@ type Stage = {
   title: string;
   copy: string;
 };
-
-const stages: Stage[] = [
-  {
-    number: '01',
-    owner: 'You',
-    title: 'Choose Full KERSIVO',
-    copy: `Subscribe for £${SAAS_MONTHLY_GBP} a month. Your first payment is taken at checkout.`,
-  },
-  {
-    number: '02',
-    owner: 'You',
-    title: 'Tell us about your shop',
-    copy: 'Share your shop details, branding, team, services and opening hours. Missing a few photos? We can still get started.',
-  },
-  {
-    number: '03',
-    owner: 'We',
-    title: 'We prepare your website',
-    copy: 'We prepare your standard branded website, configure bookings and help connect your domain.',
-  },
-  {
-    number: '04',
-    owner: 'You',
-    title: 'Check it before launch',
-    copy: 'Preview it in your KERSIVO dashboard and try a booking. Nothing goes live until you approve it.',
-  },
-  {
-    number: '05',
-    owner: 'We',
-    title: 'Go live',
-    copy: 'Once you’ve approved the site and the final technical checks are done, we publish it.',
-  },
-];
 
 type Note = {
   title: string;
@@ -77,15 +43,14 @@ const notes: Note[] = [
   },
 ];
 
-// FREE_PREVIEW_FLOW_ENABLED shows the preview-first journey; off keeps the original stages.
+// FREE_PREVIEW_FLOW_ENABLED shows the preview-first journey; off keeps the four subscribe-first stages.
 const freePreview = isFreePreviewFlowEnabled();
-const previewStages: Stage[] = FREE_PREVIEW_STEPS.map((step, index) => ({
+const shownStages: Stage[] = getSetupSteps(freePreview).map((step, index) => ({
   number: String(index + 1).padStart(2, '0'),
   owner: step.owner === 'KERSIVO' ? 'We' : 'You',
   title: step.title,
   copy: step.body,
 }));
-const shownStages = freePreview ? previewStages : stages;
 const billingNote = freePreview
   ? FREE_PREVIEW_BILLING_CLAIM
   : 'Your subscription starts when you buy, including while we prepare your site.';

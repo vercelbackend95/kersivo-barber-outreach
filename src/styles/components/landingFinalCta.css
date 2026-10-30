@@ -5,7 +5,7 @@
 
 .landing-final-cta {
   position: relative;
-  padding-block: clamp(2.35rem, 5vw, 3.5rem);
+  padding-block: var(--section-space-y);
   background: var(--bg);
   border-top: 1px solid var(--border);
   overflow: hidden;
