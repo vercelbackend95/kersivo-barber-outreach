@@ -74,9 +74,9 @@ export default function PreviewLaunchOnboarding({ prefill }: Props) {
         throw new Error(typeof body.error === 'string' ? body.error : 'Please check the highlighted details.');
       }
       const response = await fetch('/api/admin/client-onboarding/submit', { method: 'POST', credentials: 'include' });
-      const body = (await response.json().catch(() => ({}))) as { errors?: string[]; error?: string };
+      const body = (await response.json().catch(() => ({}))) as { missing?: string[]; error?: string };
       if (!response.ok) {
-        setErrors(body.errors?.length ? body.errors : [body.error || 'Could not submit. Please try again.']);
+        setErrors(body.missing?.length ? body.missing : [body.error || 'Could not submit. Please try again.']);
         return;
       }
       setSubmitted(true);

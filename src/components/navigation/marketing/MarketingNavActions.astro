@@ -30,6 +30,7 @@ const primaryLead = priceSuffix ? primary.label.slice(0, -priceSuffix.length) : 
         class="mnav-btn mnav-btn--primary"
         href={primary.href}
         data-track={primary.track}
+        data-track-placement={primary.track === 'preview_cta_click' ? 'navbar' : undefined}
         data-astro-reload={leavesFamily(primary.href) ? '' : undefined}
       >
         {primaryLead}{priceSuffix && <span class="mnav-btn__price">{priceSuffix}</span>}

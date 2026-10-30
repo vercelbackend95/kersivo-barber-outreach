@@ -3,10 +3,10 @@
  * Bump this when Terms content changes in a material way.
  * Material DPA updates also require a Terms bump because /dpa is incorporated by reference.
  */
-export const CURRENT_TERMS_VERSION = '2026-10-28';
+export const CURRENT_TERMS_VERSION = '2026-10-30';
 
 /** Terms versions already accepted by shops. A later bump must not invalidate these. */
-export const ACCEPTED_PRIOR_TERMS_VERSIONS = ['2026-10-06', '2026-10-27'] as const;
+export const ACCEPTED_PRIOR_TERMS_VERSIONS = ['2026-10-06', '2026-10-27', '2026-10-28'] as const;
 
 /**
  * Migration-only marker for a Full -> Starter continuation that was already EFFECTIVE before

@@ -46,7 +46,9 @@ import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { markPreviewRequestConverted } from '../../../lib/freePreview/conversion';
-import { PREVIEW_REQUEST_METADATA_KEY } from '../../../lib/freePreview/launchCheckout';
+import { PREVIEW_GA_CLIENT_METADATA_KEY, PREVIEW_REQUEST_METADATA_KEY } from '../../../lib/freePreview/launchCheckout';
+import { sendServerAnalyticsEvent } from '../../../lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '../../../lib/analytics/funnelEvents';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
 import { confirmPaidBookingPayment } from '../../../lib/booking/confirmPaidDeposit';
@@ -701,6 +703,12 @@ async function handleSaasSubscriptionCheckout(
       stripeSessionId: sessionId,
     });
     logSaasSubscriptionStage('free_preview_conversion', { sessionId, result: conversion });
+    if (conversion === 'converted') {
+      await sendServerAnalyticsEvent({
+        name: FUNNEL_EVENTS.preview_converted,
+        clientId: metadata[PREVIEW_GA_CLIENT_METADATA_KEY]?.trim() || null,
+      });
+    }
   }
 
   try {

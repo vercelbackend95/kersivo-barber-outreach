@@ -5,7 +5,7 @@
  *
  * Advance a date only when the respective document materially changes.
  */
-export const PRIVACY_POLICY_LAST_UPDATED_ISO = '2026-10-06';
+export const PRIVACY_POLICY_LAST_UPDATED_ISO = '2026-10-30';
 export const COOKIE_POLICY_LAST_UPDATED_ISO = '2026-09-25';
 
 export function formatLegalPageDate(iso: string): string {

@@ -27,4 +27,6 @@ export function previewApiGuard(request: Request): Response | null {
 /** IP limits for the token endpoints: generous for an owner, useless for guessing 256-bit tokens. */
 export const PREVIEW_CHANGES_RATE = { action: 'free_preview_changes', limit: 10, windowMs: 60 * 60 * 1000 };
 export const PREVIEW_CHECKOUT_RATE = { action: 'free_preview_checkout', limit: 10, windowMs: 15 * 60 * 1000 };
+export const PREVIEW_EVENT_RATE = { action: 'free_preview_event', limit: 30, windowMs: 60 * 60 * 1000 };
+export const PREVIEW_NO_THANKS_RATE = { action: 'free_preview_no_thanks', limit: 30, windowMs: 60 * 60 * 1000 };
 export const PREVIEW_PAGE_RATE = { action: 'free_preview_view', limit: 120, windowMs: 60 * 60 * 1000 };

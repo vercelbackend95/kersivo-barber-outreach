@@ -2,6 +2,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { FOOTER_LEGAL_LINKS, type FooterNavItem } from '@/lib/seo/footerSocialLinks';
 import {
   FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_TRACK,
   FREE_PREVIEW_CTA_LABEL,
   SUBSCRIBE_NOW_CTA_HREF,
   SUBSCRIBE_NOW_CTA_LABEL,
@@ -75,7 +76,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
 
 /** Product-column links that replace FOOTER_PRODUCT_CTA while FREE_PREVIEW_FLOW_ENABLED is on (spec §10.2). */
 export const FOOTER_FREE_PREVIEW_LINKS: readonly FooterColumnLink[] = [
-  { name: FREE_PREVIEW_CTA_LABEL, href: FREE_PREVIEW_CTA_HREF, accent: true },
+  { name: FREE_PREVIEW_CTA_LABEL, href: FREE_PREVIEW_CTA_HREF, accent: true, track: FREE_PREVIEW_CTA_TRACK },
   { name: SUBSCRIBE_NOW_CTA_LABEL, href: SUBSCRIBE_NOW_CTA_HREF, track: SUBSCRIBE_NOW_CTA_TRACK },
 ];
 

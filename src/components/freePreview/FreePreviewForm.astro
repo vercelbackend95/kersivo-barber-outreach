@@ -135,6 +135,9 @@ const linkFields = [
 </div>
 
 <script>
+  import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+  import { trackConsentedEvent } from '@/lib/consent/events';
+
   const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
 
   function initFreePreviewForm(root: HTMLElement) {
@@ -173,6 +176,12 @@ const linkFields = [
       const template = confirmationText.dataset.template ?? '';
       confirmationText.textContent = template.replace('{shopName}', shopName).replace('{email}', email);
     };
+
+    form.addEventListener(
+      'focusin',
+      () => trackConsentedEvent(FUNNEL_EVENTS.preview_form_start),
+      { once: true },
+    );
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -215,6 +224,7 @@ const linkFields = [
           fieldErrors?: Record<string, string>;
         };
         if (response.ok && data.ok) {
+          trackConsentedEvent(FUNNEL_EVENTS.preview_request_submitted);
           fillConfirmation(payload.shopName, payload.email);
           form.hidden = true;
           confirmation.hidden = false;

@@ -81,6 +81,30 @@ export async function countPreviewRequestsLast30Days(now: Date = new Date()) {
   return counts;
 }
 
+export type PreviewFunnelCounts = { requested: number; ready: number; viewed: number; converted: number };
+
+/** Null when there is nothing to divide by, so ops sees "—" rather than a misleading 0%. */
+export function previewFunnelRates(counts: PreviewFunnelCounts) {
+  const rate = (part: number, whole: number) => (whole > 0 ? part / whole : null);
+  return {
+    requestedToReady: rate(counts.ready, counts.requested),
+    readyToViewed: rate(counts.viewed, counts.ready),
+    viewedToConverted: rate(counts.converted, counts.viewed),
+  };
+}
+
+/** Funnel for requests created in the last 30 days. Anonymised records keep their dates, so they still count. */
+export async function previewFunnelLast30Days(now: Date = new Date()): Promise<PreviewFunnelCounts> {
+  const createdAt = { gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) };
+  const [requested, ready, viewed, converted] = await Promise.all([
+    prisma.previewRequest.count({ where: { createdAt } }),
+    prisma.previewRequest.count({ where: { createdAt, previewReadyAt: { not: null } } }),
+    prisma.previewRequest.count({ where: { createdAt, previewReadyAt: { not: null }, firstViewedAt: { not: null } } }),
+    prisma.previewRequest.count({ where: { createdAt, firstViewedAt: { not: null }, convertedAt: { not: null } } }),
+  ]);
+  return { requested, ready, viewed, converted };
+}
+
 export async function getPreviewRequestDetail(id: string) {
   return prisma.previewRequest.findUnique({
     where: { id },

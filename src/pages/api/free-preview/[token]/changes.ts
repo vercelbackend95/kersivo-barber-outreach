@@ -1,6 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { PREVIEW_CHANGES_RATE, previewApiGuard, previewJson } from '@/lib/freePreview/previewApi';
 import { previewChangesSchema, requestPreviewChanges } from '@/lib/freePreview/requestChanges';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
@@ -36,6 +38,10 @@ export const POST: APIRoute = async ({ request, params }) => {
         ? previewJson({ ok: false, error: 'Not found.' }, 404)
         : previewJson({ ok: false, error: 'This preview is no longer available.', code: result.code }, result.httpStatus);
     }
+    await sendServerAnalyticsEvent({
+      name: FUNNEL_EVENTS.preview_changes_requested,
+      clientId: analyticsClientIdFromRequest(request),
+    });
     return previewJson({ ok: true });
   } catch (error) {
     console.error('[free-preview] request changes failed', error instanceof Error ? error.message : error);

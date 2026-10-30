@@ -20,6 +20,8 @@ import {
   shouldRecordOwnerView,
 } from '@/lib/freePreview/previewAccess';
 import { previewBookingPresentation } from '@/lib/freePreview/previewBooking';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
@@ -78,9 +80,16 @@ if (preview && !draft) return notFound();
 
 // Owner views only: operator views are excluded, and converted previews are no longer counted.
 if (preview && shouldRecordOwnerView(state)) {
-  await recordPreviewView(preview.request.id, now).catch((error) =>
-    console.error('[free-preview] view tracking failed', error instanceof Error ? error.message : error),
-  );
+  const firstView = await recordPreviewView(preview.request.id, now).catch((error) => {
+    console.error('[free-preview] view tracking failed', error instanceof Error ? error.message : error);
+    return false;
+  });
+  if (firstView) {
+    await sendServerAnalyticsEvent({
+      name: FUNNEL_EVENTS.preview_viewed,
+      clientId: analyticsClientIdFromRequest(Astro.request),
+    });
+  }
 }
 
 if (state.kind === 'expired') Astro.response.status = 410;

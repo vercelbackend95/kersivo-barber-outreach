@@ -123,6 +123,7 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
                     class:list={['footer50__nav-link', item.accent && 'footer50__nav-link--accent']}
                     href={item.href}
                     data-track={item.track}
+                    data-track-placement={item.track === 'preview_cta_click' ? 'footer' : undefined}
                     {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   >
                     {item.name}

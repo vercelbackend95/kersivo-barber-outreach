@@ -5,7 +5,7 @@
  */
 
 import { NAVBAR_SUBSCRIBE_CTA_LABEL, type Navbar17CtaTrack } from './navbar17Items';
-import { FREE_PREVIEW_CTA_HREF, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_TRACK, NAVBAR_FREE_PREVIEW_CTA_LABEL } from '@/lib/freePreview/fullPlanCta';
 import type { MarketingNavIcon } from './marketingNavIcons';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
@@ -361,6 +361,7 @@ export const MARKETING_NAV_PRIMARY_ACTION: MarketingNavAction = {
 export const MARKETING_NAV_FREE_PREVIEW_ACTION: MarketingNavAction = {
   label: NAVBAR_FREE_PREVIEW_CTA_LABEL,
   href: FREE_PREVIEW_CTA_HREF,
+  track: FREE_PREVIEW_CTA_TRACK,
 };
 
 /** Internal application surfaces that must never appear in the marketing navigation. */

@@ -9,6 +9,7 @@ import {
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { formatLegalPageDate, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
+import { FREE_PREVIEW_PRIVACY_RETENTION_TEXT } from '@/lib/freePreview/legalCopy';
 import '@/styles/legal-pages.css';
 ---
 
@@ -111,6 +112,16 @@ import '@/styles/legal-pages.css';
           legitimate interests where we process administrative details of representatives of a corporate customer.
           Specific accounting or tax records may also be processed where a UK legal obligation requires them.
           ({TRADING_NAME} as independent controller for this business-customer relationship.)
+        </li>
+        <li>
+          <strong>Free website preview requests</strong> — your name (if given), email address, shop name, town or
+          city, the links you send us, details about your shop, your notes and any changes you ask for, plus the details,
+          text and images we take from those links to build your preview, and whether and when you opened it.
+          <strong>Purpose:</strong> creating your private preview, sending it to you, up to two reminder emails about it
+          (each has a link to stop them), and acting on your response. <strong>Legal basis (UK):</strong> steps taken at
+          your request before entering into a contract; legitimate interests where you act for a corporate business.
+          If you tick the optional box for product news and tips, the legal basis for those emails is consent, which you
+          can withdraw at any time. ({TRADING_NAME} as independent controller.)
         </li>
         <li>
           <strong>B2B prospecting and business outreach</strong> — {TRADING_NAME} may identify relevant UK barbershop
@@ -252,7 +263,10 @@ import '@/styles/legal-pages.css';
           <strong>Website analytics (optional)</strong> — if you accept Analytics cookies on {TRADING_NAME} marketing
           pages, Google Analytics 4 may process pseudonymous usage data (for example pages viewed and approximate
           location derived by Google) to help us understand site performance. Live barbershop booking and storefront
-          pages do not load {TRADING_NAME} marketing analytics tags.
+          pages do not load {TRADING_NAME} marketing analytics tags. Private preview pages do not load them either; if
+          you have accepted Analytics cookies, our server may tell Google Analytics about preview milestones (for example
+          that a preview was viewed or launched) using the same pseudonymous identifier, without your name, email address
+          or shop details.
           <strong>Legal basis (UK):</strong> consent. For the current configuration (Google &ldquo;Google products &amp;
           services&rdquo; data sharing off), Google acts as a <strong>processor</strong> for Analytics-service data
           processed to provide the Analytics service; {TRADING_NAME} remains the controller for deciding to use GA4 on
@@ -357,6 +371,9 @@ import '@/styles/legal-pages.css';
         for its purpose. Different categories can have different, purpose-specific periods.
       </p>
       <ul>
+        <li>
+          <strong>Free website preview requests.</strong> {FREE_PREVIEW_PRIVACY_RETENTION_TEXT}
+        </li>
         <li>
           <strong>Live barbershop (Customer Personal Data).</strong> While the KERSIVO service for a shop is active
           — whether on Starter or Full — shop customer and booking data is kept to run the service under the

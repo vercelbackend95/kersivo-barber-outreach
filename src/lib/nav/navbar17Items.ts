@@ -3,7 +3,7 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 /** Marketing pages (LandingLayout) use MarketingNavbar; Navbar17 serves MainLayout pages only. */
 export type Navbar17Variant = 'default' | 'shop' | 'testShop';
 
-export type Navbar17CtaTrack = 'plan_my_setup_click' | 'saas_subscribe_click';
+export type Navbar17CtaTrack = 'plan_my_setup_click' | 'saas_subscribe_click' | 'preview_cta_click';
 
 export const NAVBAR_SUBSCRIBE_CTA_LABEL =
   `Get started — £${SAAS_MONTHLY_GBP}/month`;

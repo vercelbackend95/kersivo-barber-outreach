@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { prisma } from '@/lib/db/client';
 import { runGuestSaasCheckout } from '@/lib/setup/guestSaasCheckout';
 import { parseCheckoutAttemptId } from '@/lib/setup/saasCheckoutGuard';
@@ -9,6 +11,9 @@ import { ownerCanActOnPreview, resolvePreviewRequestByToken } from './previewAcc
 
 /** Stripe Checkout metadata key carrying the PreviewRequest id (shopId carries the draft shop). */
 export const PREVIEW_REQUEST_METADATA_KEY = 'previewRequestId';
+
+/** GA client id, present only with Analytics consent: lets the webhook report preview_converted. */
+export const PREVIEW_GA_CLIENT_METADATA_KEY = 'gaClientId';
 
 export const previewLaunchSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -55,6 +60,7 @@ export async function startPreviewLaunchCheckout(input: {
     return json({ error: 'This preview is no longer available.', code: 'PREVIEW_NOT_AVAILABLE' }, 409);
   }
 
+  const gaClientId = analyticsClientIdFromRequest(input.request);
   const response = await runGuestSaasCheckout({
     request: input.request,
     name: input.name.trim(),
@@ -64,7 +70,10 @@ export async function startPreviewLaunchCheckout(input: {
     currentStack: `free_preview:${labelFor(FREE_PREVIEW_BOOKING_SYSTEMS, preview.currentBookingSystem)}`.slice(0, 120),
     checkoutAttemptId,
     previewShopId: preview.draftShopId,
-    extraMetadata: { [PREVIEW_REQUEST_METADATA_KEY]: preview.id },
+    extraMetadata: {
+      [PREVIEW_REQUEST_METADATA_KEY]: preview.id,
+      ...(gaClientId ? { [PREVIEW_GA_CLIENT_METADATA_KEY]: gaClientId } : {}),
+    },
     cancelPath: previewPagePath(input.token),
   });
 
@@ -72,6 +81,7 @@ export async function startPreviewLaunchCheckout(input: {
     await prisma.previewRequestEvent
       .create({ data: { previewRequestId: preview.id, action: PREVIEW_REQUEST_ACTIONS.CHECKOUT_STARTED } })
       .catch((error) => console.error('[free-preview] checkout event failed', { id: preview.id, error }));
+    await sendServerAnalyticsEvent({ name: FUNNEL_EVENTS.preview_checkout_started, clientId: gaClientId });
   }
   return response;
 }
