@@ -19,6 +19,19 @@ describe('free preview emails', () => {
     expect(email.html).not.toMatch(/\b\d+ working days\b/);
   });
 
+  it('E1 over the daily cap gives the longer wait instead of the usual turnaround', () => {
+    const email = buildPreviewRequestAcknowledgementEmail({
+      to: 'sam@example.com',
+      firstName: null,
+      shopName: 'Sharp Cuts',
+      overDailyCap: true,
+    });
+    expect(email.html).toContain(
+      "We've received your request. Because each preview is built by hand, yours may take up to 3 working days.",
+    );
+    expect(email.html).not.toContain(PREVIEW_TURNAROUND_TEXT);
+  });
+
   it('E2 lists the fields, escapes input and links to the ops detail view', () => {
     const email = buildPreviewRequestInternalEmail({
       id: 'req_1',

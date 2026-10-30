@@ -73,8 +73,9 @@ export const POST: APIRoute = async ({ request }) => {
   });
   if (!emailLimit.ok) return rateLimitExceededResponse(emailLimit.retryAfterSeconds);
 
+  let overDailyCap: boolean;
   try {
-    await createPreviewRequest(parsed.value);
+    ({ overDailyCap } = await createPreviewRequest(parsed.value));
   } catch (error) {
     console.error('[free-preview] request create failed', {
       error: error instanceof Error ? error.message : String(error),
@@ -82,5 +83,5 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'We could not save your request. Please try again shortly.' }, 500);
   }
 
-  return json({ ok: true });
+  return json(overDailyCap ? { ok: true, overDailyCap: true } : { ok: true });
 };

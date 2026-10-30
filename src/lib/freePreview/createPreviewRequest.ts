@@ -1,12 +1,15 @@
 import { EmailOutboundPurpose } from '@prisma/client';
+import { getLondonDayBounds } from '@/lib/admin/barberRosterPresentation';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { hashPreviewToken, mintPreviewToken } from '@/lib/preview/shopPreviewSession';
+import { getFreePreviewDailyCap } from './config';
 import { buildPreviewRequestAcknowledgementEmail, buildPreviewRequestInternalEmail } from './emails';
 import type { FreePreviewRequestInput } from './intake';
 
 export const PREVIEW_REQUEST_ACTIONS = {
   CREATED: 'CREATED',
+  OVER_DAILY_CAP: 'OVER_DAILY_CAP',
   STATUS_CHANGED: 'STATUS_CHANGED',
   NOTES_UPDATED: 'NOTES_UPDATED',
   DRAFT_SHOP_CREATED: 'DRAFT_SHOP_CREATED',
@@ -28,13 +31,19 @@ export const PREVIEW_REQUEST_ACTIONS = {
 /**
  * Stores a public preview request and queues E1 (owner) + E2 (internal) in the same transaction,
  * then attempts immediate delivery. The outbox cron retries anything that fails.
+ * Requests over the daily cap are still saved; they carry an OVER_DAILY_CAP event and a longer-wait message.
  */
 export async function createPreviewRequest(
   input: FreePreviewRequestInput,
   now: Date = new Date(),
-): Promise<{ id: string }> {
+): Promise<{ id: string; overDailyCap: boolean }> {
   const publicToken = mintPreviewToken();
-  const { request, outboxIds } = await prisma.$transaction(async (tx) => {
+  const { request, outboxIds, overDailyCap } = await prisma.$transaction(async (tx) => {
+    const requestsToday = await tx.previewRequest.count({
+      where: { createdAt: { gte: new Date(getLondonDayBounds(now).startMs) } },
+    });
+    const overDailyCap = requestsToday >= getFreePreviewDailyCap();
+
     const request = await tx.previewRequest.create({
       data: {
         publicToken,
@@ -54,7 +63,12 @@ export async function createPreviewRequest(
         authorisationConsentAt: now,
         marketingOptInAt: input.marketingOptIn ? now : null,
         entryPoint: input.entryPoint,
-        events: { create: { action: PREVIEW_REQUEST_ACTIONS.CREATED, toStatus: 'REQUESTED' } },
+        events: {
+          create: [
+            { action: PREVIEW_REQUEST_ACTIONS.CREATED, toStatus: 'REQUESTED' },
+            ...(overDailyCap ? [{ action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }] : []),
+          ],
+        },
       },
     });
 
@@ -62,6 +76,7 @@ export async function createPreviewRequest(
       to: request.email,
       firstName: request.firstName,
       shopName: request.shopName,
+      overDailyCap,
     });
     const ackRow = await enqueueEmail(tx, {
       shopId: null,
@@ -73,6 +88,7 @@ export async function createPreviewRequest(
     const internal = buildPreviewRequestInternalEmail({
       ...request,
       marketingOptIn: Boolean(request.marketingOptInAt),
+      overDailyCap,
     });
     const internalRow = await enqueueEmail(tx, {
       shopId: null,
@@ -81,9 +97,9 @@ export async function createPreviewRequest(
       dedupeKey: `free-preview:internal:${request.id}`,
     });
 
-    return { request, outboxIds: [ackRow.id, internalRow.id] };
+    return { request, outboxIds: [ackRow.id, internalRow.id], overDailyCap };
   });
 
   await Promise.all(outboxIds.map((id) => tryDeliverOutboxEmail(id)));
-  return { id: request.id };
+  return { id: request.id, overDailyCap };
 }

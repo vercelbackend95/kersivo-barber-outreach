@@ -19,6 +19,7 @@ import {
 import {
   PREVIEW_STATUS_LABELS,
   getPreviewRequestDetail,
+  isOverDailyCap,
   previewRequestLinks,
 } from '@/lib/freePreview/opsQueries';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
@@ -55,6 +56,9 @@ function formatDate(value: Date | null | undefined): string {
 const fields: Array<[string, string]> = request
   ? [
       ['Status', PREVIEW_STATUS_LABELS[request.status]],
+      ...(isOverDailyCap(request)
+        ? ([['Daily cap', 'Over the cap: owner told it may take up to 3 working days']] as Array<[string, string]>)
+        : []),
       ['First name', request.firstName ?? '—'],
       ['Email', request.email],
       ['Shop', request.shopName],

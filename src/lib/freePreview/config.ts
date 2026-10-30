@@ -22,6 +22,19 @@ export const PREVIEW_TURNAROUND_TEXT = 'usually within a few working days';
 export const PREVIEW_TURNAROUND_TEXT_CAPITALISED = 'Usually within a few working days';
 export const PREVIEW_TURNAROUND_TEXT_SHORT = 'within a few working days';
 
+/** Previews are built by hand: requests beyond this many per Europe/London day are told to expect longer. */
+export const FREE_PREVIEW_DEFAULT_DAILY_CAP = 3;
+
+/** Founder wording (30 Oct 2026). Shown only to requests over the daily cap, on screen and in E1. */
+export const PREVIEW_OVER_CAP_MESSAGE =
+  "We've received your request. Because each preview is built by hand, yours may take up to 3 working days.";
+
+/** FREE_PREVIEW_DAILY_CAP: a whole number, 0 included. Anything else falls back to the default. */
+export function getFreePreviewDailyCap(): number {
+  const raw = (readEnv('FREE_PREVIEW_DAILY_CAP') ?? '').trim();
+  return /^\d+$/.test(raw) ? Number(raw) : FREE_PREVIEW_DEFAULT_DAILY_CAP;
+}
+
 export const PREVIEW_EXPIRY_DAYS = 30;
 export const PREVIEW_DATA_RETENTION_DAYS_AFTER_EXPIRY = 90;
 export const PREVIEW_FOLLOWUP_DAYS_AFTER_READY = 3;

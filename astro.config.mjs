@@ -35,6 +35,9 @@ export default defineConfig({
   },
 
   vite: {
+    define: {
+      'import.meta.env.SENTRY_RELEASE': JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA ?? ''),
+    },
     plugins: [tailwindcss()],
     resolve: {
       alias: {

@@ -7,6 +7,7 @@ import {
   FREE_PREVIEW_MARKETING_LABEL,
   FREE_PREVIEW_NOTES_MAX,
 } from '@/lib/freePreview/intake';
+import { PREVIEW_OVER_CAP_MESSAGE } from '@/lib/freePreview/config';
 import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
 
 const linkFields = [
@@ -129,7 +130,7 @@ const linkFields = [
 
   <div class="free-preview-confirmation" data-free-preview-confirmation hidden tabindex="-1">
     <h2 class="free-preview-confirmation__title">{FREE_PREVIEW_PAGE.confirmationHeading}</h2>
-    <p class="free-preview-confirmation__text" data-free-preview-confirmation-text data-template={FREE_PREVIEW_PAGE.confirmationText}></p>
+    <p class="free-preview-confirmation__text" data-free-preview-confirmation-text data-template={FREE_PREVIEW_PAGE.confirmationText} data-over-cap-text={PREVIEW_OVER_CAP_MESSAGE}></p>
     <a class="free-preview-confirmation__link" href="/demo">{FREE_PREVIEW_PAGE.demoLinkLabel}</a>
   </div>
 </div>
@@ -172,9 +173,11 @@ const linkFields = [
       first?.focus();
     };
 
-    const fillConfirmation = (shopName: string, email: string) => {
+    const fillConfirmation = (shopName: string, email: string, overDailyCap: boolean) => {
       const template = confirmationText.dataset.template ?? '';
-      confirmationText.textContent = template.replace('{shopName}', shopName).replace('{email}', email);
+      confirmationText.textContent = overDailyCap
+        ? (confirmationText.dataset.overCapText ?? '')
+        : template.replace('{shopName}', shopName).replace('{email}', email);
     };
 
     form.addEventListener(
@@ -220,12 +223,13 @@ const linkFields = [
         });
         const data = (await response.json().catch(() => ({}))) as {
           ok?: boolean;
+          overDailyCap?: boolean;
           error?: string;
           fieldErrors?: Record<string, string>;
         };
         if (response.ok && data.ok) {
           trackConsentedEvent(FUNNEL_EVENTS.preview_request_submitted);
-          fillConfirmation(payload.shopName, payload.email);
+          fillConfirmation(payload.shopName, payload.email, Boolean(data.overDailyCap));
           form.hidden = true;
           confirmation.hidden = false;
           confirmation.focus();

@@ -64,6 +64,14 @@ describe('POST /api/free-preview', () => {
     expect(createPreviewRequest).not.toHaveBeenCalled();
   });
 
+  it('tells the page when a saved request is over the daily cap', async () => {
+    createPreviewRequest.mockResolvedValue({ id: 'req_1', overDailyCap: true });
+    const response = await call(validBody);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, overDailyCap: true });
+    expect(createPreviewRequest).toHaveBeenCalledTimes(1);
+  });
+
   it('returns field errors for invalid input', async () => {
     const response = await call({ ...validBody, instagramUrl: '' });
     expect(response.status).toBe(400);

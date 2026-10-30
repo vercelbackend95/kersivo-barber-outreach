@@ -1,6 +1,7 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import {
   OPS_PREVIEW_REQUESTS_PATH,
+  PREVIEW_OVER_CAP_MESSAGE,
   PREVIEW_REPLY_TO_EMAIL,
   PREVIEW_TURNAROUND_TEXT,
   formatPreviewExpiryDate,
@@ -42,6 +43,7 @@ export function buildPreviewRequestAcknowledgementEmail(input: {
   to: string;
   firstName: string | null;
   shopName: string;
+  overDailyCap?: boolean;
 }): FreePreviewEmail {
   const shop = escapeHtml(input.shopName);
   return {
@@ -50,7 +52,9 @@ export function buildPreviewRequestAcknowledgementEmail(input: {
     replyTo: PREVIEW_REPLY_TO_EMAIL,
     html: paragraphs([
       greeting(input.firstName),
-      `Thanks for requesting a free website preview for ${shop}. We'll design it individually for your shop and email you a private link, ${escapeHtml(PREVIEW_TURNAROUND_TEXT)}.`,
+      input.overDailyCap
+        ? `Thanks for requesting a free website preview for ${shop}. ${escapeHtml(PREVIEW_OVER_CAP_MESSAGE)} We'll design it individually for your shop and email you a private link.`
+        : `Thanks for requesting a free website preview for ${shop}. We'll design it individually for your shop and email you a private link, ${escapeHtml(PREVIEW_TURNAROUND_TEXT)}.`,
       "If you have photos, a logo or anything you'd like us to include, just reply to this email.",
       "There's nothing to pay and no card needed. You only pay if you decide to launch.",
       SIGN_OFF,
@@ -75,6 +79,7 @@ export type PreviewRequestInternalEmailInput = {
   marketingOptIn: boolean;
   entryPoint: string | null;
   createdAt: Date;
+  overDailyCap?: boolean;
 };
 
 export function opsPreviewRequestUrl(id: string): string {
@@ -99,6 +104,9 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
     ['Marketing opt-in', input.marketingOptIn ? 'Yes' : 'No'],
     ['Entry point', input.entryPoint ?? '—'],
     ['Requested at', input.createdAt.toISOString()],
+    ...(input.overDailyCap
+      ? ([['Daily cap', 'Over the cap: owner told it may take up to 3 working days']] as Array<[string, string]>)
+      : []),
   ];
   const opsUrl = opsPreviewRequestUrl(input.id);
   return {
