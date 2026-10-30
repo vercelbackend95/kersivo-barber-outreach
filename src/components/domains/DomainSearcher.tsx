@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { normalizeAndValidateDomainInput } from '@/lib/domains/hostname';
 import { canSelectForRegister, type DomainSuggestionResult } from '@/lib/domains/availability';
 import { suggestDomains, type DomainCandidate } from '@/lib/domains/suggest';
@@ -23,7 +23,7 @@ export type DomainSearcherProps = {
   existingExtra?: ReactNode;
 };
 
-const DEBOUNCE_MS = 150;
+const DEBOUNCE_MS = 300;
 
 const PILL_LABEL: Record<DomainSuggestionResult['status'] | 'checking', string> = {
   checking: 'Checking',
@@ -33,18 +33,36 @@ const PILL_LABEL: Record<DomainSuggestionResult['status'] | 'checking', string> 
   unknown: 'We’ll confirm',
 };
 
+export function mergeLiveResults(
+  current: DomainSuggestionResult[] | null,
+  incoming: DomainSuggestionResult[],
+): DomainSuggestionResult[] {
+  const byDomain = new Map((current ?? []).map((row) => [row.domain, row]));
+  for (const row of incoming) {
+    byDomain.set(row.domain, row);
+  }
+  return [...byDomain.values()];
+}
+
+export function rowRank(row: DomainSuggestionResult & { pending: boolean }): number {
+  if (row.pending) return 1;
+  if (row.status === 'available' && row.included) return 0;
+  if (row.status === 'unknown') return 2;
+  return 3;
+}
+
 function asResults(
   candidates: DomainCandidate[],
   live: DomainSuggestionResult[] | null,
 ): Array<DomainSuggestionResult & { pending: boolean }> {
   const byDomain = new Map((live ?? []).map((row) => [row.domain, row]));
-  return candidates.map((candidate) => {
+  const rows = candidates.map((candidate) => {
     const hit = byDomain.get(candidate.domain);
     if (!hit) {
       return {
         domain: candidate.domain,
         tld: candidate.tld,
-        status: 'unknown',
+        status: 'unknown' as const,
         included: false,
         pricePence: null,
         pending: true,
@@ -52,6 +70,11 @@ function asResults(
     }
     return { ...hit, pending: false };
   });
+  return rows.sort((a, b) => rowRank(a) - rowRank(b));
+}
+
+function preventSubmitOnEnter(event: KeyboardEvent<HTMLInputElement>) {
+  if (event.key === 'Enter') event.preventDefault();
 }
 
 export default function DomainSearcher(props: DomainSearcherProps) {
@@ -78,6 +101,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
   const [searchError, setSearchError] = useState('');
   const [existingError, setExistingError] = useState('');
 
+  const showSearch = mode !== 'EXISTING';
   const candidates = useMemo(
     () => suggestDomains({ shopName, townCity, query }),
     [shopName, townCity, query],
@@ -85,7 +109,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
   const rows = useMemo(() => asResults(candidates, live), [candidates, live]);
 
   useEffect(() => {
-    if (mode !== 'KERSIVO_REGISTER' || disabled) return;
+    if (!showSearch || disabled) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void (async () => {
@@ -106,7 +130,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
             throw new Error(body.error || 'Unable to check domains just now.');
           }
           if (!controller.signal.aborted) {
-            setLive(body.suggestions);
+            setLive((current) => mergeLiveResults(current, body.suggestions ?? []));
             setSearchError('');
           }
         } catch (error) {
@@ -119,10 +143,11 @@ export default function DomainSearcher(props: DomainSearcherProps) {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [disabled, mode, query, searchEndpoint, shopName, townCity]);
+  }, [disabled, query, searchEndpoint, shopName, showSearch, townCity]);
 
   function selectRow(row: DomainSuggestionResult & { pending: boolean }) {
     if (disabled || row.pending || !canSelectForRegister(row)) return;
+    if (mode !== 'KERSIVO_REGISTER') onModeChange('KERSIVO_REGISTER');
     onSelectDomain(row.domain);
   }
 
@@ -195,7 +220,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
         </div>
       ) : null}
 
-      {mode === 'KERSIVO_REGISTER' ? (
+      {showSearch ? (
         <>
           <p className="domain-searcher__help">
             We’ll register this standard domain for you after you subscribe, included in Full KERSIVO. Premium
@@ -213,10 +238,8 @@ export default function DomainSearcher(props: DomainSearcherProps) {
               autoComplete="off"
               spellCheck={false}
               placeholder="yourshop or yourshop.co.uk"
-              onChange={(event) => {
-                setLive(null);
-                setQuery(event.target.value);
-              }}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={preventSubmitOnEnter}
             />
           </div>
           <ul className="domain-searcher__list" role="listbox" aria-label="Domain suggestions">
@@ -224,6 +247,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
               const selectable = !row.pending && canSelectForRegister(row);
               const selected = selectedDomain === row.domain;
               const status = row.pending ? 'checking' : row.status;
+              const dimmed = status === 'taken' || status === 'not_included' || (status === 'available' && !row.included);
               return (
                 <li key={row.domain}>
                   <button
@@ -231,7 +255,7 @@ export default function DomainSearcher(props: DomainSearcherProps) {
                     role="option"
                     aria-selected={selected}
                     disabled={disabled || !selectable}
-                    className={`domain-searcher__row${selected ? ' is-selected' : ''}${row.pending ? ' is-pending' : ''}`}
+                    className={`domain-searcher__row${selected ? ' is-selected' : ''}${row.pending ? ' is-pending' : ''}${dimmed ? ' is-dimmed' : ''}`}
                     onClick={() => selectRow(row)}
                   >
                     <span className="domain-searcher__name">{row.domain}</span>
