@@ -120,6 +120,9 @@ describe('/barbershop-websites — section 05 Full KERSIVO & price', () => {
     );
     expect(BILLING_CYCLE_SHORT).toMatch(/^Billed today, then monthly on the same billing-cycle day/);
     expect(payment).toContain('Billing runs while we prepare your website and doesn’t pause if your materials arrive late.');
+    expect(payment).toContain('landingConditionsLine2');
+    expect(list('previewPayment')).toContain('landingConditionsLine2');
+    expect(frontmatter).toContain('getRateCard1LandingLayout().conditionsLine2');
     expect(ONBOARDING_BILLING_INDEPENDENT_CLAIM).toMatch(/does not pause or stop the billing cycle/);
     expect(payment).not.toMatch(/free (trial|period|setup period)|after (launch|go-live)/i);
     expect(markup).toContain('{PRICE_VAT_DISCLAIMER}');

@@ -74,9 +74,12 @@ describe('/barbershop-websites — section 03 website essentials', () => {
     }
   });
 
-  it('stays general guidance without product sales notes or unsupported claims', () => {
+  it('stays general guidance and links the design and booking guides', () => {
     expect(section).not.toMatch(/KERSIVO|In Full|£|Retail|guarantee|rank|more (clients|customers|bookings)|traffic/i);
-    expect(section).not.toMatch(/href=|<script|<iframe|<img|<svg|<button|client:/);
+    expect(section).not.toMatch(/<script|<iframe|<img|<svg|<button|client:/);
+    expect(section).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
+    expect(section).toContain('href={`${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team`}');
+    expect(section).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(text(section)).not.toMatch(/\bcolor\b|customiz|optimiz/i);
   });
 

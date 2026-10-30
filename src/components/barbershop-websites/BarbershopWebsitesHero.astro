@@ -6,8 +6,6 @@ import HeroBenefits from './HeroBenefits.astro';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
-import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { BARBERSHOP_WEBSITES_PAGE_H1 } from '@/lib/seo/barbershopWebsitesPage';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/barbershop-websites-hero.css';
@@ -42,7 +40,7 @@ const lines = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt 
       ))}
     </h1>
     <p class="bsw-hero__lead">
-      Full KERSIVO brings your shop a branded website, a standard domain, online booking and
+      Full KERSIVO brings your shop a branded website, your own domain, online booking and
       tools to manage the day.
     </p>
     <p class="bsw-hero__price">
@@ -52,8 +50,6 @@ const lines = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt 
       <span aria-hidden="true">·</span>
       <span>0% KERSIVO commission</span>
     </p>
-    <p class="bsw-hero__price-note">{STRIPE_FEES_NOTE}</p>
-    <p class="bsw-hero__price-note">{getRateCard1LandingLayout().conditionsLine2}</p>
     <div class="bsw-hero__actions">
       {freePreview ? (
         <FullPlanCta

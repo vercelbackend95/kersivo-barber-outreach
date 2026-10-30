@@ -60,12 +60,13 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(css).toContain('.bsw-hero__breadcrumb a:focus-visible');
   });
 
-  it('links to both guides without deleting the real demo paths', () => {
-    expect(panel).toContain('href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
-    expect(panel).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
-    expect(panel).toContain('href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
+  it('links to both guides from website essentials without deleting the real demo paths', () => {
+    const essentials = read('../../components/barbershop-websites/WebsiteEssentials.astro');
+    expect(essentials).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
+    expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
+    expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(designTeamSection).toContain('id="your-team"');
-    for (const route of ['DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) {
+    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', 'DEMO_BOOK_HREF', '/demo/services', '/demo/barbers']) {
       expect(panel).toContain(route);
     }
     const footer = read('../../lib/nav/footerNavigation.ts');

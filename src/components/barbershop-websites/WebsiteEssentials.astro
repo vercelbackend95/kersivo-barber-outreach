@@ -1,5 +1,7 @@
 ---
 import '@/styles/components/barbershop-websites-essentials.css';
+import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 
 type Essential = {
   number: string;
@@ -73,6 +75,15 @@ const essentials: Essential[] = [
         </li>
       ))}
     </ol>
+
+    <p class="bsw-essentials__guides">
+      Branding, including
+      <a href={`${BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team`}>your team</a>,
+      is covered in the
+      <a href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}>website design guide</a>.
+      How clients book is covered in the
+      <a href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}>online booking guide</a>.
+    </p>
 
     <div class="bsw-essentials-test">
       <div class="bsw-essentials-test__intro">

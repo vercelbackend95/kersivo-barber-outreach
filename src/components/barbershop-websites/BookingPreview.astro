@@ -1,5 +1,6 @@
 ---
 import { ArrowRight, CalendarDays, ChevronDown } from 'lucide-react';
+import { bookingPreviewDates } from '@/lib/barbershopWebsites/bookingPreviewDates';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
 
@@ -20,13 +21,14 @@ const slots = [
   { time: '13:00' },
 ];
 const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=${encodeURIComponent(firstBarber.slug)}`;
+const dates = bookingPreviewDates();
 ---
 
 <aside class="bsw-panel bsw-booking" aria-labelledby="bsw-booking-title">
   <header class="bsw-booking__head">
     <span class="bsw-booking__icon" aria-hidden="true"><CalendarDays size={16} strokeWidth={1.6} /></span>
     <div>
-      <p id="bsw-booking-title" class="bsw-booking__title">Book an Appointment</p>
+      <p id="bsw-booking-title" class="bsw-booking__title">Client booking flow</p>
       <p class="bsw-booking__sub">A preview of the CUTSTATE demo booking flow.</p>
     </div>
   </header>
@@ -72,9 +74,9 @@ const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=
         <p class="bsw-step__label">Pick a date <span class="bsw-step__hint">Example dates</span></p>
         <!-- Static miniature of the real BookingDateCarousel from /demo/book.
              Date tiles and navigation icons intentionally contain no buttons or handlers. -->
-        <div class="bsw-date-preview" aria-label="Illustrative October 2026 booking dates. This preview is not interactive and does not show availability.">
+        <div class="bsw-date-preview" aria-label={`Illustrative ${dates.monthLabel} booking dates. This preview is not interactive and does not show availability.`}>
           <div class="bsw-date-preview__header">
-            <strong>October 2026</strong>
+            <strong>{dates.monthLabel}</strong>
             <span class="bsw-date-preview__actions" aria-hidden="true">
               <span class="bsw-date-preview__control">‹</span>
               <span class="bsw-date-preview__control">›</span>
@@ -84,9 +86,11 @@ const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=
             </span>
           </div>
           <ul class="bsw-date-preview__days" role="list">
-            <li class="bsw-date-preview__day"><span>Mon</span><strong>12</strong></li>
-            <li class="bsw-date-preview__day is-selected"><span>Tue</span><strong>13</strong></li>
-            <li class="bsw-date-preview__day"><span>Wed</span><strong>14</strong></li>
+            {dates.days.map((day) => (
+              <li class:list={['bsw-date-preview__day', { 'is-selected': day.selected }]}>
+                <span>{day.weekday}</span><strong>{day.dayOfMonth}</strong>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -105,7 +109,7 @@ const demoHref = `/demo/book?service=${encodeURIComponent(service.slug)}&barber=
     </li>
   </ol>
 
-  <a class="btn btn--primary btn--sm bsw-booking__cta" href={demoHref} data-track="view_live_demo_click" data-track-placement="barbershop_websites_booking_card">
-    Try the Booking Demo <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
+  <a class="btn btn--primary btn--lg bsw-booking__cta" href={demoHref} data-track="view_live_demo_click" data-track-placement="barbershop_websites_booking_card">
+    Try the booking demo <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
   </a>
 </aside>

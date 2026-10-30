@@ -45,6 +45,13 @@ describe('/barbershop-websites — section 06 setup process', () => {
     expect(markup.indexOf('<h2')).toBeLessThan(markup.indexOf('<h3'));
   });
 
+  it('uses the shared four-step preview journey and keeps the subscribe-first stages', () => {
+    expect(frontmatter).toContain('const previewStages: Stage[] = FREE_PREVIEW_STEPS.map');
+    expect(markup).toContain('data-stages={shownStages.length}');
+    const previewBlock = frontmatter.slice(frontmatter.indexOf('const previewStages'));
+    expect(previewBlock).not.toContain("title: 'Go live'");
+  });
+
   it('walks through the five stages in order', () => {
     expect(stageField('title')).toEqual([
       'Choose Full KERSIVO',
