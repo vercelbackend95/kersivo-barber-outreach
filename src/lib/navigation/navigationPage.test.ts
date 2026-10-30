@@ -58,6 +58,8 @@ describe('KERSIVO route transition families', () => {
     expect(mainLayout).not.toContain('antonio');
     expect(fonts).not.toContain('Antonio');
     expect(fonts).toMatch(/font-weight: 100 900;/);
+    expect(landingLayout).toContain('data-astro-transition-persist="ks-font-faces"');
+    expect(landingLayout).not.toContain("import '@/styles/fonts-landing.css'");
   });
 
   it('keeps BLACKLINE on its own coordinator and shared motion tokens', () => {

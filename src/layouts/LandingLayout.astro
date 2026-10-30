@@ -8,9 +8,10 @@ import MarketingNavbar from '@/components/navigation/marketing/MarketingNavbar.a
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
 import type { PageSeo } from '@/lib/seo/meta';
+import fontFallbackFaces from '@/styles/fonts-fallback.css?raw';
+import fontFaces from '@/styles/fonts-landing.css?raw';
 import '@/styles/motion.css';
 import '@/styles/tokens.css';
-import '@/styles/fonts-landing.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/marketing-navbar.css';
@@ -39,6 +40,8 @@ const {
   suppressMarketingFontPreloads = false,
 } = Astro.props;
 
+const persistentFontFaces = `${fontFallbackFaces}${fontFaces}`.replace(new RegExp('/[*][^]*?[*]/', 'g'), '');
+
 const jsonLdBlocks = jsonLd
   ? Array.isArray(jsonLd)
     ? jsonLd
@@ -58,6 +61,8 @@ const jsonLdBlocks = jsonLd
         <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
       </>
     )}
+    {/* Persisted across client-side navigation: re-creating @font-face rules makes the browser reload the fonts and repaint in the fallback. */}
+    <style is:inline data-astro-transition-persist="ks-font-faces" set:html={persistentFontFaces} />
     <title>{title}</title>
     <SeoHead
       title={title}

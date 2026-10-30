@@ -319,7 +319,8 @@
  * The admin, booking and reports widgets have fixed heights per breakpoint (they do not scale with
  * width), so this is a min-height, not an aspect-ratio. No overflow clipping: if a widget is taller
  * than the reservation it grows instead of being cut off. Widgets mount ~200px before they scroll
- * into view, so any growth happens off-screen.
+ * into view, but a fast scroll can catch them, so these cover the tallest state: the reports widget
+ * renders its legend taller for a moment before settling, and the retail carousel scales with width.
  */
 .deferred-widget--admin { min-height: 360px; }
 .deferred-widget--booking { min-height: 416px; }
@@ -329,15 +330,19 @@
 @media (min-width: 768px) and (max-width: 899px) {
   .deferred-widget--admin { min-height: 396px; }
   .deferred-widget--booking { min-height: 576px; }
-  .deferred-widget--retail { min-height: 410px; }
-  .deferred-widget--reports { min-height: 646px; }
+  .deferred-widget--retail { min-height: 422px; }
+  .deferred-widget--reports { min-height: 668px; }
 }
 
 @media (min-width: 900px) {
   .deferred-widget--admin { min-height: 396px; }
   .deferred-widget--booking { min-height: 576px; }
-  .deferred-widget--retail { min-height: 315px; }
-  .deferred-widget--reports { min-height: 601px; }
+  .deferred-widget--retail { min-height: 326px; }
+  .deferred-widget--reports { min-height: 627px; }
+}
+
+@media (min-width: 1280px) {
+  .deferred-widget--retail { min-height: 351px; }
 }
 
 .landing-demo-still__caption {

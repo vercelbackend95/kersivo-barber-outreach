@@ -51,7 +51,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 - Long-lived cache headers for hashed `/_astro/*` and fonts.
 - Static or edge-cached marketing HTML (homepage no longer needs the database).
 - Client Sentry: remove from marketing pages or configure DSN.
-- ClientRouter (view transitions) on marketing pages: remove unless GA4 DebugView proves page views are counted once.
+- ClientRouter (view transitions) on marketing pages: restored in BATCH A. One `page_view` per client-side navigation measured with real gtag.js (collect hits stubbed); it relies on GA4 enhanced measurement's history setting. Still to confirm in GA4 DebugView on production.
 - `robots.txt`: explicit AI-crawler groups; do not use robots for `/seo-growth` (it must stay public for Google OAuth verification).
 - GSC 404 export → 301/410 old pre-September URLs; `barberdemo.kersivo.co.uk` cleanup.
 - Accessibility: contrast on red buttons, skip link, focus ring (target a11y ≥ 95).

@@ -1,5 +1,4 @@
 /* Marketing pages — latin-only @font-face rules (no fontsource @import bloat). */
-@import './fonts-fallback.css';
 
 /* Variable Inter (wght 100-900): every weight the CSS asks for is real, never synthesised. */
 @font-face {
