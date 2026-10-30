@@ -302,12 +302,16 @@
   }
 }
 
-/* ---------- Wide: lanes across the top, five stages in a row ---------- */
+/* ---------- Wide: lanes across the top, one column per stage ---------- */
 
 @media (min-width: 80rem) {
   .bsw-setup__stages {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     column-gap: clamp(1rem, 2vw, 1.75rem);
+  }
+
+  .bsw-setup__stages[data-stages='4'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .bsw-setup-stage {

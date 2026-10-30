@@ -79,23 +79,13 @@ const notes: Note[] = [
 
 // FREE_PREVIEW_FLOW_ENABLED shows the preview-first journey; off keeps the original stages.
 const freePreview = isFreePreviewFlowEnabled();
-const previewStages: Stage[] = [
-  { number: '01', owner: 'You', title: FREE_PREVIEW_STEPS[0].title, copy: FREE_PREVIEW_STEPS[0].body },
-  { number: '02', owner: 'We', title: FREE_PREVIEW_STEPS[1].title, copy: FREE_PREVIEW_STEPS[1].body },
-  { number: '03', owner: 'You', title: FREE_PREVIEW_STEPS[2].title, copy: FREE_PREVIEW_STEPS[2].body },
-  {
-    number: '04',
-    owner: 'You',
-    title: FREE_PREVIEW_STEPS[3].title,
-    copy: `Happy with it? Subscribe for £${SAAS_MONTHLY_GBP}/month. Not for you? You owe nothing.`,
-  },
-  {
-    number: '05',
-    owner: 'We',
-    title: 'Go live',
-    copy: 'Once you’ve approved the site and the final technical checks are done, we publish it.',
-  },
-];
+const previewOwners: Array<Stage['owner']> = ['You', 'We', 'You', 'You'];
+const previewStages: Stage[] = FREE_PREVIEW_STEPS.map((step, index) => ({
+  number: String(index + 1).padStart(2, '0'),
+  owner: previewOwners[index] ?? 'You',
+  title: step.title,
+  copy: step.body,
+}));
 const shownStages = freePreview ? previewStages : stages;
 const billingNote = freePreview
   ? FREE_PREVIEW_BILLING_CLAIM
@@ -127,7 +117,7 @@ const billingNote = freePreview
       </div>
     </header>
 
-    <ol class="bsw-setup__stages" role="list">
+    <ol class="bsw-setup__stages" data-stages={shownStages.length} role="list">
       {shownStages.map((stage) => (
         <li class={`bsw-setup-stage bsw-setup-stage--${stage.owner === 'You' ? 'you' : 'we'}`}>
           <p class="bsw-setup-stage__meta">

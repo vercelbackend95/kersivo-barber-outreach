@@ -18,9 +18,12 @@ const closing = component('FaqAndClose.astro');
 describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
   it('keeps the existing commercial value and separates demo from pricing-intent tracking', () => {
     expect(hero).toContain('Full KERSIVO brings your shop a branded website');
+    expect(hero).toContain('your own domain');
     expect(hero).toContain('£{SAAS_MONTHLY_GBP}/month per location');
     expect(hero).toContain('0% KERSIVO commission');
-    expect(hero).toContain('STRIPE_FEES_NOTE');
+    expect(hero).not.toContain('STRIPE_FEES_NOTE');
+    expect(offer).toContain('STRIPE_FEES_NOTE');
+    expect(offer).toContain('landingConditionsLine2');
     expect(hero).toContain('CUTSTATE BARBERS is a fictional demonstration shop');
     expect(hero).toContain('data-track="view_live_demo_click"');
     expect(hero).toContain('data-track="saas_subscribe_click"');

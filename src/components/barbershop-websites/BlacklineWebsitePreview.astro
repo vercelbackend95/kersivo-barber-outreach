@@ -6,14 +6,16 @@ import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/
 
 const IMG = '/images/barbershop-websites';
 
-const serviceCards = [
-  { slug: 'haircut-finish', label: 'Haircut', image: `${IMG}/service-haircut.webp` },
-  { slug: 'beard-trim', label: 'Beard Trim', image: `${IMG}/service-beard.webp` },
-  { slug: 'skin-fade', label: 'Skin Fade', image: `${IMG}/service-fade.webp` },
-  { slug: 'wash-style-finish', label: 'Style & Finish', image: `${IMG}/service-style.webp` },
-].flatMap((card) => {
-  const service = DEMO_SERVICES.find((item) => item.slug === card.slug);
-  return service ? [{ ...card, service }] : [];
+const serviceImages = {
+  'haircut-finish': `${IMG}/service-haircut.webp`,
+  'beard-trim': `${IMG}/service-beard.webp`,
+  'skin-fade': `${IMG}/service-fade.webp`,
+  'wash-style-finish': `${IMG}/service-style.webp`,
+} as const;
+
+const serviceCards = (Object.keys(serviceImages) as (keyof typeof serviceImages)[]).flatMap((slug) => {
+  const service = DEMO_SERVICES.find((item) => item.slug === slug);
+  return service ? [{ slug, image: serviceImages[slug], service }] : [];
 });
 
 const siteNav = [
@@ -80,13 +82,24 @@ const siteNav = [
     <ul class="bsw-site__services" role="list">
       {serviceCards.map((card) => (
         <li>
-          <a class="bsw-service" href={demoBookingHref(card.slug)} aria-label={`${card.service.name}, from ${formatDemoPriceGbp(card.service.pricePence)}, book in the demo`}>
+          <a
+            class="bsw-service"
+            href={demoBookingHref(card.slug)}
+            data-astro-reload
+            aria-label={`Book ${card.service.name} in the CUTSTATE demo`}
+          >
             <img src={card.image} alt="" width="400" height="300" loading="lazy" decoding="async" />
             <span class="bsw-service__text">
-              <span class="bsw-service__name">{card.label}</span>
-              <span class="bsw-service__price">From {formatDemoPriceGbp(card.service.pricePence)}</span>
+              <span class="bsw-service__name">{card.service.shortName ?? card.service.name}</span>
+              <span class="bsw-service__meta">
+                <span class="bsw-service__price">From {formatDemoPriceGbp(card.service.pricePence)}</span>
+                <span class="bsw-service__book">
+                  Book in demo
+                  <ArrowRight className="bsw-service__arrow" size={13} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <ArrowRight className="bsw-service__arrow bsw-service__arrow--touch" size={13} strokeWidth={1.8} aria-hidden="true" />
+              </span>
             </span>
-            <ArrowRight className="bsw-service__arrow" size={13} strokeWidth={1.8} aria-hidden="true" />
           </a>
         </li>
       ))}

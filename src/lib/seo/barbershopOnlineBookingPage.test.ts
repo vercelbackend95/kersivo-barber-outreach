@@ -399,9 +399,9 @@ describe('/barbershop-online-booking Section 01 hero', () => {
   });
 
   it('links published booking guide in Resources only when the pillar is also published', () => {
-    const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
+    const essentials = read('../../components/barbershop-websites/WebsiteEssentials.astro');
     const nav = read('../../lib/nav/marketingNavigation.ts');
-    expect(panel).toContain('href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
+    expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(nav).toContain('visible: BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE');
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
   });

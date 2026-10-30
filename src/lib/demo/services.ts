@@ -18,6 +18,8 @@ export type DemoService = {
   id: string;
   slug: string;
   name: string;
+  /** Shorter tile label. Omit when `name` already fits. */
+  shortName?: string;
   durationMinutes: number;
   pricePence: number;
   description: string;

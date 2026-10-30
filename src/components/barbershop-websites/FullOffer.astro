@@ -13,6 +13,7 @@ import {
   SMS_INCLUDED_WITH_ALLOWANCE_CLAIM,
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const TRACK_EVENT = 'saas_subscribe_click';
@@ -60,13 +61,21 @@ const facts = [
   '0% KERSIVO commission on bookings and retail.',
 ];
 
+const landingConditionsLine2 = getRateCard1LandingLayout().conditionsLine2;
+
 const payment = [
   STRIPE_FEES_NOTE,
   `You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same billing-cycle day.`,
   'Billing runs while we prepare your website and doesn’t pause if your materials arrive late.',
+  landingConditionsLine2,
 ];
 
-const previewPayment = [STRIPE_FEES_NOTE, FREE_PREVIEW_BILLING_CLAIM, ONBOARDING_BILLING_INDEPENDENT_CLAIM];
+const previewPayment = [
+  STRIPE_FEES_NOTE,
+  FREE_PREVIEW_BILLING_CLAIM,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
+  landingConditionsLine2,
+];
 const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;
 ---
 
@@ -105,7 +114,7 @@ const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;
         </ul>
 
         {isFreePreviewFlowEnabled() ? (
-          <FullPlanCta part="all" primaryClass="btn btn--primary btn--lg bsw-offer-panel__cta" placement={TRACK_PLACEMENT} class="bsw-offer-panel__free-preview">
+          <FullPlanCta part="primary" primaryClass="btn btn--primary btn--lg bsw-offer-panel__cta" placement={TRACK_PLACEMENT}>
             <ArrowRight slot="icon" className="bsw-offer-panel__cta-icon" size={17} strokeWidth={2} aria-hidden="true" />
           </FullPlanCta>
         ) : (

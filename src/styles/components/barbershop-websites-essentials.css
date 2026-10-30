@@ -122,6 +122,31 @@
   text-wrap: pretty;
 }
 
+.bsw-essentials__guides {
+  max-width: 62ch;
+  margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+  color: var(--bsw-ess-text-2);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.bsw-essentials__guides a {
+  color: var(--accent-text);
+  font-weight: 600;
+  text-decoration-line: underline;
+  text-underline-offset: 0.18em;
+}
+
+.bsw-essentials__guides a:hover {
+  color: var(--fg);
+}
+
+.bsw-essentials__guides a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-4);
+}
+
 /* ---------- Quick test ---------- */
 
 /* The section's closing moment: one framed question, set larger than the topics. */

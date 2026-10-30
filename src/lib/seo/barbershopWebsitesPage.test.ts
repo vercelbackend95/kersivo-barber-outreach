@@ -60,11 +60,18 @@ describe('/barbershop-websites pillar hero', () => {
     expect(hero).not.toMatch(/<span>\{lineTwo\}<span class="bsw-accent">/);
   });
 
-  it('qualifies the 0% KERSIVO commission claim with the Stripe fees note', () => {
+  it('keeps the price line under the H1 and moves Stripe fees plus the refund line into pricing', () => {
+    expect(hero).toContain('your own domain');
+    expect(hero).not.toContain('a standard domain');
     expect(hero).toContain('0% KERSIVO commission');
-    expect(hero).toContain('import { STRIPE_FEES_NOTE }');
-    expect(hero).toContain('<p class="bsw-hero__price-note">{STRIPE_FEES_NOTE}</p>');
-    expect(hero.indexOf('bsw-hero__price-note')).toBeGreaterThan(hero.indexOf('0% KERSIVO commission'));
+    expect(hero).not.toContain('STRIPE_FEES_NOTE');
+    expect(hero).not.toContain('bsw-hero__price-note');
+    const offer = read(`${componentDir}FullOffer.astro`);
+    expect(offer).toContain('STRIPE_FEES_NOTE');
+    expect(offer).toContain('landingConditionsLine2');
+    expect(offer).toContain('How payment works');
+    expect(offer).toContain('part="primary"');
+    expect(offer).not.toContain('part="all"');
   });
 
   it('uses real demo data, no iframes, and labels CUTSTATE as fictional', () => {
@@ -77,17 +84,25 @@ describe('/barbershop-websites pillar hero', () => {
     }
   });
 
-  it('presents six capabilities with focused guide links and working demo destinations', () => {
+  it('points all six feature links at the working demo and keeps guide pages in essentials', () => {
     const panel = read(`${componentDir}WebsiteFeaturesPanel.astro`);
+    const essentials = read(`${componentDir}WebsiteEssentials.astro`);
     expect(panel).toContain('Your website. Your business.');
-    const capabilities = ['Branding', 'Services', 'Your Team', 'Retail Shop', 'Online Booking', 'Contact & Location'];
+    const capabilities = ['Branding', 'Services', 'Your team', 'Retail shop', 'Online booking', 'Contact & location'];
     for (const label of capabilities) expect(panel).toContain(`label: '${label}'`);
     expect((panel.match(/key: '/g) ?? [])).toHaveLength(6);
     expect(panel).not.toContain('Hero sections');
     expect(panel).not.toContain("label: 'Gallery'");
-    for (const route of ['BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH', 'BARBERSHOP_ONLINE_BOOKING_PAGE_PATH', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', '/demo/services']) {
+    expect(panel).toContain('aria-labelledby=');
+    expect(panel).toContain('class="bsw-thumb__booking-slots" aria-hidden="true"');
+    for (const route of ['DEMO_HOME_HREF', '/demo/services', '/demo/barbers', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF']) {
       expect(panel).toContain(route);
     }
+    expect(panel).not.toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
+    expect(panel).not.toContain('BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
+    expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
+    expect(essentials).toContain('#your-team');
+    expect(essentials).toContain('BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
   });
 
   it('uses a visual-only calendar rail matching the real booking date picker', () => {
@@ -96,10 +111,15 @@ describe('/barbershop-websites pillar hero', () => {
       ?.split('<p class="bsw-step__label">Choose a time')[0] ?? '';
     expect(calendar).toContain('bsw-date-preview__header');
     expect(calendar).toContain('bsw-date-preview__days');
-    expect(calendar).toContain('bsw-date-preview__day is-selected');
+    expect(calendar).toContain("'is-selected': day.selected");
+    expect(calendar).toContain('dates.monthLabel');
     expect(calendar).toContain('Example dates');
     expect(calendar).toContain('not interactive');
-    expect(calendar).not.toMatch(/<button|<input|<a\b|onClick|onChange/);
+    expect(calendar).not.toMatch(/October|20\d{2}|<button|<input|<a\b|onClick|onChange/);
+    expect(preview).toContain('bookingPreviewDates');
+    expect(preview).toContain('Client booking flow');
+    expect(preview).toContain('Try the booking demo');
+    expect(preview).toContain('class="btn btn--primary btn--lg bsw-booking__cta"');
     const css = read('../../styles/components/barbershop-websites-hero.css');
     expect(css).toContain('.bsw-date-preview__day.is-selected');
     expect(css).toContain('background: var(--accent);');
