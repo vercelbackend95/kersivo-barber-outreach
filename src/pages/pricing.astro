@@ -9,7 +9,6 @@ import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import {
-  PRICING_FAQ_ITEMS,
   PRICING_FEES_POINTS,
   PRICING_INCLUDED_GROUPS,
   PRICING_PAGE_DESCRIPTION,
@@ -23,6 +22,7 @@ import {
   buildPricingBreadcrumbJsonLd,
   buildPricingFaqJsonLd,
   buildPricingWebPageJsonLd,
+  getPricingFaqItems,
 } from '@/lib/seo/pricingPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
@@ -47,7 +47,7 @@ const currentYear = new Date().getFullYear();
   title={PRICING_PAGE_TITLE}
   description={PRICING_PAGE_DESCRIPTION}
   canonicalPath={PRICING_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildPricingWebPageJsonLd(), buildPricingBreadcrumbJsonLd(), buildPricingFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildPricingWebPageJsonLd(), buildPricingBreadcrumbJsonLd(), buildPricingFaqJsonLd(freePreview)]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <section class="fresha-alt-hero company-hero" aria-labelledby="pricing-hero-title">
@@ -232,7 +232,7 @@ const currentYear = new Date().getFullYear();
       supportText="Tell us about your barbershop and we’ll give you a clear answer."
       supportLinkLabel="Ask a question"
       supportLinkHref="#contact"
-      faqs={PRICING_FAQ_ITEMS}
+      faqs={getPricingFaqItems(freePreview)}
     />
 
     <section class="landing-final-cta fresha-alt-final" aria-labelledby="pricing-final-title">

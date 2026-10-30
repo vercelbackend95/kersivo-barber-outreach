@@ -180,14 +180,28 @@ export function buildPricingBreadcrumbJsonLd(): Record<string, unknown> {
   return buildBreadcrumbListJsonLd(PRICING_BREADCRUMBS);
 }
 
-export function buildPricingFaqJsonLd(): Record<string, unknown> {
+const FREE_PREVIEW_PRICING_ANSWERS: Record<string, string> = {
+  'When does billing start?':
+    "You don't pay anything for your preview. If you decide to launch, your first Full KERSIVO payment is taken when you subscribe, then monthly on the same billing-cycle day. Your site is typically ready in a few days once we receive all required information.",
+};
+
+/** FAQ with the free preview answers while FREE_PREVIEW_FLOW_ENABLED is on. */
+export function getPricingFaqItems(freePreview = false): PricingFaqItem[] {
+  if (!freePreview) return PRICING_FAQ_ITEMS;
+  return PRICING_FAQ_ITEMS.map((item) => {
+    const answer = FREE_PREVIEW_PRICING_ANSWERS[item.question];
+    return answer ? { ...item, answer } : item;
+  });
+}
+
+export function buildPricingFaqJsonLd(freePreview = false): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
 
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}${PRICING_PAGE_PATH}#faq`,
-    mainEntity: PRICING_FAQ_ITEMS.map((item) => ({
+    mainEntity: getPricingFaqItems(freePreview).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

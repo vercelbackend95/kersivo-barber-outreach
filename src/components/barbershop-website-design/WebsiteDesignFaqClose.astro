@@ -1,5 +1,7 @@
 ---
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_BILLING_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/components/barbershop-website-design-faq-close.css';
 
@@ -10,6 +12,9 @@ const DEMO_TRACK_EVENT = 'view_live_demo_click';
 const DEMO_TRACK_PLACEMENT = 'barbershop_website_design_final_demo';
 const SUBSCRIPTION_TERMS_HREF = '/terms#subscription';
 const UPDATE_SUPPORT_TERMS_HREF = '/terms#website-update-support';
+const BILLING_NOTE = isFreePreviewFlowEnabled()
+  ? FREE_PREVIEW_BILLING_CLAIM
+  : 'The first payment is taken when you subscribe, before your website goes live.';
 
 type Faq = {
   id: string;
@@ -134,9 +139,8 @@ const faqs: Faq[] = [
       </div>
 
       <p class="bwc__note">
-        Full KERSIVO: £{SAAS_MONTHLY_GBP}/month per physical location. Standard website setup included. The first
-        payment is taken when you subscribe, before your website goes live. CUTSTATE is a fictional demonstration
-        shop.
+        Full KERSIVO: £{SAAS_MONTHLY_GBP}/month per physical location. Standard website setup included. {BILLING_NOTE} CUTSTATE is a fictional
+        demonstration shop.
         <a class="bwc__terms" href={SUBSCRIPTION_TERMS_HREF}>Subscription terms</a>
       </p>
     </div>

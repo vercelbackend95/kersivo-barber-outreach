@@ -2,6 +2,7 @@ import {
   BILLING_CYCLE_SHORT,
   CLIENT_COMMS_CLAIM,
   DOMAIN_INCLUDED_SHORT,
+  FREE_PREVIEW_BILLING_CLAIM,
   KERSIVO_COMMISSION_CLAIM,
   KERSIVO_COMMISSION_WITH_STRIPE,
   NO_SETUP_FEE_SHORT,
@@ -169,8 +170,7 @@ export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCar
 /** Pricing-card conditions while FREE_PREVIEW_FLOW_ENABLED is on (docs/free-preview-spec.md §10.3). */
 const FREE_PREVIEW_LANDING_LAYOUT: RateCard1LandingLayout = {
   ...LANDING_LAYOUT,
-  conditionsLine1:
-    'Standard Stripe payment-processing fees apply to online payments. See your free preview first. If you subscribe, your first payment is taken at checkout, then monthly on the same day.',
+  conditionsLine1: `Standard Stripe payment-processing fees apply to online payments. ${FREE_PREVIEW_BILLING_CLAIM}`,
 };
 
 export function getRateCard1LandingLayout(freePreview = false): RateCard1LandingLayout {

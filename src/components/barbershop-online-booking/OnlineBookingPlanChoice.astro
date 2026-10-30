@@ -4,10 +4,10 @@ import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { PLAN_CHOICE_INTENTS, buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
 import '@/styles/components/barbershop-online-booking-plan-choice.css';
 
-const content = buildPlanChoiceContent();
 const PLAN_CHOICE_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
 // FREE_PREVIEW_FLOW_ENABLED replaces the Full primary CTA (docs/free-preview-spec.md §10.2).
 const freePreview = isFreePreviewFlowEnabled();
+const content = buildPlanChoiceContent(freePreview);
 ---
 
 <section class="bob-pc" id={content.sectionId} aria-labelledby="bob-pc-title">
