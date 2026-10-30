@@ -219,6 +219,9 @@ describe('/pricing billing and page clean-up', () => {
 
   it('drops competitor-page classes from /pricing', () => {
     const page = read('pages/pricing.astro');
+    expect(page).not.toContain('fresha-alternative.css');
+    expect(page).not.toContain('company-pages.css');
+    expect(page).toContain('ks-hero.css');
     expect(page).not.toContain('RateCard1Offer');
     expect(page).not.toContain('company-groups');
     expect(page).not.toContain('company-checks');

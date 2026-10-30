@@ -660,7 +660,7 @@ describe('contact form placeholder', () => {
 
 describe('hero dashboard showcase', () => {
   const showcaseSource = readRepoFile('../../components/marketing/HeroDashboardShowcase.astro');
-  const heroCss = readRepoFile('../../styles/components/fresha-alternative.css');
+  const heroCss = readRepoFile('../../styles/components/ks-hero.css');
 
   it('renders the shared live dashboard showcase below the hero copy', () => {
     expect(heroSource).toContain("import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';");

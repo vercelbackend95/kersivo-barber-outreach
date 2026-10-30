@@ -7,7 +7,7 @@
   --hub-red-fill: var(--accent);
   --hub-red-fill-hover: var(--accent-hover);
   --hub-bg: #050506;
-  --hub-surface: #0d0e11;
+  --hub-surface: var(--ks-tile);
   --hub-surface-2: #14161a;
   --hub-border: rgb(255 255 255 / 0.09);
   --hub-border-strong: rgb(255 255 255 / 0.16);
@@ -87,13 +87,8 @@
   color: var(--hub-text);
 }
 
-.alt-hub-hero__eyebrow {
+.alt-hub-hero .ks-eyebrow {
   margin: 0 0 0.55rem;
-  color: var(--hub-red-text);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
 }
 
 .alt-hub-hero__title {
@@ -1257,12 +1252,8 @@
 .alt-hub-panel__intro .alt-hub-panel__helper {
   margin-top: 0.35rem;
 }
-.alt-hub-panel__eyebrow {
+.alt-hub-panel .ks-eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--hub-red-text);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
 }
 .alt-hub-pill__label--mobile,
 .alt-hub-panel__close,
@@ -1330,10 +1321,8 @@
     display: block;
     flex: 1 1 100%;
   }
-  .alt-hub-panel__eyebrow {
+  .alt-hub-panel .ks-eyebrow {
     margin-bottom: 0.35rem;
-    font-size: 0.62rem;
-    letter-spacing: 0.16em;
   }
   .alt-hub-panel__title {
     font-size: clamp(1.35rem, 5.5vw, 1.6rem);

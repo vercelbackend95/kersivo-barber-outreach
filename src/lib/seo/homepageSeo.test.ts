@@ -197,9 +197,11 @@ describe('homepage visual style parity with /starter', () => {
     const pricing = read('src/styles/rateCard1.css');
     const final = read('src/styles/components/landingFinalCta.css');
     const panel = read('src/components/FinalCta.astro');
-    const reference = 'background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);';
+    const reference = 'background: linear-gradient(180deg, var(--ks-glass-top) 0%, var(--ks-glass-bottom) 100%);';
     const shadow = 'inset 0 1px 0 rgba(255, 255, 255, 0.05)';
-    expect(starter).toContain('background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);');
+    expect(read('src/styles/tokens.css')).toContain('--ks-glass-top: #0d0d0e');
+    expect(read('src/styles/tokens.css')).toContain('--ks-glass-bottom: #080809');
+    expect(starter).toContain(reference);
     expect(pricing).toContain(reference);
     expect(starter).toContain(shadow);
     expect(pricing).toContain(shadow);

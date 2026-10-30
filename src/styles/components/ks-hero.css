@@ -1,0 +1,226 @@
+/* Shared product-first hero (homepage copies these rules as .home-hero). */
+
+.fresha-alt-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3.25rem, 5.2vw, 4.75rem) 0 clamp(4.5rem, 8vw, 7rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: #030303;
+}
+
+.fresha-alt-hero__content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: start;
+  width: min(94vw, 91.1rem);
+  margin-inline: auto;
+  text-align: left;
+}
+
+.fresha-alt-hero__title {
+  margin: 0;
+  max-width: none;
+  font-family: var(--font-body);
+  font-size: clamp(2.85rem, 5.25vw, 5.55rem);
+  font-weight: 600;
+  line-height: 0.84;
+  letter-spacing: -0.062em;
+  color: var(--fg);
+}
+
+.fresha-alt-hero__title-line {
+  display: block;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+}
+
+.fresha-alt-hero__title-line + .fresha-alt-hero__title-line {
+  margin-top: 0;
+}
+
+.fresha-alt-hero__title-line--primary {
+  color: var(--fg);
+}
+
+.fresha-alt-hero__lead {
+  margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
+  max-width: 46ch;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  font-size: clamp(0.9rem, 1.05vw, 1rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.fresha-alt-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.fresha-alt-hero__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  min-height: var(--btn-height-lg);
+  padding: 0 var(--btn-pad-x-lg);
+  border-radius: var(--btn-radius);
+  font-family: var(--font-body);
+  font-size: var(--btn-font-md);
+  font-weight: var(--btn-weight);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fresha-alt-hero__action--primary {
+  border: 1px solid transparent;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  box-shadow: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fresha-alt-hero__action--primary:hover,
+.fresha-alt-hero__action--primary:focus-visible {
+  color: var(--btn-primary-fg);
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.fresha-alt-hero__action--primary:hover {
+  box-shadow: none;
+}
+
+.fresha-alt-hero__action--primary:active {
+  background: var(--btn-primary-pressed);
+  border-color: var(--btn-primary-pressed);
+}
+
+.fresha-alt-hero__action--primary:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.fresha-alt-hero__action--secondary {
+  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  background: transparent;
+  color: var(--fg);
+  box-shadow: none;
+  backdrop-filter: none;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fresha-alt-hero__action--secondary:hover,
+.fresha-alt-hero__action--secondary:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border-color: color-mix(in srgb, var(--fg) 30%, transparent);
+}
+
+.fresha-alt-hero__action--secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.fresha-alt-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.4rem 0.62rem;
+  margin-top: 0.75rem;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.fresha-alt-hero__meta strong {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  font-weight: 700;
+}
+
+@media (max-width: 64rem) {
+  .fresha-alt-hero {
+    padding-top: clamp(3.25rem, 6vw, 4.25rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .fresha-alt-hero {
+    padding-top: 3.25rem;
+    padding-bottom: 3.7rem;
+  }
+
+  .fresha-alt-hero__content {
+    width: calc(100% - 1.35rem);
+  }
+
+  .fresha-alt-hero__title {
+    max-width: 100%;
+    font-size: clamp(2.35rem, 10vw, 4.15rem);
+    letter-spacing: -0.055em;
+  }
+
+  .fresha-alt-hero__title-line {
+    white-space: normal;
+  }
+
+  .fresha-alt-hero__lead {
+    max-width: 31rem;
+  }
+}
+
+@media (max-width: 38rem) {
+  .fresha-alt-hero__actions {
+    width: min(100%, 28rem);
+    flex-direction: column;
+  }
+
+  .fresha-alt-hero__action {
+    width: 100%;
+  }
+
+  .fresha-alt-hero__meta {
+    max-width: 25rem;
+  }
+}
+
+/* End of shared product hero (homepage copies these rules as .home-hero). */
+
+.fresha-alt-hero .ks-eyebrow {
+  margin: 0 0 0.85rem;
+}
+
+.fresha-alt {
+  background: var(--bg);
+  color: var(--fg);
+  min-width: 0;
+}
+
+.fresha-alt .container {
+  min-width: 0;
+}
+
+.company-hero {
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.company-hero .fresha-alt-hero__lead {
+  max-width: 60ch;
+}
+
+.company-hero__updated {
+  margin: 1rem 0 0;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}

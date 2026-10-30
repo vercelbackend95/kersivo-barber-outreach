@@ -152,7 +152,7 @@
   padding: clamp(1.5rem, 3vw, 2.25rem);
   border: 1px solid var(--border);
   border-radius: var(--radius-16);
-  background: var(--surface-1);
+  background: var(--ks-tile);
 }
 
 .bsw-offer-panel::before {

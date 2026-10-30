@@ -60,32 +60,8 @@
   min-width: 0;
 }
 
-.cost-calc-hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  max-width: 100%;
+.cost-calc-hero .ks-eyebrow {
   margin: 0 0 1rem;
-  padding: 0.48rem 0.72rem;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
-  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
-  font-family: var(--font-body);
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.cost-calc-hero__eyebrow-dot {
-  flex: none;
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0.24rem color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .cost-calc-hero__title {
