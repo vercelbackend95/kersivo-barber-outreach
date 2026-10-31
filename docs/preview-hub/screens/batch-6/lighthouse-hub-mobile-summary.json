@@ -1,0 +1,22 @@
+{
+  "overview": {
+    "performance": 100,
+    "accessibility": 100,
+    "a11yFailed": []
+  },
+  "details": {
+    "performance": 100,
+    "accessibility": 100,
+    "a11yFailed": []
+  },
+  "website": {
+    "performance": 100,
+    "accessibility": 100,
+    "a11yFailed": []
+  },
+  "messages": {
+    "performance": 100,
+    "accessibility": 100,
+    "a11yFailed": []
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "islands": [
+    {
+      "island": "previewHub/HubUploader.tsx",
+      "sourceBytes": 10956,
+      "sourceKb": 10.7,
+      "gzipKb": 2.8
+    },
+    {
+      "island": "previewHub/HubYourShop.tsx",
+      "sourceBytes": 22651,
+      "sourceKb": 22.1,
+      "gzipKb": 5.2
+    },
+    {
+      "island": "previewHub/HubWebsiteView.tsx",
+      "sourceBytes": 7521,
+      "sourceKb": 7.3,
+      "gzipKb": 2.1
+    },
+    {
+      "island": "previewHub/HubReviewCards.tsx",
+      "sourceBytes": 17687,
+      "sourceKb": 17.3,
+      "gzipKb": 3.7
+    },
+    {
+      "island": "previewHub/HubChanges.tsx",
+      "sourceBytes": 9510,
+      "sourceKb": 9.3,
+      "gzipKb": 2.4
+    },
+    {
+      "island": "previewHub/HubMessages.tsx",
+      "sourceBytes": 14213,
+      "sourceKb": 13.9,
+      "gzipKb": 3.8
+    },
+    {
+      "island": "previewHub/HubLaunchChecklist.tsx",
+      "sourceBytes": 24604,
+      "sourceKb": 24,
+      "gzipKb": 4.5
+    },
+    {
+      "island": "freePreview/PreviewTopBar.tsx",
+      "sourceBytes": 13772,
+      "sourceKb": 13.4,
+      "gzipKb": 3.8
+    }
+  ],
+  "sourceTotalGzipKb": 28.3,
+  "buildChunks": [
+    {
+      "file": "dist/client/_astro/HubChanges.ConTubCj.js",
+      "bytes": 69,
+      "kb": 0.1,
+      "gzipKb": 0.1
+    },
+    {
+      "file": "dist/client/_astro/HubChanges.DdjfQncw.js",
+      "bytes": 7541,
+      "kb": 7.4,
+      "gzipKb": 2.7
+    },
+    {
+      "file": "dist/client/_astro/hubCopy.E7Mykvm6.js",
+      "bytes": 9036,
+      "kb": 8.8,
+      "gzipKb": 4
+    },
+    {
+      "file": "dist/client/_astro/HubLaunchChecklist.D13k4pfF.js",
+      "bytes": 12036,
+      "kb": 11.8,
+      "gzipKb": 3.1
+    },
+    {
+      "file": "dist/client/_astro/HubMessages.BwmNLd7C.js",
+      "bytes": 134893,
+      "kb": 131.7,
+      "gzipKb": 39
+    },
+    {
+      "file": "dist/client/_astro/HubReviewCards.BHLSXFRR.js",
+      "bytes": 77,
+      "kb": 0.1,
+      "gzipKb": 0.1
+    },
+    {
+      "file": "dist/client/_astro/HubReviewCards.D8BwOikm.js",
+      "bytes": 10285,
+      "kb": 10,
+      "gzipKb": 3
+    },
+    {
+      "file": "dist/client/_astro/HubUploader.BGFPZKq-.js",
+      "bytes": 69754,
+      "kb": 68.1,
+      "gzipKb": 17.2
+    },
+    {
+      "file": "dist/client/_astro/HubWebsiteView.sW6hIeki.js",
+      "bytes": 4551,
+      "kb": 4.4,
+      "gzipKb": 1.7
+    },
+    {
+      "file": "dist/client/_astro/HubYourShop.CeCMR6FL.js",
+      "bytes": 13410,
+      "kb": 13.1,
+      "gzipKb": 4.1
+    },
+    {
+      "file": "dist/client/_astro/OpsHubChanges.DGivLjBD.js",
+      "bytes": 2932,
+      "kb": 2.9,
+      "gzipKb": 1.1
+    },
+    {
+      "file": "dist/client/_astro/OpsHubContent.DC4yBE_f.js",
+      "bytes": 2623,
+      "kb": 2.6,
+      "gzipKb": 1.2
+    },
+    {
+      "file": "dist/client/_astro/PreviewTopBar.DNGRWKQb.js",
+      "bytes": 8289,
+      "kb": 8.1,
+      "gzipKb": 2.7
+    },
+    {
+      "file": "dist/client/_astro/SiteLaunchHubPanel.0WEPBNT9.js",
+      "bytes": 4206,
+      "kb": 4.1,
+      "gzipKb": 1.4
+    }
+  ],
+  "buildPresent": true,
+  "note": "Matching client chunks from the last build."
+}
