@@ -6,6 +6,7 @@ import HubComingSoon from '@/components/previewHub/HubComingSoon.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
+import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -39,6 +40,8 @@ await recordHubOwnerView({
 }).catch((error) => {
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
+
+const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx.request.id);
 ---
 
 <HubDocument title={`${HUB_NAV.changes} — ${ctx.request.shopName} | KERSIVO`}>
@@ -48,6 +51,7 @@ await recordHubOwnerView({
     stage={ctx.state.stage}
     current="changes"
     capabilities={ctx.state.capabilities}
+    unreadMessages={unreadMessages}
   >
     {
       ctx.state.capabilities.canDraftChanges ? (

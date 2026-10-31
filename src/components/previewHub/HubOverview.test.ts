@@ -17,11 +17,11 @@ describe('HubOverview key UI states', () => {
     expect(overview).toContain('checklist');
   });
 
-  it('renders a designed expired CTA that stays disabled until Batch 3', () => {
-    expect(overview).toContain('expiredDisabled');
-    expect(overview).toContain('HUB_AVAILABLE_SOON');
-    expect(overview).toContain('disabled');
-    expect(overview).toContain('HUB_PRIMARY.expired');
+  it('sends declined and expired primary actions to the messages composer with a draft', () => {
+    expect(overview).toContain('messages?draft=message');
+    expect(overview).toContain('messages?draft=reopen');
+    expect(overview).toContain('HUB_PRIMARY[state.stage]');
+    expect(overview).not.toContain('expiredDisabled');
   });
 
   it('shows the Review subscribe control in the Overview header', () => {
@@ -39,5 +39,7 @@ describe('HubShell', () => {
     expect(shell).toContain('HUB_LOCKED_REASON_PREVIEW');
     expect(shell).toContain('aria-label="Hub sections"');
     expect(shell).toContain('aria-label="Hub pages"');
+    expect(shell).toContain('unreadMessages');
+    expect(shell).toContain('hub-unread');
   });
 });

@@ -29,6 +29,21 @@ export const PREVIEW_HUB_ASSET_GET_RATE = {
   limit: 240,
   windowMs: 60 * 60 * 1000,
 };
+export const PREVIEW_HUB_MESSAGES_IP_RATE = {
+  action: 'preview_hub_messages_ip',
+  limit: 20,
+  windowMs: 60 * 60 * 1000,
+};
+export const PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE = {
+  action: 'preview_hub_messages_request_hour',
+  limit: 20,
+  windowMs: 60 * 60 * 1000,
+};
+export const PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE = {
+  action: 'preview_hub_messages_request_day',
+  limit: 100,
+  windowMs: 24 * 60 * 60 * 1000,
+};
 
 export const HUB_API_HEADERS = {
   'Content-Type': 'application/json',
@@ -116,10 +131,44 @@ export async function enforceHubAssetGetRate(request: Request): Promise<Response
   );
 }
 
-export function requireUploadCapability(ctx: HubPageContext): Response | null {
+export function requireUploadCapability(ctx: HubPageContext, kind?: PreviewHubAssetKind): Response | null {
+  if (kind === 'MESSAGE_ATTACHMENT' && ctx.state.capabilities.canMessage) return null;
   if (!ctx.state.capabilities.canUpload) {
     return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_DENIED }, 403);
   }
+  return null;
+}
+
+export function requireMessageCapability(ctx: HubPageContext): Response | null {
+  if (!ctx.state.capabilities.canMessage) {
+    return hubJson({ ok: false, error: 'You cannot send messages at this stage.' }, 403);
+  }
+  return null;
+}
+
+export async function enforceHubMessageRates(request: Request, token: string): Promise<Response | null> {
+  const ipLimited = await enforceIpRateLimit(
+    request,
+    PREVIEW_HUB_MESSAGES_IP_RATE.action,
+    PREVIEW_HUB_MESSAGES_IP_RATE.limit,
+    PREVIEW_HUB_MESSAGES_IP_RATE.windowMs,
+  );
+  if (ipLimited) return ipLimited;
+  const tokenKey = previewTokenLookupHash(token.trim() || 'invalid');
+  const hourLimit = await checkDurableRateLimit({
+    key: `hub-msg-h:${tokenKey}`,
+    action: PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE.action,
+    limit: PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE.limit,
+    windowMs: PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE.windowMs,
+  });
+  if (!hourLimit.ok) return rateLimitExceededResponse(hourLimit.retryAfterSeconds);
+  const dayLimit = await checkDurableRateLimit({
+    key: `hub-msg-d:${tokenKey}`,
+    action: PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.action,
+    limit: PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.limit,
+    windowMs: PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.windowMs,
+  });
+  if (!dayLimit.ok) return rateLimitExceededResponse(dayLimit.retryAfterSeconds);
   return null;
 }
 

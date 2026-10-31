@@ -3,7 +3,6 @@ import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import {
   HUB_ACTIVITY_EMPTY,
   HUB_ACTIVITY_TITLE,
-  HUB_AVAILABLE_SOON,
   HUB_CHECKLIST_PROGRESS,
   HUB_CHECKLIST_TITLE,
   HUB_HELP_EMAIL,
@@ -56,13 +55,14 @@ const primaryHref =
         : state.stage === 'live'
           ? '/admin'
           : state.stage === 'declined'
-            ? `${base}/messages`
-            : undefined;
+            ? `${base}/messages?draft=message`
+            : state.stage === 'expired'
+              ? `${base}/messages?draft=reopen`
+              : undefined;
 const primaryLabel =
   state.stage === 'review' && state.reviewSubstate === 'changes_sent'
     ? HUB_PRIMARY.reviewChangesSent
     : HUB_PRIMARY[state.stage];
-const expiredDisabled = state.stage === 'expired';
 ---
 
 <article class="hub-overview">
@@ -70,19 +70,10 @@ const expiredDisabled = state.stage === 'expired';
     <div>
       <h1>{header.h1}</h1>
       <p class="hub-header__sub">{header.sub}</p>
-      {
-        expiredDisabled ? (
-          <p class="hub-expired-note">{HUB_AVAILABLE_SOON}</p>
-        ) : null
-      }
     </div>
     <div class="hub-header__actions">
       {
-        expiredDisabled ? (
-          <button type="button" class="btn btn--primary" disabled>
-            {HUB_PRIMARY.expired}
-          </button>
-        ) : primaryHref ? (
+        primaryHref ? (
           <a class="btn btn--primary" href={primaryHref}>
             {primaryLabel}
           </a>

@@ -41,6 +41,7 @@ export const HUB_OWNER_UPLOAD_KINDS: readonly PreviewHubAssetKind[] = [
   'SHOP_PHOTO',
   'TEAM_PHOTO',
   'PRICE_LIST',
+  'MESSAGE_ATTACHMENT',
   'OTHER',
 ];
 

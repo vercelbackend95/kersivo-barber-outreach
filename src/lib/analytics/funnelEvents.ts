@@ -98,6 +98,8 @@ export const FUNNEL_EVENTS = {
   hub_asset_uploaded: 'hub_asset_uploaded',
   /** Shop Hub: owner saved brand / about fields. */
   hub_details_saved: 'hub_details_saved',
+  /** Shop Hub: a message was sent. Param `{ actor }` is `owner` or `kersivo`. Owner sends only from owner APIs. */
+  hub_message_sent: 'hub_message_sent',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

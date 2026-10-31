@@ -9,3 +9,11 @@ exports[`free preview emails > E1 with the hub flag on uses §9.1 copy, the hub 
 <p style="margin:0 0 16px;line-height:1.5">There's nothing to pay and no card needed. You only pay if you decide to launch.</p>
 <p style="margin:0 0 16px;line-height:1.5">The KERSIVO team</p>"
 `;
+
+exports[`free preview emails > KERSIVO → owner message email is transactional, escaped, and links to the hub thread 1`] = `
+"<p style="margin:0 0 16px;line-height:1.5">Hi Sam,</p>
+<p style="margin:0 0 16px;line-height:1.5">KERSIVO sent a message about Sharp Cuts:</p>
+<p style="margin:0 0 16px;line-height:1.5"><span style="white-space:pre-wrap">We can reopen it. &lt;img src=x onerror=alert(1)&gt;</span></p>
+<p style="margin:0 0 16px;line-height:1.5"><a href="https://kersivo.co.uk/preview/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/messages" style="display:inline-block;padding:12px 18px;background:#d72638;color:#fff8ee;text-decoration:none;border-radius:8px;font-weight:600">Reply in your shop hub</a></p>
+<p style="margin:0 0 16px;line-height:1.5">The KERSIVO team</p>"
+`;

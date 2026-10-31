@@ -3,10 +3,16 @@ import { PREVIEW_OVER_CAP_MESSAGE, PREVIEW_TURNAROUND_TEXT } from './config';
 import { HUB_ACK_BUTTON, HUB_ACK_SUBJECT, HUB_OPS_OPEN_HUB } from './hubCopy';
 import {
   buildHubFilesAddedInternalEmail,
+  buildHubMessageFromKersivoEmail,
+  buildHubMessagesAddedInternalEmail,
   buildPreviewRequestAcknowledgementEmail,
   buildPreviewRequestInternalEmail,
 } from './emails';
-import { HUB_OPS_FILES_EMAIL_SUBJECT } from './hubCopy';
+import {
+  HUB_OPS_FILES_EMAIL_SUBJECT,
+  HUB_OWNER_MESSAGE_EMAIL_BUTTON,
+  HUB_OWNER_MESSAGE_EMAIL_SUBJECT,
+} from './hubCopy';
 
 const HUB_TOKEN = 'A'.repeat(43);
 
@@ -216,5 +222,37 @@ describe('free preview emails', () => {
     expect(email.html).toContain('>6<');
     expect(email.html).toContain('/ops/preview-requests/req_1');
     expect(email.html).toContain('Open in KERSIVO Ops');
+  });
+
+  it('KERSIVO → owner message email is transactional, escaped, and links to the hub thread', () => {
+    const email = buildHubMessageFromKersivoEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      publicToken: HUB_TOKEN,
+      body: 'We can reopen it. <img src=x onerror=alert(1)>',
+    });
+    expect(email.subject).toBe(HUB_OWNER_MESSAGE_EMAIL_SUBJECT('Sharp Cuts'));
+    expect(email.to).toBe('sam@example.com');
+    expect(email.replyTo).toBe('hello@kersivo.co.uk');
+    expect(email.html).toContain(HUB_OWNER_MESSAGE_EMAIL_BUTTON);
+    expect(email.html).toContain(`/preview/${HUB_TOKEN}/messages`);
+    expect(email.html).toContain('We can reopen it.');
+    expect(email.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(email.html).not.toContain('<img src=x');
+    expect(email.html).toMatchSnapshot();
+  });
+
+  it('owner → ops message digest uses the count and ops messages tab', () => {
+    const email = buildHubMessagesAddedInternalEmail({
+      id: 'req_1',
+      shopName: 'Sharp Cuts',
+      count: 3,
+    });
+    expect(email.subject).toBe('3 new messages from Sharp Cuts');
+    expect(email.html).toContain('/ops/preview-requests/req_1?tab=messages');
+    expect(buildHubMessagesAddedInternalEmail({ id: 'req_1', shopName: 'Sharp Cuts', count: 1 }).subject).toBe(
+      '1 new message from Sharp Cuts',
+    );
   });
 });

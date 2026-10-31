@@ -6,6 +6,7 @@ import {
   HUB_PRIVATE_LABEL,
   HUB_QUESTIONS_FOOTER,
   HUB_STAGE_PILL,
+  HUB_UNREAD,
 } from '@/lib/freePreview/hubCopy';
 import { previewPagePath } from '@/lib/freePreview/config';
 import type { HubStage, HubCapabilities } from '@/lib/freePreview/hubStage';
@@ -20,9 +21,11 @@ interface Props {
   stage: HubStage;
   current: TabId;
   capabilities: HubCapabilities;
+  unreadMessages?: number;
 }
 
-const { token, shopName, stage, current, capabilities } = Astro.props;
+const { token, shopName, stage, current, capabilities, unreadMessages = 0 } = Astro.props;
+const showUnread = unreadMessages > 0;
 const base = previewPagePath(token);
 
 const tabs: Array<{
@@ -77,10 +80,13 @@ const tabs: Array<{
               <tab.Icon width={18} height={18} strokeWidth={1.8} />
             </span>
             {tab.label}
+            {tab.id === 'messages' && showUnread ? (
+              <span class="hub-unread" aria-label={HUB_UNREAD}></span>
+            ) : null}
             {tab.locked ? (
               <span class="hub-nav__lock">
                 <Lock width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
-                <span class="sr-only">{tab.reason}</span>
+                <span class="hub-sr-only">{tab.reason}</span>
               </span>
             ) : null}
           </a>
@@ -97,8 +103,9 @@ const tabs: Array<{
     <header class="hub-topbar">
       <p class="hub-topbar__shop">{shopName}</p>
       <p class={`hub-stage-pill hub-stage-pill--${stage}`}>{HUB_STAGE_PILL[stage]}</p>
-      <a class="hub-topbar__msg" href={`${base}/messages`} aria-label={HUB_NAV.messages}>
+      <a class="hub-topbar__msg" href={`${base}/messages`} aria-label={showUnread ? HUB_UNREAD : HUB_NAV.messages}>
         <MessageCircle width={20} height={20} strokeWidth={1.8} />
+        {showUnread ? <span class="hub-unread" aria-hidden="true"></span> : null}
       </a>
     </header>
     <p class="hub-private hub-private--mobile">{HUB_PRIVATE_LABEL}</p>
@@ -118,7 +125,10 @@ const tabs: Array<{
           aria-current={current === tab.id ? 'page' : undefined}
           title={tab.locked ? tab.reason : tab.label}
         >
-          <tab.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
+          <span class="hub-tabs__icon">
+            <tab.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
+            {tab.id === 'messages' && showUnread ? <span class="hub-unread" aria-hidden="true"></span> : null}
+          </span>
           {tab.label}
         </a>
       ))
