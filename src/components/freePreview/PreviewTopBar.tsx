@@ -22,8 +22,8 @@ export type PreviewTopBarProps = {
   activeView: 'website' | 'booking';
   websiteHref: string;
   bookingHref: string;
-  /** `checkout` is the Overview subscribe button (hub). Default keeps the existing preview bar. */
-  chrome?: 'full' | 'checkout';
+  /** `checkout` is the Overview subscribe button (hub). `checkout-outline` is the admin-hub header. Default keeps the existing preview bar. */
+  chrome?: 'full' | 'checkout' | 'checkout-outline';
   /** When set (hub flag on), Request changes is a link to the Changes tab instead of the free-text dialog. */
   changesHref?: string;
   /** Inside /admin: '/api/admin-hub' for event, checkout and domain search (cookie session, no token). */
@@ -167,13 +167,25 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   ) : (
     <button
       type="button"
-      className={chrome === 'checkout' ? 'btn btn--secondary btn--sm' : 'btn btn--primary btn--sm'}
+      className={
+        chrome === 'checkout-outline'
+          ? 'btn btn--outline'
+          : chrome === 'checkout'
+            ? 'btn btn--secondary btn--sm'
+            : 'btn btn--primary btn--sm'
+      }
       data-testid="hub-subscribe"
       onClick={() => open('launch')}
       disabled={ownerActionsDisabled}
     >
       Launch this website
-      {chrome === 'checkout' ? <span className="hub-subscribe__price">£39/month per location</span> : ' — £39/month'}
+      {chrome === 'checkout-outline' ? (
+        <small>£39/month</small>
+      ) : chrome === 'checkout' ? (
+        <span className="hub-subscribe__price">£39/month per location</span>
+      ) : (
+        ' — £39/month'
+      )}
     </button>
   );
 
@@ -256,7 +268,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
     </dialog>
   );
 
-  if (chrome === 'checkout') {
+  if (chrome === 'checkout' || chrome === 'checkout-outline') {
     return (
       <div className="hub-subscribe">
         {launchButton}

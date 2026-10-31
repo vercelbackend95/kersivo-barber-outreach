@@ -96,6 +96,8 @@ export function HubMessages(props: {
   initialMessages: HubMessagePublic[];
   initialDraft?: string;
   canAttach?: boolean;
+  /** Admin-hub app window: hide the page H1 (the window already has a title). */
+  chrome?: 'page' | 'app';
 }) {
   const [messages, setMessages] = useState<ThreadItem[]>(props.initialMessages);
   const [draft, setDraft] = useState(props.initialDraft ?? '');
@@ -255,10 +257,15 @@ export function HubMessages(props: {
   };
 
   return (
-    <section className="hub-messages" aria-labelledby="hub-messages-title">
+    <section
+      className={props.chrome === 'app' ? 'hub-messages hub-messages--app' : 'hub-messages'}
+      aria-labelledby={props.chrome === 'app' ? undefined : 'hub-messages-title'}
+    >
+      {props.chrome === 'app' ? null : (
       <h1 id="hub-messages-title" className="hub-messages__title">
         {props.shopName}
       </h1>
+      )}
       <div className="hub-messages__thread" ref={listRef} aria-live="polite">
         {loadError ? (
           <div className="hub-error" role="alert">

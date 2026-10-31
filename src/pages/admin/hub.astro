@@ -4,7 +4,7 @@ export const prerender = false;
 import type { APIContext } from 'astro';
 import HubDocument from '@/layouts/HubDocument.astro';
 import AdminHubShell from '@/components/adminHub/AdminHubShell.astro';
-import HubOverview from '@/components/previewHub/HubOverview.astro';
+import AdminHubOverview from '@/components/adminHub/AdminHubOverview.astro';
 import { AppHost } from '@/components/adminHub/AppHost';
 import { HubChanges } from '@/components/previewHub/HubChanges';
 import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
@@ -164,27 +164,26 @@ const appCtx = {
     logoSrc={logoSrc}
     brandColour={ctx.request.brandPrimaryColour}
     setup={view.setup}
-    showMobileSetup={location.section === 'overview'}
+    showMobileSetup={false}
   >
     {
       location.section === 'overview' && view.overview ? (
-        <HubOverview
-          token=""
-          apiBase={ADMIN_HUB_API_BASE}
-          links={ADMIN_HUB_LINKS}
+        <AdminHubOverview
           request={ctx.request}
           state={ctx.state}
           isOperator={ctx.isOperator}
           steps={view.overview.steps}
           activity={view.overview.activity}
           hasWebsitePreview={Boolean(sitePreviewUrl)}
-          checklist={view.overview.checklist}
-          reviews={view.reviews}
-          reviewShop={view.reviewShop}
           reviewNeed={view.overview.reviewNeed}
           launchProgress={view.overview.launchProgress}
-          logoAssetId={view.logo?.id ?? null}
+          logoSrc={logoSrc}
           brandColour={ctx.request.brandPrimaryColour}
+          brandSecondaryColour={ctx.request.brandSecondaryColour}
+          latestMessage={view.overview.latestMessage}
+          unreadMessages={view.unreadMessages}
+          changeItems={view.overview.changeItems}
+          setup={view.setup}
         />
       ) : location.section === 'changes' ? (
         caps.canDraftChanges ? (

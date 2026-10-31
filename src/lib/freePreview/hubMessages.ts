@@ -75,6 +75,16 @@ export async function loadHubMessageAttachments(
     .map(serializeHubAsset);
 }
 
+export async function loadLatestHubMessage(previewRequestId: string): Promise<HubMessagePublic | null> {
+  const row = await prisma.previewHubMessage.findFirst({
+    where: { previewRequestId },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!row) return null;
+  const attachments = await loadHubMessageAttachments(previewRequestId, row.attachmentIds);
+  return serializeHubMessage(row, attachments);
+}
+
 export async function loadHubMessages(previewRequestId: string): Promise<HubMessagePublic[]> {
   const rows = await prisma.previewHubMessage.findMany({
     where: { previewRequestId },

@@ -1,0 +1,500 @@
+---
+import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
+import AdminHubSetupCard from './AdminHubSetupCard.astro';
+import {
+  ArrowUpRight,
+  Check,
+  Globe,
+  ImagePlus,
+  ListChecks,
+  MessageCircle,
+  Palette,
+  Paperclip,
+  Smartphone,
+  Sparkles,
+  TrendingUp,
+} from '@/components/lucide-react';
+import {
+  ADMIN_HUB_ACTIVITY_SHOW_ALL,
+  ADMIN_HUB_COLOURS_MINUTE,
+  ADMIN_HUB_MESSAGES_EMPTY,
+  ADMIN_HUB_OPEN,
+  ADMIN_HUB_TILE_ACTIVITY,
+  ADMIN_HUB_TILE_CHANGES,
+  ADMIN_HUB_TILE_COLOURS,
+  ADMIN_HUB_TILE_MESSAGES,
+  ADMIN_HUB_TILE_PREVIEW,
+  ADMIN_HUB_TILE_PROGRESS,
+  ADMIN_HUB_WRITE_MESSAGE,
+} from '@/lib/adminHub/copy';
+import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import {
+  formatOverviewStepDate,
+  isOverviewTerminal,
+  overviewActivityKind,
+  overviewChanges,
+  overviewChangesLocked,
+  overviewColours,
+  overviewLatestMessage,
+  overviewNowCopy,
+  overviewOurSteps,
+  overviewPreviewLocked,
+  overviewPrimary,
+  overviewShowLaunch,
+  overviewStagePill,
+  overviewTileHrefs,
+  overviewUnreadLabel,
+  shopInitials,
+} from '@/lib/adminHub/overview';
+import type { SetupCardModel } from '@/lib/adminHub/setupCard';
+import {
+  HUB_ACTIVITY_EMPTY,
+  HUB_LOCKED_REASON_PREVIEW,
+  HUB_NAV,
+  HUB_PREVIEW_CARD_LOCKED,
+  HUB_PREVIEW_OPEN_WEBSITE,
+  HUB_PREVIEW_TRY_BOOKING,
+  hubHeaderCopy,
+} from '@/lib/freePreview/hubCopy';
+import type { HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
+import type { HubLaunchProgress } from '@/lib/freePreview/hubLaunch';
+import type { HubMessagePublic } from '@/lib/freePreview/hubMessages.shared';
+import { hostnameOf, type HubActivityItem, type HubStepperStep } from '@/lib/freePreview/hubPage';
+import { hubHeaderKind, type HubState } from '@/lib/freePreview/hubStage';
+import type { TokenPreviewRequest } from '@/lib/freePreview/previewAccess';
+
+interface Props {
+  request: TokenPreviewRequest;
+  state: Extract<HubState, { kind: 'hub' }>;
+  isOperator: boolean;
+  steps: HubStepperStep[];
+  activity: HubActivityItem[];
+  hasWebsitePreview: boolean;
+  reviewNeed?: string;
+  launchProgress?: HubLaunchProgress | null;
+  logoSrc: string | null;
+  screenshotSrc?: string | null;
+  brandColour: string | null;
+  brandSecondaryColour?: string | null;
+  latestMessage: HubMessagePublic | null;
+  unreadMessages: number;
+  changeItems: HubChangePublic[];
+  setup: SetupCardModel | null;
+}
+
+const {
+  request,
+  state,
+  isOperator,
+  steps,
+  activity,
+  hasWebsitePreview,
+  reviewNeed,
+  launchProgress,
+  logoSrc,
+  screenshotSrc,
+  brandColour,
+  brandSecondaryColour,
+  latestMessage,
+  unreadMessages,
+  changeItems,
+  setup,
+} = Astro.props;
+
+const now = new Date();
+const shopName = request.shopName;
+const header = hubHeaderCopy(hubHeaderKind(state), shopName);
+const primary = overviewPrimary({ state });
+const showLaunch = overviewShowLaunch(state);
+const nowCopy = overviewNowCopy({
+  stage: state.stage,
+  reviewSubstate: state.reviewSubstate,
+  reviewNeed,
+});
+const ourSteps = state.stage === 'launch' ? overviewOurSteps(launchProgress?.ourSteps) : null;
+const stagePill = overviewStagePill(steps);
+const previewLocked = overviewPreviewLocked(state.stage);
+const changesLocked = overviewChangesLocked(state.stage);
+const hrefs = overviewTileHrefs();
+const colours = overviewColours({
+  hasLogo: Boolean(logoSrc),
+  brandPrimaryColour: brandColour,
+  brandSecondaryColour,
+});
+const changes = overviewChanges({
+  items: changeItems,
+  includedChangeRounds: request.includedChangeRounds,
+  changeRoundsUsed: request.changeRoundsUsed,
+});
+const latest = overviewLatestMessage(latestMessage, now);
+const unread = overviewUnreadLabel(unreadMessages);
+const feed = activity.slice(0, 5);
+const initials = shopInitials(shopName);
+const previewColour = brandColour?.trim() || '#d72638';
+const terminal = isOverviewTerminal(state.stage);
+---
+
+<article class="admin-hub-overview" data-stage={state.stage} data-testid="admin-hub-overview">
+  <header class="admin-hub-head">
+    <div>
+      <span class="admin-hub-head__eyebrow">{HUB_NAV.overview}</span>
+      <h1>{header.h1}</h1>
+      <p class="admin-hub-head__sub">{header.sub}</p>
+    </div>
+    {
+      primary || showLaunch ? (
+        <div class="admin-hub-head__actions">
+          {showLaunch ? (
+            <PreviewTopBar
+              client:load
+              chrome="checkout-outline"
+              token=""
+              apiBase="/api/admin-hub"
+              shopName={shopName}
+              townCity={request.townCity}
+              firstName={request.firstName}
+              checkoutEmail={request.email}
+              hasOwnDomain={request.hasOwnDomain ?? 'not_sure'}
+              existingWebsiteHost={hostnameOf(request.websiteUrl)}
+              isOperator={isOperator}
+              converted={request.status === 'CONVERTED'}
+              activeView="website"
+              websiteHref={ADMIN_HUB_LINKS.website}
+              bookingHref={ADMIN_HUB_LINKS.booking}
+            />
+          ) : null}
+          {primary ? (
+            <a class="btn btn--primary" href={primary.href} data-testid="admin-hub-primary">
+              {primary.label}
+            </a>
+          ) : null}
+        </div>
+      ) : null
+    }
+  </header>
+
+  {setup ? <AdminHubSetupCard placement="mobile" card={setup} /> : null}
+
+  {
+    terminal ? (
+      <section class="admin-hub-tile admin-hub-calm" data-tile="calm">
+        <h2 class="admin-hub-sr-only">{header.h1}</h2>
+        <p>{header.sub}</p>
+        {primary ? (
+          <a class="btn btn--primary" href={primary.href}>
+            {primary.label}
+          </a>
+        ) : null}
+      </section>
+    ) : (
+      <div class="admin-hub-bento">
+        <section class="admin-hub-tile admin-hub-bento__progress" data-tile="progress" aria-labelledby="admin-hub-progress-title">
+          <div class="admin-hub-tile__head">
+            <span class="admin-hub-tile__icon" aria-hidden="true">
+              <TrendingUp width={15} height={15} strokeWidth={1.8} />
+            </span>
+            <h2 class="admin-hub-tile__title" id="admin-hub-progress-title">{ADMIN_HUB_TILE_PROGRESS}</h2>
+            {
+              stagePill ? (
+                <span class="admin-hub-pill admin-hub-pill--accent" style="margin-left:auto">
+                  <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+                  {stagePill}
+                </span>
+              ) : null
+            }
+          </div>
+          <ol class="admin-hub-stages" aria-label="Preview progress">
+            {
+              steps.map((step, index) => (
+                <li class:list={['admin-hub-stage', step.status === 'complete' && 'admin-hub-stage--done', step.status === 'current' && 'admin-hub-stage--now', step.status === 'upcoming' && 'admin-hub-stage--todo']}>
+                  <div class="admin-hub-stage__bar" aria-hidden="true"></div>
+                  <div class="admin-hub-stage__label">
+                    <span class="admin-hub-stage__num">
+                      {step.status === 'complete' ? <Check width={13} height={13} strokeWidth={2.2} aria-hidden="true" /> : index + 1}
+                    </span>
+                    {step.label}
+                  </div>
+                  <div class="admin-hub-stage__date">{formatOverviewStepDate(step.date, now) ?? '\u00a0'}</div>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="admin-hub-now">
+            <div class="admin-hub-nowbox">
+              <div class="admin-hub-nowbox__k">
+                <Sparkles width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                {nowCopy.doingLabel}
+              </div>
+              <div class="admin-hub-nowbox__v">{nowCopy.doing}</div>
+            </div>
+            {
+              ourSteps ? (
+                <div class="admin-hub-nowbox">
+                  <div class="admin-hub-nowbox__k">{ourSteps.label}</div>
+                  <ul class="admin-hub-nowbox__list">
+                    {ourSteps.items.map((item) => (
+                      <li>{item.label}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div class:list={['admin-hub-nowbox', nowCopy.needIsAction && 'admin-hub-nowbox--you']}>
+                  <div class="admin-hub-nowbox__k">{nowCopy.needLabel}</div>
+                  <div class="admin-hub-nowbox__v">{nowCopy.need}</div>
+                </div>
+              )
+            }
+          </div>
+        </section>
+
+        {
+          previewLocked ? (
+            <section class="admin-hub-tile admin-hub-bento__preview admin-hub-tile--locked" data-tile="preview" aria-labelledby="admin-hub-preview-title">
+              <div class="admin-hub-tile__head">
+                <span class="admin-hub-tile__icon" aria-hidden="true">
+                  <Smartphone width={15} height={15} strokeWidth={1.8} />
+                </span>
+                <h2 class="admin-hub-tile__title" id="admin-hub-preview-title">{ADMIN_HUB_TILE_PREVIEW}</h2>
+              </div>
+              <div class="admin-hub-phonewrap">
+                <div class="admin-hub-phone" aria-hidden="true">
+                  <div class="admin-hub-phone__screen admin-hub-skel">
+                    <span class="admin-hub-phone__notch"></span>
+                    <p class="admin-hub-phone__lock">{HUB_PREVIEW_CARD_LOCKED}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <article class="admin-hub-tile admin-hub-bento__preview" data-tile="preview" aria-labelledby="admin-hub-preview-title">
+              <a class="admin-hub-tile__hit" href={hrefs.preview}>
+                <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_PREVIEW}</span>
+              </a>
+              <div class="admin-hub-tile__head">
+                <span class="admin-hub-tile__icon" aria-hidden="true">
+                  <Smartphone width={15} height={15} strokeWidth={1.8} />
+                </span>
+                <h2 class="admin-hub-tile__title" id="admin-hub-preview-title">{ADMIN_HUB_TILE_PREVIEW}</h2>
+                <span class="admin-hub-tile__open" aria-hidden="true">
+                  <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
+                </span>
+              </div>
+              <div class="admin-hub-phonewrap" style={`--admin-hub-brand:${previewColour}`}>
+                <div class="admin-hub-phone" aria-hidden="true">
+                  <div class="admin-hub-phone__screen" style={`background:${previewColour}`}>
+                    <span class="admin-hub-phone__notch"></span>
+                    {
+                      screenshotSrc ? (
+                        <img src={screenshotSrc} alt="" width="182" height="386" class="admin-hub-phone__logo" style="width:100%;height:100%;object-fit:cover" />
+                      ) : logoSrc ? (
+                        <img class="admin-hub-phone__logo" src={logoSrc} alt="" width="72" height="72" />
+                      ) : (
+                        <span class="admin-hub-phone__initials">{initials}</span>
+                      )
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="admin-hub-preview-actions">
+                <a class="btn btn--primary btn--sm" href={hrefs.preview}>
+                  {HUB_PREVIEW_OPEN_WEBSITE}
+                </a>
+                <a class="btn btn--outline btn--sm" href={hrefs.booking}>
+                  {HUB_PREVIEW_TRY_BOOKING}
+                </a>
+              </div>
+              {!hasWebsitePreview ? <p class="admin-hub-sr-only">Booking preview is available while the website frame is still being added.</p> : null}
+            </article>
+          )
+        }
+
+        <a class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" href={hrefs.colours}>
+          <div class="admin-hub-tile__head">
+            <span class="admin-hub-tile__icon" aria-hidden="true">
+              <Palette width={15} height={15} strokeWidth={1.8} />
+            </span>
+            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_COLOURS}</span>
+            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+            </span>
+          </div>
+          <div class="admin-hub-logo-mini">
+            <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
+              {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
+            </span>
+            <p>
+              <strong>{colours.headline}</strong>
+            </p>
+          </div>
+          <div class="admin-hub-swatches" aria-hidden={colours.swatches.length ? undefined : 'true'}>
+            {
+              colours.swatches.length
+                ? colours.swatches.map((swatch) => (
+                    <div class:list={['admin-hub-sw', swatch.light && 'admin-hub-sw--light']} style={`background:${swatch.hex}`}>
+                      {swatch.role ? <span class="admin-hub-sw__role">{swatch.role}</span> : null}
+                      <small>{swatch.hex}</small>
+                    </div>
+                  ))
+                : [0, 1, 2, 3].map(() => <div class="admin-hub-sw admin-hub-sw--empty admin-hub-skel"></div>)
+            }
+          </div>
+          <div class="admin-hub-tile__foot">
+            <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
+              <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+              {colours.statusLabel}
+            </span>
+            {colours.status === 'not_sent' ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
+          </div>
+        </a>
+
+        <a class="admin-hub-tile admin-hub-bento__messages" data-tile="messages" href={hrefs.messages}>
+          <div class="admin-hub-tile__head">
+            <span class="admin-hub-tile__icon" aria-hidden="true">
+              <MessageCircle width={15} height={15} strokeWidth={1.8} />
+            </span>
+            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_MESSAGES}</span>
+            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+            </span>
+          </div>
+          {
+            latest ? (
+              <div class="admin-hub-msg">
+                <span class:list={['admin-hub-msg__av', latest.author !== 'KERSIVO' && 'admin-hub-msg__av--you']} aria-hidden="true">
+                  {latest.author === 'KERSIVO' ? 'K' : 'Y'}
+                </span>
+                <div>
+                  <div class="admin-hub-msg__bubble">{latest.body}</div>
+                  <div class="admin-hub-msg__meta">
+                    {latest.authorLabel} · {latest.relative}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p class="admin-hub-msg__bubble">{ADMIN_HUB_MESSAGES_EMPTY}</p>
+            )
+          }
+          <div class="admin-hub-composer-fake" aria-hidden="true">
+            <Paperclip width={15} height={15} strokeWidth={1.8} />
+            {ADMIN_HUB_WRITE_MESSAGE}
+          </div>
+          {
+            unread ? (
+              <div class="admin-hub-tile__foot">
+                <span class="admin-hub-unread" data-testid="admin-hub-unread">{unread}</span>
+              </div>
+            ) : null
+          }
+        </a>
+
+        {
+          changesLocked ? (
+            <section class="admin-hub-tile admin-hub-bento__changes admin-hub-tile--locked" data-tile="changes" aria-labelledby="admin-hub-changes-title">
+              <div class="admin-hub-tile__head">
+                <span class="admin-hub-tile__icon" aria-hidden="true">
+                  <ListChecks width={15} height={15} strokeWidth={1.8} />
+                </span>
+                <h2 class="admin-hub-tile__title" id="admin-hub-changes-title">{ADMIN_HUB_TILE_CHANGES}</h2>
+              </div>
+              <p class="admin-hub-nowbox__v">{HUB_LOCKED_REASON_PREVIEW}</p>
+            </section>
+          ) : (
+            <a class="admin-hub-tile admin-hub-bento__changes" data-tile="changes" href={hrefs.changes}>
+              <div class="admin-hub-tile__head">
+                <span class="admin-hub-tile__icon" aria-hidden="true">
+                  <ListChecks width={15} height={15} strokeWidth={1.8} />
+                </span>
+                <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_CHANGES}</span>
+                <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
+                  <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+                </span>
+              </div>
+              <div class="admin-hub-chstats">
+                <div class="admin-hub-chstat">
+                  <b>{changes.drafts}</b>
+                  <span>{changes.labels.drafts}</span>
+                </div>
+                <div class="admin-hub-chstat">
+                  <b>{changes.withKersivo}</b>
+                  <span>{changes.labels.withKersivo}</span>
+                </div>
+                <div class="admin-hub-chstat">
+                  <b>{changes.done}</b>
+                  <span>{changes.labels.done}</span>
+                </div>
+              </div>
+              {
+                changes.latest.length ? (
+                  <ul class="admin-hub-chlist">
+                    {changes.latest.map((item) => (
+                      <li>
+                        <span class="admin-hub-chip admin-hub-chip--page">{item.pageLabel}</span>
+                        <span class="admin-hub-chlist__body">{item.body}</span>
+                        <span class={`admin-hub-chip admin-hub-chip--${item.tone}`}>{item.statusLabel}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="admin-hub-tile__foot">{changes.empty}</p>
+                )
+              }
+              <div class="admin-hub-tile__foot">
+                {changes.roundText}
+                {changes.sendHint ? (
+                  <>
+                    {' · '}
+                    <strong>{changes.sendHint}</strong>
+                  </>
+                ) : null}
+              </div>
+            </a>
+          )
+        }
+
+        <section class="admin-hub-tile admin-hub-tile--quiet admin-hub-bento__activity" data-tile="activity" aria-labelledby="admin-hub-activity-title">
+          <div class="admin-hub-tile__head">
+            <span class="admin-hub-tile__icon" aria-hidden="true">
+              <TrendingUp width={15} height={15} strokeWidth={1.8} />
+            </span>
+            <h2 class="admin-hub-tile__title" id="admin-hub-activity-title">{ADMIN_HUB_TILE_ACTIVITY}</h2>
+            <a class="btn btn--ghost btn--sm" href={hrefs.activity} style="margin-left:auto">
+              {ADMIN_HUB_ACTIVITY_SHOW_ALL}
+            </a>
+          </div>
+          {
+            feed.length ? (
+              <ul class="admin-hub-feed">
+                {feed.map((item) => {
+                  const kind = overviewActivityKind(item);
+                  return (
+                    <li>
+                      <span class:list={['admin-hub-fdot', kind === 'ready' && 'admin-hub-fdot--accent', kind === 'ok' && 'admin-hub-fdot--ok']}>
+                        {kind === 'ready' ? (
+                          <Globe width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                        ) : kind === 'photo' ? (
+                          <ImagePlus width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                        ) : kind === 'logo' ? (
+                          <ImagePlus width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                        ) : kind === 'message' ? (
+                          <MessageCircle width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                        ) : (
+                          <Check width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                        )}
+                      </span>
+                      <span>{item.label}</span>
+                      <time datetime={item.at.toISOString()} title={item.absolute}>
+                        {item.relative}
+                      </time>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p class="admin-hub-nowbox__v">{HUB_ACTIVITY_EMPTY}</p>
+            )
+          }
+        </section>
+      </div>
+    )
+  }
+</article>

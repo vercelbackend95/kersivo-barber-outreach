@@ -12,6 +12,7 @@ export default function MessagesApp({ ctx }: AdminHubAppBodyProps) {
       initialMessages={ctx.messages}
       initialDraft={ctx.initialDraft}
       canAttach={ctx.canAttach}
+      chrome="app"
     />
   );
 }

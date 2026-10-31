@@ -134,4 +134,12 @@ describe('PreviewTopBar checkout chrome (hub Overview)', () => {
     expect(screen.queryByRole('navigation', { name: 'Preview pages' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Private website preview' })).toBeNull();
   });
+
+  it('uses the outline header chrome without changing the default checkout button', () => {
+    renderBar({ chrome: 'checkout-outline' });
+    const button = screen.getByRole('button', { name: /Launch this website/i });
+    expect(button.className).toContain('btn--outline');
+    expect(button.textContent).toContain('£39/month');
+    expect(button.textContent).not.toContain('per location');
+  });
 });
