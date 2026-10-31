@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import type { PreviewHubAssetKind } from '@prisma/client';
 import {
+  HUB_ATTACH,
   HUB_RETRY,
   HUB_UPLOAD_CAMERA,
   HUB_UPLOAD_CHOOSE,
@@ -13,7 +14,7 @@ import { downscaleHubImage, isHubSvgOrPdf } from './downscaleHubImage';
 
 export type HubUploaderKind = Extract<
   PreviewHubAssetKind,
-  'LOGO' | 'SHOP_PHOTO' | 'TEAM_PHOTO' | 'PRICE_LIST' | 'OTHER'
+  'LOGO' | 'SHOP_PHOTO' | 'TEAM_PHOTO' | 'PRICE_LIST' | 'MESSAGE_ATTACHMENT' | 'OTHER'
 >;
 
 export type HubUploadedAsset = {
@@ -46,6 +47,7 @@ const ACCEPT: Record<HubUploaderKind, string> = {
   SHOP_PHOTO: 'image/jpeg,image/png,image/webp',
   TEAM_PHOTO: 'image/jpeg,image/png,image/webp',
   PRICE_LIST: 'image/jpeg,image/png,image/webp,application/pdf',
+  MESSAGE_ATTACHMENT: 'image/jpeg,image/png,image/webp,application/pdf',
   OTHER: 'image/jpeg,image/png,image/webp,application/pdf',
 };
 
@@ -86,7 +88,9 @@ export function HubUploader(props: {
   kind: HubUploaderKind;
   disabled?: boolean;
   multiple?: boolean;
+  compact?: boolean;
   hint?: string;
+  remaining?: number;
   onUploaded: (asset: HubUploadedAsset) => void;
 }) {
   const inputId = useId();
@@ -132,7 +136,10 @@ export function HubUploader(props: {
 
   const enqueue = (files: File[]) => {
     if (props.disabled || !files.length) return;
-    const next = files.map((file) => ({
+    const capped =
+      typeof props.remaining === 'number' ? files.slice(0, Math.max(0, props.remaining)) : files;
+    if (!capped.length) return;
+    const next = capped.map((file) => ({
       localId: `${file.name}-${file.size}-${crypto.randomUUID()}`,
       file,
       name: file.name,
@@ -159,7 +166,74 @@ export function HubUploader(props: {
   const active = items.filter((item) => item.status !== 'done');
   const uploading = items.filter((item) => item.status === 'uploading' || item.status === 'queued');
   const accept = ACCEPT[props.kind];
-  const camera = PHOTO_KINDS.has(props.kind);
+  const camera = PHOTO_KINDS.has(props.kind) || props.kind === 'MESSAGE_ATTACHMENT';
+
+  if (props.compact) {
+    return (
+      <div className="hub-uploader hub-uploader--compact">
+        <input
+          id={inputId}
+          ref={inputRef}
+          className="hub-sr-only"
+          type="file"
+          accept={accept}
+          multiple={props.multiple !== false}
+          disabled={props.disabled}
+          onChange={(event) => onFiles(event.target.files)}
+        />
+        {camera ? (
+          <input
+            id={cameraId}
+            ref={cameraRef}
+            className="hub-sr-only"
+            type="file"
+            accept={accept}
+            capture="environment"
+            disabled={props.disabled}
+            onChange={(event) => {
+              onFiles(event.target.files);
+              if (cameraRef.current) cameraRef.current.value = '';
+            }}
+          />
+        ) : null}
+        <div className="hub-uploader__compact-actions">
+          <label htmlFor={inputId} className="btn btn--ghost btn--sm">
+            {HUB_ATTACH}
+          </label>
+          {camera ? (
+            <label htmlFor={cameraId} className="btn btn--ghost btn--sm">
+              {HUB_UPLOAD_CAMERA}
+            </label>
+          ) : null}
+        </div>
+        <div className="hub-sr-only" aria-live="polite">
+          {uploading.length ? HUB_UPLOAD_PROGRESS(items.filter((item) => item.status === 'done').length, items.length) : ''}
+        </div>
+        {active.length ? (
+          <ul className="hub-uploader__list">
+            {active.map((item) => (
+              <li key={item.localId}>
+                <div className="hub-uploader__row">
+                  <span>{item.name}</span>
+                  {item.status === 'error' ? (
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => retry(item)}>
+                      {HUB_RETRY}
+                    </button>
+                  ) : (
+                    <span>{item.progress}%</span>
+                  )}
+                </div>
+                <div className="hub-uploader__bar" aria-hidden="true">
+                  <span style={{ width: `${item.progress}%` }} />
+                </div>
+                {item.error ? <p className="hub-uploader__error">{item.error}</p> : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="hub-uploader">

@@ -40,8 +40,6 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const ctxResult = await resolveHubApiContext({ request, token: params.token ?? '', mutation: true });
   if (!ctxResult.ok) return ctxResult.response;
-  const denied = requireUploadCapability(ctxResult.ctx);
-  if (denied) return denied;
 
   let form: FormData;
   try {
@@ -52,6 +50,8 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const kind = parseHubAssetKind(form.get('kind'));
   if (!kind) return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TYPE }, 400);
+  const denied = requireUploadCapability(ctxResult.ctx, kind);
+  if (denied) return denied;
 
   const file = form.get('file');
   if (!(file instanceof File)) return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_EMPTY }, 400);
@@ -95,12 +95,14 @@ export const POST: APIRoute = async ({ request, params }) => {
         params: { kind },
       });
     }
-    await maybeNotifyOpsOfHubFiles({
-      requestId: ctxResult.ctx.request.id,
-      shopName: ctxResult.ctx.request.shopName,
-    }).catch((error) => {
-      console.error('[preview-hub] files digest failed', error instanceof Error ? error.message : error);
-    });
+    if (kind !== 'MESSAGE_ATTACHMENT') {
+      await maybeNotifyOpsOfHubFiles({
+        requestId: ctxResult.ctx.request.id,
+        shopName: ctxResult.ctx.request.shopName,
+      }).catch((error) => {
+        console.error('[preview-hub] files digest failed', error instanceof Error ? error.message : error);
+      });
+    }
     return hubJson({ ok: true, asset: serializeHubAsset(row) }, 201);
   } catch (error) {
     console.error('[preview-hub] upload failed', {

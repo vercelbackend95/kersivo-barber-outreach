@@ -7,6 +7,7 @@ import { HubYourShop } from '@/components/previewHub/HubYourShop';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_NAV } from '@/lib/freePreview/hubCopy';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
+import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -41,7 +42,10 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const assets = await loadActiveHubAssets(ctx.request.id);
+const [assets, unreadMessages] = await Promise.all([
+  loadActiveHubAssets(ctx.request.id),
+  ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
+]);
 ---
 
 <HubDocument title={`${HUB_NAV.details} — ${ctx.request.shopName} | KERSIVO`}>
@@ -51,6 +55,7 @@ const assets = await loadActiveHubAssets(ctx.request.id);
     stage={ctx.state.stage}
     current="details"
     capabilities={ctx.state.capabilities}
+    unreadMessages={unreadMessages}
   >
     <HubYourShop
       client:load

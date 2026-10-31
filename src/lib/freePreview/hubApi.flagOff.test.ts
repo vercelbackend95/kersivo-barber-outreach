@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  PREVIEW_HUB_MESSAGES_IP_RATE,
+  PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE,
+  PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE,
+} from './hubApi';
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), 'utf8');
 
@@ -12,9 +17,18 @@ describe('hub APIs keep the flag-off path (GLOBAL RULE 2)', () => {
       'src/pages/api/preview-hub/[token]/assets.ts',
       'src/pages/api/preview-hub/[token]/assets/[id].ts',
       'src/pages/api/preview-hub/[token]/details.ts',
+      'src/pages/api/preview-hub/[token]/messages.ts',
+      'src/pages/api/preview-hub/[token]/messages/read.ts',
     ]) {
       expect(read(file)).toContain('resolveHubApiContext');
     }
+  });
+
+  it('enforces per-IP and per-request message rate limits', () => {
+    expect(PREVIEW_HUB_MESSAGES_IP_RATE.limit).toBe(20);
+    expect(PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE.limit).toBe(20);
+    expect(PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.limit).toBe(100);
+    expect(read('src/pages/api/preview-hub/[token]/messages.ts')).toContain('enforceHubMessageRates');
   });
 
   it('does not change the existing free-preview token APIs', () => {

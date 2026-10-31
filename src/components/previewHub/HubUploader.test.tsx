@@ -3,7 +3,7 @@
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { HUB_EMPTY_PHOTOS, HUB_UPLOAD_CHOOSE, HUB_UPLOAD_DROP } from '@/lib/freePreview/hubCopy';
+import { HUB_ATTACH, HUB_EMPTY_PHOTOS, HUB_UPLOAD_CHOOSE, HUB_UPLOAD_DROP } from '@/lib/freePreview/hubCopy';
 import { HubUploader } from './HubUploader';
 import { HubYourShop } from './HubYourShop';
 
@@ -15,6 +15,20 @@ describe('HubUploader', () => {
     expect(screen.getByText(HUB_UPLOAD_DROP)).toBeTruthy();
     expect(screen.getByText(HUB_UPLOAD_CHOOSE)).toBeTruthy();
     expect(document.querySelector('input[type="file"]')?.getAttribute('accept')).toContain('image/jpeg');
+  });
+
+  it('renders a compact attach control for message attachments', () => {
+    render(
+      <HubUploader
+        token={'A'.repeat(43)}
+        kind="MESSAGE_ATTACHMENT"
+        compact
+        remaining={5}
+        onUploaded={() => undefined}
+      />,
+    );
+    expect(screen.getByText(HUB_ATTACH)).toBeTruthy();
+    expect(screen.queryByText(HUB_UPLOAD_DROP)).toBeNull();
   });
 });
 

@@ -9,7 +9,11 @@ import {
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { formatLegalPageDate, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
-import { FREE_PREVIEW_PRIVACY_HUB_FILES_TEXT, FREE_PREVIEW_PRIVACY_RETENTION_TEXT } from '@/lib/freePreview/legalCopy';
+import {
+  FREE_PREVIEW_PRIVACY_HUB_FILES_TEXT,
+  FREE_PREVIEW_PRIVACY_HUB_MESSAGES_TEXT,
+  FREE_PREVIEW_PRIVACY_RETENTION_TEXT,
+} from '@/lib/freePreview/legalCopy';
 import '@/styles/legal-pages.css';
 ---
 
@@ -118,6 +122,7 @@ import '@/styles/legal-pages.css';
           city, the links you send us, details about your shop, your notes and any changes you ask for, plus the details,
           text and images we take from those links to build your preview, and whether and when you opened it.
           {FREE_PREVIEW_PRIVACY_HUB_FILES_TEXT}
+          {FREE_PREVIEW_PRIVACY_HUB_MESSAGES_TEXT}
           <strong>Purpose:</strong> creating your private preview, sending it to you, up to two reminder emails about it
           (each has a link to stop them), and acting on your response. <strong>Legal basis (UK):</strong> steps taken at
           your request before entering into a contract; legitimate interests where you act for a corporate business.

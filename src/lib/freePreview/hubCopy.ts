@@ -207,6 +207,46 @@ export const HUB_ROUND_USED =
   "You've used your included round of changes. Message us if something isn't right.";
 export const HUB_MESSAGES_EMPTY =
   'Got a question or something we should know? Send us a message — we reply by email and here.';
+export const HUB_YOU = 'You';
+export const HUB_KERSIVO = 'KERSIVO';
+export const HUB_SEEN = 'Seen';
+export const HUB_SEND = 'Send';
+export const HUB_ATTACH = 'Attach a file';
+export const HUB_MESSAGE_PLACEHOLDER = 'Write a message';
+export const HUB_MESSAGE_HINT = 'Ctrl or Cmd + Enter to send. Enter starts a new line.';
+export const HUB_MESSAGE_CHAR_COUNT = (used: number, max: number) => `${used} / ${max}`;
+export const HUB_MESSAGE_TOO_LONG = 'Messages can be up to 2,000 characters.';
+export const HUB_MESSAGE_REQUIRED = 'Write a message before sending.';
+export const HUB_MESSAGE_SENDING = 'Sending…';
+export const HUB_MESSAGE_SENT = 'Sent';
+export const HUB_MESSAGE_FAILED = 'Could not send. Try again.';
+export const HUB_MESSAGE_LOAD_ERROR = 'Could not load messages.';
+export const HUB_MESSAGE_ATTACH_MAX = 'You can attach up to 5 files.';
+export const HUB_MESSAGE_ATTACH_DENIED = 'That file is not a message attachment for this preview.';
+export const HUB_UNREAD = 'Unread messages';
+export const HUB_DRAFT_REOPEN = 'Please reopen this preview.';
+export const HUB_DRAFT_DECLINED = "I'd like to continue with this preview.";
+export const HUB_ACTIVITY_YOU_SENT = 'You sent a message';
+export const HUB_ACTIVITY_KERSIVO_REPLIED = 'KERSIVO replied';
+export const HUB_OWNER_MESSAGE_EMAIL_SUBJECT = (shopName: string) =>
+  `New message from KERSIVO about ${shopName}`;
+export const HUB_OWNER_MESSAGE_EMAIL_INTRO = (shopName: string) =>
+  `KERSIVO sent a message about ${shopName}:`;
+export const HUB_OWNER_MESSAGE_EMAIL_BUTTON = 'Reply in your shop hub';
+export const HUB_OPS_MESSAGES_EMAIL_SUBJECT = (count: number, shopName: string) =>
+  count === 1 ? `1 new message from ${shopName}` : `${count} new messages from ${shopName}`;
+export const HUB_OPS_MESSAGES_EMAIL_INTRO = (count: number, shopName: string) =>
+  count === 1
+    ? `${shopName} sent a message in their shop hub.`
+    : `${shopName} sent ${count} messages in their shop hub.`;
+export const HUB_OPS_MESSAGES_EMAIL_BUTTON = 'Open in KERSIVO Ops';
+export const HUB_OPS_MESSAGES_TITLE = 'Messages';
+export const HUB_OPS_MESSAGES_EMPTY = 'No messages yet.';
+export const HUB_OPS_UNREAD_MESSAGES = (count: number) =>
+  count === 1 ? '1 unread' : `${count} unread`;
+export const HUB_OPS_TAB_OVERVIEW = 'Overview';
+export const HUB_OPS_TAB_FILES = 'Files';
+export const HUB_OPS_TAB_MESSAGES = 'Messages';
 export const HUB_LAUNCH_LTD_QUESTION = 'Is your shop a limited company?';
 export const HUB_LAUNCH_LTD_HELPER =
   "Limited companies must show their registered name, number and office address on their website. We'll add them to your footer.";
@@ -299,6 +339,8 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   hub_live: 'Site live',
   hub_asset_uploaded: 'Files added',
   hub_details_saved: 'Shop details saved',
+  hub_message_sent: 'You sent a message',
+  ops_hub_message_sent: 'KERSIVO replied',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

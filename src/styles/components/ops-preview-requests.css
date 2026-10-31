@@ -184,6 +184,33 @@
   background: var(--warning-subtle);
 }
 
+.ops-pr__status--unread {
+  margin-left: 0.35rem;
+  background: color-mix(in srgb, var(--color-brand) 28%, transparent);
+}
+
+.ops-pr-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.ops-pr-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: inherit;
+  text-decoration: none;
+}
+.ops-pr-tabs a[aria-current='page'] {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
 .ops-pr-files {
   margin: 0 0 1.5rem;
 }

@@ -56,6 +56,10 @@ const db: any = {
     findMany: vi.fn(async () => []),
     deleteMany: vi.fn(async () => ({ count: 0 })),
   },
+  previewHubMessage: {
+    updateMany: vi.fn(async () => ({ count: 0 })),
+    deleteMany: vi.fn(async () => ({ count: 0 })),
+  },
   emailOutbound: { deleteMany: (...a: unknown[]) => deleteOutbox(...a) },
   saasSubscription: {
     count: vi.fn(async () => state.liveSubscriptions),
@@ -269,6 +273,11 @@ describe('purgeExpiredPreviewData', () => {
     expect(deleteCheckouts).toHaveBeenCalledWith({ where: { shopId: 'shop_draft', status: 'PENDING' } });
     expect(deleteOutbox.mock.calls[0]![0].where.dedupeKey).toEqual({ startsWith: 'free-preview:', contains: 'req_1' });
     expect(deleteEvents).toHaveBeenCalledWith({ where: { previewRequestId: 'req_1' } });
+    expect(db.previewHubMessage.updateMany).toHaveBeenCalledWith({
+      where: { previewRequestId: 'req_1' },
+      data: { body: '', authorEmail: null },
+    });
+    expect(db.previewHubMessage.deleteMany).toHaveBeenCalledWith({ where: { previewRequestId: 'req_1' } });
 
     const row = state.rows[0]!;
     expect(row).toMatchObject({

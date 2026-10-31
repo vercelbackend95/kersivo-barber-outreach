@@ -72,8 +72,28 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
         orderBy: { createdAt: 'desc' },
         take: 1,
       },
+      hubMessages: {
+        where: { author: 'OWNER', readByOpsAt: null },
+        select: { id: true },
+      },
     },
+  }).then((rows) => sortPreviewRequestsForOps(rows, query.sort));
+}
+
+export function sortPreviewRequestsForOps<
+  T extends { createdAt: Date; hubMessages?: Array<{ id: string }> },
+>(rows: T[], sort: PreviewRequestListSort): T[] {
+  return [...rows].sort((a, b) => {
+    const unreadA = a.hubMessages?.length ?? 0;
+    const unreadB = b.hubMessages?.length ?? 0;
+    if ((unreadA > 0) !== (unreadB > 0)) return unreadA > 0 ? -1 : 1;
+    const created = a.createdAt.getTime() - b.createdAt.getTime();
+    return sort === 'oldest' ? created : -created;
   });
+}
+
+export function unreadOwnerMessageCount(request: { hubMessages?: Array<{ id: string }> }): number {
+  return request.hubMessages?.length ?? 0;
 }
 
 export function hasNewHubFiles(request: {
@@ -142,6 +162,10 @@ export async function getPreviewRequestDetail(id: string) {
       hubAssets: {
         where: { deletedAt: null },
         orderBy: [{ kind: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
+      hubMessages: {
+        where: { author: 'OWNER', readByOpsAt: null },
+        select: { id: true },
       },
     },
   });

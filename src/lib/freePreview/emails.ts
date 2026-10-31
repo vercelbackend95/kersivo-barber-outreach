@@ -19,8 +19,15 @@ import {
   HUB_OPS_FILES_EMAIL_BUTTON,
   HUB_OPS_FILES_EMAIL_INTRO,
   HUB_OPS_FILES_EMAIL_SUBJECT,
+  HUB_OPS_MESSAGES_EMAIL_BUTTON,
+  HUB_OPS_MESSAGES_EMAIL_INTRO,
+  HUB_OPS_MESSAGES_EMAIL_SUBJECT,
   HUB_OPS_OPEN_HUB,
+  HUB_OWNER_MESSAGE_EMAIL_BUTTON,
+  HUB_OWNER_MESSAGE_EMAIL_INTRO,
+  HUB_OWNER_MESSAGE_EMAIL_SUBJECT,
 } from './hubCopy';
+import { hubMessageExcerpt } from './hubMessageText';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
@@ -382,5 +389,45 @@ export function buildHubFilesAddedInternalEmail(input: {
     html: `<p>${escapeHtml(HUB_OPS_FILES_EMAIL_INTRO(input.shopName))}</p>
 <table cellpadding="4">${rows}</table>
 <p><a href="${escapeHtml(opsUrl)}">${escapeHtml(HUB_OPS_FILES_EMAIL_BUTTON)}</a></p>`,
+  };
+}
+
+/** Immediate transactional email when KERSIVO writes in the hub thread (HUB_SPEC.md §5). */
+export function buildHubMessageFromKersivoEmail(input: {
+  to: string;
+  firstName: string | null;
+  shopName: string;
+  publicToken: string;
+  body: string;
+}): FreePreviewEmail {
+  const replyUrl = `${previewPageUrl(input.publicToken)}/messages`;
+  const excerpt = escapeHtml(hubMessageExcerpt(input.body));
+  return {
+    to: input.to,
+    subject: HUB_OWNER_MESSAGE_EMAIL_SUBJECT(input.shopName),
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      escapeHtml(HUB_OWNER_MESSAGE_EMAIL_INTRO(input.shopName)),
+      `<span style="white-space:pre-wrap">${excerpt}</span>`,
+      hubButton(replyUrl, HUB_OWNER_MESSAGE_EMAIL_BUTTON),
+      SIGN_OFF,
+    ]),
+  };
+}
+
+/** Ops digest when the owner sends messages (HUB_SPEC.md §5). At most one per request per 15 minutes. */
+export function buildHubMessagesAddedInternalEmail(input: {
+  id: string;
+  shopName: string;
+  count: number;
+}): FreePreviewEmail {
+  const opsUrl = `${opsPreviewRequestUrl(input.id)}?tab=messages`;
+  return {
+    to: getPreviewNotifyEmail(),
+    subject: HUB_OPS_MESSAGES_EMAIL_SUBJECT(input.count, input.shopName),
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: `<p>${escapeHtml(HUB_OPS_MESSAGES_EMAIL_INTRO(input.count, input.shopName))}</p>
+<p><a href="${escapeHtml(opsUrl)}">${escapeHtml(HUB_OPS_MESSAGES_EMAIL_BUTTON)}</a></p>`,
   };
 }

@@ -2,10 +2,11 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
-import HubComingSoon from '@/components/previewHub/HubComingSoon.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
+import { HubMessages } from '@/components/previewHub/HubMessages';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
-import { HUB_NAV } from '@/lib/freePreview/hubCopy';
+import { HUB_DRAFT_DECLINED, HUB_DRAFT_REOPEN, HUB_NAV } from '@/lib/freePreview/hubCopy';
+import { loadHubMessages } from '@/lib/freePreview/hubMessages';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -39,6 +40,12 @@ await recordHubOwnerView({
 }).catch((error) => {
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
+
+const draftParam = (Astro.url.searchParams.get('draft') ?? '').trim();
+const initialDraft =
+  draftParam === 'reopen' ? HUB_DRAFT_REOPEN : draftParam === 'message' ? HUB_DRAFT_DECLINED : '';
+
+const messages = await loadHubMessages(ctx.request.id);
 ---
 
 <HubDocument title={`${HUB_NAV.messages} — ${ctx.request.shopName} | KERSIVO`}>
@@ -48,7 +55,17 @@ await recordHubOwnerView({
     stage={ctx.state.stage}
     current="messages"
     capabilities={ctx.state.capabilities}
+    unreadMessages={0}
   >
-    <HubComingSoon title={HUB_NAV.messages} />
+    <HubMessages
+      client:load
+      token={token}
+      viewer={ctx.isOperator ? 'ops' : 'owner'}
+      requestId={ctx.isOperator ? ctx.request.id : undefined}
+      shopName={ctx.request.shopName}
+      initialMessages={messages}
+      initialDraft={initialDraft}
+      canAttach={ctx.state.capabilities.canMessage}
+    />
   </HubShell>
 </HubDocument>

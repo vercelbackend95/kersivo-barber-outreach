@@ -7,6 +7,7 @@ import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
 import { loadActiveHubAssets } from '@/lib/freePreview/hubAssets';
+import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { isHubRouteEnabled, hubNotFound, loadHubOverviewExtras, designingAtFromEvents, hubActivityItems, hubStepper, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -43,9 +44,10 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const [events, assets] = await Promise.all([
+const [events, assets, unreadMessages] = await Promise.all([
   loadHubOverviewExtras(ctx.request.id),
   loadActiveHubAssets(ctx.request.id),
+  ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
 ]);
 const steps = hubStepper({
   stage: ctx.state.stage,
@@ -70,6 +72,7 @@ const shopName = ctx.request.shopName;
     stage={ctx.state.stage}
     current="overview"
     capabilities={ctx.state.capabilities}
+    unreadMessages={unreadMessages}
   >
     <HubOverview
       token={token}

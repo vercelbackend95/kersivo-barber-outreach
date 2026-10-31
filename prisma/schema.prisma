@@ -100,6 +100,10 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_EXPIRY_REMINDER
   /// Shop Hub: ops digest when the owner adds files (at most one per request per 15 minutes).
   FREE_PREVIEW_HUB_FILES_INTERNAL
+  /// Shop Hub: immediate transactional email to the owner when KERSIVO sends a message.
+  FREE_PREVIEW_HUB_MESSAGE_OWNER
+  /// Shop Hub: ops digest when the owner sends messages (at most one per request per 15 minutes).
+  FREE_PREVIEW_HUB_MESSAGES_INTERNAL
 }
 
 enum EmailOutboundStatus {
@@ -1638,12 +1642,28 @@ model PreviewRequest {
 
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
-  events    PreviewRequestEvent[]
-  hubAssets PreviewHubAsset[]
+  events      PreviewRequestEvent[]
+  hubAssets   PreviewHubAsset[]
+  hubMessages PreviewHubMessage[]
 
   @@index([status, createdAt])
   @@index([email])
   @@index([expiresAt])
+}
+
+model PreviewHubMessage {
+  id               String          @id @default(cuid())
+  previewRequestId String
+  author           PreviewHubActor
+  authorEmail      String?
+  body             String          @db.Text
+  attachmentIds    String[]
+  createdAt        DateTime        @default(now())
+  readByOwnerAt    DateTime?
+  readByOpsAt      DateTime?
+  previewRequest   PreviewRequest  @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
+
+  @@index([previewRequestId, createdAt])
 }
 
 model PreviewHubAsset {

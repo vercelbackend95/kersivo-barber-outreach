@@ -8,6 +8,7 @@ import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { previewPagePath } from '@/lib/freePreview/config';
+import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
 import {
   hostnameOf,
@@ -87,6 +88,7 @@ if (
 
 const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
 const basePath = previewPagePath(token);
+const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx.request.id);
 ---
 
 <HubDocument title={`Website preview — ${shopName} | KERSIVO`}>
@@ -96,6 +98,7 @@ const basePath = previewPagePath(token);
     stage={ctx.state.stage}
     current="website"
     capabilities={ctx.state.capabilities}
+    unreadMessages={unreadMessages}
   >
     {
       showPreview && ctx.draft ? (

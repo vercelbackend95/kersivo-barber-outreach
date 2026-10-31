@@ -9,3 +9,7 @@ export const FREE_PREVIEW_PRIVACY_RETENTION_TEXT = `If you do not subscribe, we 
 /** /privacy, under the free website preview collection section. Unconditional — legal pages describe what can happen. */
 export const FREE_PREVIEW_PRIVACY_HUB_FILES_TEXT =
   "Files you add in your private shop hub (logo, photos, price lists) are used only to build your preview and website, and are deleted with your preview if you don't launch.";
+
+/** /privacy, under the free website preview collection section. Unconditional. */
+export const FREE_PREVIEW_PRIVACY_HUB_MESSAGES_TEXT =
+  "Messages you send in your private shop hub are used only to talk about your preview, and are deleted with your preview if you don't launch.";

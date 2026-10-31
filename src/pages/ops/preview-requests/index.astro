@@ -25,8 +25,9 @@ import {
   listPreviewRequests,
   parsePreviewRequestListQuery,
   previewRequestLinks,
+  unreadOwnerMessageCount,
 } from '@/lib/freePreview/opsQueries';
-import { HUB_OPS_NEW_FILES } from '@/lib/freePreview/hubCopy';
+import { HUB_OPS_NEW_FILES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
 import { isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
@@ -194,6 +195,11 @@ function filterHref(status: string | null, sort = query.sort) {
                       {hubEnabled && hasNewHubFiles(request) ? (
                         <span class="ops-pr__status ops-pr__status--new-files">{HUB_OPS_NEW_FILES}</span>
                       ) : null}
+                      {hubEnabled && unreadOwnerMessageCount(request) > 0 ? (
+                        <span class="ops-pr__status ops-pr__status--unread">
+                          {HUB_OPS_UNREAD_MESSAGES(unreadOwnerMessageCount(request))}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -245,6 +251,11 @@ function filterHref(status: string | null, sort = query.sort) {
                         {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
                         {hubEnabled && hasNewHubFiles(request) ? (
                           <span class="ops-pr__status ops-pr__status--new-files">{HUB_OPS_NEW_FILES}</span>
+                        ) : null}
+                        {hubEnabled && unreadOwnerMessageCount(request) > 0 ? (
+                          <span class="ops-pr__status ops-pr__status--unread">
+                            {HUB_OPS_UNREAD_MESSAGES(unreadOwnerMessageCount(request))}
+                          </span>
                         ) : null}
                       </td>
                       <td>{request.firstViewedAt ? `${request.viewCount}×` : 'Not yet'}</td>

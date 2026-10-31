@@ -75,6 +75,23 @@ describe('hubPage helpers', () => {
     expect(items.map((item) => item.label)).toEqual(['Request received', 'Preview ready']);
   });
 
+  it('labels message events without including the body', () => {
+    const items = hubActivityItems(
+      [
+        { id: '1', action: 'hub_message_sent', createdAt: NOW, meta: { actor: 'owner' } },
+        { id: '2', action: 'ops_hub_message_sent', createdAt: NOW, meta: { actor: 'kersivo' } },
+        { id: '3', action: 'hub_message_sent', createdAt: NOW, meta: { actor: 'kersivo' } },
+      ],
+      NOW,
+    );
+    expect(items.map((item) => item.label)).toEqual([
+      'You sent a message',
+      'KERSIVO replied',
+      'KERSIVO replied',
+    ]);
+    expect(JSON.stringify(items)).not.toContain('secret text');
+  });
+
   it('groups consecutive photo uploads', () => {
     const items = hubActivityItems(
       [

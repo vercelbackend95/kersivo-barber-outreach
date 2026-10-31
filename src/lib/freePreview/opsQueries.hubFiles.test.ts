@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasNewHubFiles } from './opsQueries';
+import { hasNewHubFiles, sortPreviewRequestsForOps, unreadOwnerMessageCount } from './opsQueries';
 
 describe('hasNewHubFiles', () => {
   it('is false when the request has no files', () => {
@@ -29,5 +29,23 @@ describe('hasNewHubFiles', () => {
         hubAssets: [{ createdAt: new Date('2026-10-31T12:00:01Z') }],
       }),
     ).toBe(true);
+  });
+});
+
+describe('ops unread owner messages', () => {
+  it('counts unread owner messages', () => {
+    expect(unreadOwnerMessageCount({ hubMessages: [{ id: '1' }, { id: '2' }] })).toBe(2);
+    expect(unreadOwnerMessageCount({})).toBe(0);
+  });
+
+  it('sorts requests with unread owner messages first', () => {
+    const older = { id: 'a', createdAt: new Date('2026-10-01T00:00:00Z'), hubMessages: [] };
+    const newer = { id: 'b', createdAt: new Date('2026-10-31T00:00:00Z'), hubMessages: [] };
+    const unread = { id: 'c', createdAt: new Date('2026-10-15T00:00:00Z'), hubMessages: [{ id: 'm' }] };
+    expect(sortPreviewRequestsForOps([older, newer, unread], 'newest').map((row) => row.id)).toEqual([
+      'c',
+      'b',
+      'a',
+    ]);
   });
 });

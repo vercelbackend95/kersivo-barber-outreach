@@ -25,6 +25,10 @@ import {
   previewRequestLinks,
 } from '@/lib/freePreview/opsQueries';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
+import { HubMessages } from '@/components/previewHub/HubMessages';
+import { loadHubMessages, markOwnerMessagesReadByOps } from '@/lib/freePreview/hubMessages';
+import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
+import { prisma } from '@/lib/db/client';
 import {
   HUB_OPS_ABOUT,
   HUB_OPS_BRAND_COLOURS,
@@ -32,9 +36,14 @@ import {
   HUB_OPS_FILES_EMPTY,
   HUB_OPS_FILES_TITLE,
   HUB_OPS_STYLE_NOTES,
+  HUB_OPS_TAB_FILES,
+  HUB_OPS_TAB_MESSAGES,
+  HUB_OPS_TAB_OVERVIEW,
+  HUB_OPS_UNREAD_MESSAGES,
   HUB_OPS_UPLOADED_BY_KERSIVO,
   HUB_OPS_UPLOADED_BY_OWNER,
 } from '@/lib/freePreview/hubCopy';
+import { unreadOwnerMessageCount } from '@/lib/freePreview/opsQueries';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
 import '@/styles/tokens.css';
@@ -45,6 +54,7 @@ import '@/styles/components/buttons.css';
 import '@/styles/components/admin-login.css';
 import '@/styles/components/ops-recommendations.css';
 import '@/styles/components/ops-preview-requests.css';
+import '@/styles/components/preview-hub.css';
 
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 Astro.response.headers.set('Vary', 'Cookie');
@@ -81,6 +91,30 @@ const hubState = request
     })
   : { kind: 'not_found' as const };
 const hubStageLabel = hubEnabled ? ownerFacingStageLabel(hubState) : null;
+const tabParam = (Astro.url.searchParams.get('tab') ?? '').trim().toLowerCase();
+const activeTab = tabParam === 'files' || tabParam === 'messages' ? tabParam : 'overview';
+const unreadOpsMessages = request ? unreadOwnerMessageCount(request) : 0;
+const hubMessages =
+  view === 'dashboard' && request && hubEnabled && activeTab === 'messages'
+    ? await loadHubMessages(request.id)
+    : [];
+if (view === 'dashboard' && request && hubEnabled && activeTab === 'messages') {
+  const marked = await markOwnerMessagesReadByOps({ previewRequestId: request.id }).catch(() => 0);
+  if (marked > 0) {
+    await prisma.previewRequestEvent
+      .create({
+        data: {
+          previewRequestId: request.id,
+          action: PREVIEW_REQUEST_ACTIONS.OPS_HUB_MESSAGES_READ,
+          actorEmail: auth.ok ? auth.access.email : null,
+          meta: { marked },
+        },
+      })
+      .catch((error) => {
+        console.error('[ops/preview-requests] mark messages read failed', error instanceof Error ? error.message : error);
+      });
+  }
+}
 
 const fields: Array<[string, string]> = request
   ? [
@@ -173,7 +207,47 @@ const fields: Array<[string, string]> = request
           </header>
 
           <div class="ops-pr-detail">
-            <section class="ops-pr-detail__fields" aria-label="Request details">
+            {
+              hubEnabled ? (
+                <nav class="ops-pr-tabs" aria-label="Request workspace">
+                  <a
+                    href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}`}
+                    aria-current={activeTab === 'overview' ? 'page' : undefined}
+                  >
+                    {HUB_OPS_TAB_OVERVIEW}
+                  </a>
+                  <a
+                    href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}?tab=files`}
+                    aria-current={activeTab === 'files' ? 'page' : undefined}
+                  >
+                    {HUB_OPS_TAB_FILES}
+                  </a>
+                  <a
+                    href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}?tab=messages`}
+                    aria-current={activeTab === 'messages' ? 'page' : undefined}
+                  >
+                    {HUB_OPS_TAB_MESSAGES}
+                    {unreadOpsMessages > 0 ? ` · ${HUB_OPS_UNREAD_MESSAGES(unreadOpsMessages)}` : ''}
+                  </a>
+                </nav>
+              ) : null
+            }
+            {
+              hubEnabled && activeTab === 'messages' ? (
+                <section class="ops-pr-detail__fields" aria-label={HUB_OPS_TAB_MESSAGES}>
+                  <HubMessages
+                    client:load
+                    token={request.publicToken}
+                    viewer="ops"
+                    requestId={request.id}
+                    shopName={request.shopName}
+                    initialMessages={hubMessages}
+                    canAttach
+                  />
+                </section>
+              ) : null
+            }
+            <section class="ops-pr-detail__fields" aria-label="Request details" hidden={hubEnabled && activeTab === 'messages'}>
               <h2 class="ops-pr-actions__title">Links</h2>
               <ul class="ops-pr__links ops-pr__links--stacked">
                 {previewRequestLinks(request).map((link) => (
@@ -200,8 +274,8 @@ const fields: Array<[string, string]> = request
               </dl>
 
               {
-                hubEnabled ? (
-                  <section class="ops-pr-files" aria-label={HUB_OPS_FILES_TITLE}>
+                hubEnabled && activeTab !== 'overview' ? (
+                  <section class="ops-pr-files" aria-label={HUB_OPS_FILES_TITLE} hidden={activeTab !== 'files'}>
                     <h2 class="ops-pr-actions__title">{HUB_OPS_FILES_TITLE}</h2>
                     <dl class="ops-pr-detail__list">
                       <div class="ops-pr-detail__item">

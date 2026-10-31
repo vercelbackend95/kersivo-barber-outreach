@@ -13,7 +13,9 @@ import {
   HUB_ACTIVITY_KIND_PRICES,
   HUB_ACTIVITY_KIND_TEAM,
   HUB_ACTIVITY_KIND_TEAMS,
+  HUB_ACTIVITY_KERSIVO_REPLIED,
   HUB_ACTIVITY_LABELS,
+  HUB_ACTIVITY_YOU_SENT,
   HUB_OWNER_ACTIVITY_ACTIONS,
   HUB_STEPPER_LABELS,
 } from './hubCopy';
@@ -248,14 +250,22 @@ export function hubActivityItems(
       i = j;
       continue;
     }
-    grouped.push({
-      id: event.id,
-      action: event.action,
-      label: HUB_ACTIVITY_LABELS[event.action] ?? event.action,
-      at: event.createdAt,
-      relative: formatHubRelativeTime(event.createdAt, now),
-      absolute: formatHubAbsoluteDate(event.createdAt),
-    });
+      const messageLabel =
+        event.action === PREVIEW_REQUEST_ACTIONS.HUB_MESSAGE_SENT
+          ? (event.meta as { actor?: string } | null)?.actor === 'kersivo'
+            ? HUB_ACTIVITY_KERSIVO_REPLIED
+            : HUB_ACTIVITY_YOU_SENT
+          : event.action === PREVIEW_REQUEST_ACTIONS.OPS_HUB_MESSAGE_SENT
+            ? HUB_ACTIVITY_KERSIVO_REPLIED
+            : (HUB_ACTIVITY_LABELS[event.action] ?? event.action);
+      grouped.push({
+        id: event.id,
+        action: event.action,
+        label: messageLabel,
+        at: event.createdAt,
+        relative: formatHubRelativeTime(event.createdAt, now),
+        absolute: formatHubAbsoluteDate(event.createdAt),
+      });
     i += 1;
   }
   return grouped;
