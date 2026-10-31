@@ -13,8 +13,9 @@ import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { BLACKLINE_DEMO_CONTACT_SOURCE } from '@/lib/demo/kersivoContact';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 
-const RESEND_API_KEY = import.meta.env.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
-const FROM_EMAIL = import.meta.env.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
+const metaEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env ?? {};
+const RESEND_API_KEY = metaEnv.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
+const FROM_EMAIL = metaEnv.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
 
 type BookingEmailBaseInput = {
   to: string;
@@ -44,7 +45,7 @@ export function isEmailDeliveryConfigured(): boolean {
  * Astro: import.meta.env.PROD; Node scripts: NODE_ENV === 'production'.
  */
 function isProductionRuntime(): boolean {
-  return import.meta.env.PROD === true || process.env.NODE_ENV === 'production';
+  return String(metaEnv.PROD) === 'true' || process.env.NODE_ENV === 'production';
 }
 
 export function assertEmailDeliveryConfigured(): void {
@@ -81,6 +82,10 @@ async function sendEmail(input: {
     }
 
     console.log(input.devLogLabel, input.devPayload);
+    if ((process.env.PREVIEW_HUB_REAL_QA ?? '').trim().toLowerCase() === 'true') {
+      const { recordQaEmail } = await import('@/lib/previewHub/qaEmailLog');
+      recordQaEmail({ to: input.to, subject: input.subject, html: input.html });
+    }
     return { messageId: null };
   }
 
@@ -108,6 +113,10 @@ async function sendEmail(input: {
     }
 
     console.info('[EMAIL] Sent', { to: input.to, subject: input.subject, messageId });
+    if ((process.env.PREVIEW_HUB_REAL_QA ?? '').trim().toLowerCase() === 'true') {
+      const { recordQaEmail } = await import('@/lib/previewHub/qaEmailLog');
+      recordQaEmail({ to: input.to, subject: input.subject, html: input.html });
+    }
     return { messageId };
 
   } catch (error) {
@@ -379,7 +388,7 @@ function escapeHtml(text: string): string {
 
 function getSetupOnboardingFormUrl(): string {
   const configured = (
-    import.meta.env.SETUP_ONBOARDING_FORM_URL ??
+    metaEnv.SETUP_ONBOARDING_FORM_URL ??
     process.env.SETUP_ONBOARDING_FORM_URL ??
     ''
   ).trim();
@@ -397,7 +406,7 @@ export function getSetupOnboardingFormUrlOrEmpty(): string {
 
 function getContactInboxEmail(): string {
   return (
-    import.meta.env.CONTACT_INBOX_EMAIL ??
+    metaEnv.CONTACT_INBOX_EMAIL ??
     process.env.CONTACT_INBOX_EMAIL ??
     FROM_EMAIL
   );

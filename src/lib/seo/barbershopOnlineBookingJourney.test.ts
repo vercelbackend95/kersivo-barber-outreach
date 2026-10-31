@@ -105,7 +105,8 @@ describe('Barbershop online booking page — Section 02 client booking journey',
   });
 
   it('labels times as illustrative examples from the product sandbox slots, with no date', () => {
-    const sandbox = flow.slice(flow.indexOf('const PREVIEW_STATIC_SLOTS'), flow.indexOf('] as const;', flow.indexOf('const PREVIEW_STATIC_SLOTS')));
+    const slotsSource = read('lib/freePreview/previewBookingSlots.ts');
+    const sandbox = slotsSource.slice(slotsSource.indexOf('export const PREVIEW_STATIC_SLOTS'), slotsSource.indexOf('] as const;', slotsSource.indexOf('export const PREVIEW_STATIC_SLOTS')));
     const slots = [...(journey.match(/const EXAMPLE_SLOTS = \[([^\]]+)\] as const;/)?.[1].matchAll(/'(\d{2}:\d{2})'/g) ?? [])].map((m) => m[1]);
     expect(slots.length).toBeGreaterThan(0);
     for (const slot of slots) expect(sandbox).toContain(`'${slot}'`);

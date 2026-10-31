@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+import { isPreviewHubRealQaEnabled } from '@/lib/previewHub/realQa';
+if (!isPreviewHubRealQaEnabled()) return new Response('Not found', { status: 404 });
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ready Hub Barbers — preview</title>
+    <style>
+      body { margin: 0; background: #111; color: #fff8ee; font-family: Inter, sans-serif; padding: 24px; }
+      h1 { font-size: 1.6rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Ready Hub Barbers</h1>
+    <p>Local static preview page for Shop Hub real-stack QA.</p>
+  </body>
+</html>

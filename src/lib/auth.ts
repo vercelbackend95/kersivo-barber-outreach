@@ -13,25 +13,27 @@ import {
   sendPasswordResetEmail,
 } from '@/lib/email/sender';
 
+const metaEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env ?? {};
+
 function resolveAuthBaseUrl(): string {
   return resolveBetterAuthBaseUrl(
     {
-      VERCEL_ENV: process.env.VERCEL_ENV ?? import.meta.env.VERCEL_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV ?? metaEnv.VERCEL_ENV,
       VERCEL_BRANCH_URL:
-        process.env.VERCEL_BRANCH_URL ?? import.meta.env.VERCEL_BRANCH_URL,
-      VERCEL_URL: process.env.VERCEL_URL ?? import.meta.env.VERCEL_URL,
+        process.env.VERCEL_BRANCH_URL ?? metaEnv.VERCEL_BRANCH_URL,
+      VERCEL_URL: process.env.VERCEL_URL ?? metaEnv.VERCEL_URL,
     },
     {
       betterAuthUrl:
-        process.env.BETTER_AUTH_URL || import.meta.env.BETTER_AUTH_URL,
+        process.env.BETTER_AUTH_URL || metaEnv.BETTER_AUTH_URL,
       publicSiteUrl:
-        process.env.PUBLIC_SITE_URL || import.meta.env.PUBLIC_SITE_URL,
+        process.env.PUBLIC_SITE_URL || metaEnv.PUBLIC_SITE_URL,
     },
   );
 }
 
 function isAuthProd(): boolean {
-  return import.meta.env.PROD === true;
+  return String(metaEnv.PROD) === 'true';
 }
 
 /** RFC1918 + loopback hostnames for local phone-on-LAN testing. */
@@ -64,7 +66,7 @@ function isPrivateLanOrigin(origin: string): boolean {
 function envTrustedOrigins(): string[] {
   const raw =
     process.env.BETTER_AUTH_TRUSTED_ORIGINS ||
-    import.meta.env.BETTER_AUTH_TRUSTED_ORIGINS ||
+    metaEnv.BETTER_AUTH_TRUSTED_ORIGINS ||
     '';
   return String(raw)
     .split(',')
@@ -81,10 +83,10 @@ function staticTrustedOrigins(): string[] {
     'https://www.kersivo.co.uk',
     ...envTrustedOrigins(),
     ...resolveVercelPreviewTrustedOrigins({
-      VERCEL_ENV: process.env.VERCEL_ENV ?? import.meta.env.VERCEL_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV ?? metaEnv.VERCEL_ENV,
       VERCEL_BRANCH_URL:
-        process.env.VERCEL_BRANCH_URL ?? import.meta.env.VERCEL_BRANCH_URL,
-      VERCEL_URL: process.env.VERCEL_URL ?? import.meta.env.VERCEL_URL,
+        process.env.VERCEL_BRANCH_URL ?? metaEnv.VERCEL_BRANCH_URL,
+      VERCEL_URL: process.env.VERCEL_URL ?? metaEnv.VERCEL_URL,
     }),
   ];
 }
@@ -115,13 +117,13 @@ function resolveBaseURLConfig(): string | {
   };
 }
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID || import.meta.env.GOOGLE_CLIENT_ID;
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || import.meta.env.GOOGLE_CLIENT_SECRET;
+const googleClientId = process.env.GOOGLE_CLIENT_ID || metaEnv.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || metaEnv.GOOGLE_CLIENT_SECRET;
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
   baseURL: resolveBaseURLConfig(),
-  secret: process.env.BETTER_AUTH_SECRET || import.meta.env.BETTER_AUTH_SECRET || process.env.ADMIN_SECRET,
+  secret: process.env.BETTER_AUTH_SECRET || metaEnv.BETTER_AUTH_SECRET || process.env.ADMIN_SECRET,
   trustedOrigins: async (request) => {
     const origins = [...staticTrustedOrigins()];
 

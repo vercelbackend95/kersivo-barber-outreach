@@ -1,3 +1,4 @@
+import { isPreviewHubRealQaEnabled } from '@/lib/previewHub/realQa';
 import {
   checkDurableRateLimit,
   clientIpFromRequest,
@@ -11,6 +12,7 @@ export async function enforceIpRateLimit(
   limit: number,
   windowMs: number,
 ): Promise<Response | null> {
+  if (isPreviewHubRealQaEnabled()) return null;
   const ip = clientIpFromRequest(request);
   const result = await checkDurableRateLimit({ key: ip, action, limit, windowMs });
   if (!result.ok) return rateLimitExceededResponse(result.retryAfterSeconds);

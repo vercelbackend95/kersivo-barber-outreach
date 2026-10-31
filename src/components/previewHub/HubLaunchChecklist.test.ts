@@ -34,4 +34,10 @@ describe('HubLaunchChecklist', () => {
     expect(src).toContain('HUB_SAVED');
     expect(src).toContain('HUB_SAVING');
   });
+
+  it('names the launch progressbar for assistive tech', () => {
+    expect(src).toContain('id="hub-launch-progress"');
+    expect(src).toContain('role="progressbar"');
+    expect(src).toContain('aria-labelledby="hub-launch-progress"');
+  });
 });

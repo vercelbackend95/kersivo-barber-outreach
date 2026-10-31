@@ -74,22 +74,44 @@ export async function loadShopOpeningHoursDays(shopId: string): Promise<ShopHour
   }));
 }
 
-export async function replaceShopOpeningHours(shopId: string, rules: OnboardingWeeklyRule[]) {
-  await prisma.$transaction(async (tx) => {
+type HoursWriter = {
+  shopOpeningHours: {
+    deleteMany: (args: { where: { shopId: string } }) => Promise<unknown>;
+    createMany: (args: { data: Array<{
+      shopId: string;
+      dayOfWeek: number;
+      active: boolean;
+      startMinutes: number;
+      endMinutes: number;
+    }> }) => Promise<unknown>;
+  };
+};
+
+export async function replaceShopOpeningHours(
+  shopId: string,
+  rules: OnboardingWeeklyRule[],
+  client?: HoursWriter,
+) {
+  const run = async (tx: HoursWriter) => {
     await tx.shopOpeningHours.deleteMany({ where: { shopId } });
-    const activeRules = rules.filter((rule) => rule.active);
-    if (activeRules.length === 0) return;
+    if (rules.length === 0) return;
 
     await tx.shopOpeningHours.createMany({
-      data: activeRules.map((rule) => ({
+      data: rules.map((rule) => ({
         shopId,
         dayOfWeek: rule.dayOfWeek,
-        active: true,
+        active: rule.active,
         startMinutes: timeStringToMinutes(rule.startTime),
         endMinutes: timeStringToMinutes(rule.endTime),
       })),
     });
-  });
+  };
+
+  if (!client) {
+    await prisma.$transaction(async (tx) => run(tx));
+    return;
+  }
+  await run(client);
 }
 
 /**

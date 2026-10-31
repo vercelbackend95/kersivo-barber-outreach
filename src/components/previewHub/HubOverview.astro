@@ -66,9 +66,21 @@ interface Props {
   reviewShop?: HubReviewShopData | null;
   reviewNeed?: string;
   launchProgress?: HubLaunchProgress | null;
+  logoAssetId?: string | null;
+  brandColour?: string | null;
 }
 
-const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed, launchProgress } = Astro.props;
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed, launchProgress, logoAssetId, brandColour } = Astro.props;
+function shopInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'K';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+}
+const previewColour = brandColour?.trim() || '#d72638';
+const logoSrc = logoAssetId
+  ? `/api/preview-hub/${encodeURIComponent(token)}/assets/${encodeURIComponent(logoAssetId)}?size=thumb`
+  : null;
 const YOUR_STEP_LABEL: Record<LaunchItem, string> = {
   business: HUB_LAUNCH_ITEM_BUSINESS,
   domain: HUB_LAUNCH_ITEM_DOMAIN,
@@ -229,6 +241,15 @@ const primaryLabel =
         {
           state.capabilities.showPreview ? (
             <>
+              <div class="hub-phone-frame" aria-hidden="true">
+                <div class="hub-phone-frame__screen" style={`background:${previewColour}`}>
+                  {logoSrc ? (
+                    <img class="hub-phone-frame__logo" src={logoSrc} alt="" />
+                  ) : (
+                    <span class="hub-phone-frame__initials">{shopInitials(shopName)}</span>
+                  )}
+                </div>
+              </div>
               <p class="hub-card__body">{shopName}</p>
               <div class="hub-preview-actions">
                 <a class="btn btn--primary btn--sm" href={`${base}/website`}>

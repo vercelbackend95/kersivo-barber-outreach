@@ -129,6 +129,7 @@ const [unreadMessages, changeItems, openChanges] = await Promise.all([
             rescheduleWindowHours: ctx.draft.shop.rescheduleWindowHours,
             services: ctx.draft.services,
             barbers: ctx.draft.barbers,
+            hours: ctx.draft.hours,
           }}
           changeItems={changeItems}
           includedChangeRounds={ctx.request.includedChangeRounds}

@@ -106,10 +106,13 @@ const tabs: Array<{
 
   <div class="hub-content">
     <header class="hub-topbar">
-      <p class="hub-topbar__shop">{shopName}</p>
+      <div class="hub-topbar__identity">
+        <p class="hub-topbar__mark">KERSIVO</p>
+        <p class="hub-topbar__shop">{shopName}</p>
+      </div>
       <p class={`hub-stage-pill hub-stage-pill--${stage}`}>{HUB_STAGE_PILL[stage]}</p>
       <a class="hub-topbar__msg" href={`${base}/messages`} aria-label={showUnread ? HUB_UNREAD : HUB_NAV.messages}>
-        <MessageCircle width={20} height={20} strokeWidth={1.8} />
+        <MessageCircle width={20} height={20} strokeWidth={1.8} aria-hidden="true" />
         {showUnread ? <span class="hub-unread" aria-hidden="true"></span> : null}
       </a>
     </header>
@@ -128,14 +131,24 @@ const tabs: Array<{
           href={tab.href}
           class:list={['hub-tabs__item', tab.locked && 'is-locked']}
           aria-current={current === tab.id ? 'page' : undefined}
+          aria-label={
+            tab.locked
+              ? `${tab.label}. ${tab.reason}`
+              : tab.id === 'changes' && showOpenChanges
+                ? `${tab.label} ${openChanges} open`
+                : undefined
+          }
           title={tab.locked ? tab.reason : tab.label}
         >
-          <span class="hub-tabs__icon">
-            <tab.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
-            {tab.id === 'messages' && showUnread ? <span class="hub-unread" aria-hidden="true"></span> : null}
-            {tab.id === 'changes' && showOpenChanges ? <span class="hub-count" aria-hidden="true">{openChanges}</span> : null}
+          <span class="hub-tabs__icon" aria-hidden="true">
+            <tab.Icon width={18} height={18} strokeWidth={1.8} />
+            {tab.locked ? <Lock width={12} height={12} strokeWidth={1.8} className="hub-tabs__lock" /> : null}
+            {tab.id === 'messages' && showUnread ? <span class="hub-unread"></span> : null}
           </span>
-          {tab.label}
+          <span class="hub-tabs__label">{tab.label}</span>
+          {tab.id === 'changes' && showOpenChanges ? (
+            <span class="hub-count">{openChanges}<span class="hub-sr-only"> open</span></span>
+          ) : null}
         </a>
       ))
     }

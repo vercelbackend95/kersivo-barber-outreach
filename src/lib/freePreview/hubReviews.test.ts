@@ -7,6 +7,7 @@ import {
   hubReviewPostSchema,
   hubServicesProposalSchema,
   hubTeamProposalSchema,
+  reviewDiff,
   reviewNowNeed,
   servicesFingerprint,
   teamFingerprint,
@@ -99,5 +100,24 @@ describe('hub review card states and Now copy', () => {
   it('fingerprints are stable', () => {
     expect(teamFingerprint([{ id: 'b', name: 'Alex', photoAssetId: null }])).toContain('Alex');
     expect(hoursFingerprint([{ dayOfWeek: 1, open: true, start: '09:00', end: '18:00' }])).toContain('09:00');
+  });
+
+  it('reviewDiff formats service prices after the shared-module split', () => {
+    const rows = reviewDiff({
+      section: 'SERVICES',
+      current: {
+        shopId: 'shop_1',
+        services: [{ id: 'svc_1', name: 'Skin fade', durationMinutes: 45, pricePence: 2200 }],
+        barbers: [],
+        hours: [],
+      },
+      proposal: {
+        baseline: 'x',
+        services: [{ clientId: 'c1', id: 'svc_1', name: 'Skin fade', durationMinutes: 45, pricePence: 2500 }],
+      },
+    });
+    expect(rows).toEqual([
+      { label: 'Skin fade', from: 'Skin fade · 45 min · £22.00', to: 'Skin fade · 45 min · £25.00' },
+    ]);
   });
 });

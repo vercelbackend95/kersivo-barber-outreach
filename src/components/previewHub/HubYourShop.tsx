@@ -42,7 +42,7 @@ import {
 } from '@/lib/freePreview/hubCopy';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 import { HubReviewCards, type HubReviewMap } from './HubReviewCards';
-import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
+import type { HubReviewShopData } from '@/lib/freePreview/hubReviews.shared';
 
 export type HubShopDetails = {
   brandPrimaryColour: string | null;
@@ -571,6 +571,7 @@ export function HubYourShop(props: {
         <p className="field__hint">{HUB_DETAILS_ABOUT_HINT}</p>
         <textarea
           id="hub-about"
+          aria-labelledby="hub-about-title"
           className="textarea"
           maxLength={600}
           disabled={!props.canEditDetails}

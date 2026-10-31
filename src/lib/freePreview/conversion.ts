@@ -1,13 +1,15 @@
-import { Prisma } from '@prisma/client';
+import { EmailOutboundPurpose, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { purgeShopData } from '@/lib/setup/purgeShopData';
 import { normalizeSaasCheckoutIdentity } from '@/lib/setup/saasCheckoutGuard';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { suppressPendingPreviewFollowups } from './followups';
 import { isPreviewHubEnabled } from './config';
+import { buildRejectedPreviewPaymentInternalEmail } from './emails';
 import { notifyOwnerSubscribed } from './hubLaunch';
 
-export type MarkConvertedResult = 'converted' | 'already_converted' | 'not_found';
+export type MarkConvertedResult = 'converted' | 'already_converted' | 'not_found' | 'rejected_paid';
 
 /**
  * Webhook step for a paid free-preview checkout (spec §7): mark the request converted and link the
@@ -24,6 +26,45 @@ export async function markPreviewRequestConverted(input: {
 }): Promise<MarkConvertedResult> {
   const now = input.now ?? new Date();
   if (!input.draftShopId) return 'not_found';
+
+  const existing = await prisma.previewRequest.findFirst({
+    where: { id: input.previewRequestId, draftShopId: input.draftShopId },
+    select: { status: true, shopName: true },
+  });
+  if (!existing) return 'not_found';
+  if (existing.status === 'CONVERTED') return 'already_converted';
+
+  if (existing.status === 'REJECTED') {
+    await prisma.previewRequest.update({
+      where: { id: input.previewRequestId },
+      data: {
+        stripeCustomerId: input.stripeCustomerId,
+        stripeSubscriptionId: input.stripeSubscriptionId,
+      },
+    });
+    console.warn('[free-preview] Payment received for a rejected preview request', {
+      previewRequestId: input.previewRequestId,
+      shopName: existing.shopName,
+    });
+    const email = buildRejectedPreviewPaymentInternalEmail({
+      shopName: existing.shopName,
+      requestId: input.previewRequestId,
+    });
+    const row = await enqueueEmail(prisma, {
+      shopId: input.draftShopId,
+      purpose: EmailOutboundPurpose.FREE_PREVIEW_REQUEST_INTERNAL,
+      ...email,
+      dedupeKey: `free-preview:rejected-payment:${input.previewRequestId}`,
+    }).catch((error) => {
+      console.error('[free-preview] rejected-payment email failed', {
+        id: input.previewRequestId,
+        error: error instanceof Error ? error.message : error,
+      });
+      return null;
+    });
+    if (row) await tryDeliverOutboxEmail(row.id).catch(() => undefined);
+    return 'rejected_paid';
+  }
 
   const updated = await prisma.previewRequest.updateMany({
     where: { id: input.previewRequestId, draftShopId: input.draftShopId, status: { not: 'CONVERTED' } },
@@ -69,11 +110,11 @@ export async function markPreviewRequestConverted(input: {
     return 'converted';
   }
 
-  const existing = await prisma.previewRequest.findFirst({
+  const raced = await prisma.previewRequest.findFirst({
     where: { id: input.previewRequestId, draftShopId: input.draftShopId },
     select: { status: true },
   });
-  return existing?.status === 'CONVERTED' ? 'already_converted' : 'not_found';
+  return raced?.status === 'CONVERTED' ? 'already_converted' : 'not_found';
 }
 
 export type AdoptDraftShopResult =

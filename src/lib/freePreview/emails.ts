@@ -552,3 +552,19 @@ export function buildHubSiteLiveEmail(input: {
     ].filter(Boolean)),
   };
 }
+
+/** Internal: a payment arrived for a request that ops had already rejected. */
+export function buildRejectedPreviewPaymentInternalEmail(input: { shopName: string; requestId: string }): FreePreviewEmail {
+  const opsUrl = opsPreviewRequestUrl(input.requestId);
+  const shop = escapeHtml(input.shopName);
+  return {
+    to: getPreviewNotifyEmail(),
+    subject: `Payment received for a rejected preview request: ${input.shopName}`,
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      `Payment received for a rejected preview request: ${shop}.`,
+      `The Stripe subscription was recorded. The request stays rejected — no owner-facing change.`,
+      `<a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a>`,
+    ]),
+  };
+}

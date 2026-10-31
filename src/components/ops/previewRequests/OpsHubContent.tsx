@@ -9,8 +9,11 @@ import {
   HUB_OPS_DISMISS,
   HUB_OPS_DISMISS_NOTE,
   HUB_OPS_DISMISSED,
+  HUB_OPS_MANUAL_WEBSITE_UPDATE,
   HUB_OPS_WEBSITE_REMINDER,
   HUB_RETRY,
+  HUB_REVIEW_BIO,
+  HUB_REVIEW_SHOW_ON_WEBSITE,
 } from '@/lib/freePreview/hubCopy';
 import type { HubReviewPublic, HubReviewSection, HubReviewShopData } from '@/lib/freePreview/hubReviews';
 
@@ -87,6 +90,24 @@ export function OpsHubContent(props: {
             ) : (
               <p className="ops-pr__empty">No proposal to apply.</p>
             )}
+            {section === 'TEAM' && review?.proposal && typeof review.proposal === 'object' && 'barbers' in review.proposal ? (
+              <div className="ops-hub-manual">
+                <p className="ops-pr__empty">{HUB_OPS_MANUAL_WEBSITE_UPDATE}</p>
+                <ul>
+                  {(review.proposal as { barbers?: Array<{ name?: string; bio?: string; showOnWebsite?: boolean }> }).barbers?.map((barber, index) => (
+                    <li key={`${barber.name ?? 'barber'}-${index}`}>
+                      <strong>{barber.name}</strong>
+                      <span>
+                        {HUB_REVIEW_BIO}: {barber.bio?.trim() || '—'}
+                      </span>
+                      <span>
+                        {HUB_REVIEW_SHOW_ON_WEBSITE}: {barber.showOnWebsite === false ? 'No' : 'Yes'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {review?.state === 'CORRECTIONS_SENT' ? (
               <>
                 <label>

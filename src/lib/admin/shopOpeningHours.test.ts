@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   assertBarberHoursWithinShop,
@@ -85,6 +87,14 @@ describe('intersectMinutesWithShopDay', () => {
   it('returns null when barber window is entirely outside shop hours', () => {
     expect(intersectMinutesWithShopDay(shop, 17 * 60, 18 * 60)).toBeNull();
     expect(intersectMinutesWithShopDay(shop, 7 * 60, 8 * 60)).toBeNull();
+  });
+});
+
+describe('replaceShopOpeningHours persists closed weekdays', () => {
+  it('writes inactive days instead of omitting them', () => {
+    const src = readFileSync(path.join(process.cwd(), 'src/lib/admin/shopOpeningHours.ts'), 'utf8');
+    expect(src).toContain('active: rule.active');
+    expect(src).not.toContain('const activeRules = rules.filter');
   });
 });
 

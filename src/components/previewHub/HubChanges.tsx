@@ -25,8 +25,7 @@ import {
   HUB_RETRY,
   HUB_ROUND_USED,
 } from '@/lib/freePreview/hubCopy';
-import type { HubChangePublic } from '@/lib/freePreview/hubChanges';
-import { HUB_CHANGE_PAGES } from '@/lib/freePreview/hubChanges';
+import { HUB_CHANGE_PAGES, type HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import { HubUploader } from './HubUploader';
 
 const STATUS_LABEL: Record<HubChangePublic['status'], string> = {
@@ -207,6 +206,7 @@ export function HubChanges(props: {
             {HUB_CHANGES_PAGE}
             <select
               className="input"
+              data-testid="hub-change-page"
               value={composer.page}
               onChange={(event) =>
                 setComposer({ ...composer, page: event.target.value as DraftForm['page'] })
@@ -223,6 +223,7 @@ export function HubChanges(props: {
             {HUB_CHANGES_BODY}
             <textarea
               className="textarea"
+              data-testid="hub-change-body"
               required
               maxLength={2000}
               value={composer.body}
@@ -243,7 +244,7 @@ export function HubChanges(props: {
             <button type="button" className="btn btn--secondary btn--sm" onClick={() => setComposer(null)} disabled={busy}>
               {HUB_CHANGES_CANCEL}
             </button>
-            <button type="submit" className="btn btn--primary btn--sm" disabled={busy || !composer.body.trim()}>
+            <button type="submit" className="btn btn--primary btn--sm" data-testid="hub-save-draft" disabled={busy || !composer.body.trim()}>
               {busy ? HUB_CHANGES_SENDING : HUB_CHANGES_SAVE_DRAFT}
             </button>
           </div>
@@ -254,6 +255,7 @@ export function HubChanges(props: {
         <button
           type="button"
           className="btn btn--primary"
+          data-testid="hub-send-changes"
           onClick={() => void send()}
           disabled={busy || sendBlocked || !canSend || drafts.length === 0}
         >
@@ -270,7 +272,6 @@ export function HubChanges(props: {
           </button>
         </p>
       ) : null}
-      {error === HUB_CHANGES_LOAD_ERROR ? null : null}
       <div className="hub-toast" role="status" aria-live="polite">
         {toast}
       </div>

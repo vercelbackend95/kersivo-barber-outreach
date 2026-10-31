@@ -1,0 +1,17 @@
+---
+export const prerender = false;
+import { isPreviewHubRealQaEnabled } from '@/lib/previewHub/realQa';
+import { getLastSubscriptionCheckoutStub } from '@/lib/shop/stripe';
+if (!isPreviewHubRealQaEnabled()) return new Response('Not found', { status: 404 });
+const stub = getLastSubscriptionCheckoutStub();
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stripe stub</title>
+  </head>
+  <body>
+    <h1>Stripe checkout stub</h1>
+    <pre data-testid="stripe-stub-payload">{JSON.stringify(stub, null, 2)}</pre>
+  </body>
+</html>

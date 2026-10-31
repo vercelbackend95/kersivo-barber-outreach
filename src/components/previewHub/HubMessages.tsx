@@ -22,9 +22,9 @@ import {
   HUB_MESSAGES_POLL_MS,
   hubMessageDayKey,
   hubMessageTimeLabel,
-  splitHubMessageParts,
   type HubMessagePublic,
-} from '@/lib/freePreview/hubMessages';
+} from '@/lib/freePreview/hubMessages.shared';
+import { splitHubMessageParts } from '@/lib/freePreview/hubMessageText';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 
 type PendingStatus = 'pending' | 'error';
@@ -231,8 +231,19 @@ export function HubMessages(props: {
     setDraft(item.body);
     setAttachments(
       item.attachments.map((asset) => ({
-        ...asset,
-        uploadedBy: asset.uploadedBy,
+        id: asset.id,
+        kind: asset.kind as HubUploadedAsset['kind'],
+        originalFileName: asset.originalFileName,
+        contentType: asset.contentType,
+        sizeBytes: asset.sizeBytes,
+        width: null,
+        height: null,
+        caption: null,
+        sortOrder: 0,
+        barberId: null,
+        uploadedBy: 'OWNER',
+        createdAt: item.createdAt,
+        hasThumb: asset.hasThumb,
       })),
     );
     setMessages((current) => current.filter((row) => row.id !== item.id));
@@ -337,6 +348,7 @@ export function HubMessages(props: {
         <textarea
           id="hub-composer-body"
           ref={composerRef}
+          data-testid="hub-message-body"
           className="hub-composer__input"
           rows={3}
           maxLength={HUB_MESSAGE_MAX_CHARS}
@@ -365,7 +377,7 @@ export function HubMessages(props: {
             />
           ) : null}
           <p className="hub-composer__count">{HUB_MESSAGE_CHAR_COUNT(draft.length, HUB_MESSAGE_MAX_CHARS)}</p>
-          <button type="submit" className="btn btn--primary" disabled={!canSend}>
+          <button type="submit" className="btn btn--primary" data-testid="hub-send-message" disabled={!canSend}>
             {sending ? HUB_MESSAGE_SENDING : HUB_SEND}
           </button>
         </div>

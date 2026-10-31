@@ -259,7 +259,8 @@ describe('/barbershop-online-booking Section 01 hero', () => {
   });
 
   it('shows only labelled illustrative times drawn from the product sandbox slots, with no date', () => {
-    const sandbox = flow.slice(flow.indexOf('const PREVIEW_STATIC_SLOTS'), flow.indexOf('] as const;', flow.indexOf('const PREVIEW_STATIC_SLOTS')));
+    const slotsSource = readFileSync(join(srcDir, 'lib/freePreview/previewBookingSlots.ts'), 'utf8');
+    const sandbox = slotsSource.slice(slotsSource.indexOf('export const PREVIEW_STATIC_SLOTS'), slotsSource.indexOf('] as const;', slotsSource.indexOf('export const PREVIEW_STATIC_SLOTS')));
     const slotsLine = preview.match(/const EXAMPLE_SLOTS = \[([^\]]+)\] as const;/);
     expect(slotsLine).not.toBeNull();
     const slots = [...(slotsLine?.[1].matchAll(/'(\d{2}:\d{2})'/g) ?? [])].map((match) => match[1]);

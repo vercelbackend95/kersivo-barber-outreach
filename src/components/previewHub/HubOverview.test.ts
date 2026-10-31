@@ -35,9 +35,18 @@ describe('HubOverview key UI states', () => {
     expect(overview).not.toContain('launchDeposits');
   });
 
-  it('shows the Review subscribe control in the Overview header', () => {
+  it('shows the Review subscribe control in the Overview header as secondary chrome', () => {
     expect(overview).toContain('canCheckout');
     expect(overview).toContain('chrome="checkout"');
+    expect(overview).toContain('class="btn btn--primary"');
+    expect(overview).toContain('HUB_PRIMARY');
+  });
+
+  it('uses a phone-frame placeholder, not an iframe, for the preview card', () => {
+    expect(overview).toContain('hub-phone-frame');
+    expect(overview).toContain('HUB_PREVIEW_OPEN_WEBSITE');
+    expect(overview).toContain('HUB_PREVIEW_TRY_BOOKING');
+    expect(overview).not.toMatch(/<iframe[\s\S]*hub-phone-frame|hub-phone-frame[\s\S]*<iframe/);
   });
 });
 
@@ -52,5 +61,14 @@ describe('HubShell', () => {
     expect(shell).toContain('aria-label="Hub pages"');
     expect(shell).toContain('unreadMessages');
     expect(shell).toContain('hub-unread');
+  });
+
+  it('shows the KERSIVO wordmark, outline tab icons and a lock on locked tabs', () => {
+    expect(shell).toContain('hub-topbar__mark');
+    expect(shell).toContain('hub-tabs__icon');
+    expect(shell).toContain('aria-hidden="true"');
+    expect(shell).toContain('hub-tabs__lock');
+    expect(shell).toContain('hub-count');
+    expect(shell).toContain('${tab.label} ${openChanges} open');
   });
 });

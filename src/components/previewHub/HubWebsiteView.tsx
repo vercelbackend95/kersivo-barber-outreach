@@ -12,9 +12,8 @@ import {
   HUB_WEBSITE_TEST_NOTE,
   HUB_WEBSITE_WEBSITE,
 } from '@/lib/freePreview/hubCopy';
-import { HUB_CHANGE_PAGES } from '@/lib/freePreview/hubChanges';
+import { HUB_CHANGE_PAGES, type HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import { HubChanges } from './HubChanges';
-import type { HubChangePublic } from '@/lib/freePreview/hubChanges';
 
 export type HubWebsiteDraft = {
   sitePreviewUrl: string | null;
@@ -30,6 +29,7 @@ export type HubWebsiteDraft = {
     description: string | null;
   }>;
   barbers: Array<{ id: string; name: string; serviceIds: string[] }>;
+  hours: Array<{ dayOfWeek: number; open: boolean }>;
 };
 
 export function HubWebsiteView(props: {
@@ -169,6 +169,7 @@ export function HubWebsiteView(props: {
               publicDemoMode={true}
               services={props.draft.services}
               barbers={props.draft.barbers}
+              openingHours={props.draft.hours}
               shopDetails={{
                 timezone: props.draft.timezone,
                 name: props.shopName,

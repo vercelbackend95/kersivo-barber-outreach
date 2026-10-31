@@ -164,11 +164,13 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   ) : (
     <button
       type="button"
-      className="btn btn--primary btn--sm"
+      className={chrome === 'checkout' ? 'btn btn--secondary btn--sm' : 'btn btn--primary btn--sm'}
+      data-testid="hub-subscribe"
       onClick={() => open('launch')}
       disabled={ownerActionsDisabled}
     >
-      Launch this website — £39/month
+      Launch this website
+      {chrome === 'checkout' ? <span className="hub-subscribe__price">£39/month per location</span> : ' — £39/month'}
     </button>
   );
 

@@ -108,14 +108,6 @@ export const POST: APIRoute = async (context) => {
       const message = result.code === 'INCOMPATIBLE' ? HUB_OPS_APPLY_INCOMPATIBLE : HUB_OPS_NO_PROPOSAL;
       return json({ ok: false, error: { code: result.code, message } }, status);
     }
-    await prisma.previewRequestEvent.create({
-      data: {
-        previewRequestId: request.id,
-        action: PREVIEW_REQUEST_ACTIONS.OPS_HUB_REVIEW_APPLIED,
-        actorEmail: access.email,
-        meta: { reviewId: result.review.id, section: result.review.section },
-      },
-    });
     return json({ ok: true, review: result.review });
   } catch (error) {
     if (error instanceof HubApplyIncompatibleError) {

@@ -259,6 +259,9 @@ export default function HubLaunchChecklist() {
         <div className="hub-skel hub-skel--bar" />
         <div className="hub-skel hub-skel--card" />
         <div className="hub-skel hub-skel--card" />
+        <div className="hub-skel hub-skel--card" />
+        <div className="hub-skel hub-skel--card" />
+        <div className="hub-skel hub-skel--card" />
       </div>
     );
   }
@@ -269,10 +272,17 @@ export default function HubLaunchChecklist() {
     <div className="hub-launch">
       <header className="hub-launch__header">
         <h1>{HUB_LAUNCH_TITLE}</h1>
-        <p className="hub-launch__progress" aria-live="polite">
+        <p className="hub-launch__progress" id="hub-launch-progress" aria-live="polite">
           {HUB_LAUNCH_PROGRESS(state.done, state.total)}
         </p>
-        <div className="hub-launch__bar" role="progressbar" aria-valuemin={0} aria-valuemax={state.total} aria-valuenow={state.done}>
+        <div
+          className="hub-launch__bar"
+          role="progressbar"
+          aria-labelledby="hub-launch-progress"
+          aria-valuemin={0}
+          aria-valuemax={state.total}
+          aria-valuenow={state.done}
+        >
           <span style={{ width: `${(state.done / state.total) * 100}%` }} />
         </div>
         {saveLabel ? (
@@ -381,6 +391,7 @@ export default function HubLaunchChecklist() {
                         <input
                           type="radio"
                           name="isLimitedCompany"
+                          data-testid="ltd-yes"
                           checked={state.business.isLimitedCompany === true}
                           onChange={() => setBusiness('isLimitedCompany', true)}
                         />
@@ -390,6 +401,7 @@ export default function HubLaunchChecklist() {
                         <input
                           type="radio"
                           name="isLimitedCompany"
+                          data-testid="ltd-no"
                           checked={state.business.isLimitedCompany === false}
                           onChange={() => setBusiness('isLimitedCompany', false)}
                         />
@@ -477,6 +489,7 @@ export default function HubLaunchChecklist() {
                           type="button"
                           className="btn btn--ghost"
                           disabled={busy !== null || state.payments.skipped}
+                          data-testid="skip-payments"
                           onClick={() => void patch({ item: 'payments', skip: true })}
                         >
                           {HUB_LAUNCH_SKIP_PAYMENTS}
@@ -515,6 +528,7 @@ export default function HubLaunchChecklist() {
                       type="button"
                       className="btn btn--ghost"
                       disabled={busy !== null || state.migration.skipped}
+                      data-testid="skip-migration"
                       onClick={() => void patch({ item: 'migration', skip: true })}
                     >
                       {HUB_LAUNCH_MIGRATION_NOT_NOW}
@@ -549,6 +563,7 @@ export default function HubLaunchChecklist() {
                         <button
                           type="button"
                           className="btn btn--primary"
+                          data-testid="approve-launch"
                           disabled={!state.approve.canApprove || !rights || !accuracy || busy !== null}
                           onClick={() =>
                             void postAction(

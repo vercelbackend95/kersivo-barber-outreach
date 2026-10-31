@@ -31,6 +31,7 @@ import {
   makeHubAssetPath,
   processHubUpload,
   serializeHubAsset,
+  svgContainsUnsafeContent,
 } from './hubAssets';
 
 function jpegWithGps(jpeg: Buffer): Buffer {
@@ -86,9 +87,9 @@ describe('processHubUpload', () => {
     expect(result.ok).toBe(false);
   });
 
-  it('stores SVG originals and a raster thumb, and never plans to serve SVG inline', async () => {
+  it('stores a clean SVG original and a raster thumb, and never plans to serve SVG inline', async () => {
     const svg = Buffer.from(
-      `<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="10" height="10" fill="#d72638"/></svg>`,
+      `<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#d72638"/></svg>`,
       'utf8',
     );
     expect(sniffFile(svg)).toMatchObject({ kind: 'svg' });
@@ -100,11 +101,35 @@ describe('processHubUpload', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.file.contentType).toBe('image/svg+xml');
-    expect(result.file.buffer.includes(Buffer.from('<script>'))).toBe(true);
     expect(result.file.thumb?.contentType).toBe('image/png');
     const plan = hubAssetServePlan({ size: 'full', contentType: 'image/svg+xml', sniffedExt: 'svg' });
     expect(plan.disposition).toBe('attachment');
     expect(plan.contentType).toBe('application/octet-stream');
+  });
+
+  it.each([
+    ['script', `<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="10" height="10"/></svg>`],
+    ['onload', `<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><rect width="10" height="10"/></svg>`],
+    ['foreignObject', `<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><div>x</div></foreignObject></svg>`],
+    ['external href', `<svg xmlns="http://www.w3.org/2000/svg"><image href="https://evil.test/x.png"/></svg>`],
+    ['external xlink', `<svg xmlns="http://www.w3.org/2000/svg"><use xlink:href="https://evil.test/x.svg#a"/></svg>`],
+  ])('rejects an SVG that contains %s', async (_label, markup) => {
+    const svg = Buffer.from(markup, 'utf8');
+    expect(svgContainsUnsafeContent(svg)).toBe(true);
+    const result = await processHubUpload({
+      bytes: svg,
+      originalFileName: 'logo.svg',
+      kind: 'LOGO',
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it('allows fragment and data-image hrefs in an SVG', () => {
+    const svg = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg"><use href="#mark"/><image href="data:image/png;base64,AAAA"/></svg>`,
+      'utf8',
+    );
+    expect(svgContainsUnsafeContent(svg)).toBe(false);
   });
 
   it('stores PDFs as-is and serves them as attachments', async () => {

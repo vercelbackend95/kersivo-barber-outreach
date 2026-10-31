@@ -27,6 +27,10 @@ import {
 import { getDemoRecommendationProducts } from '@/lib/demo/recommendations';
 import { DEMO_LOCATION, DEMO_SHOP_NAME } from '@/lib/demo/site';
 import type { BookingCalendarInput } from '@/lib/booking/calendarEvent';
+import {
+  previewSlotsForDate,
+  type PreviewBookingHoursDay,
+} from '@/lib/freePreview/previewBookingSlots';
 
 type Service = {
   id: string;
@@ -119,6 +123,11 @@ type Props = {
   publicCreateUrl?: string;
   /** Live tenant book: scopes availability to this shop (no admin session / demo fallback). */
   publicShopId?: string;
+  /**
+   * Shop Hub booking preview: applied opening hours. Closed weekdays show no example slots.
+   * Omit on the marketing `/book` sandbox so every day stays bookable.
+   */
+  openingHours?: PreviewBookingHoursDay[];
   /** Full KERSIVO booking payment mode. Starter ignores this and uses the fixed v1.19 policy. */
   bookingPaymentMode?: BookingPaymentMode;
   /** v1.19 Starter: fixed £5-minimum online-payment policy with customer deposit/full choice. */
@@ -153,18 +162,6 @@ function BookingChoiceMark({ compact = false }: { compact?: boolean }) {
 }
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
-
-/** Fixed free slots for landing preview / public sandbox — no real availability fetch. */
-const PREVIEW_STATIC_SLOTS = [
-  '09:00',
-  '09:30',
-  '10:00',
-  '10:30',
-  '11:00',
-  '11:30',
-  '14:00',
-  '14:30',
-] as const;
 
 const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -340,6 +337,7 @@ export default function BookingFlow({
   persistDemoSessionBooking = false,
   publicCreateUrl,
   publicShopId,
+  openingHours,
   bookingPaymentMode = 'NONE',
   starterPaymentPolicy = false,
   onComplete,
@@ -676,8 +674,13 @@ export default function BookingFlow({
       return;
     }
 
+    const limitByHours = (times: string[]) => {
+      if (!openingHours?.length) return times;
+      return previewSlotsForDate({ isoDate: nextDate, hours: openingHours }).length ? times : [];
+    };
+
     if (useStaticSlots) {
-      setSlots([...PREVIEW_STATIC_SLOTS]);
+      setSlots(limitByHours(previewSlotsForDate({ isoDate: nextDate, hours: openingHours })));
       setTime('');
       setIsSlotsLoading(false);
       return;
@@ -686,11 +689,13 @@ export default function BookingFlow({
     if (useBlacklineSessionSlots) {
       const durationMinutes = services.find((service) => service.id === serviceId)?.durationMinutes ?? 0;
       setSlots(
-        listBlacklineAvailableSlots({
-          date: nextDate,
-          barberId,
-          durationMinutes,
-        }),
+        limitByHours(
+          listBlacklineAvailableSlots({
+            date: nextDate,
+            barberId,
+            durationMinutes,
+          }),
+        ),
       );
       setTime('');
       setIsSlotsLoading(false);
@@ -712,7 +717,7 @@ export default function BookingFlow({
             ? data.pauseReason.trim()
             : null,
         );
-        setSlots(Array.isArray(data.slots) ? data.slots : []);
+        setSlots(limitByHours(Array.isArray(data.slots) ? data.slots : []));
         setTime('');
       })
       .catch(() => {
@@ -726,7 +731,7 @@ export default function BookingFlow({
         if (!controller.signal.aborted) setIsSlotsLoading(false);
       });
     return () => controller.abort();
-  }, [serviceId, barberId, date, useStaticSlots, useBlacklineSessionSlots, publicShopId, services]);
+  }, [serviceId, barberId, date, useStaticSlots, useBlacklineSessionSlots, publicShopId, services, openingHours]);
 
   async function submit() {
     if (isSubmitting) return;
@@ -1116,6 +1121,8 @@ export default function BookingFlow({
   return (
     <section
       ref={bookingShellRef}
+      data-testid="booking-opening-hours"
+      data-opening-hours={openingHours ? JSON.stringify(openingHours) : ''}
       className={`surface booking-shell booking-flow booking-flow--wizard${previewMode ? ' booking-flow--preview' : ''}${publicDemoMode ? ' booking-flow--public-demo' : ''}`}
       aria-live="polite"
     >

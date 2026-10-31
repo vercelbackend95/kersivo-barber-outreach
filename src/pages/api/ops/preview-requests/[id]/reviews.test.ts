@@ -66,7 +66,7 @@ describe('POST /api/ops/preview-requests/[id]/reviews', () => {
   it('applies a proposal', async () => {
     const response = await post({ action: 'apply', reviewId: 'rev_1' });
     expect(response.status).toBe(200);
-    expect(eventCreate).toHaveBeenCalled();
+    expect(applyHubContentReview).toHaveBeenCalled();
   });
 
   it('is idempotent when already applied', async () => {

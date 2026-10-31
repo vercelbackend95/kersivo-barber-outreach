@@ -37,6 +37,7 @@ function call(body: unknown) {
 describe('POST /api/free-preview', () => {
   beforeEach(() => {
     vi.stubEnv('FREE_PREVIEW_FLOW_ENABLED', 'true');
+    vi.stubEnv('PREVIEW_HUB_REAL_QA', '');
     createPreviewRequest.mockReset().mockResolvedValue({ id: 'req_1', overDailyCap: false, leadToken: LEAD_TOKEN });
     enforceIpRateLimit.mockReset().mockResolvedValue(null);
     checkDurableRateLimit.mockReset().mockResolvedValue({ ok: true });

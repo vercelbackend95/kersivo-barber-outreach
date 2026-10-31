@@ -5,11 +5,17 @@ import { serializeHubAsset, type HubAssetPublic } from './hubAssets';
 import { HUB_MESSAGE_ATTACH_DENIED, HUB_MESSAGE_REQUIRED, HUB_MESSAGE_TOO_LONG } from './hubCopy';
 
 export { escapeHubText, hubMessageExcerpt, splitHubMessageParts } from './hubMessageText';
+export {
+  HUB_MESSAGE_MAX_ATTACHMENTS,
+  HUB_MESSAGE_MAX_CHARS,
+  HUB_MESSAGES_POLL_MS,
+  hubMessageDayKey,
+  hubMessageTimeLabel,
+  type HubMessagePublic,
+} from './hubMessages.shared';
+import { HUB_MESSAGE_MAX_ATTACHMENTS, HUB_MESSAGE_MAX_CHARS, type HubMessagePublic } from './hubMessages.shared';
 
-export const HUB_MESSAGE_MAX_CHARS = 2000;
-export const HUB_MESSAGE_MAX_ATTACHMENTS = 5;
 export const HUB_MESSAGES_NOTIFY_WINDOW_MS = 15 * 60 * 1000;
-export const HUB_MESSAGES_POLL_MS = 30_000;
 
 export const hubMessagePostSchema = z.object({
   body: z
@@ -24,16 +30,6 @@ export const hubMessagePostSchema = z.object({
   attachmentIds: z.array(z.string().min(1).max(64)).max(HUB_MESSAGE_MAX_ATTACHMENTS).optional(),
 });
 
-export type HubMessagePublic = {
-  id: string;
-  author: PreviewHubActor;
-  body: string;
-  createdAt: string;
-  readByOwnerAt: string | null;
-  readByOpsAt: string | null;
-  attachments: HubAssetPublic[];
-};
-
 export type HubMessageRow = {
   id: string;
   author: PreviewHubActor;
@@ -43,23 +39,6 @@ export type HubMessageRow = {
   readByOwnerAt: Date | null;
   readByOpsAt: Date | null;
 };
-
-export function hubMessageDayKey(date: Date): string {
-  return date.toLocaleDateString('en-GB', {
-    timeZone: 'Europe/London',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-export function hubMessageTimeLabel(date: Date): string {
-  return date.toLocaleTimeString('en-GB', {
-    timeZone: 'Europe/London',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export function serializeHubMessage(
   row: HubMessageRow,

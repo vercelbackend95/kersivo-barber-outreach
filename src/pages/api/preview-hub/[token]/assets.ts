@@ -17,7 +17,7 @@ import {
   enforceHubAssetRates,
   hubJson,
   parseHubAssetKind,
-  rejectOversizedHubBody,
+  readLimitedHubBody,
   requireUploadCapability,
   resolveHubApiContext,
 } from '@/lib/freePreview/hubApi';
@@ -32,18 +32,19 @@ export const GET: APIRoute = async ({ request, params }) => {
 };
 
 export const POST: APIRoute = async ({ request, params }) => {
-  const oversized = rejectOversizedHubBody(request);
-  if (oversized) return oversized;
+  const limitedBody = await readLimitedHubBody(request);
+  if (!limitedBody.ok) return limitedBody.response;
+  const requestWithBody = limitedBody.request;
 
-  const limited = await enforceHubAssetRates(request, params.token ?? '');
+  const limited = await enforceHubAssetRates(requestWithBody, params.token ?? '');
   if (limited) return limited;
 
-  const ctxResult = await resolveHubApiContext({ request, token: params.token ?? '', mutation: true });
+  const ctxResult = await resolveHubApiContext({ request: requestWithBody, token: params.token ?? '', mutation: true });
   if (!ctxResult.ok) return ctxResult.response;
 
   let form: FormData;
   try {
-    form = await request.formData();
+    form = await requestWithBody.formData();
   } catch {
     return hubJson({ ok: false, error: 'Invalid request body.' }, 400);
   }

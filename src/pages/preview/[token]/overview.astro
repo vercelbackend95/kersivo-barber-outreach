@@ -77,6 +77,7 @@ const checklist = buildHubChecklist({
   ...checklistFlagsFromAssets(assets, ctx.request.aboutText),
 });
 const shopName = ctx.request.shopName;
+const logoAsset = assets.find((asset) => asset.kind === 'LOGO');
 ---
 
 <HubDocument title={`Shop hub — ${shopName} | KERSIVO`}>
@@ -102,6 +103,8 @@ const shopName = ctx.request.shopName;
       reviewShop={reviewShop}
       reviewNeed={reviewNeed}
       launchProgress={launchProgress}
+      logoAssetId={logoAsset?.id ?? null}
+      brandColour={ctx.request.brandPrimaryColour}
     />
   </HubShell>
 </HubDocument>

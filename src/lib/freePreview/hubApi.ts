@@ -78,6 +78,41 @@ export function rejectOversizedHubBody(request: Request): Response | null {
   return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TOO_LARGE_BODY }, 413);
 }
 
+/** Rejects oversized uploads even when Content-Length is missing (chunked / streamed). */
+export async function readLimitedHubBody(
+  request: Request,
+): Promise<{ ok: true; request: Request } | { ok: false; response: Response }> {
+  const headerReject = rejectOversizedHubBody(request);
+  if (headerReject) return { ok: false, response: headerReject };
+  if (!request.body) return { ok: true, request };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > HUB_MAX_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      return { ok: false, response: hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TOO_LARGE_BODY }, 413) };
+    }
+    chunks.push(value);
+  }
+
+  const buffer = Buffer.concat(chunks);
+  const headers = new Headers(request.headers);
+  headers.set('content-length', String(buffer.byteLength));
+  return {
+    ok: true,
+    request: new Request(request.url, {
+      method: request.method,
+      headers,
+      body: buffer,
+    }),
+  };
+}
+
 export async function resolveHubApiContext(input: {
   request: Request;
   token: string;

@@ -1,0 +1,21 @@
+# Local Postgres for Shop Hub real-stack QA only.
+# Never point this file at the shared Neon DATABASE_URL.
+services:
+  preview-hub-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kersivo
+      POSTGRES_PASSWORD: kersivo
+      POSTGRES_DB: kersivo_hub_qa
+    ports:
+      - '55432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kersivo -d kersivo_hub_qa']
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - preview-hub-pgdata:/var/lib/postgresql/data
+
+volumes:
+  preview-hub-pgdata:

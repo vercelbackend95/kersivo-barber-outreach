@@ -86,6 +86,30 @@ describe('free preview test-mode booking', () => {
     expect(trackConsentedEvent).not.toHaveBeenCalled();
   });
 
+  it('shows no Sunday slots after shop hours apply closed Sunday', async () => {
+    render(
+      <BookingFlow
+        mode="create"
+        publicDemoMode
+        services={services}
+        barbers={barbers}
+        openingHours={[1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({ dayOfWeek, open: true }))}
+        shopDetails={{ timezone: 'Europe/London', name: 'Sharp Cuts' }}
+        presentation={previewBookingPresentation('Sharp Cuts')}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('radio', { name: /^Sam$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    const sunday = (await screen.findAllByRole('button', { name: /^Sunday,/ }))[0];
+    fireEvent.click(sunday!);
+    await waitFor(() => expect(screen.getByText(/No times available|No available times/i)).toBeTruthy());
+    expect(screen.queryByRole('radio', { name: '09:00' })).toBeNull();
+  });
+
   it('the preview page never wires the booking flow to a create, availability or payment endpoint', () => {
     const page = readFileSync('src/pages/preview/[token].astro', 'utf8');
     const bookingFlowUsage = page.slice(page.indexOf('<BookingFlow'), page.indexOf('/>', page.indexOf('<BookingFlow')));

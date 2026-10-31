@@ -180,6 +180,7 @@ export function HubUploader(props: {
           accept={accept}
           multiple={props.multiple !== false}
           disabled={props.disabled}
+          data-testid={`hub-upload-${props.kind.toLowerCase()}`}
           onChange={(event) => onFiles(event.target.files)}
         />
         {camera ? (
@@ -259,6 +260,7 @@ export function HubUploader(props: {
           accept={accept}
           multiple={props.multiple !== false}
           disabled={props.disabled}
+          data-testid={`hub-upload-${props.kind.toLowerCase()}`}
           onChange={(event) => onFiles(event.target.files)}
         />
         {camera ? (

@@ -32,6 +32,11 @@ public/videos/
 
 # local QA / agent scratch
 tmp/
+.preview-hub-pgdata/
+.preview-hub-seed.json
+.preview-hub-qa-emails.json
+scripts/preview-hub/.seed-real.json
+scripts/preview-hub/.qa-emails.json
 
 # Smart Retail calibration harness (fictional data only)
 .calibration-cache/
