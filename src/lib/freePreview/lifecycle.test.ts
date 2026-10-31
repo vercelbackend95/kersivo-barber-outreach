@@ -60,6 +60,14 @@ const db: any = {
     updateMany: vi.fn(async () => ({ count: 0 })),
     deleteMany: vi.fn(async () => ({ count: 0 })),
   },
+  previewChangeRequest: {
+    updateMany: vi.fn(async () => ({ count: 0 })),
+    deleteMany: vi.fn(async () => ({ count: 0 })),
+  },
+  previewContentReview: {
+    updateMany: vi.fn(async () => ({ count: 0 })),
+    deleteMany: vi.fn(async () => ({ count: 0 })),
+  },
   emailOutbound: { deleteMany: (...a: unknown[]) => deleteOutbox(...a) },
   saasSubscription: {
     count: vi.fn(async () => state.liveSubscriptions),
@@ -278,6 +286,13 @@ describe('purgeExpiredPreviewData', () => {
       data: { body: '', authorEmail: null },
     });
     expect(db.previewHubMessage.deleteMany).toHaveBeenCalledWith({ where: { previewRequestId: 'req_1' } });
+    expect(db.previewChangeRequest.updateMany).toHaveBeenCalledWith({
+      where: { previewRequestId: 'req_1' },
+      data: { body: '', opsNote: null, attachmentId: null, anchor: expect.anything() },
+    });
+    expect(db.previewChangeRequest.deleteMany).toHaveBeenCalledWith({ where: { previewRequestId: 'req_1' } });
+    expect(db.previewContentReview.updateMany).toHaveBeenCalled();
+    expect(db.previewContentReview.deleteMany).toHaveBeenCalledWith({ where: { previewRequestId: 'req_1' } });
 
     const row = state.rows[0]!;
     expect(row).toMatchObject({

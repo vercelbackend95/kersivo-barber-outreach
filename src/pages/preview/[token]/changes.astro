@@ -2,10 +2,11 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
-import HubComingSoon from '@/components/previewHub/HubComingSoon.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
+import { HubChanges } from '@/components/previewHub/HubChanges';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
+import { countOpenHubChanges, loadHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
@@ -41,7 +42,11 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx.request.id);
+const [unreadMessages, changeItems, openChanges] = await Promise.all([
+  ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
+  ctx.state.capabilities.canDraftChanges ? loadHubChanges(ctx.request.id) : Promise.resolve([]),
+  ctx.state.capabilities.canDraftChanges ? countOpenHubChanges(ctx.request.id) : Promise.resolve(0),
+]);
 ---
 
 <HubDocument title={`${HUB_NAV.changes} — ${ctx.request.shopName} | KERSIVO`}>
@@ -52,10 +57,19 @@ const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx
     current="changes"
     capabilities={ctx.state.capabilities}
     unreadMessages={unreadMessages}
+    openChanges={openChanges}
   >
     {
       ctx.state.capabilities.canDraftChanges ? (
-        <HubComingSoon title={HUB_NAV.changes} />
+        <HubChanges
+          client:load
+          token={token}
+          initialItems={changeItems}
+          includedChangeRounds={ctx.request.includedChangeRounds}
+          changeRoundsUsed={ctx.request.changeRoundsUsed}
+          canDraft={ctx.state.capabilities.canDraftChanges}
+          canSend={ctx.state.capabilities.canSendChanges}
+        />
       ) : (
         <section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder">
           <h1>{HUB_LOCKED_REASON_PREVIEW}</h1>

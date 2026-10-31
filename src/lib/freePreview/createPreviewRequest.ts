@@ -39,6 +39,16 @@ export const PREVIEW_REQUEST_ACTIONS = {
   OPS_HUB_MESSAGE_SENT: 'ops_hub_message_sent',
   OPS_HUB_MESSAGES_READ: 'ops_hub_messages_read',
   OPS_HUB_MESSAGES_NOTIFIED: 'ops_hub_messages_notified',
+  HUB_REVIEW_CONFIRMED: 'hub_review_confirmed',
+  HUB_REVIEW_CORRECTIONS_SENT: 'hub_review_corrections_sent',
+  HUB_CHANGE_DRAFTED: 'hub_change_drafted',
+  HUB_CHANGE_UPDATED: 'hub_change_updated',
+  HUB_CHANGE_DELETED: 'hub_change_deleted',
+  HUB_CHANGES_SENT: 'hub_changes_sent',
+  OPS_HUB_REVIEW_APPLIED: 'ops_hub_review_applied',
+  OPS_HUB_REVIEW_DISMISSED: 'ops_hub_review_dismissed',
+  OPS_HUB_CHANGE_STATUS: 'ops_hub_change_status',
+  OPS_HUB_ROUND_GRANTED: 'ops_hub_round_granted',
 } as const;
 
 /**

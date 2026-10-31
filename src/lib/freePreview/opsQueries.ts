@@ -76,20 +76,31 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
         where: { author: 'OWNER', readByOpsAt: null },
         select: { id: true },
       },
+      changeRequests: {
+        where: { status: { in: ['SENT', 'IN_PROGRESS'] } },
+        select: { id: true },
+      },
     },
   }).then((rows) => sortPreviewRequestsForOps(rows, query.sort));
 }
 
 export function sortPreviewRequestsForOps<
-  T extends { createdAt: Date; hubMessages?: Array<{ id: string }> },
+  T extends { createdAt: Date; hubMessages?: Array<{ id: string }>; changeRequests?: Array<{ id: string }> },
 >(rows: T[], sort: PreviewRequestListSort): T[] {
   return [...rows].sort((a, b) => {
     const unreadA = a.hubMessages?.length ?? 0;
     const unreadB = b.hubMessages?.length ?? 0;
     if ((unreadA > 0) !== (unreadB > 0)) return unreadA > 0 ? -1 : 1;
+    const sentA = a.changeRequests?.length ?? 0;
+    const sentB = b.changeRequests?.length ?? 0;
+    if ((sentA > 0) !== (sentB > 0)) return sentA > 0 ? -1 : 1;
     const created = a.createdAt.getTime() - b.createdAt.getTime();
     return sort === 'oldest' ? created : -created;
   });
+}
+
+export function openChangeCount(request: { changeRequests?: Array<{ id: string }> }): number {
+  return request.changeRequests?.length ?? 0;
 }
 
 export function unreadOwnerMessageCount(request: { hubMessages?: Array<{ id: string }> }): number {

@@ -14,7 +14,7 @@ import { downscaleHubImage, isHubSvgOrPdf } from './downscaleHubImage';
 
 export type HubUploaderKind = Extract<
   PreviewHubAssetKind,
-  'LOGO' | 'SHOP_PHOTO' | 'TEAM_PHOTO' | 'PRICE_LIST' | 'MESSAGE_ATTACHMENT' | 'OTHER'
+  'LOGO' | 'SHOP_PHOTO' | 'TEAM_PHOTO' | 'PRICE_LIST' | 'MESSAGE_ATTACHMENT' | 'CHANGE_ATTACHMENT' | 'OTHER'
 >;
 
 export type HubUploadedAsset = {
@@ -48,6 +48,7 @@ const ACCEPT: Record<HubUploaderKind, string> = {
   TEAM_PHOTO: 'image/jpeg,image/png,image/webp',
   PRICE_LIST: 'image/jpeg,image/png,image/webp,application/pdf',
   MESSAGE_ATTACHMENT: 'image/jpeg,image/png,image/webp,application/pdf',
+  CHANGE_ATTACHMENT: 'image/jpeg,image/png,image/webp,application/pdf',
   OTHER: 'image/jpeg,image/png,image/webp,application/pdf',
 };
 

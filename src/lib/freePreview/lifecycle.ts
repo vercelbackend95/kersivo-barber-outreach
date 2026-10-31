@@ -29,6 +29,8 @@ import { collectHubAssetBlobPaths, deleteHubAssetRows, deleteHubBlobPaths } from
 import { sendPendingHubFileDigests } from './hubFilesNotify';
 import { clearHubMessageBodies, deleteHubMessageRows } from './hubMessages';
 import { sendPendingHubMessageDigests } from './hubMessagesNotify';
+import { clearHubChangeBodies, deleteHubChangeRows } from './hubChanges';
+import { clearHubReviewProposals, deleteHubReviewRows } from './hubReviews';
 import { isPreviewHubEnabled } from './config';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -269,6 +271,10 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
       await deleteHubAssetRows(tx, id);
       await clearHubMessageBodies(tx, id);
       await deleteHubMessageRows(tx, id);
+      await clearHubChangeBodies(tx, id);
+      await deleteHubChangeRows(tx, id);
+      await clearHubReviewProposals(tx, id);
+      await deleteHubReviewRows(tx, id);
       await tx.previewRequestEvent.deleteMany({ where: { previewRequestId: id } });
       const publicToken = mintPreviewToken();
       await tx.previewRequest.update({

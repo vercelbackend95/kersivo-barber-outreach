@@ -24,7 +24,8 @@ const plainCreateEvent = vi.fn();
 const tx = {
   $queryRaw: vi.fn(),
   previewRequest: { findUnique: vi.fn(async () => state.request), update: (...a: unknown[]) => update(...a) },
-  previewRequestEvent: { create: () => createEvent() },
+  previewRequestEvent: { create: () => createEvent(), findFirst: vi.fn(async () => null) },
+  previewChangeRequest: { findMany: vi.fn(async () => []) },
   shopSettings: { findUnique: vi.fn() },
 };
 

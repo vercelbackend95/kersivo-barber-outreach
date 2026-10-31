@@ -7,7 +7,9 @@ import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
 import { loadActiveHubAssets } from '@/lib/freePreview/hubAssets';
+import { countOpenHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
+import { cardStateFromReview, loadHubReviewShopData, loadLatestHubReviews, reviewNowNeed } from '@/lib/freePreview/hubReviews';
 import { isHubRouteEnabled, hubNotFound, loadHubOverviewExtras, designingAtFromEvents, hubActivityItems, hubStepper, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -44,11 +46,19 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const [events, assets, unreadMessages] = await Promise.all([
+const [events, assets, unreadMessages, openChanges, reviews, reviewShop] = await Promise.all([
   loadHubOverviewExtras(ctx.request.id),
   loadActiveHubAssets(ctx.request.id),
   ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
+  countOpenHubChanges(ctx.request.id),
+  loadLatestHubReviews(ctx.request.id),
+  ctx.request.draftShopId ? loadHubReviewShopData(ctx.request.draftShopId, ctx.request.id) : Promise.resolve(null),
 ]);
+const reviewNeed = reviewNowNeed({
+  SERVICES: cardStateFromReview(reviews.SERVICES?.state ?? null),
+  TEAM: cardStateFromReview(reviews.TEAM?.state ?? null),
+  HOURS: cardStateFromReview(reviews.HOURS?.state ?? null),
+});
 const steps = hubStepper({
   stage: ctx.state.stage,
   createdAt: ctx.request.createdAt,
@@ -73,6 +83,7 @@ const shopName = ctx.request.shopName;
     current="overview"
     capabilities={ctx.state.capabilities}
     unreadMessages={unreadMessages}
+    openChanges={openChanges}
   >
     <HubOverview
       token={token}
@@ -83,6 +94,9 @@ const shopName = ctx.request.shopName;
       activity={activity}
       hasWebsitePreview={Boolean(ctx.draft?.shop.sitePreviewUrl)}
       checklist={checklist}
+      reviews={reviews}
+      reviewShop={reviewShop}
+      reviewNeed={reviewNeed}
     />
   </HubShell>
 </HubDocument>

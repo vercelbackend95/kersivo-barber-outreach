@@ -41,6 +41,8 @@ import {
   HUB_UPLOAD_HINT_PRICE,
 } from '@/lib/freePreview/hubCopy';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
+import { HubReviewCards, type HubReviewMap } from './HubReviewCards';
+import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
 
 export type HubShopDetails = {
   brandPrimaryColour: string | null;
@@ -201,6 +203,9 @@ export function HubYourShop(props: {
   token: string;
   canUpload: boolean;
   canEditDetails: boolean;
+  canReview?: boolean;
+  reviews?: HubReviewMap;
+  reviewShop?: HubReviewShopData | null;
   details: HubShopDetails;
   assets: HubUploadedAsset[];
 }) {
@@ -577,9 +582,21 @@ export function HubYourShop(props: {
         />
       </section>
 
-      <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
-      <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
-      <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
+      {props.canReview ? (
+        <HubReviewCards
+          token={props.token}
+          canReview
+          mode="full"
+          shop={props.reviewShop ?? null}
+          reviews={props.reviews ?? { SERVICES: null, TEAM: null, HOURS: null }}
+        />
+      ) : (
+        <>
+          <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
+          <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
+          <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
+        </>
+      )}
 
       <div className="hub-toast" role="status" aria-live="polite">
         {toast ? (

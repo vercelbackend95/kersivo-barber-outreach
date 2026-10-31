@@ -19,6 +19,10 @@ describe('hub APIs keep the flag-off path (GLOBAL RULE 2)', () => {
       'src/pages/api/preview-hub/[token]/details.ts',
       'src/pages/api/preview-hub/[token]/messages.ts',
       'src/pages/api/preview-hub/[token]/messages/read.ts',
+      'src/pages/api/preview-hub/[token]/reviews.ts',
+      'src/pages/api/preview-hub/[token]/changes.ts',
+      'src/pages/api/preview-hub/[token]/changes/[id].ts',
+      'src/pages/api/preview-hub/[token]/changes/send.ts',
     ]) {
       expect(read(file)).toContain('resolveHubApiContext');
     }

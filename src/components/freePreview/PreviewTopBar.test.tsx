@@ -112,6 +112,21 @@ describe('PreviewTopBar launch domain gate', () => {
   });
 });
 
+describe('PreviewTopBar request changes (hub vs flag-off)', () => {
+  it('keeps the free-text dialog when changesHref is not set', () => {
+    renderBar();
+    fireEvent.click(screen.getByRole('button', { name: /Request changes/i }));
+    expect(screen.getByLabelText(/What would you like us to change/i)).toBeTruthy();
+  });
+
+  it('replaces the dialog with a Changes tab link when changesHref is set', () => {
+    renderBar({ changesHref: `/preview/${TOKEN}/changes` });
+    const link = screen.getByRole('link', { name: /Request changes/i });
+    expect(link.getAttribute('href')).toBe(`/preview/${TOKEN}/changes`);
+    expect(screen.queryByRole('button', { name: /Request changes/i })).toBeNull();
+  });
+});
+
 describe('PreviewTopBar checkout chrome (hub Overview)', () => {
   it('renders only the subscribe button, not the website/booking switcher', () => {
     renderBar({ chrome: 'checkout' });

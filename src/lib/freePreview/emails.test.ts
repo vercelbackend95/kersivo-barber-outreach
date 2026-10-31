@@ -5,8 +5,10 @@ import {
   buildHubFilesAddedInternalEmail,
   buildHubMessageFromKersivoEmail,
   buildHubMessagesAddedInternalEmail,
+  buildPreviewChangesRequestedInternalEmail,
   buildPreviewRequestAcknowledgementEmail,
   buildPreviewRequestInternalEmail,
+  buildPreviewUpdatedEmail,
 } from './emails';
 import {
   HUB_OPS_FILES_EMAIL_SUBJECT,
@@ -241,6 +243,64 @@ describe('free preview emails', () => {
     expect(email.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
     expect(email.html).not.toContain('<img src=x');
     expect(email.html).toMatchSnapshot();
+  });
+
+  it('E4 stays the same when the hub flag is off, even if items are passed', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
+    const email = buildPreviewUpdatedEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      previewUrl: 'https://kersivo.co.uk/preview/abc',
+      expiresAt: new Date('2026-12-01T10:00:00Z'),
+      completedItems: [{ page: 'HOME', body: 'Bigger logo', status: 'DONE', opsNote: null }],
+    });
+    expect(email.subject).toBe("We've updated your Sharp Cuts preview");
+    expect(email.html).toContain("We've made your changes.");
+    expect(email.html).not.toContain('Bigger logo');
+    expect(email.html).not.toContain("Here's what we did");
+  });
+
+  it('E4 lists Done and Not possible items when the hub flag is on', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'true');
+    const email = buildPreviewUpdatedEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      previewUrl: 'https://kersivo.co.uk/preview/abc',
+      expiresAt: new Date('2026-12-01T10:00:00Z'),
+      completedItems: [
+        { page: 'HOME', body: 'Bigger logo', status: 'DONE', opsNote: null },
+        { page: 'SERVICES', body: 'New type', status: 'NOT_POSSIBLE', opsNote: 'Type is already set.' },
+      ],
+    });
+    expect(email.html).toContain('Bigger logo');
+    expect(email.html).toContain('Not possible');
+    expect(email.html).toContain('Type is already set.');
+  });
+
+  it('changes email lists items only when the hub flag is on', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
+    const off = buildPreviewChangesRequestedInternalEmail({
+      id: 'req_1',
+      email: 'sam@example.com',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
+      changesText: 'Please fix the logo',
+      items: [{ page: 'HOME', body: 'Bigger logo' }],
+    });
+    expect(off.html).toContain('Please fix the logo');
+    expect(off.html).not.toContain('Home: Bigger logo');
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'true');
+    const on = buildPreviewChangesRequestedInternalEmail({
+      id: 'req_1',
+      email: 'sam@example.com',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
+      changesText: 'Please fix the logo',
+      items: [{ page: 'HOME', body: 'Bigger logo' }],
+    });
+    expect(on.html).toContain('Home: Bigger logo');
   });
 
   it('owner → ops message digest uses the count and ops messages tab', () => {

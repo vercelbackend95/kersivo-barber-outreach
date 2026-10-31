@@ -3,11 +3,11 @@ export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
-import PreviewWebsitePane from '@/components/previewHub/PreviewWebsitePane.astro';
-import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
+import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
 import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { previewPagePath } from '@/lib/freePreview/config';
+import { countOpenHubChanges, loadHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
 import {
@@ -88,7 +88,11 @@ if (
 
 const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
 const basePath = previewPagePath(token);
-const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx.request.id);
+const [unreadMessages, changeItems, openChanges] = await Promise.all([
+  ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
+  ctx.state.capabilities.canDraftChanges ? loadHubChanges(ctx.request.id) : Promise.resolve([]),
+  ctx.state.capabilities.canDraftChanges ? countOpenHubChanges(ctx.request.id) : Promise.resolve(0),
+]);
 ---
 
 <HubDocument title={`Website preview — ${shopName} | KERSIVO`}>
@@ -99,27 +103,40 @@ const unreadMessages = ctx.isOperator ? 0 : await countUnreadKersivoMessages(ctx
     current="website"
     capabilities={ctx.state.capabilities}
     unreadMessages={unreadMessages}
+    openChanges={openChanges}
   >
     {
       showPreview && ctx.draft ? (
-        <div class="fp-page">
-          <PreviewTopBar
-            client:load
-            token={token}
-            shopName={shopName}
-            townCity={ctx.request.townCity}
-            firstName={ctx.request.firstName}
-            checkoutEmail={ctx.request.email}
-            hasOwnDomain={ctx.request.hasOwnDomain ?? 'not_sure'}
-            existingWebsiteHost={hostnameOf(ctx.request.websiteUrl)}
-            isOperator={ctx.isOperator}
-            converted={ctx.request.status === 'CONVERTED'}
-            activeView={view}
-            websiteHref={basePath + '/website'}
-            bookingHref={`${basePath}/website?view=booking`}
-          />
-          <PreviewWebsitePane shopName={shopName} view={view} draft={ctx.draft} />
-        </div>
+        <HubWebsiteView
+          client:load
+          token={token}
+          shopName={shopName}
+          townCity={ctx.request.townCity}
+          firstName={ctx.request.firstName}
+          checkoutEmail={ctx.request.email}
+          hasOwnDomain={ctx.request.hasOwnDomain ?? 'not_sure'}
+          existingWebsiteHost={hostnameOf(ctx.request.websiteUrl)}
+          isOperator={ctx.isOperator}
+          converted={ctx.request.status === 'CONVERTED'}
+          view={view}
+          websiteHref={basePath + '/website'}
+          bookingHref={`${basePath}/website?view=booking`}
+          changesHref={`${basePath}/changes`}
+          draft={{
+            sitePreviewUrl: ctx.draft.shop.sitePreviewUrl,
+            timezone: ctx.draft.shop.timezone,
+            cancellationWindowHours: ctx.draft.shop.cancellationWindowHours,
+            rescheduleWindowHours: ctx.draft.shop.rescheduleWindowHours,
+            services: ctx.draft.services,
+            barbers: ctx.draft.barbers,
+          }}
+          changeItems={changeItems}
+          includedChangeRounds={ctx.request.includedChangeRounds}
+          changeRoundsUsed={ctx.request.changeRoundsUsed}
+          canDraft={ctx.state.capabilities.canDraftChanges}
+          canSend={ctx.state.capabilities.canSendChanges}
+          canCheckout={ctx.state.capabilities.canCheckout}
+        />
       ) : (
         <section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder">
           <h1>{HUB_LOCKED_REASON_PREVIEW}</h1>
