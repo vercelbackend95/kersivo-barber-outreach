@@ -360,6 +360,112 @@ export const HUB_LAUNCH_LTD_HELPER =
 export const HUB_PAYMENTS_OPTIONAL =
   "Clients pay at the shop by default. Connect Stripe if you'd like deposits or online payment — you can also do this later in your dashboard.";
 
+export const HUB_LAUNCH_TITLE = 'Launch checklist';
+export const HUB_LAUNCH_PROGRESS = (done: number, total: number) => `${done} of ${total} done`;
+export const HUB_LAUNCH_YOUR_STEPS = 'Your steps';
+export const HUB_LAUNCH_OUR_STEPS = 'Our steps';
+export const HUB_LAUNCH_FINISH_DASHBOARD = 'Finish in your dashboard';
+export const HUB_LAUNCH_DONE = 'Done';
+export const HUB_LAUNCH_TO_DO = 'To do';
+export const HUB_LAUNCH_PENDING = 'Pending';
+export const HUB_LAUNCH_IN_PROGRESS = 'In progress';
+export const HUB_LAUNCH_ITEM_BUSINESS = 'Business details';
+export const HUB_LAUNCH_ITEM_DOMAIN = 'Domain';
+export const HUB_LAUNCH_ITEM_PAYMENTS = 'Payments (optional)';
+export const HUB_LAUNCH_ITEM_MIGRATION = 'Moving your clients (optional)';
+export const HUB_LAUNCH_ITEM_APPROVE = 'Approve your website';
+export const HUB_LAUNCH_OUR_DOMAIN = 'Connect your domain';
+export const HUB_LAUNCH_OUR_SSL = 'Secure it (SSL)';
+export const HUB_LAUNCH_OUR_PUBLISH = 'Publish your website';
+export const HUB_LAUNCH_NAME_LABEL = 'Name shown on your website';
+export const HUB_LAUNCH_PUBLIC_PHONE = 'Public phone';
+export const HUB_LAUNCH_PUBLIC_EMAIL = 'Public email';
+export const HUB_LAUNCH_ADDRESS = 'Shop address';
+export const HUB_LAUNCH_TOWN = 'Town or city';
+export const HUB_LAUNCH_POSTCODE = 'Postcode';
+export const HUB_LAUNCH_CONTACT_NAME = 'Your name (private)';
+export const HUB_LAUNCH_CONTACT_EMAIL = 'Your email (private)';
+export const HUB_LAUNCH_CONTACT_HINT = 'Private — for KERSIVO only, not shown on your website.';
+export const HUB_LAUNCH_PUBLIC_HINT = 'Shown on your website and to Google.';
+export const HUB_LAUNCH_LTD_YES = 'Yes';
+export const HUB_LAUNCH_LTD_NO = 'No';
+export const HUB_LAUNCH_COMPANY_NAME = 'Registered company name';
+export const HUB_LAUNCH_COMPANY_NUMBER = 'Company number';
+export const HUB_LAUNCH_COMPANY_NUMBER_HINT =
+  'Eight characters. Use the SC, NI or OC prefix when Companies House shows one.';
+export const HUB_LAUNCH_OFFICE_ADDRESS = 'Registered office address';
+export const HUB_LAUNCH_LTD_REQUIRED = 'Limited companies need a registered name, number and office address.';
+export const HUB_LAUNCH_COMPANY_NUMBER_INVALID =
+  'Enter a valid UK company number (8 digits, or SC, NI or OC plus 6 digits).';
+export const HUB_LAUNCH_BUSINESS_REQUIRED = 'Add your contact details and shop address.';
+export const HUB_LAUNCH_DOMAIN_EXISTING_INTRO =
+  'Add these DNS records at the company where you bought your domain. The steps are the same for GoDaddy, 123 Reg, Cloudflare, Namecheap and others.';
+export const HUB_LAUNCH_DNS_STEP_1 = 'Sign in to your domain registrar and open DNS settings.';
+export const HUB_LAUNCH_DNS_STEP_2 =
+  'Add an A record for the root (@) and a CNAME record for www, using the values KERSIVO sent you. If you do not have them yet, message us from your shop hub.';
+export const HUB_LAUNCH_DNS_STEP_3 = 'Save the records. Changes can take a short while to appear.';
+export const HUB_LAUNCH_DNS_DONE = "I've done this";
+export const HUB_LAUNCH_DNS_CONFIRMED = "You've told us the DNS records are in place.";
+export const HUB_LAUNCH_DOMAIN_KERSIVO = (domain: string) => `We're registering ${domain}.`;
+export const HUB_LAUNCH_DOMAIN_CHOSEN = (domain: string) => `Your domain: ${domain}`;
+export const HUB_LAUNCH_DOMAIN_UNDECIDED = 'Your domain choice from checkout will appear here.';
+export const HUB_LAUNCH_STRIPE_CONNECTED = 'Stripe is connected.';
+export const HUB_LAUNCH_CONNECT_STRIPE = 'Connect Stripe';
+export const HUB_LAUNCH_SKIP_PAYMENTS = 'Skip for now';
+export const HUB_LAUNCH_PAYMENTS_SKIPPED = 'Skipped — you can connect Stripe later in your dashboard.';
+export const HUB_LAUNCH_MIGRATION_INTRO = (system: string) =>
+  `We can help you move your client list from ${system}.`;
+export const HUB_LAUNCH_MIGRATION_NONE = 'You did not tell us you use another booking system. You can still upload a CSV if you want.';
+export const HUB_LAUNCH_MIGRATION_CSV = 'Upload a CSV of your clients';
+export const HUB_LAUNCH_MIGRATION_LAWFUL =
+  'I confirm this client data was collected lawfully and I have the right to share it with KERSIVO.';
+export const HUB_LAUNCH_MIGRATION_NOT_NOW = 'Not now';
+export const HUB_LAUNCH_MIGRATION_SKIPPED = 'Skipped — you can send a client list later.';
+export const HUB_LAUNCH_MIGRATION_UPLOADED = 'CSV uploaded.';
+export const HUB_LAUNCH_APPROVE_INTRO = 'Check your website and booking page, then approve when you are happy.';
+export const HUB_LAUNCH_OPEN_WEBSITE = 'Open website preview';
+export const HUB_LAUNCH_OPEN_BOOKING = 'Open booking preview';
+export const HUB_LAUNCH_RIGHTS =
+  'I have the right to use the photos, logo and text on my website.';
+export const HUB_LAUNCH_ACCURACY = 'The details on my preview and on this page are correct.';
+export const HUB_LAUNCH_APPROVE_BUTTON = 'Approve for launch';
+export const HUB_LAUNCH_APPROVE_BLOCKED = 'Finish your business details before you approve.';
+export const HUB_LAUNCH_APPROVED = (shopName: string) =>
+  `Thanks — we'll put ${shopName} live and email you.`;
+export const HUB_LAUNCH_LOAD_ERROR = 'Could not load your launch checklist.';
+export const HUB_LAUNCH_SAVE_ERROR = 'Could not save. Try again.';
+export const HUB_LAUNCH_SIGN_IN = 'Sign in to finish your launch checklist.';
+export const HUB_LIVE_OPEN_SITE = 'Open your live website';
+export const HUB_LIVE_NEXT_TITLE = 'Next in your dashboard';
+export const HUB_LIVE_NEXT_GOOGLE = 'Add your booking link to Google';
+export const HUB_LIVE_NEXT_QR = 'Order your QR Kit';
+export const HUB_LIVE_NEXT_DEPOSITS = 'Set deposits (optional)';
+export const HUB_LIVE_NEXT_RETAIL = 'Start selling products';
+export const HUB_LIVE_NEXT_HOURS = "Add your team's working hours";
+export const HUB_OPS_APPROVED_BADGE = 'Approved — ready to launch';
+export const HUB_OPS_DOMAIN_CONNECTED = 'Domain connected';
+export const HUB_OPS_SSL_ACTIVE = 'SSL active';
+export const HUB_OPS_MARK_LIVE = 'Mark live';
+export const HUB_OPS_DOMAIN_CONFIRM = 'Mark the domain as connected?';
+export const HUB_OPS_SSL_CONFIRM = 'Mark SSL as active?';
+export const HUB_OPS_LIVE_CONFIRM = 'Mark this website live? The owner will be emailed.';
+export const HUB_OPS_LAUNCH_STEPS = 'Launch steps';
+export const HUB_SUBSCRIBED_SUBJECT = (shopName: string) => `Let's put ${shopName} live`;
+export const HUB_SUBSCRIBED_INTRO = (shopName: string) =>
+  `Thanks for subscribing. A few details from you and we'll put ${shopName} live.`;
+export const HUB_SUBSCRIBED_BUTTON = 'Open your launch checklist';
+export const HUB_LAUNCH_APPROVED_OPS_SUBJECT = (shopName: string) => `Ready to launch: ${shopName}`;
+export const HUB_LAUNCH_APPROVED_OPS_INTRO = (shopName: string) =>
+  `${shopName} approved their website for launch.`;
+export const HUB_LAUNCH_APPROVED_OPS_BUTTON = 'Open in KERSIVO Ops';
+export const HUB_SITE_LIVE_SUBJECT = (shopName: string) => `${shopName} is live`;
+export const HUB_SITE_LIVE_INTRO = (shopName: string) =>
+  `${shopName} is live. Your website and booking page are open to clients.`;
+export const HUB_SITE_LIVE_BUTTON = 'Open your live website';
+export const HUB_SITE_LIVE_NEXT = 'Next in your dashboard:';
+export const HUB_RETAIL_NEEDS_PRODUCT =
+  'Add at least one active product before enabling retail checkout.';
+
 export const HUB_HELP_TITLE = 'Need a hand?';
 export const HUB_HELP_MESSAGE = 'Message KERSIVO';
 export const HUB_HELP_EMAIL = 'hello@kersivo.co.uk';
@@ -453,6 +559,10 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   ops_hub_review_applied: 'Details updated on your preview',
   hub_changes_sent: 'Changes sent',
   ops_hub_change_status: 'Change updated',
+  hub_launch_details_saved: 'Business details saved',
+  hub_domain_confirmed: 'Domain records confirmed',
+  hub_launch_approved: 'Website approved for launch',
+  ops_hub_mark_live: 'Site live',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

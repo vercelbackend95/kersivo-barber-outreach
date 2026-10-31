@@ -22,6 +22,14 @@ describe('hub routes keep the flag-off path (GLOBAL RULE 2)', () => {
     expect(read('src/lib/freePreview/hubPage.ts')).toContain('isFreePreviewFlowEnabled() && isPreviewHubEnabled()');
   });
 
+  it('preview-launch keeps the old form when the hub flag is off', () => {
+    const page = read('src/pages/admin/preview-launch.astro');
+    expect(page).toContain('isPreviewHubEnabled()');
+    expect(page).toContain('PreviewLaunchOnboarding');
+    expect(page).toContain('!hubOn && prefill');
+    expect(page).toContain('HubLaunchChecklist');
+  });
+
   it('nested hub pages apply private headers', () => {
     expect(read('src/lib/freePreview/previewHeaders.ts')).toContain("'X-Robots-Tag': 'noindex, nofollow'");
     expect(read('src/lib/freePreview/previewHeaders.ts')).toContain("'Referrer-Policy': 'no-referrer'");

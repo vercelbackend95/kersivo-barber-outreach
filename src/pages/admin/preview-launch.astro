@@ -2,11 +2,15 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
 import PreviewLaunchOnboarding from '@/components/freePreview/PreviewLaunchOnboarding';
+import HubLaunchChecklist from '@/components/previewHub/HubLaunchChecklist';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { accessCan } from '@/lib/admin/rbac/can';
-import { PREVIEW_ONBOARDING_PATH } from '@/lib/freePreview/config';
+import { PREVIEW_ONBOARDING_PATH, isPreviewHubEnabled } from '@/lib/freePreview/config';
+import { HUB_LAUNCH_SIGN_IN } from '@/lib/freePreview/hubCopy';
 import { loadPreviewOnboarding } from '@/lib/freePreview/previewOnboarding';
+import { PRIVATE_PREVIEW_HEADERS } from '@/lib/freePreview/previewHeaders';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
@@ -15,19 +19,25 @@ import '@/styles/components/buttons.css';
 import '@/styles/components/free-preview-onboarding.css';
 import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/domain-searcher.css';
+import '@/styles/components/preview-hub.css';
+import '@/styles/components/admin-login.css';
 
-Astro.response.headers.set('Cache-Control', 'private, no-store');
+const hubOn = isPreviewHubEnabled();
+if (hubOn) {
+  for (const [name, value] of Object.entries(PRIVATE_PREVIEW_HEADERS)) {
+    Astro.response.headers.set(name, value);
+  }
+} else {
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+}
 
 const access = await resolveAdminAccess(Astro);
-if (!access || access.via !== 'session' || !accessCan(access, 'billing.manage')) {
-  return Astro.redirect('/admin');
-}
+const canManage = Boolean(access && access.via === 'session' && accessCan(access, 'billing.manage'));
 
-// Only shops adopted from a free preview get the shortened onboarding.
-const prefill = await loadPreviewOnboarding(access.shopId);
-if (!prefill) {
-  return Astro.redirect('/admin/client-onboarding');
-}
+if (!hubOn && !canManage) return Astro.redirect('/admin');
+
+const prefill = canManage ? await loadPreviewOnboarding(access!.shopId) : null;
+if (canManage && !prefill) return Astro.redirect('/admin/client-onboarding');
 ---
 
 <MinimalLayout
@@ -41,6 +51,25 @@ if (!prefill) {
   viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
 >
   <main class="container page-wrap">
-    <PreviewLaunchOnboarding client:load prefill={prefill} />
+    {
+      !hubOn && prefill ? (
+        <PreviewLaunchOnboarding client:load prefill={prefill} />
+      ) : hubOn && !canManage ? (
+        <div class="hub-launch-gate">
+          <h1>{HUB_LAUNCH_SIGN_IN}</h1>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={PREVIEW_ONBOARDING_PATH}
+            title="Sign in"
+            subtitle="Finish your launch checklist in your dashboard."
+            showGoogle={false}
+            allowSignup={false}
+          />
+        </div>
+      ) : hubOn && canManage ? (
+        <HubLaunchChecklist client:load />
+      ) : null
+    }
   </main>
 </MinimalLayout>

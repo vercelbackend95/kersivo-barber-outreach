@@ -104,6 +104,12 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_HUB_MESSAGE_OWNER
   /// Shop Hub: ops digest when the owner sends messages (at most one per request per 15 minutes).
   FREE_PREVIEW_HUB_MESSAGES_INTERNAL
+  /// Shop Hub: owner subscribed — launch checklist (flag on).
+  FREE_PREVIEW_HUB_SUBSCRIBED
+  /// Shop Hub: owner approved for launch — internal ops email.
+  FREE_PREVIEW_HUB_LAUNCH_APPROVED_INTERNAL
+  /// Shop Hub: site is live — transactional email to the owner.
+  FREE_PREVIEW_HUB_SITE_LIVE
 }
 
 enum EmailOutboundStatus {
@@ -1248,6 +1254,10 @@ model ClientOnboarding {
   legalBusinessName   String?
   businessType        String?
   companyNumber       String?
+  /// Shop Hub launch checklist (Batch 5). Null = unanswered. Sole traders stay false.
+  isLimitedCompany         Boolean?
+  /// Required when isLimitedCompany is true. Shown in the website footer.
+  registeredOfficeAddress  String?
   addressLine1        String?
   addressLine2        String?
   townCity            String?

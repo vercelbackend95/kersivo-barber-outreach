@@ -38,6 +38,25 @@ describe('ops unread owner messages', () => {
     expect(unreadOwnerMessageCount({})).toBe(0);
   });
 
+  it('sorts approved-ready-to-launch requests first', () => {
+    const unread = {
+      id: 'unread',
+      createdAt: new Date('2026-10-31T00:00:00Z'),
+      hubMessages: [{ id: 'm' }],
+    };
+    const approved = {
+      id: 'approved',
+      createdAt: new Date('2026-10-01T00:00:00Z'),
+      launchApprovedAt: new Date('2026-10-30T00:00:00Z'),
+      liveAt: null,
+      hubMessages: [],
+    };
+    expect(sortPreviewRequestsForOps([unread, approved], 'newest').map((row) => row.id)).toEqual([
+      'approved',
+      'unread',
+    ]);
+  });
+
   it('sorts requests with unread owner messages first', () => {
     const older = { id: 'a', createdAt: new Date('2026-10-01T00:00:00Z'), hubMessages: [] };
     const newer = { id: 'b', createdAt: new Date('2026-10-31T00:00:00Z'), hubMessages: [] };

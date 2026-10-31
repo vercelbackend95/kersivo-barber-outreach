@@ -9,6 +9,27 @@ import {
   HUB_HELP_EMAIL_HREF,
   HUB_HELP_MESSAGE,
   HUB_HELP_TITLE,
+  HUB_LAUNCH_DONE,
+  HUB_LAUNCH_FINISH_DASHBOARD,
+  HUB_LAUNCH_ITEM_APPROVE,
+  HUB_LAUNCH_ITEM_BUSINESS,
+  HUB_LAUNCH_ITEM_DOMAIN,
+  HUB_LAUNCH_ITEM_MIGRATION,
+  HUB_LAUNCH_ITEM_PAYMENTS,
+  HUB_LAUNCH_OUR_DOMAIN,
+  HUB_LAUNCH_OUR_PUBLISH,
+  HUB_LAUNCH_OUR_SSL,
+  HUB_LAUNCH_OUR_STEPS,
+  HUB_LAUNCH_PENDING,
+  HUB_LAUNCH_TO_DO,
+  HUB_LAUNCH_YOUR_STEPS,
+  HUB_LIVE_NEXT_DEPOSITS,
+  HUB_LIVE_NEXT_GOOGLE,
+  HUB_LIVE_NEXT_HOURS,
+  HUB_LIVE_NEXT_QR,
+  HUB_LIVE_NEXT_RETAIL,
+  HUB_LIVE_NEXT_TITLE,
+  HUB_LIVE_OPEN_SITE,
   HUB_NOW,
   HUB_NOW_LABEL_DOING,
   HUB_NOW_LABEL_NEED,
@@ -18,6 +39,7 @@ import {
   HUB_PRIMARY,
   hubHeaderCopy,
 } from '@/lib/freePreview/hubCopy';
+import type { HubLaunchProgress, LaunchItem, OurLaunchStep } from '@/lib/freePreview/hubLaunch';
 import type { HubChecklistItem } from '@/lib/freePreview/hubChecklist';
 import { HubReviewCards, type HubReviewMap } from '@/components/previewHub/HubReviewCards';
 import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
@@ -43,9 +65,29 @@ interface Props {
   reviews?: HubReviewMap;
   reviewShop?: HubReviewShopData | null;
   reviewNeed?: string;
+  launchProgress?: HubLaunchProgress | null;
 }
 
-const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed } = Astro.props;
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed, launchProgress } = Astro.props;
+const YOUR_STEP_LABEL: Record<LaunchItem, string> = {
+  business: HUB_LAUNCH_ITEM_BUSINESS,
+  domain: HUB_LAUNCH_ITEM_DOMAIN,
+  payments: HUB_LAUNCH_ITEM_PAYMENTS,
+  migration: HUB_LAUNCH_ITEM_MIGRATION,
+  approve: HUB_LAUNCH_ITEM_APPROVE,
+};
+const OUR_STEP_LABEL: Record<OurLaunchStep, string> = {
+  domain: HUB_LAUNCH_OUR_DOMAIN,
+  ssl: HUB_LAUNCH_OUR_SSL,
+  live: HUB_LAUNCH_OUR_PUBLISH,
+};
+const LIVE_NEXT = [
+  { href: '/insights/google-business-profile-booking-link-barbershop', label: HUB_LIVE_NEXT_GOOGLE },
+  { href: '/admin?section=barbershop_settings#qr-kit', label: HUB_LIVE_NEXT_QR },
+  { href: '/admin?section=barbershop_settings', label: HUB_LIVE_NEXT_DEPOSITS },
+  { href: '/admin/retail-onboarding', label: HUB_LIVE_NEXT_RETAIL },
+  { href: '/admin?section=team', label: HUB_LIVE_NEXT_HOURS },
+] as const;
 const shopName = request.shopName;
 const header = hubHeaderCopy(hubHeaderKind(state), shopName);
 const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
@@ -134,34 +176,84 @@ const primaryLabel =
     </div>
   </section>
 
-  <section class="hub-card ks-glass-card" aria-labelledby="hub-preview-title">
-    <h2 id="hub-preview-title" class="hub-card__title">Your preview</h2>
-    {
-      state.capabilities.showPreview ? (
-        <>
-          <p class="hub-card__body">{shopName}</p>
-          <div class="hub-preview-actions">
-            <a class="btn btn--primary btn--sm" href={`${base}/website`}>
-              {HUB_PREVIEW_OPEN_WEBSITE}
-            </a>
-            <a class="btn btn--secondary btn--sm" href={`${base}/website?view=booking`}>
-              {HUB_PREVIEW_TRY_BOOKING}
+  {
+    state.stage === 'launch' && launchProgress ? (
+      <section class="hub-card ks-glass-card" aria-labelledby="hub-launch-title">
+        <h2 id="hub-launch-title" class="hub-card__title">Launch progress</h2>
+        <div class="hub-launch-progress">
+          <div>
+            <h3>{HUB_LAUNCH_YOUR_STEPS}</h3>
+            <ul class="hub-checklist">
+              {launchProgress.yourSteps.map((item) => (
+                <li class:list={['hub-checklist__item', item.done ? 'is-done' : 'is-todo']}>
+                  <span class="hub-checklist__mark" aria-hidden="true" />
+                  <span>
+                    {YOUR_STEP_LABEL[item.id]}
+                    <span class="hub-checklist__hint">{item.done ? HUB_LAUNCH_DONE : HUB_LAUNCH_TO_DO}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <a class="btn btn--primary btn--sm" href={PREVIEW_ONBOARDING_PATH}>
+              {HUB_LAUNCH_FINISH_DASHBOARD}
             </a>
           </div>
-          {!hasWebsitePreview ? (
-            <p class="hub-card__body" style="margin-top:12px">
-              We're still adding services and barbers to this booking page.
-            </p>
-          ) : null}
-        </>
-      ) : (
-        <div class="hub-preview-lock">
-          <p class="ks-eyebrow">{shopName}</p>
-          <p>{HUB_PREVIEW_CARD_LOCKED}</p>
+          <div>
+            <h3>{HUB_LAUNCH_OUR_STEPS}</h3>
+            <ul class="hub-checklist">
+              {launchProgress.ourSteps.map((item) => (
+                <li class:list={['hub-checklist__item', item.status === 'done' ? 'is-done' : 'is-todo']}>
+                  <span class="hub-checklist__mark" aria-hidden="true" />
+                  <span>
+                    {OUR_STEP_LABEL[item.id]}
+                    <span class="hub-checklist__hint">{item.status === 'done' ? HUB_LAUNCH_DONE : HUB_LAUNCH_PENDING}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      )
-    }
-  </section>
+      </section>
+    ) : state.stage === 'live' ? (
+      <section class="hub-card ks-glass-card" aria-labelledby="hub-preview-title">
+        <h2 id="hub-preview-title" class="hub-card__title">{shopName}</h2>
+        {launchProgress?.liveUrl ? (
+          <a class="btn btn--primary btn--sm" href={launchProgress.liveUrl} rel="noopener noreferrer">
+            {HUB_LIVE_OPEN_SITE}
+          </a>
+        ) : null}
+      </section>
+    ) : (
+      <section class="hub-card ks-glass-card" aria-labelledby="hub-preview-title">
+        <h2 id="hub-preview-title" class="hub-card__title">Your preview</h2>
+        {
+          state.capabilities.showPreview ? (
+            <>
+              <p class="hub-card__body">{shopName}</p>
+              <div class="hub-preview-actions">
+                <a class="btn btn--primary btn--sm" href={`${base}/website`}>
+                  {HUB_PREVIEW_OPEN_WEBSITE}
+                </a>
+                <a class="btn btn--secondary btn--sm" href={`${base}/website?view=booking`}>
+                  {HUB_PREVIEW_TRY_BOOKING}
+                </a>
+              </div>
+              {!hasWebsitePreview ? (
+                <p class="hub-card__body" style="margin-top:12px">
+                  We're still adding services and barbers to this booking page.
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <div class="hub-preview-lock">
+              <p class="ks-eyebrow">{shopName}</p>
+              <p>{HUB_PREVIEW_CARD_LOCKED}</p>
+            </div>
+          )
+        }
+      </section>
+    )
+  }
 
   {
     state.capabilities.canReview && reviews ? (
@@ -178,7 +270,20 @@ const primaryLabel =
   }
 
   {
-    checklist && state.stage !== 'launch' && state.stage !== 'live' ? (
+    state.stage === 'live' ? (
+      <section class="hub-card ks-glass-card" aria-labelledby="hub-next-title">
+        <h2 id="hub-next-title" class="hub-card__title">{HUB_LIVE_NEXT_TITLE}</h2>
+        <ul class="hub-live-next">
+          {LIVE_NEXT.map((card) => (
+            <li>
+              <a class="hub-live-next__card" href={card.href}>
+                {card.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : checklist && state.stage !== 'launch' ? (
       <section class="hub-card ks-glass-card" aria-labelledby="hub-checklist-title">
         <h2 id="hub-checklist-title" class="hub-card__title">
           {HUB_CHECKLIST_TITLE}

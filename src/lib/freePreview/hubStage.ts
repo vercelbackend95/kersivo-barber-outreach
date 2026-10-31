@@ -149,7 +149,7 @@ export function resolveHubState(input: {
     return hubResult('declined', request, isOperator);
   }
 
-  if (request.status === 'CONVERTED') {
+  if (request.status === 'CONVERTED' || (request.convertedAt && request.previewReadyAt)) {
     return hubResult(liveAt ? 'live' : 'launch', request, isOperator);
   }
 

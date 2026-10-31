@@ -189,6 +189,11 @@
   background: color-mix(in srgb, var(--color-brand) 28%, transparent);
 }
 
+.ops-pr__status--approved {
+  margin-left: 0.35rem;
+  background: color-mix(in srgb, #3da66f 28%, transparent);
+}
+
 .ops-pr-tabs {
   display: flex;
   flex-wrap: wrap;

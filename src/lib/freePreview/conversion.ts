@@ -4,6 +4,8 @@ import { purgeShopData } from '@/lib/setup/purgeShopData';
 import { normalizeSaasCheckoutIdentity } from '@/lib/setup/saasCheckoutGuard';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { suppressPendingPreviewFollowups } from './followups';
+import { isPreviewHubEnabled } from './config';
+import { notifyOwnerSubscribed } from './hubLaunch';
 
 export type MarkConvertedResult = 'converted' | 'already_converted' | 'not_found';
 
@@ -45,6 +47,25 @@ export async function markPreviewRequestConverted(input: {
     await suppressPendingPreviewFollowups(input.previewRequestId).catch((error) =>
       console.error('[free-preview] follow-up suppression failed', { id: input.previewRequestId, error }),
     );
+    if (isPreviewHubEnabled()) {
+      const request = await prisma.previewRequest.findUnique({
+        where: { id: input.previewRequestId },
+        select: { email: true, firstName: true, shopName: true },
+      });
+      if (request) {
+        await notifyOwnerSubscribed({
+          to: request.email,
+          firstName: request.firstName,
+          shopName: request.shopName,
+          previewRequestId: input.previewRequestId,
+        }).catch((error) =>
+          console.error('[free-preview] subscribed email failed', {
+            id: input.previewRequestId,
+            error: error instanceof Error ? error.message : error,
+          }),
+        );
+      }
+    }
     return 'converted';
   }
 

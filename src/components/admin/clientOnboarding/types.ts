@@ -7,6 +7,8 @@ export type DraftFields = {
   legalBusinessName: string | null;
   businessType: string | null;
   companyNumber: string | null;
+  isLimitedCompany: boolean | null;
+  registeredOfficeAddress: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
   townCity: string | null;
@@ -168,6 +170,8 @@ export function draftFromOnboarding(
     legalBusinessName: onboarding.legalBusinessName,
     businessType: onboarding.businessType,
     companyNumber: onboarding.companyNumber,
+    isLimitedCompany: onboarding.isLimitedCompany,
+    registeredOfficeAddress: onboarding.registeredOfficeAddress,
     addressLine1: onboarding.addressLine1,
     addressLine2: onboarding.addressLine2,
     townCity: onboarding.townCity,

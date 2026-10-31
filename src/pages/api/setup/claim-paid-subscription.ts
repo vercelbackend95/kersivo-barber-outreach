@@ -18,6 +18,7 @@ import { retrieveCheckoutSession, retrieveSubscription } from '@/lib/shop/stripe
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 import { adoptPreviewDraftShop } from '@/lib/freePreview/conversion';
 import { PREVIEW_ONBOARDING_PATH } from '@/lib/freePreview/config';
+import { ensureDirectSubscribePreviewRequest } from '@/lib/freePreview/directSubscribe';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -270,8 +271,16 @@ export const POST: APIRoute = async (ctx) => {
       await prisma.previewRequest.findUnique({ where: { draftShopId: record.shopId }, select: { id: true } }),
     );
   }
-  // Only free-preview purchases get the shortened onboarding; every other response is unchanged.
-  const previewRedirect = previewDraftShop ? { redirectTo: PREVIEW_ONBOARDING_PATH } : {};
+  const hubRedirect = async (): Promise<{ redirectTo?: string }> => {
+    if (previewDraftShop) return { redirectTo: PREVIEW_ONBOARDING_PATH };
+    const created = await ensureDirectSubscribePreviewRequest({
+      shopId: ownerShopId,
+      email: paidEmail,
+      shopName: record.shopName,
+      firstName: record.customerName,
+    });
+    return created.created ? { redirectTo: PREVIEW_ONBOARDING_PATH } : {};
+  };
 
   // Already owned by this shop — entitlement, persist PENDING→ACTIVE snapshot, then heal paid.
   if (record.shopId != null && record.shopId === ownerShopId) {
@@ -310,7 +319,7 @@ export const POST: APIRoute = async (ctx) => {
       idempotent: true,
       shopId: ownerShopId,
       subscriptionId: record.id,
-      ...previewRedirect,
+      ...(await hubRedirect()),
     });
   }
 
@@ -346,6 +355,7 @@ export const POST: APIRoute = async (ctx) => {
           idempotent: true,
           shopId: ownerShopId,
           subscriptionId: record.id,
+          ...(await hubRedirect()),
         });
       }
       return json(
@@ -378,6 +388,7 @@ export const POST: APIRoute = async (ctx) => {
           idempotent: true,
           shopId: ownerShopId,
           subscriptionId: record.id,
+          ...(await hubRedirect()),
         });
       }
       return json(
@@ -399,6 +410,6 @@ export const POST: APIRoute = async (ctx) => {
     idempotent: false,
     shopId: ownerShopId,
     subscriptionId: record.id,
-    ...previewRedirect,
+    ...(await hubRedirect()),
   });
 };

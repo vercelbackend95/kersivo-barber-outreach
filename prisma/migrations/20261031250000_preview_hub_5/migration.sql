@@ -1,0 +1,8 @@
+-- AlterEnum
+ALTER TYPE "EmailOutboundPurpose" ADD VALUE 'FREE_PREVIEW_HUB_SUBSCRIBED';
+ALTER TYPE "EmailOutboundPurpose" ADD VALUE 'FREE_PREVIEW_HUB_LAUNCH_APPROVED_INTERNAL';
+ALTER TYPE "EmailOutboundPurpose" ADD VALUE 'FREE_PREVIEW_HUB_SITE_LIVE';
+
+-- AlterTable
+ALTER TABLE "ClientOnboarding" ADD COLUMN "isLimitedCompany" BOOLEAN,
+ADD COLUMN "registeredOfficeAddress" TEXT;

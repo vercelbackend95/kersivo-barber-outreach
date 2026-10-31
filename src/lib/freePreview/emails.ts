@@ -27,6 +27,21 @@ import {
   HUB_OWNER_MESSAGE_EMAIL_INTRO,
   HUB_OWNER_MESSAGE_EMAIL_SUBJECT,
   HUB_CHANGES_PAGES,
+  HUB_LAUNCH_APPROVED_OPS_BUTTON,
+  HUB_LAUNCH_APPROVED_OPS_INTRO,
+  HUB_LAUNCH_APPROVED_OPS_SUBJECT,
+  HUB_LIVE_NEXT_DEPOSITS,
+  HUB_LIVE_NEXT_GOOGLE,
+  HUB_LIVE_NEXT_HOURS,
+  HUB_LIVE_NEXT_QR,
+  HUB_LIVE_NEXT_RETAIL,
+  HUB_SITE_LIVE_BUTTON,
+  HUB_SITE_LIVE_INTRO,
+  HUB_SITE_LIVE_NEXT,
+  HUB_SITE_LIVE_SUBJECT,
+  HUB_SUBSCRIBED_BUTTON,
+  HUB_SUBSCRIBED_INTRO,
+  HUB_SUBSCRIBED_SUBJECT,
 } from './hubCopy';
 import { hubMessageExcerpt } from './hubMessageText';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
@@ -469,5 +484,71 @@ export function buildHubMessagesAddedInternalEmail(input: {
     replyTo: PREVIEW_REPLY_TO_EMAIL,
     html: `<p>${escapeHtml(HUB_OPS_MESSAGES_EMAIL_INTRO(input.count, input.shopName))}</p>
 <p><a href="${escapeHtml(opsUrl)}">${escapeHtml(HUB_OPS_MESSAGES_EMAIL_BUTTON)}</a></p>`,
+  };
+}
+
+/** Owner subscribed — launch checklist (HUB_SPEC.md §5). */
+export function buildHubSubscribedEmail(input: {
+  to: string;
+  firstName: string | null;
+  shopName: string;
+  checklistUrl: string;
+}): FreePreviewEmail {
+  return {
+    to: input.to,
+    subject: HUB_SUBSCRIBED_SUBJECT(input.shopName),
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      escapeHtml(HUB_SUBSCRIBED_INTRO(input.shopName)),
+      hubButton(input.checklistUrl, HUB_SUBSCRIBED_BUTTON),
+      SIGN_OFF,
+    ]),
+  };
+}
+
+/** Ops: owner approved for launch (HUB_SPEC.md §5). */
+export function buildHubLaunchApprovedInternalEmail(input: {
+  id: string;
+  shopName: string;
+}): FreePreviewEmail {
+  const opsUrl = opsPreviewRequestUrl(input.id);
+  return {
+    to: getPreviewNotifyEmail(),
+    subject: HUB_LAUNCH_APPROVED_OPS_SUBJECT(input.shopName),
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: `<p>${escapeHtml(HUB_LAUNCH_APPROVED_OPS_INTRO(input.shopName))}</p>
+<p><a href="${escapeHtml(opsUrl)}">${escapeHtml(HUB_LAUNCH_APPROVED_OPS_BUTTON)}</a></p>`,
+  };
+}
+
+const LIVE_NEXT_LINES = [
+  HUB_LIVE_NEXT_GOOGLE,
+  HUB_LIVE_NEXT_QR,
+  HUB_LIVE_NEXT_DEPOSITS,
+  HUB_LIVE_NEXT_RETAIL,
+  HUB_LIVE_NEXT_HOURS,
+];
+
+/** Owner: site is live (HUB_SPEC.md §5). Transactional. */
+export function buildHubSiteLiveEmail(input: {
+  to: string;
+  firstName: string | null;
+  shopName: string;
+  liveUrl: string | null;
+}): FreePreviewEmail {
+  const next = `${escapeHtml(HUB_SITE_LIVE_NEXT)}<br>${LIVE_NEXT_LINES.map((line) => escapeHtml(line)).join('<br>')}`;
+  const button = input.liveUrl ? hubButton(input.liveUrl, HUB_SITE_LIVE_BUTTON) : '';
+  return {
+    to: input.to,
+    subject: HUB_SITE_LIVE_SUBJECT(input.shopName),
+    replyTo: PREVIEW_REPLY_TO_EMAIL,
+    html: paragraphs([
+      greeting(input.firstName),
+      escapeHtml(HUB_SITE_LIVE_INTRO(input.shopName)),
+      button,
+      next,
+      SIGN_OFF,
+    ].filter(Boolean)),
   };
 }

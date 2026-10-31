@@ -10,6 +10,7 @@ import { loadActiveHubAssets } from '@/lib/freePreview/hubAssets';
 import { countOpenHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
 import { cardStateFromReview, loadHubReviewShopData, loadLatestHubReviews, reviewNowNeed } from '@/lib/freePreview/hubReviews';
+import { loadHubLaunchProgress } from '@/lib/freePreview/hubLaunch';
 import { isHubRouteEnabled, hubNotFound, loadHubOverviewExtras, designingAtFromEvents, hubActivityItems, hubStepper, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -46,13 +47,16 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const [events, assets, unreadMessages, openChanges, reviews, reviewShop] = await Promise.all([
+const [events, assets, unreadMessages, openChanges, reviews, reviewShop, launchProgress] = await Promise.all([
   loadHubOverviewExtras(ctx.request.id),
   loadActiveHubAssets(ctx.request.id),
   ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
   countOpenHubChanges(ctx.request.id),
   loadLatestHubReviews(ctx.request.id),
   ctx.request.draftShopId ? loadHubReviewShopData(ctx.request.draftShopId, ctx.request.id) : Promise.resolve(null),
+  ctx.state.stage === 'launch' || ctx.state.stage === 'live'
+    ? loadHubLaunchProgress(ctx.request.id)
+    : Promise.resolve(null),
 ]);
 const reviewNeed = reviewNowNeed({
   SERVICES: cardStateFromReview(reviews.SERVICES?.state ?? null),
@@ -97,6 +101,7 @@ const shopName = ctx.request.shopName;
       reviews={reviews}
       reviewShop={reviewShop}
       reviewNeed={reviewNeed}
+      launchProgress={launchProgress}
     />
   </HubShell>
 </HubDocument>

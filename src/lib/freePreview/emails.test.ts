@@ -4,7 +4,10 @@ import { HUB_ACK_BUTTON, HUB_ACK_SUBJECT, HUB_OPS_OPEN_HUB } from './hubCopy';
 import {
   buildHubFilesAddedInternalEmail,
   buildHubMessageFromKersivoEmail,
+  buildHubLaunchApprovedInternalEmail,
   buildHubMessagesAddedInternalEmail,
+  buildHubSiteLiveEmail,
+  buildHubSubscribedEmail,
   buildPreviewChangesRequestedInternalEmail,
   buildPreviewRequestAcknowledgementEmail,
   buildPreviewRequestInternalEmail,
@@ -314,5 +317,36 @@ describe('free preview emails', () => {
     expect(buildHubMessagesAddedInternalEmail({ id: 'req_1', shopName: 'Sharp Cuts', count: 1 }).subject).toBe(
       '1 new message from Sharp Cuts',
     );
+  });
+
+  it('subscribed email points at the launch checklist', () => {
+    const email = buildHubSubscribedEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      checklistUrl: 'https://kersivo.co.uk/admin/preview-launch',
+    });
+    expect(email.subject).toBe("Let's put Sharp Cuts live");
+    expect(email.html).toContain('/admin/preview-launch');
+    expect(email.html).toContain('Open your launch checklist');
+  });
+
+  it('launch-approved ops email uses Ready to launch', () => {
+    const email = buildHubLaunchApprovedInternalEmail({ id: 'req_1', shopName: 'Sharp Cuts' });
+    expect(email.subject).toBe('Ready to launch: Sharp Cuts');
+    expect(email.html).toContain('/ops/preview-requests/req_1');
+  });
+
+  it('site-live email lists dashboard next steps', () => {
+    const email = buildHubSiteLiveEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      liveUrl: 'https://sharpcuts.co.uk',
+    });
+    expect(email.subject).toBe('Sharp Cuts is live');
+    expect(email.html).toContain('https://sharpcuts.co.uk');
+    expect(email.html).toContain('Add your booking link to Google');
+    expect(email.html).toContain('Start selling products');
   });
 });

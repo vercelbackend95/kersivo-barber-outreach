@@ -1,4 +1,13 @@
 import { useState } from 'react';
+import {
+  HUB_OPS_DOMAIN_CONFIRM,
+  HUB_OPS_DOMAIN_CONNECTED,
+  HUB_OPS_LAUNCH_STEPS,
+  HUB_OPS_LIVE_CONFIRM,
+  HUB_OPS_MARK_LIVE,
+  HUB_OPS_SSL_ACTIVE,
+  HUB_OPS_SSL_CONFIRM,
+} from '@/lib/freePreview/hubCopy';
 
 type Status =
   | 'REQUESTED'
@@ -24,6 +33,10 @@ type Props = {
   /** PREVIEW_HUB_ENABLED: show the owner hub link even before a draft shop exists. */
   hubEnabled?: boolean;
   hubStageLabel?: string;
+  launchApprovedAt?: string | null;
+  liveAt?: string | null;
+  ourStepDomainAt?: string | null;
+  ourStepSslAt?: string | null;
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -62,6 +75,30 @@ export default function PreviewRequestActions(props: Props) {
       setMessage({ kind: 'ok', text: 'Preview link copied.' });
     } catch {
       window.prompt('Copy the preview link:', props.previewUrl);
+    }
+  }
+
+  async function runLaunchStep(step: 'domain' | 'ssl' | 'live', successText: string) {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/ops/preview-requests/${encodeURIComponent(props.requestId)}/launch-steps`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step, confirm: true }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: { code?: string } };
+      if (!response.ok || !data.ok) {
+        setMessage({ kind: 'error', text: ERROR_MESSAGES[data.error?.code ?? ''] ?? `Action failed (${response.status}).` });
+        return;
+      }
+      setMessage({ kind: 'ok', text: successText });
+      window.location.reload();
+    } catch {
+      setMessage({ kind: 'error', text: 'Network error. Try again.' });
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -274,6 +311,52 @@ export default function PreviewRequestActions(props: Props) {
           </>
         )}
       </section>
+
+      {props.hubEnabled ? (
+        <section className="ops-pr-actions__block" aria-labelledby="ops-pr-launch-title">
+          <h2 id="ops-pr-launch-title" className="ops-pr-actions__title">
+            {HUB_OPS_LAUNCH_STEPS}
+          </h2>
+          <div className="ops-pr-actions__row">
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm"
+              disabled={busy || Boolean(props.ourStepDomainAt)}
+              onClick={() => {
+                if (window.confirm(HUB_OPS_DOMAIN_CONFIRM)) {
+                  void runLaunchStep('domain', 'Domain marked connected.');
+                }
+              }}
+            >
+              {HUB_OPS_DOMAIN_CONNECTED}
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm"
+              disabled={busy || Boolean(props.ourStepSslAt)}
+              onClick={() => {
+                if (window.confirm(HUB_OPS_SSL_CONFIRM)) {
+                  void runLaunchStep('ssl', 'SSL marked active.');
+                }
+              }}
+            >
+              {HUB_OPS_SSL_ACTIVE}
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary btn--sm"
+              disabled={busy || Boolean(props.liveAt)}
+              onClick={() => {
+                if (window.confirm(HUB_OPS_LIVE_CONFIRM)) {
+                  void runLaunchStep('live', 'Marked live. Owner emailed.');
+                }
+              }}
+            >
+              {HUB_OPS_MARK_LIVE}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="ops-pr-actions__block" aria-labelledby="ops-pr-notes-title">
         <h2 id="ops-pr-notes-title" className="ops-pr-actions__title">

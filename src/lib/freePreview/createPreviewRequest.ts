@@ -49,6 +49,17 @@ export const PREVIEW_REQUEST_ACTIONS = {
   OPS_HUB_REVIEW_DISMISSED: 'ops_hub_review_dismissed',
   OPS_HUB_CHANGE_STATUS: 'ops_hub_change_status',
   OPS_HUB_ROUND_GRANTED: 'ops_hub_round_granted',
+  HUB_LAUNCH_DETAILS_SAVED: 'hub_launch_details_saved',
+  HUB_DOMAIN_CONFIRMED: 'hub_domain_confirmed',
+  HUB_PAYMENTS_SKIPPED: 'hub_payments_skipped',
+  HUB_MIGRATION_SKIPPED: 'hub_migration_skipped',
+  HUB_MIGRATION_UPLOADED: 'hub_migration_uploaded',
+  HUB_LAUNCH_APPROVED: 'hub_launch_approved',
+  HUB_LAUNCH_ITEM_COMPLETED: 'hub_launch_item_completed',
+  OPS_HUB_DOMAIN_CONNECTED: 'ops_hub_domain_connected',
+  OPS_HUB_SSL_ACTIVE: 'ops_hub_ssl_active',
+  OPS_HUB_MARK_LIVE: 'ops_hub_mark_live',
+  HUB_DIRECT_SUBSCRIBE_CREATED: 'hub_direct_subscribe_created',
 } as const;
 
 /**

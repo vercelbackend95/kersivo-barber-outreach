@@ -74,6 +74,7 @@ async function lockRequest(tx: Tx, id: string) {
       firstName: true,
       publicToken: true,
       anonymisedAt: true,
+      convertedAt: true,
       draftShop: { select: { sitePreviewUrl: true } },
     },
   });
@@ -207,6 +208,7 @@ export async function executePreviewRequestOpsAction(input: {
 
         const isUpdate = request.status === 'CHANGES_REQUESTED';
         const expiresAt = previewExpiryFrom(now);
+        const nextStatus = request.convertedAt ? 'CONVERTED' : 'READY';
         const completedItems =
           isUpdate && isPreviewHubEnabled()
             ? await loadCompletedChangesForUpdateEmail(tx, request.id)
@@ -216,7 +218,7 @@ export async function executePreviewRequestOpsAction(input: {
             previewRequestId: request.id,
             action: PREVIEW_REQUEST_ACTIONS.MARKED_READY,
             fromStatus: request.status,
-            toStatus: 'READY',
+            toStatus: nextStatus,
             actorEmail,
             meta: { email: isUpdate ? 'E4' : 'E3', expiresAt: expiresAt.toISOString() },
           },
@@ -224,7 +226,7 @@ export async function executePreviewRequestOpsAction(input: {
         });
         await tx.previewRequest.update({
           where: { id: request.id },
-          data: { status: 'READY', previewReadyAt: now, expiresAt },
+          data: { status: nextStatus, previewReadyAt: now, expiresAt },
         });
 
         const emailInput = {
@@ -243,7 +245,7 @@ export async function executePreviewRequestOpsAction(input: {
           dedupeKey: `free-preview:${isUpdate ? 'updated' : 'ready'}:${request.id}:${event.id}`,
         });
         outboxIds.push(row.id);
-        return { ok: true, status: 'READY', draftShopId: request.draftShopId, emailSent: isUpdate ? 'E4' : 'E3' };
+        return { ok: true, status: nextStatus, draftShopId: request.draftShopId, emailSent: isUpdate ? 'E4' : 'E3' };
       }
     }
   });
