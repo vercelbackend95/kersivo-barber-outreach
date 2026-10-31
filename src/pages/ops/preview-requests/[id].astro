@@ -21,8 +21,20 @@ import {
   PREVIEW_STATUS_LABELS,
   getPreviewRequestDetail,
   isOverDailyCap,
+  markPreviewRequestOpsSeen,
   previewRequestLinks,
 } from '@/lib/freePreview/opsQueries';
+import { formatBytes } from '@/lib/freePreview/hubAssets';
+import {
+  HUB_OPS_ABOUT,
+  HUB_OPS_BRAND_COLOURS,
+  HUB_OPS_DOWNLOAD,
+  HUB_OPS_FILES_EMPTY,
+  HUB_OPS_FILES_TITLE,
+  HUB_OPS_STYLE_NOTES,
+  HUB_OPS_UPLOADED_BY_KERSIVO,
+  HUB_OPS_UPLOADED_BY_OWNER,
+} from '@/lib/freePreview/hubCopy';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
 import '@/styles/tokens.css';
@@ -42,6 +54,11 @@ const view = resolveOpsPageView(auth);
 
 const id = (Astro.params.id ?? '').trim();
 const request = view === 'dashboard' && id && id.length <= 64 ? await getPreviewRequestDetail(id) : null;
+if (view === 'dashboard' && request) {
+  await markPreviewRequestOpsSeen(request.id).catch((error) => {
+    console.error('[ops/preview-requests] opsLastSeenAt failed', error instanceof Error ? error.message : error);
+  });
+}
 if (view === 'dashboard' && !request) {
   return new Response('Preview request not found', {
     status: 404,
@@ -181,6 +198,63 @@ const fields: Array<[string, string]> = request
                   </div>
                 ))}
               </dl>
+
+              {
+                hubEnabled ? (
+                  <section class="ops-pr-files" aria-label={HUB_OPS_FILES_TITLE}>
+                    <h2 class="ops-pr-actions__title">{HUB_OPS_FILES_TITLE}</h2>
+                    <dl class="ops-pr-detail__list">
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_BRAND_COLOURS}</dt>
+                        <dd>
+                          {request.brandPrimaryColour || request.brandSecondaryColour
+                            ? `${request.brandPrimaryColour ?? '—'} / ${request.brandSecondaryColour ?? '—'}`
+                            : '—'}
+                        </dd>
+                      </div>
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_STYLE_NOTES}</dt>
+                        <dd>{request.styleNotes ?? '—'}</dd>
+                      </div>
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_ABOUT}</dt>
+                        <dd>{request.aboutText ?? '—'}</dd>
+                      </div>
+                    </dl>
+                    {request.hubAssets.length === 0 ? (
+                      <p class="ops-pr__empty">{HUB_OPS_FILES_EMPTY}</p>
+                    ) : (
+                      <ul class="ops-pr-files__grid">
+                        {request.hubAssets.map((asset) => (
+                          <li class="ops-pr-files__item">
+                            <div class="ops-pr-files__thumb">
+                              {asset.thumbPath || asset.contentType.startsWith('image/') ? (
+                                <img
+                                  src={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=thumb`}
+                                  alt=""
+                                />
+                              ) : (
+                                <span>{asset.kind}</span>
+                              )}
+                            </div>
+                            <p class="ops-pr-files__name">{asset.originalFileName}</p>
+                            <p class="ops-pr-files__meta">
+                              {asset.kind} · {formatBytes(asset.sizeBytes)} · {formatDate(asset.createdAt)} ·{' '}
+                              {asset.uploadedBy === 'OWNER' ? HUB_OPS_UPLOADED_BY_OWNER : HUB_OPS_UPLOADED_BY_KERSIVO}
+                            </p>
+                            <a
+                              class="btn btn--ghost btn--sm"
+                              href={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=full`}
+                            >
+                              {HUB_OPS_DOWNLOAD}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                ) : null
+              }
 
               <h2 class="ops-pr-actions__title">History</h2>
               <ol class="ops-pr-detail__events">

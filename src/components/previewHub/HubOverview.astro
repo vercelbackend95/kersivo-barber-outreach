@@ -4,6 +4,8 @@ import {
   HUB_ACTIVITY_EMPTY,
   HUB_ACTIVITY_TITLE,
   HUB_AVAILABLE_SOON,
+  HUB_CHECKLIST_PROGRESS,
+  HUB_CHECKLIST_TITLE,
   HUB_HELP_EMAIL,
   HUB_HELP_EMAIL_HREF,
   HUB_HELP_MESSAGE,
@@ -17,6 +19,7 @@ import {
   HUB_PRIMARY,
   hubHeaderCopy,
 } from '@/lib/freePreview/hubCopy';
+import type { HubChecklistItem } from '@/lib/freePreview/hubChecklist';
 import { PREVIEW_ONBOARDING_PATH, previewPagePath } from '@/lib/freePreview/config';
 import {
   formatHubStepDate,
@@ -35,9 +38,10 @@ interface Props {
   steps: HubStepperStep[];
   activity: HubActivityItem[];
   hasWebsitePreview: boolean;
+  checklist?: { items: HubChecklistItem[]; done: number; total: number };
 }
 
-const { token, request, state, isOperator, steps, activity, hasWebsitePreview } = Astro.props;
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist } = Astro.props;
 const shopName = request.shopName;
 const header = hubHeaderCopy(hubHeaderKind(state), shopName);
 const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
@@ -161,6 +165,28 @@ const expiredDisabled = state.stage === 'expired';
       )
     }
   </section>
+
+  {
+    checklist && state.stage !== 'launch' && state.stage !== 'live' ? (
+      <section class="hub-card ks-glass-card" aria-labelledby="hub-checklist-title">
+        <h2 id="hub-checklist-title" class="hub-card__title">
+          {HUB_CHECKLIST_TITLE}
+          <span class="hub-checklist__progress">{HUB_CHECKLIST_PROGRESS(checklist.done, checklist.total)}</span>
+        </h2>
+        <ul class="hub-checklist">
+          {checklist.items.map((item) => (
+            <li class:list={['hub-checklist__item', `is-${item.status}`]}>
+              <span class="hub-checklist__mark" aria-hidden="true" />
+              <span>
+                {item.label}
+                {item.hint ? <span class="hub-checklist__hint">{item.hint}</span> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null
+  }
 
   <section class="hub-card ks-glass-card" aria-labelledby="hub-activity-title">
     <h2 id="hub-activity-title" class="hub-card__title">{HUB_ACTIVITY_TITLE}</h2>

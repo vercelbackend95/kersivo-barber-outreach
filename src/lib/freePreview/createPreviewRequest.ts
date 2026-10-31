@@ -28,6 +28,12 @@ export const PREVIEW_REQUEST_ACTIONS = {
   EXPIRED: 'EXPIRED',
   ANONYMISED: 'ANONYMISED',
   HUB_VIEWED: 'hub_viewed',
+  HUB_ASSET_UPLOADED: 'hub_asset_uploaded',
+  HUB_ASSET_UPDATED: 'hub_asset_updated',
+  HUB_ASSET_DELETED: 'hub_asset_deleted',
+  HUB_DETAILS_SAVED: 'hub_details_saved',
+  OPS_HUB_OPENED: 'ops_hub_opened',
+  OPS_HUB_FILES_NOTIFIED: 'ops_hub_files_notified',
 } as const;
 
 /**

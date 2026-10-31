@@ -2,10 +2,11 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
-import HubComingSoon from '@/components/previewHub/HubComingSoon.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
+import { HubYourShop } from '@/components/previewHub/HubYourShop';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_NAV } from '@/lib/freePreview/hubCopy';
+import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -39,6 +40,8 @@ await recordHubOwnerView({
 }).catch((error) => {
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
+
+const assets = await loadActiveHubAssets(ctx.request.id);
 ---
 
 <HubDocument title={`${HUB_NAV.details} — ${ctx.request.shopName} | KERSIVO`}>
@@ -49,6 +52,18 @@ await recordHubOwnerView({
     current="details"
     capabilities={ctx.state.capabilities}
   >
-    <HubComingSoon title={HUB_NAV.details} />
+    <HubYourShop
+      client:load
+      token={token}
+      canUpload={ctx.state.capabilities.canUpload}
+      canEditDetails={ctx.state.capabilities.canEditDetails}
+      details={{
+        brandPrimaryColour: ctx.request.brandPrimaryColour,
+        brandSecondaryColour: ctx.request.brandSecondaryColour,
+        styleNotes: ctx.request.styleNotes,
+        aboutText: ctx.request.aboutText,
+      }}
+      assets={assets.map(serializeHubAsset)}
+    />
   </HubShell>
 </HubDocument>

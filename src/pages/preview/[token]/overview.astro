@@ -5,6 +5,8 @@ import HubDocument from '@/layouts/HubDocument.astro';
 import HubOverview from '@/components/previewHub/HubOverview.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
+import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
+import { loadActiveHubAssets } from '@/lib/freePreview/hubAssets';
 import { isHubRouteEnabled, hubNotFound, loadHubOverviewExtras, designingAtFromEvents, hubActivityItems, hubStepper, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -41,7 +43,10 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const events = await loadHubOverviewExtras(ctx.request.id);
+const [events, assets] = await Promise.all([
+  loadHubOverviewExtras(ctx.request.id),
+  loadActiveHubAssets(ctx.request.id),
+]);
 const steps = hubStepper({
   stage: ctx.state.stage,
   createdAt: ctx.request.createdAt,
@@ -51,6 +56,10 @@ const steps = hubStepper({
   liveAt: ctx.request.liveAt,
 });
 const activity = hubActivityItems(events, now);
+const checklist = buildHubChecklist({
+  stage: ctx.state.stage,
+  ...checklistFlagsFromAssets(assets, ctx.request.aboutText),
+});
 const shopName = ctx.request.shopName;
 ---
 
@@ -70,6 +79,7 @@ const shopName = ctx.request.shopName;
       steps={steps}
       activity={activity}
       hasWebsitePreview={Boolean(ctx.draft?.shop.sitePreviewUrl)}
+      checklist={checklist}
     />
   </HubShell>
 </HubDocument>

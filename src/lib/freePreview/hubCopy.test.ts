@@ -18,6 +18,7 @@ import {
   HUB_REVIEW_CARD_FOOTER,
   HUB_ROUND_USED,
   HUB_UPLOAD_HINT,
+  HUB_FILES_PRIVACY,
   hubHeaderCopy,
 } from './hubCopy';
 
@@ -64,6 +65,9 @@ describe('hubCopy §9', () => {
   it('keeps §9.3 microcopy', () => {
     expect(HUB_PRIVATE_LABEL).toBe('Private · hidden from search engines');
     expect(HUB_UPLOAD_HINT).toBe('Phone photos are perfect. JPG, PNG, WEBP or PDF.');
+    expect(HUB_FILES_PRIVACY).toBe(
+      "Your files are private. If you don't launch, we delete them with your preview.",
+    );
     expect(HUB_REVIEW_CARD_FOOTER).toContain("don't use your round");
     expect(HUB_ROUND_USED).toContain('included round of changes');
     expect(HUB_MESSAGES_EMPTY).toContain('we reply by email and here');

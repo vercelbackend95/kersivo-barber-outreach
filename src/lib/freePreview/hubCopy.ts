@@ -101,8 +101,106 @@ export const HUB_OPS_OPEN_HUB = 'Open hub as KERSIVO';
 export const HUB_OPS_OPEN_OPS = 'Open it in KERSIVO Ops';
 
 export const HUB_UPLOAD_HINT = 'Phone photos are perfect. JPG, PNG, WEBP or PDF.';
+export const HUB_UPLOAD_HINT_PHOTOS = 'Phone photos are perfect. Landscape works best for the top of your website.';
+export const HUB_UPLOAD_HINT_PRICE = "We'll copy your services and prices from it.";
 export const HUB_FILES_PRIVACY =
   "Your files are private. If you don't launch, we delete them with your preview.";
+export const HUB_UPLOAD_DROP = 'Drop files here, or tap to choose';
+export const HUB_UPLOAD_CHOOSE = 'Choose files';
+export const HUB_UPLOAD_CAMERA = 'Take a photo';
+export const HUB_UPLOAD_RETRY = 'Try again';
+export const HUB_UPLOAD_PROGRESS = (done: number, total: number) =>
+  total === 1 ? 'Uploading 1 file' : `Uploading ${done} of ${total} files`;
+export const HUB_UPLOAD_ERROR_TYPE = 'Only JPG, PNG, WEBP or PDF.';
+export const HUB_UPLOAD_ERROR_TYPE_LOGO = 'Only JPG, PNG, WEBP, SVG or PDF.';
+export const HUB_UPLOAD_ERROR_TYPE_PHOTO = 'Only JPG, PNG or WEBP.';
+export const HUB_UPLOAD_ERROR_TOO_LARGE = 'This file is over 4 MB. Try a smaller photo.';
+export const HUB_UPLOAD_ERROR_TOO_LARGE_BODY = 'This upload is over 4 MB. Try one smaller file at a time.';
+export const HUB_UPLOAD_ERROR_EMPTY = 'That file is empty.';
+export const HUB_UPLOAD_ERROR_REJECTED = 'We could not use that file. Try a JPG, PNG, WEBP or PDF.';
+export const HUB_UPLOAD_ERROR_CAP_FILES = 'You can add up to 60 files.';
+export const HUB_UPLOAD_ERROR_CAP_BYTES = 'These files would take you over 250 MB.';
+export const HUB_UPLOAD_ERROR_CAP_PHOTOS = 'You can add up to 40 shop photos.';
+export const HUB_UPLOAD_ERROR_CAP_PRICE = 'You can add up to 5 price list files.';
+export const HUB_UPLOAD_ERROR_CAP_TEAM = 'You can add up to 40 team photos.';
+export const HUB_UPLOAD_ERROR_CAP_LOGO = 'You can add up to 3 logos.';
+export const HUB_UPLOAD_ERROR_GENERIC = 'Upload failed. Try again.';
+export const HUB_UPLOAD_ERROR_DENIED = 'You cannot add files at this stage.';
+export const HUB_SAVING = 'Saving…';
+export const HUB_SAVED = 'Saved';
+export const HUB_SAVE_FAILED = 'Could not save. Try again.';
+export const HUB_RETRY = 'Try again';
+export const HUB_UNDO = 'Undo';
+export const HUB_DELETE = 'Delete';
+export const HUB_CAPTION_LABEL = 'Caption';
+export const HUB_CAPTION_PLACEHOLDER = 'Optional caption';
+export const HUB_MOVE_UP = 'Move up';
+export const HUB_MOVE_DOWN = 'Move down';
+export const HUB_EMPTY_PHOTOS = 'No shop photos yet.';
+export const HUB_EMPTY_TEAM_PHOTOS = 'No team photos yet.';
+export const HUB_EMPTY_PRICE = 'No price list yet.';
+export const HUB_EMPTY_LOGO = 'No logo yet.';
+
+export const HUB_DETAILS_TITLE = 'Your shop';
+export const HUB_DETAILS_BRAND_TITLE = 'Brand';
+export const HUB_DETAILS_PHOTOS_TITLE = 'Shop photos';
+export const HUB_DETAILS_TEAM_PHOTOS_TITLE = 'Team photos';
+export const HUB_DETAILS_PRICE_TITLE = 'Price list';
+export const HUB_DETAILS_PRICE_HEAD = 'Snap your price list';
+export const HUB_DETAILS_ABOUT_TITLE = 'About your shop';
+export const HUB_DETAILS_ABOUT_HINT = 'Two or three sentences is enough. Optional.';
+export const HUB_DETAILS_STYLE_LABEL = 'Anything about your style?';
+export const HUB_DETAILS_STYLE_HINT = 'Optional. Up to 500 characters.';
+export const HUB_DETAILS_COLOUR_PRIMARY = 'Primary colour';
+export const HUB_DETAILS_COLOUR_SECONDARY = 'Secondary colour';
+export const HUB_DETAILS_PICK_FROM_LOGO = 'Pick from my logo';
+export const HUB_DETAILS_HEX_LABEL = 'Hex';
+export const HUB_DETAILS_SWATCH_DARK = 'On dark';
+export const HUB_DETAILS_SWATCH_LIGHT = 'On light';
+export const HUB_DETAILS_PLACEHOLDER_LINKS =
+  "We'll fill these from your links — you'll confirm them on your preview";
+export const HUB_DETAILS_SERVICES_TITLE = 'Services & prices';
+export const HUB_DETAILS_TEAM_TITLE = 'Team';
+export const HUB_DETAILS_HOURS_TITLE = 'Opening hours';
+
+export const HUB_CHECKLIST_TITLE = 'Your shop';
+export const HUB_CHECKLIST_OPTIONAL = 'Optional';
+export const HUB_CHECKLIST_ON_PREVIEW = 'On your preview';
+export const HUB_CHECKLIST_LOGO = 'Logo';
+export const HUB_CHECKLIST_PHOTOS = 'Shop photos';
+export const HUB_CHECKLIST_SERVICES = 'Services & prices';
+export const HUB_CHECKLIST_TEAM = 'Team';
+export const HUB_CHECKLIST_HOURS = 'Opening hours';
+export const HUB_CHECKLIST_ABOUT = 'About your shop';
+export const HUB_CHECKLIST_PRICE = 'Price list photo';
+export const HUB_CHECKLIST_PROGRESS = (done: number, total: number) => `${done} of ${total}`;
+
+export const HUB_ACTIVITY_ADDED = (count: number, kindLabel: string) =>
+  count === 1 ? `You added ${kindLabel}` : `You added ${count} ${kindLabel}`;
+export const HUB_ACTIVITY_KIND_LOGO = 'a logo';
+export const HUB_ACTIVITY_KIND_PHOTO = 'a photo';
+export const HUB_ACTIVITY_KIND_PHOTOS = 'photos';
+export const HUB_ACTIVITY_KIND_TEAM = 'a team photo';
+export const HUB_ACTIVITY_KIND_TEAMS = 'team photos';
+export const HUB_ACTIVITY_KIND_PRICE = 'a price list';
+export const HUB_ACTIVITY_KIND_PRICES = 'price lists';
+export const HUB_ACTIVITY_KIND_FILE = 'a file';
+export const HUB_ACTIVITY_KIND_FILES = 'files';
+
+export const HUB_OPS_NEW_FILES = 'New files';
+export const HUB_OPS_FILES_TITLE = 'Files';
+export const HUB_OPS_FILES_EMPTY = 'No files yet.';
+export const HUB_OPS_DOWNLOAD = 'Download original';
+export const HUB_OPS_UPLOADED_BY_OWNER = 'Owner';
+export const HUB_OPS_UPLOADED_BY_KERSIVO = 'KERSIVO';
+export const HUB_OPS_BRAND_COLOURS = 'Brand colours';
+export const HUB_OPS_STYLE_NOTES = 'Style notes';
+export const HUB_OPS_ABOUT = 'About';
+
+export const HUB_OPS_FILES_EMAIL_SUBJECT = (shopName: string) => `Files added: ${shopName}`;
+export const HUB_OPS_FILES_EMAIL_INTRO = (shopName: string) =>
+  `${shopName} added files in their shop hub.`;
+export const HUB_OPS_FILES_EMAIL_BUTTON = 'Open in KERSIVO Ops';
 export const HUB_REVIEW_CARD_FOOTER =
   "Corrections to your details don't use your round of design changes.";
 export const HUB_ROUND_USED =
@@ -199,6 +297,8 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   EXPIRED: 'Preview expired',
   hub_viewed: 'Shop hub opened',
   hub_live: 'Site live',
+  hub_asset_uploaded: 'Files added',
+  hub_details_saved: 'Shop details saved',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));
