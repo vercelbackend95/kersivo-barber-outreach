@@ -17,15 +17,12 @@ vi.mock('@/lib/rate-limit/durableRateLimit', () => ({
 
 import { POST } from './free-preview';
 
+const LEAD_TOKEN = 'b'.repeat(43);
+
 const validBody = {
   email: 'sam@example.com',
   shopName: 'Sharp Cuts',
   townCity: 'Leeds',
-  instagramUrl: 'instagram.com/sharpcuts',
-  barberCount: '1',
-  currentBookingSystem: 'none',
-  hasOwnDomain: 'no',
-  authorisationConsent: true,
 };
 
 function call(body: unknown) {
@@ -40,7 +37,7 @@ function call(body: unknown) {
 describe('POST /api/free-preview', () => {
   beforeEach(() => {
     vi.stubEnv('FREE_PREVIEW_FLOW_ENABLED', 'true');
-    createPreviewRequest.mockReset().mockResolvedValue({ id: 'req_1' });
+    createPreviewRequest.mockReset().mockResolvedValue({ id: 'req_1', overDailyCap: false, leadToken: LEAD_TOKEN });
     enforceIpRateLimit.mockReset().mockResolvedValue(null);
     checkDurableRateLimit.mockReset().mockResolvedValue({ ok: true });
   });
@@ -65,10 +62,10 @@ describe('POST /api/free-preview', () => {
   });
 
   it('tells the page when a saved request is over the daily cap', async () => {
-    createPreviewRequest.mockResolvedValue({ id: 'req_1', overDailyCap: true });
+    createPreviewRequest.mockResolvedValue({ id: 'req_1', overDailyCap: true, leadToken: LEAD_TOKEN });
     const response = await call(validBody);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true, overDailyCap: true });
+    expect(await response.json()).toEqual({ ok: true, overDailyCap: true, leadToken: LEAD_TOKEN });
     expect(createPreviewRequest).toHaveBeenCalledTimes(1);
   });
 
@@ -80,22 +77,14 @@ describe('POST /api/free-preview', () => {
     expect(createPreviewRequest).not.toHaveBeenCalled();
   });
 
-  it('accepts a request with no work links', async () => {
-    const response = await call({ ...validBody, instagramUrl: '' });
+  it('accepts a request with no links', async () => {
+    const response = await call(validBody);
     expect(response.status).toBe(200);
-    expect(createPreviewRequest).toHaveBeenCalledTimes(1);
-    expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
-      workLinks: [],
-      instagramUrl: null,
-    });
+    expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({ workLinks: [], instagramUrl: null });
   });
 
-  it('accepts a structured workLinks payload', async () => {
-    const response = await call({
-      ...validBody,
-      instagramUrl: '',
-      workLinks: [{ platform: 'instagram', value: '@sharpcuts' }],
-    });
+  it('stores links with the platform it detects, not the one the client claims', async () => {
+    const response = await call({ ...validBody, links: [{ url: '@sharpcuts', platform: 'booksy' }] });
     expect(response.status).toBe(200);
     expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
       instagramUrl: 'https://www.instagram.com/sharpcuts',
@@ -108,6 +97,19 @@ describe('POST /api/free-preview', () => {
         },
       ],
     });
+  });
+
+  it('rejects a link that is not one', async () => {
+    const response = await call({ ...validBody, links: [{ url: 'javascript:alert(1)' }] });
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { fieldErrors: Record<string, string> };
+    expect(body.fieldErrors.links).toBeTruthy();
+    expect(createPreviewRequest).not.toHaveBeenCalled();
+  });
+
+  it('never sends the private preview link back to the browser', async () => {
+    const response = await call(validBody);
+    expect(await response.json()).toEqual({ ok: true, leadToken: LEAD_TOKEN });
   });
 
   it('enforces the IP and per-email limits', async () => {
@@ -128,7 +130,8 @@ describe('POST /api/free-preview', () => {
     expect(createPreviewRequest).toHaveBeenCalledTimes(1);
     expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
       email: 'sam@example.com',
-      instagramUrl: 'https://www.instagram.com/sharpcuts',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
     });
   });
 });

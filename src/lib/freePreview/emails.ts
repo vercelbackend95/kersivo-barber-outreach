@@ -74,9 +74,9 @@ export type PreviewRequestInternalEmailInput = {
   googleListingUrl: string | null;
   websiteUrl: string | null;
   workLinks?: unknown;
-  barberCount: string;
-  currentBookingSystem: string;
-  hasOwnDomain: string;
+  barberCount: string | null;
+  currentBookingSystem: string | null;
+  hasOwnDomain: string | null;
   notes: string | null;
   marketingOptIn: boolean;
   entryPoint: string | null;
@@ -105,7 +105,7 @@ function workLinkEmailCell(link: DisplayWorkLink): string {
 
 function workLinkEmailRows(input: PreviewRequestInternalEmailInput): Array<[string, string]> {
   const links = displayWorkLinks(input);
-  if (!links.length) return [['Work links', '—']];
+  if (!links.length) return [['Links', 'No links provided']];
   return links.map((link) => [link.label, workLinkEmailCell(link)]);
 }
 
@@ -142,6 +142,44 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
         const cell = kind === 'html' ? value : escapeHtml(value);
         return `<tr><th align="left" valign="top">${escapeHtml(label)}</th><td>${cell}</td></tr>`;
       })
+      .join('')}</table>`,
+  };
+}
+
+export type PreviewRequestDetailsEmailInput = {
+  id: string;
+  email: string;
+  shopName: string;
+  townCity: string;
+  barberCount?: string;
+  currentBookingSystem?: string;
+  hasOwnDomain?: string;
+  firstName?: string;
+  notes?: string;
+  marketingOptIn?: boolean;
+};
+
+/** Short follow-up to E2 when the owner adds optional details after sending the form. Only what changed. */
+export function buildPreviewRequestDetailsInternalEmail(input: PreviewRequestDetailsEmailInput): FreePreviewEmail {
+  const rows: Array<[string, string]> = [];
+  if (input.barberCount) rows.push(['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, input.barberCount)]);
+  if (input.currentBookingSystem) rows.push(['Booking system', currentBookingSystemLabel(input.currentBookingSystem)]);
+  if (input.hasOwnDomain) rows.push(['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, input.hasOwnDomain)]);
+  if (input.firstName) rows.push(['First name', input.firstName]);
+  if (input.notes) rows.push(['Notes', input.notes]);
+  if (input.marketingOptIn !== undefined) rows.push(['Marketing opt-in', input.marketingOptIn ? 'Yes' : 'No']);
+  const opsUrl = opsPreviewRequestUrl(input.id);
+  return {
+    to: getPreviewNotifyEmail(),
+    subject: `Preview details added: ${input.shopName}, ${input.townCity}`,
+    replyTo: input.email,
+    html: `<p>${escapeHtml(input.shopName)} (${escapeHtml(input.email)}) added details to their preview request.</p>
+<p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a></p>
+<table cellpadding="4">${rows
+      .map(
+        ([label, value]) =>
+          `<tr><th align="left" valign="top">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`,
+      )
       .join('')}</table>`,
   };
 }

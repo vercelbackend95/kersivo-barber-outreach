@@ -35,6 +35,11 @@ export function getFreePreviewDailyCap(): number {
   return /^\d+$/.test(raw) ? Number(raw) : FREE_PREVIEW_DEFAULT_DAILY_CAP;
 }
 
+/** Step 2 of the public form can update a request for this long after it was sent. */
+export const PREVIEW_DETAILS_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+/** The same shop and email again within this window is a retry: no second request or emails. */
+export const PREVIEW_DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
 export const PREVIEW_EXPIRY_DAYS = 30;
 export const PREVIEW_DATA_RETENTION_DAYS_AFTER_EXPIRY = 90;
 export const PREVIEW_FOLLOWUP_DAYS_AFTER_READY = 3;

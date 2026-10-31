@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
   detectBookingPlatform,
   detectPlatform,
+  dedupeWorkLinks,
   displayWorkLinks,
-  legacyFieldsToWorkLinks,
+  inferBookingSystem,
   normaliseWorkLink,
-  normaliseWorkLinksInput,
+  parseLinkInput,
+  parseStoredWorkLinks,
   parseWebUrl,
-  workLinkLooksValid,
+  splitLinkInput,
   workLinkPreviewText,
   workLinksToLegacyFields,
 } from './workLinkNormalise';
+import { CURRENT_BOOKING_SYSTEM_VALUE_SET } from '@/lib/forms/currentBookingSystems';
 import { WORK_PLATFORM_IDS } from './workPlatforms';
 
 describe('parseWebUrl', () => {
@@ -22,6 +25,8 @@ describe('parseWebUrl', () => {
     expect(parseWebUrl('ftp://sharpcuts.co.uk')).toBeNull();
     expect(parseWebUrl('https://user:pass@sharpcuts.co.uk')).toBeNull();
     expect(parseWebUrl('localhost')).toBeNull();
+    expect(parseWebUrl('192.168.0.1')).toBeNull();
+    expect(parseWebUrl('https://shop.c')).toBeNull();
     expect(parseWebUrl('')).toBeNull();
   });
 });
@@ -39,6 +44,16 @@ describe('detectPlatform', () => {
     expect(detectPlatform('https://www.treatwell.co.uk/place/sharp')).toBe('treatwell');
     expect(detectPlatform('https://vm.tiktok.com/ZMxxxx')).toBe('tiktok');
     expect(detectPlatform('https://m.facebook.com/sharpcuts')).toBe('facebook');
+    expect(detectPlatform('https://share.google/abc')).toBe('google');
+    expect(detectPlatform('https://goo.gl/maps/abc')).toBe('google');
+    expect(detectPlatform('https://g.page/sharpcuts')).toBe('google');
+    expect(detectPlatform('https://treatwell.com/place/sharp')).toBe('treatwell');
+    expect(detectPlatform('https://fb.com/sharpcuts')).toBe('facebook');
+    expect(detectPlatform('https://tiktok.com/@shop')).toBe('tiktok');
+    expect(detectPlatform('https://nearcut.com/sharp')).toBe('nearcut');
+    expect(detectPlatform('https://sharp.setora.co.uk')).toBe('setora');
+    expect(detectPlatform('https://book.squareup.com/appointments/abc')).toBe('square');
+    expect(detectPlatform('https://sharp.square.site')).toBe('square');
     expect(detectPlatform('https://yourshop.co.uk')).toBe('website');
     expect(detectPlatform('@sharpcuts')).toBeNull();
     expect(detectPlatform('hello')).toBeNull();
@@ -101,8 +116,6 @@ describe('normaliseWorkLink', () => {
       url: null,
       handle: null,
     });
-    expect(workLinkLooksValid('instagram', 'not a handle')).toBe(false);
-    expect(workLinkLooksValid('instagram', '@sharpcuts')).toBe(true);
   });
 
   it('normalises TikTok handles, profile URLs and short links', () => {
@@ -130,8 +143,6 @@ describe('normaliseWorkLink', () => {
       url: 'https://vm.tiktok.com/ZMxxxx',
       handle: null,
     });
-    expect(workLinkLooksValid('tiktok', 'https://vm.tiktok.com/ZMxxxx')).toBe(true);
-    expect(workLinkLooksValid('tiktok', 'not a handle')).toBe(false);
     expect(workLinkPreviewText('tiktok', '@shop')).toBe('tiktok.com/@shop');
   });
 
@@ -160,8 +171,6 @@ describe('normaliseWorkLink', () => {
       url: null,
       handle: null,
     });
-    expect(workLinkLooksValid('facebook', 'Sharp Cuts Barbers')).toBe(true);
-    expect(workLinkLooksValid('facebook', 'https://example.com/not-facebook')).toBe(false);
   });
 
   it('validates Booksy, Fresha and Treatwell by domain only', () => {
@@ -189,8 +198,6 @@ describe('normaliseWorkLink', () => {
       url: null,
       handle: null,
     });
-    expect(workLinkLooksValid('booksy', 'https://not-booksy.example/x')).toBe(false);
-    expect(workLinkLooksValid('booksy', 'https://booksy.com/en-gb/1')).toBe(true);
     expect(detectBookingPlatform('https://partners.fresha.com/a')).toBe('fresha');
   });
 
@@ -231,7 +238,6 @@ describe('normaliseWorkLink', () => {
       url: null,
       handle: null,
     });
-    expect(workLinkLooksValid('google', 'Northside Barbers, Leeds')).toBe(true);
   });
 
   it('normalises a website and strips tracking params', () => {
@@ -253,7 +259,6 @@ describe('normaliseWorkLink', () => {
       url: 'https://yourshop.co.uk',
       handle: null,
     });
-    expect(workLinkLooksValid('website', 'not a url')).toBe(false);
   });
 
   it('keeps Other as free text and attaches a URL when one is typed', () => {
@@ -289,38 +294,27 @@ describe('normaliseWorkLink', () => {
 });
 
 describe('workLinks projection', () => {
-  it('drops blanks, uniques by platform and projects onto the legacy columns', () => {
-    const links = normaliseWorkLinksInput([
-      { platform: 'instagram', value: '  ' },
-      { platform: 'instagram', value: '@shop' },
-      { platform: 'instagram', value: '@ignored' },
-      { platform: 'booksy', value: 'https://booksy.com/en-gb/1' },
-      { platform: 'fresha', value: 'https://fresha.com/a/shop' },
-      { platform: 'unknown', value: 'x' },
-    ]);
-    expect(links.map((link) => link.platform)).toEqual(['instagram', 'booksy', 'fresha']);
-    expect(links[0]).toEqual({
-      platform: 'instagram',
-      value: '@shop',
-      url: 'https://www.instagram.com/shop',
-      handle: 'shop',
-    });
+  it('projects the first link of each kind onto the legacy columns', () => {
+    const links = ['@shop', '@second', 'https://nearcut.com/sharp', 'https://booksy.com/en-gb/1'].map(
+      (raw) => parseLinkInput(raw)!,
+    );
     expect(workLinksToLegacyFields(links)).toEqual({
-      bookingPageUrl: 'https://booksy.com/en-gb/1',
+      bookingPageUrl: 'https://nearcut.com/sharp',
       instagramUrl: 'https://www.instagram.com/shop',
       googleListingUrl: null,
       websiteUrl: null,
     });
   });
 
-  it('synthesises work links from the four legacy URL columns', () => {
-    const links = legacyFieldsToWorkLinks({
-      bookingPageUrl: 'https://www.treatwell.co.uk/place/sharp',
-      instagramUrl: 'https://instagram.com/sharpcuts',
-      googleListingUrl: 'https://maps.app.goo.gl/abc',
-      websiteUrl: 'https://sharpcuts.co.uk',
-    });
-    expect(links.map((link) => link.platform)).toEqual(['instagram', 'treatwell', 'google', 'website']);
+  it('reads several stored links on one platform, deduped by URL', () => {
+    const stored = parseStoredWorkLinks([
+      { platform: 'website', value: 'a.co.uk', url: 'https://a.co.uk' },
+      { platform: 'website', value: 'b.co.uk', url: 'https://b.co.uk' },
+      { platform: 'website', value: 'A.co.uk', url: 'https://A.co.uk' },
+      { platform: 'unknown', value: 'x', url: null },
+    ]);
+    expect(stored.map((link) => link.url)).toEqual(['https://a.co.uk', 'https://b.co.uk']);
+    expect(dedupeWorkLinks([...stored, ...stored])).toEqual(stored);
   });
 
   it('falls back to the four columns when workLinks is missing, labelling an unknown booking page', () => {
@@ -362,17 +356,89 @@ describe('workLinks projection', () => {
     ]);
   });
 
-  it('lists platforms in the picker order', () => {
+  it('lists the platforms', () => {
     expect(WORK_PLATFORM_IDS).toEqual([
       'instagram',
       'google',
       'booksy',
       'fresha',
       'treatwell',
+      'nearcut',
+      'setora',
+      'square',
       'tiktok',
       'facebook',
       'website',
       'other',
     ]);
+  });
+});
+
+describe('parseLinkInput', () => {
+  it('treats a bare @handle as Instagram and normalises it', () => {
+    expect(parseLinkInput(' @SharpCuts ')).toEqual({
+      platform: 'instagram',
+      value: '@SharpCuts',
+      url: 'https://www.instagram.com/SharpCuts',
+      handle: 'SharpCuts',
+    });
+  });
+
+  it('adds https, strips tracking params and keeps what matters', () => {
+    expect(
+      parseLinkInput('booksy.com/en-gb/1?utm_source=a&utm_medium=b&igsh=c&igshid=d&fbclid=e&si=f&id=7')?.url,
+    ).toBe('https://booksy.com/en-gb/1?id=7');
+  });
+
+  it.each(['', '   ', 'hello', 'two words', 'sam@example.com', '@not a handle', 'javascript:alert(1)', 'mailto:a@b.co'])(
+    'returns null for %j',
+    (raw) => {
+      expect(parseLinkInput(raw)).toBeNull();
+    },
+  );
+
+  it('returns null for anything over 300 characters', () => {
+    expect(parseLinkInput(`https://booksy.com/${'a'.repeat(300)}`)).toBeNull();
+  });
+});
+
+describe('splitLinkInput', () => {
+  it('splits on spaces, commas and new lines', () => {
+    expect(splitLinkInput('a.co.uk b.co.uk,c.co.uk, d.co.uk\ne.co.uk\r\n@f,@g')).toEqual([
+      'a.co.uk',
+      'b.co.uk',
+      'c.co.uk',
+      'd.co.uk',
+      'e.co.uk',
+      '@f',
+      '@g',
+    ]);
+  });
+
+  it('keeps a Google Maps URL with commas in one piece', () => {
+    const url = 'https://www.google.com/maps/place/Northside+Barbers,+Leeds/@53.8,-1.54,15z/data=!3m1';
+    expect(splitLinkInput(url)).toEqual([url]);
+    expect(parseLinkInput(url)?.platform).toBe('google');
+  });
+
+  it('drops punctuation around a link', () => {
+    expect(splitLinkInput('(booksy.com/shop), "sharp.co.uk".')).toEqual(['booksy.com/shop', 'sharp.co.uk']);
+  });
+});
+
+describe('inferBookingSystem', () => {
+  it('answers only when exactly one booking platform is linked', () => {
+    expect(inferBookingSystem([{ platform: 'booksy' }, { platform: 'instagram' }])).toBe('booksy');
+    expect(inferBookingSystem([{ platform: 'booksy' }, { platform: 'booksy' }])).toBe('booksy');
+    expect(inferBookingSystem([{ platform: 'booksy' }, { platform: 'fresha' }])).toBeNull();
+    expect(inferBookingSystem([{ platform: 'instagram' }])).toBeNull();
+    expect(inferBookingSystem([])).toBeNull();
+  });
+
+  it('only ever answers with a stored booking-system value', () => {
+    for (const platform of WORK_PLATFORM_IDS) {
+      const inferred = inferBookingSystem([{ platform }]);
+      if (inferred) expect(CURRENT_BOOKING_SYSTEM_VALUE_SET.has(inferred)).toBe(true);
+    }
   });
 });

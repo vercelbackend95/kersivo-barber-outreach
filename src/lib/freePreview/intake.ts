@@ -1,12 +1,7 @@
 import { z } from 'zod';
 import { CURRENT_BOOKING_SYSTEMS } from '@/lib/forms/currentBookingSystems';
-import {
-  legacyFieldsToWorkLinks,
-  normaliseWorkLinksInput,
-  parseWebUrl,
-  workLinksToLegacyFields,
-} from './workLinkNormalise';
-import { WORK_LINKS_MAX, WORK_LINK_VALUE_MAX, type WorkLink } from './workPlatforms';
+import { dedupeWorkLinks, parseLinkInput, workLinksToLegacyFields } from './workLinkNormalise';
+import { SMART_LINK_COPY, WORK_LINKS_MAX, WORK_LINK_VALUE_MAX, type WorkLink } from './workPlatforms';
 
 /** Select options (spec §4). Values are stored; labels are shown. */
 export const FREE_PREVIEW_BARBER_COUNTS = [
@@ -29,15 +24,15 @@ export const FREE_PREVIEW_DOMAIN_OPTIONS = [
 export const FREE_PREVIEW_ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
 
 export const FREE_PREVIEW_NOTES_MAX = 1000;
-export const FREE_PREVIEW_LINK_FIELDS = [
-  'bookingPageUrl',
-  'instagramUrl',
-  'googleListingUrl',
-  'websiteUrl',
-] as const;
+export const FREE_PREVIEW_FIRST_NAME_MAX = 80;
 
-export const FREE_PREVIEW_AUTHORISATION_LABEL =
-  "I'm the owner or manager of this barbershop, and KERSIVO can use the details and photos from the links above to create a private preview for me.";
+/**
+ * Shown under the submit button. Submitting is the confirmation, recorded with this version:
+ * changing the wording means a new version.
+ */
+export const FREE_PREVIEW_AUTHORISATION_STATEMENT =
+  'By sending this, you confirm you own or manage this barbershop and that KERSIVO can use the details and photos from your links to build your private preview.';
+export const FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION = '2026-10-31';
 export const FREE_PREVIEW_MARKETING_LABEL =
   'Send me occasional KERSIVO product news and tips. You can unsubscribe at any time.';
 
@@ -53,59 +48,48 @@ const optionalText = (max: number) =>
     .optional()
     .transform((value) => (value ? value : null));
 
-/** Accepts "instagram.com/shop" as well as full URLs; stores a normalised https URL. */
-export function normaliseLinkInput(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const url = parseWebUrl(trimmed);
-  return url ? url.toString() : null;
-}
-
-const linkField = z
-  .string()
-  .max(500, 'Links must be 500 characters or fewer.')
-  .optional()
-  .superRefine((value, ctx) => {
-    if (value && value.trim() && !normaliseLinkInput(value)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid link, for example instagram.com/yourshop.' });
-    }
-  })
-  .transform((value) => (value ? normaliseLinkInput(value) : null));
+const barberCountField = z.enum(valuesOf(FREE_PREVIEW_BARBER_COUNTS), {
+  errorMap: () => ({ message: 'Choose how many barbers work in your shop.' }),
+});
+const bookingSystemField = z.enum(valuesOf(FREE_PREVIEW_BOOKING_SYSTEMS), {
+  errorMap: () => ({ message: 'Choose your current booking system.' }),
+});
+const ownDomainField = z.enum(valuesOf(FREE_PREVIEW_DOMAIN_OPTIONS), {
+  errorMap: () => ({ message: 'Tell us whether you have your own domain.' }),
+});
 
 export const freePreviewRequestSchema = z
   .object({
-    firstName: optionalText(80),
-    email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(254),
-    shopName: z.string().trim().min(2, 'Enter your barbershop name.').max(120),
-    townCity: z.string().trim().min(2, 'Enter your town or city.').max(120),
-    bookingPageUrl: linkField,
-    instagramUrl: linkField,
-    googleListingUrl: linkField,
-    websiteUrl: linkField,
-    workLinks: z
+    firstName: optionalText(FREE_PREVIEW_FIRST_NAME_MAX),
+    email: z.string().trim().toLowerCase().email('Please enter a valid email address.').max(254),
+    shopName: z.string().trim().min(2, 'Please enter your barbershop name.').max(120),
+    townCity: z.string().trim().min(2, 'Please enter your town or city.').max(120),
+    /** The platform a client sends is never trusted: it is detected again from the URL. */
+    links: z
       .array(
         z.object({
-          platform: z.string(),
-          value: z.string().max(WORK_LINK_VALUE_MAX, 'Links must be 300 characters or fewer.'),
-          url: z.string().max(WORK_LINK_VALUE_MAX).nullable().optional(),
-          handle: z.string().max(WORK_LINK_VALUE_MAX).nullable().optional(),
+          url: z.string().max(WORK_LINK_VALUE_MAX, SMART_LINK_COPY.invalid),
+          platform: z.string().optional(),
         }),
       )
-      .max(WORK_LINKS_MAX)
-      .optional(),
-    barberCount: z.enum(valuesOf(FREE_PREVIEW_BARBER_COUNTS), {
-      errorMap: () => ({ message: 'Choose how many barbers work in your shop.' }),
-    }),
-    currentBookingSystem: z.enum(valuesOf(FREE_PREVIEW_BOOKING_SYSTEMS), {
-      errorMap: () => ({ message: 'Choose your current booking system.' }),
-    }),
-    hasOwnDomain: z.enum(valuesOf(FREE_PREVIEW_DOMAIN_OPTIONS), {
-      errorMap: () => ({ message: 'Tell us whether you have your own domain.' }),
-    }),
+      .max(WORK_LINKS_MAX, SMART_LINK_COPY.max)
+      .optional()
+      .transform((items, ctx): WorkLink[] => {
+        const links: WorkLink[] = [];
+        for (const item of items ?? []) {
+          const link = parseLinkInput(item.url);
+          if (!link) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: SMART_LINK_COPY.invalid });
+            return z.NEVER;
+          }
+          links.push(link);
+        }
+        return dedupeWorkLinks(links);
+      }),
+    barberCount: barberCountField.optional().transform((value) => value ?? null),
+    currentBookingSystem: bookingSystemField.optional().transform((value) => value ?? null),
+    hasOwnDomain: ownDomainField.optional().transform((value) => value ?? null),
     notes: optionalText(FREE_PREVIEW_NOTES_MAX),
-    authorisationConsent: z.literal(true, {
-      errorMap: () => ({ message: 'Please confirm you can request a preview for this barbershop.' }),
-    }),
     marketingOptIn: z.boolean().optional().default(false),
     entryPoint: z
       .string()
@@ -115,34 +99,34 @@ export const freePreviewRequestSchema = z
         return FREE_PREVIEW_ENTRY_POINT_PATTERN.test(trimmed) ? trimmed : null;
       }),
   })
-  .transform((value) => {
-    const workLinks =
-      value.workLinks !== undefined
-        ? normaliseWorkLinksInput(value.workLinks)
-        : legacyFieldsToWorkLinks({
-            bookingPageUrl: value.bookingPageUrl,
-            instagramUrl: value.instagramUrl,
-            googleListingUrl: value.googleListingUrl,
-            websiteUrl: value.websiteUrl,
-          });
-    return {
-      ...value,
-      workLinks,
-      ...workLinksToLegacyFields(workLinks),
-    };
-  });
+  .transform(({ links, ...value }) => ({
+    ...value,
+    workLinks: links,
+    ...workLinksToLegacyFields(links),
+  }));
 
-export type FreePreviewRequestInput = z.output<typeof freePreviewRequestSchema> & {
-  workLinks: WorkLink[];
-};
+export type FreePreviewRequestInput = z.output<typeof freePreviewRequestSchema>;
 
-export type FreePreviewParseResult =
-  | { ok: true; value: FreePreviewRequestInput }
-  | { ok: false; fieldErrors: Record<string, string> };
+/** Step 2 accepts these fields and nothing else. Omitted fields keep their stored value. */
+export const freePreviewDetailsSchema = z
+  .object({
+    token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+    barberCount: barberCountField.optional(),
+    currentBookingSystem: bookingSystemField.optional(),
+    hasOwnDomain: ownDomainField.optional(),
+    firstName: z.string().trim().max(FREE_PREVIEW_FIRST_NAME_MAX).optional(),
+    notes: z.string().trim().max(FREE_PREVIEW_NOTES_MAX).optional(),
+    marketingOptIn: z.boolean().optional(),
+  })
+  .strict();
 
-/** Validates the public form body. Field errors are keyed by input name (`links` for the group). */
-export function parseFreePreviewRequest(body: unknown): FreePreviewParseResult {
-  const parsed = freePreviewRequestSchema.safeParse(body);
+export type FreePreviewDetailsInput = z.output<typeof freePreviewDetailsSchema>;
+
+type ParseResult<T> = { ok: true; value: T } | { ok: false; fieldErrors: Record<string, string> };
+
+/** Field errors are keyed by input name (`form` for anything that isn't a field). */
+function parseWith<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, body: unknown): ParseResult<T> {
+  const parsed = schema.safeParse(body);
   if (parsed.success) return { ok: true, value: parsed.data };
   const fieldErrors: Record<string, string> = {};
   for (const issue of parsed.error.issues) {
@@ -150,6 +134,14 @@ export function parseFreePreviewRequest(body: unknown): FreePreviewParseResult {
     if (!fieldErrors[key]) fieldErrors[key] = issue.message;
   }
   return { ok: false, fieldErrors };
+}
+
+export function parseFreePreviewRequest(body: unknown): ParseResult<FreePreviewRequestInput> {
+  return parseWith(freePreviewRequestSchema, body);
+}
+
+export function parseFreePreviewDetails(body: unknown): ParseResult<FreePreviewDetailsInput> {
+  return parseWith(freePreviewDetailsSchema, body);
 }
 
 export function labelFor(

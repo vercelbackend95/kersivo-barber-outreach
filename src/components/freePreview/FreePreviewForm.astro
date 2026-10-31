@@ -1,20 +1,52 @@
 ---
 import { Check } from 'lucide-react';
-import PlatformPicker from '@/components/freePreview/PlatformPicker.astro';
 import {
-  FREE_PREVIEW_AUTHORISATION_LABEL,
+  FREE_PREVIEW_AUTHORISATION_STATEMENT,
   FREE_PREVIEW_BARBER_COUNTS,
   FREE_PREVIEW_BOOKING_SYSTEMS,
   FREE_PREVIEW_DOMAIN_OPTIONS,
+  FREE_PREVIEW_FIRST_NAME_MAX,
   FREE_PREVIEW_MARKETING_LABEL,
   FREE_PREVIEW_NOTES_MAX,
 } from '@/lib/freePreview/intake';
 import { PREVIEW_OVER_CAP_MESSAGE } from '@/lib/freePreview/config';
+import { SMART_LINK_COPY, WORK_LINK_VALUE_MAX } from '@/lib/freePreview/workPlatforms';
 import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
 import '@/styles/components/ks-glass-card.css';
+
+const bookingChipLabels: Record<string, string> = FREE_PREVIEW_PAGE.detailsBookingChipLabels;
+const choiceGroups = [
+  {
+    name: 'barberCount',
+    legend: FREE_PREVIEW_PAGE.detailsBarbersLabel,
+    options: FREE_PREVIEW_BARBER_COUNTS.map(({ value, label }) => ({ value, label })),
+  },
+  {
+    name: 'currentBookingSystem',
+    legend: FREE_PREVIEW_PAGE.detailsBookingLabel,
+    options: FREE_PREVIEW_BOOKING_SYSTEMS.map(({ value, label }) => ({
+      value,
+      label: bookingChipLabels[value] ?? label,
+    })),
+  },
+  {
+    name: 'hasOwnDomain',
+    legend: FREE_PREVIEW_PAGE.detailsDomainLabel,
+    options: FREE_PREVIEW_DOMAIN_OPTIONS.map(({ value, label }) => ({ value, label })),
+  },
+];
 ---
 
-<div class="fp-card ks-glass-card ks-glass-card--accent" data-free-preview>
+<div
+  class="fp-card ks-glass-card ks-glass-card--accent"
+  data-free-preview
+  data-copy-shop-name={FREE_PREVIEW_PAGE.errorShopName}
+  data-copy-town-city={FREE_PREVIEW_PAGE.errorTownCity}
+  data-copy-email={FREE_PREVIEW_PAGE.errorEmail}
+  data-copy-network={FREE_PREVIEW_PAGE.errorNetwork}
+  data-copy-rate-limited={FREE_PREVIEW_PAGE.errorRateLimited}
+  data-copy-details-expired={FREE_PREVIEW_PAGE.detailsExpired}
+>
   <form class="free-preview-form" data-free-preview-form novalidate>
     <header class="fp-card__header">
       <p class="fp-card__eyebrow">{FREE_PREVIEW_PAGE.formEyebrow}</p>
@@ -36,9 +68,10 @@ import '@/styles/components/ks-glass-card.css';
           name="shopName"
           type="text"
           autocomplete="organization"
+          enterkeyhint="next"
           required
           maxlength="120"
-          placeholder="e.g. Northside Barbers"
+          placeholder={FREE_PREVIEW_PAGE.shopNamePlaceholder}
           aria-describedby="fp-error-shopName"
         />
         <span class="free-preview-form__error" id="fp-error-shopName" data-error-for="shopName"></span>
@@ -49,100 +82,73 @@ import '@/styles/components/ks-glass-card.css';
           name="townCity"
           type="text"
           autocomplete="address-level2"
+          enterkeyhint="next"
           required
           maxlength="120"
-          placeholder="e.g. Leeds"
+          placeholder={FREE_PREVIEW_PAGE.townCityPlaceholder}
           aria-describedby="fp-error-townCity"
         />
         <span class="free-preview-form__error" id="fp-error-townCity" data-error-for="townCity"></span>
       </label>
     </div>
 
-    <PlatformPicker />
-    <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
-
-    <div class="fp-fields fp-fields--three">
-      <label class="free-preview-form__field">
-        <span class="free-preview-form__label">Number of barbers</span>
-        <select name="barberCount" required aria-describedby="fp-error-barberCount">
-          <option value="" selected disabled>Choose</option>
-          {FREE_PREVIEW_BARBER_COUNTS.map((option) => <option value={option.value}>{option.label}</option>)}
-        </select>
-        <span class="free-preview-form__error" id="fp-error-barberCount" data-error-for="barberCount"></span>
-      </label>
-      <label class="free-preview-form__field">
-        <span class="free-preview-form__label">Current booking system</span>
-        <select name="currentBookingSystem" required aria-describedby="fp-error-currentBookingSystem">
-          <option value="" selected disabled>Choose</option>
-          {FREE_PREVIEW_BOOKING_SYSTEMS.map((option) => <option value={option.value}>{option.label}</option>)}
-        </select>
-        <span class="free-preview-form__error" id="fp-error-currentBookingSystem" data-error-for="currentBookingSystem"></span>
-      </label>
-      <label class="free-preview-form__field">
-        <span class="free-preview-form__label">Own domain?</span>
-        <select name="hasOwnDomain" required aria-describedby="fp-error-hasOwnDomain">
-          <option value="" selected disabled>Choose</option>
-          {FREE_PREVIEW_DOMAIN_OPTIONS.map((option) => <option value={option.value}>{option.label}</option>)}
-        </select>
-        <span class="free-preview-form__error" id="fp-error-hasOwnDomain" data-error-for="hasOwnDomain"></span>
-      </label>
+    <div class="fp-links" data-smart-links>
+      <label class="free-preview-form__label" for="fp-link-input">{SMART_LINK_COPY.label}</label>
+      <p class="fp-links__help" id="fp-links-help">{SMART_LINK_COPY.hint}</p>
+      <div class="fp-links__stack">
+        <ul class="fp-link-chips" data-link-chips aria-label="Links added" hidden></ul>
+        <div class="fp-links__entry" data-link-entry>
+          <input
+            id="fp-link-input"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="next"
+            maxlength={WORK_LINK_VALUE_MAX * 5}
+            placeholder={SMART_LINK_COPY.placeholder}
+            data-smart-paste
+            aria-describedby="fp-links-help fp-link-hint fp-links-supported fp-error-links"
+          />
+        </div>
+        <button type="button" class="fp-links__add" data-link-add hidden>{SMART_LINK_COPY.addAnother}</button>
+        <p class="fp-links__supported" id="fp-links-supported" data-link-supported>{SMART_LINK_COPY.supported}</p>
+        <p class="fp-links__hint" id="fp-link-hint" data-link-hint hidden></p>
+        <p class="fp-links__max" data-link-max hidden>{SMART_LINK_COPY.max}</p>
+        <p class="fp-links__undo" data-link-undo hidden>
+          <span>{SMART_LINK_COPY.removed}.</span>
+          <button type="button" data-link-undo-button>{SMART_LINK_COPY.undo}</button>
+        </p>
+      </div>
+      <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
+      <p class="sr-only" data-link-live role="status" aria-live="polite"></p>
     </div>
 
-    <div class="fp-fields fp-fields--two">
-      <label class="free-preview-form__field">
-        <span class="free-preview-form__label">First name (optional)</span>
-        <input name="firstName" type="text" autocomplete="given-name" maxlength="80" placeholder="e.g. Alex" />
-      </label>
-      <label class="free-preview-form__field">
-        <span class="free-preview-form__label">Email address</span>
-        <input
-          name="email"
-          type="email"
-          autocomplete="email"
-          required
-          maxlength="254"
-          placeholder="alex@yourshop.co.uk"
-          aria-describedby="fp-error-email"
-        />
-        <span class="free-preview-form__error" id="fp-error-email" data-error-for="email"></span>
-      </label>
-    </div>
+    <label class="free-preview-form__field">
+      <span class="free-preview-form__label">{FREE_PREVIEW_PAGE.emailLabel}</span>
+      <input
+        name="email"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        enterkeyhint="send"
+        required
+        maxlength="254"
+        placeholder={FREE_PREVIEW_PAGE.emailPlaceholder}
+        aria-describedby="fp-hint-email fp-error-email"
+      />
+      <span class="fp-links__help" id="fp-hint-email">{FREE_PREVIEW_PAGE.emailHint}</span>
+      <span class="free-preview-form__error" id="fp-error-email" data-error-for="email"></span>
+    </label>
 
-    <div class="fp-note">
-      <button
-        type="button"
-        class="fp-note__toggle"
-        data-fp-note-toggle
-        aria-expanded="false"
-        aria-controls="fp-note-field"
-      >
-        {FREE_PREVIEW_PAGE.addNoteLabel}
-      </button>
-      <label class="free-preview-form__field" id="fp-note-field" data-fp-note-field hidden>
-        <span class="free-preview-form__label">Anything else we should know? (optional)</span>
-        <textarea
-          name="notes"
-          maxlength={FREE_PREVIEW_NOTES_MAX}
-          rows="3"
-          data-fp-autogrow
-          placeholder="e.g. photos, a logo, or anything you'd like us to include"
-          aria-describedby="fp-error-notes"
-        ></textarea>
-        <span class="free-preview-form__error" id="fp-error-notes" data-error-for="notes"></span>
-      </label>
-    </div>
-
-    <div class="fp-checks">
-      <label class="free-preview-form__check">
-        <input type="checkbox" name="authorisationConsent" required aria-describedby="fp-error-authorisationConsent" />
-        <span>{FREE_PREVIEW_AUTHORISATION_LABEL}</span>
-      </label>
-      <span class="free-preview-form__error" id="fp-error-authorisationConsent" data-error-for="authorisationConsent"></span>
-
-      <label class="free-preview-form__check">
-        <input type="checkbox" name="marketingOptIn" />
-        <span>{FREE_PREVIEW_MARKETING_LABEL}</span>
-      </label>
+    <div class="fp-no-link" data-fp-no-link role="group" aria-labelledby="fp-no-link-text" tabindex="-1" hidden>
+      <p id="fp-no-link-text">{FREE_PREVIEW_PAGE.noLinkNotice}</p>
+      <div class="fp-no-link__actions">
+        <button type="button" class="fp-no-link__button" data-fp-no-link-add>{FREE_PREVIEW_PAGE.noLinkAddLabel}</button>
+        <button type="button" class="fp-no-link__button" data-fp-no-link-send>{FREE_PREVIEW_PAGE.noLinkSendLabel}</button>
+      </div>
     </div>
 
     <p class="free-preview-form__status" data-free-preview-status role="status" aria-live="polite"></p>
@@ -157,31 +163,99 @@ import '@/styles/components/ks-glass-card.css';
         <span data-fp-submit-label>{FREE_PREVIEW_PAGE.submitLabel}</span>
       </button>
       <p class="free-preview-form__note">
-        {FREE_PREVIEW_PAGE.submitNote} <a href="/privacy">{FREE_PREVIEW_PAGE.privacyLabel}</a>
+        {FREE_PREVIEW_PAGE.submitNoteLead} {FREE_PREVIEW_AUTHORISATION_STATEMENT}
+        <a href="/privacy">{FREE_PREVIEW_PAGE.privacyLabel}</a>
       </p>
     </div>
   </form>
 
-  <div class="free-preview-confirmation" data-free-preview-confirmation hidden tabindex="-1">
+  <div class="free-preview-confirmation" data-free-preview-confirmation hidden>
     <span class="free-preview-confirmation__icon" aria-hidden="true">
-      <Check size={24} strokeWidth={2.2} />
+      <Check size={20} strokeWidth={2.2} />
     </span>
-    <h2 class="free-preview-confirmation__title">{FREE_PREVIEW_PAGE.confirmationHeading}</h2>
-    <p class="free-preview-confirmation__text" data-free-preview-confirmation-text data-template={FREE_PREVIEW_PAGE.confirmationText} data-over-cap-text={PREVIEW_OVER_CAP_MESSAGE}></p>
-    <p class="free-preview-confirmation__next-label">{FREE_PREVIEW_PAGE.confirmationNextHeading}</p>
-    <ol class="free-preview-confirmation__next">
-      {FREE_PREVIEW_PAGE.confirmationNext.map((step) => <li>{step}</li>)}
-    </ol>
-    <a class="free-preview-confirmation__link" href="/demo">{FREE_PREVIEW_PAGE.demoLinkLabel}</a>
+    <h2 class="free-preview-confirmation__title" data-fp-confirmation-heading tabindex="-1">
+      {FREE_PREVIEW_PAGE.confirmationHeading}
+    </h2>
+    <p
+      class="free-preview-confirmation__text"
+      data-free-preview-confirmation-text
+      data-template={FREE_PREVIEW_PAGE.confirmationText}
+      data-over-cap-text={PREVIEW_OVER_CAP_MESSAGE}
+    ></p>
+
+    <form class="free-preview-form fp-details" data-fp-details novalidate>
+      <h3 class="fp-details__heading">{FREE_PREVIEW_PAGE.detailsHeading}</h3>
+
+      {
+        choiceGroups.map((group) => (
+          <fieldset class="fp-choice">
+            <legend class="free-preview-form__label">{group.legend}</legend>
+            <div class="fp-choice__options">
+              {group.options.map((option) => (
+                <label class="fp-choice__option">
+                  <input type="radio" name={group.name} value={option.value} />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))
+      }
+
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">{FREE_PREVIEW_PAGE.detailsFirstNameLabel}</span>
+        <input
+          name="firstName"
+          type="text"
+          autocomplete="given-name"
+          enterkeyhint="next"
+          maxlength={FREE_PREVIEW_FIRST_NAME_MAX}
+        />
+      </label>
+
+      <label class="free-preview-form__field">
+        <span class="free-preview-form__label">{FREE_PREVIEW_PAGE.detailsNotesLabel}</span>
+        <textarea
+          name="notes"
+          maxlength={FREE_PREVIEW_NOTES_MAX}
+          rows="3"
+          data-fp-autogrow
+          placeholder={FREE_PREVIEW_PAGE.detailsNotesPlaceholder}
+        ></textarea>
+      </label>
+
+      <p class="fp-links__help">{FREE_PREVIEW_PAGE.detailsPhotosLine}</p>
+
+      <label class="free-preview-form__check">
+        <input type="checkbox" name="marketingOptIn" />
+        <span>{FREE_PREVIEW_MARKETING_LABEL}</span>
+      </label>
+
+      <p class="free-preview-form__status" data-fp-details-status role="status" aria-live="polite"></p>
+
+      <div class="fp-details__actions">
+        <button type="submit" class="btn btn--primary btn--lg free-preview-form__submit" data-fp-details-submit>
+          <span class="btn-spinner" data-fp-details-spinner hidden aria-hidden="true"></span>
+          <span>{FREE_PREVIEW_PAGE.detailsSaveLabel}</span>
+        </button>
+        <button type="button" class="fp-details__skip" data-fp-details-skip>{FREE_PREVIEW_PAGE.detailsSkipLabel}</button>
+      </div>
+    </form>
+
+    <p class="fp-details__saved" data-fp-details-saved tabindex="-1" hidden>{FREE_PREVIEW_PAGE.detailsSaved}</p>
   </div>
 </div>
 
 <script>
   import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
   import { trackConsentedEvent } from '@/lib/consent/events';
-  import { collectWorkLinks, initPlatformPicker } from '@/lib/freePreview/initPlatformPicker';
+  import { startPreviewDetailsStep } from '@/lib/freePreview/initPreviewDetails';
+  import { initSmartLinks } from '@/lib/freePreview/initSmartLinks';
 
   const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const REQUIRED_FIELDS = ['shopName', 'townCity', 'email'] as const;
+  type RequiredField = (typeof REQUIRED_FIELDS)[number];
 
   function initFreePreviewForm(root: HTMLElement) {
     const form = root.querySelector<HTMLFormElement>('[data-free-preview-form]');
@@ -190,66 +264,70 @@ import '@/styles/components/ks-glass-card.css';
     const spinner = root.querySelector<HTMLElement>('[data-fp-spinner]');
     const confirmation = root.querySelector<HTMLElement>('[data-free-preview-confirmation]');
     const confirmationText = root.querySelector<HTMLElement>('[data-free-preview-confirmation-text]');
-    if (!form || !status || !submit || !confirmation || !confirmationText) return;
+    const noLink = root.querySelector<HTMLElement>('[data-fp-no-link]');
+    if (!form || !status || !submit || !confirmation || !confirmationText || !noLink) return;
     if (root.dataset.fpReady === 'true') return;
     root.dataset.fpReady = 'true';
-    initPlatformPicker(root);
 
-    const autogrow = root.querySelector<HTMLTextAreaElement>('[data-fp-autogrow]');
-    const grow = () => {
-      if (!autogrow) return;
-      autogrow.style.height = 'auto';
-      autogrow.style.height = `${autogrow.scrollHeight}px`;
-    };
-    autogrow?.addEventListener('input', grow);
+    const field = (name: string) => form.querySelector<HTMLInputElement>(`[name="${name}"]`);
+    const copy = root.dataset;
 
-    // The textarea stays in the form while collapsed, so it still submits when empty.
-    const noteToggle = root.querySelector<HTMLButtonElement>('[data-fp-note-toggle]');
-    const noteField = root.querySelector<HTMLElement>('[data-fp-note-field]');
-    const revealNote = () => {
-      if (!noteToggle || !noteField) return;
-      noteField.hidden = false;
-      noteToggle.hidden = true;
-      noteToggle.setAttribute('aria-expanded', 'true');
-      grow();
-    };
-    noteToggle?.addEventListener('click', () => {
-      revealNote();
-      autogrow?.focus();
+    const links = initSmartLinks(root, {
+      onNext: () => field('email')?.focus(),
+      onChange: () => {
+        noLink.hidden = true;
+      },
     });
-    if (autogrow?.value) revealNote();
+    if (!links) return;
 
-    const clearErrors = () => {
-      root.querySelectorAll<HTMLElement>('[data-error-for]').forEach((el) => {
-        el.textContent = '';
-      });
-      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+    const messageFor = (name: RequiredField): string => {
+      const value = field(name)?.value.trim() ?? '';
+      if (name === 'shopName') return value.length >= 2 ? '' : (copy.copyShopName ?? '');
+      if (name === 'townCity') return value.length >= 2 ? '' : (copy.copyTownCity ?? '');
+      return EMAIL_PATTERN.test(value) ? '' : (copy.copyEmail ?? '');
     };
 
-    const showErrors = (fieldErrors: Record<string, string>) => {
-      let first: HTMLElement | null = null;
-      for (const [name, message] of Object.entries(fieldErrors)) {
-        if (name === 'notes') revealNote();
-        const target = root.querySelector<HTMLElement>('[data-error-for="' + name + '"]');
-        if (target) target.textContent = message;
-        const input =
-          name === 'links'
-            ? form.querySelector<HTMLElement>('button.fp-platform')
-            : form.querySelector<HTMLElement>(`[name="${name}"]`);
-        if (input) {
-          input.setAttribute('aria-invalid', 'true');
-          first ??= input;
-        }
+    const setFieldError = (name: string, message: string) => {
+      const target = root.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+      if (target) target.textContent = message;
+      const input = name === 'links' ? links.input : field(name);
+      if (message) input?.setAttribute('aria-invalid', 'true');
+      else input?.removeAttribute('aria-invalid');
+    };
+
+    const focusFirstError = (names: readonly string[]) => {
+      for (const name of names) {
+        const input = name === 'links' ? links.input : field(name);
+        if (!input?.hasAttribute('aria-invalid')) continue;
+        input.focus();
+        input.scrollIntoView({ block: 'center' });
+        return;
       }
-      first?.focus();
     };
 
-    const fillConfirmation = (shopName: string, email: string, overDailyCap: boolean) => {
-      const template = confirmationText.dataset.template ?? '';
-      confirmationText.textContent = overDailyCap
-        ? (confirmationText.dataset.overCapText ?? '')
-        : template.replace('{shopName}', shopName).replace('{email}', email);
+    const touched = new Set<RequiredField>();
+    for (const name of REQUIRED_FIELDS) {
+      const input = field(name);
+      input?.addEventListener('input', () => {
+        touched.add(name);
+        if (input.hasAttribute('aria-invalid') && !messageFor(name)) setFieldError(name, '');
+      });
+      // A field the owner only tabbed through waits for submit, so nothing turns red too early.
+      input?.addEventListener('blur', () => {
+        if (touched.has(name)) setFieldError(name, messageFor(name));
+      });
+    }
+
+    // The keyboards show "next" on these fields, so Enter moves on instead of sending a half-filled form.
+    const onEnter = (input: HTMLElement | null, next: () => void) => {
+      input?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        next();
+      });
     };
+    onEnter(field('shopName'), () => field('townCity')?.focus());
+    onEnter(field('townCity'), () => links.focus());
 
     const setBusy = (busy: boolean) => {
       submit.disabled = busy;
@@ -258,36 +336,74 @@ import '@/styles/components/ks-glass-card.css';
       if (spinner) spinner.hidden = !busy;
     };
 
-    form.addEventListener(
-      'focusin',
-      () => trackConsentedEvent(FUNNEL_EVENTS.preview_form_start),
-      { once: true },
-    );
+    let formStarted = false;
+    form.addEventListener('focusin', () => {
+      if (formStarted) return;
+      formStarted = true;
+      trackConsentedEvent(FUNNEL_EVENTS.preview_form_start);
+      trackConsentedEvent(FUNNEL_EVENTS.fp_form_start);
+    });
+
+    root.querySelector('[data-fp-no-link-add]')?.addEventListener('click', () => {
+      noLink.hidden = true;
+      links.focus();
+    });
+    root.querySelector('[data-fp-no-link-send]')?.addEventListener('click', () => {
+      noLink.hidden = true;
+      form.requestSubmit();
+    });
+
+    const showDetailsStep = (email: string, overDailyCap: boolean, leadToken: string | null) => {
+      confirmationText.textContent = overDailyCap
+        ? (confirmationText.dataset.overCapText ?? '')
+        : (confirmationText.dataset.template ?? '').replace('{email}', email);
+      // Hold the card's height so nothing below it jumps when the form is swapped out.
+      root.style.minHeight = `${root.offsetHeight}px`;
+      form.hidden = true;
+      confirmation.hidden = false;
+      startPreviewDetailsStep(root, { leadToken, links: links.links() });
+    };
+
+    let noLinkPromptShown = false;
+    let sending = false;
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      clearErrors();
+      if (sending) return;
       status.textContent = '';
+      setFieldError('links', '');
+      links.flush();
+
+      for (const name of REQUIRED_FIELDS) setFieldError(name, messageFor(name));
+      if (REQUIRED_FIELDS.some((name) => messageFor(name))) {
+        trackConsentedEvent(FUNNEL_EVENTS.fp_submit_error, { reason: 'validation' });
+        focusFirstError(REQUIRED_FIELDS);
+        return;
+      }
+
+      const added = links.links();
+      if (!added.length && !noLinkPromptShown) {
+        noLinkPromptShown = true;
+        noLink.hidden = false;
+        noLink.focus();
+        trackConsentedEvent(FUNNEL_EVENTS.fp_no_link_prompt_shown);
+        return;
+      }
+      noLink.hidden = true;
 
       const fd = new FormData(form);
       const text = (name: string) => String(fd.get(name) ?? '').trim();
       const fromParam = new URLSearchParams(window.location.search).get('from')?.trim().toLowerCase() ?? '';
       const payload = {
         companyWebsite: text('companyWebsite'),
-        firstName: text('firstName'),
-        email: text('email'),
         shopName: text('shopName'),
         townCity: text('townCity'),
-        workLinks: collectWorkLinks(root),
-        barberCount: text('barberCount'),
-        currentBookingSystem: text('currentBookingSystem'),
-        hasOwnDomain: text('hasOwnDomain'),
-        notes: text('notes'),
-        authorisationConsent: fd.get('authorisationConsent') === 'on',
-        marketingOptIn: fd.get('marketingOptIn') === 'on',
+        email: text('email'),
+        links: added.map((link) => ({ url: link.url, platform: link.platform })),
         ...(ENTRY_POINT_PATTERN.test(fromParam) ? { entryPoint: fromParam } : {}),
       };
 
+      sending = true;
       setBusy(true);
       try {
         const response = await fetch('/api/free-preview', {
@@ -298,27 +414,36 @@ import '@/styles/components/ks-glass-card.css';
         const data = (await response.json().catch(() => ({}))) as {
           ok?: boolean;
           overDailyCap?: boolean;
+          leadToken?: string;
           error?: string;
           fieldErrors?: Record<string, string>;
         };
         if (response.ok && data.ok) {
           trackConsentedEvent(FUNNEL_EVENTS.preview_request_submitted);
-          fillConfirmation(payload.shopName, payload.email, Boolean(data.overDailyCap));
-          // Hold the card's height so nothing below it jumps when the form is swapped out.
-          root.style.minHeight = `${root.offsetHeight}px`;
-          form.hidden = true;
-          confirmation.hidden = false;
-          confirmation.focus();
+          trackConsentedEvent(FUNNEL_EVENTS.fp_submit_success, {
+            link_count: added.length,
+            platforms: added.map((link) => link.platform).join(','),
+          });
+          showDetailsStep(payload.email, Boolean(data.overDailyCap), data.leadToken ?? null);
           return;
         }
-        if (data.fieldErrors) showErrors(data.fieldErrors);
-        status.textContent =
-          response.status === 429
-            ? 'Too many requests. Please try again a little later.'
-            : data.error || 'Something went wrong. Please try again.';
+        if (data.fieldErrors) {
+          for (const [name, message] of Object.entries(data.fieldErrors)) setFieldError(name, message);
+          focusFirstError([...REQUIRED_FIELDS, 'links']);
+          status.textContent = data.error ?? '';
+          trackConsentedEvent(FUNNEL_EVENTS.fp_submit_error, { reason: 'validation' });
+        } else if (response.status === 429) {
+          status.textContent = copy.copyRateLimited ?? '';
+          trackConsentedEvent(FUNNEL_EVENTS.fp_submit_error, { reason: 'rate_limited' });
+        } else {
+          status.textContent = copy.copyNetwork ?? '';
+          trackConsentedEvent(FUNNEL_EVENTS.fp_submit_error, { reason: 'server' });
+        }
       } catch {
-        status.textContent = 'We could not send your request. Check your connection and try again.';
+        status.textContent = copy.copyNetwork ?? '';
+        trackConsentedEvent(FUNNEL_EVENTS.fp_submit_error, { reason: 'network' });
       } finally {
+        sending = false;
         setBusy(false);
       }
     });

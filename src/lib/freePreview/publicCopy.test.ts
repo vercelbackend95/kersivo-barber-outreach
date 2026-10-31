@@ -32,7 +32,8 @@ import {
   buildFreePreviewFaqJsonLd,
   buildFreePreviewWebPageJsonLd,
 } from '@/lib/seo/freePreviewPage';
-import { WORK_PICKER_COPY } from './workPlatforms';
+import { FREE_PREVIEW_AUTHORISATION_STATEMENT, FREE_PREVIEW_MARKETING_LABEL } from './intake';
+import { SMART_LINK_COPY } from './workPlatforms';
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), 'utf8');
 
@@ -167,36 +168,48 @@ describe('/free-preview page (spec §10.1)', () => {
     expect(page).toContain('canonicalPath={FREE_PREVIEW_PAGE.path}');
   });
 
-  it('keeps the form contract: field names, endpoint, honeypot and consent wording', () => {
+  it('keeps the form contract: field names, endpoints, honeypot and no pre-ticked consent', () => {
     const form = read('src/components/freePreview/FreePreviewForm.astro');
-    for (const name of [
-      'companyWebsite',
-      'shopName',
-      'townCity',
-      'barberCount',
-      'currentBookingSystem',
-      'hasOwnDomain',
-      'firstName',
-      'email',
-      'notes',
-      'authorisationConsent',
-      'marketingOptIn',
-    ]) {
+    for (const name of ['companyWebsite', 'shopName', 'townCity', 'email', 'firstName', 'notes', 'marketingOptIn']) {
       expect(form).toContain(`name="${name}"`);
     }
-    expect(form).toContain("import PlatformPicker from '@/components/freePreview/PlatformPicker.astro'");
-    expect(form).toContain('workLinks: collectWorkLinks(root)');
+    expect(form).toContain('name={group.name}');
+    for (const name of ['barberCount', 'currentBookingSystem', 'hasOwnDomain']) {
+      expect(form).toContain(`name: '${name}'`);
+    }
+    expect(form).not.toContain('authorisationConsent');
+    expect(form).not.toContain('<select');
+    expect(form).not.toMatch(/\schecked[\s=>]/);
+    expect(form).toContain('autocomplete="organization"');
+    expect(form).toContain('autocomplete="address-level2"');
+    expect(form).toContain('inputmode="email"');
+    expect(form).toContain('enterkeyhint="send"');
     expect(form).toContain("fetch('/api/free-preview'");
-    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('data-platform-picker');
-    expect(FREE_PREVIEW_PAGE.formLinksHint).toBe(
-      "Add the places your shop is online. We'll use them to build your free preview.",
-    );
-    expect(WORK_PICKER_COPY.smartLabel).toBe('Paste any link');
-    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('{WORK_PICKER_COPY.smartLabel}');
-    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('data-smart-paste');
+    expect(read('src/lib/freePreview/initPreviewDetails.ts')).toContain("fetch('/api/free-preview/details'");
     expect(form).toContain('class="hp-field"');
-    expect(form).toContain('{FREE_PREVIEW_AUTHORISATION_LABEL}');
+    expect(form).toContain('data-smart-paste');
+    expect(form).toContain('{FREE_PREVIEW_AUTHORISATION_STATEMENT}');
     expect(form).toContain('{FREE_PREVIEW_MARKETING_LABEL}');
+    expect(FREE_PREVIEW_AUTHORISATION_STATEMENT).toContain('own or manage this barbershop');
+    expect(FREE_PREVIEW_MARKETING_LABEL).toContain('unsubscribe');
+  });
+
+  it('uses the approved link-field and form copy', () => {
+    expect(SMART_LINK_COPY).toMatchObject({
+      label: 'Your booking page or Instagram',
+      hint: "Paste a link or @handle. We'll use it for your services, prices and photos.",
+      placeholder: 'booksy.com/… or @yourshop',
+      supported: 'Works with Booksy, Fresha, Treatwell, Instagram, Google Maps, Facebook, TikTok or your own website.',
+      addAnother: '+ Add another link (optional)',
+      invalid: "That doesn't look like a link. Try pasting the full address or your @handle.",
+      max: "That's plenty — 5 links is the maximum.",
+    });
+    expect(FREE_PREVIEW_PAGE.submitLabel).toBe('Get my free preview');
+    expect(FREE_PREVIEW_PAGE.confirmationHeading).toBe("Thanks — we've got your request");
+    expect(FREE_PREVIEW_PAGE.confirmationText).toBe(
+      "We'll email your private preview to {email}, usually within a few working days. If we need anything else, we'll ask.",
+    );
+    expect(FREE_PREVIEW_PAGE.detailsSaved).toBe('Saved — thank you. Keep an eye on your inbox.');
   });
 
   it('renders the redesigned hero, form card and showcase copy', () => {

@@ -68,6 +68,7 @@ const fields: Array<[string, string]> = request
       ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, request.hasOwnDomain)],
       ['Notes', request.notes ?? '—'],
       ['Authorisation consent', formatDate(request.authorisationConsentAt)],
+      ['Authorisation statement', request.authorisationStatementVersion ?? 'Checkbox (earlier form)'],
       ['Marketing opt-in', request.marketingOptInAt ? formatDate(request.marketingOptInAt) : 'No'],
       ['Entry point', request.entryPoint ?? '—'],
       ['Requested', formatDate(request.createdAt)],

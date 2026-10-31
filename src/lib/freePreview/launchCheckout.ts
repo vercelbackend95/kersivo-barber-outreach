@@ -92,8 +92,10 @@ export async function startPreviewLaunchCheckout(input: {
     name: input.name.trim(),
     email: preview.email.trim().toLowerCase(),
     shopName: preview.shopName,
-    shopSize: labelFor(FREE_PREVIEW_BARBER_COUNTS, preview.barberCount),
-    currentStack: `free_preview:${currentBookingSystemLabel(preview.currentBookingSystem)}`.slice(0, 120),
+    shopSize: preview.barberCount ? labelFor(FREE_PREVIEW_BARBER_COUNTS, preview.barberCount) : 'Not provided',
+    currentStack: `free_preview:${
+      preview.currentBookingSystem ? currentBookingSystemLabel(preview.currentBookingSystem) : 'Not provided'
+    }`.slice(0, 120),
     checkoutAttemptId,
     previewShopId: preview.draftShopId,
     extraMetadata: {

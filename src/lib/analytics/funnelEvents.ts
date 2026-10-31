@@ -73,10 +73,18 @@ export const FUNNEL_EVENTS = {
   preview_cta_click: 'preview_cta_click',
   preview_form_start: 'preview_form_start',
   preview_request_submitted: 'preview_request_submitted',
-  /** Platform tile on the free-preview form. Params: `{ platform }` only — never the typed value. */
-  preview_work_platform_selected: 'preview_work_platform_selected',
-  /** Smart-paste auto-detect. Params: `{ platform }` only — never the typed value. */
-  preview_work_platform_autodetected: 'preview_work_platform_autodetected',
+  /** Two-step /free-preview form. Params never carry an email, a name or a URL. */
+  fp_form_start: 'fp_form_start',
+  /** `{ platform }` */
+  fp_link_added: 'fp_link_added',
+  fp_no_link_prompt_shown: 'fp_no_link_prompt_shown',
+  /** `{ link_count, platforms }`, platforms comma-separated. */
+  fp_submit_success: 'fp_submit_success',
+  /** `{ reason }`: validation, rate_limited, server or network. */
+  fp_submit_error: 'fp_submit_error',
+  /** `{ fields_completed }` */
+  fp_step2_saved: 'fp_step2_saved',
+  fp_step2_skipped: 'fp_step2_skipped',
   /** The rest are sent from the server: see src/lib/analytics/serverEvents.ts. */
   preview_viewed: 'preview_viewed',
   preview_changes_requested: 'preview_changes_requested',
