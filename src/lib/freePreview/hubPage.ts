@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db/client';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
-import { isFreePreviewFlowEnabled, isPreviewHubEnabled } from './config';
+import { isAdminHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from './config';
 import {
   HUB_ACTIVITY_ADDED,
   HUB_ACTIVITY_KIND_FILE,
@@ -21,8 +21,10 @@ import {
 } from './hubCopy';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { resolveHubState, type HubStage, type HubState } from './hubStage';
+import { verifyHubSession } from '@/lib/adminHub/hubSession';
 import {
   loadPreviewDraftShop,
+  resolvePreviewRequestById,
   resolvePreviewRequestByToken,
   type TokenPreviewRequest,
 } from './previewAccess';
@@ -45,6 +47,11 @@ export type HubStepperStep = {
 
 export function isHubRouteEnabled(): boolean {
   return isFreePreviewFlowEnabled() && isPreviewHubEnabled();
+}
+
+/** /admin hub mode, /api/admin-hub/* and the /preview/{token} bridge. Independent of PREVIEW_HUB_ENABLED. */
+export function isAdminHubRouteEnabled(): boolean {
+  return isFreePreviewFlowEnabled() && isAdminHubEnabled();
 }
 
 export function hubNotFound(): Response {
@@ -81,19 +88,41 @@ export function formatHubStepDate(date: Date): string {
 }
 
 export type HubPageContext = {
+  /** The URL token on /preview/{token} and /api/preview-hub/{token}; always '' when resolved from `ks_hub`. */
   token: string;
+  source: 'token' | 'cookie';
   request: TokenPreviewRequest;
   state: Extract<HubState, { kind: 'hub' }>;
   isOperator: boolean;
   draft: Awaited<ReturnType<typeof loadPreviewDraftShop>>;
 };
 
-export async function resolveHubPageContext(input: {
-  token: string;
-  isOperator: boolean;
-  now: Date;
-}): Promise<HubPageContext | null> {
-  const request = await resolvePreviewRequestByToken(input.token);
+/** `previewRequestId` is for trusted server callers only (a signed-in owner's own converted request). */
+export type HubContextSource =
+  | { token: string }
+  | { cookie: string | null | undefined }
+  | { previewRequestId: string };
+
+/**
+ * One resolver for every hub entry point: the token routes, /api/admin-hub/* and /admin hub mode
+ * (docs/admin-hub/ADMIN_HUB_SPEC.md §2.2). Both sources end in the same stage check, so REJECTED and unknown
+ * requests are null either way. An operator cookie is only honoured alongside a live operator session.
+ */
+export async function resolveHubContext(
+  source: HubContextSource,
+  input: { isOperator: boolean; now: Date },
+): Promise<HubPageContext | null> {
+  let request: TokenPreviewRequest | null;
+  if ('token' in source) {
+    request = await resolvePreviewRequestByToken(source.token);
+  } else if ('previewRequestId' in source) {
+    request = await resolvePreviewRequestById(source.previewRequestId);
+  } else {
+    const session = verifyHubSession(source.cookie, input.now);
+    if (!session) return null;
+    if (session.operator && !input.isOperator) return null;
+    request = await resolvePreviewRequestById(session.previewRequestId);
+  }
   const state = resolveHubState({
     request,
     isOperator: input.isOperator,
@@ -103,12 +132,21 @@ export async function resolveHubPageContext(input: {
   if (!request || state.kind !== 'hub') return null;
   const draft = request.draftShopId ? await loadPreviewDraftShop(request.draftShopId) : null;
   return {
-    token: input.token,
+    token: 'token' in source ? source.token : '',
+    source: 'token' in source ? 'token' : 'cookie',
     request,
     state,
     isOperator: input.isOperator,
     draft,
   };
+}
+
+export async function resolveHubPageContext(input: {
+  token: string;
+  isOperator: boolean;
+  now: Date;
+}): Promise<HubPageContext | null> {
+  return resolveHubContext({ token: input.token }, { isOperator: input.isOperator, now: input.now });
 }
 
 /** First owner view per stage: event + hub_viewed analytics. Operators are never counted. */

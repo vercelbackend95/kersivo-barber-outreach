@@ -25,6 +25,7 @@ import {
   type HubMessagePublic,
 } from '@/lib/freePreview/hubMessages.shared';
 import { splitHubMessageParts } from '@/lib/freePreview/hubMessageText';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 
 type PendingStatus = 'pending' | 'error';
@@ -74,6 +75,7 @@ export function HubMessageBody({ body }: { body: string }) {
 function attachmentHref(input: {
   viewer: 'owner' | 'ops';
   token: string;
+  apiBase?: string;
   requestId?: string;
   assetId: string;
   size: 'thumb' | 'full';
@@ -81,11 +83,13 @@ function attachmentHref(input: {
   if (input.viewer === 'ops' && input.requestId) {
     return `/api/ops/preview-requests/${encodeURIComponent(input.requestId)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
   }
-  return `/api/preview-hub/${encodeURIComponent(input.token)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
+  return `${hubApiRoot(input)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
 }
 
 export function HubMessages(props: {
   token: string;
+  /** Owner view inside /admin: '/api/admin-hub'. */
+  apiBase?: string;
   viewer: 'owner' | 'ops';
   requestId?: string;
   shopName: string;
@@ -101,10 +105,10 @@ export function HubMessages(props: {
   const listRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  const apiBase =
+  const messagesUrl =
     props.viewer === 'ops' && props.requestId
       ? `/api/ops/preview-requests/${encodeURIComponent(props.requestId)}/messages`
-      : `/api/preview-hub/${encodeURIComponent(props.token)}/messages`;
+      : `${hubApiRoot(props)}/messages`;
 
   const scrollToEnd = () => {
     const node = listRef.current;
@@ -123,7 +127,7 @@ export function HubMessages(props: {
   const markRead = async () => {
     if (props.viewer !== 'owner') return;
     try {
-      await fetch(`${apiBase}/read`, {
+      await fetch(`${messagesUrl}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
@@ -135,7 +139,7 @@ export function HubMessages(props: {
 
   const refresh = async () => {
     try {
-      const response = await fetch(apiBase, { headers: { Accept: 'application/json' } });
+      const response = await fetch(messagesUrl, { headers: { Accept: 'application/json' } });
       if (!response.ok) throw new Error('load');
       const payload = (await response.json()) as { ok?: boolean; messages?: HubMessagePublic[] };
       if (!payload.ok || !payload.messages) throw new Error('load');
@@ -208,7 +212,7 @@ export function HubMessages(props: {
     }
     setSending(true);
     try {
-      const response = await fetch(apiBase, {
+      const response = await fetch(messagesUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ body, attachmentIds }),
@@ -291,6 +295,7 @@ export function HubMessages(props: {
                               href={attachmentHref({
                                 viewer: props.viewer,
                                 token: props.token,
+                                apiBase: props.apiBase,
                                 requestId: props.requestId,
                                 assetId: asset.id,
                                 size: 'full',
@@ -302,6 +307,7 @@ export function HubMessages(props: {
                                   src={attachmentHref({
                                     viewer: props.viewer,
                                     token: props.token,
+                                    apiBase: props.apiBase,
                                     requestId: props.requestId,
                                     assetId: asset.id,
                                     size: 'thumb',
@@ -366,6 +372,7 @@ export function HubMessages(props: {
           {props.canAttach !== false ? (
             <HubUploader
               token={props.token}
+              apiBase={props.apiBase}
               kind="MESSAGE_ATTACHMENT"
               compact
               remaining={remaining}

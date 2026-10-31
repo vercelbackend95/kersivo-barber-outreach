@@ -26,6 +26,7 @@ import {
   HUB_ROUND_USED,
 } from '@/lib/freePreview/hubCopy';
 import { HUB_CHANGE_PAGES, type HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader } from './HubUploader';
 
 const STATUS_LABEL: Record<HubChangePublic['status'], string> = {
@@ -51,6 +52,7 @@ const emptyDraft = (page: DraftForm['page'] = 'HOME'): DraftForm => ({
 
 export function HubChanges(props: {
   token: string;
+  apiBase?: string;
   initialItems: HubChangePublic[];
   includedChangeRounds: number;
   changeRoundsUsed: number;
@@ -59,6 +61,7 @@ export function HubChanges(props: {
   initialPage?: DraftForm['page'];
   startComposer?: boolean;
 }) {
+  const apiRoot = hubApiRoot(props);
   const [items, setItems] = useState(props.initialItems);
   const [used, setUsed] = useState(props.changeRoundsUsed);
   const [canSend, setCanSend] = useState(props.canSend);
@@ -76,8 +79,8 @@ export function HubChanges(props: {
     setError(null);
     try {
       const url = composer.id
-        ? `/api/preview-hub/${encodeURIComponent(props.token)}/changes/${encodeURIComponent(composer.id)}`
-        : `/api/preview-hub/${encodeURIComponent(props.token)}/changes`;
+        ? `${apiRoot}/changes/${encodeURIComponent(composer.id)}`
+        : `${apiRoot}/changes`;
       const response = await fetch(url, {
         method: composer.id ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +105,7 @@ export function HubChanges(props: {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/preview-hub/${encodeURIComponent(props.token)}/changes/${encodeURIComponent(id)}`, {
+      const response = await fetch(`${apiRoot}/changes/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       const payload = (await response.json()) as { ok?: boolean; error?: string };
@@ -125,7 +128,7 @@ export function HubChanges(props: {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/preview-hub/${encodeURIComponent(props.token)}/changes/send`, {
+      const response = await fetch(`${apiRoot}/changes/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
@@ -234,6 +237,7 @@ export function HubChanges(props: {
             <p className="field__hint">{HUB_CHANGES_ATTACHMENT}</p>
             <HubUploader
               token={props.token}
+              apiBase={props.apiBase}
               kind="CHANGE_ATTACHMENT"
               compact
               remaining={1}

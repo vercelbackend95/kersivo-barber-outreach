@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { tokenHubLinks } from '@/lib/adminHub/links';
 
 const overview = readFileSync(path.join(process.cwd(), 'src/components/previewHub/HubOverview.astro'), 'utf8');
 const shell = readFileSync(path.join(process.cwd(), 'src/components/previewHub/HubShell.astro'), 'utf8');
@@ -18,8 +19,10 @@ describe('HubOverview key UI states', () => {
   });
 
   it('sends declined and expired primary actions to the messages composer with a draft', () => {
-    expect(overview).toContain('messages?draft=message');
-    expect(overview).toContain('messages?draft=reopen');
+    expect(overview).toContain("links.messagesDraft('message')");
+    expect(overview).toContain("links.messagesDraft('reopen')");
+    expect(tokenHubLinks('tok').messagesDraft('message')).toBe('/preview/tok/messages?draft=message');
+    expect(tokenHubLinks('tok').messagesDraft('reopen')).toBe('/preview/tok/messages?draft=reopen');
     expect(overview).toContain('HUB_PRIMARY[state.stage]');
     expect(overview).not.toContain('expiredDisabled');
   });

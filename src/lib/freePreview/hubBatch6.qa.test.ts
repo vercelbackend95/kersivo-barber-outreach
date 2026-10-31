@@ -93,7 +93,7 @@ describe('HUB_SPEC §11 security checklist', () => {
   it('mutations require exact same-origin; JSON except multipart uploads', () => {
     expect(read('src/lib/freePreview/hubApi.ts')).toContain('evaluateExactSameOrigin');
     expect(read('src/lib/freePreview/hubLaunchApi.ts')).toContain('evaluateExactSameOrigin');
-    expect(read('src/pages/api/preview-hub/[token]/assets.ts')).toContain('formData');
+    expect(read('src/lib/previewHub/handlers/assets.ts')).toContain('formData');
   });
 
   it('uploads sniff magic bytes, cap the body, and store under preview-hub/', () => {
@@ -136,13 +136,16 @@ describe('HUB_SPEC §11 security checklist', () => {
 
   it('REJECTED hub POSTs 404 and owner messages are capped at 100/day', () => {
     expect(PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.limit).toBe(100);
-    expect(read('src/pages/api/preview-hub/[token]/messages.ts')).toContain('enforceHubMessageRates');
+    expect(read('src/lib/previewHub/handlers/messages.ts')).toContain('enforceHubMessageRates');
     expect(read('src/lib/freePreview/hubStage.ts')).toContain("'REJECTED'");
   });
 
   it('every hub API still goes through resolveHubApiContext (flag-off 404)', () => {
-    for (const file of apiFiles('src/pages/api/preview-hub')) {
+    for (const file of apiFiles('src/lib/previewHub/handlers')) {
       expect(read(file)).toContain('resolveHubApiContext');
+    }
+    for (const file of [...apiFiles('src/pages/api/preview-hub'), ...apiFiles('src/pages/api/admin-hub')]) {
+      expect(read(file)).toMatch(/resolveHubApiContext|create\w+Handlers\((tokenSourceOf|cookieSourceOf)\)/);
     }
   });
 });

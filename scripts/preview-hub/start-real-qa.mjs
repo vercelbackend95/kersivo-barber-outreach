@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createConnection } from 'node:net';
 import { dirname, join } from 'node:path';
@@ -66,6 +66,15 @@ async function stopAstro() {
     await waitForPortClosed(Number(PORT));
   } catch {
     /* port may already be free or owned by a non-astro process */
+  }
+}
+
+// On Windows `shell: true` makes child.kill() stop only cmd.exe and leave astro running.
+function killTree(child) {
+  if (process.platform === 'win32' && child.pid) {
+    spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    child.kill();
   }
 }
 
@@ -167,10 +176,14 @@ async function ensurePostgres() {
   }
 }
 
+// --admin-hub: the /admin hub (docs/admin-hub). The old /preview hub stays off, as in production.
+const ADMIN_HUB = process.argv.includes('--admin-hub');
+
 function qaEnv(overrides = {}) {
   return {
     DATABASE_URL,
-    PREVIEW_HUB_ENABLED: 'true',
+    PREVIEW_HUB_ENABLED: ADMIN_HUB ? '' : 'true',
+    ADMIN_HUB_ENABLED: ADMIN_HUB ? 'true' : '',
     FREE_PREVIEW_FLOW_ENABLED: 'true',
     PRIVATE_BLOB_DRIVER: 'memory',
     PREVIEW_HUB_STRIPE_STUB: 'true',
@@ -244,7 +257,7 @@ async function flagOffCheck() {
     }
     console.log('[preview-hub qa] flag-off 404 + old ack email confirmed');
   } finally {
-    child.kill();
+    killTree(child);
     await stopAstro();
   }
 }
@@ -272,13 +285,43 @@ if (mode === 'serve') {
   const origin = `http://127.0.0.1:${PORT}`;
   await stopAstro();
   const child = startAstro(qaEnv(), PORT);
+  const config = ADMIN_HUB
+    ? 'scripts/admin-hub-real.playwright.config.mjs'
+    : 'scripts/preview-hub-real.playwright.config.mjs';
   try {
     await waitForPort(Number(PORT), '127.0.0.1', 180000);
     await waitForHealth(origin);
-    await run('npx', ['playwright', 'test', '--config=scripts/preview-hub-real.playwright.config.mjs'], qaEnv());
+    await run('npx', ['playwright', 'test', `--config=${config}`], qaEnv());
   } finally {
-    child.kill();
+    killTree(child);
   }
-  await flagOffCheck();
+  if (ADMIN_HUB) await adminHubFlagOffCheck();
+  else await flagOffCheck();
   process.exit(0);
+}
+
+async function adminHubFlagOffCheck() {
+  const seed = JSON.parse(readFileSync(join(root, '.preview-hub-seed.json'), 'utf8'));
+  const origin = `http://127.0.0.1:${PORT}`;
+  const env = qaEnv({ ADMIN_HUB_ENABLED: '', PREVIEW_HUB_ENABLED: '', BETTER_AUTH_URL: origin, PUBLIC_SITE_URL: origin });
+  await stopAstro();
+  const child = startAstro(env, PORT);
+  try {
+    await waitForPort(Number(PORT), '127.0.0.1', 180000);
+    await waitForHealth(origin);
+    const preview = await fetch(`${origin}/preview/${seed.ready.token}`, { redirect: 'manual' });
+    if (preview.status === 303) throw new Error('flag-off /preview still bridges to /admin');
+    const admin = await fetch(`${origin}/admin`, { headers: { cookie: 'ks_hub=v1.x.1.y' }, redirect: 'manual' });
+    if (admin.status !== 200) throw new Error(`flag-off /admin expected 200, got ${admin.status}`);
+    if (admin.headers.get('set-cookie')?.includes('ks_hub')) throw new Error('flag-off /admin touched ks_hub');
+    if (admin.headers.get('x-robots-tag')) throw new Error('flag-off /admin gained X-Robots-Tag');
+    const html = await admin.text();
+    if (html.includes('admin-hub')) throw new Error('flag-off /admin rendered the hub shell');
+    const hub = await fetch(`${origin}/admin/hub`, { redirect: 'manual' });
+    if (hub.status !== 404) throw new Error(`flag-off /admin/hub expected 404, got ${hub.status}`);
+    console.log('[admin-hub qa] flag-off: no bridge, /admin unchanged, /admin/hub 404');
+  } finally {
+    killTree(child);
+    await stopAstro();
+  }
 }
