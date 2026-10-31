@@ -69,7 +69,7 @@ Statuses:
 
 ## 5. Public intake: /free-preview
 Indexable, self-canonical, included in the sitemap.
-Form with honeypot, server-side validation and rate limiting (plus the existing captcha if the site already uses one). “Where can we see your work?” is an optional multi-select platform grid; format hints are soft and never block submit. On success, show the confirmation state on the same page, send email E1 to the owner and E2 to PREVIEW_NOTIFY_EMAIL, and fire analytics events (`preview_work_platform_selected` on tile select, platform name only).
+Form with honeypot, server-side validation and rate limiting (plus the existing captcha if the site already uses one). “Where can we see your work?” is an optional multi-select platform grid with a “Paste any link” field that auto-detects the platform from the host. Format hints are soft and never block submit. Stored shape is `{ platform, value, url, handle }`. On success, show the confirmation state on the same page, send email E1 to the owner and E2 to PREVIEW_NOTIFY_EMAIL, and fire analytics events (`preview_work_platform_selected` on tile select, `preview_work_platform_autodetected` on smart paste; platform id only).
 
 Required consent checkbox label:
 "I'm the owner or manager of this barbershop, and KERSIVO can use the details and photos from the links above to create a private preview for me."

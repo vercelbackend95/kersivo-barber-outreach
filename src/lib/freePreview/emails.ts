@@ -91,7 +91,13 @@ export function opsPreviewRequestUrl(id: string): string {
 function workLinkEmailCell(link: DisplayWorkLink): string {
   if (link.url) {
     const safe = escapeHtml(link.url);
-    const extra = link.value && link.value !== link.url ? ` (${escapeHtml(link.value)})` : '';
+    const extraLabel =
+      link.handle && link.handle !== link.url
+        ? link.handle
+        : link.value && link.value !== link.url
+          ? link.value
+          : '';
+    const extra = extraLabel ? ` (${escapeHtml(extraLabel)})` : '';
     return `<a href="${safe}">${safe}</a>${extra}`;
   }
   return escapeHtml(link.value || '—');

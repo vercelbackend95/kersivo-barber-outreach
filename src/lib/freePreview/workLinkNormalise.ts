@@ -1,8 +1,11 @@
 import {
   WORK_PLATFORM_IDS,
+  WORK_PLATFORMS,
   isWorkPlatformId,
+  workPlatformById,
   workPlatformName,
   type WorkLink,
+  type WorkPlatform,
   type WorkPlatformId,
 } from './workPlatforms';
 
@@ -21,6 +24,7 @@ const INSTAGRAM_RESERVED = new Set([
   'about',
 ]);
 const TIKTOK_RESERVED = new Set(['foryou', 'following', 'video', 'tag', 'music', 'discover', 'live', 'place']);
+const TIKTOK_SHORT_HOSTS = ['vm.tiktok.com', 'vt.tiktok.com'];
 
 const TRACKING_PARAMS = new Set([
   'igsh',
@@ -34,6 +38,7 @@ const TRACKING_PARAMS = new Set([
   '_ga',
   '_gl',
   'si',
+  'ref',
   '_t',
   '_r',
   'tt_from',
@@ -46,12 +51,14 @@ const TRACKING_PARAMS = new Set([
   'img_index',
 ]);
 
-const FACEBOOK_HOSTS = ['facebook.com', 'fb.com', 'fb.me'];
-const BOOKING_HOSTS: Record<'booksy' | 'fresha' | 'treatwell', readonly string[]> = {
-  booksy: ['booksy.com'],
-  fresha: ['fresha.com'],
-  treatwell: ['treatwell.co.uk', 'treatwell.com'],
-};
+function workLink(
+  platform: WorkPlatformId,
+  value: string,
+  url: string | null,
+  handle: string | null = null,
+): WorkLink {
+  return { platform, value, url, handle };
+}
 
 export function parseWebUrl(raw: string): URL | null {
   const trimmed = raw.trim();
@@ -66,6 +73,11 @@ export function parseWebUrl(raw: string): URL | null {
   if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
   if (url.username || url.password) return null;
   if (!url.hostname.includes('.') || url.hostname.endsWith('.')) return null;
+  if (url.protocol === 'http:') {
+    const forced = new URL(url.toString());
+    forced.protocol = 'https:';
+    return forced;
+  }
   return url;
 }
 
@@ -80,7 +92,9 @@ function hostMatches(hostname: string, roots: readonly string[]): boolean {
 
 function isGoogleListingUrl(url: URL): boolean {
   const host = hostWithoutWww(url.hostname);
-  if (host === 'maps.app.goo.gl' || host === 'g.page' || host === 'business.google.com') return true;
+  if (host === 'maps.app.goo.gl' || host === 'g.page' || host === 'g.co' || host === 'business.google.com') {
+    return true;
+  }
   if (host === 'goo.gl' && url.pathname.toLowerCase().startsWith('/maps')) return true;
   if (host === 'maps.google.com' || host.startsWith('maps.google.')) return true;
   if (host === 'google.com' || host.startsWith('google.')) {
@@ -106,11 +120,11 @@ function serialiseUrl(url: URL, options?: { dropTrailingSlash?: boolean }): stri
   }
   if ([...next.searchParams.keys()].length === 0) next.search = '';
   if (!next.hash || next.hash === '#') next.hash = '';
-  return next.toString();
-}
-
-function cleanedUrl(url: URL, options?: { dropTrailingSlash?: boolean }): string {
-  return serialiseUrl(stripTracking(url), options);
+  let href = next.toString();
+  if (options?.dropTrailingSlash && !next.search && !next.hash && href.endsWith('/')) {
+    href = href.slice(0, -1);
+  }
+  return href;
 }
 
 function pathSegments(url: URL): string[] {
@@ -121,15 +135,26 @@ function stripAt(value: string): string {
   return value.trim().replace(/^@+/, '');
 }
 
-function instagramHandleFromUrl(url: URL): string | null {
-  if (!hostMatches(url.hostname, ['instagram.com'])) return null;
+function asSafeUrl(url: URL): string | null {
+  const cleaned = stripTracking(url);
+  if (cleaned.protocol !== 'http:' && cleaned.protocol !== 'https:') return null;
+  return serialiseUrl(cleaned, { dropTrailingSlash: true });
+}
+
+function instagramHandleFromUrl(url: URL, hosts: readonly string[]): string | null {
+  if (!hostMatches(url.hostname, hosts)) return null;
   const [first] = pathSegments(url);
   if (!first || INSTAGRAM_RESERVED.has(first.toLowerCase())) return null;
   return INSTAGRAM_HANDLE.test(first) ? first : null;
 }
 
-function tiktokHandleFromUrl(url: URL): string | null {
-  if (!hostMatches(url.hostname, ['tiktok.com'])) return null;
+function isTiktokShortHost(hostname: string): boolean {
+  return TIKTOK_SHORT_HOSTS.includes(hostWithoutWww(hostname));
+}
+
+function tiktokHandleFromUrl(url: URL, hosts: readonly string[]): string | null {
+  if (isTiktokShortHost(url.hostname)) return null;
+  if (!hostMatches(url.hostname, hosts)) return null;
   const [first] = pathSegments(url);
   if (!first) return null;
   const handle = stripAt(first);
@@ -140,101 +165,103 @@ function tiktokHandleFromUrl(url: URL): string | null {
 export function detectBookingPlatform(raw: string): 'booksy' | 'fresha' | 'treatwell' | null {
   const url = parseWebUrl(raw);
   if (!url) return null;
-  if (hostMatches(url.hostname, BOOKING_HOSTS.booksy)) return 'booksy';
-  if (hostMatches(url.hostname, BOOKING_HOSTS.fresha)) return 'fresha';
-  if (hostMatches(url.hostname, BOOKING_HOSTS.treatwell)) return 'treatwell';
+  if (hostMatches(url.hostname, workPlatformById('booksy').hosts)) return 'booksy';
+  if (hostMatches(url.hostname, workPlatformById('fresha').hosts)) return 'fresha';
+  if (hostMatches(url.hostname, workPlatformById('treatwell').hosts)) return 'treatwell';
   return null;
 }
 
-function asSafeUrl(url: URL): string | null {
-  const cleaned = stripTracking(url);
-  if (cleaned.protocol !== 'http:' && cleaned.protocol !== 'https:') return null;
-  return serialiseUrl(cleaned, { dropTrailingSlash: true });
-}
-
-function handleOrRaw(platform: 'instagram' | 'tiktok', raw: string, handle: string | null, profileUrl: string | null): WorkLink {
-  if (handle && profileUrl) return { platform, value: handle, url: profileUrl };
+/** Host → platform for the smart-paste field. Unknown URLs become `website`. Non-URLs return null. */
+export function detectPlatform(raw: string): WorkPlatformId | null {
   const url = parseWebUrl(raw);
-  if (url && (platform === 'instagram' ? hostMatches(url.hostname, ['instagram.com']) : hostMatches(url.hostname, ['tiktok.com']))) {
-    return { platform, value: raw.trim(), url: asSafeUrl(url) };
+  if (!url) return null;
+  for (const platform of WORK_PLATFORMS) {
+    if (platform.kind === 'website' || platform.kind === 'other' || !platform.hosts.length) continue;
+    if (platform.kind === 'google') {
+      if (isGoogleListingUrl(url)) return 'google';
+      continue;
+    }
+    if (hostMatches(url.hostname, platform.hosts)) return platform.id;
   }
-  return { platform, value: raw.trim(), url: null };
+  return 'website';
 }
 
-function normaliseInstagram(raw: string): WorkLink {
-  const url = parseWebUrl(raw);
+function normaliseHandlePlatform(platform: WorkPlatform, raw: string): WorkLink {
+  const value = raw.trim();
+  const url = parseWebUrl(value);
+  const isTiktok = platform.id === 'tiktok';
+
   if (url) {
-    const handle = instagramHandleFromUrl(url);
-    return handleOrRaw('instagram', raw, handle, handle ? `https://www.instagram.com/${handle}` : null);
+    if (isTiktok && isTiktokShortHost(url.hostname)) {
+      return workLink(platform.id, value, asSafeUrl(url), null);
+    }
+    const handle = isTiktok
+      ? tiktokHandleFromUrl(url, platform.hosts)
+      : instagramHandleFromUrl(url, platform.hosts);
+    if (handle) {
+      const profile = isTiktok
+        ? `https://www.tiktok.com/@${handle}`
+        : `https://www.instagram.com/${handle}`;
+      return workLink(platform.id, value, profile, handle);
+    }
+    if (hostMatches(url.hostname, platform.hosts)) {
+      return workLink(platform.id, value, asSafeUrl(url), null);
+    }
+    return workLink(platform.id, value, null, null);
   }
-  const handle = stripAt(raw);
-  if (INSTAGRAM_HANDLE.test(handle) && !handle.includes(' ')) {
-    return { platform: 'instagram', value: handle, url: `https://www.instagram.com/${handle}` };
+
+  const handle = stripAt(value);
+  const pattern = isTiktok ? TIKTOK_HANDLE : INSTAGRAM_HANDLE;
+  if (pattern.test(handle) && !handle.includes(' ')) {
+    const profile = isTiktok
+      ? `https://www.tiktok.com/@${handle}`
+      : `https://www.instagram.com/${handle}`;
+    return workLink(platform.id, value, profile, handle);
   }
-  return { platform: 'instagram', value: raw.trim(), url: null };
+  return workLink(platform.id, value, null, null);
 }
 
-function normaliseTiktok(raw: string): WorkLink {
-  const url = parseWebUrl(raw);
-  if (url) {
-    const handle = tiktokHandleFromUrl(url);
-    return handleOrRaw('tiktok', raw, handle, handle ? `https://www.tiktok.com/@${handle}` : null);
+function normaliseDomainPlatform(platform: WorkPlatform, raw: string): WorkLink {
+  const value = raw.trim();
+  const url = parseWebUrl(value);
+  if (url && hostMatches(url.hostname, platform.hosts)) {
+    return workLink(platform.id, value, asSafeUrl(url), null);
   }
-  const handle = stripAt(raw);
-  if (TIKTOK_HANDLE.test(handle) && !handle.includes(' ')) {
-    return { platform: 'tiktok', value: handle, url: `https://www.tiktok.com/@${handle}` };
-  }
-  return { platform: 'tiktok', value: raw.trim(), url: null };
-}
-
-function normaliseDomainPlatform(platform: 'booksy' | 'fresha' | 'treatwell' | 'facebook', raw: string, roots: readonly string[]): WorkLink {
-  const url = parseWebUrl(raw);
-  if (url && hostMatches(url.hostname, roots)) {
-    const cleaned = asSafeUrl(url);
-    return { platform, value: cleaned ?? raw.trim(), url: cleaned };
-  }
-  return { platform, value: raw.trim(), url: null };
+  return workLink(platform.id, value, null, null);
 }
 
 function normaliseGoogle(raw: string): WorkLink {
-  const url = parseWebUrl(raw);
+  const value = raw.trim();
+  const url = parseWebUrl(value);
   if (url && isGoogleListingUrl(url)) {
-    const cleaned = asSafeUrl(url);
-    return { platform: 'google', value: cleaned ?? raw.trim(), url: cleaned };
+    return workLink('google', value, asSafeUrl(url), null);
   }
-  return { platform: 'google', value: raw.trim(), url: null };
+  return workLink('google', value, null, null);
 }
 
 function normaliseWebsite(raw: string): WorkLink {
-  const url = parseWebUrl(raw);
-  if (!url) return { platform: 'website', value: raw.trim(), url: null };
-  const cleaned = stripTracking(url);
-  return { platform: 'website', value: serialiseUrl(cleaned), url: serialiseUrl(cleaned) };
+  const value = raw.trim();
+  const url = parseWebUrl(value);
+  if (!url) return workLink('website', value, null, null);
+  return workLink('website', value, asSafeUrl(url), null);
 }
 
 function normaliseOther(raw: string): WorkLink {
-  const url = parseWebUrl(raw);
-  if (!url) return { platform: 'other', value: raw.trim(), url: null };
-  const cleaned = asSafeUrl(url);
-  return { platform: 'other', value: raw.trim(), url: cleaned };
+  const value = raw.trim();
+  const url = parseWebUrl(value);
+  if (!url) return workLink('other', value, null, null);
+  return workLink('other', value, asSafeUrl(url), null);
 }
 
 export function normaliseWorkLink(platform: WorkPlatformId, raw: string): WorkLink | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
-  switch (platform) {
-    case 'instagram':
-      return normaliseInstagram(trimmed);
-    case 'tiktok':
-      return normaliseTiktok(trimmed);
-    case 'facebook':
-      return normaliseDomainPlatform('facebook', trimmed, FACEBOOK_HOSTS);
-    case 'booksy':
-      return normaliseDomainPlatform('booksy', trimmed, BOOKING_HOSTS.booksy);
-    case 'fresha':
-      return normaliseDomainPlatform('fresha', trimmed, BOOKING_HOSTS.fresha);
-    case 'treatwell':
-      return normaliseDomainPlatform('treatwell', trimmed, BOOKING_HOSTS.treatwell);
+  const config = workPlatformById(platform);
+  switch (config.kind) {
+    case 'handle':
+      return normaliseHandlePlatform(config, trimmed);
+    case 'domain':
+      return normaliseDomainPlatform(config, trimmed);
     case 'google':
       return normaliseGoogle(trimmed);
     case 'website':
@@ -250,22 +277,36 @@ export function workLinkLooksValid(platform: WorkPlatformId, raw: string): boole
   if (!trimmed) return true;
   const parsed = normaliseWorkLink(platform, trimmed);
   if (!parsed) return true;
-  switch (platform) {
-    case 'instagram':
-    case 'tiktok':
-      return Boolean(parsed.url && parsed.value !== parsed.url);
-    case 'booksy':
-    case 'fresha':
-    case 'treatwell':
-      return Boolean(parsed.url);
-    case 'facebook':
-      return Boolean(parsed.url) || !parseWebUrl(trimmed);
+  const config = workPlatformById(platform);
+  switch (config.kind) {
+    case 'handle':
+      return platform === 'tiktok' ? Boolean(parsed.handle || parsed.url) : Boolean(parsed.handle);
+    case 'domain':
+      return platform === 'facebook' ? Boolean(parsed.url) || !parseWebUrl(trimmed) : Boolean(parsed.url);
     case 'google':
       return Boolean(parsed.url) || !parseWebUrl(trimmed);
     case 'website':
       return Boolean(parsed.url);
     case 'other':
       return true;
+  }
+}
+
+/** Host-style preview under the row, e.g. `instagram.com/yourshop`. Empty when there is nothing to show. */
+export function workLinkPreviewText(platform: WorkPlatformId, raw: string): string {
+  const parsed = normaliseWorkLink(platform, raw);
+  if (!parsed) return '';
+  if (parsed.handle) {
+    return platform === 'tiktok' ? `tiktok.com/@${parsed.handle}` : `${workPlatformById(platform).hosts[0]}/${parsed.handle}`;
+  }
+  if (!parsed.url) return '';
+  try {
+    const url = new URL(parsed.url);
+    const host = hostWithoutWww(url.hostname);
+    const path = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '');
+    return `${host}${path}${url.search}`;
+  } catch {
+    return '';
   }
 }
 
@@ -311,33 +352,29 @@ export function legacyFieldsToWorkLinks(fields: {
 }): WorkLink[] {
   const links: WorkLink[] = [];
   if (fields.instagramUrl) {
-    links.push(normaliseWorkLink('instagram', fields.instagramUrl) ?? {
-      platform: 'instagram',
-      value: fields.instagramUrl,
-      url: fields.instagramUrl,
-    });
+    links.push(
+      normaliseWorkLink('instagram', fields.instagramUrl) ??
+        workLink('instagram', fields.instagramUrl, fields.instagramUrl, null),
+    );
   }
   if (fields.bookingPageUrl) {
     const platform = detectBookingPlatform(fields.bookingPageUrl) ?? 'other';
-    links.push(normaliseWorkLink(platform, fields.bookingPageUrl) ?? {
-      platform,
-      value: fields.bookingPageUrl,
-      url: fields.bookingPageUrl,
-    });
+    links.push(
+      normaliseWorkLink(platform, fields.bookingPageUrl) ??
+        workLink(platform, fields.bookingPageUrl, fields.bookingPageUrl, null),
+    );
   }
   if (fields.googleListingUrl) {
-    links.push(normaliseWorkLink('google', fields.googleListingUrl) ?? {
-      platform: 'google',
-      value: fields.googleListingUrl,
-      url: fields.googleListingUrl,
-    });
+    links.push(
+      normaliseWorkLink('google', fields.googleListingUrl) ??
+        workLink('google', fields.googleListingUrl, fields.googleListingUrl, null),
+    );
   }
   if (fields.websiteUrl) {
-    links.push(normaliseWorkLink('website', fields.websiteUrl) ?? {
-      platform: 'website',
-      value: fields.websiteUrl,
-      url: fields.websiteUrl,
-    });
+    links.push(
+      normaliseWorkLink('website', fields.websiteUrl) ??
+        workLink('website', fields.websiteUrl, fields.websiteUrl, null),
+    );
   }
   return links;
 }
@@ -353,12 +390,13 @@ export function parseStoredWorkLinks(value: unknown): WorkLink[] {
     if (seen.has(record.platform)) continue;
     seen.add(record.platform);
     const url = typeof record.url === 'string' && record.url.trim() ? record.url.trim() : null;
-    out.push({ platform: record.platform, value: record.value.trim(), url });
+    const handle = typeof record.handle === 'string' && record.handle.trim() ? record.handle.trim() : null;
+    out.push({ platform: record.platform, value: record.value.trim(), url, handle });
   }
   return out;
 }
 
-export type DisplayWorkLink = { label: string; value: string; url: string | null };
+export type DisplayWorkLink = { label: string; value: string; url: string | null; handle: string | null };
 
 /** Prefer stored `workLinks`; fall back to the four legacy URL columns on older rows. */
 export function displayWorkLinks(request: {
@@ -374,6 +412,7 @@ export function displayWorkLinks(request: {
       label: workPlatformName(link.platform),
       value: link.value,
       url: link.url,
+      handle: link.handle,
     }));
   }
 
@@ -384,6 +423,7 @@ export function displayWorkLinks(request: {
       label: workPlatformName('instagram'),
       value: link?.value ?? request.instagramUrl,
       url: link?.url ?? request.instagramUrl,
+      handle: link?.handle ?? null,
     });
   }
   if (request.bookingPageUrl) {
@@ -393,6 +433,7 @@ export function displayWorkLinks(request: {
       label: detected ? workPlatformName(detected) : 'Booking page',
       value: link?.value ?? request.bookingPageUrl,
       url: link?.url ?? request.bookingPageUrl,
+      handle: link?.handle ?? null,
     });
   }
   if (request.googleListingUrl) {
@@ -401,6 +442,7 @@ export function displayWorkLinks(request: {
       label: workPlatformName('google'),
       value: link?.value ?? request.googleListingUrl,
       url: link?.url ?? request.googleListingUrl,
+      handle: link?.handle ?? null,
     });
   }
   if (request.websiteUrl) {
@@ -409,6 +451,7 @@ export function displayWorkLinks(request: {
       label: workPlatformName('website'),
       value: link?.value ?? request.websiteUrl,
       url: link?.url ?? request.websiteUrl,
+      handle: link?.handle ?? null,
     });
   }
   return entries;
