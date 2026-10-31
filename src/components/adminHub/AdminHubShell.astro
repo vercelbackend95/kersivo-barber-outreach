@@ -1,0 +1,222 @@
+---
+import { EyeOff, Globe, LayoutDashboard, ListChecks, Lock, MessageCircle } from '@/components/lucide-react';
+import AdminHubSetupCard from './AdminHubSetupCard.astro';
+import {
+  ADMIN_HUB_LEAVE,
+  ADMIN_HUB_NAV_GROUP,
+  ADMIN_HUB_OPERATOR,
+  ADMIN_HUB_OPERATOR_BANNER,
+  ADMIN_HUB_STAGE_PILL,
+  adminHubPillTone,
+} from '@/lib/adminHub/copy';
+import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import type { AdminHubSection } from '@/lib/adminHub/hubView';
+import type { SetupItem, SetupItemId } from '@/lib/adminHub/setupCard';
+import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_PRIVATE_LABEL, HUB_UNREAD } from '@/lib/freePreview/hubCopy';
+import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
+import '@/styles/components/admin-hub.css';
+
+interface Props {
+  shopName: string;
+  townCity: string;
+  ownerEmail: string;
+  ownerFirstName: string | null;
+  stage: HubStage;
+  capabilities: HubCapabilities;
+  current: AdminHubSection | null;
+  isOperator: boolean;
+  unreadMessages: number;
+  openChanges: number;
+  logoSrc: string | null;
+  brandColour: string | null;
+  setup: { items: SetupItem[]; done: number; total: number; nextId: SetupItemId | null } | null;
+  /** Mobile: the setup card sits at the top of Overview. */
+  showMobileSetup: boolean;
+}
+
+const {
+  shopName,
+  townCity,
+  ownerEmail,
+  ownerFirstName,
+  stage,
+  capabilities,
+  current,
+  isOperator,
+  unreadMessages,
+  openChanges,
+  logoSrc,
+  brandColour,
+  setup,
+  showMobileSetup,
+} = Astro.props;
+
+function initials(value: string) {
+  const parts = value.trim().split(/[\s@._-]+/).filter(Boolean);
+  if (parts.length === 0) return 'K';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+}
+
+const pill = ADMIN_HUB_STAGE_PILL[stage];
+const tone = adminHubPillTone(stage);
+const chipColour = brandColour?.trim() || 'var(--accent, #d72638)';
+const showUnread = unreadMessages > 0;
+const accountLabel = isOperator ? ADMIN_HUB_OPERATOR : ownerEmail;
+const avatar = isOperator ? 'K' : initials(ownerFirstName || ownerEmail);
+
+const nav: Array<{
+  id: AdminHubSection;
+  href: string;
+  label: string;
+  Icon: typeof LayoutDashboard;
+  locked: boolean;
+  badge: number;
+}> = [
+  { id: 'overview', href: ADMIN_HUB_LINKS.overview, label: HUB_NAV.overview, Icon: LayoutDashboard, locked: false, badge: 0 },
+  {
+    id: 'changes',
+    href: ADMIN_HUB_LINKS.changes,
+    label: HUB_NAV.changes,
+    Icon: ListChecks,
+    locked: !capabilities.canDraftChanges,
+    badge: openChanges,
+  },
+  {
+    id: 'website',
+    href: ADMIN_HUB_LINKS.website,
+    label: HUB_NAV.website,
+    Icon: Globe,
+    locked: !capabilities.showPreview,
+    badge: 0,
+  },
+];
+---
+
+<div class="admin-hub" data-stage={stage}>
+  <a class="admin-hub__skip" href="#admin-hub-main">Skip to content</a>
+
+  <aside class="admin-hub-side" aria-label="KERSIVO">
+    <p class="admin-hub-wordmark"><span class="admin-hub-wordmark__dot" aria-hidden="true"></span>KERSIVO</p>
+
+    <div class="admin-hub-shopchip">
+      <span class="admin-hub-shopchip__logo" style={logoSrc ? undefined : `background:${chipColour}`}>
+        {logoSrc ? <img src={logoSrc} alt="" width="36" height="36" /> : <span aria-hidden="true">{initials(shopName)}</span>}
+      </span>
+      <span class="admin-hub-shopchip__text">
+        <span class="admin-hub-shopchip__name">{shopName}</span>
+        {townCity ? <span class="admin-hub-shopchip__meta">{townCity}</span> : null}
+      </span>
+    </div>
+
+    <p class={`admin-hub-pill admin-hub-pill--${tone}`}>
+      <span class="admin-hub-pill__dot" aria-hidden="true"></span>{pill}
+    </p>
+
+    <nav class="admin-hub-nav" aria-labelledby="admin-hub-nav-title">
+      <p class="admin-hub-nav__title" id="admin-hub-nav-title">{ADMIN_HUB_NAV_GROUP}</p>
+      {
+        nav.map((item) => (
+          <a
+            class:list={['admin-hub-navlink', item.locked && 'is-locked']}
+            href={item.href}
+            aria-current={current === item.id ? 'page' : undefined}
+            title={item.locked ? HUB_LOCKED_REASON_PREVIEW : undefined}
+          >
+            <item.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
+            <span>{item.label}</span>
+            {item.badge > 0 ? (
+              <span class="admin-hub-navlink__badge">
+                {item.badge}
+                <span class="admin-hub-sr-only"> open</span>
+              </span>
+            ) : item.locked ? (
+              <span class="admin-hub-navlink__lock">
+                <Lock width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+                <span class="admin-hub-sr-only">{HUB_LOCKED_REASON_PREVIEW}</span>
+              </span>
+            ) : null}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="admin-hub-side__spacer"></div>
+
+    {setup ? <AdminHubSetupCard placement="sidebar" {...setup} /> : null}
+
+    <p class="admin-hub-private">
+      <EyeOff width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+      {HUB_PRIVATE_LABEL}
+    </p>
+
+    <div class="admin-hub-account">
+      <span class="admin-hub-account__avatar" aria-hidden="true">{avatar}</span>
+      <span class="admin-hub-account__who">{accountLabel}</span>
+      <form class="admin-hub-account__leave" method="post" action="/admin/leave-preview">
+        <button type="submit">{ADMIN_HUB_LEAVE}</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="admin-hub-body">
+    <header class="admin-hub-top">
+      <span class="admin-hub-top__wm">KERSIVO</span>
+      <span class="admin-hub-top__shop">{shopName}</span>
+      <span class={`admin-hub-pill admin-hub-pill--${tone}`}>
+        <span class="admin-hub-pill__dot" aria-hidden="true"></span>{pill}
+      </span>
+      <a
+        class="admin-hub-top__msg"
+        href={ADMIN_HUB_LINKS.messages}
+        aria-label={showUnread ? `${HUB_NAV.messages}. ${HUB_UNREAD}` : HUB_NAV.messages}
+      >
+        <MessageCircle width={20} height={20} strokeWidth={1.8} aria-hidden="true" />
+        {showUnread ? <span class="admin-hub-top__dot" aria-hidden="true"></span> : null}
+      </a>
+    </header>
+
+    {
+      isOperator ? (
+        <p class="admin-hub-banner" role="status">
+          {ADMIN_HUB_OPERATOR_BANNER}
+        </p>
+      ) : null
+    }
+
+    <main class="admin-hub-main" id="admin-hub-main">
+      {setup && showMobileSetup ? <AdminHubSetupCard placement="mobile" {...setup} /> : null}
+      <slot />
+      <div class="admin-hub-mobile-foot">
+        <p class="admin-hub-private">
+          <EyeOff width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+          {HUB_PRIVATE_LABEL}
+        </p>
+        <p class="admin-hub-mobile-foot__who">{accountLabel}</p>
+        <form class="admin-hub-account__leave" method="post" action="/admin/leave-preview">
+          <button type="submit">{ADMIN_HUB_LEAVE}</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <nav class="admin-hub-tabs" aria-label={ADMIN_HUB_NAV_GROUP}>
+    {
+      nav.map((item) => (
+        <a
+          class:list={['admin-hub-tabs__item', item.locked && 'is-locked']}
+          href={item.href}
+          aria-current={current === item.id ? 'page' : undefined}
+          aria-label={item.locked ? `${item.label}. ${HUB_LOCKED_REASON_PREVIEW}` : undefined}
+        >
+          <span class="admin-hub-tabs__icon" aria-hidden="true">
+            <item.Icon width={20} height={20} strokeWidth={1.8} />
+            {item.badge > 0 ? <span class="admin-hub-tabs__count">{item.badge}</span> : null}
+          </span>
+          <span>{item.label}</span>
+          {item.badge > 0 ? <span class="admin-hub-sr-only"> {item.badge} open</span> : null}
+        </a>
+      ))
+    }
+  </nav>
+</div>

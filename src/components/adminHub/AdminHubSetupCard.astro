@@ -1,0 +1,62 @@
+---
+import AdminLaunchCtaButton from '@/components/admin/AdminLaunchCtaButton';
+import { Check, ArrowRight } from '@/components/lucide-react';
+import {
+  SETUP_FROM_LINKS_TAG,
+  SETUP_OPTIONAL_TAG,
+  SETUP_PHASE1_TITLE,
+  setupPhase1Status,
+  type SetupItem,
+  type SetupItemId,
+} from '@/lib/adminHub/setupCard';
+
+interface Props {
+  items: SetupItem[];
+  done: number;
+  total: number;
+  nextId: SetupItemId | null;
+  placement: 'sidebar' | 'mobile';
+}
+
+const { items, done, total, nextId, placement } = Astro.props;
+const percent = total ? Math.round((done / total) * 100) : 0;
+---
+
+<div class:list={['admin-hub-setup', `admin-hub-setup--${placement}`]}>
+  <AdminLaunchCtaButton
+    conversion
+    className="admin-hub-setup__cta"
+    href="/admin?app=setup"
+    status={setupPhase1Status(done, total)}
+    title={SETUP_PHASE1_TITLE}
+    dataTrack="admin_hub_setup_card"
+  >
+    <span class="admin-hub-setup__bar" aria-hidden="true"><span style={`width:${percent}%`}></span></span>
+    <span class="admin-hub-setup__list">
+      {
+        items.map((item) => (
+          <span
+            class:list={[
+              'admin-hub-setup__item',
+              item.done ? 'is-done' : item.id === nextId ? 'is-next' : 'is-todo',
+            ]}
+          >
+            <span class="admin-hub-setup__mark" aria-hidden="true">
+              {item.done ? <Check width={11} height={11} strokeWidth={3} /> : null}
+            </span>
+            <span class="admin-hub-setup__label">{item.label}</span>
+            {item.id === nextId ? (
+              <span class="admin-hub-setup__go" aria-hidden="true">
+                <ArrowRight width={13} height={13} />
+              </span>
+            ) : item.fromLinks && !item.done ? (
+              <span class="admin-hub-setup__tag">{SETUP_FROM_LINKS_TAG}</span>
+            ) : item.optional && !item.done ? (
+              <span class="admin-hub-setup__tag">{SETUP_OPTIONAL_TAG}</span>
+            ) : null}
+          </span>
+        ))
+      }
+    </span>
+  </AdminLaunchCtaButton>
+</div>

@@ -56,6 +56,18 @@ export async function resolvePreviewRequestByToken(token: string): Promise<Token
   return row;
 }
 
+/** Same row as the token lookup, for the signed `ks_hub` cookie (the id was authenticated by its HMAC). */
+export async function resolvePreviewRequestById(id: string): Promise<TokenPreviewRequest | null> {
+  if (!id) return null;
+  return prisma.previewRequest.findUnique({ where: { id }, select: previewRequestSelect });
+}
+
+/** The request whose draft shop an owner adopted at checkout (draftShopId is unique). */
+export async function resolvePreviewRequestByDraftShopId(shopId: string): Promise<TokenPreviewRequest | null> {
+  if (!shopId) return null;
+  return prisma.previewRequest.findUnique({ where: { draftShopId: shopId }, select: previewRequestSelect });
+}
+
 export function isPreviewExpired(request: { status: PreviewRequestStatus; expiresAt: Date | null }, now: Date): boolean {
   if (request.status === 'EXPIRED' || request.status === 'DECLINED') return true;
   return Boolean(request.expiresAt && request.expiresAt.getTime() <= now.getTime());

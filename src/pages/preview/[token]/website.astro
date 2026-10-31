@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
+import { adminHubBridge } from '@/lib/adminHub/bridge';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
 import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
@@ -29,6 +30,15 @@ import '@/styles/components/booking-mobile.css';
 import '@/styles/components/booking-review.css';
 
 applyPrivatePreviewHeaders(Astro.response.headers);
+
+const bridged = await adminHubBridge({
+  request: Astro.request,
+  url: Astro.url,
+  token: Astro.params.token ?? '',
+  subroute: 'website',
+  rateLimit: true,
+});
+if (bridged) return bridged;
 
 if (!isHubRouteEnabled()) return hubNotFound();
 

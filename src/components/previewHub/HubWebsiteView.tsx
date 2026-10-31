@@ -34,6 +34,7 @@ export type HubWebsiteDraft = {
 
 export function HubWebsiteView(props: {
   token: string;
+  apiBase?: string;
   shopName: string;
   townCity: string;
   firstName: string | null;
@@ -136,6 +137,7 @@ export function HubWebsiteView(props: {
             <PreviewTopBar
               chrome="checkout"
               token={props.token}
+              apiBase={props.apiBase}
               shopName={props.shopName}
               townCity={props.townCity}
               firstName={props.firstName}
@@ -195,6 +197,7 @@ export function HubWebsiteView(props: {
             </header>
             <HubChanges
               token={props.token}
+              apiBase={props.apiBase}
               initialItems={props.changeItems}
               includedChangeRounds={props.includedChangeRounds}
               changeRoundsUsed={props.changeRoundsUsed}

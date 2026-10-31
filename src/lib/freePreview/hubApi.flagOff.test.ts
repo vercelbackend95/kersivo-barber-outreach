@@ -24,7 +24,12 @@ describe('hub APIs keep the flag-off path (GLOBAL RULE 2)', () => {
       'src/pages/api/preview-hub/[token]/changes/[id].ts',
       'src/pages/api/preview-hub/[token]/changes/send.ts',
     ]) {
-      expect(read(file)).toContain('resolveHubApiContext');
+      expect(read(file)).toContain('(tokenSourceOf)');
+    }
+    for (const file of ['assets', 'assetById', 'changes', 'details', 'messages', 'reviews']) {
+      const handler = read(`src/lib/previewHub/handlers/${file}.ts`);
+      expect(handler).toContain('resolveHubApiContext');
+      expect(handler).not.toMatch(/resolveHubApiContext\(\{[^}]*token:/);
     }
   });
 
@@ -32,7 +37,7 @@ describe('hub APIs keep the flag-off path (GLOBAL RULE 2)', () => {
     expect(PREVIEW_HUB_MESSAGES_IP_RATE.limit).toBe(20);
     expect(PREVIEW_HUB_MESSAGES_REQUEST_HOUR_RATE.limit).toBe(20);
     expect(PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE.limit).toBe(100);
-    expect(read('src/pages/api/preview-hub/[token]/messages.ts')).toContain('enforceHubMessageRates');
+    expect(read('src/lib/previewHub/handlers/messages.ts')).toContain('enforceHubMessageRates');
   });
 
   it('does not change the existing free-preview token APIs', () => {

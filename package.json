@@ -42,6 +42,7 @@
     "test:demo-heroes": "playwright test --config=scripts/demo-page-hero.playwright.config.mjs",
     "test:marketing-scroll-nav": "playwright test --config=scripts/marketing-scroll-nav.playwright.config.mjs",
     "test:preview-hub-real": "node scripts/preview-hub/start-real-qa.mjs --test",
+    "test:admin-hub-real": "node scripts/preview-hub/start-real-qa.mjs --test --admin-hub",
     "qa:visual:barbershop-websites": "node scripts/visual-qa/capture-barbershop-websites.mjs",
     "check:widgets": "node scripts/check-landing-widgets.mjs",
     "assets:landing-demo": "node scripts/fetch-landing-demo-assets.mjs",

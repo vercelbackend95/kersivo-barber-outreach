@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
+import { adminHubBridge } from '@/lib/adminHub/bridge';
 import HubOverview from '@/components/previewHub/HubOverview.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
@@ -18,6 +19,15 @@ import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 applyPrivatePreviewHeaders(Astro.response.headers);
+
+const bridged = await adminHubBridge({
+  request: Astro.request,
+  url: Astro.url,
+  token: Astro.params.token ?? '',
+  subroute: 'overview',
+  rateLimit: true,
+});
+if (bridged) return bridged;
 
 if (!isHubRouteEnabled()) return hubNotFound();
 

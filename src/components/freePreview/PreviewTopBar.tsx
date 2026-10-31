@@ -26,6 +26,8 @@ export type PreviewTopBarProps = {
   chrome?: 'full' | 'checkout';
   /** When set (hub flag on), Request changes is a link to the Changes tab instead of the free-text dialog. */
   changesHref?: string;
+  /** Inside /admin: '/api/admin-hub' for event, checkout and domain search (cookie session, no token). */
+  apiBase?: string;
 };
 
 function initialMode(hasOwnDomain: string): DomainDecisionMode | null {
@@ -55,12 +57,13 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
 
   const ownerActionsDisabled = props.isOperator || props.converted;
   const chrome = props.chrome ?? 'full';
+  const actionRoot = props.apiBase ?? `/api/free-preview/${encodeURIComponent(props.token)}`;
 
   function open(next: Exclude<Panel, null>) {
     setError('');
     if (next === 'launch') {
       // Analytics only; never blocks the panel. The server applies the visitor's consent.
-      void fetch(`/api/free-preview/${encodeURIComponent(props.token)}/event`, { method: 'POST', keepalive: true }).catch(() => {});
+      void fetch(`${actionRoot}/event`, { method: 'POST', keepalive: true }).catch(() => {});
     }
     setPanel(next);
     (next === 'changes' ? changesDialog : launchDialog).current?.showModal();
@@ -129,7 +132,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
         getAttemptId: getOrCreateSaasCheckoutAttemptId,
         rotateAttemptId: rotateSaasCheckoutAttemptId,
         start: (checkoutAttemptId) =>
-          fetch(`/api/free-preview/${encodeURIComponent(props.token)}/checkout`, {
+          fetch(`${actionRoot}/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -207,7 +210,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
         <DomainSearcher
           shopName={props.shopName}
           townCity={props.townCity}
-          searchEndpoint={`/api/free-preview/${encodeURIComponent(props.token)}/domain-search`}
+          searchEndpoint={`${actionRoot}/domain-search`}
           mode={domainMode}
           onModeChange={setDomainMode}
           selectedDomain={selectedDomain}

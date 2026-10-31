@@ -43,6 +43,7 @@ import {
   type HubReviewSection,
   type HubReviewShopData,
 } from '@/lib/freePreview/hubReviews.shared';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 
 export type HubReviewMap = Record<HubReviewSection, HubReviewPublic | null>;
@@ -82,8 +83,8 @@ function newId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function postReview(token: string, body: unknown) {
-  const response = await fetch(`/api/preview-hub/${encodeURIComponent(token)}/reviews`, {
+async function postReview(apiRoot: string, body: unknown) {
+  const response = await fetch(`${apiRoot}/reviews`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -95,12 +96,14 @@ async function postReview(token: string, body: unknown) {
 
 export function HubReviewCards(props: {
   token: string;
+  apiBase?: string;
   detailsHref?: string;
   canReview: boolean;
   shop: HubReviewShopData | null;
   reviews: HubReviewMap;
   mode: 'strip' | 'full';
 }) {
+  const apiRoot = hubApiRoot(props);
   const [reviews, setReviews] = useState(props.reviews);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<HubReviewSection | null>(null);
@@ -143,7 +146,7 @@ export function HubReviewCards(props: {
     setBusy(section);
     setError(null);
     try {
-      const review = await postReview(props.token, body);
+      const review = await postReview(apiRoot, body);
       setReviews((current) => ({ ...current, [section]: review }));
       setToast(HUB_REVIEW_SENT);
     } catch (err) {
@@ -379,11 +382,12 @@ export function HubReviewCards(props: {
                     <p className="field__hint">{HUB_REVIEW_PHOTO}</p>
                     <HubUploader
                       token={props.token}
+                      apiBase={props.apiBase}
                       kind="TEAM_PHOTO"
                       compact
                       remaining={1}
                       onUploaded={(asset) => {
-                        void fetch(`/api/preview-hub/${encodeURIComponent(props.token)}/assets/${encodeURIComponent(asset.id)}`, {
+                        void fetch(`${apiRoot}/assets/${encodeURIComponent(asset.id)}`, {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ barberId: row.id }),

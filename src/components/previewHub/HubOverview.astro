@@ -43,7 +43,8 @@ import type { HubLaunchProgress, LaunchItem, OurLaunchStep } from '@/lib/freePre
 import type { HubChecklistItem } from '@/lib/freePreview/hubChecklist';
 import { HubReviewCards, type HubReviewMap } from '@/components/previewHub/HubReviewCards';
 import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
-import { PREVIEW_ONBOARDING_PATH, previewPagePath } from '@/lib/freePreview/config';
+import { PREVIEW_ONBOARDING_PATH } from '@/lib/freePreview/config';
+import { hubApiRoot, tokenHubLinks, type HubLinks } from '@/lib/adminHub/links';
 import {
   formatHubStepDate,
   hostnameOf,
@@ -68,9 +69,13 @@ interface Props {
   launchProgress?: HubLaunchProgress | null;
   logoAssetId?: string | null;
   brandColour?: string | null;
+  /** Inside /admin: cookie API root and /admin links, so the token never reaches the page. */
+  apiBase?: string;
+  links?: HubLinks;
 }
 
-const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed, launchProgress, logoAssetId, brandColour } = Astro.props;
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed, launchProgress, logoAssetId, brandColour, apiBase } = Astro.props;
+const links = Astro.props.links ?? tokenHubLinks(token);
 function shopInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return 'K';
@@ -79,7 +84,7 @@ function shopInitials(name: string) {
 }
 const previewColour = brandColour?.trim() || '#d72638';
 const logoSrc = logoAssetId
-  ? `/api/preview-hub/${encodeURIComponent(token)}/assets/${encodeURIComponent(logoAssetId)}?size=thumb`
+  ? `${hubApiRoot({ token, apiBase })}/assets/${encodeURIComponent(logoAssetId)}?size=thumb`
   : null;
 const YOUR_STEP_LABEL: Record<LaunchItem, string> = {
   business: HUB_LAUNCH_ITEM_BUSINESS,
@@ -104,20 +109,19 @@ const shopName = request.shopName;
 const header = hubHeaderCopy(hubHeaderKind(state), shopName);
 const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
 const nowNeed = state.stage === 'review' && state.reviewSubstate !== 'changes_sent' && reviewNeed ? reviewNeed : nowCopy.need;
-const base = previewPagePath(token);
 const primaryHref =
   state.stage === 'requested' || state.stage === 'designing'
-    ? `${base}/details`
+    ? links.details
     : state.stage === 'review'
-      ? `${base}/website`
+      ? links.website
       : state.stage === 'launch'
         ? PREVIEW_ONBOARDING_PATH
         : state.stage === 'live'
           ? '/admin'
           : state.stage === 'declined'
-            ? `${base}/messages?draft=message`
+            ? links.messagesDraft('message')
             : state.stage === 'expired'
-              ? `${base}/messages?draft=reopen`
+              ? links.messagesDraft('reopen')
               : undefined;
 const primaryLabel =
   state.stage === 'review' && state.reviewSubstate === 'changes_sent'
@@ -145,6 +149,7 @@ const primaryLabel =
             client:load
             chrome="checkout"
             token={token}
+            apiBase={apiBase}
             shopName={shopName}
             townCity={request.townCity}
             firstName={request.firstName}
@@ -154,8 +159,8 @@ const primaryLabel =
             isOperator={isOperator}
             converted={request.status === 'CONVERTED'}
             activeView="website"
-            websiteHref={`${base}/website`}
-            bookingHref={`${base}/website?view=booking`}
+            websiteHref={links.website}
+            bookingHref={links.booking}
           />
         ) : null
       }
@@ -252,10 +257,10 @@ const primaryLabel =
               </div>
               <p class="hub-card__body">{shopName}</p>
               <div class="hub-preview-actions">
-                <a class="btn btn--primary btn--sm" href={`${base}/website`}>
+                <a class="btn btn--primary btn--sm" href={links.website}>
                   {HUB_PREVIEW_OPEN_WEBSITE}
                 </a>
-                <a class="btn btn--secondary btn--sm" href={`${base}/website?view=booking`}>
+                <a class="btn btn--secondary btn--sm" href={links.booking}>
                   {HUB_PREVIEW_TRY_BOOKING}
                 </a>
               </div>
@@ -281,7 +286,8 @@ const primaryLabel =
       <HubReviewCards
         client:load
         token={token}
-        detailsHref={`${base}/details`}
+        apiBase={apiBase}
+        detailsHref={links.details}
         canReview={state.capabilities.canReview}
         shop={reviewShop ?? null}
         reviews={reviews}
@@ -349,7 +355,7 @@ const primaryLabel =
     <h2 id="hub-help-title" class="hub-card__title">{HUB_HELP_TITLE}</h2>
     <p class="hub-card__body">Questions about your preview? Message us here or by email.</p>
     <div class="hub-help__row">
-      <a class="btn btn--secondary btn--sm" href={`${base}/messages`}>
+      <a class="btn btn--secondary btn--sm" href={links.messages}>
         {HUB_HELP_MESSAGE}
       </a>
       <a class="btn btn--ghost btn--sm" href={HUB_HELP_EMAIL_HREF}>
