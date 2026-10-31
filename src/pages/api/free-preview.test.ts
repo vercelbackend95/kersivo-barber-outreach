@@ -73,11 +73,34 @@ describe('POST /api/free-preview', () => {
   });
 
   it('returns field errors for invalid input', async () => {
-    const response = await call({ ...validBody, instagramUrl: '' });
+    const response = await call({ ...validBody, email: 'not-an-email' });
     expect(response.status).toBe(400);
     const body = (await response.json()) as { fieldErrors: Record<string, string> };
-    expect(body.fieldErrors.links).toBeTruthy();
+    expect(body.fieldErrors.email).toBeTruthy();
     expect(createPreviewRequest).not.toHaveBeenCalled();
+  });
+
+  it('accepts a request with no work links', async () => {
+    const response = await call({ ...validBody, instagramUrl: '' });
+    expect(response.status).toBe(200);
+    expect(createPreviewRequest).toHaveBeenCalledTimes(1);
+    expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
+      workLinks: [],
+      instagramUrl: null,
+    });
+  });
+
+  it('accepts a structured workLinks payload', async () => {
+    const response = await call({
+      ...validBody,
+      instagramUrl: '',
+      workLinks: [{ platform: 'instagram', value: '@sharpcuts' }],
+    });
+    expect(response.status).toBe(200);
+    expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
+      instagramUrl: 'https://www.instagram.com/sharpcuts',
+      workLinks: [{ platform: 'instagram', value: 'sharpcuts', url: 'https://www.instagram.com/sharpcuts' }],
+    });
   });
 
   it('enforces the IP and per-email limits', async () => {
@@ -98,7 +121,7 @@ describe('POST /api/free-preview', () => {
     expect(createPreviewRequest).toHaveBeenCalledTimes(1);
     expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
       email: 'sam@example.com',
-      instagramUrl: 'https://instagram.com/sharpcuts',
+      instagramUrl: 'https://www.instagram.com/sharpcuts',
     });
   });
 });

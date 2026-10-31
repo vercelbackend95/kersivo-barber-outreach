@@ -73,6 +73,8 @@ export const FUNNEL_EVENTS = {
   preview_cta_click: 'preview_cta_click',
   preview_form_start: 'preview_form_start',
   preview_request_submitted: 'preview_request_submitted',
+  /** Platform tile on the free-preview form. Params: `{ platform }` only — never the typed value. */
+  preview_work_platform_selected: 'preview_work_platform_selected',
   /** The rest are sent from the server: see src/lib/analytics/serverEvents.ts. */
   preview_viewed: 'preview_viewed',
   preview_changes_requested: 'preview_changes_requested',

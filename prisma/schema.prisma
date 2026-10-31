@@ -1557,6 +1557,8 @@ model PreviewRequest {
   instagramUrl           String?
   googleListingUrl       String?
   websiteUrl             String?
+  /// Structured picker values. The four URL columns stay populated for older readers.
+  workLinks              Json?
   /// One of FREE_PREVIEW_BARBER_COUNTS ("1", "2-3", "4-6", "7+").
   barberCount            String
   /// One of FREE_PREVIEW_BOOKING_SYSTEMS.

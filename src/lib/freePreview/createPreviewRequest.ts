@@ -1,4 +1,4 @@
-import { EmailOutboundPurpose } from '@prisma/client';
+import { EmailOutboundPurpose, Prisma } from '@prisma/client';
 import { getLondonDayBounds } from '@/lib/admin/barberRosterPresentation';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
@@ -56,6 +56,7 @@ export async function createPreviewRequest(
         instagramUrl: input.instagramUrl,
         googleListingUrl: input.googleListingUrl,
         websiteUrl: input.websiteUrl,
+        workLinks: input.workLinks.length ? input.workLinks : Prisma.DbNull,
         barberCount: input.barberCount,
         currentBookingSystem: input.currentBookingSystem,
         hasOwnDomain: input.hasOwnDomain,
