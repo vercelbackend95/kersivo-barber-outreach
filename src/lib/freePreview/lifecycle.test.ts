@@ -277,6 +277,8 @@ describe('purgeExpiredPreviewData', () => {
       draftShopId: null,
       publicToken: 'new-token',
       publicTokenHash: 'new-hash',
+      detailsTokenHash: null,
+      detailsTokenExpiresAt: null,
       barberCount: '2-3',
     });
     expect(row.email).toBe('deleted-req_1@anonymised.invalid');

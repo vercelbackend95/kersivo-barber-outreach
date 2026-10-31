@@ -268,6 +268,8 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
           // New random token: the old private link can never resolve again.
           publicToken,
           publicTokenHash: hashPreviewToken(publicToken),
+          detailsTokenHash: null,
+          detailsTokenExpiresAt: null,
           firstName: null,
           email: `deleted-${id}@anonymised.invalid`,
           shopName: 'Deleted',

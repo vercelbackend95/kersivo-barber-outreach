@@ -1,148 +1,127 @@
 import { describe, expect, it } from 'vitest';
-import { normaliseLinkInput, parseFreePreviewRequest } from './intake';
+import {
+  FREE_PREVIEW_AUTHORISATION_STATEMENT,
+  FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION,
+  parseFreePreviewDetails,
+  parseFreePreviewRequest,
+} from './intake';
 
 const valid = {
-  firstName: 'Sam',
   email: ' Sam@Example.COM ',
   shopName: 'Sharp Cuts',
   townCity: 'Leeds',
-  instagramUrl: 'instagram.com/sharpcuts',
-  barberCount: '2-3',
-  currentBookingSystem: 'booksy',
-  hasOwnDomain: 'not_sure',
-  authorisationConsent: true,
 };
 
+const TOKEN = 'a'.repeat(43);
+
 describe('parseFreePreviewRequest', () => {
-  it('accepts a minimal valid request and normalises email and links', () => {
+  it('needs only shop, town and email, leaving everything else empty', () => {
     const result = parseFreePreviewRequest(valid);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.email).toBe('sam@example.com');
-    expect(result.value.instagramUrl).toBe('https://www.instagram.com/sharpcuts');
-    expect(result.value.bookingPageUrl).toBeNull();
-    expect(result.value.workLinks).toEqual([
-      {
-        platform: 'instagram',
-        value: 'https://instagram.com/sharpcuts',
-        url: 'https://www.instagram.com/sharpcuts',
-        handle: 'sharpcuts',
+    expect(result.value).toMatchObject({
+      email: 'sam@example.com',
+      workLinks: [],
+      instagramUrl: null,
+      bookingPageUrl: null,
+      barberCount: null,
+      currentBookingSystem: null,
+      hasOwnDomain: null,
+      firstName: null,
+      notes: null,
+      marketingOptIn: false,
+    });
+  });
+
+  it('uses the approved wording for missing required fields', () => {
+    const result = parseFreePreviewRequest({ email: 'nope', shopName: '', townCity: ' ' });
+    expect(result).toEqual({
+      ok: false,
+      fieldErrors: {
+        email: 'Please enter a valid email address.',
+        shopName: 'Please enter your barbershop name.',
+        townCity: 'Please enter your town or city.',
       },
-    ]);
-    expect(result.value.notes).toBeNull();
-    expect(result.value.marketingOptIn).toBe(false);
+    });
   });
 
-  it('allows a request with no work links', () => {
-    const result = parseFreePreviewRequest({ ...valid, instagramUrl: '' });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.workLinks).toEqual([]);
-    expect(result.value.instagramUrl).toBeNull();
-  });
-
-  it('normalises a workLinks payload and projects the legacy URL columns', () => {
+  it('normalises links, detects the platform itself and projects the legacy URL columns', () => {
     const result = parseFreePreviewRequest({
       ...valid,
-      instagramUrl: '',
-      workLinks: [
-        { platform: 'instagram', value: '@sharpcuts' },
-        { platform: 'booksy', value: 'https://booksy.com/en-gb/1?utm_source=bio' },
-        { platform: 'google', value: 'Northside Barbers, Leeds' },
+      links: [
+        { url: '@sharpcuts', platform: 'website' },
+        { url: 'https://booksy.com/en-gb/1?utm_source=bio' },
+        { url: 'https://maps.app.goo.gl/abc' },
+        { url: 'https://sharpcuts.co.uk' },
       ],
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.workLinks).toEqual([
-      {
-        platform: 'instagram',
-        value: '@sharpcuts',
-        url: 'https://www.instagram.com/sharpcuts',
-        handle: 'sharpcuts',
-      },
-      {
-        platform: 'booksy',
-        value: 'https://booksy.com/en-gb/1?utm_source=bio',
-        url: 'https://booksy.com/en-gb/1',
-        handle: null,
-      },
-      { platform: 'google', value: 'Northside Barbers, Leeds', url: null, handle: null },
+    expect(result.value.workLinks.map((link) => [link.platform, link.url])).toEqual([
+      ['instagram', 'https://www.instagram.com/sharpcuts'],
+      ['booksy', 'https://booksy.com/en-gb/1'],
+      ['google', 'https://maps.app.goo.gl/abc'],
+      ['website', 'https://sharpcuts.co.uk'],
     ]);
-    expect(result.value.instagramUrl).toBe('https://www.instagram.com/sharpcuts');
-    expect(result.value.bookingPageUrl).toBe('https://booksy.com/en-gb/1');
-    expect(result.value.googleListingUrl).toBeNull();
+    expect(result.value).toMatchObject({
+      instagramUrl: 'https://www.instagram.com/sharpcuts',
+      bookingPageUrl: 'https://booksy.com/en-gb/1',
+      googleListingUrl: 'https://maps.app.goo.gl/abc',
+      websiteUrl: 'https://sharpcuts.co.uk',
+    });
   });
 
-  it('lets workLinks win over the four legacy URL fields', () => {
+  it('dedupes links after normalising, and keeps two different links on one platform', () => {
     const result = parseFreePreviewRequest({
       ...valid,
-      instagramUrl: 'instagram.com/legacy',
-      workLinks: [{ platform: 'website', value: 'sharpcuts.co.uk' }],
+      links: [
+        { url: 'instagram.com/sharp' },
+        { url: 'https://www.instagram.com/sharp/?igsh=1' },
+        { url: '@othershop' },
+      ],
     });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.workLinks.map((link) => link.platform)).toEqual(['website']);
-    expect(result.value.instagramUrl).toBeNull();
-    expect(result.value.websiteUrl).toBe('https://sharpcuts.co.uk');
+    expect(result.ok && result.value.workLinks.map((link) => link.handle)).toEqual(['sharp', 'othershop']);
   });
 
-  it('still stores a mistyped Booksy link instead of rejecting the request', () => {
-    const result = parseFreePreviewRequest({
-      ...valid,
-      instagramUrl: '',
-      workLinks: [{ platform: 'booksy', value: 'not-a-booksy-link' }],
-    });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.workLinks).toEqual([
-      { platform: 'booksy', value: 'not-a-booksy-link', url: null, handle: null },
-    ]);
-    expect(result.value.bookingPageUrl).toBeNull();
+  it.each([
+    ['not a link', 'hello there'],
+    ['a script URL', 'javascript:alert(1)'],
+    ['a non-web scheme', 'ftp://sharpcuts.co.uk'],
+    ['an email address', 'sam@example.com'],
+    ['a host with no real TLD', 'https://localhost'],
+    ['over 300 characters', `https://booksy.com/${'a'.repeat(300)}`],
+  ])('rejects %s in links', (_name, url) => {
+    const result = parseFreePreviewRequest({ ...valid, links: [{ url }] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(Object.keys(result.fieldErrors)).toEqual(['links']);
   });
 
-  it('accepts the shared booking-system list including mixed tools', () => {
+  it('allows 5 links and rejects a sixth', () => {
+    const links = (n: number) => Array.from({ length: n }, (_, i) => ({ url: `https://shop${i}.co.uk` }));
+    expect(parseFreePreviewRequest({ ...valid, links: links(5) }).ok).toBe(true);
+    expect(parseFreePreviewRequest({ ...valid, links: links(6) })).toEqual({
+      ok: false,
+      fieldErrors: { links: "That's plenty — 5 links is the maximum." },
+    });
+  });
+
+  it('still validates the optional answers when they are sent', () => {
     expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'mixed-manual' }).ok).toBe(true);
-    expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'other-platform' }).ok).toBe(true);
-    expect(parseFreePreviewRequest({ ...valid, currentBookingSystem: 'other' }).ok).toBe(false);
-  });
-
-  it('rejects invalid links, select values and missing consent', () => {
     const result = parseFreePreviewRequest({
       ...valid,
-      websiteUrl: 'not a url',
       barberCount: '12',
       currentBookingSystem: 'calendly',
       hasOwnDomain: 'maybe',
-      authorisationConsent: false,
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(Object.keys(result.fieldErrors).sort()).toEqual(
-      ['authorisationConsent', 'barberCount', 'currentBookingSystem', 'hasOwnDomain', 'websiteUrl'].sort(),
-    );
+    expect(Object.keys(result.fieldErrors).sort()).toEqual(['barberCount', 'currentBookingSystem', 'hasOwnDomain']);
   });
 
   it('caps notes at 1000 characters', () => {
     expect(parseFreePreviewRequest({ ...valid, notes: 'x'.repeat(1000) }).ok).toBe(true);
     expect(parseFreePreviewRequest({ ...valid, notes: 'x'.repeat(1001) }).ok).toBe(false);
-  });
-
-  it('caps each work link at 300 characters', () => {
-    const long = `https://booksy.com/${'a'.repeat(300)}`;
-    expect(
-      parseFreePreviewRequest({
-        ...valid,
-        instagramUrl: '',
-        workLinks: [{ platform: 'booksy', value: 'https://booksy.com/en-gb/1' }],
-      }).ok,
-    ).toBe(true);
-    expect(
-      parseFreePreviewRequest({
-        ...valid,
-        instagramUrl: '',
-        workLinks: [{ platform: 'booksy', value: long }],
-      }).ok,
-    ).toBe(false);
   });
 
   it('keeps only a safe internal entry point', () => {
@@ -153,13 +132,49 @@ describe('parseFreePreviewRequest', () => {
   });
 });
 
-describe('normaliseLinkInput', () => {
-  it('adds https and rejects non-web or credentialed URLs', () => {
-    expect(normaliseLinkInput('sharpcuts.co.uk')).toBe('https://sharpcuts.co.uk/');
-    expect(normaliseLinkInput('http://sharpcuts.co.uk/book')).toBe('https://sharpcuts.co.uk/book');
-    expect(normaliseLinkInput('javascript:alert(1)')).toBeNull();
-    expect(normaliseLinkInput('ftp://sharpcuts.co.uk')).toBeNull();
-    expect(normaliseLinkInput('https://user:pass@sharpcuts.co.uk')).toBeNull();
-    expect(normaliseLinkInput('localhost')).toBeNull();
+describe('parseFreePreviewDetails', () => {
+  it('accepts every Step 2 field, all of them optional', () => {
+    expect(parseFreePreviewDetails({ token: TOKEN }).ok).toBe(true);
+    const result = parseFreePreviewDetails({
+      token: TOKEN,
+      barberCount: '4-6',
+      currentBookingSystem: 'booksy',
+      hasOwnDomain: 'not_sure',
+      firstName: ' Sam ',
+      notes: 'Use the red logo',
+      marketingOptIn: true,
+    });
+    expect(result.ok && result.value.firstName).toBe('Sam');
+  });
+
+  it('rejects a malformed or missing token', () => {
+    expect(parseFreePreviewDetails({}).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: 'short' }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: `${'a'.repeat(42)}!` }).ok).toBe(false);
+  });
+
+  it.each(['email', 'shopName', 'townCity', 'status', 'publicToken', 'links'])(
+    'rejects the non-Step-2 field %s',
+    (field) => {
+      expect(parseFreePreviewDetails({ token: TOKEN, [field]: 'x' }).ok).toBe(false);
+    },
+  );
+
+  it('rejects values outside the allowed lists and over-long text', () => {
+    expect(parseFreePreviewDetails({ token: TOKEN, barberCount: '12' }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: TOKEN, currentBookingSystem: 'calendly' }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: TOKEN, hasOwnDomain: 'maybe' }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: TOKEN, notes: 'x'.repeat(1001) }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: TOKEN, firstName: 'x'.repeat(81) }).ok).toBe(false);
+    expect(parseFreePreviewDetails({ token: TOKEN, marketingOptIn: 'on' }).ok).toBe(false);
+  });
+});
+
+describe('authorisation statement', () => {
+  it('pins the wording to its version: change one, change both', () => {
+    expect(FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION).toBe('2026-10-31');
+    expect(FREE_PREVIEW_AUTHORISATION_STATEMENT).toBe(
+      'By sending this, you confirm you own or manage this barbershop and that KERSIVO can use the details and photos from your links to build your private preview.',
+    );
   });
 });

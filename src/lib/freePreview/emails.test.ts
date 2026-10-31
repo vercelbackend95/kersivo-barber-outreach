@@ -93,4 +93,28 @@ describe('free preview emails', () => {
     expect(email.html).toContain('<a href="https://www.tiktok.com/@shop">https://www.tiktok.com/@shop</a>');
     expect(email.html).not.toContain('Work links');
   });
+
+  it('E2 says clearly when no links or optional answers came with the request', () => {
+    const email = buildPreviewRequestInternalEmail({
+      id: 'req_3',
+      firstName: null,
+      email: 'sam@example.com',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
+      bookingPageUrl: null,
+      instagramUrl: null,
+      googleListingUrl: null,
+      websiteUrl: null,
+      workLinks: null,
+      barberCount: null,
+      currentBookingSystem: null,
+      hasOwnDomain: null,
+      notes: null,
+      marketingOptIn: false,
+      entryPoint: null,
+      createdAt: new Date('2026-10-29T10:00:00Z'),
+    });
+    expect(email.html).toContain('No links provided');
+    expect(email.html).toContain('<th align="left" valign="top">Barbers</th><td>—</td>');
+  });
 });

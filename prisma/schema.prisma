@@ -1559,15 +1559,21 @@ model PreviewRequest {
   websiteUrl             String?
   /// Structured picker values. The four URL columns stay populated for older readers.
   workLinks              Json?
-  /// One of FREE_PREVIEW_BARBER_COUNTS ("1", "2-3", "4-6", "7+").
-  barberCount            String
-  /// One of FREE_PREVIEW_BOOKING_SYSTEMS.
-  currentBookingSystem   String
-  /// "yes" | "no" | "not_sure".
-  hasOwnDomain           String
+  /// One of FREE_PREVIEW_BARBER_COUNTS ("1", "2-3", "4-6", "7+"). Optional since the two-step form.
+  barberCount            String?
+  /// One of FREE_PREVIEW_BOOKING_SYSTEMS. Optional since the two-step form.
+  currentBookingSystem   String?
+  /// "yes" | "no" | "not_sure". Optional since the two-step form.
+  hasOwnDomain           String?
   notes                  String?   @db.Text
+  /// When the owner confirmed authority: ticked a checkbox (older rows) or submitted under the statement.
   authorisationConsentAt DateTime
+  /// FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION shown at submit. Null on rows from the checkbox form.
+  authorisationStatementVersion String?
   marketingOptInAt       DateTime?
+  /// SHA-256 (hex) of the short-lived token that lets the owner add optional details. Never the private preview link.
+  detailsTokenHash       String?   @unique
+  detailsTokenExpiresAt  DateTime?
   /// Which KERSIVO CTA sent the visitor (internal `?from=` value). No campaign attribution is stored.
   entryPoint             String?
 

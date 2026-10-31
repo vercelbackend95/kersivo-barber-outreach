@@ -2,12 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const count = vi.fn();
 const create = vi.fn();
+const findFirst = vi.fn();
+const update = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
-    $transaction: (run: (tx: unknown) => unknown) => run({ previewRequest: { count, create } }),
+    $transaction: (run: (tx: unknown) => unknown) => run({ previewRequest: { count, create, findFirst, update } }),
   },
 }));
 vi.mock('@/lib/email/outbox', () => ({
@@ -15,6 +17,7 @@ vi.mock('@/lib/email/outbox', () => ({
   tryDeliverOutboxEmail: (...args: unknown[]) => tryDeliverOutboxEmail(...args),
 }));
 
+import { hashPreviewToken } from '@/lib/preview/shopPreviewSession';
 import { getFreePreviewDailyCap, PREVIEW_OVER_CAP_MESSAGE, PREVIEW_TURNAROUND_TEXT } from './config';
 import { createPreviewRequest } from './createPreviewRequest';
 import type { FreePreviewRequestInput } from './intake';
@@ -51,6 +54,8 @@ function createdEvents(): Array<{ action: string }> {
 describe('createPreviewRequest daily cap', () => {
   beforeEach(() => {
     count.mockReset();
+    findFirst.mockReset().mockResolvedValue(null);
+    update.mockReset().mockResolvedValue({});
     create.mockReset().mockImplementation(({ data }) => ({
       ...data,
       id: 'req_1',
@@ -93,7 +98,7 @@ describe('createPreviewRequest daily cap', () => {
   it('still saves a request over the cap, flags it and sends the longer-wait message', async () => {
     count.mockResolvedValue(3);
     const result = await createPreviewRequest(input, NOW);
-    expect(result).toEqual({ id: 'req_1', overDailyCap: true });
+    expect(result).toMatchObject({ id: 'req_1', overDailyCap: true });
     expect(create).toHaveBeenCalledTimes(1);
     expect(createdEvents().map((event) => event.action)).toEqual(['CREATED', 'OVER_DAILY_CAP']);
     expect(ackHtml()).toContain(PREVIEW_OVER_CAP_MESSAGE);
@@ -105,5 +110,64 @@ describe('createPreviewRequest daily cap', () => {
     vi.stubEnv('FREE_PREVIEW_DAILY_CAP', '0');
     count.mockResolvedValue(0);
     expect((await createPreviewRequest(input, NOW)).overDailyCap).toBe(true);
+  });
+});
+
+describe('createPreviewRequest Step 2 token and consent record', () => {
+  beforeEach(() => {
+    count.mockReset().mockResolvedValue(0);
+    findFirst.mockReset().mockResolvedValue(null);
+    update.mockReset().mockResolvedValue({});
+    create.mockReset().mockImplementation(({ data }) => ({ ...data, id: 'req_1', createdAt: NOW }));
+    enqueueEmail.mockReset().mockImplementation((_tx, row: { dedupeKey: string }) => ({ id: row.dedupeKey }));
+    tryDeliverOutboxEmail.mockReset().mockResolvedValue(undefined);
+  });
+
+  const createdData = () => create.mock.calls[0]?.[0].data as Record<string, unknown>;
+
+  it('returns an unguessable token that is not the preview link, storing only its hash for 24 hours', async () => {
+    const { leadToken } = await createPreviewRequest(input, NOW);
+    expect(leadToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(leadToken).not.toBe(createdData().publicToken);
+    expect(createdData().detailsTokenHash).toBe(hashPreviewToken(leadToken));
+    expect(createdData().detailsTokenExpiresAt).toEqual(new Date('2026-07-15T23:30:00Z'));
+    expect(JSON.stringify(createdData())).not.toContain(leadToken);
+  });
+
+  it('records the authorisation timestamp and statement version', async () => {
+    await createPreviewRequest(input, NOW);
+    expect(createdData().authorisationConsentAt).toBe(NOW);
+    expect(createdData().authorisationStatementVersion).toBe('2026-10-31');
+  });
+
+  it('stores empty Step 2 answers and says so in the internal email', async () => {
+    await createPreviewRequest(
+      { ...input, barberCount: null, currentBookingSystem: null, hasOwnDomain: null, workLinks: [], instagramUrl: null },
+      NOW,
+    );
+    expect(createdData()).toMatchObject({ barberCount: null, currentBookingSystem: null, hasOwnDomain: null });
+    expect((enqueueEmail.mock.calls[1]?.[1] as { html: string }).html).toContain('No links provided');
+  });
+
+  it('treats a recent same-shop request as a retry: no new row, no emails, a fresh token', async () => {
+    findFirst.mockResolvedValue({ id: 'req_earlier', events: [{ id: 'evt_cap' }] });
+    const result = await createPreviewRequest(input, NOW);
+    expect(result.id).toBe('req_earlier');
+    expect(result.overDailyCap).toBe(true);
+    expect(findFirst.mock.calls[0]?.[0].where).toEqual({
+      email: 'sam@example.com',
+      shopName: { equals: 'Sharp Cuts', mode: 'insensitive' },
+      createdAt: { gte: new Date('2026-07-14T23:20:00Z') },
+    });
+    expect(update.mock.calls[0]?.[0]).toEqual({
+      where: { id: 'req_earlier' },
+      data: {
+        detailsTokenHash: hashPreviewToken(result.leadToken),
+        detailsTokenExpiresAt: new Date('2026-07-15T23:30:00Z'),
+      },
+    });
+    expect(create).not.toHaveBeenCalled();
+    expect(enqueueEmail).not.toHaveBeenCalled();
+    expect(tryDeliverOutboxEmail).not.toHaveBeenCalled();
   });
 });

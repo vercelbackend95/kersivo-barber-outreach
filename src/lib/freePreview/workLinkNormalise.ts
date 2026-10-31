@@ -1,4 +1,5 @@
 import {
+  WORK_LINK_VALUE_MAX,
   WORK_PLATFORM_IDS,
   WORK_PLATFORMS,
   isWorkPlatformId,
@@ -9,6 +10,7 @@ import {
   type WorkPlatformId,
 } from './workPlatforms';
 
+const VALID_TLD = /\.(?:[a-z]{2,}|xn--[a-z0-9-]+)$/i;
 const INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
 const TIKTOK_HANDLE = /^[A-Za-z0-9._]{2,24}$/;
 const INSTAGRAM_RESERVED = new Set([
@@ -72,7 +74,7 @@ export function parseWebUrl(raw: string): URL | null {
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
   if (url.username || url.password) return null;
-  if (!url.hostname.includes('.') || url.hostname.endsWith('.')) return null;
+  if (!VALID_TLD.test(url.hostname)) return null;
   if (url.protocol === 'http:') {
     const forced = new URL(url.toString());
     forced.protocol = 'https:';
@@ -92,7 +94,13 @@ function hostMatches(hostname: string, roots: readonly string[]): boolean {
 
 function isGoogleListingUrl(url: URL): boolean {
   const host = hostWithoutWww(url.hostname);
-  if (host === 'maps.app.goo.gl' || host === 'g.page' || host === 'g.co' || host === 'business.google.com') {
+  if (
+    host === 'maps.app.goo.gl' ||
+    host === 'g.page' ||
+    host === 'g.co' ||
+    host === 'share.google' ||
+    host === 'business.google.com'
+  ) {
     return true;
   }
   if (host === 'goo.gl' && url.pathname.toLowerCase().startsWith('/maps')) return true;
@@ -171,7 +179,7 @@ export function detectBookingPlatform(raw: string): 'booksy' | 'fresha' | 'treat
   return null;
 }
 
-/** Host → platform for the smart-paste field. Unknown URLs become `website`. Non-URLs return null. */
+/** Host → platform for the link field. Unknown URLs become `website`. Non-URLs return null. */
 export function detectPlatform(raw: string): WorkPlatformId | null {
   const url = parseWebUrl(raw);
   if (!url) return null;
@@ -271,28 +279,52 @@ export function normaliseWorkLink(platform: WorkPlatformId, raw: string): WorkLi
   }
 }
 
-/** Soft client hint only — never used to block submit. */
-export function workLinkLooksValid(platform: WorkPlatformId, raw: string): boolean {
-  const trimmed = raw.trim();
-  if (!trimmed) return true;
-  const parsed = normaliseWorkLink(platform, trimmed);
-  if (!parsed) return true;
-  const config = workPlatformById(platform);
-  switch (config.kind) {
-    case 'handle':
-      return platform === 'tiktok' ? Boolean(parsed.handle || parsed.url) : Boolean(parsed.handle);
-    case 'domain':
-      return platform === 'facebook' ? Boolean(parsed.url) || !parseWebUrl(trimmed) : Boolean(parsed.url);
-    case 'google':
-      return Boolean(parsed.url) || !parseWebUrl(trimmed);
-    case 'website':
-      return Boolean(parsed.url);
-    case 'other':
-      return true;
-  }
+/** A URL or @handle → detected platform and normalised https URL. Null when it isn't usable as a link. */
+export function parseLinkInput(raw: string): WorkLink | null {
+  const value = raw.trim();
+  if (!value || value.length > WORK_LINK_VALUE_MAX) return null;
+  const platform = value.startsWith('@') ? 'instagram' : detectPlatform(value);
+  if (!platform) return null;
+  const link = normaliseWorkLink(platform, value);
+  return link?.url && link.url.length <= WORK_LINK_VALUE_MAX ? link : null;
 }
 
-/** Host-style preview under the row, e.g. `instagram.com/yourshop`. Empty when there is nothing to show. */
+/** A comma only separates links when another link follows, because Google Maps URLs contain commas. */
+const COMMA_BEFORE_LINK = /,(?=(?:https?:\/\/|www\.|@|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}(?:[/?#,]|$)))/i;
+
+/** Splits pasted text into candidates on spaces, new lines and commas, dropping surrounding punctuation. */
+export function splitLinkInput(text: string): string[] {
+  return text
+    .split(/[\s;]+/)
+    .flatMap((part) => part.split(COMMA_BEFORE_LINK))
+    .map((part) => part.replace(/^[,(<"']+|[,.:)>"']+$/g, ''))
+    .filter(Boolean);
+}
+
+function workLinkKey(link: WorkLink): string {
+  return (link.url ?? link.value).toLowerCase();
+}
+
+/** Same URL twice counts once; the first one wins. */
+export function dedupeWorkLinks(links: readonly WorkLink[]): WorkLink[] {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    const key = workLinkKey(link);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const BOOKING_SYSTEM_PLATFORMS = new Set<WorkPlatformId>(['booksy', 'fresha', 'treatwell', 'nearcut', 'setora', 'square']);
+
+/** A CURRENT_BOOKING_SYSTEMS value when the links point at exactly one booking platform, otherwise null. */
+export function inferBookingSystem(links: readonly Pick<WorkLink, 'platform'>[]): WorkPlatformId | null {
+  const found = new Set(links.map((link) => link.platform).filter((id) => BOOKING_SYSTEM_PLATFORMS.has(id)));
+  return found.size === 1 ? [...found][0] : null;
+}
+
+/** Host-style text for a link chip, e.g. `instagram.com/yourshop`. Empty when there is nothing to show. */
 export function workLinkPreviewText(platform: WorkPlatformId, raw: string): string {
   const parsed = normaliseWorkLink(platform, raw);
   if (!parsed) return '';
@@ -310,22 +342,6 @@ export function workLinkPreviewText(platform: WorkPlatformId, raw: string): stri
   }
 }
 
-export function normaliseWorkLinksInput(
-  items: ReadonlyArray<{ platform: string; value: string }>,
-): WorkLink[] {
-  const out: WorkLink[] = [];
-  const seen = new Set<WorkPlatformId>();
-  for (const item of items) {
-    if (!isWorkPlatformId(item.platform)) continue;
-    if (seen.has(item.platform)) continue;
-    const link = normaliseWorkLink(item.platform, item.value);
-    if (!link) continue;
-    seen.add(item.platform);
-    out.push(link);
-  }
-  return out;
-}
-
 export function workLinksToLegacyFields(links: readonly WorkLink[]): {
   bookingPageUrl: string | null;
   instagramUrl: string | null;
@@ -333,9 +349,7 @@ export function workLinksToLegacyFields(links: readonly WorkLink[]): {
   websiteUrl: string | null;
 } {
   const find = (id: WorkPlatformId) => links.find((link) => link.platform === id);
-  const booking = (['booksy', 'fresha', 'treatwell'] as const)
-    .map(find)
-    .find((link) => link?.url);
+  const booking = links.find((link) => link.url && BOOKING_SYSTEM_PLATFORMS.has(link.platform));
   return {
     bookingPageUrl: booking?.url ?? null,
     instagramUrl: find('instagram')?.url ?? null,
@@ -344,56 +358,18 @@ export function workLinksToLegacyFields(links: readonly WorkLink[]): {
   };
 }
 
-export function legacyFieldsToWorkLinks(fields: {
-  bookingPageUrl: string | null;
-  instagramUrl: string | null;
-  googleListingUrl: string | null;
-  websiteUrl: string | null;
-}): WorkLink[] {
-  const links: WorkLink[] = [];
-  if (fields.instagramUrl) {
-    links.push(
-      normaliseWorkLink('instagram', fields.instagramUrl) ??
-        workLink('instagram', fields.instagramUrl, fields.instagramUrl, null),
-    );
-  }
-  if (fields.bookingPageUrl) {
-    const platform = detectBookingPlatform(fields.bookingPageUrl) ?? 'other';
-    links.push(
-      normaliseWorkLink(platform, fields.bookingPageUrl) ??
-        workLink(platform, fields.bookingPageUrl, fields.bookingPageUrl, null),
-    );
-  }
-  if (fields.googleListingUrl) {
-    links.push(
-      normaliseWorkLink('google', fields.googleListingUrl) ??
-        workLink('google', fields.googleListingUrl, fields.googleListingUrl, null),
-    );
-  }
-  if (fields.websiteUrl) {
-    links.push(
-      normaliseWorkLink('website', fields.websiteUrl) ??
-        workLink('website', fields.websiteUrl, fields.websiteUrl, null),
-    );
-  }
-  return links;
-}
-
 export function parseStoredWorkLinks(value: unknown): WorkLink[] {
   if (!Array.isArray(value)) return [];
   const out: WorkLink[] = [];
-  const seen = new Set<WorkPlatformId>();
   for (const item of value) {
     if (!item || typeof item !== 'object') continue;
     const record = item as Record<string, unknown>;
     if (!isWorkPlatformId(record.platform) || typeof record.value !== 'string' || !record.value.trim()) continue;
-    if (seen.has(record.platform)) continue;
-    seen.add(record.platform);
     const url = typeof record.url === 'string' && record.url.trim() ? record.url.trim() : null;
     const handle = typeof record.handle === 'string' && record.handle.trim() ? record.handle.trim() : null;
     out.push({ platform: record.platform, value: record.value.trim(), url, handle });
   }
-  return out;
+  return dedupeWorkLinks(out);
 }
 
 export type DisplayWorkLink = { label: string; value: string; url: string | null; handle: string | null };

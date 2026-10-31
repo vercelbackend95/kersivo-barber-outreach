@@ -1,4 +1,4 @@
-/** Platforms on the free-preview “Where can we see your work?” picker. Client-safe. */
+/** Platforms detected from links on the free-preview form. Client-safe. */
 
 export const WORK_PLATFORM_IDS = [
   'instagram',
@@ -6,6 +6,9 @@ export const WORK_PLATFORM_IDS = [
   'booksy',
   'fresha',
   'treatwell',
+  'nearcut',
+  'setora',
+  'square',
   'tiktok',
   'facebook',
   'website',
@@ -22,141 +25,54 @@ export type WorkLink = {
   handle: string | null;
 };
 
-export type WorkPlatformMark = 'globe' | 'ellipsis' | 'mappin' | null;
-
 export type WorkPlatformKind = 'handle' | 'domain' | 'google' | 'website' | 'other';
 
 export type WorkPlatform = {
   id: WorkPlatformId;
   name: string;
-  inputLabel: string;
-  placeholder: string;
-  hint: string;
-  inputMode: 'text' | 'url';
-  /** Official brand mark when we have one; Lucide generic marks; otherwise text-only. */
-  mark: WorkPlatformMark;
   hosts: readonly string[];
   kind: WorkPlatformKind;
 };
 
-function hintFor(name: string): string {
-  return `That doesn't look like a ${name} link – we'll still take it.`;
-}
-
-export const WORK_PICKER_COPY = {
-  smartLabel: 'Paste any link',
-  smartPlaceholder: 'e.g. your Booksy or Instagram link',
-  smartUnknown: "We couldn't spot a link there – pick a platform below instead.",
+export const SMART_LINK_COPY = {
+  label: 'Your booking page or Instagram',
+  hint: "Paste a link or @handle. We'll use it for your services, prices and photos.",
+  placeholder: 'booksy.com/… or @yourshop',
+  supported: 'Works with Booksy, Fresha, Treatwell, Instagram, Google Maps, Facebook, TikTok or your own website.',
+  addAnother: '+ Add another link (optional)',
+  invalid: "That doesn't look like a link. Try pasting the full address or your @handle.",
+  max: "That's plenty — 5 links is the maximum.",
   check: 'Check',
-  addedTo: (name: string) => `Added to ${name}`,
-  addedCount: (n: number) => `${n} added`,
-  removedUndo: (name: string) => `${name} removed. Undo`,
+  undo: 'Undo',
+  removed: 'Link removed',
+  added: (name: string) => `${name} link added`,
+  remove: (name: string) => `Remove ${name} link`,
+  checkLabel: (name: string) => `Check ${name} link (opens in a new tab)`,
 } as const;
 
 export const WORK_LINK_VALUE_MAX = 300;
-export const WORK_LINKS_MAX = 10;
+export const WORK_LINKS_MAX = 5;
 export const WORK_UNDO_MS = 5000;
 
+/** `other` no longer comes from detection; it stays so rows from the earlier picker still read correctly. */
 export const WORK_PLATFORMS: readonly WorkPlatform[] = [
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    inputLabel: 'Your Instagram',
-    placeholder: '@yourshop',
-    hint: hintFor('Instagram'),
-    inputMode: 'text',
-    mark: null,
-    hosts: ['instagram.com', 'instagr.am'],
-    kind: 'handle',
-  },
+  { id: 'instagram', name: 'Instagram', hosts: ['instagram.com', 'instagr.am'], kind: 'handle' },
   {
     id: 'google',
     name: 'Google',
-    inputLabel: 'Your Google listing',
-    placeholder: 'Google Maps link, or shop name and town',
-    hint: hintFor('Google'),
-    inputMode: 'text',
-    mark: 'mappin',
-    hosts: ['maps.google.com', 'maps.app.goo.gl', 'g.page', 'g.co', 'business.google.com', 'google.com'],
+    hosts: ['maps.google.com', 'maps.app.goo.gl', 'g.page', 'g.co', 'share.google', 'business.google.com', 'google.com'],
     kind: 'google',
   },
-  {
-    id: 'booksy',
-    name: 'Booksy',
-    inputLabel: 'Your Booksy page',
-    placeholder: 'Paste your Booksy link',
-    hint: hintFor('Booksy'),
-    inputMode: 'url',
-    mark: null,
-    hosts: ['booksy.com'],
-    kind: 'domain',
-  },
-  {
-    id: 'fresha',
-    name: 'Fresha',
-    inputLabel: 'Your Fresha page',
-    placeholder: 'Paste your Fresha link',
-    hint: hintFor('Fresha'),
-    inputMode: 'url',
-    mark: null,
-    hosts: ['fresha.com'],
-    kind: 'domain',
-  },
-  {
-    id: 'treatwell',
-    name: 'Treatwell',
-    inputLabel: 'Your Treatwell page',
-    placeholder: 'Paste your Treatwell link',
-    hint: hintFor('Treatwell'),
-    inputMode: 'url',
-    mark: null,
-    hosts: ['treatwell.co.uk', 'treatwell.com'],
-    kind: 'domain',
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok',
-    inputLabel: 'Your TikTok',
-    placeholder: '@yourshop',
-    hint: hintFor('TikTok'),
-    inputMode: 'text',
-    mark: null,
-    hosts: ['tiktok.com'],
-    kind: 'handle',
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook',
-    inputLabel: 'Your Facebook page',
-    placeholder: 'Page link or name',
-    hint: hintFor('Facebook'),
-    inputMode: 'text',
-    mark: null,
-    hosts: ['facebook.com', 'fb.com', 'fb.me'],
-    kind: 'domain',
-  },
-  {
-    id: 'website',
-    name: 'Website',
-    inputLabel: 'Your website',
-    placeholder: 'yourshop.co.uk',
-    hint: hintFor('Website'),
-    inputMode: 'url',
-    mark: 'globe',
-    hosts: [],
-    kind: 'website',
-  },
-  {
-    id: 'other',
-    name: 'Other',
-    inputLabel: 'Anything else',
-    placeholder: 'Tell us where',
-    hint: hintFor('Other'),
-    inputMode: 'text',
-    mark: 'ellipsis',
-    hosts: [],
-    kind: 'other',
-  },
+  { id: 'booksy', name: 'Booksy', hosts: ['booksy.com'], kind: 'domain' },
+  { id: 'fresha', name: 'Fresha', hosts: ['fresha.com'], kind: 'domain' },
+  { id: 'treatwell', name: 'Treatwell', hosts: ['treatwell.co.uk', 'treatwell.com'], kind: 'domain' },
+  { id: 'nearcut', name: 'Nearcut', hosts: ['nearcut.com', 'nearcut.co.uk'], kind: 'domain' },
+  { id: 'setora', name: 'Setora', hosts: ['setora.co.uk', 'setora.com'], kind: 'domain' },
+  { id: 'square', name: 'Square', hosts: ['squareup.com', 'square.site'], kind: 'domain' },
+  { id: 'tiktok', name: 'TikTok', hosts: ['tiktok.com'], kind: 'handle' },
+  { id: 'facebook', name: 'Facebook', hosts: ['facebook.com', 'fb.com', 'fb.me'], kind: 'domain' },
+  { id: 'website', name: 'Website', hosts: [], kind: 'website' },
+  { id: 'other', name: 'Other', hosts: [], kind: 'other' },
 ] as const;
 
 const PLATFORM_BY_ID = new Map(WORK_PLATFORMS.map((platform) => [platform.id, platform]));

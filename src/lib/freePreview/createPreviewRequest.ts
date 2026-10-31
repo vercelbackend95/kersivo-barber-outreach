@@ -3,13 +3,14 @@ import { getLondonDayBounds } from '@/lib/admin/barberRosterPresentation';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { hashPreviewToken, mintPreviewToken } from '@/lib/preview/shopPreviewSession';
-import { getFreePreviewDailyCap } from './config';
+import { PREVIEW_DETAILS_TOKEN_TTL_MS, PREVIEW_DUPLICATE_WINDOW_MS, getFreePreviewDailyCap } from './config';
 import { buildPreviewRequestAcknowledgementEmail, buildPreviewRequestInternalEmail } from './emails';
-import type { FreePreviewRequestInput } from './intake';
+import { FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION, type FreePreviewRequestInput } from './intake';
 
 export const PREVIEW_REQUEST_ACTIONS = {
   CREATED: 'CREATED',
   OVER_DAILY_CAP: 'OVER_DAILY_CAP',
+  DETAILS_UPDATED: 'DETAILS_UPDATED',
   STATUS_CHANGED: 'STATUS_CHANGED',
   NOTES_UPDATED: 'NOTES_UPDATED',
   DRAFT_SHOP_CREATED: 'DRAFT_SHOP_CREATED',
@@ -32,13 +33,37 @@ export const PREVIEW_REQUEST_ACTIONS = {
  * Stores a public preview request and queues E1 (owner) + E2 (internal) in the same transaction,
  * then attempts immediate delivery. The outbox cron retries anything that fails.
  * Requests over the daily cap are still saved; they carry an OVER_DAILY_CAP event and a longer-wait message.
+ * A retry of a recent request (its response may never have arrived) updates nothing but the Step 2 token.
+ * `leadToken` authorises Step 2 only: it is not the private preview link, and only its hash is stored.
  */
 export async function createPreviewRequest(
   input: FreePreviewRequestInput,
   now: Date = new Date(),
-): Promise<{ id: string; overDailyCap: boolean }> {
+): Promise<{ id: string; overDailyCap: boolean; leadToken: string }> {
   const publicToken = mintPreviewToken();
-  const { request, outboxIds, overDailyCap } = await prisma.$transaction(async (tx) => {
+  const leadToken = mintPreviewToken();
+  const detailsToken = {
+    detailsTokenHash: hashPreviewToken(leadToken),
+    detailsTokenExpiresAt: new Date(now.getTime() + PREVIEW_DETAILS_TOKEN_TTL_MS),
+  };
+  const { requestId, outboxIds, overDailyCap } = await prisma.$transaction(async (tx) => {
+    const duplicate = await tx.previewRequest.findFirst({
+      where: {
+        email: input.email,
+        shopName: { equals: input.shopName, mode: 'insensitive' },
+        createdAt: { gte: new Date(now.getTime() - PREVIEW_DUPLICATE_WINDOW_MS) },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        events: { where: { action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }, select: { id: true }, take: 1 },
+      },
+    });
+    if (duplicate) {
+      await tx.previewRequest.update({ where: { id: duplicate.id }, data: detailsToken });
+      return { requestId: duplicate.id, outboxIds: [], overDailyCap: duplicate.events.length > 0 };
+    }
+
     const requestsToday = await tx.previewRequest.count({
       where: { createdAt: { gte: new Date(getLondonDayBounds(now).startMs) } },
     });
@@ -48,6 +73,7 @@ export async function createPreviewRequest(
       data: {
         publicToken,
         publicTokenHash: hashPreviewToken(publicToken),
+        ...detailsToken,
         firstName: input.firstName,
         email: input.email,
         shopName: input.shopName,
@@ -62,6 +88,7 @@ export async function createPreviewRequest(
         hasOwnDomain: input.hasOwnDomain,
         notes: input.notes,
         authorisationConsentAt: now,
+        authorisationStatementVersion: FREE_PREVIEW_AUTHORISATION_STATEMENT_VERSION,
         marketingOptInAt: input.marketingOptIn ? now : null,
         entryPoint: input.entryPoint,
         events: {
@@ -98,9 +125,9 @@ export async function createPreviewRequest(
       dedupeKey: `free-preview:internal:${request.id}`,
     });
 
-    return { request, outboxIds: [ackRow.id, internalRow.id], overDailyCap };
+    return { requestId: request.id, outboxIds: [ackRow.id, internalRow.id], overDailyCap };
   });
 
   await Promise.all(outboxIds.map((id) => tryDeliverOutboxEmail(id)));
-  return { id: request.id, overDailyCap };
+  return { id: requestId, overDailyCap, leadToken };
 }

@@ -150,7 +150,7 @@ function hostnameOf(url: string | null | undefined): string {
           townCity={preview.request.townCity}
           firstName={preview.request.firstName}
           checkoutEmail={preview.request.email}
-          hasOwnDomain={preview.request.hasOwnDomain}
+          hasOwnDomain={preview.request.hasOwnDomain ?? 'not_sure'}
           existingWebsiteHost={hostnameOf(preview.request.websiteUrl)}
           isOperator={preview.isOperator}
           converted={preview.request.status === 'CONVERTED'}
