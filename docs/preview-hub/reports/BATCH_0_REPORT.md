@@ -2,7 +2,8 @@
 
 **Date:** 31 October 2026  
 **Branch:** `preview-hub-batch-0`  
-**Product code changed:** none (docs only)
+**Product code changed:** none (docs only)  
+**Spec:** `docs/preview-hub/HUB_SPEC.md` v1.0 (founder-placed; not edited)
 
 ---
 
@@ -10,8 +11,8 @@
 
 | File | Why |
 |---|---|
-| `docs/preview-hub/HUB_SPEC.md` | Required destination for the attached spec. The source file was not in the workspace or on disk, so this is a provenance placeholder plus the GLOBAL RULES that arrived with the prompt. **Not the product spec.** |
-| `docs/preview-hub/BATCH_0_FINDINGS.md` | Answers a–m with `file:line` evidence, the actual state machine, reuse inventory, and conflicts. |
+| `docs/preview-hub/HUB_SPEC.md` | Founder placed the full spec. This batch did not modify it. |
+| `docs/preview-hub/BATCH_0_FINDINGS.md` | Answers a–m with `file:line` evidence, reuse inventory, and spec-vs-code conflicts. |
 | `docs/preview-hub/reports/BATCH_0_REPORT.md` | This report. |
 
 No migrations. No new env vars. No screens (discovery; no UI).
@@ -22,52 +23,66 @@ No migrations. No new env vars. No screens (discovery; no UI).
 
 | Item | Status |
 |---|---|
-| `docs/preview-hub/HUB_SPEC.md` exists | **Partial.** File exists. It is **not** the exact contents of `KERSIVO_Shop_Hub_Spec_v1.md` because that attachment was not found. |
+| `docs/preview-hub/HUB_SPEC.md` exists with the spec | Pass (founder-placed). |
 | `docs/preview-hub/BATCH_0_FINDINGS.md` exists | Pass. |
 | Every question a–m has an answer with evidence or an explicit “not found” | Pass. |
+| Conflicts between HUB_SPEC and the code listed, not resolved | Pass (findings §14, 35 items). |
 | No product code changed | Pass. |
-
-**Batch 0 is not marked done** (GLOBAL RULE 11 / Batch 0 acceptance): item 1 failed. Replace `HUB_SPEC.md` with the exact spec before Batch 1.
 
 ---
 
 ## Screenshots
 
-None. Batch 0 added no screens. Directory `docs/preview-hub/screens/batch-0/` was not created.
+None. Batch 0 added no screens.
 
 ---
 
 ## Test results
 
-Not run. No product code, no tests added. Existing suite was not required for a docs-only discovery batch.
+Not run. No product code.
+
+---
+
+## Headline answers (a–m)
+
+- **a.** Eight statuses. Writers: create, ops (`set_status` / `reject` / `mark_ready_and_send`), request-changes, no-thanks, expiry cron, Stripe webhook. Claim does not change status. Owners currently 404 before READY.
+- **b.** Ops create/link ownerless draft + set `sitePreviewUrl` only. Apply-correction helpers: `replaceShopOpeningHours`, `replaceBarberAvailabilityRules`, `linkAllServicesToAllBarbers`, `createStandaloneBookingProfile`, `storeShopLogo`.
+- **c.** External/manual Vercel project. This repo iframes the URL. **Skip Batch 6 pin mode.**
+- **d.** No published-website field. **Add `PreviewRequest.liveAt`** (spec §2 / §7).
+- **e.** Direct subscribe → `ClientOnboardingWizard`. No `PreviewRequest`. Batch 5 target documented.
+- **f.** `/admin/preview-launch` is a short confirm-details form, not the five-item checklist. Approval lives on `/admin/site-preview`.
+- **g.** `retailEnabled` only via settings PATCH; no product or live gate. Hub/preview-launch never ask (matches D1 for the hub).
+- **h.** `bookingPaymentMode` stays `NONE` (matches D2).
+- **i.** `uploadPrivateOnboardingFile` / `deletePrivateOnboardingFile` / `retrievePrivateOnboardingFile`. Stream helper exists. Vercel body default 4.5 MB (spec hub cap 4 MB fits). No magic-byte sniff.
+- **j.** Outbox + Resend. E1 has **no hub link**. File/message/live emails do not exist. Opt-out via no-thanks.
+- **k.** Anonymise `EXPIRED`/`DECLINED`/`REJECTED` after 90 days; draft shop graph deleted; external site not deleted. Hub tables do not exist yet.
+- **l.** `/api/cron/free-preview-lifecycle` at `20 * * * *`. Email outbox every 5 min.
+- **m.** `admin-theme-premium-black` + `tokens.css` + Lucide subset (`lucide-react.tsx`). `WeeklyHoursEditor` exists. **No shared toast.**
+
+---
+
+## Conflicts to carry into Batch 1
+
+Highest impact:
+
+1. Token page 404s before READY and without `draftShopId` — hub must open at Requested.
+2. Add `PREVIEW_HUB_ENABLED` beside `FREE_PREVIEW_FLOW_ENABLED`; decide composition.
+3. E1 rewrite behind the hub flag only (flag-off byte-identical).
+4. Add `PreviewRequest.liveAt`; skip pin mode.
+5. Apply content via named service helpers, not `/api/admin/onboarding/*`.
+6. No-thanks `Referrer-Policy: same-origin` vs spec `no-referrer`.
+7. D1 dashboard retail product+live gate is **not** true today — do not change that PATCH in hub batches unless asked.
+
+Full table: `docs/preview-hub/BATCH_0_FINDINGS.md` §14.
 
 ---
 
 ## What I could not do
 
-1. **Copy the attached spec.** Searched the workspace, this chat’s tool-visible attachments, Downloads, Desktop, Documents, and filename patterns `*Shop_Hub*`, `*HUB_SPEC*`, `*preview-hub*`. Not found. A ChatGPT canvas “Kersivo shop hub cursor batches - MD” holds the batch prompts; conversation “Hub i formularz preview” is the likely home of the spec. Computer-use clicks into that ChatGPT window were blocked.
-2. **Fully enumerate spec-vs-code conflicts.** §14 of the findings compares GLOBAL RULES + Batch 0 questions to the code. Re-run after the exact spec is supplied (especially §2 `liveAt` and §9 copy).
-3. **Screenshots at 360/1280.** No new or changed screens.
+Nothing remaining for Batch 0 investigation. Product implementation starts at Batch 1.
 
 ---
 
 ## Open questions
 
-See `docs/preview-hub/BATCH_0_FINDINGS.md` “Open questions”. The blocker is the missing spec file.
-
----
-
-## Headline findings (for Batch 1)
-
-- Eight `PreviewRequest` statuses. Status actually changes in six writers: create, ops (`set_status` / `reject` / `mark_ready_and_send`), request-changes, no-thanks, expiry cron, Stripe webhook. Claim/adoption does **not** change status.
-- Ops can create/link an ownerless draft and set `sitePreviewUrl`. There is no ops API for services, barbers, hours or logo. Reuse `replaceShopOpeningHours`, `replaceBarberAvailabilityRules`, `linkAllServicesToAllBarbers`, `createStandaloneBookingProfile`, `storeShopLogo`.
-- The website at `sitePreviewUrl` is an **external/manual** Vercel project. This repo only stores the URL and iframes it. Batch 6 pin mode cannot inject a script from this codebase.
-- No single “site published” field. Closest: `FullBookingDestination.status = VERIFIED_LIVE` (booking URL) and `goLiveAt` (approve click, not DNS). Spec §2 would add `PreviewRequest.liveAt`.
-- Direct subscribers get `ClientOnboardingWizard`. No `PreviewRequest`. Preview buyers get `/admin/preview-launch`.
-- `retailEnabled` only via settings PATCH; no product-count gate. `bookingPaymentMode` stays `NONE` through preview → launch.
-- Private blobs: `uploadPrivateOnboardingFile` / `deletePrivateOnboardingFile` / `retrievePrivateOnboardingFile`. Vercel body default 4.5 MB. Streaming helper exists; no ops download route.
-- Emails: `EmailOutbound` outbox + Resend. Free-preview builders and opt-out already exist.
-- Retention anonymises `EXPIRED`/`DECLINED`/`REJECTED` after 90 days and deletes the draft shop graph. External site is **not** deleted.
-- Only free-preview cron: `/api/cron/free-preview-lifecycle` at `20 * * * *`.
-- Dashboard look: `admin-theme-premium-black` + `booking.css` + `tokens.css`. Icons: local Lucide subset. No shared toast.
-- `PREVIEW_HUB_ENABLED` / `isPreviewHubEnabled()` / `hubCopy.ts` do not exist.
+See findings “Open questions” (flag composition, approve-for-launch writer, D1 dashboard gate, converting REJECTED, no-thanks referrer).
