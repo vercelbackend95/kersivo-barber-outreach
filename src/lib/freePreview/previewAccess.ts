@@ -27,6 +27,10 @@ const previewRequestSelect = {
   liveAt: true,
   includedChangeRounds: true,
   changeRoundsUsed: true,
+  brandPrimaryColour: true,
+  brandSecondaryColour: true,
+  styleNotes: true,
+  aboutText: true,
 } as const;
 
 export type TokenPreviewRequest = NonNullable<Awaited<ReturnType<typeof findPreviewRequestRow>>>;

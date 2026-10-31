@@ -55,6 +55,10 @@ function pageRow(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequ
     liveAt: null,
     includedChangeRounds: 1,
     changeRoundsUsed: 0,
+    brandPrimaryColour: null,
+    brandSecondaryColour: null,
+    styleNotes: null,
+    aboutText: null,
     ...overrides,
   };
 }

@@ -50,6 +50,10 @@ function row(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequest 
     liveAt: null,
     includedChangeRounds: 1,
     changeRoundsUsed: 0,
+    brandPrimaryColour: null,
+    brandSecondaryColour: null,
+    styleNotes: null,
+    aboutText: null,
     ...overrides,
   };
 }

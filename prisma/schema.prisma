@@ -98,6 +98,8 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_FOLLOWUP
   /// Free website preview: expiry reminder (E6).
   FREE_PREVIEW_EXPIRY_REMINDER
+  /// Shop Hub: ops digest when the owner adds files (at most one per request per 15 minutes).
+  FREE_PREVIEW_HUB_FILES_INTERNAL
 }
 
 enum EmailOutboundStatus {
@@ -1546,6 +1548,16 @@ enum PreviewHubActor {
   KERSIVO
 }
 
+enum PreviewHubAssetKind {
+  LOGO
+  SHOP_PHOTO
+  TEAM_PHOTO
+  PRICE_LIST
+  MESSAGE_ATTACHMENT
+  CHANGE_ATTACHMENT
+  OTHER
+}
+
 /// "Free preview before you pay" request. Rules in src/lib/freePreview/*.
 model PreviewRequest {
   id              String               @id @default(cuid())
@@ -1627,10 +1639,33 @@ model PreviewRequest {
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
   events    PreviewRequestEvent[]
+  hubAssets PreviewHubAsset[]
 
   @@index([status, createdAt])
   @@index([email])
   @@index([expiresAt])
+}
+
+model PreviewHubAsset {
+  id               String              @id @default(cuid())
+  previewRequestId String
+  kind             PreviewHubAssetKind
+  storagePath      String
+  thumbPath        String?
+  originalFileName String
+  contentType      String
+  sizeBytes        Int
+  width            Int?
+  height           Int?
+  caption          String?
+  sortOrder        Int                 @default(0)
+  barberId         String?
+  uploadedBy       PreviewHubActor
+  createdAt        DateTime            @default(now())
+  deletedAt        DateTime?
+  previewRequest   PreviewRequest      @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
+
+  @@index([previewRequestId, kind])
 }
 
 /// Audit trail of status changes and ops actions on a preview request.

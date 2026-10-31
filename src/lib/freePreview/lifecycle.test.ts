@@ -52,6 +52,10 @@ const db: any = {
     }),
   },
   previewRequestEvent: { create: (...a: unknown[]) => createEvent(...a), deleteMany: (...a: unknown[]) => deleteEvents(...a) },
+  previewHubAsset: {
+    findMany: vi.fn(async () => []),
+    deleteMany: vi.fn(async () => ({ count: 0 })),
+  },
   emailOutbound: { deleteMany: (...a: unknown[]) => deleteOutbox(...a) },
   saasSubscription: {
     count: vi.fn(async () => state.liveSubscriptions),

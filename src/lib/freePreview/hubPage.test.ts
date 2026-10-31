@@ -75,6 +75,22 @@ describe('hubPage helpers', () => {
     expect(items.map((item) => item.label)).toEqual(['Request received', 'Preview ready']);
   });
 
+  it('groups consecutive photo uploads', () => {
+    const items = hubActivityItems(
+      [
+        { id: 'p1', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'p2', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'p3', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'p4', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'p5', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'p6', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'SHOP_PHOTO' } },
+        { id: 'l1', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'LOGO' } },
+      ],
+      NOW,
+    );
+    expect(items.map((item) => item.label)).toEqual(['You added 6 photos', 'You added a logo']);
+  });
+
   it('reads designing date from STATUS_CHANGED to IN_PROGRESS', () => {
     expect(
       designingAtFromEvents([

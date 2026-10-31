@@ -94,6 +94,10 @@ export const FUNNEL_EVENTS = {
   preview_declined: 'preview_declined',
   /** Shop Hub: first owner view per stage. Server-side only. Never for operators. */
   hub_viewed: 'hub_viewed',
+  /** Shop Hub: owner uploaded a file. Param `{ kind }` only. */
+  hub_asset_uploaded: 'hub_asset_uploaded',
+  /** Shop Hub: owner saved brand / about fields. */
+  hub_details_saved: 'hub_details_saved',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
