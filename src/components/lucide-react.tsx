@@ -698,6 +698,68 @@ const ListChecks = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const ArrowUpRight = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M7 7h10v10" />
+    <path d="M7 17 17 7" />
+  </svg>
+);
+
+const Palette = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+    <circle cx="13.5" cy="6.5" r=".8" fill="currentColor" />
+    <circle cx="17.5" cy="10.5" r=".8" fill="currentColor" />
+    <circle cx="6.5" cy="12.5" r=".8" fill="currentColor" />
+    <circle cx="8.5" cy="7.5" r=".8" fill="currentColor" />
+  </svg>
+);
+
+const Paperclip = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+  </svg>
+);
+
+const Smartphone = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect x="5" y="2" width="14" height="20" rx="2" />
+    <path d="M12 18h.01" />
+  </svg>
+);
+
 const EyeOff = ({ ...props }: IconProps) => (
   <svg
     viewBox="0 0 24 24"
@@ -717,7 +779,11 @@ const EyeOff = ({ ...props }: IconProps) => (
 
 export {
   ArrowRight,
+  ArrowUpRight,
   EyeOff,
+  Palette,
+  Paperclip,
+  Smartphone,
   ListChecks,
   ArrowUpDown,
   Ban,

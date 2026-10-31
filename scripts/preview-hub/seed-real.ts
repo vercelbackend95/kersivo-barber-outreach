@@ -139,6 +139,14 @@ async function main() {
     townCity: 'Leeds',
     firstName: 'Sam',
   });
+  await prisma.previewHubMessage.create({
+    data: {
+      previewRequestId: requested.id,
+      author: 'KERSIVO',
+      body: 'We have your request. Add a logo or photos if you have them — it is all optional.',
+      attachmentIds: [],
+    },
+  });
 
   const readyShop = await createDraftShop({ name: 'Hub QA Ready', townCity: 'Leeds' });
   await fillDraftShop(readyShop.id, 'Hub QA Ready');
@@ -156,6 +164,30 @@ async function main() {
       includedChangeRounds: 1,
       changeRoundsUsed: 0,
     },
+  });
+  await prisma.previewHubMessage.create({
+    data: {
+      previewRequestId: ready.id,
+      author: 'KERSIVO',
+      body: 'Your preview is ready. We used the photos you sent for the top of the page — let us know if you would like a different one.',
+      attachmentIds: [],
+    },
+  });
+  await prisma.previewChangeRequest.createMany({
+    data: [
+      {
+        previewRequestId: ready.id,
+        page: 'HOME',
+        body: 'Use the shopfront photo at the top',
+        status: 'DRAFT',
+      },
+      {
+        previewRequestId: ready.id,
+        page: 'BARBERS',
+        body: 'Add the newest team member',
+        status: 'DRAFT',
+      },
+    ],
   });
 
   const convertedShop = await createDraftShop({ name: 'Hub QA Converted', townCity: 'Bournemouth' });

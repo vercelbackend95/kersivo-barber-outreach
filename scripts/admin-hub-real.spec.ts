@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shotDir = join(root, 'docs/admin-hub/screens/batch-1');
 const shotDir2 = join(root, 'docs/admin-hub/screens/batch-2');
+const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
+mkdirSync(shotDir3, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -316,5 +318,104 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.screenshot({ path: join(shotDir2, 'launch-business-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'launch-business-390.png'), fullPage: true });
+  });
+});
+
+test.describe('Admin Hub batch 3 — Overview bento', () => {
+  test.beforeAll(async ({ request }) => {
+    if (seed) return;
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  async function shots3(page: Page, name: string, widths: number[]) {
+    await page.addStyleTag({ content: 'astro-dev-toolbar { display: none !important; }' });
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+      await page.waitForTimeout(250);
+      await expectNoHorizontalScroll(page, `${name}@${width}`);
+      await page.screenshot({ path: join(shotDir3, `${name}-${width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+
+  async function axeAt(page: Page, name: string, width: number) {
+    await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+    const results = await new AxeBuilder({ page }).include('.admin-hub').analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    if (serious.length) writeFileSync(join(shotDir3, `axe-${name}-${width}.json`), JSON.stringify(serious, null, 2));
+    expect(serious, `${name}@${width} axe`).toEqual([]);
+  }
+
+  test('REQUESTED locks preview and changes; tiles have no iframe', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    const overview = page.getByTestId('admin-hub-overview');
+    await expect(overview).toBeVisible();
+    await expect(overview.locator('[data-tile="preview"]')).toContainText('Your preview will appear here');
+    await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
+    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
+    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin?app=messages');
+    expect(await overview.locator('iframe').count()).toBe(0);
+    await expect(overview.locator('[data-tile="preview"] a')).toHaveCount(0);
+    await expect(page.getByTestId('admin-hub-unread')).toHaveText('1 unread');
+    await shots3(page, 'requested-overview', [390, 768, 1280, 1440]);
+    await axeAt(page, 'requested-overview', 390);
+    await axeAt(page, 'requested-overview', 768);
+    await axeAt(page, 'requested-overview', 1440);
+  });
+
+  test('READY bento links, unread badge and header actions', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    const overview = page.getByTestId('admin-hub-overview');
+    await expect(overview).toBeVisible();
+    await expect(overview.locator('[data-tile="progress"]')).toContainText('Your website build');
+    await expect(overview.locator('[data-tile="preview"] a[href="/admin?section=website"]').first()).toBeVisible();
+    await expect(overview.locator('[data-tile="preview"] a[href="/admin?section=website&view=booking"]')).toBeVisible();
+    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
+    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin?app=messages');
+    await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin?section=changes');
+    await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toContainText('Show all');
+    await expect(page.getByTestId('admin-hub-primary')).toHaveText('Open your preview');
+    await expect(page.getByTestId('hub-subscribe')).toContainText('Launch this website');
+    await expect(page.getByTestId('hub-subscribe')).toContainText('£39/month');
+    expect(await overview.locator('iframe').count()).toBe(0);
+    await shots3(page, 'ready-overview', [390, 768, 1280, 1440]);
+    await axeAt(page, 'ready-overview', 390);
+    await axeAt(page, 'ready-overview', 768);
+    await axeAt(page, 'ready-overview', 1440);
+
+    await overview.locator('[data-tile="messages"]').click();
+    const dialog = page.getByTestId('admin-hub-app');
+    await expect(dialog).toBeVisible();
+    expect(await dialog.getAttribute('data-app')).toBe('messages');
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
+    await page.screenshot({ path: join(shotDir3, 'ready-messages-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('.admin-hub-app--sheet')).toBeVisible();
+    await page.screenshot({ path: join(shotDir3, 'ready-messages-390.png'), fullPage: true });
+  });
+
+  test('EXPIRED replaces the bento with the calm card', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.expired.token}`, seed.expired.token, '/admin');
+    const overview = page.getByTestId('admin-hub-overview');
+    await expect(overview.locator('.admin-hub-bento')).toHaveCount(0);
+    await expect(overview.locator('[data-tile="calm"]')).toContainText('Ask us to reopen it');
+    await shots3(page, 'expired-overview', [390, 1440]);
+    await axeAt(page, 'expired-overview', 390);
+    await axeAt(page, 'expired-overview', 1440);
+  });
+
+  test('Launch progress tile shows Our steps', async ({ page }) => {
+    await signIn(page, seed.owner.email, seed.owner.password);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin');
+    const overview = page.getByTestId('admin-hub-overview');
+    await expect(overview.locator('[data-tile="progress"]')).toContainText('Our steps');
+    await expect(overview.locator('[data-tile="progress"]')).toContainText('Connect your domain');
+    await shots3(page, 'launch-overview', [390, 1440]);
   });
 });
