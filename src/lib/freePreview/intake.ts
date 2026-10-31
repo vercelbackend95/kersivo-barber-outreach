@@ -6,7 +6,7 @@ import {
   parseWebUrl,
   workLinksToLegacyFields,
 } from './workLinkNormalise';
-import type { WorkLink } from './workPlatforms';
+import { WORK_LINKS_MAX, WORK_LINK_VALUE_MAX, type WorkLink } from './workPlatforms';
 
 /** Select options (spec §4). Values are stored; labels are shown. */
 export const FREE_PREVIEW_BARBER_COUNTS = [
@@ -86,10 +86,12 @@ export const freePreviewRequestSchema = z
       .array(
         z.object({
           platform: z.string(),
-          value: z.string().max(500, 'Links must be 500 characters or fewer.'),
+          value: z.string().max(WORK_LINK_VALUE_MAX, 'Links must be 300 characters or fewer.'),
+          url: z.string().max(WORK_LINK_VALUE_MAX).nullable().optional(),
+          handle: z.string().max(WORK_LINK_VALUE_MAX).nullable().optional(),
         }),
       )
-      .max(9)
+      .max(WORK_LINKS_MAX)
       .optional(),
     barberCount: z.enum(valuesOf(FREE_PREVIEW_BARBER_COUNTS), {
       errorMap: () => ({ message: 'Choose how many barbers work in your shop.' }),

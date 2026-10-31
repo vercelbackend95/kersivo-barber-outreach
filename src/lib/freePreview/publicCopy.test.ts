@@ -32,6 +32,7 @@ import {
   buildFreePreviewFaqJsonLd,
   buildFreePreviewWebPageJsonLd,
 } from '@/lib/seo/freePreviewPage';
+import { WORK_PICKER_COPY } from './workPlatforms';
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), 'utf8');
 
@@ -188,8 +189,11 @@ describe('/free-preview page (spec §10.1)', () => {
     expect(form).toContain("fetch('/api/free-preview'");
     expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('data-platform-picker');
     expect(FREE_PREVIEW_PAGE.formLinksHint).toBe(
-      "Tap where your shop is online. We'll use it to build your free preview.",
+      "Add the places your shop is online. We'll use them to build your free preview.",
     );
+    expect(WORK_PICKER_COPY.smartLabel).toBe('Paste any link');
+    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('{WORK_PICKER_COPY.smartLabel}');
+    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('data-smart-paste');
     expect(form).toContain('class="hp-field"');
     expect(form).toContain('{FREE_PREVIEW_AUTHORISATION_LABEL}');
     expect(form).toContain('{FREE_PREVIEW_MARKETING_LABEL}');

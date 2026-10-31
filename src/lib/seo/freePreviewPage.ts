@@ -90,7 +90,7 @@ export const FREE_PREVIEW_PAGE = {
   steps: FREE_PREVIEW_STEPS,
   formHeading: 'Tell us about your shop',
   formGroupLinks: 'Where can we see your work?',
-  formLinksHint: "Tap where your shop is online. We'll use it to build your free preview.",
+  formLinksHint: "Add the places your shop is online. We'll use them to build your free preview.",
   addNoteLabel: '+ Add a note (optional)',
   submitLabel: 'Request my free preview',
   submitNote: "No card needed. We'll only use your details to create and send your preview.",

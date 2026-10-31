@@ -99,7 +99,14 @@ describe('POST /api/free-preview', () => {
     expect(response.status).toBe(200);
     expect(createPreviewRequest.mock.calls[0]?.[0]).toMatchObject({
       instagramUrl: 'https://www.instagram.com/sharpcuts',
-      workLinks: [{ platform: 'instagram', value: 'sharpcuts', url: 'https://www.instagram.com/sharpcuts' }],
+      workLinks: [
+        {
+          platform: 'instagram',
+          value: '@sharpcuts',
+          url: 'https://www.instagram.com/sharpcuts',
+          handle: 'sharpcuts',
+        },
+      ],
     });
   });
 
