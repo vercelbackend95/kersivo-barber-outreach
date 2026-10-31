@@ -31,7 +31,10 @@ import {
   buildFreePreviewBreadcrumbJsonLd,
   buildFreePreviewFaqJsonLd,
   buildFreePreviewWebPageJsonLd,
+  getFreePreviewDetailsPhotosLine,
+  getFreePreviewFaqItems,
 } from '@/lib/seo/freePreviewPage';
+import { HUB_FREE_PREVIEW_FAQ_PHOTOS_ANSWER, HUB_FREE_PREVIEW_PHOTOS_LINE } from './hubCopy';
 import { FREE_PREVIEW_AUTHORISATION_STATEMENT, FREE_PREVIEW_MARKETING_LABEL } from './intake';
 import { SMART_LINK_COPY } from './workPlatforms';
 
@@ -164,7 +167,7 @@ describe('/free-preview page (spec §10.1)', () => {
     );
     const page = read('src/pages/free-preview/index.astro');
     expect(page).toContain("import Accordion from '@/components/ui/Accordion.astro'");
-    expect(page).toContain('FREE_PREVIEW_FAQ_ITEMS.map');
+    expect(page).toContain('getFreePreviewFaqItems(hubEnabled)');
     expect(page).toContain('canonicalPath={FREE_PREVIEW_PAGE.path}');
   });
 
@@ -210,6 +213,26 @@ describe('/free-preview page (spec §10.1)', () => {
       "We'll email your private preview to {email}, usually within a few working days. If we need anything else, we'll ask.",
     );
     expect(FREE_PREVIEW_PAGE.detailsSaved).toBe('Saved — thank you. Keep an eye on your inbox.');
+  });
+
+  it('keeps flag-off photos copy identical and swaps only the hub-on variants', () => {
+    expect(FREE_PREVIEW_PAGE.detailsPhotosLine).toBe(
+      'Want to send photos or a logo? Just reply to our confirmation email.',
+    );
+    expect(getFreePreviewDetailsPhotosLine(false)).toBe(FREE_PREVIEW_PAGE.detailsPhotosLine);
+    expect(getFreePreviewDetailsPhotosLine(true)).toBe(HUB_FREE_PREVIEW_PHOTOS_LINE);
+    expect(getFreePreviewFaqItems(false)).toBe(FREE_PREVIEW_FAQ_ITEMS);
+    expect(getFreePreviewFaqItems(true).find((item) => item.question === 'Which photos do you use?')?.answer).toBe(
+      HUB_FREE_PREVIEW_FAQ_PHOTOS_ANSWER,
+    );
+    const faq = buildFreePreviewFaqJsonLd(true) as {
+      mainEntity: Array<{ name: string; acceptedAnswer: { text: string } }>;
+    };
+    expect(faq.mainEntity.map((q) => [q.name, q.acceptedAnswer.text])).toEqual(
+      getFreePreviewFaqItems(true).map((item) => [item.question, item.answer]),
+    );
+    const photos = FREE_PREVIEW_FAQ_ITEMS.find((item) => item.question === 'Which photos do you use?');
+    expect(photos?.answer).toContain('replying to our confirmation email');
   });
 
   it('renders the redesigned hero, form card and showcase copy', () => {

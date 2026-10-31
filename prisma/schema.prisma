@@ -1540,6 +1540,12 @@ enum PreviewRequestStatus {
   REJECTED
 }
 
+/// Who wrote a hub message, change, or file (docs/preview-hub/HUB_SPEC.md §7). Used from Batch 2.
+enum PreviewHubActor {
+  OWNER
+  KERSIVO
+}
+
 /// "Free preview before you pay" request. Rules in src/lib/freePreview/*.
 model PreviewRequest {
   id              String               @id @default(cuid())
@@ -1600,6 +1606,23 @@ model PreviewRequest {
   internalNotes        String?   @db.Text
   /// Set by the retention job: personal data is gone; status and dates stay for metrics.
   anonymisedAt         DateTime?
+
+  /// Shop Hub fields (docs/preview-hub/HUB_SPEC.md §7). Additive; unused until later batches wire them.
+  brandPrimaryColour     String?
+  brandSecondaryColour   String?
+  styleNotes             String?
+  aboutText              String?   @db.Text
+  includedChangeRounds   Int       @default(1)
+  changeRoundsUsed       Int       @default(0)
+  ownerLastSeenAt        DateTime?
+  opsLastSeenAt          DateTime?
+  opsFilesNotifiedAt     DateTime?
+  opsMessagesNotifiedAt  DateTime?
+  launchApprovedAt       DateTime?
+  /// Ops "Mark live". Batch 0 found no existing published-website marker — do not reuse goLiveAt.
+  liveAt                 DateTime?
+  ourStepDomainAt        DateTime?
+  ourStepSslAt           DateTime?
 
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt

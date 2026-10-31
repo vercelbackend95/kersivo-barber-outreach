@@ -17,6 +17,15 @@ export function isFreePreviewFlowEnabled(): boolean {
   return (readEnv('FREE_PREVIEW_FLOW_ENABLED') ?? '').trim().toLowerCase() === 'true';
 }
 
+/**
+ * Shop Hub switch (docs/preview-hub/HUB_SPEC.md). Off by default: with it off, owner pages, emails and
+ * APIs stay exactly as they are today. Hub routes also require FREE_PREVIEW_FLOW_ENABLED (the public
+ * token page already 404s while the flow is off).
+ */
+export function isPreviewHubEnabled(): boolean {
+  return (readEnv('PREVIEW_HUB_ENABLED') ?? '').trim().toLowerCase() === 'true';
+}
+
 /** Founder decision (29 Oct 2026): "a few working days", never a fixed number of days. */
 export const PREVIEW_TURNAROUND_TEXT = 'usually within a few working days';
 export const PREVIEW_TURNAROUND_TEXT_CAPITALISED = 'Usually within a few working days';

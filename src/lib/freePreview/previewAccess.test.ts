@@ -46,6 +46,10 @@ function row(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequest 
     previewReadyAt: new Date('2026-10-31T12:00:00Z'),
     convertedAt: null,
     changesRequestedAt: null,
+    createdAt: new Date('2026-10-30T12:00:00Z'),
+    liveAt: null,
+    includedChangeRounds: 1,
+    changeRoundsUsed: 0,
     ...overrides,
   };
 }

@@ -53,6 +53,7 @@ function createdEvents(): Array<{ action: string }> {
 
 describe('createPreviewRequest daily cap', () => {
   beforeEach(() => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
     count.mockReset();
     findFirst.mockReset().mockResolvedValue(null);
     update.mockReset().mockResolvedValue({});
@@ -115,6 +116,7 @@ describe('createPreviewRequest daily cap', () => {
 
 describe('createPreviewRequest Step 2 token and consent record', () => {
   beforeEach(() => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
     count.mockReset().mockResolvedValue(0);
     findFirst.mockReset().mockResolvedValue(null);
     update.mockReset().mockResolvedValue({});

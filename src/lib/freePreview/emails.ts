@@ -6,8 +6,18 @@ import {
   PREVIEW_TURNAROUND_TEXT,
   formatPreviewExpiryDate,
   getPreviewNotifyEmail,
+  isPreviewHubEnabled,
   previewPagePath,
 } from './config';
+import {
+  HUB_ACK_BUTTON,
+  HUB_ACK_HUB_READY,
+  HUB_ACK_HUB_USES,
+  HUB_ACK_NO_PAY,
+  HUB_ACK_SUBJECT,
+  HUB_ACK_WHEN_READY,
+  HUB_OPS_OPEN_HUB,
+} from './hubCopy';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
   FREE_PREVIEW_BARBER_COUNTS,
@@ -39,13 +49,41 @@ function greeting(firstName: string | null | undefined): string {
 
 export type FreePreviewEmail = { to: string; subject: string; html: string; replyTo: string };
 
-/** E1 — acknowledgement to the owner (spec §9). */
+function hubButton(url: string, label: string): string {
+  const safe = escapeHtml(url);
+  return `<a href="${safe}" style="display:inline-block;padding:12px 18px;background:#d72638;color:#fff8ee;text-decoration:none;border-radius:8px;font-weight:600">${escapeHtml(label)}</a>`;
+}
+
+/** E1 — acknowledgement to the owner (spec §9). Hub flag on: HUB_SPEC.md §9.1. */
 export function buildPreviewRequestAcknowledgementEmail(input: {
   to: string;
   firstName: string | null;
   shopName: string;
   overDailyCap?: boolean;
+  publicToken?: string;
 }): FreePreviewEmail {
+  if (isPreviewHubEnabled() && input.publicToken) {
+    const shop = escapeHtml(input.shopName);
+    const hubUrl = previewPageUrl(input.publicToken);
+    const intro = input.overDailyCap
+      ? `Thanks for requesting a free website preview for ${shop}. ${escapeHtml(PREVIEW_OVER_CAP_MESSAGE)}`
+      : `Thanks for requesting a free website preview for ${shop}. We design every preview individually, ${escapeHtml(PREVIEW_TURNAROUND_TEXT)}.`;
+    return {
+      to: input.to,
+      subject: HUB_ACK_SUBJECT(input.shopName),
+      replyTo: PREVIEW_REPLY_TO_EMAIL,
+      html: paragraphs([
+        greeting(input.firstName),
+        intro,
+        `${escapeHtml(HUB_ACK_HUB_READY)}<br>${hubButton(hubUrl, HUB_ACK_BUTTON)}`,
+        escapeHtml(HUB_ACK_HUB_USES),
+        escapeHtml(HUB_ACK_WHEN_READY),
+        escapeHtml(HUB_ACK_NO_PAY),
+        SIGN_OFF,
+      ]),
+    };
+  }
+
   const shop = escapeHtml(input.shopName);
   return {
     to: input.to,
@@ -65,6 +103,7 @@ export function buildPreviewRequestAcknowledgementEmail(input: {
 
 export type PreviewRequestInternalEmailInput = {
   id: string;
+  publicToken?: string;
   firstName: string | null;
   email: string;
   shopName: string;
@@ -131,12 +170,16 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
       : []),
   ];
   const opsUrl = opsPreviewRequestUrl(input.id);
+  const hubLink =
+    isPreviewHubEnabled() && input.publicToken
+      ? ` · <a href="${escapeHtml(previewPageUrl(input.publicToken))}">${escapeHtml(HUB_OPS_OPEN_HUB)}</a>`
+      : '';
   return {
     to: getPreviewNotifyEmail(),
     subject: `New preview request: ${input.shopName}, ${input.townCity}`,
     replyTo: input.email,
     html: `<p>A new free preview request has been received.</p>
-<p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a></p>
+<p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a>${hubLink}</p>
 <table cellpadding="4">${rows
       .map(([label, value, kind]) => {
         const cell = kind === 'html' ? value : escapeHtml(value);

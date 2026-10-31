@@ -1,0 +1,55 @@
+---
+import BookingFlow from '@/components/booking/BookingFlow';
+import { previewBookingPresentation } from '@/lib/freePreview/previewBooking';
+import type { loadPreviewDraftShop } from '@/lib/freePreview/previewAccess';
+
+interface Props {
+  shopName: string;
+  view: 'website' | 'booking';
+  draft: NonNullable<Awaited<ReturnType<typeof loadPreviewDraftShop>>>;
+}
+
+const { shopName, view, draft } = Astro.props;
+---
+
+{
+  view === 'website' && draft.shop.sitePreviewUrl ? (
+    <main class="fp-site" id="preview-content">
+      <iframe
+        class="fp-site__frame"
+        src={draft.shop.sitePreviewUrl}
+        title={`Website preview for ${shopName}`}
+        referrerpolicy="no-referrer"
+        loading="eager"
+      />
+      <p class="fp-site__fallback">
+        Website not showing?{' '}
+        <a href={draft.shop.sitePreviewUrl} target="_blank" rel="noopener noreferrer">
+          Open it in a new tab
+        </a>
+        .
+      </p>
+    </main>
+  ) : (
+    <main class="container page-wrap booking-page-wrap fp-booking" id="preview-content">
+      {draft.services.length && draft.barbers.length ? (
+        <BookingFlow
+          client:load
+          mode="create"
+          publicDemoMode={true}
+          services={draft.services}
+          barbers={draft.barbers}
+          shopDetails={{
+            timezone: draft.shop.timezone,
+            name: shopName,
+            cancellationWindowHours: draft.shop.cancellationWindowHours,
+            rescheduleWindowHours: draft.shop.rescheduleWindowHours,
+          }}
+          presentation={previewBookingPresentation(shopName)}
+        />
+      ) : (
+        <p class="muted">We're still adding services and barbers to this booking page.</p>
+      )}
+    </main>
+  )
+}

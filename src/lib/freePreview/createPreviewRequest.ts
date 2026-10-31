@@ -27,6 +27,7 @@ export const PREVIEW_REQUEST_ACTIONS = {
   DECLINED: 'DECLINED',
   EXPIRED: 'EXPIRED',
   ANONYMISED: 'ANONYMISED',
+  HUB_VIEWED: 'hub_viewed',
 } as const;
 
 /**
@@ -105,6 +106,7 @@ export async function createPreviewRequest(
       firstName: request.firstName,
       shopName: request.shopName,
       overDailyCap,
+      publicToken: request.publicToken,
     });
     const ackRow = await enqueueEmail(tx, {
       shopId: null,
