@@ -102,6 +102,8 @@ export function HubReviewCards(props: {
   shop: HubReviewShopData | null;
   reviews: HubReviewMap;
   mode: 'strip' | 'full';
+  /** Admin Hub apps: render one section. Omitted = all three. */
+  only?: HubReviewSection;
 }) {
   const apiRoot = hubApiRoot(props);
   const [reviews, setReviews] = useState(props.reviews);
@@ -189,8 +191,11 @@ export function HubReviewCards(props: {
     );
   }
 
+  const show = (section: HubReviewSection) => !props.only || props.only === section;
+
   return (
     <div className="hub-review-stack">
+      {show('SERVICES') ? (
       <ReviewCard
         id="hub-review-services"
         title={HUB_DETAILS_SERVICES_TITLE}
@@ -308,7 +313,9 @@ export function HubReviewCards(props: {
           </button>
         ) : null}
       </ReviewCard>
+      ) : null}
 
+      {show('TEAM') ? (
       <ReviewCard
         id="hub-review-team"
         title={HUB_DETAILS_TEAM_TITLE}
@@ -432,7 +439,9 @@ export function HubReviewCards(props: {
           </button>
         ) : null}
       </ReviewCard>
+      ) : null}
 
+      {show('HOURS') ? (
       <ReviewCard
         id="hub-review-hours"
         title={HUB_DETAILS_HOURS_TITLE}
@@ -462,6 +471,7 @@ export function HubReviewCards(props: {
       >
         <WeeklyHoursEditor idPrefix="hub-hours" rules={hours} onChange={setHours} disabled={!props.canReview} />
       </ReviewCard>
+      ) : null}
 
       {error ? (
         <p className="hub-card__body" role="alert">

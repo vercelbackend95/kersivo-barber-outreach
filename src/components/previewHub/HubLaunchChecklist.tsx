@@ -83,10 +83,15 @@ function sameOriginHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json' };
 }
 
-export default function HubLaunchChecklist() {
+export default function HubLaunchChecklist(props: {
+  initialItem?: LaunchItem;
+  embedded?: boolean;
+  websiteHref?: string;
+  bookingHref?: string;
+} = {}) {
   const [state, setState] = useState<LaunchChecklistState | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [open, setOpen] = useState<LaunchItem | null>('business');
+  const [open, setOpen] = useState<LaunchItem | null>(props.initialItem ?? 'business');
   const [save, setSave] = useState<SaveStatus>('idle');
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -233,17 +238,21 @@ export default function HubLaunchChecklist() {
   };
 
   const websiteHref = useMemo(() => {
+    if (props.websiteHref) return props.websiteHref;
     if (!state) return '/admin/site-preview';
     return `${previewPagePath(state.publicToken)}/website`;
-  }, [state]);
+  }, [props.websiteHref, state]);
   const bookingHref = useMemo(() => {
+    if (props.bookingHref) return props.bookingHref;
     if (!state) return '/admin/site-preview';
     return `${previewPagePath(state.publicToken)}/website?view=booking`;
-  }, [state]);
+  }, [props.bookingHref, state]);
+
+  const launchClass = props.embedded ? 'hub-launch hub-launch--embedded' : 'hub-launch';
 
   if (loadError) {
     return (
-      <div className="hub-launch" role="alert">
+      <div className={launchClass} role="alert">
         <p>{HUB_LAUNCH_LOAD_ERROR}</p>
         <button type="button" className="btn btn--secondary" onClick={() => void load()}>
           {HUB_RETRY}
@@ -254,7 +263,7 @@ export default function HubLaunchChecklist() {
 
   if (!state) {
     return (
-      <div className="hub-launch" aria-busy="true">
+      <div className={launchClass} aria-busy="true">
         <div className="hub-skel hub-skel--title" />
         <div className="hub-skel hub-skel--bar" />
         <div className="hub-skel hub-skel--card" />
@@ -269,9 +278,9 @@ export default function HubLaunchChecklist() {
   const saveLabel = save === 'saving' ? HUB_SAVING : save === 'saved' ? HUB_SAVED : save === 'error' ? HUB_LAUNCH_SAVE_ERROR : null;
 
   return (
-    <div className="hub-launch">
+    <div className={`hub-launch${props.embedded ? ' hub-launch--embedded' : ''}`}>
       <header className="hub-launch__header">
-        <h1>{HUB_LAUNCH_TITLE}</h1>
+        {props.embedded ? null : <h1>{HUB_LAUNCH_TITLE}</h1>}
         <p className="hub-launch__progress" id="hub-launch-progress" aria-live="polite">
           {HUB_LAUNCH_PROGRESS(state.done, state.total)}
         </p>

@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shotDir = join(root, 'docs/admin-hub/screens/batch-1');
+const shotDir2 = join(root, 'docs/admin-hub/screens/batch-2');
 mkdirSync(shotDir, { recursive: true });
+mkdirSync(shotDir2, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -138,9 +140,11 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await shots(page, 'ready-changes', [390, 1440]);
 
     await openEmailLink(page, `/preview/${t}/details`, t, '/admin?app=setup');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await shots(page, 'ready-setup', [390, 1440]);
 
     await openEmailLink(page, `/preview/${t}/messages?draft=message`, t, '/admin?app=messages&draft=message');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await expect(page.getByTestId('hub-message-body')).toBeVisible();
     await shots(page, 'ready-messages', [390, 1440]);
 
@@ -221,5 +225,96 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Launch');
     expect((await response!.text()).includes(seed.converted.token)).toBe(false);
     await shots(page, 'converted-launch', [390, 1440]);
+    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=business"]')).toBeVisible();
+  });
+
+  test('setup card rows open apps; back and Esc close; axe at 390 and 1440', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    await expect(page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=logo"]')).toBeVisible();
+
+    const apps = [
+      'logo',
+      'photos',
+      'services',
+      'team',
+      'hours',
+      'about',
+      'setup',
+      'activity',
+      'messages',
+    ] as const;
+    for (const app of apps) {
+      await page.goto(`/admin?app=${app}`);
+      const dialog = page.getByTestId('admin-hub-app');
+      await expect(dialog).toBeVisible();
+      expect(await dialog.getAttribute('data-app')).toBe(app);
+      await expect(dialog).toHaveAttribute('aria-modal', 'true');
+      await page.screenshot({ path: join(shotDir2, `ready-${app}-1440.png`), fullPage: true });
+      const axe1440 = await new AxeBuilder({ page }).include('[data-testid="admin-hub-app"]').analyze();
+      const serious1440 = axe1440.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      if (serious1440.length) writeFileSync(join(shotDir2, `axe-${app}-1440.json`), JSON.stringify(serious1440, null, 2));
+      expect(serious1440, `${app} 1440 axe`).toEqual([]);
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.locator('.admin-hub-app--sheet')).toBeVisible();
+      await page.screenshot({ path: join(shotDir2, `ready-${app}-390.png`), fullPage: true });
+      const axe390 = await new AxeBuilder({ page }).include('[data-testid="admin-hub-app"]').analyze();
+      const serious390 = axe390.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      if (serious390.length) writeFileSync(join(shotDir2, `axe-${app}-390.json`), JSON.stringify(serious390, null, 2));
+      expect(serious390, `${app} 390 axe`).toEqual([]);
+      await page.setViewportSize({ width: 1440, height: 900 });
+    }
+
+    await page.goto('/admin?app=logo');
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.screenshot({ path: join(shotDir2, 'ready-logo-768.png'), fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.screenshot({ path: join(shotDir2, 'ready-logo-1280.png'), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto('/admin?app=logo');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Close' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
+
+    await page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=photos"]').click();
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
+  });
+
+  test('before Review the services app shows the from-your-links state', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText('From your links');
+    await page.screenshot({ path: join(shotDir2, 'requested-card-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: join(shotDir2, 'requested-card-390.png'), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin?app=services');
+    await expect(page.getByTestId('admin-hub-app')).toContainText("you'll check them when your preview is ready");
+    await page.screenshot({ path: join(shotDir2, 'requested-services-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: join(shotDir2, 'requested-services-390.png'), fullPage: true });
+  });
+
+  test('launch phase card opens the restyled checklist', async ({ page }) => {
+    await signIn(page, seed.owner.email, seed.owner.password);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
+    await page.screenshot({ path: join(shotDir2, 'launch-card-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: join(shotDir2, 'launch-card-390.png'), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin?app=business');
+    await expect(page.locator('.hub-launch--embedded')).toBeVisible();
+    await expect(page.locator('.hub-launch--embedded[aria-busy="true"]')).toHaveCount(0);
+    await page.screenshot({ path: join(shotDir2, 'launch-business-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: join(shotDir2, 'launch-business-390.png'), fullPage: true });
   });
 });

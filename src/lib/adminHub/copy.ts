@@ -19,3 +19,11 @@ export function adminHubPillTone(stage: HubStage): AdminHubPillTone {
   if (stage === 'declined' || stage === 'expired') return 'neutral';
   return 'accent';
 }
+
+export const ADMIN_HUB_APP_CLOSE = 'Close';
+export const ADMIN_HUB_APP_LOADING = 'Loading…';
+export const ADMIN_HUB_APP_RETRY = 'Try again';
+export const ADMIN_HUB_APP_ERROR = 'Something went wrong. Try again.';
+export const ADMIN_HUB_ACTIVITY_SHOW_ALL = 'Show all';
+export const ADMIN_HUB_LAUNCH_READONLY =
+  'The owner finishes these steps after they sign in.';

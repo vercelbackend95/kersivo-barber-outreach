@@ -210,7 +210,18 @@ export function HubYourShop(props: {
   reviewShop?: HubReviewShopData | null;
   details: HubShopDetails;
   assets: HubUploadedAsset[];
+  /** Admin Hub apps: show one block. Omitted = today's full Your shop page. */
+  focus?: 'logo' | 'photos' | 'about';
+  /** When false, the page H1 is omitted (the app window already has a title). */
+  chrome?: boolean;
 }) {
+  const focus = props.focus;
+  const chrome = props.chrome !== false && !focus;
+  const showLogo = !focus || focus === 'logo';
+  const showPhotos = !focus || focus === 'photos';
+  const showAbout = !focus || focus === 'about';
+  const showReviews = !focus;
+  const showBrandExtras = showLogo && !focus;
   const apiRoot = hubApiRoot(props);
   const [assets, setAssets] = useState(props.assets);
   const [details, setDetails] = useState(props.details);
@@ -384,13 +395,17 @@ export function HubYourShop(props: {
 
   return (
     <article className="hub-details">
-      <header className="hub-header">
-        <div>
-          <h1>{HUB_DETAILS_TITLE}</h1>
-          <p className="hub-header__sub">{HUB_FILES_PRIVACY}</p>
-        </div>
+      {chrome ? (
+        <header className="hub-header">
+          <div>
+            <h1>{HUB_DETAILS_TITLE}</h1>
+            <p className="hub-header__sub">{HUB_FILES_PRIVACY}</p>
+          </div>
+          <SaveHint state={save} />
+        </header>
+      ) : (
         <SaveHint state={save} />
-      </header>
+      )}
 
       {error ? (
         <section className="hub-card ks-glass-card hub-error" role="alert">
@@ -401,6 +416,7 @@ export function HubYourShop(props: {
         </section>
       ) : null}
 
+      {showLogo ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-brand-title">
         <h2 id="hub-brand-title" className="hub-card__title">
           {HUB_DETAILS_BRAND_TITLE}
@@ -416,68 +432,75 @@ export function HubYourShop(props: {
           </figure>
         </div>
         {props.canUpload ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
-        <div className="hub-colours">
-          <HexField
-            id="hub-primary"
-            label={HUB_DETAILS_COLOUR_PRIMARY}
-            value={primary}
-            disabled={!props.canEditDetails}
-            onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
-          />
-          <HexField
-            id="hub-secondary"
-            label={HUB_DETAILS_COLOUR_SECONDARY}
-            value={secondary}
-            disabled={!props.canEditDetails}
-            onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
-          />
-        </div>
-        {logo && props.canEditDetails ? (
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
-            {HUB_DETAILS_PICK_FROM_LOGO}
-          </button>
-        ) : null}
-        {palette.length ? (
-          <div className="hub-chips" role="list">
-            {palette.map((hex) => (
-              <button
-                key={hex}
-                type="button"
-                className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
-                style={{ background: hex }}
-                aria-label={`Use ${hex} as primary`}
-                onClick={() => {
-                  setPrimary(hex);
-                  queueDetails({ brandPrimaryColour: hex });
-                }}
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  setSecondary(hex);
-                  queueDetails({ brandSecondaryColour: hex });
+        {showBrandExtras ? (
+          <>
+            <div className="hub-colours">
+              <HexField
+                id="hub-primary"
+                label={HUB_DETAILS_COLOUR_PRIMARY}
+                value={primary}
+                disabled={!props.canEditDetails}
+                onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
+              />
+              <HexField
+                id="hub-secondary"
+                label={HUB_DETAILS_COLOUR_SECONDARY}
+                value={secondary}
+                disabled={!props.canEditDetails}
+                onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
+              />
+            </div>
+            {logo && props.canEditDetails ? (
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
+                {HUB_DETAILS_PICK_FROM_LOGO}
+              </button>
+            ) : null}
+            {palette.length ? (
+              <div className="hub-chips" role="list">
+                {palette.map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
+                    style={{ background: hex }}
+                    aria-label={`Use ${hex} as primary`}
+                    onClick={() => {
+                      setPrimary(hex);
+                      queueDetails({ brandPrimaryColour: hex });
+                    }}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      setSecondary(hex);
+                      queueDetails({ brandSecondaryColour: hex });
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
+            <div className="field" style={{ marginTop: 16 }}>
+              <label className="field__label" htmlFor="hub-style">
+                {HUB_DETAILS_STYLE_LABEL}
+              </label>
+              <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
+              <textarea
+                id="hub-style"
+                className="textarea"
+                maxLength={500}
+                disabled={!props.canEditDetails}
+                value={styleNotes}
+                onChange={(event) => {
+                  setStyleNotes(event.target.value);
+                  queueDetails({ styleNotes: event.target.value });
                 }}
               />
-            ))}
-          </div>
+            </div>
+          </>
         ) : null}
-        <div className="field" style={{ marginTop: 16 }}>
-          <label className="field__label" htmlFor="hub-style">
-            {HUB_DETAILS_STYLE_LABEL}
-          </label>
-          <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
-          <textarea
-            id="hub-style"
-            className="textarea"
-            maxLength={500}
-            disabled={!props.canEditDetails}
-            value={styleNotes}
-            onChange={(event) => {
-              setStyleNotes(event.target.value);
-              queueDetails({ styleNotes: event.target.value });
-            }}
-          />
-        </div>
       </section>
+      ) : null}
 
+      {showPhotos ? (
+      <>
       <section className="hub-card ks-glass-card" aria-labelledby="hub-photos-title">
         <h2 id="hub-photos-title" className="hub-card__title">
           {HUB_DETAILS_PHOTOS_TITLE}
@@ -509,6 +532,7 @@ export function HubYourShop(props: {
         )}
       </section>
 
+      {showReviews ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-team-photos-title">
         <h2 id="hub-team-photos-title" className="hub-card__title">
           {HUB_DETAILS_TEAM_PHOTOS_TITLE}
@@ -536,6 +560,7 @@ export function HubYourShop(props: {
           <p className="hub-card__body">{HUB_EMPTY_TEAM_PHOTOS}</p>
         )}
       </section>
+      ) : null}
 
       <section className="hub-card ks-glass-card" aria-labelledby="hub-price-title">
         <h2 id="hub-price-title" className="hub-card__title">
@@ -566,7 +591,10 @@ export function HubYourShop(props: {
           <p className="hub-card__body">{HUB_EMPTY_PRICE}</p>
         )}
       </section>
+      </>
+      ) : null}
 
+      {showAbout ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-about-title">
         <h2 id="hub-about-title" className="hub-card__title">
           {HUB_DETAILS_ABOUT_TITLE}
@@ -585,23 +613,26 @@ export function HubYourShop(props: {
           }}
         />
       </section>
+      ) : null}
 
-      {props.canReview ? (
-        <HubReviewCards
-          token={props.token}
-          apiBase={props.apiBase}
-          canReview
-          mode="full"
-          shop={props.reviewShop ?? null}
-          reviews={props.reviews ?? { SERVICES: null, TEAM: null, HOURS: null }}
-        />
-      ) : (
-        <>
-          <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
-          <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
-          <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
-        </>
-      )}
+      {showReviews ? (
+        props.canReview ? (
+          <HubReviewCards
+            token={props.token}
+            apiBase={props.apiBase}
+            canReview
+            mode="full"
+            shop={props.reviewShop ?? null}
+            reviews={props.reviews ?? { SERVICES: null, TEAM: null, HOURS: null }}
+          />
+        ) : (
+          <>
+            <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
+            <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
+            <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
+          </>
+        )
+      ) : null}
 
       <div className="hub-toast" role="status" aria-live="polite">
         {toast ? (

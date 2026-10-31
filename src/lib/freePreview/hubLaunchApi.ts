@@ -3,7 +3,7 @@ import { resolveAdminAccess } from '@/lib/admin/auth';
 import { accessCan } from '@/lib/admin/rbac/can';
 import { evaluateExactSameOrigin } from '@/lib/ops/requireOperatorMutation';
 import { PRIVATE_PREVIEW_HEADERS } from './previewHeaders';
-import { isHubRouteEnabled } from './hubPage';
+import { isAdminHubRouteEnabled, isHubRouteEnabled } from './hubPage';
 import { prisma } from '@/lib/db/client';
 import { ensureClientOnboarding } from '@/lib/admin/clientOnboarding/service';
 
@@ -20,7 +20,7 @@ export async function requireLaunchOwner(
   ctx: APIContext,
   method: 'GET' | 'MUTATE',
 ): Promise<{ shopId: string; previewRequestId: string } | Response> {
-  if (!isHubRouteEnabled()) return launchJson({ error: 'Not found.' }, 404);
+  if (!isHubRouteEnabled() && !isAdminHubRouteEnabled()) return launchJson({ error: 'Not found.' }, 404);
   if (method === 'MUTATE') {
     const origin = evaluateExactSameOrigin(ctx.request);
     if (!origin.ok) return launchJson({ error: 'Forbidden.' }, 403);
