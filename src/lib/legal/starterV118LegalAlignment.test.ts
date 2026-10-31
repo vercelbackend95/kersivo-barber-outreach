@@ -114,6 +114,6 @@ describe('v1.19 legal/product alignment', () => {
     expect(CURRENT_TERMS_VERSION).toBe('2026-10-30');
     expect(CURRENT_DPA_VERSION).toBe('2026-10-06');
     expect(privacy).toContain('Last updated: {formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)}');
-    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('30 October 2026');
+    expect(formatLegalPageDate(PRIVACY_POLICY_LAST_UPDATED_ISO)).toBe('31 October 2026');
   });
 });

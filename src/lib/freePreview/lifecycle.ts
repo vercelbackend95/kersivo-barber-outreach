@@ -25,6 +25,9 @@ import {
   previewPageUrl,
 } from './emails';
 import { expiryReminderDedupeKey, followupDedupeKey, suppressPendingPreviewFollowups } from './followups';
+import { collectHubAssetBlobPaths, deleteHubAssetRows, deleteHubBlobPaths } from './hubAssets';
+import { sendPendingHubFileDigests } from './hubFilesNotify';
+import { isPreviewHubEnabled } from './config';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -235,8 +238,10 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
 
   let privateBlobPaths: string[] = [];
   let publicBlobUrls: string[] = [];
+  let hubBlobPaths: string[] = [];
   let gateOpenedHere = false;
   try {
+    hubBlobPaths = await collectHubAssetBlobPaths(prisma, id);
     if (shopId) {
       await assertShopDisposable(prisma, shopId);
       gateOpenedHere = !(await beginShopPurgeGate(shopId, now)).alreadyStarted;
@@ -259,6 +264,7 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
         await purgeShopData(tx, shopId);
       }
       await tx.emailOutbound.deleteMany({ where: { dedupeKey: { startsWith: 'free-preview:', contains: id } } });
+      await deleteHubAssetRows(tx, id);
       await tx.previewRequestEvent.deleteMany({ where: { previewRequestId: id } });
       const publicToken = mintPreviewToken();
       await tx.previewRequest.update({
@@ -314,16 +320,19 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
     });
   }
 
-  if (shopId) {
-    try {
+  try {
+    if (hubBlobPaths.length) {
+      await deleteHubBlobPaths(hubBlobPaths);
+    }
+    if (shopId) {
       await deletePrivateBlobPathsBestEffort(privateBlobPaths);
       await runPostCommitPublicBlobCleanup(shopId, publicBlobUrls);
-    } catch (error) {
-      console.error('[free-preview] post-commit blob cleanup failed', {
-        id,
-        error: error instanceof Error ? error.message : 'unknown',
-      });
     }
+  } catch (error) {
+    console.error('[free-preview] post-commit blob cleanup failed', {
+      id,
+      error: error instanceof Error ? error.message : 'unknown',
+    });
   }
   return true;
 }
@@ -359,6 +368,7 @@ export type PreviewLifecycleResult = {
   followups: number;
   expiryReminders: number;
   anonymised: number;
+  hubFileDigests?: number;
 };
 
 /**
@@ -372,5 +382,6 @@ export async function runFreePreviewLifecycle(now: Date = new Date()): Promise<P
     ? await sendDuePreviewFollowups(now)
     : { followups: 0, expiryReminders: 0 };
   const anonymised = await purgeExpiredPreviewData(now);
-  return { expired, followups, expiryReminders, anonymised };
+  const hubFileDigests = isPreviewHubEnabled() ? await sendPendingHubFileDigests(now) : 0;
+  return { expired, followups, expiryReminders, anonymised, hubFileDigests };
 }

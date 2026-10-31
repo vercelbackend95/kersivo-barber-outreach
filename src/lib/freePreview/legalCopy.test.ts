@@ -15,6 +15,7 @@ describe('free preview legal copy (spec §12)', () => {
     const privacy = readFileSync('src/pages/privacy.astro', 'utf8');
     expect(terms).toContain('{FREE_PREVIEW_TERMS_TEXT}');
     expect(privacy).toContain('{FREE_PREVIEW_PRIVACY_RETENTION_TEXT}');
+    expect(privacy).toContain('{FREE_PREVIEW_PRIVACY_HUB_FILES_TEXT}');
     expect(privacy.replace(/\s+/g, ' ')).toContain('steps taken at your request before entering into a contract');
   });
 

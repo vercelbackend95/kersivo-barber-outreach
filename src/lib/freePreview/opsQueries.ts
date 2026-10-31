@@ -64,9 +64,26 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       viewCount: true,
       firstViewedAt: true,
       createdAt: true,
+      opsLastSeenAt: true,
       events: { where: { action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }, select: { action: true }, take: 1 },
+      hubAssets: {
+        where: { deletedAt: null },
+        select: { createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
     },
   });
+}
+
+export function hasNewHubFiles(request: {
+  opsLastSeenAt: Date | null;
+  hubAssets: Array<{ createdAt: Date }>;
+}): boolean {
+  const latest = request.hubAssets[0]?.createdAt;
+  if (!latest) return false;
+  if (!request.opsLastSeenAt) return true;
+  return latest.getTime() > request.opsLastSeenAt.getTime();
 }
 
 /** True when the request arrived over the daily cap, so the owner was told it may take longer. */
@@ -122,7 +139,18 @@ export async function getPreviewRequestDetail(id: string) {
         select: { id: true, name: true, ownerUserId: true, sitePreviewUrl: true, sitePreviewVersion: true },
       },
       events: { orderBy: { createdAt: 'desc' }, take: 50 },
+      hubAssets: {
+        where: { deletedAt: null },
+        orderBy: [{ kind: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
     },
+  });
+}
+
+export async function markPreviewRequestOpsSeen(id: string, now: Date = new Date()) {
+  await prisma.previewRequest.update({
+    where: { id },
+    data: { opsLastSeenAt: now },
   });
 }
 

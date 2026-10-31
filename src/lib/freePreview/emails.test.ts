@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PREVIEW_OVER_CAP_MESSAGE, PREVIEW_TURNAROUND_TEXT } from './config';
 import { HUB_ACK_BUTTON, HUB_ACK_SUBJECT, HUB_OPS_OPEN_HUB } from './hubCopy';
-import { buildPreviewRequestAcknowledgementEmail, buildPreviewRequestInternalEmail } from './emails';
+import {
+  buildHubFilesAddedInternalEmail,
+  buildPreviewRequestAcknowledgementEmail,
+  buildPreviewRequestInternalEmail,
+} from './emails';
+import { HUB_OPS_FILES_EMAIL_SUBJECT } from './hubCopy';
 
 const HUB_TOKEN = 'A'.repeat(43);
 
@@ -195,5 +200,21 @@ describe('free preview emails', () => {
     expect(email.subject).toBe("We've received your preview request — Sharp & Co");
     expect(email.html).not.toContain(HUB_ACK_BUTTON);
     expect(email.html).not.toContain(`/preview/${HUB_TOKEN}`);
+  });
+
+  it('ops files digest lists kinds and links to the request', () => {
+    const email = buildHubFilesAddedInternalEmail({
+      id: 'req_1',
+      shopName: 'Sharp Cuts',
+      counts: [
+        { kind: 'SHOP_PHOTO', count: 6 },
+        { kind: 'LOGO', count: 1 },
+      ],
+    });
+    expect(email.subject).toBe(HUB_OPS_FILES_EMAIL_SUBJECT('Sharp Cuts'));
+    expect(email.html).toContain('Shop photos');
+    expect(email.html).toContain('>6<');
+    expect(email.html).toContain('/ops/preview-requests/req_1');
+    expect(email.html).toContain('Open in KERSIVO Ops');
   });
 });

@@ -20,11 +20,14 @@ import {
   previewFunnelLast30Days,
   previewFunnelRates,
   formatAge,
+  hasNewHubFiles,
   isOverDailyCap,
   listPreviewRequests,
   parsePreviewRequestListQuery,
   previewRequestLinks,
 } from '@/lib/freePreview/opsQueries';
+import { HUB_OPS_NEW_FILES } from '@/lib/freePreview/hubCopy';
+import { isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
 import '@/styles/tokens.css';
@@ -52,6 +55,7 @@ const [requests, counts, funnel] =
 const funnelRates = funnel ? previewFunnelRates(funnel) : null;
 const formatRate = (value: number | null) => (value === null ? '—' : `${Math.round(value * 100)}%`);
 const now = new Date();
+const hubEnabled = isPreviewHubEnabled();
 
 function filterHref(status: string | null, sort = query.sort) {
   const params = new URLSearchParams();
@@ -169,6 +173,32 @@ function filterHref(status: string | null, sort = query.sort) {
           {requests.length === 0 ? (
             <p class="ops-pr__empty">No preview requests{query.status ? ` with status ${PREVIEW_STATUS_LABELS[query.status]}` : ''}.</p>
           ) : (
+            <>
+            <div class="ops-cards">
+              {requests.map((request) => (
+                <article class="ops-card">
+                  <div class="ops-card__top">
+                    <div>
+                      <h2 class="ops-card__name">
+                        <a class="ops-table__name" href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}`}>
+                          {request.shopName}
+                        </a>
+                      </h2>
+                      <p class="ops-card__meta">{request.townCity} · {formatAge(request.createdAt, now)}</p>
+                    </div>
+                    <div>
+                      <span class={`ops-pr__status ops-pr__status--${request.status.toLowerCase()}`}>
+                        {PREVIEW_STATUS_LABELS[request.status]}
+                      </span>
+                      {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
+                      {hubEnabled && hasNewHubFiles(request) ? (
+                        <span class="ops-pr__status ops-pr__status--new-files">{HUB_OPS_NEW_FILES}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
             <div class="ops-table-wrap">
               <table class="ops-table">
                 <thead>
@@ -213,6 +243,9 @@ function filterHref(status: string | null, sort = query.sort) {
                           {PREVIEW_STATUS_LABELS[request.status]}
                         </span>
                         {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
+                        {hubEnabled && hasNewHubFiles(request) ? (
+                          <span class="ops-pr__status ops-pr__status--new-files">{HUB_OPS_NEW_FILES}</span>
+                        ) : null}
                       </td>
                       <td>{request.firstViewedAt ? `${request.viewCount}×` : 'Not yet'}</td>
                       <td title={request.createdAt.toISOString()}>{formatAge(request.createdAt, now)}</td>
@@ -221,6 +254,7 @@ function filterHref(status: string | null, sort = query.sort) {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
       ) : null

@@ -13,6 +13,8 @@ describe('HubOverview key UI states', () => {
     expect(overview).toContain('HUB_PREVIEW_CARD_LOCKED');
     expect(overview).toContain('HUB_ACTIVITY_EMPTY');
     expect(overview).toContain('HUB_HELP_TITLE');
+    expect(overview).toContain('HUB_CHECKLIST_TITLE');
+    expect(overview).toContain('checklist');
   });
 
   it('renders a designed expired CTA that stays disabled until Batch 3', () => {

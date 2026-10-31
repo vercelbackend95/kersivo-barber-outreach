@@ -1,13 +1,23 @@
 import { prisma } from '@/lib/db/client';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
-import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { isFreePreviewFlowEnabled, isPreviewHubEnabled } from './config';
 import {
+  HUB_ACTIVITY_ADDED,
+  HUB_ACTIVITY_KIND_FILE,
+  HUB_ACTIVITY_KIND_FILES,
+  HUB_ACTIVITY_KIND_LOGO,
+  HUB_ACTIVITY_KIND_PHOTO,
+  HUB_ACTIVITY_KIND_PHOTOS,
+  HUB_ACTIVITY_KIND_PRICE,
+  HUB_ACTIVITY_KIND_PRICES,
+  HUB_ACTIVITY_KIND_TEAM,
+  HUB_ACTIVITY_KIND_TEAMS,
   HUB_ACTIVITY_LABELS,
   HUB_OWNER_ACTIVITY_ACTIONS,
   HUB_STEPPER_LABELS,
 } from './hubCopy';
+import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { resolveHubState, type HubStage, type HubState } from './hubStage';
 import {
   loadPreviewDraftShop,
@@ -183,22 +193,72 @@ export function designingAtFromEvents(
   return hit?.createdAt ?? null;
 }
 
+function uploadKindLabel(kind: string | undefined, count: number): string {
+  switch (kind) {
+    case 'LOGO':
+      return HUB_ACTIVITY_KIND_LOGO;
+    case 'SHOP_PHOTO':
+      return count === 1 ? HUB_ACTIVITY_KIND_PHOTO : HUB_ACTIVITY_KIND_PHOTOS;
+    case 'TEAM_PHOTO':
+      return count === 1 ? HUB_ACTIVITY_KIND_TEAM : HUB_ACTIVITY_KIND_TEAMS;
+    case 'PRICE_LIST':
+      return count === 1 ? HUB_ACTIVITY_KIND_PRICE : HUB_ACTIVITY_KIND_PRICES;
+    default:
+      return count === 1 ? HUB_ACTIVITY_KIND_FILE : HUB_ACTIVITY_KIND_FILES;
+  }
+}
+
+function eventKind(event: { meta?: unknown }): string | undefined {
+  const meta = event.meta as { kind?: string } | null;
+  return typeof meta?.kind === 'string' ? meta.kind : undefined;
+}
+
 export function hubActivityItems(
-  events: Array<{ id: string; action: string; createdAt: Date }>,
+  events: Array<{ id: string; action: string; createdAt: Date; meta?: unknown }>,
   now: Date,
   limit = 10,
 ): HubActivityItem[] {
-  return events
-    .filter((event) => HUB_OWNER_ACTIVITY_ACTIONS.has(event.action) && event.action !== PREVIEW_REQUEST_ACTIONS.HUB_VIEWED)
-    .slice(0, limit)
-    .map((event) => ({
+  const visible = events.filter(
+    (event) => HUB_OWNER_ACTIVITY_ACTIONS.has(event.action) && event.action !== PREVIEW_REQUEST_ACTIONS.HUB_VIEWED,
+  );
+  const grouped: HubActivityItem[] = [];
+  let i = 0;
+  while (i < visible.length && grouped.length < limit) {
+    const event = visible[i]!;
+    if (event.action === PREVIEW_REQUEST_ACTIONS.HUB_ASSET_UPLOADED) {
+      const kind = eventKind(event);
+      let count = 1;
+      let j = i + 1;
+      while (
+        j < visible.length &&
+        visible[j]!.action === PREVIEW_REQUEST_ACTIONS.HUB_ASSET_UPLOADED &&
+        eventKind(visible[j]!) === kind
+      ) {
+        count += 1;
+        j += 1;
+      }
+      grouped.push({
+        id: event.id,
+        action: event.action,
+        label: HUB_ACTIVITY_ADDED(count, uploadKindLabel(kind, count)),
+        at: event.createdAt,
+        relative: formatHubRelativeTime(event.createdAt, now),
+        absolute: formatHubAbsoluteDate(event.createdAt),
+      });
+      i = j;
+      continue;
+    }
+    grouped.push({
       id: event.id,
       action: event.action,
       label: HUB_ACTIVITY_LABELS[event.action] ?? event.action,
       at: event.createdAt,
       relative: formatHubRelativeTime(event.createdAt, now),
       absolute: formatHubAbsoluteDate(event.createdAt),
-    }));
+    });
+    i += 1;
+  }
+  return grouped;
 }
 
 export async function loadHubOverviewExtras(previewRequestId: string) {
