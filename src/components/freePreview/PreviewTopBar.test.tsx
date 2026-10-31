@@ -111,3 +111,12 @@ describe('PreviewTopBar launch domain gate', () => {
     expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('/checkout'))).toBe(false);
   });
 });
+
+describe('PreviewTopBar checkout chrome (hub Overview)', () => {
+  it('renders only the subscribe button, not the website/booking switcher', () => {
+    renderBar({ chrome: 'checkout' });
+    expect(screen.getByRole('button', { name: /Launch this website/i })).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Preview pages' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Private website preview' })).toBeNull();
+  });
+});

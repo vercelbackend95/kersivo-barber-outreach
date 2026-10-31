@@ -1,9 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { PREVIEW_TURNAROUND_TEXT } from './config';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { PREVIEW_OVER_CAP_MESSAGE, PREVIEW_TURNAROUND_TEXT } from './config';
+import { HUB_ACK_BUTTON, HUB_ACK_SUBJECT, HUB_OPS_OPEN_HUB } from './hubCopy';
 import { buildPreviewRequestAcknowledgementEmail, buildPreviewRequestInternalEmail } from './emails';
+
+const HUB_TOKEN = 'A'.repeat(43);
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('free preview emails', () => {
   it('E1 uses the spec subject, turnaround from config, reply-to and sign-off', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
     const email = buildPreviewRequestAcknowledgementEmail({
       to: 'sam@example.com',
       firstName: null,
@@ -20,6 +28,7 @@ describe('free preview emails', () => {
   });
 
   it('E1 over the daily cap gives the longer wait instead of the usual turnaround', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
     const email = buildPreviewRequestAcknowledgementEmail({
       to: 'sam@example.com',
       firstName: null,
@@ -116,5 +125,75 @@ describe('free preview emails', () => {
     });
     expect(email.html).toContain('No links provided');
     expect(email.html).toContain('<th align="left" valign="top">Barbers</th><td>—</td>');
+  });
+
+  it('E1 with the hub flag on uses §9.1 copy, the hub button and a snapshot', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'true');
+    const email = buildPreviewRequestAcknowledgementEmail({
+      to: 'sam@example.com',
+      firstName: 'Sam',
+      shopName: 'Sharp Cuts',
+      publicToken: HUB_TOKEN,
+    });
+    expect(email.subject).toBe(HUB_ACK_SUBJECT('Sharp Cuts'));
+    expect(email.html).toContain(PREVIEW_TURNAROUND_TEXT);
+    expect(email.html).toContain(HUB_ACK_BUTTON);
+    expect(email.html).toContain(`/preview/${HUB_TOKEN}`);
+    expect(email.html).toContain('We design every preview individually');
+    expect(email.html).not.toContain('email you a private link');
+    expect(email.html).toMatchSnapshot();
+  });
+
+  it('E1 hub over-cap keeps PREVIEW_OVER_CAP_MESSAGE in the second paragraph', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'true');
+    const email = buildPreviewRequestAcknowledgementEmail({
+      to: 'sam@example.com',
+      firstName: null,
+      shopName: 'Sharp Cuts',
+      overDailyCap: true,
+      publicToken: HUB_TOKEN,
+    });
+    expect(email.html).toContain(PREVIEW_OVER_CAP_MESSAGE);
+    expect(email.html).not.toContain(PREVIEW_TURNAROUND_TEXT);
+    expect(email.html).toContain(`/preview/${HUB_TOKEN}`);
+  });
+
+  it('E2 with the hub flag on adds the hub link next to the ops link', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'true');
+    const email = buildPreviewRequestInternalEmail({
+      id: 'req_1',
+      publicToken: HUB_TOKEN,
+      firstName: 'Sam',
+      email: 'sam@example.com',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
+      bookingPageUrl: null,
+      instagramUrl: null,
+      googleListingUrl: null,
+      websiteUrl: null,
+      barberCount: null,
+      currentBookingSystem: null,
+      hasOwnDomain: null,
+      notes: null,
+      marketingOptIn: false,
+      entryPoint: null,
+      createdAt: new Date('2026-10-29T10:00:00Z'),
+    });
+    expect(email.html).toContain('/ops/preview-requests/req_1');
+    expect(email.html).toContain(`/preview/${HUB_TOKEN}`);
+    expect(email.html).toContain(HUB_OPS_OPEN_HUB);
+  });
+
+  it('E1 with the hub flag off stays byte-identical even when a token is passed', () => {
+    vi.stubEnv('PREVIEW_HUB_ENABLED', 'false');
+    const email = buildPreviewRequestAcknowledgementEmail({
+      to: 'sam@example.com',
+      firstName: null,
+      shopName: 'Sharp & Co',
+      publicToken: HUB_TOKEN,
+    });
+    expect(email.subject).toBe("We've received your preview request — Sharp & Co");
+    expect(email.html).not.toContain(HUB_ACK_BUTTON);
+    expect(email.html).not.toContain(`/preview/${HUB_TOKEN}`);
   });
 });

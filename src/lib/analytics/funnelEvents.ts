@@ -92,6 +92,8 @@ export const FUNNEL_EVENTS = {
   preview_checkout_started: 'preview_checkout_started',
   preview_converted: 'preview_converted',
   preview_declined: 'preview_declined',
+  /** Shop Hub: first owner view per stage. Server-side only. Never for operators. */
+  hub_viewed: 'hub_viewed',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

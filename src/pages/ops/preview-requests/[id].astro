@@ -8,7 +8,8 @@ import {
   OpsAccessDenied,
   OpsAccessUnconfigured,
 } from '@/components/ops/recommendations/OpsPageGates';
-import { OPS_PREVIEW_REQUESTS_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { OPS_PREVIEW_REQUESTS_PATH, isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
+import { ownerFacingStageLabel, resolveHubState } from '@/lib/freePreview/hubStage';
 import { previewPageUrl } from '@/lib/freePreview/emails';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import {
@@ -53,9 +54,21 @@ function formatDate(value: Date | null | undefined): string {
   return value.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' });
 }
 
+const hubEnabled = isPreviewHubEnabled();
+const hubState = request
+  ? resolveHubState({
+      request,
+      isOperator: true,
+      now: new Date(),
+      liveMarker: request.liveAt,
+    })
+  : { kind: 'not_found' as const };
+const hubStageLabel = hubEnabled ? ownerFacingStageLabel(hubState) : null;
+
 const fields: Array<[string, string]> = request
   ? [
       ['Status', PREVIEW_STATUS_LABELS[request.status]],
+      ...(hubStageLabel ? ([['Owner-facing stage', hubStageLabel]] as Array<[string, string]>) : []),
       ...(isOverDailyCap(request)
         ? ([['Daily cap', 'Over the cap: owner told it may take up to 3 working days']] as Array<[string, string]>)
         : []),
@@ -195,6 +208,8 @@ const fields: Array<[string, string]> = request
                 sitePreviewUrl={request.draftShop?.sitePreviewUrl ?? null}
                 sitePreviewVersion={request.draftShop?.sitePreviewVersion ?? null}
                 flowEnabled={isFreePreviewFlowEnabled()}
+                hubEnabled={hubEnabled}
+                hubStageLabel={hubStageLabel ?? undefined}
               />
             </aside>
           </div>

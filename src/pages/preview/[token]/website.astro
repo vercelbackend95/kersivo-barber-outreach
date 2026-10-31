@@ -1,0 +1,128 @@
+---
+export const prerender = false;
+
+import HubDocument from '@/layouts/HubDocument.astro';
+import HubShell from '@/components/previewHub/HubShell.astro';
+import PreviewWebsitePane from '@/components/previewHub/PreviewWebsitePane.astro';
+import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { previewPagePath } from '@/lib/freePreview/config';
+import { HUB_LOCKED_REASON_PREVIEW, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
+import {
+  hostnameOf,
+  hubNotFound,
+  isHubRouteEnabled,
+  recordHubOwnerView,
+  resolveHubPageContext,
+} from '@/lib/freePreview/hubPage';
+import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
+import { recordPreviewView, shouldRecordOwnerView } from '@/lib/freePreview/previewAccess';
+import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/booking-review.css';
+
+applyPrivatePreviewHeaders(Astro.response.headers);
+
+if (!isHubRouteEnabled()) return hubNotFound();
+
+const limited = await enforceIpRateLimit(
+  Astro.request,
+  PREVIEW_PAGE_RATE.action,
+  PREVIEW_PAGE_RATE.limit,
+  PREVIEW_PAGE_RATE.windowMs,
+);
+if (limited) return limited;
+
+const token = (Astro.params.token ?? '').trim();
+const now = new Date();
+const operator = await resolveOperatorAccess(Astro.request);
+const ctx = await resolveHubPageContext({ token, isOperator: operator.ok, now });
+if (!ctx) return hubNotFound();
+
+if (ctx.state.stage === 'expired') Astro.response.status = 410;
+
+await recordHubOwnerView({
+  requestId: ctx.request.id,
+  stage: ctx.state.stage,
+  isOperator: ctx.isOperator,
+  now,
+  clientId: analyticsClientIdFromRequest(Astro.request),
+}).catch((error) => {
+  console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
+});
+
+const showPreview = ctx.state.capabilities.showPreview && ctx.draft;
+const view: 'website' | 'booking' =
+  Astro.url.searchParams.get('view') === 'booking' || !ctx.draft?.shop.sitePreviewUrl ? 'booking' : 'website';
+if (showPreview && view === 'website' && ctx.draft?.shop.sitePreviewUrl) {
+  Astro.response.headers.set(EXTRA_FRAME_SRC_HEADER, ctx.draft.shop.sitePreviewUrl);
+}
+
+if (
+  showPreview &&
+  shouldRecordOwnerView({
+    kind: 'preview',
+    request: ctx.request,
+    draftShopId: ctx.request.draftShopId ?? '',
+    isOperator: ctx.isOperator,
+  })
+) {
+  const firstView = await recordPreviewView(ctx.request.id, now).catch((error) => {
+    console.error('[free-preview] view tracking failed', error instanceof Error ? error.message : error);
+    return false;
+  });
+  if (firstView) {
+    await sendServerAnalyticsEvent({
+      name: FUNNEL_EVENTS.preview_viewed,
+      clientId: analyticsClientIdFromRequest(Astro.request),
+    });
+  }
+}
+
+const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
+const basePath = previewPagePath(token);
+---
+
+<HubDocument title={`Website preview — ${shopName} | KERSIVO`}>
+  <HubShell
+    token={token}
+    shopName={shopName}
+    stage={ctx.state.stage}
+    current="website"
+    capabilities={ctx.state.capabilities}
+  >
+    {
+      showPreview && ctx.draft ? (
+        <div class="fp-page">
+          <PreviewTopBar
+            client:load
+            token={token}
+            shopName={shopName}
+            townCity={ctx.request.townCity}
+            firstName={ctx.request.firstName}
+            checkoutEmail={ctx.request.email}
+            hasOwnDomain={ctx.request.hasOwnDomain ?? 'not_sure'}
+            existingWebsiteHost={hostnameOf(ctx.request.websiteUrl)}
+            isOperator={ctx.isOperator}
+            converted={ctx.request.status === 'CONVERTED'}
+            activeView={view}
+            websiteHref={basePath + '/website'}
+            bookingHref={`${basePath}/website?view=booking`}
+          />
+          <PreviewWebsitePane shopName={shopName} view={view} draft={ctx.draft} />
+        </div>
+      ) : (
+        <section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder">
+          <h1>{HUB_LOCKED_REASON_PREVIEW}</h1>
+          <p class="hub-card__body">{HUB_WEBSITE_LOCKED_BODY}</p>
+        </section>
+      )
+    }
+  </HubShell>
+</HubDocument>

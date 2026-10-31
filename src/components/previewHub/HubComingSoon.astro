@@ -1,0 +1,14 @@
+---
+import { HUB_COMING_SOON, HUB_TAB_COMING_SOON_BODY, HUB_TAB_COMING_SOON_TITLE } from '@/lib/freePreview/hubCopy';
+
+interface Props {
+  title?: string;
+}
+const { title = HUB_TAB_COMING_SOON_TITLE } = Astro.props;
+---
+
+<section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder" aria-labelledby="hub-soon-title">
+  <p class="ks-eyebrow">{HUB_COMING_SOON}</p>
+  <h1 id="hub-soon-title">{title}</h1>
+  <p class="hub-card__body">{HUB_TAB_COMING_SOON_BODY}</p>
+</section>

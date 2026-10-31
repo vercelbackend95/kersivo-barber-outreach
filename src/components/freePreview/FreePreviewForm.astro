@@ -9,12 +9,13 @@ import {
   FREE_PREVIEW_MARKETING_LABEL,
   FREE_PREVIEW_NOTES_MAX,
 } from '@/lib/freePreview/intake';
-import { PREVIEW_OVER_CAP_MESSAGE } from '@/lib/freePreview/config';
+import { PREVIEW_OVER_CAP_MESSAGE, isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { SMART_LINK_COPY, WORK_LINK_VALUE_MAX } from '@/lib/freePreview/workPlatforms';
-import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
+import { FREE_PREVIEW_PAGE, getFreePreviewDetailsPhotosLine } from '@/lib/seo/freePreviewPage';
 import '@/styles/components/ks-glass-card.css';
 
 const bookingChipLabels: Record<string, string> = FREE_PREVIEW_PAGE.detailsBookingChipLabels;
+const detailsPhotosLine = getFreePreviewDetailsPhotosLine(isPreviewHubEnabled());
 const choiceGroups = [
   {
     name: 'barberCount',
@@ -224,7 +225,7 @@ const choiceGroups = [
         ></textarea>
       </label>
 
-      <p class="fp-links__help">{FREE_PREVIEW_PAGE.detailsPhotosLine}</p>
+      <p class="fp-links__help">{detailsPhotosLine}</p>
 
       <label class="free-preview-form__check">
         <input type="checkbox" name="marketingOptIn" />

@@ -1,0 +1,127 @@
+---
+import { LayoutDashboard, Globe, Store, Pencil, MessageCircle, Lock } from '@/components/lucide-react';
+import {
+  HUB_LOCKED_REASON_PREVIEW,
+  HUB_NAV,
+  HUB_PRIVATE_LABEL,
+  HUB_QUESTIONS_FOOTER,
+  HUB_STAGE_PILL,
+} from '@/lib/freePreview/hubCopy';
+import { previewPagePath } from '@/lib/freePreview/config';
+import type { HubStage, HubCapabilities } from '@/lib/freePreview/hubStage';
+import '@/styles/components/preview-hub.css';
+import '@/styles/components/ks-glass-card.css';
+
+type TabId = 'overview' | 'website' | 'details' | 'changes' | 'messages';
+
+interface Props {
+  token: string;
+  shopName: string;
+  stage: HubStage;
+  current: TabId;
+  capabilities: HubCapabilities;
+}
+
+const { token, shopName, stage, current, capabilities } = Astro.props;
+const base = previewPagePath(token);
+
+const tabs: Array<{
+  id: TabId;
+  href: string;
+  label: string;
+  locked: boolean;
+  reason: string;
+  Icon: typeof LayoutDashboard;
+}> = [
+  { id: 'overview', href: base, label: HUB_NAV.overview, locked: false, reason: '', Icon: LayoutDashboard },
+  {
+    id: 'website',
+    href: `${base}/website`,
+    label: HUB_NAV.website,
+    locked: !capabilities.showPreview,
+    reason: HUB_LOCKED_REASON_PREVIEW,
+    Icon: Globe,
+  },
+  { id: 'details', href: `${base}/details`, label: HUB_NAV.details, locked: false, reason: '', Icon: Store },
+  {
+    id: 'changes',
+    href: `${base}/changes`,
+    label: HUB_NAV.changes,
+    locked: !capabilities.canDraftChanges,
+    reason: HUB_LOCKED_REASON_PREVIEW,
+    Icon: Pencil,
+  },
+  { id: 'messages', href: `${base}/messages`, label: HUB_NAV.messages, locked: false, reason: '', Icon: MessageCircle },
+];
+---
+
+<div class="hub-shell">
+  <a class="hub-shell__skip" href="#hub-main">Skip to content</a>
+  <aside class="hub-sidebar" aria-label="Shop hub">
+    <div class="hub-brand">
+      <p class="hub-brand__mark">KERSIVO</p>
+      <p class="hub-brand__shop">{shopName}</p>
+      <p class={`hub-stage-pill hub-stage-pill--${stage}`}>{HUB_STAGE_PILL[stage]}</p>
+      <p class="hub-private">{HUB_PRIVATE_LABEL}</p>
+    </div>
+    <nav class="hub-nav" aria-label="Hub sections">
+      {
+        tabs.map((tab) => (
+          <a
+            href={tab.href}
+            class:list={['hub-nav__item', tab.locked && 'is-locked']}
+            aria-current={current === tab.id ? 'page' : undefined}
+            title={tab.locked ? tab.reason : undefined}
+          >
+            <span class="hub-nav__icon" aria-hidden="true">
+              <tab.Icon width={18} height={18} strokeWidth={1.8} />
+            </span>
+            {tab.label}
+            {tab.locked ? (
+              <span class="hub-nav__lock">
+                <Lock width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+                <span class="sr-only">{tab.reason}</span>
+              </span>
+            ) : null}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="hub-sidebar__footer">
+      <p>{HUB_QUESTIONS_FOOTER}</p>
+      <a class="btn btn--secondary btn--sm" href={`${base}/messages`}>Message us</a>
+    </div>
+  </aside>
+
+  <div class="hub-content">
+    <header class="hub-topbar">
+      <p class="hub-topbar__shop">{shopName}</p>
+      <p class={`hub-stage-pill hub-stage-pill--${stage}`}>{HUB_STAGE_PILL[stage]}</p>
+      <a class="hub-topbar__msg" href={`${base}/messages`} aria-label={HUB_NAV.messages}>
+        <MessageCircle width={20} height={20} strokeWidth={1.8} />
+      </a>
+    </header>
+    <p class="hub-private hub-private--mobile">{HUB_PRIVATE_LABEL}</p>
+    <div class="hub-main" id="hub-main">
+      <div class="hub-main__inner">
+        <slot />
+      </div>
+    </div>
+  </div>
+
+  <nav class="hub-tabs" aria-label="Hub pages">
+    {
+      tabs.map((tab) => (
+        <a
+          href={tab.href}
+          class:list={['hub-tabs__item', tab.locked && 'is-locked']}
+          aria-current={current === tab.id ? 'page' : undefined}
+          title={tab.locked ? tab.reason : tab.label}
+        >
+          <tab.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
+          {tab.label}
+        </a>
+      ))
+    }
+  </nav>
+</div>

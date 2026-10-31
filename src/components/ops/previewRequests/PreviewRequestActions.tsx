@@ -21,6 +21,9 @@ type Props = {
   sitePreviewVersion: string | null;
   /** FREE_PREVIEW_FLOW_ENABLED: previews 404 and "Mark ready and send" is refused while it is off. */
   flowEnabled: boolean;
+  /** PREVIEW_HUB_ENABLED: show the owner hub link even before a draft shop exists. */
+  hubEnabled?: boolean;
+  hubStageLabel?: string;
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -138,6 +141,9 @@ export default function PreviewRequestActions(props: Props) {
             FREE_PREVIEW_FLOW_ENABLED is off: the preview link returns 404 and nothing can be sent.
           </p>
         ) : null}
+        {props.hubEnabled && props.hubStageLabel ? (
+          <p className="ops-pr-actions__hint">Owner-facing stage: {props.hubStageLabel}</p>
+        ) : null}
         <div className="ops-pr-actions__row">
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void copyPreviewLink()}>
             Copy preview link
@@ -145,6 +151,11 @@ export default function PreviewRequestActions(props: Props) {
           {props.draftShopId ? (
             <a className="btn btn--secondary btn--sm" href={props.previewUrl} target="_blank" rel="noopener noreferrer">
               Open preview
+            </a>
+          ) : null}
+          {props.hubEnabled ? (
+            <a className="btn btn--primary btn--sm" href={props.previewUrl} target="_blank" rel="noopener noreferrer">
+              Open hub as KERSIVO
             </a>
           ) : null}
         </div>
