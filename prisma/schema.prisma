@@ -1642,9 +1642,11 @@ model PreviewRequest {
 
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
-  events      PreviewRequestEvent[]
-  hubAssets   PreviewHubAsset[]
-  hubMessages PreviewHubMessage[]
+  events         PreviewRequestEvent[]
+  hubAssets      PreviewHubAsset[]
+  hubMessages    PreviewHubMessage[]
+  changeRequests PreviewChangeRequest[]
+  contentReviews PreviewContentReview[]
 
   @@index([status, createdAt])
   @@index([email])
@@ -1686,6 +1688,66 @@ model PreviewHubAsset {
   previewRequest   PreviewRequest      @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
 
   @@index([previewRequestId, kind])
+}
+
+enum PreviewChangeStatus {
+  DRAFT
+  SENT
+  IN_PROGRESS
+  DONE
+  NOT_POSSIBLE
+}
+
+/// Owner design-change tickets (HUB_SPEC.md §4.5). One included round before subscribe.
+model PreviewChangeRequest {
+  id               String              @id @default(cuid())
+  previewRequestId String
+  /// Set when the owner sends the round.
+  round            Int?
+  /// HOME | SERVICES | BARBERS | GALLERY | CONTACT | BOOKING | OTHER
+  page             String
+  body             String              @db.Text
+  attachmentId     String?
+  /// Batch 6 pin data. Unused until pin mode exists.
+  anchor           Json?
+  status           PreviewChangeStatus @default(DRAFT)
+  opsNote          String?
+  createdAt        DateTime            @default(now())
+  sentAt           DateTime?
+  resolvedAt       DateTime?
+  previewRequest   PreviewRequest      @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
+
+  @@index([previewRequestId, status])
+}
+
+enum PreviewContentSection {
+  SERVICES
+  TEAM
+  HOURS
+}
+
+enum PreviewContentReviewState {
+  CONFIRMED
+  CORRECTIONS_SENT
+  APPLIED
+  DISMISSED
+}
+
+/// Owner confirm/correct cards for services, team and hours (HUB_SPEC.md §4.4).
+model PreviewContentReview {
+  id               String                    @id @default(cuid())
+  previewRequestId String
+  section          PreviewContentSection
+  state            PreviewContentReviewState
+  /// Zod-validated proposal per section. Null when CONFIRMED.
+  proposal         Json?
+  opsNote          String?
+  createdAt        DateTime                  @default(now())
+  appliedAt        DateTime?
+  appliedBy        String?
+  previewRequest   PreviewRequest            @relation(fields: [previewRequestId], references: [id], onDelete: Cascade)
+
+  @@index([previewRequestId, section, createdAt])
 }
 
 /// Audit trail of status changes and ops actions on a preview request.

@@ -7,7 +7,7 @@ import { previewJson } from './previewApi';
 import { isHubRouteEnabled, resolveHubPageContext, tokenPrefixForLog, type HubPageContext } from './hubPage';
 import { previewTokenLookupHash } from './token';
 import { HUB_MAX_BODY_BYTES, HUB_OWNER_UPLOAD_KINDS } from './hubAssets';
-import { HUB_UPLOAD_ERROR_DENIED, HUB_UPLOAD_ERROR_TOO_LARGE_BODY } from './hubCopy';
+import { HUB_ROUND_USED, HUB_UPLOAD_ERROR_DENIED, HUB_UPLOAD_ERROR_TOO_LARGE_BODY } from './hubCopy';
 
 export const PREVIEW_HUB_ASSETS_IP_RATE = {
   action: 'preview_hub_assets_ip',
@@ -43,6 +43,16 @@ export const PREVIEW_HUB_MESSAGES_REQUEST_DAY_RATE = {
   action: 'preview_hub_messages_request_day',
   limit: 100,
   windowMs: 24 * 60 * 60 * 1000,
+};
+export const PREVIEW_HUB_REVIEWS_IP_RATE = {
+  action: 'preview_hub_reviews_ip',
+  limit: 40,
+  windowMs: 15 * 60 * 1000,
+};
+export const PREVIEW_HUB_CHANGES_IP_RATE = {
+  action: 'preview_hub_changes_ip',
+  limit: 40,
+  windowMs: 15 * 60 * 1000,
 };
 
 export const HUB_API_HEADERS = {
@@ -133,8 +143,30 @@ export async function enforceHubAssetGetRate(request: Request): Promise<Response
 
 export function requireUploadCapability(ctx: HubPageContext, kind?: PreviewHubAssetKind): Response | null {
   if (kind === 'MESSAGE_ATTACHMENT' && ctx.state.capabilities.canMessage) return null;
+  if (kind === 'CHANGE_ATTACHMENT' && ctx.state.capabilities.canDraftChanges) return null;
   if (!ctx.state.capabilities.canUpload) {
     return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_DENIED }, 403);
+  }
+  return null;
+}
+
+export function requireReviewCapability(ctx: HubPageContext): Response | null {
+  if (!ctx.state.capabilities.canReview) {
+    return hubJson({ ok: false, error: 'You cannot review details at this stage.' }, 403);
+  }
+  return null;
+}
+
+export function requireDraftChangesCapability(ctx: HubPageContext): Response | null {
+  if (!ctx.state.capabilities.canDraftChanges) {
+    return hubJson({ ok: false, error: 'You cannot suggest changes at this stage.' }, 403);
+  }
+  return null;
+}
+
+export function requireSendChangesCapability(ctx: HubPageContext): Response | null {
+  if (!ctx.state.capabilities.canSendChanges) {
+    return hubJson({ ok: false, error: HUB_ROUND_USED }, 403);
   }
   return null;
 }
@@ -170,6 +202,24 @@ export async function enforceHubMessageRates(request: Request, token: string): P
   });
   if (!dayLimit.ok) return rateLimitExceededResponse(dayLimit.retryAfterSeconds);
   return null;
+}
+
+export async function enforceHubReviewsRate(request: Request): Promise<Response | null> {
+  return enforceIpRateLimit(
+    request,
+    PREVIEW_HUB_REVIEWS_IP_RATE.action,
+    PREVIEW_HUB_REVIEWS_IP_RATE.limit,
+    PREVIEW_HUB_REVIEWS_IP_RATE.windowMs,
+  );
+}
+
+export async function enforceHubChangesRate(request: Request): Promise<Response | null> {
+  return enforceIpRateLimit(
+    request,
+    PREVIEW_HUB_CHANGES_IP_RATE.action,
+    PREVIEW_HUB_CHANGES_IP_RATE.limit,
+    PREVIEW_HUB_CHANGES_IP_RATE.windowMs,
+  );
 }
 
 export function requireEditDetailsCapability(ctx: HubPageContext): Response | null {

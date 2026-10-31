@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         params: { kind },
       });
     }
-    if (kind !== 'MESSAGE_ATTACHMENT') {
+    if (kind !== 'MESSAGE_ATTACHMENT' && kind !== 'CHANGE_ATTACHMENT') {
       await maybeNotifyOpsOfHubFiles({
         requestId: ctxResult.ctx.request.id,
         shopName: ctxResult.ctx.request.shopName,

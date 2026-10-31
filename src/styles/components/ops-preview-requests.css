@@ -261,3 +261,34 @@
   font-size: 0.75rem;
   white-space: normal;
 }
+
+.ops-hub-content,
+.ops-hub-changes,
+.ops-hub-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ops-hub-section {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0d0d0e;
+}
+
+.ops-hub-diff {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ops-hub-diff li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}

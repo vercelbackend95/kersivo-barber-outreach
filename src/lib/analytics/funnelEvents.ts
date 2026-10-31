@@ -100,6 +100,14 @@ export const FUNNEL_EVENTS = {
   hub_details_saved: 'hub_details_saved',
   /** Shop Hub: a message was sent. Param `{ actor }` is `owner` or `kersivo`. Owner sends only from owner APIs. */
   hub_message_sent: 'hub_message_sent',
+  /** Shop Hub: owner confirmed a review card. Param `{ section }`. */
+  hub_review_confirmed: 'hub_review_confirmed',
+  /** Shop Hub: owner sent a data-correction proposal. Param `{ section }`. */
+  hub_review_corrections_sent: 'hub_review_corrections_sent',
+  /** Shop Hub: owner saved a draft design change. */
+  hub_change_drafted: 'hub_change_drafted',
+  /** Shop Hub: owner sent a round of design changes. */
+  hub_changes_sent: 'hub_changes_sent',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

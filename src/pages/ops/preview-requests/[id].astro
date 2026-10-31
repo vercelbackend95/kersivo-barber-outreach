@@ -26,7 +26,11 @@ import {
 } from '@/lib/freePreview/opsQueries';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
 import { HubMessages } from '@/components/previewHub/HubMessages';
+import { OpsHubContent } from '@/components/ops/previewRequests/OpsHubContent';
+import { OpsHubChanges } from '@/components/ops/previewRequests/OpsHubChanges';
 import { loadHubMessages, markOwnerMessagesReadByOps } from '@/lib/freePreview/hubMessages';
+import { loadHubChanges } from '@/lib/freePreview/hubChanges';
+import { loadHubReviewShopData, loadLatestHubReviews, reviewDiff } from '@/lib/freePreview/hubReviews';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { prisma } from '@/lib/db/client';
 import {
@@ -36,6 +40,8 @@ import {
   HUB_OPS_FILES_EMPTY,
   HUB_OPS_FILES_TITLE,
   HUB_OPS_STYLE_NOTES,
+  HUB_OPS_TAB_CHANGES,
+  HUB_OPS_TAB_CONTENT,
   HUB_OPS_TAB_FILES,
   HUB_OPS_TAB_MESSAGES,
   HUB_OPS_TAB_OVERVIEW,
@@ -92,11 +98,34 @@ const hubState = request
   : { kind: 'not_found' as const };
 const hubStageLabel = hubEnabled ? ownerFacingStageLabel(hubState) : null;
 const tabParam = (Astro.url.searchParams.get('tab') ?? '').trim().toLowerCase();
-const activeTab = tabParam === 'files' || tabParam === 'messages' ? tabParam : 'overview';
+const activeTab =
+  tabParam === 'files' || tabParam === 'messages' || tabParam === 'content' || tabParam === 'changes'
+    ? tabParam
+    : 'overview';
 const unreadOpsMessages = request ? unreadOwnerMessageCount(request) : 0;
 const hubMessages =
   view === 'dashboard' && request && hubEnabled && activeTab === 'messages'
     ? await loadHubMessages(request.id)
+    : [];
+const opsReviews = view === 'dashboard' && request && hubEnabled && activeTab === 'content'
+  ? await loadLatestHubReviews(request.id)
+  : null;
+const opsReviewShop =
+  view === 'dashboard' && request && hubEnabled && activeTab === 'content' && request.draftShopId
+    ? await loadHubReviewShopData(request.draftShopId, request.id)
+    : null;
+const opsReviewDiffs = opsReviews && opsReviewShop
+  ? {
+      SERVICES: opsReviews.SERVICES
+        ? reviewDiff({ section: 'SERVICES', current: opsReviewShop, proposal: opsReviews.SERVICES.proposal })
+        : [],
+      TEAM: opsReviews.TEAM ? reviewDiff({ section: 'TEAM', current: opsReviewShop, proposal: opsReviews.TEAM.proposal }) : [],
+      HOURS: opsReviews.HOURS ? reviewDiff({ section: 'HOURS', current: opsReviewShop, proposal: opsReviews.HOURS.proposal }) : [],
+    }
+  : { SERVICES: [], TEAM: [], HOURS: [] };
+const opsChanges =
+  view === 'dashboard' && request && hubEnabled && activeTab === 'changes'
+    ? await loadHubChanges(request.id)
     : [];
 if (view === 'dashboard' && request && hubEnabled && activeTab === 'messages') {
   const marked = await markOwnerMessagesReadByOps({ previewRequestId: request.id }).catch(() => 0);
@@ -223,6 +252,18 @@ const fields: Array<[string, string]> = request
                     {HUB_OPS_TAB_FILES}
                   </a>
                   <a
+                    href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}?tab=content`}
+                    aria-current={activeTab === 'content' ? 'page' : undefined}
+                  >
+                    {HUB_OPS_TAB_CONTENT}
+                  </a>
+                  <a
+                    href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}?tab=changes`}
+                    aria-current={activeTab === 'changes' ? 'page' : undefined}
+                  >
+                    {HUB_OPS_TAB_CHANGES}
+                  </a>
+                  <a
                     href={`${OPS_PREVIEW_REQUESTS_PATH}/${request.id}?tab=messages`}
                     aria-current={activeTab === 'messages' ? 'page' : undefined}
                   >
@@ -230,6 +271,33 @@ const fields: Array<[string, string]> = request
                     {unreadOpsMessages > 0 ? ` · ${HUB_OPS_UNREAD_MESSAGES(unreadOpsMessages)}` : ''}
                   </a>
                 </nav>
+              ) : null
+            }
+            {
+              hubEnabled && activeTab === 'content' && opsReviews ? (
+                <section class="ops-pr-detail__fields" aria-label={HUB_OPS_TAB_CONTENT}>
+                  <OpsHubContent
+                    client:load
+                    requestId={request.id}
+                    reviews={opsReviews}
+                    diffs={opsReviewDiffs}
+                    shop={opsReviewShop}
+                    hasSeparateWebsite={Boolean(request.draftShop?.sitePreviewUrl)}
+                  />
+                </section>
+              ) : null
+            }
+            {
+              hubEnabled && activeTab === 'changes' ? (
+                <section class="ops-pr-detail__fields" aria-label={HUB_OPS_TAB_CHANGES}>
+                  <OpsHubChanges
+                    client:load
+                    requestId={request.id}
+                    initialItems={opsChanges}
+                    includedChangeRounds={request.includedChangeRounds}
+                    changeRoundsUsed={request.changeRoundsUsed}
+                  />
+                </section>
               ) : null
             }
             {
@@ -247,7 +315,7 @@ const fields: Array<[string, string]> = request
                 </section>
               ) : null
             }
-            <section class="ops-pr-detail__fields" aria-label="Request details" hidden={hubEnabled && activeTab === 'messages'}>
+            <section class="ops-pr-detail__fields" aria-label="Request details" hidden={hubEnabled && (activeTab === 'messages' || activeTab === 'content' || activeTab === 'changes')}>
               <h2 class="ops-pr-actions__title">Links</h2>
               <ul class="ops-pr__links ops-pr__links--stacked">
                 {previewRequestLinks(request).map((link) => (

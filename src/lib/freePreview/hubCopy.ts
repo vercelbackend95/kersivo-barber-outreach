@@ -205,6 +205,113 @@ export const HUB_REVIEW_CARD_FOOTER =
   "Corrections to your details don't use your round of design changes.";
 export const HUB_ROUND_USED =
   "You've used your included round of changes. Message us if something isn't right.";
+export const HUB_CHECK_DETAILS_TITLE = 'Check your details';
+export const HUB_REVIEW_LOOKS_RIGHT = 'Looks right';
+export const HUB_REVIEW_SEND_CORRECTIONS = 'Send corrections';
+export const HUB_REVIEW_ADD_ROW = 'Add a row';
+export const HUB_REVIEW_REMOVE_ROW = 'Remove';
+export const HUB_REVIEW_NOT_CHECKED = 'Not checked';
+export const HUB_REVIEW_CONFIRMED = 'Confirmed';
+export const HUB_REVIEW_CORRECTIONS_SENT = 'Corrections sent';
+export const HUB_REVIEW_UPDATED = 'Updated on your preview';
+export const HUB_REVIEW_DISMISSED_NOTE = 'KERSIVO left a note';
+export const HUB_REVIEW_EMPTY_SERVICES = 'No services on this preview yet.';
+export const HUB_REVIEW_EMPTY_TEAM = 'No team on this preview yet.';
+export const HUB_REVIEW_EMPTY_HOURS = 'No opening hours on this preview yet.';
+export const HUB_REVIEW_NAME = 'Name';
+export const HUB_REVIEW_DURATION = 'Duration (minutes)';
+export const HUB_REVIEW_PRICE = 'Price';
+export const HUB_REVIEW_BIO = 'Short bio';
+export const HUB_REVIEW_SHOW_ON_WEBSITE = 'Show on website';
+export const HUB_REVIEW_PHOTO = 'Photo';
+export const HUB_REVIEW_SENDING = 'Sending…';
+export const HUB_REVIEW_SENT = 'Sent';
+export const HUB_REVIEW_FAILED = 'Could not save. Try again.';
+export const HUB_REVIEW_LOAD_ERROR = 'Could not load your details.';
+export const HUB_REVIEW_INVALID_SERVICE_NAME = 'Service name must be 1–80 characters.';
+export const HUB_REVIEW_INVALID_DURATION = 'Duration must be between 5 and 480 minutes.';
+export const HUB_REVIEW_INVALID_PRICE = 'Price must be between £0 and £999.99.';
+export const HUB_REVIEW_INVALID_TEAM_NAME = 'Name must be 1–60 characters.';
+export const HUB_REVIEW_INVALID_BIO = 'Bio can be up to 280 characters.';
+export const HUB_REVIEW_INVALID_HOURS = 'Opening hours need 7 days, with a start time before the end time.';
+export const HUB_REVIEW_INVALID_PHOTO = 'That photo is not a team photo for this preview.';
+export const HUB_NOW_REVIEW_NEED_ALL =
+  "Check your services, team and hours, then subscribe when you're happy.";
+export const HUB_NOW_REVIEW_NEED_SOME = (unchecked: string) =>
+  `Check your ${unchecked}, then subscribe when you're happy.`;
+export const HUB_NOW_REVIEW_NEED_DONE = "Subscribe when you're happy, or send design changes.";
+export const HUB_CHANGES_TITLE = 'Changes';
+export const HUB_CHANGES_EMPTY = 'No changes yet. Suggest something from your website preview or add one here.';
+export const HUB_CHANGES_ADD = 'Suggest a change';
+export const HUB_CHANGES_SEND = 'Send changes to KERSIVO';
+export const HUB_CHANGES_SENDING = 'Sending…';
+export const HUB_CHANGES_SENT = 'Changes sent';
+export const HUB_CHANGES_FAILED = 'Could not send. Try again.';
+export const HUB_CHANGES_LOAD_ERROR = 'Could not load your changes.';
+export const HUB_CHANGES_DRAFT = 'Draft';
+export const HUB_CHANGES_STATUS_SENT = 'Sent';
+export const HUB_CHANGES_IN_PROGRESS = 'In progress';
+export const HUB_CHANGES_DONE = 'Done';
+export const HUB_CHANGES_NOT_POSSIBLE = 'Not possible';
+export const HUB_CHANGES_PAGE = 'Page';
+export const HUB_CHANGES_BODY = 'What would you like us to change?';
+export const HUB_CHANGES_BODY_REQUIRED = 'Write what you would like us to change.';
+export const HUB_CHANGES_BODY_TOO_LONG = 'Changes can be up to 2,000 characters.';
+export const HUB_CHANGES_ROUND = (used: number, included: number) =>
+  `Round ${Math.min(used + 1, included)} of ${included} included`;
+export const HUB_CHANGES_ROUND_USED_COUNT = (used: number, included: number) =>
+  `${used} of ${included} included rounds used`;
+export const HUB_CHANGES_DELETE = 'Delete draft';
+export const HUB_CHANGES_SAVE_DRAFT = 'Save draft';
+export const HUB_CHANGES_EDIT = 'Edit';
+export const HUB_CHANGES_CANCEL = 'Cancel';
+export const HUB_CHANGES_ATTACHMENT = 'Add a screenshot (optional)';
+export const HUB_CHANGES_DENIED = 'You cannot send changes at this stage.';
+export const HUB_CHANGES_NO_DRAFTS = 'Add a draft change before sending.';
+export const HUB_CHANGES_PAGES = {
+  HOME: 'Home',
+  SERVICES: 'Services',
+  BARBERS: 'Barbers',
+  GALLERY: 'Gallery',
+  CONTACT: 'Contact',
+  BOOKING: 'Booking',
+  OTHER: 'Other',
+} as const;
+export const HUB_WEBSITE_WEBSITE = 'Website';
+export const HUB_WEBSITE_BOOKING = 'Booking';
+export const HUB_WEBSITE_PHONE = 'Phone';
+export const HUB_WEBSITE_DESKTOP = 'Desktop';
+export const HUB_WEBSITE_OPEN_TAB = 'Open in new tab';
+export const HUB_WEBSITE_SUGGEST = 'Suggest a change';
+export const HUB_WEBSITE_TEST_NOTE = 'Test bookings only — no payments are taken.';
+export const HUB_WEBSITE_REQUEST_CHANGES = 'Request changes';
+export const HUB_OPS_TAB_CONTENT = 'Content';
+export const HUB_OPS_TAB_CHANGES = 'Changes';
+export const HUB_OPS_APPLY = 'Apply';
+export const HUB_OPS_DISMISS = 'Dismiss with note';
+export const HUB_OPS_DISMISS_NOTE = 'Note for the owner';
+export const HUB_OPS_DISMISS_NOTE_REQUIRED = 'Add a note before dismissing.';
+export const HUB_OPS_APPLIED = 'Applied';
+export const HUB_OPS_DISMISSED = 'Dismissed';
+export const HUB_OPS_APPLY_FAILED = 'Could not apply. The draft shop may have changed.';
+export const HUB_OPS_APPLY_INCOMPATIBLE =
+  'The draft shop has changed since this proposal. Refresh and try again.';
+export const HUB_OPS_NO_PROPOSAL = 'No proposal to apply.';
+export const HUB_OPS_GRANT_ROUND = 'Grant extra round';
+export const HUB_OPS_GRANT_ROUND_DONE = 'Extra round granted';
+export const HUB_OPS_CHANGE_NOTE = 'Note (required for Not possible)';
+export const HUB_OPS_WEBSITE_REMINDER =
+  'Applying booking data updates the booking page immediately. The website at the site preview URL is a separate build — update that too.';
+export const HUB_OPS_OPEN_CHANGES = (count: number) =>
+  count === 1 ? '1 open change' : `${count} open changes`;
+export const HUB_ACTIVITY_CONFIRMED = (section: string) => `You confirmed your ${section}`;
+export const HUB_ACTIVITY_CORRECTIONS = (section: string) => `You sent corrections to your ${section}`;
+export const HUB_ACTIVITY_UPDATED_SECTION = (section: string) => `KERSIVO updated your ${section}`;
+export const HUB_ACTIVITY_CHANGE_DONE = 'Change done';
+export const HUB_ACTIVITY_CHANGES_SENT = 'Changes sent';
+export const HUB_SECTION_SERVICES = 'services';
+export const HUB_SECTION_TEAM = 'team';
+export const HUB_SECTION_HOURS = 'opening hours';
 export const HUB_MESSAGES_EMPTY =
   'Got a question or something we should know? Send us a message — we reply by email and here.';
 export const HUB_YOU = 'You';
@@ -341,6 +448,11 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   hub_details_saved: 'Shop details saved',
   hub_message_sent: 'You sent a message',
   ops_hub_message_sent: 'KERSIVO replied',
+  hub_review_confirmed: 'You confirmed your details',
+  hub_review_corrections_sent: 'You sent corrections',
+  ops_hub_review_applied: 'Details updated on your preview',
+  hub_changes_sent: 'Changes sent',
+  ops_hub_change_status: 'Change updated',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

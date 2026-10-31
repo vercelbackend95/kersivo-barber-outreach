@@ -24,6 +24,8 @@ export type PreviewTopBarProps = {
   bookingHref: string;
   /** `checkout` is the Overview subscribe button (hub). Default keeps the existing preview bar. */
   chrome?: 'full' | 'checkout';
+  /** When set (hub flag on), Request changes is a link to the Changes tab instead of the free-text dialog. */
+  changesHref?: string;
 };
 
 function initialMode(hasOwnDomain: string): DomainDecisionMode | null {
@@ -295,14 +297,20 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
             launchButton
           ) : (
             <>
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
-                onClick={() => open('changes')}
-                disabled={ownerActionsDisabled}
-              >
-                Request changes
-              </button>
+              {props.changesHref ? (
+                <a className="btn btn--secondary btn--sm" href={props.changesHref}>
+                  Request changes
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  onClick={() => open('changes')}
+                  disabled={ownerActionsDisabled}
+                >
+                  Request changes
+                </button>
+              )}
               {launchButton}
             </>
           )}

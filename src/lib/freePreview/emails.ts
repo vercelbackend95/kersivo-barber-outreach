@@ -26,6 +26,7 @@ import {
   HUB_OWNER_MESSAGE_EMAIL_BUTTON,
   HUB_OWNER_MESSAGE_EMAIL_INTRO,
   HUB_OWNER_MESSAGE_EMAIL_SUBJECT,
+  HUB_CHANGES_PAGES,
 } from './hubCopy';
 import { hubMessageExcerpt } from './hubMessageText';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
@@ -273,19 +274,53 @@ export function buildPreviewReadyEmail(input: PreviewLinkEmailInput): FreePrevie
   };
 }
 
-/** E4 — preview updated after changes (spec §9). */
-export function buildPreviewUpdatedEmail(input: PreviewLinkEmailInput): FreePreviewEmail {
+export type PreviewUpdatedCompletedItem = {
+  page: string;
+  body: string;
+  status: 'DONE' | 'NOT_POSSIBLE';
+  opsNote: string | null;
+};
+
+/** E4 — preview updated after changes (spec §9). Hub flag on: lists Done / Not possible items. */
+export function buildPreviewUpdatedEmail(
+  input: PreviewLinkEmailInput & { completedItems?: PreviewUpdatedCompletedItem[] },
+): FreePreviewEmail {
+  const blocks = [
+    greeting(input.firstName),
+    `We've made your changes. Take another look:<br>${linkBlock(input.previewUrl)}`,
+  ];
+  if (isPreviewHubEnabled() && input.completedItems?.length) {
+    blocks.push(renderCompletedChangeItems(input.completedItems));
+  }
+  blocks.push(
+    `If it's right, you can launch it from the preview for £39/month. Your link works until ${escapeHtml(formatPreviewExpiryDate(input.expiresAt))}.`,
+    SIGN_OFF,
+  );
   return {
     to: input.to,
     subject: `We've updated your ${input.shopName} preview`,
     replyTo: PREVIEW_REPLY_TO_EMAIL,
-    html: paragraphs([
-      greeting(input.firstName),
-      `We've made your changes. Take another look:<br>${linkBlock(input.previewUrl)}`,
-      `If it's right, you can launch it from the preview for £39/month. Your link works until ${escapeHtml(formatPreviewExpiryDate(input.expiresAt))}.`,
-      SIGN_OFF,
-    ]),
+    html: paragraphs(blocks),
   };
+}
+
+function changePageLabel(page: string): string {
+  return HUB_CHANGES_PAGES[page as keyof typeof HUB_CHANGES_PAGES] ?? page;
+}
+
+function renderCompletedChangeItems(items: PreviewUpdatedCompletedItem[]): string {
+  const lines = items.map((item) => {
+    const status = item.status === 'DONE' ? 'Done' : 'Not possible';
+    const note = item.opsNote ? ` — ${escapeHtml(item.opsNote)}` : '';
+    return `${escapeHtml(changePageLabel(item.page))}: ${escapeHtml(item.body)} (${status}${note})`;
+  });
+  return `Here's what we did:<br>${lines.join('<br>')}`;
+}
+
+function renderChangeItemsList(items: Array<{ page: string; body: string }>): string {
+  return items
+    .map((item) => `${escapeHtml(changePageLabel(item.page))}: ${escapeHtml(item.body)}`)
+    .join('<br>');
 }
 
 /** Internal notification: the owner asked for changes on their preview (spec §6). */
@@ -295,15 +330,20 @@ export function buildPreviewChangesRequestedInternalEmail(input: {
   shopName: string;
   townCity: string;
   changesText: string;
+  items?: Array<{ page: string; body: string }>;
 }): FreePreviewEmail {
   const opsUrl = opsPreviewRequestUrl(input.id);
+  const list =
+    isPreviewHubEnabled() && input.items?.length
+      ? `<p>${renderChangeItemsList(input.items)}</p>`
+      : `<blockquote style="white-space:pre-wrap;margin:0;padding:8px 12px;border-left:3px solid #ccc">${escapeHtml(input.changesText)}</blockquote>`;
   return {
     to: getPreviewNotifyEmail(),
     subject: `Preview changes requested: ${input.shopName}, ${input.townCity}`,
     replyTo: input.email,
     html: `<p>${escapeHtml(input.shopName)} (${escapeHtml(input.email)}) asked for changes to their preview.</p>
 <p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a></p>
-<blockquote style="white-space:pre-wrap;margin:0;padding:8px 12px;border-left:3px solid #ccc">${escapeHtml(input.changesText)}</blockquote>`,
+${list}`,
   };
 }
 

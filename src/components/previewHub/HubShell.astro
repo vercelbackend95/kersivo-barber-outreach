@@ -22,10 +22,12 @@ interface Props {
   current: TabId;
   capabilities: HubCapabilities;
   unreadMessages?: number;
+  openChanges?: number;
 }
 
-const { token, shopName, stage, current, capabilities, unreadMessages = 0 } = Astro.props;
+const { token, shopName, stage, current, capabilities, unreadMessages = 0, openChanges = 0 } = Astro.props;
 const showUnread = unreadMessages > 0;
+const showOpenChanges = openChanges > 0;
 const base = previewPagePath(token);
 
 const tabs: Array<{
@@ -83,6 +85,9 @@ const tabs: Array<{
             {tab.id === 'messages' && showUnread ? (
               <span class="hub-unread" aria-label={HUB_UNREAD}></span>
             ) : null}
+            {tab.id === 'changes' && showOpenChanges ? (
+              <span class="hub-count" aria-label={`${openChanges} open changes`}>{openChanges}</span>
+            ) : null}
             {tab.locked ? (
               <span class="hub-nav__lock">
                 <Lock width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
@@ -128,6 +133,7 @@ const tabs: Array<{
           <span class="hub-tabs__icon">
             <tab.Icon width={18} height={18} strokeWidth={1.8} aria-hidden="true" />
             {tab.id === 'messages' && showUnread ? <span class="hub-unread" aria-hidden="true"></span> : null}
+            {tab.id === 'changes' && showOpenChanges ? <span class="hub-count" aria-hidden="true">{openChanges}</span> : null}
           </span>
           {tab.label}
         </a>

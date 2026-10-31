@@ -7,7 +7,11 @@ import { HubYourShop } from '@/components/previewHub/HubYourShop';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_NAV } from '@/lib/freePreview/hubCopy';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
+import { countOpenHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
+import { loadHubReviewShopData, loadLatestHubReviews } from '@/lib/freePreview/hubReviews';
+import '@/styles/components/admin-onboarding.css';
+import '@/styles/components/admin-client-onboarding.css';
 import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
@@ -42,9 +46,12 @@ await recordHubOwnerView({
   console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
 });
 
-const [assets, unreadMessages] = await Promise.all([
+const [assets, unreadMessages, openChanges, reviews, reviewShop] = await Promise.all([
   loadActiveHubAssets(ctx.request.id),
   ctx.isOperator ? Promise.resolve(0) : countUnreadKersivoMessages(ctx.request.id),
+  countOpenHubChanges(ctx.request.id),
+  loadLatestHubReviews(ctx.request.id),
+  ctx.request.draftShopId ? loadHubReviewShopData(ctx.request.draftShopId, ctx.request.id) : Promise.resolve(null),
 ]);
 ---
 
@@ -56,12 +63,16 @@ const [assets, unreadMessages] = await Promise.all([
     current="details"
     capabilities={ctx.state.capabilities}
     unreadMessages={unreadMessages}
+    openChanges={openChanges}
   >
     <HubYourShop
       client:load
       token={token}
       canUpload={ctx.state.capabilities.canUpload}
       canEditDetails={ctx.state.capabilities.canEditDetails}
+      canReview={ctx.state.capabilities.canReview}
+      reviews={reviews}
+      reviewShop={reviewShop}
       details={{
         brandPrimaryColour: ctx.request.brandPrimaryColour,
         brandSecondaryColour: ctx.request.brandSecondaryColour,

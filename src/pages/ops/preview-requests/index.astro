@@ -21,13 +21,14 @@ import {
   previewFunnelRates,
   formatAge,
   hasNewHubFiles,
+  openChangeCount,
   isOverDailyCap,
   listPreviewRequests,
   parsePreviewRequestListQuery,
   previewRequestLinks,
   unreadOwnerMessageCount,
 } from '@/lib/freePreview/opsQueries';
-import { HUB_OPS_NEW_FILES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
+import { HUB_OPS_NEW_FILES, HUB_OPS_OPEN_CHANGES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
 import { isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
@@ -200,6 +201,9 @@ function filterHref(status: string | null, sort = query.sort) {
                           {HUB_OPS_UNREAD_MESSAGES(unreadOwnerMessageCount(request))}
                         </span>
                       ) : null}
+                      {hubEnabled && openChangeCount(request) > 0 ? (
+                        <span class="ops-pr__status ops-pr__status--unread">{HUB_OPS_OPEN_CHANGES(openChangeCount(request))}</span>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -256,6 +260,9 @@ function filterHref(status: string | null, sort = query.sort) {
                           <span class="ops-pr__status ops-pr__status--unread">
                             {HUB_OPS_UNREAD_MESSAGES(unreadOwnerMessageCount(request))}
                           </span>
+                        ) : null}
+                        {hubEnabled && openChangeCount(request) > 0 ? (
+                          <span class="ops-pr__status ops-pr__status--unread">{HUB_OPS_OPEN_CHANGES(openChangeCount(request))}</span>
                         ) : null}
                       </td>
                       <td>{request.firstViewedAt ? `${request.viewCount}×` : 'Not yet'}</td>

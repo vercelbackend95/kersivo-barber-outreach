@@ -19,6 +19,8 @@ import {
   hubHeaderCopy,
 } from '@/lib/freePreview/hubCopy';
 import type { HubChecklistItem } from '@/lib/freePreview/hubChecklist';
+import { HubReviewCards, type HubReviewMap } from '@/components/previewHub/HubReviewCards';
+import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
 import { PREVIEW_ONBOARDING_PATH, previewPagePath } from '@/lib/freePreview/config';
 import {
   formatHubStepDate,
@@ -38,12 +40,16 @@ interface Props {
   activity: HubActivityItem[];
   hasWebsitePreview: boolean;
   checklist?: { items: HubChecklistItem[]; done: number; total: number };
+  reviews?: HubReviewMap;
+  reviewShop?: HubReviewShopData | null;
+  reviewNeed?: string;
 }
 
-const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist } = Astro.props;
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview, checklist, reviews, reviewShop, reviewNeed } = Astro.props;
 const shopName = request.shopName;
 const header = hubHeaderCopy(hubHeaderKind(state), shopName);
 const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
+const nowNeed = state.stage === 'review' && state.reviewSubstate !== 'changes_sent' && reviewNeed ? reviewNeed : nowCopy.need;
 const base = previewPagePath(token);
 const primaryHref =
   state.stage === 'requested' || state.stage === 'designing'
@@ -123,7 +129,7 @@ const primaryLabel =
       </div>
       <div>
         <h3>{HUB_NOW_LABEL_NEED}</h3>
-        <p>{nowCopy.need}</p>
+        <p>{nowNeed}</p>
       </div>
     </div>
   </section>
@@ -156,6 +162,20 @@ const primaryLabel =
       )
     }
   </section>
+
+  {
+    state.capabilities.canReview && reviews ? (
+      <HubReviewCards
+        client:load
+        token={token}
+        detailsHref={`${base}/details`}
+        canReview={state.capabilities.canReview}
+        shop={reviewShop ?? null}
+        reviews={reviews}
+        mode="strip"
+      />
+    ) : null
+  }
 
   {
     checklist && state.stage !== 'launch' && state.stage !== 'live' ? (

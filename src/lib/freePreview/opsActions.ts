@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { createDraftShop } from '@/lib/preview/shopPreviewSession';
 import { SITE_VERSION_MAX, applySitePreview, normalizeSitePreviewUrl } from '@/lib/setup/sitePreview';
-import { isFreePreviewFlowEnabled, previewExpiryFrom } from './config';
+import { isFreePreviewFlowEnabled, isPreviewHubEnabled, previewExpiryFrom } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { buildPreviewReadyEmail, buildPreviewUpdatedEmail, previewPageUrl } from './emails';
 
@@ -207,6 +207,10 @@ export async function executePreviewRequestOpsAction(input: {
 
         const isUpdate = request.status === 'CHANGES_REQUESTED';
         const expiresAt = previewExpiryFrom(now);
+        const completedItems =
+          isUpdate && isPreviewHubEnabled()
+            ? await loadCompletedChangesForUpdateEmail(tx, request.id)
+            : [];
         const event = await tx.previewRequestEvent.create({
           data: {
             previewRequestId: request.id,
@@ -229,6 +233,7 @@ export async function executePreviewRequestOpsAction(input: {
           shopName: request.shopName,
           previewUrl: previewPageUrl(request.publicToken),
           expiresAt,
+          completedItems,
         };
         const email = isUpdate ? buildPreviewUpdatedEmail(emailInput) : buildPreviewReadyEmail(emailInput);
         const row = await enqueueEmail(tx, {
@@ -281,4 +286,27 @@ async function setSitePreview(input: {
     },
   });
   return { ok: true, status: request.status, draftShopId: request.draftShopId };
+}
+
+async function loadCompletedChangesForUpdateEmail(tx: Tx, previewRequestId: string) {
+  const lastReady = await tx.previewRequestEvent.findFirst({
+    where: { previewRequestId, action: PREVIEW_REQUEST_ACTIONS.MARKED_READY },
+    orderBy: { createdAt: 'desc' },
+    select: { createdAt: true },
+  });
+  const rows = await tx.previewChangeRequest.findMany({
+    where: {
+      previewRequestId,
+      status: { in: ['DONE', 'NOT_POSSIBLE'] },
+      resolvedAt: lastReady ? { gt: lastReady.createdAt } : { not: null },
+    },
+    orderBy: { resolvedAt: 'asc' },
+    select: { page: true, body: true, status: true, opsNote: true },
+  });
+  return rows.map((row) => ({
+    page: row.page,
+    body: row.body,
+    status: row.status as 'DONE' | 'NOT_POSSIBLE',
+    opsNote: row.opsNote,
+  }));
 }
