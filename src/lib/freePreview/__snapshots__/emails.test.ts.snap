@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`free preview emails > E1 with the hub flag on uses §9.1 copy, the hub button and a snapshot 1`] = `
+"<p style="margin:0 0 16px;line-height:1.5">Hi Sam,</p>
+<p style="margin:0 0 16px;line-height:1.5">Thanks for requesting a free website preview for Sharp Cuts. We design every preview individually, usually within a few working days.</p>
+<p style="margin:0 0 16px;line-height:1.5">Your private shop hub is ready now:<br><a href="https://kersivo.co.uk/preview/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" style="display:inline-block;padding:12px 18px;background:#d72638;color:#fff8ee;text-decoration:none;border-radius:8px;font-weight:600">Open your shop hub</a></p>
+<p style="margin:0 0 16px;line-height:1.5">Use it to see where your preview is up to, add your logo, photos or a photo of your price list, and message us. Everything is optional — we can work from your links.</p>
+<p style="margin:0 0 16px;line-height:1.5">When your preview is ready, it appears in the same place and we'll email you.</p>
+<p style="margin:0 0 16px;line-height:1.5">There's nothing to pay and no card needed. You only pay if you decide to launch.</p>
+<p style="margin:0 0 16px;line-height:1.5">The KERSIVO team</p>"
+`;

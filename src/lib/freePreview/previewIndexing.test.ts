@@ -19,10 +19,13 @@ describe('private preview indexing', () => {
   });
 
   it('sends noindex, nofollow by header and meta, private no-store, and no referrer', () => {
+    const headers = readFileSync('src/lib/freePreview/previewHeaders.ts', 'utf8');
+    expect(headers).toContain("'X-Robots-Tag': 'noindex, nofollow'");
+    expect(headers).toContain("'Cache-Control': 'private, no-store'");
+    expect(headers).toContain("'Referrer-Policy': 'no-referrer'");
+
     const page = readFileSync('src/pages/preview/[token].astro', 'utf8');
-    expect(page).toContain("'X-Robots-Tag': 'noindex, nofollow'");
-    expect(page).toContain("'Cache-Control': 'private, no-store'");
-    expect(page).toContain("'Referrer-Policy': 'no-referrer'");
+    expect(page).toContain('PRIVATE_PREVIEW_HEADERS');
     expect(page).toMatch(/noindex=\{true\}\s+robotsFollow=\{false\}/);
     expect(page).toContain('referrerpolicy="no-referrer"');
   });

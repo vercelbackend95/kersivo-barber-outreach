@@ -1,0 +1,54 @@
+---
+export const prerender = false;
+
+import HubDocument from '@/layouts/HubDocument.astro';
+import HubComingSoon from '@/components/previewHub/HubComingSoon.astro';
+import HubShell from '@/components/previewHub/HubShell.astro';
+import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
+import { HUB_NAV } from '@/lib/freePreview/hubCopy';
+import { hubNotFound, isHubRouteEnabled, recordHubOwnerView, resolveHubPageContext } from '@/lib/freePreview/hubPage';
+import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
+import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+
+applyPrivatePreviewHeaders(Astro.response.headers);
+if (!isHubRouteEnabled()) return hubNotFound();
+
+const limited = await enforceIpRateLimit(
+  Astro.request,
+  PREVIEW_PAGE_RATE.action,
+  PREVIEW_PAGE_RATE.limit,
+  PREVIEW_PAGE_RATE.windowMs,
+);
+if (limited) return limited;
+
+const token = (Astro.params.token ?? '').trim();
+const now = new Date();
+const operator = await resolveOperatorAccess(Astro.request);
+const ctx = await resolveHubPageContext({ token, isOperator: operator.ok, now });
+if (!ctx) return hubNotFound();
+if (ctx.state.stage === 'expired') Astro.response.status = 410;
+
+await recordHubOwnerView({
+  requestId: ctx.request.id,
+  stage: ctx.state.stage,
+  isOperator: ctx.isOperator,
+  now,
+  clientId: analyticsClientIdFromRequest(Astro.request),
+}).catch((error) => {
+  console.error('[preview-hub] view tracking failed', error instanceof Error ? error.message : error);
+});
+---
+
+<HubDocument title={`${HUB_NAV.messages} — ${ctx.request.shopName} | KERSIVO`}>
+  <HubShell
+    token={token}
+    shopName={ctx.request.shopName}
+    stage={ctx.state.stage}
+    current="messages"
+    capabilities={ctx.state.capabilities}
+  >
+    <HubComingSoon title={HUB_NAV.messages} />
+  </HubShell>
+</HubDocument>

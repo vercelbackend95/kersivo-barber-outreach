@@ -23,6 +23,10 @@ const previewRequestSelect = {
   previewReadyAt: true,
   convertedAt: true,
   changesRequestedAt: true,
+  createdAt: true,
+  liveAt: true,
+  includedChangeRounds: true,
+  changeRoundsUsed: true,
 } as const;
 
 export type TokenPreviewRequest = NonNullable<Awaited<ReturnType<typeof findPreviewRequestRow>>>;

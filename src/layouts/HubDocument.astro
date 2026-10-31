@@ -1,0 +1,35 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/preview-hub.css';
+import '@/styles/components/free-preview-page.css';
+import '@/styles/components/domain-searcher.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<MinimalLayout
+  title={title}
+  description="A private KERSIVO shop hub."
+  canonicalPath="/free-preview"
+  noindex={true}
+  robotsFollow={false}
+  bodyClass="admin-theme-premium-black hub-page-body"
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <slot />
+</MinimalLayout>

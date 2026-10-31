@@ -9,8 +9,11 @@ import {
   PREVIEW_EXPIRY_DAYS,
   PREVIEW_REPLY_TO_EMAIL,
   isFreePreviewFlowEnabled,
+  isPreviewHubEnabled,
   previewPagePath,
 } from '@/lib/freePreview/config';
+import { resolveHubPageContext } from '@/lib/freePreview/hubPage';
+import { PRIVATE_PREVIEW_HEADERS as PRIVATE_HEADERS, previewNotFoundResponse } from '@/lib/freePreview/previewHeaders';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
 import {
   loadPreviewDraftShop,
@@ -43,17 +46,10 @@ import '@/styles/components/free-preview-page.css';
  * Private, tokenised preview of a shop's draft website and booking page (spec §6).
  * noindex/nofollow by header and meta; never in the sitemap; deliberately not blocked in robots.txt.
  */
-const PRIVATE_HEADERS: Record<string, string> = {
-  'X-Robots-Tag': 'noindex, nofollow',
-  'Cache-Control': 'private, no-store',
-  // The token is in the URL: never send it to the framed site or to any link target.
-  'Referrer-Policy': 'no-referrer',
-  Vary: 'Cookie',
-};
 for (const [name, value] of Object.entries(PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
 
 function notFound() {
-  return new Response('Not found', { status: 404, headers: { ...PRIVATE_HEADERS, 'Content-Type': 'text/plain' } });
+  return previewNotFoundResponse();
 }
 
 if (!isFreePreviewFlowEnabled()) return notFound();
@@ -68,6 +64,17 @@ if (limited) return limited;
 
 const token = (Astro.params.token ?? '').trim();
 const now = new Date();
+
+if (isPreviewHubEnabled()) {
+  const hubOperator = await resolveOperatorAccess(Astro.request);
+  const hub = await resolveHubPageContext({ token, isOperator: hubOperator.ok, now });
+  if (!hub) return notFound();
+  if (Astro.url.searchParams.get('view') === 'booking') {
+    return Astro.redirect(`${previewPagePath(token)}/website?view=booking`, 302);
+  }
+  return Astro.rewrite(`${previewPagePath(token)}/overview`);
+}
+
 const operator = await resolveOperatorAccess(Astro.request);
 const state = resolvePreviewPageState({
   request: await resolvePreviewRequestByToken(token),

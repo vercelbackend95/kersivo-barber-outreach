@@ -7,6 +7,10 @@ import {
   PREVIEW_TURNAROUND_TEXT_CAPITALISED,
   PREVIEW_TURNAROUND_TEXT_SHORT,
 } from '@/lib/freePreview/config';
+import {
+  HUB_FREE_PREVIEW_FAQ_PHOTOS_ANSWER,
+  HUB_FREE_PREVIEW_PHOTOS_LINE,
+} from '@/lib/freePreview/hubCopy';
 import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { buildBreadcrumbListJsonLd, type BreadcrumbTrailItem } from '@/lib/seo/breadcrumbs';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
@@ -159,14 +163,27 @@ export function buildFreePreviewBreadcrumbJsonLd(): Record<string, unknown> {
   return buildBreadcrumbListJsonLd(FREE_PREVIEW_BREADCRUMBS);
 }
 
-/** Built from FREE_PREVIEW_FAQ_ITEMS, the same list the visible FAQ renders, so it matches exactly. */
-export function buildFreePreviewFaqJsonLd(): Record<string, unknown> {
+/** Built from the visible FAQ, so JSON-LD always matches the page. Hub flag only swaps one answer. */
+export function getFreePreviewFaqItems(hubEnabled = false): readonly FreePreviewFaqItem[] {
+  if (!hubEnabled) return FREE_PREVIEW_FAQ_ITEMS;
+  return FREE_PREVIEW_FAQ_ITEMS.map((item) =>
+    item.question === 'Which photos do you use?'
+      ? { question: item.question, answer: HUB_FREE_PREVIEW_FAQ_PHOTOS_ANSWER }
+      : item,
+  );
+}
+
+export function getFreePreviewDetailsPhotosLine(hubEnabled = false): string {
+  return hubEnabled ? HUB_FREE_PREVIEW_PHOTOS_LINE : FREE_PREVIEW_PAGE.detailsPhotosLine;
+}
+
+export function buildFreePreviewFaqJsonLd(hubEnabled = false): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${pageUrl(siteUrl)}#faq`,
-    mainEntity: FREE_PREVIEW_FAQ_ITEMS.map((item) => ({
+    mainEntity: getFreePreviewFaqItems(hubEnabled).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },

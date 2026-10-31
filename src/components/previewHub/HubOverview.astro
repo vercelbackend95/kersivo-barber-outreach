@@ -1,0 +1,197 @@
+---
+import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
+import {
+  HUB_ACTIVITY_EMPTY,
+  HUB_ACTIVITY_TITLE,
+  HUB_AVAILABLE_SOON,
+  HUB_HELP_EMAIL,
+  HUB_HELP_EMAIL_HREF,
+  HUB_HELP_MESSAGE,
+  HUB_HELP_TITLE,
+  HUB_NOW,
+  HUB_NOW_LABEL_DOING,
+  HUB_NOW_LABEL_NEED,
+  HUB_PREVIEW_CARD_LOCKED,
+  HUB_PREVIEW_OPEN_WEBSITE,
+  HUB_PREVIEW_TRY_BOOKING,
+  HUB_PRIMARY,
+  hubHeaderCopy,
+} from '@/lib/freePreview/hubCopy';
+import { PREVIEW_ONBOARDING_PATH, previewPagePath } from '@/lib/freePreview/config';
+import {
+  formatHubStepDate,
+  hostnameOf,
+  type HubActivityItem,
+  type HubStepperStep,
+} from '@/lib/freePreview/hubPage';
+import { hubHeaderKind, type HubState } from '@/lib/freePreview/hubStage';
+import type { TokenPreviewRequest } from '@/lib/freePreview/previewAccess';
+
+interface Props {
+  token: string;
+  request: TokenPreviewRequest;
+  state: Extract<HubState, { kind: 'hub' }>;
+  isOperator: boolean;
+  steps: HubStepperStep[];
+  activity: HubActivityItem[];
+  hasWebsitePreview: boolean;
+}
+
+const { token, request, state, isOperator, steps, activity, hasWebsitePreview } = Astro.props;
+const shopName = request.shopName;
+const header = hubHeaderCopy(hubHeaderKind(state), shopName);
+const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
+const base = previewPagePath(token);
+const primaryHref =
+  state.stage === 'requested' || state.stage === 'designing'
+    ? `${base}/details`
+    : state.stage === 'review'
+      ? `${base}/website`
+      : state.stage === 'launch'
+        ? PREVIEW_ONBOARDING_PATH
+        : state.stage === 'live'
+          ? '/admin'
+          : state.stage === 'declined'
+            ? `${base}/messages`
+            : undefined;
+const primaryLabel =
+  state.stage === 'review' && state.reviewSubstate === 'changes_sent'
+    ? HUB_PRIMARY.reviewChangesSent
+    : HUB_PRIMARY[state.stage];
+const expiredDisabled = state.stage === 'expired';
+---
+
+<article class="hub-overview">
+  <header class="hub-header">
+    <div>
+      <h1>{header.h1}</h1>
+      <p class="hub-header__sub">{header.sub}</p>
+      {
+        expiredDisabled ? (
+          <p class="hub-expired-note">{HUB_AVAILABLE_SOON}</p>
+        ) : null
+      }
+    </div>
+    <div class="hub-header__actions">
+      {
+        expiredDisabled ? (
+          <button type="button" class="btn btn--primary" disabled>
+            {HUB_PRIMARY.expired}
+          </button>
+        ) : primaryHref ? (
+          <a class="btn btn--primary" href={primaryHref}>
+            {primaryLabel}
+          </a>
+        ) : null
+      }
+      {
+        state.capabilities.canCheckout ? (
+          <PreviewTopBar
+            client:load
+            chrome="checkout"
+            token={token}
+            shopName={shopName}
+            townCity={request.townCity}
+            firstName={request.firstName}
+            checkoutEmail={request.email}
+            hasOwnDomain={request.hasOwnDomain ?? 'not_sure'}
+            existingWebsiteHost={hostnameOf(request.websiteUrl)}
+            isOperator={isOperator}
+            converted={request.status === 'CONVERTED'}
+            activeView="website"
+            websiteHref={`${base}/website`}
+            bookingHref={`${base}/website?view=booking`}
+          />
+        ) : null
+      }
+    </div>
+  </header>
+
+  <ol class="hub-stepper" aria-label="Preview progress">
+    {
+      steps.map((step) => (
+        <li class:list={['hub-stepper__item', `is-${step.status}`]}>
+          <span class="hub-stepper__bar" aria-hidden="true" />
+          <span class="hub-stepper__label">{step.label}</span>
+          {step.date ? <span class="hub-stepper__date">{formatHubStepDate(step.date)}</span> : null}
+        </li>
+      ))
+    }
+  </ol>
+
+  <section class="hub-card ks-glass-card ks-glass-card--accent" aria-labelledby="hub-now-title">
+    <h2 id="hub-now-title" class="hub-card__title">Now</h2>
+    <div class="hub-now">
+      <div>
+        <h3>{HUB_NOW_LABEL_DOING}</h3>
+        <p>{nowCopy.doing}</p>
+      </div>
+      <div>
+        <h3>{HUB_NOW_LABEL_NEED}</h3>
+        <p>{nowCopy.need}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="hub-card ks-glass-card" aria-labelledby="hub-preview-title">
+    <h2 id="hub-preview-title" class="hub-card__title">Your preview</h2>
+    {
+      state.capabilities.showPreview ? (
+        <>
+          <p class="hub-card__body">{shopName}</p>
+          <div class="hub-preview-actions">
+            <a class="btn btn--primary btn--sm" href={`${base}/website`}>
+              {HUB_PREVIEW_OPEN_WEBSITE}
+            </a>
+            <a class="btn btn--secondary btn--sm" href={`${base}/website?view=booking`}>
+              {HUB_PREVIEW_TRY_BOOKING}
+            </a>
+          </div>
+          {!hasWebsitePreview ? (
+            <p class="hub-card__body" style="margin-top:12px">
+              We're still adding services and barbers to this booking page.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <div class="hub-preview-lock">
+          <p class="ks-eyebrow">{shopName}</p>
+          <p>{HUB_PREVIEW_CARD_LOCKED}</p>
+        </div>
+      )
+    }
+  </section>
+
+  <section class="hub-card ks-glass-card" aria-labelledby="hub-activity-title">
+    <h2 id="hub-activity-title" class="hub-card__title">{HUB_ACTIVITY_TITLE}</h2>
+    {
+      activity.length ? (
+        <ol class="hub-activity">
+          {activity.map((item) => (
+            <li>
+              <span>{item.label}</span>
+              <time datetime={item.at.toISOString()} title={item.absolute}>
+                {item.relative}
+              </time>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p class="hub-card__body">{HUB_ACTIVITY_EMPTY}</p>
+      )
+    }
+  </section>
+
+  <section class="hub-card ks-glass-card" aria-labelledby="hub-help-title">
+    <h2 id="hub-help-title" class="hub-card__title">{HUB_HELP_TITLE}</h2>
+    <p class="hub-card__body">Questions about your preview? Message us here or by email.</p>
+    <div class="hub-help__row">
+      <a class="btn btn--secondary btn--sm" href={`${base}/messages`}>
+        {HUB_HELP_MESSAGE}
+      </a>
+      <a class="btn btn--ghost btn--sm" href={HUB_HELP_EMAIL_HREF}>
+        {HUB_HELP_EMAIL}
+      </a>
+    </div>
+  </section>
+</article>

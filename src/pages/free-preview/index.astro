@@ -9,14 +9,14 @@ import SectionHeader from '@/components/ui/SectionHeader.astro';
 import FreePreviewForm from '@/components/freePreview/FreePreviewForm.astro';
 import FreePreviewShowcase from '@/components/freePreview/FreePreviewShowcase.astro';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
-import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
 import {
   FREE_PREVIEW_BREADCRUMBS,
-  FREE_PREVIEW_FAQ_ITEMS,
   FREE_PREVIEW_PAGE,
   buildFreePreviewBreadcrumbJsonLd,
   buildFreePreviewFaqJsonLd,
   buildFreePreviewWebPageJsonLd,
+  getFreePreviewFaqItems,
 } from '@/lib/seo/freePreviewPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
@@ -30,7 +30,8 @@ if (!isFreePreviewFlowEnabled()) {
 
 const trustIcons = [CreditCard, PhoneOff, EyeOff] as const;
 const getIcons = [LayoutTemplate, CalendarCheck, Smartphone, PenLine] as const;
-const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
+const hubEnabled = isPreviewHubEnabled();
+const faqItems = getFreePreviewFaqItems(hubEnabled).map((faq, index) => ({
   id: `free-preview-faq-${index + 1}`,
   title: faq.question,
   body: faq.answer,
@@ -45,7 +46,7 @@ const faqItems = FREE_PREVIEW_FAQ_ITEMS.map((faq, index) => ({
     buildKersivoEntityJsonLd(),
     buildFreePreviewWebPageJsonLd(),
     buildFreePreviewBreadcrumbJsonLd(),
-    buildFreePreviewFaqJsonLd(),
+    buildFreePreviewFaqJsonLd(hubEnabled),
   ]}
 >
   <main class="free-preview">

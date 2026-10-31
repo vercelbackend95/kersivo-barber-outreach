@@ -22,6 +22,8 @@ export type PreviewTopBarProps = {
   activeView: 'website' | 'booking';
   websiteHref: string;
   bookingHref: string;
+  /** `checkout` is the Overview subscribe button (hub). Default keeps the existing preview bar. */
+  chrome?: 'full' | 'checkout';
 };
 
 function initialMode(hasOwnDomain: string): DomainDecisionMode | null {
@@ -50,6 +52,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   const [error, setError] = useState('');
 
   const ownerActionsDisabled = props.isOperator || props.converted;
+  const chrome = props.chrome ?? 'full';
 
   function open(next: Exclude<Panel, null>) {
     setError('');
@@ -152,6 +155,114 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
     }
   }
 
+  const launchButton = props.converted ? (
+    <a className="btn btn--primary btn--sm" href="/admin">
+      Go to your dashboard
+    </a>
+  ) : (
+    <button
+      type="button"
+      className="btn btn--primary btn--sm"
+      onClick={() => open('launch')}
+      disabled={ownerActionsDisabled}
+    >
+      Launch this website — £39/month
+    </button>
+  );
+
+  const launchDialogNode = (
+    <dialog
+      ref={launchDialog}
+      className="fp-dialog"
+      aria-labelledby="fp-launch-title"
+      onClose={() => setPanel(null)}
+    >
+      <form className="fp-dialog__body" onSubmit={startCheckout}>
+        <h2 id="fp-launch-title" className="fp-dialog__title">
+          Launch this website
+        </h2>
+        <p className="fp-dialog__summary">
+          £39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) ·
+          Cancel anytime. Nothing goes live until you approve it.
+        </p>
+        <label className="fp-dialog__label" htmlFor="fp-launch-name">
+          Your name
+        </label>
+        <input
+          id="fp-launch-name"
+          className="input"
+          autoComplete="name"
+          value={name}
+          maxLength={120}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
+        <p className="fp-dialog__hint">
+          Checkout email: <strong>{props.checkoutEmail}</strong>. Use this email to sign in after checkout.
+        </p>
+        <DomainSearcher
+          shopName={props.shopName}
+          townCity={props.townCity}
+          searchEndpoint={`/api/free-preview/${encodeURIComponent(props.token)}/domain-search`}
+          mode={domainMode}
+          onModeChange={setDomainMode}
+          selectedDomain={selectedDomain}
+          onSelectDomain={setSelectedDomain}
+          existingDomain={existingDomain}
+          onExistingDomainChange={setExistingDomain}
+          authorised={domainAuthorised}
+          onAuthorisedChange={setDomainAuthorised}
+          disabled={busy}
+        />
+        <label className="fp-dialog__check">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(event) => setTermsAccepted(event.target.checked)}
+          />
+          <span>
+            I agree to the{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </a>
+            , including the{' '}
+            <a href="/dpa" target="_blank" rel="noopener noreferrer">
+              Data Processing Agreement
+            </a>{' '}
+            where applicable, and understand I am starting a £39/month subscription for one physical location.
+          </span>
+        </label>
+        {panel === 'launch' && error ? (
+          <p className="fp-dialog__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <div className="fp-dialog__actions">
+          <button type="button" className="btn btn--secondary btn--sm" onClick={close} disabled={busy}>
+            Cancel
+          </button>
+          <button type="submit" className="btn btn--primary btn--sm" disabled={busy}>
+            {busy ? 'Opening checkout…' : 'Continue to secure checkout'}
+          </button>
+        </div>
+      </form>
+    </dialog>
+  );
+
+  if (chrome === 'checkout') {
+    return (
+      <div className="hub-subscribe">
+        {launchButton}
+        {props.isOperator ? (
+          <p className="fp-bar__operator" role="note">
+            Operator view: owner actions are disabled.
+          </p>
+        ) : null}
+        {launchDialogNode}
+      </div>
+    );
+  }
+
   return (
     <header className="fp-bar" role="region" aria-label="Private website preview">
       <div className="fp-bar__inner">
@@ -181,9 +292,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
 
         <div className="fp-bar__actions">
           {props.converted ? (
-            <a className="btn btn--primary btn--sm" href="/admin">
-              Go to your dashboard
-            </a>
+            launchButton
           ) : (
             <>
               <button
@@ -194,14 +303,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
               >
                 Request changes
               </button>
-              <button
-                type="button"
-                className="btn btn--primary btn--sm"
-                onClick={() => open('launch')}
-                disabled={ownerActionsDisabled}
-              >
-                Launch this website — £39/month
-              </button>
+              {launchButton}
             </>
           )}
         </div>
@@ -268,82 +370,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
         )}
       </dialog>
 
-      <dialog
-        ref={launchDialog}
-        className="fp-dialog"
-        aria-labelledby="fp-launch-title"
-        onClose={() => setPanel(null)}
-      >
-        <form className="fp-dialog__body" onSubmit={startCheckout}>
-          <h2 id="fp-launch-title" className="fp-dialog__title">
-            Launch this website
-          </h2>
-          <p className="fp-dialog__summary">
-            £39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) ·
-            Cancel anytime. Nothing goes live until you approve it.
-          </p>
-          <label className="fp-dialog__label" htmlFor="fp-launch-name">
-            Your name
-          </label>
-          <input
-            id="fp-launch-name"
-            className="input"
-            autoComplete="name"
-            value={name}
-            maxLength={120}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-          <p className="fp-dialog__hint">
-            Checkout email: <strong>{props.checkoutEmail}</strong>. Use this email to sign in after checkout.
-          </p>
-          <DomainSearcher
-            shopName={props.shopName}
-            townCity={props.townCity}
-            searchEndpoint={`/api/free-preview/${encodeURIComponent(props.token)}/domain-search`}
-            mode={domainMode}
-            onModeChange={setDomainMode}
-            selectedDomain={selectedDomain}
-            onSelectDomain={setSelectedDomain}
-            existingDomain={existingDomain}
-            onExistingDomainChange={setExistingDomain}
-            authorised={domainAuthorised}
-            onAuthorisedChange={setDomainAuthorised}
-            disabled={busy}
-          />
-          <label className="fp-dialog__check">
-            <input
-              type="checkbox"
-              checked={termsAccepted}
-              onChange={(event) => setTermsAccepted(event.target.checked)}
-            />
-            <span>
-              I agree to the{' '}
-              <a href="/terms" target="_blank" rel="noopener noreferrer">
-                Terms of Service
-              </a>
-              , including the{' '}
-              <a href="/dpa" target="_blank" rel="noopener noreferrer">
-                Data Processing Agreement
-              </a>{' '}
-              where applicable, and understand I am starting a £39/month subscription for one physical location.
-            </span>
-          </label>
-          {panel === 'launch' && error ? (
-            <p className="fp-dialog__error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <div className="fp-dialog__actions">
-            <button type="button" className="btn btn--secondary btn--sm" onClick={close} disabled={busy}>
-              Cancel
-            </button>
-            <button type="submit" className="btn btn--primary btn--sm" disabled={busy}>
-              {busy ? 'Opening checkout…' : 'Continue to secure checkout'}
-            </button>
-          </div>
-        </form>
-      </dialog>
+      {launchDialogNode}
     </header>
   );
 }
