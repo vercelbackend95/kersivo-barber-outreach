@@ -13,18 +13,19 @@ describe('/admin hub location', () => {
   const parse = (search: string) => parseAdminHubLocation(new URLSearchParams(search));
 
   it('renders the three sections and falls back to Overview', () => {
-    expect(parse('').body).toBe('overview');
-    expect(parse('section=changes').body).toBe('changes');
-    expect(parse('section=website').body).toBe('website');
-    expect(parse('section=bookings').body).toBe('overview');
+    expect(parse('').section).toBe('overview');
+    expect(parse('section=changes').section).toBe('changes');
+    expect(parse('section=website').section).toBe('website');
+    expect(parse('section=bookings').section).toBe('overview');
   });
 
-  it('opens Messages and the setup apps', () => {
-    expect(parse('app=messages&draft=reopen')).toMatchObject({ body: 'messages', draft: 'reopen' });
-    for (const app of ['setup', 'logo', 'photos', 'services', 'team', 'hours', 'about', 'colours']) {
-      expect(parse(`app=${app}`).body).toBe('setup');
+  it('opens apps without replacing the section underneath', () => {
+    expect(parse('app=messages&draft=reopen')).toMatchObject({ section: 'overview', app: 'messages', draft: 'reopen' });
+    for (const app of ['setup', 'logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'activity', 'business']) {
+      expect(parse(`app=${app}`)).toMatchObject({ section: 'overview', app });
     }
-    expect(parse('app=unknown&section=changes').body).toBe('changes');
+    expect(parse('app=unknown&section=changes')).toMatchObject({ section: 'changes', app: null });
+    expect(parse('section=website&app=logo')).toMatchObject({ section: 'website', app: 'logo' });
     expect(parse('draft=<script>').draft).toBeNull();
   });
 
@@ -66,11 +67,14 @@ describe('/admin hub page never exposes the token', () => {
   const page = read('src/pages/admin/hub.astro');
   const shell = read('src/components/adminHub/AdminHubShell.astro');
 
-  it('passes an empty token and the cookie API to every island', () => {
+  it('passes an empty token and the cookie API to every remaining island', () => {
     const tokens = page.match(/token=\{?[^\s>]*/g) ?? [];
-    expect(tokens.length).toBeGreaterThanOrEqual(5);
+    expect(tokens.length).toBeGreaterThanOrEqual(2);
     expect(tokens.every((value) => value === 'token=""')).toBe(true);
-    expect(page.match(/apiBase=\{ADMIN_HUB_API_BASE\}/g)?.length).toBe(tokens.length);
+    expect(page).toContain('apiBase={ADMIN_HUB_API_BASE}');
+    expect(page).toContain('<AppHost client:load');
+    expect(page).not.toContain('HubYourShop');
+    expect(page).not.toContain('HubMessages');
   });
 
   it('never reads the token or builds /preview URLs', () => {

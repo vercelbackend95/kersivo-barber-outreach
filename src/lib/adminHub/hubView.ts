@@ -16,79 +16,97 @@ import {
 } from '@/lib/freePreview/hubReviews';
 import { loadHubLaunchProgress } from '@/lib/freePreview/hubLaunch';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
-import { isSetupPhase1Stage, setupPhase1Items } from './setupCard';
+import { parseAdminHubApp, type AdminHubAppId } from './apps';
+import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel } from './setupCard';
 
 export type AdminHubSection = 'overview' | 'changes' | 'website';
-export type AdminHubBody = AdminHubSection | 'setup' | 'messages';
-
-const SETUP_APPS = new Set(['setup', 'logo', 'photos', 'services', 'team', 'hours', 'about', 'colours']);
 
 /**
- * `?section=` picks the nav item; `?app=` opens an app. Until the app windows land (Batch 3+), setup-style apps
- * render the existing "Your shop" screen and `activity` falls back to Overview.
+ * `?section=` picks the nav item (rendered under the overlay). `?app=` opens an app window.
  */
 export function parseAdminHubLocation(search: URLSearchParams): {
   section: AdminHubSection;
-  body: AdminHubBody;
+  app: AdminHubAppId | null;
   view: 'website' | 'booking';
   draft: 'message' | 'reopen' | null;
 } {
   const rawSection = search.get('section');
   const section: AdminHubSection =
     rawSection === 'changes' || rawSection === 'website' ? rawSection : 'overview';
-  const app = (search.get('app') ?? '').trim();
-  const body: AdminHubBody = app === 'messages' ? 'messages' : SETUP_APPS.has(app) ? 'setup' : section;
   const rawDraft = search.get('draft');
   return {
     section,
-    body,
+    app: parseAdminHubApp(search.get('app')),
     view: search.get('view') === 'booking' ? 'booking' : 'website',
     draft: rawDraft === 'message' || rawDraft === 'reopen' ? rawDraft : null,
   };
 }
 
-export async function loadAdminHubView(ctx: HubPageContext, body: AdminHubBody, now: Date) {
+export async function loadAdminHubView(
+  ctx: HubPageContext,
+  location: { section: AdminHubSection; app: AdminHubAppId | null },
+  now: Date,
+) {
   const id = ctx.request.id;
   const caps = ctx.state.capabilities;
-  const wantsOverview = body === 'overview';
-  const wantsChanges = (body === 'changes' || body === 'website') && caps.canDraftChanges;
+  const stage = ctx.state.stage;
+  const wantsOverview = location.section === 'overview';
+  const wantsChanges = (location.section === 'changes' || location.section === 'website') && caps.canDraftChanges;
+  const wantsActivity = wantsOverview || location.app === 'activity';
+  const wantsMessages = location.app === 'messages';
+  const wantsShop =
+    location.app === 'setup' ||
+    location.app === 'logo' ||
+    location.app === 'photos' ||
+    location.app === 'services' ||
+    location.app === 'team' ||
+    location.app === 'hours' ||
+    location.app === 'about' ||
+    location.app === 'colours';
+  const wantsLaunch = isSetupPhase2Stage(stage) || location.app === 'business' || location.app === 'domain' || location.app === 'payments' || location.app === 'approve';
 
   const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages] =
     await Promise.all([
       loadActiveHubAssets(id),
       loadLatestHubReviews(id),
-      ctx.isOperator || body === 'messages' ? Promise.resolve(0) : countUnreadKersivoMessages(id),
+      ctx.isOperator || wantsMessages ? Promise.resolve(0) : countUnreadKersivoMessages(id),
       countOpenHubChanges(id),
-      wantsOverview ? loadHubOverviewExtras(id) : Promise.resolve([]),
-      (wantsOverview || body === 'setup') && ctx.request.draftShopId
+      wantsActivity ? loadHubOverviewExtras(id) : Promise.resolve([]),
+      (wantsOverview || wantsShop) && ctx.request.draftShopId
         ? loadHubReviewShopData(ctx.request.draftShopId, id)
         : Promise.resolve(null),
-      wantsOverview && (ctx.state.stage === 'launch' || ctx.state.stage === 'live')
-        ? loadHubLaunchProgress(id)
-        : Promise.resolve(null),
+      wantsLaunch ? loadHubLaunchProgress(id) : Promise.resolve(null),
       wantsChanges ? loadHubChanges(id) : Promise.resolve([]),
-      body === 'messages' ? loadHubMessages(id) : Promise.resolve([]),
+      wantsMessages ? loadHubMessages(id) : Promise.resolve([]),
     ]);
 
   const serialized = assets.map(serializeHubAsset);
   const logo = [...serialized].reverse().find((asset) => asset.kind === 'LOGO') ?? null;
-  const setup = isSetupPhase1Stage(ctx.state.stage)
-    ? setupPhase1Items({
-        stage: ctx.state.stage,
-        assetKinds: assets.map((asset) => asset.kind),
-        aboutText: ctx.request.aboutText,
-        reviewStates: {
-          SERVICES: reviews.SERVICES?.state ?? null,
-          TEAM: reviews.TEAM?.state ?? null,
-          HOURS: reviews.HOURS?.state ?? null,
-        },
-      })
+  const launchFlags = launchProgress
+    ? {
+        businessDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'business')?.done),
+        domainDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'domain')?.done),
+        paymentsDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'payments')?.done),
+        approveDone: Boolean(launchProgress.launchApproved),
+      }
     : null;
+
+  const setup: SetupCardModel | null = setupCardForStage({
+    stage,
+    assetKinds: assets.map((asset) => asset.kind),
+    aboutText: ctx.request.aboutText,
+    reviewStates: {
+      SERVICES: reviews.SERVICES?.state ?? null,
+      TEAM: reviews.TEAM?.state ?? null,
+      HOURS: reviews.HOURS?.state ?? null,
+    },
+    launch: launchFlags,
+  });
 
   const overview = wantsOverview
     ? {
         steps: hubStepper({
-          stage: ctx.state.stage,
+          stage,
           createdAt: ctx.request.createdAt,
           designingAt: designingAtFromEvents(events),
           previewReadyAt: ctx.request.previewReadyAt,
@@ -97,7 +115,7 @@ export async function loadAdminHubView(ctx: HubPageContext, body: AdminHubBody, 
         }),
         activity: hubActivityItems(events, now),
         checklist: buildHubChecklist({
-          stage: ctx.state.stage,
+          stage,
           ...checklistFlagsFromAssets(assets, ctx.request.aboutText),
         }),
         reviewNeed: reviewNowNeed({
@@ -108,6 +126,8 @@ export async function loadAdminHubView(ctx: HubPageContext, body: AdminHubBody, 
         launchProgress,
       }
     : null;
+
+  const activity = wantsActivity ? hubActivityItems(events, now, 50) : [];
 
   return {
     assets: serialized,
@@ -120,6 +140,8 @@ export async function loadAdminHubView(ctx: HubPageContext, body: AdminHubBody, 
     messages,
     setup,
     overview,
+    activity,
+    launchFlags,
   };
 }
 

@@ -11,7 +11,7 @@ import {
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import type { AdminHubSection } from '@/lib/adminHub/hubView';
-import type { SetupItem, SetupItemId } from '@/lib/adminHub/setupCard';
+import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_PRIVATE_LABEL, HUB_UNREAD } from '@/lib/freePreview/hubCopy';
 import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
 import '@/styles/components/admin-hub.css';
@@ -29,7 +29,7 @@ interface Props {
   openChanges: number;
   logoSrc: string | null;
   brandColour: string | null;
-  setup: { items: SetupItem[]; done: number; total: number; nextId: SetupItemId | null } | null;
+  setup: SetupCardModel | null;
   /** Mobile: the setup card sits at the top of Overview. */
   showMobileSetup: boolean;
 }
@@ -143,7 +143,7 @@ const nav: Array<{
 
     <div class="admin-hub-side__spacer"></div>
 
-    {setup ? <AdminHubSetupCard placement="sidebar" {...setup} /> : null}
+    {setup ? <AdminHubSetupCard placement="sidebar" card={setup} /> : null}
 
     <p class="admin-hub-private">
       <EyeOff width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
@@ -185,7 +185,7 @@ const nav: Array<{
     }
 
     <main class="admin-hub-main" id="admin-hub-main">
-      {setup && showMobileSetup ? <AdminHubSetupCard placement="mobile" {...setup} /> : null}
+      {setup && showMobileSetup ? <AdminHubSetupCard placement="mobile" card={setup} /> : null}
       <slot />
       <div class="admin-hub-mobile-foot">
         <p class="admin-hub-private">

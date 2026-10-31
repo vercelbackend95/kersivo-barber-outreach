@@ -5,10 +5,10 @@ import type { APIContext } from 'astro';
 import HubDocument from '@/layouts/HubDocument.astro';
 import AdminHubShell from '@/components/adminHub/AdminHubShell.astro';
 import HubOverview from '@/components/previewHub/HubOverview.astro';
+import { AppHost } from '@/components/adminHub/AppHost';
 import { HubChanges } from '@/components/previewHub/HubChanges';
-import { HubMessages } from '@/components/previewHub/HubMessages';
 import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
-import { HubYourShop } from '@/components/previewHub/HubYourShop';
+import { adminHubAppMeta } from '@/lib/adminHub/apps';
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
 import { loadAdminHubView, parseAdminHubLocation } from '@/lib/adminHub/hubView';
 import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
@@ -70,7 +70,7 @@ const sitePreviewUrl = ctx.draft?.shop.sitePreviewUrl ?? null;
 const websiteView: 'website' | 'booking' =
   location.view === 'booking' || !sitePreviewUrl ? 'booking' : 'website';
 
-if (location.body === 'website' && showPreview) {
+if (location.section === 'website' && showPreview) {
   if (websiteView === 'website' && sitePreviewUrl) {
     Astro.response.headers.set(EXTRA_FRAME_SRC_HEADER, sitePreviewUrl);
   }
@@ -90,24 +90,66 @@ if (location.body === 'website' && showPreview) {
   }
 }
 
-const view = await loadAdminHubView(ctx, location.body, now);
+const view = await loadAdminHubView(ctx, location, now);
 const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
 const logoSrc = view.logo?.hasThumb
   ? `${ADMIN_HUB_API_BASE}/assets/${encodeURIComponent(view.logo.id)}?size=thumb`
   : null;
-const current = location.body === 'setup' || location.body === 'messages' ? null : location.body;
-const titleLabel: Record<typeof location.body, string> = {
-  overview: HUB_NAV.overview,
-  changes: HUB_NAV.changes,
-  website: HUB_NAV.website,
-  setup: HUB_NAV.details,
-  messages: HUB_NAV.messages,
-};
+const sessionShop = await adminSessionShopFor(Astro as unknown as APIContext);
+const canEditLaunch = Boolean(
+  !ctx.isOperator &&
+    ctx.state.stage === 'launch' &&
+    sessionShop?.via === 'session' &&
+    sessionShop.role === 'OWNER' &&
+    sessionShop.shopId &&
+    sessionShop.shopId === ctx.request.draftShopId,
+);
+const title = location.app
+  ? adminHubAppMeta(location.app).title
+  : location.section === 'changes'
+    ? HUB_NAV.changes
+    : location.section === 'website'
+      ? HUB_NAV.website
+      : HUB_NAV.overview;
 const initialDraft =
   location.draft === 'reopen' ? HUB_DRAFT_REOPEN : location.draft === 'message' ? HUB_DRAFT_DECLINED : '';
+const appCtx = {
+  apiBase: ADMIN_HUB_API_BASE,
+  canUpload: caps.canUpload,
+  canEditDetails: caps.canEditDetails,
+  canReview: caps.canReview,
+  canEditLaunch,
+  stage: ctx.state.stage,
+  details: {
+    brandPrimaryColour: ctx.request.brandPrimaryColour,
+    brandSecondaryColour: ctx.request.brandSecondaryColour,
+    styleNotes: ctx.request.styleNotes,
+    aboutText: ctx.request.aboutText,
+  },
+  assets: view.assets,
+  reviews: view.reviews,
+  reviewShop: view.reviewShop,
+  activity: view.activity.map((item) => ({
+    id: item.id,
+    label: item.label,
+    relative: item.relative,
+    absolute: item.absolute,
+    at: item.at.toISOString(),
+  })),
+  setupItems: view.setup?.items ?? [],
+  messages: view.messages,
+  initialDraft,
+  viewer: ctx.isOperator ? ('ops' as const) : ('owner' as const),
+  requestId: ctx.isOperator ? ctx.request.id : undefined,
+  canAttach: caps.canMessage,
+  shopName,
+  websiteHref: ADMIN_HUB_LINKS.website,
+  bookingHref: ADMIN_HUB_LINKS.booking,
+  launch: view.launchFlags,
+};
 ---
 
-<HubDocument title={`${titleLabel[location.body]} — ${shopName} | KERSIVO`}>
+<HubDocument title={`${title} — ${shopName} | KERSIVO`}>
   <AdminHubShell
     shopName={shopName}
     townCity={ctx.request.townCity}
@@ -115,17 +157,17 @@ const initialDraft =
     ownerFirstName={ctx.request.firstName}
     stage={ctx.state.stage}
     capabilities={caps}
-    current={current}
+    current={location.section}
     isOperator={ctx.isOperator}
     unreadMessages={view.unreadMessages}
     openChanges={view.openChanges}
     logoSrc={logoSrc}
     brandColour={ctx.request.brandPrimaryColour}
     setup={view.setup}
-    showMobileSetup={location.body === 'overview'}
+    showMobileSetup={location.section === 'overview'}
   >
     {
-      location.body === 'overview' && view.overview ? (
+      location.section === 'overview' && view.overview ? (
         <HubOverview
           token=""
           apiBase={ADMIN_HUB_API_BASE}
@@ -144,7 +186,7 @@ const initialDraft =
           logoAssetId={view.logo?.id ?? null}
           brandColour={ctx.request.brandPrimaryColour}
         />
-      ) : location.body === 'changes' ? (
+      ) : location.section === 'changes' ? (
         caps.canDraftChanges ? (
           <HubChanges
             client:load
@@ -162,7 +204,7 @@ const initialDraft =
             <p class="hub-card__body">{HUB_WEBSITE_LOCKED_BODY}</p>
           </section>
         )
-      ) : location.body === 'website' ? (
+      ) : location.section === 'website' ? (
         showPreview && ctx.draft ? (
           <HubWebsiteView
             client:load
@@ -202,37 +244,8 @@ const initialDraft =
             <p class="hub-card__body">{HUB_WEBSITE_LOCKED_BODY}</p>
           </section>
         )
-      ) : location.body === 'messages' ? (
-        <HubMessages
-          client:load
-          token=""
-          apiBase={ADMIN_HUB_API_BASE}
-          viewer={ctx.isOperator ? 'ops' : 'owner'}
-          requestId={ctx.isOperator ? ctx.request.id : undefined}
-          shopName={shopName}
-          initialMessages={view.messages}
-          initialDraft={initialDraft}
-          canAttach={caps.canMessage}
-        />
-      ) : (
-        <HubYourShop
-          client:load
-          token=""
-          apiBase={ADMIN_HUB_API_BASE}
-          canUpload={caps.canUpload}
-          canEditDetails={caps.canEditDetails}
-          canReview={caps.canReview}
-          reviews={view.reviews}
-          reviewShop={view.reviewShop}
-          details={{
-            brandPrimaryColour: ctx.request.brandPrimaryColour,
-            brandSecondaryColour: ctx.request.brandSecondaryColour,
-            styleNotes: ctx.request.styleNotes,
-            aboutText: ctx.request.aboutText,
-          }}
-          assets={view.assets}
-        />
-      )
+      ) : null
     }
+    <AppHost client:load initialApp={location.app} ctx={appCtx} />
   </AdminHubShell>
 </HubDocument>

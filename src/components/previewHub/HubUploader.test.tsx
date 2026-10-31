@@ -48,6 +48,22 @@ describe('HubYourShop', () => {
     expect(screen.getAllByText(/we'll fill these from your links/i)).toHaveLength(3);
   });
 
+  it('can show only the logo tiles without the colour fields', () => {
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        canUpload
+        canEditDetails
+        focus="logo"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[]}
+      />,
+    );
+    expect(screen.getByText('On dark')).toBeTruthy();
+    expect(screen.queryByText('Primary colour')).toBeNull();
+    expect(screen.queryByText(HUB_EMPTY_PHOTOS)).toBeNull();
+  });
+
   it('hides uploaders when the owner cannot upload', () => {
     render(
       <HubYourShop
