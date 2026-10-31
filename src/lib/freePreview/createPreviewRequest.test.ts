@@ -28,6 +28,7 @@ const input = {
   instagramUrl: 'https://instagram.com/sharpcuts',
   googleListingUrl: null,
   websiteUrl: null,
+  workLinks: [{ platform: 'instagram', value: 'sharpcuts', url: 'https://instagram.com/sharpcuts' }],
   barberCount: '1',
   currentBookingSystem: 'none',
   hasOwnDomain: 'no',

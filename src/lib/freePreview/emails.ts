@@ -14,6 +14,7 @@ import {
   FREE_PREVIEW_DOMAIN_OPTIONS,
   labelFor,
 } from './intake';
+import { displayWorkLinks, type DisplayWorkLink } from './workLinkNormalise';
 
 function escapeHtml(value: string) {
   return value
@@ -72,6 +73,7 @@ export type PreviewRequestInternalEmailInput = {
   instagramUrl: string | null;
   googleListingUrl: string | null;
   websiteUrl: string | null;
+  workLinks?: unknown;
   barberCount: string;
   currentBookingSystem: string;
   hasOwnDomain: string;
@@ -86,26 +88,40 @@ export function opsPreviewRequestUrl(id: string): string {
   return `${getPublicSiteUrl()}${OPS_PREVIEW_REQUESTS_PATH}/${encodeURIComponent(id)}`;
 }
 
+function workLinkEmailCell(link: DisplayWorkLink): string {
+  if (link.url) {
+    const safe = escapeHtml(link.url);
+    const extra = link.value && link.value !== link.url ? ` (${escapeHtml(link.value)})` : '';
+    return `<a href="${safe}">${safe}</a>${extra}`;
+  }
+  return escapeHtml(link.value || '—');
+}
+
+function workLinkEmailRows(input: PreviewRequestInternalEmailInput): Array<[string, string]> {
+  const links = displayWorkLinks(input);
+  if (!links.length) return [['Work links', '—']];
+  return links.map((link) => [link.label, workLinkEmailCell(link)]);
+}
+
 /** E2 — internal notification with every submitted field and the ops link (spec §9). */
 export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEmailInput): FreePreviewEmail {
-  const rows: Array<[string, string]> = [
-    ['Shop', input.shopName],
-    ['Town / city', input.townCity],
-    ['First name', input.firstName ?? '—'],
-    ['Email', input.email],
-    ['Booking page', input.bookingPageUrl ?? '—'],
-    ['Instagram', input.instagramUrl ?? '—'],
-    ['Google listing', input.googleListingUrl ?? '—'],
-    ['Website', input.websiteUrl ?? '—'],
-    ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, input.barberCount)],
-    ['Booking system', currentBookingSystemLabel(input.currentBookingSystem)],
-    ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, input.hasOwnDomain)],
-    ['Notes', input.notes ?? '—'],
-    ['Marketing opt-in', input.marketingOptIn ? 'Yes' : 'No'],
-    ['Entry point', input.entryPoint ?? '—'],
-    ['Requested at', input.createdAt.toISOString()],
+  const rows: Array<[string, string, 'html' | 'text']> = [
+    ['Shop', input.shopName, 'text'],
+    ['Town / city', input.townCity, 'text'],
+    ['First name', input.firstName ?? '—', 'text'],
+    ['Email', input.email, 'text'],
+    ...workLinkEmailRows(input).map(([label, html]) => [label, html, 'html'] as [string, string, 'html']),
+    ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, input.barberCount), 'text'],
+    ['Booking system', currentBookingSystemLabel(input.currentBookingSystem), 'text'],
+    ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, input.hasOwnDomain), 'text'],
+    ['Notes', input.notes ?? '—', 'text'],
+    ['Marketing opt-in', input.marketingOptIn ? 'Yes' : 'No', 'text'],
+    ['Entry point', input.entryPoint ?? '—', 'text'],
+    ['Requested at', input.createdAt.toISOString(), 'text'],
     ...(input.overDailyCap
-      ? ([['Daily cap', 'Over the cap: owner told it may take up to 3 working days']] as Array<[string, string]>)
+      ? ([['Daily cap', 'Over the cap: owner told it may take up to 3 working days', 'text']] as Array<
+          [string, string, 'text']
+        >)
       : []),
   ];
   const opsUrl = opsPreviewRequestUrl(input.id);
@@ -116,10 +132,10 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
     html: `<p>A new free preview request has been received.</p>
 <p><a href="${escapeHtml(opsUrl)}">Open it in KERSIVO Ops</a></p>
 <table cellpadding="4">${rows
-      .map(
-        ([label, value]) =>
-          `<tr><th align="left" valign="top">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`,
-      )
+      .map(([label, value, kind]) => {
+        const cell = kind === 'html' ? value : escapeHtml(value);
+        return `<tr><th align="left" valign="top">${escapeHtml(label)}</th><td>${cell}</td></tr>`;
+      })
       .join('')}</table>`,
   };
 }

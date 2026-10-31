@@ -195,9 +195,13 @@ function filterHref(status: string | null, sort = query.sort) {
                         <ul class="ops-pr__links">
                           {previewRequestLinks(request).map((link) => (
                             <li>
-                              <a href={link.url} target="_blank" rel="noopener noreferrer nofollow">
-                                {link.label}
-                              </a>
+                              {link.url ? (
+                                <a href={link.url} target="_blank" rel="noopener noreferrer nofollow">
+                                  {link.label}
+                                </a>
+                              ) : (
+                                <span>{link.label}: {link.value}</span>
+                              )}
                             </li>
                           ))}
                         </ul>

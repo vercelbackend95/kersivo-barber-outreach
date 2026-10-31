@@ -1,6 +1,7 @@
 import type { PreviewRequestStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
+import { displayWorkLinks } from './workLinkNormalise';
 
 export const PREVIEW_REQUEST_STATUSES: readonly PreviewRequestStatus[] = [
   'REQUESTED',
@@ -56,6 +57,7 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       instagramUrl: true,
       googleListingUrl: true,
       websiteUrl: true,
+      workLinks: true,
       barberCount: true,
       currentBookingSystem: true,
       status: true,
@@ -134,16 +136,11 @@ export function formatAge(from: Date, now: Date = new Date()): string {
 }
 
 export function previewRequestLinks(request: {
-  bookingPageUrl: string | null;
-  instagramUrl: string | null;
-  googleListingUrl: string | null;
-  websiteUrl: string | null;
-}): Array<{ label: string; url: string }> {
-  const entries: Array<[string, string | null]> = [
-    ['Booking', request.bookingPageUrl],
-    ['Instagram', request.instagramUrl],
-    ['Google', request.googleListingUrl],
-    ['Website', request.websiteUrl],
-  ];
-  return entries.flatMap(([label, url]) => (url ? [{ label, url }] : []));
+  workLinks?: unknown;
+  bookingPageUrl?: string | null;
+  instagramUrl?: string | null;
+  googleListingUrl?: string | null;
+  websiteUrl?: string | null;
+}): Array<{ label: string; url: string | null; value: string }> {
+  return displayWorkLinks(request);
 }

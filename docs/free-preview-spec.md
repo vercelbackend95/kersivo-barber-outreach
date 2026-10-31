@@ -35,7 +35,7 @@ Fields:
 - email (required)
 - shop name (required)
 - town/city (required)
-- links: current booking page / Instagram / Google listing / website. At least one required; validate as URLs.
+- work links (optional): structured `workLinks` array from the platform picker (Instagram, Booksy, Fresha, Treatwell, Google, TikTok, Facebook, Website, Other). Format is not required. The four legacy URL columns (`bookingPageUrl`, `instagramUrl`, `googleListingUrl`, `websiteUrl`) stay populated when a matching link is present.
 - number of barbers (select: 1, 2–3, 4–6, 7+)
 - current booking system (select: Booksy, Fresha, Treatwell, Nearcut, Setora, Square, Other, None)
 - has own domain (yes / no / not sure)
@@ -69,7 +69,7 @@ Statuses:
 
 ## 5. Public intake: /free-preview
 Indexable, self-canonical, included in the sitemap.
-Form with honeypot, server-side validation and rate limiting (plus the existing captcha if the site already uses one). On success, show the confirmation state on the same page, send email E1 to the owner and E2 to PREVIEW_NOTIFY_EMAIL, and fire analytics events.
+Form with honeypot, server-side validation and rate limiting (plus the existing captcha if the site already uses one). “Where can we see your work?” is an optional multi-select platform grid; format hints are soft and never block submit. On success, show the confirmation state on the same page, send email E1 to the owner and E2 to PREVIEW_NOTIFY_EMAIL, and fire analytics events (`preview_work_platform_selected` on tile select, platform name only).
 
 Required consent checkbox label:
 "I'm the owner or manager of this barbershop, and KERSIVO can use the details and photos from the links above to create a private preview for me."

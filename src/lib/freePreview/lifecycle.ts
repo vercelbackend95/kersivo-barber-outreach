@@ -276,6 +276,7 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
           instagramUrl: null,
           googleListingUrl: null,
           websiteUrl: null,
+          workLinks: Prisma.DbNull,
           notes: null,
           changesRequestedText: null,
           internalNotes: null,

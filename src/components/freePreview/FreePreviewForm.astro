@@ -1,5 +1,6 @@
 ---
-import { AtSign, Check, Globe, Link2, MapPin } from 'lucide-react';
+import { Check } from 'lucide-react';
+import PlatformPicker from '@/components/freePreview/PlatformPicker.astro';
 import {
   FREE_PREVIEW_AUTHORISATION_LABEL,
   FREE_PREVIEW_BARBER_COUNTS,
@@ -11,13 +12,6 @@ import {
 import { PREVIEW_OVER_CAP_MESSAGE } from '@/lib/freePreview/config';
 import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
 import '@/styles/components/ks-glass-card.css';
-
-const linkFields = [
-  { name: 'bookingPageUrl', label: 'Current booking page', placeholder: 'booksy.com/…', Icon: Link2 },
-  { name: 'instagramUrl', label: 'Instagram', placeholder: 'instagram.com/yourshop', Icon: AtSign },
-  { name: 'googleListingUrl', label: 'Google listing', placeholder: 'maps.app.goo.gl/…', Icon: MapPin },
-  { name: 'websiteUrl', label: 'Website', placeholder: 'yourshop.co.uk', Icon: Globe },
-] as const;
 ---
 
 <div class="fp-card ks-glass-card ks-glass-card--accent" data-free-preview>
@@ -64,40 +58,8 @@ const linkFields = [
       </label>
     </div>
 
-    <fieldset class="fp-group" aria-describedby="fp-links-hint fp-error-links">
-      <legend class="fp-group__legend">
-        {FREE_PREVIEW_PAGE.formGroupLinks}
-        <span class="fp-group__hint" id="fp-links-hint">{FREE_PREVIEW_PAGE.formLinksHint}</span>
-      </legend>
-      <div class="fp-fields fp-fields--two">
-        {
-          linkFields.map((field) => {
-            const Icon = field.Icon;
-            return (
-            <label class="free-preview-form__field">
-              <span class="free-preview-form__label">{field.label}</span>
-              <span class="free-preview-form__control">
-                <span class="free-preview-form__icon" aria-hidden="true">
-                  <Icon size={16} strokeWidth={1.8} />
-                </span>
-                <input
-                  name={field.name}
-                  type="text"
-                  inputmode="url"
-                  autocomplete="url"
-                  placeholder={field.placeholder}
-                  maxlength="500"
-                  aria-describedby={`fp-error-${field.name}`}
-                />
-              </span>
-              <span class="free-preview-form__error" id={`fp-error-${field.name}`} data-error-for={field.name} />
-            </label>
-            );
-          })
-        }
-      </div>
-      <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
-    </fieldset>
+    <PlatformPicker />
+    <span class="free-preview-form__error" id="fp-error-links" data-error-for="links"></span>
 
     <div class="fp-fields fp-fields--three">
       <label class="free-preview-form__field">
@@ -217,6 +179,7 @@ const linkFields = [
 <script>
   import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
   import { trackConsentedEvent } from '@/lib/consent/events';
+  import { collectWorkLinks, initPlatformPicker } from '@/lib/freePreview/initPlatformPicker';
 
   const ENTRY_POINT_PATTERN = /^[a-z0-9-]{1,40}$/;
 
@@ -230,6 +193,7 @@ const linkFields = [
     if (!form || !status || !submit || !confirmation || !confirmationText) return;
     if (root.dataset.fpReady === 'true') return;
     root.dataset.fpReady = 'true';
+    initPlatformPicker(root);
 
     const autogrow = root.querySelector<HTMLTextAreaElement>('[data-fp-autogrow]');
     const grow = () => {
@@ -270,7 +234,7 @@ const linkFields = [
         if (target) target.textContent = message;
         const input =
           name === 'links'
-            ? form.querySelector<HTMLElement>('[name="bookingPageUrl"]')
+            ? form.querySelector<HTMLElement>('button.fp-platform')
             : form.querySelector<HTMLElement>(`[name="${name}"]`);
         if (input) {
           input.setAttribute('aria-invalid', 'true');
@@ -314,10 +278,7 @@ const linkFields = [
         email: text('email'),
         shopName: text('shopName'),
         townCity: text('townCity'),
-        bookingPageUrl: text('bookingPageUrl'),
-        instagramUrl: text('instagramUrl'),
-        googleListingUrl: text('googleListingUrl'),
-        websiteUrl: text('websiteUrl'),
+        workLinks: collectWorkLinks(root),
         barberCount: text('barberCount'),
         currentBookingSystem: text('currentBookingSystem'),
         hasOwnDomain: text('hasOwnDomain'),

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  FREE_PREVIEW_LINKS_REQUIRED_MESSAGE,
-  normaliseLinkInput,
-  parseFreePreviewRequest,
-} from './intake';
+import { normaliseLinkInput, parseFreePreviewRequest } from './intake';
 
 const valid = {
   firstName: 'Sam',
@@ -23,15 +19,70 @@ describe('parseFreePreviewRequest', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.email).toBe('sam@example.com');
-    expect(result.value.instagramUrl).toBe('https://instagram.com/sharpcuts');
+    expect(result.value.instagramUrl).toBe('https://www.instagram.com/sharpcuts');
     expect(result.value.bookingPageUrl).toBeNull();
+    expect(result.value.workLinks).toEqual([
+      { platform: 'instagram', value: 'sharpcuts', url: 'https://www.instagram.com/sharpcuts' },
+    ]);
     expect(result.value.notes).toBeNull();
     expect(result.value.marketingOptIn).toBe(false);
   });
 
-  it('requires at least one link', () => {
+  it('allows a request with no work links', () => {
     const result = parseFreePreviewRequest({ ...valid, instagramUrl: '' });
-    expect(result).toEqual({ ok: false, fieldErrors: { links: FREE_PREVIEW_LINKS_REQUIRED_MESSAGE } });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.workLinks).toEqual([]);
+    expect(result.value.instagramUrl).toBeNull();
+  });
+
+  it('normalises a workLinks payload and projects the legacy URL columns', () => {
+    const result = parseFreePreviewRequest({
+      ...valid,
+      instagramUrl: '',
+      workLinks: [
+        { platform: 'instagram', value: '@sharpcuts' },
+        { platform: 'booksy', value: 'https://booksy.com/en-gb/1?utm_source=bio' },
+        { platform: 'google', value: 'Northside Barbers, Leeds' },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.workLinks).toEqual([
+      { platform: 'instagram', value: 'sharpcuts', url: 'https://www.instagram.com/sharpcuts' },
+      { platform: 'booksy', value: 'https://booksy.com/en-gb/1', url: 'https://booksy.com/en-gb/1' },
+      { platform: 'google', value: 'Northside Barbers, Leeds', url: null },
+    ]);
+    expect(result.value.instagramUrl).toBe('https://www.instagram.com/sharpcuts');
+    expect(result.value.bookingPageUrl).toBe('https://booksy.com/en-gb/1');
+    expect(result.value.googleListingUrl).toBeNull();
+  });
+
+  it('lets workLinks win over the four legacy URL fields', () => {
+    const result = parseFreePreviewRequest({
+      ...valid,
+      instagramUrl: 'instagram.com/legacy',
+      workLinks: [{ platform: 'website', value: 'sharpcuts.co.uk' }],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.workLinks.map((link) => link.platform)).toEqual(['website']);
+    expect(result.value.instagramUrl).toBeNull();
+    expect(result.value.websiteUrl).toBe('https://sharpcuts.co.uk/');
+  });
+
+  it('still stores a mistyped Booksy link instead of rejecting the request', () => {
+    const result = parseFreePreviewRequest({
+      ...valid,
+      instagramUrl: '',
+      workLinks: [{ platform: 'booksy', value: 'not-a-booksy-link' }],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.workLinks).toEqual([
+      { platform: 'booksy', value: 'not-a-booksy-link', url: null },
+    ]);
+    expect(result.value.bookingPageUrl).toBeNull();
   });
 
   it('accepts the shared booking-system list including mixed tools', () => {

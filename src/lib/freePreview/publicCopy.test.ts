@@ -183,10 +183,13 @@ describe('/free-preview page (spec §10.1)', () => {
     ]) {
       expect(form).toContain(`name="${name}"`);
     }
-    for (const name of ['bookingPageUrl', 'instagramUrl', 'googleListingUrl', 'websiteUrl']) {
-      expect(form).toContain(`name: '${name}'`);
-    }
+    expect(form).toContain("import PlatformPicker from '@/components/freePreview/PlatformPicker.astro'");
+    expect(form).toContain('workLinks: collectWorkLinks(root)');
     expect(form).toContain("fetch('/api/free-preview'");
+    expect(read('src/components/freePreview/PlatformPicker.astro')).toContain('data-platform-picker');
+    expect(FREE_PREVIEW_PAGE.formLinksHint).toBe(
+      "Tap where your shop is online. We'll use it to build your free preview.",
+    );
     expect(form).toContain('class="hp-field"');
     expect(form).toContain('{FREE_PREVIEW_AUTHORISATION_LABEL}');
     expect(form).toContain('{FREE_PREVIEW_MARKETING_LABEL}');

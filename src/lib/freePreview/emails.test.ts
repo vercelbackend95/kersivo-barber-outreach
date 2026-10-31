@@ -59,5 +59,38 @@ describe('free preview emails', () => {
     expect(email.html).toContain('2–3');
     expect(email.html).toContain('Booksy');
     expect(email.html).toContain('Not sure');
+    expect(email.html).toContain('<a href="https://www.instagram.com/sharpcuts">https://www.instagram.com/sharpcuts</a>');
+    expect(email.html).toContain('(sharpcuts)');
+  });
+
+  it('E2 lists each workLinks platform with a clickable URL when we have one', () => {
+    const email = buildPreviewRequestInternalEmail({
+      id: 'req_2',
+      firstName: 'Sam',
+      email: 'sam@example.com',
+      shopName: 'Sharp Cuts',
+      townCity: 'Leeds',
+      bookingPageUrl: null,
+      instagramUrl: null,
+      googleListingUrl: null,
+      websiteUrl: null,
+      workLinks: [
+        { platform: 'booksy', value: 'https://booksy.com/en-gb/1', url: 'https://booksy.com/en-gb/1' },
+        { platform: 'google', value: 'Northside Barbers, Leeds', url: null },
+        { platform: 'tiktok', value: 'shop', url: 'https://www.tiktok.com/@shop' },
+      ],
+      barberCount: '2-3',
+      currentBookingSystem: 'booksy',
+      hasOwnDomain: 'not_sure',
+      notes: null,
+      marketingOptIn: false,
+      entryPoint: null,
+      createdAt: new Date('2026-10-29T10:00:00Z'),
+    });
+    expect(email.html).toContain('<th align="left" valign="top">Booksy</th>');
+    expect(email.html).toContain('<a href="https://booksy.com/en-gb/1">https://booksy.com/en-gb/1</a>');
+    expect(email.html).toContain('Northside Barbers, Leeds');
+    expect(email.html).toContain('<a href="https://www.tiktok.com/@shop">https://www.tiktok.com/@shop</a>');
+    expect(email.html).not.toContain('Work links');
   });
 });

@@ -1,5 +1,12 @@
 import { z } from 'zod';
 import { CURRENT_BOOKING_SYSTEMS } from '@/lib/forms/currentBookingSystems';
+import {
+  legacyFieldsToWorkLinks,
+  normaliseWorkLinksInput,
+  parseWebUrl,
+  workLinksToLegacyFields,
+} from './workLinkNormalise';
+import type { WorkLink } from './workPlatforms';
 
 /** Select options (spec §4). Values are stored; labels are shown. */
 export const FREE_PREVIEW_BARBER_COUNTS = [
@@ -33,8 +40,6 @@ export const FREE_PREVIEW_AUTHORISATION_LABEL =
   "I'm the owner or manager of this barbershop, and KERSIVO can use the details and photos from the links above to create a private preview for me.";
 export const FREE_PREVIEW_MARKETING_LABEL =
   'Send me occasional KERSIVO product news and tips. You can unsubscribe at any time.';
-export const FREE_PREVIEW_LINKS_REQUIRED_MESSAGE =
-  'Add at least one link: your booking page, Instagram, Google listing or website.';
 
 function valuesOf<T extends readonly { value: string }[]>(options: T) {
   return options.map((option) => option.value) as [T[number]['value'], ...T[number]['value'][]];
@@ -52,17 +57,8 @@ const optionalText = (max: number) =>
 export function normaliseLinkInput(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
-  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  let url: URL;
-  try {
-    url = new URL(withScheme);
-  } catch {
-    return null;
-  }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
-  if (url.username || url.password) return null;
-  if (!url.hostname.includes('.') || url.hostname.endsWith('.')) return null;
-  return url.toString();
+  const url = parseWebUrl(trimmed);
+  return url ? url.toString() : null;
 }
 
 const linkField = z
@@ -86,6 +82,15 @@ export const freePreviewRequestSchema = z
     instagramUrl: linkField,
     googleListingUrl: linkField,
     websiteUrl: linkField,
+    workLinks: z
+      .array(
+        z.object({
+          platform: z.string(),
+          value: z.string().max(500, 'Links must be 500 characters or fewer.'),
+        }),
+      )
+      .max(9)
+      .optional(),
     barberCount: z.enum(valuesOf(FREE_PREVIEW_BARBER_COUNTS), {
       errorMap: () => ({ message: 'Choose how many barbers work in your shop.' }),
     }),
@@ -108,17 +113,26 @@ export const freePreviewRequestSchema = z
         return FREE_PREVIEW_ENTRY_POINT_PATTERN.test(trimmed) ? trimmed : null;
       }),
   })
-  .superRefine((value, ctx) => {
-    if (!FREE_PREVIEW_LINK_FIELDS.some((field) => value[field])) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['links'],
-        message: FREE_PREVIEW_LINKS_REQUIRED_MESSAGE,
-      });
-    }
+  .transform((value) => {
+    const workLinks =
+      value.workLinks !== undefined
+        ? normaliseWorkLinksInput(value.workLinks)
+        : legacyFieldsToWorkLinks({
+            bookingPageUrl: value.bookingPageUrl,
+            instagramUrl: value.instagramUrl,
+            googleListingUrl: value.googleListingUrl,
+            websiteUrl: value.websiteUrl,
+          });
+    return {
+      ...value,
+      workLinks,
+      ...workLinksToLegacyFields(workLinks),
+    };
   });
 
-export type FreePreviewRequestInput = z.output<typeof freePreviewRequestSchema>;
+export type FreePreviewRequestInput = z.output<typeof freePreviewRequestSchema> & {
+  workLinks: WorkLink[];
+};
 
 export type FreePreviewParseResult =
   | { ok: true; value: FreePreviewRequestInput }
