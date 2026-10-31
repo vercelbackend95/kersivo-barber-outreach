@@ -240,6 +240,29 @@ describe('resolveHubState', () => {
     expect(state.kind === 'hub' && state.capabilities.canSendChanges).toBe(false);
   });
 
+  it('treats a convertedAt + previewReadyAt request as Launch even if status is still READY', () => {
+    const state = resolveHubState({
+      request: request({
+        status: 'READY',
+        previewReadyAt: READY_AT,
+        convertedAt: NOW,
+        expiresAt: FUTURE,
+      }),
+      isOperator: false,
+      now: NOW,
+    });
+    expect(state.kind === 'hub' && state.stage).toBe('launch');
+  });
+
+  it('keeps Designing for a direct subscriber until the preview is ready', () => {
+    const state = resolveHubState({
+      request: request({ status: 'IN_PROGRESS', convertedAt: NOW }),
+      isOperator: false,
+      now: NOW,
+    });
+    expect(state.kind === 'hub' && state.stage).toBe('designing');
+  });
+
   it('uses liveMarker over request.liveAt when both are passed', () => {
     const without = resolveHubState({
       request: request({ status: 'CONVERTED', liveAt: null }),

@@ -426,6 +426,10 @@ const fields: Array<[string, string]> = request
                 flowEnabled={isFreePreviewFlowEnabled()}
                 hubEnabled={hubEnabled}
                 hubStageLabel={hubStageLabel ?? undefined}
+                launchApprovedAt={request.launchApprovedAt?.toISOString() ?? null}
+                liveAt={request.liveAt?.toISOString() ?? null}
+                ourStepDomainAt={request.ourStepDomainAt?.toISOString() ?? null}
+                ourStepSslAt={request.ourStepSslAt?.toISOString() ?? null}
               />
             </aside>
           </div>

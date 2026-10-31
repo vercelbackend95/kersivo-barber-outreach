@@ -24,6 +24,17 @@ describe('HubOverview key UI states', () => {
     expect(overview).not.toContain('expiredDisabled');
   });
 
+  it('shows launch progress and live next-step cards from the copy module', () => {
+    expect(overview).toContain('HUB_LAUNCH_YOUR_STEPS');
+    expect(overview).toContain('HUB_LAUNCH_OUR_STEPS');
+    expect(overview).toContain('HUB_LAUNCH_FINISH_DASHBOARD');
+    expect(overview).toContain('HUB_LIVE_NEXT_TITLE');
+    expect(overview).toContain('HUB_LIVE_NEXT_GOOGLE');
+    expect(overview).toContain('HUB_LIVE_NEXT_RETAIL');
+    expect(overview).not.toContain('launchRetail');
+    expect(overview).not.toContain('launchDeposits');
+  });
+
   it('shows the Review subscribe control in the Overview header', () => {
     expect(overview).toContain('canCheckout');
     expect(overview).toContain('chrome="checkout"');

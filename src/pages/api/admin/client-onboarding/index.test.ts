@@ -164,6 +164,8 @@ function draftRow(overrides: Record<string, unknown> = {}) {
     legalBusinessName: null,
     businessType: null,
     companyNumber: null,
+    isLimitedCompany: null,
+    registeredOfficeAddress: null,
     addressLine1: '1 High Street',
     addressLine2: null,
     townCity: 'London',

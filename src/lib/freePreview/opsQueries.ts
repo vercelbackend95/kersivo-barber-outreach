@@ -65,6 +65,8 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       firstViewedAt: true,
       createdAt: true,
       opsLastSeenAt: true,
+      launchApprovedAt: true,
+      liveAt: true,
       events: { where: { action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }, select: { action: true }, take: 1 },
       hubAssets: {
         where: { deletedAt: null },
@@ -84,10 +86,26 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
   }).then((rows) => sortPreviewRequestsForOps(rows, query.sort));
 }
 
+export function isApprovedReadyToLaunch(request: {
+  launchApprovedAt?: Date | null;
+  liveAt?: Date | null;
+}): boolean {
+  return Boolean(request.launchApprovedAt && !request.liveAt);
+}
+
 export function sortPreviewRequestsForOps<
-  T extends { createdAt: Date; hubMessages?: Array<{ id: string }>; changeRequests?: Array<{ id: string }> },
+  T extends {
+    createdAt: Date;
+    hubMessages?: Array<{ id: string }>;
+    changeRequests?: Array<{ id: string }>;
+    launchApprovedAt?: Date | null;
+    liveAt?: Date | null;
+  },
 >(rows: T[], sort: PreviewRequestListSort): T[] {
   return [...rows].sort((a, b) => {
+    const approvedA = isApprovedReadyToLaunch(a);
+    const approvedB = isApprovedReadyToLaunch(b);
+    if (approvedA !== approvedB) return approvedA ? -1 : 1;
     const unreadA = a.hubMessages?.length ?? 0;
     const unreadB = b.hubMessages?.length ?? 0;
     if ((unreadA > 0) !== (unreadB > 0)) return unreadA > 0 ? -1 : 1;

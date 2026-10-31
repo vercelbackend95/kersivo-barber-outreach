@@ -108,6 +108,12 @@ export const FUNNEL_EVENTS = {
   hub_change_drafted: 'hub_change_drafted',
   /** Shop Hub: owner sent a round of design changes. */
   hub_changes_sent: 'hub_changes_sent',
+  /** Shop Hub: owner finished a launch-checklist item. Param `{ item }`. */
+  launch_checklist_item_completed: 'launch_checklist_item_completed',
+  /** Shop Hub: owner approved the website for launch. */
+  launch_approved: 'launch_approved',
+  /** Shop Hub: ops marked the site live. */
+  site_live: 'site_live',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

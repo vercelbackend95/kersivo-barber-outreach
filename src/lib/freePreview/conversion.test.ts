@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const db = {
-  previewRequest: { updateMany: vi.fn(), findFirst: vi.fn() },
+  previewRequest: { updateMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
   previewRequestEvent: { create: vi.fn() },
 };
 
@@ -38,6 +38,7 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 vi.mock('@/lib/setup/purgeShopData', () => ({ purgeShopData: (...a: unknown[]) => purgeShopData(...a) }));
+vi.mock('./hubLaunch', () => ({ notifyOwnerSubscribed: vi.fn() }));
 
 import { adoptPreviewDraftShop, markPreviewRequestConverted } from './conversion';
 
@@ -126,6 +127,8 @@ describe('adoptPreviewDraftShop (claim)', () => {
     // Ownership only: no publicActivityPaused change, so the shop stays "under construction" until approval.
     const shopUpdate = tx.shopSettings.update.mock.calls[0]![0] as { data: Record<string, unknown> };
     expect(Object.keys(shopUpdate.data)).not.toContain('publicActivityPaused');
+    expect(Object.keys(shopUpdate.data)).not.toContain('bookingPaymentMode');
+    expect(Object.keys(shopUpdate.data)).not.toContain('retailEnabled');
     expect(tx.shopMember.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ create: { shopId: 'shop_draft', userId: 'user_1', role: 'OWNER' } }),
     );

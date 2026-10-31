@@ -507,6 +507,30 @@ export function buildSaasSubscriptionConfirmationEmail(input: {
   setupSuccessUrl: string;
 }): { subject: string; html: string } {
   const setupSuccessUrl = input.setupSuccessUrl.trim();
+  const hubOn =
+    ((import.meta.env as Record<string, string | undefined> | undefined)?.PREVIEW_HUB_ENABLED ??
+      process.env.PREVIEW_HUB_ENABLED ??
+      '')
+      .trim()
+      .toLowerCase() === 'true';
+
+  if (hubOn) {
+    const nextStepBlock = setupSuccessUrl
+      ? `<p>A few details from you, then we connect your domain and publish.</p>
+  <p><a href="${escapeHtml(setupSuccessUrl)}">Open your launch checklist</a></p>`
+      : `<p>Sign in to your dashboard to finish the launch checklist, or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>`;
+    const subject = `Let's put ${input.shopName} live`;
+    const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
+  <p>Thanks for subscribing. Let's put ${escapeHtml(input.shopName)} live.</p>
+  <p><strong>Subscription:</strong> ${escapeHtml(input.monthlyFormatted)}/month<br/>
+  <strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
+  ${nextStepBlock}
+  <p>Nothing goes live without your review.</p>
+  <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
+  <p>The KERSIVO team</p>`;
+    return { subject, html };
+  }
+
   const nextStepBlock = setupSuccessUrl
     ? `<p><strong>Next step:</strong><br/>Complete your setup so we can prepare your barbershop.</p>
   <p><a href="${escapeHtml(setupSuccessUrl)}">Complete Your KERSIVO Setup</a></p>`

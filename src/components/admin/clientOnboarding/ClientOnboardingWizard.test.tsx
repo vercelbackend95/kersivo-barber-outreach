@@ -31,6 +31,8 @@ function baseDraft(overrides: Partial<ClientOnboardingState['onboarding']> = {})
     legalBusinessName: null,
     businessType: null,
     companyNumber: null,
+    isLimitedCompany: null,
+    registeredOfficeAddress: null,
     addressLine1: null,
     addressLine2: null,
     townCity: null,

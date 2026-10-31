@@ -118,6 +118,8 @@ export const clientOnboardingDraftSchema = z
     legalBusinessName: optionalTrimmed,
     businessType: optionalTrimmed,
     companyNumber: optionalTrimmed,
+    isLimitedCompany: z.boolean().nullable().optional(),
+    registeredOfficeAddress: optionalLongText,
     addressLine1: optionalTrimmed,
     addressLine2: optionalTrimmed,
     townCity: optionalTrimmed,

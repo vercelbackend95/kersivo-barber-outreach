@@ -85,6 +85,12 @@ export const PATCH: APIRoute = async (ctx) => {
   if (body.retailEnabled && (!shop.stripeConnectAccountId || !shop.stripeConnectChargesEnabled)) {
     return json({ error: 'Connect Stripe and finish onboarding before enabling retail checkout.' }, 400);
   }
+  if (body.retailEnabled) {
+    const activeProducts = await prisma.product.count({ where: { shopId: shop.id, active: true } });
+    if (activeProducts < 1) {
+      return json({ error: 'Add at least one active product before enabling retail checkout.' }, 400);
+    }
+  }
 
   const updated = await prisma.shopSettings.update({
     where: { id: shop.id },
