@@ -12,6 +12,7 @@ import {
   HUB_DETAILS_COLOUR_SECONDARY,
   HUB_DETAILS_HEX_LABEL,
   HUB_DETAILS_HOURS_TITLE,
+  HUB_DETAILS_OTHER_TITLE,
   HUB_DETAILS_PHOTOS_TITLE,
   HUB_DETAILS_PICK_FROM_LOGO,
   HUB_DETAILS_PLACEHOLDER_LINKS,
@@ -26,6 +27,7 @@ import {
   HUB_DETAILS_TEAM_TITLE,
   HUB_DETAILS_TITLE,
   HUB_EMPTY_LOGO,
+  HUB_EMPTY_OTHER,
   HUB_EMPTY_PHOTOS,
   HUB_EMPTY_PRICE,
   HUB_EMPTY_TEAM_PHOTOS,
@@ -39,8 +41,10 @@ import {
   HUB_UNDO,
   HUB_UPLOAD_HINT_PHOTOS,
   HUB_UPLOAD_HINT_PRICE,
+  HUB_UPLOAD_HINT_OTHER,
 } from '@/lib/freePreview/hubCopy';
 import { hubApiRoot } from '@/lib/adminHub/links';
+import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 import { HubReviewCards, type HubReviewMap } from './HubReviewCards';
 import type { HubReviewShopData } from '@/lib/freePreview/hubReviews.shared';
@@ -216,6 +220,8 @@ export function HubYourShop(props: {
   assets: HubUploadedAsset[];
   /** Admin Hub apps: show one block. Omitted = today's full Your shop page. */
   focus?: 'logo' | 'photos' | 'about' | 'materials';
+  /** Scroll the materials app to this block (`?item=`). */
+  highlight?: AdminHubAddWebsiteItem | null;
   /** When false, the page H1 is omitted (the app window already has a title). */
   chrome?: boolean;
 }) {
@@ -223,7 +229,9 @@ export function HubYourShop(props: {
   const chrome = props.chrome !== false && !focus;
   const showLogo = !focus || focus === 'logo' || focus === 'materials';
   const showPhotos = !focus || focus === 'photos' || focus === 'materials';
-  const showAbout = !focus || focus === 'about';
+  const showAbout = !focus || focus === 'about' || focus === 'materials';
+  const showTeamPhotos = !focus || focus === 'materials';
+  const showOther = focus === 'materials';
   const showReviews = !focus;
   const showBrandExtras = showLogo && !focus;
   const apiRoot = hubApiRoot(props);
@@ -246,7 +254,32 @@ export function HubYourShop(props: {
   const photos = assets.filter((asset) => asset.kind === 'SHOP_PHOTO');
   const teamPhotos = assets.filter((asset) => asset.kind === 'TEAM_PHOTO');
   const prices = assets.filter((asset) => asset.kind === 'PRICE_LIST');
+  const others = assets.filter((asset) => asset.kind === 'OTHER');
   const logo = logos[logos.length - 1] ?? null;
+
+  useEffect(() => {
+    const item = props.highlight;
+    if (!item) return;
+    const id =
+      item === 'photos'
+        ? 'hub-add-photos'
+        : item === 'logo'
+          ? 'hub-add-logo'
+          : item === 'text'
+            ? 'hub-add-text'
+            : item === 'team-photos'
+              ? 'hub-add-team-photos'
+              : item === 'price-list'
+                ? 'hub-add-price-list'
+                : 'hub-add-other';
+    const node = document.getElementById(id);
+    if (!node) return;
+    const reduce =
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    node.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+    node.classList.add('is-hub-add-target');
+    return () => node.classList.remove('is-hub-add-target');
+  }, [props.highlight]);
 
   const addAsset = (asset: HubUploadedAsset) => {
     knownAssets.current = [...knownAssets.current.filter((row) => row.id !== asset.id), asset];
@@ -424,7 +457,7 @@ export function HubYourShop(props: {
       ) : null}
 
       {showLogo ? (
-      <section className="hub-card ks-glass-card" aria-labelledby="hub-brand-title">
+      <section className="hub-card ks-glass-card" id="hub-add-logo" aria-labelledby="hub-brand-title">
         <h2 id="hub-brand-title" className="hub-card__title">
           {HUB_DETAILS_BRAND_TITLE}
         </h2>
@@ -508,7 +541,7 @@ export function HubYourShop(props: {
 
       {showPhotos ? (
       <>
-      <section className="hub-card ks-glass-card" aria-labelledby="hub-photos-title">
+      <section className="hub-card ks-glass-card" id="hub-add-photos" aria-labelledby="hub-photos-title">
         <h2 id="hub-photos-title" className="hub-card__title">
           {HUB_DETAILS_PHOTOS_TITLE}
         </h2>
@@ -539,8 +572,8 @@ export function HubYourShop(props: {
         )}
       </section>
 
-      {showReviews ? (
-      <section className="hub-card ks-glass-card" aria-labelledby="hub-team-photos-title">
+      {showTeamPhotos ? (
+      <section className="hub-card ks-glass-card" id="hub-add-team-photos" aria-labelledby="hub-team-photos-title">
         <h2 id="hub-team-photos-title" className="hub-card__title">
           {HUB_DETAILS_TEAM_PHOTOS_TITLE}
         </h2>
@@ -569,7 +602,7 @@ export function HubYourShop(props: {
       </section>
       ) : null}
 
-      <section className="hub-card ks-glass-card" aria-labelledby="hub-price-title">
+      <section className="hub-card ks-glass-card" id="hub-add-price-list" aria-labelledby="hub-price-title">
         <h2 id="hub-price-title" className="hub-card__title">
           {HUB_DETAILS_PRICE_TITLE}
         </h2>
@@ -598,11 +631,40 @@ export function HubYourShop(props: {
           <p className="hub-card__body">{HUB_EMPTY_PRICE}</p>
         )}
       </section>
+      {showOther ? (
+      <section className="hub-card ks-glass-card" id="hub-add-other" aria-labelledby="hub-other-title">
+        <h2 id="hub-other-title" className="hub-card__title">
+          {HUB_DETAILS_OTHER_TITLE}
+        </h2>
+        <p className="hub-card__body">{HUB_UPLOAD_HINT_OTHER}</p>
+        {props.canUpload ? (
+          <HubUploader token={props.token} apiBase={props.apiBase} kind="OTHER" hint={HUB_UPLOAD_HINT_OTHER} onUploaded={addAsset} />
+        ) : null}
+        {others.length ? (
+          <ul className="hub-photo-grid hub-photo-grid--files">
+            {others.map((asset) => (
+              <PhotoTile
+                key={asset.id}
+                apiRoot={apiRoot}
+                asset={asset}
+                canEdit={props.canUpload}
+                compact
+                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+                onDelete={() => requestDelete(asset)}
+                onMove={(dir) => void moveAsset('OTHER', asset.id, dir)}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="hub-card__body">{HUB_EMPTY_OTHER}</p>
+        )}
+      </section>
+      ) : null}
       </>
       ) : null}
 
       {showAbout ? (
-      <section className="hub-card ks-glass-card" aria-labelledby="hub-about-title">
+      <section className="hub-card ks-glass-card" id="hub-add-text" aria-labelledby="hub-about-title">
         <h2 id="hub-about-title" className="hub-card__title">
           {HUB_DETAILS_ABOUT_TITLE}
         </h2>

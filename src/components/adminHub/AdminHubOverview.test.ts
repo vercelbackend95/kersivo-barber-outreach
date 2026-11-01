@@ -29,6 +29,10 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('AdminHubActivityFeed');
     expect(src).not.toContain('admin-hub-sw--empty');
     expect(src).toContain('overviewHideAddMaterialsPrimary');
+    expect(src).toContain('AdminHubAddMenu');
+    expect(src).toContain('overviewAddMenuFromHub');
+    expect(src).not.toContain('HUB_PRIMARY.requested');
+    expect(src).not.toContain('HUB_PRIMARY.designing');
     expect(src).toContain('overviewPreviewLocked');
     expect(src).toContain('overviewChangesLocked');
     expect(src).toContain('isOverviewTerminal');

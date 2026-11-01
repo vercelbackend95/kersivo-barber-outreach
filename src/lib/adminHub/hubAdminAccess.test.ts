@@ -43,6 +43,7 @@ import {
   HUB_INVITE_FORBIDDEN_MESSAGE,
   HUB_OWNER_EDIT_DEBOUNCE_MS,
   denyHubInvite,
+  hubStageAllowsDraftAdmin,
   isAdminApiPath,
   isHubAdminApiAllowed,
   isHubOnlyAdminApiRequest,
@@ -97,6 +98,16 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.clearAllMocks();
+});
+
+describe('hubStageAllowsDraftAdmin', () => {
+  it('matches the H1 draft-shop stages', () => {
+    expect(hubStageAllowsDraftAdmin('requested')).toBe(true);
+    expect(hubStageAllowsDraftAdmin('designing')).toBe(true);
+    expect(hubStageAllowsDraftAdmin('review')).toBe(true);
+    expect(hubStageAllowsDraftAdmin('launch')).toBe(false);
+    expect(hubStageAllowsDraftAdmin('live')).toBe(false);
+  });
 });
 
 describe('HUB_ADMIN_API_ALLOWLIST', () => {

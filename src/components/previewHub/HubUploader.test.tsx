@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HUB_ATTACH, HUB_EMPTY_PHOTOS, HUB_UPLOAD_CHOOSE, HUB_UPLOAD_DROP } from '@/lib/freePreview/hubCopy';
 import { HubUploader } from './HubUploader';
 import { HubYourShop } from './HubYourShop';
@@ -62,6 +62,38 @@ describe('HubYourShop', () => {
     expect(screen.getByText('On dark')).toBeTruthy();
     expect(screen.queryByText('Primary colour')).toBeNull();
     expect(screen.queryByText(HUB_EMPTY_PHOTOS)).toBeNull();
+  });
+
+  it('scrolls the materials app to the requested block', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: () => ({
+        matches: false,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }),
+    });
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        canUpload
+        canEditDetails
+        focus="materials"
+        highlight="photos"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[]}
+      />,
+    );
+    expect(document.getElementById('hub-add-photos')).toBeTruthy();
+    expect(document.getElementById('hub-add-logo')).toBeTruthy();
+    expect(document.getElementById('hub-add-text')).toBeTruthy();
+    expect(document.getElementById('hub-add-team-photos')).toBeTruthy();
+    expect(document.getElementById('hub-add-price-list')).toBeTruthy();
+    expect(document.getElementById('hub-add-other')).toBeTruthy();
+    expect(document.getElementById('hub-add-photos')?.className).toContain('is-hub-add-target');
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 
   it('hides uploaders when the owner cannot upload', () => {

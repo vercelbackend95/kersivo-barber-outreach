@@ -19,6 +19,7 @@ import {
   resolveAdminHubApp,
   type AdminHubAppId,
 } from '@/lib/adminHub/apps';
+import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
@@ -121,29 +122,45 @@ export function AppHost(props: {
     };
   }, [app, loader, retry]);
 
+  const writeLocation = useCallback((id: AdminHubAppId | null, item: string | null, push: boolean) => {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set('app', id);
+    else url.searchParams.delete('app');
+    if (id && item) url.searchParams.set('item', item);
+    else url.searchParams.delete('item');
+    const state = { adminHubApp: id, adminHubItem: item };
+    if (push) {
+      history.pushState(state, '', url);
+      pushedRef.current = true;
+    } else {
+      history.replaceState(state, '', url);
+    }
+    window.dispatchEvent(new Event(ADMIN_HUB_LOCATION_EVENT));
+  }, []);
+
   const close = useCallback(() => {
     if (pushedRef.current) {
       pushedRef.current = false;
       history.back();
       return;
     }
-    const url = new URL(window.location.href);
-    url.searchParams.delete('app');
-    history.replaceState({ adminHubApp: null }, '', url);
+    writeLocation(null, null, false);
     withTransition(() => setApp(null));
     queueMicrotask(() => openerRef.current?.focus());
-  }, []);
+  }, [writeLocation]);
 
-  const open = useCallback((id: AdminHubAppId, opener: HTMLElement | null, push: boolean) => {
-    openerRef.current = opener;
-    if (push) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('app', id);
-      history.pushState({ adminHubApp: id }, '', url);
-      pushedRef.current = true;
-    }
-    withTransition(() => setApp(id));
-  }, []);
+  const open = useCallback(
+    (id: AdminHubAppId, opener: HTMLElement | null, push: boolean, item: string | null = null) => {
+      openerRef.current = opener;
+      if (id === app) {
+        writeLocation(id, item, false);
+        return;
+      }
+      writeLocation(id, item, push);
+      withTransition(() => setApp(id));
+    },
+    [app, writeLocation],
+  );
 
   useEffect(() => {
     const onPop = () => {
@@ -170,8 +187,8 @@ export function AppHost(props: {
         const id = parseAdminHubApp(button.getAttribute('data-admin-hub-app'));
         if (!id) return;
         mouse.preventDefault();
-        if (id === app) return;
-        open(id, button, true);
+        const item = parseAdminHubAddWebsiteItem(button.getAttribute('data-admin-hub-item'));
+        open(id, button, true, item);
         return;
       }
       const link = target?.closest?.('a') as HTMLAnchorElement | null;
@@ -186,8 +203,8 @@ export function AppHost(props: {
       const id = parseAdminHubApp(url.searchParams.get('app'));
       if (!id) return;
       mouse.preventDefault();
-      if (id === app) return;
-      open(id, link, true);
+      const item = parseAdminHubAddWebsiteItem(url.searchParams.get('item'));
+      open(id, link, true, item);
     };
     root.addEventListener('click', onClick);
     return () => root.removeEventListener('click', onClick);

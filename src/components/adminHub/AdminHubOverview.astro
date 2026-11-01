@@ -25,6 +25,8 @@ import {
   ADMIN_HUB_TILE_PROGRESS,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import { AdminHubAddMenu } from './AdminHubAddMenu';
+import { hubCanAddShopItems, overviewAddMenuFromHub } from '@/lib/adminHub/addMenu';
 import {
   isOverviewTerminal,
   overviewActivityFeed,
@@ -115,6 +117,7 @@ const feed = overviewActivityFeed(activity, new Date());
 const initials = shopInitials(shopName);
 const previewColour = colours.swatches[0]?.css || 'var(--color-brand)';
 const headerPrimary = primary && !overviewHideAddMaterialsPrimary(state.stage) ? primary : null;
+const addMenu = overviewAddMenuFromHub({ stage: state.stage, capabilities: state.capabilities });
 const terminal = isOverviewTerminal(state.stage);
 ---
 
@@ -126,7 +129,7 @@ const terminal = isOverviewTerminal(state.stage);
       <p class="admin-hub-head__sub">{header.sub}</p>
     </div>
     {
-      headerPrimary || showLaunch ? (
+      headerPrimary || showLaunch || !addMenu.empty ? (
         <div class="admin-hub-head__actions">
           {showLaunch ? (
             <PreviewTopBar
@@ -152,6 +155,13 @@ const terminal = isOverviewTerminal(state.stage);
               {headerPrimary.label}
             </a>
           ) : null}
+          <AdminHubAddMenu
+            client:load
+            stage={state.stage}
+            capabilities={state.capabilities}
+            canAddShop={hubCanAddShopItems(state.stage)}
+            tone={addMenu.tone}
+          />
         </div>
       ) : null
     }

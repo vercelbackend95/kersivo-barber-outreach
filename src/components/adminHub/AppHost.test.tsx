@@ -55,6 +55,7 @@ function renderHost(initialApp: 'logo' | 'materials' | null = 'logo') {
   return render(
     <div className="admin-shell">
       <a href="/admin?app=logo">Open logo</a>
+      <a href="/admin?app=materials&item=photos">Shop photos</a>
       <button type="button" data-admin-hub-app="materials">
         Add photos or a logo to your website
       </button>
@@ -132,6 +133,14 @@ describe('AppHost', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog.className).toContain('admin-hub-app--sheet');
     expect(dialog.className).toContain('admin-hub-app--fullscreen');
+  });
+
+  it('keeps item= on materials links so the app can focus that block', async () => {
+    renderHost(null);
+    fireEvent.click(screen.getByRole('link', { name: 'Shop photos' }));
+    await screen.findByRole('dialog');
+    expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+    expect(new URL(window.location.href).searchParams.get('item')).toBe('photos');
   });
 
   it('traps tab inside the window', async () => {

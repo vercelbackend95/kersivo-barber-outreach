@@ -1614,3 +1614,93 @@ test.describe('A1 labelled add actions', () => {
   });
 });
 
+test.describe('A2 overview add menu', () => {
+  test.beforeAll(async ({ request }) => {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      try {
+        if ((await request.get('/preview-hub-qa/health')).ok()) break;
+      } catch {
+        /* server still starting */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  test('A2: Add menu opens materials on Shop photos and the new-service sheet', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a2' : '/tmp/kersivo-shots/a2';
+    mkdirSync(shotRoot, { recursive: true });
+    const a2Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.requested.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    expect(await hubCookie(context)).toBeTruthy();
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    const add = page.getByTestId('admin-hub-add');
+    await expect(add).toBeVisible();
+    await expect(add).toHaveText(/^Add$/);
+    await expect(add).toHaveClass(/btn--primary/);
+    await expect(page.getByTestId('admin-hub-primary')).toHaveCount(0);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(add).toBeVisible();
+    await expect(async () => {
+      if ((await add.getAttribute('aria-expanded')) !== 'true') await add.click();
+      await expect(add).toHaveAttribute('aria-expanded', 'true');
+    }).toPass({ timeout: 15000 });
+    await expect(page.getByTestId('admin-hub-add-menu')).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Shop photos/ })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Service/ })).toHaveAttribute('href', '/admin/services?add=1');
+    await a2Shot('menu-open');
+
+    await page.getByRole('menuitem', { name: /Shop photos/ }).click();
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-app')).toHaveAttribute('data-app', 'materials');
+    await expect(page.locator('#hub-add-photos')).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('item')).toBe('photos');
+    await a2Shot('materials-photos');
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-add')).toBeVisible();
+    await expect(async () => {
+      if ((await page.getByTestId('admin-hub-add').getAttribute('aria-expanded')) !== 'true') {
+        await page.getByTestId('admin-hub-add').click();
+      }
+      await expect(page.getByTestId('admin-hub-add')).toHaveAttribute('aria-expanded', 'true');
+    }).toPass({ timeout: 15000 });
+    await page.getByRole('menuitem', { name: /Service/ }).click();
+    await expect(page).toHaveURL(/\/admin\/services/);
+    await expect(page.locator('#admin-service-form-title')).toBeVisible({ timeout: 15000 });
+    expect(new URL(page.url()).searchParams.has('add')).toBe(false);
+    await a2Shot('services-add');
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-primary')).toHaveText('Open your preview');
+    await expect(page.getByTestId('admin-hub-add')).toHaveClass(/btn--outline/);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expect(async () => {
+      if ((await page.getByTestId('admin-hub-add').getAttribute('aria-expanded')) !== 'true') {
+        await page.getByTestId('admin-hub-add').click();
+      }
+      await expect(page.getByTestId('admin-hub-add-sheet')).toBeVisible();
+    }).toPass({ timeout: 15000 });
+    await a2Shot('menu-sheet');
+  });
+});
+

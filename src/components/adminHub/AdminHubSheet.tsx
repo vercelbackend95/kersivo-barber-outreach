@@ -1,6 +1,8 @@
-import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ComponentType, type KeyboardEvent, type ReactNode, type SVGProps } from 'react';
 import { MessageCircle, X } from '@/components/lucide-react';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
+
+type SheetIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -18,10 +20,13 @@ export function AdminHubSheet(props: {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  icon?: SheetIcon;
+  testId?: string;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const Icon = props.icon ?? MessageCircle;
   const sheet =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(max-width: 1023px)').matches
@@ -70,7 +75,7 @@ export function AdminHubSheet(props: {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        data-testid="admin-hub-suggest"
+        data-testid={props.testId ?? 'admin-hub-suggest'}
         tabIndex={-1}
         style={sheet ? undefined : { maxWidth: 720 }}
         onKeyDown={onKeyDown}
@@ -78,7 +83,7 @@ export function AdminHubSheet(props: {
         {sheet ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
         <header className="admin-hub-app__bar">
           <span className="admin-hub-app__icon" aria-hidden="true">
-            <MessageCircle width={16} height={16} strokeWidth={1.8} />
+            <Icon width={16} height={16} strokeWidth={1.8} />
           </span>
           <div>
             <h2 className="admin-hub-app__title" id={titleId}>

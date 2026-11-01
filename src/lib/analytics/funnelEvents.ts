@@ -94,6 +94,10 @@ export const FUNNEL_EVENTS = {
   preview_declined: 'preview_declined',
   /** Shop Hub: first owner view per stage. Server-side only. Never for operators. */
   hub_viewed: 'hub_viewed',
+  /** Admin Hub: owner opened the Overview Add menu. No personal data. */
+  hub_add_menu_open: 'hub_add_menu_open',
+  /** Admin Hub: owner chose an Add menu item. Param `{ item }` is an allowlisted id. */
+  hub_add_menu_item: 'hub_add_menu_item',
   /** Shop Hub: owner uploaded a file. Param `{ kind }` only. */
   hub_asset_uploaded: 'hub_asset_uploaded',
   /** Shop Hub: owner saved brand / about fields. */

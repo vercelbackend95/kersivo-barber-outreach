@@ -161,7 +161,12 @@ export function denyHubRestricted(access: { via: string }): Response | null {
   return access.via === 'hub' ? hubAdminUnavailableResponse() : null;
 }
 
-const HUB_ADMIN_STAGES = new Set(['requested', 'designing', 'review']);
+/** Stages where hub visitors may manage the ownerless draft shop (H1). */
+export const HUB_ADMIN_STAGES = new Set(['requested', 'designing', 'review']);
+
+export function hubStageAllowsDraftAdmin(stage: string): boolean {
+  return HUB_ADMIN_STAGES.has(stage);
+}
 
 export type HubAdminAccess = {
   shopId: string;
