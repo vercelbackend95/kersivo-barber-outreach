@@ -544,7 +544,7 @@ export default function AdminPanel({
         }
         isPreviewAccess={demoMode || isHubChrome ? false : isPreviewAccess}
         permissions={demoMode ? null : permissions}
-        persistentAdminChrome={isHubChrome ? null : <AdminGlobalMobileNextStripHost />}
+        persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
         showcaseMode={showcaseMode}
       >
         {sessionPending ? null : (
@@ -586,7 +586,6 @@ export default function AdminPanel({
                 key="services"
                 isBlacklineDemo={demoTenant === 'blackline'}
                 showcaseMode={showcaseMode}
-                isHubAccess={isHubAccess}
               />
             ) : null}
 
@@ -630,18 +629,14 @@ export default function AdminPanel({
 
   return (
     <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
-    {isHubChrome ? (
-      layout
-    ) : (
     <AdminTodayBookingsLiveProvider
       isPublicDemo={demoMode}
       isBlacklineDemo={demoTenant === 'blackline'}
       showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
-      initialBookings={initialBookings}
+      initialBookings={isHubChrome ? [] : initialBookings}
     >
       {layout}
     </AdminTodayBookingsLiveProvider>
-    )}
     </AdminClockContext.Provider>
   );
 }

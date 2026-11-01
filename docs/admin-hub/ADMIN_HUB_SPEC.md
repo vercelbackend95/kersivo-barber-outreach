@@ -44,7 +44,7 @@ The owner's first screen of KERSIVO is now the product they will use every day. 
 - Feature flag `ADMIN_HUB_ENABLED` (server-only). Off → today's behaviour exactly (`/preview/{token}` renders the old hub if `PREVIEW_HUB_ENABLED`, otherwise the legacy preview).
 
 ### 2.3 Hub mode must never expose full admin
-In hub mode the client receives hub chrome plus the real Team, Services and Products screens, bound to the **ownerless draft shop**. `ks_hub` is tenant access only through `resolveHubAdminAccess()` (`via: 'hub'`).
+In hub mode the client receives hub chrome plus the real Team, Services and Products screens, bound to the **ownerless draft shop**. The first visit to `/admin/team`, `/admin/services` or `/admin/products` creates that shop if it is missing — the owner lands on the same KERSIVO admin as after payment, not a setup placeholder. `ks_hub` is tenant access only through `resolveHubAdminAccess()` (`via: 'hub'`).
 
 Default-deny on `/api/admin/*`:
 - Middleware (`isHubOnlyAdminApiRequest` + `isHubAdminApiAllowed`) allows only the exact method+path pairs in `HUB_ADMIN_API_ALLOWLIST` (session, services, barbers, team cards / booking-only seats / hours / time blocks, products). No prefix wildcard.

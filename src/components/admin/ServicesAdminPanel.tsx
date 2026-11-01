@@ -117,11 +117,9 @@ function useAdminBodyScrollLock(isLocked: boolean): void {
 export default function ServicesAdminPanel({
   isBlacklineDemo = false,
   showcaseMode = false,
-  isHubAccess = false,
 }: {
   isBlacklineDemo?: boolean;
   showcaseMode?: boolean;
-  isHubAccess?: boolean;
 }) {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -423,7 +421,7 @@ export default function ServicesAdminPanel({
         }
       />
 
-      {isHubAccess ? null : <AdminDesktopDashHeroSlot />}
+      <AdminDesktopDashHeroSlot />
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}

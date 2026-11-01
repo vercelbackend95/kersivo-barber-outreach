@@ -2,12 +2,9 @@
 export const prerender = false;
 
 import AdminPanel from '@/components/admin/AdminPanel';
-import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
-import { HubDraftShopSetup } from '@/components/adminHub/HubDraftShopSetup';
 import PreviewHubAdminDocument from '@/layouts/PreviewHubAdminDocument.astro';
 import {
   hubChromeFromPage,
-  pageHasDraftShop,
   preparePreviewHubRealAdminPage,
 } from '@/lib/adminHub/previewHubAdminPage';
 
@@ -17,18 +14,9 @@ const prepared = await preparePreviewHubRealAdminPage({
 });
 if (prepared.kind === 'response') return prepared.response;
 const { data } = prepared;
-const hasDraftShop = pageHasDraftShop(data);
 const hubChrome = hubChromeFromPage(data, 'services');
 ---
 
 <PreviewHubAdminDocument title={`${data.title} — ${data.shopName} | KERSIVO`}>
-  {
-    hasDraftShop ? (
-      <AdminPanel client:load initialSection="services" hubChrome={hubChrome} />
-    ) : (
-      <PreviewHubFrame data={data} section="services">
-        <HubDraftShopSetup client:load />
-      </PreviewHubFrame>
-    )
-  }
+  <AdminPanel client:load initialSection="services" hubChrome={hubChrome} />
 </PreviewHubAdminDocument>
