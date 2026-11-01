@@ -158,7 +158,9 @@ const terminal = isOverviewTerminal(state.stage);
     }
   </header>
 
-  {setup ? <AdminHubSetupCard placement="mobile" card={setup} /> : null}
+  {setup ? (
+    <AdminHubSetupCard client:load placement="mobile" card={setup} storageScope={request.email} />
+  ) : null}
 
   {
     terminal ? (

@@ -445,6 +445,24 @@ export default function AdminLayout({
     email: null,
     image: null,
   };
+  const setupStorageScope = hubProfileUser.email || hubProfileUser.name || shopName || 'hub';
+  const setupCard =
+    isPreviewChrome && previewSetup ? (
+      <AdminHubSetupCard
+        placement="sidebar"
+        card={previewSetup}
+        storageScope={setupStorageScope}
+      />
+    ) : null;
+  const setupCardMobile =
+    isPreviewChrome && previewSetup ? (
+      <AdminHubSetupCard
+        placement="mobile"
+        card={previewSetup}
+        storageScope={setupStorageScope}
+        onNavigate={() => setIsMobileMenuOpen(false)}
+      />
+    ) : null;
 
   const accountFooter = isPreviewChrome ? (
     <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="desktop" />
@@ -848,23 +866,26 @@ export default function AdminLayout({
             </button>
           </div>
         </div>
-        <div className="admin-mobile-drawer-launch">
-          {isPreviewChrome ? (
-            previewSetup ? <AdminHubSetupCard placement="sidebar" card={previewSetup} /> : null
-          ) : isBlacklineDemo ? (
-            <BlacklineConversionCard />
-          ) : canManageBilling ? (
-            <AdminSidebarLaunchCta
-              isPublicDemo={isPublicDemo}
-              onSpaSection={changeSection}
-              onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
-              placement="mobile"
-            />
-          ) : null}
-        </div>
+        {!isPreviewChrome ? (
+          <div className="admin-mobile-drawer-launch">
+            {isBlacklineDemo ? (
+              <BlacklineConversionCard />
+            ) : canManageBilling ? (
+              <AdminSidebarLaunchCta
+                isPublicDemo={isPublicDemo}
+                onSpaSection={changeSection}
+                onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
+                placement="mobile"
+              />
+            ) : null}
+          </div>
+        ) : null}
         {renderMenu(false)}
-        <div className="admin-sidebar-divider" aria-hidden="true" />
-        {accountFooterMobile}
+        <div className="admin-mobile-drawer-dock">
+          {setupCardMobile}
+          <div className="admin-sidebar-divider" aria-hidden="true" />
+          {accountFooterMobile}
+        </div>
       </aside>
     </>
   );
@@ -886,9 +907,7 @@ export default function AdminLayout({
         />
         {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
-          {isPreviewChrome && previewSetup ? (
-            <AdminHubSetupCard placement="sidebar" card={previewSetup} />
-          ) : null}
+          {setupCard}
           <SidebarStatus
             paused={publicActivityPaused && !previewUnderConstruction}
             underConstruction={previewUnderConstruction}

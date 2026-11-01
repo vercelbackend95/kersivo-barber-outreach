@@ -41,7 +41,11 @@ describe('preview hub paths', () => {
 
   it('removes admin-hub-tabs from the codebase', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/styles/components/admin-hub.css'), 'utf8');
+    const booking = readFileSync(resolve(process.cwd(), 'src/styles/components/booking.css'), 'utf8');
     const layout = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminLayout.tsx'), 'utf8');
+    expect(css).toContain('admin-hub-setup__count');
+    expect(booking).toContain('admin-mobile-drawer-dock');
+    expect(booking).toContain('overflow: hidden');
     expect(css).not.toContain('admin-hub-tabs');
     expect(layout).not.toContain('admin-hub-tabs');
     expect(layout).toContain("mode === 'preview'");
@@ -50,6 +54,8 @@ describe('preview hub paths', () => {
     expect(layout).toContain('previewUnreadMessages');
     expect(layout).toContain('admin-sidebar-link-badge');
     expect(layout).toContain('placement="sidebar"');
+    expect(layout).toContain('placement="mobile"');
+    expect(layout).toContain('admin-mobile-drawer-dock');
     expect(layout).toContain('admin-mobile-top-chrome');
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubShell.astro'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubSetupCard.astro'))).toBe(false);

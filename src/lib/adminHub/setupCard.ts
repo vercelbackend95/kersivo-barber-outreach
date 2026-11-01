@@ -15,6 +15,86 @@ export const SETUP_PHASE3_DISMISS = 'Dismiss';
 export const SETUP_PHASE3_RETAIL_HREF = '/admin/retail-onboarding';
 export const SETUP_PHASE3_TEST_BOOK_HREF = '/admin/test-book';
 
+/** Compact sidebar/drawer card (preview hub). Phase titles stay on the model for apps. */
+export const SETUP_CARD_TITLE = 'Set up your website';
+export const SETUP_COMPLETE_LABEL = 'Setup complete';
+export const SETUP_SHOW_ALL_STEPS = 'Show all steps';
+export const SETUP_HIDE_STEPS = 'Hide steps';
+export const SETUP_EXPAND_STORAGE_KEY = 'ks_admin_hub_setup_expanded';
+export const SETUP_COMPLETE_STORAGE_KEY = 'ks_admin_hub_setup_complete_at';
+export const SETUP_COMPLETE_VISIBLE_MS = 7 * 24 * 60 * 60 * 1000;
+export const SETUP_EXPAND_EVENT = 'ks-admin-hub-setup-expand';
+
+export function setupDoneStatus(done: number, total: number): string {
+  return `${done} of ${total} done`;
+}
+
+export function setupCardAllDone(card: { done: number; total: number }): boolean {
+  return card.total > 0 && card.done >= card.total;
+}
+
+export type SetupCardChrome = 'checklist' | 'complete' | 'hidden';
+
+/** All-done with no stored date hides immediately (private mode / blocked storage). */
+export function resolveSetupCardChrome(
+  allDone: boolean,
+  nowMs: number,
+  storedCompleteAtMs: number | null,
+): SetupCardChrome {
+  if (!allDone) return 'checklist';
+  if (storedCompleteAtMs == null || !Number.isFinite(storedCompleteAtMs)) return 'hidden';
+  if (nowMs - storedCompleteAtMs < SETUP_COMPLETE_VISIBLE_MS) return 'complete';
+  return 'hidden';
+}
+
+export function setupStorageKey(base: string, scope?: string | null): string {
+  const suffix = (scope ?? '').trim().toLowerCase();
+  return suffix ? `${base}:${suffix}` : base;
+}
+
+function storageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function storageSet(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function readSetupExpanded(scope?: string | null): boolean {
+  return storageGet(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope)) === '1';
+}
+
+export function writeSetupExpanded(expanded: boolean, scope?: string | null): void {
+  storageSet(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope), expanded ? '1' : '0');
+}
+
+export function readSetupCompleteAtMs(scope?: string | null): number | null {
+  const raw = storageGet(setupStorageKey(SETUP_COMPLETE_STORAGE_KEY, scope));
+  if (!raw) return null;
+  const ms = Number(raw);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+export function writeSetupCompleteAtMs(ms: number, scope?: string | null): boolean {
+  return storageSet(setupStorageKey(SETUP_COMPLETE_STORAGE_KEY, scope), String(ms));
+}
+
+/** Persist the first time every step is done so the 7-day complete line can show. */
+export function rememberSetupCompleteAt(nowMs: number, scope?: string | null): number | null {
+  const existing = readSetupCompleteAtMs(scope);
+  if (existing != null) return existing;
+  return writeSetupCompleteAtMs(nowMs, scope) ? nowMs : null;
+}
+
 export function setupPhase1Status(done: number, total: number): string {
   return `Your shop · ${done} of ${total}`;
 }

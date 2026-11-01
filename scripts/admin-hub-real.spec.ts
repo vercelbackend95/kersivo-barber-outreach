@@ -11,12 +11,14 @@ const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
 const shotDir4 = join(root, 'docs/admin-hub/screens/batch-4');
 const shotDir5 = join(root, 'docs/admin-hub/screens/batch-5');
 const shotDir6 = join(root, 'docs/admin-hub/screens/batch-6');
+const shotDirSetup = join(root, 'docs/admin-hub/screens/setup-compact');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
 mkdirSync(shotDir3, { recursive: true });
 mkdirSync(shotDir4, { recursive: true });
 mkdirSync(shotDir5, { recursive: true });
 mkdirSync(shotDir6, { recursive: true });
+mkdirSync(shotDirSetup, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 360: 800, 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -131,11 +133,40 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
     await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Overview/);
     await expect(page.locator('.admin-sidebar .admin-hub-setup')).toBeVisible();
-    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Help us build your site');
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await page.locator('.admin-sidebar .admin-sidebar-profile').click();
     await expect(page.getByRole('menuitem', { name: 'Leave preview' })).toBeVisible();
     await shots(page, 'requested-overview', [390, 768, 1280, 1440]);
     await expectNoSeriousAxe(page, 'requested-overview');
+  });
+
+  test('compact sidebar setup card fits 1280x700 with status and profile visible', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 700 });
+    await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    const card = page.locator('.admin-sidebar .admin-hub-setup');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Set up your website');
+    await expect(card.getByRole('link')).toHaveCount(1);
+    const box = await card.boundingBox();
+    expect(box?.height, 'collapsed card height').toBeLessThanOrEqual(120);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toBeInViewport();
+    await expect(page.locator('.admin-sidebar .admin-sidebar-profile')).toBeInViewport();
+    const wrapOverflow = await page.locator('.admin-sidebar').evaluate((el) => {
+      const nav = el.querySelector('.admin-sidebar-nav');
+      const dock = el.querySelector('.admin-sidebar-logout-wrap');
+      const style = getComputedStyle(el);
+      return {
+        sidebarOverflow: style.overflowY === 'hidden' || style.overflow === 'hidden',
+        navScrolls: nav ? getComputedStyle(nav).overflowY === 'auto' : false,
+        dockInView: dock ? dock.getBoundingClientRect().bottom <= 700 + 1 : false,
+      };
+    });
+    expect(wrapOverflow.sidebarOverflow).toBe(true);
+    expect(wrapOverflow.navScrolls).toBe(true);
+    expect(wrapOverflow.dockInView).toBe(true);
+    await page.screenshot({
+      path: join(shotDirSetup, 'sidebar-1280x700.png'),
+    });
   });
 
   test('READY email links map every sub-route', async ({ page }) => {
@@ -245,7 +276,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
     expect((await response!.text()).includes(seed.converted.token)).toBe(false);
     await shots(page, 'converted-launch', [390, 1440]);
-    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await expect(page.locator('.admin-sidebar .admin-hub-setup a[href="/admin?app=business"]')).toBeVisible();
   });
 
@@ -311,6 +342,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
 
+    await page.locator('.admin-sidebar .admin-hub-setup button[aria-label="Show all steps"]').click();
     await page.locator('.admin-sidebar .admin-hub-setup a[href="/admin?app=photos"]').click();
     await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await page.goBack();
@@ -320,6 +352,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
   test('before Review the services app shows the from-your-links state', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    await page.locator('.admin-sidebar .admin-hub-setup button[aria-label="Show all steps"]').click();
     await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('From your links');
     await page.screenshot({ path: join(shotDir2, 'requested-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -336,7 +369,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/admin');
-    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await page.screenshot({ path: join(shotDir2, 'launch-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'launch-card-390.png'), fullPage: true });
@@ -883,7 +916,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
 
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.goto('/admin');
-    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await shots6(page, 'journey-launch', [360, 390, 768, 1280, 1440]);
     const approved = await page.request.post('/api/admin/preview-launch/approve', {
       headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },

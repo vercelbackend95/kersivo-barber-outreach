@@ -99,6 +99,7 @@ describe('/admin hub pages never expose the token', () => {
       expect(src).not.toContain('previewPagePath');
       expect(src).not.toContain('/api/preview-hub');
     }
+    expect(read('src/components/adminHub/AdminHubSetupCard.tsx')).not.toMatch(/\bfetch\s*\(/);
   });
 
   it('is private and refuses to render outside hub mode', () => {
