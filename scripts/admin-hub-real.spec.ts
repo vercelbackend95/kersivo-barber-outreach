@@ -1132,4 +1132,285 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     expect(new URL(page.url()).pathname).toBe('/admin/team');
     expect(teamLegacy?.status()).toBe(200);
   });
+
+  test('H4: allowlist walk, cross-tenant, cookie states, CSRF, no outbound, under-construction', async ({
+    page,
+    context,
+    request,
+  }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/h4' : '/tmp/kersivo-shots/h4';
+    mkdirSync(shotRoot, { recursive: true });
+
+    const inventory = await request.get('/api/preview-hub-qa/admin-api-inventory');
+    expect(inventory.ok(), `inventory ${inventory.status()}`).toBeTruthy();
+    const inventoryJson = (await inventory.json()) as {
+      rows: Array<{ method: string; path: string; allowlisted: boolean }>;
+      table: string;
+    };
+    writeFileSync(join(shotRoot, 'allowlist.md'), inventoryJson.table);
+
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    const cookie = await hubCookie(context);
+    expect(cookie).toBeTruthy();
+    const hubHeaders = {
+      Cookie: `${cookie!.name}=${cookie!.value}`,
+      Origin: ORIGIN,
+      'Content-Type': 'application/json',
+    };
+
+    const emailsBefore = await request.get('/api/preview-hub-qa/emails');
+    const stripeBefore = await request.get('/api/preview-hub-qa/stripe');
+    const emailCountBefore = ((await emailsBefore.json()) as { emails?: unknown[] }).emails?.length ?? 0;
+    const stripeStubBefore = JSON.stringify(await stripeBefore.json());
+
+    const liveRows: Array<{ method: string; path: string; allowlisted: boolean; status: number }> = [];
+    for (const row of inventoryJson.rows) {
+      const path = row.path.replace(/:[^/]+/g, 'x');
+      const res = await page.request.fetch(path, {
+        method: row.method,
+        headers: hubHeaders,
+        data: row.method === 'GET' || row.method === 'HEAD' ? undefined : {},
+        failOnStatusCode: false,
+      });
+      liveRows.push({ ...row, status: res.status() });
+      if (row.allowlisted) {
+        expect(res.status(), `${row.method} ${row.path} allowlisted`).not.toBe(403);
+        expect(res.status(), `${row.method} ${row.path} allowlisted`).toBeGreaterThanOrEqual(200);
+        expect(res.status(), `${row.method} ${row.path} allowlisted`).toBeLessThan(500);
+      } else {
+        expect(res.status(), `${row.method} ${row.path} denied`).toBe(403);
+      }
+    }
+    writeFileSync(join(shotRoot, 'allowlist-live.json'), JSON.stringify(liveRows, null, 2));
+
+    const created = await page.request.post('/api/admin/services', {
+      headers: hubHeaders,
+      data: {
+        name: 'H4 Fade',
+        pricePence: 2500,
+        durationMinutes: 45,
+        category: 'featured',
+        shopId: seed.live.shopId,
+      },
+    });
+    expect([200, 201], `create H4 Fade ${created.status()}`).toContain(created.status());
+    const createdJson = (await created.json()) as { service?: { id: string; shopId?: string; name: string } };
+    expect(createdJson.service?.name).toBe('H4 Fade');
+
+    const product = await page.request.post('/api/admin/shop/products/create', {
+      headers: hubHeaders,
+      data: {
+        name: 'H4 Clay',
+        pricePence: 1400,
+        shopId: seed.live.shopId,
+      },
+    });
+    expect([200, 201], `create H4 Clay ${product.status()}`).toContain(product.status());
+
+    const servicesOnA = await page.request.get(`/api/admin/services?shopId=${seed.live.shopId}`, {
+      headers: hubHeaders,
+    });
+    expect(servicesOnA.status()).toBe(200);
+    const servicePayload = (await servicesOnA.json()) as { services: Array<{ id: string; name: string }> };
+    expect(servicePayload.services.some((row) => row.name === 'H4 Fade')).toBe(true);
+    expect(servicePayload.services.some((row) => row.id === seed.live.serviceId)).toBe(false);
+
+    const steal = await page.request.fetch(`/api/admin/services/${seed.live.serviceId}`, {
+      method: 'PATCH',
+      headers: hubHeaders,
+      data: { name: 'Stolen fade', shopId: seed.live.shopId },
+      failOnStatusCode: false,
+    });
+    expect([404, 400], `cross-tenant PATCH ${steal.status()}`).toContain(steal.status());
+
+    const missingOrigin = await page.request.post('/api/admin/services', {
+      headers: { Cookie: hubHeaders.Cookie, 'Content-Type': 'application/json' },
+      data: { name: 'CSRF fade', pricePence: 2500, durationMinutes: 45, category: 'HAIRCUTS' },
+    });
+    expect(missingOrigin.status(), 'missing Origin').toBe(403);
+    const foreignOrigin = await page.request.post('/api/admin/services', {
+      headers: { Cookie: hubHeaders.Cookie, Origin: 'https://evil.example', 'Content-Type': 'application/json' },
+      data: { name: 'CSRF fade', pricePence: 2500, durationMinutes: 45, category: 'HAIRCUTS' },
+    });
+    expect(foreignOrigin.status(), 'foreign Origin').toBe(403);
+
+    const invite = await page.request.post('/api/admin/team/invite', {
+      headers: hubHeaders,
+      data: { name: 'Should Not Send', email: 'should.not.send@hubqa.test', role: 'BARBER' },
+    });
+    expect(invite.status()).toBe(403);
+    expect(await invite.text()).toMatch(
+      /Not available in your preview\.|Invites are available after your shop goes live\./,
+    );
+
+    const emailsAfter = await request.get('/api/preview-hub-qa/emails');
+    const stripeAfter = await request.get('/api/preview-hub-qa/stripe');
+    expect(((await emailsAfter.json()) as { emails?: unknown[] }).emails?.length ?? 0).toBe(emailCountBefore);
+    expect(JSON.stringify(await stripeAfter.json())).toBe(stripeStubBefore);
+
+    const shopState = await request.get(`/api/preview-hub-qa/shop-state?shopId=${seed.ready.shopId}`);
+    expect(shopState.ok()).toBeTruthy();
+    const stateJson = (await shopState.json()) as {
+      acceptingBookings: boolean;
+      shop: { retailEnabled: boolean; publicActivityPaused: boolean; ownerUserId: string | null };
+      services: Array<{ name: string }>;
+      products: Array<{ name: string }>;
+    };
+    expect(stateJson.acceptingBookings).toBe(false);
+    expect(stateJson.shop.retailEnabled).toBe(false);
+    expect(stateJson.shop.publicActivityPaused).toBe(true);
+    expect(stateJson.shop.ownerUserId).toBeNull();
+    expect(stateJson.services.some((row) => row.name === 'H4 Fade')).toBe(true);
+    expect(stateJson.products.some((row) => row.name === 'H4 Clay')).toBe(true);
+
+    const bookPage = await page.goto(`/book/${seed.ready.shopId}`);
+    expect(bookPage?.ok() || bookPage?.status() === 200).toBeTruthy();
+    await expect(page.locator('body')).toContainText('Online booking is temporarily unavailable');
+
+    await page.goto(`/preview/${seed.expired.token}`);
+    const expiredCookie = await hubCookie(context);
+    expect(expiredCookie).toBeTruthy();
+    const expiredApi = await page.request.get('/api/admin/services', {
+      headers: { Cookie: `${expiredCookie!.name}=${expiredCookie!.value}`, Origin: ORIGIN },
+    });
+    expect([401, 403], 'expired request').toContain(expiredApi.status());
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.converted.token}`);
+    const convertedCookie = await hubCookie(context);
+    if (convertedCookie) {
+      const convertedApi = await page.request.get('/api/admin/services', {
+        headers: { Cookie: `${convertedCookie.name}=${convertedCookie.value}`, Origin: ORIGIN },
+      });
+      expect([401, 403], 'converted request cookie').toContain(convertedApi.status());
+    }
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await page.locator('.admin-sidebar .admin-sidebar-profile').click();
+    await page.getByRole('menuitem', { name: 'Leave preview' }).click();
+    await page.waitForURL(`${ORIGIN}/`);
+    expect(await hubCookie(context)).toBeUndefined();
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
+    const afterLeave = await page.request.get('/api/admin/services', { headers: { Origin: ORIGIN } });
+    expect([401, 403], 'after leave-preview').toContain(afterLeave.status());
+  });
+
+  test('H4: converted owner keeps hub catalogue; paid admin menu unchanged', async ({ page }) => {
+    await signIn(page, seed.owner.email, seed.owner.password);
+    const session = await page.request.get('/api/admin/session', { headers: { Origin: ORIGIN } });
+    expect(session.ok(), `converted session ${session.status()}`).toBeTruthy();
+    const sessionJson = (await session.json()) as { shopId?: string };
+    expect(sessionJson.shopId).toBeTruthy();
+
+    const services = await page.request.get('/api/admin/services', { headers: { Origin: ORIGIN } });
+    expect(services.ok()).toBeTruthy();
+    const serviceNames = ((await services.json()) as { services: Array<{ name: string }> }).services.map(
+      (row) => row.name,
+    );
+    expect(serviceNames.filter((name) => name === 'Skin fade')).toHaveLength(1);
+    expect(serviceNames.filter((name) => name === 'Beard trim')).toHaveLength(1);
+
+    const team = await page.request.get('/api/admin/team', { headers: { Origin: ORIGIN } });
+    expect(team.ok()).toBeTruthy();
+    const teamText = await team.text();
+    expect(teamText).toContain('Alex Reed');
+    expect(teamText).toContain('Jordan Cole');
+    expect((teamText.match(/Alex Reed/g) ?? []).length).toBeGreaterThanOrEqual(1);
+
+    await page.context().clearCookies();
+    await signIn(page, seed.live.owner.email, seed.live.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
+    await expect(page.locator('.admin-sidebar')).toContainText('Bookings');
+    await expect(page.locator('.admin-sidebar')).toContainText('Reports');
+    await expect(page.locator('.admin-sidebar')).toContainText('Clients');
+    await expect(page.locator('.admin-sidebar')).toContainText('Orders');
+    await expect(page.locator('.admin-sidebar')).toContainText('Sales');
+    await expect(page.locator('.admin-sidebar')).toContainText('Assistant');
+
+    const liveInvite = await page.request.post('/api/admin/team/invite', {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: { name: 'H4 Invite', email: 'h4.invite@hubqa.test', role: 'BARBER' },
+    });
+    const liveInviteBody = await liveInvite.text();
+    expect(liveInviteBody).not.toContain('Invites are available after your shop goes live.');
+    expect([200, 201, 400, 409], `live invite ${liveInvite.status()} ${liveInviteBody}`).toContain(
+      liveInvite.status(),
+    );
+  });
+
+  test('H4: UX pass at 375, 768, 1024 and 1440', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/h4' : '/tmp/kersivo-shots/h4';
+    mkdirSync(shotRoot, { recursive: true });
+    const widths = [375, 768, 1024, 1440] as const;
+    const h4Shot = async (name: string) => {
+      for (const width of widths) {
+        await page.setViewportSize({ width, height: width <= 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        if (width >= 1024) {
+          await expect(page.locator('.admin-sidebar')).toBeVisible();
+          await expect(page.locator('.admin-sidebar .admin-sidebar-group-title', { hasText: 'Your website' })).toBeVisible();
+          await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/team"]')).toBeVisible();
+          await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/services"]')).toBeVisible();
+          await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/products"]')).toBeVisible();
+        } else {
+          await expect(page.locator('.admin-mobile-top-chrome')).toBeVisible();
+        }
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    expect(await hubCookie(context)).toBeTruthy();
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
+    await h4Shot('overview');
+
+    await page.goto('/admin/services');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/services"][aria-current="page"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add service' })).toBeVisible({ timeout: 15000 });
+    await h4Shot('services');
+
+    await page.goto('/admin/team');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/team"][aria-current="page"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add team member' })).toBeVisible({ timeout: 15000 });
+    await h4Shot('team');
+
+    await page.goto('/admin/products');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/products"][aria-current="page"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add product' })).toBeVisible({ timeout: 15000 });
+    await h4Shot('products');
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin/services');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    const focus = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el) return { tag: '', outline: '' };
+      const style = getComputedStyle(el);
+      return {
+        tag: `${el.tagName.toLowerCase()}${el.className ? `.${String(el.className).split(' ')[0]}` : ''}`,
+        outline: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+        boxShadow: style.boxShadow,
+      };
+    });
+    expect(focus.tag.length).toBeGreaterThan(0);
+    const visibleFocus =
+      (focus.outline && focus.outline !== 'none' && focus.outlineWidth !== '0px') ||
+      (focus.boxShadow && focus.boxShadow !== 'none');
+    expect(visibleFocus, `focus-visible on ${focus.tag}`).toBeTruthy();
+    await page.screenshot({ path: join(shotRoot, 'keyboard-focus-1440.png'), fullPage: true });
+  });
 });
