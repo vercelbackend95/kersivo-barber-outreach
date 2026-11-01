@@ -148,4 +148,6 @@ export const ADMIN_HUB_WEBSITE_FULL_SCREEN = 'Full screen';
 export const ADMIN_HUB_WEBSITE_SUGGEST_SHORT = 'Suggest';
 export const ADMIN_HUB_WEBSITE_SCALED = (width: number) => `${width}px · scaled to fit`;
 export const ADMIN_HUB_CHANGES_SUB = 'Tell us what to change on your preview.';
+export const ADMIN_HUB_CHANGES_SELF_EDIT =
+  'Prices, services, team and products: edit them yourself in the menu — they update your booking preview straight away.';
 export const ADMIN_HUB_BOOKING_EMPTY = "We're still adding services and barbers to this booking page.";

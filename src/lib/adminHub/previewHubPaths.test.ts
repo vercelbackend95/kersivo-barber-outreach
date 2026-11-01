@@ -45,6 +45,8 @@ describe('preview hub paths', () => {
     );
     expect(previewHubLegacyRedirect(new URL('http://x/admin?app=messages&draft=reopen'))).toBeNull();
     expect(previewHubLegacyRedirect(new URL('http://x/admin?app=colours'))).toBeNull();
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=services'))).toBe('/admin/services');
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=team'))).toBe('/admin/team');
   });
 
   it('removes leftover hub chrome and keeps paid admin CSS on main', () => {

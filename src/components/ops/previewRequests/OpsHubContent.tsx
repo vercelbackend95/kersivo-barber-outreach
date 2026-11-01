@@ -10,12 +10,14 @@ import {
   HUB_OPS_DISMISS_NOTE,
   HUB_OPS_DISMISSED,
   HUB_OPS_MANUAL_WEBSITE_UPDATE,
+  HUB_OPS_REVIEW_HISTORICAL,
   HUB_OPS_WEBSITE_REMINDER,
   HUB_RETRY,
   HUB_REVIEW_BIO,
   HUB_REVIEW_SHOW_ON_WEBSITE,
 } from '@/lib/freePreview/hubCopy';
 import type { HubReviewPublic, HubReviewSection, HubReviewShopData } from '@/lib/freePreview/hubReviews';
+import { isRetiredHubReviewSection } from '@/lib/freePreview/hubReviews.shared';
 
 const TITLES: Record<HubReviewSection, string> = {
   SERVICES: HUB_DETAILS_SERVICES_TITLE,
@@ -108,7 +110,10 @@ export function OpsHubContent(props: {
                 </ul>
               </div>
             ) : null}
-            {review?.state === 'CORRECTIONS_SENT' ? (
+            {isRetiredHubReviewSection(section) && review ? (
+              <p className="ops-pr__empty">{HUB_OPS_REVIEW_HISTORICAL}</p>
+            ) : null}
+            {review?.state === 'CORRECTIONS_SENT' && !isRetiredHubReviewSection(section) ? (
               <>
                 <label>
                   {HUB_OPS_DISMISS_NOTE}

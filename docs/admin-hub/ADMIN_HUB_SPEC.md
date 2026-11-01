@@ -12,7 +12,7 @@ Visual source of truth: `docs/admin-hub/mockups/*.png` (2× PNG) and the matchin
 | Before (Batches 1–6) | After (this spec) |
 |---|---|
 | Hub lives at `/preview/{token}/…` with its own shell | Hub lives at **`/admin`**, inside the real KERSIVO admin shell (same sidebar, theme `admin-theme-premium-black`, same components) |
-| Nav: Overview · Website · Your shop · Changes · Messages | Nav: **Overview · Changes · Website** (3 items) |
+| Nav: Overview · Website · Your shop · Changes · Messages | Nav: **Your website** (Overview · Changes · Website · Messages) plus the real **Booking system** (Team · Services) and **Shop / Retail** (Products) groups — seven items, same `AdminLayout` as paid admin |
 | "Your shop" page with stacked forms | Each shop detail is an **app** opened from the red setup card or a bento tile |
 | Overview = vertical list of cards | Overview = **bento grid** of tiles; each tile opens its app |
 | Messages = page | Messages = **app** (tile + top-bar icon) |
@@ -44,14 +44,28 @@ The owner's first screen of KERSIVO is now the product they will use every day. 
 - Feature flag `ADMIN_HUB_ENABLED` (server-only). Off → today's behaviour exactly (`/preview/{token}` renders the old hub if `PREVIEW_HUB_ENABLED`, otherwise the legacy preview).
 
 ### 2.3 Hub mode must never expose full admin
-In hub mode the client receives only hub state. No full-admin API is callable with only `ks_hub` (all existing admin endpoints keep requiring a real session — add a test that hits a sample of them with only the cookie → 401/403).
+In hub mode the client receives hub chrome plus the real Team, Services and Products screens, bound to the **ownerless draft shop**. `ks_hub` is tenant access only through `resolveHubAdminAccess()` (`via: 'hub'`).
+
+Default-deny on `/api/admin/*`:
+- Middleware (`isHubOnlyAdminApiRequest` + `isHubAdminApiAllowed`) allows only the exact method+path pairs in `HUB_ADMIN_API_ALLOWLIST` (session, services, barbers, team cards / booking-only seats / hours / time blocks, products). No prefix wildcard.
+- Everything else returns **403** with `Not available in your preview.` before the handler runs.
+- `access.shopId` always comes from the cookie’s draft shop. Client `shopId` in the body or query is ignored.
+- Invites (`denyHubInvite`) stay off until the shop is paid and live. No email, SMS or Stripe from allowlisted handlers.
+- Product create does **not** mark retail onboarding complete when `via === 'hub'`. Adding products does not enable retail.
+- Draft shops stay under construction (`publicActivityPaused`, no `PUBLIC_BOOKING` entitlement). Hub edits cannot make the shop public or bookable.
+- Converted / launch / live / expired / rejected / anonymised requests, and an operator cookie without a live operator session, get no hub admin access.
+- A Better Auth session still wins. After checkout the owner uses the same screens with the full menu.
+
+The inventory walker (`src/lib/adminHub/adminApiInventory.ts`) and `docs/admin-hub/reports/H4_SECURITY.md` are the living table of every `/api/admin/*` method+path.
 
 ## 3. Shell (hub mode)
 
-**Desktop ≥1024px** (mockups 01, 03): left sidebar 256px, reusing the admin sidebar styles:
-1. KERSIVO wordmark (red dot) · 2. shop chip (logo or initials on brand colour, name, town) · 3. stage pill · 4. nav group "YOUR WEBSITE": **Overview**, **Changes** (badge = open items), **Website** · spacer · 5. **red setup card** (§5) · 6. "Private · hidden from search engines" · 7. account row (email or "Viewing as KERSIVO"; "Leave preview").
+**Desktop ≥1024px** (mockups 01, 03): left sidebar 256px, reusing `AdminLayout` with `mode="preview"`:
+1. KERSIVO wordmark (red dot) · 2. shop chip (logo or initials on brand colour, name, town) · 3. stage pill · 4. nav groups — **Your website:** Overview, Changes (badge = open items), Website, Messages · **Booking system:** Team (`/admin/team`), Services (`/admin/services`) · **Shop / Retail:** Products (`/admin/products`) · spacer · 5. **red setup card** (§5) · 6. "Private · hidden from search engines" · 7. account row (email or "Viewing as KERSIVO"; "Leave preview").
 
-**Mobile <1024px** (mockups 04, 05): top bar = wordmark · shop name · stage pill · Messages icon with unread dot. Bottom tab bar with **3 tabs** (Overview, Changes with count badge, Website), icon above label, active = red top indicator + red icon, safe-area padding, ≥44px targets. The red setup card sits at the top of Overview (above the bento), full width.
+The three real-admin items open `ServicesAdminPanel`, `BookingsAdminPanel` (`mode="blocks"`) and `ShopAdminPanel` (products tab) inside the hub chrome. Do not fork or restyle those panels. LIVE badges, dashboard invites, Orders and Sales stay hidden until the shop is paid.
+
+**Mobile <1024px** (mockups 04, 05): top bar = wordmark · shop name · stage pill · Messages icon with unread dot. The same seven links are in the mobile drawer (no separate 3-tab bar). The red setup card sits at the top of Overview (above the bento), full width.
 
 Main column: max 1180px, padding 28/36px desktop, 16px mobile. Page header = eyebrow (red dot + section name), H1, one-line sub, actions on the right (desktop) / 2-up buttons under the header (mobile).
 
@@ -80,18 +94,18 @@ Same component family as `AdminLaunchCtaButton` `--conversion` (red gradient, ic
 
 | Phase | Status / title | Rows → app |
 |---|---|---|
-| 1 · Preview (Requested→Review) | "YOUR SHOP · n OF 6" / "Help us build your site" | Logo → `?app=logo` · Shop photos → `?app=photos` · Services & prices → `?app=services` · Team → `?app=team` · Opening hours → `?app=hours` · About your shop (Optional) → `?app=about` |
+| 1 · Preview (Requested→Review) | "YOUR SHOP · n OF 7" / "Help us build your site" | Logo → `?app=logo` · Shop photos → `?app=photos` · Services & prices → `/admin/services` · Team → `/admin/team` · Opening hours → `?app=hours` · About your shop (Optional) → `?app=about` · Products (Optional) → `/admin/products` |
 | 2 · Launch (paid, not live) | "LAUNCH · n OF 4" / "Let's put you live" | Business details · Domain · Payments (Optional) · Approve your website → the existing launch checklist items (`/admin/preview-launch#item`, restyled in this shell) |
 | 3 · Live (full admin) | "YOU'RE LIVE · n OF 3" / "Get the most from KERSIVO" | View your website (opens live site, marks done) · Make a test booking (`/admin/test-book`) · Set up retail (Optional, existing retail onboarding) |
 
-Done rules phase 1: Logo = ≥1 LOGO asset; Shop photos = ≥1 SHOP_PHOTO; Services/Team/Hours = review state CONFIRMED or CORRECTIONS_SENT/APPLIED; About = aboutText present. Before Review, Services/Team/Hours show tag "From your links" and their app explains "We'll fill these from your links — you'll check them when your preview is ready" (they do not block the count; count = 6 always). Phase 3: card hides when all done or after "Dismiss" (stored per shop). Starter and non-hub shops keep today's card logic untouched.
+Done rules phase 1: Logo = ≥1 LOGO asset; Shop photos = ≥1 SHOP_PHOTO; Services = ≥1 active service on the draft shop; Team = ≥1 active barber on the draft shop; Hours = review state CONFIRMED or CORRECTIONS_SENT/APPLIED; About = aboutText present; Products (optional) = ≥1 product on the draft shop. Hours still uses the hub Hours app and, before Review, may show tag "From your links". `?app=services` and `?app=team` 303 to the real screens. Phase 3: card hides when all done or after "Dismiss" (stored per shop). Starter and non-hub shops keep today's card logic untouched.
 
 ## 6. Apps (window on desktop, sheet on mobile)
 
-- Opened by `?app=<id>` (ids: `logo, photos, services, team, hours, about, colours, messages, activity, setup`). `setup` = list of the six detail apps (target of old `/details`).
+- Opened by `?app=<id>` (ids: `logo, photos, materials, hours, about, colours, messages, activity, setup, business, domain, payments, approve`). `setup` = list of the remaining detail apps (target of old `/details`). **Services, Team and Products are not apps** — they are the real admin screens at `/admin/services`, `/admin/team` and `/admin/products`.
 - Desktop: centred window over a blurred scrim, max-width 1120px (messages 720px), radius 22px, title bar (icon, title, breadcrumb "Overview › …", optional action, close), scrollable body, sticky footer with the single primary action. Mobile: bottom sheet at full height minus top bar, grab handle, sticky footer.
 - Behaviour: focus trap, `Esc` closes, back button closes (history entry per open), focus returns to the tile/row that opened it, `aria-modal`, title as `aria-labelledby`. View Transitions API morph from tile → window when supported and `prefers-reduced-motion` is not set; otherwise 160ms fade/scale.
-- Content reuses existing islands: `HubUploader` (logo, photos, price list inside Photos app as a second section), `HubReviewCards` (services, team, hours), about text field, `HubMessages` (messages), activity feed. Restyle only; keep their logic and tests.
+- Content reuses existing islands: `HubUploader` (logo, photos, price list inside Photos app as a second section), `HubReviewCards` (hours only — services/team review cards are retired; POSTing those kinds returns 410), about text field, `HubMessages` (messages), activity feed. Restyle only; keep their logic and tests.
 
 ## 7. Brand colours app (mockups 02, 07)
 

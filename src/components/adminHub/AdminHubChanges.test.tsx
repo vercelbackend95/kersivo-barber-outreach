@@ -3,7 +3,7 @@
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ADMIN_HUB_CHANGES_DRAFTS, ADMIN_HUB_CHANGES_WITH } from '@/lib/adminHub/copy';
+import { ADMIN_HUB_CHANGES_DRAFTS, ADMIN_HUB_CHANGES_SELF_EDIT, ADMIN_HUB_CHANGES_WITH } from '@/lib/adminHub/copy';
 import { HUB_CHANGES_ADD, HUB_CHANGES_SEND } from '@/lib/freePreview/hubCopy';
 import { AdminHubChanges } from './AdminHubChanges';
 
@@ -37,6 +37,7 @@ describe('AdminHubChanges', () => {
     );
     expect(screen.getByText(ADMIN_HUB_CHANGES_DRAFTS)).toBeTruthy();
     expect(screen.getByText(ADMIN_HUB_CHANGES_WITH)).toBeTruthy();
+    expect(screen.getByText(ADMIN_HUB_CHANGES_SELF_EDIT, { exact: false })).toBeTruthy();
     expect(screen.getByText('Home')).toBeTruthy();
     expect(screen.getByText('Draft')).toBeTruthy();
     expect((screen.getByRole('button', { name: HUB_CHANGES_SEND }) as HTMLButtonElement).disabled).toBe(false);

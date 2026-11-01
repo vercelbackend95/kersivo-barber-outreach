@@ -150,9 +150,17 @@ describe('adoptPreviewDraftShop (claim)', () => {
     });
     // Ownership only: no publicActivityPaused change, so the shop stays "under construction" until approval.
     const shopUpdate = tx.shopSettings.update.mock.calls[0]![0] as { data: Record<string, unknown> };
+    expect(shopUpdate.data).toEqual({
+      ownerUserId: 'user_1',
+      onboardingCompleted: true,
+      onboardingCompletedAt: NOW,
+    });
     expect(Object.keys(shopUpdate.data)).not.toContain('publicActivityPaused');
     expect(Object.keys(shopUpdate.data)).not.toContain('bookingPaymentMode');
     expect(Object.keys(shopUpdate.data)).not.toContain('retailEnabled');
+    expect('create' in tx.service).toBe(false);
+    expect('create' in tx.barber).toBe(false);
+    expect('product' in tx).toBe(false);
     expect(tx.shopMember.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ create: { shopId: 'shop_draft', userId: 'user_1', role: 'OWNER' } }),
     );

@@ -59,6 +59,8 @@ export function previewHubLegacyRedirect(url: URL): string | null {
   const view = url.searchParams.get('view');
   const draft = url.searchParams.get('draft');
 
+  if (app === 'services') return PREVIEW_HUB_PATHS.services;
+  if (app === 'team') return PREVIEW_HUB_PATHS.team;
   if (section === 'changes') return withSearch(PREVIEW_HUB_PATHS.changes, { view, draft, app });
   if (section === 'website') return withSearch(PREVIEW_HUB_PATHS.website, { view, draft, app });
   if (section === 'messages') {

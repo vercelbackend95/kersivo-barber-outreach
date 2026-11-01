@@ -17,6 +17,7 @@ import {
 import { loadHubLaunchProgress } from '@/lib/freePreview/hubLaunch';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
 import { parseAdminHubApp, type AdminHubAppId } from './apps';
+import { loadDraftShopSetupCounts } from './draftShopSetupCounts';
 import { previewHubSectionFromPath, type PreviewHubSection } from './previewHubPaths';
 import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel } from './setupCard';
 
@@ -58,14 +59,12 @@ export async function loadAdminHubView(
     location.app === 'logo' ||
     location.app === 'photos' ||
     location.app === 'materials' ||
-    location.app === 'services' ||
-    location.app === 'team' ||
     location.app === 'hours' ||
     location.app === 'about' ||
     location.app === 'colours';
   const wantsLaunch = isSetupPhase2Stage(stage) || location.app === 'business' || location.app === 'domain' || location.app === 'payments' || location.app === 'approve';
 
-  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages] =
+  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages, shopCounts] =
     await Promise.all([
       loadActiveHubAssets(id),
       loadLatestHubReviews(id),
@@ -78,6 +77,7 @@ export async function loadAdminHubView(
       wantsLaunch ? loadHubLaunchProgress(id) : Promise.resolve(null),
       wantsChanges ? loadHubChanges(id) : Promise.resolve([]),
       wantsMessages ? loadHubMessages(id) : Promise.resolve([]),
+      loadDraftShopSetupCounts(ctx.request.draftShopId),
     ]);
 
   const serialized = assets.map(serializeHubAsset);
@@ -100,6 +100,7 @@ export async function loadAdminHubView(
       TEAM: reviews.TEAM?.state ?? null,
       HOURS: reviews.HOURS?.state ?? null,
     },
+    shopCounts,
     launch: launchFlags,
   });
 

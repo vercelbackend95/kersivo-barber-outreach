@@ -13,6 +13,7 @@ import {
   teamFingerprint,
 } from './hubReviews';
 import { HUB_NOW_REVIEW_NEED_ALL, HUB_NOW_REVIEW_NEED_DONE, HUB_REVIEW_CARD_FOOTER } from './hubCopy';
+import { isRetiredHubReviewSection } from './hubReviews.shared';
 
 const baseline = servicesFingerprint([
   { id: 'svc_1', name: 'Skin fade', durationMinutes: 45, pricePence: 2500 },
@@ -85,15 +86,23 @@ describe('hub review card states and Now copy', () => {
     expect(HUB_REVIEW_CARD_FOOTER).toContain("don't use your round");
   });
 
+  it('closes new services and team proposals', () => {
+    expect(isRetiredHubReviewSection('SERVICES')).toBe(true);
+    expect(isRetiredHubReviewSection('TEAM')).toBe(true);
+    expect(isRetiredHubReviewSection('HOURS')).toBe(false);
+  });
+
   it('tells the owner what is left to check', () => {
     expect(
       reviewNowNeed({ SERVICES: 'not_checked', TEAM: 'not_checked', HOURS: 'not_checked' }),
     ).toBe(HUB_NOW_REVIEW_NEED_ALL);
+    expect(HUB_NOW_REVIEW_NEED_ALL).toContain('opening hours');
+    expect(HUB_NOW_REVIEW_NEED_ALL).not.toContain('services');
     expect(reviewNowNeed({ SERVICES: 'confirmed', TEAM: 'updated', HOURS: 'corrections_sent' })).toBe(
       HUB_NOW_REVIEW_NEED_DONE,
     );
-    expect(reviewNowNeed({ SERVICES: 'not_checked', TEAM: 'confirmed', HOURS: 'confirmed' })).toContain(
-      'services',
+    expect(reviewNowNeed({ SERVICES: 'not_checked', TEAM: 'not_checked', HOURS: 'confirmed' })).toBe(
+      HUB_NOW_REVIEW_NEED_DONE,
     );
   });
 

@@ -43,7 +43,7 @@ describe('AdminHubSetupCard', () => {
   it('shows the compact title, count and only the next step until expanded', () => {
     render(<AdminHubSetupCard placement="sidebar" card={incompleteCard()} storageScope={scope} />);
     expect(screen.getByRole('heading', { name: SETUP_CARD_TITLE })).toBeTruthy();
-    expect(screen.getByText('0 of 6 done')).toBeTruthy();
+    expect(screen.getByText('0 of 7 done')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Logo, Next' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Shop photos/ })).toBeNull();
 
