@@ -1413,4 +1413,107 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     expect(visibleFocus, `focus-visible on ${focus.tag}`).toBeTruthy();
     await page.screenshot({ path: join(shotRoot, 'keyboard-focus-1440.png'), fullPage: true });
   });
+
+  test('A0: hub-only owner can upload, save about, message and open checkout', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a0' : '/tmp/kersivo-shots/a0';
+    mkdirSync(shotRoot, { recursive: true });
+    const a0Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    const cookies = await context.cookies();
+    expect(cookies.some((cookie) => cookie.name === 'ks_hub'), 'ks_hub present').toBe(true);
+    expect(
+      cookies.some((cookie) => /better-auth\.session_token/i.test(cookie.name)),
+      'hub-only: no Better Auth cookie',
+    ).toBe(false);
+    expect(
+      cookies.some((cookie) => cookie.name === 'kersivo_shop_preview'),
+      'hub-only: no guest preview cookie',
+    ).toBe(false);
+
+    const jpeg = Buffer.from(
+      '/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAgDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAL/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCfwFD/2Q==',
+      'base64',
+    );
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+
+    await page.goto('/admin?app=materials');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    const shopUpload = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/assets') && res.request().method() === 'POST',
+    );
+    await page.locator('[data-testid="hub-upload-shop_photo"]').setInputFiles({
+      name: 'shop.jpg',
+      mimeType: 'image/jpeg',
+      buffer: jpeg,
+    });
+    const shopRes = await shopUpload;
+    expect(shopRes.status(), `shop photo ${shopRes.status()} ${await shopRes.text()}`).toBeLessThan(400);
+    await expect(page.locator('.hub-photo-grid img[alt="shop.jpg"]')).toBeVisible();
+
+    const logoUpload = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/assets') && res.request().method() === 'POST',
+    );
+    await page.locator('[data-testid="hub-upload-logo"]').setInputFiles({
+      name: 'logo.png',
+      mimeType: 'image/png',
+      buffer: png,
+    });
+    const logoRes = await logoUpload;
+    expect(logoRes.status(), `logo ${logoRes.status()} ${await logoRes.text()}`).toBeLessThan(400);
+    await expect(page.locator('.hub-swatch img')).toHaveCount(2);
+    await a0Shot('materials');
+
+    await page.goto('/admin?app=about');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    const about = page.locator('#hub-about');
+    await expect(about).toBeVisible();
+    const aboutSave = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/details') && res.request().method() === 'PATCH',
+    );
+    await about.fill('We cut classic and modern styles in Bournemouth.');
+    const aboutRes = await aboutSave;
+    expect(aboutRes.status(), `about ${aboutRes.status()} ${await aboutRes.text()}`).toBeLessThan(400);
+    await expect(page.locator('.hub-savehint.is-saved')).toBeVisible();
+    await a0Shot('about');
+
+    const message = `A0 hub-only message ${Date.now()}`;
+    await page.goto('/admin/messages');
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    const composer = page.getByTestId('hub-message-body');
+    await expect(composer).toBeVisible();
+    await composer.click();
+    await composer.fill(message);
+    await expect(composer).toHaveValue(message);
+    await expect(page.getByTestId('hub-send-message')).toBeEnabled();
+    const sent = page.waitForResponse((res) => {
+      const url = new URL(res.url());
+      return url.pathname === '/api/admin-hub/messages' && res.request().method() === 'POST';
+    });
+    await page.getByTestId('hub-send-message').click();
+    const sentRes = await sent;
+    expect(sentRes.status(), `message ${sentRes.status()} ${await sentRes.text()}`).toBeLessThan(400);
+    await expect(page.getByText(message)).toBeVisible();
+    await a0Shot('messages');
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await page.getByTestId('hub-subscribe').click();
+    await expect(page.getByRole('heading', { name: 'Launch this website' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue to secure checkout' })).toBeVisible();
+    await a0Shot('checkout');
+  });
 });

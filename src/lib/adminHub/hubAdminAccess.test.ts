@@ -43,6 +43,7 @@ import {
   HUB_INVITE_FORBIDDEN_MESSAGE,
   HUB_OWNER_EDIT_DEBOUNCE_MS,
   denyHubInvite,
+  isAdminApiPath,
   isHubAdminApiAllowed,
   isHubOnlyAdminApiRequest,
   recordHubOwnerAdminEdit,
@@ -143,6 +144,17 @@ describe('HUB_ADMIN_API_ALLOWLIST', () => {
   it('never uses a /api/admin/* prefix wildcard', () => {
     expect(HUB_ADMIN_API_ALLOWLIST.some((entry) => entry.path === '/api/admin/*')).toBe(false);
     expect(HUB_ADMIN_API_ALLOWLIST.some((entry) => entry.path.endsWith('/*'))).toBe(false);
+  });
+});
+
+describe('isAdminApiPath', () => {
+  it('matches /api/admin and /api/admin/... only', () => {
+    expect(isAdminApiPath('/api/admin')).toBe(true);
+    expect(isAdminApiPath('/api/admin/')).toBe(true);
+    expect(isAdminApiPath('/api/admin/services')).toBe(true);
+    expect(isAdminApiPath('/api/admin-hub/assets')).toBe(false);
+    expect(isAdminApiPath('/api/admin-demo/x')).toBe(false);
+    expect(isAdminApiPath('/api/administrator')).toBe(false);
   });
 });
 
@@ -284,9 +296,12 @@ describe('middleware wiring', () => {
     const src = readFileSync(resolve(process.cwd(), 'src/middleware.ts'), 'utf8');
     expect(src).toContain('isHubOnlyAdminApiRequest');
     expect(src).toContain('isHubAdminApiAllowed');
+    expect(src).toContain('isAdminApiPath');
     expect(src).toContain('hubAdminUnavailableResponse');
     expect(src).toContain('recordHubOwnerAdminEdit');
     expect(src).toContain('isPreviewHubAllowedPath');
+    expect(src).not.toMatch(/startsWith\(ADMIN_API_PREFIX\)/);
+    expect(src).not.toMatch(/startsWith\(['"]\/api\/admin['"]\)/);
     expect(HUB_ADMIN_UNAVAILABLE_MESSAGE).toBe('Not available in your preview.');
   });
 });

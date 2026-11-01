@@ -6,6 +6,7 @@ import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
 import {
   hubAdminUnavailableResponse,
+  isAdminApiPath,
   isHubAdminApiAllowed,
   isHubOnlyAdminApiRequest,
   recordHubOwnerAdminEdit,
@@ -18,8 +19,6 @@ import {
   evaluateOriginGate,
   parseAllowedOrigins,
 } from '@/lib/security/origin';
-
-const ADMIN_API_PREFIX = '/api/admin';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url } = context;
@@ -60,7 +59,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (
     !SAFE_METHODS.has(method) &&
-    url.pathname.startsWith(ADMIN_API_PREFIX) &&
+    isAdminApiPath(url.pathname) &&
     request.headers.get(DEMO_ADMIN_MODE_HEADER) === 'true'
   ) {
     return applySecurityHeaders(
@@ -72,8 +71,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  const hubOnlyAdminApi =
-    url.pathname.startsWith(ADMIN_API_PREFIX) && isHubOnlyAdminApiRequest(request);
+  const hubOnlyAdminApi = isAdminApiPath(url.pathname) && isHubOnlyAdminApiRequest(request);
   if (hubOnlyAdminApi && !isHubAdminApiAllowed(method, url.pathname)) {
     return applySecurityHeaders(hubAdminUnavailableResponse(), { isProd, isHttps });
   }
