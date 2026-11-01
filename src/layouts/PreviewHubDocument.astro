@@ -1,0 +1,65 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/booking-review.css';
+import '@/styles/components/admin-mobile-sticky-overrides.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/admin-section-header.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/admin-onboarding.css';
+import '@/styles/components/admin-client-onboarding.css';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/domain-searcher.css';
+import '@/styles/components/preview-hub.css';
+import '@/styles/components/admin-hub.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<MinimalLayout
+  title={title}
+  description="A private KERSIVO shop hub."
+  canonicalPath="/admin"
+  noindex={true}
+  robotsFollow={false}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-400-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-600-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <main class="container page-wrap admin-page-wrap">
+    <h1 class="sr-only">Kersivo Admin Panel</h1>
+    <slot />
+  </main>
+</MinimalLayout>

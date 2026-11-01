@@ -96,8 +96,9 @@ export function HubMessages(props: {
   initialMessages: HubMessagePublic[];
   initialDraft?: string;
   canAttach?: boolean;
-  /** Admin-hub app window: hide the page H1 (the window already has a title). */
-  chrome?: 'page' | 'app';
+  /** Admin-hub app window: hide the page H1 (the window already has a title). Section = full /admin/messages view. */
+  chrome?: 'page' | 'app' | 'section';
+  emptyLabel?: string;
 }) {
   const [messages, setMessages] = useState<ThreadItem[]>(props.initialMessages);
   const [draft, setDraft] = useState(props.initialDraft ?? '');
@@ -184,6 +185,10 @@ export function HubMessages(props: {
 
   const remaining = HUB_MESSAGE_MAX_ATTACHMENTS - attachments.length;
   const canSend = draft.trim().length > 0 && draft.trim().length <= HUB_MESSAGE_MAX_CHARS && !sending;
+  const chrome = props.chrome ?? 'page';
+  const emptyLabel = props.emptyLabel ?? HUB_MESSAGES_EMPTY;
+  const messagesClass =
+    chrome === 'app' ? 'hub-messages hub-messages--app' : chrome === 'section' ? 'hub-messages hub-messages--section' : 'hub-messages';
 
   const send = async (localId?: string) => {
     const body = draft.trim();
@@ -258,14 +263,14 @@ export function HubMessages(props: {
 
   return (
     <section
-      className={props.chrome === 'app' ? 'hub-messages hub-messages--app' : 'hub-messages'}
-      aria-labelledby={props.chrome === 'app' ? undefined : 'hub-messages-title'}
+      className={messagesClass}
+      aria-labelledby={chrome === 'page' ? 'hub-messages-title' : undefined}
     >
-      {props.chrome === 'app' ? null : (
-      <h1 id="hub-messages-title" className="hub-messages__title">
-        {props.shopName}
-      </h1>
-      )}
+      {chrome === 'page' ? (
+        <h1 id="hub-messages-title" className="hub-messages__title">
+          {props.shopName}
+        </h1>
+      ) : null}
       <div className="hub-messages__thread" ref={listRef} aria-live="polite">
         {loadError ? (
           <div className="hub-error" role="alert">
@@ -275,7 +280,7 @@ export function HubMessages(props: {
             </button>
           </div>
         ) : null}
-        {!messages.length && !loadError ? <p className="hub-messages__empty">{HUB_MESSAGES_EMPTY}</p> : null}
+        {!messages.length && !loadError ? <p className="hub-messages__empty">{emptyLabel}</p> : null}
         {grouped.map((day) => (
           <div key={day.key} className="hub-messages__day">
             <p className="hub-messages__day-label">{day.key}</p>

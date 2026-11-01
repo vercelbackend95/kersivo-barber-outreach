@@ -1,6 +1,10 @@
 ---
+export const prerender = false;
+
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import AdminPanel from '../components/admin/AdminPanel';
+import AdminHubOverview from '@/components/adminHub/AdminHubOverview.astro';
+import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../styles/tokens.css';
 import '@/styles/fonts-admin.css';
@@ -24,49 +28,119 @@ import '../styles/components/table.css';
 import '../styles/components/admin-ai.css';
 import type { APIContext } from 'astro';
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
+import { preparePreviewHubPage } from '@/lib/adminHub/previewHubPage';
 
 const mode = await resolveAdminPageMode({
   request: Astro.request,
   now: new Date(),
   sessionShop: () => adminSessionShopFor(Astro as unknown as APIContext),
 });
+let hubPage: Awaited<ReturnType<typeof preparePreviewHubPage>> | null = null;
 if (mode) {
   for (const [name, value] of Object.entries(ADMIN_PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
   if (mode.kind === 'hub') {
     Astro.locals.adminHubMode = mode;
-    return Astro.rewrite(`/admin/hub${Astro.url.search}`);
+    hubPage = await preparePreviewHubPage({
+      context: Astro,
+      section: 'overview',
+    });
+    if (hubPage.kind === 'response') return hubPage.response;
+  } else if (mode.setCookie) {
+    Astro.response.headers.append('Set-Cookie', mode.setCookie);
   }
-  if (mode.setCookie) Astro.response.headers.append('Set-Cookie', mode.setCookie);
 }
+
+const hub = hubPage?.kind === 'page' ? hubPage.data : null;
 ---
 
-<MinimalLayout
-  title="Admin | Kersivo"
-  description={PAGE_DESCRIPTIONS.admin}
-  canonicalPath="/admin"
-  htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
-  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
-  enableAnalytics={false}
->
-  <link
-    slot="head"
-    rel="preload"
-    href="/fonts/inter-latin-400-normal.woff2"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    slot="head"
-    rel="preload"
-    href="/fonts/inter-latin-600-normal.woff2"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <main class="container page-wrap admin-page-wrap">
-    <h1 class="sr-only">Kersivo Admin Panel</h1>
-    <AdminPanel client:load initialSection={Astro.url.searchParams.get('section')} />
-  </main>
-</MinimalLayout>
+{
+  hub ? (
+    <MinimalLayout
+      title={`${hub.title} — ${hub.shopName} | KERSIVO`}
+      description="A private KERSIVO shop hub."
+      canonicalPath="/admin"
+      noindex={true}
+      robotsFollow={false}
+      htmlClass="admin-app-scroll"
+      bodyClass="admin-theme-premium-black"
+      viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+      enableAnalytics={false}
+      showCookieConsent={false}
+    >
+      <link
+        slot="head"
+        rel="preload"
+        href="/fonts/inter-latin-400-normal.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin
+      />
+      <link
+        slot="head"
+        rel="preload"
+        href="/fonts/inter-latin-600-normal.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin
+      />
+      <main class="container page-wrap admin-page-wrap">
+        <h1 class="sr-only">Kersivo Admin Panel</h1>
+        <PreviewHubFrame data={hub} section="overview">
+          {
+            hub.view.overview ? (
+              <AdminHubOverview
+                request={hub.ctx.request}
+                state={hub.ctx.state}
+                isOperator={hub.ctx.isOperator}
+                steps={hub.view.overview.steps}
+                activity={hub.view.overview.activity}
+                hasWebsitePreview={Boolean(hub.sitePreviewUrl)}
+                reviewNeed={hub.view.overview.reviewNeed}
+                launchProgress={hub.view.overview.launchProgress}
+                logoSrc={hub.logoSrc}
+                brandColour={hub.ctx.request.brandPrimaryColour}
+                brandSecondaryColour={hub.ctx.request.brandSecondaryColour}
+                brandColoursSentAt={hub.ctx.request.brandColoursSentAt}
+                brandColoursSource={hub.brandColoursSource}
+                brandPaletteExtracted={hub.brandPaletteExtracted}
+                changeItems={hub.view.overview.changeItems}
+                setup={hub.view.setup}
+              />
+            ) : null
+          }
+        </PreviewHubFrame>
+      </main>
+    </MinimalLayout>
+  ) : (
+    <MinimalLayout
+      title="Admin | Kersivo"
+      description={PAGE_DESCRIPTIONS.admin}
+      canonicalPath="/admin"
+      htmlClass="admin-app-scroll"
+      bodyClass="admin-theme-premium-black"
+      viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+      enableAnalytics={false}
+    >
+      <link
+        slot="head"
+        rel="preload"
+        href="/fonts/inter-latin-400-normal.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin
+      />
+      <link
+        slot="head"
+        rel="preload"
+        href="/fonts/inter-latin-600-normal.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin
+      />
+      <main class="container page-wrap admin-page-wrap">
+        <h1 class="sr-only">Kersivo Admin Panel</h1>
+        <AdminPanel client:load initialSection={Astro.url.searchParams.get('section')} />
+      </main>
+    </MinimalLayout>
+  )
+}

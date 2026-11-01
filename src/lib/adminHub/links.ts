@@ -29,12 +29,12 @@ export function tokenHubLinks(token: string): HubLinks {
 
 export const ADMIN_HUB_LINKS: HubLinks = {
   overview: ADMIN_HUB_PATH,
-  website: `${ADMIN_HUB_PATH}?section=website`,
-  booking: `${ADMIN_HUB_PATH}?section=website&view=booking`,
-  changes: `${ADMIN_HUB_PATH}?section=changes`,
+  website: `${ADMIN_HUB_PATH}/website`,
+  booking: `${ADMIN_HUB_PATH}/website?view=booking`,
+  changes: `${ADMIN_HUB_PATH}/changes`,
   details: `${ADMIN_HUB_PATH}?app=setup`,
-  messages: `${ADMIN_HUB_PATH}?app=messages`,
-  messagesDraft: (draft) => `${ADMIN_HUB_PATH}?app=messages&draft=${draft}`,
+  messages: `${ADMIN_HUB_PATH}/messages`,
+  messagesDraft: (draft) => `${ADMIN_HUB_PATH}/messages?draft=${draft}`,
 };
 
 /** Base path of the hub JSON API: the token routes unless the caller is inside /admin. */

@@ -7,7 +7,7 @@ import {
 } from '@/lib/freePreview/hubPage';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
 import { countOpenHubChanges, loadHubChanges } from '@/lib/freePreview/hubChanges';
-import { countUnreadKersivoMessages, loadHubMessages, loadLatestHubMessage } from '@/lib/freePreview/hubMessages';
+import { countUnreadKersivoMessages, loadHubMessages } from '@/lib/freePreview/hubMessages';
 import {
   cardStateFromReview,
   loadHubReviewShopData,
@@ -17,27 +17,25 @@ import {
 import { loadHubLaunchProgress } from '@/lib/freePreview/hubLaunch';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
 import { parseAdminHubApp, type AdminHubAppId } from './apps';
+import { previewHubSectionFromPath, type PreviewHubSection } from './previewHubPaths';
 import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel } from './setupCard';
 
-export type AdminHubSection = 'overview' | 'changes' | 'website';
+export type AdminHubSection = PreviewHubSection;
 
 /**
- * `?section=` picks the nav item (rendered under the overlay). `?app=` opens an app window.
+ * Path picks the nav item (`/admin`, `/admin/changes`, …). `?app=` opens an app window.
  */
-export function parseAdminHubLocation(search: URLSearchParams): {
+export function parseAdminHubLocation(url: URL): {
   section: AdminHubSection;
   app: AdminHubAppId | null;
   view: 'website' | 'booking';
   draft: 'message' | 'reopen' | null;
 } {
-  const rawSection = search.get('section');
-  const section: AdminHubSection =
-    rawSection === 'changes' || rawSection === 'website' ? rawSection : 'overview';
-  const rawDraft = search.get('draft');
+  const rawDraft = url.searchParams.get('draft');
   return {
-    section,
-    app: parseAdminHubApp(search.get('app')),
-    view: search.get('view') === 'booking' ? 'booking' : 'website',
+    section: previewHubSectionFromPath(url.pathname),
+    app: parseAdminHubApp(url.searchParams.get('app')),
+    view: url.searchParams.get('view') === 'booking' ? 'booking' : 'website',
     draft: rawDraft === 'message' || rawDraft === 'reopen' ? rawDraft : null,
   };
 }
@@ -54,12 +52,12 @@ export async function loadAdminHubView(
   const wantsChanges =
     wantsOverview || ((location.section === 'changes' || location.section === 'website') && caps.canDraftChanges);
   const wantsActivity = wantsOverview || location.app === 'activity';
-  const wantsMessages = location.app === 'messages';
-  const wantsLatestMessage = wantsOverview;
+  const wantsMessages = location.section === 'messages' || location.app === 'messages';
   const wantsShop =
     location.app === 'setup' ||
     location.app === 'logo' ||
     location.app === 'photos' ||
+    location.app === 'materials' ||
     location.app === 'services' ||
     location.app === 'team' ||
     location.app === 'hours' ||
@@ -67,7 +65,7 @@ export async function loadAdminHubView(
     location.app === 'colours';
   const wantsLaunch = isSetupPhase2Stage(stage) || location.app === 'business' || location.app === 'domain' || location.app === 'payments' || location.app === 'approve';
 
-  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages, latestMessage] =
+  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages] =
     await Promise.all([
       loadActiveHubAssets(id),
       loadLatestHubReviews(id),
@@ -80,7 +78,6 @@ export async function loadAdminHubView(
       wantsLaunch ? loadHubLaunchProgress(id) : Promise.resolve(null),
       wantsChanges ? loadHubChanges(id) : Promise.resolve([]),
       wantsMessages ? loadHubMessages(id) : Promise.resolve([]),
-      wantsLatestMessage ? loadLatestHubMessage(id) : Promise.resolve(null),
     ]);
 
   const serialized = assets.map(serializeHubAsset);
@@ -127,7 +124,6 @@ export async function loadAdminHubView(
           HOURS: cardStateFromReview(reviews.HOURS?.state ?? null),
         }),
         launchProgress,
-        latestMessage,
         changeItems,
       }
     : null;

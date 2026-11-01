@@ -10,7 +10,7 @@ declare namespace App {
   interface Locals {
     /** Set by middleware from navbarPreviewCta.server — never import that module in client graphs. */
     navbarPreviewCta?: NavbarPreviewCtaLocals | null;
-    /** Set by /admin before it rewrites to /admin/hub (ADMIN_HUB_ENABLED only). */
+    /** Set by middleware /admin when ADMIN_HUB_ENABLED and the visitor is in hub mode. */
     adminHubMode?: Extract<import('./lib/adminHub/adminMode').AdminPageMode, { kind: 'hub' }>;
   }
 }

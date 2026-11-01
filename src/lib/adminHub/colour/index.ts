@@ -24,7 +24,7 @@ export type {
   RgbaImage,
   Srgb,
 } from './types';
-export { HEX_COLOUR_RE, expandShortHex, hexToSrgb, isLightHex, normaliseHexColour, srgbToHex } from './hex';
+export { HEX_COLOUR_RE, expandShortHex, hexToSrgb, isLightHex, normaliseHexColour, parseCssColour, srgbToHex } from './hex';
 export {
   clampToGamut,
   deltaEok,

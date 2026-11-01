@@ -8,6 +8,7 @@ type Loader = () => Promise<{ default: ComponentType<AdminHubAppBodyProps> }>;
 const LOADERS: Record<AdminHubAppId, Loader> = {
   logo: () => import('./LogoApp'),
   photos: () => import('./PhotosApp'),
+  materials: () => import('./MaterialsApp'),
   about: () => import('./AboutApp'),
   services: () => import('./ReviewApp').then((mod) => ({ default: mod.ServicesApp })),
   team: () => import('./ReviewApp').then((mod) => ({ default: mod.TeamApp })),

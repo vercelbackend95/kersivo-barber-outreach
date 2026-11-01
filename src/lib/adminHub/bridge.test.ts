@@ -59,14 +59,14 @@ afterEach(() => {
 describe('adminHubBridge', () => {
   it.each([
     ['', '', '/admin'],
-    ['', '?view=booking', '/admin?section=website&view=booking'],
+    ['', '?view=booking', '/admin/website?view=booking'],
     ['overview', '/overview', '/admin'],
-    ['website', '/website', '/admin?section=website'],
-    ['website', '/website?view=booking', '/admin?section=website&view=booking'],
-    ['changes', '/changes', '/admin?section=changes'],
-    ['messages', '/messages', '/admin?app=messages'],
-    ['messages', '/messages?draft=reopen', '/admin?app=messages&draft=reopen'],
-    ['messages', '/messages?draft=<x>', '/admin?app=messages'],
+    ['website', '/website', '/admin/website'],
+    ['website', '/website?view=booking', '/admin/website?view=booking'],
+    ['changes', '/changes', '/admin/changes'],
+    ['messages', '/messages', '/admin/messages'],
+    ['messages', '/messages?draft=reopen', '/admin/messages?draft=reopen'],
+    ['messages', '/messages?draft=<x>', '/admin/messages'],
     ['details', '/details', '/admin?app=setup'],
   ] as const)('maps /preview/{token}%s to %s', async (subroute, path, location) => {
     const response = await bridge(path, subroute);

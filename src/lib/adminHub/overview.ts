@@ -9,6 +9,9 @@ import {
   ADMIN_HUB_CHANGES_EMPTY,
   ADMIN_HUB_CHANGES_SEND_READY,
   ADMIN_HUB_CHANGES_WITH,
+  ADMIN_HUB_ACTIVITY_TODAY,
+  ADMIN_HUB_ACTIVITY_YESTERDAY,
+  ADMIN_HUB_BUILD_STAGES,
   ADMIN_HUB_COLOURS_ACCENT,
   ADMIN_HUB_COLOURS_EMPTY,
   ADMIN_HUB_COLOURS_FOUND,
@@ -44,11 +47,10 @@ import {
 } from '@/lib/freePreview/hubCopy';
 import type { HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import type { HubMessagePublic } from '@/lib/freePreview/hubMessages.shared';
+import { parseCssColour } from '@/lib/adminHub/colour';
 import { formatHubRelativeTime, formatHubStepDate, type HubActivityItem, type HubStepperStep } from '@/lib/freePreview/hubPage';
 import type { OurLaunchStep } from '@/lib/freePreview/hubLaunch';
 import { hubHeaderKind, type HubStage, type HubState } from '@/lib/freePreview/hubStage';
-
-const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 export function shopInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -151,11 +153,6 @@ export function overviewChangesLocked(stage: HubStage): boolean {
   return stage === 'requested' || stage === 'designing';
 }
 
-function parseHex(value: string | null | undefined): string | null {
-  const hex = value?.trim() ?? '';
-  return HEX.test(hex) ? hex.toUpperCase() : null;
-}
-
 function isLightHex(hex: string): boolean {
   const raw = hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex;
   const r = parseInt(raw.slice(1, 3), 16);
@@ -164,7 +161,7 @@ function isLightHex(hex: string): boolean {
   return (r * 299 + g * 587 + b * 114) / 1000 > 160;
 }
 
-export type OverviewSwatch = { hex: string; role: 'Main' | 'Accent' | null; light: boolean };
+export type OverviewSwatch = { hex: string; css: string; role: 'Main' | 'Accent' | null; light: boolean };
 export type OverviewColoursStatus = 'not_sent' | 'sent' | 'kersivo';
 
 export function overviewColours(input: {
@@ -180,24 +177,24 @@ export function overviewColours(input: {
   status: OverviewColoursStatus;
   statusLabel: string;
 } {
-  const primary = parseHex(input.brandPrimaryColour);
-  const secondary = parseHex(input.brandSecondaryColour);
+  const primary = parseCssColour(input.brandPrimaryColour);
+  const secondary = parseCssColour(input.brandSecondaryColour);
   const palette = (input.brandPaletteExtracted ?? [])
-    .map((row) => parseHex(row.hex))
-    .filter((hex): hex is string => Boolean(hex));
+    .map((row) => parseCssColour(row.hex))
+    .filter((colour): colour is NonNullable<typeof colour> => Boolean(colour));
 
   const swatches: OverviewSwatch[] = [];
   const seen = new Set<string>();
-  const push = (hex: string, role: OverviewSwatch['role']) => {
-    if (seen.has(hex)) return;
-    seen.add(hex);
-    swatches.push({ hex, role, light: isLightHex(hex) });
+  const push = (colour: { hex: string; css: string }, role: OverviewSwatch['role']) => {
+    if (seen.has(colour.hex)) return;
+    seen.add(colour.hex);
+    swatches.push({ hex: colour.hex, css: colour.css, role, light: isLightHex(colour.hex) });
   };
   if (primary) push(primary, ADMIN_HUB_COLOURS_MAIN);
-  if (secondary && secondary !== primary) push(secondary, ADMIN_HUB_COLOURS_ACCENT);
-  for (const hex of palette) {
+  if (secondary && secondary.hex !== primary?.hex) push(secondary, ADMIN_HUB_COLOURS_ACCENT);
+  for (const colour of palette) {
     if (swatches.length >= 4) break;
-    push(hex, null);
+    push(colour, null);
   }
 
   const source = input.brandColoursSource;
@@ -302,15 +299,114 @@ export function overviewUnreadLabel(count: number): string | null {
   return count > 0 ? ADMIN_HUB_UNREAD_COUNT(count) : null;
 }
 
-export type OverviewActivityKind = 'ready' | 'photo' | 'logo' | 'message' | 'ok' | 'default';
+export type OverviewActivityKind = 'message' | 'upload' | 'status' | 'change' | 'default';
+
+const STATUS_ACTIONS = new Set([
+  'CREATED',
+  'MARKED_READY',
+  'CONVERTED',
+  'DECLINED',
+  'EXPIRED',
+  'hub_live',
+  'ops_hub_mark_live',
+]);
+
+const CHANGE_ACTIONS = new Set(['CHANGES_REQUESTED', 'hub_changes_sent', 'ops_hub_change_status']);
+
+const STATUS_STAGE_LABEL: Record<string, string> = {
+  CREATED: ADMIN_HUB_BUILD_STAGES[0],
+  MARKED_READY: ADMIN_HUB_BUILD_STAGES[2],
+  CONVERTED: ADMIN_HUB_BUILD_STAGES[3],
+  hub_live: ADMIN_HUB_BUILD_STAGES[4],
+  ops_hub_mark_live: ADMIN_HUB_BUILD_STAGES[4],
+};
 
 export function overviewActivityKind(item: Pick<HubActivityItem, 'action' | 'label'>): OverviewActivityKind {
-  if (/logo/i.test(item.label)) return 'logo';
-  if (/photo/i.test(item.label)) return 'photo';
-  if (item.action === 'MARKED_READY' || /preview is ready/i.test(item.label)) return 'ready';
-  if (/message|replied/i.test(item.label)) return 'message';
-  if (item.action === 'CREATED' || /request received/i.test(item.label)) return 'ok';
+  if (CHANGE_ACTIONS.has(item.action) || /change/i.test(item.label)) return 'change';
+  if (STATUS_ACTIONS.has(item.action) || /preview is ready|request received/i.test(item.label)) return 'status';
+  if (
+    item.action === 'hub_asset_uploaded' ||
+    /logo|photo|file|price list/i.test(item.label)
+  ) {
+    return 'upload';
+  }
+  if (/message|replied/i.test(item.label) || item.action.endsWith('message_sent')) return 'message';
   return 'default';
+}
+
+export function overviewActivityLabel(item: Pick<HubActivityItem, 'action' | 'label'>): string {
+  return STATUS_STAGE_LABEL[item.action] ?? item.label;
+}
+
+export function formatOverviewCompactRelativeTime(date: Date, now: Date): string {
+  const seconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+  if (seconds < 45) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return formatHubStepDate(date);
+}
+
+function londonDayKey(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+}
+
+function londonYesterdayKey(now: Date): string {
+  const [year, month, day] = londonDayKey(now).split('-').map(Number);
+  return new Date(Date.UTC(year!, month! - 1, day! - 1)).toISOString().slice(0, 10);
+}
+
+export function overviewActivityDayLabel(date: Date, now: Date): string {
+  const key = londonDayKey(date);
+  if (key === londonDayKey(now)) return ADMIN_HUB_ACTIVITY_TODAY;
+  if (key === londonYesterdayKey(now)) return ADMIN_HUB_ACTIVITY_YESTERDAY;
+  return formatHubStepDate(date);
+}
+
+export type OverviewActivityRow = {
+  id: string;
+  action: string;
+  label: string;
+  kind: OverviewActivityKind;
+  at: string;
+  relative: string;
+  absolute: string;
+};
+
+export type OverviewActivityGroup = {
+  label: string;
+  items: OverviewActivityRow[];
+};
+
+export function overviewActivityFeed(
+  activity: HubActivityItem[],
+  now: Date,
+  limit = 5,
+): OverviewActivityGroup[] {
+  const items = activity.slice(0, limit).map((item) => ({
+    id: item.id,
+    action: item.action,
+    label: overviewActivityLabel(item),
+    kind: overviewActivityKind(item),
+    at: item.at.toISOString(),
+    relative: formatOverviewCompactRelativeTime(item.at, now),
+    absolute: item.absolute,
+  }));
+  const groups: OverviewActivityGroup[] = [];
+  for (const item of items) {
+    const label = overviewActivityDayLabel(new Date(item.at), now);
+    const last = groups.at(-1);
+    if (last?.label === label) last.items.push(item);
+    else groups.push({ label, items: [item] });
+  }
+  return groups;
+}
+
+export function overviewHideAddMaterialsPrimary(stage: HubStage): boolean {
+  return stage === 'requested' || stage === 'designing';
 }
 
 export function overviewTileHrefs() {

@@ -11,12 +11,14 @@ const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
 const shotDir4 = join(root, 'docs/admin-hub/screens/batch-4');
 const shotDir5 = join(root, 'docs/admin-hub/screens/batch-5');
 const shotDir6 = join(root, 'docs/admin-hub/screens/batch-6');
+const shotDirSetup = join(root, 'docs/admin-hub/screens/setup-compact');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
 mkdirSync(shotDir3, { recursive: true });
 mkdirSync(shotDir4, { recursive: true });
 mkdirSync(shotDir5, { recursive: true });
 mkdirSync(shotDir6, { recursive: true });
+mkdirSync(shotDirSetup, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 360: 800, 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -69,7 +71,8 @@ async function openEmailLink(page: Page, path: string, token: string, expected: 
   const html = await response!.text();
   expect(html.includes(token), `token leaked into ${expected}`).toBe(false);
   expect((await page.content()).includes(token)).toBe(false);
-  await expect(page.locator('.admin-hub')).toBeVisible();
+  await expect(page.locator('.admin-shell')).toBeVisible();
+  await expect(page.locator('.admin-hub-content')).toBeVisible();
   return response!;
 }
 
@@ -84,13 +87,12 @@ async function shots(page: Page, name: string, widths: number[]) {
     await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
     await page.waitForTimeout(250);
     await expectNoHorizontalScroll(page, `${name}@${width}`);
+    await expect(page.locator('.admin-hub-tabs')).toHaveCount(0);
     if (width >= 1024) {
-      await expect(page.locator('.admin-hub-side')).toBeVisible();
-      await expect(page.locator('.admin-hub-tabs')).toBeHidden();
+      await expect(page.locator('.admin-sidebar')).toBeVisible();
+      await expect(page.locator('.admin-main-panel')).toBeVisible();
     } else {
-      await expect(page.locator('.admin-hub-top')).toBeVisible();
-      await expect(page.locator('.admin-hub-tabs')).toBeVisible();
-      await expect(page.locator('.admin-hub-side')).toBeHidden();
+      await expect(page.locator('.admin-mobile-top-chrome')).toBeVisible();
     }
     await page.screenshot({ path: join(shotDir, `${name}-${width}.png`), fullPage: true });
   }
@@ -98,7 +100,7 @@ async function shots(page: Page, name: string, widths: number[]) {
 }
 
 async function expectNoSeriousAxe(page: Page, name: string) {
-  const results = await new AxeBuilder({ page }).include('.admin-hub').analyze();
+  const results = await new AxeBuilder({ page }).include('.admin-shell').analyze();
   const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
   if (serious.length) writeFileSync(join(shotDir, `axe-${name}.json`), JSON.stringify(serious, null, 2));
   expect(serious, `${name} axe serious/critical`).toEqual([]);
@@ -128,44 +130,74 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     const cookie = await hubCookie(context);
     expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: 'Lax', path: '/' });
     expect(cookie!.value).toMatch(/^v1\.[A-Za-z0-9_-]+\.\d+\.[A-Za-z0-9_-]{43}$/);
-    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Requested');
-    await expect(page.locator('.admin-hub-navlink[aria-current="page"]')).toHaveText(/Overview/);
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toBeVisible();
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText('Help us build your site');
-    await expect(page.locator('.admin-hub-side')).toContainText('Private · hidden from search engines');
-    await expect(page.locator('.admin-hub-side')).toContainText('Leave preview');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
+    await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Overview/);
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toBeVisible();
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
+    await page.locator('.admin-sidebar .admin-sidebar-profile').click();
+    await expect(page.getByRole('menuitem', { name: 'Leave preview' })).toBeVisible();
     await shots(page, 'requested-overview', [390, 768, 1280, 1440]);
     await expectNoSeriousAxe(page, 'requested-overview');
+  });
+
+  test('compact sidebar setup card fits 1280x700 with status and profile visible', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 700 });
+    await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    const card = page.locator('.admin-sidebar .admin-hub-setup');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Set up your website');
+    await expect(card.getByRole('link')).toHaveCount(1);
+    const box = await card.boundingBox();
+    expect(box?.height, 'collapsed card height').toBeLessThanOrEqual(120);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toBeInViewport();
+    await expect(page.locator('.admin-sidebar .admin-sidebar-profile')).toBeInViewport();
+    const wrapOverflow = await page.locator('.admin-sidebar').evaluate((el) => {
+      const nav = el.querySelector('.admin-sidebar-nav');
+      const dock = el.querySelector('.admin-sidebar-logout-wrap');
+      const style = getComputedStyle(el);
+      return {
+        sidebarOverflow: style.overflowY === 'hidden' || style.overflow === 'hidden',
+        navScrolls: nav ? getComputedStyle(nav).overflowY === 'auto' : false,
+        dockInView: dock ? dock.getBoundingClientRect().bottom <= 700 + 1 : false,
+      };
+    });
+    expect(wrapOverflow.sidebarOverflow).toBe(true);
+    expect(wrapOverflow.navScrolls).toBe(true);
+    expect(wrapOverflow.dockInView).toBe(true);
+    await page.screenshot({
+      path: join(shotDirSetup, 'sidebar-1280x700.png'),
+    });
   });
 
   test('READY email links map every sub-route', async ({ page }) => {
     const t = seed.ready.token;
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${t}`, t, '/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Preview ready');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
     await shots(page, 'ready-overview', [390, 768, 1280, 1440]);
     await expectNoSeriousAxe(page, 'ready-overview');
 
-    await openEmailLink(page, `/preview/${t}/website`, t, '/admin?section=website');
-    await expect(page.locator('.admin-hub-navlink[aria-current="page"]')).toHaveText(/Website/);
+    await openEmailLink(page, `/preview/${t}/website`, t, '/admin/website');
+    await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Website/);
     await expect(page.getByTestId('admin-hub-website')).toBeVisible();
     await shots(page, 'ready-website', [390, 768, 1280, 1440]);
 
-    await openEmailLink(page, `/preview/${t}/website?view=booking`, t, '/admin?section=website&view=booking');
-    await openEmailLink(page, `/preview/${t}?view=booking`, t, '/admin?section=website&view=booking');
+    await openEmailLink(page, `/preview/${t}/website?view=booking`, t, '/admin/website?view=booking');
+    await openEmailLink(page, `/preview/${t}?view=booking`, t, '/admin/website?view=booking');
 
-    await openEmailLink(page, `/preview/${t}/changes`, t, '/admin?section=changes');
-    await expect(page.locator('.admin-hub-navlink[aria-current="page"]')).toHaveText(/Changes/);
+    await openEmailLink(page, `/preview/${t}/changes`, t, '/admin/changes');
+    await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Changes/);
     await shots(page, 'ready-changes', [390, 1440]);
 
     await openEmailLink(page, `/preview/${t}/details`, t, '/admin?app=setup');
     await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await shots(page, 'ready-setup', [390, 1440]);
 
-    await openEmailLink(page, `/preview/${t}/messages?draft=message`, t, '/admin?app=messages&draft=message');
-    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await openEmailLink(page, `/preview/${t}/messages?draft=message`, t, '/admin/messages?draft=message');
+    await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Messages/);
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
     await expect(page.getByTestId('hub-message-body')).toBeVisible();
-    await shots(page, 'ready-messages', [390, 1440]);
+    await shots(page, 'ready-messages', [360, 390, 1440]);
 
     await openEmailLink(page, `/preview/${t}/overview`, t, '/admin');
   });
@@ -203,8 +235,8 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.expired.token}`, seed.expired.token, '/admin');
     expect(await hubCookie(context)).toBeTruthy();
-    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Expired');
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toHaveCount(0);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toHaveCount(0);
     await shots(page, 'expired-overview', [390, 1440]);
   });
 
@@ -213,26 +245,26 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
     expect((await hubCookie(context))!.value).toMatch(/\.op\.[A-Za-z0-9_-]{43}$/);
-    await expect(page.locator('.admin-hub-banner')).toContainText('Viewing as KERSIVO');
-    await expect(page.locator('.admin-hub-account__who')).toHaveText('Viewing as KERSIVO');
+    await expect(page.locator('.admin-barbershop-paused-banner')).toContainText('Viewing as KERSIVO');
     await shots(page, 'operator-overview', [390, 1440]);
 
     const opCookie = (await hubCookie(context))!;
     await context.clearCookies();
     await context.addCookies([opCookie]);
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
     expect(await hubCookie(context)).toBeUndefined();
   });
 
   test('Leave preview clears the cookie and goes home', async ({ page, context }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
-    await page.locator('.admin-hub-side').getByRole('button', { name: 'Leave preview' }).click();
+    await page.locator('.admin-sidebar .admin-sidebar-profile').click();
+    await page.getByRole('menuitem', { name: 'Leave preview' }).click();
     await page.waitForURL(`${ORIGIN}/`);
     expect(await hubCookie(context)).toBeUndefined();
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
   });
 
   test('a signed-in owner whose converted preview is not live sees the launch phase', async ({ page }) => {
@@ -240,18 +272,29 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const response = await page.goto('/admin');
     expect(response?.headers()['x-robots-tag']).toBe('noindex, nofollow');
-    await expect(page.locator('.admin-hub')).toBeVisible();
-    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Launch');
+    await expect(page.locator('.admin-hub-content')).toBeVisible();
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
     expect((await response!.text()).includes(seed.converted.token)).toBe(false);
     await shots(page, 'converted-launch', [390, 1440]);
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
-    await expect(page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=business"]')).toBeVisible();
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
+    await expect(page.locator('.admin-sidebar .admin-hub-setup a[href="/admin?app=business"]')).toBeVisible();
+  });
+
+  test('paid-only admin routes redirect to /admin in preview mode', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    for (const paid of ['/admin/launch', '/admin/upgrade', '/admin/barbershop-settings', '/admin/retail-onboarding']) {
+      await page.goto(paid);
+      expect(new URL(page.url()).pathname).toBe('/admin');
+      await expect(page.locator('.admin-hub-content')).toBeVisible();
+      await expect(page.locator('.admin-sidebar-link[href="/admin/launch"]')).toHaveCount(0);
+    }
   });
 
   test('setup card rows open apps; back and Esc close; axe at 390 and 1440', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=logo"]')).toBeVisible();
+    await expect(page.locator('.admin-sidebar .admin-hub-setup a[href="/admin?app=logo"]')).toBeVisible();
 
     const apps = [
       'logo',
@@ -299,7 +342,8 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
 
-    await page.locator('.admin-hub-side .admin-hub-setup a[href="/admin?app=photos"]').click();
+    await page.locator('.admin-sidebar .admin-hub-setup button[aria-label="Show all steps"]').click();
+    await page.locator('.admin-sidebar .admin-hub-setup a[href="/admin?app=photos"]').click();
     await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await page.goBack();
     await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
@@ -308,7 +352,8 @@ test.describe('Admin Hub batch 1 — real stack', () => {
   test('before Review the services app shows the from-your-links state', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText('From your links');
+    await page.locator('.admin-sidebar .admin-hub-setup button[aria-label="Show all steps"]').click();
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('From your links');
     await page.screenshot({ path: join(shotDir2, 'requested-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'requested-card-390.png'), fullPage: true });
@@ -324,7 +369,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await page.screenshot({ path: join(shotDir2, 'launch-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'launch-card-390.png'), fullPage: true });
@@ -359,7 +404,7 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
 
   async function axeAt(page: Page, name: string, width: number) {
     await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
-    const results = await new AxeBuilder({ page }).include('.admin-hub').analyze();
+    const results = await new AxeBuilder({ page }).include('.admin-shell').analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     if (serious.length) writeFileSync(join(shotDir3, `axe-${name}-${width}.json`), JSON.stringify(serious, null, 2));
     expect(serious, `${name}@${width} axe`).toEqual([]);
@@ -372,11 +417,12 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview).toBeVisible();
     await expect(overview.locator('[data-tile="preview"]')).toContainText('Your preview will appear here');
     await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
-    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
-    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin?app=messages');
+    await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toBeVisible();
+    await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     expect(await overview.locator('iframe').count()).toBe(0);
     await expect(overview.locator('[data-tile="preview"] a')).toHaveCount(0);
-    await expect(page.getByTestId('admin-hub-unread')).toHaveText('1 unread');
+    await expect(page.locator('.admin-sidebar').getByTestId('admin-hub-unread')).toHaveText('1');
     await shots3(page, 'requested-overview', [390, 768, 1280, 1440]);
     await axeAt(page, 'requested-overview', 390);
     await axeAt(page, 'requested-overview', 768);
@@ -389,11 +435,12 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     const overview = page.getByTestId('admin-hub-overview');
     await expect(overview).toBeVisible();
     await expect(overview.locator('[data-tile="progress"]')).toContainText('Your website build');
-    await expect(overview.locator('[data-tile="preview"] a[href="/admin?section=website"]').first()).toBeVisible();
-    await expect(overview.locator('[data-tile="preview"] a[href="/admin?section=website&view=booking"]')).toBeVisible();
-    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
-    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin?app=messages');
-    await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin?section=changes');
+    await expect(overview.locator('[data-tile="preview"] a[href="/admin/website"]').first()).toBeVisible();
+    await expect(overview.locator('[data-tile="preview"] a[href="/admin/website?view=booking"]')).toBeVisible();
+    await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toBeVisible();
+    await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
+    await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin/changes');
     await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toContainText('Show all');
     await expect(page.getByTestId('admin-hub-primary')).toHaveText('Open your preview');
     await expect(page.getByTestId('hub-subscribe')).toContainText('Launch this website');
@@ -404,14 +451,15 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await axeAt(page, 'ready-overview', 768);
     await axeAt(page, 'ready-overview', 1440);
 
-    await overview.locator('[data-tile="messages"]').click();
-    const dialog = page.getByTestId('admin-hub-app');
-    await expect(dialog).toBeVisible();
-    expect(await dialog.getAttribute('data-app')).toBe('messages');
+    await page.locator('.admin-sidebar a.admin-sidebar-link[href="/admin/messages"]').click();
+    await expect(page).toHaveURL(/\/admin\/messages/);
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await expect(page.locator('.admin-sidebar').getByTestId('admin-hub-unread')).toHaveCount(0);
     await expect(page.getByTestId('hub-message-body')).toBeVisible();
     await page.screenshot({ path: join(shotDir3, 'ready-messages-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.locator('.admin-hub-app--sheet')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
     await page.screenshot({ path: join(shotDir3, 'ready-messages-390.png'), fullPage: true });
   });
 
@@ -472,7 +520,7 @@ test.describe('Admin Hub batch 4 — Brand colours', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
     const tile = page.locator('[data-tile="colours"]');
-    await expect(tile).toHaveAttribute('href', '/admin?app=colours');
+    await expect(tile.locator('a[href="/admin?app=colours"]').first()).toBeVisible();
     await expect(tile).toContainText('colours found in your logo');
     await expect(tile).toContainText('Not sent yet');
     await expect(tile).toContainText('#1F6F6B');
@@ -540,7 +588,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 
   async function axe5(page: Page, name: string, width: number) {
     await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
-    const results = await new AxeBuilder({ page }).include('.admin-hub').analyze();
+    const results = await new AxeBuilder({ page }).include('.admin-shell').analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     if (serious.length) writeFileSync(join(shotDir5, `axe-${name}-${width}.json`), JSON.stringify(serious, null, 2));
     expect(serious, `${name}@${width} axe`).toEqual([]);
@@ -548,7 +596,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 
   test('Website scales desktop on a phone and remembers the device', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin?section=website');
+    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin/website');
     const website = page.getByTestId('admin-hub-website');
     await expect(website).toBeVisible();
     await expect(website).toHaveAttribute('data-ready', 'true');
@@ -573,7 +621,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
       page,
       `/preview/${seed.ready.token}/website?view=booking`,
       seed.ready.token,
-      '/admin?section=website&view=booking',
+      '/admin/website?view=booking',
     );
     const website = page.getByTestId('admin-hub-website');
     await expect(website).toBeVisible();
@@ -586,7 +634,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 
   test('Changes page lists chips and opens the composer sheet', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await openEmailLink(page, `/preview/${seed.ready.token}/changes`, seed.ready.token, '/admin?section=changes');
+    await openEmailLink(page, `/preview/${seed.ready.token}/changes`, seed.ready.token, '/admin/changes');
     const changes = page.getByTestId('admin-hub-changes');
     await expect(changes).toBeVisible();
     await expect(changes).toContainText('Drafts');
@@ -604,10 +652,10 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 
   test('Website and Changes stay locked before Review', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await openEmailLink(page, `/preview/${seed.requested.token}/website`, seed.requested.token, '/admin?section=website');
+    await openEmailLink(page, `/preview/${seed.requested.token}/website`, seed.requested.token, '/admin/website');
     await expect(page.getByTestId('admin-hub-website-locked')).toContainText('Available when your preview is ready');
     await shots5(page, 'requested-website-locked', [390, 1440]);
-    await openEmailLink(page, `/preview/${seed.requested.token}/changes`, seed.requested.token, '/admin?section=changes');
+    await openEmailLink(page, `/preview/${seed.requested.token}/changes`, seed.requested.token, '/admin/changes');
     await expect(page.getByTestId('admin-hub-changes-locked')).toContainText('Available when your preview is ready');
     await shots5(page, 'requested-changes-locked', [390, 1440]);
   });
@@ -647,7 +695,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 
   test('segmented controls are keyboard reachable', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin?section=website');
+    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin/website');
     const website = page.getByTestId('admin-hub-website');
     await expect(website).toHaveAttribute('data-ready', 'true');
     const device = page.getByRole('radiogroup', { name: 'Device' });
@@ -657,7 +705,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
     await expect(page.getByTestId('admin-hub-website')).toHaveAttribute('data-device', 'desktop');
     await page.getByRole('link', { name: 'Booking' }).first().focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/section=website&view=booking/);
+    await expect(page).toHaveURL(/\/admin\/website\?view=booking/);
   });
 });
 
@@ -684,7 +732,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await signIn(page, seed.live.owner.email, seed.live.owner.password);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
     const card = page.locator('.admin-sidebar [data-testid="admin-next-steps"]');
     await expect(card).toBeVisible();
     await expect(card).toContainText('Get the most from KERSIVO');
@@ -732,13 +780,13 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
     await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
     await shots6(page, 'screen-overview', widths);
-    await page.goto('/admin?section=website');
+    await page.goto('/admin/website');
     await expect(page.getByTestId('admin-hub-website')).toBeVisible();
     await shots6(page, 'screen-website', widths);
-    await page.goto('/admin?section=changes');
+    await page.goto('/admin/changes');
     await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
     await shots6(page, 'screen-changes', widths);
-    for (const app of ['logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
+    for (const app of ['logo', 'photos', 'materials', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
       await page.goto(`/admin?app=${app}`);
       await expect(page.getByTestId('admin-hub-app')).toBeVisible();
       await shots6(page, `app-${app}`, widths);
@@ -755,7 +803,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await page.context().clearCookies();
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toBeVisible();
+    await expect(page.locator('.admin-hub-content')).toBeVisible();
     await shots6(page, 'screen-launch', widths);
 
     await page.context().clearCookies();
@@ -781,7 +829,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     const created = await request.get(`/api/preview-hub-qa/request?email=${encodeURIComponent(journeyEmail)}`);
     const createdJson = (await created.json()) as { token: string; id: string };
     await openEmailLink(page, `/preview/${createdJson.token}`, createdJson.token, '/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Requested');
+    await expect(page.locator('.admin-sidebar .admin-sidebar-status')).toHaveText('Building');
     await shots6(page, 'journey-requested', [360, 390, 768, 1280, 1440]);
 
     const png = Buffer.from(
@@ -833,7 +881,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
     await shots6(page, 'journey-ready-overview', [360, 390, 768, 1280, 1440]);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/admin?section=website');
+    await page.goto('/admin/website');
     const website = page.getByTestId('admin-hub-website');
     await expect(website).toBeVisible();
     await expect(website).toHaveAttribute('data-ready', 'true');
@@ -843,7 +891,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/admin?app=services');
     await expect(page.getByTestId('admin-hub-app')).toBeVisible();
-    await page.goto('/admin?section=changes');
+    await page.goto('/admin/changes');
     await page.getByRole('button', { name: /Suggest a change|Suggest/ }).click();
     await page.getByTestId('hub-change-body').fill('Make the Book button larger.');
     await page.getByTestId('hub-save-draft').click();
@@ -868,7 +916,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
 
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
+    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('Set up your website');
     await shots6(page, 'journey-launch', [360, 390, 768, 1280, 1440]);
     const approved = await page.request.post('/api/admin/preview-launch/approve', {
       headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
@@ -887,7 +935,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
 
     await signIn(page, seed.owner.email, seed.owner.password);
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
     await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toBeVisible();
     await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toContainText('Get the most from KERSIVO');
     await shots6(page, 'journey-live-admin', [360, 390, 768, 1280, 1440]);
@@ -912,7 +960,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
       },
     ]);
     await page.goto('/admin');
-    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-hub-content')).toHaveCount(0);
     const headers = { Cookie: `${cookie!.name}=${cookie!.value}` };
     for (const path of [
       '/api/admin/bookings',

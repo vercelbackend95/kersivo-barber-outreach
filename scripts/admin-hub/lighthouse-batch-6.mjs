@@ -80,7 +80,7 @@ async function run() {
   const cookie = await hubCookie();
   const chromePath = chromium.executablePath();
   const overview = await measure('/admin', cookie, chromePath);
-  const website = await measure('/admin?section=website', cookie, chromePath);
+  const website = await measure('/admin/website', cookie, chromePath);
   const summary = { overview, website, origin };
   console.log(
     `[lighthouse-admin-hub] overview perf=${overview.performance} a11y=${overview.accessibility} cls=${overview.cls}`,

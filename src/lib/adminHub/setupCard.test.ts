@@ -1,21 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import { ADMIN_HUB_STAGE_PILL, adminHubPillTone } from './copy';
 import {
+  SETUP_CARD_TITLE,
+  SETUP_COMPLETE_LABEL,
+  SETUP_COMPLETE_VISIBLE_MS,
   SETUP_PHASE1_TITLE,
   SETUP_PHASE2_TITLE,
   SETUP_PHASE3_TITLE,
   isSetupPhase1Stage,
   isSetupPhase2Stage,
+  resolveSetupCardChrome,
+  setupCardAllDone,
   setupCardForStage,
+  setupDoneStatus,
   setupPhase1Items,
   setupPhase1Status,
   setupPhase2Items,
   setupPhase2Status,
   setupPhase3Items,
+  setupStorageKey,
   reviewStepDone,
 } from './setupCard';
 
 const none = { SERVICES: null, TEAM: null, HOURS: null };
+
+describe('compact setup card chrome', () => {
+  it('uses the compact title and X of Y done', () => {
+    expect(SETUP_CARD_TITLE).toBe('Set up your website');
+    expect(SETUP_COMPLETE_LABEL).toBe('Setup complete');
+    expect(setupDoneStatus(2, 6)).toBe('2 of 6 done');
+    expect(setupCardAllDone({ done: 6, total: 6 })).toBe(true);
+    expect(setupCardAllDone({ done: 5, total: 6 })).toBe(false);
+    expect(setupStorageKey('ks_admin_hub_setup_expanded', 'Jo@Shop.test')).toBe(
+      'ks_admin_hub_setup_expanded:jo@shop.test',
+    );
+  });
+
+  it('hides the complete line when no date is stored or after 7 days', () => {
+    const now = Date.parse('2026-11-01T12:00:00.000Z');
+    expect(resolveSetupCardChrome(false, now, null)).toBe('checklist');
+    expect(resolveSetupCardChrome(true, now, null)).toBe('hidden');
+    expect(resolveSetupCardChrome(true, now, now - SETUP_COMPLETE_VISIBLE_MS + 1)).toBe('complete');
+    expect(resolveSetupCardChrome(true, now, now - SETUP_COMPLETE_VISIBLE_MS)).toBe('hidden');
+  });
+});
 
 describe('setup card phase 1', () => {
   it('uses the approved title and status', () => {

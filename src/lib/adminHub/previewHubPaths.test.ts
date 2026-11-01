@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  isPreviewHubAllowedPath,
+  previewHubLegacyRedirect,
+  previewHubSectionFromPath,
+} from './previewHubPaths';
+
+describe('preview hub paths', () => {
+  it('allows only the four hub routes and leave-preview', () => {
+    expect(isPreviewHubAllowedPath('/admin')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/changes')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/website')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/messages')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/leave-preview')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/launch')).toBe(false);
+    expect(isPreviewHubAllowedPath('/admin/upgrade')).toBe(false);
+    expect(isPreviewHubAllowedPath('/admin/barbershop-settings')).toBe(false);
+    expect(isPreviewHubAllowedPath('/admin/retail-onboarding')).toBe(false);
+  });
+
+  it('maps path to section', () => {
+    expect(previewHubSectionFromPath('/admin')).toBe('overview');
+    expect(previewHubSectionFromPath('/admin/changes')).toBe('changes');
+    expect(previewHubSectionFromPath('/admin/website/')).toBe('website');
+    expect(previewHubSectionFromPath('/admin/messages')).toBe('messages');
+  });
+
+  it('redirects old query URLs', () => {
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?section=changes'))).toBe('/admin/changes');
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?section=website&view=booking'))).toBe(
+      '/admin/website?view=booking',
+    );
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?section=messages&draft=reopen'))).toBe(
+      '/admin/messages?draft=reopen',
+    );
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=messages&draft=reopen'))).toBeNull();
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=colours'))).toBeNull();
+  });
+
+  it('removes leftover hub chrome and keeps paid admin CSS on main', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/components/admin-hub.css'), 'utf8');
+    const booking = readFileSync(resolve(process.cwd(), 'src/styles/components/booking.css'), 'utf8');
+    const layout = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminLayout.tsx'), 'utf8');
+    expect(css).toContain('admin-hub-setup__count');
+    expect(css).toContain('admin-shell--preview');
+    expect(css).toContain('admin-mobile-drawer-dock');
+    expect(css).toContain('admin-sidebar-link-badge');
+    expect(css).not.toContain('admin-hub-tabs');
+    expect(css).not.toContain('admin-hub-unread');
+    expect(css).not.toContain('admin-hub-composer-fake');
+    expect(css).not.toContain('admin-hub-chip--prog');
+    expect(css).not.toContain('admin-hub-skel--bar');
+    expect(css).not.toContain('rgba(215, 38, 56');
+    expect(css).not.toContain('#ff9aa4');
+    expect(booking).not.toContain('admin-mobile-drawer-dock');
+    expect(booking).not.toContain('admin-sidebar-link-badge');
+    expect(booking).toMatch(/\.admin-sidebar-nav \{\s*display: grid;\s*gap: 0\.85rem;\s*flex: 1;\s*\}/);
+    expect(booking).toMatch(/\.admin-mobile-drawer \{[\s\S]*?display: grid;[\s\S]*?grid-template-rows: auto auto 1fr auto auto;/);
+    expect(layout).not.toContain('admin-hub-tabs');
+    expect(layout).toContain("mode === 'preview'");
+    expect(layout).toContain('admin-shell--preview');
+    expect(layout).toContain('admin-sidebar-link');
+    expect(layout).toContain('PREVIEW_HUB_PATHS.messages');
+    expect(layout).toContain('previewUnreadMessages');
+    expect(layout).toContain('admin-sidebar-link-badge');
+    expect(layout).toContain('placement="sidebar"');
+    expect(layout).toContain('placement="mobile"');
+    expect(layout).toContain('admin-mobile-drawer-dock');
+    expect(layout).toContain('admin-mobile-top-chrome');
+    expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubShell.astro'))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubSetupCard.astro'))).toBe(false);
+  });
+
+  it('keeps the paid admin sidebar items and routes', () => {
+    const layout = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminLayout.tsx'), 'utf8');
+    expect(layout).toContain("title: 'Booking system'");
+    expect(layout).toContain("section: 'bookings_dashboard', label: 'Bookings'");
+    expect(layout).toContain("section: 'bookings_blocks', label: 'Team'");
+    expect(layout).toContain("section: 'bookings_reports', label: 'Reports'");
+    expect(layout).toContain("section: 'bookings_clients', label: 'Clients'");
+    expect(layout).toContain("section: 'services', label: 'Services'");
+    expect(layout).toContain("title: 'Shop / Retail'");
+    expect(layout).toContain("section: 'shop_products', label: 'Products'");
+    expect(layout).toContain("section: 'shop_orders', label: 'Orders'");
+    expect(layout).toContain("section: 'shop_sales', label: 'Sales'");
+    expect(layout).toContain("title: 'Assistant'");
+    expect(layout).toContain("section: 'assistant', label: 'Assistant'");
+    expect(layout).toContain("mode = 'full'");
+    expect(layout).toContain('isPreviewChrome ? (');
+  });
+});

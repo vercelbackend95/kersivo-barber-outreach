@@ -56,8 +56,8 @@ function ctx(overrides: Partial<AdminHubAppContext> = {}): AdminHubAppContext {
     viewer: 'owner',
     canAttach: true,
     shopName: 'Hub QA Ready',
-    websiteHref: '/admin?section=website',
-    bookingHref: '/admin?section=website&view=booking',
+    websiteHref: '/admin/website',
+    bookingHref: '/admin/website?view=booking',
     launch: null,
     ...overrides,
   } as AdminHubAppContext;

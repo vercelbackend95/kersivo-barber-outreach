@@ -1,55 +1,45 @@
 ---
 import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
-import AdminHubSetupCard from './AdminHubSetupCard.astro';
+import { AdminHubSetupCard } from './AdminHubSetupCard';
+import { AdminHubActivityFeed } from './AdminHubActivityFeed';
+import { AdminHubSwatches } from './AdminHubSwatches';
 import {
   ArrowUpRight,
-  Check,
-  Globe,
-  ImagePlus,
   ListChecks,
-  MessageCircle,
   Palette,
-  Paperclip,
+  Plus,
   Smartphone,
-  Sparkles,
   TrendingUp,
 } from '@/components/lucide-react';
+import { websiteBuildProgressFromHubStage } from '@/lib/adminHub/buildProgress';
 import {
   ADMIN_HUB_ACTIVITY_SHOW_ALL,
+  ADMIN_HUB_ADD_TILE,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
-  ADMIN_HUB_MESSAGES_EMPTY,
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_ACTIVITY,
   ADMIN_HUB_TILE_CHANGES,
   ADMIN_HUB_TILE_COLOURS,
-  ADMIN_HUB_TILE_MESSAGES,
   ADMIN_HUB_TILE_PREVIEW,
   ADMIN_HUB_TILE_PROGRESS,
-  ADMIN_HUB_WRITE_MESSAGE,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import {
-  formatOverviewStepDate,
   isOverviewTerminal,
-  overviewActivityKind,
+  overviewActivityFeed,
   overviewChanges,
   overviewChangesLocked,
   overviewColours,
-  overviewLatestMessage,
-  overviewNowCopy,
-  overviewOurSteps,
+  overviewHideAddMaterialsPrimary,
   overviewPreviewLocked,
   overviewPrimary,
   overviewShowLaunch,
-  overviewStagePill,
   overviewTileHrefs,
-  overviewUnreadLabel,
   shopInitials,
 } from '@/lib/adminHub/overview';
 import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import {
-  HUB_ACTIVITY_EMPTY,
   HUB_LOCKED_REASON_PREVIEW,
   HUB_NAV,
   HUB_PREVIEW_CARD_LOCKED,
@@ -59,7 +49,6 @@ import {
 } from '@/lib/freePreview/hubCopy';
 import type { HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import type { HubLaunchProgress } from '@/lib/freePreview/hubLaunch';
-import type { HubMessagePublic } from '@/lib/freePreview/hubMessages.shared';
 import { hostnameOf, type HubActivityItem, type HubStepperStep } from '@/lib/freePreview/hubPage';
 import { hubHeaderKind, type HubState } from '@/lib/freePreview/hubStage';
 import type { TokenPreviewRequest } from '@/lib/freePreview/previewAccess';
@@ -68,7 +57,7 @@ interface Props {
   request: TokenPreviewRequest;
   state: Extract<HubState, { kind: 'hub' }>;
   isOperator: boolean;
-  steps: HubStepperStep[];
+  steps?: HubStepperStep[];
   activity: HubActivityItem[];
   hasWebsitePreview: boolean;
   reviewNeed?: string;
@@ -80,8 +69,6 @@ interface Props {
   brandColoursSentAt?: Date | string | null;
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
-  latestMessage: HubMessagePublic | null;
-  unreadMessages: number;
   changeItems: HubChangePublic[];
   setup: SetupCardModel | null;
 }
@@ -90,11 +77,8 @@ const {
   request,
   state,
   isOperator,
-  steps,
   activity,
   hasWebsitePreview,
-  reviewNeed,
-  launchProgress,
   logoSrc,
   screenshotSrc,
   brandColour,
@@ -102,24 +86,15 @@ const {
   brandColoursSentAt,
   brandColoursSource,
   brandPaletteExtracted,
-  latestMessage,
-  unreadMessages,
   changeItems,
   setup,
 } = Astro.props;
 
-const now = new Date();
 const shopName = request.shopName;
 const header = hubHeaderCopy(hubHeaderKind(state), shopName);
 const primary = overviewPrimary({ state });
 const showLaunch = overviewShowLaunch(state);
-const nowCopy = overviewNowCopy({
-  stage: state.stage,
-  reviewSubstate: state.reviewSubstate,
-  reviewNeed,
-});
-const ourSteps = state.stage === 'launch' ? overviewOurSteps(launchProgress?.ourSteps) : null;
-const stagePill = overviewStagePill(steps);
+const buildProgress = websiteBuildProgressFromHubStage(state.stage);
 const previewLocked = overviewPreviewLocked(state.stage);
 const changesLocked = overviewChangesLocked(state.stage);
 const hrefs = overviewTileHrefs();
@@ -136,11 +111,10 @@ const changes = overviewChanges({
   includedChangeRounds: request.includedChangeRounds,
   changeRoundsUsed: request.changeRoundsUsed,
 });
-const latest = overviewLatestMessage(latestMessage, now);
-const unread = overviewUnreadLabel(unreadMessages);
-const feed = activity.slice(0, 5);
+const feed = overviewActivityFeed(activity, new Date());
 const initials = shopInitials(shopName);
-const previewColour = brandColour?.trim() || '#d72638';
+const previewColour = colours.swatches[0]?.css || 'var(--color-brand)';
+const headerPrimary = primary && !overviewHideAddMaterialsPrimary(state.stage) ? primary : null;
 const terminal = isOverviewTerminal(state.stage);
 ---
 
@@ -152,7 +126,7 @@ const terminal = isOverviewTerminal(state.stage);
       <p class="admin-hub-head__sub">{header.sub}</p>
     </div>
     {
-      primary || showLaunch ? (
+      headerPrimary || showLaunch ? (
         <div class="admin-hub-head__actions">
           {showLaunch ? (
             <PreviewTopBar
@@ -173,9 +147,9 @@ const terminal = isOverviewTerminal(state.stage);
               bookingHref={ADMIN_HUB_LINKS.booking}
             />
           ) : null}
-          {primary ? (
-            <a class="btn btn--primary" href={primary.href} data-testid="admin-hub-primary">
-              {primary.label}
+          {headerPrimary ? (
+            <a class="btn btn--primary" href={headerPrimary.href} data-testid="admin-hub-primary">
+              {headerPrimary.label}
             </a>
           ) : null}
         </div>
@@ -183,7 +157,9 @@ const terminal = isOverviewTerminal(state.stage);
     }
   </header>
 
-  {setup ? <AdminHubSetupCard placement="mobile" card={setup} /> : null}
+  {setup ? (
+    <AdminHubSetupCard client:load placement="mobile" card={setup} storageScope={request.email} />
+  ) : null}
 
   {
     terminal ? (
@@ -204,57 +180,46 @@ const terminal = isOverviewTerminal(state.stage);
               <TrendingUp width={15} height={15} strokeWidth={1.8} />
             </span>
             <h2 class="admin-hub-tile__title" id="admin-hub-progress-title">{ADMIN_HUB_TILE_PROGRESS}</h2>
-            {
-              stagePill ? (
-                <span class="admin-hub-pill admin-hub-pill--accent" style="margin-left:auto">
-                  <span class="admin-hub-pill__dot" aria-hidden="true"></span>
-                  {stagePill}
-                </span>
-              ) : null
-            }
           </div>
-          <ol class="admin-hub-stages" aria-label="Preview progress">
-            {
-              steps.map((step, index) => (
-                <li class:list={['admin-hub-stage', step.status === 'complete' && 'admin-hub-stage--done', step.status === 'current' && 'admin-hub-stage--now', step.status === 'upcoming' && 'admin-hub-stage--todo']}>
-                  <div class="admin-hub-stage__bar" aria-hidden="true"></div>
-                  <div class="admin-hub-stage__label">
-                    <span class="admin-hub-stage__num">
-                      {step.status === 'complete' ? <Check width={13} height={13} strokeWidth={2.2} aria-hidden="true" /> : index + 1}
-                    </span>
-                    {step.label}
-                  </div>
-                  <div class="admin-hub-stage__date">{formatOverviewStepDate(step.date, now) ?? '\u00a0'}</div>
-                </li>
-              ))
-            }
-          </ol>
-          <div class="admin-hub-now">
-            <div class="admin-hub-nowbox">
-              <div class="admin-hub-nowbox__k">
-                <Sparkles width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                {nowCopy.doingLabel}
+          {
+            buildProgress ? (
+              <div
+                class="admin-hub-progress"
+                style={`--admin-hub-progress-fill:${buildProgress.fillPercent}%`}
+                data-stage={buildProgress.stage}
+              >
+                <div class="admin-hub-progress__rail" aria-hidden="true">
+                  <span class="admin-hub-progress__fill"></span>
+                </div>
+                <ol class="admin-hub-progress__steps" aria-label={ADMIN_HUB_TILE_PROGRESS}>
+                  {
+                    buildProgress.steps.map((step) => (
+                      <li
+                        class:list={[
+                          'admin-hub-progress__step',
+                          step.marker === 'complete' && 'admin-hub-progress__step--done',
+                          step.marker === 'current' && 'admin-hub-progress__step--now',
+                          step.marker === 'upcoming' && 'admin-hub-progress__step--todo',
+                        ]}
+                        aria-current={step.marker === 'current' ? 'step' : undefined}
+                      >
+                        <span class="admin-hub-progress__marker" aria-hidden="true"></span>
+                        <span class="admin-hub-progress__label">{step.label}</span>
+                        {step.marker === 'current' ? (
+                          <span class="admin-hub-sr-only">{buildProgress.stepSr}</span>
+                        ) : null}
+                      </li>
+                    ))
+                  }
+                </ol>
+                <p class="admin-hub-progress__now" aria-hidden="true">
+                  <strong>{buildProgress.steps[buildProgress.currentIndex]?.label}</strong>
+                  <span>{buildProgress.stepOf}</span>
+                </p>
+                <p class="admin-hub-progress__copy">{buildProgress.copy}</p>
               </div>
-              <div class="admin-hub-nowbox__v">{nowCopy.doing}</div>
-            </div>
-            {
-              ourSteps ? (
-                <div class="admin-hub-nowbox">
-                  <div class="admin-hub-nowbox__k">{ourSteps.label}</div>
-                  <ul class="admin-hub-nowbox__list">
-                    {ourSteps.items.map((item) => (
-                      <li>{item.label}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div class:list={['admin-hub-nowbox', nowCopy.needIsAction && 'admin-hub-nowbox--you']}>
-                  <div class="admin-hub-nowbox__k">{nowCopy.needLabel}</div>
-                  <div class="admin-hub-nowbox__v">{nowCopy.need}</div>
-                </div>
-              )
-            }
-          </div>
+            ) : null
+          }
         </section>
 
         {
@@ -318,85 +283,56 @@ const terminal = isOverviewTerminal(state.stage);
           )
         }
 
-        <a class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" href={hrefs.colours}>
+        <article class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" aria-labelledby="admin-hub-colours-title">
+          <a class="admin-hub-tile__hit" href={hrefs.colours}>
+            <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_COLOURS}</span>
+          </a>
           <div class="admin-hub-tile__head">
             <span class="admin-hub-tile__icon" aria-hidden="true">
               <Palette width={15} height={15} strokeWidth={1.8} />
             </span>
-            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_COLOURS}</span>
-            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
-              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
+            <h2 class="admin-hub-tile__title" id="admin-hub-colours-title">{ADMIN_HUB_TILE_COLOURS}</h2>
+            <span class="admin-hub-tile__open" aria-hidden="true">
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
             </span>
           </div>
-          <div class="admin-hub-logo-mini">
-            <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
-              {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
-            </span>
-            <p>
-              <strong>{colours.headline}</strong>
-              {colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_TUNE}</span> : null}
-            </p>
+          <div class="admin-hub-colours-body">
+            <div class="admin-hub-logo-mini">
+              <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
+                {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
+              </span>
+              {
+                colours.swatches.length ? (
+                  <p>
+                    <strong>{colours.headline}</strong>
+                    <span>{ADMIN_HUB_COLOURS_TUNE}</span>
+                  </p>
+                ) : null
+              }
+            </div>
+            <AdminHubSwatches client:load swatches={colours.swatches} />
+            <div class="admin-hub-tile__foot">
+              <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
+                <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+                {colours.statusLabel}
+              </span>
+              {colours.status === 'not_sent' && colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
+            </div>
           </div>
-          <div class="admin-hub-swatches" aria-hidden={colours.swatches.length ? undefined : 'true'}>
-            {
-              colours.swatches.length
-                ? colours.swatches.map((swatch) => (
-                    <div class:list={['admin-hub-sw', swatch.light && 'admin-hub-sw--light']} style={`background:${swatch.hex}`}>
-                      {swatch.role ? <span class="admin-hub-sw__role">{swatch.role}</span> : null}
-                      <small>{swatch.hex}</small>
-                    </div>
-                  ))
-                : [0, 1, 2, 3].map(() => <div class="admin-hub-sw admin-hub-sw--empty admin-hub-skel"></div>)
-            }
-          </div>
-          <div class="admin-hub-tile__foot">
-            <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
-              <span class="admin-hub-pill__dot" aria-hidden="true"></span>
-              {colours.statusLabel}
-            </span>
-            {colours.status === 'not_sent' ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
-          </div>
-        </a>
+        </article>
 
-        <a class="admin-hub-tile admin-hub-bento__messages" data-tile="messages" href={hrefs.messages}>
-          <div class="admin-hub-tile__head">
-            <span class="admin-hub-tile__icon" aria-hidden="true">
-              <MessageCircle width={15} height={15} strokeWidth={1.8} />
-            </span>
-            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_MESSAGES}</span>
-            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
-              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
-            </span>
-          </div>
-          {
-            latest ? (
-              <div class="admin-hub-msg">
-                <span class:list={['admin-hub-msg__av', latest.author !== 'KERSIVO' && 'admin-hub-msg__av--you']} aria-hidden="true">
-                  {latest.author === 'KERSIVO' ? 'K' : 'Y'}
-                </span>
-                <div>
-                  <div class="admin-hub-msg__bubble">{latest.body}</div>
-                  <div class="admin-hub-msg__meta">
-                    {latest.authorLabel} · {latest.relative}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p class="admin-hub-msg__bubble">{ADMIN_HUB_MESSAGES_EMPTY}</p>
-            )
-          }
-          <div class="admin-hub-composer-fake" aria-hidden="true">
-            <Paperclip width={15} height={15} strokeWidth={1.8} />
-            {ADMIN_HUB_WRITE_MESSAGE}
-          </div>
-          {
-            unread ? (
-              <div class="admin-hub-tile__foot">
-                <span class="admin-hub-unread" data-testid="admin-hub-unread">{unread}</span>
-              </div>
-            ) : null
-          }
-        </a>
+        <button
+          type="button"
+          class="admin-hub-tile admin-hub-tile--add admin-hub-bento__add"
+          data-tile="add"
+          data-admin-hub-app="materials"
+          data-testid="admin-hub-add-tile"
+        >
+          <span class="admin-hub-add__plus" aria-hidden="true">
+            <Plus width={36} height={36} strokeWidth={1.5} />
+          </span>
+          <span class="admin-hub-add__label">{ADMIN_HUB_ADD_TILE}</span>
+        </button>
 
         {
           changesLocked ? (
@@ -472,38 +408,7 @@ const terminal = isOverviewTerminal(state.stage);
               {ADMIN_HUB_ACTIVITY_SHOW_ALL}
             </a>
           </div>
-          {
-            feed.length ? (
-              <ul class="admin-hub-feed">
-                {feed.map((item) => {
-                  const kind = overviewActivityKind(item);
-                  return (
-                    <li>
-                      <span class:list={['admin-hub-fdot', kind === 'ready' && 'admin-hub-fdot--accent', kind === 'ok' && 'admin-hub-fdot--ok']}>
-                        {kind === 'ready' ? (
-                          <Globe width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                        ) : kind === 'photo' ? (
-                          <ImagePlus width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                        ) : kind === 'logo' ? (
-                          <ImagePlus width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                        ) : kind === 'message' ? (
-                          <MessageCircle width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                        ) : (
-                          <Check width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-                        )}
-                      </span>
-                      <span>{item.label}</span>
-                      <time datetime={item.at.toISOString()} title={item.absolute}>
-                        {item.relative}
-                      </time>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p class="admin-hub-nowbox__v">{HUB_ACTIVITY_EMPTY}</p>
-            )
-          }
+          <AdminHubActivityFeed client:load groups={feed} />
         </section>
       </div>
     )

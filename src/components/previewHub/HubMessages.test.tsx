@@ -3,6 +3,7 @@
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { ADMIN_HUB_MESSAGES_EMPTY } from '@/lib/adminHub/copy';
 import { HUB_KERSIVO, HUB_MESSAGES_EMPTY, HUB_SEEN, HUB_YOU } from '@/lib/freePreview/hubCopy';
 import { HubMessageBody, HubMessages } from './HubMessages';
 
@@ -34,6 +35,22 @@ describe('HubMessages', () => {
       />,
     );
     expect(screen.getByText(HUB_MESSAGES_EMPTY)).toBeTruthy();
+    expect(screen.getByPlaceholderText('Write a message')).toBeTruthy();
+  });
+
+  it('hides the page title and uses section empty copy on /admin/messages', () => {
+    render(
+      <HubMessages
+        token={'A'.repeat(43)}
+        viewer="owner"
+        shopName="Sharp Cuts"
+        initialMessages={[]}
+        chrome="section"
+        emptyLabel={ADMIN_HUB_MESSAGES_EMPTY}
+      />,
+    );
+    expect(screen.queryByRole('heading', { name: 'Sharp Cuts' })).toBeNull();
+    expect(screen.getByText(ADMIN_HUB_MESSAGES_EMPTY)).toBeTruthy();
     expect(screen.getByPlaceholderText('Write a message')).toBeTruthy();
   });
 

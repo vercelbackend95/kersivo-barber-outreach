@@ -1,0 +1,74 @@
+---
+export const prerender = false;
+
+import PreviewHubDocument from '@/layouts/PreviewHubDocument.astro';
+import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
+import { AdminHubWebsite } from '@/components/adminHub/AdminHubWebsite';
+import { ADMIN_HUB_WEBSITE_SUB, ADMIN_HUB_WEBSITE_TITLE } from '@/lib/adminHub/copy';
+import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import { preparePreviewHubPage } from '@/lib/adminHub/previewHubPage';
+import { hostnameOf } from '@/lib/freePreview/hubPage';
+import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
+
+const prepared = await preparePreviewHubPage({
+  context: Astro,
+  section: 'website',
+  fallbackFullToAdmin: true,
+});
+if (prepared.kind === 'response') return prepared.response;
+const { data } = prepared;
+---
+
+<PreviewHubDocument title={`${data.title} — ${data.shopName} | KERSIVO`}>
+  <PreviewHubFrame data={data} section="website">
+    {
+      data.showPreview && data.ctx.draft ? (
+        <AdminHubWebsite
+          client:load
+          token=""
+          apiBase={ADMIN_HUB_API_BASE}
+          shopName={data.shopName}
+          townCity={data.ctx.request.townCity}
+          firstName={data.ctx.request.firstName}
+          checkoutEmail={data.ctx.request.email}
+          hasOwnDomain={data.ctx.request.hasOwnDomain ?? 'not_sure'}
+          existingWebsiteHost={hostnameOf(data.ctx.request.websiteUrl)}
+          isOperator={data.ctx.isOperator}
+          converted={data.ctx.request.status === 'CONVERTED'}
+          view={data.websiteView}
+          websiteHref={ADMIN_HUB_LINKS.website}
+          bookingHref={ADMIN_HUB_LINKS.booking}
+          draft={{
+            sitePreviewUrl: data.sitePreviewUrl,
+            timezone: data.ctx.draft.shop.timezone,
+            cancellationWindowHours: data.ctx.draft.shop.cancellationWindowHours,
+            rescheduleWindowHours: data.ctx.draft.shop.rescheduleWindowHours,
+            services: data.ctx.draft.services,
+            barbers: data.ctx.draft.barbers,
+            hours: data.ctx.draft.hours,
+          }}
+          changeItems={data.view.changeItems}
+          includedChangeRounds={data.ctx.request.includedChangeRounds}
+          changeRoundsUsed={data.ctx.request.changeRoundsUsed}
+          canDraft={data.ctx.state.capabilities.canDraftChanges}
+          canSend={data.ctx.state.capabilities.canSendChanges}
+          canCheckout={data.ctx.state.capabilities.canCheckout}
+        />
+      ) : (
+        <section class="admin-hub-locked" data-testid="admin-hub-website-locked">
+          <header class="admin-hub-head">
+            <div>
+              <span class="admin-hub-head__eyebrow">{HUB_NAV.website}</span>
+              <h1>{ADMIN_HUB_WEBSITE_TITLE}</h1>
+              <p class="admin-hub-head__sub">{ADMIN_HUB_WEBSITE_SUB}</p>
+            </div>
+          </header>
+          <div class="admin-hub-tile admin-hub-calm">
+            <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
+            <p>{HUB_WEBSITE_LOCKED_BODY}</p>
+          </div>
+        </section>
+      )
+    }
+  </PreviewHubFrame>
+</PreviewHubDocument>

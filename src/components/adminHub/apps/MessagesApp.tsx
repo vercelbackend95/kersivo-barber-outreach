@@ -1,4 +1,5 @@
 import { HubMessages } from '@/components/previewHub/HubMessages';
+import { ADMIN_HUB_MESSAGES_EMPTY } from '@/lib/adminHub/copy';
 import type { AdminHubAppBodyProps } from './types';
 
 export default function MessagesApp({ ctx }: AdminHubAppBodyProps) {
@@ -13,6 +14,7 @@ export default function MessagesApp({ ctx }: AdminHubAppBodyProps) {
       initialDraft={ctx.initialDraft}
       canAttach={ctx.canAttach}
       chrome="app"
+      emptyLabel={ADMIN_HUB_MESSAGES_EMPTY}
     />
   );
 }

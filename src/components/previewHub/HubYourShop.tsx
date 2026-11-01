@@ -215,14 +215,14 @@ export function HubYourShop(props: {
   details: HubShopDetails;
   assets: HubUploadedAsset[];
   /** Admin Hub apps: show one block. Omitted = today's full Your shop page. */
-  focus?: 'logo' | 'photos' | 'about';
+  focus?: 'logo' | 'photos' | 'about' | 'materials';
   /** When false, the page H1 is omitted (the app window already has a title). */
   chrome?: boolean;
 }) {
   const focus = props.focus;
   const chrome = props.chrome !== false && !focus;
-  const showLogo = !focus || focus === 'logo';
-  const showPhotos = !focus || focus === 'photos';
+  const showLogo = !focus || focus === 'logo' || focus === 'materials';
+  const showPhotos = !focus || focus === 'photos' || focus === 'materials';
   const showAbout = !focus || focus === 'about';
   const showReviews = !focus;
   const showBrandExtras = showLogo && !focus;
@@ -252,6 +252,9 @@ export function HubYourShop(props: {
     knownAssets.current = [...knownAssets.current.filter((row) => row.id !== asset.id), asset];
     setAssets((current) => [...current, asset]);
     setError(null);
+    window.dispatchEvent(
+      new CustomEvent('admin-hub:asset-uploaded', { detail: { kind: asset.kind, asset } }),
+    );
   };
 
   const persistDetails = useCallback(

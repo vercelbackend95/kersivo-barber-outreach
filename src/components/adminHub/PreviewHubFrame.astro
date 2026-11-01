@@ -1,0 +1,33 @@
+---
+import { PreviewAdminChrome } from './PreviewAdminChrome';
+import { AppHost } from './AppHost';
+import type { PreviewHubPageData } from '@/lib/adminHub/previewHubPage';
+import type { PreviewHubSection } from '@/lib/adminHub/previewHubPaths';
+
+interface Props {
+  data: PreviewHubPageData;
+  section: PreviewHubSection;
+}
+
+const { data, section } = Astro.props;
+const profileUser = {
+  name: data.ctx.request.firstName || data.shopName,
+  email: data.ctx.request.email,
+  image: null,
+};
+---
+
+<PreviewAdminChrome
+  client:load
+  section={section}
+  shopName={data.shopName}
+  shopLogoUrl={data.logoSrc}
+  profileUser={profileUser}
+  setup={data.view.setup}
+  underConstruction={data.underConstruction}
+  isOperator={data.ctx.isOperator}
+  unreadMessages={data.view.unreadMessages}
+>
+  <slot />
+  <AppHost client:load initialApp={data.location.app} ctx={data.appCtx} />
+</PreviewAdminChrome>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HEX_COLOUR_RE, expandShortHex, normaliseHexColour } from './hex';
+import { HEX_COLOUR_RE, expandShortHex, normaliseHexColour, parseCssColour } from './hex';
 import {
   clampToGamut,
   deltaEok,
@@ -20,6 +20,16 @@ describe('hex', () => {
     expect(normaliseHexColour('#1f6')).toBe('#11FF66');
     expect(expandShortHex('#abc')).toBe('#AABBCC');
     expect(normaliseHexColour('#1f6f6b')).toBe('#1F6F6B');
+  });
+
+  it('accepts opaque rgb/rgba and rejects names or transparent values', () => {
+    expect(parseCssColour('#1f6f6b')).toEqual({ hex: '#1F6F6B', css: '#1F6F6B' });
+    expect(parseCssColour('rgb(31, 111, 107)')).toEqual({ hex: '#1F6F6B', css: '#1F6F6B' });
+    expect(parseCssColour('rgb(31 111 107)')).toEqual({ hex: '#1F6F6B', css: '#1F6F6B' });
+    expect(parseCssColour('rgba(31, 111, 107, 1)')).toEqual({ hex: '#1F6F6B', css: '#1F6F6B' });
+    expect(parseCssColour('rgba(31, 111, 107, 0.5)')).toBeNull();
+    expect(parseCssColour('red')).toBeNull();
+    expect(parseCssColour('oklch(0.5 0.1 20)')).toBeNull();
   });
 });
 
