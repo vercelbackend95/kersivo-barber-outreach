@@ -56,7 +56,6 @@ export const ADMIN_HUB_COLOURS_EMPTY = "Add your logo and we'll find colours";
 export const ADMIN_HUB_COLOURS_NONE =
   "No brand colours yet. Add your logo and we'll pick colours that match.";
 export const ADMIN_HUB_ADD_TILE = 'Add photos or logo';
-export const ADMIN_HUB_ADD_TILE_ARIA = 'Add photos or a logo to your website';
 export const ADMIN_HUB_ACTIVITY_TODAY = 'Today';
 export const ADMIN_HUB_ACTIVITY_YESTERDAY = 'Yesterday';
 export const ADMIN_HUB_ACTIVITY_EMPTY =

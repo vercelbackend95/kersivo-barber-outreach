@@ -35,10 +35,27 @@ export function AdminHubSwatches(props: { swatches: AdminHubSwatch[] }) {
 
   const copyHex = async (hex: string) => {
     try {
-      await navigator.clipboard.writeText(hex);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(hex);
+      } else {
+        throw new Error('clipboard unavailable');
+      }
       setCopied(hex);
     } catch {
-      setCopied(null);
+      try {
+        const field = document.createElement('textarea');
+        field.value = hex;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.left = '-9999px';
+        document.body.appendChild(field);
+        field.select();
+        document.execCommand('copy');
+        document.body.removeChild(field);
+        setCopied(hex);
+      } catch {
+        setCopied(null);
+      }
     }
   };
 
@@ -63,11 +80,11 @@ export function AdminHubSwatches(props: { swatches: AdminHubSwatch[] }) {
           className={`admin-hub-sw${swatch.light ? ' admin-hub-sw--light' : ''}`}
           style={{ '--admin-hub-swatch': swatch.css } as CSSProperties}
           onClick={() => void copyHex(swatch.hex)}
-          aria-label={`${ADMIN_HUB_COLOURS_COPY} ${swatch.hex}`}
+          aria-label={`${ADMIN_HUB_COLOURS_COPY} ${[swatch.role, swatch.hex].filter(Boolean).join(' ')}`}
         >
           <span className="admin-hub-sw__chip" aria-hidden="true" />
           {swatch.role ? <span className="admin-hub-sw__role">{swatch.role}</span> : null}
-          <small>{copied === swatch.hex ? ADMIN_HUB_COLOURS_COPIED : swatch.hex}</small>
+          <small>{swatch.hex}</small>
         </button>
       ))}
     </div>

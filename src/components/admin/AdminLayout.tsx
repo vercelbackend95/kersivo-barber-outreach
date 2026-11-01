@@ -838,6 +838,7 @@ export default function AdminLayout({
         className={`admin-mobile-drawer ${isMobileMenuOpen ? 'admin-mobile-drawer--open' : ''}`}
         aria-label="Admin menu drawer"
         aria-hidden={!isMobileMenuOpen}
+        inert={!isMobileMenuOpen || undefined}
       >
         <div className="admin-mobile-drawer-head">
           <div className="admin-mobile-drawer-head-top">
@@ -881,11 +882,18 @@ export default function AdminLayout({
           </div>
         ) : null}
         {renderMenu(false)}
-        <div className="admin-mobile-drawer-dock">
-          {setupCardMobile}
-          <div className="admin-sidebar-divider" aria-hidden="true" />
-          {accountFooterMobile}
-        </div>
+        {isPreviewChrome ? (
+          <div className="admin-mobile-drawer-dock">
+            {setupCardMobile}
+            <div className="admin-sidebar-divider" aria-hidden="true" />
+            {accountFooterMobile}
+          </div>
+        ) : (
+          <>
+            <div className="admin-sidebar-divider" aria-hidden="true" />
+            {accountFooterMobile}
+          </>
+        )}
       </aside>
     </>
   );
@@ -893,7 +901,7 @@ export default function AdminLayout({
   return (
     <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
       <div
-        className={`admin-shell${showcaseMode ? ' admin-shell--showcase' : ''}`}
+        className={`admin-shell${showcaseMode ? ' admin-shell--showcase' : ''}${isPreviewChrome ? ' admin-shell--preview' : ''}`}
         data-showcase={showcaseMode ? 'true' : undefined}
       >
       <aside className="admin-sidebar" aria-label="Admin sections">

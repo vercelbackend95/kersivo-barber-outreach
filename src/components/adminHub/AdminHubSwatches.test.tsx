@@ -21,11 +21,27 @@ describe('AdminHubSwatches', () => {
         swatches={[{ hex: '#1F6F6B', css: '#1F6F6B', role: 'Main', light: false }]}
       />,
     );
-    const button = screen.getByRole('button', { name: 'Copy #1F6F6B' });
+    const button = screen.getByRole('button', { name: 'Copy Main #1F6F6B' });
     expect(button.style.getPropertyValue('--admin-hub-swatch')).toBe('#1F6F6B');
     fireEvent.click(button);
     await waitFor(() => expect(screen.getAllByText('Copied').length).toBeGreaterThan(0));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('#1F6F6B');
+  });
+
+  it('still marks Copied when the Clipboard API is missing', async () => {
+    vi.unstubAllGlobals();
+    vi.stubGlobal('navigator', {});
+    const exec = vi.fn().mockReturnValue(true);
+    vi.stubGlobal('document', document);
+    document.execCommand = exec;
+    render(
+      <AdminHubSwatches
+        swatches={[{ hex: '#1F6F6B', css: '#1F6F6B', role: 'Main', light: false }]}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Main #1F6F6B' }));
+    await waitFor(() => expect(screen.getAllByText('Copied').length).toBeGreaterThan(0));
+    expect(exec).toHaveBeenCalledWith('copy');
   });
 
   it('shows the empty copy and a materials link instead of frames', () => {

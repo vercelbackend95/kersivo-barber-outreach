@@ -3,7 +3,7 @@
 @import './segmented-control.css';
 
 .admin-hub-content {
-  --admin-hub-muted-2: #8f877e;
+  --admin-hub-muted-2: var(--muted);
   --admin-hub-hair: rgba(255, 255, 255, 0.08);
   --admin-hub-hair-2: rgba(255, 255, 255, 0.05);
   min-width: 0;
@@ -19,6 +19,63 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Preview-only chrome. Paid admin keeps the booking.css sidebar/drawer as on main. */
+.admin-shell--preview .admin-sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.admin-shell--preview .admin-sidebar-logout-wrap {
+  flex-shrink: 0;
+}
+.admin-shell--preview .admin-sidebar-link-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.admin-shell--preview .admin-mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.admin-shell--preview .admin-mobile-drawer-head,
+.admin-shell--preview .admin-mobile-drawer-launch {
+  flex-shrink: 0;
+}
+.admin-shell--preview .admin-mobile-drawer-dock {
+  flex-shrink: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.admin-shell--preview .admin-mobile-drawer .admin-sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .admin-shell--preview .admin-sidebar {
+    overflow: hidden;
+    overflow-x: hidden;
+  }
+  .admin-shell--preview .admin-sidebar-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
 
 .admin-hub-pill {
@@ -45,9 +102,9 @@
   background: currentColor;
 }
 .admin-hub-pill--accent {
-  color: #ff9aa4;
-  border-color: rgba(215, 38, 56, 0.38);
-  background: rgba(215, 38, 56, 0.12);
+  color: var(--color-brand-on-tint);
+  border-color: color-mix(in srgb, var(--color-brand) 38%, transparent);
+  background: color-mix(in srgb, var(--color-brand) 12%, transparent);
 }
 .admin-hub-pill--live {
   color: #7ee2a0;
@@ -649,9 +706,9 @@
 .admin-hub-tile:focus-visible .admin-hub-tile__open,
 .admin-hub-tile:has(.admin-hub-tile__hit:hover) .admin-hub-tile__open,
 .admin-hub-tile:has(.admin-hub-tile__hit:focus-visible) .admin-hub-tile__open {
-  color: #fff;
-  border-color: rgba(215, 38, 56, 0.6);
-  background: rgba(215, 38, 56, 0.14);
+  color: var(--color-on-brand);
+  border-color: color-mix(in srgb, var(--color-brand) 60%, transparent);
+  background: color-mix(in srgb, var(--color-brand) 14%, transparent);
 }
 .admin-hub-tile__head {
   display: flex;
@@ -1063,36 +1120,6 @@
   color: var(--admin-hub-muted-2);
   margin-top: 6px;
 }
-.admin-hub-unread {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 650;
-  color: #ff9aa4;
-}
-.admin-hub-unread::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-}
-.admin-hub-composer-fake {
-  margin-top: 12px;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-hub-hair);
-  background: rgba(255, 255, 255, 0.02);
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  color: var(--admin-hub-muted-2);
-  font-size: 13px;
-  gap: 8px;
-}
-
 .admin-hub-chstats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1168,11 +1195,6 @@
   color: #ffd38a;
   margin-left: auto;
 }
-.admin-hub-chip--prog {
-  background: rgba(215, 38, 56, 0.14);
-  color: #ff9aa4;
-  margin-left: auto;
-}
 .admin-hub-chip--done {
   background: rgba(34, 197, 94, 0.12);
   color: #7ee2a0;
@@ -1222,8 +1244,8 @@
   color: var(--muted);
 }
 .admin-hub-fdot--accent {
-  color: #ff9aa4;
-  border-color: rgba(215, 38, 56, 0.4);
+  color: var(--color-brand-on-tint);
+  border-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
 }
 .admin-hub-fdot--ok {
   color: #7ee2a0;
@@ -1283,10 +1305,6 @@
 
 .admin-hub-skel {
   background: rgba(255, 255, 255, 0.04);
-}
-.admin-hub-skel--bar {
-  height: 8px;
-  border-radius: 6px;
 }
 
 .admin-hub-app[data-app='messages'] .admin-hub-app__body {
@@ -2119,7 +2137,7 @@
   border-radius: 20px;
   border: 1px solid var(--admin-hub-hair);
   background:
-    radial-gradient(70% 60% at 50% 0%, rgba(215, 38, 56, 0.08), transparent 70%),
+    radial-gradient(70% 60% at 50% 0%, color-mix(in srgb, var(--color-brand) 8%, transparent), transparent 70%),
     #070707;
   padding: 22px;
   display: grid;

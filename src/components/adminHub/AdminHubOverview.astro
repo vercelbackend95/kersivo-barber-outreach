@@ -15,7 +15,6 @@ import { websiteBuildProgressFromHubStage } from '@/lib/adminHub/buildProgress';
 import {
   ADMIN_HUB_ACTIVITY_SHOW_ALL,
   ADMIN_HUB_ADD_TILE,
-  ADMIN_HUB_ADD_TILE_ARIA,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
   ADMIN_HUB_OPEN,
@@ -328,7 +327,6 @@ const terminal = isOverviewTerminal(state.stage);
           data-tile="add"
           data-admin-hub-app="materials"
           data-testid="admin-hub-add-tile"
-          aria-label={ADMIN_HUB_ADD_TILE_ARIA}
         >
           <span class="admin-hub-add__plus" aria-hidden="true">
             <Plus width={36} height={36} strokeWidth={1.5} />
