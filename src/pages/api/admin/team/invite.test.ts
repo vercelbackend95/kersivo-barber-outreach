@@ -97,6 +97,7 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
+import { requireAdminContext } from '@/lib/admin/auth';
 import { POST } from './invite';
 import type { APIContext } from 'astro';
 
@@ -129,6 +130,31 @@ describe('POST /api/admin/team/invite', () => {
       bookable: true,
       expiresAt: new Date(),
     });
+  });
+
+  it('refuses hub access before creating an invite or sending mail', async () => {
+    vi.mocked(requireAdminContext).mockResolvedValueOnce({
+      shopId: 'shop_draft',
+      via: 'hub',
+      role: 'OWNER',
+      permissions: ['catalog.manage', 'team.read', 'retail.manage'],
+    } as never);
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: true,
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({
+      error: 'Invites are available after your shop goes live.',
+    });
+    expect(sendShopTeamInviteEmail).not.toHaveBeenCalled();
+    expect(shopInviteCreate).not.toHaveBeenCalled();
   });
 
   it('creates active Barber + linked invite when Barber has online bookings on', async () => {

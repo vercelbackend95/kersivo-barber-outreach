@@ -571,6 +571,9 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   hub_domain_confirmed: 'Domain records confirmed',
   hub_launch_approved: 'Website approved for launch',
   ops_hub_mark_live: 'Site live',
+  OWNER_EDITED_SERVICES: 'You updated your services',
+  OWNER_EDITED_TEAM: 'You updated your team',
+  OWNER_EDITED_PRODUCTS: 'You updated your products',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

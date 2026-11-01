@@ -9,7 +9,9 @@ import {
 } from '../../../lib/admin/onboarding';
 import { isPauseActiveNow } from '../../../lib/admin/shopPublicActivity';
 import { prisma } from '../../../lib/db/client';
+import { HUB_ADMIN_PERMISSIONS } from '../../../lib/adminHub/hubAdminAccess';
 import {
+  accessForState,
   loadKersivoAccess,
   serializeKersivoAccess,
   type SerializedKersivoAccess,
@@ -34,7 +36,48 @@ export const GET: APIRoute = async (context) => {
   let productAccess: SerializedKersivoAccess | null = null;
   let onboardingGate: AdminOnboardingGate = 'dashboard';
 
-  if (isTenantAdminAccess(access)) {
+  if (access.via === 'hub') {
+    try {
+      const shop = await prisma.shopSettings.findUnique({
+        where: { id: access.shopId },
+        select: {
+          logoUrl: true,
+          name: true,
+          publicActivityPaused: true,
+          publicActivityPauseFrom: true,
+          publicActivityPauseUntil: true,
+          publicActivityPauseReason: true,
+          retailOnboardingCompleted: true,
+          retailOnboardingSkipped: true,
+          retailOnboardingProductId: true,
+          retailTestOrderId: true,
+          retailTestOrderCompletedAt: true,
+          retailPickupWalkthroughCompletedAt: true,
+        },
+      });
+      logoUrl = shop?.logoUrl ?? null;
+      shopName = shop?.name ?? null;
+      publicActivityPaused = shop ? isPauseActiveNow(shop) : false;
+      publicActivityPauseReason = shop?.publicActivityPauseReason?.trim() || null;
+      retailOnboardingCompleted = shop?.retailOnboardingCompleted ?? false;
+      retailOnboardingSkipped = shop?.retailOnboardingSkipped ?? false;
+      retailOnboardingProductId = shop?.retailOnboardingProductId ?? null;
+      retailTestOrderId = shop?.retailTestOrderId ?? null;
+      retailTestOrderCompletedAt = shop?.retailTestOrderCompletedAt?.toISOString() ?? null;
+      retailPickupWalkthroughCompletedAt =
+        shop?.retailPickupWalkthroughCompletedAt?.toISOString() ?? null;
+      // Full preview of the draft shop — never a stored plan, never onboarding.
+      productAccess = serializeKersivoAccess(accessForState('FULL_KERSIVO'));
+      onboardingCompleted = true;
+      onboardingCurrentStep = 0;
+      onboardingGate = 'dashboard';
+    } catch (error) {
+      console.error('Failed to load hub admin session shop settings', error);
+      return new Response(JSON.stringify({ error: 'Could not load admin session.' }), {
+        status: 500,
+      });
+    }
+  } else if (isTenantAdminAccess(access)) {
     try {
       await healOnboardingCompletedIfEligible(access.shopId);
 
@@ -94,7 +137,8 @@ export const GET: APIRoute = async (context) => {
       onboardingCurrentStep,
       retailOnboardingCompleted,
       retailOnboardingSkipped,
-      retailOnboardingProductId: isTenantAdminAccess(access) ? retailOnboardingProductId : null,
+      retailOnboardingProductId:
+        access.via === 'hub' || isTenantAdminAccess(access) ? retailOnboardingProductId : null,
       retailTestOrderId,
       retailTestOrderCompletedAt,
       retailPickupWalkthroughCompletedAt,
@@ -114,7 +158,7 @@ export const GET: APIRoute = async (context) => {
         : null,
       role: access.role,
       barberId: access.barberId,
-      permissions: access.permissions,
+      permissions: access.via === 'hub' ? HUB_ADMIN_PERMISSIONS : access.permissions,
       productAccess,
       onboardingGate,
       // Free activation is owner-level (onboarding.manage); other members keep the dashboard.

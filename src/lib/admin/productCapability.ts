@@ -10,6 +10,7 @@ import {
 import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 import { resolveFullUpgradeEligibility } from '@/lib/setup/fullKersivoUpgrade';
 import {
+  accessForState,
   hasKersivoCapability,
   loadKersivoAccess,
   type KersivoAccess,
@@ -28,12 +29,15 @@ export const KERSIVO_UPGRADE_REQUIRED_MESSAGE = 'This feature is available with 
 /**
  * Plan locks apply to real signed-in tenants only. Deliberately not enforced for:
  * - guest preview (`preview`): a provisional SETUP shop that showcases the Full dashboard;
+ * - hub (`hub`): a Full KERSIVO preview of an ownerless draft shop — capabilities are granted
+ *   below as an explicit via === 'hub' rule, never by writing a plan onto the shop;
  * - legacy development access (`secret` / `legacy-cookie`);
  * - demo shops (public demo / BLACKLINE), which always resolve to SETUP yet showcase Full.
  * For enforced tenants the capability matrix is authoritative: SETUP (incl. a lapsed paid shop
  * without the Free marker) has no paid capabilities and is denied exactly like Free.
  */
 export function adminProductCapabilityEnforced(access: Pick<AdminAccess, 'via' | 'shopId'>): boolean {
+  if (access.via === 'hub') return false;
   return access.via === 'session' && !isDemoShopId(access.shopId);
 }
 
@@ -59,6 +63,14 @@ export async function requireAdminProductCapability(
   capability: KersivoCapability,
   now: Date = new Date(),
 ): Promise<AdminProductCapabilityGrant | Response> {
+  // Hub is a Full preview of an ownerless draft: grant Full capabilities without a plan/subscription.
+  if (access.via === 'hub') {
+    const productAccess = accessForState('FULL_KERSIVO');
+    if (!hasKersivoCapability(productAccess, capability)) {
+      return kersivoUpgradeRequiredResponse(capability);
+    }
+    return { access, productAccess };
+  }
   if (!adminProductCapabilityEnforced(access)) return { access, productAccess: null };
   const productAccess = await loadKersivoAccess(access.shopId, now);
   if (!hasKersivoCapability(productAccess, capability)) {

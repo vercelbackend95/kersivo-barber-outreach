@@ -5,7 +5,14 @@ export function can(role: ShopRole, permission: Permission): boolean {
   return permissionsForRole(role).includes(permission);
 }
 
-export function accessCan(access: { role: ShopRole }, permission: Permission): boolean {
+export function accessCan(
+  access: { role: ShopRole; via?: string; permissions?: readonly Permission[] },
+  permission: Permission,
+): boolean {
+  // Hub keeps role OWNER for the SPA, but RBAC must honour the restricted permission list.
+  if (access.via === 'hub') {
+    return Boolean(access.permissions?.includes(permission));
+  }
   return can(access.role, permission);
 }
 

@@ -11,6 +11,7 @@ import { requirePermission as denyUnless } from '@/lib/admin/rbac/can';
 import type { Permission } from '@/lib/admin/rbac/permissions';
 import { permissionsForRole } from '@/lib/admin/rbac/permissions';
 import { resolvePreviewAccess } from '@/lib/preview/shopPreviewSession';
+import { HUB_ADMIN_PERMISSIONS, resolveHubAdminAccess } from '@/lib/adminHub/hubAdminAccess';
 import { getAdminSessionCookieName, getSessionSecret, parseAdminSessionToken } from './session';
 
 export type AdminAccess = {
@@ -21,15 +22,19 @@ export type AdminAccess = {
   /** Session users: from Better Auth. Secret / legacy-cookie paths are treated as verified. */
   emailVerified: boolean;
   userImage: string | null;
-  via: 'session' | 'secret' | 'legacy-cookie' | 'preview';
+  via: 'session' | 'secret' | 'legacy-cookie' | 'preview' | 'hub';
   role: ShopRole;
   memberId: string | null;
   barberId: string | null;
   permissions: readonly Permission[];
+  /** Set for via 'hub' so write activity can attach to the PreviewRequest. */
+  previewRequestId?: string;
 };
 
-/** Tenant shop-scoped access (Better Auth owner/member or guest preview cookie). */
-export function isTenantAdminAccess(access: AdminAccess | null | undefined): access is AdminAccess {
+/** Tenant shop-scoped access (Better Auth owner/member or guest preview cookie). Hub is not tenant access. */
+export function isTenantAdminAccess(
+  access: AdminAccess | null | undefined,
+): access is AdminAccess & { via: 'session' | 'preview' } {
   return Boolean(access && (access.via === 'session' || access.via === 'preview'));
 }
 
@@ -83,10 +88,12 @@ function buildAccess(input: {
   role: ShopRole;
   memberId: string | null;
   barberId: string | null;
+  permissions?: readonly Permission[];
+  previewRequestId?: string;
 }): AdminAccess {
   return {
     ...input,
-    permissions: permissionsForRole(input.role),
+    permissions: input.permissions ?? permissionsForRole(input.role),
   };
 }
 
@@ -137,6 +144,24 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
       role: 'OWNER',
       memberId: null,
       barberId: null,
+    });
+  }
+
+  const hub = await resolveHubAdminAccess(context);
+  if (hub) {
+    return buildAccess({
+      shopId: hub.shopId,
+      userId: null,
+      userName: null,
+      userEmail: null,
+      emailVerified: true,
+      userImage: null,
+      via: 'hub',
+      role: 'OWNER',
+      memberId: null,
+      barberId: null,
+      permissions: HUB_ADMIN_PERMISSIONS,
+      previewRequestId: hub.previewRequestId,
     });
   }
 

@@ -104,6 +104,18 @@ describe('I / J: Free stays locked, Full stays allowed', () => {
     expect(await requireAdminProductCapability(sessionAccess(), 'REPORTS', now)).toBeInstanceOf(Response);
   });
 
+  it('hub access is granted Full capabilities without loading a plan', async () => {
+    const grant = await requireAdminProductCapability(
+      sessionAccess({ via: 'hub', userId: null, permissions: ['catalog.manage', 'retail.manage'] }),
+      'RETAIL',
+      now,
+    );
+    expect(grant).not.toBeInstanceOf(Response);
+    expect((grant as { productAccess: { state: string } }).productAccess.state).toBe('FULL_KERSIVO');
+    expect(shopFindUnique).not.toHaveBeenCalled();
+    expect(subscriptionFindFirst).not.toHaveBeenCalled();
+  });
+
   it('J: an active Full subscription is allowed REPORTS', async () => {
     shopFindUnique.mockResolvedValue(shopRow());
     subscriptionFindFirst.mockResolvedValue(ACTIVE_SUBSCRIPTION);
