@@ -1,0 +1,288 @@
+---
+export const prerender = false;
+
+import type { APIContext } from 'astro';
+import HubDocument from '@/layouts/HubDocument.astro';
+import AdminHubShell from '@/components/adminHub/AdminHubShell.astro';
+import AdminHubOverview from '@/components/adminHub/AdminHubOverview.astro';
+import { AppHost } from '@/components/adminHub/AppHost';
+import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
+import { AdminHubChanges } from '@/components/adminHub/AdminHubChanges';
+import { AdminHubWebsite } from '@/components/adminHub/AdminHubWebsite';
+import {
+  ADMIN_HUB_CHANGES_SUB,
+  ADMIN_HUB_WEBSITE_SUB,
+  ADMIN_HUB_WEBSITE_TITLE,
+} from '@/lib/adminHub/copy';
+import { adminHubAppMeta } from '@/lib/adminHub/apps';
+import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
+import { loadAdminHubView, parseAdminHubLocation } from '@/lib/adminHub/hubView';
+import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import { parseBrandPalette } from '@/lib/adminHub/brandColours';
+import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import {
+  HUB_DRAFT_DECLINED,
+  HUB_DRAFT_REOPEN,
+  HUB_LOCKED_REASON_PREVIEW,
+  HUB_NAV,
+  HUB_WEBSITE_LOCKED_BODY,
+} from '@/lib/freePreview/hubCopy';
+import { hostnameOf, hubNotFound, recordHubOwnerView } from '@/lib/freePreview/hubPage';
+import { recordPreviewView, shouldRecordOwnerView } from '@/lib/freePreview/previewAccess';
+import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/booking-review.css';
+import '@/styles/components/admin-onboarding.css';
+import '@/styles/components/admin-client-onboarding.css';
+
+const now = new Date();
+const mode =
+  Astro.locals.adminHubMode ??
+  (await resolveAdminPageMode({
+    request: Astro.request,
+    now,
+    sessionShop: () => adminSessionShopFor(Astro as unknown as APIContext),
+  }));
+if (!mode) return hubNotFound();
+if (mode.kind !== 'hub') {
+  const headers = new Headers({ Location: '/admin', ...ADMIN_PRIVATE_HEADERS });
+  if (mode.setCookie) headers.append('Set-Cookie', mode.setCookie);
+  return new Response(null, { status: 303, headers });
+}
+
+for (const [name, value] of Object.entries(ADMIN_PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
+Astro.response.headers.set('Vary', 'Cookie');
+if (mode.setCookie) Astro.response.headers.append('Set-Cookie', mode.setCookie);
+
+const { ctx } = mode;
+const caps = ctx.state.capabilities;
+const location = parseAdminHubLocation(Astro.url.searchParams);
+const clientId = analyticsClientIdFromRequest(Astro.request);
+
+await recordHubOwnerView({
+  requestId: ctx.request.id,
+  stage: ctx.state.stage,
+  isOperator: ctx.isOperator,
+  now,
+  clientId,
+}).catch((error) => {
+  console.error('[admin-hub] view tracking failed', error instanceof Error ? error.message : error);
+});
+
+const showPreview = Boolean(caps.showPreview && ctx.draft);
+const sitePreviewUrl = ctx.draft?.shop.sitePreviewUrl ?? null;
+const websiteView: 'website' | 'booking' =
+  location.view === 'booking' || !sitePreviewUrl ? 'booking' : 'website';
+
+if (location.section === 'website' && showPreview) {
+  if (websiteView === 'website' && sitePreviewUrl) {
+    Astro.response.headers.set(EXTRA_FRAME_SRC_HEADER, sitePreviewUrl);
+  }
+  if (
+    shouldRecordOwnerView({
+      kind: 'preview',
+      request: ctx.request,
+      draftShopId: ctx.request.draftShopId ?? '',
+      isOperator: ctx.isOperator,
+    })
+  ) {
+    const firstView = await recordPreviewView(ctx.request.id, now).catch((error) => {
+      console.error('[admin-hub] preview view tracking failed', error instanceof Error ? error.message : error);
+      return false;
+    });
+    if (firstView) await sendServerAnalyticsEvent({ name: FUNNEL_EVENTS.preview_viewed, clientId });
+  }
+}
+
+const view = await loadAdminHubView(ctx, location, now);
+const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
+const logoSrc = view.logo?.hasThumb
+  ? `${ADMIN_HUB_API_BASE}/assets/${encodeURIComponent(view.logo.id)}?size=thumb`
+  : null;
+const sessionShop = await adminSessionShopFor(Astro as unknown as APIContext);
+const canEditLaunch = Boolean(
+  !ctx.isOperator &&
+    ctx.state.stage === 'launch' &&
+    sessionShop?.via === 'session' &&
+    sessionShop.role === 'OWNER' &&
+    sessionShop.shopId &&
+    sessionShop.shopId === ctx.request.draftShopId,
+);
+const title = location.app
+  ? adminHubAppMeta(location.app).title
+  : location.section === 'changes'
+    ? HUB_NAV.changes
+    : location.section === 'website'
+      ? HUB_NAV.website
+      : HUB_NAV.overview;
+const initialDraft =
+  location.draft === 'reopen' ? HUB_DRAFT_REOPEN : location.draft === 'message' ? HUB_DRAFT_DECLINED : '';
+const rawTone = ctx.request.brandBackgroundTone;
+const brandBackgroundTone: 'DARK' | 'LIGHT' | null =
+  rawTone === 'DARK' || rawTone === 'LIGHT' ? rawTone : null;
+const rawSource = ctx.request.brandColoursSource;
+const brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null =
+  rawSource === 'LOGO' || rawSource === 'MANUAL' || rawSource === 'KERSIVO_CHOOSES' ? rawSource : null;
+const brandPaletteExtracted = parseBrandPalette(ctx.request.brandPaletteExtracted);
+const appCtx: AdminHubAppContext = {
+  apiBase: ADMIN_HUB_API_BASE,
+  canUpload: caps.canUpload,
+  canEditDetails: caps.canEditDetails,
+  canReview: caps.canReview,
+  canEditLaunch,
+  stage: ctx.state.stage,
+  details: {
+    brandPrimaryColour: ctx.request.brandPrimaryColour,
+    brandSecondaryColour: ctx.request.brandSecondaryColour,
+    styleNotes: ctx.request.styleNotes,
+    aboutText: ctx.request.aboutText,
+    brandBackgroundTone,
+    brandColoursSource,
+    brandPaletteExtracted,
+    brandColoursSentAt: ctx.request.brandColoursSentAt ? ctx.request.brandColoursSentAt.toISOString() : null,
+  },
+  assets: view.assets,
+  reviews: view.reviews,
+  reviewShop: view.reviewShop,
+  activity: view.activity.map((item) => ({
+    id: item.id,
+    label: item.label,
+    relative: item.relative,
+    absolute: item.absolute,
+    at: item.at.toISOString(),
+  })),
+  setupItems: view.setup?.items ?? [],
+  messages: view.messages,
+  initialDraft,
+  viewer: ctx.isOperator ? ('ops' as const) : ('owner' as const),
+  requestId: ctx.isOperator ? ctx.request.id : undefined,
+  canAttach: caps.canMessage,
+  shopName,
+  websiteHref: ADMIN_HUB_LINKS.website,
+  bookingHref: ADMIN_HUB_LINKS.booking,
+  launch: view.launchFlags,
+};
+---
+
+<HubDocument title={`${title} — ${shopName} | KERSIVO`}>
+  <AdminHubShell
+    shopName={shopName}
+    townCity={ctx.request.townCity}
+    ownerEmail={ctx.request.email}
+    ownerFirstName={ctx.request.firstName}
+    stage={ctx.state.stage}
+    capabilities={caps}
+    current={location.section}
+    isOperator={ctx.isOperator}
+    unreadMessages={view.unreadMessages}
+    openChanges={view.openChanges}
+    logoSrc={logoSrc}
+    brandColour={ctx.request.brandPrimaryColour}
+    setup={view.setup}
+    showMobileSetup={false}
+  >
+    {
+      location.section === 'overview' && view.overview ? (
+        <AdminHubOverview
+          request={ctx.request}
+          state={ctx.state}
+          isOperator={ctx.isOperator}
+          steps={view.overview.steps}
+          activity={view.overview.activity}
+          hasWebsitePreview={Boolean(sitePreviewUrl)}
+          reviewNeed={view.overview.reviewNeed}
+          launchProgress={view.overview.launchProgress}
+          logoSrc={logoSrc}
+          brandColour={ctx.request.brandPrimaryColour}
+          brandSecondaryColour={ctx.request.brandSecondaryColour}
+          brandColoursSentAt={ctx.request.brandColoursSentAt}
+          brandColoursSource={brandColoursSource}
+          brandPaletteExtracted={brandPaletteExtracted}
+          latestMessage={view.overview.latestMessage}
+          unreadMessages={view.unreadMessages}
+          changeItems={view.overview.changeItems}
+          setup={view.setup}
+        />
+      ) : location.section === 'changes' ? (
+        caps.canDraftChanges ? (
+          <AdminHubChanges
+            client:load
+            token=""
+            apiBase={ADMIN_HUB_API_BASE}
+            initialItems={view.changeItems}
+            includedChangeRounds={ctx.request.includedChangeRounds}
+            changeRoundsUsed={ctx.request.changeRoundsUsed}
+            canDraft={caps.canDraftChanges}
+            canSend={caps.canSendChanges}
+          />
+        ) : (
+          <section class="admin-hub-locked" data-testid="admin-hub-changes-locked">
+            <header class="admin-hub-head">
+              <div>
+                <span class="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
+                <h1>{HUB_NAV.changes}</h1>
+                <p class="admin-hub-head__sub">{ADMIN_HUB_CHANGES_SUB}</p>
+              </div>
+            </header>
+            <div class="admin-hub-tile admin-hub-calm">
+              <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
+              <p>{HUB_WEBSITE_LOCKED_BODY}</p>
+            </div>
+          </section>
+        )
+      ) : location.section === 'website' ? (
+        showPreview && ctx.draft ? (
+          <AdminHubWebsite
+            client:load
+            token=""
+            apiBase={ADMIN_HUB_API_BASE}
+            shopName={shopName}
+            townCity={ctx.request.townCity}
+            firstName={ctx.request.firstName}
+            checkoutEmail={ctx.request.email}
+            hasOwnDomain={ctx.request.hasOwnDomain ?? 'not_sure'}
+            existingWebsiteHost={hostnameOf(ctx.request.websiteUrl)}
+            isOperator={ctx.isOperator}
+            converted={ctx.request.status === 'CONVERTED'}
+            view={websiteView}
+            websiteHref={ADMIN_HUB_LINKS.website}
+            bookingHref={ADMIN_HUB_LINKS.booking}
+            draft={{
+              sitePreviewUrl,
+              timezone: ctx.draft.shop.timezone,
+              cancellationWindowHours: ctx.draft.shop.cancellationWindowHours,
+              rescheduleWindowHours: ctx.draft.shop.rescheduleWindowHours,
+              services: ctx.draft.services,
+              barbers: ctx.draft.barbers,
+              hours: ctx.draft.hours,
+            }}
+            changeItems={view.changeItems}
+            includedChangeRounds={ctx.request.includedChangeRounds}
+            changeRoundsUsed={ctx.request.changeRoundsUsed}
+            canDraft={caps.canDraftChanges}
+            canSend={caps.canSendChanges}
+            canCheckout={caps.canCheckout}
+          />
+        ) : (
+          <section class="admin-hub-locked" data-testid="admin-hub-website-locked">
+            <header class="admin-hub-head">
+              <div>
+                <span class="admin-hub-head__eyebrow">{HUB_NAV.website}</span>
+                <h1>{ADMIN_HUB_WEBSITE_TITLE}</h1>
+                <p class="admin-hub-head__sub">{ADMIN_HUB_WEBSITE_SUB}</p>
+              </div>
+            </header>
+            <div class="admin-hub-tile admin-hub-calm">
+              <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
+              <p>{HUB_WEBSITE_LOCKED_BODY}</p>
+            </div>
+          </section>
+        )
+      ) : null
+    }
+    <AppHost client:load initialApp={location.app} ctx={appCtx} />
+  </AdminHubShell>
+</HubDocument>

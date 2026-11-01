@@ -1,0 +1,37 @@
+[
+  {
+    "name": "overview",
+    "path": "/preview/edWaW6etpjnUH-n_-ABtuvZioGmO-TkdDdEq-mi_YDg",
+    "performance": 55,
+    "accessibility": 100,
+    "cls": 0.000247583978304102
+  },
+  {
+    "name": "details",
+    "path": "/preview/edWaW6etpjnUH-n_-ABtuvZioGmO-TkdDdEq-mi_YDg/details",
+    "performance": 58,
+    "accessibility": 99,
+    "cls": 0.001442700495271894
+  },
+  {
+    "name": "website",
+    "path": "/preview/edWaW6etpjnUH-n_-ABtuvZioGmO-TkdDdEq-mi_YDg/website",
+    "performance": 38,
+    "accessibility": 100,
+    "cls": 0.0008088244981192972
+  },
+  {
+    "name": "messages",
+    "path": "/preview/edWaW6etpjnUH-n_-ABtuvZioGmO-TkdDdEq-mi_YDg/messages",
+    "performance": 64,
+    "accessibility": 100,
+    "cls": 0.001948094039927283
+  },
+  {
+    "name": "checklist",
+    "path": "/admin/preview-launch",
+    "performance": 54,
+    "accessibility": 100,
+    "cls": 0.05229783794769279
+  }
+]

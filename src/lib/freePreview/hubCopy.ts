@@ -118,6 +118,13 @@ export const HUB_UPLOAD_ERROR_TOO_LARGE = 'This file is over 4 MB. Try a smaller
 export const HUB_UPLOAD_ERROR_TOO_LARGE_BODY = 'This upload is over 4 MB. Try one smaller file at a time.';
 export const HUB_UPLOAD_ERROR_EMPTY = 'That file is empty.';
 export const HUB_UPLOAD_ERROR_REJECTED = 'We could not use that file. Try a JPG, PNG, WEBP or PDF.';
+export const HUB_UPLOAD_ERROR_UNSAFE_SVG =
+  'This SVG is not allowed. Remove scripts, event handlers or external links.';
+export const HUB_REVIEW_UNSAVED = 'Unsaved changes';
+export const HUB_REVIEW_BIO_HELPER = "We'll add this to your website.";
+export const HUB_OPS_MANUAL_WEBSITE_UPDATE = 'Update on the website build manually';
+export const HUB_SUBSCRIBE_SECONDARY = 'Launch this website';
+export const HUB_SUBSCRIBE_PRICE = '£39/month per location';
 export const HUB_UPLOAD_ERROR_CAP_FILES = 'You can add up to 60 files.';
 export const HUB_UPLOAD_ERROR_CAP_BYTES = 'These files would take you over 250 MB.';
 export const HUB_UPLOAD_ERROR_CAP_PHOTOS = 'You can add up to 40 shop photos.';
@@ -519,7 +526,7 @@ export const HUB_PRIMARY = {
   live: 'Go to your dashboard',
   declined: 'Send us a message',
   expired: 'Ask us to reopen it',
-  subscribe: 'Launch this website — £39/month',
+  subscribe: 'Launch this website',
 } as const;
 
 export const HUB_PREVIEW_CARD_LOCKED = 'Your preview will appear here';
@@ -552,6 +559,7 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   hub_live: 'Site live',
   hub_asset_uploaded: 'Files added',
   hub_details_saved: 'Shop details saved',
+  BRAND_COLOURS_SENT: 'You sent your colours',
   hub_message_sent: 'You sent a message',
   ops_hub_message_sent: 'KERSIVO replied',
   hub_review_confirmed: 'You confirmed your details',

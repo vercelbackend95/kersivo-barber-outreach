@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { tokenHubLinks } from '@/lib/adminHub/links';
 
 const overview = readFileSync(path.join(process.cwd(), 'src/components/previewHub/HubOverview.astro'), 'utf8');
 const shell = readFileSync(path.join(process.cwd(), 'src/components/previewHub/HubShell.astro'), 'utf8');
@@ -18,8 +19,10 @@ describe('HubOverview key UI states', () => {
   });
 
   it('sends declined and expired primary actions to the messages composer with a draft', () => {
-    expect(overview).toContain('messages?draft=message');
-    expect(overview).toContain('messages?draft=reopen');
+    expect(overview).toContain("links.messagesDraft('message')");
+    expect(overview).toContain("links.messagesDraft('reopen')");
+    expect(tokenHubLinks('tok').messagesDraft('message')).toBe('/preview/tok/messages?draft=message');
+    expect(tokenHubLinks('tok').messagesDraft('reopen')).toBe('/preview/tok/messages?draft=reopen');
     expect(overview).toContain('HUB_PRIMARY[state.stage]');
     expect(overview).not.toContain('expiredDisabled');
   });
@@ -35,9 +38,18 @@ describe('HubOverview key UI states', () => {
     expect(overview).not.toContain('launchDeposits');
   });
 
-  it('shows the Review subscribe control in the Overview header', () => {
+  it('shows the Review subscribe control in the Overview header as secondary chrome', () => {
     expect(overview).toContain('canCheckout');
     expect(overview).toContain('chrome="checkout"');
+    expect(overview).toContain('class="btn btn--primary"');
+    expect(overview).toContain('HUB_PRIMARY');
+  });
+
+  it('uses a phone-frame placeholder, not an iframe, for the preview card', () => {
+    expect(overview).toContain('hub-phone-frame');
+    expect(overview).toContain('HUB_PREVIEW_OPEN_WEBSITE');
+    expect(overview).toContain('HUB_PREVIEW_TRY_BOOKING');
+    expect(overview).not.toMatch(/<iframe[\s\S]*hub-phone-frame|hub-phone-frame[\s\S]*<iframe/);
   });
 });
 
@@ -52,5 +64,14 @@ describe('HubShell', () => {
     expect(shell).toContain('aria-label="Hub pages"');
     expect(shell).toContain('unreadMessages');
     expect(shell).toContain('hub-unread');
+  });
+
+  it('shows the KERSIVO wordmark, outline tab icons and a lock on locked tabs', () => {
+    expect(shell).toContain('hub-topbar__mark');
+    expect(shell).toContain('hub-tabs__icon');
+    expect(shell).toContain('aria-hidden="true"');
+    expect(shell).toContain('hub-tabs__lock');
+    expect(shell).toContain('hub-count');
+    expect(shell).toContain('${tab.label} ${openChanges} open');
   });
 });

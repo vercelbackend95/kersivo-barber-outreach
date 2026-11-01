@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import HubDocument from '@/layouts/HubDocument.astro';
+import { adminHubBridge } from '@/lib/adminHub/bridge';
 import HubOverview from '@/components/previewHub/HubOverview.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
@@ -18,6 +19,15 @@ import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 applyPrivatePreviewHeaders(Astro.response.headers);
+
+const bridged = await adminHubBridge({
+  request: Astro.request,
+  url: Astro.url,
+  token: Astro.params.token ?? '',
+  subroute: 'overview',
+  rateLimit: true,
+});
+if (bridged) return bridged;
 
 if (!isHubRouteEnabled()) return hubNotFound();
 
@@ -77,6 +87,7 @@ const checklist = buildHubChecklist({
   ...checklistFlagsFromAssets(assets, ctx.request.aboutText),
 });
 const shopName = ctx.request.shopName;
+const logoAsset = assets.find((asset) => asset.kind === 'LOGO');
 ---
 
 <HubDocument title={`Shop hub — ${shopName} | KERSIVO`}>
@@ -102,6 +113,8 @@ const shopName = ctx.request.shopName;
       reviewShop={reviewShop}
       reviewNeed={reviewNeed}
       launchProgress={launchProgress}
+      logoAssetId={logoAsset?.id ?? null}
+      brandColour={ctx.request.brandPrimaryColour}
     />
   </HubShell>
 </HubDocument>

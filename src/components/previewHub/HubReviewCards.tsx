@@ -9,6 +9,7 @@ import {
   HUB_RETRY,
   HUB_REVIEW_ADD_ROW,
   HUB_REVIEW_BIO,
+  HUB_REVIEW_BIO_HELPER,
   HUB_REVIEW_CARD_FOOTER,
   HUB_REVIEW_CONFIRMED,
   HUB_REVIEW_CORRECTIONS_SENT,
@@ -28,6 +29,7 @@ import {
   HUB_REVIEW_SENDING,
   HUB_REVIEW_SENT,
   HUB_REVIEW_SHOW_ON_WEBSITE,
+  HUB_REVIEW_UNSAVED,
   HUB_REVIEW_UPDATED,
 } from '@/lib/freePreview/hubCopy';
 import {
@@ -40,7 +42,8 @@ import {
   type HubReviewPublic,
   type HubReviewSection,
   type HubReviewShopData,
-} from '@/lib/freePreview/hubReviews';
+} from '@/lib/freePreview/hubReviews.shared';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 
 export type HubReviewMap = Record<HubReviewSection, HubReviewPublic | null>;
@@ -80,8 +83,8 @@ function newId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function postReview(token: string, body: unknown) {
-  const response = await fetch(`/api/preview-hub/${encodeURIComponent(token)}/reviews`, {
+async function postReview(apiRoot: string, body: unknown) {
+  const response = await fetch(`${apiRoot}/reviews`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -93,12 +96,16 @@ async function postReview(token: string, body: unknown) {
 
 export function HubReviewCards(props: {
   token: string;
+  apiBase?: string;
   detailsHref?: string;
   canReview: boolean;
   shop: HubReviewShopData | null;
   reviews: HubReviewMap;
   mode: 'strip' | 'full';
+  /** Admin Hub apps: render one section. Omitted = all three. */
+  only?: HubReviewSection;
 }) {
+  const apiRoot = hubApiRoot(props);
   const [reviews, setReviews] = useState(props.reviews);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<HubReviewSection | null>(null);
@@ -131,13 +138,17 @@ export function HubReviewCards(props: {
   const [serviceRows, setServiceRows] = useState(services);
   const [teamRows, setTeamRows] = useState(team);
   const [hours, setHours] = useState<WeeklyRule[]>(hoursToWeeklyRules(shop?.hours ?? []));
+  const servicesDirty = JSON.stringify(serviceRows) !== JSON.stringify(services);
+  const teamDirty = JSON.stringify(teamRows) !== JSON.stringify(team);
+  const hoursDirty =
+    JSON.stringify(hours) !== JSON.stringify(hoursToWeeklyRules(shop?.hours ?? []));
 
   const save = async (section: HubReviewSection, body: unknown) => {
     if (busy) return;
     setBusy(section);
     setError(null);
     try {
-      const review = await postReview(props.token, body);
+      const review = await postReview(apiRoot, body);
       setReviews((current) => ({ ...current, [section]: review }));
       setToast(HUB_REVIEW_SENT);
     } catch (err) {
@@ -180,8 +191,11 @@ export function HubReviewCards(props: {
     );
   }
 
+  const show = (section: HubReviewSection) => !props.only || props.only === section;
+
   return (
     <div className="hub-review-stack">
+      {show('SERVICES') ? (
       <ReviewCard
         id="hub-review-services"
         title={HUB_DETAILS_SERVICES_TITLE}
@@ -189,6 +203,7 @@ export function HubReviewCards(props: {
         note={reviews.SERVICES?.opsNote}
         busy={busy === 'SERVICES'}
         canReview={props.canReview}
+        dirty={servicesDirty}
         empty={!serviceRows.some((row) => !row.removed)}
         emptyLabel={HUB_REVIEW_EMPTY_SERVICES}
         onConfirm={() => void save('SERVICES', { action: 'confirmed', section: 'SERVICES' })}
@@ -203,11 +218,11 @@ export function HubReviewCards(props: {
           })
         }
       >
-        <div className="hub-review-table" role="table" aria-label={HUB_DETAILS_SERVICES_TITLE}>
+        <div className="hub-review-table">
           {serviceRows
             .filter((row) => !row.removed)
             .map((row) => (
-              <div key={row.clientId} className="hub-review-row" role="row">
+              <div key={row.clientId} className="hub-review-row">
                 <label>
                   <span className="sr-only">{HUB_REVIEW_NAME}</span>
                   <input
@@ -262,19 +277,23 @@ export function HubReviewCards(props: {
                   />
                 </label>
                 {props.canReview ? (
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--sm"
-                    onClick={() =>
-                      setServiceRows((current) =>
-                        current.map((item) => (item.clientId === row.clientId ? { ...item, removed: true } : item)),
-                      )
-                    }
-                  >
-                    {HUB_REVIEW_REMOVE_ROW}
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      onClick={() =>
+                        setServiceRows((current) =>
+                          current.map((item) => (item.clientId === row.clientId ? { ...item, removed: true } : item)),
+                        )
+                      }
+                    >
+                      {HUB_REVIEW_REMOVE_ROW}
+                    </button>
+                  </div>
                 ) : (
-                  <span className="hub-card__body">{formatGbpPence(row.pricePence)}</span>
+                  <span className="hub-card__body">
+                    {formatGbpPence(row.pricePence)}
+                  </span>
                 )}
               </div>
             ))}
@@ -294,7 +313,9 @@ export function HubReviewCards(props: {
           </button>
         ) : null}
       </ReviewCard>
+      ) : null}
 
+      {show('TEAM') ? (
       <ReviewCard
         id="hub-review-team"
         title={HUB_DETAILS_TEAM_TITLE}
@@ -302,6 +323,7 @@ export function HubReviewCards(props: {
         note={reviews.TEAM?.opsNote}
         busy={busy === 'TEAM'}
         canReview={props.canReview}
+        dirty={teamDirty}
         empty={!teamRows.some((row) => !row.removed)}
         emptyLabel={HUB_REVIEW_EMPTY_TEAM}
         onConfirm={() => void save('TEAM', { action: 'confirmed', section: 'TEAM' })}
@@ -345,6 +367,7 @@ export function HubReviewCards(props: {
                       )
                     }
                   />
+                  <span className="field__hint">{HUB_REVIEW_BIO_HELPER}</span>
                 </label>
                 <label className="hub-review-toggle">
                   <input
@@ -366,11 +389,12 @@ export function HubReviewCards(props: {
                     <p className="field__hint">{HUB_REVIEW_PHOTO}</p>
                     <HubUploader
                       token={props.token}
+                      apiBase={props.apiBase}
                       kind="TEAM_PHOTO"
                       compact
                       remaining={1}
                       onUploaded={(asset) => {
-                        void fetch(`/api/preview-hub/${encodeURIComponent(props.token)}/assets/${encodeURIComponent(asset.id)}`, {
+                        void fetch(`${apiRoot}/assets/${encodeURIComponent(asset.id)}`, {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ barberId: row.id }),
@@ -415,7 +439,9 @@ export function HubReviewCards(props: {
           </button>
         ) : null}
       </ReviewCard>
+      ) : null}
 
+      {show('HOURS') ? (
       <ReviewCard
         id="hub-review-hours"
         title={HUB_DETAILS_HOURS_TITLE}
@@ -423,6 +449,7 @@ export function HubReviewCards(props: {
         note={reviews.HOURS?.opsNote}
         busy={busy === 'HOURS'}
         canReview={props.canReview}
+        dirty={hoursDirty}
         empty={hours.length === 0}
         emptyLabel={HUB_REVIEW_EMPTY_HOURS}
         onConfirm={() => void save('HOURS', { action: 'confirmed', section: 'HOURS' })}
@@ -444,6 +471,7 @@ export function HubReviewCards(props: {
       >
         <WeeklyHoursEditor idPrefix="hub-hours" rules={hours} onChange={setHours} disabled={!props.canReview} />
       </ReviewCard>
+      ) : null}
 
       {error ? (
         <p className="hub-card__body" role="alert">
@@ -467,6 +495,7 @@ function ReviewCard(props: {
   note: string | null | undefined;
   busy: boolean;
   canReview: boolean;
+  dirty: boolean;
   empty: boolean;
   emptyLabel: string;
   onConfirm: () => void;
@@ -490,10 +519,23 @@ function ReviewCard(props: {
       <p className="hub-card__body">{HUB_REVIEW_CARD_FOOTER}</p>
       {props.canReview ? (
         <div className="hub-review-card__actions">
-          <button type="button" className="btn btn--secondary btn--sm" onClick={props.onConfirm} disabled={props.busy}>
+          {props.dirty ? <p className="hub-review-unsaved">{HUB_REVIEW_UNSAVED}</p> : null}
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm"
+            data-testid={`${props.id}-looks-right`}
+            onClick={props.onConfirm}
+            disabled={props.busy || props.dirty}
+          >
             {props.busy ? HUB_REVIEW_SENDING : `${HUB_REVIEW_LOOKS_RIGHT} ✓`}
           </button>
-          <button type="button" className="btn btn--primary btn--sm" onClick={props.onCorrections} disabled={props.busy}>
+          <button
+            type="button"
+            className="btn btn--primary btn--sm"
+            data-testid={`${props.id}-send-corrections`}
+            onClick={props.onCorrections}
+            disabled={props.busy || !props.dirty}
+          >
             {props.busy ? HUB_REVIEW_SENDING : HUB_REVIEW_SEND_CORRECTIONS}
           </button>
         </div>

@@ -1,5 +1,6 @@
 import type { PreviewRequestStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { previewHoursFromRows } from './previewBookingSlots';
 import { isWellFormedPreviewToken, previewTokenLookupHash, previewTokensMatch } from './token';
 
 /** Statuses in which the owner can view the preview, request changes and launch. */
@@ -29,6 +30,10 @@ const previewRequestSelect = {
   changeRoundsUsed: true,
   brandPrimaryColour: true,
   brandSecondaryColour: true,
+  brandBackgroundTone: true,
+  brandColoursSource: true,
+  brandPaletteExtracted: true,
+  brandColoursSentAt: true,
   styleNotes: true,
   aboutText: true,
 } as const;
@@ -53,6 +58,18 @@ export async function resolvePreviewRequestByToken(token: string): Promise<Token
   const row = await findPreviewRequestRow(previewTokenLookupHash(trimmed));
   if (!row || !previewTokensMatch(trimmed, row.publicToken)) return null;
   return row;
+}
+
+/** Same row as the token lookup, for the signed `ks_hub` cookie (the id was authenticated by its HMAC). */
+export async function resolvePreviewRequestById(id: string): Promise<TokenPreviewRequest | null> {
+  if (!id) return null;
+  return prisma.previewRequest.findUnique({ where: { id }, select: previewRequestSelect });
+}
+
+/** The request whose draft shop an owner adopted at checkout (draftShopId is unique). */
+export async function resolvePreviewRequestByDraftShopId(shopId: string): Promise<TokenPreviewRequest | null> {
+  if (!shopId) return null;
+  return prisma.previewRequest.findUnique({ where: { draftShopId: shopId }, select: previewRequestSelect });
 }
 
 export function isPreviewExpired(request: { status: PreviewRequestStatus; expiresAt: Date | null }, now: Date): boolean {
@@ -122,7 +139,7 @@ export async function recordPreviewView(id: string, now: Date = new Date()): Pro
 
 /** Draft shop data rendered on the preview: the website URL plus the catalogue for the test booking page. */
 export async function loadPreviewDraftShop(shopId: string) {
-  const [shop, services, barbers] = await Promise.all([
+  const [shop, services, barbers, hourRows] = await Promise.all([
     prisma.shopSettings.findUnique({
       where: { id: shopId },
       select: {
@@ -145,11 +162,16 @@ export async function loadPreviewDraftShop(shopId: string) {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, barberServices: { select: { serviceId: true } } },
     }),
+    prisma.shopOpeningHours.findMany({
+      where: { shopId },
+      select: { dayOfWeek: true, active: true },
+    }),
   ]);
   if (!shop) return null;
   return {
     shop,
     services,
+    hours: previewHoursFromRows(hourRows),
     barbers: barbers.map((barber) => ({
       id: barber.id,
       name: barber.name,

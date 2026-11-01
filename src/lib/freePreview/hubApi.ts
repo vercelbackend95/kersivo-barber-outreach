@@ -4,7 +4,15 @@ import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 import { checkDurableRateLimit, rateLimitExceededResponse } from '@/lib/rate-limit/durableRateLimit';
 import { previewJson } from './previewApi';
-import { isHubRouteEnabled, resolveHubPageContext, tokenPrefixForLog, type HubPageContext } from './hubPage';
+import { readHubCookie, verifyHubSession } from '@/lib/adminHub/hubSession';
+import {
+  isAdminHubRouteEnabled,
+  isHubRouteEnabled,
+  resolveHubContext,
+  resolveHubPageContext,
+  tokenPrefixForLog,
+  type HubPageContext,
+} from './hubPage';
 import { previewTokenLookupHash } from './token';
 import { HUB_MAX_BODY_BYTES, HUB_OWNER_UPLOAD_KINDS } from './hubAssets';
 import { HUB_ROUND_USED, HUB_UPLOAD_ERROR_DENIED, HUB_UPLOAD_ERROR_TOO_LARGE_BODY } from './hubCopy';
@@ -66,6 +74,15 @@ export function hubJson(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: HUB_API_HEADERS });
 }
 
+/** Adds the private hub headers to a response built elsewhere (e.g. the shared checkout). */
+export function withHubApiHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(HUB_API_HEADERS)) {
+    if (name !== 'Content-Type') headers.set(name, value);
+  }
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export function hubNotFoundJson(): Response {
   return hubJson({ ok: false, error: 'Not found.' }, 404);
 }
@@ -78,24 +95,94 @@ export function rejectOversizedHubBody(request: Request): Response | null {
   return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TOO_LARGE_BODY }, 413);
 }
 
+/** Rejects oversized uploads even when Content-Length is missing (chunked / streamed). */
+export async function readLimitedHubBody(
+  request: Request,
+): Promise<{ ok: true; request: Request } | { ok: false; response: Response }> {
+  const headerReject = rejectOversizedHubBody(request);
+  if (headerReject) return { ok: false, response: headerReject };
+  if (!request.body) return { ok: true, request };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > HUB_MAX_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      return { ok: false, response: hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TOO_LARGE_BODY }, 413) };
+    }
+    chunks.push(value);
+  }
+
+  const buffer = Buffer.concat(chunks);
+  const headers = new Headers(request.headers);
+  headers.set('content-length', String(buffer.byteLength));
+  return {
+    ok: true,
+    request: new Request(request.url, {
+      method: request.method,
+      headers,
+      body: buffer,
+    }),
+  };
+}
+
+/**
+ * Where a hub API call gets its request from: the URL token (/api/preview-hub/{token}/*) or the signed `ks_hub`
+ * cookie (/api/admin-hub/*, docs/admin-hub/ADMIN_HUB_SPEC.md §2.2). Both run the same handlers.
+ */
+export type HubApiSource = { kind: 'token'; token: string } | { kind: 'cookie' };
+export type HubSourceOf = (params: Record<string, string | undefined>) => HubApiSource;
+
+export const tokenSourceOf: HubSourceOf = (params) => ({ kind: 'token', token: params.token ?? '' });
+export const cookieSourceOf: HubSourceOf = () => ({ kind: 'cookie' });
+
+/** Per-request rate-limit key: the token as before, or the HMAC-verified request id from `ks_hub`. */
+export function hubRateKey(source: HubApiSource, request: Request): string {
+  if (source.kind === 'token') return source.token;
+  const session = verifyHubSession(readHubCookie(request));
+  return session ? `ks_hub:${session.previewRequestId}` : '';
+}
+
+/** Safe log reference: never the whole token, never the cookie. */
+export function hubLogRef(source: HubApiSource): string {
+  return source.kind === 'token' ? tokenPrefixForLog(source.token) : 'ks_hub';
+}
+
 export async function resolveHubApiContext(input: {
   request: Request;
-  token: string;
+  token?: string;
+  source?: HubApiSource;
   mutation: boolean;
 }): Promise<{ ok: true; ctx: HubPageContext } | { ok: false; response: Response }> {
-  if (!isHubRouteEnabled()) return { ok: false, response: hubNotFoundJson() };
+  const source: HubApiSource = input.source ?? { kind: 'token', token: input.token ?? '' };
+  const enabled = source.kind === 'cookie' ? isAdminHubRouteEnabled() : isHubRouteEnabled();
+  if (!enabled) return { ok: false, response: hubNotFoundJson() };
 
   if (input.mutation) {
     const origin = evaluateExactSameOrigin(input.request);
     if (!origin.ok) return { ok: false, response: hubJson({ ok: false, error: 'Forbidden.' }, 403) };
   }
 
-  const token = input.token.trim();
   const operator = await resolveOperatorAccess(input.request);
+  const now = new Date();
+  if (source.kind === 'cookie') {
+    const ctx = await resolveHubContext({ cookie: readHubCookie(input.request) }, { isOperator: operator.ok, now });
+    if (!ctx) {
+      console.info('[admin-hub] cookie miss');
+      return { ok: false, response: hubNotFoundJson() };
+    }
+    return { ok: true, ctx };
+  }
+
+  const token = source.token.trim();
   const ctx = await resolveHubPageContext({
     token,
     isOperator: operator.ok,
-    now: new Date(),
+    now,
   });
   if (!ctx) {
     console.info('[preview-hub] token miss', { token: tokenPrefixForLog(token) });

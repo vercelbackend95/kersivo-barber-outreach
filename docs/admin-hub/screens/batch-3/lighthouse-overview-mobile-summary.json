@@ -1,0 +1,44 @@
+{
+  "name": "overview",
+  "path": "/admin",
+  "mode": "astro-dev",
+  "origin": "http://127.0.0.1:4397",
+  "performance": 55,
+  "accessibility": 100,
+  "cls": 0.00018907973383635148,
+  "fcpMs": 30257.49159999998,
+  "lcpMs": 46536.55304999997,
+  "tbtMs": 56.5,
+  "opportunities": [
+    {
+      "id": "unminified-javascript",
+      "title": "Minify JavaScript",
+      "savingsMs": 21290
+    },
+    {
+      "id": "redirects",
+      "title": "Avoid multiple page redirects",
+      "savingsMs": 16516.245799999993
+    },
+    {
+      "id": "uses-text-compression",
+      "title": "Enable text compression",
+      "savingsMs": 7750
+    },
+    {
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "savingsMs": 3100
+    },
+    {
+      "id": "duplicated-javascript",
+      "title": "Remove duplicate modules in JavaScript bundles",
+      "savingsMs": 80
+    },
+    {
+      "id": "server-response-time",
+      "title": "Initial server response time was short",
+      "savingsMs": 6.346000000000004
+    }
+  ]
+}

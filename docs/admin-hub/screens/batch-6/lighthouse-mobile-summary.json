@@ -1,0 +1,21 @@
+{
+  "overview": {
+    "path": "/admin",
+    "mode": "astro-dev",
+    "performance": 50,
+    "accessibility": 100,
+    "cls": 0.16204112773470047,
+    "fcpMs": 7907.405500000001,
+    "lcpMs": 7907.405500000001
+  },
+  "website": {
+    "path": "/admin?section=website",
+    "mode": "astro-dev",
+    "performance": 54,
+    "accessibility": 100,
+    "cls": 0.00003282570681856272,
+    "fcpMs": 16641.016875,
+    "lcpMs": 19720.418000000005
+  },
+  "origin": "http://127.0.0.1:4397"
+}

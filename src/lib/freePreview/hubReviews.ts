@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Prisma, type PreviewContentReviewState, type PreviewContentSection } from '@prisma/client';
+import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { prisma } from '@/lib/db/client';
 import { DEFAULT_ONBOARDING_HOURS, type OnboardingWeeklyRule } from '@/lib/admin/shopOpeningHours';
 import { minutesToTimeString, timeStringToMinutes } from '@/lib/admin/timeStrings';
@@ -20,11 +21,38 @@ import {
   HUB_SECTION_TEAM,
 } from './hubCopy';
 
-export const HUB_REVIEW_SECTIONS = ['SERVICES', 'TEAM', 'HOURS'] as const satisfies readonly PreviewContentSection[];
-
-export type HubReviewSection = (typeof HUB_REVIEW_SECTIONS)[number];
-
-export type HubReviewCardState = 'not_checked' | 'confirmed' | 'corrections_sent' | 'updated' | 'dismissed';
+export {
+  HUB_REVIEW_SECTIONS,
+  cardStateFromReview,
+  formatGbpPence,
+  hoursFingerprint,
+  hoursToWeeklyRules,
+  servicesFingerprint,
+  teamFingerprint,
+  type HubReviewCardState,
+  type HubReviewPublic,
+  type HubReviewSection,
+  type HubReviewShopBarber,
+  type HubReviewShopData,
+  type HubReviewShopHours,
+  type HubReviewShopService,
+} from './hubReviews.shared';
+import {
+  HUB_REVIEW_SECTIONS,
+  cardStateFromReview,
+  formatGbpPence,
+  hoursFingerprint,
+  hoursToWeeklyRules,
+  servicesFingerprint,
+  teamFingerprint,
+  type HubReviewCardState,
+  type HubReviewPublic,
+  type HubReviewSection,
+  type HubReviewShopBarber,
+  type HubReviewShopData,
+  type HubReviewShopHours,
+  type HubReviewShopService,
+} from './hubReviews.shared';
 
 const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -110,80 +138,6 @@ export type HubServicesProposal = z.infer<typeof hubServicesProposalSchema>;
 export type HubTeamProposal = z.infer<typeof hubTeamProposalSchema>;
 export type HubHoursProposal = z.infer<typeof hubHoursProposalSchema>;
 
-export type HubReviewShopService = {
-  id: string;
-  name: string;
-  durationMinutes: number;
-  pricePence: number;
-};
-
-export type HubReviewShopBarber = {
-  id: string;
-  name: string;
-  photoAssetId: string | null;
-};
-
-export type HubReviewShopHours = {
-  dayOfWeek: number;
-  open: boolean;
-  start: string;
-  end: string;
-};
-
-export type HubReviewShopData = {
-  shopId: string;
-  services: HubReviewShopService[];
-  barbers: HubReviewShopBarber[];
-  hours: HubReviewShopHours[];
-};
-
-export type HubReviewPublic = {
-  id: string;
-  section: HubReviewSection;
-  state: PreviewContentReviewState;
-  cardState: HubReviewCardState;
-  proposal: unknown;
-  opsNote: string | null;
-  createdAt: string;
-  appliedAt: string | null;
-};
-
-export function servicesFingerprint(services: HubReviewShopService[]): string {
-  return JSON.stringify(
-    [...services]
-      .map((row) => ({ id: row.id, name: row.name, durationMinutes: row.durationMinutes, pricePence: row.pricePence }))
-      .sort((a, b) => a.id.localeCompare(b.id)),
-  );
-}
-
-export function teamFingerprint(barbers: HubReviewShopBarber[]): string {
-  return JSON.stringify(
-    [...barbers]
-      .map((row) => ({ id: row.id, name: row.name, photoAssetId: row.photoAssetId }))
-      .sort((a, b) => a.id.localeCompare(b.id)),
-  );
-}
-
-export function hoursFingerprint(hours: HubReviewShopHours[]): string {
-  return JSON.stringify([...hours].sort((a, b) => a.dayOfWeek - b.dayOfWeek));
-}
-
-export function cardStateFromReview(state: PreviewContentReviewState | null): HubReviewCardState {
-  if (!state) return 'not_checked';
-  if (state === 'CONFIRMED') return 'confirmed';
-  if (state === 'CORRECTIONS_SENT') return 'corrections_sent';
-  if (state === 'APPLIED') return 'updated';
-  return 'dismissed';
-}
-
-export function hoursToWeeklyRules(hours: HubReviewShopHours[]): OnboardingWeeklyRule[] {
-  return hours.map((day) => ({
-    dayOfWeek: day.dayOfWeek,
-    active: day.open,
-    startTime: day.start,
-    endTime: day.end,
-  }));
-}
 
 export function defaultHubHours(): HubReviewShopHours[] {
   return DEFAULT_ONBOARDING_HOURS.map((row) => ({
@@ -194,23 +148,34 @@ export function defaultHubHours(): HubReviewShopHours[] {
   }));
 }
 
-export async function loadHubReviewShopData(shopId: string, previewRequestId: string): Promise<HubReviewShopData> {
+type ReviewDb = {
+  service: Pick<typeof prisma.service, 'findMany'>;
+  barber: Pick<typeof prisma.barber, 'findMany'>;
+  shopOpeningHours: Pick<typeof prisma.shopOpeningHours, 'findMany'>;
+  previewHubAsset: Pick<typeof prisma.previewHubAsset, 'findMany'>;
+};
+
+export async function loadHubReviewShopData(
+  shopId: string,
+  previewRequestId: string,
+  db: ReviewDb = prisma,
+): Promise<HubReviewShopData> {
   const [services, barbers, hourRows, teamPhotos] = await Promise.all([
-    prisma.service.findMany({
+    db.service.findMany({
       where: { shopId, isActive: true },
       orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, durationMinutes: true, pricePence: true },
     }),
-    prisma.barber.findMany({
+    db.barber.findMany({
       where: { shopId, active: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true },
     }),
-    prisma.shopOpeningHours.findMany({
+    db.shopOpeningHours.findMany({
       where: { shopId },
       select: { dayOfWeek: true, active: true, startMinutes: true, endMinutes: true },
     }),
-    prisma.previewHubAsset.findMany({
+    db.previewHubAsset.findMany({
       where: { previewRequestId, kind: 'TEAM_PHOTO', deletedAt: null, barberId: { not: null } },
       select: { id: true, barberId: true },
       orderBy: { createdAt: 'desc' },
@@ -354,41 +319,65 @@ export async function applyHubContentReview(input: {
   now?: Date;
 }): Promise<{ ok: true; review: HubReviewPublic } | { ok: false; code: 'NOT_FOUND' | 'INCOMPATIBLE' | 'NO_PROPOSAL' | 'ALREADY_APPLIED' }> {
   const now = input.now ?? new Date();
-  const review = await prisma.previewContentReview.findFirst({
-    where: { id: input.reviewId, previewRequestId: input.previewRequestId },
-  });
-  if (!review) return { ok: false, code: 'NOT_FOUND' };
-  if (review.state === 'APPLIED') return { ok: true, review: serializeHubReview(review) };
-  if (review.state !== 'CORRECTIONS_SENT') return { ok: false, code: 'NO_PROPOSAL' };
-  if (!review.proposal || typeof review.proposal !== 'object') return { ok: false, code: 'NO_PROPOSAL' };
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const review = await tx.previewContentReview.findFirst({
+        where: { id: input.reviewId, previewRequestId: input.previewRequestId },
+      });
+      if (!review) return { ok: false as const, code: 'NOT_FOUND' as const };
+      if (review.state === 'APPLIED') return { ok: true as const, review: serializeHubReview(review) };
+      if (review.state !== 'CORRECTIONS_SENT') return { ok: false as const, code: 'NO_PROPOSAL' as const };
+      if (!review.proposal || typeof review.proposal !== 'object') return { ok: false as const, code: 'NO_PROPOSAL' as const };
 
-  const shop = await loadHubReviewShopData(input.shopId, input.previewRequestId);
-  const baseline = proposalBaseline(review.proposal);
-  if (!baseline) return { ok: false, code: 'NO_PROPOSAL' };
+      const shop = await loadHubReviewShopData(input.shopId, input.previewRequestId, tx);
+      const baseline = proposalBaseline(review.proposal);
+      if (!baseline) return { ok: false as const, code: 'NO_PROPOSAL' as const };
 
-  if (review.section === 'SERVICES') {
-    const parsed = hubServicesProposalSchema.safeParse(review.proposal);
-    if (!parsed.success) return { ok: false, code: 'NO_PROPOSAL' };
-    if (baseline !== servicesFingerprint(shop.services)) return { ok: false, code: 'INCOMPATIBLE' };
-    await applyServicesProposal(input.shopId, parsed.data);
-  } else if (review.section === 'TEAM') {
-    const parsed = hubTeamProposalSchema.safeParse(review.proposal);
-    if (!parsed.success) return { ok: false, code: 'NO_PROPOSAL' };
-    if (baseline !== teamFingerprint(shop.barbers)) return { ok: false, code: 'INCOMPATIBLE' };
-    await applyTeamProposal(input.shopId, input.previewRequestId, parsed.data);
-  } else {
-    const parsed = hubHoursProposalSchema.safeParse(review.proposal);
-    if (!parsed.success) return { ok: false, code: 'NO_PROPOSAL' };
-    if (baseline !== hoursFingerprint(shop.hours)) return { ok: false, code: 'INCOMPATIBLE' };
-    await applyHoursProposal(input.shopId, parsed.data);
+      if (review.section === 'SERVICES') {
+        const parsed = hubServicesProposalSchema.safeParse(review.proposal);
+        if (!parsed.success) return { ok: false as const, code: 'NO_PROPOSAL' as const };
+        if (baseline !== servicesFingerprint(shop.services)) return { ok: false as const, code: 'INCOMPATIBLE' as const };
+        await applyServicesProposal(tx, input.shopId, parsed.data);
+      } else if (review.section === 'TEAM') {
+        const parsed = hubTeamProposalSchema.safeParse(review.proposal);
+        if (!parsed.success) return { ok: false as const, code: 'NO_PROPOSAL' as const };
+        if (baseline !== teamFingerprint(shop.barbers)) return { ok: false as const, code: 'INCOMPATIBLE' as const };
+        await applyTeamProposal(tx, input.shopId, input.previewRequestId, parsed.data);
+      } else {
+        const parsed = hubHoursProposalSchema.safeParse(review.proposal);
+        if (!parsed.success) return { ok: false as const, code: 'NO_PROPOSAL' as const };
+        if (baseline !== hoursFingerprint(shop.hours)) return { ok: false as const, code: 'INCOMPATIBLE' as const };
+        await applyHoursProposal(tx, input.shopId, parsed.data);
+      }
+
+      if (hubApplyTestHooks.throwAfterSectionWrite) {
+        throw new Error(hubApplyTestHooks.throwAfterSectionWrite);
+      }
+
+      const updated = await tx.previewContentReview.update({
+        where: { id: review.id },
+        data: { state: 'APPLIED', appliedAt: now, appliedBy: input.actorEmail },
+      });
+      await tx.previewRequestEvent.create({
+        data: {
+          previewRequestId: input.previewRequestId,
+          action: PREVIEW_REQUEST_ACTIONS.OPS_HUB_REVIEW_APPLIED,
+          actorEmail: input.actorEmail,
+          meta: { reviewId: updated.id, section: updated.section },
+        },
+      });
+      return { ok: true as const, review: serializeHubReview(updated) };
+    });
+  } catch (error) {
+    if (error instanceof HubApplyIncompatibleError) return { ok: false, code: 'INCOMPATIBLE' };
+    throw error;
   }
-
-  const updated = await prisma.previewContentReview.update({
-    where: { id: review.id },
-    data: { state: 'APPLIED', appliedAt: now, appliedBy: input.actorEmail },
-  });
-  return { ok: true, review: serializeHubReview(updated) };
 }
+
+/** Test-only hook so a mid-apply throw can prove the transaction rolls back. */
+export const hubApplyTestHooks = {
+  throwAfterSectionWrite: '' as string,
+};
 
 export async function dismissHubContentReview(input: {
   previewRequestId: string;
@@ -408,8 +397,7 @@ export async function dismissHubContentReview(input: {
   return { ok: true, review: serializeHubReview(updated) };
 }
 
-async function applyServicesProposal(shopId: string, proposal: HubServicesProposal) {
-  await prisma.$transaction(async (tx) => {
+async function applyServicesProposal(tx: Prisma.TransactionClient, shopId: string, proposal: HubServicesProposal) {
     const existing = await tx.service.findMany({
       where: { shopId },
       select: { id: true },
@@ -448,11 +436,14 @@ async function applyServicesProposal(shopId: string, proposal: HubServicesPropos
       if (!row.removed) order += 1;
     }
     await linkServicesInTx(tx, shopId);
-  });
 }
 
-async function applyTeamProposal(shopId: string, previewRequestId: string, proposal: HubTeamProposal) {
-  await prisma.$transaction(async (tx) => {
+async function applyTeamProposal(
+  tx: Prisma.TransactionClient,
+  shopId: string,
+  previewRequestId: string,
+  proposal: HubTeamProposal,
+) {
     const existing = await tx.barber.findMany({
       where: { shopId },
       select: { id: true },
@@ -499,12 +490,15 @@ async function applyTeamProposal(shopId: string, previewRequestId: string, propo
       if (!row.removed) order += 1;
     }
     await linkServicesInTx(tx, shopId);
-  });
 }
 
-async function applyHoursProposal(shopId: string, proposal: HubHoursProposal) {
+async function applyHoursProposal(
+  tx: Prisma.TransactionClient,
+  shopId: string,
+  proposal: HubHoursProposal,
+) {
   const { replaceShopOpeningHours } = await import('@/lib/admin/shopOpeningHours');
-  await replaceShopOpeningHours(shopId, hoursToWeeklyRules(proposal.days));
+  await replaceShopOpeningHours(shopId, hoursToWeeklyRules(proposal.days), tx);
 }
 
 async function linkServicesInTx(
@@ -551,10 +545,6 @@ export async function deleteHubReviewRows(
 ): Promise<number> {
   const result = await db.previewContentReview.deleteMany({ where: { previewRequestId } });
   return result.count;
-}
-
-export function formatGbpPence(pence: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pence / 100);
 }
 
 export function reviewDiff(input: {

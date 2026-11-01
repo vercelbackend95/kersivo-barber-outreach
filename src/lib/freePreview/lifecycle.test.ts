@@ -55,14 +55,18 @@ const db: any = {
   previewHubAsset: {
     findMany: vi.fn(async () => []),
     deleteMany: vi.fn(async () => ({ count: 0 })),
+    delete: vi.fn(async () => ({})),
   },
   previewHubMessage: {
+    count: vi.fn(async () => 0),
     updateMany: vi.fn(async () => ({ count: 0 })),
     deleteMany: vi.fn(async () => ({ count: 0 })),
+    findFirst: vi.fn(async () => null),
   },
   previewChangeRequest: {
     updateMany: vi.fn(async () => ({ count: 0 })),
     deleteMany: vi.fn(async () => ({ count: 0 })),
+    findFirst: vi.fn(async () => null),
   },
   previewContentReview: {
     updateMany: vi.fn(async () => ({ count: 0 })),
@@ -105,13 +109,21 @@ vi.mock('./followups', async (importOriginal) => ({
 vi.mock('./config', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./config')>()),
   isFreePreviewFlowEnabled: () => state.flag,
+  isPreviewHubEnabled: () => state.flag,
+  isAnyHubEnabled: () => state.flag,
+}));
+vi.mock('./hubAssets', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./hubAssets')>()),
+  deleteHubBlobPaths: vi.fn(async () => undefined),
 }));
 
 import {
   expireDuePreviews,
+  expireStaleOpenPreviews,
   isExpiryReminderDue,
   isFollowupDue,
   purgeExpiredPreviewData,
+  purgeOrphanHubAttachments,
   runFreePreviewLifecycle,
   sendDuePreviewFollowups,
 } from './lifecycle';
@@ -357,5 +369,75 @@ describe('runFreePreviewLifecycle', () => {
     expect(result.expired).toBe(1);
     expect(result.followups).toBe(0);
     expect(enqueueEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('expireStaleOpenPreviews', () => {
+  it('expires REQUESTED / IN_PROGRESS with no activity for 180 days and does not email', async () => {
+    const staleAt = daysAgo(181);
+    state.rows = [
+      {
+        id: 'req_stale',
+        status: 'REQUESTED',
+        convertedAt: null,
+        anonymisedAt: null,
+        entryPoint: 'free_preview',
+        events: [{ createdAt: staleAt }],
+      },
+      {
+        id: 'req_recent',
+        status: 'IN_PROGRESS',
+        convertedAt: null,
+        anonymisedAt: null,
+        entryPoint: 'free_preview',
+        events: [{ createdAt: daysAgo(2) }],
+      },
+      {
+        id: 'req_direct',
+        status: 'REQUESTED',
+        convertedAt: null,
+        anonymisedAt: null,
+        entryPoint: 'direct_subscribe',
+        events: [{ createdAt: staleAt }],
+      },
+    ];
+    expect(await expireStaleOpenPreviews(NOW)).toBe(1);
+    expect(state.rows[0]!.status).toBe('EXPIRED');
+    expect(state.rows[1]!.status).toBe('IN_PROGRESS');
+    expect(enqueueEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('purgeOrphanHubAttachments', () => {
+  it('deletes unreferenced message/change attachments after 24 hours', async () => {
+    const oldAsset = {
+      id: 'asset_orphan',
+      storagePath: 'preview-hub/req/message_attachment/a.jpg',
+      thumbPath: 'preview-hub/req/message_attachment/a.webp',
+      previewRequestId: 'req_1',
+      kind: 'MESSAGE_ATTACHMENT',
+      createdAt: daysAgo(2),
+    };
+    db.previewHubAsset.findMany.mockResolvedValueOnce([oldAsset]);
+    db.previewHubMessage.findFirst.mockResolvedValueOnce(null);
+    db.previewChangeRequest.findFirst.mockResolvedValueOnce(null);
+    expect(await purgeOrphanHubAttachments(NOW)).toBe(1);
+    expect(db.previewHubAsset.delete).toHaveBeenCalledWith({ where: { id: 'asset_orphan' } });
+  });
+
+  it('keeps attachments still referenced by a message', async () => {
+    db.previewHubAsset.findMany.mockResolvedValueOnce([
+      {
+        id: 'asset_used',
+        storagePath: 'preview-hub/req/message_attachment/b.jpg',
+        thumbPath: null,
+        previewRequestId: 'req_1',
+        kind: 'MESSAGE_ATTACHMENT',
+        createdAt: daysAgo(2),
+      },
+    ]);
+    db.previewHubMessage.findFirst.mockResolvedValueOnce({ id: 'msg_1' });
+    expect(await purgeOrphanHubAttachments(NOW)).toBe(0);
+    expect(db.previewHubAsset.delete).not.toHaveBeenCalled();
   });
 });

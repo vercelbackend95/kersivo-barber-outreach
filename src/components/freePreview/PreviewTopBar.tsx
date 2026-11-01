@@ -22,10 +22,12 @@ export type PreviewTopBarProps = {
   activeView: 'website' | 'booking';
   websiteHref: string;
   bookingHref: string;
-  /** `checkout` is the Overview subscribe button (hub). Default keeps the existing preview bar. */
-  chrome?: 'full' | 'checkout';
+  /** `checkout` is the Overview subscribe button (hub). `checkout-outline` is the admin-hub header. Default keeps the existing preview bar. */
+  chrome?: 'full' | 'checkout' | 'checkout-outline';
   /** When set (hub flag on), Request changes is a link to the Changes tab instead of the free-text dialog. */
   changesHref?: string;
+  /** Inside /admin: '/api/admin-hub' for event, checkout and domain search (cookie session, no token). */
+  apiBase?: string;
 };
 
 function initialMode(hasOwnDomain: string): DomainDecisionMode | null {
@@ -55,12 +57,13 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
 
   const ownerActionsDisabled = props.isOperator || props.converted;
   const chrome = props.chrome ?? 'full';
+  const actionRoot = props.apiBase ?? `/api/free-preview/${encodeURIComponent(props.token)}`;
 
   function open(next: Exclude<Panel, null>) {
     setError('');
     if (next === 'launch') {
       // Analytics only; never blocks the panel. The server applies the visitor's consent.
-      void fetch(`/api/free-preview/${encodeURIComponent(props.token)}/event`, { method: 'POST', keepalive: true }).catch(() => {});
+      void fetch(`${actionRoot}/event`, { method: 'POST', keepalive: true }).catch(() => {});
     }
     setPanel(next);
     (next === 'changes' ? changesDialog : launchDialog).current?.showModal();
@@ -129,7 +132,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
         getAttemptId: getOrCreateSaasCheckoutAttemptId,
         rotateAttemptId: rotateSaasCheckoutAttemptId,
         start: (checkoutAttemptId) =>
-          fetch(`/api/free-preview/${encodeURIComponent(props.token)}/checkout`, {
+          fetch(`${actionRoot}/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -164,11 +167,25 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   ) : (
     <button
       type="button"
-      className="btn btn--primary btn--sm"
+      className={
+        chrome === 'checkout-outline'
+          ? 'btn btn--outline'
+          : chrome === 'checkout'
+            ? 'btn btn--secondary btn--sm'
+            : 'btn btn--primary btn--sm'
+      }
+      data-testid="hub-subscribe"
       onClick={() => open('launch')}
       disabled={ownerActionsDisabled}
     >
-      Launch this website — £39/month
+      Launch this website
+      {chrome === 'checkout-outline' ? (
+        <small>£39/month</small>
+      ) : chrome === 'checkout' ? (
+        <span className="hub-subscribe__price">£39/month per location</span>
+      ) : (
+        ' — £39/month'
+      )}
     </button>
   );
 
@@ -205,7 +222,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
         <DomainSearcher
           shopName={props.shopName}
           townCity={props.townCity}
-          searchEndpoint={`/api/free-preview/${encodeURIComponent(props.token)}/domain-search`}
+          searchEndpoint={`${actionRoot}/domain-search`}
           mode={domainMode}
           onModeChange={setDomainMode}
           selectedDomain={selectedDomain}
@@ -224,11 +241,11 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
           />
           <span>
             I agree to the{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" data-astro-reload="" data-astro-prefetch="false">
               Terms of Service
             </a>
             , including the{' '}
-            <a href="/dpa" target="_blank" rel="noopener noreferrer">
+            <a href="/dpa" target="_blank" rel="noopener noreferrer" data-astro-reload="" data-astro-prefetch="false">
               Data Processing Agreement
             </a>{' '}
             where applicable, and understand I am starting a £39/month subscription for one physical location.
@@ -251,7 +268,7 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
     </dialog>
   );
 
-  if (chrome === 'checkout') {
+  if (chrome === 'checkout' || chrome === 'checkout-outline') {
     return (
       <div className="hub-subscribe">
         {launchButton}

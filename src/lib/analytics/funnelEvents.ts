@@ -98,6 +98,8 @@ export const FUNNEL_EVENTS = {
   hub_asset_uploaded: 'hub_asset_uploaded',
   /** Shop Hub: owner saved brand / about fields. */
   hub_details_saved: 'hub_details_saved',
+  /** Admin Hub: owner sent brand colours. No personal data. */
+  hub_brand_colours_sent: 'hub_brand_colours_sent',
   /** Shop Hub: a message was sent. Param `{ actor }` is `owner` or `kersivo`. Owner sends only from owner APIs. */
   hub_message_sent: 'hub_message_sent',
   /** Shop Hub: owner confirmed a review card. Param `{ section }`. */

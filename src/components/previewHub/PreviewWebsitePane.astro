@@ -39,6 +39,7 @@ const { shopName, view, draft } = Astro.props;
           publicDemoMode={true}
           services={draft.services}
           barbers={draft.barbers}
+          openingHours={draft.hours}
           shopDetails={{
             timezone: draft.shop.timezone,
             name: shopName,

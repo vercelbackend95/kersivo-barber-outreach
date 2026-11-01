@@ -27,6 +27,7 @@ import {
   VAT_OPTIONS,
 } from '@/lib/costCalculator/calculatorUi';
 import { requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
+import SegmentedControl from '@/components/ui/SegmentedControl.astro';
 
 const helperId = (id: string) => `${id}-helper`;
 const errorId = (id: string) => `${id}-error`;
@@ -224,21 +225,12 @@ const describedBy = (id: string, withHelper: boolean) =>
     <div class="calc-advanced__body">
       <fieldset class="calc-fieldset">
         <legend class="calc-field__label">{VAT_OPTIONS.legend}</legend>
-        <div class="calc-segmented calc-segmented--small">
-          {
-            VAT_OPTIONS.options.map((option) => (
-              <label class="calc-segmented__option">
-                <input
-                  type="radio"
-                  name={VAT_OPTIONS.name}
-                  value={option.value}
-                  checked={option.value === VAT_OPTIONS.defaultValue}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))
-          }
-        </div>
+        <SegmentedControl
+          name={VAT_OPTIONS.name}
+          size="small"
+          value={VAT_OPTIONS.defaultValue}
+          options={VAT_OPTIONS.options}
+        />
       </fieldset>
 
       <fieldset class="calc-fieldset">
@@ -340,15 +332,15 @@ const describedBy = (id: string, withHelper: boolean) =>
         </div>
         <fieldset class="calc-fieldset">
           <legend class="calc-field__label">{TREATWELL_QUOTE_VAT.legend}</legend>
-          <div class="calc-segmented calc-segmented--small">
-            {TREATWELL_QUOTE_VAT.options.map(option => (
-              <label class="calc-segmented__option">
-                <input type="radio" name={TREATWELL_QUOTE_VAT.name} value={option.value}
-                  checked={option.value === TREATWELL_QUOTE_VAT.defaultValue} />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
+          <SegmentedControl
+            name={TREATWELL_QUOTE_VAT.name}
+            size="small"
+            value={String(TREATWELL_QUOTE_VAT.defaultValue)}
+            options={TREATWELL_QUOTE_VAT.options.map((option) => ({
+              value: String(option.value),
+              label: option.label,
+            }))}
+          />
           <p class="calc-field__helper">Select the VAT basis only if confirmed by your invoice or agreement. An unknown subscription remains Custom pricing.</p>
         </fieldset>
         <p class="calc-field__helper">Treatwell may have other contract-specific charges; the published rates are illustrations, not a guaranteed quotation.</p>
@@ -356,15 +348,15 @@ const describedBy = (id: string, withHelper: boolean) =>
 
       <fieldset class="calc-fieldset">
         <legend class="calc-field__label">{SQUARE_PLAN_FIELD.label}</legend>
-        <div class="calc-segmented calc-segmented--small">
-          {SQUARE_PLAN_FIELD.options.map((option) => (
-            <label class="calc-segmented__option">
-              <input type="radio" name={SQUARE_PLAN_FIELD.name} value={option.value}
-                checked={option.value === SQUARE_PLAN_FIELD.defaultValue} />
-              <span>{option.label} · {option.priceLabel}</span>
-            </label>
-          ))}
-        </div>
+        <SegmentedControl
+          name={SQUARE_PLAN_FIELD.name}
+          size="small"
+          value={SQUARE_PLAN_FIELD.defaultValue}
+          options={SQUARE_PLAN_FIELD.options.map((option) => ({
+            value: option.value,
+            label: `${option.label} · ${option.priceLabel}`,
+          }))}
+        />
         <p class="calc-field__helper">{SQUARE_PLAN_FIELD.helper}</p>
       </fieldset>
 
@@ -395,19 +387,15 @@ const describedBy = (id: string, withHelper: boolean) =>
         </div>
         <fieldset class="calc-fieldset">
           <legend class="calc-field__label">{PHOREST_QUOTE_VAT.legend}</legend>
-          <div class="calc-segmented calc-segmented--small">
-            {PHOREST_QUOTE_VAT.options.map(option => (
-              <label class="calc-segmented__option">
-                <input
-                  type="radio"
-                  name={PHOREST_QUOTE_VAT.name}
-                  value={option.value}
-                  checked={option.value === PHOREST_QUOTE_VAT.defaultValue}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
+          <SegmentedControl
+            name={PHOREST_QUOTE_VAT.name}
+            size="small"
+            value={String(PHOREST_QUOTE_VAT.defaultValue)}
+            options={PHOREST_QUOTE_VAT.options.map((option) => ({
+              value: String(option.value),
+              label: option.label,
+            }))}
+          />
           <p class="calc-field__helper">Only select the standard UK VAT rate or No VAT if confirmed by your quote/invoice. Otherwise Phorest stays at Custom pricing.</p>
         </fieldset>
         <p class="calc-field__helper">If you enable booking deposit processing, the Phorest total becomes Custom pricing because a verified PhorestPay rate is not available.</p>

@@ -83,10 +83,15 @@ function sameOriginHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json' };
 }
 
-export default function HubLaunchChecklist() {
+export default function HubLaunchChecklist(props: {
+  initialItem?: LaunchItem;
+  embedded?: boolean;
+  websiteHref?: string;
+  bookingHref?: string;
+} = {}) {
   const [state, setState] = useState<LaunchChecklistState | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [open, setOpen] = useState<LaunchItem | null>('business');
+  const [open, setOpen] = useState<LaunchItem | null>(props.initialItem ?? 'business');
   const [save, setSave] = useState<SaveStatus>('idle');
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -233,17 +238,21 @@ export default function HubLaunchChecklist() {
   };
 
   const websiteHref = useMemo(() => {
+    if (props.websiteHref) return props.websiteHref;
     if (!state) return '/admin/site-preview';
     return `${previewPagePath(state.publicToken)}/website`;
-  }, [state]);
+  }, [props.websiteHref, state]);
   const bookingHref = useMemo(() => {
+    if (props.bookingHref) return props.bookingHref;
     if (!state) return '/admin/site-preview';
     return `${previewPagePath(state.publicToken)}/website?view=booking`;
-  }, [state]);
+  }, [props.bookingHref, state]);
+
+  const launchClass = props.embedded ? 'hub-launch hub-launch--embedded' : 'hub-launch';
 
   if (loadError) {
     return (
-      <div className="hub-launch" role="alert">
+      <div className={launchClass} role="alert">
         <p>{HUB_LAUNCH_LOAD_ERROR}</p>
         <button type="button" className="btn btn--secondary" onClick={() => void load()}>
           {HUB_RETRY}
@@ -254,9 +263,12 @@ export default function HubLaunchChecklist() {
 
   if (!state) {
     return (
-      <div className="hub-launch" aria-busy="true">
+      <div className={launchClass} aria-busy="true">
         <div className="hub-skel hub-skel--title" />
         <div className="hub-skel hub-skel--bar" />
+        <div className="hub-skel hub-skel--card" />
+        <div className="hub-skel hub-skel--card" />
+        <div className="hub-skel hub-skel--card" />
         <div className="hub-skel hub-skel--card" />
         <div className="hub-skel hub-skel--card" />
       </div>
@@ -266,13 +278,20 @@ export default function HubLaunchChecklist() {
   const saveLabel = save === 'saving' ? HUB_SAVING : save === 'saved' ? HUB_SAVED : save === 'error' ? HUB_LAUNCH_SAVE_ERROR : null;
 
   return (
-    <div className="hub-launch">
+    <div className={`hub-launch${props.embedded ? ' hub-launch--embedded' : ''}`}>
       <header className="hub-launch__header">
-        <h1>{HUB_LAUNCH_TITLE}</h1>
-        <p className="hub-launch__progress" aria-live="polite">
+        {props.embedded ? null : <h1>{HUB_LAUNCH_TITLE}</h1>}
+        <p className="hub-launch__progress" id="hub-launch-progress" aria-live="polite">
           {HUB_LAUNCH_PROGRESS(state.done, state.total)}
         </p>
-        <div className="hub-launch__bar" role="progressbar" aria-valuemin={0} aria-valuemax={state.total} aria-valuenow={state.done}>
+        <div
+          className="hub-launch__bar"
+          role="progressbar"
+          aria-labelledby="hub-launch-progress"
+          aria-valuemin={0}
+          aria-valuemax={state.total}
+          aria-valuenow={state.done}
+        >
           <span style={{ width: `${(state.done / state.total) * 100}%` }} />
         </div>
         {saveLabel ? (
@@ -381,6 +400,7 @@ export default function HubLaunchChecklist() {
                         <input
                           type="radio"
                           name="isLimitedCompany"
+                          data-testid="ltd-yes"
                           checked={state.business.isLimitedCompany === true}
                           onChange={() => setBusiness('isLimitedCompany', true)}
                         />
@@ -390,6 +410,7 @@ export default function HubLaunchChecklist() {
                         <input
                           type="radio"
                           name="isLimitedCompany"
+                          data-testid="ltd-no"
                           checked={state.business.isLimitedCompany === false}
                           onChange={() => setBusiness('isLimitedCompany', false)}
                         />
@@ -477,6 +498,7 @@ export default function HubLaunchChecklist() {
                           type="button"
                           className="btn btn--ghost"
                           disabled={busy !== null || state.payments.skipped}
+                          data-testid="skip-payments"
                           onClick={() => void patch({ item: 'payments', skip: true })}
                         >
                           {HUB_LAUNCH_SKIP_PAYMENTS}
@@ -515,6 +537,7 @@ export default function HubLaunchChecklist() {
                       type="button"
                       className="btn btn--ghost"
                       disabled={busy !== null || state.migration.skipped}
+                      data-testid="skip-migration"
                       onClick={() => void patch({ item: 'migration', skip: true })}
                     >
                       {HUB_LAUNCH_MIGRATION_NOT_NOW}
@@ -549,6 +572,7 @@ export default function HubLaunchChecklist() {
                         <button
                           type="button"
                           className="btn btn--primary"
+                          data-testid="approve-launch"
                           disabled={!state.approve.canApprove || !rights || !accuracy || busy !== null}
                           onClick={() =>
                             void postAction(

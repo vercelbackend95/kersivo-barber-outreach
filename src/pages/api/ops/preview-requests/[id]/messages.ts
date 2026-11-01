@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { prisma } from '@/lib/db/client';
-import { isHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isAnyHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import {
   assertMessageAttachments,
   createHubMessage,
@@ -20,7 +20,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 export const GET: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorAccess(context);
   if (access instanceof Response) return access;
 
@@ -50,7 +50,7 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorMutation(context);
   if (access instanceof Response) return access;
 

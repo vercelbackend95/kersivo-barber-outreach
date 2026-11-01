@@ -9,13 +9,23 @@ import {
   HUB_CHANGES_BODY_TOO_LONG,
   HUB_CHANGES_DENIED,
   HUB_CHANGES_NO_DRAFTS,
-  HUB_CHANGES_PAGES,
   HUB_ROUND_USED,
 } from './hubCopy';
 
-export const HUB_CHANGE_PAGES = ['HOME', 'SERVICES', 'BARBERS', 'GALLERY', 'CONTACT', 'BOOKING', 'OTHER'] as const;
-export const HUB_CHANGE_BODY_MAX = 2000;
-export const HUB_OPEN_CHANGE_STATUSES: readonly PreviewChangeStatus[] = ['DRAFT', 'SENT', 'IN_PROGRESS'];
+export {
+  HUB_CHANGE_BODY_MAX,
+  HUB_CHANGE_PAGES,
+  HUB_OPEN_CHANGE_STATUSES,
+  changePageLabel,
+  type HubChangePublic,
+} from './hubChanges.shared';
+import {
+  HUB_CHANGE_BODY_MAX,
+  HUB_CHANGE_PAGES,
+  HUB_OPEN_CHANGE_STATUSES,
+  changePageLabel,
+  type HubChangePublic,
+} from './hubChanges.shared';
 
 export const hubChangeDraftSchema = z.object({
   page: z.enum(HUB_CHANGE_PAGES),
@@ -30,24 +40,6 @@ export const hubChangeStatusSchema = z.object({
   status: z.enum(['IN_PROGRESS', 'DONE', 'NOT_POSSIBLE']),
   opsNote: z.string().trim().max(2000).optional().nullable(),
 });
-
-export type HubChangePublic = {
-  id: string;
-  page: (typeof HUB_CHANGE_PAGES)[number];
-  pageLabel: string;
-  body: string;
-  attachmentId: string | null;
-  status: PreviewChangeStatus;
-  opsNote: string | null;
-  round: number | null;
-  createdAt: string;
-  sentAt: string | null;
-  resolvedAt: string | null;
-};
-
-export function changePageLabel(page: string): string {
-  return HUB_CHANGES_PAGES[page as keyof typeof HUB_CHANGES_PAGES] ?? page;
-}
 
 export function serializeHubChange(row: {
   id: string;

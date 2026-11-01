@@ -68,5 +68,8 @@ describe('HubReviewCards', () => {
     );
     expect(screen.getByRole('heading', { name: HUB_DETAILS_SERVICES_TITLE })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: new RegExp(HUB_REVIEW_LOOKS_RIGHT) }).length).toBe(3);
+    expect(screen.getByDisplayValue('Skin fade')).toBeTruthy();
+    expect(document.querySelector('[role="row"]')).toBeNull();
+    expect(document.querySelector('[role="table"]')).toBeNull();
   });
 });

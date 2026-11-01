@@ -30,7 +30,7 @@ import {
   unreadOwnerMessageCount,
 } from '@/lib/freePreview/opsQueries';
 import { HUB_OPS_APPROVED_BADGE, HUB_OPS_NEW_FILES, HUB_OPS_OPEN_CHANGES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
-import { isPreviewHubEnabled } from '@/lib/freePreview/config';
+import { isAdminHubEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
 import '@/styles/tokens.css';
@@ -58,7 +58,7 @@ const [requests, counts, funnel] =
 const funnelRates = funnel ? previewFunnelRates(funnel) : null;
 const formatRate = (value: number | null) => (value === null ? '—' : `${Math.round(value * 100)}%`);
 const now = new Date();
-const hubEnabled = isPreviewHubEnabled();
+const hubEnabled = isPreviewHubEnabled() || isAdminHubEnabled();
 
 function filterHref(status: string | null, sort = query.sort) {
   const params = new URLSearchParams();

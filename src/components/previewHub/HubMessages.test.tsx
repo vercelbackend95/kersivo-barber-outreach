@@ -37,6 +37,20 @@ describe('HubMessages', () => {
     expect(screen.getByPlaceholderText('Write a message')).toBeTruthy();
   });
 
+  it('hides the page title when opened as an admin-hub app', () => {
+    render(
+      <HubMessages
+        token={'A'.repeat(43)}
+        viewer="owner"
+        shopName="Sharp Cuts"
+        initialMessages={[]}
+        chrome="app"
+      />,
+    );
+    expect(screen.queryByRole('heading', { name: 'Sharp Cuts' })).toBeNull();
+    expect(screen.getByPlaceholderText('Write a message')).toBeTruthy();
+  });
+
   it('shows You / KERSIVO and Seen on an owner message ops has read', () => {
     render(
       <HubMessages

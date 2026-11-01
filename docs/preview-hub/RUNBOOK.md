@@ -2,6 +2,26 @@
 
 For the founder. British English. The Shop Hub is **off** until you set the flag.
 
+## Real-stack QA (local only)
+
+The Batch 6 fixture harness is gone. Use the real app against a **local** Postgres:
+
+```
+npm run test:preview-hub-real
+```
+
+That script:
+
+1. Refuses to run if `DATABASE_URL` is not localhost / 127.0.0.1 (Preview and Production share Neon — do not point this at it).
+2. Starts `docker-compose.preview-hub.yml` (port 55432) or an embedded Postgres if Docker is missing.
+3. Applies the current Prisma schema (`db push` — historical migrations are not replayable on an empty cluster) and runs `scripts/preview-hub/seed-real.ts`.
+4. Starts `astro dev` with `PREVIEW_HUB_ENABLED=true`, `FREE_PREVIEW_FLOW_ENABLED=true`, `PRIVATE_BLOB_DRIVER=memory`, `PREVIEW_HUB_STRIPE_STUB=true`.
+5. Starts `astro dev` on `127.0.0.1:4397`, runs Playwright (`scripts/preview-hub-real.spec.ts`), then restarts the same port with the hub flag off to prove REQUESTED tokens 404 and the old acknowledgement email.
+
+Optional: after a seed, `node scripts/preview-hub/start-real-qa.mjs --serve` and `node scripts/preview-hub/lighthouse-real.mjs` for mobile Lighthouse on the real routes.
+
+Do **not** set `PREVIEW_HUB_ENABLED` on the Vercel Preview environment. Do not run this against the production `DATABASE_URL`.
+
 ## Turn the flag on or off
 
 Two Vercel environment variables, both must be the exact value `true`:
@@ -13,8 +33,8 @@ Two Vercel environment variables, both must be the exact value `true`:
 
 Both default **off**. With `PREVIEW_HUB_ENABLED` off, owners see today's preview page, acknowledgement email (no hub link), and the old `/admin/preview-launch` form. Production owner behaviour stays the same.
 
-**On:** Vercel → project `kersivo-barber-outreach` → Settings → Environment Variables → set both to `true` on Production (and Preview if you want to try it). Redeploy.  
-**Off:** set either (or both) back to empty / `false` and redeploy. Existing hub rows stay in the database; owners just cannot open the new routes.
+**On (Production only):** Vercel → project `kersivo-barber-outreach` → Settings → Environment Variables → set `PREVIEW_HUB_ENABLED=true` on **Production only**. Never set it on Preview or Development — Preview deployments share the production database. Redeploy Production.  
+**Off:** set `PREVIEW_HUB_ENABLED` back to empty / `false` on Production and redeploy. Existing hub rows stay in the database; owners fall back to the previous flow.
 
 Do not run `vercel` / `vercel link` from a folder that is not this project.
 

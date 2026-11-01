@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const { enqueueEmail, tryDeliverOutboxEmail } = vi.hoisted(() => ({
+  enqueueEmail: vi.fn(async () => ({ id: 'outbox_rejected' })),
+  tryDeliverOutboxEmail: vi.fn(async () => undefined),
+}));
+
 const db = {
-  previewRequest: { updateMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn() },
+  previewRequest: { updateMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
   previewRequestEvent: { create: vi.fn() },
 };
 
@@ -39,6 +44,10 @@ vi.mock('@/lib/db/client', () => ({
 }));
 vi.mock('@/lib/setup/purgeShopData', () => ({ purgeShopData: (...a: unknown[]) => purgeShopData(...a) }));
 vi.mock('./hubLaunch', () => ({ notifyOwnerSubscribed: vi.fn() }));
+vi.mock('@/lib/email/outbox', () => ({
+  enqueueEmail,
+  tryDeliverOutboxEmail,
+}));
 
 import { adoptPreviewDraftShop, markPreviewRequestConverted } from './conversion';
 
@@ -57,6 +66,7 @@ describe('markPreviewRequestConverted (webhook)', () => {
   };
 
   it('converts once with a conditional update and links the Stripe ids', async () => {
+    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'READY', shopName: 'Sharp Cuts' });
     db.previewRequest.updateMany.mockResolvedValueOnce({ count: 1 });
     expect(await markPreviewRequestConverted(input)).toBe('converted');
     expect(db.previewRequest.updateMany).toHaveBeenCalledWith({
@@ -67,14 +77,28 @@ describe('markPreviewRequestConverted (webhook)', () => {
   });
 
   it('is idempotent on redelivery: no second event', async () => {
-    db.previewRequest.updateMany.mockResolvedValueOnce({ count: 0 });
-    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'CONVERTED' });
+    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'CONVERTED', shopName: 'Sharp Cuts' });
     expect(await markPreviewRequestConverted(input)).toBe('already_converted');
+    expect(db.previewRequest.updateMany).not.toHaveBeenCalled();
     expect(db.previewRequestEvent.create).not.toHaveBeenCalled();
   });
 
+  it('records a REJECTED payment without converting or emailing the owner', async () => {
+    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'REJECTED', shopName: 'Sharp Cuts' });
+    db.previewRequest.update.mockResolvedValueOnce({});
+    expect(await markPreviewRequestConverted(input)).toBe('rejected_paid');
+    expect(db.previewRequest.update).toHaveBeenCalledWith({
+      where: { id: 'req_1' },
+      data: { stripeCustomerId: 'cus_1', stripeSubscriptionId: 'sub_1' },
+    });
+    expect(db.previewRequest.updateMany).not.toHaveBeenCalled();
+    expect(enqueueEmail).toHaveBeenCalled();
+    expect(JSON.stringify(enqueueEmail.mock.calls[0])).toContain(
+      'Payment received for a rejected preview request: Sharp Cuts',
+    );
+  });
+
   it('ignores metadata whose draft shop does not match the request', async () => {
-    db.previewRequest.updateMany.mockResolvedValueOnce({ count: 0 });
     db.previewRequest.findFirst.mockResolvedValueOnce(null);
     expect(await markPreviewRequestConverted(input)).toBe('not_found');
     expect(await markPreviewRequestConverted({ ...input, draftShopId: null })).toBe('not_found');

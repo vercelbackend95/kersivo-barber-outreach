@@ -10,6 +10,7 @@ import {
   HUB_UPLOAD_HINT,
   HUB_UPLOAD_PROGRESS,
 } from '@/lib/freePreview/hubCopy';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { downscaleHubImage, isHubSvgOrPdf } from './downscaleHubImage';
 
 export type HubUploaderKind = Extract<
@@ -56,6 +57,7 @@ const PHOTO_KINDS = new Set<HubUploaderKind>(['SHOP_PHOTO', 'TEAM_PHOTO']);
 
 async function uploadOne(input: {
   token: string;
+  apiBase?: string;
   kind: HubUploaderKind;
   file: File;
   onProgress: (value: number) => void;
@@ -66,7 +68,7 @@ async function uploadOne(input: {
   body.append('file', prepared, prepared.name);
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `/api/preview-hub/${encodeURIComponent(input.token)}/assets`);
+    xhr.open('POST', `${hubApiRoot(input)}/assets`);
     xhr.responseType = 'json';
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) input.onProgress(Math.round((event.loaded / event.total) * 100));
@@ -86,6 +88,8 @@ async function uploadOne(input: {
 
 export function HubUploader(props: {
   token: string;
+  /** Inside /admin: '/api/admin-hub' (the token is never sent to the page). */
+  apiBase?: string;
   kind: HubUploaderKind;
   disabled?: boolean;
   multiple?: boolean;
@@ -117,6 +121,7 @@ export function HubUploader(props: {
       try {
         const asset = await uploadOne({
           token: props.token,
+          apiBase: props.apiBase,
           kind: props.kind,
           file: next.file,
           onProgress: (value) => updateItem(next.localId, { progress: value }),
@@ -180,6 +185,7 @@ export function HubUploader(props: {
           accept={accept}
           multiple={props.multiple !== false}
           disabled={props.disabled}
+          data-testid={`hub-upload-${props.kind.toLowerCase()}`}
           onChange={(event) => onFiles(event.target.files)}
         />
         {camera ? (
@@ -259,6 +265,7 @@ export function HubUploader(props: {
           accept={accept}
           multiple={props.multiple !== false}
           disabled={props.disabled}
+          data-testid={`hub-upload-${props.kind.toLowerCase()}`}
           onChange={(event) => onFiles(event.target.files)}
         />
         {camera ? (

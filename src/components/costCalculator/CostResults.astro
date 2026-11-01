@@ -16,6 +16,7 @@ import {
   THREE_YEAR_NOTE,
 } from '@/lib/costCalculator/calculatorUi';
 import { buildCalculatorView } from '@/lib/costCalculator/resultView';
+import SegmentedControl from '@/components/ui/SegmentedControl.astro';
 
 const view = buildCalculatorView(DEFAULT_SCENARIO, DEFAULT_PERIOD);
 const viewFor = (id: string) => view.providers.find((provider) => provider.id === id)!;
@@ -30,17 +31,15 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
       </div>
 
       <div class="calc-results__period-wrap">
-        <fieldset class="calc-segmented calc-results__period" data-calc-period>
-          <legend class="sr-only">Cost period</legend>
-          {
-            PERIOD_OPTIONS.map((option) => (
-              <label class="calc-segmented__option">
-                <input type="radio" name="period" value={option.value} checked={option.value === view.period} />
-                <span>{option.label}</span>
-              </label>
-            ))
-          }
-        </fieldset>
+        <SegmentedControl
+          as="fieldset"
+          name="period"
+          legend="Cost period"
+          class="calc-results__period"
+          data-calc-period
+          value={view.period}
+          options={PERIOD_OPTIONS}
+        />
         <div class="calc-share">
           <button type="button" class="calc-share__button" data-calc-share>{SHARE_SCENARIO.label}</button>
           <p class="calc-share__status" data-calc-share-status role="status" aria-live="polite"></p>

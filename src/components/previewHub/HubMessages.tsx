@@ -22,9 +22,10 @@ import {
   HUB_MESSAGES_POLL_MS,
   hubMessageDayKey,
   hubMessageTimeLabel,
-  splitHubMessageParts,
   type HubMessagePublic,
-} from '@/lib/freePreview/hubMessages';
+} from '@/lib/freePreview/hubMessages.shared';
+import { splitHubMessageParts } from '@/lib/freePreview/hubMessageText';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 
 type PendingStatus = 'pending' | 'error';
@@ -74,6 +75,7 @@ export function HubMessageBody({ body }: { body: string }) {
 function attachmentHref(input: {
   viewer: 'owner' | 'ops';
   token: string;
+  apiBase?: string;
   requestId?: string;
   assetId: string;
   size: 'thumb' | 'full';
@@ -81,17 +83,21 @@ function attachmentHref(input: {
   if (input.viewer === 'ops' && input.requestId) {
     return `/api/ops/preview-requests/${encodeURIComponent(input.requestId)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
   }
-  return `/api/preview-hub/${encodeURIComponent(input.token)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
+  return `${hubApiRoot(input)}/assets/${encodeURIComponent(input.assetId)}?size=${input.size}`;
 }
 
 export function HubMessages(props: {
   token: string;
+  /** Owner view inside /admin: '/api/admin-hub'. */
+  apiBase?: string;
   viewer: 'owner' | 'ops';
   requestId?: string;
   shopName: string;
   initialMessages: HubMessagePublic[];
   initialDraft?: string;
   canAttach?: boolean;
+  /** Admin-hub app window: hide the page H1 (the window already has a title). */
+  chrome?: 'page' | 'app';
 }) {
   const [messages, setMessages] = useState<ThreadItem[]>(props.initialMessages);
   const [draft, setDraft] = useState(props.initialDraft ?? '');
@@ -101,10 +107,10 @@ export function HubMessages(props: {
   const listRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  const apiBase =
+  const messagesUrl =
     props.viewer === 'ops' && props.requestId
       ? `/api/ops/preview-requests/${encodeURIComponent(props.requestId)}/messages`
-      : `/api/preview-hub/${encodeURIComponent(props.token)}/messages`;
+      : `${hubApiRoot(props)}/messages`;
 
   const scrollToEnd = () => {
     const node = listRef.current;
@@ -123,7 +129,7 @@ export function HubMessages(props: {
   const markRead = async () => {
     if (props.viewer !== 'owner') return;
     try {
-      await fetch(`${apiBase}/read`, {
+      await fetch(`${messagesUrl}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
@@ -135,7 +141,7 @@ export function HubMessages(props: {
 
   const refresh = async () => {
     try {
-      const response = await fetch(apiBase, { headers: { Accept: 'application/json' } });
+      const response = await fetch(messagesUrl, { headers: { Accept: 'application/json' } });
       if (!response.ok) throw new Error('load');
       const payload = (await response.json()) as { ok?: boolean; messages?: HubMessagePublic[] };
       if (!payload.ok || !payload.messages) throw new Error('load');
@@ -208,7 +214,7 @@ export function HubMessages(props: {
     }
     setSending(true);
     try {
-      const response = await fetch(apiBase, {
+      const response = await fetch(messagesUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ body, attachmentIds }),
@@ -231,8 +237,19 @@ export function HubMessages(props: {
     setDraft(item.body);
     setAttachments(
       item.attachments.map((asset) => ({
-        ...asset,
-        uploadedBy: asset.uploadedBy,
+        id: asset.id,
+        kind: asset.kind as HubUploadedAsset['kind'],
+        originalFileName: asset.originalFileName,
+        contentType: asset.contentType,
+        sizeBytes: asset.sizeBytes,
+        width: null,
+        height: null,
+        caption: null,
+        sortOrder: 0,
+        barberId: null,
+        uploadedBy: 'OWNER',
+        createdAt: item.createdAt,
+        hasThumb: asset.hasThumb,
       })),
     );
     setMessages((current) => current.filter((row) => row.id !== item.id));
@@ -240,10 +257,15 @@ export function HubMessages(props: {
   };
 
   return (
-    <section className="hub-messages" aria-labelledby="hub-messages-title">
+    <section
+      className={props.chrome === 'app' ? 'hub-messages hub-messages--app' : 'hub-messages'}
+      aria-labelledby={props.chrome === 'app' ? undefined : 'hub-messages-title'}
+    >
+      {props.chrome === 'app' ? null : (
       <h1 id="hub-messages-title" className="hub-messages__title">
         {props.shopName}
       </h1>
+      )}
       <div className="hub-messages__thread" ref={listRef} aria-live="polite">
         {loadError ? (
           <div className="hub-error" role="alert">
@@ -280,6 +302,7 @@ export function HubMessages(props: {
                               href={attachmentHref({
                                 viewer: props.viewer,
                                 token: props.token,
+                                apiBase: props.apiBase,
                                 requestId: props.requestId,
                                 assetId: asset.id,
                                 size: 'full',
@@ -291,6 +314,7 @@ export function HubMessages(props: {
                                   src={attachmentHref({
                                     viewer: props.viewer,
                                     token: props.token,
+                                    apiBase: props.apiBase,
                                     requestId: props.requestId,
                                     assetId: asset.id,
                                     size: 'thumb',
@@ -337,6 +361,7 @@ export function HubMessages(props: {
         <textarea
           id="hub-composer-body"
           ref={composerRef}
+          data-testid="hub-message-body"
           className="hub-composer__input"
           rows={3}
           maxLength={HUB_MESSAGE_MAX_CHARS}
@@ -354,6 +379,7 @@ export function HubMessages(props: {
           {props.canAttach !== false ? (
             <HubUploader
               token={props.token}
+              apiBase={props.apiBase}
               kind="MESSAGE_ATTACHMENT"
               compact
               remaining={remaining}
@@ -365,7 +391,7 @@ export function HubMessages(props: {
             />
           ) : null}
           <p className="hub-composer__count">{HUB_MESSAGE_CHAR_COUNT(draft.length, HUB_MESSAGE_MAX_CHARS)}</p>
-          <button type="submit" className="btn btn--primary" disabled={!canSend}>
+          <button type="submit" className="btn btn--primary" data-testid="hub-send-message" disabled={!canSend}>
             {sending ? HUB_MESSAGE_SENDING : HUB_SEND}
           </button>
         </div>

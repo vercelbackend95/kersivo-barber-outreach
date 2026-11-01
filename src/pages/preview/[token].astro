@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { adminHubBridge } from '@/lib/adminHub/bridge';
 import BookingFlow from '@/components/booking/BookingFlow';
 import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import {
@@ -64,6 +65,9 @@ if (limited) return limited;
 
 const token = (Astro.params.token ?? '').trim();
 const now = new Date();
+
+const bridged = await adminHubBridge({ request: Astro.request, url: Astro.url, token, subroute: '', rateLimit: false, now });
+if (bridged) return bridged;
 
 if (isPreviewHubEnabled()) {
   const hubOperator = await resolveOperatorAccess(Astro.request);
@@ -192,6 +196,7 @@ function hostnameOf(url: string | null | undefined): string {
                   publicDemoMode={true}
                   services={draft.services}
                   barbers={draft.barbers}
+                  openingHours={draft.hours}
                   shopDetails={{
                     timezone: draft.shop.timezone,
                     name: shopName,

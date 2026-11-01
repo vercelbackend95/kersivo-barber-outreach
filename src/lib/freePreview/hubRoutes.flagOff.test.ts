@@ -30,6 +30,21 @@ describe('hub routes keep the flag-off path (GLOBAL RULE 2)', () => {
     expect(page).toContain('HubLaunchChecklist');
   });
 
+  it('launch owner API stays 404 unless the old hub or the admin hub is on', () => {
+    const src = read('src/lib/freePreview/hubLaunchApi.ts');
+    expect(src).toContain('isHubRouteEnabled()');
+    expect(src).toContain('isAdminHubRouteEnabled()');
+  });
+
+  it('ops hub APIs accept ADMIN_HUB_ENABLED without PREVIEW_HUB_ENABLED', () => {
+    expect(read('src/lib/freePreview/hubPage.ts')).toContain('export function isAnyHubRouteEnabled()');
+    for (const file of ['launch-steps.ts', 'messages.ts', 'reviews.ts', 'changes.ts', 'grant-round.ts']) {
+      const src = read(`src/pages/api/ops/preview-requests/[id]/${file}`);
+      expect(src).toContain('isAnyHubRouteEnabled()');
+      expect(src).not.toMatch(/if \(!isHubRouteEnabled\(\)\)/);
+    }
+  });
+
   it('nested hub pages apply private headers', () => {
     expect(read('src/lib/freePreview/previewHeaders.ts')).toContain("'X-Robots-Tag': 'noindex, nofollow'");
     expect(read('src/lib/freePreview/previewHeaders.ts')).toContain("'Referrer-Policy': 'no-referrer'");

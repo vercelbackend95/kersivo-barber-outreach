@@ -4,7 +4,7 @@ import '@/styles/components/admin-sidebar-launch-cta.css';
 
 type AdminLaunchCtaButtonProps = {
   title: string;
-  ariaLabel: string;
+  ariaLabel?: string;
   status?: string;
   supporting?: string;
   children?: React.ReactNode;

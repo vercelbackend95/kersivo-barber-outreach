@@ -16,7 +16,7 @@ vi.mock('@/lib/ops/operatorAuth', () => ({
   requireOperatorAccess: (...args: unknown[]) => requireOperatorAccess(...args),
   OPS_API_HEADERS: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
 }));
-vi.mock('@/lib/freePreview/hubPage', () => ({ isHubRouteEnabled: () => true }));
+vi.mock('@/lib/freePreview/hubPage', () => ({ isAnyHubRouteEnabled: () => true }));
 vi.mock('@/lib/freePreview/hubReviews', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/freePreview/hubReviews')>();
   return {
@@ -66,7 +66,7 @@ describe('POST /api/ops/preview-requests/[id]/reviews', () => {
   it('applies a proposal', async () => {
     const response = await post({ action: 'apply', reviewId: 'rev_1' });
     expect(response.status).toBe(200);
-    expect(eventCreate).toHaveBeenCalled();
+    expect(applyHubContentReview).toHaveBeenCalled();
   });
 
   it('is idempotent when already applied', async () => {

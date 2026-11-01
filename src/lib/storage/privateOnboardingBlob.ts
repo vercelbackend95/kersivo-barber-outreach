@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { del, get, put } from '@vercel/blob';
 import { ClientOnboardingAssetKind } from '@prisma/client';
+import {
+  isMemoryPrivateBlobEnabled,
+  memoryDeletePrivateFile,
+  memoryRetrievePrivateFile,
+  memoryUploadPrivateFile,
+} from '@/lib/storage/memoryPrivateBlob';
 import { getPrivateBlobReadWriteToken } from '@/lib/storage/vercelBlob';
 
 export const MIGRATION_CSV_MAX_BYTES = 10 * 1024 * 1024;
@@ -227,6 +233,9 @@ export async function uploadPrivateOnboardingFile(
   pathname: string,
   contentType?: string,
 ): Promise<PrivateBlobUploadResult> {
+  if (isMemoryPrivateBlobEnabled()) {
+    return memoryUploadPrivateFile(file, pathname, contentType);
+  }
   const token = requirePrivateBlobToken();
   const type =
     contentType ||
@@ -248,6 +257,10 @@ export async function uploadPrivateOnboardingFile(
 }
 
 export async function deletePrivateOnboardingFile(pathname: string): Promise<void> {
+  if (isMemoryPrivateBlobEnabled()) {
+    await memoryDeletePrivateFile(pathname);
+    return;
+  }
   const token = requirePrivateBlobToken();
   const path = pathname.trim();
   if (!path) return;
@@ -263,6 +276,9 @@ export async function retrievePrivateOnboardingFile(pathname: string): Promise<{
   contentType: string | null;
   statusCode: number;
 }> {
+  if (isMemoryPrivateBlobEnabled()) {
+    return memoryRetrievePrivateFile(pathname);
+  }
   const token = requirePrivateBlobToken();
   const path = pathname.trim();
   if (!path) {

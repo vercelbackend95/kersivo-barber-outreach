@@ -40,15 +40,20 @@ import {
   HUB_UPLOAD_HINT_PHOTOS,
   HUB_UPLOAD_HINT_PRICE,
 } from '@/lib/freePreview/hubCopy';
+import { hubApiRoot } from '@/lib/adminHub/links';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 import { HubReviewCards, type HubReviewMap } from './HubReviewCards';
-import type { HubReviewShopData } from '@/lib/freePreview/hubReviews';
+import type { HubReviewShopData } from '@/lib/freePreview/hubReviews.shared';
 
 export type HubShopDetails = {
   brandPrimaryColour: string | null;
   brandSecondaryColour: string | null;
   styleNotes: string | null;
   aboutText: string | null;
+  brandBackgroundTone?: 'DARK' | 'LIGHT' | null;
+  brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
+  brandPaletteExtracted?: Array<{ hex: string; share: number }> | null;
+  brandColoursSentAt?: string | null;
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -56,20 +61,20 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 const UNDO_MS = 5000;
 const AUTOSAVE_MS = 700;
 
-function assetUrl(token: string, id: string, size: 'thumb' | 'full') {
-  return `/api/preview-hub/${encodeURIComponent(token)}/assets/${encodeURIComponent(id)}?size=${size}`;
+function assetUrl(apiRoot: string, id: string, size: 'thumb' | 'full') {
+  return `${apiRoot}/assets/${encodeURIComponent(id)}?size=${size}`;
 }
 
-function displayUrl(token: string, asset: HubUploadedAsset) {
-  if (asset.hasThumb) return assetUrl(token, asset.id, 'thumb');
+function displayUrl(apiRoot: string, asset: HubUploadedAsset) {
+  if (asset.hasThumb) return assetUrl(apiRoot, asset.id, 'thumb');
   if (asset.contentType.startsWith('image/') && !asset.contentType.includes('svg')) {
-    return assetUrl(token, asset.id, 'full');
+    return assetUrl(apiRoot, asset.id, 'full');
   }
   return null;
 }
 
-async function patchAsset(token: string, id: string, body: Record<string, unknown>) {
-  const response = await fetch(`/api/preview-hub/${encodeURIComponent(token)}/assets/${encodeURIComponent(id)}`, {
+async function patchAsset(apiRoot: string, id: string, body: Record<string, unknown>) {
+  const response = await fetch(`${apiRoot}/assets/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -78,8 +83,8 @@ async function patchAsset(token: string, id: string, body: Record<string, unknow
   if (!response.ok || !payload.ok) throw new Error(payload.error || HUB_SAVE_FAILED);
 }
 
-async function deleteAsset(token: string, id: string) {
-  const response = await fetch(`/api/preview-hub/${encodeURIComponent(token)}/assets/${encodeURIComponent(id)}`, {
+async function deleteAsset(apiRoot: string, id: string) {
+  const response = await fetch(`${apiRoot}/assets/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
   const payload = (await response.json()) as { ok?: boolean; error?: string };
@@ -137,7 +142,7 @@ function PlaceholderCard({ title }: { title: string }) {
 }
 
 function PhotoTile(props: {
-  token: string;
+  apiRoot: string;
   asset: HubUploadedAsset;
   canEdit: boolean;
   compact?: boolean;
@@ -147,7 +152,7 @@ function PhotoTile(props: {
   onDragStart?: () => void;
   onDrop?: () => void;
 }) {
-  const src = displayUrl(props.token, props.asset);
+  const src = displayUrl(props.apiRoot, props.asset);
   const isPdf = props.asset.contentType.includes('pdf') || props.asset.originalFileName.toLowerCase().endsWith('.pdf');
   return (
     <li
@@ -201,6 +206,7 @@ function PhotoTile(props: {
 
 export function HubYourShop(props: {
   token: string;
+  apiBase?: string;
   canUpload: boolean;
   canEditDetails: boolean;
   canReview?: boolean;
@@ -208,7 +214,19 @@ export function HubYourShop(props: {
   reviewShop?: HubReviewShopData | null;
   details: HubShopDetails;
   assets: HubUploadedAsset[];
+  /** Admin Hub apps: show one block. Omitted = today's full Your shop page. */
+  focus?: 'logo' | 'photos' | 'about';
+  /** When false, the page H1 is omitted (the app window already has a title). */
+  chrome?: boolean;
 }) {
+  const focus = props.focus;
+  const chrome = props.chrome !== false && !focus;
+  const showLogo = !focus || focus === 'logo';
+  const showPhotos = !focus || focus === 'photos';
+  const showAbout = !focus || focus === 'about';
+  const showReviews = !focus;
+  const showBrandExtras = showLogo && !focus;
+  const apiRoot = hubApiRoot(props);
   const [assets, setAssets] = useState(props.assets);
   const [details, setDetails] = useState(props.details);
   const [primary, setPrimary] = useState(props.details.brandPrimaryColour ?? '');
@@ -240,7 +258,7 @@ export function HubYourShop(props: {
     async (patch: Partial<HubShopDetails>) => {
       setSave('saving');
       try {
-        const response = await fetch(`/api/preview-hub/${encodeURIComponent(props.token)}/details`, {
+        const response = await fetch(`${apiRoot}/details`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patch),
@@ -254,7 +272,7 @@ export function HubYourShop(props: {
         setError(err instanceof Error ? err.message : HUB_SAVE_FAILED);
       }
     },
-    [props.token],
+    [apiRoot],
   );
 
   const queueDetails = (patch: Partial<HubShopDetails>) => {
@@ -280,7 +298,7 @@ export function HubYourShop(props: {
   const pickFromLogo = async () => {
     if (!logo) return;
     try {
-      const url = displayUrl(props.token, logo);
+      const url = displayUrl(apiRoot, logo);
       if (!url) return;
       const image = new Image();
       image.crossOrigin = 'anonymous';
@@ -304,7 +322,7 @@ export function HubYourShop(props: {
 
   const commitDelete = async (id: string) => {
     try {
-      await deleteAsset(props.token, id);
+      await deleteAsset(apiRoot, id);
       setAssets((current) => current.filter((asset) => asset.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : HUB_SAVE_FAILED);
@@ -342,8 +360,8 @@ export function HubYourShop(props: {
     setAssets(next);
     try {
       await Promise.all([
-        patchAsset(props.token, id, { sortOrder: swap.sortOrder }),
-        patchAsset(props.token, swap.id, { sortOrder: group[index]!.sortOrder }),
+        patchAsset(apiRoot, id, { sortOrder: swap.sortOrder }),
+        patchAsset(apiRoot, swap.id, { sortOrder: group[index]!.sortOrder }),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : HUB_SAVE_FAILED);
@@ -364,13 +382,13 @@ export function HubYourShop(props: {
     const updates = reordered.map((asset, index) => ({ ...asset, sortOrder: index }));
     setAssets((current) => current.map((asset) => updates.find((row) => row.id === asset.id) ?? asset));
     try {
-      await Promise.all(updates.map((asset) => patchAsset(props.token, asset.id, { sortOrder: asset.sortOrder })));
+      await Promise.all(updates.map((asset) => patchAsset(apiRoot, asset.id, { sortOrder: asset.sortOrder })));
     } catch (err) {
       setError(err instanceof Error ? err.message : HUB_SAVE_FAILED);
     }
   };
 
-  const logoSrc = logo ? displayUrl(props.token, logo) : null;
+  const logoSrc = logo ? displayUrl(apiRoot, logo) : null;
   const selectedPrimary = HEX_COLOUR_RE.test(primary) ? primary : details.brandPrimaryColour;
 
   const toast = useMemo(() => {
@@ -381,13 +399,17 @@ export function HubYourShop(props: {
 
   return (
     <article className="hub-details">
-      <header className="hub-header">
-        <div>
-          <h1>{HUB_DETAILS_TITLE}</h1>
-          <p className="hub-header__sub">{HUB_FILES_PRIVACY}</p>
-        </div>
+      {chrome ? (
+        <header className="hub-header">
+          <div>
+            <h1>{HUB_DETAILS_TITLE}</h1>
+            <p className="hub-header__sub">{HUB_FILES_PRIVACY}</p>
+          </div>
+          <SaveHint state={save} />
+        </header>
+      ) : (
         <SaveHint state={save} />
-      </header>
+      )}
 
       {error ? (
         <section className="hub-card ks-glass-card hub-error" role="alert">
@@ -398,6 +420,7 @@ export function HubYourShop(props: {
         </section>
       ) : null}
 
+      {showLogo ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-brand-title">
         <h2 id="hub-brand-title" className="hub-card__title">
           {HUB_DETAILS_BRAND_TITLE}
@@ -412,86 +435,93 @@ export function HubYourShop(props: {
             <figcaption>{HUB_DETAILS_SWATCH_LIGHT}</figcaption>
           </figure>
         </div>
-        {props.canUpload ? <HubUploader token={props.token} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
-        <div className="hub-colours">
-          <HexField
-            id="hub-primary"
-            label={HUB_DETAILS_COLOUR_PRIMARY}
-            value={primary}
-            disabled={!props.canEditDetails}
-            onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
-          />
-          <HexField
-            id="hub-secondary"
-            label={HUB_DETAILS_COLOUR_SECONDARY}
-            value={secondary}
-            disabled={!props.canEditDetails}
-            onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
-          />
-        </div>
-        {logo && props.canEditDetails ? (
-          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
-            {HUB_DETAILS_PICK_FROM_LOGO}
-          </button>
-        ) : null}
-        {palette.length ? (
-          <div className="hub-chips" role="list">
-            {palette.map((hex) => (
-              <button
-                key={hex}
-                type="button"
-                className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
-                style={{ background: hex }}
-                aria-label={`Use ${hex} as primary`}
-                onClick={() => {
-                  setPrimary(hex);
-                  queueDetails({ brandPrimaryColour: hex });
-                }}
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  setSecondary(hex);
-                  queueDetails({ brandSecondaryColour: hex });
+        {props.canUpload ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
+        {showBrandExtras ? (
+          <>
+            <div className="hub-colours">
+              <HexField
+                id="hub-primary"
+                label={HUB_DETAILS_COLOUR_PRIMARY}
+                value={primary}
+                disabled={!props.canEditDetails}
+                onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
+              />
+              <HexField
+                id="hub-secondary"
+                label={HUB_DETAILS_COLOUR_SECONDARY}
+                value={secondary}
+                disabled={!props.canEditDetails}
+                onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
+              />
+            </div>
+            {logo && props.canEditDetails ? (
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
+                {HUB_DETAILS_PICK_FROM_LOGO}
+              </button>
+            ) : null}
+            {palette.length ? (
+              <div className="hub-chips" role="list">
+                {palette.map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
+                    style={{ background: hex }}
+                    aria-label={`Use ${hex} as primary`}
+                    onClick={() => {
+                      setPrimary(hex);
+                      queueDetails({ brandPrimaryColour: hex });
+                    }}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      setSecondary(hex);
+                      queueDetails({ brandSecondaryColour: hex });
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
+            <div className="field" style={{ marginTop: 16 }}>
+              <label className="field__label" htmlFor="hub-style">
+                {HUB_DETAILS_STYLE_LABEL}
+              </label>
+              <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
+              <textarea
+                id="hub-style"
+                className="textarea"
+                maxLength={500}
+                disabled={!props.canEditDetails}
+                value={styleNotes}
+                onChange={(event) => {
+                  setStyleNotes(event.target.value);
+                  queueDetails({ styleNotes: event.target.value });
                 }}
               />
-            ))}
-          </div>
+            </div>
+          </>
         ) : null}
-        <div className="field" style={{ marginTop: 16 }}>
-          <label className="field__label" htmlFor="hub-style">
-            {HUB_DETAILS_STYLE_LABEL}
-          </label>
-          <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
-          <textarea
-            id="hub-style"
-            className="textarea"
-            maxLength={500}
-            disabled={!props.canEditDetails}
-            value={styleNotes}
-            onChange={(event) => {
-              setStyleNotes(event.target.value);
-              queueDetails({ styleNotes: event.target.value });
-            }}
-          />
-        </div>
       </section>
+      ) : null}
 
+      {showPhotos ? (
+      <>
       <section className="hub-card ks-glass-card" aria-labelledby="hub-photos-title">
         <h2 id="hub-photos-title" className="hub-card__title">
           {HUB_DETAILS_PHOTOS_TITLE}
         </h2>
         <p className="hub-card__body">{HUB_UPLOAD_HINT_PHOTOS}</p>
         {props.canUpload ? (
-          <HubUploader token={props.token} kind="SHOP_PHOTO" hint={HUB_UPLOAD_HINT_PHOTOS} onUploaded={addAsset} />
+          <HubUploader token={props.token} apiBase={props.apiBase} kind="SHOP_PHOTO" hint={HUB_UPLOAD_HINT_PHOTOS} onUploaded={addAsset} />
         ) : null}
         {photos.length ? (
           <ul className="hub-photo-grid">
             {photos.map((asset) => (
               <PhotoTile
                 key={asset.id}
-                token={props.token}
+                apiRoot={apiRoot}
                 asset={asset}
                 canEdit={props.canUpload}
-                onCaption={(caption) => void patchAsset(props.token, asset.id, { caption }).catch((err) => setError(err.message))}
+                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
                 onDelete={() => requestDelete(asset)}
                 onMove={(dir) => void moveAsset('SHOP_PHOTO', asset.id, dir)}
                 onDragStart={() => {
@@ -506,20 +536,21 @@ export function HubYourShop(props: {
         )}
       </section>
 
+      {showReviews ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-team-photos-title">
         <h2 id="hub-team-photos-title" className="hub-card__title">
           {HUB_DETAILS_TEAM_PHOTOS_TITLE}
         </h2>
-        {props.canUpload ? <HubUploader token={props.token} kind="TEAM_PHOTO" onUploaded={addAsset} /> : null}
+        {props.canUpload ? <HubUploader token={props.token} apiBase={props.apiBase} kind="TEAM_PHOTO" onUploaded={addAsset} /> : null}
         {teamPhotos.length ? (
           <ul className="hub-photo-grid">
             {teamPhotos.map((asset) => (
               <PhotoTile
                 key={asset.id}
-                token={props.token}
+                apiRoot={apiRoot}
                 asset={asset}
                 canEdit={props.canUpload}
-                onCaption={(caption) => void patchAsset(props.token, asset.id, { caption }).catch((err) => setError(err.message))}
+                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
                 onDelete={() => requestDelete(asset)}
                 onMove={(dir) => void moveAsset('TEAM_PHOTO', asset.id, dir)}
                 onDragStart={() => {
@@ -533,6 +564,7 @@ export function HubYourShop(props: {
           <p className="hub-card__body">{HUB_EMPTY_TEAM_PHOTOS}</p>
         )}
       </section>
+      ) : null}
 
       <section className="hub-card ks-glass-card" aria-labelledby="hub-price-title">
         <h2 id="hub-price-title" className="hub-card__title">
@@ -542,18 +574,18 @@ export function HubYourShop(props: {
           {HUB_DETAILS_PRICE_HEAD}. {HUB_UPLOAD_HINT_PRICE}
         </p>
         {props.canUpload ? (
-          <HubUploader token={props.token} kind="PRICE_LIST" hint={HUB_UPLOAD_HINT_PRICE} onUploaded={addAsset} />
+          <HubUploader token={props.token} apiBase={props.apiBase} kind="PRICE_LIST" hint={HUB_UPLOAD_HINT_PRICE} onUploaded={addAsset} />
         ) : null}
         {prices.length ? (
           <ul className="hub-photo-grid hub-photo-grid--files">
             {prices.map((asset) => (
               <PhotoTile
                 key={asset.id}
-                token={props.token}
+                apiRoot={apiRoot}
                 asset={asset}
                 canEdit={props.canUpload}
                 compact
-                onCaption={(caption) => void patchAsset(props.token, asset.id, { caption }).catch((err) => setError(err.message))}
+                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
                 onDelete={() => requestDelete(asset)}
                 onMove={(dir) => void moveAsset('PRICE_LIST', asset.id, dir)}
               />
@@ -563,7 +595,10 @@ export function HubYourShop(props: {
           <p className="hub-card__body">{HUB_EMPTY_PRICE}</p>
         )}
       </section>
+      </>
+      ) : null}
 
+      {showAbout ? (
       <section className="hub-card ks-glass-card" aria-labelledby="hub-about-title">
         <h2 id="hub-about-title" className="hub-card__title">
           {HUB_DETAILS_ABOUT_TITLE}
@@ -571,6 +606,7 @@ export function HubYourShop(props: {
         <p className="field__hint">{HUB_DETAILS_ABOUT_HINT}</p>
         <textarea
           id="hub-about"
+          aria-labelledby="hub-about-title"
           className="textarea"
           maxLength={600}
           disabled={!props.canEditDetails}
@@ -581,22 +617,26 @@ export function HubYourShop(props: {
           }}
         />
       </section>
+      ) : null}
 
-      {props.canReview ? (
-        <HubReviewCards
-          token={props.token}
-          canReview
-          mode="full"
-          shop={props.reviewShop ?? null}
-          reviews={props.reviews ?? { SERVICES: null, TEAM: null, HOURS: null }}
-        />
-      ) : (
-        <>
-          <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
-          <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
-          <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
-        </>
-      )}
+      {showReviews ? (
+        props.canReview ? (
+          <HubReviewCards
+            token={props.token}
+            apiBase={props.apiBase}
+            canReview
+            mode="full"
+            shop={props.reviewShop ?? null}
+            reviews={props.reviews ?? { SERVICES: null, TEAM: null, HOURS: null }}
+          />
+        ) : (
+          <>
+            <PlaceholderCard title={HUB_DETAILS_SERVICES_TITLE} />
+            <PlaceholderCard title={HUB_DETAILS_TEAM_TITLE} />
+            <PlaceholderCard title={HUB_DETAILS_HOURS_TITLE} />
+          </>
+        )
+      ) : null}
 
       <div className="hub-toast" role="status" aria-live="polite">
         {toast ? (

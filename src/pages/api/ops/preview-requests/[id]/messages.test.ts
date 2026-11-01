@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requireOperatorAccess = vi.fn();
 const requireOperatorMutation = vi.fn();
-const isHubRouteEnabled = vi.fn();
+const isAnyHubRouteEnabled = vi.fn();
 const findUnique = vi.fn();
 const eventCreate = vi.fn();
 const loadHubMessages = vi.fn();
@@ -19,7 +19,7 @@ vi.mock('@/lib/ops/requireOperatorMutation', () => ({
   requireOperatorMutation: (...args: unknown[]) => requireOperatorMutation(...args),
 }));
 vi.mock('@/lib/freePreview/hubPage', () => ({
-  isHubRouteEnabled: (...args: unknown[]) => isHubRouteEnabled(...args),
+  isAnyHubRouteEnabled: (...args: unknown[]) => isAnyHubRouteEnabled(...args),
 }));
 vi.mock('@/lib/freePreview/hubMessages', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/freePreview/hubMessages')>();
@@ -46,7 +46,7 @@ import { GET, POST } from './messages';
 const access = { userId: 'op_1', email: 'ops@kersivo.co.uk' };
 
 beforeEach(() => {
-  isHubRouteEnabled.mockReset().mockReturnValue(true);
+  isAnyHubRouteEnabled.mockReset().mockReturnValue(true);
   requireOperatorAccess.mockReset().mockResolvedValue(access);
   requireOperatorMutation.mockReset().mockResolvedValue(access);
   findUnique.mockReset().mockResolvedValue({
@@ -98,7 +98,7 @@ describe('GET /api/ops/preview-requests/[id]/messages', () => {
   });
 
   it('404s when the hub is off', async () => {
-    isHubRouteEnabled.mockReturnValueOnce(false);
+    isAnyHubRouteEnabled.mockReturnValueOnce(false);
     expect(
       (
         await GET({

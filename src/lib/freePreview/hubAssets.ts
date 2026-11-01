@@ -19,6 +19,7 @@ import {
   HUB_UPLOAD_ERROR_REJECTED,
   HUB_UPLOAD_ERROR_TOO_LARGE,
   HUB_UPLOAD_ERROR_TYPE,
+  HUB_UPLOAD_ERROR_UNSAFE_SVG,
   HUB_UPLOAD_ERROR_TYPE_LOGO,
   HUB_UPLOAD_ERROR_TYPE_PHOTO,
 } from './hubCopy';
@@ -147,6 +148,22 @@ async function encodeThumb(buffer: Buffer): Promise<{ buffer: Buffer; contentTyp
   return { buffer: out, contentType: 'image/webp', ext: 'webp' };
 }
 
+/** Reject scripted / eventful / externally linked SVGs before rasterising (HUB_SPEC §11). */
+export function svgContainsUnsafeContent(bytes: Buffer): boolean {
+  const text = bytes.toString('utf8');
+  if (/<\s*script[\s>/]/i.test(text)) return true;
+  if (/<\s*foreignObject[\s>/]/i.test(text)) return true;
+  if (/\son[a-z][a-z0-9-]*\s*=/i.test(text)) return true;
+  const hrefs = text.matchAll(/(?:xlink:)?href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi);
+  for (const match of hrefs) {
+    const value = (match[1] ?? match[2] ?? match[3] ?? '').trim();
+    if (!value) continue;
+    if (value.startsWith('#') || value.toLowerCase().startsWith('data:image/')) continue;
+    return true;
+  }
+  return false;
+}
+
 async function rasteriseSvg(buffer: Buffer): Promise<{
   display: Buffer;
   width: number;
@@ -194,6 +211,9 @@ export async function processHubUpload(input: {
   }
 
   if (sniffed.kind === 'svg') {
+    if (svgContainsUnsafeContent(input.bytes)) {
+      return { ok: false, error: HUB_UPLOAD_ERROR_UNSAFE_SVG };
+    }
     try {
       const raster = await rasteriseSvg(input.bytes);
       return {

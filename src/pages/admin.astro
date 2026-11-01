@@ -22,6 +22,22 @@ import '../styles/components/shop-products-polish.css';
 import '../styles/components/admin-retail-onboarding.css';
 import '../styles/components/table.css';
 import '../styles/components/admin-ai.css';
+import type { APIContext } from 'astro';
+import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
+
+const mode = await resolveAdminPageMode({
+  request: Astro.request,
+  now: new Date(),
+  sessionShop: () => adminSessionShopFor(Astro as unknown as APIContext),
+});
+if (mode) {
+  for (const [name, value] of Object.entries(ADMIN_PRIVATE_HEADERS)) Astro.response.headers.set(name, value);
+  if (mode.kind === 'hub') {
+    Astro.locals.adminHubMode = mode;
+    return Astro.rewrite(`/admin/hub${Astro.url.search}`);
+  }
+  if (mode.setCookie) Astro.response.headers.append('Set-Cookie', mode.setCookie);
+}
 ---
 
 <MinimalLayout

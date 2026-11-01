@@ -31,7 +31,7 @@ import { clearHubMessageBodies, deleteHubMessageRows } from './hubMessages';
 import { sendPendingHubMessageDigests } from './hubMessagesNotify';
 import { clearHubChangeBodies, deleteHubChangeRows } from './hubChanges';
 import { clearHubReviewProposals, deleteHubReviewRows } from './hubReviews';
-import { isPreviewHubEnabled } from './config';
+import { isAnyHubEnabled } from './config';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -300,6 +300,10 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
           internalNotes: null,
           brandPrimaryColour: null,
           brandSecondaryColour: null,
+          brandBackgroundTone: null,
+          brandColoursSource: null,
+          brandPaletteExtracted: Prisma.JsonNull,
+          brandColoursSentAt: null,
           styleNotes: null,
           aboutText: null,
           stripeCustomerId: null,
@@ -373,6 +377,9 @@ export async function purgeExpiredPreviewData(now: Date): Promise<number> {
   return anonymised;
 }
 
+export const PREVIEW_STALE_OPEN_DAYS = 180;
+export const HUB_ORPHAN_ATTACHMENT_HOURS = 24;
+
 export type PreviewLifecycleResult = {
   expired: number;
   followups: number;
@@ -380,6 +387,8 @@ export type PreviewLifecycleResult = {
   anonymised: number;
   hubFileDigests?: number;
   hubMessageDigests?: number;
+  staleExpired?: number;
+  orphanAttachments?: number;
 };
 
 /**
@@ -387,13 +396,113 @@ export type PreviewLifecycleResult = {
  * flow on, because they link to the preview page (a 404 while it is off). Expiry and retention always run:
  * the deletion promise in the legal text does not depend on the flag.
  */
+/**
+ * Requests that never reached READY keep hub files forever today, which contradicts the privacy
+ * copy. After 180 days with no owner or ops activity, expire them (no email) so the existing
+ * retention window can purge the files.
+ */
+export async function expireStaleOpenPreviews(now: Date): Promise<number> {
+  const cutoff = new Date(now.getTime() - PREVIEW_STALE_OPEN_DAYS * DAY_MS);
+  const candidates = await prisma.previewRequest.findMany({
+    where: {
+      status: { in: ['REQUESTED', 'IN_PROGRESS'] },
+      convertedAt: null,
+      anonymisedAt: null,
+      NOT: { entryPoint: 'direct_subscribe' },
+    },
+    select: {
+      id: true,
+      status: true,
+      convertedAt: true,
+      entryPoint: true,
+      events: { orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
+    },
+    take: LIFECYCLE_BATCH_SIZE,
+  });
+
+  let expired = 0;
+  for (const row of candidates) {
+    if (row.convertedAt || row.entryPoint === 'direct_subscribe') continue;
+    if (row.status !== 'REQUESTED' && row.status !== 'IN_PROGRESS') continue;
+    const latest = row.events[0]?.createdAt ?? null;
+    if (!latest || latest.getTime() > cutoff.getTime()) continue;
+    const done = await prisma.$transaction(async (tx) => {
+      const updated = await tx.previewRequest.updateMany({
+        where: {
+          id: row.id,
+          status: { in: ['REQUESTED', 'IN_PROGRESS'] },
+          convertedAt: null,
+        },
+        data: { status: 'EXPIRED', expiresAt: now },
+      });
+      if (updated.count === 0) return false;
+      await tx.previewRequestEvent.create({
+        data: {
+          previewRequestId: row.id,
+          action: PREVIEW_REQUEST_ACTIONS.EXPIRED,
+          fromStatus: row.status,
+          toStatus: 'EXPIRED',
+          meta: { reason: 'stale_open' },
+        },
+      });
+      return true;
+    });
+    if (done) expired += 1;
+  }
+  return expired;
+}
+
+/** MESSAGE_ATTACHMENT / CHANGE_ATTACHMENT rows that nothing references after 24 hours. */
+export async function purgeOrphanHubAttachments(now: Date): Promise<number> {
+  const cutoff = new Date(now.getTime() - HUB_ORPHAN_ATTACHMENT_HOURS * 60 * 60 * 1000);
+  const assets = await prisma.previewHubAsset.findMany({
+    where: {
+      kind: { in: ['MESSAGE_ATTACHMENT', 'CHANGE_ATTACHMENT'] },
+      deletedAt: null,
+      createdAt: { lte: cutoff },
+    },
+    select: { id: true, storagePath: true, thumbPath: true, previewRequestId: true },
+    take: LIFECYCLE_BATCH_SIZE,
+  });
+
+  let purged = 0;
+  for (const asset of assets) {
+    const [inMessage, inChange] = await Promise.all([
+      prisma.previewHubMessage.findFirst({
+        where: { previewRequestId: asset.previewRequestId, attachmentIds: { has: asset.id } },
+        select: { id: true },
+      }),
+      prisma.previewChangeRequest.findFirst({
+        where: { previewRequestId: asset.previewRequestId, attachmentId: asset.id },
+        select: { id: true },
+      }),
+    ]);
+    if (inMessage || inChange) continue;
+    await deleteHubBlobPaths([asset.storagePath, ...(asset.thumbPath ? [asset.thumbPath] : [])]);
+    await prisma.previewHubAsset.delete({ where: { id: asset.id } });
+    purged += 1;
+  }
+  return purged;
+}
+
 export async function runFreePreviewLifecycle(now: Date = new Date()): Promise<PreviewLifecycleResult> {
-  const expired = await expireDuePreviews(now);
+  const staleExpired = await expireStaleOpenPreviews(now);
+  const expired = (await expireDuePreviews(now)) + staleExpired;
   const { followups, expiryReminders } = isFreePreviewFlowEnabled()
     ? await sendDuePreviewFollowups(now)
     : { followups: 0, expiryReminders: 0 };
   const anonymised = await purgeExpiredPreviewData(now);
-  const hubFileDigests = isPreviewHubEnabled() ? await sendPendingHubFileDigests(now) : 0;
-  const hubMessageDigests = isPreviewHubEnabled() ? await sendPendingHubMessageDigests(now) : 0;
-  return { expired, followups, expiryReminders, anonymised, hubFileDigests, hubMessageDigests };
+  const orphanAttachments = await purgeOrphanHubAttachments(now);
+  const hubFileDigests = isAnyHubEnabled() ? await sendPendingHubFileDigests(now) : 0;
+  const hubMessageDigests = isAnyHubEnabled() ? await sendPendingHubMessageDigests(now) : 0;
+  return {
+    expired,
+    followups,
+    expiryReminders,
+    anonymised,
+    hubFileDigests,
+    hubMessageDigests,
+    staleExpired,
+    orphanAttachments,
+  };
 }

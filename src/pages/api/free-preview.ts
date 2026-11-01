@@ -5,6 +5,7 @@ import type { APIRoute } from 'astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { createPreviewRequest } from '@/lib/freePreview/createPreviewRequest';
 import { parseFreePreviewRequest } from '@/lib/freePreview/intake';
+import { isPreviewHubRealQaEnabled } from '@/lib/previewHub/realQa';
 import { checkDurableRateLimit, rateLimitExceededResponse } from '@/lib/rate-limit/durableRateLimit';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
@@ -49,12 +50,15 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: true });
   }
 
-  const limited = await enforceIpRateLimit(
-    request,
-    FREE_PREVIEW_IP_RATE.action,
-    FREE_PREVIEW_IP_RATE.limit,
-    FREE_PREVIEW_IP_RATE.windowMs,
-  );
+  const skipRates = isPreviewHubRealQaEnabled();
+  const limited = skipRates
+    ? null
+    : await enforceIpRateLimit(
+        request,
+        FREE_PREVIEW_IP_RATE.action,
+        FREE_PREVIEW_IP_RATE.limit,
+        FREE_PREVIEW_IP_RATE.windowMs,
+      );
   if (limited) return limited;
 
   const parsed = parseFreePreviewRequest(body);
@@ -65,13 +69,15 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  const emailLimit = await checkDurableRateLimit({
-    key: emailBucketKey(parsed.value.email),
-    action: FREE_PREVIEW_EMAIL_RATE.action,
-    limit: FREE_PREVIEW_EMAIL_RATE.limit,
-    windowMs: FREE_PREVIEW_EMAIL_RATE.windowMs,
-  });
-  if (!emailLimit.ok) return rateLimitExceededResponse(emailLimit.retryAfterSeconds);
+  if (!skipRates) {
+    const emailLimit = await checkDurableRateLimit({
+      key: emailBucketKey(parsed.value.email),
+      action: FREE_PREVIEW_EMAIL_RATE.action,
+      limit: FREE_PREVIEW_EMAIL_RATE.limit,
+      windowMs: FREE_PREVIEW_EMAIL_RATE.windowMs,
+    });
+    if (!emailLimit.ok) return rateLimitExceededResponse(emailLimit.retryAfterSeconds);
+  }
 
   let overDailyCap: boolean;
   let leadToken: string;

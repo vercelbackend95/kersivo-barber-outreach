@@ -10,7 +10,7 @@ import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import { FREE_PREVIEW_BARBER_COUNTS, labelFor } from './intake';
 import { persistPreviewDomainChoice } from './persistPreviewDomain';
-import { ownerCanActOnPreview, resolvePreviewRequestByToken } from './previewAccess';
+import { ownerCanActOnPreview, resolvePreviewRequestByToken, type TokenPreviewRequest } from './previewAccess';
 
 /** Stripe Checkout metadata key carrying the PreviewRequest id (shopId carries the draft shop). */
 export const PREVIEW_REQUEST_METADATA_KEY = 'previewRequestId';
@@ -49,9 +49,25 @@ export async function startPreviewLaunchCheckout(input: {
   domainRegistrationAuthorised?: boolean;
   now?: Date;
 }): Promise<Response> {
-  const now = input.now ?? new Date();
   const preview = await resolvePreviewRequestByToken(input.token);
   if (!preview) return json({ error: 'Not found.' }, 404);
+  return startPreviewLaunchCheckoutFor({ ...input, preview, cancelPath: previewPagePath(input.token) });
+}
+
+/** Same checkout for a request already resolved from the `ks_hub` cookie; Stripe's cancel URL is then /admin. */
+export async function startPreviewLaunchCheckoutFor(input: {
+  request: Request;
+  preview: TokenPreviewRequest;
+  cancelPath: string;
+  name: string;
+  checkoutAttemptId: string;
+  domainMode: 'EXISTING' | 'KERSIVO_REGISTER';
+  domain: string;
+  domainRegistrationAuthorised?: boolean;
+  now?: Date;
+}): Promise<Response> {
+  const now = input.now ?? new Date();
+  const { preview } = input;
 
   if (preview.status === 'CONVERTED') {
     return json({ error: 'This website has already been launched.', code: 'ALREADY_CONVERTED', redirectTo: '/admin' }, 409);
@@ -104,7 +120,7 @@ export async function startPreviewLaunchCheckout(input: {
       [PREVIEW_DOMAIN_METADATA_KEY]: choice.hostname,
       ...(gaClientId ? { [PREVIEW_GA_CLIENT_METADATA_KEY]: gaClientId } : {}),
     },
-    cancelPath: previewPagePath(input.token),
+    cancelPath: input.cancelPath,
   });
 
   if (response.ok) {

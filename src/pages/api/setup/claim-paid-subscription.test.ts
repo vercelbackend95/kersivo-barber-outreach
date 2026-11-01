@@ -27,6 +27,7 @@ vi.mock('@/lib/db/client', () => ({
     },
     // Not a free-preview draft shop: the claim behaves exactly as before.
     previewRequest: { findUnique: async () => null },
+    shopSettings: { findUnique: async () => null },
   },
 }));
 

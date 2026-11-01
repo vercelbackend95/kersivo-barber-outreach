@@ -1,4 +1,26 @@
 import crypto from 'node:crypto';
+import { HUB_REAL_QA_STRIPE_SESSION_ID, isStripeCheckoutStubEnabled } from '@/lib/previewHub/realQa';
+
+export type StripeCheckoutStubPayload = {
+  customerEmail?: string;
+  successUrl: string;
+  cancelUrl: string;
+  productId: string;
+  name: string;
+  unitAmount: number;
+  metadata: Record<string, string>;
+  idempotencyKey?: string;
+};
+
+let lastSubscriptionCheckoutStub: StripeCheckoutStubPayload | null = null;
+
+export function getLastSubscriptionCheckoutStub(): StripeCheckoutStubPayload | null {
+  return lastSubscriptionCheckoutStub;
+}
+
+export function resetSubscriptionCheckoutStub(): void {
+  lastSubscriptionCheckoutStub = null;
+}
 
 type StripeCheckoutParams = {
   customerEmail?: string;
@@ -109,6 +131,25 @@ export async function createCheckoutSession(params: StripeCheckoutParams): Promi
 export async function createSubscriptionCheckoutSession(
   params: StripeSubscriptionCheckoutParams,
 ): Promise<{ id: string; url: string }> {
+  if (isStripeCheckoutStubEnabled()) {
+    lastSubscriptionCheckoutStub = {
+      customerEmail: params.customerEmail,
+      successUrl: params.successUrl,
+      cancelUrl: params.cancelUrl,
+      productId: params.productId,
+      name: params.name,
+      unitAmount: params.unitAmount,
+      metadata: { ...params.metadata },
+      idempotencyKey: params.idempotencyKey,
+    };
+    const origin = params.successUrl.startsWith('http')
+      ? new URL(params.successUrl).origin
+      : 'http://127.0.0.1:4397';
+    return {
+      id: `${HUB_REAL_QA_STRIPE_SESSION_ID}_${Date.now()}`,
+      url: `${origin}/preview-hub-qa/stripe-checkout`,
+    };
+  }
   const secretKey = getSecretKey();
   const body = new URLSearchParams();
   body.set('mode', 'subscription');
@@ -161,6 +202,20 @@ export async function retrieveCheckoutSession(
   sessionId: string,
   options?: { stripeAccount?: string },
 ): Promise<StripeSession> {
+  if (isStripeCheckoutStubEnabled() && sessionId.startsWith(HUB_REAL_QA_STRIPE_SESSION_ID)) {
+    const origin = lastSubscriptionCheckoutStub?.successUrl?.startsWith('http')
+      ? new URL(lastSubscriptionCheckoutStub.successUrl).origin
+      : 'http://127.0.0.1:4397';
+    return {
+      id: sessionId,
+      url: `${origin}/preview-hub-qa/stripe-checkout`,
+      status: 'open',
+      amount_total: lastSubscriptionCheckoutStub?.unitAmount ?? 3900,
+      currency: 'gbp',
+      payment_status: 'unpaid',
+      metadata: lastSubscriptionCheckoutStub?.metadata,
+    };
+  }
   const secretKey = getSecretKey();
   const headers: Record<string, string> = { Authorization: `Bearer ${secretKey}` };
   const stripeAccount = options?.stripeAccount?.trim();

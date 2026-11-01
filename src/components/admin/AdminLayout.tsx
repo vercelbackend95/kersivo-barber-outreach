@@ -780,6 +780,7 @@ export default function AdminLayout({
               isPublicDemo={isPublicDemo}
               onSpaSection={onChangeSection}
               onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
+              placement="mobile"
             />
           ) : null}
         </div>
