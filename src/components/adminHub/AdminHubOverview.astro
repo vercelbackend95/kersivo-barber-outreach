@@ -5,24 +5,29 @@ import { AdminHubActivityFeed } from './AdminHubActivityFeed';
 import { AdminHubSwatches } from './AdminHubSwatches';
 import {
   ArrowUpRight,
+  ImagePlus,
   ListChecks,
   Palette,
-  Plus,
   Smartphone,
+  Store,
   TrendingUp,
 } from '@/components/lucide-react';
 import { websiteBuildProgressFromHubStage } from '@/lib/adminHub/buildProgress';
 import {
   ADMIN_HUB_ACTIVITY_SHOW_ALL,
+  ADMIN_HUB_ADD,
   ADMIN_HUB_ADD_TILE,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
+  ADMIN_HUB_CONTENT_EMPTY,
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_ACTIVITY,
   ADMIN_HUB_TILE_CHANGES,
   ADMIN_HUB_TILE_COLOURS,
+  ADMIN_HUB_TILE_CONTENT,
   ADMIN_HUB_TILE_PREVIEW,
   ADMIN_HUB_TILE_PROGRESS,
+  ADMIN_HUB_TILE_SHOP,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import { AdminHubAddMenu } from './AdminHubAddMenu';
@@ -36,11 +41,14 @@ import {
   overviewHideAddMaterialsPrimary,
   overviewPreviewLocked,
   overviewPrimary,
+  overviewShopTile,
   overviewShowLaunch,
   overviewTileHrefs,
+  overviewWebsiteContent,
   shopInitials,
+  type OverviewContentAsset,
 } from '@/lib/adminHub/overview';
-import type { SetupCardModel } from '@/lib/adminHub/setupCard';
+import type { SetupShopCounts, SetupCardModel } from '@/lib/adminHub/setupCard';
 import {
   HUB_LOCKED_REASON_PREVIEW,
   HUB_NAV,
@@ -73,6 +81,8 @@ interface Props {
   brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
   changeItems: HubChangePublic[];
   setup: SetupCardModel | null;
+  assets?: OverviewContentAsset[];
+  shopCounts?: SetupShopCounts | null;
 }
 
 const {
@@ -90,6 +100,8 @@ const {
   brandPaletteExtracted,
   changeItems,
   setup,
+  assets = [],
+  shopCounts = null,
 } = Astro.props;
 
 const shopName = request.shopName;
@@ -119,6 +131,12 @@ const previewColour = colours.swatches[0]?.css || 'var(--color-brand)';
 const headerPrimary = primary && !overviewHideAddMaterialsPrimary(state.stage) ? primary : null;
 const addMenu = overviewAddMenuFromHub({ stage: state.stage, capabilities: state.capabilities });
 const terminal = isOverviewTerminal(state.stage);
+const content = overviewWebsiteContent({
+  assets,
+  aboutText: request.aboutText,
+  websiteExtraText: request.websiteExtraText,
+});
+const shop = overviewShopTile({ stage: state.stage, counts: shopCounts });
 ---
 
 <article class="admin-hub-overview" data-stage={state.stage} data-testid="admin-hub-overview">
@@ -183,7 +201,7 @@ const terminal = isOverviewTerminal(state.stage);
         ) : null}
       </section>
     ) : (
-      <div class="admin-hub-bento">
+      <div class:list={['admin-hub-bento', !shop.show && 'admin-hub-bento--no-shop']}>
         <section class="admin-hub-tile admin-hub-bento__progress" data-tile="progress" aria-labelledby="admin-hub-progress-title">
           <div class="admin-hub-tile__head">
             <span class="admin-hub-tile__icon" aria-hidden="true">
@@ -293,56 +311,111 @@ const terminal = isOverviewTerminal(state.stage);
           )
         }
 
-        <article class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" aria-labelledby="admin-hub-colours-title">
-          <a class="admin-hub-tile__hit" href={hrefs.colours}>
-            <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_COLOURS}</span>
-          </a>
+        <section class="admin-hub-tile admin-hub-bento__content" data-tile="content" data-testid="admin-hub-content-tile" aria-labelledby="admin-hub-content-title">
           <div class="admin-hub-tile__head">
             <span class="admin-hub-tile__icon" aria-hidden="true">
-              <Palette width={15} height={15} strokeWidth={1.8} />
+              <ImagePlus width={15} height={15} strokeWidth={1.8} />
             </span>
-            <h2 class="admin-hub-tile__title" id="admin-hub-colours-title">{ADMIN_HUB_TILE_COLOURS}</h2>
-            <span class="admin-hub-tile__open" aria-hidden="true">
-              <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
-            </span>
+            <h2 class="admin-hub-tile__title" id="admin-hub-content-title">{ADMIN_HUB_TILE_CONTENT}</h2>
+            {
+              !content.empty ? (
+                addMenu.empty ? (
+                  <a class="btn btn--ghost btn--sm admin-hub-tile__action" href={hrefs.materials}>
+                    {ADMIN_HUB_ADD}
+                  </a>
+                ) : (
+                  <AdminHubAddMenu
+                    client:load
+                    variant="inline"
+                    stage={state.stage}
+                    capabilities={state.capabilities}
+                    canAddShop={hubCanAddShopItems(state.stage)}
+                    tone="outline"
+                  />
+                )
+              ) : null
+            }
           </div>
-          <div class="admin-hub-colours-body">
-            <div class="admin-hub-logo-mini">
-              <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
-                {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
-              </span>
-              {
-                colours.swatches.length ? (
-                  <p>
-                    <strong>{colours.headline}</strong>
-                    <span>{ADMIN_HUB_COLOURS_TUNE}</span>
-                  </p>
-                ) : null
-              }
-            </div>
-            <AdminHubSwatches client:load swatches={colours.swatches} />
-            <div class="admin-hub-tile__foot">
-              <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
-                <span class="admin-hub-pill__dot" aria-hidden="true"></span>
-                {colours.statusLabel}
-              </span>
-              {colours.status === 'not_sent' && colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
-            </div>
-          </div>
-        </article>
+          {
+            content.empty ? (
+              <div class="admin-hub-content-empty">
+                <p>{ADMIN_HUB_CONTENT_EMPTY}</p>
+                {
+                  addMenu.empty ? (
+                    <a class="btn btn--primary btn--sm" href={hrefs.materials}>
+                      {ADMIN_HUB_ADD_TILE}
+                    </a>
+                  ) : (
+                    <AdminHubAddMenu
+                      client:load
+                      stage={state.stage}
+                      capabilities={state.capabilities}
+                      canAddShop={hubCanAddShopItems(state.stage)}
+                      tone="primary"
+                      label={ADMIN_HUB_ADD_TILE}
+                      testId="admin-hub-content-add"
+                    />
+                  )
+                }
+              </div>
+            ) : (
+              <div class="admin-hub-content-body">
+                {
+                  content.thumbs.length ? (
+                    <ul class="admin-hub-thumbs">
+                      {content.thumbs.map((thumb) => (
+                        <li>
+                          <img src={thumb.src} alt="" width="72" height="72" loading="lazy" />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null
+                }
+                <ul class="admin-hub-status">
+                  {
+                    content.status.map((row) => (
+                      <li>
+                        <a href={row.href} data-content-item={row.id}>
+                          <span>{row.label}</span>
+                          <span class:list={['admin-hub-status__value', row.done && 'admin-hub-status__value--done']}>
+                            {row.value}
+                          </span>
+                        </a>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </div>
+            )
+          }
+        </section>
 
-        <button
-          type="button"
-          class="admin-hub-tile admin-hub-tile--add admin-hub-bento__add"
-          data-tile="add"
-          data-admin-hub-app="materials"
-          data-testid="admin-hub-add-tile"
-        >
-          <span class="admin-hub-add__plus" aria-hidden="true">
-            <Plus width={36} height={36} strokeWidth={1.5} />
-          </span>
-          <span class="admin-hub-add__label">{ADMIN_HUB_ADD_TILE}</span>
-        </button>
+        {
+          shop.show ? (
+            <section class="admin-hub-tile admin-hub-bento__shop" data-tile="shop" data-testid="admin-hub-shop-tile" aria-labelledby="admin-hub-shop-title">
+              <div class="admin-hub-tile__head">
+                <span class="admin-hub-tile__icon" aria-hidden="true">
+                  <Store width={15} height={15} strokeWidth={1.8} />
+                </span>
+                <h2 class="admin-hub-tile__title" id="admin-hub-shop-title">{ADMIN_HUB_TILE_SHOP}</h2>
+              </div>
+              <ul class="admin-hub-status">
+                {
+                  shop.rows.map((row) => (
+                    <li>
+                      <a href={row.href} data-shop-item={row.id}>
+                        <span>{row.name}</span>
+                        <span class:list={['admin-hub-status__value', row.empty && 'admin-hub-status__value--add']}>
+                          {row.detail}
+                        </span>
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </section>
+          ) : null
+        }
 
         {
           changesLocked ? (
@@ -407,6 +480,44 @@ const terminal = isOverviewTerminal(state.stage);
             </a>
           )
         }
+
+        <article class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" aria-labelledby="admin-hub-colours-title">
+          <a class="admin-hub-tile__hit" href={hrefs.colours}>
+            <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_COLOURS}</span>
+          </a>
+          <div class="admin-hub-tile__head">
+            <span class="admin-hub-tile__icon" aria-hidden="true">
+              <Palette width={15} height={15} strokeWidth={1.8} />
+            </span>
+            <h2 class="admin-hub-tile__title" id="admin-hub-colours-title">{ADMIN_HUB_TILE_COLOURS}</h2>
+            <span class="admin-hub-tile__open" aria-hidden="true">
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
+            </span>
+          </div>
+          <div class="admin-hub-colours-body">
+            <div class="admin-hub-logo-mini">
+              <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
+                {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
+              </span>
+              {
+                colours.swatches.length ? (
+                  <p>
+                    <strong>{colours.headline}</strong>
+                    <span>{ADMIN_HUB_COLOURS_TUNE}</span>
+                  </p>
+                ) : null
+              }
+            </div>
+            <AdminHubSwatches client:load swatches={colours.swatches} />
+            <div class="admin-hub-tile__foot">
+              <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
+                <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+                {colours.statusLabel}
+              </span>
+              {colours.status === 'not_sent' && colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
+            </div>
+          </div>
+        </article>
 
         <section class="admin-hub-tile admin-hub-tile--quiet admin-hub-bento__activity" data-tile="activity" aria-labelledby="admin-hub-activity-title">
           <div class="admin-hub-tile__head">

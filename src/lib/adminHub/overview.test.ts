@@ -10,17 +10,23 @@ import {
   overviewChanges,
   overviewChangesLocked,
   overviewColours,
+  overviewBentoAreasCss,
+  overviewBentoTiles,
   overviewHideAddMaterialsPrimary,
   overviewLatestMessage,
   overviewNowCopy,
   overviewOurSteps,
   overviewPreviewLocked,
   overviewPrimary,
+  overviewShopTile,
   overviewShowLaunch,
+  overviewShowShopTile,
   overviewStagePill,
   overviewTileHrefs,
   overviewUnreadLabel,
+  overviewWebsiteContent,
   shopInitials,
+  OVERVIEW_BENTO_AREAS,
 } from './overview';
 import {
   ADMIN_HUB_COLOURS_EMPTY,
@@ -156,6 +162,10 @@ describe('overview view-model', () => {
     expect(hrefs.changes).toBe('/admin/changes');
     expect(hrefs.messages).toBe('/admin/messages');
     expect(hrefs.activity).toBe('/admin?app=activity');
+    expect(hrefs.materials).toBe('/admin?app=materials');
+    expect(hrefs.team).toBe('/admin/team');
+    expect(hrefs.services).toBe('/admin/services');
+    expect(hrefs.products).toBe('/admin/products');
     expect(Object.values(hrefs).every((href) => href.startsWith('/admin'))).toBe(true);
   });
 
@@ -324,5 +334,159 @@ describe('overview view-model', () => {
     expect(overviewActivityDayLabel(new Date('2026-10-31T08:00:00.000Z'), now)).toBe('Today');
     expect(overviewHideAddMaterialsPrimary('requested')).toBe(true);
     expect(overviewHideAddMaterialsPrimary('review')).toBe(false);
+  });
+
+  it('builds website content thumbs and status rows, and treats empty as nothing added', () => {
+    expect(
+      overviewWebsiteContent({
+        assets: [],
+        aboutText: '  ',
+        websiteExtraText: null,
+      }),
+    ).toMatchObject({ empty: true, thumbs: [], status: expect.any(Array) });
+
+    const filled = overviewWebsiteContent({
+      assets: [
+        {
+          id: 'old',
+          kind: 'SHOP_PHOTO',
+          hasThumb: true,
+          contentType: 'image/jpeg',
+          createdAt: '2026-10-01T10:00:00.000Z',
+        },
+        {
+          id: 'new',
+          kind: 'SHOP_PHOTO',
+          hasThumb: true,
+          contentType: 'image/jpeg',
+          createdAt: '2026-10-31T10:00:00.000Z',
+        },
+        {
+          id: 'mid',
+          kind: 'SHOP_PHOTO',
+          hasThumb: false,
+          contentType: 'application/pdf',
+          createdAt: '2026-10-20T10:00:00.000Z',
+        },
+        { id: 'logo', kind: 'LOGO', hasThumb: true, contentType: 'image/png', createdAt: '2026-10-02T10:00:00.000Z' },
+        {
+          id: 'team',
+          kind: 'TEAM_PHOTO',
+          hasThumb: true,
+          contentType: 'image/jpeg',
+          createdAt: '2026-10-03T10:00:00.000Z',
+        },
+        { id: 'file', kind: 'OTHER', hasThumb: false, contentType: 'application/pdf', createdAt: '2026-10-04T10:00:00.000Z' },
+      ],
+      aboutText: 'Family shop',
+      websiteExtraText: null,
+    });
+    expect(filled.empty).toBe(false);
+    expect(filled.thumbs.map((thumb) => thumb.id)).toEqual(['new', 'old']);
+    expect(filled.thumbs[0]?.src).toBe('/api/admin-hub/assets/new?size=thumb');
+    expect(filled.status.map((row) => [row.id, row.value, row.href, row.done])).toEqual([
+      ['logo', '✓', '/admin?app=materials&item=logo', true],
+      ['photos', '3', '/admin?app=materials&item=photos', true],
+      ['team-photos', '1', '/admin?app=materials&item=team-photos', true],
+      ['text', '✓', '/admin?app=materials&item=text', true],
+      ['other', '1', '/admin?app=materials&item=other', true],
+    ]);
+    expect(
+      overviewWebsiteContent({
+        assets: [],
+        aboutText: null,
+        websiteExtraText: 'Walk-ins welcome',
+      }).status.find((row) => row.id === 'text'),
+    ).toMatchObject({ value: '✓', done: true });
+    expect(
+      overviewWebsiteContent({ assets: [], aboutText: null, websiteExtraText: null }).status.find(
+        (row) => row.id === 'other',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('builds shop rows with counts or first-add links, and hides without draft-shop admin access', () => {
+    expect(overviewShowShopTile('requested')).toBe(true);
+    expect(overviewShowShopTile('designing')).toBe(true);
+    expect(overviewShowShopTile('review')).toBe(true);
+    expect(overviewShowShopTile('launch')).toBe(false);
+    expect(overviewShopTile({ stage: 'launch', counts: { activeServices: 2, activeBarbers: 1, products: 3 } })).toEqual({
+      show: false,
+      rows: [],
+    });
+    expect(overviewShopTile({ stage: 'review', counts: null }).rows).toEqual([
+      { id: 'team', name: 'Team', detail: 'Add your first team member', href: '/admin/team?add=1', empty: true },
+      { id: 'services', name: 'Services', detail: 'Add your first service', href: '/admin/services?add=1', empty: true },
+      { id: 'products', name: 'Products', detail: 'Add your first product', href: '/admin/products?add=1', empty: true },
+    ]);
+    expect(
+      overviewShopTile({
+        stage: 'requested',
+        counts: { activeServices: 2, activeBarbers: 1, products: 4 },
+      }).rows,
+    ).toEqual([
+      { id: 'team', name: 'Team', detail: '1 team member', href: '/admin/team', empty: false },
+      { id: 'services', name: 'Services', detail: '2 services', href: '/admin/services', empty: false },
+      { id: 'products', name: 'Products', detail: '4 products', href: '/admin/products', empty: false },
+    ]);
+  });
+
+  it('keeps every requested tile in requested, designing, review and launch', () => {
+    for (const stage of ['requested', 'designing', 'review'] as const) {
+      expect(overviewBentoTiles({ stage, showShop: true })).toEqual([
+        'progress',
+        'preview',
+        'content',
+        'shop',
+        'changes',
+        'colours',
+        'activity',
+      ]);
+    }
+    expect(overviewBentoTiles({ stage: 'launch', showShop: false })).toEqual([
+      'progress',
+      'preview',
+      'content',
+      'changes',
+      'colours',
+      'activity',
+    ]);
+    expect(overviewBentoTiles({ stage: 'expired', showShop: false })).toEqual([]);
+  });
+
+  it('snapshots grid-template-areas for each breakpoint', () => {
+    expect(OVERVIEW_BENTO_AREAS).toEqual({
+      mobile: ['progress', 'preview', 'content', 'shop', 'changes', 'colours', 'activity'],
+      mobileNoShop: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
+      tablet: [
+        'progress progress progress progress progress progress',
+        'preview preview preview content content content',
+        'shop shop shop colours colours colours',
+        'changes changes changes changes changes changes',
+        'activity activity activity activity activity activity',
+      ],
+      tabletNoShop: [
+        'progress progress progress progress progress progress',
+        'preview preview preview content content content',
+        'colours colours colours colours colours colours',
+        'changes changes changes changes changes changes',
+        'activity activity activity activity activity activity',
+      ],
+      desktop: [
+        'progress progress progress progress progress progress progress progress preview preview preview preview',
+        'content content content content shop shop shop shop preview preview preview preview',
+        'changes changes changes changes changes changes changes changes colours colours colours colours',
+        'activity activity activity activity activity activity activity activity activity activity activity activity',
+      ],
+      desktopNoShop: [
+        'progress progress progress progress progress progress progress progress preview preview preview preview',
+        'content content content content content content content content preview preview preview preview',
+        'changes changes changes changes changes changes changes changes colours colours colours colours',
+        'activity activity activity activity activity activity activity activity activity activity activity activity',
+      ],
+    });
+    expect(overviewBentoAreasCss(OVERVIEW_BENTO_AREAS.desktop)).toContain(
+      '"content content content content shop shop shop shop preview preview preview preview"',
+    );
   });
 });

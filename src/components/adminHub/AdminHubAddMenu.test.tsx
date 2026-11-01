@@ -182,6 +182,37 @@ describe('AdminHubAddMenu', () => {
     );
   });
 
+  it('renders an inline Add text button that opens the same menu', () => {
+    render(
+      <AdminHubAddMenu
+        stage="review"
+        capabilities={caps()}
+        canAddShop
+        variant="inline"
+      />,
+    );
+    const trigger = screen.getByTestId('admin-hub-add-inline');
+    expect(trigger.textContent).toBe('Add');
+    expect(trigger.className).toContain('btn--ghost');
+    fireEvent.click(trigger);
+    expect(screen.getByRole('menuitem', { name: /Shop photos/ }).getAttribute('href')).toBe(
+      '/admin?app=materials&item=photos',
+    );
+  });
+
+  it('falls back to the materials app when the inline menu is empty', () => {
+    render(
+      <AdminHubAddMenu
+        stage="launch"
+        capabilities={caps({ canUpload: false, canEditDetails: false })}
+        canAddShop={false}
+        variant="inline"
+      />,
+    );
+    const fallback = screen.getByRole('link', { name: 'Add' });
+    expect(fallback.getAttribute('href')).toBe('/admin?app=materials');
+  });
+
   it('has popup semantics on the trigger', () => {
     renderMenu();
     const trigger = screen.getByTestId('admin-hub-add');

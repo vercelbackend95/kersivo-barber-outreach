@@ -18,13 +18,17 @@ describe('AdminHubOverview', () => {
   it('renders the bento tiles and stage variants', () => {
     expect(src).toContain('data-tile="progress"');
     expect(src).toContain('data-tile="preview"');
+    expect(src).toContain('data-tile="content"');
+    expect(src).toContain('data-tile="shop"');
     expect(src).toContain('data-tile="colours"');
     expect(src).not.toContain('data-tile="messages"');
     expect(src).not.toContain('admin-hub-bento__messages');
     expect(src).toContain('data-tile="changes"');
     expect(src).toContain('data-tile="activity"');
-    expect(src).toContain('data-tile="add"');
-    expect(src).toContain('data-admin-hub-app="materials"');
+    expect(src).not.toContain('data-tile="add"');
+    expect(src).not.toContain('admin-hub-add-tile');
+    expect(src).not.toContain('admin-hub-bento__add');
+    expect(src).toContain('variant="inline"');
     expect(src).toContain('AdminHubSwatches');
     expect(src).toContain('AdminHubActivityFeed');
     expect(src).not.toContain('admin-hub-sw--empty');
@@ -53,9 +57,20 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('hrefs.colours');
     expect(src).toContain('hrefs.changes');
     expect(src).toContain('hrefs.activity');
+    expect(src).toContain('hrefs.materials');
+    expect(src).toContain('overviewWebsiteContent');
+    expect(src).toContain('overviewShopTile');
+    expect(src).toContain('admin-hub-bento--no-shop');
     expect(src).not.toContain('/preview/');
     expect(src).not.toContain('publicToken');
     expect(src).not.toContain('app=services');
     expect(src).not.toContain('app=team');
+  });
+
+  it('keeps bento source order as mobile / screen-reader order', () => {
+    const bento = src.slice(src.indexOf('class:list={['), src.lastIndexOf('admin-hub-bento__activity'));
+    const tiles = [...bento.matchAll(/data-tile="([^"]+)"/g)].map((match) => match[1]);
+    const first = tiles.filter((id, index) => tiles.indexOf(id) === index);
+    expect(first).toEqual(['progress', 'preview', 'content', 'shop', 'changes', 'colours']);
   });
 });

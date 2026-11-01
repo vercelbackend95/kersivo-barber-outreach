@@ -30,10 +30,26 @@ export const ADMIN_HUB_LAUNCH_READONLY =
 
 export const ADMIN_HUB_TILE_PROGRESS = 'Your website build';
 export const ADMIN_HUB_TILE_PREVIEW = 'Your preview';
+export const ADMIN_HUB_TILE_CONTENT = 'Website content';
+export const ADMIN_HUB_TILE_SHOP = 'Your shop';
 export const ADMIN_HUB_TILE_COLOURS = 'Brand colours';
 export const ADMIN_HUB_TILE_MESSAGES = 'Messages';
 export const ADMIN_HUB_TILE_CHANGES = 'Changes';
 export const ADMIN_HUB_TILE_ACTIVITY = 'Activity';
+export const ADMIN_HUB_CONTENT_EMPTY =
+  'Photos, your logo and a few lines of text help us build a site that feels like your shop.';
+export const ADMIN_HUB_NOT_ADDED = 'Not added';
+export const ADMIN_HUB_CONTENT_DONE = '✓';
+export const ADMIN_HUB_SHOP_TEAM = 'Team';
+export const ADMIN_HUB_SHOP_SERVICES = 'Services';
+export const ADMIN_HUB_SHOP_PRODUCTS = 'Products';
+export const ADMIN_HUB_SHOP_TEAM_COUNT = (n: number) =>
+  n === 1 ? '1 team member' : `${n} team members`;
+export const ADMIN_HUB_SHOP_SERVICES_COUNT = (n: number) => (n === 1 ? '1 service' : `${n} services`);
+export const ADMIN_HUB_SHOP_PRODUCTS_COUNT = (n: number) => (n === 1 ? '1 product' : `${n} products`);
+export const ADMIN_HUB_SHOP_TEAM_ADD = 'Add your first team member';
+export const ADMIN_HUB_SHOP_SERVICES_ADD = 'Add your first service';
+export const ADMIN_HUB_SHOP_PRODUCTS_ADD = 'Add your first product';
 export const ADMIN_HUB_OPEN = 'Open';
 export const ADMIN_HUB_STEP_TODAY = 'Today';
 export const ADMIN_HUB_STAGE_OF = (current: number, total: number, label: string) =>

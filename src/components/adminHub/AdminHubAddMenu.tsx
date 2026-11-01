@@ -22,6 +22,7 @@ import {
   type HubAddMenuGroup,
   type HubAddMenuItem,
 } from '@/lib/adminHub/addMenu';
+import { adminHubAppHref } from '@/lib/adminHub/apps';
 import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
 import { AdminHubSheet } from './AdminHubSheet';
 
@@ -65,6 +66,9 @@ export function AdminHubAddMenu(props: {
   capabilities: HubCapabilities;
   canAddShop?: boolean;
   tone?: 'primary' | 'outline';
+  variant?: 'header' | 'inline';
+  label?: string;
+  testId?: string;
 }) {
   const menu = useMemo(
     () =>
@@ -76,6 +80,8 @@ export function AdminHubAddMenu(props: {
     [props.capabilities.canUpload, props.capabilities.canEditDetails, props.canAddShop],
   );
   const tone = props.tone ?? (props.stage === 'requested' || props.stage === 'designing' ? 'primary' : 'outline');
+  const variant = props.variant ?? 'header';
+  const label = props.label ?? ADMIN_HUB_ADD;
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -138,7 +144,14 @@ export function AdminHubAddMenu(props: {
     else queueMicrotask(() => node?.focus());
   }, [open, activeIndex]);
 
-  if (menu.empty) return null;
+  if (menu.empty) {
+    if (variant !== 'inline') return null;
+    return (
+      <a className="btn btn--ghost btn--sm admin-hub-add-menu__fallback" href={adminHubAppHref('materials')}>
+        {label}
+      </a>
+    );
+  }
 
   const move = (next: number) => {
     const count = items.length;
@@ -226,28 +239,35 @@ export function AdminHubAddMenu(props: {
     </div>
   );
 
+  const triggerClass =
+    variant === 'inline'
+      ? 'btn btn--ghost btn--sm admin-hub-add-menu__inline'
+      : `btn btn--sm admin-add-btn${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`;
+
   return (
-    <div className="admin-hub-add-menu">
+    <div className={`admin-hub-add-menu${variant === 'inline' ? ' admin-hub-add-menu--inline' : ''}`}>
       <button
         ref={triggerRef}
         type="button"
-        className={`btn btn--sm admin-add-btn${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`}
+        className={triggerClass}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        data-testid="admin-hub-add"
+        data-testid={props.testId ?? (variant === 'inline' ? 'admin-hub-add-inline' : 'admin-hub-add')}
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKeyDown}
       >
-        <Plus aria-hidden />
-        <span>{ADMIN_HUB_ADD}</span>
-        <ChevronDown
-          aria-hidden
-          width={14}
-          height={14}
-          strokeWidth={2}
-          className={`admin-hub-add-menu__chevron${open ? ' is-open' : ''}`}
-        />
+        {variant === 'inline' ? null : <Plus aria-hidden />}
+        <span>{label}</span>
+        {variant === 'inline' ? null : (
+          <ChevronDown
+            aria-hidden
+            width={14}
+            height={14}
+            strokeWidth={2}
+            className={`admin-hub-add-menu__chevron${open ? ' is-open' : ''}`}
+          />
+        )}
       </button>
       {open && !mobile ? list : null}
       {open && mobile ? (
