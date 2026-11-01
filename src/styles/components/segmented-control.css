@@ -1,0 +1,96 @@
+/* Shared pill segmented control (calculator .calc-segmented + admin hub toolbar).
+   Black track, pill radius, active = light fill + inset red underline, focus ring. */
+
+.calc-segmented {
+  display: inline-flex;
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #060708;
+}
+
+.calc-segmented__option {
+  position: relative;
+  display: inline-flex;
+}
+
+.calc-segmented__option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.calc-segmented__option span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.44rem;
+  min-width: 4.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.calc-segmented__option input:checked + span,
+.calc-segmented__option.is-on > span,
+.calc-segmented__option[aria-current='page'] > span,
+.calc-segmented__option[aria-pressed='true'] > span,
+.calc-segmented__option[aria-checked='true'] > span {
+  border-color: color-mix(in srgb, var(--fg) 16%, transparent);
+  background: color-mix(in srgb, var(--fg) 11%, #060708);
+  color: var(--fg);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.calc-segmented__option input:focus-visible + span,
+.calc-segmented__option:focus-visible > span {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.calc-segmented--small .calc-segmented__option span {
+  min-width: 3.5rem;
+  min-height: 2.25rem;
+}
+
+.calc-segmented--grow {
+  display: flex;
+  width: 100%;
+}
+
+.calc-segmented--grow .calc-segmented__option {
+  flex: 1;
+}
+
+.calc-segmented--grow .calc-segmented__option span {
+  width: 100%;
+  min-width: 0;
+}
+
+a.calc-segmented__option,
+button.calc-segmented__option {
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calc-segmented__option span {
+    transition: none;
+  }
+}

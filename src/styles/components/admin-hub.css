@@ -1,8 +1,11 @@
 /* /admin hub mode shell (docs/admin-hub/ADMIN_HUB_SPEC.md §3, mockups 01/03/04). Only loaded by /admin/hub. */
 
+@import './segmented-control.css';
+
 .admin-hub {
   --bg: #030303;
   --fg: #fff8ee;
+  --focus: #fff;
   --muted: #c9c1b7;
   --admin-hub-muted-2: #8f877e;
   --surface-2: #0d0d0d;
@@ -15,6 +18,7 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  overflow-x: hidden;
   background: var(--bg);
   color: var(--fg);
 }
@@ -2191,5 +2195,278 @@
     width: 100%;
     order: 2;
     justify-content: center;
+  }
+}
+
+/* ───────── Website page (mockups 03 / 05) ───────── */
+.admin-hub-website,
+.admin-hub-changes,
+.admin-hub-locked {
+  min-width: 0;
+}
+.admin-hub-wtoolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #0d0d0e, #080809);
+  border: 1px solid var(--admin-hub-hair);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 18px 40px -24px rgba(0, 0, 0, 0.8);
+}
+.admin-hub-wtoolbar .calc-segmented {
+  flex: 0 0 auto;
+}
+.admin-hub-wtoolbar .calc-segmented .calc-segmented__option span {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 13px;
+}
+.admin-hub-wtoolbar__spacer {
+  flex: 1;
+  min-width: 0;
+}
+.admin-hub-wtoolbar__note {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--admin-hub-muted-2);
+}
+.admin-hub-wtoolbar__note--mobile {
+  display: none;
+}
+.admin-hub-wtoolbar__desktop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.admin-hub-wtoolbar__mobile {
+  display: none;
+}
+.admin-hub-stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--admin-hub-hair);
+  background:
+    radial-gradient(70% 60% at 50% 0%, rgba(215, 38, 56, 0.08), transparent 70%),
+    #070707;
+  padding: 22px;
+  display: grid;
+  justify-items: center;
+}
+.admin-hub-stage--phone {
+  padding: 18px;
+}
+.admin-hub-stage__fit {
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+}
+.admin-hub-stage--phone .admin-hub-stage__fit {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.9);
+}
+.admin-hub-stage--desktop .admin-hub-stage__fit {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
+}
+.admin-hub-stage__frame {
+  transform-origin: top left;
+  background: #080809;
+}
+.admin-hub-stage__iframe,
+.admin-hub-stage__booking {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #080809;
+}
+.admin-hub-stage__booking {
+  overflow: auto;
+}
+/* Brand red on the stage (#080809) is 4.02:1 at 12px. Lift so WCAG AA holds. */
+.admin-hub-stage__booking .booking-flow--wizard .booking-flow__eyebrow {
+  color: #e84555;
+}
+.admin-hub-stage__empty {
+  margin: 0;
+  padding: 24px;
+  color: var(--muted);
+}
+.admin-hub-stage__badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-hub-hair);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* ───────── Changes page ───────── */
+.admin-hub-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 88px;
+}
+.admin-hub-changes__stats {
+  margin: 0;
+}
+.admin-hub-changes__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.admin-hub-changes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.admin-hub-changes__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: start;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--admin-hub-hair);
+  background: linear-gradient(180deg, #0d0d0e, #080809);
+}
+.admin-hub-changes__body p {
+  margin: 0;
+  font-size: 14px;
+}
+.admin-hub-changes__note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.admin-hub-changes__item-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-hub-changes__suggest-short {
+  display: none;
+}
+.admin-hub-changes__send {
+  position: sticky;
+  bottom: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--admin-hub-hair);
+  background: rgba(8, 8, 9, 0.92);
+}
+.admin-hub-changes__send .btn {
+  width: 100%;
+}
+.admin-hub-changes__send p,
+.admin-hub-changes__error {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+@supports (backdrop-filter: blur(10px)) {
+  .admin-hub-changes__send {
+    background: rgba(8, 8, 9, 0.78);
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-hub-wtoolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 0;
+    margin-bottom: 12px;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .admin-hub-wtoolbar .calc-segmented {
+    width: 100%;
+    display: flex;
+  }
+  .admin-hub-wtoolbar .calc-segmented .calc-segmented__option {
+    flex: 1;
+  }
+  .admin-hub-wtoolbar .calc-segmented .calc-segmented__option span {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-hub-wtoolbar__spacer,
+  .admin-hub-wtoolbar__note--bar,
+  .admin-hub-wtoolbar__desktop-btn {
+    display: none;
+  }
+  .admin-hub-wtoolbar__mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .admin-hub-wtoolbar__mobile .btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .admin-hub-wtoolbar__note--mobile {
+    display: inline-flex;
+    margin-top: 12px;
+  }
+  .admin-hub-stage {
+    padding: 0;
+    justify-items: start;
+  }
+  .admin-hub-stage--phone {
+    padding: 0;
+  }
+  .admin-hub-changes {
+    padding-bottom: calc(var(--admin-hub-tabs) + 72px);
+  }
+  .admin-hub-changes__send {
+    bottom: calc(var(--admin-hub-tabs) + 8px);
+  }
+  .admin-hub-changes__suggest-full {
+    display: none;
+  }
+  .admin-hub-changes__suggest-short {
+    display: inline;
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-hub-changes__send {
+    bottom: 16px;
   }
 }

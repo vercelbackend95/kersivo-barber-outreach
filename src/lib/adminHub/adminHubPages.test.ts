@@ -73,6 +73,9 @@ describe('/admin hub page never exposes the token', () => {
     expect(tokens.every((value) => value === 'token=""')).toBe(true);
     expect(page).toContain('apiBase={ADMIN_HUB_API_BASE}');
     expect(page).toContain('<AppHost client:load');
+    expect(page).toContain('<AdminHubWebsite');
+    expect(page).toContain('<AdminHubChanges');
+    expect(page).not.toContain('HubWebsiteView');
     expect(page).not.toContain('HubYourShop');
     expect(page).not.toContain('HubMessages');
   });

@@ -1,0 +1,45 @@
+---
+export type SegmentedOption = {
+  value: string;
+  label: string;
+};
+
+export interface Props {
+  name: string;
+  options: readonly SegmentedOption[];
+  value?: string;
+  size?: 'default' | 'small';
+  class?: string;
+  legend?: string;
+  as?: 'div' | 'fieldset';
+  'data-calc-period'?: boolean | string;
+}
+
+const {
+  name,
+  options,
+  value,
+  size = 'default',
+  class: className,
+  legend,
+  as = 'div',
+  ...rest
+} = Astro.props;
+
+const Tag = as;
+---
+
+<Tag
+  class:list={['calc-segmented', size === 'small' && 'calc-segmented--small', className]}
+  {...rest}
+>
+  {legend && as === 'fieldset' ? <legend class="sr-only">{legend}</legend> : null}
+  {
+    options.map((option: SegmentedOption) => (
+      <label class="calc-segmented__option">
+        <input type="radio" name={name} value={option.value} checked={option.value === value} />
+        <span>{option.label}</span>
+      </label>
+    ))
+  }
+</Tag>

@@ -9,13 +9,15 @@ const shotDir = join(root, 'docs/admin-hub/screens/batch-1');
 const shotDir2 = join(root, 'docs/admin-hub/screens/batch-2');
 const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
 const shotDir4 = join(root, 'docs/admin-hub/screens/batch-4');
+const shotDir5 = join(root, 'docs/admin-hub/screens/batch-5');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
 mkdirSync(shotDir3, { recursive: true });
 mkdirSync(shotDir4, { recursive: true });
+mkdirSync(shotDir5, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
-const HEIGHT: Record<number, number> = { 390: 844, 768: 1024, 1280: 800, 1440: 900 };
+const HEIGHT: Record<number, number> = { 360: 800, 390: 844, 768: 1024, 1280: 800, 1440: 900 };
 
 type Seed = {
   ops: { email: string; password: string };
@@ -133,7 +135,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
 
     await openEmailLink(page, `/preview/${t}/website`, t, '/admin?section=website');
     await expect(page.locator('.admin-hub-navlink[aria-current="page"]')).toHaveText(/Website/);
-    await expect(page.locator('.hub-website')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-website')).toBeVisible();
     await shots(page, 'ready-website', [390, 768, 1280, 1440]);
 
     await openEmailLink(page, `/preview/${t}/website?view=booking`, t, '/admin?section=website&view=booking');
@@ -501,5 +503,147 @@ test.describe('Admin Hub batch 4 — Brand colours', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await expectNoHorizontalScroll(page, 'ops-overview-colours@390');
     await page.screenshot({ path: join(shotDir4, 'ops-overview-colours-390.png'), fullPage: true });
+  });
+});
+
+test.describe('Admin Hub batch 5 — Website and Changes', () => {
+  test.beforeAll(async ({ request }) => {
+    if (seed) return;
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  async function shots5(page: Page, name: string, widths: number[]) {
+    await page.addStyleTag({ content: 'astro-dev-toolbar { display: none !important; }' });
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+      await page.waitForTimeout(300);
+      await expectNoHorizontalScroll(page, `${name}@${width}`);
+      await page.screenshot({ path: join(shotDir5, `${name}-${width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+
+  async function axe5(page: Page, name: string, width: number) {
+    await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+    const results = await new AxeBuilder({ page }).include('.admin-hub').analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    if (serious.length) writeFileSync(join(shotDir5, `axe-${name}-${width}.json`), JSON.stringify(serious, null, 2));
+    expect(serious, `${name}@${width} axe`).toEqual([]);
+  }
+
+  test('Website scales desktop on a phone and remembers the device', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin?section=website');
+    const website = page.getByTestId('admin-hub-website');
+    await expect(website).toBeVisible();
+    await expect(website).toHaveAttribute('data-ready', 'true');
+    await expect(website).toHaveAttribute('data-device', 'phone');
+    await expect(page.getByRole('link', { name: 'Website' }).first()).toHaveAttribute('aria-current', 'page');
+    await page.getByRole('radiogroup', { name: 'Device' }).getByRole('radio', { name: 'Desktop' }).click();
+    await expect(website).toHaveAttribute('data-device', 'desktop');
+    await expect(page.getByTestId('admin-hub-scale-badge')).toContainText('1280px · scaled to fit');
+    await expect(page.evaluate(() => localStorage.getItem('ks_admin_hub_website_device'))).resolves.toBe('desktop');
+    await shots5(page, 'ready-website-desktop', [360, 390, 768, 1440]);
+    await page.getByRole('radiogroup', { name: 'Device' }).getByRole('radio', { name: 'Phone' }).click();
+    await expect(website).toHaveAttribute('data-device', 'phone');
+    await shots5(page, 'ready-website-phone', [360, 390, 768, 1440]);
+    await axe5(page, 'ready-website', 390);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await axe5(page, 'ready-website', 1440);
+  });
+
+  test('Booking uses the same scaled stage', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(
+      page,
+      `/preview/${seed.ready.token}/website?view=booking`,
+      seed.ready.token,
+      '/admin?section=website&view=booking',
+    );
+    const website = page.getByTestId('admin-hub-website');
+    await expect(website).toBeVisible();
+    await expect(website).toHaveAttribute('data-view', 'booking');
+    await expect(page.getByRole('link', { name: 'Booking' }).first()).toHaveAttribute('aria-current', 'page');
+    await shots5(page, 'ready-booking', [390, 1440]);
+    await axe5(page, 'ready-booking', 390);
+    await axe5(page, 'ready-booking', 1440);
+  });
+
+  test('Changes page lists chips and opens the composer sheet', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}/changes`, seed.ready.token, '/admin?section=changes');
+    const changes = page.getByTestId('admin-hub-changes');
+    await expect(changes).toBeVisible();
+    await expect(changes).toContainText('Drafts');
+    await expect(changes).toContainText('With KERSIVO');
+    await expect(page.getByRole('button', { name: 'Send changes to KERSIVO' })).toBeVisible();
+    await page.getByRole('button', { name: /Suggest a change|Suggest/ }).click();
+    await expect(page.getByTestId('admin-hub-suggest')).toBeVisible();
+    await expect(page.getByTestId('hub-change-body')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('admin-hub-suggest')).toHaveCount(0);
+    await shots5(page, 'ready-changes', [390, 1440]);
+    await axe5(page, 'ready-changes', 390);
+    await axe5(page, 'ready-changes', 1440);
+  });
+
+  test('Website and Changes stay locked before Review', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openEmailLink(page, `/preview/${seed.requested.token}/website`, seed.requested.token, '/admin?section=website');
+    await expect(page.getByTestId('admin-hub-website-locked')).toContainText('Available when your preview is ready');
+    await shots5(page, 'requested-website-locked', [390, 1440]);
+    await openEmailLink(page, `/preview/${seed.requested.token}/changes`, seed.requested.token, '/admin?section=changes');
+    await expect(page.getByTestId('admin-hub-changes-locked')).toContainText('Available when your preview is ready');
+    await shots5(page, 'requested-changes-locked', [390, 1440]);
+  });
+
+  test('calculator pills are unchanged after the extract', async ({ page }) => {
+    const hideChrome = async () => {
+      await page.addStyleTag({
+        content: 'astro-dev-toolbar,[data-cookie-banner],.cc-window{display:none!important}',
+      });
+    };
+    for (const width of [390, 1440] as const) {
+      await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+      const live = await page.goto('https://kersivo.co.uk/barber-software-cost-calculator', {
+        waitUntil: 'domcontentloaded',
+      });
+      if (live?.ok()) {
+        await hideChrome();
+        const livePills = page.locator('[data-calc-period]').first();
+        if (await livePills.count()) {
+          await livePills.scrollIntoViewIfNeeded();
+          if (await livePills.isVisible()) {
+            await page.screenshot({ path: join(shotDir5, `calc-before-${width}.png`), fullPage: true });
+            await livePills.screenshot({ path: join(shotDir5, `calc-before-pills-${width}.png`) });
+          }
+        }
+      }
+      await page.goto('/barber-software-cost-calculator', { waitUntil: 'domcontentloaded' });
+      await hideChrome();
+      const afterPills = page.locator('[data-calc-period]').first();
+      await expect(afterPills).toBeVisible();
+      await expect(page.locator('[data-calc-period] input[name="period"]').first()).toBeVisible();
+      await afterPills.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: join(shotDir5, `calc-after-${width}.png`), fullPage: true });
+      await afterPills.screenshot({ path: join(shotDir5, `calc-after-pills-${width}.png`) });
+    }
+  });
+
+  test('segmented controls are keyboard reachable', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}/website`, seed.ready.token, '/admin?section=website');
+    const website = page.getByTestId('admin-hub-website');
+    await expect(website).toHaveAttribute('data-ready', 'true');
+    const device = page.getByRole('radiogroup', { name: 'Device' });
+    await device.getByRole('radio', { name: 'Phone' }).click();
+    await device.getByRole('radio', { name: 'Phone' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('admin-hub-website')).toHaveAttribute('data-device', 'desktop');
+    await page.getByRole('link', { name: 'Booking' }).first().focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/section=website&view=booking/);
   });
 });

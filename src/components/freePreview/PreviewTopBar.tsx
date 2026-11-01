@@ -241,11 +241,11 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
           />
           <span>
             I agree to the{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" data-astro-reload="" data-astro-prefetch="false">
               Terms of Service
             </a>
             , including the{' '}
-            <a href="/dpa" target="_blank" rel="noopener noreferrer">
+            <a href="/dpa" target="_blank" rel="noopener noreferrer" data-astro-reload="" data-astro-prefetch="false">
               Data Processing Agreement
             </a>{' '}
             where applicable, and understand I am starting a £39/month subscription for one physical location.

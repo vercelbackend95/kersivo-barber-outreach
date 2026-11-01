@@ -15,6 +15,9 @@ const ENTRIES = [
   'components/previewHub/HubLaunchChecklist.tsx',
   'components/previewHub/HubUploader.tsx',
   'components/adminHub/AppHost.tsx',
+  'components/adminHub/AdminHubWebsite.tsx',
+  'components/adminHub/AdminHubChanges.tsx',
+  'components/ui/SegmentedControl.tsx',
 ];
 
 const FORBIDDEN_PACKAGES = [/^@prisma\/client$/, /^\.prisma\//, /^dotenv$/];
