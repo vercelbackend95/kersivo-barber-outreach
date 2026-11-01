@@ -50,6 +50,10 @@ export type HubShopDetails = {
   brandSecondaryColour: string | null;
   styleNotes: string | null;
   aboutText: string | null;
+  brandBackgroundTone?: 'DARK' | 'LIGHT' | null;
+  brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
+  brandPaletteExtracted?: Array<{ hex: string; share: number }> | null;
+  brandColoursSentAt?: string | null;
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';

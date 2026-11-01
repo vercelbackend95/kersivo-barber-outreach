@@ -11,9 +11,10 @@ describe('admin hub apps', () => {
     expect(parseAdminHubApp('')).toBeNull();
   });
 
-  it('opens colours as the logo app until Batch 4', () => {
-    expect(resolveAdminHubApp('colours')).toBe('logo');
-    expect(adminHubAppMeta('colours').title).toBe('Logo');
+  it('opens colours as its own app', () => {
+    expect(resolveAdminHubApp('colours')).toBe('colours');
+    expect(adminHubAppMeta('colours').title).toBe('Brand colours');
+    expect(adminHubAppMeta('colours').crumb).toBe('Overview › Brand colours');
   });
 
   it('keeps messages on the narrow window', () => {

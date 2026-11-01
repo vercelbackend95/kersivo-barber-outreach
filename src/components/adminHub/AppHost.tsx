@@ -7,6 +7,7 @@ import {
   ListChecks,
   MessageCircle,
   NotebookPen,
+  Palette,
   Scissors,
   Store,
   Ticket,
@@ -23,12 +24,13 @@ import {
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
+import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './apps/AppChrome';
 import type { AdminHubAppBodyProps, AdminHubAppContext } from './apps/types';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const ICONS: Record<ReturnType<typeof resolveAdminHubApp>, typeof Store> = {
+const ICONS: Record<AdminHubAppId, typeof Store> = {
   logo: ImagePlus,
   photos: Camera,
   services: Scissors,
@@ -37,6 +39,7 @@ const ICONS: Record<ReturnType<typeof resolveAdminHubApp>, typeof Store> = {
   about: NotebookPen,
   messages: MessageCircle,
   activity: TrendingUp,
+  colours: Palette,
   setup: ListChecks,
   business: Store,
   domain: Globe,
@@ -87,6 +90,7 @@ export function AppHost(props: {
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [Body, setBody] = useState<ComponentType<AdminHubAppBodyProps> | null>(null);
+  const [chrome, setChrome] = useState<AdminHubAppChrome>(emptyAppChrome);
   const loader = props.loadApp ?? loadAdminHubApp;
 
   useEffect(() => {
@@ -101,6 +105,7 @@ export function AppHost(props: {
     if (!app) {
       setBody(null);
       setLoadError(false);
+      setChrome(emptyAppChrome);
       return;
     }
     let cancelled = false;
@@ -250,6 +255,7 @@ export function AppHost(props: {
             </h2>
             <p className="admin-hub-app__crumb">{meta.crumb}</p>
           </div>
+          {chrome.headerAction ? <div className="admin-hub-app__action">{chrome.headerAction}</div> : null}
           <button
             ref={closeRef}
             type="button"
@@ -264,11 +270,14 @@ export function AppHost(props: {
           {loadError ? (
             <AppStatus state="error" onRetry={() => setRetry((n) => n + 1)} />
           ) : Body ? (
-            <Body ctx={props.ctx} />
+            <AppChromeProvider setChrome={setChrome}>
+              <Body ctx={props.ctx} />
+            </AppChromeProvider>
           ) : (
             <AppStatus state="loading" />
           )}
         </div>
+        {chrome.footer ? <div className="admin-hub-app__foot">{chrome.footer}</div> : null}
       </div>
     </div>
   );

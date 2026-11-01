@@ -8,9 +8,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shotDir = join(root, 'docs/admin-hub/screens/batch-1');
 const shotDir2 = join(root, 'docs/admin-hub/screens/batch-2');
 const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
+const shotDir4 = join(root, 'docs/admin-hub/screens/batch-4');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
 mkdirSync(shotDir3, { recursive: true });
+mkdirSync(shotDir4, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -417,5 +419,87 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="progress"]')).toContainText('Our steps');
     await expect(overview.locator('[data-tile="progress"]')).toContainText('Connect your domain');
     await shots3(page, 'launch-overview', [390, 1440]);
+  });
+});
+
+test.describe('Admin Hub batch 4 — Brand colours', () => {
+  test.beforeAll(async ({ request }) => {
+    if (seed) return;
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  async function shots4(page: Page, name: string, widths: number[]) {
+    await page.addStyleTag({ content: 'astro-dev-toolbar { display: none !important; }' });
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+      await page.waitForTimeout(250);
+      await expectNoHorizontalScroll(page, `${name}@${width}`);
+      await page.screenshot({ path: join(shotDir4, `${name}-${width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+
+  async function axeColours(page: Page, name: string, width: number) {
+    await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+    await page.addStyleTag({
+      content: '.admin-hub-app--sheet,.admin-hub-app--window{animation:none!important}',
+    });
+    await page.waitForTimeout(350);
+    const results = await new AxeBuilder({ page }).include('[data-testid="admin-hub-app"]').analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    if (serious.length) writeFileSync(join(shotDir4, `axe-${name}-${width}.json`), JSON.stringify(serious, null, 2));
+    expect(serious, `${name}@${width} axe`).toEqual([]);
+  }
+
+  test('Overview tile opens Brand colours and shows Not sent yet', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    const tile = page.locator('[data-tile="colours"]');
+    await expect(tile).toHaveAttribute('href', '/admin?app=colours');
+    await expect(tile).toContainText('colours found in your logo');
+    await expect(tile).toContainText('Not sent yet');
+    await expect(tile).toContainText('#1F6F6B');
+    await tile.click();
+    const dialog = page.getByTestId('admin-hub-app');
+    await expect(dialog).toBeVisible();
+    expect(await dialog.getAttribute('data-app')).toBe('colours');
+    await expect(page.getByRole('heading', { name: 'Brand colours' })).toBeVisible();
+    const colours = page.getByTestId('admin-hub-colours');
+    await expect(colours).toBeVisible();
+    await expect(colours.getByText('Found in your logo')).toBeVisible();
+    await expect(colours.getByText('Fine-tune main colour')).toBeVisible();
+    await expect(colours.getByText('How it looks on your site')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send colours to KERSIVO' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Save draft' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Let KERSIVO choose' }).first()).toBeVisible();
+    await shots4(page, 'ready-colours', [390, 768, 1280, 1440]);
+    await axeColours(page, 'ready-colours', 390);
+    await axeColours(page, 'ready-colours', 1440);
+
+    await page.getByTestId('admin-hub-role-accent').click();
+    await page.getByTestId('admin-hub-swatch-141414').click();
+    await page.getByRole('button', { name: 'Send colours to KERSIVO' }).click();
+    await expect(page.getByRole('status')).toContainText("Thanks — we'll use these colours");
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-tile="colours"]')).toContainText('Sent');
+  });
+
+  test('Ops Overview shows swatches with hex, role, source and copy', async ({ page }) => {
+    await signIn(page, seed.ops.email, seed.ops.password);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`/ops/preview-requests/${seed.ready.id}`, { waitUntil: 'domcontentloaded' });
+    const panel = page.getByTestId('ops-brand-colours');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('#1F6F6B');
+    await expect(panel).toContainText('Main');
+    await expect(panel).toContainText('From your logo');
+    await expect(panel).toContainText('Dark');
+    await page.screenshot({ path: join(shotDir4, 'ops-overview-colours-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expectNoHorizontalScroll(page, 'ops-overview-colours@390');
+    await page.screenshot({ path: join(shotDir4, 'ops-overview-colours-390.png'), fullPage: true });
   });
 });

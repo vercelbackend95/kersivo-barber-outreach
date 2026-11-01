@@ -41,7 +41,7 @@ const META: Record<AdminHubAppId, Omit<AdminHubAppMeta, 'id'>> = {
   team: { title: 'Team', crumb: 'Overview › Team', maxWidth: 1120 },
   hours: { title: 'Opening hours', crumb: 'Overview › Opening hours', maxWidth: 1120 },
   about: { title: 'About your shop', crumb: 'Overview › About your shop', maxWidth: 1120 },
-  colours: { title: 'Logo', crumb: 'Overview › Logo', maxWidth: 1120 },
+  colours: { title: 'Brand colours', crumb: 'Overview › Brand colours', maxWidth: 1120 },
   messages: { title: 'Messages', crumb: 'We reply here and by email', maxWidth: 720 },
   activity: { title: 'Activity', crumb: 'Overview › Activity', maxWidth: 1120 },
   setup: { title: 'Your shop', crumb: 'Overview › Your shop', maxWidth: 1120 },
@@ -55,9 +55,8 @@ export function adminHubAppMeta(id: AdminHubAppId): AdminHubAppMeta {
   return { id, ...META[id] };
 }
 
-/** Brand colours is Batch 4; until then the colours query opens the logo app. */
-export function resolveAdminHubApp(id: AdminHubAppId): Exclude<AdminHubAppId, 'colours'> {
-  return id === 'colours' ? 'logo' : id;
+export function resolveAdminHubApp(id: AdminHubAppId): AdminHubAppId {
+  return id;
 }
 
 export function adminHubAppHref(id: AdminHubAppId): string {
