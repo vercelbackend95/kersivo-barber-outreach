@@ -34,6 +34,60 @@ export const GET: APIRoute = async ({ params, url }) => {
     }
   }
 
+  if (action === 'admin-api-inventory') {
+    const { formatAdminApiAllowlistTable, listAdminApiEndpoints } = await import(
+      '@/lib/adminHub/adminApiInventory'
+    );
+    const rows = listAdminApiEndpoints();
+    return json({
+      ok: true,
+      rows,
+      table: formatAdminApiAllowlistTable(rows),
+    });
+  }
+
+  if (action === 'shop-state') {
+    const shopId = (url.searchParams.get('shopId') ?? '').trim();
+    if (!shopId) return json({ ok: false }, 400);
+    const { shopAcceptsPublicBookings } = await import('@/lib/setup/shopPublicBookingGate');
+    const [shop, services, barbers, products, members, acceptingBookings] = await Promise.all([
+      prisma.shopSettings.findUnique({
+        where: { id: shopId },
+        select: {
+          id: true,
+          name: true,
+          ownerUserId: true,
+          retailEnabled: true,
+          retailOnboardingCompleted: true,
+          publicActivityPaused: true,
+          publicActivityPauseReason: true,
+        },
+      }),
+      prisma.service.findMany({
+        where: { shopId },
+        select: { id: true, name: true },
+        orderBy: { displayOrder: 'asc' },
+      }),
+      prisma.barber.findMany({
+        where: { shopId },
+        select: { id: true, name: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
+      prisma.product.findMany({
+        where: { shopId },
+        select: { id: true, name: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
+      prisma.shopMember.findMany({
+        where: { shopId },
+        select: { userId: true, role: true },
+      }),
+      shopAcceptsPublicBookings(shopId),
+    ]);
+    if (!shop) return json({ ok: false }, 404);
+    return json({ ok: true, shop, services, barbers, products, members, acceptingBookings });
+  }
+
   if (action === 'hours') {
     const shopId = (url.searchParams.get('shopId') ?? '').trim();
     if (!shopId) return json({ ok: false }, 400);
