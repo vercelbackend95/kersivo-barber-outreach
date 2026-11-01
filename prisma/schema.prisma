@@ -1636,6 +1636,10 @@ model PreviewRequest {
   /// Shop Hub fields (docs/preview-hub/HUB_SPEC.md §7). Additive; unused until later batches wire them.
   brandPrimaryColour     String?
   brandSecondaryColour   String?
+  brandBackgroundTone    String?
+  brandColoursSource     String?
+  brandPaletteExtracted  Json?
+  brandColoursSentAt     DateTime?
   styleNotes             String?
   aboutText              String?   @db.Text
   includedChangeRounds   Int       @default(1)

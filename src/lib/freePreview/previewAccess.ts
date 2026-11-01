@@ -30,6 +30,10 @@ const previewRequestSelect = {
   changeRoundsUsed: true,
   brandPrimaryColour: true,
   brandSecondaryColour: true,
+  brandBackgroundTone: true,
+  brandColoursSource: true,
+  brandPaletteExtracted: true,
+  brandColoursSentAt: true,
   styleNotes: true,
   aboutText: true,
 } as const;

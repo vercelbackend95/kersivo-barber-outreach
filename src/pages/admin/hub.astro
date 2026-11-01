@@ -6,12 +6,14 @@ import HubDocument from '@/layouts/HubDocument.astro';
 import AdminHubShell from '@/components/adminHub/AdminHubShell.astro';
 import AdminHubOverview from '@/components/adminHub/AdminHubOverview.astro';
 import { AppHost } from '@/components/adminHub/AppHost';
+import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { HubChanges } from '@/components/previewHub/HubChanges';
 import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
 import { adminHubAppMeta } from '@/lib/adminHub/apps';
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
 import { loadAdminHubView, parseAdminHubLocation } from '@/lib/adminHub/hubView';
 import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
+import { parseBrandPalette } from '@/lib/adminHub/brandColours';
 import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import {
@@ -113,7 +115,14 @@ const title = location.app
       : HUB_NAV.overview;
 const initialDraft =
   location.draft === 'reopen' ? HUB_DRAFT_REOPEN : location.draft === 'message' ? HUB_DRAFT_DECLINED : '';
-const appCtx = {
+const rawTone = ctx.request.brandBackgroundTone;
+const brandBackgroundTone: 'DARK' | 'LIGHT' | null =
+  rawTone === 'DARK' || rawTone === 'LIGHT' ? rawTone : null;
+const rawSource = ctx.request.brandColoursSource;
+const brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null =
+  rawSource === 'LOGO' || rawSource === 'MANUAL' || rawSource === 'KERSIVO_CHOOSES' ? rawSource : null;
+const brandPaletteExtracted = parseBrandPalette(ctx.request.brandPaletteExtracted);
+const appCtx: AdminHubAppContext = {
   apiBase: ADMIN_HUB_API_BASE,
   canUpload: caps.canUpload,
   canEditDetails: caps.canEditDetails,
@@ -125,6 +134,10 @@ const appCtx = {
     brandSecondaryColour: ctx.request.brandSecondaryColour,
     styleNotes: ctx.request.styleNotes,
     aboutText: ctx.request.aboutText,
+    brandBackgroundTone,
+    brandColoursSource,
+    brandPaletteExtracted,
+    brandColoursSentAt: ctx.request.brandColoursSentAt ? ctx.request.brandColoursSentAt.toISOString() : null,
   },
   assets: view.assets,
   reviews: view.reviews,
@@ -180,6 +193,9 @@ const appCtx = {
           logoSrc={logoSrc}
           brandColour={ctx.request.brandPrimaryColour}
           brandSecondaryColour={ctx.request.brandSecondaryColour}
+          brandColoursSentAt={ctx.request.brandColoursSentAt}
+          brandColoursSource={brandColoursSource}
+          brandPaletteExtracted={brandPaletteExtracted}
           latestMessage={view.overview.latestMessage}
           unreadMessages={view.unreadMessages}
           changeItems={view.overview.changeItems}

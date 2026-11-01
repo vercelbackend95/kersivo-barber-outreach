@@ -154,7 +154,7 @@ describe('overview view-model', () => {
     expect(Object.values(hrefs).every((href) => href.startsWith('/admin'))).toBe(true);
   });
 
-  it('does not invent a logo palette; status is Not sent yet until Batch 4 fields exist', () => {
+  it('uses extracted palette count and sent / KERSIVO status', () => {
     expect(overviewColours({ hasLogo: false })).toMatchObject({
       swatches: [],
       headline: ADMIN_HUB_COLOURS_EMPTY,
@@ -190,6 +190,19 @@ describe('overview view-model', () => {
         brandColoursSource: 'LOGO',
       }).statusLabel,
     ).toBe(ADMIN_HUB_COLOURS_SENT);
+    expect(
+      overviewColours({
+        hasLogo: true,
+        brandPaletteExtracted: [
+          { hex: '#1F6F6B', share: 0.5 },
+          { hex: '#C9A24A', share: 0.3 },
+          { hex: '#141414', share: 0.14 },
+          { hex: '#F2E8D5', share: 0.06 },
+        ],
+        brandPrimaryColour: '#1F6F6B',
+        brandSecondaryColour: '#C9A24A',
+      }).headline,
+    ).toBe('4 colours found in your logo');
   });
 
   it('counts change buckets and keeps the two latest', () => {

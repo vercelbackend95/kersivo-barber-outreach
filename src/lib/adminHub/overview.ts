@@ -11,6 +11,7 @@ import {
   ADMIN_HUB_CHANGES_WITH,
   ADMIN_HUB_COLOURS_ACCENT,
   ADMIN_HUB_COLOURS_EMPTY,
+  ADMIN_HUB_COLOURS_FOUND,
   ADMIN_HUB_COLOURS_HINT,
   ADMIN_HUB_COLOURS_KERSIVO,
   ADMIN_HUB_COLOURS_MAIN,
@@ -170,9 +171,9 @@ export function overviewColours(input: {
   hasLogo: boolean;
   brandPrimaryColour?: string | null;
   brandSecondaryColour?: string | null;
-  /** Batch 4 fields — always absent until that migration. */
-  brandColoursSentAt?: Date | null;
+  brandColoursSentAt?: Date | string | null;
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
+  brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
 }): {
   swatches: OverviewSwatch[];
   headline: string;
@@ -181,10 +182,22 @@ export function overviewColours(input: {
 } {
   const primary = parseHex(input.brandPrimaryColour);
   const secondary = parseHex(input.brandSecondaryColour);
+  const palette = (input.brandPaletteExtracted ?? [])
+    .map((row) => parseHex(row.hex))
+    .filter((hex): hex is string => Boolean(hex));
+
   const swatches: OverviewSwatch[] = [];
-  if (primary) swatches.push({ hex: primary, role: ADMIN_HUB_COLOURS_MAIN, light: isLightHex(primary) });
-  if (secondary && secondary !== primary) {
-    swatches.push({ hex: secondary, role: ADMIN_HUB_COLOURS_ACCENT, light: isLightHex(secondary) });
+  const seen = new Set<string>();
+  const push = (hex: string, role: OverviewSwatch['role']) => {
+    if (seen.has(hex)) return;
+    seen.add(hex);
+    swatches.push({ hex, role, light: isLightHex(hex) });
+  };
+  if (primary) push(primary, ADMIN_HUB_COLOURS_MAIN);
+  if (secondary && secondary !== primary) push(secondary, ADMIN_HUB_COLOURS_ACCENT);
+  for (const hex of palette) {
+    if (swatches.length >= 4) break;
+    push(hex, null);
   }
 
   const source = input.brandColoursSource;
@@ -194,11 +207,13 @@ export function overviewColours(input: {
   const statusLabel =
     status === 'kersivo' ? ADMIN_HUB_COLOURS_KERSIVO : status === 'sent' ? ADMIN_HUB_COLOURS_SENT : ADMIN_HUB_COLOURS_NOT_SENT;
 
-  const headline = swatches.length
-    ? ADMIN_HUB_COLOURS_SAVED(swatches.length)
-    : input.hasLogo
-      ? ADMIN_HUB_COLOURS_HINT
-      : ADMIN_HUB_COLOURS_EMPTY;
+  const headline = palette.length
+    ? ADMIN_HUB_COLOURS_FOUND(palette.length)
+    : swatches.length
+      ? ADMIN_HUB_COLOURS_SAVED(swatches.length)
+      : input.hasLogo
+        ? ADMIN_HUB_COLOURS_HINT
+        : ADMIN_HUB_COLOURS_EMPTY;
 
   return { swatches, headline, status, statusLabel };
 }

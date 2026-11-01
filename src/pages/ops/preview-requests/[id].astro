@@ -8,7 +8,9 @@ import {
   OpsAccessDenied,
   OpsAccessUnconfigured,
 } from '@/components/ops/recommendations/OpsPageGates';
-import { OPS_PREVIEW_REQUESTS_PATH, isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
+import { OPS_PREVIEW_REQUESTS_PATH, isAdminHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
+import { parseBrandPalette } from '@/lib/adminHub/brandColours';
+import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColours';
 import { ownerFacingStageLabel, resolveHubState } from '@/lib/freePreview/hubStage';
 import { previewPageUrl } from '@/lib/freePreview/emails';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
@@ -88,6 +90,7 @@ function formatDate(value: Date | null | undefined): string {
 }
 
 const hubEnabled = isPreviewHubEnabled();
+const adminHubEnabled = isAdminHubEnabled();
 const hubState = request
   ? resolveHubState({
       request,
@@ -340,6 +343,19 @@ const fields: Array<[string, string]> = request
                   </div>
                 ))}
               </dl>
+              {
+                adminHubEnabled && (!hubEnabled || activeTab === 'overview') ? (
+                  <OpsBrandColours
+                    client:load
+                    primary={request.brandPrimaryColour}
+                    secondary={request.brandSecondaryColour}
+                    tone={request.brandBackgroundTone}
+                    source={request.brandColoursSource}
+                    sentAt={request.brandColoursSentAt ? request.brandColoursSentAt.toISOString() : null}
+                    palette={parseBrandPalette(request.brandPaletteExtracted)}
+                  />
+                ) : null
+              }
 
               {
                 hubEnabled && activeTab !== 'overview' ? (

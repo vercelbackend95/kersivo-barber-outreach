@@ -163,6 +163,16 @@ async function main() {
       expiresAt: new Date(readyAt.getTime() + 30 * 24 * 60 * 60 * 1000),
       includedChangeRounds: 1,
       changeRoundsUsed: 0,
+      brandPrimaryColour: '#1F6F6B',
+      brandSecondaryColour: '#C9A24A',
+      brandBackgroundTone: 'DARK',
+      brandColoursSource: 'LOGO',
+      brandPaletteExtracted: [
+        { hex: '#1F6F6B', share: 0.42 },
+        { hex: '#C9A24A', share: 0.28 },
+        { hex: '#141414', share: 0.18 },
+        { hex: '#F2E8D5', share: 0.12 },
+      ],
     },
   });
   await prisma.previewHubMessage.create({

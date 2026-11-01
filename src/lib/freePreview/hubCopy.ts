@@ -559,6 +559,7 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   hub_live: 'Site live',
   hub_asset_uploaded: 'Files added',
   hub_details_saved: 'Shop details saved',
+  BRAND_COLOURS_SENT: 'You sent your colours',
   hub_message_sent: 'You sent a message',
   ops_hub_message_sent: 'KERSIVO replied',
   hub_review_confirmed: 'You confirmed your details',

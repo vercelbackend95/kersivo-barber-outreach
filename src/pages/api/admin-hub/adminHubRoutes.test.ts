@@ -32,6 +32,7 @@ import * as reviews from './reviews';
 import * as checkout from './checkout';
 import * as event from './event';
 import * as domainSearch from './domain-search';
+import * as brandColours from './brand-colours';
 
 type Handler = (context: never) => Promise<Response> | Response;
 const ROUTES: Array<[string, Record<string, unknown>]> = [
@@ -47,6 +48,7 @@ const ROUTES: Array<[string, Record<string, unknown>]> = [
   ['checkout', checkout],
   ['event', event],
   ['domain-search', domainSearch],
+  ['brand-colours', brandColours],
 ];
 const METHODS = ['GET', 'POST', 'PATCH', 'DELETE'] as const;
 
@@ -79,7 +81,7 @@ afterEach(() => {
 
 describe('/api/admin-hub/*', () => {
   it('mirrors every token hub endpoint', () => {
-    const hubRoutes = ['assets', 'assets/[id]', 'changes', 'changes/[id]', 'changes/send', 'details', 'messages', 'messages/read', 'reviews'];
+    const hubRoutes = ['assets', 'assets/[id]', 'changes', 'changes/[id]', 'changes/send', 'details', 'messages', 'messages/read', 'reviews', 'brand-colours'];
     for (const path of hubRoutes) {
       const source = readFileSync(resolve(process.cwd(), `src/pages/api/admin-hub/${path}.ts`), 'utf8');
       const tokenSource = readFileSync(resolve(process.cwd(), `src/pages/api/preview-hub/[token]/${path}.ts`), 'utf8');

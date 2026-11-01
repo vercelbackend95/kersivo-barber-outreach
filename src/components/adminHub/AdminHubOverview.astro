@@ -17,6 +17,7 @@ import {
 import {
   ADMIN_HUB_ACTIVITY_SHOW_ALL,
   ADMIN_HUB_COLOURS_MINUTE,
+  ADMIN_HUB_COLOURS_TUNE,
   ADMIN_HUB_MESSAGES_EMPTY,
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_ACTIVITY,
@@ -76,6 +77,9 @@ interface Props {
   screenshotSrc?: string | null;
   brandColour: string | null;
   brandSecondaryColour?: string | null;
+  brandColoursSentAt?: Date | string | null;
+  brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
+  brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
   latestMessage: HubMessagePublic | null;
   unreadMessages: number;
   changeItems: HubChangePublic[];
@@ -95,6 +99,9 @@ const {
   screenshotSrc,
   brandColour,
   brandSecondaryColour,
+  brandColoursSentAt,
+  brandColoursSource,
+  brandPaletteExtracted,
   latestMessage,
   unreadMessages,
   changeItems,
@@ -120,6 +127,9 @@ const colours = overviewColours({
   hasLogo: Boolean(logoSrc),
   brandPrimaryColour: brandColour,
   brandSecondaryColour,
+  brandColoursSentAt,
+  brandColoursSource,
+  brandPaletteExtracted,
 });
 const changes = overviewChanges({
   items: changeItems,
@@ -324,6 +334,7 @@ const terminal = isOverviewTerminal(state.stage);
             </span>
             <p>
               <strong>{colours.headline}</strong>
+              {colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_TUNE}</span> : null}
             </p>
           </div>
           <div class="admin-hub-swatches" aria-hidden={colours.swatches.length ? undefined : 'true'}>
