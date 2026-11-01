@@ -14,6 +14,7 @@ export function PreviewAdminChrome(props: {
   setup: SetupCardModel | null;
   underConstruction: boolean;
   isOperator: boolean;
+  unreadMessages?: number;
   children: ReactNode;
 }) {
   return (
@@ -23,6 +24,7 @@ export function PreviewAdminChrome(props: {
       previewSetup={props.setup}
       previewOperator={props.isOperator}
       previewUnderConstruction={props.underConstruction}
+      previewUnreadMessages={props.unreadMessages ?? 0}
       shopName={props.shopName}
       shopLogoUrl={props.shopLogoUrl}
       profileUser={props.profileUser}

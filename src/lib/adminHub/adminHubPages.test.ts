@@ -87,7 +87,9 @@ describe('/admin hub pages never expose the token', () => {
     expect(changes).toContain('<AdminHubChanges');
     expect(website).not.toContain('HubWebsiteView');
     expect(website).not.toContain('HubYourShop');
-    expect(read('src/pages/admin/messages.astro')).not.toContain('HubMessages');
+    expect(read('src/pages/admin/messages.astro')).toContain('AdminHubMessages');
+    expect(read('src/pages/admin/messages.astro')).toContain('token=""');
+    expect(read('src/pages/admin/messages.astro')).not.toContain('admin-hub-messages-placeholder');
   });
 
   it('never reads the token or builds /preview URLs', () => {

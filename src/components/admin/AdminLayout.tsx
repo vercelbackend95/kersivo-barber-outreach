@@ -31,7 +31,7 @@ import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
 import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
-import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER } from '@/lib/adminHub/copy';
+import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER, ADMIN_HUB_UNREAD_COUNT } from '@/lib/adminHub/copy';
 import { PREVIEW_HUB_PATHS, type PreviewHubSection } from '@/lib/adminHub/previewHubPaths';
 import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import { clearAdminSecret } from './adminAuth';
@@ -54,6 +54,8 @@ type AdminLayoutProps = {
   previewSection?: PreviewHubSection;
   previewSetup?: SetupCardModel | null;
   previewOperator?: boolean;
+  /** Unread KERSIVO messages in preview hub. Paid admin ignores this. */
+  previewUnreadMessages?: number;
   activeSection?: AdminSection;
   onChangeSection?: (section: AdminSection) => void;
   isTransitioning: boolean;
@@ -255,6 +257,7 @@ export default function AdminLayout({
   previewSection = 'overview',
   previewSetup = null,
   previewOperator = false,
+  previewUnreadMessages = 0,
   activeSection = 'bookings_dashboard',
   onChangeSection,
   isTransitioning,
@@ -534,18 +537,27 @@ export default function AdminLayout({
       {isPreviewChrome ? (
         <div className="admin-sidebar-group">
           <p className="admin-sidebar-group-title">{ADMIN_HUB_NAV_GROUP}</p>
-          {previewNavItems.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              className={`admin-sidebar-link${previewSection === item.id ? ' admin-sidebar-link--active' : ''}`}
-              aria-current={previewSection === item.id ? 'page' : undefined}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <span className="admin-sidebar-link-icon">{item.icon}</span>
-              <span className="admin-sidebar-link-label">{item.label}</span>
-            </a>
-          ))}
+          {previewNavItems.map((item) => {
+            const unread = item.id === 'messages' && previewUnreadMessages > 0 ? previewUnreadMessages : 0;
+            return (
+              <a
+                key={item.id}
+                href={item.href}
+                className={`admin-sidebar-link${previewSection === item.id ? ' admin-sidebar-link--active' : ''}`}
+                aria-current={previewSection === item.id ? 'page' : undefined}
+                aria-label={unread ? `${item.label}, ${ADMIN_HUB_UNREAD_COUNT(unread)}` : undefined}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="admin-sidebar-link-icon">{item.icon}</span>
+                <span className="admin-sidebar-link-label">{item.label}</span>
+                {unread ? (
+                  <span className="admin-sidebar-link-badge" data-testid="admin-hub-unread" aria-hidden="true">
+                    {unread}
+                  </span>
+                ) : null}
+              </a>
+            );
+          })}
         </div>
       ) : (
         visibleMenuGroups.map((group) => (

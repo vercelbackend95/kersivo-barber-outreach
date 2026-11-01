@@ -26,6 +26,7 @@ const profileUser = {
   setup={data.view.setup}
   underConstruction={data.underConstruction}
   isOperator={data.ctx.isOperator}
+  unreadMessages={data.view.unreadMessages}
 >
   <slot />
   <AppHost client:load initialApp={data.location.app} ctx={data.appCtx} />

@@ -9,7 +9,6 @@ import {
   ListChecks,
   MessageCircle,
   Palette,
-  Paperclip,
   Smartphone,
   Sparkles,
   TrendingUp,
@@ -18,15 +17,12 @@ import {
   ADMIN_HUB_ACTIVITY_SHOW_ALL,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
-  ADMIN_HUB_MESSAGES_EMPTY,
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_ACTIVITY,
   ADMIN_HUB_TILE_CHANGES,
   ADMIN_HUB_TILE_COLOURS,
-  ADMIN_HUB_TILE_MESSAGES,
   ADMIN_HUB_TILE_PREVIEW,
   ADMIN_HUB_TILE_PROGRESS,
-  ADMIN_HUB_WRITE_MESSAGE,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import {
@@ -36,7 +32,6 @@ import {
   overviewChanges,
   overviewChangesLocked,
   overviewColours,
-  overviewLatestMessage,
   overviewNowCopy,
   overviewOurSteps,
   overviewPreviewLocked,
@@ -44,7 +39,6 @@ import {
   overviewShowLaunch,
   overviewStagePill,
   overviewTileHrefs,
-  overviewUnreadLabel,
   shopInitials,
 } from '@/lib/adminHub/overview';
 import type { SetupCardModel } from '@/lib/adminHub/setupCard';
@@ -59,7 +53,6 @@ import {
 } from '@/lib/freePreview/hubCopy';
 import type { HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import type { HubLaunchProgress } from '@/lib/freePreview/hubLaunch';
-import type { HubMessagePublic } from '@/lib/freePreview/hubMessages.shared';
 import { hostnameOf, type HubActivityItem, type HubStepperStep } from '@/lib/freePreview/hubPage';
 import { hubHeaderKind, type HubState } from '@/lib/freePreview/hubStage';
 import type { TokenPreviewRequest } from '@/lib/freePreview/previewAccess';
@@ -80,8 +73,6 @@ interface Props {
   brandColoursSentAt?: Date | string | null;
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
-  latestMessage: HubMessagePublic | null;
-  unreadMessages: number;
   changeItems: HubChangePublic[];
   setup: SetupCardModel | null;
 }
@@ -102,8 +93,6 @@ const {
   brandColoursSentAt,
   brandColoursSource,
   brandPaletteExtracted,
-  latestMessage,
-  unreadMessages,
   changeItems,
   setup,
 } = Astro.props;
@@ -136,8 +125,6 @@ const changes = overviewChanges({
   includedChangeRounds: request.includedChangeRounds,
   changeRoundsUsed: request.changeRoundsUsed,
 });
-const latest = overviewLatestMessage(latestMessage, now);
-const unread = overviewUnreadLabel(unreadMessages);
 const feed = activity.slice(0, 5);
 const initials = shopInitials(shopName);
 const previewColour = brandColour?.trim() || '#d72638';
@@ -356,46 +343,6 @@ const terminal = isOverviewTerminal(state.stage);
             </span>
             {colours.status === 'not_sent' ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
           </div>
-        </a>
-
-        <a class="admin-hub-tile admin-hub-bento__messages" data-tile="messages" href={hrefs.messages}>
-          <div class="admin-hub-tile__head">
-            <span class="admin-hub-tile__icon" aria-hidden="true">
-              <MessageCircle width={15} height={15} strokeWidth={1.8} />
-            </span>
-            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_MESSAGES}</span>
-            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
-              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
-            </span>
-          </div>
-          {
-            latest ? (
-              <div class="admin-hub-msg">
-                <span class:list={['admin-hub-msg__av', latest.author !== 'KERSIVO' && 'admin-hub-msg__av--you']} aria-hidden="true">
-                  {latest.author === 'KERSIVO' ? 'K' : 'Y'}
-                </span>
-                <div>
-                  <div class="admin-hub-msg__bubble">{latest.body}</div>
-                  <div class="admin-hub-msg__meta">
-                    {latest.authorLabel} · {latest.relative}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p class="admin-hub-msg__bubble">{ADMIN_HUB_MESSAGES_EMPTY}</p>
-            )
-          }
-          <div class="admin-hub-composer-fake" aria-hidden="true">
-            <Paperclip width={15} height={15} strokeWidth={1.8} />
-            {ADMIN_HUB_WRITE_MESSAGE}
-          </div>
-          {
-            unread ? (
-              <div class="admin-hub-tile__foot">
-                <span class="admin-hub-unread" data-testid="admin-hub-unread">{unread}</span>
-              </div>
-            ) : null
-          }
         </a>
 
         {

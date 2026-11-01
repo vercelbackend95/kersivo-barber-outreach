@@ -47,6 +47,8 @@ describe('preview hub paths', () => {
     expect(layout).toContain("mode === 'preview'");
     expect(layout).toContain('admin-sidebar-link');
     expect(layout).toContain('PREVIEW_HUB_PATHS.messages');
+    expect(layout).toContain('previewUnreadMessages');
+    expect(layout).toContain('admin-sidebar-link-badge');
     expect(layout).toContain('placement="sidebar"');
     expect(layout).toContain('admin-mobile-top-chrome');
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubShell.astro'))).toBe(false);

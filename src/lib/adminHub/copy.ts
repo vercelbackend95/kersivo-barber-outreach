@@ -101,10 +101,10 @@ export const ADMIN_HUB_COLOURS_COPIED = 'Copied';
 
 export const ADMIN_HUB_WRITE_MESSAGE = 'Write a message…';
 export const ADMIN_HUB_UNREAD_COUNT = (n: number) => (n === 1 ? '1 unread' : `${n} unread`);
-export const ADMIN_HUB_MESSAGES_EMPTY = 'No messages yet';
-export const ADMIN_HUB_MESSAGES_PLACEHOLDER_SUB = 'We reply here and by email.';
-export const ADMIN_HUB_MESSAGES_PLACEHOLDER_BODY =
-  'No messages yet. You will be able to write to KERSIVO here.';
+export const ADMIN_HUB_MESSAGES_EMPTY =
+  'No messages yet. Questions about your website? Send us a message.';
+export const ADMIN_HUB_MESSAGES_SUB = 'We reply here and by email.';
+export const ADMIN_HUB_MESSAGES_PLACEHOLDER_SUB = ADMIN_HUB_MESSAGES_SUB;
 
 export const ADMIN_HUB_CHANGES_DRAFTS = 'Drafts';
 export const ADMIN_HUB_CHANGES_WITH = 'With KERSIVO';

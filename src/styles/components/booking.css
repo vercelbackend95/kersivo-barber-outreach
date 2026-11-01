@@ -4013,6 +4013,23 @@ button.admin-sidebar-brand--button:focus-visible {
   color: var(--accent);
 }
 
+.admin-sidebar-link-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--color-on-brand);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 .admin-main-content {
   min-width: 0;
   width: 100%;

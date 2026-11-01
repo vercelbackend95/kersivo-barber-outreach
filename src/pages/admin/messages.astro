@@ -3,13 +3,9 @@ export const prerender = false;
 
 import PreviewHubDocument from '@/layouts/PreviewHubDocument.astro';
 import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
-import {
-  ADMIN_HUB_MESSAGES_EMPTY,
-  ADMIN_HUB_MESSAGES_PLACEHOLDER_BODY,
-  ADMIN_HUB_MESSAGES_PLACEHOLDER_SUB,
-} from '@/lib/adminHub/copy';
+import { AdminHubMessages } from '@/components/adminHub/AdminHubMessages';
+import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
 import { preparePreviewHubPage } from '@/lib/adminHub/previewHubPage';
-import { HUB_NAV } from '@/lib/freePreview/hubCopy';
 
 const prepared = await preparePreviewHubPage({
   context: Astro,
@@ -22,18 +18,16 @@ const { data } = prepared;
 
 <PreviewHubDocument title={`${data.title} — ${data.shopName} | KERSIVO`}>
   <PreviewHubFrame data={data} section="messages">
-    <section class="admin-hub-locked" data-testid="admin-hub-messages-placeholder">
-      <header class="admin-hub-head">
-        <div>
-          <span class="admin-hub-head__eyebrow">{HUB_NAV.messages}</span>
-          <h1>{HUB_NAV.messages}</h1>
-          <p class="admin-hub-head__sub">{ADMIN_HUB_MESSAGES_PLACEHOLDER_SUB}</p>
-        </div>
-      </header>
-      <div class="admin-hub-tile admin-hub-calm">
-        <h2>{ADMIN_HUB_MESSAGES_EMPTY}</h2>
-        <p>{ADMIN_HUB_MESSAGES_PLACEHOLDER_BODY}</p>
-      </div>
-    </section>
+    <AdminHubMessages
+      client:load
+      token=""
+      apiBase={ADMIN_HUB_API_BASE}
+      viewer={data.appCtx.viewer}
+      requestId={data.appCtx.requestId}
+      shopName={data.shopName}
+      initialMessages={data.view.messages}
+      initialDraft={data.appCtx.initialDraft}
+      canAttach={data.appCtx.canAttach}
+    />
   </PreviewHubFrame>
 </PreviewHubDocument>

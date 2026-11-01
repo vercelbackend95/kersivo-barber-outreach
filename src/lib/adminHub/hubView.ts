@@ -7,7 +7,7 @@ import {
 } from '@/lib/freePreview/hubPage';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
 import { countOpenHubChanges, loadHubChanges } from '@/lib/freePreview/hubChanges';
-import { countUnreadKersivoMessages, loadHubMessages, loadLatestHubMessage } from '@/lib/freePreview/hubMessages';
+import { countUnreadKersivoMessages, loadHubMessages } from '@/lib/freePreview/hubMessages';
 import {
   cardStateFromReview,
   loadHubReviewShopData,
@@ -53,7 +53,6 @@ export async function loadAdminHubView(
     wantsOverview || ((location.section === 'changes' || location.section === 'website') && caps.canDraftChanges);
   const wantsActivity = wantsOverview || location.app === 'activity';
   const wantsMessages = location.section === 'messages' || location.app === 'messages';
-  const wantsLatestMessage = wantsOverview;
   const wantsShop =
     location.app === 'setup' ||
     location.app === 'logo' ||
@@ -65,7 +64,7 @@ export async function loadAdminHubView(
     location.app === 'colours';
   const wantsLaunch = isSetupPhase2Stage(stage) || location.app === 'business' || location.app === 'domain' || location.app === 'payments' || location.app === 'approve';
 
-  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages, latestMessage] =
+  const [assets, reviews, unreadMessages, openChanges, events, reviewShop, launchProgress, changeItems, messages] =
     await Promise.all([
       loadActiveHubAssets(id),
       loadLatestHubReviews(id),
@@ -78,7 +77,6 @@ export async function loadAdminHubView(
       wantsLaunch ? loadHubLaunchProgress(id) : Promise.resolve(null),
       wantsChanges ? loadHubChanges(id) : Promise.resolve([]),
       wantsMessages ? loadHubMessages(id) : Promise.resolve([]),
-      wantsLatestMessage ? loadLatestHubMessage(id) : Promise.resolve(null),
     ]);
 
   const serialized = assets.map(serializeHubAsset);
@@ -125,7 +123,6 @@ export async function loadAdminHubView(
           HOURS: cardStateFromReview(reviews.HOURS?.state ?? null),
         }),
         launchProgress,
-        latestMessage,
         changeItems,
       }
     : null;

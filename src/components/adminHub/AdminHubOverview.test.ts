@@ -19,7 +19,8 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('data-tile="progress"');
     expect(src).toContain('data-tile="preview"');
     expect(src).toContain('data-tile="colours"');
-    expect(src).toContain('data-tile="messages"');
+    expect(src).not.toContain('data-tile="messages"');
+    expect(src).not.toContain('admin-hub-bento__messages');
     expect(src).toContain('data-tile="changes"');
     expect(src).toContain('data-tile="activity"');
     expect(src).toContain('overviewPreviewLocked');
@@ -35,7 +36,6 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('hrefs.preview');
     expect(src).toContain('hrefs.booking');
     expect(src).toContain('hrefs.colours');
-    expect(src).toContain('hrefs.messages');
     expect(src).toContain('hrefs.changes');
     expect(src).toContain('hrefs.activity');
     expect(src).not.toContain('/preview/');

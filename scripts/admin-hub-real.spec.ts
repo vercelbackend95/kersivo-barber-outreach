@@ -164,8 +164,9 @@ test.describe('Admin Hub batch 1 — real stack', () => {
 
     await openEmailLink(page, `/preview/${t}/messages?draft=message`, t, '/admin/messages?draft=message');
     await expect(page.locator('.admin-sidebar-link[aria-current="page"]')).toHaveText(/Messages/);
-    await expect(page.getByTestId('admin-hub-messages-placeholder')).toBeVisible();
-    await shots(page, 'ready-messages', [390, 1440]);
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
+    await shots(page, 'ready-messages', [360, 390, 1440]);
 
     await openEmailLink(page, `/preview/${t}/overview`, t, '/admin');
   });
@@ -384,10 +385,10 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="preview"]')).toContainText('Your preview will appear here');
     await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
     await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
-    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin/messages');
+    await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     expect(await overview.locator('iframe').count()).toBe(0);
     await expect(overview.locator('[data-tile="preview"] a')).toHaveCount(0);
-    await expect(page.getByTestId('admin-hub-unread')).toHaveText('1 unread');
+    await expect(page.locator('.admin-sidebar').getByTestId('admin-hub-unread')).toHaveText('1');
     await shots3(page, 'requested-overview', [390, 768, 1280, 1440]);
     await axeAt(page, 'requested-overview', 390);
     await axeAt(page, 'requested-overview', 768);
@@ -403,7 +404,7 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="preview"] a[href="/admin/website"]').first()).toBeVisible();
     await expect(overview.locator('[data-tile="preview"] a[href="/admin/website?view=booking"]')).toBeVisible();
     await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
-    await expect(overview.locator('[data-tile="messages"]')).toHaveAttribute('href', '/admin/messages');
+    await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin/changes');
     await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toContainText('Show all');
     await expect(page.getByTestId('admin-hub-primary')).toHaveText('Open your preview');
@@ -415,12 +416,15 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await axeAt(page, 'ready-overview', 768);
     await axeAt(page, 'ready-overview', 1440);
 
-    await overview.locator('[data-tile="messages"]').click();
+    await page.locator('.admin-sidebar a.admin-sidebar-link[href="/admin/messages"]').click();
     await expect(page).toHaveURL(/\/admin\/messages/);
-    await expect(page.getByTestId('admin-hub-messages-placeholder')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await expect(page.locator('.admin-sidebar').getByTestId('admin-hub-unread')).toHaveCount(0);
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
     await page.screenshot({ path: join(shotDir3, 'ready-messages-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.getByTestId('admin-hub-messages-placeholder')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
     await page.screenshot({ path: join(shotDir3, 'ready-messages-390.png'), fullPage: true });
   });
 

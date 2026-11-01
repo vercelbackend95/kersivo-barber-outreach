@@ -17,6 +17,7 @@ const ENTRIES = [
   'components/adminHub/AppHost.tsx',
   'components/adminHub/AdminHubWebsite.tsx',
   'components/adminHub/AdminHubChanges.tsx',
+  'components/adminHub/AdminHubMessages.tsx',
   'components/ui/SegmentedControl.tsx',
 ];
 
