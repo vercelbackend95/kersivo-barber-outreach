@@ -5,6 +5,7 @@ import OrdersDataTable22 from './OrdersDataTable22';
 import { useAdminClock } from './adminClock';
 import ClientProfilePanel from './ClientProfilePanel';
 import AdminSectionHeader from './AdminSectionHeader';
+import AdminAddButton from './AdminAddButton';
 import AdminLineChart from './charts/AdminLineChart';
 import AdminAnalyticsStudio from './AdminAnalyticsStudio';
 import AdminSegmentedControl from './AdminSegmentedControl';
@@ -14,7 +15,8 @@ import AdminLeaderboard from './AdminLeaderboard';
 import { CHART_OVERALL_COLOR, getProductSlotColor } from '@/lib/admin/chartSeriesColors';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
-import { ChevronDown, Package, Plus, Search, Star, X } from '../lucide-react';
+import { ChevronDown, Package, Search, Star, X } from '../lucide-react';
+import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
@@ -518,6 +520,7 @@ type ShopAdminPanelProps = {
   isBlacklineDemo?: boolean;
   showcaseMode?: boolean;
   isHubAccess?: boolean;
+  openCreateOnMount?: boolean;
 };
 
 const RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY = 'kersivo:retail-walkthrough-complete-dismissed';
@@ -595,12 +598,14 @@ export default function ShopAdminPanel({
   isBlacklineDemo = false,
   showcaseMode = false,
   isHubAccess = false,
+  openCreateOnMount = false,
 }: ShopAdminPanelProps) {
   const clock = useAdminClock();
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [productsLoadedOnce, setProductsLoadedOnce] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [wizardInitialForm, setWizardInitialForm] = useState<ProductForm | undefined>(undefined);
@@ -608,6 +613,8 @@ export default function ShopAdminPanel({
   const [success, setSuccess] = useState<string | null>(null);
   const [retailPromptDismissed, setRetailPromptDismissed] = useState(true); // hide until session loads
   const [retailFlagsLoaded, setRetailFlagsLoaded] = useState(false);
+  const [retailOn, setRetailOn] = useState(false);
+  const addIntentConsumedRef = useRef(false);
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -1129,6 +1136,7 @@ export default function ShopAdminPanel({
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch products.');
     } finally {
       setLoading(false);
+      setProductsLoadedOnce(true);
     }
   }
 
@@ -1335,6 +1343,17 @@ export default function ShopAdminPanel({
   }, []);
 
   useEffect(() => {
+    if (!openCreateOnMount || addIntentConsumedRef.current) return;
+    if (!productsLoadedOnce) return;
+    if (activeTab !== 'products') return;
+    addIntentConsumedRef.current = true;
+    if (!isPublicAdminDemoMode()) {
+      startCreate();
+    }
+    stripAdminAddQueryFromUrl();
+  }, [openCreateOnMount, productsLoadedOnce, activeTab]);
+
+  useEffect(() => {
     void (async () => {
       try {
         const response = await fetch('/api/admin/session', { credentials: 'include' });
@@ -1351,6 +1370,7 @@ export default function ShopAdminPanel({
         const hidePrompt =
           payload.via !== 'session' || Boolean(payload.retailPickupWalkthroughCompletedAt);
         setRetailPromptDismissed(hidePrompt);
+        setRetailOn(payload.via === 'session' && Boolean(payload.retailPickupWalkthroughCompletedAt));
       } catch {
         setRetailPromptDismissed(false);
       } finally {
@@ -1559,15 +1579,7 @@ export default function ShopAdminPanel({
         ] : undefined}
         metaBadgeVariant="default"
         actions={activeTab === 'products' ? (
-          <button
-            type="button"
-            className="btn btn--primary btn--icon"
-            aria-label="Add product"
-            title="Add product"
-            onClick={startCreate}
-          >
-            <Plus aria-hidden />
-          </button>
+          <AdminAddButton label="Add product" onClick={startCreate} />
         ) : undefined}
       />
 
@@ -1731,7 +1743,12 @@ export default function ShopAdminPanel({
                     <EmptyState
                       icon={Package}
                       title="No products yet"
-                      description="Add your first product to launch your storefront."
+                      description={
+                        retailOn
+                          ? 'Add products you sell in the shop.'
+                          : 'Add products you sell in the shop. Retail stays off until you switch it on.'
+                      }
+                      action={<AdminAddButton label="Add your first product" onClick={startCreate} />}
                     />
                   ) : (
                     <RetailOnboardingWelcome

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ensureHubDraftShop = vi.fn();
@@ -45,6 +47,13 @@ function hubMode(draftShopId: string | null, stage = 'review'): Extract<AdminPag
 beforeEach(() => {
   ensureHubDraftShop.mockReset();
   resolveHubContext.mockReset();
+});
+
+describe('paid redirect', () => {
+  it('forwards the incoming query so add=1 survives the 302', () => {
+    const src = readFileSync(resolve(process.cwd(), 'src/lib/adminHub/previewHubAdminPage.ts'), 'utf8');
+    expect(src).toContain('paidAdminRedirectForHubPath(section, context.url.searchParams)');
+  });
 });
 
 describe('ensureHubModeDraftShop', () => {

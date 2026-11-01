@@ -8,6 +8,7 @@ import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
 import { signalHeroShowcaseReadyWhenSettled } from './heroShowcaseReady';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
+import { hasAdminAddQuery } from '@/lib/admin/addQuery';
 import type { AdminHubChrome } from '@/lib/adminHub/hubChrome';
 import { ADMIN_HUB_APP_ERROR } from '@/lib/adminHub/copy';
 import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
@@ -162,6 +163,7 @@ export default function AdminPanel({
   hubChrome = null,
 }: AdminPanelProps) {
   const isHubChrome = Boolean(hubChrome);
+  const [openCreateRequested] = useState(() => hasAdminAddQuery());
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     resolveAdminSpaSection(
       initialSection ??
@@ -558,6 +560,9 @@ export default function AdminPanel({
           isBlacklineDemo={demoTenant === 'blackline'}
           initialBookings={initialBookings as never}
           isHubAccess={isHubAccess}
+          openCreateOnMount={
+            openCreateRequested && !hubLockedFeature && activeSection === 'bookings_blocks'
+          }
           mode={
             hubLockedFeature
               ? 'dashboard'
@@ -586,6 +591,7 @@ export default function AdminPanel({
                 key="services"
                 isBlacklineDemo={demoTenant === 'blackline'}
                 showcaseMode={showcaseMode}
+                openCreateOnMount={openCreateRequested}
               />
             ) : null}
 
@@ -600,6 +606,7 @@ export default function AdminPanel({
                 isBlacklineDemo={demoTenant === 'blackline'}
                 showcaseMode={showcaseMode}
                 isHubAccess={isHubAccess}
+                openCreateOnMount={openCreateRequested && activeSection === 'shop_products'}
               />
             ) : null}
 

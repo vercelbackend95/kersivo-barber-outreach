@@ -1517,3 +1517,100 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await a0Shot('checkout');
   });
 });
+
+test.describe('A1 labelled add actions', () => {
+  test.beforeAll(async ({ request }) => {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      try {
+        if ((await request.get('/preview-hub-qa/health')).ok()) break;
+      } catch {
+        /* server still starting */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  test('A1: hub Team, Services and Products headers show labelled add buttons; ?add=1 opens the service sheet', async ({
+    page,
+    context,
+  }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a1' : '/tmp/kersivo-shots/a1';
+    mkdirSync(shotRoot, { recursive: true });
+    const a1Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    expect(await hubCookie(context)).toBeTruthy();
+
+    await page.goto('/admin/services');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/services"][aria-current="page"]')).toBeVisible();
+    const addService = page.getByRole('button', { name: 'Add service' });
+    await expect(addService).toBeVisible({ timeout: 15000 });
+    await expect(addService).toHaveText(/Add service/);
+    await a1Shot('hub-services');
+
+    await page.goto('/admin/team');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/team"][aria-current="page"]')).toBeVisible();
+    const addTeam = page.getByRole('button', { name: 'Add team member' });
+    await expect(addTeam).toBeVisible({ timeout: 15000 });
+    await expect(addTeam).toHaveText(/Add team member/);
+    await a1Shot('hub-team');
+
+    await page.goto('/admin/products');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/products"][aria-current="page"]')).toBeVisible();
+    const addProduct = page.getByRole('button', { name: 'Add product' });
+    await expect(addProduct).toBeVisible({ timeout: 15000 });
+    await expect(addProduct).toHaveText(/Add product/);
+    await a1Shot('hub-products');
+
+    await page.goto('/admin/services?add=1');
+    await expect(page.locator('#admin-service-form-title')).toBeVisible({ timeout: 15000 });
+    expect(new URL(page.url()).searchParams.has('add')).toBe(false);
+    await a1Shot('hub-services-add');
+  });
+
+  test('A1: paid Team, Services and Products headers show labelled add buttons', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a1' : '/tmp/kersivo-shots/a1';
+    mkdirSync(shotRoot, { recursive: true });
+    const a1Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `paid ${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await context.clearCookies();
+    await signIn(page, seed.live.owner.email, seed.live.owner.password);
+
+    await page.goto('/admin?section=services');
+    await expect(page.getByRole('button', { name: 'Add service' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: 'Add service' })).toHaveText(/Add service/);
+    await a1Shot('paid-services');
+
+    await page.goto('/admin?section=bookings_blocks');
+    await expect(page.getByRole('button', { name: 'Add team member' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: 'Add team member' })).toHaveText(/Add team member/);
+    await a1Shot('paid-team');
+
+    await page.goto('/admin?section=shop_products');
+    await expect(page.getByRole('button', { name: 'Add product' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: 'Add product' })).toHaveText(/Add product/);
+    await a1Shot('paid-products');
+  });
+});
+

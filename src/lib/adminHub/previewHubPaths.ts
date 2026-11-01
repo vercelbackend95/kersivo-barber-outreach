@@ -29,8 +29,18 @@ export const PREVIEW_HUB_PAID_SECTION: Record<'team' | 'services' | 'products', 
   products: 'shop_products',
 };
 
-export function paidAdminRedirectForHubPath(section: 'team' | 'services' | 'products'): string {
-  return `/admin?section=${PREVIEW_HUB_PAID_SECTION[section]}`;
+export function paidAdminRedirectForHubPath(
+  section: 'team' | 'services' | 'products',
+  search?: URLSearchParams | string | null,
+): string {
+  const params = new URLSearchParams();
+  params.set('section', PREVIEW_HUB_PAID_SECTION[section]);
+  const incoming =
+    typeof search === 'string'
+      ? new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+      : search;
+  if (incoming?.get('add') === '1') params.set('add', '1');
+  return `/admin?${params.toString()}`;
 }
 
 const ALLOWED = new Set<string>(Object.values(PREVIEW_HUB_PATHS));
