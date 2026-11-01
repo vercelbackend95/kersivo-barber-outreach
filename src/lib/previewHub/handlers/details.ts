@@ -9,9 +9,15 @@ import {
   resolveHubApiContext,
   type HubSourceOf,
 } from '@/lib/freePreview/hubApi';
-import { hubDetailsSchema, saveHubDetails } from '@/lib/freePreview/hubDetails';
+import { hubDetailsSchema, publicHubDetails, saveHubDetails } from '@/lib/freePreview/hubDetails';
 
-export function createHubDetailsHandlers(sourceOf: HubSourceOf): { PATCH: APIRoute } {
+export function createHubDetailsHandlers(sourceOf: HubSourceOf): { GET: APIRoute; PATCH: APIRoute } {
+  const GET: APIRoute = async ({ request, params }) => {
+    const ctxResult = await resolveHubApiContext({ request, source: sourceOf(params), mutation: false });
+    if (!ctxResult.ok) return ctxResult.response;
+    return hubJson({ ok: true, details: publicHubDetails(ctxResult.ctx.request) });
+  };
+
   const PATCH: APIRoute = async ({ request, params }) => {
     const source = sourceOf(params);
     const limited = await enforceHubDetailsRate(request);
@@ -34,7 +40,12 @@ export function createHubDetailsHandlers(sourceOf: HubSourceOf): { PATCH: APIRou
     }
 
     try {
-      const details = await saveHubDetails({ requestId: ctxResult.ctx.request.id, patch: parsed.data });
+      const details = await saveHubDetails({
+        requestId: ctxResult.ctx.request.id,
+        patch: parsed.data,
+        shopName: ctxResult.ctx.request.shopName,
+        recordOwnerEvent: !ctxResult.ctx.isOperator,
+      });
       if (!ctxResult.ctx.isOperator) {
         await sendServerAnalyticsEvent({
           name: FUNNEL_EVENTS.hub_details_saved,
@@ -51,5 +62,5 @@ export function createHubDetailsHandlers(sourceOf: HubSourceOf): { PATCH: APIRou
     }
   };
 
-  return { PATCH };
+  return { GET, PATCH };
 }

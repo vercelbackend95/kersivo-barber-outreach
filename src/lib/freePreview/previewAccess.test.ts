@@ -58,6 +58,7 @@ function row(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequest 
     brandColoursSentAt: null,
     styleNotes: null,
     aboutText: null,
+    websiteExtraText: null,
     ...overrides,
   };
 }

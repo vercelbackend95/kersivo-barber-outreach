@@ -15,10 +15,12 @@ import {
 } from '@/components/lucide-react';
 import {
   adminHubAppMeta,
+  adminHubAppOpenTarget,
   parseAdminHubApp,
   resolveAdminHubApp,
   type AdminHubAppId,
 } from '@/lib/adminHub/apps';
+import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
@@ -55,6 +57,32 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+/** Menu items unmount when the Add menu closes — restore to the still-mounted trigger. */
+function stableOpener(opener: HTMLElement | null): HTMLElement | null {
+  if (!opener) return null;
+  const menu = opener.closest('[role="menu"]');
+  const menuId = menu?.id;
+  if (menuId) {
+    const trigger = [...document.querySelectorAll<HTMLElement>('[aria-controls]')].find(
+      (el) => el.getAttribute('aria-controls') === menuId,
+    );
+    if (trigger) return trigger;
+  }
+  return opener;
+}
+
+function restoreOpenerFocus(opener: HTMLElement | null) {
+  if (opener?.isConnected) {
+    opener.focus();
+    return;
+  }
+  document
+    .querySelector<HTMLElement>(
+      '[data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"], [data-testid="admin-hub-content-add"]',
+    )
+    ?.focus();
+}
+
 function withTransition(update: () => void): void {
   const start = document.startViewTransition?.bind(document);
   if (start && !prefersReducedMotion()) {
@@ -69,7 +97,8 @@ function withTransition(update: () => void): void {
 }
 
 function appFromLocation(): AdminHubAppId | null {
-  return parseAdminHubApp(new URLSearchParams(window.location.search).get('app'));
+  const raw = parseAdminHubApp(new URLSearchParams(window.location.search).get('app'));
+  return raw ? adminHubAppOpenTarget(raw).id : null;
 }
 
 export function AppHost(props: {
@@ -82,7 +111,9 @@ export function AppHost(props: {
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
-  const [app, setApp] = useState<AdminHubAppId | null>(props.initialApp);
+  const [app, setApp] = useState<AdminHubAppId | null>(
+    props.initialApp ? adminHubAppOpenTarget(props.initialApp).id : null,
+  );
   const [sheet, setSheet] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -121,40 +152,64 @@ export function AppHost(props: {
     };
   }, [app, loader, retry]);
 
-  const close = useCallback(() => {
-    if (pushedRef.current) {
-      pushedRef.current = false;
-      history.back();
-      return;
-    }
+  const writeLocation = useCallback((id: AdminHubAppId | null, item: string | null, push: boolean) => {
     const url = new URL(window.location.href);
-    url.searchParams.delete('app');
-    history.replaceState({ adminHubApp: null }, '', url);
-    withTransition(() => setApp(null));
-    queueMicrotask(() => openerRef.current?.focus());
+    if (id) url.searchParams.set('app', id);
+    else url.searchParams.delete('app');
+    if (id && item) url.searchParams.set('item', item);
+    else url.searchParams.delete('item');
+    const state = { adminHubApp: id, adminHubItem: item };
+    if (push) {
+      history.pushState(state, '', url);
+      pushedRef.current = true;
+    } else {
+      history.replaceState(state, '', url);
+    }
+    window.dispatchEvent(new Event(ADMIN_HUB_LOCATION_EVENT));
   }, []);
 
-  const open = useCallback((id: AdminHubAppId, opener: HTMLElement | null, push: boolean) => {
-    openerRef.current = opener;
-    if (push) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('app', id);
-      history.pushState({ adminHubApp: id }, '', url);
-      pushedRef.current = true;
-    }
-    withTransition(() => setApp(id));
-  }, []);
+  const close = useCallback(() => {
+    const usedHistory = pushedRef.current;
+    pushedRef.current = false;
+    if (usedHistory) history.back();
+    else writeLocation(null, null, false);
+    withTransition(() => setApp(null));
+    queueMicrotask(() => restoreOpenerFocus(openerRef.current));
+  }, [writeLocation]);
+
+  const open = useCallback(
+    (id: AdminHubAppId, opener: HTMLElement | null, push: boolean, item: string | null = null) => {
+      openerRef.current = stableOpener(opener);
+      const target = adminHubAppOpenTarget(id);
+      const nextItem = item ?? target.item;
+      if (target.id === app) {
+        writeLocation(target.id, nextItem, false);
+        return;
+      }
+      writeLocation(target.id, nextItem, push);
+      withTransition(() => setApp(target.id));
+    },
+    [app, writeLocation],
+  );
 
   useEffect(() => {
     const onPop = () => {
       const next = appFromLocation();
       setApp(next);
       pushedRef.current = false;
-      if (!next) queueMicrotask(() => openerRef.current?.focus());
+      if (!next) queueMicrotask(() => restoreOpenerFocus(openerRef.current));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = parseAdminHubApp(params.get('app'));
+    if (raw === 'about') {
+      writeLocation('materials', 'text', false);
+    }
+  }, [writeLocation]);
 
   useEffect(() => {
     const root = document.querySelector('.admin-shell');
@@ -170,8 +225,8 @@ export function AppHost(props: {
         const id = parseAdminHubApp(button.getAttribute('data-admin-hub-app'));
         if (!id) return;
         mouse.preventDefault();
-        if (id === app) return;
-        open(id, button, true);
+        const item = parseAdminHubAddWebsiteItem(button.getAttribute('data-admin-hub-item'));
+        open(id, button, true, item);
         return;
       }
       const link = target?.closest?.('a') as HTMLAnchorElement | null;
@@ -186,8 +241,8 @@ export function AppHost(props: {
       const id = parseAdminHubApp(url.searchParams.get('app'));
       if (!id) return;
       mouse.preventDefault();
-      if (id === app) return;
-      open(id, link, true);
+      const item = parseAdminHubAddWebsiteItem(url.searchParams.get('item'));
+      open(id, link, true, item);
     };
     root.addEventListener('click', onClick);
     return () => root.removeEventListener('click', onClick);

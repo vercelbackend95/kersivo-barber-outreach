@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
 import type { AdminHubAppContext } from './apps/types';
@@ -55,8 +56,10 @@ function renderHost(initialApp: 'logo' | 'materials' | null = 'logo') {
   return render(
     <div className="admin-shell">
       <a href="/admin?app=logo">Open logo</a>
+      <a href="/admin?app=materials&item=photos">Shop photos</a>
+      <a href="/admin?app=about">Open about</a>
       <button type="button" data-admin-hub-app="materials">
-        Add photos or a logo to your website
+        Add to your website
       </button>
       <AppHost initialApp={initialApp} ctx={ctx} loadApp={loadStub} />
     </div>,
@@ -113,12 +116,12 @@ describe('AppHost', () => {
 
   it('opens from a data-admin-hub-app button and returns focus on close', async () => {
     renderHost(null);
-    const opener = screen.getByRole('button', { name: 'Add photos or a logo to your website' });
+    const opener = screen.getByRole('button', { name: 'Add to your website' });
     opener.focus();
     fireEvent.click(opener);
     const dialog = await screen.findByRole('dialog');
     expect(dialog.className).toContain('admin-hub-app--window');
-    expect(screen.getByRole('heading', { name: 'Add photos or a logo' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Add to your website' })).toBeTruthy();
     fireEvent.keyDown(document, { key: 'Escape' });
     fireEvent.popState(window);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -132,6 +135,66 @@ describe('AppHost', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog.className).toContain('admin-hub-app--sheet');
     expect(dialog.className).toContain('admin-hub-app--fullscreen');
+  });
+
+  it('rewrites ?app=about to materials on the text card', async () => {
+    renderHost(null);
+    fireEvent.click(screen.getByRole('link', { name: 'Open about' }));
+    await screen.findByRole('dialog');
+    expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+    expect(new URL(window.location.href).searchParams.get('item')).toBe('text');
+    expect(screen.getByRole('heading', { name: 'Add to your website' })).toBeTruthy();
+  });
+
+  it('keeps item= on materials links so the app can focus that block', async () => {
+    renderHost(null);
+    fireEvent.click(screen.getByRole('link', { name: 'Shop photos' }));
+    await screen.findByRole('dialog');
+    expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+    expect(new URL(window.location.href).searchParams.get('item')).toBe('photos');
+  });
+
+  it('returns focus to the Add trigger when the menu item that opened the app unmounts', async () => {
+    function MenuHost() {
+      const [open, setOpen] = useState(true);
+      return (
+        <div className="admin-shell">
+          <button
+            type="button"
+            data-testid="admin-hub-add"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-controls="add-menu"
+          >
+            Add
+          </button>
+          {open ? (
+            <div id="add-menu" role="menu" aria-label="Add to your website or shop">
+              <a
+                role="menuitem"
+                href="/admin?app=materials&item=photos"
+                onClick={() => queueMicrotask(() => setOpen(false))}
+              >
+                Shop photos
+              </a>
+            </div>
+          ) : null}
+          <AppHost initialApp={null} ctx={ctx} loadApp={loadStub} />
+        </div>
+      );
+    }
+
+    render(<MenuHost />);
+    const item = screen.getByRole('menuitem', { name: 'Shop photos' });
+    item.focus();
+    fireEvent.click(item);
+    await screen.findByRole('dialog');
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Shop photos' })).toBeNull());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(screen.getByTestId('admin-hub-add'));
   });
 
   it('traps tab inside the window', async () => {

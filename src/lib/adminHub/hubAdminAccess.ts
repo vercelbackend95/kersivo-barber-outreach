@@ -4,7 +4,10 @@ import { prisma } from '@/lib/db/client';
 import { isAdminHubRouteEnabled, resolveHubContext } from '@/lib/freePreview/hubPage';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { recordDebouncedPreviewRequestEvent } from './ownerEditEvents';
 import { readHubCookie, verifyHubSession } from './hubSession';
+
+export { HUB_OWNER_EDIT_DEBOUNCE_MS } from './ownerEditEvents';
 
 /** Hub visitors manage catalogue, team seats and products — never bookings, billing, invites, settings or AI. */
 export const HUB_ADMIN_PERMISSIONS: readonly Permission[] = [
@@ -23,9 +26,6 @@ export const HUB_OWNER_EDIT_ACTIONS = {
 } as const;
 
 export type HubOwnerEditSection = keyof typeof HUB_OWNER_EDIT_ACTIONS;
-
-/** At most one owner-edit event per section per this window. */
-export const HUB_OWNER_EDIT_DEBOUNCE_MS = 10 * 60 * 1000;
 
 export type HubAdminAllowlistEntry = {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -161,7 +161,12 @@ export function denyHubRestricted(access: { via: string }): Response | null {
   return access.via === 'hub' ? hubAdminUnavailableResponse() : null;
 }
 
-const HUB_ADMIN_STAGES = new Set(['requested', 'designing', 'review']);
+/** Stages where hub visitors may manage the ownerless draft shop (H1). */
+export const HUB_ADMIN_STAGES = new Set(['requested', 'designing', 'review']);
+
+export function hubStageAllowsDraftAdmin(stage: string): boolean {
+  return HUB_ADMIN_STAGES.has(stage);
+}
 
 export type HubAdminAccess = {
   shopId: string;
@@ -264,29 +269,10 @@ export async function recordHubOwnerAdminEdit(input: {
   const session = verifyHubSession(readHubCookie(input.request), input.now);
   if (!session || session.operator) return;
 
-  const action = HUB_OWNER_EDIT_ACTIONS[section];
-  const since = new Date((input.now ?? new Date()).getTime() - HUB_OWNER_EDIT_DEBOUNCE_MS);
-  try {
-    const recent = await prisma.previewRequestEvent.findFirst({
-      where: {
-        previewRequestId: session.previewRequestId,
-        action,
-        createdAt: { gt: since },
-      },
-      select: { id: true },
-    });
-    if (recent) return;
-    await prisma.previewRequestEvent.create({
-      data: {
-        previewRequestId: session.previewRequestId,
-        action,
-        meta: { section },
-      },
-    });
-  } catch (error) {
-    console.error('[admin-hub] owner edit event failed', {
-      section,
-      error: error instanceof Error ? error.message : error,
-    });
-  }
+  await recordDebouncedPreviewRequestEvent({
+    previewRequestId: session.previewRequestId,
+    action: HUB_OWNER_EDIT_ACTIONS[section],
+    meta: { section },
+    now: input.now,
+  });
 }

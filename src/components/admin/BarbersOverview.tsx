@@ -31,7 +31,10 @@ import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import { useAdminClock } from './adminClock';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
+import AdminAddButton from './AdminAddButton';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
+import EmptyState from '../EmptyState';
+import { Users } from '../lucide-react';
 import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import { combineRefreshResults } from '@/lib/admin/teamInviteWizardResults';
@@ -80,6 +83,7 @@ type BarbersOverviewProps = {
   onShowInactiveChange: (show: boolean) => void;
   onOpenBarber: (barberId: string | null, meta?: TeamProfileOpenMeta) => void;
   onCloseAddBarberSheet: () => void;
+  onOpenAddBarberSheet?: () => void;
   onBarberSaved: () => void | Promise<void | boolean>;
   formatBlockRange: (startAt: string, endAt: string) => string;
   onActorRoleChange?: (role: string) => void;
@@ -147,6 +151,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       onShowInactiveChange,
       onOpenBarber,
       onCloseAddBarberSheet,
+      onOpenAddBarberSheet,
       onBarberSaved,
       formatBlockRange,
       onActorRoleChange,
@@ -402,6 +407,17 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
 
       {loading ? (
         <BarberRosterOverviewGridSkeleton ariaLabel="Loading team" />
+      ) : teamCards.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No team members yet"
+          description="Add the people customers can book with. You can set their hours and services."
+          action={
+            onOpenAddBarberSheet ? (
+              <AdminAddButton label="Add your first team member" onClick={onOpenAddBarberSheet} />
+            ) : undefined
+          }
+        />
       ) : showEmptySearch ? (
         <p className="admin-barbers-roster-search-empty">No team members match your search.</p>
       ) : (

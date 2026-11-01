@@ -35,13 +35,14 @@ export const GET: APIRoute = async ({ params, url }) => {
   }
 
   if (action === 'admin-api-inventory') {
-    const { formatAdminApiAllowlistTable, listAdminApiEndpoints } = await import(
+    const { formatAdminApiAllowlistTable, listAdminApiEndpoints, listAdminHubApiEndpoints } = await import(
       '@/lib/adminHub/adminApiInventory'
     );
     const rows = listAdminApiEndpoints();
     return json({
       ok: true,
       rows,
+      hubRows: listAdminHubApiEndpoints(),
       table: formatAdminApiAllowlistTable(rows),
     });
   }

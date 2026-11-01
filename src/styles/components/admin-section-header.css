@@ -49,6 +49,25 @@
   gap: var(--space-xs);
 }
 
+.admin-add-btn {
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.admin-add-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-add-btn {
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 48rem) {
   .admin-section-header {
     gap: var(--space-sm);
@@ -82,5 +101,16 @@
   /* Retail walkthrough card needs clear gap under Orders header (undo flush pull-up). */
   .admin-page-wrap .booking-shell:has(> .admin-orders-panel > .retail-task-card) > .admin-section-header {
     margin-bottom: var(--space-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-section-header {
+    flex-wrap: wrap;
+  }
+
+  .admin-section-header-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
   }
 }

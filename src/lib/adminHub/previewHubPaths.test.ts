@@ -25,6 +25,13 @@ describe('preview hub paths', () => {
     expect(isPreviewHubAllowedPath('/admin/bookings')).toBe(false);
   });
 
+  it('keeps query strings on allowed hub paths (middleware matches pathname only)', () => {
+    expect(isPreviewHubAllowedPath(new URL('http://x/admin/team?add=1').pathname)).toBe(true);
+    expect(isPreviewHubAllowedPath(new URL('http://x/admin/services?add=1').pathname)).toBe(true);
+    expect(isPreviewHubAllowedPath(new URL('http://x/admin/products?add=1').pathname)).toBe(true);
+    expect(isPreviewHubAllowedPath(new URL('http://x/admin/bookings?add=1').pathname)).toBe(false);
+  });
+
   it('maps path to section', () => {
     expect(previewHubSectionFromPath('/admin')).toBe('overview');
     expect(previewHubSectionFromPath('/admin/changes')).toBe('changes');
@@ -87,6 +94,14 @@ describe('preview hub paths', () => {
     expect(paidAdminRedirectForHubPath('team')).toBe('/admin?section=bookings_blocks');
     expect(paidAdminRedirectForHubPath('services')).toBe('/admin?section=services');
     expect(paidAdminRedirectForHubPath('products')).toBe('/admin?section=shop_products');
+  });
+
+  it('keeps add=1 on the paid redirect so the create sheet still opens', () => {
+    expect(paidAdminRedirectForHubPath('services', new URLSearchParams('add=1'))).toBe(
+      '/admin?section=services&add=1',
+    );
+    expect(paidAdminRedirectForHubPath('team', '?add=1')).toBe('/admin?section=bookings_blocks&add=1');
+    expect(paidAdminRedirectForHubPath('products', 'view=x')).toBe('/admin?section=shop_products');
   });
 
   it('keeps the paid admin sidebar items and routes', () => {

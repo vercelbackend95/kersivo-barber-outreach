@@ -30,10 +30,26 @@ export const ADMIN_HUB_LAUNCH_READONLY =
 
 export const ADMIN_HUB_TILE_PROGRESS = 'Your website build';
 export const ADMIN_HUB_TILE_PREVIEW = 'Your preview';
+export const ADMIN_HUB_TILE_CONTENT = 'Website content';
+export const ADMIN_HUB_TILE_SHOP = 'Your shop';
 export const ADMIN_HUB_TILE_COLOURS = 'Brand colours';
 export const ADMIN_HUB_TILE_MESSAGES = 'Messages';
 export const ADMIN_HUB_TILE_CHANGES = 'Changes';
 export const ADMIN_HUB_TILE_ACTIVITY = 'Activity';
+export const ADMIN_HUB_CONTENT_EMPTY =
+  'Photos, your logo and a few lines of text help us build a site that feels like your shop.';
+export const ADMIN_HUB_NOT_ADDED = 'Not added';
+export const ADMIN_HUB_CONTENT_DONE = '✓';
+export const ADMIN_HUB_SHOP_TEAM = 'Team';
+export const ADMIN_HUB_SHOP_SERVICES = 'Services';
+export const ADMIN_HUB_SHOP_PRODUCTS = 'Products';
+export const ADMIN_HUB_SHOP_TEAM_COUNT = (n: number) =>
+  n === 1 ? '1 team member' : `${n} team members`;
+export const ADMIN_HUB_SHOP_SERVICES_COUNT = (n: number) => (n === 1 ? '1 service' : `${n} services`);
+export const ADMIN_HUB_SHOP_PRODUCTS_COUNT = (n: number) => (n === 1 ? '1 product' : `${n} products`);
+export const ADMIN_HUB_SHOP_TEAM_ADD = 'Add your first team member';
+export const ADMIN_HUB_SHOP_SERVICES_ADD = 'Add your first service';
+export const ADMIN_HUB_SHOP_PRODUCTS_ADD = 'Add your first product';
 export const ADMIN_HUB_OPEN = 'Open';
 export const ADMIN_HUB_STEP_TODAY = 'Today';
 export const ADMIN_HUB_STAGE_OF = (current: number, total: number, label: string) =>
@@ -55,7 +71,30 @@ export const ADMIN_HUB_COLOURS_HINT = "We'll find colours in your logo";
 export const ADMIN_HUB_COLOURS_EMPTY = "Add your logo and we'll find colours";
 export const ADMIN_HUB_COLOURS_NONE =
   "No brand colours yet. Add your logo and we'll pick colours that match.";
-export const ADMIN_HUB_ADD_TILE = 'Add photos or logo';
+export const ADMIN_HUB_ADD_TILE = 'Add to your website';
+export const ADMIN_HUB_ADD = 'Add';
+export const ADMIN_HUB_ADD_MENU = 'Add to your website or shop';
+export const ADMIN_HUB_ADD_GROUP_WEBSITE = 'Your website';
+export const ADMIN_HUB_ADD_GROUP_SHOP = 'Your shop';
+export const ADMIN_HUB_ADD_PHOTOS = 'Shop photos';
+export const ADMIN_HUB_ADD_PHOTOS_HINT = 'Inside, outside, chairs and cuts';
+export const ADMIN_HUB_ADD_LOGO = 'Logo';
+/** Matches HubUploader / hubAssets accepted types for LOGO. */
+export const ADMIN_HUB_ADD_LOGO_HINT = 'JPG, PNG, WEBP, SVG or PDF';
+export const ADMIN_HUB_ADD_TEXT = 'Text for your website';
+export const ADMIN_HUB_ADD_TEXT_HINT = 'About your shop, Instagram and anything else';
+export const ADMIN_HUB_ADD_TEAM_PHOTOS = 'Team photos';
+export const ADMIN_HUB_ADD_TEAM_PHOTOS_HINT = 'Shown with each barber';
+export const ADMIN_HUB_ADD_PRICE = 'Price list';
+export const ADMIN_HUB_ADD_PRICE_HINT = 'Photo or PDF of your current prices';
+export const ADMIN_HUB_ADD_OTHER = 'Other files';
+export const ADMIN_HUB_ADD_OTHER_HINT = 'Menus, flyers, anything useful';
+export const ADMIN_HUB_ADD_TEAM = 'Team member';
+export const ADMIN_HUB_ADD_TEAM_HINT = 'A barber on your booking page';
+export const ADMIN_HUB_ADD_SERVICE = 'Service';
+export const ADMIN_HUB_ADD_SERVICE_HINT = 'Name, price and duration';
+export const ADMIN_HUB_ADD_PRODUCT = 'Product';
+export const ADMIN_HUB_ADD_PRODUCT_HINT = 'Listed in your shop, not on sale yet';
 export const ADMIN_HUB_ACTIVITY_TODAY = 'Today';
 export const ADMIN_HUB_ACTIVITY_YESTERDAY = 'Yesterday';
 export const ADMIN_HUB_ACTIVITY_EMPTY =

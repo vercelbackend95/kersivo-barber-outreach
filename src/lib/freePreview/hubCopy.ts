@@ -131,6 +131,7 @@ export const HUB_UPLOAD_ERROR_CAP_PHOTOS = 'You can add up to 40 shop photos.';
 export const HUB_UPLOAD_ERROR_CAP_PRICE = 'You can add up to 5 price list files.';
 export const HUB_UPLOAD_ERROR_CAP_TEAM = 'You can add up to 40 team photos.';
 export const HUB_UPLOAD_ERROR_CAP_LOGO = 'You can add up to 3 logos.';
+export const HUB_UPLOAD_ERROR_CAP_OTHER = 'You can add up to 10 other files.';
 export const HUB_UPLOAD_ERROR_GENERIC = 'Upload failed. Try again.';
 export const HUB_UPLOAD_ERROR_DENIED = 'You cannot add files at this stage.';
 export const HUB_SAVING = 'Saving…';
@@ -154,8 +155,27 @@ export const HUB_DETAILS_PHOTOS_TITLE = 'Shop photos';
 export const HUB_DETAILS_TEAM_PHOTOS_TITLE = 'Team photos';
 export const HUB_DETAILS_PRICE_TITLE = 'Price list';
 export const HUB_DETAILS_PRICE_HEAD = 'Snap your price list';
+export const HUB_DETAILS_OTHER_TITLE = 'Other files';
+export const HUB_EMPTY_OTHER = 'No other files yet.';
+export const HUB_UPLOAD_HINT_OTHER = "Menus, flyers or anything you'd like us to use.";
 export const HUB_DETAILS_ABOUT_TITLE = 'About your shop';
-export const HUB_DETAILS_ABOUT_HINT = 'Two or three sentences is enough. Optional.';
+export const HUB_DETAILS_ABOUT_HINT = "Two or three sentences: who you are and what you're known for.";
+export const HUB_WEBSITE_TEXT_TITLE = 'Text for your website';
+export const HUB_WEBSITE_TEXT_INTRO =
+  "Add what you'd like customers to read. We'll place it on your website and you can change it any time.";
+export const HUB_DETAILS_INSTAGRAM_LABEL = 'Instagram';
+export const HUB_DETAILS_INSTAGRAM_HINT = 'Your handle (@name) or Instagram profile link.';
+export const HUB_DETAILS_INSTAGRAM_INVALID = 'Enter an Instagram handle or profile link.';
+export const HUB_WEBSITE_EXTRA_LABEL = 'Anything else for your website';
+export const HUB_WEBSITE_EXTRA_HINT =
+  'For example: parking, walk-ins, card or cash, languages you speak, opening offers.';
+export const HUB_WEBSITE_EXTRA_COUNT = (used: number, max: number) => `${used} / ${max}`;
+export const HUB_JUMP_PHOTOS = 'Photos';
+export const HUB_JUMP_LOGO = 'Logo';
+export const HUB_JUMP_TEXT = 'Text';
+export const HUB_JUMP_TEAM = 'Team photos';
+export const HUB_JUMP_PRICE = 'Price list';
+export const HUB_JUMP_OTHER = 'Other';
 export const HUB_DETAILS_STYLE_LABEL = 'Anything about your style?';
 export const HUB_DETAILS_STYLE_HINT = 'Optional. Up to 500 characters.';
 export const HUB_DETAILS_COLOUR_PRIMARY = 'Primary colour';
@@ -203,6 +223,10 @@ export const HUB_OPS_UPLOADED_BY_KERSIVO = 'KERSIVO';
 export const HUB_OPS_BRAND_COLOURS = 'Brand colours';
 export const HUB_OPS_STYLE_NOTES = 'Style notes';
 export const HUB_OPS_ABOUT = 'About';
+export const HUB_OPS_INSTAGRAM = 'Instagram';
+export const HUB_OPS_WEBSITE_EXTRA = 'Anything else';
+export const HUB_OPS_TEXT_UPDATED = 'Last updated';
+export const HUB_OPS_DETAILS_EMAIL_LINE = 'Website text was updated.';
 
 export const HUB_OPS_FILES_EMAIL_SUBJECT = (shopName: string) => `Files added: ${shopName}`;
 export const HUB_OPS_FILES_EMAIL_INTRO = (shopName: string) =>
@@ -522,8 +546,8 @@ export const HUB_NOW = {
 } as const;
 
 export const HUB_PRIMARY = {
-  requested: 'Add photos or a logo',
-  designing: 'Add photos or a logo',
+  requested: 'Add to your website',
+  designing: 'Add to your website',
   review: 'Open your preview',
   reviewChangesSent: 'Open your preview',
   launch: 'Finish in your dashboard',
@@ -561,7 +585,7 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   EXPIRED: 'Preview expired',
   hub_viewed: 'Shop hub opened',
   hub_live: 'Site live',
-  hub_asset_uploaded: 'Files added',
+  hub_asset_uploaded: 'You added files',
   hub_details_saved: 'Shop details saved',
   BRAND_COLOURS_SENT: 'You sent your colours',
   hub_message_sent: 'You sent a message',
@@ -578,6 +602,7 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   OWNER_EDITED_SERVICES: 'You updated your services',
   OWNER_EDITED_TEAM: 'You updated your team',
   OWNER_EDITED_PRODUCTS: 'You updated your products',
+  OWNER_EDITED_WEBSITE_TEXT: 'You updated the text for your website',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

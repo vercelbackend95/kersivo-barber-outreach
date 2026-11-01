@@ -12,6 +12,7 @@ import {
   HUB_UPLOAD_ERROR_CAP_BYTES,
   HUB_UPLOAD_ERROR_CAP_FILES,
   HUB_UPLOAD_ERROR_CAP_LOGO,
+  HUB_UPLOAD_ERROR_CAP_OTHER,
   HUB_UPLOAD_ERROR_CAP_PHOTOS,
   HUB_UPLOAD_ERROR_CAP_PRICE,
   HUB_UPLOAD_ERROR_CAP_TEAM,
@@ -34,6 +35,7 @@ export const HUB_MAX_SHOP_PHOTOS = 40;
 export const HUB_MAX_TEAM_PHOTOS = 40;
 export const HUB_MAX_PRICE_LISTS = 5;
 export const HUB_MAX_LOGOS = 3;
+export const HUB_MAX_OTHER_FILES = 10;
 export const HUB_CAPTION_MAX = 140;
 export const HUB_FILES_NOTIFY_WINDOW_MS = 15 * 60 * 1000;
 
@@ -321,6 +323,9 @@ export async function assertHubUploadCaps(input: {
     return { ok: false, error: HUB_UPLOAD_ERROR_CAP_PRICE };
   }
   if (input.kind === 'LOGO' && ofKind >= HUB_MAX_LOGOS) return { ok: false, error: HUB_UPLOAD_ERROR_CAP_LOGO };
+  if (input.kind === 'OTHER' && ofKind >= HUB_MAX_OTHER_FILES) {
+    return { ok: false, error: HUB_UPLOAD_ERROR_CAP_OTHER };
+  }
   return { ok: true };
 }
 

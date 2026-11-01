@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion, type Variants } from 'framer-motion';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
+import AdminAddButton from './AdminAddButton';
 import AdminBookingsOpsSearch, { type AdminBookingsOpsSearchBooking } from './AdminBookingsOpsSearch';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
@@ -35,6 +36,7 @@ import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbers
 import EmptyState from '../EmptyState';
 import NewBookingPanel from './NewBookingPanel';
 import { Clock, ListOrdered, Lock, Plus } from '../lucide-react';
+import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { isCapabilityLocked } from '@/lib/admin/productLocks';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
@@ -675,6 +677,8 @@ type BookingsAdminPanelProps = {
   showcaseMode?: boolean;
   /** Preview-hub access: hide bookings strip and dashboard-invite actions. */
   isHubAccess?: boolean;
+  /** Deep-link `?add=1` — open the add-team-member sheet after the first team load. */
+  openCreateOnMount?: boolean;
 };
 
 export default function BookingsAdminPanel({
@@ -688,6 +692,7 @@ export default function BookingsAdminPanel({
   initialBookings,
   showcaseMode = false,
   isHubAccess = false,
+  openCreateOnMount = false,
 }: BookingsAdminPanelProps) {
   const clock = useAdminClock();
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
@@ -696,6 +701,8 @@ export default function BookingsAdminPanel({
   const [canManageBookings, setCanManageBookings] = useState(true);
   const [canCreateManualBooking, setCanCreateManualBooking] = useState(false);
   const [canEditTeam, setCanEditTeam] = useState(true);
+  const [sessionReady, setSessionReady] = useState(isPublicDemo);
+  const addIntentConsumedRef = useRef(false);
   const urlBookingDate = readInitialBookingDateFromUrl();
   const urlBookingId = readInitialBookingIdFromUrl();
   const urlDemoJourney = readInitialDemoJourneyFromUrl();
@@ -1121,6 +1128,8 @@ export default function BookingsAdminPanel({
         );
       } catch {
         setLoggedIn(false);
+      } finally {
+        setSessionReady(true);
       }
     })();
   }, [isHubAccess, isPublicDemo]);
@@ -2238,6 +2247,19 @@ export default function BookingsAdminPanel({
     setIsAddBarberSheetOpen(true);
   }, [isPublicDemo]);
 
+  useEffect(() => {
+    if (!openCreateOnMount || addIntentConsumedRef.current) return;
+    if (mode !== 'blocks') return;
+    if (barbersInitialLoading || !sessionReady) return;
+    addIntentConsumedRef.current = true;
+    if (canEditTeam && !isPublicDemo) {
+      setBarberSaveError('');
+      setBarberSaveMessage('');
+      setIsAddBarberSheetOpen(true);
+    }
+    stripAdminAddQueryFromUrl();
+  }, [openCreateOnMount, mode, barbersInitialLoading, sessionReady, canEditTeam, isPublicDemo]);
+
 
   const switchBookingsSubview = useCallback(
     async (target: 'dashboard' | 'history') => {
@@ -2747,15 +2769,7 @@ export default function BookingsAdminPanel({
             metaBadgeVariant={undefined}
             actions={
               mode === 'blocks' && canEditTeam ? (
-                <button
-                  type="button"
-                  className="btn btn--primary btn--icon"
-                  aria-label="Add team member"
-                  title="Add team member"
-                  onClick={openAddBarberSheet}
-                >
-                  <Plus aria-hidden />
-                </button>
+                <AdminAddButton label="Add team member" onClick={openAddBarberSheet} />
               ) : undefined
             }
           />
@@ -2791,6 +2805,7 @@ export default function BookingsAdminPanel({
                 onCloseAddBarberSheet={() => {
                   setIsAddBarberSheetOpen(false);
                 }}
+                onOpenAddBarberSheet={canEditTeam ? openAddBarberSheet : undefined}
                 onBarberSaved={async () => {
                   return fetchBarbers();
                 }}
@@ -3075,8 +3090,8 @@ export default function BookingsAdminPanel({
         <button
           type="button"
           className="admin-manual-booking-fab"
-          aria-label="Create booking"
-          title="Create booking"
+          aria-label="New booking"
+          title="New booking"
           onClick={() => {
             setManualBookingMessage('');
             if (manualBookingsLocked) {

@@ -69,24 +69,36 @@ The three real-admin items open `ServicesAdminPanel`, `BookingsAdminPanel` (`mod
 
 Main column: max 1180px, padding 28/36px desktop, 16px mobile. Page header = eyebrow (red dot + section name), H1, one-line sub, actions on the right (desktop) / 2-up buttons under the header (mobile).
 
-**One primary action per screen.** Overview Review stage: primary "Open your preview", secondary outline "Launch this website £39/month".
+**One primary action per screen.** Requested / Designing: primary header **Add** (the add menu). Review: primary "Open your preview", outline **Add**, outline "Launch this website £39/month". Messages stay a sidebar / top-bar destination (`/admin/messages`), not an Overview tile.
 
-## 4. Overview — bento (mockup 01 / 04)
+## 4. Overview — bento (A4)
 
-12-column grid, gap 14px, tiles: radius 20px, `#0D0D0E → #080809` gradient, 1px `rgba(255,255,255,.08)` border, inset top highlight, deep shadow, 1px red→transparent line on the top edge (the `/starter` premium card DNA). Tile header: 30px icon chip · uppercase eyebrow title · circular "open" button (↗) top-right. Hover/focus: lift 2px, border brightens, ↗ turns red. Whole tile is an `<a href="/admin?app=…">` (works without JS).
+12-column grid, gap 14px, tiles: radius 20px, `#0D0D0E → #080809` gradient, 1px `rgba(255,255,255,.08)` border, inset top highlight, deep shadow, 1px red→transparent line on the top edge (the `/starter` premium card DNA). Tile header: 30px icon chip · uppercase eyebrow title · circular "open" button (↗) top-right where the tile is a link. Hover/focus: lift 2px, border brightens, ↗ turns red. `prefers-reduced-motion: reduce` disables the lift.
 
 | Tile | Desktop placement (≥1280) | Content | Opens |
 |---|---|---|---|
-| **Your website build** | cols 1–8, row 1 | 5-segment progress bar Requested → Designing → Review → Launch → Live (done = red, current = red with soft glow + subtle shimmer, todo = grey), step number/check + label + date; two boxes "What we're doing" / "What we need from you" (amber when owner action needed). No percentages. | — (not a link) |
-| **Your preview** | cols 9–12, rows 1–2 | Static phone-frame thumbnail (server-rendered screenshot if one exists, otherwise a CSS composition with logo/initials on brand colours). Before Review: locked state "Your preview will appear here". Buttons "Open website" / "Try booking". **No iframe in the tile.** | `?section=website` |
-| **Brand colours** | cols 1–4, row 2 | Logo + "N colours found in your logo", 4 swatches with role labels, status pill (Not sent yet / Sent / Using KERSIVO's choice) | `?app=colours` |
-| **Messages** | cols 5–8, row 2 | Latest message bubble (author, relative time), fake composer, unread count | `?app=messages` |
-| **Changes** | cols 1–5, row 3 | Counters Drafts / With KERSIVO / Done, two latest items with page chip + status chip, round info | `?section=changes` |
-| **Activity** | cols 6–12, row 3 | Latest 5 events with icon dot, actor, relative time; "Show all" opens `?app=activity` | `?app=activity` |
+| **Your website build** | cols 1–8, row 1 | 5-step progress Requested → Designing → Review → Launch → Live (done / current / upcoming markers). No percentages. | — (not a link) |
+| **Your preview** | cols 9–12, rows 1–2 | Static phone-frame thumbnail (server-rendered screenshot if one exists, otherwise a CSS composition with logo/initials on brand colours). Before Review: locked state "Your preview will appear here". Buttons "Open website" / "Try booking". **No iframe in the tile.** | `/admin/website` |
+| **Website content** | cols 1–4, row 2 | Empty: one-line prompt + **Add to your website**. Filled: up to 4 shop-photo thumbs + status rows (Logo, Shop photos, Team photos, Text; Other files only once a file exists). Inline **Add** opens the same menu. | `?app=materials&item=…` |
+| **Your shop** | cols 5–8, row 2 | Team / Services / Products counts, or "Add your first …" → `/admin/{team\|services\|products}?add=1`. Hidden after Review (launch / live). | Real admin screens |
+| **Changes** | cols 1–8, row 3 | Counters Drafts / With KERSIVO / Done, two latest items with page chip + status chip, round info | `/admin/changes` |
+| **Brand colours** | cols 9–12, row 3 | Logo + "N colours found in your logo", swatches with role labels, status pill (Not sent yet / Sent / Using KERSIVO's choice) | `?app=colours` |
+| **Activity** | cols 1–12, row 4 | Latest events grouped by day; "Show all" opens `?app=activity` | `?app=activity` |
 
-768–1279px: 6 columns — progress full width; preview + colours side by side; messages + changes; activity full width. <768px: single column in order progress, preview, colours, messages, changes, activity.
+768–1279px: 6 columns — progress full width; preview + content; shop + colours; changes; activity. <768px: single column in order progress, preview, content, shop, changes, colours, activity. The `+` materials tile from the earlier polish is gone (`admin-hub-add-tile` must stay at count 0).
 
-Stage variants: Requested/Designing — preview tile locked, changes tile locked ("Available when your preview is ready"), "What we need" = upload logo/photos (optional). Launch — progress tile shows *Our steps* (domain, SSL, publish) in the right box. Expired/Declined — calm full-width state card replaces the bento (copy from HUB_SPEC §9.2).
+Stage variants: Requested/Designing — preview tile locked, changes tile locked ("Available when your preview is ready"). Launch — shop tile hidden. Expired/Declined — calm full-width state card replaces the bento (copy from HUB_SPEC §9.2).
+
+### 4.1 Add menu (A2)
+
+Header control labelled **Add** (`aria-haspopup="menu"`, `aria-label` on the menu: "Add to your website or shop"). Desktop: dropdown. ≤640px: bottom sheet. Groups:
+
+| Group | Items | Destination |
+|---|---|---|
+| **Your website** | Shop photos · Logo · Text for your website · Team photos · Price list · Other files | `?app=materials&item=` (`photos`, `logo`, `text`, `team-photos`, `price-list`, `other`) — in-place app |
+| **Your shop** | Team member · Service · Product | `/admin/team?add=1` · `/admin/services?add=1` · `/admin/products?add=1` — only in requested / designing / review |
+
+Website items follow `canUpload` / `canEditDetails`. Shop items follow the H1 draft-shop stages. Keyboard: Arrow / Home / End, `Escape` returns focus to **Add**. Opening a website item from the menu, then closing the app, returns focus to **Add** (the menuitem unmounts). Analytics: `hub_add_menu_open`, `hub_add_menu_item` (allowlisted `item` only) via `POST /api/admin-hub/event`.
 
 ## 5. Red setup card (mockup 06)
 
@@ -94,18 +106,22 @@ Same component family as `AdminLaunchCtaButton` `--conversion` (red gradient, ic
 
 | Phase | Status / title | Rows → app |
 |---|---|---|
-| 1 · Preview (Requested→Review) | "YOUR SHOP · n OF 7" / "Help us build your site" | Logo → `?app=logo` · Shop photos → `?app=photos` · Services & prices → `/admin/services` · Team → `/admin/team` · Opening hours → `?app=hours` · About your shop (Optional) → `?app=about` · Products (Optional) → `/admin/products` |
+| 1 · Preview (Requested→Review) | "YOUR SHOP · n OF 7" / "Help us build your site" | Logo → `?app=materials&item=logo` · Shop photos → `?app=materials&item=photos` · Services & prices → `/admin/services` · Team → `/admin/team` · Opening hours → `?app=hours` · About your shop (Optional) → `?app=materials&item=text` · Products (Optional) → `/admin/products` |
 | 2 · Launch (paid, not live) | "LAUNCH · n OF 4" / "Let's put you live" | Business details · Domain · Payments (Optional) · Approve your website → the existing launch checklist items (`/admin/preview-launch#item`, restyled in this shell) |
 | 3 · Live (full admin) | "YOU'RE LIVE · n OF 3" / "Get the most from KERSIVO" | View your website (opens live site, marks done) · Make a test booking (`/admin/test-book`) · Set up retail (Optional, existing retail onboarding) |
 
-Done rules phase 1: Logo = ≥1 LOGO asset; Shop photos = ≥1 SHOP_PHOTO; Services = ≥1 active service on the draft shop; Team = ≥1 active barber on the draft shop; Hours = review state CONFIRMED or CORRECTIONS_SENT/APPLIED; About = aboutText present; Products (optional) = ≥1 product on the draft shop. Hours still uses the hub Hours app and, before Review, may show tag "From your links". `?app=services` and `?app=team` 303 to the real screens. Phase 3: card hides when all done or after "Dismiss" (stored per shop). Starter and non-hub shops keep today's card logic untouched.
+Done rules phase 1: Logo = ≥1 LOGO asset; Shop photos = ≥1 SHOP_PHOTO; Services = ≥1 active service on the draft shop; Team = ≥1 active barber on the draft shop; Hours = review state CONFIRMED or CORRECTIONS_SENT/APPLIED; About = aboutText present; Products (optional) = ≥1 product on the draft shop. Hours still uses the hub Hours app and, before Review, may show tag "From your links". `?app=services` and `?app=team` 303 to the real screens. `?app=about` rewrites to the materials window on the text card. Phase 3: card hides when all done or after "Dismiss" (stored per shop). Starter and non-hub shops keep today's card logic untouched.
 
 ## 6. Apps (window on desktop, sheet on mobile)
 
-- Opened by `?app=<id>` (ids: `logo, photos, materials, hours, about, colours, messages, activity, setup, business, domain, payments, approve`). `setup` = list of the remaining detail apps (target of old `/details`). **Services, Team and Products are not apps** — they are the real admin screens at `/admin/services`, `/admin/team` and `/admin/products`.
-- Desktop: centred window over a blurred scrim, max-width 1120px (messages 720px), radius 22px, title bar (icon, title, breadcrumb "Overview › …", optional action, close), scrollable body, sticky footer with the single primary action. Mobile: bottom sheet at full height minus top bar, grab handle, sticky footer.
-- Behaviour: focus trap, `Esc` closes, back button closes (history entry per open), focus returns to the tile/row that opened it, `aria-modal`, title as `aria-labelledby`. View Transitions API morph from tile → window when supported and `prefers-reduced-motion` is not set; otherwise 160ms fade/scale.
-- Content reuses existing islands: `HubUploader` (logo, photos, price list inside Photos app as a second section), `HubReviewCards` (hours only — services/team review cards are retired; POSTing those kinds returns 410), about text field, `HubMessages` (messages), activity feed. Restyle only; keep their logic and tests.
+- Opened by `?app=<id>` (ids: `logo, photos, materials, hours, about, colours, messages, activity, setup, business, domain, payments, approve`). `materials` is **Add to your website** (A3): logo, shop photos, team photos, price list, other files, and the text card. `about` is an alias that opens `materials` with `item=text`. `setup` = list of the remaining detail apps (target of old `/details`). **Services, Team and Products are not apps** — they are the real admin screens at `/admin/services`, `/admin/team` and `/admin/products`.
+- **Materials / text card fields** (autosave, do not consume a change round): About your shop (`aboutText`, ≤600), Instagram (`instagramUrl` — `@handle`, handle or instagram.com URL, stored as `https://www.instagram.com/<handle>/`), Anything else (`websiteExtraText`, ≤2000). Ops Files tab shows the same three fields plus last-updated; Astro interpolates them (escaped). Caption on an asset ≤140.
+- **Labelled add actions (A1)** on the shared panels (hub and paid): `AdminAddButton` visible label "Add service" / "Add team member" / "Add product". Empty states: "Add your first …". `?add=1` opens the create sheet once, then is stripped. One interface — do not fork a panel for the hub.
+- Desktop: centred window over a blurred scrim, max-width 1120px (messages 720px), radius 22px, title bar (icon, title, breadcrumb "Overview › …", optional action, close), scrollable body, sticky footer with the single primary action. Mobile: bottom sheet at full height minus top bar, grab handle, sticky footer. Materials uses a full-screen sheet below 640px.
+- Behaviour: focus trap, `Esc` closes, back button closes (history entry per open), focus returns to the tile/row/Add trigger that opened it, `aria-modal`, title as `aria-labelledby`. View Transitions API morph from tile → window when supported and `prefers-reduced-motion` is not set; otherwise 160ms fade/scale.
+- Content reuses existing islands: `HubYourShop` / `HubUploader` (materials), `HubReviewCards` (hours only — services/team review cards are retired; POSTing those kinds returns 410), `HubMessages` (messages page), activity feed. Restyle only; keep their logic and tests.
+
+`/api/admin-hub/*` is a separate namespace from `/api/admin/*`. Hub-only visitors (valid `ks_hub`, no Better Auth cookie) never hit `HUB_ADMIN_API_ALLOWLIST` for these routes. Missing or invalid cookie → handler `404 { error: 'Not found.' }` (not the allowlist 403). Each handler binds to the cookie's PreviewRequest; a client `requestId` in the body is ignored.
 
 ## 7. Brand colours app (mockups 02, 07)
 

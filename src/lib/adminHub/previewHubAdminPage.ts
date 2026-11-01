@@ -68,7 +68,10 @@ export async function preparePreviewHubRealAdminPage(input: {
   if (!resolved || resolved.kind === 'full') {
     return {
       kind: 'response',
-      response: redirectTo(paidAdminRedirectForHubPath(section), resolved?.setCookie ?? null),
+      response: redirectTo(
+        paidAdminRedirectForHubPath(section, context.url.searchParams),
+        resolved?.setCookie ?? null,
+      ),
     };
   }
 

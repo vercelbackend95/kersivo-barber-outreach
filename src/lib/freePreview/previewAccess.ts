@@ -36,6 +36,7 @@ const previewRequestSelect = {
   brandColoursSentAt: true,
   styleNotes: true,
   aboutText: true,
+  websiteExtraText: true,
 } as const;
 
 export type TokenPreviewRequest = NonNullable<Awaited<ReturnType<typeof findPreviewRequestRow>>>;

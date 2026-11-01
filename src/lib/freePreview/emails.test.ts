@@ -227,6 +227,14 @@ describe('free preview emails', () => {
     expect(email.html).toContain('>6<');
     expect(email.html).toContain('/ops/preview-requests/req_1');
     expect(email.html).toContain('Open in KERSIVO Ops');
+    expect(email.html).not.toContain('Website text was updated.');
+    const withText = buildHubFilesAddedInternalEmail({
+      id: 'req_1',
+      shopName: 'Sharp Cuts',
+      counts: [],
+      detailsUpdated: true,
+    });
+    expect(withText.html).toContain('Website text was updated.');
   });
 
   it('KERSIVO → owner message email is transactional, escaped, and links to the hub thread', () => {

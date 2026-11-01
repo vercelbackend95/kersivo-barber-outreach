@@ -287,7 +287,10 @@ export function hubActivityItems(
       grouped.push({
         id: event.id,
         action: event.action,
-        label: HUB_ACTIVITY_ADDED(count, uploadKindLabel(kind, count)),
+        label:
+          kind === 'OTHER'
+            ? HUB_ACTIVITY_LABELS.hub_asset_uploaded
+            : HUB_ACTIVITY_ADDED(count, uploadKindLabel(kind, count)),
         at: event.createdAt,
         relative: formatHubRelativeTime(event.createdAt, now),
         absolute: formatHubAbsoluteDate(event.createdAt),

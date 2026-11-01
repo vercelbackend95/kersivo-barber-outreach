@@ -186,6 +186,10 @@ describe('hub asset helpers', () => {
     expect((await assertHubUploadCaps({ previewRequestId: 'req', kind: 'PRICE_LIST', incomingBytes: 10 })).ok).toBe(
       false,
     );
+    findMany.mockResolvedValueOnce(Array.from({ length: 9 }, () => ({ kind: 'OTHER', sizeBytes: 10 })));
+    expect((await assertHubUploadCaps({ previewRequestId: 'req', kind: 'OTHER', incomingBytes: 10 })).ok).toBe(true);
+    findMany.mockResolvedValueOnce(Array.from({ length: 10 }, () => ({ kind: 'OTHER', sizeBytes: 10 })));
+    expect((await assertHubUploadCaps({ previewRequestId: 'req', kind: 'OTHER', incomingBytes: 10 })).ok).toBe(false);
   });
 });
 

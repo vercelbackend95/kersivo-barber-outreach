@@ -2,8 +2,14 @@
  * Overview bento view-model (docs/admin-hub/ADMIN_HUB_SPEC.md §4).
  * Client-safe except where callers pass already-loaded data.
  */
+import { adminHubMaterialsHref, hubCanAddShopItems } from './addMenu';
 import { adminHubAppHref } from './apps';
 import {
+  ADMIN_HUB_ADD_LOGO,
+  ADMIN_HUB_ADD_OTHER,
+  ADMIN_HUB_ADD_PHOTOS,
+  ADMIN_HUB_ADD_TEAM_PHOTOS,
+  ADMIN_HUB_ADD_TEXT,
   ADMIN_HUB_CHANGES_DONE,
   ADMIN_HUB_CHANGES_DRAFTS,
   ADMIN_HUB_CHANGES_EMPTY,
@@ -21,11 +27,24 @@ import {
   ADMIN_HUB_COLOURS_NOT_SENT,
   ADMIN_HUB_COLOURS_SAVED,
   ADMIN_HUB_COLOURS_SENT,
+  ADMIN_HUB_CONTENT_DONE,
+  ADMIN_HUB_NOT_ADDED,
+  ADMIN_HUB_SHOP_PRODUCTS,
+  ADMIN_HUB_SHOP_PRODUCTS_ADD,
+  ADMIN_HUB_SHOP_PRODUCTS_COUNT,
+  ADMIN_HUB_SHOP_SERVICES,
+  ADMIN_HUB_SHOP_SERVICES_ADD,
+  ADMIN_HUB_SHOP_SERVICES_COUNT,
+  ADMIN_HUB_SHOP_TEAM,
+  ADMIN_HUB_SHOP_TEAM_ADD,
+  ADMIN_HUB_SHOP_TEAM_COUNT,
   ADMIN_HUB_STAGE_OF,
   ADMIN_HUB_STEP_TODAY,
   ADMIN_HUB_UNREAD_COUNT,
 } from './copy';
-import { ADMIN_HUB_LINKS } from './links';
+import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from './links';
+import { PREVIEW_HUB_PATHS } from './previewHubPaths';
+import type { SetupShopCounts } from './setupCard';
 import {
   HUB_CHANGES_DONE,
   HUB_CHANGES_DRAFT,
@@ -409,6 +428,216 @@ export function overviewHideAddMaterialsPrimary(stage: HubStage): boolean {
   return stage === 'requested' || stage === 'designing';
 }
 
+export function overviewShowShopTile(stage: HubStage): boolean {
+  return hubCanAddShopItems(stage);
+}
+
+export const OVERVIEW_BENTO_TILES = [
+  'progress',
+  'preview',
+  'content',
+  'shop',
+  'changes',
+  'colours',
+  'activity',
+] as const;
+
+export type OverviewBentoTile = (typeof OVERVIEW_BENTO_TILES)[number];
+
+/** Named grid areas. Source / DOM order matches mobile order for screen readers. */
+export const OVERVIEW_BENTO_AREAS = {
+  mobile: ['progress', 'preview', 'content', 'shop', 'changes', 'colours', 'activity'],
+  mobileNoShop: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
+  tablet: [
+    'progress progress progress progress progress progress',
+    'preview preview preview content content content',
+    'shop shop shop colours colours colours',
+    'changes changes changes changes changes changes',
+    'activity activity activity activity activity activity',
+  ],
+  tabletNoShop: [
+    'progress progress progress progress progress progress',
+    'preview preview preview content content content',
+    'colours colours colours colours colours colours',
+    'changes changes changes changes changes changes',
+    'activity activity activity activity activity activity',
+  ],
+  desktop: [
+    'progress progress progress progress progress progress progress progress preview preview preview preview',
+    'content content content content shop shop shop shop preview preview preview preview',
+    'changes changes changes changes changes changes changes changes colours colours colours colours',
+    'activity activity activity activity activity activity activity activity activity activity activity activity',
+  ],
+  desktopNoShop: [
+    'progress progress progress progress progress progress progress progress preview preview preview preview',
+    'content content content content content content content content preview preview preview preview',
+    'changes changes changes changes changes changes changes changes colours colours colours colours',
+    'activity activity activity activity activity activity activity activity activity activity activity activity',
+  ],
+} as const;
+
+export function overviewBentoAreasCss(rows: readonly string[]): string {
+  return rows.map((row) => `"${row}"`).join('\n    ');
+}
+
+export function overviewBentoTiles(input: { stage: HubStage; showShop: boolean }): OverviewBentoTile[] {
+  if (isOverviewTerminal(input.stage)) return [];
+  return OVERVIEW_BENTO_TILES.filter((id) => id !== 'shop' || input.showShop);
+}
+
+export type OverviewContentAsset = {
+  id: string;
+  kind: string;
+  hasThumb: boolean;
+  contentType: string;
+  createdAt: string;
+};
+
+export type OverviewContentThumb = {
+  id: string;
+  src: string;
+};
+
+export type OverviewContentStatusId = 'logo' | 'photos' | 'team-photos' | 'text' | 'other';
+
+export type OverviewContentStatus = {
+  id: OverviewContentStatusId;
+  label: string;
+  href: string;
+  value: string;
+  done: boolean;
+};
+
+export function hubAssetThumbSrc(asset: Pick<OverviewContentAsset, 'id' | 'hasThumb' | 'contentType'>): string | null {
+  if (asset.hasThumb) return `${ADMIN_HUB_API_BASE}/assets/${encodeURIComponent(asset.id)}?size=thumb`;
+  if (asset.contentType.startsWith('image/') && !asset.contentType.includes('svg')) {
+    return `${ADMIN_HUB_API_BASE}/assets/${encodeURIComponent(asset.id)}?size=full`;
+  }
+  return null;
+}
+
+export function overviewWebsiteContent(input: {
+  assets: OverviewContentAsset[];
+  aboutText?: string | null;
+  websiteExtraText?: string | null;
+}): {
+  empty: boolean;
+  thumbs: OverviewContentThumb[];
+  status: OverviewContentStatus[];
+} {
+  const photos = input.assets.filter((asset) => asset.kind === 'SHOP_PHOTO');
+  const teamPhotos = input.assets.filter((asset) => asset.kind === 'TEAM_PHOTO');
+  const others = input.assets.filter((asset) => asset.kind === 'OTHER');
+  const hasLogo = input.assets.some((asset) => asset.kind === 'LOGO');
+  const hasPriceList = input.assets.some((asset) => asset.kind === 'PRICE_LIST');
+  const hasText = Boolean(input.aboutText?.trim() || input.websiteExtraText?.trim());
+  const thumbs = [...photos]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, 4)
+    .flatMap((asset) => {
+      const src = hubAssetThumbSrc(asset);
+      return src ? [{ id: asset.id, src }] : [];
+    });
+  const status: OverviewContentStatus[] = [
+    {
+      id: 'logo',
+      label: ADMIN_HUB_ADD_LOGO,
+      href: adminHubMaterialsHref('logo'),
+      value: hasLogo ? ADMIN_HUB_CONTENT_DONE : ADMIN_HUB_NOT_ADDED,
+      done: hasLogo,
+    },
+    {
+      id: 'photos',
+      label: ADMIN_HUB_ADD_PHOTOS,
+      href: adminHubMaterialsHref('photos'),
+      value: String(photos.length),
+      done: photos.length > 0,
+    },
+    {
+      id: 'team-photos',
+      label: ADMIN_HUB_ADD_TEAM_PHOTOS,
+      href: adminHubMaterialsHref('team-photos'),
+      value: String(teamPhotos.length),
+      done: teamPhotos.length > 0,
+    },
+    {
+      id: 'text',
+      label: ADMIN_HUB_ADD_TEXT,
+      href: adminHubMaterialsHref('text'),
+      value: hasText ? ADMIN_HUB_CONTENT_DONE : ADMIN_HUB_NOT_ADDED,
+      done: hasText,
+    },
+  ];
+  if (others.length > 0) {
+    status.push({
+      id: 'other',
+      label: ADMIN_HUB_ADD_OTHER,
+      href: adminHubMaterialsHref('other'),
+      value: String(others.length),
+      done: true,
+    });
+  }
+  return {
+    empty: !hasLogo && photos.length === 0 && teamPhotos.length === 0 && !hasText && others.length === 0 && !hasPriceList,
+    thumbs,
+    status,
+  };
+}
+
+export type OverviewShopRowId = 'team' | 'services' | 'products';
+
+export type OverviewShopRow = {
+  id: OverviewShopRowId;
+  name: string;
+  detail: string;
+  href: string;
+  empty: boolean;
+};
+
+export function overviewShopTile(input: {
+  stage: HubStage;
+  counts: SetupShopCounts | null | undefined;
+}): { show: boolean; rows: OverviewShopRow[] } {
+  if (!overviewShowShopTile(input.stage)) return { show: false, rows: [] };
+  const counts = input.counts ?? { activeServices: 0, activeBarbers: 0, products: 0 };
+  return {
+    show: true,
+    rows: [
+      shopRow('team', ADMIN_HUB_SHOP_TEAM, counts.activeBarbers, PREVIEW_HUB_PATHS.team, ADMIN_HUB_SHOP_TEAM_COUNT, ADMIN_HUB_SHOP_TEAM_ADD),
+      shopRow(
+        'services',
+        ADMIN_HUB_SHOP_SERVICES,
+        counts.activeServices,
+        PREVIEW_HUB_PATHS.services,
+        ADMIN_HUB_SHOP_SERVICES_COUNT,
+        ADMIN_HUB_SHOP_SERVICES_ADD,
+      ),
+      shopRow(
+        'products',
+        ADMIN_HUB_SHOP_PRODUCTS,
+        counts.products,
+        PREVIEW_HUB_PATHS.products,
+        ADMIN_HUB_SHOP_PRODUCTS_COUNT,
+        ADMIN_HUB_SHOP_PRODUCTS_ADD,
+      ),
+    ],
+  };
+}
+
+function shopRow(
+  id: OverviewShopRowId,
+  name: string,
+  count: number,
+  path: string,
+  countLabel: (n: number) => string,
+  addLabel: string,
+): OverviewShopRow {
+  if (count <= 0) {
+    return { id, name, detail: addLabel, href: `${path}?add=1`, empty: true };
+  }
+  return { id, name, detail: countLabel(count), href: path, empty: false };
+}
+
 export function overviewTileHrefs() {
   return {
     preview: ADMIN_HUB_LINKS.website,
@@ -417,6 +646,10 @@ export function overviewTileHrefs() {
     messages: ADMIN_HUB_LINKS.messages,
     changes: ADMIN_HUB_LINKS.changes,
     activity: adminHubAppHref('activity'),
+    materials: adminHubAppHref('materials'),
+    team: PREVIEW_HUB_PATHS.team,
+    services: PREVIEW_HUB_PATHS.services,
+    products: PREVIEW_HUB_PATHS.products,
   };
 }
 

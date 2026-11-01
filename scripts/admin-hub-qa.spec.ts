@@ -54,10 +54,12 @@ test('preview hub QA: routes, widths, keyboard, console', async ({ page }) => {
   }
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  const add = page.getByTestId('admin-hub-add-tile');
+  const add = page.getByTestId('admin-hub-add');
   await expect(add).toBeVisible();
   await add.focus();
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('admin-hub-add-menu')).toBeVisible();
+  await page.getByRole('menuitem', { name: /Shop photos/ }).click();
   await expect(page.getByTestId('admin-hub-app')).toBeVisible();
   await page.screenshot({ path: join(shotDir, 'add-dialog-1440.png') });
   await page.keyboard.press('Escape');

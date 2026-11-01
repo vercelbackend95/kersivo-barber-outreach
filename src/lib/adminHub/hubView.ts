@@ -141,6 +141,7 @@ export async function loadAdminHubView(
     changeItems,
     messages,
     setup,
+    shopCounts,
     overview,
     activity,
     launchFlags,

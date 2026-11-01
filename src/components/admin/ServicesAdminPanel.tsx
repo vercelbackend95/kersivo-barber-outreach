@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import AdminSectionHeader from './AdminSectionHeader';
+import AdminAddButton from './AdminAddButton';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
-import { ChevronDown, Plus, Scissors, Search, Star, X } from '../lucide-react';
+import { ChevronDown, Scissors, Search, Star } from '../lucide-react';
 import { adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
+import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import ServiceWizard from './service-wizard/ServiceWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
@@ -117,9 +119,11 @@ function useAdminBodyScrollLock(isLocked: boolean): void {
 export default function ServicesAdminPanel({
   isBlacklineDemo = false,
   showcaseMode = false,
+  openCreateOnMount = false,
 }: {
   isBlacklineDemo?: boolean;
   showcaseMode?: boolean;
+  openCreateOnMount?: boolean;
 }) {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -138,6 +142,7 @@ export default function ServicesAdminPanel({
   const [serviceStatusById, setServiceStatusById] = useState<Record<string, string>>({});
   const serviceSearchInputRef = useRef<HTMLInputElement | null>(null);
   const serviceSortRef = useRef<HTMLDivElement | null>(null);
+  const addIntentConsumedRef = useRef(false);
   const isMobileAdminChrome = useAdminMobileChromeBreakpoint();
   useAdminBodyScrollLock(isMobileAdminChrome && isServiceSheetOpen);
 
@@ -298,6 +303,19 @@ export default function ServicesAdminPanel({
     setIsServiceSheetOpen(true);
   }
 
+  useEffect(() => {
+    if (!openCreateOnMount || addIntentConsumedRef.current) return;
+    if (loading) return;
+    addIntentConsumedRef.current = true;
+    if (!isPublicAdminDemoMode()) {
+      setEditingId(null);
+      setError('');
+      setMessage('');
+      setIsServiceSheetOpen(true);
+    }
+    stripAdminAddQueryFromUrl();
+  }, [openCreateOnMount, loading]);
+
   function startEdit(service: ServiceRow) {
     if (isPublicAdminDemoMode()) {
       notifyAdminDemoBlocked();
@@ -408,17 +426,7 @@ export default function ServicesAdminPanel({
         title="Services"
         description="Service catalogue"
         metaBadge={`${services.length} services`}
-        actions={
-          <button
-            type="button"
-            className="btn btn--primary btn--icon"
-            aria-label="Add service"
-            title="Add service"
-            onClick={openCreateServiceSheet}
-          >
-            <Plus aria-hidden />
-          </button>
-        }
+        actions={<AdminAddButton label="Add service" onClick={openCreateServiceSheet} />}
       />
 
       <AdminDesktopDashHeroSlot />
@@ -430,7 +438,8 @@ export default function ServicesAdminPanel({
         <EmptyState
           icon={Scissors}
           title="No services yet"
-          description="Add your first service to start accepting bookings."
+          description="Add the services customers can book, with prices and durations."
+          action={<AdminAddButton label="Add your first service" onClick={openCreateServiceSheet} />}
         />
       ) : null}
 

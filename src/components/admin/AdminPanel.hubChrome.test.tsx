@@ -6,13 +6,25 @@ import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./BookingsAdminPanel', () => ({
-  default: () => React.createElement('div', { 'data-testid': 'bookings-panel' }),
+  default: (props: { openCreateOnMount?: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'bookings-panel',
+      'data-open-create': props.openCreateOnMount ? '1' : '0',
+    }),
 }));
 vi.mock('./ServicesAdminPanel', () => ({
-  default: () => React.createElement('div', { 'data-testid': 'services-panel' }),
+  default: (props: { openCreateOnMount?: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'services-panel',
+      'data-open-create': props.openCreateOnMount ? '1' : '0',
+    }),
 }));
 vi.mock('./ShopAdminPanel', () => ({
-  default: () => React.createElement('div', { 'data-testid': 'shop-panel' }),
+  default: (props: { openCreateOnMount?: boolean }) =>
+    React.createElement('div', {
+      'data-testid': 'shop-panel',
+      'data-open-create': props.openCreateOnMount ? '1' : '0',
+    }),
 }));
 vi.mock('./ClientsAdminPanel', () => ({ default: () => null }));
 vi.mock('./AiAssistantPanel', () => ({ default: () => null }));
@@ -118,5 +130,27 @@ describe('AdminPanel hubChrome', () => {
     expect(assign).not.toHaveBeenCalled();
 
     Object.defineProperty(window, 'location', { configurable: true, value: original });
+  });
+
+  it('passes openCreateOnMount to Services when ?add=1 is present', async () => {
+    window.history.replaceState(null, '', '/admin/services?add=1');
+    render(<AdminPanel initialSection="services" hubChrome={hubChrome} />);
+    const panel = await waitFor(() => {
+      const node = document.querySelector('[data-testid="services-panel"]');
+      expect(node).toBeTruthy();
+      return node as HTMLElement;
+    });
+    expect(panel.getAttribute('data-open-create')).toBe('1');
+  });
+
+  it('does not pass openCreateOnMount when add is absent', async () => {
+    window.history.replaceState(null, '', '/admin/services');
+    render(<AdminPanel initialSection="services" hubChrome={hubChrome} />);
+    const panel = await waitFor(() => {
+      const node = document.querySelector('[data-testid="services-panel"]');
+      expect(node).toBeTruthy();
+      return node as HTMLElement;
+    });
+    expect(panel.getAttribute('data-open-create')).toBe('0');
   });
 });

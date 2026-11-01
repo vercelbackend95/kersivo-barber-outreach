@@ -37,6 +37,9 @@ import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest'
 import { prisma } from '@/lib/db/client';
 import {
   HUB_OPS_ABOUT,
+  HUB_OPS_INSTAGRAM,
+  HUB_OPS_TEXT_UPDATED,
+  HUB_OPS_WEBSITE_EXTRA,
   HUB_OPS_BRAND_COLOURS,
   HUB_OPS_DOWNLOAD,
   HUB_OPS_FILES_EMPTY,
@@ -88,6 +91,14 @@ function formatDate(value: Date | null | undefined): string {
   if (!value) return '—';
   return value.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' });
 }
+
+const websiteTextUpdatedAt = request
+  ? request.events.find(
+      (event) =>
+        event.action === PREVIEW_REQUEST_ACTIONS.OWNER_EDITED_WEBSITE_TEXT ||
+        event.action === PREVIEW_REQUEST_ACTIONS.HUB_DETAILS_SAVED,
+    )?.createdAt ?? request.updatedAt
+  : null;
 
 const hubEnabled = isPreviewHubEnabled() || isAdminHubEnabled();
 const adminHubEnabled = isAdminHubEnabled();
@@ -377,6 +388,18 @@ const fields: Array<[string, string]> = request
                       <div class="ops-pr-detail__item">
                         <dt>{HUB_OPS_ABOUT}</dt>
                         <dd>{request.aboutText ?? '—'}</dd>
+                      </div>
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_INSTAGRAM}</dt>
+                        <dd>{request.instagramUrl ?? '—'}</dd>
+                      </div>
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_WEBSITE_EXTRA}</dt>
+                        <dd>{request.websiteExtraText ?? '—'}</dd>
+                      </div>
+                      <div class="ops-pr-detail__item">
+                        <dt>{HUB_OPS_TEXT_UPDATED}</dt>
+                        <dd>{formatDate(websiteTextUpdatedAt)}</dd>
                       </div>
                     </dl>
                     {request.hubAssets.length === 0 ? (
