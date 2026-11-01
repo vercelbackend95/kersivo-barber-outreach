@@ -5,9 +5,13 @@ import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
 import {
   BarChart2,
   Calendar,
+  Globe,
+  LayoutDashboard,
+  ListChecks,
   Lock,
   LogOut,
   Menu,
+  MessageCircle,
   Package,
   Scissors,
   ShoppingBag,
@@ -26,6 +30,10 @@ import BlacklineConversionCard from './BlacklineConversionCard';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
+import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
+import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER } from '@/lib/adminHub/copy';
+import { PREVIEW_HUB_PATHS, type PreviewHubSection } from '@/lib/adminHub/previewHubPaths';
+import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
 import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
@@ -38,9 +46,16 @@ import '@/styles/components/admin-demo.css';
 import '@/styles/components/admin-profile.css';
 import '@/styles/components/admin-sidebar-launch-cta.css';
 
+export type AdminChromeMode = 'full' | 'preview';
+
 type AdminLayoutProps = {
-  activeSection: AdminSection;
-  onChangeSection: (section: AdminSection) => void;
+  /** `preview` = Free Preview hub chrome. Paid admin stays `full`. */
+  mode?: AdminChromeMode;
+  previewSection?: PreviewHubSection;
+  previewSetup?: SetupCardModel | null;
+  previewOperator?: boolean;
+  activeSection?: AdminSection;
+  onChangeSection?: (section: AdminSection) => void;
   isTransitioning: boolean;
   isEntering?: boolean;
   showPending?: boolean;
@@ -85,6 +100,18 @@ type SectionGroup = {
 };
 
 const ICON = { width: 16, height: 16, 'aria-hidden': true as const };
+
+const previewNavItems: Array<{
+  id: PreviewHubSection;
+  href: string;
+  label: string;
+  icon: React.ReactElement;
+}> = [
+  { id: 'overview', href: PREVIEW_HUB_PATHS.overview, label: 'Overview', icon: <LayoutDashboard {...ICON} /> },
+  { id: 'changes', href: PREVIEW_HUB_PATHS.changes, label: 'Changes', icon: <ListChecks {...ICON} /> },
+  { id: 'website', href: PREVIEW_HUB_PATHS.website, label: 'Website', icon: <Globe {...ICON} /> },
+  { id: 'messages', href: PREVIEW_HUB_PATHS.messages, label: 'Messages', icon: <MessageCircle {...ICON} /> },
+];
 
 const menuGroups: SectionGroup[] = [
   {
@@ -224,7 +251,11 @@ function SidebarStatus({
 }
 
 export default function AdminLayout({
-  activeSection,
+  mode = 'full',
+  previewSection = 'overview',
+  previewSetup = null,
+  previewOperator = false,
+  activeSection = 'bookings_dashboard',
   onChangeSection,
   isTransitioning,
   isEntering = false,
@@ -244,10 +275,12 @@ export default function AdminLayout({
   showcaseMode = false,
   children,
 }: AdminLayoutProps) {
+  const isPreviewChrome = mode === 'preview';
+  const changeSection = onChangeSection ?? (() => undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileTopExtension, setMobileTopExtension] = useState<React.ReactNode | null>(null);
   const [showPreviewSubscribeBanner, setShowPreviewSubscribeBanner] = useState(() =>
-    typeof window === 'undefined' ? true : isPreviewSubscribeBannerVisible(),
+    isPreviewChrome ? false : typeof window === 'undefined' ? true : isPreviewSubscribeBannerVisible(),
   );
   const mainContentRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
@@ -261,12 +294,12 @@ export default function AdminLayout({
   const brandShopName = isBlacklineDemo ? shopName : isPublicDemo ? null : shopName;
 
   const canOpenBarbershopSettings =
-    !isPublicDemo && Boolean(!permissions || permissions.includes('shop.settings'));
+    !isPreviewChrome && !isPublicDemo && Boolean(!permissions || permissions.includes('shop.settings'));
 
   const openBarbershopSettings = useCallback(() => {
-    onChangeSection('barbershop_settings');
+    changeSection('barbershop_settings');
     setIsMobileMenuOpen(false);
-  }, [onChangeSection]);
+  }, [changeSection]);
 
   const visibleMenuGroups = useMemo(() => {
     if (!permissions) return menuGroups;
@@ -364,7 +397,7 @@ export default function AdminLayout({
 
   const onSelectSection = (section: AdminSection) => {
     setIsMobileMenuOpen(false);
-    onChangeSection(section);
+    changeSection(section);
   };
 
   const { gate: productGate, openUpgrade } = useAdminProductLocks();
@@ -404,7 +437,15 @@ export default function AdminLayout({
     image: null,
   };
 
-  const accountFooter = isPublicDemo ? (
+  const hubProfileUser: AdminProfileUser = profileUser ?? {
+    name: shopName?.trim() || null,
+    email: null,
+    image: null,
+  };
+
+  const accountFooter = isPreviewChrome ? (
+    <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="desktop" />
+  ) : isPublicDemo ? (
     <AdminSidebarProfile
       mode="guest"
       variant="desktop"
@@ -445,7 +486,9 @@ export default function AdminLayout({
     </button>
   );
 
-  const accountFooterMobile = isPublicDemo ? (
+  const accountFooterMobile = isPreviewChrome ? (
+    <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="mobile" />
+  ) : isPublicDemo ? (
     <AdminSidebarProfile
       mode="guest"
       variant="mobile"
@@ -488,34 +531,52 @@ export default function AdminLayout({
 
   const renderMenu = (showLaunchCta: boolean) => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
-      {visibleMenuGroups.map((group) => (
-        <div className="admin-sidebar-group" key={group.title}>
-          <p className="admin-sidebar-group-title">{group.title}</p>
-          {group.items.map((item) => {
-            const locked = lockedFeatureForSection(productGate, item.section) !== null;
-            return (
-              <button
-                key={item.section}
-                type="button"
-                className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}${locked ? ' admin-sidebar-link--locked' : ''}`}
-                aria-current={activeSection === item.section ? 'page' : undefined}
-                aria-label={locked ? `${item.label} (Full KERSIVO)` : undefined}
-                data-locked={locked ? 'true' : undefined}
-                onClick={() => onSelectSection(item.section)}
-              >
-                <span className="admin-sidebar-link-icon">{item.icon}</span>
-                <span className="admin-sidebar-link-label">{item.label}</span>
-                {locked ? (
-                  <span className="admin-sidebar-link-lock" aria-hidden="true">
-                    <Lock width={13} height={13} />
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+      {isPreviewChrome ? (
+        <div className="admin-sidebar-group">
+          <p className="admin-sidebar-group-title">{ADMIN_HUB_NAV_GROUP}</p>
+          {previewNavItems.map((item) => (
+            <a
+              key={item.id}
+              href={item.href}
+              className={`admin-sidebar-link${previewSection === item.id ? ' admin-sidebar-link--active' : ''}`}
+              aria-current={previewSection === item.id ? 'page' : undefined}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <span className="admin-sidebar-link-icon">{item.icon}</span>
+              <span className="admin-sidebar-link-label">{item.label}</span>
+            </a>
+          ))}
         </div>
-      ))}
-      {isBlacklineDemo && showLaunchCta ? (
+      ) : (
+        visibleMenuGroups.map((group) => (
+          <div className="admin-sidebar-group" key={group.title}>
+            <p className="admin-sidebar-group-title">{group.title}</p>
+            {group.items.map((item) => {
+              const locked = lockedFeatureForSection(productGate, item.section) !== null;
+              return (
+                <button
+                  key={item.section}
+                  type="button"
+                  className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}${locked ? ' admin-sidebar-link--locked' : ''}`}
+                  aria-current={activeSection === item.section ? 'page' : undefined}
+                  aria-label={locked ? `${item.label} (Full KERSIVO)` : undefined}
+                  data-locked={locked ? 'true' : undefined}
+                  onClick={() => onSelectSection(item.section)}
+                >
+                  <span className="admin-sidebar-link-icon">{item.icon}</span>
+                  <span className="admin-sidebar-link-label">{item.label}</span>
+                  {locked ? (
+                    <span className="admin-sidebar-link-lock" aria-hidden="true">
+                      <Lock width={13} height={13} />
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        ))
+      )}
+      {isPreviewChrome ? null : isBlacklineDemo && showLaunchCta ? (
         <div className="admin-sidebar-group">
           <BlacklineConversionCard />
         </div>
@@ -523,7 +584,7 @@ export default function AdminLayout({
         <div className="admin-sidebar-group">
           <AdminSidebarLaunchCta
             isPublicDemo={isPublicDemo}
-            onSpaSection={onChangeSection}
+            onSpaSection={changeSection}
             onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
           />
         </div>
@@ -532,6 +593,9 @@ export default function AdminLayout({
   );
 
   const activeSectionLabel = useMemo(() => {
+    if (isPreviewChrome) {
+      return previewNavItems.find((item) => item.id === previewSection)?.label ?? 'Overview';
+    }
     if (activeSection === 'barbershop_settings') return 'Barbershop settings';
     if (activeSection === 'site_launch') return 'Site launch';
     for (const group of visibleMenuGroups) {
@@ -539,7 +603,7 @@ export default function AdminLayout({
       if (item) return item.label;
     }
     return '';
-  }, [activeSection, visibleMenuGroups]);
+  }, [activeSection, isPreviewChrome, previewSection, visibleMenuGroups]);
 
   const skeletonVariant = useMemo<'kpi' | 'table'>(() => {
     if (activeSection === 'bookings_reports' || activeSection === 'shop_sales') {
@@ -720,11 +784,11 @@ export default function AdminLayout({
   }, [mobileTopExtension, activeSectionLabel, previewUnderConstruction, publicActivityPaused, showPreviewSubscribeBanner]);
 
   useEffect(() => {
-    if (!previewUnderConstruction) return;
+    if (isPreviewChrome || !previewUnderConstruction) return;
     if (prevActiveSectionRef.current === activeSection) return;
     prevActiveSectionRef.current = activeSection;
     setShowPreviewSubscribeBanner(notePreviewSubscribeBannerSectionChange());
-  }, [activeSection, previewUnderConstruction]);
+  }, [activeSection, isPreviewChrome, previewUnderConstruction]);
 
   const handleDismissPreviewSubscribeBanner = useCallback(() => {
     dismissPreviewSubscribeBanner();
@@ -773,12 +837,14 @@ export default function AdminLayout({
           </div>
         </div>
         <div className="admin-mobile-drawer-launch">
-          {isBlacklineDemo ? (
+          {isPreviewChrome ? (
+            previewSetup ? <AdminHubSetupCard placement="sidebar" card={previewSetup} /> : null
+          ) : isBlacklineDemo ? (
             <BlacklineConversionCard />
           ) : canManageBilling ? (
             <AdminSidebarLaunchCta
               isPublicDemo={isPublicDemo}
-              onSpaSection={onChangeSection}
+              onSpaSection={changeSection}
               onUpgrade={isFreeBooking ? openLaunchUpgrade : undefined}
               placement="mobile"
             />
@@ -808,6 +874,9 @@ export default function AdminLayout({
         />
         {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
+          {isPreviewChrome && previewSetup ? (
+            <AdminHubSetupCard placement="sidebar" card={previewSetup} />
+          ) : null}
           <SidebarStatus
             paused={publicActivityPaused && !previewUnderConstruction}
             underConstruction={previewUnderConstruction}
@@ -830,7 +899,11 @@ export default function AdminLayout({
           aria-hidden="true"
         />
         <div className="admin-mobile-top-chrome">
-          {previewUnderConstruction && showPreviewSubscribeBanner ? (
+          {isPreviewChrome && previewOperator ? (
+            <div className="admin-barbershop-paused-banner" role="status">
+              <div className="admin-barbershop-paused-banner__body">{ADMIN_HUB_OPERATOR_BANNER}</div>
+            </div>
+          ) : previewUnderConstruction && showPreviewSubscribeBanner && !isPreviewChrome ? (
             <div className="admin-barbershop-paused-banner" role="status">
               <div className="admin-barbershop-paused-banner__body">
                 <span className="admin-barbershop-paused-banner__desktop-copy">

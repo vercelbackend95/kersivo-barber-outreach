@@ -159,7 +159,7 @@ export function AppHost(props: {
   }, []);
 
   useEffect(() => {
-    const root = document.querySelector('.admin-hub');
+    const root = document.querySelector('.admin-shell');
     if (!root) return;
     const onClick = (event: Event) => {
       const mouse = event as MouseEvent;
@@ -174,7 +174,7 @@ export function AppHost(props: {
       } catch {
         return;
       }
-      if (url.origin !== window.location.origin || url.pathname !== '/admin') return;
+      if (url.origin !== window.location.origin || !url.pathname.startsWith('/admin')) return;
       const id = parseAdminHubApp(url.searchParams.get('app'));
       if (!id) return;
       mouse.preventDefault();

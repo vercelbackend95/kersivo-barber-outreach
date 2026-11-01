@@ -1,7 +1,11 @@
 import { defineMiddleware } from 'astro:middleware';
 // Ensure server Sentry is initialized for API routes (page-ssr alone does not load for /api/*).
 import '../sentry.server.config';
+import type { APIContext } from 'astro';
 import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
+import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
+import { isAdminHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isPreviewHubAllowedPath } from '@/lib/adminHub/previewHubPaths';
 import { applySecurityHeaders } from '@/lib/security/headers';
 import {
   SAFE_METHODS,
@@ -25,6 +29,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
       context.locals.navbarPreviewCta = await resolveNavbarPreviewCta(context);
     } catch {
       context.locals.navbarPreviewCta = null;
+    }
+  }
+
+  if (
+    url.pathname.startsWith('/admin') &&
+    !url.pathname.startsWith('/api/') &&
+    isAdminHubRouteEnabled()
+  ) {
+    const mode = await resolveAdminPageMode({
+      request,
+      now: new Date(),
+      sessionShop: () => adminSessionShopFor(context as unknown as APIContext),
+    });
+    if (mode?.kind === 'hub') {
+      context.locals.adminHubMode = mode;
+      if (url.pathname !== '/admin/hub' && !isPreviewHubAllowedPath(url.pathname)) {
+        const headers = new Headers({ Location: '/admin', ...ADMIN_PRIVATE_HEADERS });
+        if (mode.setCookie) headers.append('Set-Cookie', mode.setCookie);
+        return applySecurityHeaders(new Response(null, { status: 303, headers }), { isProd, isHttps });
+      }
     }
   }
 

@@ -38,8 +38,8 @@ const ctx = {
   viewer: 'owner',
   canAttach: true,
   shopName: 'Test Shop',
-  websiteHref: '/admin?section=website',
-  bookingHref: '/admin?section=website&view=booking',
+  websiteHref: '/admin/website',
+  bookingHref: '/admin/website?view=booking',
   launch: null,
 } as unknown as AdminHubAppContext;
 
@@ -53,7 +53,7 @@ async function loadStub() {
 
 function renderHost(initialApp: 'logo' | null = 'logo') {
   return render(
-    <div className="admin-hub">
+    <div className="admin-shell">
       <a href="/admin?app=logo">Open logo</a>
       <AppHost initialApp={initialApp} ctx={ctx} loadApp={loadStub} />
     </div>,

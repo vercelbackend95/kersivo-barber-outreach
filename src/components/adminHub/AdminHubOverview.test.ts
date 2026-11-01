@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const src = readFileSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubOverview.astro'), 'utf8');
-const page = readFileSync(resolve(process.cwd(), 'src/pages/admin/hub.astro'), 'utf8');
+const page = readFileSync(resolve(process.cwd(), 'src/pages/admin.astro'), 'utf8');
 const old = readFileSync(resolve(process.cwd(), 'src/components/previewHub/HubOverview.astro'), 'utf8');
 
 describe('AdminHubOverview', () => {

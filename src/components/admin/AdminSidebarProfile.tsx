@@ -4,6 +4,8 @@ import { AccountCircle, Ban, Calendar, Globe, Lock, LogOut, Package, Store } fro
 import { authClient } from '@/lib/auth-client';
 import type { KersivoProductState } from '@/lib/shop/kersivoAccess';
 import type { FullKersivoFeature } from '@/lib/admin/productLocks';
+import { ADMIN_HUB_LEAVE } from '@/lib/adminHub/copy';
+import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
 import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
 export type AdminProfileUser = {
@@ -24,7 +26,7 @@ function initialsFromUser(user: AdminProfileUser): string {
 type AdminSidebarProfileProps = {
   user?: AdminProfileUser | null;
   variant: 'desktop' | 'mobile';
-  mode?: 'authenticated' | 'guest' | 'preview';
+  mode?: 'authenticated' | 'guest' | 'preview' | 'hub';
   /** Session permissions; used to hide Owner-only menu items (e.g. Launch). */
   permissions?: string[] | null;
   /** Tenant shop id — opens public /book/{shopId} for deposit smoke tests. */
@@ -67,6 +69,7 @@ export default function AdminSidebarProfile({
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const isPreview = mode === 'preview';
+  const isHub = mode === 'hub';
   const isFreeBooking = !isGuest && !isPreview && productState === 'FREE_BOOKING';
   const lockFeature = (feature: FullKersivoFeature): boolean => {
     if (!isFreeBooking || !onLockedFeature) return false;
@@ -101,10 +104,10 @@ export default function AdminSidebarProfile({
     ? suppressAuthLock
       ? user?.name?.trim() || 'Owner demo'
       : 'Login'
-    : user?.name?.trim() || user?.email?.trim() || (isPreview ? 'My Barbershop' : 'Account');
+    : user?.name?.trim() || user?.email?.trim() || (isPreview || isHub ? 'My Barbershop' : 'Account');
   const planLabel = isGuest
     ? 'Demo'
-    : isPreview
+    : isPreview || isHub
       ? 'Preview'
       : isFreeBooking
         ? 'KERSIVO Starter'
@@ -290,7 +293,7 @@ export default function AdminSidebarProfile({
   };
 
   useEffect(() => {
-    if (isGuest || isPreview || !canManageBilling) {
+    if (isGuest || isPreview || isHub || !canManageBilling) {
       setBillingLabel(null);
       return;
     }
@@ -525,7 +528,14 @@ export default function AdminSidebarProfile({
                 </div>
               )}
               <div className="admin-profile-menu__divider" aria-hidden="true" />
-              {conversionAccountMenu ? (
+              {isHub ? (
+                <form method="post" action={PREVIEW_HUB_PATHS.leave}>
+                  <button type="submit" className="admin-profile-menu__item" role="menuitem">
+                    <LogOut width={15} height={15} aria-hidden="true" />
+                    {ADMIN_HUB_LEAVE}
+                  </button>
+                </form>
+              ) : conversionAccountMenu ? (
                 <>
                   <a
                     className="admin-profile-menu__item admin-profile-menu__item--cta"

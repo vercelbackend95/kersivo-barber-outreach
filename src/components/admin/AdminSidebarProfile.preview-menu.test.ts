@@ -21,9 +21,10 @@ describe('preview sidebar account menu', () => {
       resolve(process.cwd(), 'src/components/admin/AdminSidebarProfile.tsx'),
       'utf8',
     );
-    expect(source).toContain("mode?: 'authenticated' | 'guest' | 'preview'");
+    expect(source).toContain("mode?: 'authenticated' | 'guest' | 'preview' | 'hub'");
     expect(source).toContain("const isPreview = mode === 'preview'");
-    expect(source).toMatch(/isPreview\s*\?\s*'Preview'/);
+    expect(source).toContain("const isHub = mode === 'hub'");
+    expect(source).toMatch(/isPreview \|\| isHub[\s\S]*\?\s*'Preview'/);
     expect(source).toContain('!isPreview && shopId');
     expect(source).toContain('{!isPreview ? (');
     expect(source).toContain('Launch My Barbershop');

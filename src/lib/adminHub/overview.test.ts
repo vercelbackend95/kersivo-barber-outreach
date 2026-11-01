@@ -145,11 +145,11 @@ describe('overview view-model', () => {
     expect(overviewShowLaunch(hub('requested'))).toBe(false);
 
     const hrefs = overviewTileHrefs();
-    expect(hrefs.preview).toBe('/admin?section=website');
-    expect(hrefs.booking).toBe('/admin?section=website&view=booking');
+    expect(hrefs.preview).toBe('/admin/website');
+    expect(hrefs.booking).toBe('/admin/website?view=booking');
     expect(hrefs.colours).toBe('/admin?app=colours');
-    expect(hrefs.messages).toBe('/admin?app=messages');
-    expect(hrefs.changes).toBe('/admin?section=changes');
+    expect(hrefs.changes).toBe('/admin/changes');
+    expect(hrefs.messages).toBe('/admin/messages');
     expect(hrefs.activity).toBe('/admin?app=activity');
     expect(Object.values(hrefs).every((href) => href.startsWith('/admin'))).toBe(true);
   });

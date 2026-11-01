@@ -38,8 +38,8 @@ function renderWebsite(view: 'website' | 'booking' = 'website') {
       isOperator={false}
       converted={false}
       view={view}
-      websiteHref="/admin?section=website"
-      bookingHref="/admin?section=website&view=booking"
+      websiteHref="/admin/website"
+      bookingHref="/admin/website?view=booking"
       draft={draft}
       changeItems={[]}
       includedChangeRounds={1}

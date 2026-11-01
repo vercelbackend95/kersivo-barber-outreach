@@ -10,33 +10,38 @@ import { ADMIN_HUB_LINKS, adminHubUrlFor, tokenHubLinks } from './links';
 const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), 'utf8');
 
 describe('/admin hub location', () => {
-  const parse = (search: string) => parseAdminHubLocation(new URLSearchParams(search));
+  const parse = (path: string) => parseAdminHubLocation(new URL(`http://localhost${path}`));
 
-  it('renders the three sections and falls back to Overview', () => {
-    expect(parse('').section).toBe('overview');
-    expect(parse('section=changes').section).toBe('changes');
-    expect(parse('section=website').section).toBe('website');
-    expect(parse('section=bookings').section).toBe('overview');
+  it('renders the four sections from the path', () => {
+    expect(parse('/admin').section).toBe('overview');
+    expect(parse('/admin/changes').section).toBe('changes');
+    expect(parse('/admin/website').section).toBe('website');
+    expect(parse('/admin/messages').section).toBe('messages');
+    expect(parse('/admin/launch').section).toBe('overview');
   });
 
   it('opens apps without replacing the section underneath', () => {
-    expect(parse('app=messages&draft=reopen')).toMatchObject({ section: 'overview', app: 'messages', draft: 'reopen' });
+    expect(parse('/admin?app=messages&draft=reopen')).toMatchObject({
+      section: 'overview',
+      app: 'messages',
+      draft: 'reopen',
+    });
     for (const app of ['setup', 'logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'activity', 'business']) {
-      expect(parse(`app=${app}`)).toMatchObject({ section: 'overview', app });
+      expect(parse(`/admin?app=${app}`)).toMatchObject({ section: 'overview', app });
     }
-    expect(parse('app=unknown&section=changes')).toMatchObject({ section: 'changes', app: null });
-    expect(parse('section=website&app=logo')).toMatchObject({ section: 'website', app: 'logo' });
-    expect(parse('draft=<script>').draft).toBeNull();
+    expect(parse('/admin/changes?app=unknown')).toMatchObject({ section: 'changes', app: null });
+    expect(parse('/admin/website?app=logo')).toMatchObject({ section: 'website', app: 'logo' });
+    expect(parse('/admin?draft=<script>').draft).toBeNull();
   });
 
   it('keeps the booking view', () => {
-    expect(parse('section=website&view=booking').view).toBe('booking');
-    expect(parse('section=website&view=x').view).toBe('website');
+    expect(parse('/admin/website?view=booking').view).toBe('booking');
+    expect(parse('/admin/website?view=x').view).toBe('website');
   });
 
   it('every bridged URL is an /admin URL without a token', () => {
     for (const subroute of ['', 'overview', 'website', 'changes', 'messages', 'details'] as const) {
-      expect(adminHubUrlFor(subroute, new URLSearchParams())).toMatch(/^\/admin(\?|$)/);
+      expect(adminHubUrlFor(subroute, new URLSearchParams())).toMatch(/^\/admin(\/|\?|$)/);
     }
     expect(Object.values(ADMIN_HUB_LINKS).filter((value) => typeof value === 'string').every((value) => (value as string).startsWith('/admin'))).toBe(true);
     expect(tokenHubLinks('abc').details).toBe('/preview/abc/details');
@@ -57,31 +62,36 @@ describe('/admin page with the flag off', () => {
     const frontmatter = src.split('---')[1]!;
     const guard = frontmatter.indexOf('if (mode) {');
     expect(guard).toBeGreaterThan(frontmatter.indexOf('resolveAdminPageMode('));
-    for (const effect of ['Astro.response.headers', 'Astro.rewrite', 'Astro.locals.adminHubMode']) {
+    for (const effect of ['Astro.response.headers', 'Astro.locals.adminHubMode']) {
       expect(frontmatter.indexOf(effect)).toBeGreaterThan(guard);
     }
   });
 });
 
-describe('/admin hub page never exposes the token', () => {
-  const page = read('src/pages/admin/hub.astro');
-  const shell = read('src/components/adminHub/AdminHubShell.astro');
+describe('/admin hub pages never expose the token', () => {
+  const pages = [
+    read('src/pages/admin.astro'),
+    read('src/pages/admin/changes.astro'),
+    read('src/pages/admin/website.astro'),
+    read('src/pages/admin/messages.astro'),
+  ];
 
-  it('passes an empty token and the cookie API to every remaining island', () => {
-    const tokens = page.match(/token=\{?[^\s>]*/g) ?? [];
-    expect(tokens.length).toBeGreaterThanOrEqual(2);
-    expect(tokens.every((value) => value === 'token=""')).toBe(true);
-    expect(page).toContain('apiBase={ADMIN_HUB_API_BASE}');
-    expect(page).toContain('<AppHost client:load');
-    expect(page).toContain('<AdminHubWebsite');
-    expect(page).toContain('<AdminHubChanges');
-    expect(page).not.toContain('HubWebsiteView');
-    expect(page).not.toContain('HubYourShop');
-    expect(page).not.toContain('HubMessages');
+  it('passes an empty token and the cookie API to remaining islands', () => {
+    const website = read('src/pages/admin/website.astro');
+    const changes = read('src/pages/admin/changes.astro');
+    expect(website).toContain('token=""');
+    expect(changes).toContain('token=""');
+    expect(website).toContain('apiBase={ADMIN_HUB_API_BASE}');
+    expect(read('src/components/adminHub/PreviewHubFrame.astro')).toContain('<AppHost client:load');
+    expect(website).toContain('<AdminHubWebsite');
+    expect(changes).toContain('<AdminHubChanges');
+    expect(website).not.toContain('HubWebsiteView');
+    expect(website).not.toContain('HubYourShop');
+    expect(read('src/pages/admin/messages.astro')).not.toContain('HubMessages');
   });
 
   it('never reads the token or builds /preview URLs', () => {
-    for (const src of [page, shell, read('src/components/adminHub/AdminHubSetupCard.astro')]) {
+    for (const src of [...pages, read('src/components/adminHub/AdminHubSetupCard.tsx')]) {
       expect(src).not.toContain('publicToken');
       expect(src).not.toContain('ctx.token');
       expect(src).not.toContain('previewPagePath');
@@ -90,13 +100,15 @@ describe('/admin hub page never exposes the token', () => {
   });
 
   it('is private and refuses to render outside hub mode', () => {
-    expect(page).toContain('ADMIN_PRIVATE_HEADERS');
-    expect(page).toContain("if (!mode) return hubNotFound();");
-    expect(page).toContain("if (mode.kind !== 'hub')");
+    const hub = read('src/pages/admin/hub.astro');
+    expect(hub).toContain('ADMIN_PRIVATE_HEADERS');
+    expect(hub).toContain("if (!mode) return hubNotFound();");
+    expect(hub).toContain("if (mode.kind !== 'hub')");
+    expect(read('src/pages/admin/changes.astro')).toContain('fallbackFullToAdmin');
   });
 
   it('keeps HubShell for the old /preview pages only', () => {
-    expect(page).not.toContain('components/previewHub/HubShell.astro');
+    expect(read('src/pages/admin.astro')).not.toContain('components/previewHub/HubShell.astro');
     expect(read('src/pages/preview/[token]/overview.astro')).toContain('HubShell');
   });
 });
