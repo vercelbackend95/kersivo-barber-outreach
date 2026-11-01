@@ -1,8 +1,11 @@
 import type { APIContext } from 'astro';
+import { ensureHubDraftShop } from '@/lib/freePreview/ensureHubDraftShop';
+import { resolveHubContext } from '@/lib/freePreview/hubPage';
 import {
   ADMIN_PRIVATE_HEADERS,
   adminSessionShopFor,
   resolveAdminPageMode,
+  type AdminPageMode,
 } from './adminMode';
 import type { AdminHubChrome } from './hubChrome';
 import { preparePreviewHubPage, type PreviewHubPageData, type PreviewHubPrepareResult } from './previewHubPage';
@@ -21,6 +24,29 @@ function redirectTo(location: string, setCookie: string | null): Response {
   return new Response(null, { status: 302, headers });
 }
 
+const HUB_DRAFT_STAGES = new Set(['requested', 'designing', 'review']);
+
+/**
+ * Team / Services / Products need the ownerless draft shop. Create it on first
+ * visit so the owner lands on the real KERSIVO admin, not a setup placeholder.
+ */
+export async function ensureHubModeDraftShop(
+  mode: Extract<AdminPageMode, { kind: 'hub' }>,
+  now: Date = new Date(),
+): Promise<Extract<AdminPageMode, { kind: 'hub' }>> {
+  if (mode.ctx.request.draftShopId) return mode;
+  if (!HUB_DRAFT_STAGES.has(mode.ctx.state.stage)) return mode;
+
+  const result = await ensureHubDraftShop(mode.ctx.request.id);
+  if (!result.ok) return mode;
+
+  const ctx = await resolveHubContext(
+    { previewRequestId: mode.ctx.request.id },
+    { isOperator: mode.ctx.isOperator, now },
+  );
+  return ctx ? { ...mode, ctx } : mode;
+}
+
 /**
  * Hub real-admin pages (Team / Services / Products).
  * Paid visitors keep the SPA bookmark: 302 to /admin?section=…
@@ -31,7 +57,7 @@ export async function preparePreviewHubRealAdminPage(input: {
 }): Promise<PreviewHubPrepareResult> {
   const { context, section } = input;
   const now = new Date();
-  const mode =
+  const resolved =
     context.locals.adminHubMode ??
     (await resolveAdminPageMode({
       request: context.request,
@@ -39,13 +65,14 @@ export async function preparePreviewHubRealAdminPage(input: {
       sessionShop: () => adminSessionShopFor(context as unknown as APIContext),
     }));
 
-  if (!mode || mode.kind === 'full') {
+  if (!resolved || resolved.kind === 'full') {
     return {
       kind: 'response',
-      response: redirectTo(paidAdminRedirectForHubPath(section), mode?.setCookie ?? null),
+      response: redirectTo(paidAdminRedirectForHubPath(section), resolved?.setCookie ?? null),
     };
   }
 
+  const mode = await ensureHubModeDraftShop(resolved, now);
   context.locals.adminHubMode = mode;
   return preparePreviewHubPage({
     context,

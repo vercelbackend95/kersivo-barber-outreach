@@ -2325,7 +2325,7 @@ export default function BookingsAdminPanel({
   const dashboardOpsDashCluster =
     mode === 'dashboard' ? (
       <div className="admin-bookings-ops-dash-cluster">
-        {!isHubAccess && !isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
+        {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
 
         <section
           className={`admin-bookings-ops admin-bookings-ops--dashboard${staffRosterOpen ? ' admin-bookings-ops--staff-roster-open' : ''}`}
@@ -2759,7 +2759,7 @@ export default function BookingsAdminPanel({
               ) : undefined
             }
           />
-          {!isHubAccess && !isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
+          {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
         </>
       )}
 

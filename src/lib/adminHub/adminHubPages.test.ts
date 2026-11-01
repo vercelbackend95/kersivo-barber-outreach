@@ -114,6 +114,8 @@ describe('/admin hub pages never expose the token', () => {
     expect(hub).toContain("if (mode.kind !== 'hub')");
     expect(read('src/pages/admin/changes.astro')).toContain('fallbackFullToAdmin');
     expect(read('src/lib/adminHub/previewHubAdminPage.ts')).toContain('ADMIN_PRIVATE_HEADERS');
+    expect(read('src/lib/adminHub/previewHubAdminPage.ts')).toContain('ensureHubDraftShop');
+    expect(read('src/lib/adminHub/previewHubAdminPage.ts')).toContain('ensureHubModeDraftShop');
     expect(read('src/layouts/PreviewHubDocument.astro')).toContain('noindex={true}');
     expect(read('src/layouts/PreviewHubDocument.astro')).toContain('robotsFollow={false}');
     for (const page of ['team', 'services', 'products']) {
@@ -121,7 +123,7 @@ describe('/admin hub pages never expose the token', () => {
       expect(src).toContain('preparePreviewHubRealAdminPage');
       expect(src).toContain('<AdminPanel client:load');
       expect(src).toContain('hubChrome={hubChrome}');
-      expect(src).toContain('HubDraftShopSetup');
+      expect(src).not.toContain('HubDraftShopSetup');
       expect(src).toContain('PreviewHubAdminDocument');
     }
   });
