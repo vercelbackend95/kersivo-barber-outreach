@@ -113,6 +113,8 @@ describe('HUB_ADMIN_API_ALLOWLIST', () => {
     expect(isHubAdminApiAllowed('POST', '/api/admin/barbers/delete')).toBe(true);
     expect(isHubAdminApiAllowed('POST', '/api/admin/shop/products/create')).toBe(true);
     expect(isHubAdminApiAllowed('PATCH', '/api/admin/shop/products/prod_1')).toBe(true);
+    expect(isHubAdminApiAllowed('GET', '/api/admin/team/shop-hours')).toBe(true);
+    expect(isHubAdminApiAllowed('POST', '/api/admin/team/booking-profiles')).toBe(true);
   });
 
   it('denies bookings, clients, reports, invites, settings, billing, AI and retail onboarding', () => {
@@ -284,6 +286,7 @@ describe('middleware wiring', () => {
     expect(src).toContain('isHubAdminApiAllowed');
     expect(src).toContain('hubAdminUnavailableResponse');
     expect(src).toContain('recordHubOwnerAdminEdit');
+    expect(src).toContain('isPreviewHubAllowedPath');
     expect(HUB_ADMIN_UNAVAILABLE_MESSAGE).toBe('Not available in your preview.');
   });
 });

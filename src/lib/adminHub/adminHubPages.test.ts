@@ -17,6 +17,9 @@ describe('/admin hub location', () => {
     expect(parse('/admin/changes').section).toBe('changes');
     expect(parse('/admin/website').section).toBe('website');
     expect(parse('/admin/messages').section).toBe('messages');
+    expect(parse('/admin/team').section).toBe('team');
+    expect(parse('/admin/services').section).toBe('services');
+    expect(parse('/admin/products').section).toBe('products');
     expect(parse('/admin/launch').section).toBe('overview');
   });
 
@@ -108,6 +111,17 @@ describe('/admin hub pages never expose the token', () => {
     expect(hub).toContain("if (!mode) return hubNotFound();");
     expect(hub).toContain("if (mode.kind !== 'hub')");
     expect(read('src/pages/admin/changes.astro')).toContain('fallbackFullToAdmin');
+    expect(read('src/lib/adminHub/previewHubAdminPage.ts')).toContain('ADMIN_PRIVATE_HEADERS');
+    expect(read('src/layouts/PreviewHubDocument.astro')).toContain('noindex={true}');
+    expect(read('src/layouts/PreviewHubDocument.astro')).toContain('robotsFollow={false}');
+    for (const page of ['team', 'services', 'products']) {
+      const src = read(`src/pages/admin/${page}.astro`);
+      expect(src).toContain('preparePreviewHubRealAdminPage');
+      expect(src).toContain('<AdminPanel client:load');
+      expect(src).toContain('hubChrome={hubChrome}');
+      expect(src).toContain('HubDraftShopSetup');
+      expect(src).toContain('PreviewHubAdminDocument');
+    }
   });
 
   it('keeps HubShell for the old /preview pages only', () => {

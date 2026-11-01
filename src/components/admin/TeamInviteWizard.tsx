@@ -43,6 +43,8 @@ type TeamInviteWizardProps = {
     role: InviteRole;
     bookable: boolean;
   } | null;
+  /** Preview hub: add to the booking team only — never send an invite. */
+  isHubAccess?: boolean;
 };
 
 const ACCESS_EMAIL_HINT =
@@ -64,8 +66,9 @@ export default function TeamInviteWizard({
   onCancel,
   onSent,
   linkBarber = null,
+  isHubAccess = false,
 }: TeamInviteWizardProps) {
-  const isLinkMode = Boolean(linkBarber);
+  const isLinkMode = Boolean(linkBarber) && !isHubAccess;
   const canInviteManager = actorRole === 'OWNER';
   const [role, setRole] = useState<InviteRole>(linkBarber?.role ?? 'BARBER');
   const [bookable, setBookable] = useState(linkBarber?.bookable ?? true);
@@ -96,11 +99,20 @@ export default function TeamInviteWizard({
 
   // Link mode: seat already has services/hours — only collect email.
   const needsBookingSetup = bookable && !isLinkMode;
-  const maxStep = isLinkMode ? 1 : needsBookingSetup ? 5 : 3;
+  const maxStep = isHubAccess
+    ? needsBookingSetup
+      ? 4
+      : 2
+    : isLinkMode
+      ? 1
+      : needsBookingSetup
+        ? 5
+        : 3;
   const reviewStep = needsBookingSetup ? 4 : 2;
-  const accessStep = isLinkMode ? 1 : needsBookingSetup ? 5 : 3;
-  const dashboardAccess = isLinkMode || role === 'MANAGER' || emailImpliesDashboardAccess(email);
-  const emailRequired = isLinkMode || role === 'MANAGER';
+  const accessStep = isHubAccess ? -1 : isLinkMode ? 1 : needsBookingSetup ? 5 : 3;
+  const dashboardAccess =
+    !isHubAccess && (isLinkMode || role === 'MANAGER' || emailImpliesDashboardAccess(email));
+  const emailRequired = !isHubAccess && (isLinkMode || role === 'MANAGER');
 
   useEffect(() => {
     if (!linkBarber) return;
@@ -179,9 +191,9 @@ export default function TeamInviteWizard({
     const options: Array<{ value: InviteRole; label: string }> = [
       { value: 'BARBER', label: 'Barber' },
     ];
-    if (canInviteManager) options.push({ value: 'MANAGER', label: 'Manager' });
+    if (canInviteManager && !isHubAccess) options.push({ value: 'MANAGER', label: 'Manager' });
     return options;
-  }, [canInviteManager]);
+  }, [canInviteManager, isHubAccess]);
 
   const weeklySummary = useMemo(() => getWeeklyHoursSummary(workingHours), [workingHours]);
 
@@ -449,12 +461,12 @@ export default function TeamInviteWizard({
         { n: 2, label: 'Services' },
         { n: 3, label: 'Schedule' },
         { n: 4, label: 'Review' },
-        { n: 5, label: 'Access' },
+        ...(isHubAccess ? [] : [{ n: 5, label: 'Access' }]),
       ]
     : [
         { n: 1, label: 'Role' },
         { n: 2, label: 'Review' },
-        { n: 3, label: 'Access' },
+        ...(isHubAccess ? [] : [{ n: 3, label: 'Access' }]),
       ];
 
   const willInvite = dashboardAccess;

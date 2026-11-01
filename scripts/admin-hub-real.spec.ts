@@ -217,7 +217,7 @@ test.describe('Admin Hub batch 1 — real stack', () => {
       data: { body: 'hello' },
     });
     expect(crossSite.status()).toBe(403);
-    for (const path of ['/api/admin/bookings', '/api/admin/clients', '/api/admin/team', '/api/admin/barbershop-settings']) {
+    for (const path of ['/api/admin/bookings', '/api/admin/clients', '/api/admin/barbershop-settings']) {
       const res = await page.request.get(path, { headers });
       expect([401, 403], `${path} with only ks_hub`).toContain(res.status());
     }
@@ -973,5 +973,96 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     }
     const dismiss = await page.request.post('/api/admin/next-steps/dismiss', { headers });
     expect([401, 403], 'dismiss with only ks_hub').toContain(dismiss.status());
+  });
+
+  test('H2: hub owner uses the real Team, Services and Products screens', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/h2' : '/tmp/kersivo-shots/h2';
+    mkdirSync(shotRoot, { recursive: true });
+    const h2Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    const cookie = await hubCookie(context);
+    expect(cookie).toBeTruthy();
+    const headers = { Cookie: `${cookie!.name}=${cookie!.value}` };
+
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/team"]')).toBeVisible();
+    await expect(page.locator('.admin-sidebar-link[href="/admin/services"]')).toBeVisible();
+    await expect(page.locator('.admin-sidebar-link[href="/admin/products"]')).toBeVisible();
+    await h2Shot('admin');
+
+    await page.goto('/admin/services');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/services"][aria-current="page"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add service' })).toBeVisible();
+    await page.getByRole('button', { name: 'Add service' }).click();
+    await page.locator('#service-wizard-name').fill("Kids' Haircut");
+    await page.getByRole('radio', { name: 'featured' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.locator('#service-wizard-price').fill('18.00');
+    await page.getByRole('button', { name: '30 min' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Create service' }).click();
+    await page.getByRole('button', { name: 'Done' }).click({ timeout: 15000 });
+    await expect(page.locator('.admin-product-row__name', { hasText: "Kids' Haircut" }).first()).toBeVisible();
+    await page.reload();
+    await expect(page.locator('.admin-product-row__name', { hasText: "Kids' Haircut" }).first()).toBeVisible();
+    await h2Shot('admin-services');
+
+    await page.goto('/admin/team');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/team"][aria-current="page"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Add team member' }).click();
+    await page.locator('#team-invite-name').fill('Jamie Cole');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(
+      page.getByRole('list', { name: 'Available services' }).getByText("Kids' Haircut").first(),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: /^Mon,/ }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Add to booking team' }).click();
+    await expect(page.getByRole('button', { name: 'Done' })).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: 'Done' }).click();
+    await expect(page.getByText('Jamie Cole').first()).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Jamie Cole').first()).toBeVisible();
+    await expect(page.getByText('No dashboard account').first()).toBeVisible();
+    await expect(page.getByText('Invite to dashboard')).toHaveCount(0);
+    await h2Shot('admin-team');
+
+    await page.goto('/admin/products');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/products"][aria-current="page"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Add product' }).click();
+    await page.locator('#product-wizard-name').fill('Matte clay');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.locator('#product-wizard-price').fill('12.00');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Create product' }).click();
+    await page.getByRole('button', { name: 'Done' }).click({ timeout: 15000 });
+    await expect(page.getByText('Matte clay', { exact: true }).first()).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('Matte clay', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Orders' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Sales' })).toHaveCount(0);
+    await h2Shot('admin-products');
+
+    for (const paidPath of ['/admin/launch', '/admin/upgrade', '/admin/barbershop-settings']) {
+      const response = await page.goto(paidPath);
+      expect(new URL(page.url()).pathname, paidPath).toBe('/admin');
+      expect(response?.status()).toBe(200);
+    }
+
+    const denied = await page.request.get('/api/admin/bookings', { headers });
+    expect(denied.status(), 'GET /api/admin/bookings').toBe(403);
   });
 });

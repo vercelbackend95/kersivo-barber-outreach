@@ -8,6 +8,9 @@ import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK } from './adminClock';
 import { signalHeroShowcaseReadyWhenSettled } from './heroShowcaseReady';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
+import type { AdminHubChrome } from '@/lib/adminHub/hubChrome';
+import { ADMIN_HUB_APP_ERROR } from '@/lib/adminHub/copy';
+import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
 import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
@@ -127,6 +130,16 @@ class LazyPanelErrorBoundary extends React.Component<
   }
 }
 
+const HUB_ALLOWED_SECTIONS = new Set<AdminSection>(['bookings_blocks', 'services', 'shop_products']);
+
+const HUB_SECTION_PATH: Partial<Record<AdminSection, string>> = {
+  bookings_blocks: PREVIEW_HUB_PATHS.team,
+  services: PREVIEW_HUB_PATHS.services,
+  shop_products: PREVIEW_HUB_PATHS.products,
+};
+
+export type { AdminHubChrome };
+
 type AdminPanelProps = {
   demoMode?: boolean;
   demoTenant?: PublicAdminDemoTenant;
@@ -136,6 +149,8 @@ type AdminPanelProps = {
   initialSection?: string | null;
   /** Fixed-height landing-page embed: render a finite, non-scrolling showcase of long lists. */
   showcaseMode?: boolean;
+  /** Preview-hub chrome: real Team / Services / Products screens inside the hub shell. */
+  hubChrome?: AdminHubChrome | null;
 };
 
 export default function AdminPanel({
@@ -144,11 +159,17 @@ export default function AdminPanel({
   initialBookings,
   initialSection = null,
   showcaseMode = false,
+  hubChrome = null,
 }: AdminPanelProps) {
+  const isHubChrome = Boolean(hubChrome);
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     resolveAdminSpaSection(
       initialSection ??
-        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('section') : null),
+        (isHubChrome
+          ? null
+          : typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search).get('section')
+            : null),
     ),
   );
   const [isEntering, setIsEntering] = useState(false);
@@ -204,7 +225,7 @@ export default function AdminPanel({
         }) => {
           const onboardingRequired =
             payload.onboardingRequired ?? payload.onboardingCompleted === false;
-          if (payload.via === 'session' && onboardingRequired) {
+          if (!isHubChrome && payload.via === 'session' && onboardingRequired) {
             let skipGate = false;
             // The reopen escape hatch never bypasses explicit Free activation.
             if (payload.onboardingGate !== 'free_activation') {
@@ -246,7 +267,7 @@ export default function AdminPanel({
 
         try {
           let response = await fetch('/api/admin/session', { credentials: 'include' });
-          if (!response.ok) {
+          if (!response.ok && !isHubChrome) {
             // Signed-in via Better Auth but no ShopMember yet (invite OAuth landed on /admin).
             const baSession = await authClient.getSession().catch(() => null);
             if (baSession?.data?.user) {
@@ -300,9 +321,11 @@ export default function AdminPanel({
       })();
     }
 
-    setActiveSection(getSectionFromUrl());
-    const handlePopState = () => {
+    if (!isHubChrome) {
       setActiveSection(getSectionFromUrl());
+    }
+    const handlePopState = () => {
+      setActiveSection(isHubChrome ? resolveAdminSpaSection(initialSection) : getSectionFromUrl());
       setIsEntering(false);
       setShowPending(false);
     };
@@ -325,7 +348,7 @@ export default function AdminPanel({
         setPublicAdminDemoMode(false);
       }
     };
-  }, [demoMode]);
+  }, [demoMode, initialSection, isHubChrome]);
 
   useEffect(() => {
     if (!demoMode || showcaseMode) return;
@@ -355,7 +378,7 @@ export default function AdminPanel({
   const activeLockedFeature = lockedFeatureForSection(productGate, activeSection);
 
   useEffect(() => {
-    if (demoMode || !authReady || upgradeParamHandledRef.current) return;
+    if (demoMode || isHubChrome || !authReady || upgradeParamHandledRef.current) return;
     upgradeParamHandledRef.current = true;
     const params = new URLSearchParams(window.location.search);
     if (!params.has(ADMIN_UPGRADE_QUERY_PARAM)) return;
@@ -368,9 +391,10 @@ export default function AdminPanel({
       `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`,
     );
     if (feature && isUpgradeFeatureLocked(productGate, feature)) setUpgradeFeature(feature);
-  }, [authReady, demoMode, productGate]);
+  }, [authReady, demoMode, isHubChrome, productGate]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {
+    if (isHubChrome && !HUB_ALLOWED_SECTIONS.has(section)) return;
     const lockedFeature = lockedFeatureForSection(productGate, section);
     if (lockedFeature) {
       setUpgradeFeature(lockedFeature);
@@ -396,10 +420,14 @@ export default function AdminPanel({
     // right-hand content canvas changes; no route-level entrance/pending state.
     setIsEntering(showcaseMode ? false : !isBookingsSubviewSwitch);
     setShowPending(false);
-    const params = new URLSearchParams(window.location.search);
-    params.set('section', section);
-    const nextSearch = params.toString();
-    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`;
+    const nextUrl = isHubChrome
+      ? (HUB_SECTION_PATH[section] ?? window.location.pathname)
+      : (() => {
+          const params = new URLSearchParams(window.location.search);
+          params.set('section', section);
+          const nextSearch = params.toString();
+          return `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`;
+        })();
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl) {
       window.history.pushState({ adminSection: section }, '', nextUrl);
@@ -421,7 +449,7 @@ export default function AdminPanel({
       }
       transitionTimeoutRef.current = null;
     }, 180);
-  }, [activeSection, productGate, showcaseMode]);
+  }, [activeSection, isHubChrome, productGate, showcaseMode]);
 
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
@@ -464,6 +492,13 @@ export default function AdminPanel({
   }
 
   if (!demoMode && authReady && !hasAccess) {
+    if (isHubChrome) {
+      return (
+        <div className="admin-hub-tile admin-hub-calm" role="alert">
+          <p>{ADMIN_HUB_APP_ERROR}</p>
+        </div>
+      );
+    }
     return (
       <PrivateDemoAuthPanel
         initialMode="signup"
@@ -475,17 +510,16 @@ export default function AdminPanel({
   }
 
   const sessionPending = !demoMode && !authReady;
-
-  return (
-    <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
-    <AdminTodayBookingsLiveProvider
-      isPublicDemo={demoMode}
-      isBlacklineDemo={demoTenant === 'blackline'}
-      showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
-      initialBookings={initialBookings}
-    >
-      <AdminProductLockProvider value={productLocks}>
+  const isHubAccess = sessionVia === 'hub' || isHubChrome;
+  const hubLockedFeature = isHubChrome ? null : activeLockedFeature;
+  const layout = (
+      <AdminProductLockProvider value={isHubChrome ? { gate: null, openUpgrade: () => undefined } : productLocks}>
       <AdminLayout
+        mode={isHubChrome ? 'preview' : 'full'}
+        previewSection={hubChrome?.section}
+        previewSetup={hubChrome?.setup ?? null}
+        previewOperator={hubChrome?.isOperator ?? false}
+        previewUnreadMessages={hubChrome?.unreadMessages ?? 0}
         activeSection={activeSection === 'bookings_history_tab' ? 'bookings_dashboard' : activeSection}
         onChangeSection={handleSectionChange}
         isTransitioning={showPending || sessionPending}
@@ -494,28 +528,38 @@ export default function AdminPanel({
         showSectionSkeleton={false}
         isPublicDemo={demoMode}
         demoTenant={demoTenant}
-        profileUser={profileUser}
+        profileUser={isHubChrome ? (profileUser ?? hubChrome?.profileUser ?? null) : profileUser}
         shopId={demoMode ? null : shopId}
-        shopLogoUrl={demoMode ? null : shopLogoUrl}
-        shopName={demoTenant === 'blackline' ? shopName : demoMode ? null : shopName}
-        publicActivityPaused={demoMode ? false : publicActivityPaused}
-        previewUnderConstruction={demoMode ? false : previewUnderConstruction}
-        isPreviewAccess={demoMode ? false : isPreviewAccess}
+        shopLogoUrl={demoMode ? null : (shopLogoUrl ?? hubChrome?.shopLogoUrl ?? null)}
+        shopName={
+          demoTenant === 'blackline'
+            ? shopName
+            : demoMode
+              ? null
+              : (shopName ?? hubChrome?.shopName ?? null)
+        }
+        publicActivityPaused={demoMode || isHubChrome ? false : publicActivityPaused}
+        previewUnderConstruction={
+          isHubChrome ? Boolean(hubChrome?.underConstruction) : demoMode ? false : previewUnderConstruction
+        }
+        isPreviewAccess={demoMode || isHubChrome ? false : isPreviewAccess}
         permissions={demoMode ? null : permissions}
-        persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
+        persistentAdminChrome={isHubChrome ? null : <AdminGlobalMobileNextStripHost />}
         showcaseMode={showcaseMode}
       >
         {sessionPending ? null : (
           <>
-        {!demoMode && !showcaseMode && !isPreviewAccess ? <ShopDepartureBanner /> : null}
+        {!demoMode && !showcaseMode && !isPreviewAccess && !isHubChrome ? <ShopDepartureBanner /> : null}
+        {(!isHubChrome || activeSection === 'bookings_blocks') ? (
         <BookingsAdminPanel
           key="bookings"
-          isActive={isBookingsSection && !activeLockedFeature}
+          isActive={isBookingsSection && !hubLockedFeature}
           isPublicDemo={demoMode}
           isBlacklineDemo={demoTenant === 'blackline'}
           initialBookings={initialBookings as never}
+          isHubAccess={isHubAccess}
           mode={
-            activeLockedFeature
+            hubLockedFeature
               ? 'dashboard'
               : activeSection === 'bookings_blocks'
               ? 'blocks'
@@ -525,14 +569,15 @@ export default function AdminPanel({
                   ? 'history'
                   : 'dashboard'
           }
-          historyWithinBookings={activeSection === 'bookings_history_tab' && !activeLockedFeature}
+          historyWithinBookings={activeSection === 'bookings_history_tab' && !hubLockedFeature}
           onOpenHistoryWithinBookings={() => handleSectionChange('bookings_history_tab')}
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
           showcaseMode={showcaseMode}
         />
+        ) : null}
 
-        {activeLockedFeature ? (
-          <FullKersivoLockedSection feature={activeLockedFeature} />
+        {hubLockedFeature ? (
+          <FullKersivoLockedSection feature={hubLockedFeature} />
         ) : (
         <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
@@ -541,25 +586,27 @@ export default function AdminPanel({
                 key="services"
                 isBlacklineDemo={demoTenant === 'blackline'}
                 showcaseMode={showcaseMode}
+                isHubAccess={isHubAccess}
               />
             ) : null}
 
-            {activeSection === 'bookings_clients' ? (
+            {!isHubChrome && activeSection === 'bookings_clients' ? (
               <ClientsAdminPanel key="clients" showcaseMode={showcaseMode} />
             ) : null}
 
-            {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
+            {activeSection === 'shop_products' || (!isHubChrome && (activeSection === 'shop_orders' || activeSection === 'shop_sales')) ? (
               <ShopAdminPanel
                 key="shop"
-                initialTab={shopTab}
+                initialTab={isHubChrome ? 'products' : shopTab}
                 isBlacklineDemo={demoTenant === 'blackline'}
                 showcaseMode={showcaseMode}
+                isHubAccess={isHubAccess}
               />
             ) : null}
 
-            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} showcaseMode={showcaseMode} /> : null}
+            {!isHubChrome && activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} showcaseMode={showcaseMode} /> : null}
 
-            {activeSection === 'barbershop_settings' ? (
+            {!isHubChrome && activeSection === 'barbershop_settings' ? (
               <BarbershopSettingsPanel
                 key="barbershop-settings"
                 onIdentitySaved={(identity) => {
@@ -570,16 +617,31 @@ export default function AdminPanel({
               />
             ) : null}
 
-            {activeSection === 'site_launch' ? <SiteLaunchHubPanel key="site-launch" /> : null}
+            {!isHubChrome && activeSection === 'site_launch' ? <SiteLaunchHubPanel key="site-launch" /> : null}
           </Suspense>
         </LazyPanelErrorBoundary>
         )}
           </>
         )}
       </AdminLayout>
-      <FullKersivoUpgradeDialog feature={upgradeFeature} onClose={closeUpgrade} />
+      {isHubChrome ? null : <FullKersivoUpgradeDialog feature={upgradeFeature} onClose={closeUpgrade} />}
       </AdminProductLockProvider>
+  );
+
+  return (
+    <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
+    {isHubChrome ? (
+      layout
+    ) : (
+    <AdminTodayBookingsLiveProvider
+      isPublicDemo={demoMode}
+      isBlacklineDemo={demoTenant === 'blackline'}
+      showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
+      initialBookings={initialBookings}
+    >
+      {layout}
     </AdminTodayBookingsLiveProvider>
+    )}
     </AdminClockContext.Provider>
   );
 }

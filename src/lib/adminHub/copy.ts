@@ -134,6 +134,11 @@ export const ADMIN_HUB_CHANGES_EMPTY = 'No changes yet';
 export const ADMIN_HUB_LAUNCH_BUTTON = 'Launch this website';
 export const ADMIN_HUB_LAUNCH_PRICE = '£39/month';
 
+export const ADMIN_HUB_DRAFT_SHOP_TITLE = 'Add your services, team and products';
+export const ADMIN_HUB_DRAFT_SHOP_BODY =
+  'Anything you add here appears on your preview website and carries over when you go live.';
+export const ADMIN_HUB_DRAFT_SHOP_BUTTON = 'Set up my shop';
+
 export const ADMIN_HUB_WEBSITE_TITLE = 'Your website preview';
 export const ADMIN_HUB_WEBSITE_SUB =
   'Exactly what your clients will see. Switch to Booking to try it as a client.';
