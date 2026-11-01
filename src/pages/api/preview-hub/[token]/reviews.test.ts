@@ -88,14 +88,32 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('POST /api/preview-hub/[token]/reviews', () => {
-  it('confirms a section and does not increment changeRoundsUsed', async () => {
-    const response = await post({ action: 'confirmed', section: 'SERVICES' });
+  it('returns 410 for SERVICES and TEAM proposals', async () => {
+    for (const section of ['SERVICES', 'TEAM'] as const) {
+      createHubContentReview.mockClear();
+      const response = await post({ action: 'confirmed', section });
+      expect(response.status).toBe(410);
+      const body = await response.json();
+      expect(body.ok).toBe(false);
+      expect(body.error).toContain('dashboard');
+      expect(createHubContentReview).not.toHaveBeenCalled();
+    }
+  });
+
+  it('confirms hours and does not increment changeRoundsUsed', async () => {
+    createHubContentReview.mockResolvedValueOnce({
+      id: 'rev_1',
+      section: 'HOURS',
+      state: 'CONFIRMED',
+      cardState: 'confirmed',
+    });
+    const response = await post({ action: 'confirmed', section: 'HOURS' });
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.review.id).toBe('rev_1');
     expect(body.changeRoundsUsed).toBe(0);
     expect(sendServerAnalyticsEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'hub_review_confirmed', params: { section: 'SERVICES' } }),
+      expect.objectContaining({ name: 'hub_review_confirmed', params: { section: 'HOURS' } }),
     );
   });
 
@@ -104,7 +122,7 @@ describe('POST /api/preview-hub/[token]/reviews', () => {
       ok: false,
       response: new Response(JSON.stringify({ ok: false, error: 'Not found.' }), { status: 404 }),
     });
-    const response = await post({ action: 'confirmed', section: 'SERVICES' });
+    const response = await post({ action: 'confirmed', section: 'HOURS' });
     expect(response.status).toBe(404);
   });
 
@@ -112,7 +130,7 @@ describe('POST /api/preview-hub/[token]/reviews', () => {
     requireReviewCapability.mockReturnValueOnce(
       new Response(JSON.stringify({ ok: false, error: 'You cannot review details at this stage.' }), { status: 403 }),
     );
-    const response = await post({ action: 'confirmed', section: 'SERVICES' });
+    const response = await post({ action: 'confirmed', section: 'HOURS' });
     expect(response.status).toBe(403);
   });
 
@@ -123,7 +141,7 @@ describe('POST /api/preview-hub/[token]/reviews', () => {
 
   it('returns 429 when rate limited', async () => {
     enforceHubReviewsRate.mockResolvedValueOnce(new Response('limited', { status: 429 }));
-    const response = await post({ action: 'confirmed', section: 'SERVICES' });
+    const response = await post({ action: 'confirmed', section: 'HOURS' });
     expect(response.status).toBe(429);
   });
 

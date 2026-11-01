@@ -1,5 +1,6 @@
 import type { HubStage } from '@/lib/freePreview/hubStage';
 import { adminHubAppHref, type AdminHubAppId } from './apps';
+import { PREVIEW_HUB_PATHS } from './previewHubPaths';
 
 /** Red setup card (docs/admin-hub/ADMIN_HUB_SPEC.md §5). Client-safe. */
 
@@ -108,10 +109,17 @@ export function setupPhase3Status(done: number, total: number): string {
 }
 
 export type SetupCardPhase = 1 | 2 | 3;
-export type SetupItemId = 'logo' | 'photos' | 'services' | 'team' | 'hours' | 'about';
+export type SetupItemId = 'logo' | 'photos' | 'services' | 'team' | 'hours' | 'about' | 'products';
 export type SetupPhase2ItemId = 'business' | 'domain' | 'payments' | 'approve';
 export type SetupPhase3ItemId = 'view-site' | 'test-booking' | 'retail';
 export type SetupCardItemId = SetupItemId | SetupPhase2ItemId | SetupPhase3ItemId;
+
+/** Draft-shop counts for phase-1 done rules. Null = no draft shop = not done. */
+export type SetupShopCounts = {
+  activeServices: number;
+  activeBarbers: number;
+  products: number;
+};
 
 export type SetupItem = {
   id: SetupCardItemId;
@@ -139,7 +147,15 @@ const PHASE1_LABELS: Record<SetupItemId, string> = {
   team: 'Team',
   hours: 'Opening hours',
   about: 'About your shop',
+  products: 'Products',
 };
+
+function phase1Href(id: SetupItemId): string {
+  if (id === 'services') return PREVIEW_HUB_PATHS.services;
+  if (id === 'team') return PREVIEW_HUB_PATHS.team;
+  if (id === 'products') return PREVIEW_HUB_PATHS.products;
+  return adminHubAppHref(id);
+}
 
 const PHASE2_LABELS: Record<SetupPhase2ItemId, string> = {
   business: 'Business details',
@@ -185,22 +201,25 @@ export function setupPhase1Items(input: {
   assetKinds: readonly string[];
   aboutText: string | null | undefined;
   reviewStates: { SERVICES?: ReviewState; TEAM?: ReviewState; HOURS?: ReviewState };
+  shopCounts?: SetupShopCounts | null;
 }): SetupCardModel {
   const beforeReview = input.stage === 'requested' || input.stage === 'designing';
   const has = (kind: string) => input.assetKinds.includes(kind);
+  const counts = input.shopCounts ?? { activeServices: 0, activeBarbers: 0, products: 0 };
   const items: SetupItem[] = (
     [
       ['logo', has('LOGO'), false, false],
       ['photos', has('SHOP_PHOTO'), false, false],
-      ['services', reviewStepDone(input.reviewStates.SERVICES), false, beforeReview],
-      ['team', reviewStepDone(input.reviewStates.TEAM), false, beforeReview],
+      ['services', counts.activeServices > 0, false, false],
+      ['team', counts.activeBarbers > 0, false, false],
       ['hours', reviewStepDone(input.reviewStates.HOURS), false, beforeReview],
       ['about', Boolean(input.aboutText?.trim()), true, false],
+      ['products', counts.products > 0, true, false],
     ] as const
   ).map(([id, done, optional, fromLinks]) => ({
     id,
     label: PHASE1_LABELS[id],
-    href: adminHubAppHref(id),
+    href: phase1Href(id),
     done,
     optional,
     fromLinks,
@@ -259,6 +278,7 @@ export function setupCardForStage(input: {
   assetKinds: readonly string[];
   aboutText: string | null | undefined;
   reviewStates: { SERVICES?: ReviewState; TEAM?: ReviewState; HOURS?: ReviewState };
+  shopCounts?: SetupShopCounts | null;
   launch?: {
     businessDone: boolean;
     domainDone: boolean;

@@ -17,6 +17,9 @@ describe('/admin hub location', () => {
     expect(parse('/admin/changes').section).toBe('changes');
     expect(parse('/admin/website').section).toBe('website');
     expect(parse('/admin/messages').section).toBe('messages');
+    expect(parse('/admin/team').section).toBe('team');
+    expect(parse('/admin/services').section).toBe('services');
+    expect(parse('/admin/products').section).toBe('products');
     expect(parse('/admin/launch').section).toBe('overview');
   });
 
@@ -26,9 +29,11 @@ describe('/admin hub location', () => {
       app: 'messages',
       draft: 'reopen',
     });
-    for (const app of ['setup', 'logo', 'photos', 'materials', 'services', 'team', 'hours', 'about', 'colours', 'activity', 'business']) {
+    for (const app of ['setup', 'logo', 'photos', 'materials', 'hours', 'about', 'colours', 'activity', 'business']) {
       expect(parse(`/admin?app=${app}`)).toMatchObject({ section: 'overview', app });
     }
+    expect(parse('/admin?app=services')).toMatchObject({ section: 'overview', app: null });
+    expect(parse('/admin?app=team')).toMatchObject({ section: 'overview', app: null });
     expect(parse('/admin/changes?app=unknown')).toMatchObject({ section: 'changes', app: null });
     expect(parse('/admin/website?app=logo')).toMatchObject({ section: 'website', app: 'logo' });
     expect(parse('/admin?draft=<script>').draft).toBeNull();
@@ -108,6 +113,17 @@ describe('/admin hub pages never expose the token', () => {
     expect(hub).toContain("if (!mode) return hubNotFound();");
     expect(hub).toContain("if (mode.kind !== 'hub')");
     expect(read('src/pages/admin/changes.astro')).toContain('fallbackFullToAdmin');
+    expect(read('src/lib/adminHub/previewHubAdminPage.ts')).toContain('ADMIN_PRIVATE_HEADERS');
+    expect(read('src/layouts/PreviewHubDocument.astro')).toContain('noindex={true}');
+    expect(read('src/layouts/PreviewHubDocument.astro')).toContain('robotsFollow={false}');
+    for (const page of ['team', 'services', 'products']) {
+      const src = read(`src/pages/admin/${page}.astro`);
+      expect(src).toContain('preparePreviewHubRealAdminPage');
+      expect(src).toContain('<AdminPanel client:load');
+      expect(src).toContain('hubChrome={hubChrome}');
+      expect(src).toContain('HubDraftShopSetup');
+      expect(src).toContain('PreviewHubAdminDocument');
+    }
   });
 
   it('keeps HubShell for the old /preview pages only', () => {

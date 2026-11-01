@@ -134,6 +134,11 @@ export const ADMIN_HUB_CHANGES_EMPTY = 'No changes yet';
 export const ADMIN_HUB_LAUNCH_BUTTON = 'Launch this website';
 export const ADMIN_HUB_LAUNCH_PRICE = '£39/month';
 
+export const ADMIN_HUB_DRAFT_SHOP_TITLE = 'Add your services, team and products';
+export const ADMIN_HUB_DRAFT_SHOP_BODY =
+  'Anything you add here appears on your preview website and carries over when you go live.';
+export const ADMIN_HUB_DRAFT_SHOP_BUTTON = 'Set up my shop';
+
 export const ADMIN_HUB_WEBSITE_TITLE = 'Your website preview';
 export const ADMIN_HUB_WEBSITE_SUB =
   'Exactly what your clients will see. Switch to Booking to try it as a client.';
@@ -143,4 +148,6 @@ export const ADMIN_HUB_WEBSITE_FULL_SCREEN = 'Full screen';
 export const ADMIN_HUB_WEBSITE_SUGGEST_SHORT = 'Suggest';
 export const ADMIN_HUB_WEBSITE_SCALED = (width: number) => `${width}px · scaled to fit`;
 export const ADMIN_HUB_CHANGES_SUB = 'Tell us what to change on your preview.';
+export const ADMIN_HUB_CHANGES_SELF_EDIT =
+  'Prices, services, team and products: edit them yourself in the menu — they update your booking preview straight away.';
 export const ADMIN_HUB_BOOKING_EMPTY = "We're still adding services and barbers to this booking page.";

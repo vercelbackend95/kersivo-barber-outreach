@@ -60,6 +60,8 @@ export const HUB_ADMIN_API_ALLOWLIST: readonly HubAdminAllowlistEntry[] = [
   { method: 'PUT', path: '/api/admin/barbers/:id/services', permission: 'catalog.manage', why: 'Save barber services' },
 
   { method: 'GET', path: '/api/admin/team', permission: 'team.read', why: 'Team cards (also catalog.manage)' },
+  { method: 'GET', path: '/api/admin/team/shop-hours', permission: 'catalog.manage', why: 'Prefill hours when adding a barber' },
+  { method: 'POST', path: '/api/admin/team/booking-profiles', permission: 'catalog.manage', why: 'Create booking-only seat (no invite)' },
   {
     method: 'PATCH',
     path: '/api/admin/team/booking-profiles/:barberId/online-bookings',

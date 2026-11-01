@@ -148,7 +148,13 @@ export async function preparePreviewHubPage(input: {
         ? HUB_NAV.website
         : input.section === 'messages'
           ? HUB_NAV.messages
-          : HUB_NAV.overview;
+          : input.section === 'team'
+            ? 'Team'
+            : input.section === 'services'
+              ? 'Services'
+              : input.section === 'products'
+                ? 'Products'
+                : HUB_NAV.overview;
   const initialDraft =
     location.draft === 'reopen' ? HUB_DRAFT_REOPEN : location.draft === 'message' ? HUB_DRAFT_DECLINED : '';
   const rawTone = ctx.request.brandBackgroundTone;

@@ -10,8 +10,6 @@ const LOADERS: Record<AdminHubAppId, Loader> = {
   photos: () => import('./PhotosApp'),
   materials: () => import('./MaterialsApp'),
   about: () => import('./AboutApp'),
-  services: () => import('./ReviewApp').then((mod) => ({ default: mod.ServicesApp })),
-  team: () => import('./ReviewApp').then((mod) => ({ default: mod.TeamApp })),
   hours: () => import('./ReviewApp').then((mod) => ({ default: mod.HoursApp })),
   setup: () => import('./SetupApp'),
   activity: () => import('./ActivityApp'),

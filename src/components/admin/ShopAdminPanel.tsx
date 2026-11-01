@@ -517,6 +517,7 @@ type ShopAdminPanelProps = {
   initialTab?: ShopTab;
   isBlacklineDemo?: boolean;
   showcaseMode?: boolean;
+  isHubAccess?: boolean;
 };
 
 const RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY = 'kersivo:retail-walkthrough-complete-dismissed';
@@ -593,6 +594,7 @@ export default function ShopAdminPanel({
   initialTab = 'products',
   isBlacklineDemo = false,
   showcaseMode = false,
+  isHubAccess = false,
 }: ShopAdminPanelProps) {
   const clock = useAdminClock();
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
@@ -793,8 +795,8 @@ export default function ShopAdminPanel({
 
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    setActiveTab(isHubAccess ? 'products' : initialTab);
+  }, [initialTab, isHubAccess]);
 
   useEffect(() => {
     if (!formOpen) return;
@@ -1358,10 +1360,11 @@ export default function ShopAdminPanel({
   }, []);
 
   useEffect(() => {
+    if (isHubAccess) return;
     if (activeTab === 'orders') {
       void fetchOrders();
     }
-  }, [activeTab]);
+  }, [activeTab, isHubAccess]);
   const salesDateError = useMemo(() => {
     if (salesPreset !== 'custom') return null;
     if (!salesFrom || !salesTo) return null;
@@ -1369,10 +1372,11 @@ export default function ShopAdminPanel({
   }, [salesPreset, salesFrom, salesTo]);
 
   useEffect(() => {
+    if (isHubAccess) return;
     if (activeTab !== 'sales') return;
     if (salesDateError) return;
     void fetchSales();
-  }, [activeTab, salesPreset, salesFrom, salesTo, salesDateError]);
+  }, [activeTab, isHubAccess, salesPreset, salesFrom, salesTo, salesDateError]);
 
 
 

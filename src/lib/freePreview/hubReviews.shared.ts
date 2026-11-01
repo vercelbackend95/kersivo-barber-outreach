@@ -4,6 +4,14 @@ export const HUB_REVIEW_SECTIONS = ['SERVICES', 'TEAM', 'HOURS'] as const satisf
 
 export type HubReviewSection = (typeof HUB_REVIEW_SECTIONS)[number];
 
+/** Owner proposals for these sections are closed; historical rows stay visible to ops. */
+export const RETIRED_HUB_REVIEW_SECTIONS = ['SERVICES', 'TEAM'] as const satisfies readonly HubReviewSection[];
+export type RetiredHubReviewSection = (typeof RETIRED_HUB_REVIEW_SECTIONS)[number];
+
+export function isRetiredHubReviewSection(section: string): section is RetiredHubReviewSection {
+  return (RETIRED_HUB_REVIEW_SECTIONS as readonly string[]).includes(section);
+}
+
 export type HubReviewCardState = 'not_checked' | 'confirmed' | 'corrections_sent' | 'updated' | 'dismissed';
 
 export type HubReviewShopService = {

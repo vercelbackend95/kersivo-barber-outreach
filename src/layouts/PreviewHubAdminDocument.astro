@@ -1,0 +1,21 @@
+---
+import PreviewHubDocument from '@/layouts/PreviewHubDocument.astro';
+import '@/styles/components/admin-section-header.css';
+import '@/styles/components/admin-services.css';
+import '@/styles/components/admin-service-wizard.css';
+import '@/styles/components/admin-product-wizard.css';
+import '@/styles/components/admin-barber-wizard.css';
+import '@/styles/components/admin-team.css';
+import '@/styles/components/shop-products-polish.css';
+import '@/styles/components/table.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<PreviewHubDocument title={title}>
+  <slot />
+</PreviewHubDocument>

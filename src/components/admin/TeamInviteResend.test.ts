@@ -64,4 +64,14 @@ describe('Team invitation resend UI', () => {
     );
     expect(wizard).toMatch(/inviteCreationConflictMessage/);
   });
+
+  it('hides dashboard invites in hub access', () => {
+    const wizard = readFileSync(
+      resolve(process.cwd(), 'src/components/admin/TeamInviteWizard.tsx'),
+      'utf8',
+    );
+    expect(wizard).toContain('isHubAccess');
+    expect(wizard).toContain('dashboardAccess =\n    !isHubAccess &&');
+    expect(wizard).toContain("...(isHubAccess ? [] : [{ n: 5, label: 'Access' }])");
+  });
 });

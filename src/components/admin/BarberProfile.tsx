@@ -79,6 +79,7 @@ type BarberProfileProps = {
   onChangeRole?: (next: Extract<ShopRole, 'BARBER' | 'MANAGER'>) => Promise<boolean>;
   /** View-only team profile (e.g. Barber role): no mutations or ⋯ menu. */
   readOnly?: boolean;
+  isHubAccess?: boolean;
 };
 
 export default function BarberProfile({
@@ -133,6 +134,7 @@ export default function BarberProfile({
   onDashboardAccountChanged,
   onChangeRole,
   readOnly = false,
+  isHubAccess = false,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
@@ -271,9 +273,10 @@ export default function BarberProfile({
     setIsDeleteSheetOpen(false);
   }, []);
 
-  const effectiveDashboardAction: DashboardAccountAction | null =
-    dashboardAccountAction ??
-    (canSendDashboardInvite && accountAccess === 'no_dashboard' ? 'send' : null);
+  const effectiveDashboardAction: DashboardAccountAction | null = isHubAccess
+    ? null
+    : dashboardAccountAction ??
+      (canSendDashboardInvite && accountAccess === 'no_dashboard' ? 'send' : null);
 
   const handleSetupWizardSaved = React.useCallback(
     async (result?: import('./barber-wizard/BarberWizard').SetupMemberSavedResult) => {
@@ -737,6 +740,7 @@ export default function BarberProfile({
           <TeamInviteWizard
             key={`invite-link-${barber.id}`}
             actorRole={actorRole}
+            isHubAccess={isHubAccess}
             services={services.map((s) => ({ id: s.id, name: s.name }))}
             linkBarber={{
               id: barber.id,

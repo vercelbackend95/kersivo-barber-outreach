@@ -165,7 +165,7 @@ export const HUB_DETAILS_HEX_LABEL = 'Hex';
 export const HUB_DETAILS_SWATCH_DARK = 'On dark';
 export const HUB_DETAILS_SWATCH_LIGHT = 'On light';
 export const HUB_DETAILS_PLACEHOLDER_LINKS =
-  "We'll fill these from your links — you'll confirm them on your preview";
+  "We'll fill these from your links — you'll check them when your preview is ready";
 export const HUB_DETAILS_SERVICES_TITLE = 'Services & prices';
 export const HUB_DETAILS_TEAM_TITLE = 'Team';
 export const HUB_DETAILS_HOURS_TITLE = 'Opening hours';
@@ -209,7 +209,9 @@ export const HUB_OPS_FILES_EMAIL_INTRO = (shopName: string) =>
   `${shopName} added files in their shop hub.`;
 export const HUB_OPS_FILES_EMAIL_BUTTON = 'Open in KERSIVO Ops';
 export const HUB_REVIEW_CARD_FOOTER =
-  "Corrections to your details don't use your round of design changes.";
+  "Corrections to your opening hours don't use your round of design changes.";
+export const HUB_REVIEW_MOVED_TO_DASHBOARD =
+  'Services and team are edited in the dashboard now.';
 export const HUB_ROUND_USED =
   "You've used your included round of changes. Message us if something isn't right.";
 export const HUB_CHECK_DETAILS_TITLE = 'Check your details';
@@ -243,7 +245,7 @@ export const HUB_REVIEW_INVALID_BIO = 'Bio can be up to 280 characters.';
 export const HUB_REVIEW_INVALID_HOURS = 'Opening hours need 7 days, with a start time before the end time.';
 export const HUB_REVIEW_INVALID_PHOTO = 'That photo is not a team photo for this preview.';
 export const HUB_NOW_REVIEW_NEED_ALL =
-  "Check your services, team and hours, then subscribe when you're happy.";
+  "Check your opening hours, then subscribe when you're happy.";
 export const HUB_NOW_REVIEW_NEED_SOME = (unchecked: string) =>
   `Check your ${unchecked}, then subscribe when you're happy.`;
 export const HUB_NOW_REVIEW_NEED_DONE = "Subscribe when you're happy, or send design changes.";
@@ -309,6 +311,8 @@ export const HUB_OPS_GRANT_ROUND_DONE = 'Extra round granted';
 export const HUB_OPS_CHANGE_NOTE = 'Note (required for Not possible)';
 export const HUB_OPS_WEBSITE_REMINDER =
   'Applying booking data updates the booking page immediately. The website at the site preview URL is a separate build — update that too.';
+export const HUB_OPS_REVIEW_HISTORICAL =
+  'Historical — owners now edit this in the dashboard.';
 export const HUB_OPS_OPEN_CHANGES = (count: number) =>
   count === 1 ? '1 open change' : `${count} open changes`;
 export const HUB_ACTIVITY_CONFIRMED = (section: string) => `You confirmed your ${section}`;

@@ -5,6 +5,7 @@ import {
   ADMIN_HUB_CHANGES_DONE,
   ADMIN_HUB_CHANGES_DRAFTS,
   ADMIN_HUB_CHANGES_EMPTY,
+  ADMIN_HUB_CHANGES_SELF_EDIT,
   ADMIN_HUB_CHANGES_SUB,
   ADMIN_HUB_CHANGES_WITH,
   ADMIN_HUB_WEBSITE_SUGGEST_SHORT,
@@ -65,7 +66,7 @@ export function AdminHubChanges(props: {
           <span className="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
           <h1>{HUB_NAV.changes}</h1>
           <p className="admin-hub-head__sub">
-            {roundText}. {ADMIN_HUB_CHANGES_SUB}
+            {roundText}. {ADMIN_HUB_CHANGES_SUB} {ADMIN_HUB_CHANGES_SELF_EDIT}
           </p>
         </div>
         {props.canDraft ? (

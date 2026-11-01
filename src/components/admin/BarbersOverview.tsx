@@ -83,6 +83,7 @@ type BarbersOverviewProps = {
   onBarberSaved: () => void | Promise<void | boolean>;
   formatBlockRange: (startAt: string, endAt: string) => string;
   onActorRoleChange?: (role: string) => void;
+  isHubAccess?: boolean;
 };
 
 function isKeyboardEditableTarget(target: EventTarget | null) {
@@ -149,6 +150,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       onBarberSaved,
       formatBlockRange,
       onActorRoleChange,
+      isHubAccess = false,
     },
     ref,
   ) {
@@ -263,7 +265,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
 
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
-    const access = teamAccountAccess(card);
+    const access = isHubAccess ? 'no_dashboard' : teamAccountAccess(card);
 
     // Read-only: never create a Barber seat merely by opening a profile.
     if (!card.barberId) {
@@ -281,14 +283,16 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
         email: card.email,
         memberEmail: card.email,
         canSetUpOnlineBookings: card.canSetUpOnlineBookings,
-        dashboardAccountAction: dashboardAccountActionFor(access, actorRole, card.role),
+        dashboardAccountAction: isHubAccess
+          ? null
+          : dashboardAccountActionFor(access, actorRole, card.role),
       });
       return;
     }
 
     const barberId = card.barberId;
     const stub = cardToBarberStub(card);
-    const action = dashboardAccountActionFor(access, actorRole, card.role);
+    const action = isHubAccess ? null : dashboardAccountActionFor(access, actorRole, card.role);
 
     const meta: TeamProfileOpenMeta = {
       name: stub.name,
@@ -322,7 +326,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
   function renderCard(card: TeamCardDto, index: number) {
     const stub = cardToBarberStub(card);
     const now = new Date(nowTick);
-    const access = teamAccountAccess(card);
+    const access = isHubAccess ? 'no_dashboard' : teamAccountAccess(card);
     const barberIsActive = card.bookable;
     const hasSeat = Boolean(card.barberId && card.barber);
     const showSchedule = card.bookable && hasSeat;
@@ -457,6 +461,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
           key="invite"
           actorRole={actorRole}
           services={services}
+          isHubAccess={isHubAccess}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
             const refresh = inviteCreationPostMutationRefresh();
