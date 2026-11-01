@@ -349,20 +349,28 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
   });
 
-  test('before Review the services app shows the from-your-links state', async ({ page }) => {
+  test('before Review hours stays from-your-links and services open the real admin', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
-    await page.locator('.admin-sidebar .admin-hub-setup button[aria-label="Show all steps"]').click();
-    await expect(page.locator('.admin-sidebar .admin-hub-setup')).toContainText('From your links');
+    const requestedSetup = page.locator('.admin-sidebar .admin-hub-setup');
+    const requestedToggle = requestedSetup.locator('.admin-hub-setup__toggle');
+    await expect(requestedToggle).toBeVisible();
+    if ((await requestedToggle.getAttribute('aria-expanded')) !== 'true') {
+      await requestedToggle.click();
+    }
+    await expect(requestedToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(requestedSetup.locator('a[href="/admin/services"]')).toBeVisible();
+    await expect(requestedSetup.locator('a[href="/admin/team"]')).toBeVisible();
+    await expect(requestedSetup.locator('a[href="/admin?app=hours"]')).toContainText('From your links');
     await page.screenshot({ path: join(shotDir2, 'requested-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'requested-card-390.png'), fullPage: true });
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/admin?app=services');
+    await page.goto('/admin?app=hours');
     await expect(page.getByTestId('admin-hub-app')).toContainText("you'll check them when your preview is ready");
-    await page.screenshot({ path: join(shotDir2, 'requested-services-1440.png'), fullPage: true });
+    await page.screenshot({ path: join(shotDir2, 'requested-hours-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.screenshot({ path: join(shotDir2, 'requested-services-390.png'), fullPage: true });
+    await page.screenshot({ path: join(shotDir2, 'requested-hours-390.png'), fullPage: true });
   });
 
   test('launch phase card opens the restyled checklist', async ({ page }) => {
@@ -786,7 +794,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await page.goto('/admin/changes');
     await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
     await shots6(page, 'screen-changes', widths);
-    for (const app of ['logo', 'photos', 'materials', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
+    for (const app of ['logo', 'photos', 'materials', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
       await page.goto(`/admin?app=${app}`);
       await expect(page.getByTestId('admin-hub-app')).toBeVisible();
       await shots6(page, `app-${app}`, widths);
@@ -889,8 +897,8 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await expect(website).toHaveAttribute('data-device', 'desktop');
     await shots6(page, 'journey-website-desktop-phone', [360, 390]);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/admin?app=services');
-    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await page.goto('/admin/services');
+    await expect(page.locator('.admin-sidebar-link[href="/admin/services"][aria-current="page"]')).toBeVisible();
     await page.goto('/admin/changes');
     await page.getByRole('button', { name: /Suggest a change|Suggest/ }).click();
     await page.getByTestId('hub-change-body').fill('Make the Book button larger.');
@@ -1064,5 +1072,64 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
 
     const denied = await page.request.get('/api/admin/bookings', { headers });
     expect(denied.status(), 'GET /api/admin/bookings').toBe(403);
+  });
+
+  test('H3: setup card opens the real Services, Team and Products screens', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/h3' : '/tmp/kersivo-shots/h3';
+    mkdirSync(shotRoot, { recursive: true });
+    const h3Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    expect(await hubCookie(context)).toBeTruthy();
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await h3Shot('admin');
+
+    const expandSetup = async () => {
+      const setup = page.locator('.admin-sidebar .admin-hub-setup');
+      await expect(setup).toBeVisible();
+      const toggle = setup.locator('.admin-hub-setup__toggle');
+      await expect(toggle).toBeVisible();
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        if ((await toggle.getAttribute('aria-expanded')) === 'true') break;
+        await toggle.click();
+        if ((await toggle.getAttribute('aria-expanded')) === 'true') break;
+        await page.waitForTimeout(200);
+      }
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(setup.locator('a[href="/admin/services"]')).toBeVisible();
+      return setup;
+    };
+
+    await (await expandSetup()).locator('a[href="/admin/services"]').click();
+    await expect(page).toHaveURL(/\/admin\/services/);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/services"][aria-current="page"]')).toBeVisible();
+
+    await page.goto('/admin');
+    await (await expandSetup()).locator('a[href="/admin/team"]').click();
+    await expect(page).toHaveURL(/\/admin\/team/);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/team"][aria-current="page"]')).toBeVisible();
+
+    await page.goto('/admin');
+    await (await expandSetup()).locator('a[href="/admin/products"]').click();
+    await expect(page).toHaveURL(/\/admin\/products/);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-link[href="/admin/products"][aria-current="page"]')).toBeVisible();
+
+    const servicesLegacy = await page.goto('/admin?app=services');
+    expect(new URL(page.url()).pathname).toBe('/admin/services');
+    expect(servicesLegacy?.status()).toBe(200);
+    const teamLegacy = await page.goto('/admin?app=team');
+    expect(new URL(page.url()).pathname).toBe('/admin/team');
+    expect(teamLegacy?.status()).toBe(200);
   });
 });

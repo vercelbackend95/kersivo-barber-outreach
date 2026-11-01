@@ -51,7 +51,7 @@ describe('setup card phase 1', () => {
     expect(setupPhase1Status(2, 6)).toBe('Your shop · 2 of 6');
   });
 
-  it('lists the six rows in order with About optional', () => {
+  it('lists the seven rows in order with About and Products optional', () => {
     const card = setupPhase1Items({ stage: 'review', assetKinds: [], aboutText: null, reviewStates: none });
     expect(card.phase).toBe(1);
     expect(card.items.map((item) => item.label)).toEqual([
@@ -61,17 +61,20 @@ describe('setup card phase 1', () => {
       'Team',
       'Opening hours',
       'About your shop',
+      'Products',
     ]);
     expect(card.items.map((item) => item.href)).toEqual([
       '/admin?app=logo',
       '/admin?app=photos',
-      '/admin?app=services',
-      '/admin?app=team',
+      '/admin/services',
+      '/admin/team',
       '/admin?app=hours',
       '/admin?app=about',
+      '/admin/products',
     ]);
     expect(card.items.find((item) => item.id === 'about')?.optional).toBe(true);
-    expect(card.total).toBe(6);
+    expect(card.items.find((item) => item.id === 'products')?.optional).toBe(true);
+    expect(card.total).toBe(7);
   });
 
   it('counts a logo when at least one LOGO asset exists', () => {
@@ -86,12 +89,61 @@ describe('setup card phase 1', () => {
     ).toBe(true);
   });
 
-  it('counts services, team and hours when the review is confirmed, sent or applied', () => {
+  it('counts hours when the review is confirmed, sent or applied', () => {
     expect(reviewStepDone('CONFIRMED')).toBe(true);
     expect(reviewStepDone('CORRECTIONS_SENT')).toBe(true);
     expect(reviewStepDone('APPLIED')).toBe(true);
     expect(reviewStepDone('DISMISSED')).toBe(false);
     expect(reviewStepDone(null)).toBe(false);
+  });
+
+  it('counts services, team and products from the draft shop, not from review rows', () => {
+    const empty = setupPhase1Items({
+      stage: 'review',
+      assetKinds: [],
+      aboutText: null,
+      reviewStates: { SERVICES: 'CONFIRMED', TEAM: 'CONFIRMED', HOURS: null },
+      shopCounts: null,
+    });
+    expect(empty.items.find((item) => item.id === 'services')?.done).toBe(false);
+    expect(empty.items.find((item) => item.id === 'team')?.done).toBe(false);
+    expect(empty.items.find((item) => item.id === 'products')?.done).toBe(false);
+
+    const filled = setupPhase1Items({
+      stage: 'review',
+      assetKinds: [],
+      aboutText: null,
+      reviewStates: none,
+      shopCounts: { activeServices: 1, activeBarbers: 1, products: 1 },
+    });
+    expect(filled.items.find((item) => item.id === 'services')?.done).toBe(true);
+    expect(filled.items.find((item) => item.id === 'team')?.done).toBe(true);
+    expect(filled.items.find((item) => item.id === 'products')?.done).toBe(true);
+  });
+
+  it('does not treat inactive services or offline barbers as done', () => {
+    const card = setupPhase1Items({
+      stage: 'review',
+      assetKinds: [],
+      aboutText: null,
+      reviewStates: none,
+      shopCounts: { activeServices: 0, activeBarbers: 0, products: 0 },
+    });
+    expect(card.items.find((item) => item.id === 'services')?.done).toBe(false);
+    expect(card.items.find((item) => item.id === 'team')?.done).toBe(false);
+    expect(card.items.find((item) => item.id === 'products')?.done).toBe(false);
+  });
+
+  it('does not pick optional products as next while required rows remain', () => {
+    const card = setupPhase1Items({
+      stage: 'review',
+      assetKinds: [],
+      aboutText: 'Since 2014',
+      reviewStates: none,
+      shopCounts: { activeServices: 0, activeBarbers: 0, products: 0 },
+    });
+    expect(card.nextId).toBe('logo');
+    expect(card.items.find((item) => item.id === 'products')?.optional).toBe(true);
   });
 
   it('counts the about text when it is present', () => {
@@ -101,12 +153,13 @@ describe('setup card phase 1', () => {
     expect(setupPhase1Items({ stage: 'review', assetKinds: [], aboutText: '   ', reviewStates: none }).items[5]?.done).toBe(false);
   });
 
-  it('counts uploads, confirmed reviews and the about text together', () => {
+  it('counts uploads, draft-shop rows and the about text together', () => {
     const card = setupPhase1Items({
       stage: 'review',
       assetKinds: ['LOGO', 'SHOP_PHOTO', 'SHOP_PHOTO'],
       aboutText: 'Since 2014',
       reviewStates: { SERVICES: 'CONFIRMED', TEAM: 'CORRECTIONS_SENT', HOURS: 'DISMISSED' },
+      shopCounts: { activeServices: 2, activeBarbers: 1, products: 0 },
     });
     expect(card.items.filter((item) => item.done).map((item) => item.id)).toEqual([
       'logo',
@@ -119,11 +172,13 @@ describe('setup card phase 1', () => {
     expect(card.nextId).toBe('hours');
   });
 
-  it('tags Services, Team and Hours "From your links" before Review and does not point at them', () => {
+  it('only tags Hours "From your links" before Review and still points at services and team', () => {
     const card = setupPhase1Items({ stage: 'designing', assetKinds: ['LOGO'], aboutText: null, reviewStates: none });
-    expect(card.items.filter((item) => item.fromLinks).map((item) => item.id)).toEqual(['services', 'team', 'hours']);
+    expect(card.items.filter((item) => item.fromLinks).map((item) => item.id)).toEqual(['hours']);
+    expect(card.items.find((item) => item.id === 'services')?.fromLinks).toBe(false);
+    expect(card.items.find((item) => item.id === 'team')?.fromLinks).toBe(false);
     expect(card.nextId).toBe('photos');
-    expect(card.total).toBe(6);
+    expect(card.total).toBe(7);
   });
 });
 

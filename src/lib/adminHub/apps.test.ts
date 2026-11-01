@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_HUB_APP_IDS, adminHubAppHref, adminHubAppMeta, parseAdminHubApp, resolveAdminHubApp } from './apps';
 
@@ -28,6 +30,21 @@ describe('admin hub apps', () => {
   it('keeps messages on the narrow window', () => {
     expect(adminHubAppMeta('messages').maxWidth).toBe(720);
     expect(adminHubAppMeta('logo').maxWidth).toBe(1120);
-    expect(adminHubAppHref('services')).toBe('/admin?app=services');
+    expect(adminHubAppHref('hours')).toBe('/admin?app=hours');
+  });
+
+  it('no longer treats services and team as hub apps', () => {
+    expect(ADMIN_HUB_APP_IDS).not.toContain('services');
+    expect(ADMIN_HUB_APP_IDS).not.toContain('team');
+    expect(parseAdminHubApp('services')).toBeNull();
+    expect(parseAdminHubApp('team')).toBeNull();
+    const reviewApp = readFileSync(resolve(process.cwd(), 'src/components/adminHub/apps/ReviewApp.tsx'), 'utf8');
+    const loadApp = readFileSync(resolve(process.cwd(), 'src/components/adminHub/apps/loadApp.ts'), 'utf8');
+    expect(reviewApp).toContain('HoursApp');
+    expect(reviewApp).not.toContain('ServicesApp');
+    expect(reviewApp).not.toContain('TeamApp');
+    expect(loadApp).toContain('hours:');
+    expect(loadApp).not.toContain('services:');
+    expect(loadApp).not.toContain('team:');
   });
 });

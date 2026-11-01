@@ -11,13 +11,14 @@ import {
   resolveHubApiContext,
   type HubSourceOf,
 } from '@/lib/freePreview/hubApi';
+import { HUB_REVIEW_MOVED_TO_DASHBOARD } from '@/lib/freePreview/hubCopy';
 import {
-  assertTeamPhotoAsset,
   createHubContentReview,
   hubReviewPostSchema,
   loadHubReviewShopData,
   loadLatestHubReviews,
 } from '@/lib/freePreview/hubReviews';
+import { isRetiredHubReviewSection } from '@/lib/freePreview/hubReviews.shared';
 
 export function createHubReviewsHandlers(sourceOf: HubSourceOf): { GET: APIRoute; POST: APIRoute } {
   const GET: APIRoute = async ({ request, params }) => {
@@ -59,14 +60,8 @@ export function createHubReviewsHandlers(sourceOf: HubSourceOf): { GET: APIRoute
       return hubJson({ ok: false, error: first }, 400);
     }
 
-    if (parsed.data.action === 'corrections' && parsed.data.section === 'TEAM') {
-      for (const barber of parsed.data.proposal.barbers) {
-        const photo = await assertTeamPhotoAsset({
-          previewRequestId: ctxResult.ctx.request.id,
-          assetId: barber.photoAssetId,
-        });
-        if (!photo.ok) return hubJson({ ok: false, error: photo.error }, 400);
-      }
+    if (isRetiredHubReviewSection(parsed.data.section)) {
+      return hubJson({ ok: false, error: HUB_REVIEW_MOVED_TO_DASHBOARD }, 410);
     }
 
     try {
