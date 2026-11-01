@@ -51,10 +51,13 @@ async function loadStub() {
   return { default: StubApp };
 }
 
-function renderHost(initialApp: 'logo' | null = 'logo') {
+function renderHost(initialApp: 'logo' | 'materials' | null = 'logo') {
   return render(
     <div className="admin-shell">
       <a href="/admin?app=logo">Open logo</a>
+      <button type="button" data-admin-hub-app="materials">
+        Add photos or a logo to your website
+      </button>
       <AppHost initialApp={initialApp} ctx={ctx} loadApp={loadStub} />
     </div>,
   );
@@ -106,6 +109,29 @@ describe('AppHost', () => {
     window.history.back();
     fireEvent.popState(window);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('opens from a data-admin-hub-app button and returns focus on close', async () => {
+    renderHost(null);
+    const opener = screen.getByRole('button', { name: 'Add photos or a logo to your website' });
+    opener.focus();
+    fireEvent.click(opener);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.className).toContain('admin-hub-app--window');
+    expect(screen.getByRole('heading', { name: 'Add photos or a logo' })).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('opens the materials app as a full-screen sheet below 640px', async () => {
+    stubMatchMedia(true);
+    window.history.replaceState(null, '', '/admin?app=materials');
+    renderHost('materials');
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.className).toContain('admin-hub-app--sheet');
+    expect(dialog.className).toContain('admin-hub-app--fullscreen');
   });
 
   it('traps tab inside the window', async () => {

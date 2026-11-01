@@ -384,7 +384,8 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview).toBeVisible();
     await expect(overview.locator('[data-tile="preview"]')).toContainText('Your preview will appear here');
     await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
-    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
+    await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toBeVisible();
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     expect(await overview.locator('iframe').count()).toBe(0);
     await expect(overview.locator('[data-tile="preview"] a')).toHaveCount(0);
@@ -403,7 +404,8 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="progress"]')).toContainText('Your website build');
     await expect(overview.locator('[data-tile="preview"] a[href="/admin/website"]').first()).toBeVisible();
     await expect(overview.locator('[data-tile="preview"] a[href="/admin/website?view=booking"]')).toBeVisible();
-    await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
+    await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toBeVisible();
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin/changes');
     await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toContainText('Show all');
@@ -485,7 +487,7 @@ test.describe('Admin Hub batch 4 — Brand colours', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
     const tile = page.locator('[data-tile="colours"]');
-    await expect(tile).toHaveAttribute('href', '/admin?app=colours');
+    await expect(tile.locator('a[href="/admin?app=colours"]').first()).toBeVisible();
     await expect(tile).toContainText('colours found in your logo');
     await expect(tile).toContainText('Not sent yet');
     await expect(tile).toContainText('#1F6F6B');
@@ -751,7 +753,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await page.goto('/admin/changes');
     await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
     await shots6(page, 'screen-changes', widths);
-    for (const app of ['logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
+    for (const app of ['logo', 'photos', 'materials', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
       await page.goto(`/admin?app=${app}`);
       await expect(page.getByTestId('admin-hub-app')).toBeVisible();
       await shots6(page, `app-${app}`, widths);

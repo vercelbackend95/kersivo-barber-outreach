@@ -26,7 +26,7 @@ describe('/admin hub location', () => {
       app: 'messages',
       draft: 'reopen',
     });
-    for (const app of ['setup', 'logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'activity', 'business']) {
+    for (const app of ['setup', 'logo', 'photos', 'materials', 'services', 'team', 'hours', 'about', 'colours', 'activity', 'business']) {
       expect(parse(`/admin?app=${app}`)).toMatchObject({ section: 'overview', app });
     }
     expect(parse('/admin/changes?app=unknown')).toMatchObject({ section: 'changes', app: null });

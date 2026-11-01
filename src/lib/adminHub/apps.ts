@@ -3,6 +3,7 @@
 export const ADMIN_HUB_APP_IDS = [
   'logo',
   'photos',
+  'materials',
   'services',
   'team',
   'hours',
@@ -32,11 +33,19 @@ export type AdminHubAppMeta = {
   crumb: string;
   /** Desktop window max-width in px. Messages is the narrow one. */
   maxWidth: 720 | 1120;
+  /** Use a sheet at or below this width. Default 1024. */
+  sheetBelow?: 640 | 1024;
 };
 
 const META: Record<AdminHubAppId, Omit<AdminHubAppMeta, 'id'>> = {
   logo: { title: 'Logo', crumb: 'Overview › Logo', maxWidth: 1120 },
   photos: { title: 'Shop photos', crumb: 'Overview › Shop photos', maxWidth: 1120 },
+  materials: {
+    title: 'Add photos or a logo',
+    crumb: 'Overview › Add photos or a logo',
+    maxWidth: 1120,
+    sheetBelow: 640,
+  },
   services: { title: 'Services & prices', crumb: 'Overview › Services & prices', maxWidth: 1120 },
   team: { title: 'Team', crumb: 'Overview › Team', maxWidth: 1120 },
   hours: { title: 'Opening hours', crumb: 'Overview › Opening hours', maxWidth: 1120 },

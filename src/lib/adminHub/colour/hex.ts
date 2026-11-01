@@ -19,6 +19,32 @@ export function normaliseHexColour(value: string | null | undefined): string | n
   return expandShortHex(trimmed);
 }
 
+const RGB_COMMA =
+  /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0|0?\.\d+|1(?:\.0+)?))?\s*\)$/i;
+const RGB_SPACE =
+  /^rgba?\(\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})(?:\s*\/\s*(0|0?\.\d+|1(?:\.0+)?))?\s*\)$/i;
+
+function channelToHex(r: number, g: number, b: number): string | null {
+  if (![r, g, b].every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) return null;
+  return srgbToHex(r / 255, g / 255, b / 255);
+}
+
+/**
+ * Accept stored brand colours as #RGB, #RRGGBB, rgb() or rgba() (opaque only).
+ * Returns a #RRGGBB hex for copy/display and a CSS value safe to bind as a fill.
+ */
+export function parseCssColour(value: string | null | undefined): { hex: string; css: string } | null {
+  const hex = normaliseHexColour(value);
+  if (hex) return { hex, css: hex };
+  const raw = (value ?? '').trim();
+  const match = raw.match(RGB_COMMA) ?? raw.match(RGB_SPACE);
+  if (!match) return null;
+  const alpha = match[4] === undefined ? 1 : Number(match[4]);
+  if (!Number.isFinite(alpha) || alpha < 1) return null;
+  const parsed = channelToHex(Number(match[1]), Number(match[2]), Number(match[3]));
+  return parsed ? { hex: parsed, css: parsed } : null;
+}
+
 export function hexToSrgb(hex: string): { r: number; g: number; b: number } | null {
   const normalised = normaliseHexColour(hex);
   if (!normalised) return null;

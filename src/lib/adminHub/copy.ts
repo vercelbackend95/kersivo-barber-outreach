@@ -39,8 +39,28 @@ export const ADMIN_HUB_STEP_TODAY = 'Today';
 export const ADMIN_HUB_STAGE_OF = (current: number, total: number, label: string) =>
   `Stage ${current} of ${total} · ${label}`;
 
+export const ADMIN_HUB_BUILD_STAGES = ['Requested', 'Designing', 'Review', 'Launch', 'Live'] as const;
+export const ADMIN_HUB_BUILD_COPY = {
+  requested: "We've received your request and will start on your design shortly.",
+  designing: "We're building your website by hand.",
+  review: 'Your preview is ready. Have a look and tell us what to change.',
+  launch: "We're connecting your domain and getting everything ready.",
+  live: 'Your website is live.',
+} as const;
+export const ADMIN_HUB_BUILD_STEP_OF = (current: number, total: number) => `Step ${current} of ${total}`;
+export const ADMIN_HUB_BUILD_STEP_SR = (current: number, total: number, label: string) =>
+  `Step ${current} of ${total}: ${label}`;
+
 export const ADMIN_HUB_COLOURS_HINT = "We'll find colours in your logo";
 export const ADMIN_HUB_COLOURS_EMPTY = "Add your logo and we'll find colours";
+export const ADMIN_HUB_COLOURS_NONE =
+  "No brand colours yet. Add your logo and we'll pick colours that match.";
+export const ADMIN_HUB_ADD_TILE = 'Add photos or logo';
+export const ADMIN_HUB_ADD_TILE_ARIA = 'Add photos or a logo to your website';
+export const ADMIN_HUB_ACTIVITY_TODAY = 'Today';
+export const ADMIN_HUB_ACTIVITY_YESTERDAY = 'Yesterday';
+export const ADMIN_HUB_ACTIVITY_EMPTY =
+  'Nothing here yet. Updates on your website will appear here.';
 export const ADMIN_HUB_COLOURS_SAVED = (n: number) =>
   n === 1 ? '1 colour from your shop' : `${n} colours from your shop`;
 export const ADMIN_HUB_COLOURS_FOUND = (n: number) =>

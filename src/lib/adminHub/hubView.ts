@@ -57,6 +57,7 @@ export async function loadAdminHubView(
     location.app === 'setup' ||
     location.app === 'logo' ||
     location.app === 'photos' ||
+    location.app === 'materials' ||
     location.app === 'services' ||
     location.app === 'team' ||
     location.app === 'hours' ||

@@ -23,13 +23,24 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('admin-hub-bento__messages');
     expect(src).toContain('data-tile="changes"');
     expect(src).toContain('data-tile="activity"');
+    expect(src).toContain('data-tile="add"');
+    expect(src).toContain('data-admin-hub-app="materials"');
+    expect(src).toContain('AdminHubSwatches');
+    expect(src).toContain('AdminHubActivityFeed');
+    expect(src).not.toContain('admin-hub-sw--empty');
+    expect(src).toContain('overviewHideAddMaterialsPrimary');
     expect(src).toContain('overviewPreviewLocked');
     expect(src).toContain('overviewChangesLocked');
     expect(src).toContain('isOverviewTerminal');
     expect(src).toContain('HUB_PREVIEW_CARD_LOCKED');
     expect(src).toContain('HUB_LOCKED_REASON_PREVIEW');
     expect(src).toContain('chrome="checkout-outline"');
-    expect(src).toContain('admin-hub-nowbox--you');
+    expect(src).toContain('admin-hub-progress__steps');
+    expect(src).toContain('aria-current');
+    expect(src).toContain('websiteBuildProgressFromHubStage');
+    expect(src).not.toContain('admin-hub-nowbox--you');
+    expect(src).not.toContain('admin-hub-stages');
+    expect(src).not.toContain('formatOverviewStepDate');
   });
 
   it('links tiles to apps and sections without a token', () => {

@@ -33,6 +33,7 @@ const FOCUSABLE =
 const ICONS: Record<AdminHubAppId, typeof Store> = {
   logo: ImagePlus,
   photos: Camera,
+  materials: ImagePlus,
   services: Scissors,
   team: Users,
   hours: Clock,
@@ -94,12 +95,13 @@ export function AppHost(props: {
   const loader = props.loadApp ?? loadAdminHubApp;
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
+    const below = (app ? adminHubAppMeta(app).sheetBelow : undefined) ?? 1024;
+    const mq = window.matchMedia(`(max-width: ${below - 1}px)`);
     const sync = () => setSheet(mq.matches);
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
-  }, []);
+  }, [app]);
 
   useEffect(() => {
     if (!app) {
@@ -166,7 +168,17 @@ export function AppHost(props: {
       if (mouse.defaultPrevented || mouse.button !== 0 || mouse.metaKey || mouse.ctrlKey || mouse.shiftKey || mouse.altKey) {
         return;
       }
-      const link = (mouse.target as HTMLElement | null)?.closest?.('a');
+      const target = mouse.target as HTMLElement | null;
+      const button = target?.closest?.('button[data-admin-hub-app]') as HTMLElement | null;
+      if (button && root.contains(button)) {
+        const id = parseAdminHubApp(button.getAttribute('data-admin-hub-app'));
+        if (!id) return;
+        mouse.preventDefault();
+        if (id === app) return;
+        open(id, button, true);
+        return;
+      }
+      const link = target?.closest?.('a') as HTMLAnchorElement | null;
       if (!link || !root.contains(link)) return;
       let url: URL;
       try {
@@ -228,13 +240,14 @@ export function AppHost(props: {
   if (!app) return null;
   const meta = adminHubAppMeta(app);
   const Icon = ICONS[resolveAdminHubApp(app)];
+  const fullscreen = Boolean(sheet && (meta.sheetBelow ?? 1024) <= 640);
 
   return (
     <div className="admin-hub-app-root">
       <div className="admin-hub-app__scrim" aria-hidden="true" onClick={close} />
       <div
         ref={dialogRef}
-        className={`admin-hub-app${sheet ? ' admin-hub-app--sheet' : ' admin-hub-app--window'}`}
+        className={`admin-hub-app${sheet ? ' admin-hub-app--sheet' : ' admin-hub-app--window'}${fullscreen ? ' admin-hub-app--fullscreen' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

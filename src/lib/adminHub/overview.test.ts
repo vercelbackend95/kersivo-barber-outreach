@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatOverviewCompactRelativeTime,
   formatOverviewStepDate,
   isOverviewTerminal,
+  overviewActivityDayLabel,
+  overviewActivityFeed,
   overviewActivityKind,
+  overviewActivityLabel,
   overviewChanges,
   overviewChangesLocked,
   overviewColours,
+  overviewHideAddMaterialsPrimary,
   overviewLatestMessage,
   overviewNowCopy,
   overviewOurSteps,
@@ -171,10 +176,23 @@ describe('overview view-model', () => {
       brandSecondaryColour: '#c9a24a',
     });
     expect(withBrand.headline).toBe(ADMIN_HUB_COLOURS_SAVED(2));
-    expect(withBrand.swatches.map((swatch) => [swatch.hex, swatch.role])).toEqual([
-      ['#1F6F6B', 'Main'],
-      ['#C9A24A', 'Accent'],
+    expect(withBrand.swatches.map((swatch) => [swatch.hex, swatch.css, swatch.role])).toEqual([
+      ['#1F6F6B', '#1F6F6B', 'Main'],
+      ['#C9A24A', '#C9A24A', 'Accent'],
     ]);
+    expect(
+      overviewColours({
+        hasLogo: true,
+        brandPrimaryColour: 'rgb(31, 111, 107)',
+      }).swatches.map((swatch) => swatch.hex),
+    ).toEqual(['#1F6F6B']);
+    expect(
+      overviewColours({
+        hasLogo: true,
+        brandPrimaryColour: 'not-a-colour',
+        brandPaletteExtracted: [{ hex: 'oklch(0.5 0.1 20)' }],
+      }).swatches,
+    ).toEqual([]);
     expect(withBrand.statusLabel).toBe(ADMIN_HUB_COLOURS_NOT_SENT);
     expect(
       overviewColours({
@@ -259,10 +277,40 @@ describe('overview view-model', () => {
   });
 
   it('picks activity icons from the owner-visible label', () => {
-    expect(overviewActivityKind({ action: 'MARKED_READY', label: 'Preview ready' })).toBe('ready');
-    expect(overviewActivityKind({ action: 'hub_asset_uploaded', label: 'You added your logo' })).toBe('logo');
-    expect(overviewActivityKind({ action: 'hub_asset_uploaded', label: 'You added 6 shop photos' })).toBe('photo');
+    expect(overviewActivityKind({ action: 'MARKED_READY', label: 'Preview ready' })).toBe('status');
+    expect(overviewActivityKind({ action: 'hub_asset_uploaded', label: 'You added your logo' })).toBe('upload');
+    expect(overviewActivityKind({ action: 'hub_asset_uploaded', label: 'You added 6 shop photos' })).toBe('upload');
     expect(overviewActivityKind({ action: 'ops_hub_message_sent', label: 'KERSIVO replied' })).toBe('message');
-    expect(overviewActivityKind({ action: 'CREATED', label: 'Request received' })).toBe('ok');
+    expect(overviewActivityKind({ action: 'CREATED', label: 'Request received' })).toBe('status');
+    expect(overviewActivityKind({ action: 'hub_changes_sent', label: 'Changes sent' })).toBe('change');
+  });
+
+  it('uses progress-bar stage names for status-change events', () => {
+    expect(overviewActivityLabel({ action: 'CREATED', label: 'Request received' })).toBe('Requested');
+    expect(overviewActivityLabel({ action: 'MARKED_READY', label: 'Preview ready' })).toBe('Review');
+    expect(overviewActivityLabel({ action: 'CONVERTED', label: 'Subscribed' })).toBe('Launch');
+    expect(overviewActivityLabel({ action: 'hub_live', label: 'Site live' })).toBe('Live');
+    expect(overviewActivityLabel({ action: 'hub_message_sent', label: 'You sent a message' })).toBe('You sent a message');
+  });
+
+  it('groups the latest five events by London day and uses compact relative time', () => {
+    const now = new Date('2026-10-31T15:00:00.000Z');
+    const groups = overviewActivityFeed(
+      [
+        { id: '1', action: 'MARKED_READY', label: 'Preview ready', at: now, relative: 'just now', absolute: '31 Oct 2026, 15:00' },
+        { id: '2', action: 'hub_asset_uploaded', label: 'You added a logo', at: new Date('2026-10-30T12:00:00.000Z'), relative: 'yesterday', absolute: '30 Oct 2026, 12:00' },
+        { id: '3', action: 'CREATED', label: 'Request received', at: new Date('2026-10-28T08:00:00.000Z'), relative: '3 days ago', absolute: '28 Oct 2026, 08:00' },
+      ],
+      now,
+    );
+    expect(groups.map((group) => [group.label, group.items.map((item) => item.label)])).toEqual([
+      ['Today', ['Review']],
+      ['Yesterday', ['You added a logo']],
+      ['28 Oct', ['Requested']],
+    ]);
+    expect(formatOverviewCompactRelativeTime(new Date(now.getTime() - 2 * 60 * 60 * 1000), now)).toBe('2h ago');
+    expect(overviewActivityDayLabel(new Date('2026-10-31T08:00:00.000Z'), now)).toBe('Today');
+    expect(overviewHideAddMaterialsPrimary('requested')).toBe(true);
+    expect(overviewHideAddMaterialsPrimary('review')).toBe(false);
   });
 });
