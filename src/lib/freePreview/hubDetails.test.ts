@@ -77,6 +77,22 @@ describe('hubDetailsSchema instagram and extra text', () => {
     expect(hubDetailsSchema.safeParse({ websiteExtraText: 'x'.repeat(2001) }).success).toBe(false);
     expect(hubDetailsSchema.safeParse({ websiteExtraText: 'x'.repeat(2000) }).success).toBe(true);
   });
+
+  it('strips a client requestId so request A cannot name request B', () => {
+    const parsed = hubDetailsSchema.parse({
+      aboutText: 'Family shop',
+      requestId: 'req_other',
+      previewRequestId: 'req_other',
+    });
+    expect(parsed).toEqual({ aboutText: 'Family shop' });
+    expect('requestId' in parsed).toBe(false);
+  });
+
+  it('caps about text at 600 and style notes at 500', () => {
+    expect(hubDetailsSchema.safeParse({ aboutText: 'x'.repeat(601) }).success).toBe(false);
+    expect(hubDetailsSchema.safeParse({ aboutText: 'x'.repeat(600) }).success).toBe(true);
+    expect(hubDetailsSchema.safeParse({ styleNotes: 'x'.repeat(501) }).success).toBe(false);
+  });
 });
 
 describe('saveHubDetails', () => {
@@ -137,6 +153,16 @@ describe('saveHubDetails', () => {
     });
     expect(update.mock.calls[0]?.[0].data.websiteExtraText).toBeNull();
     expect(details.websiteExtraText).toBeNull();
+  });
+
+  it('does not increment changeRoundsUsed', async () => {
+    await saveHubDetails({
+      requestId: 'req_1',
+      patch: { aboutText: 'Family shop' },
+    });
+    const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
+    expect(data.changeRoundsUsed).toBeUndefined();
+    expect(JSON.stringify(data)).not.toContain('changeRoundsUsed');
   });
 });
 

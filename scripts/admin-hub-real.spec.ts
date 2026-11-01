@@ -81,6 +81,25 @@ async function expectNoHorizontalScroll(page: Page, label: string) {
   expect(overflow, `${label} horizontal scroll`).toBeLessThanOrEqual(0);
 }
 
+/** Controlled React fields ignore Playwright fill() unless the input event updates state. */
+async function fillReactInput(locator: ReturnType<Page['locator']>, value: string) {
+  await expect
+    .poll(async () => locator.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__react'))))
+    .toBe(true);
+  await locator.click();
+  await locator.evaluate((node, next) => {
+    const el = node as HTMLTextAreaElement | HTMLInputElement;
+    const proto =
+      el instanceof HTMLTextAreaElement
+        ? window.HTMLTextAreaElement.prototype
+        : window.HTMLInputElement.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    desc?.set?.call(el, next);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+  await expect(locator).toHaveValue(value);
+}
+
 async function shots(page: Page, name: string, widths: number[]) {
   await page.addStyleTag({ content: 'astro-dev-toolbar { display: none !important; }' });
   for (const width of widths) {
@@ -106,10 +125,10 @@ async function expectNoSeriousAxe(page: Page, name: string) {
   expect(serious, `${name} axe serious/critical`).toEqual([]);
 }
 
-test.describe.configure({ mode: 'serial' });
 test.setTimeout(600000);
 
 test.describe('Admin Hub batch 1 — real stack', () => {
+  test.describe.configure({ mode: 'serial' });
   test.beforeAll(async ({ request }) => {
     for (let attempt = 0; attempt < 40; attempt += 1) {
       try {
@@ -722,6 +741,7 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
 });
 
 test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
+  test.describe.configure({ mode: 'serial' });
   test.beforeAll(async ({ request }) => {
     if (seed) return;
     const res = await request.get('/api/preview-hub-qa/seed');
@@ -1499,9 +1519,8 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
     const composer = page.getByTestId('hub-message-body');
     await expect(composer).toBeVisible();
-    await composer.click();
-    await composer.fill(message);
-    await expect(composer).toHaveValue(message);
+    await fillReactInput(composer, message);
+    await expect(page.locator('.hub-composer__count')).toContainText(`${message.length} /`);
     await expect(page.getByTestId('hub-send-message')).toBeEnabled();
     const sent = page.waitForResponse((res) => {
       const url = new URL(res.url());
@@ -1814,6 +1833,360 @@ test.describe('A3 add to your website', () => {
     await page.getByRole('button', { name: /^Other/ }).click();
     await expect(page.locator('#other .hub-photo__file').first()).toHaveText('PDF');
     await a3Shot('other-uploaded');
+  });
+});
+
+async function assertHubOnly(context: BrowserContext) {
+  const cookies = await context.cookies();
+  expect(cookies.some((cookie) => cookie.name === 'ks_hub'), 'ks_hub present').toBe(true);
+  expect(
+    cookies.some((cookie) => /better-auth\.session_token/i.test(cookie.name)),
+    'hub-only: no Better Auth cookie',
+  ).toBe(false);
+  expect(
+    cookies.some((cookie) => cookie.name === 'kersivo_shop_preview'),
+    'hub-only: no guest preview cookie',
+  ).toBe(false);
+}
+
+async function openAddMenu(page: Page) {
+  const add = page.getByTestId('admin-hub-add');
+  await expect(add).toBeVisible();
+  await expect(async () => {
+    if ((await add.getAttribute('aria-expanded')) !== 'true') await add.click();
+    await expect(add).toHaveAttribute('aria-expanded', 'true');
+  }).toPass({ timeout: 15000 });
+  await expect(page.getByTestId('admin-hub-add-menu')).toBeVisible();
+  return add;
+}
+
+test.describe('A5 end-to-end QA', () => {
+  test.beforeAll(async ({ request }) => {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      try {
+        if ((await request.get('/preview-hub-qa/health')).ok()) break;
+      } catch {
+        /* server still starting */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  test('A5: hub-only journey — Add menu, ?add=1, Changes send, Messages, checkout', async ({
+    page,
+    context,
+  }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a5' : '/tmp/kersivo-shots/a5';
+    mkdirSync(shotRoot, { recursive: true });
+    const a5Shot = async (name: string) => {
+      for (const width of [375, 768, 1024, 1440]) {
+        await page.setViewportSize({ width, height: width <= 375 ? 812 : 900 });
+        await page.waitForTimeout(200);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    const denied: Array<{ url: string; status: number; body: string }> = [];
+    page.on('response', (res) => {
+      if (res.url().includes('/api/') && res.status() === 403) {
+        void res.text().then((body) => {
+          denied.push({ url: res.url(), status: res.status(), body });
+        });
+      }
+    });
+
+    await context.clearCookies();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`/preview/${seed.requested.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await assertHubOnly(context);
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await expect(page.locator('[data-tile="content"]')).toBeVisible();
+    await expect(page.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
+    await expect(page.getByTestId('admin-hub-shop-tile')).toBeVisible();
+    await a5Shot('overview-requested');
+
+    const add = await openAddMenu(page);
+    await expect(add).toHaveAccessibleName('Add');
+    await expect(page.getByRole('menu', { name: 'Add to your website or shop' })).toBeVisible();
+    const websiteItems = [
+      { name: /Shop photos/, item: 'photos' },
+      { name: /Logo/, item: 'logo' },
+      { name: /Text for your website/, item: 'text' },
+      { name: /Team photos/, item: 'team-photos' },
+      { name: /Price list/, item: 'price-list' },
+      { name: /Other files/, item: 'other' },
+    ] as const;
+    for (const item of websiteItems) {
+      await expect(page.getByRole('menuitem', { name: item.name })).toHaveAttribute(
+        'href',
+        `/admin?app=materials&item=${item.item}`,
+      );
+    }
+    await expect(page.getByRole('menuitem', { name: /Team member/ })).toHaveAttribute('href', '/admin/team?add=1');
+    await expect(page.getByRole('menuitem', { name: /Service/ })).toHaveAttribute('href', '/admin/services?add=1');
+    await expect(page.getByRole('menuitem', { name: /Product/ })).toHaveAttribute('href', '/admin/products?add=1');
+    await a5Shot('add-menu');
+
+    await page.getByRole('menuitem', { name: /Shop photos/ }).click();
+    await expect(page.getByTestId('admin-hub-app')).toHaveAttribute('data-app', 'materials');
+    await expect(page.getByRole('heading', { name: 'Add to your website' })).toBeVisible();
+    await expect(page.locator('#photos')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('admin-hub-app')).toHaveCount(0);
+    await expect(page.getByTestId('admin-hub-add')).toBeFocused();
+
+    await page.goto('/admin/team?add=1');
+    await expect(page).toHaveURL(/\/admin\/team/);
+    await expect(page.getByRole('button', { name: 'Add team member' })).toBeVisible({ timeout: 15000 });
+    expect(new URL(page.url()).searchParams.has('add')).toBe(false);
+
+    await page.goto('/admin/services?add=1');
+    await expect(page.locator('#admin-service-form-title')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: 'Add service' })).toBeVisible();
+    expect(new URL(page.url()).searchParams.has('add')).toBe(false);
+
+    await page.goto('/admin/products?add=1');
+    await expect(page.getByRole('button', { name: 'Add product' })).toBeVisible({ timeout: 15000 });
+    expect(new URL(page.url()).searchParams.has('add')).toBe(false);
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await assertHubOnly(context);
+
+    await page.goto('/admin/changes');
+    await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
+    const usedBefore = await page.locator('.admin-hub-head__sub').innerText();
+    await page.getByRole('button', { name: /Suggest a change/ }).click();
+    await expect(page.getByTestId('hub-change-body')).toBeVisible();
+    const changeBody = `A5 change ${Date.now()}: move the logo a little higher.`;
+    await fillReactInput(page.getByTestId('hub-change-body'), changeBody);
+    const draft = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/changes') && res.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Save draft' }).click();
+    expect((await draft).status()).toBeLessThan(400);
+    await expect(page.getByText(changeBody)).toBeVisible();
+    const sent = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/changes/send') && res.request().method() === 'POST',
+    );
+    await page.getByTestId('hub-send-changes').click();
+    expect((await sent).status()).toBeLessThan(400);
+    await expect(page.getByText(changeBody)).toBeVisible();
+    await a5Shot('changes-sent');
+
+    const message = `A5 hub-only message ${Date.now()}`;
+    await page.goto('/admin/messages');
+    await expect(page.getByTestId('admin-hub-messages')).toBeVisible();
+    await fillReactInput(page.getByTestId('hub-message-body'), message);
+    await expect(page.getByTestId('hub-send-message')).toBeEnabled();
+    const msg = page.waitForResponse((res) => {
+      const url = new URL(res.url());
+      return url.pathname === '/api/admin-hub/messages' && res.request().method() === 'POST';
+    });
+    await page.getByTestId('hub-send-message').click();
+    expect((await msg).status()).toBeLessThan(400);
+    await expect(page.getByText(message)).toBeVisible();
+
+    await page.goto('/admin');
+    await page.getByTestId('hub-subscribe').click();
+    await expect(page.getByRole('heading', { name: 'Launch this website' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue to secure checkout' })).toBeVisible();
+    await a5Shot('checkout');
+
+    const unexpected = denied.filter(
+      (row) =>
+        row.body.includes('Not available in your preview.') &&
+        !new URL(row.url).pathname.startsWith('/api/admin/'),
+    );
+    expect(unexpected, JSON.stringify(unexpected)).toEqual([]);
+    expect(usedBefore.length).toBeGreaterThan(0);
+  });
+
+  test('A5: hub-only APIs stay off the allowlist; no cookie is 404; A cannot write B', async ({
+    page,
+    context,
+    request,
+  }) => {
+    const inventory = await request.get('/api/preview-hub-qa/admin-api-inventory');
+    expect(inventory.ok(), `inventory ${inventory.status()}`).toBeTruthy();
+    const inventoryJson = (await inventory.json()) as {
+      rows: Array<{ method: string; path: string; allowlisted: boolean }>;
+      hubRows: Array<{ method: string; path: string }>;
+    };
+    expect(inventoryJson.hubRows.length).toBeGreaterThan(10);
+    for (const row of inventoryJson.hubRows) {
+      expect(row.path.startsWith('/api/admin-hub'), row.path).toBe(true);
+      expect(
+        inventoryJson.rows.some((admin) => admin.path === row.path),
+        `${row.method} ${row.path} must not sit on the /api/admin walker`,
+      ).toBe(false);
+    }
+
+    const noCookie = await page.request.get('/api/admin-hub/details', {
+      headers: { Origin: ORIGIN },
+    });
+    expect(noCookie.status(), 'no cookie details').toBe(404);
+    expect(await noCookie.text()).not.toContain('Not available in your preview.');
+
+    const noCookieAssets = await page.request.post('/api/admin-hub/assets', {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: {},
+    });
+    expect([403, 404], `no cookie assets ${noCookieAssets.status()}`).toContain(noCookieAssets.status());
+    expect(await noCookieAssets.text()).not.toContain('Not available in your preview.');
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.ready.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await assertHubOnly(context);
+    const readyCookie = await hubCookie(context);
+    expect(readyCookie).toBeTruthy();
+    const readyHeaders = {
+      Cookie: `${readyCookie!.name}=${readyCookie!.value}`,
+      Origin: ORIGIN,
+      'Content-Type': 'application/json',
+    };
+
+    for (const row of inventoryJson.hubRows) {
+      const res = await page.request.fetch(row.path, {
+        method: row.method,
+        headers: readyHeaders,
+        data: row.method === 'GET' || row.method === 'HEAD' || row.method === 'DELETE' ? undefined : {},
+        failOnStatusCode: false,
+      });
+      const body = await res.text();
+      expect(body, `${row.method} ${row.path} ${res.status()}`).not.toContain('Not available in your preview.');
+      expect(res.status(), `${row.method} ${row.path}`).toBeGreaterThanOrEqual(200);
+      expect(res.status(), `${row.method} ${row.path}`).toBeLessThan(500);
+    }
+
+    const details = await page.request.patch('/api/admin-hub/details', {
+      headers: readyHeaders,
+      data: {
+        aboutText: 'A5 ready shop about',
+        websiteExtraText: 'x'.repeat(2001),
+        requestId: seed.requested.id,
+        previewRequestId: seed.requested.id,
+      },
+    });
+    expect(details.status(), `oversize extra ${details.status()} ${await details.text()}`).toBe(400);
+
+    const saved = await page.request.patch('/api/admin-hub/details', {
+      headers: readyHeaders,
+      data: {
+        aboutText: 'A5 ready shop about',
+        websiteExtraText: 'Walk-ins welcome on Saturdays.',
+        requestId: seed.requested.id,
+      },
+    });
+    expect(saved.status(), `details ${saved.status()} ${await saved.text()}`).toBeLessThan(400);
+    const savedJson = (await saved.json()) as { details?: { aboutText?: string; websiteExtraText?: string } };
+    expect(savedJson.details?.aboutText).toBe('A5 ready shop about');
+
+    const assets = await page.request.get('/api/admin-hub/assets', { headers: readyHeaders });
+    expect(assets.status()).toBe(200);
+    const assetJson = (await assets.json()) as { assets?: Array<{ id: string }> };
+    const readyAssetId = assetJson.assets?.[0]?.id;
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.requested.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await assertHubOnly(context);
+    const requestedCookie = await hubCookie(context);
+    expect(requestedCookie).toBeTruthy();
+    const requestedHeaders = {
+      Cookie: `${requestedCookie!.name}=${requestedCookie!.value}`,
+      Origin: ORIGIN,
+      'Content-Type': 'application/json',
+    };
+
+    const stealDetails = await page.request.patch('/api/admin-hub/details', {
+      headers: requestedHeaders,
+      data: {
+        aboutText: 'Stolen about from request B',
+        requestId: seed.ready.id,
+        previewRequestId: seed.ready.id,
+      },
+    });
+    expect(stealDetails.status()).toBeLessThan(400);
+    const stealJson = (await stealDetails.json()) as { details?: { aboutText?: string } };
+    expect(stealJson.details?.aboutText).toBe('Stolen about from request B');
+
+    const readyAgain = await page.request.get('/api/admin-hub/details', { headers: readyHeaders });
+    expect(readyAgain.status()).toBe(200);
+    const readyDetails = (await readyAgain.json()) as { details?: { aboutText?: string } };
+    expect(readyDetails.details?.aboutText).toBe('A5 ready shop about');
+
+    if (readyAssetId) {
+      const stealAsset = await page.request.patch(`/api/admin-hub/assets/${readyAssetId}`, {
+        headers: requestedHeaders,
+        data: { caption: 'Stolen caption' },
+      });
+      expect([403, 404], `cross-tenant asset ${stealAsset.status()}`).toContain(stealAsset.status());
+      const stealGet = await page.request.get(`/api/admin-hub/assets/${readyAssetId}`, {
+        headers: requestedHeaders,
+      });
+      expect([403, 404], `cross-tenant asset GET ${stealGet.status()}`).toContain(stealGet.status());
+    }
+  });
+
+  test('A5: keyboard, reduced motion and paid add labels', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a5' : '/tmp/kersivo-shots/a5';
+    mkdirSync(shotRoot, { recursive: true });
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await context.clearCookies();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`/preview/${seed.requested.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    await assertHubOnly(context);
+
+    await page.goto('/admin');
+    const add = page.getByTestId('admin-hub-add');
+    await expect(add).toBeVisible();
+    await expect
+      .poll(async () => add.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__react'))))
+      .toBe(true);
+    await add.press('ArrowDown');
+    await expect(page.getByRole('menu', { name: 'Add to your website or shop' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Shop photos/ })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('admin-hub-add-menu')).toHaveCount(0);
+    await expect(add).toBeFocused();
+
+    await add.press('Enter');
+    await expect(page.getByRole('menu', { name: 'Add to your website or shop' })).toBeVisible();
+    await page.getByRole('menuitem', { name: /Shop photos/ }).press('Enter');
+    const app = page.getByTestId('admin-hub-app');
+    await expect(app).toHaveAttribute('data-app', 'materials');
+    await app.getByRole('button', { name: 'Close' }).click();
+    await expect(app).toHaveCount(0);
+    await expect(add).toBeFocused();
+    await page.screenshot({ path: join(shotRoot, 'keyboard-focus-1440.png'), fullPage: true });
+
+    await context.clearCookies();
+    await signIn(page, seed.live.owner.email, seed.live.owner.password);
+    await page.goto('/admin?section=services');
+    await expect(page.getByRole('button', { name: 'Add service' })).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('.admin-sidebar')).toContainText('Bookings');
+    await expect(page.locator('.admin-sidebar')).toContainText('Reports');
+    await expect(page.locator('.admin-sidebar')).toContainText('Clients');
+    await expect(page.locator('.admin-sidebar')).toContainText('Orders');
+    await expect(page.locator('.admin-sidebar')).toContainText('Sales');
+    await page.goto('/admin?section=bookings_blocks');
+    await expect(page.getByRole('button', { name: 'Add team member' })).toBeVisible({ timeout: 20000 });
+    await page.goto('/admin?section=shop_products');
+    await expect(page.getByRole('button', { name: 'Add product' })).toBeVisible({ timeout: 20000 });
+    await page.screenshot({ path: join(shotRoot, 'paid-products-1440.png'), fullPage: true });
   });
 });
 

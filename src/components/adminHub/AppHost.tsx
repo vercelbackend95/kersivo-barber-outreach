@@ -57,6 +57,32 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+/** Menu items unmount when the Add menu closes — restore to the still-mounted trigger. */
+function stableOpener(opener: HTMLElement | null): HTMLElement | null {
+  if (!opener) return null;
+  const menu = opener.closest('[role="menu"]');
+  const menuId = menu?.id;
+  if (menuId) {
+    const trigger = [...document.querySelectorAll<HTMLElement>('[aria-controls]')].find(
+      (el) => el.getAttribute('aria-controls') === menuId,
+    );
+    if (trigger) return trigger;
+  }
+  return opener;
+}
+
+function restoreOpenerFocus(opener: HTMLElement | null) {
+  if (opener?.isConnected) {
+    opener.focus();
+    return;
+  }
+  document
+    .querySelector<HTMLElement>(
+      '[data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"], [data-testid="admin-hub-content-add"]',
+    )
+    ?.focus();
+}
+
 function withTransition(update: () => void): void {
   const start = document.startViewTransition?.bind(document);
   if (start && !prefersReducedMotion()) {
@@ -143,19 +169,17 @@ export function AppHost(props: {
   }, []);
 
   const close = useCallback(() => {
-    if (pushedRef.current) {
-      pushedRef.current = false;
-      history.back();
-      return;
-    }
-    writeLocation(null, null, false);
+    const usedHistory = pushedRef.current;
+    pushedRef.current = false;
+    if (usedHistory) history.back();
+    else writeLocation(null, null, false);
     withTransition(() => setApp(null));
-    queueMicrotask(() => openerRef.current?.focus());
+    queueMicrotask(() => restoreOpenerFocus(openerRef.current));
   }, [writeLocation]);
 
   const open = useCallback(
     (id: AdminHubAppId, opener: HTMLElement | null, push: boolean, item: string | null = null) => {
-      openerRef.current = opener;
+      openerRef.current = stableOpener(opener);
       const target = adminHubAppOpenTarget(id);
       const nextItem = item ?? target.item;
       if (target.id === app) {
@@ -173,7 +197,7 @@ export function AppHost(props: {
       const next = appFromLocation();
       setApp(next);
       pushedRef.current = false;
-      if (!next) queueMicrotask(() => openerRef.current?.focus());
+      if (!next) queueMicrotask(() => restoreOpenerFocus(openerRef.current));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);

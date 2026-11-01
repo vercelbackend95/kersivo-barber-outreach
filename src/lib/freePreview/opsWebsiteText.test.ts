@@ -12,6 +12,7 @@ describe('ops preview-request website text', () => {
     expect(src).toContain('HUB_OPS_TEXT_UPDATED');
     expect(src).toContain('request.instagramUrl');
     expect(src).toContain('request.websiteExtraText');
+    expect(src).not.toMatch(/set:html=\{request\.(aboutText|instagramUrl|websiteExtraText|styleNotes)\}/);
     expect(HUB_OPS_INSTAGRAM).toBe('Instagram');
     expect(HUB_OPS_WEBSITE_EXTRA).toBe('Anything else');
     expect(HUB_OPS_TEXT_UPDATED).toBe('Last updated');

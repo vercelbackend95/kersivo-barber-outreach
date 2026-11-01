@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
 import type { AdminHubAppContext } from './apps/types';
@@ -151,6 +152,49 @@ describe('AppHost', () => {
     await screen.findByRole('dialog');
     expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
     expect(new URL(window.location.href).searchParams.get('item')).toBe('photos');
+  });
+
+  it('returns focus to the Add trigger when the menu item that opened the app unmounts', async () => {
+    function MenuHost() {
+      const [open, setOpen] = useState(true);
+      return (
+        <div className="admin-shell">
+          <button
+            type="button"
+            data-testid="admin-hub-add"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-controls="add-menu"
+          >
+            Add
+          </button>
+          {open ? (
+            <div id="add-menu" role="menu" aria-label="Add to your website or shop">
+              <a
+                role="menuitem"
+                href="/admin?app=materials&item=photos"
+                onClick={() => queueMicrotask(() => setOpen(false))}
+              >
+                Shop photos
+              </a>
+            </div>
+          ) : null}
+          <AppHost initialApp={null} ctx={ctx} loadApp={loadStub} />
+        </div>
+      );
+    }
+
+    render(<MenuHost />);
+    const item = screen.getByRole('menuitem', { name: 'Shop photos' });
+    item.focus();
+    fireEvent.click(item);
+    await screen.findByRole('dialog');
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Shop photos' })).toBeNull());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(screen.getByTestId('admin-hub-add'));
   });
 
   it('traps tab inside the window', async () => {
