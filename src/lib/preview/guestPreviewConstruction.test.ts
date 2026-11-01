@@ -20,6 +20,7 @@ describe('isGuestPreviewConstructionPause', () => {
 describe('isPreviewPublicActivityLocked', () => {
   it('locks preview via and construction reasons', () => {
     expect(isPreviewPublicActivityLocked({ via: 'preview', pauseReason: null })).toBe(true);
+    expect(isPreviewPublicActivityLocked({ via: 'hub', pauseReason: null })).toBe(true);
     expect(
       isPreviewPublicActivityLocked({ via: 'session', pauseReason: GUEST_PREVIEW_PAUSE_REASON }),
     ).toBe(true);

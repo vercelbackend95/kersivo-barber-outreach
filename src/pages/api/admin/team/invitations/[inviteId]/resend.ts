@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import type { ShopRole } from '@prisma/client';
 import { requireAdminContext } from '@/lib/admin/auth';
+import { denyHubInvite } from '@/lib/adminHub/hubAdminAccess';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import {
   assertCanInviteRole,
@@ -46,6 +47,8 @@ function isResendDomainFailure(error: unknown): error is ResendDomainFailure {
 export const POST: APIRoute = async (context) => {
   const access = await requireAdminContext(context);
   if (access instanceof Response) return access;
+  const hubDenied = denyHubInvite(access);
+  if (hubDenied) return hubDenied;
 
   const denied = requireAnyPermission(access, ['members.manage', 'members.invite_barber']);
   if (denied) return denied;

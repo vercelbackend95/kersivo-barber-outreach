@@ -32,7 +32,10 @@ import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
 import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
 import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER, ADMIN_HUB_UNREAD_COUNT } from '@/lib/adminHub/copy';
-import { PREVIEW_HUB_PATHS, type PreviewHubSection } from '@/lib/adminHub/previewHubPaths';
+import {
+  PREVIEW_HUB_PATHS,
+  type PreviewHubSection,
+} from '@/lib/adminHub/previewHubPaths';
 import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
@@ -141,6 +144,32 @@ const menuGroups: SectionGroup[] = [
     ],
   },
 ];
+
+const PREVIEW_REAL_SECTION_HREF: Partial<Record<AdminSection, string>> = {
+  bookings_blocks: PREVIEW_HUB_PATHS.team,
+  services: PREVIEW_HUB_PATHS.services,
+  shop_products: PREVIEW_HUB_PATHS.products,
+};
+
+const PREVIEW_REAL_SECTION_ID: Partial<Record<AdminSection, PreviewHubSection>> = {
+  bookings_blocks: 'team',
+  services: 'services',
+  shop_products: 'products',
+};
+
+const previewRealMenuGroups = menuGroups
+  .map((group) => ({
+    title: group.title,
+    items: group.items
+      .filter((item) => PREVIEW_REAL_SECTION_HREF[item.section])
+      .map((item) => ({
+        id: PREVIEW_REAL_SECTION_ID[item.section]!,
+        href: PREVIEW_REAL_SECTION_HREF[item.section]!,
+        label: item.label,
+        icon: item.icon,
+      })),
+  }))
+  .filter((group) => group.items.length > 0);
 
 const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
 
@@ -553,6 +582,7 @@ export default function AdminLayout({
   const renderMenu = (showLaunchCta: boolean) => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
       {isPreviewChrome ? (
+        <>
         <div className="admin-sidebar-group">
           <p className="admin-sidebar-group-title">{ADMIN_HUB_NAV_GROUP}</p>
           {previewNavItems.map((item) => {
@@ -577,6 +607,24 @@ export default function AdminLayout({
             );
           })}
         </div>
+        {previewRealMenuGroups.map((group) => (
+          <div className="admin-sidebar-group" key={group.title}>
+            <p className="admin-sidebar-group-title">{group.title}</p>
+            {group.items.map((item) => (
+              <a
+                key={item.id}
+                href={item.href}
+                className={`admin-sidebar-link${previewSection === item.id ? ' admin-sidebar-link--active' : ''}`}
+                aria-current={previewSection === item.id ? 'page' : undefined}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="admin-sidebar-link-icon">{item.icon}</span>
+                <span className="admin-sidebar-link-label">{item.label}</span>
+              </a>
+            ))}
+          </div>
+        ))}
+        </>
       ) : (
         visibleMenuGroups.map((group) => (
           <div className="admin-sidebar-group" key={group.title}>
@@ -624,7 +672,13 @@ export default function AdminLayout({
 
   const activeSectionLabel = useMemo(() => {
     if (isPreviewChrome) {
-      return previewNavItems.find((item) => item.id === previewSection)?.label ?? 'Overview';
+      const hubItem = previewNavItems.find((item) => item.id === previewSection);
+      if (hubItem) return hubItem.label;
+      for (const group of previewRealMenuGroups) {
+        const item = group.items.find((entry) => entry.id === previewSection);
+        if (item) return item.label;
+      }
+      return 'Overview';
     }
     if (activeSection === 'barbershop_settings') return 'Barbershop settings';
     if (activeSection === 'site_launch') return 'Site launch';

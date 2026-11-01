@@ -13,7 +13,7 @@ describe('preview sidebar account menu', () => {
   it('AdminPanel sets isPreviewAccess from session via', () => {
     const source = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminPanel.tsx'), 'utf8');
     expect(source).toContain("setIsPreviewAccess(payload.via === 'preview')");
-    expect(source).toContain('isPreviewAccess={demoMode ? false : isPreviewAccess}');
+    expect(source).toContain('isPreviewAccess={demoMode || isHubChrome ? false : isPreviewAccess}');
   });
 
   it('AdminSidebarProfile preview mode omits delete and preview website, keeps launch and logout', () => {

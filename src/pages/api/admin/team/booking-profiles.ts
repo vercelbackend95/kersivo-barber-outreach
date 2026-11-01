@@ -87,7 +87,7 @@ export const POST: APIRoute = async (context) => {
   const access = await requireAdminContext(context);
   if (access instanceof Response) return access;
 
-  const denied = requireAnyPermission(access, ['members.manage', 'members.invite_barber']);
+  const denied = requireAnyPermission(access, ['members.manage', 'members.invite_barber', 'catalog.manage']);
   if (denied) return denied;
 
   if (access.role === 'BARBER') {

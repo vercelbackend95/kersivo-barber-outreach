@@ -4,6 +4,12 @@ import '../sentry.server.config';
 import type { APIContext } from 'astro';
 import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
+import {
+  hubAdminUnavailableResponse,
+  isHubAdminApiAllowed,
+  isHubOnlyAdminApiRequest,
+  recordHubOwnerAdminEdit,
+} from '@/lib/adminHub/hubAdminAccess';
 import { isAdminHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { isPreviewHubAllowedPath } from '@/lib/adminHub/previewHubPaths';
 import { applySecurityHeaders } from '@/lib/security/headers';
@@ -66,6 +72,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
+  const hubOnlyAdminApi =
+    url.pathname.startsWith(ADMIN_API_PREFIX) && isHubOnlyAdminApiRequest(request);
+  if (hubOnlyAdminApi && !isHubAdminApiAllowed(method, url.pathname)) {
+    return applySecurityHeaders(hubAdminUnavailableResponse(), { isProd, isHttps });
+  }
+
   const allowlist = parseAllowedOrigins({
     publicSiteUrl:
       (import.meta.env.PUBLIC_SITE_URL as string | undefined) ?? process.env.PUBLIC_SITE_URL,
@@ -105,6 +117,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const response = await next();
+  if (hubOnlyAdminApi && response.ok) {
+    try {
+      await recordHubOwnerAdminEdit({ request, pathname: url.pathname, method });
+    } catch {
+      /* activity is best-effort */
+    }
+  }
   if (response.status >= 500 && url.pathname.startsWith('/api/')) {
     try {
       const { captureOpsException } = await import('@/lib/ops/sentry');

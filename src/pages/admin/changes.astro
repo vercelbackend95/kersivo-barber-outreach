@@ -4,7 +4,7 @@ export const prerender = false;
 import PreviewHubDocument from '@/layouts/PreviewHubDocument.astro';
 import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
 import { AdminHubChanges } from '@/components/adminHub/AdminHubChanges';
-import { ADMIN_HUB_CHANGES_SUB } from '@/lib/adminHub/copy';
+import { ADMIN_HUB_CHANGES_SELF_EDIT, ADMIN_HUB_CHANGES_SUB } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
 import { preparePreviewHubPage } from '@/lib/adminHub/previewHubPage';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_NAV, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
@@ -39,7 +39,7 @@ const caps = data.ctx.state.capabilities;
             <div>
               <span class="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
               <h1>{HUB_NAV.changes}</h1>
-              <p class="admin-hub-head__sub">{ADMIN_HUB_CHANGES_SUB}</p>
+              <p class="admin-hub-head__sub">{ADMIN_HUB_CHANGES_SUB} {ADMIN_HUB_CHANGES_SELF_EDIT}</p>
             </div>
           </header>
           <div class="admin-hub-tile admin-hub-calm">

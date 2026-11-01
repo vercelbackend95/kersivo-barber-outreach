@@ -61,6 +61,9 @@ export const PREVIEW_REQUEST_ACTIONS = {
   OPS_HUB_SSL_ACTIVE: 'ops_hub_ssl_active',
   OPS_HUB_MARK_LIVE: 'ops_hub_mark_live',
   HUB_DIRECT_SUBSCRIBE_CREATED: 'hub_direct_subscribe_created',
+  OWNER_EDITED_SERVICES: 'OWNER_EDITED_SERVICES',
+  OWNER_EDITED_TEAM: 'OWNER_EDITED_TEAM',
+  OWNER_EDITED_PRODUCTS: 'OWNER_EDITED_PRODUCTS',
 } as const;
 
 /**

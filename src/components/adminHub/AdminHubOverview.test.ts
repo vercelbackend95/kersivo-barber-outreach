@@ -51,5 +51,7 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('hrefs.activity');
     expect(src).not.toContain('/preview/');
     expect(src).not.toContain('publicToken');
+    expect(src).not.toContain('app=services');
+    expect(src).not.toContain('app=team');
   });
 });

@@ -1,6 +1,14 @@
 /** Preview-hub routes under /admin. Client-safe. */
 
-export const PREVIEW_HUB_SECTIONS = ['overview', 'changes', 'website', 'messages'] as const;
+export const PREVIEW_HUB_SECTIONS = [
+  'overview',
+  'changes',
+  'website',
+  'messages',
+  'team',
+  'services',
+  'products',
+] as const;
 export type PreviewHubSection = (typeof PREVIEW_HUB_SECTIONS)[number];
 
 export const PREVIEW_HUB_PATHS = {
@@ -8,8 +16,22 @@ export const PREVIEW_HUB_PATHS = {
   changes: '/admin/changes',
   website: '/admin/website',
   messages: '/admin/messages',
+  team: '/admin/team',
+  services: '/admin/services',
+  products: '/admin/products',
   leave: '/admin/leave-preview',
 } as const;
+
+/** Paid SPA `?section=` for a hub real-admin path, so bookmarks work in both worlds. */
+export const PREVIEW_HUB_PAID_SECTION: Record<'team' | 'services' | 'products', string> = {
+  team: 'bookings_blocks',
+  services: 'services',
+  products: 'shop_products',
+};
+
+export function paidAdminRedirectForHubPath(section: 'team' | 'services' | 'products'): string {
+  return `/admin?section=${PREVIEW_HUB_PAID_SECTION[section]}`;
+}
 
 const ALLOWED = new Set<string>(Object.values(PREVIEW_HUB_PATHS));
 
@@ -24,6 +46,9 @@ export function previewHubSectionFromPath(pathname: string): PreviewHubSection {
   if (path === PREVIEW_HUB_PATHS.changes) return 'changes';
   if (path === PREVIEW_HUB_PATHS.website) return 'website';
   if (path === PREVIEW_HUB_PATHS.messages) return 'messages';
+  if (path === PREVIEW_HUB_PATHS.team) return 'team';
+  if (path === PREVIEW_HUB_PATHS.services) return 'services';
+  if (path === PREVIEW_HUB_PATHS.products) return 'products';
   return 'overview';
 }
 
@@ -34,6 +59,8 @@ export function previewHubLegacyRedirect(url: URL): string | null {
   const view = url.searchParams.get('view');
   const draft = url.searchParams.get('draft');
 
+  if (app === 'services') return PREVIEW_HUB_PATHS.services;
+  if (app === 'team') return PREVIEW_HUB_PATHS.team;
   if (section === 'changes') return withSearch(PREVIEW_HUB_PATHS.changes, { view, draft, app });
   if (section === 'website') return withSearch(PREVIEW_HUB_PATHS.website, { view, draft, app });
   if (section === 'messages') {

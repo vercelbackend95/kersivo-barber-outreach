@@ -153,7 +153,9 @@ export const POST: APIRoute = async (ctx) => {
           uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file));
         }
         const product = await createProductWithReorder(shopId, parsed.data, uploadedImageUrl);
-        await markRetailOnboardingCompleted(shopId, product.id);
+        if (access.via !== 'hub') {
+          await markRetailOnboardingCompleted(shopId, product.id);
+        }
         return new Response(JSON.stringify({ product }), { status: 200 });
       } catch (error) {
         if (uploadedImageUrl) {
@@ -171,7 +173,9 @@ export const POST: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
     }
     const product = await createProductWithReorder(shopId, parsed.data);
-    await markRetailOnboardingCompleted(shopId, product.id);
+    if (access.via !== 'hub') {
+      await markRetailOnboardingCompleted(shopId, product.id);
+    }
 
     return new Response(JSON.stringify({ product }), { status: 200 });
   } catch (error) {

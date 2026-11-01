@@ -291,6 +291,15 @@ describe('overview view-model', () => {
     expect(overviewActivityLabel({ action: 'CONVERTED', label: 'Subscribed' })).toBe('Launch');
     expect(overviewActivityLabel({ action: 'hub_live', label: 'Site live' })).toBe('Live');
     expect(overviewActivityLabel({ action: 'hub_message_sent', label: 'You sent a message' })).toBe('You sent a message');
+    expect(overviewActivityLabel({ action: 'OWNER_EDITED_SERVICES', label: 'You updated your services' })).toBe(
+      'You updated your services',
+    );
+    expect(overviewActivityLabel({ action: 'OWNER_EDITED_TEAM', label: 'You updated your team' })).toBe(
+      'You updated your team',
+    );
+    expect(overviewActivityLabel({ action: 'OWNER_EDITED_PRODUCTS', label: 'You updated your products' })).toBe(
+      'You updated your products',
+    );
   });
 
   it('groups the latest five events by London day and uses compact relative time', () => {

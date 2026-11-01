@@ -15,10 +15,6 @@ import {
   HUB_REVIEW_INVALID_TEAM_NAME,
   HUB_NOW_REVIEW_NEED_ALL,
   HUB_NOW_REVIEW_NEED_DONE,
-  HUB_NOW_REVIEW_NEED_SOME,
-  HUB_SECTION_HOURS,
-  HUB_SECTION_SERVICES,
-  HUB_SECTION_TEAM,
 } from './hubCopy';
 
 export {
@@ -257,18 +253,9 @@ export function serializeHubReview(row: {
 }
 
 export function reviewNowNeed(states: Record<HubReviewSection, HubReviewCardState>): string {
-  const labels: Record<HubReviewSection, string> = {
-    SERVICES: HUB_SECTION_SERVICES,
-    TEAM: HUB_SECTION_TEAM,
-    HOURS: HUB_SECTION_HOURS,
-  };
-  const unchecked = HUB_REVIEW_SECTIONS.filter(
-    (section) => states[section] === 'not_checked' || states[section] === 'dismissed',
-  ).map((section) => labels[section]);
-  if (unchecked.length === 3) return HUB_NOW_REVIEW_NEED_ALL;
-  if (unchecked.length === 0) return HUB_NOW_REVIEW_NEED_DONE;
-  if (unchecked.length === 2) return HUB_NOW_REVIEW_NEED_SOME(`${unchecked[0]} and ${unchecked[1]}`);
-  return HUB_NOW_REVIEW_NEED_SOME(unchecked[0]!);
+  const hours = states.HOURS;
+  if (hours === 'not_checked' || hours === 'dismissed') return HUB_NOW_REVIEW_NEED_ALL;
+  return HUB_NOW_REVIEW_NEED_DONE;
 }
 
 export async function assertTeamPhotoAsset(input: {

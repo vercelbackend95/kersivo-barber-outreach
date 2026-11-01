@@ -309,6 +309,31 @@ describe('GET /api/admin/session onboarding routing', () => {
     expect(body).toMatchObject({ onboardingGate: 'onboarding', onboardingRequired: true });
   });
 
+  it('hub access is never routed to onboarding and reports Full product access', async () => {
+    requireAdminContext.mockResolvedValue({
+      ...ownerAccess,
+      via: 'hub',
+      userId: null,
+      permissions: ['catalog.manage', 'team.read', 'retail.manage'],
+    });
+    shopFindUnique.mockResolvedValue({
+      ...sessionShopRow,
+      onboardingCompleted: false,
+      name: 'Sharp Cuts',
+      logoUrl: 'https://cdn.example/logo.png',
+    });
+    const body = await getBody();
+    expect(body).toMatchObject({
+      via: 'hub',
+      shop: { name: 'Sharp Cuts', logoUrl: 'https://cdn.example/logo.png' },
+      productAccess: { state: 'FULL_KERSIVO' },
+      onboardingGate: 'dashboard',
+      onboardingRequired: false,
+      permissions: ['catalog.manage', 'team.read', 'retail.manage'],
+    });
+    expect(healOnboardingCompletedIfEligible).not.toHaveBeenCalled();
+  });
+
   it('preview access is never routed by the session onboarding gate', async () => {
     requireAdminContext.mockResolvedValue({ ...ownerAccess, via: 'preview', userId: null });
     shopFindUnique.mockResolvedValue({ ...sessionShopRow, onboardingCompleted: false });

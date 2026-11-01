@@ -9,6 +9,16 @@ vi.mock('@/lib/db/client', () => ({
     {
       get(_target, property) {
         if (property === 'then') return undefined;
+        if (property === 'previewRequest' || property === 'shopSettings' || property === 'previewRequestEvent') {
+          return new Proxy(
+            {},
+            {
+              get() {
+                return async () => null;
+              },
+            },
+          );
+        }
         throw new Error(`database touched: prisma.${String(property)}`);
       },
     },

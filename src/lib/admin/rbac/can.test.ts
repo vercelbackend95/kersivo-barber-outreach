@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { can } from './can';
+import { accessCan, can } from './can';
 import { PERMISSIONS, permissionsForRole, type Permission } from './permissions';
+import { HUB_ADMIN_PERMISSIONS } from '@/lib/adminHub/hubAdminAccess';
 
 const MANAGER_OPERATIONAL: Permission[] = [
   'members.invite_barber',
@@ -59,6 +60,17 @@ describe('RBAC matrix', () => {
     expect(can('BARBER', 'members.manage')).toBe(false);
     expect(can('BARBER', 'members.invite_barber')).toBe(false);
     expect(can('BARBER', 'onboarding.manage')).toBe(false);
+  });
+
+  it('hub access honours the restricted permission list, not OWNER role', () => {
+    const hub = { role: 'OWNER' as const, via: 'hub', permissions: HUB_ADMIN_PERMISSIONS };
+    expect(accessCan(hub, 'catalog.manage')).toBe(true);
+    expect(accessCan(hub, 'team.read')).toBe(true);
+    expect(accessCan(hub, 'retail.manage')).toBe(true);
+    expect(accessCan(hub, 'bookings.manage')).toBe(false);
+    expect(accessCan(hub, 'members.invite_barber')).toBe(false);
+    expect(accessCan(hub, 'billing.manage')).toBe(false);
+    expect(accessCan(hub, 'ai.use')).toBe(false);
   });
 
   it('clients.erase is OWNER/MANAGER only and not implied by clients.write', () => {

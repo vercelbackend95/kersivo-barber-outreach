@@ -8,11 +8,9 @@ import {
   MessageCircle,
   NotebookPen,
   Palette,
-  Scissors,
   Store,
   Ticket,
   TrendingUp,
-  Users,
   X,
 } from '@/components/lucide-react';
 import {
@@ -34,8 +32,6 @@ const ICONS: Record<AdminHubAppId, typeof Store> = {
   logo: ImagePlus,
   photos: Camera,
   materials: ImagePlus,
-  services: Scissors,
-  team: Users,
   hours: Clock,
   about: NotebookPen,
   messages: MessageCircle,

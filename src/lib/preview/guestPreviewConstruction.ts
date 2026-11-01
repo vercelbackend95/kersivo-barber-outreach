@@ -14,10 +14,10 @@ export function isGuestPreviewConstructionPause(reason: string | null | undefine
   return trimmed === GUEST_PREVIEW_PAUSE_REASON || trimmed === GUEST_PREVIEW_PAUSE_REASON_LEGACY;
 }
 
-/** Preview cookie or construction pause reason — owner cannot resume public activity. */
+/** Preview cookie, hub cookie, or construction pause reason — owner cannot resume public activity. */
 export function isPreviewPublicActivityLocked(input: {
   via?: string | null;
   pauseReason?: string | null;
 }): boolean {
-  return input.via === 'preview' || isGuestPreviewConstructionPause(input.pauseReason);
+  return input.via === 'preview' || input.via === 'hub' || isGuestPreviewConstructionPause(input.pauseReason);
 }

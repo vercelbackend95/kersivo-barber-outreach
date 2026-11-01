@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
+import { denyHubRestricted } from '@/lib/adminHub/hubAdminAccess';
 import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
 import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
@@ -57,6 +58,8 @@ export const GET: APIRoute = async (ctx) => {
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const hubDenied = denyHubRestricted(access);
+  if (hubDenied) return hubDenied;
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
   const grant = await requireAdminProductCapability(access, 'RETAIL');

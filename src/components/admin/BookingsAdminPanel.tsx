@@ -673,6 +673,8 @@ type BookingsAdminPanelProps = {
   initialBookings?: Booking[];
   /** Landing hero iframe: the timeline scrolls to "now" only once the visitor can see it. */
   showcaseMode?: boolean;
+  /** Preview-hub access: hide bookings strip and dashboard-invite actions. */
+  isHubAccess?: boolean;
 };
 
 export default function BookingsAdminPanel({
@@ -685,6 +687,7 @@ export default function BookingsAdminPanel({
   isBlacklineDemo = false,
   initialBookings,
   showcaseMode = false,
+  isHubAccess = false,
 }: BookingsAdminPanelProps) {
   const clock = useAdminClock();
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
@@ -1106,9 +1109,10 @@ export default function BookingsAdminPanel({
         const perms = payload.permissions ?? [];
         const managesBookings =
           perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER';
-        setCanManageBookings(managesBookings);
+        setCanManageBookings(managesBookings && !isHubAccess);
         setCanCreateManualBooking(
-          managesBookings || perms.includes('bookings.self') || payload.role === 'BARBER',
+          !isHubAccess &&
+            (managesBookings || perms.includes('bookings.self') || payload.role === 'BARBER'),
         );
         setCanEditTeam(
           perms.includes('catalog.manage') ||
@@ -1119,11 +1123,18 @@ export default function BookingsAdminPanel({
         setLoggedIn(false);
       }
     })();
-  }, [isPublicDemo]);
+  }, [isHubAccess, isPublicDemo]);
   useEffect(() => {
     if (!loggedIn || !isActive) return;
 
     void fetchBarbers();
+
+    if (isHubAccess) {
+      setBookingsInitialLoading(false);
+      setBookingsLoadedOnce(true);
+      void fetchTimeBlocks();
+      return;
+    }
 
     if (mode !== 'reports') {
       if (skipInitialBookingsFetchRef.current && mode === 'dashboard') {
@@ -1146,7 +1157,7 @@ export default function BookingsAdminPanel({
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(id);
-  }, [clock, fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, loggedIn, mode]);
+  }, [clock, fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, isHubAccess, loggedIn, mode]);
 
   useEffect(() => {
     if (!isBlacklineDemo || clock.frozen || mode === 'history' || mode === 'reports') return;
@@ -2314,7 +2325,7 @@ export default function BookingsAdminPanel({
   const dashboardOpsDashCluster =
     mode === 'dashboard' ? (
       <div className="admin-bookings-ops-dash-cluster">
-        {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
+        {!isHubAccess && !isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
 
         <section
           className={`admin-bookings-ops admin-bookings-ops--dashboard${staffRosterOpen ? ' admin-bookings-ops--staff-roster-open' : ''}`}
@@ -2506,11 +2517,12 @@ export default function BookingsAdminPanel({
       memberId={profileMemberMeta?.memberId}
       canSetUpOnlineBookings={canEditTeam && Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
       canSendDashboardInvite={
-        canEditTeam && Boolean(profileMemberMeta?.dashboardAccountAction === 'send')
+        !isHubAccess && canEditTeam && Boolean(profileMemberMeta?.dashboardAccountAction === 'send')
       }
       dashboardAccountAction={
-        canEditTeam ? profileMemberMeta?.dashboardAccountAction ?? null : null
+        !isHubAccess && canEditTeam ? profileMemberMeta?.dashboardAccountAction ?? null : null
       }
+      isHubAccess={isHubAccess}
       inviteId={profileMemberMeta?.inviteId}
       inviteEmail={profileMemberMeta?.inviteEmail}
       inviteExpiresAt={profileMemberMeta?.inviteExpiresAt}
@@ -2747,7 +2759,7 @@ export default function BookingsAdminPanel({
               ) : undefined
             }
           />
-          {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
+          {!isHubAccess && !isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
         </>
       )}
 
@@ -2784,6 +2796,7 @@ export default function BookingsAdminPanel({
                 }}
                 formatBlockRange={formatBlockRange}
                 onActorRoleChange={setTeamActorRole}
+                isHubAccess={isHubAccess}
               />
           ) : (
       <>

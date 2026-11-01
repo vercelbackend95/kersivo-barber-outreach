@@ -1,18 +1,8 @@
 import { HubReviewCards, type HubReviewMap } from '@/components/previewHub/HubReviewCards';
-import type { HubReviewSection } from '@/lib/freePreview/hubReviews.shared';
 import { SETUP_FROM_LINKS_BODY } from '@/lib/adminHub/setupCard';
 import type { AdminHubAppBodyProps } from './types';
 
-const ONLY: Record<'services' | 'team' | 'hours', HubReviewSection> = {
-  services: 'SERVICES',
-  team: 'TEAM',
-  hours: 'HOURS',
-};
-
-export default function ReviewApp({
-  ctx,
-  kind,
-}: AdminHubAppBodyProps & { kind: 'services' | 'team' | 'hours' }) {
+export function HoursApp({ ctx }: AdminHubAppBodyProps) {
   const empty: HubReviewMap = { SERVICES: null, TEAM: null, HOURS: null };
   if (!ctx.canReview) {
     return (
@@ -27,21 +17,9 @@ export default function ReviewApp({
       apiBase={ctx.apiBase}
       canReview={ctx.canReview}
       mode="full"
-      only={ONLY[kind]}
+      only="HOURS"
       shop={ctx.reviewShop}
       reviews={ctx.reviews ?? empty}
     />
   );
-}
-
-export function ServicesApp(props: AdminHubAppBodyProps) {
-  return <ReviewApp {...props} kind="services" />;
-}
-
-export function TeamApp(props: AdminHubAppBodyProps) {
-  return <ReviewApp {...props} kind="team" />;
-}
-
-export function HoursApp(props: AdminHubAppBodyProps) {
-  return <ReviewApp {...props} kind="hours" />;
 }

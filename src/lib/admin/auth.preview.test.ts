@@ -16,9 +16,13 @@ vi.mock('@/lib/auth', () => ({
   },
 }));
 
-vi.mock('@/lib/preview/shopPreviewSession', () => ({
-  resolvePreviewAccess: (...args: unknown[]) => resolvePreviewAccess(...args),
-}));
+vi.mock('@/lib/preview/shopPreviewSession', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/preview/shopPreviewSession')>();
+  return {
+    ...actual,
+    resolvePreviewAccess: (...args: unknown[]) => resolvePreviewAccess(...args),
+  };
+});
 
 vi.mock('@/lib/auth/provisionShop', () => ({
   getMembershipForUser: (...args: unknown[]) => getMembershipForUser(...args),
@@ -130,6 +134,21 @@ describe('isTenantAdminAccess', () => {
         emailVerified: true,
         userImage: null,
         via: 'secret',
+        role: 'OWNER',
+        memberId: null,
+        barberId: null,
+        permissions: [],
+      }),
+    ).toBe(false);
+    expect(
+      isTenantAdminAccess({
+        shopId: 'draft',
+        userId: null,
+        userName: null,
+        userEmail: null,
+        emailVerified: true,
+        userImage: null,
+        via: 'hub',
         role: 'OWNER',
         memberId: null,
         barberId: null,

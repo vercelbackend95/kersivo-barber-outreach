@@ -3,21 +3,26 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   isPreviewHubAllowedPath,
+  paidAdminRedirectForHubPath,
   previewHubLegacyRedirect,
   previewHubSectionFromPath,
 } from './previewHubPaths';
 
 describe('preview hub paths', () => {
-  it('allows only the four hub routes and leave-preview', () => {
+  it('allows the hub routes, real-admin paths and leave-preview', () => {
     expect(isPreviewHubAllowedPath('/admin')).toBe(true);
     expect(isPreviewHubAllowedPath('/admin/changes')).toBe(true);
     expect(isPreviewHubAllowedPath('/admin/website')).toBe(true);
     expect(isPreviewHubAllowedPath('/admin/messages')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/team')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/services')).toBe(true);
+    expect(isPreviewHubAllowedPath('/admin/products')).toBe(true);
     expect(isPreviewHubAllowedPath('/admin/leave-preview')).toBe(true);
     expect(isPreviewHubAllowedPath('/admin/launch')).toBe(false);
     expect(isPreviewHubAllowedPath('/admin/upgrade')).toBe(false);
     expect(isPreviewHubAllowedPath('/admin/barbershop-settings')).toBe(false);
     expect(isPreviewHubAllowedPath('/admin/retail-onboarding')).toBe(false);
+    expect(isPreviewHubAllowedPath('/admin/bookings')).toBe(false);
   });
 
   it('maps path to section', () => {
@@ -25,6 +30,9 @@ describe('preview hub paths', () => {
     expect(previewHubSectionFromPath('/admin/changes')).toBe('changes');
     expect(previewHubSectionFromPath('/admin/website/')).toBe('website');
     expect(previewHubSectionFromPath('/admin/messages')).toBe('messages');
+    expect(previewHubSectionFromPath('/admin/team')).toBe('team');
+    expect(previewHubSectionFromPath('/admin/services/')).toBe('services');
+    expect(previewHubSectionFromPath('/admin/products')).toBe('products');
   });
 
   it('redirects old query URLs', () => {
@@ -37,6 +45,8 @@ describe('preview hub paths', () => {
     );
     expect(previewHubLegacyRedirect(new URL('http://x/admin?app=messages&draft=reopen'))).toBeNull();
     expect(previewHubLegacyRedirect(new URL('http://x/admin?app=colours'))).toBeNull();
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=services'))).toBe('/admin/services');
+    expect(previewHubLegacyRedirect(new URL('http://x/admin?app=team'))).toBe('/admin/team');
   });
 
   it('removes leftover hub chrome and keeps paid admin CSS on main', () => {
@@ -71,6 +81,12 @@ describe('preview hub paths', () => {
     expect(layout).toContain('admin-mobile-top-chrome');
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubShell.astro'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubSetupCard.astro'))).toBe(false);
+  });
+
+  it('maps hub real-admin paths to paid SPA sections', () => {
+    expect(paidAdminRedirectForHubPath('team')).toBe('/admin?section=bookings_blocks');
+    expect(paidAdminRedirectForHubPath('services')).toBe('/admin?section=services');
+    expect(paidAdminRedirectForHubPath('products')).toBe('/admin?section=shop_products');
   });
 
   it('keeps the paid admin sidebar items and routes', () => {
