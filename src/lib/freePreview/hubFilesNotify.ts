@@ -32,6 +32,7 @@ export async function maybeNotifyOpsOfHubFiles(input: {
   requestId: string;
   shopName: string;
   now?: Date;
+  detailsUpdated?: boolean;
 }): Promise<'sent' | 'deferred' | 'skipped'> {
   if (!isAnyHubEnabled()) return 'skipped';
   const now = input.now ?? new Date();
@@ -48,6 +49,7 @@ export async function maybeNotifyOpsOfHubFiles(input: {
     shopName: request.shopName,
     since: request.opsFilesNotifiedAt,
     now,
+    detailsUpdated: input.detailsUpdated,
   });
 }
 
@@ -56,6 +58,7 @@ export async function sendHubFilesDigest(input: {
   shopName: string;
   since: Date | null;
   now: Date;
+  detailsUpdated?: boolean;
 }): Promise<'sent' | 'skipped'> {
   const assets = await prisma.previewHubAsset.findMany({
     where: {
@@ -65,13 +68,14 @@ export async function sendHubFilesDigest(input: {
     },
     select: { kind: true },
   });
-  if (assets.length === 0) return 'skipped';
+  if (assets.length === 0 && !input.detailsUpdated) return 'skipped';
 
   const counts = countsByKind(assets);
   const email = buildHubFilesAddedInternalEmail({
     id: input.requestId,
     shopName: input.shopName,
     counts,
+    detailsUpdated: input.detailsUpdated,
   });
   const slot = Math.floor(input.now.getTime() / HUB_FILES_NOTIFY_WINDOW_MS);
   const { row, created } = await enqueueEmailOnce({

@@ -1645,6 +1645,7 @@ model PreviewRequest {
   brandColoursSentAt     DateTime?
   styleNotes             String?
   aboutText              String?   @db.Text
+  websiteExtraText       String?   @db.Text
   includedChangeRounds   Int       @default(1)
   changeRoundsUsed       Int       @default(0)
   ownerLastSeenAt        DateTime?

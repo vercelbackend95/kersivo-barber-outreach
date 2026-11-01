@@ -15,6 +15,7 @@ import {
 } from '@/components/lucide-react';
 import {
   adminHubAppMeta,
+  adminHubAppOpenTarget,
   parseAdminHubApp,
   resolveAdminHubApp,
   type AdminHubAppId,
@@ -70,7 +71,8 @@ function withTransition(update: () => void): void {
 }
 
 function appFromLocation(): AdminHubAppId | null {
-  return parseAdminHubApp(new URLSearchParams(window.location.search).get('app'));
+  const raw = parseAdminHubApp(new URLSearchParams(window.location.search).get('app'));
+  return raw ? adminHubAppOpenTarget(raw).id : null;
 }
 
 export function AppHost(props: {
@@ -83,7 +85,9 @@ export function AppHost(props: {
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
-  const [app, setApp] = useState<AdminHubAppId | null>(props.initialApp);
+  const [app, setApp] = useState<AdminHubAppId | null>(
+    props.initialApp ? adminHubAppOpenTarget(props.initialApp).id : null,
+  );
   const [sheet, setSheet] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -152,12 +156,14 @@ export function AppHost(props: {
   const open = useCallback(
     (id: AdminHubAppId, opener: HTMLElement | null, push: boolean, item: string | null = null) => {
       openerRef.current = opener;
-      if (id === app) {
-        writeLocation(id, item, false);
+      const target = adminHubAppOpenTarget(id);
+      const nextItem = item ?? target.item;
+      if (target.id === app) {
+        writeLocation(target.id, nextItem, false);
         return;
       }
-      writeLocation(id, item, push);
-      withTransition(() => setApp(id));
+      writeLocation(target.id, nextItem, push);
+      withTransition(() => setApp(target.id));
     },
     [app, writeLocation],
   );
@@ -172,6 +178,14 @@ export function AppHost(props: {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = parseAdminHubApp(params.get('app'));
+    if (raw === 'about') {
+      writeLocation('materials', 'text', false);
+    }
+  }, [writeLocation]);
 
   useEffect(() => {
     const root = document.querySelector('.admin-shell');

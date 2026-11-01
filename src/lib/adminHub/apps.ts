@@ -39,8 +39,8 @@ const META: Record<AdminHubAppId, Omit<AdminHubAppMeta, 'id'>> = {
   logo: { title: 'Logo', crumb: 'Overview › Logo', maxWidth: 1120 },
   photos: { title: 'Shop photos', crumb: 'Overview › Shop photos', maxWidth: 1120 },
   materials: {
-    title: 'Add photos or a logo',
-    crumb: 'Overview › Add photos or a logo',
+    title: 'Add to your website',
+    crumb: 'Overview › Add to your website',
     maxWidth: 1120,
     sheetBelow: 640,
   },
@@ -61,7 +61,16 @@ export function adminHubAppMeta(id: AdminHubAppId): AdminHubAppMeta {
 }
 
 export function resolveAdminHubApp(id: AdminHubAppId): AdminHubAppId {
-  return id;
+  return id === 'about' ? 'materials' : id;
+}
+
+/** Old ?app=about links open the materials window on the text card. */
+export function adminHubAppOpenTarget(id: AdminHubAppId): {
+  id: AdminHubAppId;
+  item: 'text' | null;
+} {
+  if (id === 'about') return { id: 'materials', item: 'text' };
+  return { id, item: null };
 }
 
 export function adminHubAppHref(id: AdminHubAppId): string {

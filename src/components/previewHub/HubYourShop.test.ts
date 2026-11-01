@@ -6,10 +6,10 @@ const src = readFileSync(path.join(process.cwd(), 'src/components/previewHub/Hub
 const css = readFileSync(path.join(process.cwd(), 'src/styles/components/preview-hub.css'), 'utf8');
 
 describe('HubYourShop a11y regressions', () => {
-  it('labels the about textarea from the section title', () => {
+  it('labels the about textarea from the field title', () => {
     expect(src).toContain('id="hub-about"');
-    expect(src).toContain('aria-labelledby="hub-about-title"');
-    expect(src).toContain('id="hub-about-title"');
+    expect(src).toContain('htmlFor="hub-about"');
+    expect(src).toContain('HUB_DETAILS_ABOUT_TITLE');
   });
 
   it('keeps empty light-swatch text dark enough on cream', () => {

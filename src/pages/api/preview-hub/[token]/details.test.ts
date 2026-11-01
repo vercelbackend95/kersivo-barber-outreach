@@ -27,7 +27,7 @@ vi.mock('@/lib/analytics/serverEvents', () => ({
   sendServerAnalyticsEvent: (...args: unknown[]) => sendServerAnalyticsEvent(...args),
 }));
 
-import { PATCH } from './details';
+import { GET, PATCH } from './details';
 
 const TOKEN = 'A'.repeat(43);
 
@@ -35,7 +35,16 @@ beforeEach(() => {
   resolveHubApiContext.mockReset().mockResolvedValue({
     ok: true,
     ctx: {
-      request: { id: 'req_1' },
+      request: {
+        id: 'req_1',
+        shopName: 'Sharp Cuts',
+        brandPrimaryColour: null,
+        brandSecondaryColour: null,
+        styleNotes: null,
+        aboutText: 'Family shop',
+        instagramUrl: 'https://www.instagram.com/sharpcuts/',
+        websiteExtraText: 'Walk-ins',
+      },
       state: { capabilities: { canEditDetails: true } },
       isOperator: false,
     },
@@ -47,10 +56,34 @@ beforeEach(() => {
     brandSecondaryColour: null,
     styleNotes: 'warm wood',
     aboutText: null,
+    instagramUrl: null,
+    websiteExtraText: null,
   });
   sendServerAnalyticsEvent.mockReset();
 });
 afterEach(() => vi.clearAllMocks());
+
+describe('GET /api/preview-hub/[token]/details', () => {
+  it('returns the saved website text fields', async () => {
+    const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/details`, {
+      method: 'GET',
+      headers: { origin: 'http://localhost' },
+    });
+    const response = await GET({ request, params: { token: TOKEN } } as never);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      details: {
+        brandPrimaryColour: null,
+        brandSecondaryColour: null,
+        styleNotes: null,
+        aboutText: 'Family shop',
+        instagramUrl: 'https://www.instagram.com/sharpcuts/',
+        websiteExtraText: 'Walk-ins',
+      },
+    });
+  });
+});
 
 describe('PATCH /api/preview-hub/[token]/details', () => {
   it('saves valid brand colours', async () => {
@@ -63,6 +96,8 @@ describe('PATCH /api/preview-hub/[token]/details', () => {
     expect(response.status).toBe(200);
     expect(saveHubDetails).toHaveBeenCalledWith({
       requestId: 'req_1',
+      shopName: 'Sharp Cuts',
+      recordOwnerEvent: true,
       patch: expect.objectContaining({ brandPrimaryColour: '#D72638', styleNotes: 'warm wood' }),
     });
     expect(sendServerAnalyticsEvent).toHaveBeenCalledWith(expect.objectContaining({ name: 'hub_details_saved' }));
@@ -96,5 +131,23 @@ describe('PATCH /api/preview-hub/[token]/details', () => {
       body: JSON.stringify({ aboutText: 'hi' }),
     });
     expect((await PATCH({ request, params: { token: TOKEN } } as never)).status).toBe(429);
+  });
+
+  it('accepts instagram and extra text', async () => {
+    const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/details`, {
+      method: 'PATCH',
+      headers: { origin: 'http://localhost', 'content-type': 'application/json' },
+      body: JSON.stringify({ instagramUrl: '@sharpcuts', websiteExtraText: 'Card and cash' }),
+    });
+    expect((await PATCH({ request, params: { token: TOKEN } } as never)).status).toBe(200);
+    expect(saveHubDetails).toHaveBeenCalledWith({
+      requestId: 'req_1',
+      shopName: 'Sharp Cuts',
+      recordOwnerEvent: true,
+      patch: expect.objectContaining({
+        instagramUrl: 'https://www.instagram.com/sharpcuts/',
+        websiteExtraText: 'Card and cash',
+      }),
+    });
   });
 });

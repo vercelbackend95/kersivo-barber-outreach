@@ -297,6 +297,9 @@ describe('overview view-model', () => {
     expect(overviewActivityLabel({ action: 'OWNER_EDITED_TEAM', label: 'You updated your team' })).toBe(
       'You updated your team',
     );
+    expect(overviewActivityLabel({ action: 'OWNER_EDITED_WEBSITE_TEXT', label: 'You updated the text for your website' })).toBe(
+      'You updated the text for your website',
+    );
     expect(overviewActivityLabel({ action: 'OWNER_EDITED_PRODUCTS', label: 'You updated your products' })).toBe(
       'You updated your products',
     );

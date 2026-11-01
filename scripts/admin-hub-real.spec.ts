@@ -1669,7 +1669,7 @@ test.describe('A2 overview add menu', () => {
     await page.getByRole('menuitem', { name: /Shop photos/ }).click();
     await expect(page.getByTestId('admin-hub-app')).toBeVisible();
     await expect(page.getByTestId('admin-hub-app')).toHaveAttribute('data-app', 'materials');
-    await expect(page.locator('#hub-add-photos')).toBeVisible();
+    await expect(page.locator('#photos')).toBeVisible();
     expect(new URL(page.url()).searchParams.get('item')).toBe('photos');
     await a2Shot('materials-photos');
 
@@ -1701,6 +1701,115 @@ test.describe('A2 overview add menu', () => {
       await expect(page.getByTestId('admin-hub-add-sheet')).toBeVisible();
     }).toPass({ timeout: 15000 });
     await a2Shot('menu-sheet');
+  });
+});
+
+test.describe('A3 add to your website', () => {
+  test.beforeAll(async ({ request }) => {
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      try {
+        if ((await request.get('/preview-hub-qa/health')).ok()) break;
+      } catch {
+        /* server still starting */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  test('A3: Add menu Text card saves three fields and accepts an OTHER file', async ({ page, context }) => {
+    const shotRoot = process.platform === 'win32' ? 'C:/tmp/kersivo-shots/a3' : '/tmp/kersivo-shots/a3';
+    mkdirSync(shotRoot, { recursive: true });
+    const a3Shot = async (name: string) => {
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+        await page.waitForTimeout(250);
+        await expectNoHorizontalScroll(page, `${name}@${width}`);
+        await page.screenshot({ path: join(shotRoot, `${name}-${width}.png`), fullPage: true });
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+    };
+
+    await context.clearCookies();
+    await page.goto(`/preview/${seed.requested.token}`);
+    await expect(page.locator('.admin-shell')).toBeVisible();
+    expect(await hubCookie(context)).toBeTruthy();
+    expect(
+      (await context.cookies()).some((cookie) => /better-auth\.session_token/i.test(cookie.name)),
+      'hub-only: no Better Auth cookie',
+    ).toBe(false);
+
+    await page.goto('/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await a3Shot('overview-before');
+    const add = page.getByTestId('admin-hub-add');
+    await expect(async () => {
+      if ((await add.getAttribute('aria-expanded')) !== 'true') await add.click();
+      await expect(add).toHaveAttribute('aria-expanded', 'true');
+    }).toPass({ timeout: 15000 });
+    await page.getByRole('menuitem', { name: /Text for your website/ }).click();
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-app')).toHaveAttribute('data-app', 'materials');
+    await expect(page.getByRole('heading', { name: 'Add to your website' })).toBeVisible();
+    await expect(page.locator('#text')).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('item')).toBe('text');
+    await expect(page.getByTestId('hub-jump')).toBeVisible();
+    await a3Shot('text-open');
+
+    const about = page.locator('#hub-about');
+    const instagram = page.locator('#hub-instagram');
+    const extra = page.locator('#hub-website-extra');
+    await expect(about).toBeVisible();
+    const stamp = String(Date.now());
+    const aboutValue = `We cut classic and modern styles in Bournemouth. ${stamp}`;
+    const extraValue = `Walk-ins welcome. Card or cash. ${stamp}`;
+    const saveAbout = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/details') && res.request().method() === 'PATCH',
+    );
+    await about.fill(aboutValue);
+    expect((await saveAbout).status()).toBeLessThan(400);
+
+    const saveIg = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/details') && res.request().method() === 'PATCH',
+    );
+    await instagram.fill('@a3hubqa');
+    expect((await saveIg).status()).toBeLessThan(400);
+    await expect(instagram).toHaveValue('https://www.instagram.com/a3hubqa/');
+
+    const saveExtra = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/details') && res.request().method() === 'PATCH',
+    );
+    await extra.fill(extraValue);
+    expect((await saveExtra).status()).toBeLessThan(400);
+    await expect(page.locator('.hub-savehint.is-saved')).toBeVisible();
+    await a3Shot('text-filled');
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await expect(page.locator('#hub-about')).toHaveValue(aboutValue);
+    await expect(page.locator('#hub-instagram')).toHaveValue('https://www.instagram.com/a3hubqa/');
+    await expect(page.locator('#hub-website-extra')).toHaveValue(extraValue);
+    await a3Shot('text-reloaded');
+
+    const pdf = Buffer.from(
+      '%PDF-1.1\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n',
+      'utf8',
+    );
+    const otherUpload = page.waitForResponse(
+      (res) => res.url().includes('/api/admin-hub/assets') && res.request().method() === 'POST',
+    );
+    await page.locator('[data-testid="hub-upload-other"]').setInputFiles({
+      name: 'menu.pdf',
+      mimeType: 'application/pdf',
+      buffer: pdf,
+    });
+    const otherRes = await otherUpload;
+    expect(otherRes.status(), `other file ${otherRes.status()} ${await otherRes.text()}`).toBeLessThan(400);
+    await page.getByRole('button', { name: /^Other/ }).click();
+    await expect(page.locator('#other .hub-photo__file').first()).toHaveText('PDF');
+    await a3Shot('other-uploaded');
   });
 });
 

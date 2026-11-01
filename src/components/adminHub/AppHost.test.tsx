@@ -56,8 +56,9 @@ function renderHost(initialApp: 'logo' | 'materials' | null = 'logo') {
     <div className="admin-shell">
       <a href="/admin?app=logo">Open logo</a>
       <a href="/admin?app=materials&item=photos">Shop photos</a>
+      <a href="/admin?app=about">Open about</a>
       <button type="button" data-admin-hub-app="materials">
-        Add photos or a logo to your website
+        Add to your website
       </button>
       <AppHost initialApp={initialApp} ctx={ctx} loadApp={loadStub} />
     </div>,
@@ -114,12 +115,12 @@ describe('AppHost', () => {
 
   it('opens from a data-admin-hub-app button and returns focus on close', async () => {
     renderHost(null);
-    const opener = screen.getByRole('button', { name: 'Add photos or a logo to your website' });
+    const opener = screen.getByRole('button', { name: 'Add to your website' });
     opener.focus();
     fireEvent.click(opener);
     const dialog = await screen.findByRole('dialog');
     expect(dialog.className).toContain('admin-hub-app--window');
-    expect(screen.getByRole('heading', { name: 'Add photos or a logo' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Add to your website' })).toBeTruthy();
     fireEvent.keyDown(document, { key: 'Escape' });
     fireEvent.popState(window);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -133,6 +134,15 @@ describe('AppHost', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog.className).toContain('admin-hub-app--sheet');
     expect(dialog.className).toContain('admin-hub-app--fullscreen');
+  });
+
+  it('rewrites ?app=about to materials on the text card', async () => {
+    renderHost(null);
+    fireEvent.click(screen.getByRole('link', { name: 'Open about' }));
+    await screen.findByRole('dialog');
+    expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+    expect(new URL(window.location.href).searchParams.get('item')).toBe('text');
+    expect(screen.getByRole('heading', { name: 'Add to your website' })).toBeTruthy();
   });
 
   it('keeps item= on materials links so the app can focus that block', async () => {

@@ -64,12 +64,12 @@ describe('setup card phase 1', () => {
       'Products',
     ]);
     expect(card.items.map((item) => item.href)).toEqual([
-      '/admin?app=logo',
-      '/admin?app=photos',
+      '/admin?app=materials&item=logo',
+      '/admin?app=materials&item=photos',
       '/admin/services',
       '/admin/team',
       '/admin?app=hours',
-      '/admin?app=about',
+      '/admin?app=materials&item=text',
       '/admin/products',
     ]);
     expect(card.items.find((item) => item.id === 'about')?.optional).toBe(true);

@@ -176,6 +176,8 @@ export async function preparePreviewHubPage(input: {
       brandSecondaryColour: ctx.request.brandSecondaryColour,
       styleNotes: ctx.request.styleNotes,
       aboutText: ctx.request.aboutText,
+      instagramUrl: ctx.request.instagramUrl,
+      websiteExtraText: ctx.request.websiteExtraText,
       brandBackgroundTone,
       brandColoursSource,
       brandPaletteExtracted,

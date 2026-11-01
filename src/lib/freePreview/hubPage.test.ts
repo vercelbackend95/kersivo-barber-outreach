@@ -108,6 +108,18 @@ describe('hubPage helpers', () => {
     expect(items.map((item) => item.label)).toEqual(['You added 6 photos', 'You added a logo']);
   });
 
+  it('labels website text edits and other-file uploads', () => {
+    const items = hubActivityItems(
+      [
+        { id: 't1', action: 'OWNER_EDITED_WEBSITE_TEXT', createdAt: NOW },
+        { id: 'f1', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'OTHER' } },
+        { id: 'f2', action: 'hub_asset_uploaded', createdAt: NOW, meta: { kind: 'OTHER' } },
+      ],
+      NOW,
+    );
+    expect(items.map((item) => item.label)).toEqual(['You updated the text for your website', 'You added files']);
+  });
+
   it('reads designing date from STATUS_CHANGED to IN_PROGRESS', () => {
     expect(
       designingAtFromEvents([

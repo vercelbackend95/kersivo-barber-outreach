@@ -16,9 +16,11 @@ describe('admin hub apps', () => {
   it('opens the add-materials window as its own app', () => {
     expect(parseAdminHubApp('materials')).toBe('materials');
     expect(adminHubAppMeta('materials')).toMatchObject({
-      title: 'Add photos or a logo',
+      title: 'Add to your website',
+      crumb: 'Overview › Add to your website',
       sheetBelow: 640,
     });
+    expect(resolveAdminHubApp('about')).toBe('materials');
   });
 
   it('opens colours as its own app', () => {

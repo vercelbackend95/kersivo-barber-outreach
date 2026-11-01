@@ -306,6 +306,7 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
           brandColoursSentAt: null,
           styleNotes: null,
           aboutText: null,
+          websiteExtraText: null,
           stripeCustomerId: null,
           stripeSubscriptionId: null,
           draftShopId: null,

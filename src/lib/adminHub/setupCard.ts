@@ -1,4 +1,5 @@
 import type { HubStage } from '@/lib/freePreview/hubStage';
+import { adminHubMaterialsHref } from './addMenu';
 import { adminHubAppHref, type AdminHubAppId } from './apps';
 import { PREVIEW_HUB_PATHS } from './previewHubPaths';
 
@@ -154,6 +155,9 @@ function phase1Href(id: SetupItemId): string {
   if (id === 'services') return PREVIEW_HUB_PATHS.services;
   if (id === 'team') return PREVIEW_HUB_PATHS.team;
   if (id === 'products') return PREVIEW_HUB_PATHS.products;
+  if (id === 'logo') return adminHubMaterialsHref('logo');
+  if (id === 'photos') return adminHubMaterialsHref('photos');
+  if (id === 'about') return adminHubMaterialsHref('text');
   return adminHubAppHref(id);
 }
 

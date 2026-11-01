@@ -16,6 +16,7 @@ import {
   HUB_ACK_NO_PAY,
   HUB_ACK_SUBJECT,
   HUB_ACK_WHEN_READY,
+  HUB_OPS_DETAILS_EMAIL_LINE,
   HUB_OPS_FILES_EMAIL_BUTTON,
   HUB_OPS_FILES_EMAIL_INTRO,
   HUB_OPS_FILES_EMAIL_SUBJECT,
@@ -429,6 +430,7 @@ export function buildHubFilesAddedInternalEmail(input: {
   id: string;
   shopName: string;
   counts: Array<{ kind: string; count: number }>;
+  detailsUpdated?: boolean;
 }): FreePreviewEmail {
   const opsUrl = opsPreviewRequestUrl(input.id);
   const rows = input.counts
@@ -437,12 +439,13 @@ export function buildHubFilesAddedInternalEmail(input: {
       return `<tr><th align="left">${escapeHtml(label)}</th><td>${row.count}</td></tr>`;
     })
     .join('');
+  const detailsLine = input.detailsUpdated ? `<p>${escapeHtml(HUB_OPS_DETAILS_EMAIL_LINE)}</p>` : '';
   return {
     to: getPreviewNotifyEmail(),
     subject: HUB_OPS_FILES_EMAIL_SUBJECT(input.shopName),
     replyTo: PREVIEW_REPLY_TO_EMAIL,
     html: `<p>${escapeHtml(HUB_OPS_FILES_EMAIL_INTRO(input.shopName))}</p>
-<table cellpadding="4">${rows}</table>
+${detailsLine}${rows ? `<table cellpadding="4">${rows}</table>` : ''}
 <p><a href="${escapeHtml(opsUrl)}">${escapeHtml(HUB_OPS_FILES_EMAIL_BUTTON)}</a></p>`,
   };
 }
