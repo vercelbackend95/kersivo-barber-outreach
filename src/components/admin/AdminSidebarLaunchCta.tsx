@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import AdminLaunchCtaButton from './AdminLaunchCtaButton';
+import AdminNextStepsCard, { type NextStepsCardModel } from './AdminNextStepsCard';
 import {
   demoLaunchProgress,
   emptyLaunchProgress,
@@ -22,6 +23,7 @@ type LaunchContextPayload = {
   progress?: LaunchProgress;
   productState?: string;
   starterLaunch?: StarterLaunchState | null;
+  nextSteps?: NextStepsCardModel | null;
 };
 
 type AdminSidebarLaunchCtaProps = {
@@ -29,12 +31,14 @@ type AdminSidebarLaunchCtaProps = {
   onSpaSection?: (section: import('./AdminPanel').AdminSection) => void;
   /** Free Booking: the paid launch step opens the Full KERSIVO upgrade dialog instead. */
   onUpgrade?: () => void;
+  placement?: 'sidebar' | 'mobile';
 };
 
 export default function AdminSidebarLaunchCta({
   isPublicDemo = false,
   onSpaSection,
   onUpgrade,
+  placement = 'sidebar',
 }: AdminSidebarLaunchCtaProps) {
   const [loading, setLoading] = useState(!isPublicDemo);
   const [progress, setProgress] = useState<LaunchProgress>(() =>
@@ -45,6 +49,7 @@ export default function AdminSidebarLaunchCta({
   const [paidHref, setPaidHref] = useState<string | null>(null);
   const [productState, setProductState] = useState<string | null>(null);
   const [starterLaunch, setStarterLaunch] = useState<StarterLaunchState | null>(null);
+  const [nextSteps, setNextSteps] = useState<NextStepsCardModel | null>(null);
   const [starterActionBusy, setStarterActionBusy] = useState(false);
   const [starterActionError, setStarterActionError] = useState('');
 
@@ -65,6 +70,7 @@ export default function AdminSidebarLaunchCta({
       setPaidHref(null);
       setProductState(null);
       setStarterLaunch(null);
+      setNextSteps(null);
       setLoading(false);
       return;
     }
@@ -83,6 +89,7 @@ export default function AdminSidebarLaunchCta({
           setPaidHref(null);
           setProductState(null);
           setStarterLaunch(null);
+          setNextSteps(null);
           return;
         }
 
@@ -97,6 +104,7 @@ export default function AdminSidebarLaunchCta({
         setPaidHref(typeof data.paidHref === 'string' ? data.paidHref : null);
         setProductState(typeof data.productState === 'string' ? data.productState : null);
         setStarterLaunch(data.starterLaunch ?? null);
+        setNextSteps(data.nextSteps ?? null);
       } catch {
         if (!cancelled) {
           setProgress(emptyLaunchProgress());
@@ -105,6 +113,7 @@ export default function AdminSidebarLaunchCta({
           setPaidHref(null);
           setProductState(null);
           setStarterLaunch(null);
+          setNextSteps(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -260,6 +269,11 @@ export default function AdminSidebarLaunchCta({
         ) : null}
       </div>
     );
+  }
+
+  // Live preview shops: replace “paid → hide” with the Phase 3 card. Starter and other paid shops stay as today.
+  if (nextSteps && !isPublicDemo) {
+    return <AdminNextStepsCard card={nextSteps} placement={placement} />;
   }
 
   // Paying tenants (shopPaidAt / SaaS) — hide purchase / launch CTA entirely.

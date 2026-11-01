@@ -6,7 +6,7 @@ import {
   PREVIEW_TURNAROUND_TEXT,
   formatPreviewExpiryDate,
   getPreviewNotifyEmail,
-  isPreviewHubEnabled,
+  isAnyHubEnabled,
   previewPagePath,
 } from './config';
 import {
@@ -88,7 +88,7 @@ export function buildPreviewRequestAcknowledgementEmail(input: {
   overDailyCap?: boolean;
   publicToken?: string;
 }): FreePreviewEmail {
-  if (isPreviewHubEnabled() && input.publicToken) {
+  if (isAnyHubEnabled() && input.publicToken) {
     const shop = escapeHtml(input.shopName);
     const hubUrl = previewPageUrl(input.publicToken);
     const intro = input.overDailyCap
@@ -197,7 +197,7 @@ export function buildPreviewRequestInternalEmail(input: PreviewRequestInternalEm
   ];
   const opsUrl = opsPreviewRequestUrl(input.id);
   const hubLink =
-    isPreviewHubEnabled() && input.publicToken
+    isAnyHubEnabled() && input.publicToken
       ? ` · <a href="${escapeHtml(previewPageUrl(input.publicToken))}">${escapeHtml(HUB_OPS_OPEN_HUB)}</a>`
       : '';
   return {
@@ -304,7 +304,7 @@ export function buildPreviewUpdatedEmail(
     greeting(input.firstName),
     `We've made your changes. Take another look:<br>${linkBlock(input.previewUrl)}`,
   ];
-  if (isPreviewHubEnabled() && input.completedItems?.length) {
+  if (isAnyHubEnabled() && input.completedItems?.length) {
     blocks.push(renderCompletedChangeItems(input.completedItems));
   }
   blocks.push(
@@ -349,7 +349,7 @@ export function buildPreviewChangesRequestedInternalEmail(input: {
 }): FreePreviewEmail {
   const opsUrl = opsPreviewRequestUrl(input.id);
   const list =
-    isPreviewHubEnabled() && input.items?.length
+    isAnyHubEnabled() && input.items?.length
       ? `<p>${renderChangeItemsList(input.items)}</p>`
       : `<blockquote style="white-space:pre-wrap;margin:0;padding:8px 12px;border-left:3px solid #ccc">${escapeHtml(input.changesText)}</blockquote>`;
   return {

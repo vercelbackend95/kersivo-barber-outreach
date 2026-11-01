@@ -11,3 +11,10 @@ describe('isPreviewHubEnabled', () => {
     expect(src).toContain('export function isFreePreviewFlowEnabled()');
   });
 });
+
+describe('isAnyHubEnabled', () => {
+  it('is true when either hub flag is on so production can set ADMIN_HUB_ENABLED only', () => {
+    expect(src).toContain('export function isAnyHubEnabled()');
+    expect(src).toContain('return isPreviewHubEnabled() || isAdminHubEnabled()');
+  });
+});

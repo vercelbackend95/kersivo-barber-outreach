@@ -150,12 +150,22 @@ describe('setup card phase 2', () => {
   });
 });
 
-describe('setup card phase 3 stub', () => {
-  it('is typed for Batch 6 and is not returned for live yet', () => {
+describe('setup card phase 3', () => {
+  it('uses the live site, test-book and retail-onboarding hrefs', () => {
     expect(SETUP_PHASE3_TITLE).toBe('Get the most from KERSIVO');
-    const card = setupPhase3Items({ viewedSite: true, testBookingDone: false, retailDone: false });
+    const card = setupPhase3Items({
+      viewedSite: true,
+      testBookingDone: false,
+      retailDone: false,
+      liveUrl: 'https://live.example',
+    });
     expect(card.phase).toBe(3);
     expect(card.items.map((item) => item.id)).toEqual(['view-site', 'test-booking', 'retail']);
+    expect(card.items.map((item) => item.href)).toEqual([
+      'https://live.example',
+      '/admin/test-book',
+      '/admin/retail-onboarding',
+    ]);
     expect(card.items[2]?.optional).toBe(true);
     expect(card.nextId).toBe('test-booking');
   });

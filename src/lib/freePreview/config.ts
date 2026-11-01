@@ -35,6 +35,14 @@ export function isAdminHubEnabled(): boolean {
   return (readEnv('ADMIN_HUB_ENABLED') ?? '').trim().toLowerCase() === 'true';
 }
 
+/**
+ * Owner-facing hub emails, ops hub tabs, and launch-steps when either hub is on.
+ * Production will set ADMIN_HUB_ENABLED only — never PREVIEW_HUB_ENABLED.
+ */
+export function isAnyHubEnabled(): boolean {
+  return isPreviewHubEnabled() || isAdminHubEnabled();
+}
+
 /** Founder decision (29 Oct 2026): "a few working days", never a fixed number of days. */
 export const PREVIEW_TURNAROUND_TEXT = 'usually within a few working days';
 export const PREVIEW_TURNAROUND_TEXT_CAPITALISED = 'Usually within a few working days';

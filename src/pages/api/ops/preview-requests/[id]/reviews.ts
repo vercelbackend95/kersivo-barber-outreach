@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/client';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
-import { isHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isAnyHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import {
   applyHubContentReview,
   dismissHubContentReview,
@@ -31,7 +31,7 @@ const mutateSchema = z.discriminatedUnion('action', [
 ]);
 
 export const GET: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorAccess(context);
   if (access instanceof Response) return access;
 
@@ -56,7 +56,7 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorMutation(context);
   if (access instanceof Response) return access;
 
