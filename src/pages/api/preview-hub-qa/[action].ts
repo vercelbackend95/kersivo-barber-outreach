@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '@/lib/booking/sandboxBookings';
 import { prisma } from '@/lib/db/client';
 import { listQaEmails } from '@/lib/previewHub/qaEmailLog';
 import { isPreviewHubRealQaEnabled } from '@/lib/previewHub/realQa';
@@ -86,4 +87,45 @@ export const GET: APIRoute = async ({ params, url }) => {
   }
 
   return json({ ok: false }, 404);
+};
+
+export const POST: APIRoute = async ({ params, request }) => {
+  if (!isPreviewHubRealQaEnabled()) return json({ ok: false }, 404);
+  const action = (params.action ?? '').trim();
+  if (action !== 'test-booking') return json({ ok: false }, 404);
+
+  const body = (await request.json().catch(() => null)) as { shopId?: string } | null;
+  const shopId = (body?.shopId ?? '').trim();
+  if (!shopId) return json({ ok: false }, 400);
+
+  const [service, barber] = await Promise.all([
+    prisma.service.findFirst({
+      where: { shopId, isActive: true },
+      select: { id: true, durationMinutes: true },
+      orderBy: { displayOrder: 'asc' },
+    }),
+    prisma.barber.findFirst({
+      where: { shopId, active: true },
+      select: { id: true },
+      orderBy: { sortOrder: 'asc' },
+    }),
+  ]);
+  if (!service || !barber) return json({ ok: false, error: 'Shop is missing a service or barber.' }, 400);
+
+  const startAt = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+  startAt.setUTCHours(10, 0, 0, 0);
+  const booking = await prisma.booking.create({
+    data: {
+      serviceId: service.id,
+      barberId: barber.id,
+      fullName: 'QA Test Client',
+      email: 'qa.test@hubqa.test',
+      startAt,
+      endAt: new Date(startAt.getTime() + service.durationMinutes * 60 * 1000),
+      notes: OWNER_TEST_BOOKING_NOTES_PREFIX,
+      status: 'BOOKED',
+    },
+    select: { id: true },
+  });
+  return json({ ok: true, bookingId: booking.id });
 };

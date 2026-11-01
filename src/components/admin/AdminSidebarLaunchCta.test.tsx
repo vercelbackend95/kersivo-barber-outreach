@@ -327,6 +327,63 @@ describe('AdminSidebarLaunchCta', () => {
     });
   });
 
+  it('hides the launch CTA for a paid shop that never had a preview', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          progress: emptyLaunchProgress(),
+          pending: false,
+          paid: true,
+          paidHref: '/admin/client-onboarding',
+        }),
+      }),
+    );
+    const { container } = render(<AdminSidebarLaunchCta />);
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Loading launch status')).toBeNull();
+    });
+    expect(screen.queryByText('Continue Setup')).toBeNull();
+    expect(screen.queryByText('Get the most from KERSIVO')).toBeNull();
+    expect(container.querySelector('.admin-sidebar-launch-cta')).toBeNull();
+  });
+
+  it('shows the Phase 3 card for a live preview shop instead of hiding the CTA', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          progress: emptyLaunchProgress(),
+          pending: false,
+          paid: true,
+          nextSteps: {
+            phase: 3,
+            title: 'Get the most from KERSIVO',
+            status: "You're live · 0 of 3",
+            done: 0,
+            total: 3,
+            nextId: 'view-site',
+            liveUrl: 'https://live.example',
+            items: [
+              { id: 'view-site', label: 'View your website', href: 'https://live.example', done: false, optional: false, fromLinks: false },
+              { id: 'test-booking', label: 'Make a test booking', href: '/admin/test-book', done: false, optional: false, fromLinks: false },
+              { id: 'retail', label: 'Set up retail', href: '/admin/retail-onboarding', done: false, optional: true, fromLinks: false },
+            ],
+          },
+        }),
+      }),
+    );
+    render(<AdminSidebarLaunchCta />);
+    expect(await screen.findByTestId('admin-next-steps')).toBeTruthy();
+    expect(screen.getByText('Get the most from KERSIVO')).toBeTruthy();
+    expect(screen.getByText("You're live · 0 of 3")).toBeTruthy();
+    expect(screen.getByRole('link', { name: /View your website/i }).getAttribute('href')).toBe('https://live.example');
+    expect(screen.getByRole('link', { name: /Make a test booking/i }).getAttribute('href')).toBe('/admin/test-book');
+    expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+  });
+
   it('after Full → Starter, names the services below £5 that pause online bookings', async () => {
     const progress = buildStarterLaunchProgress({
       onboardingCompleted: true,

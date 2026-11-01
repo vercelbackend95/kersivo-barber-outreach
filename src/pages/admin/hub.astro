@@ -7,8 +7,13 @@ import AdminHubShell from '@/components/adminHub/AdminHubShell.astro';
 import AdminHubOverview from '@/components/adminHub/AdminHubOverview.astro';
 import { AppHost } from '@/components/adminHub/AppHost';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
-import { HubChanges } from '@/components/previewHub/HubChanges';
-import { HubWebsiteView } from '@/components/previewHub/HubWebsiteView';
+import { AdminHubChanges } from '@/components/adminHub/AdminHubChanges';
+import { AdminHubWebsite } from '@/components/adminHub/AdminHubWebsite';
+import {
+  ADMIN_HUB_CHANGES_SUB,
+  ADMIN_HUB_WEBSITE_SUB,
+  ADMIN_HUB_WEBSITE_TITLE,
+} from '@/lib/adminHub/copy';
 import { adminHubAppMeta } from '@/lib/adminHub/apps';
 import { ADMIN_PRIVATE_HEADERS, adminSessionShopFor, resolveAdminPageMode } from '@/lib/adminHub/adminMode';
 import { loadAdminHubView, parseAdminHubLocation } from '@/lib/adminHub/hubView';
@@ -203,7 +208,7 @@ const appCtx: AdminHubAppContext = {
         />
       ) : location.section === 'changes' ? (
         caps.canDraftChanges ? (
-          <HubChanges
+          <AdminHubChanges
             client:load
             token=""
             apiBase={ADMIN_HUB_API_BASE}
@@ -214,14 +219,23 @@ const appCtx: AdminHubAppContext = {
             canSend={caps.canSendChanges}
           />
         ) : (
-          <section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder">
-            <h1>{HUB_LOCKED_REASON_PREVIEW}</h1>
-            <p class="hub-card__body">{HUB_WEBSITE_LOCKED_BODY}</p>
+          <section class="admin-hub-locked" data-testid="admin-hub-changes-locked">
+            <header class="admin-hub-head">
+              <div>
+                <span class="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
+                <h1>{HUB_NAV.changes}</h1>
+                <p class="admin-hub-head__sub">{ADMIN_HUB_CHANGES_SUB}</p>
+              </div>
+            </header>
+            <div class="admin-hub-tile admin-hub-calm">
+              <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
+              <p>{HUB_WEBSITE_LOCKED_BODY}</p>
+            </div>
           </section>
         )
       ) : location.section === 'website' ? (
         showPreview && ctx.draft ? (
-          <HubWebsiteView
+          <AdminHubWebsite
             client:load
             token=""
             apiBase={ADMIN_HUB_API_BASE}
@@ -236,7 +250,6 @@ const appCtx: AdminHubAppContext = {
             view={websiteView}
             websiteHref={ADMIN_HUB_LINKS.website}
             bookingHref={ADMIN_HUB_LINKS.booking}
-            changesHref={ADMIN_HUB_LINKS.changes}
             draft={{
               sitePreviewUrl,
               timezone: ctx.draft.shop.timezone,
@@ -254,9 +267,18 @@ const appCtx: AdminHubAppContext = {
             canCheckout={caps.canCheckout}
           />
         ) : (
-          <section class="hub-card ks-glass-card ks-glass-card--accent hub-placeholder">
-            <h1>{HUB_LOCKED_REASON_PREVIEW}</h1>
-            <p class="hub-card__body">{HUB_WEBSITE_LOCKED_BODY}</p>
+          <section class="admin-hub-locked" data-testid="admin-hub-website-locked">
+            <header class="admin-hub-head">
+              <div>
+                <span class="admin-hub-head__eyebrow">{HUB_NAV.website}</span>
+                <h1>{ADMIN_HUB_WEBSITE_TITLE}</h1>
+                <p class="admin-hub-head__sub">{ADMIN_HUB_WEBSITE_SUB}</p>
+              </div>
+            </header>
+            <div class="admin-hub-tile admin-hub-calm">
+              <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
+              <p>{HUB_WEBSITE_LOCKED_BODY}</p>
+            </div>
           </section>
         )
       ) : null

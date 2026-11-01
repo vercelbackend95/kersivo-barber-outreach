@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { isHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isAnyHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { setOpsLaunchStep } from '@/lib/freePreview/hubLaunch';
 import { OPS_API_HEADERS } from '@/lib/ops/operatorAuth';
 import { requireOperatorMutation } from '@/lib/ops/requireOperatorMutation';
@@ -17,7 +17,7 @@ const schema = z.object({
 });
 
 export const POST: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorMutation(context);
   if (access instanceof Response) return access;
 

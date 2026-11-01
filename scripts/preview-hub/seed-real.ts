@@ -18,6 +18,12 @@ export const HUB_QA = {
   ownerEmail: 'owner.converted@hubqa.test',
   ownerPassword: 'HubQaOwner!23456',
   requestedEmail: 'requested.hubqa@hubqa.test',
+  liveEmail: 'owner.live@hubqa.test',
+  livePassword: 'HubQaLive!23456',
+  paidEmail: 'owner.paid@hubqa.test',
+  paidPassword: 'HubQaPaid!23456',
+  starterEmail: 'owner.starter@hubqa.test',
+  starterPassword: 'HubQaStarter!23456',
 } as const;
 
 async function upsertAuthUser(input: { email: string; password: string; name: string; verified: boolean }) {
@@ -116,6 +122,14 @@ async function main() {
   });
   await prisma.previewRequest.deleteMany({
     where: { OR: [{ email: { endsWith: '@hubqa.test' } }, { shopName: { startsWith: 'Hub QA ' } }] },
+  });
+  await prisma.booking.deleteMany({
+    where: {
+      OR: [
+        { email: { endsWith: '@hubqa.test' } },
+        { service: { shop: { name: { startsWith: 'Hub QA ' } } } },
+      ],
+    },
   });
   await prisma.shopSettings.deleteMany({ where: { name: { startsWith: 'Hub QA ' } } });
 
@@ -227,7 +241,7 @@ async function main() {
   if (!adopted.ok) {
     await prisma.shopSettings.update({
       where: { id: convertedShop.id },
-      data: { ownerUserId: owner.id, onboardingCompleted: true },
+      data: { ownerUserId: owner.id },
     });
     await prisma.shopMember.upsert({
       where: { shopId_userId: { shopId: convertedShop.id, userId: owner.id } },
@@ -235,6 +249,19 @@ async function main() {
       update: { role: 'OWNER' },
     });
   }
+  await prisma.shopSettings.update({
+    where: { id: convertedShop.id },
+    data: {
+      name: 'Hub QA Converted',
+      townCity: 'Bournemouth',
+      onboardingCompleted: true,
+      onboardingCompletedAt: readyAt,
+      shopPaidAt: readyAt,
+      publicActivityPaused: false,
+      publicActivityPausedAt: null,
+      publicActivityPauseReason: null,
+    },
+  });
   await prisma.clientOnboarding.upsert({
     where: { shopId: convertedShop.id },
     create: {
@@ -263,6 +290,122 @@ async function main() {
       existingDomain: 'hub-qa-converted.co.uk',
     },
   });
+
+  const liveOwner = await upsertAuthUser({
+    email: HUB_QA.liveEmail,
+    password: HUB_QA.livePassword,
+    name: 'Liv Owner',
+    verified: true,
+  });
+  let liveShop = await prisma.shopSettings.findFirst({
+    where: { ownerUserId: liveOwner.id },
+    select: { id: true },
+  });
+  if (!liveShop) {
+    liveShop = await createDraftShop({ name: 'Hub QA Live', townCity: 'Leeds' });
+    await prisma.shopSettings.update({
+      where: { id: liveShop.id },
+      data: { ownerUserId: liveOwner.id },
+    });
+    await prisma.shopMember.upsert({
+      where: { shopId_userId: { shopId: liveShop.id, userId: liveOwner.id } },
+      create: { shopId: liveShop.id, userId: liveOwner.id, role: 'OWNER' },
+      update: { role: 'OWNER' },
+    });
+  }
+  const liveFilled = await fillDraftShop(liveShop.id, 'Hub QA Live');
+  const liveAt = new Date();
+  await prisma.shopSettings.update({
+    where: { id: liveShop.id },
+    data: {
+      name: 'Hub QA Live',
+      townCity: 'Leeds',
+      onboardingCompleted: true,
+      shopPaidAt: liveAt,
+      publicActivityPaused: false,
+      publicActivityPausedAt: null,
+      publicActivityPauseReason: null,
+    },
+  });
+  const live = await createRequest({
+    status: 'CONVERTED',
+    shopName: 'Hub QA Live',
+    email: HUB_QA.liveEmail,
+    townCity: 'Leeds',
+    firstName: 'Liv',
+    draftShopId: liveShop.id,
+    extra: {
+      previewReadyAt: readyAt,
+      convertedAt: readyAt,
+      launchApprovedAt: readyAt,
+      liveAt,
+    },
+  });
+  await prisma.clientOnboarding.upsert({
+    where: { shopId: liveShop.id },
+    create: {
+      shopId: liveShop.id,
+      publicEmail: HUB_QA.liveEmail,
+      publicPhone: '01202111000',
+      addressLine1: '1 Live Street',
+      townCity: 'Leeds',
+      postcode: 'LS1 1AA',
+      primaryContactName: 'Liv Owner',
+      primaryContactEmail: HUB_QA.liveEmail,
+      isLimitedCompany: false,
+      domainMode: 'EXISTING',
+      existingDomain: 'hub-qa-live.co.uk',
+    },
+    update: {
+      domainMode: 'EXISTING',
+      existingDomain: 'hub-qa-live.co.uk',
+    },
+  });
+
+  const paidOwner = await upsertAuthUser({
+    email: HUB_QA.paidEmail,
+    password: HUB_QA.paidPassword,
+    name: 'Paid Owner',
+    verified: true,
+  });
+  const paidShop = await prisma.shopSettings.findFirst({
+    where: { ownerUserId: paidOwner.id },
+    select: { id: true },
+  });
+  if (paidShop) {
+    await prisma.shopSettings.update({
+      where: { id: paidShop.id },
+      data: {
+        name: 'Hub QA Paid Direct',
+        townCity: 'Leeds',
+        onboardingCompleted: true,
+        shopPaidAt: new Date(),
+      },
+    });
+  }
+
+  const starterOwner = await upsertAuthUser({
+    email: HUB_QA.starterEmail,
+    password: HUB_QA.starterPassword,
+    name: 'Starter Owner',
+    verified: true,
+  });
+  const starterShop = await prisma.shopSettings.findFirst({
+    where: { ownerUserId: starterOwner.id },
+    select: { id: true },
+  });
+  if (starterShop) {
+    await prisma.shopSettings.update({
+      where: { id: starterShop.id },
+      data: {
+        name: 'Hub QA Starter',
+        townCity: 'Leeds',
+        onboardingCompleted: true,
+        freeBookingActivatedAt: new Date(),
+        shopPaidAt: null,
+      },
+    });
+  }
 
   const rejected = await createRequest({
     status: 'REJECTED',
@@ -295,6 +438,23 @@ async function main() {
     requested: { id: requested.id, token: requested.publicToken },
     ready: { id: ready.id, token: ready.publicToken, shopId: readyShop.id },
     converted: { id: converted.id, token: converted.publicToken, shopId: convertedShop.id },
+    live: {
+      id: live.id,
+      token: live.publicToken,
+      shopId: liveShop.id,
+      owner: { email: HUB_QA.liveEmail, password: HUB_QA.livePassword },
+      serviceId: liveFilled.cut.id,
+      barberId: liveFilled.alex.id,
+      liveUrl: 'https://hub-qa-live.co.uk',
+    },
+    paidDirect: {
+      shopId: paidShop?.id ?? null,
+      owner: { email: HUB_QA.paidEmail, password: HUB_QA.paidPassword },
+    },
+    starter: {
+      shopId: starterShop?.id ?? null,
+      owner: { email: HUB_QA.starterEmail, password: HUB_QA.starterPassword },
+    },
     rejected: { id: rejected.id, token: rejected.publicToken },
     expired: { id: expired.id, token: expired.publicToken },
   };

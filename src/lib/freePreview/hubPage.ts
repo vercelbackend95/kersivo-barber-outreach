@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db/client';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
-import { isAdminHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from './config';
+import { isAdminHubEnabled, isAnyHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from './config';
 import {
   HUB_ACTIVITY_ADDED,
   HUB_ACTIVITY_KIND_FILE,
@@ -53,6 +53,13 @@ export function isHubRouteEnabled(): boolean {
 export function isAdminHubRouteEnabled(): boolean {
   return isFreePreviewFlowEnabled() && isAdminHubEnabled();
 }
+
+/** Ops hub APIs (messages, reviews, launch-steps) when either hub route is on. */
+export function isAnyHubRouteEnabled(): boolean {
+  return isHubRouteEnabled() || isAdminHubRouteEnabled();
+}
+
+export { isAnyHubEnabled };
 
 export function hubNotFound(): Response {
   return previewNotFoundResponse();

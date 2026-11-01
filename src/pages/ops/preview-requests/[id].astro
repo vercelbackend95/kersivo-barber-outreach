@@ -89,7 +89,7 @@ function formatDate(value: Date | null | undefined): string {
   return value.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' });
 }
 
-const hubEnabled = isPreviewHubEnabled();
+const hubEnabled = isPreviewHubEnabled() || isAdminHubEnabled();
 const adminHubEnabled = isAdminHubEnabled();
 const hubState = request
   ? resolveHubState({

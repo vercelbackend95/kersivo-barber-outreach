@@ -110,6 +110,7 @@ vi.mock('./config', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./config')>()),
   isFreePreviewFlowEnabled: () => state.flag,
   isPreviewHubEnabled: () => state.flag,
+  isAnyHubEnabled: () => state.flag,
 }));
 vi.mock('./hubAssets', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./hubAssets')>()),

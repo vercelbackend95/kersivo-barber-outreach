@@ -5,7 +5,7 @@ import { purgeShopData } from '@/lib/setup/purgeShopData';
 import { normalizeSaasCheckoutIdentity } from '@/lib/setup/saasCheckoutGuard';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { suppressPendingPreviewFollowups } from './followups';
-import { isPreviewHubEnabled } from './config';
+import { isAnyHubEnabled } from './config';
 import { buildRejectedPreviewPaymentInternalEmail } from './emails';
 import { notifyOwnerSubscribed } from './hubLaunch';
 
@@ -88,7 +88,7 @@ export async function markPreviewRequestConverted(input: {
     await suppressPendingPreviewFollowups(input.previewRequestId).catch((error) =>
       console.error('[free-preview] follow-up suppression failed', { id: input.previewRequestId, error }),
     );
-    if (isPreviewHubEnabled()) {
+    if (isAnyHubEnabled()) {
       const request = await prisma.previewRequest.findUnique({
         where: { id: input.previewRequestId },
         select: { email: true, firstName: true, shopName: true },

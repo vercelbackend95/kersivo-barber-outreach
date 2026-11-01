@@ -12,6 +12,7 @@ import {
 import { prisma } from '../../../lib/db/client';
 import { getSetupOnboardingFormUrlOrEmpty } from '../../../lib/email/sender';
 import { ENABLE_SETUP_FEES } from '../../../lib/pricing/offerMode';
+import { loadFullAdminNextSteps } from '../../../lib/adminHub/nextSteps';
 import {
   isBlockingSaasStatus,
 } from '../../../lib/setup/saasCheckoutGuard';
@@ -247,6 +248,8 @@ export const GET: APIRoute = async (context) => {
       retailComplete,
     });
 
+  const nextSteps = await loadFullAdminNextSteps(access.shopId);
+
   if (!shop.onboardingCompleted) {
     const paidHref = resolveSaasOrLegacyPaidHref(shopPaid);
     return new Response(
@@ -260,6 +263,7 @@ export const GET: APIRoute = async (context) => {
         progress,
         productState: productAccess.state,
         starterLaunch,
+        nextSteps,
         shop: shopPayload,
         user: userPayload,
         subscriptionState,
@@ -343,6 +347,7 @@ export const GET: APIRoute = async (context) => {
       progress,
       productState: productAccess.state,
       starterLaunch,
+      nextSteps,
       shop: shopPayload,
       user: userPayload,
       subscriptionState,

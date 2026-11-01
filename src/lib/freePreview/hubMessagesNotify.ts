@@ -1,7 +1,7 @@
 import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmailOnce, tryDeliverOutboxEmail } from '@/lib/email/outbox';
-import { getPreviewNotifyEmail, isPreviewHubEnabled } from './config';
+import { getPreviewNotifyEmail, isAnyHubEnabled } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { buildHubMessageFromKersivoEmail, buildHubMessagesAddedInternalEmail } from './emails';
 import { HUB_MESSAGES_NOTIFY_WINDOW_MS } from './hubMessages';
@@ -16,7 +16,7 @@ export async function notifyOwnerOfKersivoMessage(input: {
   body: string;
   messageId: string;
 }): Promise<'sent' | 'skipped'> {
-  if (!isPreviewHubEnabled()) return 'skipped';
+  if (!isAnyHubEnabled()) return 'skipped';
   const email = buildHubMessageFromKersivoEmail({
     to: input.to,
     firstName: input.firstName,
@@ -50,7 +50,7 @@ export async function maybeNotifyOpsOfHubMessages(input: {
   shopName: string;
   now?: Date;
 }): Promise<'sent' | 'deferred' | 'skipped'> {
-  if (!isPreviewHubEnabled()) return 'skipped';
+  if (!isAnyHubEnabled()) return 'skipped';
   const now = input.now ?? new Date();
   const request = await prisma.previewRequest.findUnique({
     where: { id: input.requestId },
@@ -116,7 +116,7 @@ export async function sendHubMessagesDigest(input: {
 
 /** Hourly lifecycle pickup for owner messages that landed inside the 15-minute debounce. */
 export async function sendPendingHubMessageDigests(now: Date = new Date()): Promise<number> {
-  if (!isPreviewHubEnabled()) return 0;
+  if (!isAnyHubEnabled()) return 0;
   const cutoff = new Date(now.getTime() - HUB_MESSAGES_NOTIFY_WINDOW_MS);
   const due = await prisma.previewRequest.findMany({
     where: {

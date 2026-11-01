@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { prisma } from '@/lib/db/client';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { grantHubChangeRound } from '@/lib/freePreview/hubChanges';
-import { isHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isAnyHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { OPS_API_HEADERS } from '@/lib/ops/operatorAuth';
 import { requireOperatorMutation } from '@/lib/ops/requireOperatorMutation';
 
@@ -13,7 +13,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 export const POST: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorMutation(context);
   if (access instanceof Response) return access;
 

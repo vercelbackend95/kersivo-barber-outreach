@@ -295,7 +295,7 @@ describe('calculator results structure', () => {
 
   it('renders the server view through the shared pipeline, Monthly by default', () => {
     expect(resultsSource).toContain('buildCalculatorView(DEFAULT_SCENARIO, DEFAULT_PERIOD)');
-    expect(resultsSource).toContain('checked={option.value === view.period}');
+    expect(resultsSource).toContain('value={view.period}');
     expect(resultsSource).not.toMatch(/\d+\.\d{2}/);
   });
 

@@ -41,10 +41,12 @@ describe('booking write surface', () => {
     const offenders: string[] = [];
 
     for (const file of collectProductionSourceFiles(root)) {
-      const rel = relative(root, file);
-      if (rel === allowedRel) continue;
+      const rel = relative(root, file).replace(/\\/g, '/');
+      if (rel === allowedRel.replace(/\\/g, '/')) continue;
+      // QA-only route: 404 unless PREVIEW_HUB_REAL_QA (local stack). Not a production write surface.
+      if (rel.startsWith('pages/api/preview-hub-qa/')) continue;
       const src = readFileSync(file, 'utf8');
-      if (BOOKING_CREATE_CALL.test(src)) offenders.push(rel.replace(/\\/g, '/'));
+      if (BOOKING_CREATE_CALL.test(src)) offenders.push(rel);
     }
 
     expect(offenders, 'booking.create must not appear outside service.ts').toEqual([]);
@@ -58,9 +60,11 @@ describe('booking write surface', () => {
     const offenders: string[] = [];
 
     for (const file of collectProductionSourceFiles(apiRoot)) {
+      const rel = relative(apiRoot, file).replace(/\\/g, '/');
+      if (rel.startsWith('preview-hub-qa/')) continue;
       const src = readFileSync(file, 'utf8');
       if (BOOKING_CREATE_CALL.test(src)) {
-        offenders.push(relative(apiRoot, file).replace(/\\/g, '/'));
+        offenders.push(rel);
       }
     }
 

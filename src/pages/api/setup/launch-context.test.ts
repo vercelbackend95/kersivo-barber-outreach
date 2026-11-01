@@ -9,6 +9,7 @@ const findManyMembers = vi.fn();
 const findManyInvites = vi.fn();
 const findManyBarbers = vi.fn();
 const findFirstDeposit = vi.fn();
+const loadFullAdminNextSteps = vi.fn();
 
 let enableSetupFees = false;
 
@@ -32,6 +33,10 @@ vi.mock('@/lib/pricing/offerMode', () => ({
 
 vi.mock('@/lib/email/sender', () => ({
   getSetupOnboardingFormUrlOrEmpty: () => 'https://forms.test/onboarding',
+}));
+
+vi.mock('@/lib/adminHub/nextSteps', () => ({
+  loadFullAdminNextSteps: (...args: unknown[]) => loadFullAdminNextSteps(...args),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -76,6 +81,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
     findManyInvites.mockReset();
     findManyBarbers.mockReset();
     findFirstDeposit.mockReset();
+    loadFullAdminNextSteps.mockReset().mockResolvedValue(null);
     requirePermission.mockReturnValue(null);
     resolveAdminAccess.mockResolvedValue({
       via: 'session',
@@ -412,6 +418,7 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
     findManyInvites.mockReset();
     findManyBarbers.mockReset();
     findFirstDeposit.mockReset();
+    loadFullAdminNextSteps.mockReset().mockResolvedValue(null);
     requirePermission.mockReturnValue(null);
     resolveAdminAccess.mockResolvedValue({
       via: 'session',
@@ -470,6 +477,7 @@ describe('GET /api/setup/launch-context preview via', () => {
     findManyInvites.mockReset();
     findManyBarbers.mockReset();
     findFirstDeposit.mockReset();
+    loadFullAdminNextSteps.mockReset().mockResolvedValue(null);
     requirePermission.mockReturnValue(null);
     resolveAdminAccess.mockResolvedValue({
       via: 'preview',
@@ -548,6 +556,66 @@ describe('GET /api/setup/launch-context preview via', () => {
     expect(res.status).toBe(200);
     expect(body.progress.steps.find((s: { id: string }) => s.id === 'retail')?.done).toBe(true);
     expect(body.progress.complete).toBe(true);
+    expect(body.nextSteps).toBeNull();
+  });
+
+  it('does not attach Phase 3 next-steps for a paid shop that never had a preview', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-direct',
+      shopPaidAt: new Date(),
+      smsRemindersEnabled: false,
+      freeBookingActivatedAt: null,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      stripeConnectDisconnectedAt: null,
+      departure: null,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: true,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Direct Paid',
+      townCity: 'Leeds',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      services: [{ id: 's1', isActive: true, pricePence: 2500 }],
+      _count: { services: 1 },
+    });
+    findFirstSaas.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 86400000),
+      pastDueSince: null,
+      activatedAt: new Date(),
+    });
+
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+    expect(body.paid).toBe(true);
+    expect(body.nextSteps).toBeNull();
+    expect(loadFullAdminNextSteps).toHaveBeenCalledWith('shop-preview');
+  });
+
+  it('returns Phase 3 next-steps for a live preview shop', async () => {
+    loadFullAdminNextSteps.mockResolvedValue({
+      phase: 3,
+      title: 'Get the most from KERSIVO',
+      status: "You're live · 0 of 3",
+      done: 0,
+      total: 3,
+      nextId: 'view-site',
+      liveUrl: 'https://live.example',
+      items: [],
+    });
+    findFirstSaas.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 86400000),
+      pastDueSince: null,
+      activatedAt: new Date(),
+    });
+
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+    expect(body.paid).toBe(true);
+    expect(body.nextSteps?.title).toBe('Get the most from KERSIVO');
+    expect(body.nextSteps?.liveUrl).toBe('https://live.example');
   });
 
   it('rejects secret via (non-tenant)', async () => {

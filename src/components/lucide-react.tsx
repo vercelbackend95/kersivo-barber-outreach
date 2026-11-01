@@ -808,6 +808,38 @@ const Smartphone = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Monitor = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect x="2" y="3" width="20" height="14" rx="2" />
+    <path d="M8 21h8" />
+    <path d="M12 17v4" />
+  </svg>
+);
+
+const ExternalLink = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </svg>
+);
+
 const EyeOff = ({ ...props }: IconProps) => (
   <svg
     viewBox="0 0 24 24"
@@ -879,4 +911,6 @@ export {
   Star,
   StickyNote,
   Globe,
+  Monitor,
+  ExternalLink,
 };

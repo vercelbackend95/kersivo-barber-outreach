@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { createDraftShop } from '@/lib/preview/shopPreviewSession';
 import { SITE_VERSION_MAX, applySitePreview, normalizeSitePreviewUrl } from '@/lib/setup/sitePreview';
-import { isFreePreviewFlowEnabled, isPreviewHubEnabled, previewExpiryFrom } from './config';
+import { isAnyHubEnabled, isFreePreviewFlowEnabled, previewExpiryFrom } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { buildPreviewReadyEmail, buildPreviewUpdatedEmail, previewPageUrl } from './emails';
 
@@ -210,7 +210,7 @@ export async function executePreviewRequestOpsAction(input: {
         const expiresAt = previewExpiryFrom(now);
         const nextStatus = request.convertedAt ? 'CONVERTED' : 'READY';
         const completedItems =
-          isUpdate && isPreviewHubEnabled()
+          isUpdate && isAnyHubEnabled()
             ? await loadCompletedChangesForUpdateEmail(tx, request.id)
             : [];
         const event = await tx.previewRequestEvent.create({

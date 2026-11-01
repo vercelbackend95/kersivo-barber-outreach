@@ -9,7 +9,7 @@ vi.mock('@/lib/ops/requireOperatorMutation', () => ({
 vi.mock('@/lib/ops/operatorAuth', () => ({
   OPS_API_HEADERS: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
 }));
-vi.mock('@/lib/freePreview/hubPage', () => ({ isHubRouteEnabled: () => true }));
+vi.mock('@/lib/freePreview/hubPage', () => ({ isAnyHubRouteEnabled: () => true }));
 vi.mock('@/lib/freePreview/hubLaunch', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/freePreview/hubLaunch')>();
   return { ...actual, setOpsLaunchStep: (...args: unknown[]) => setOpsLaunchStep(...args) };
