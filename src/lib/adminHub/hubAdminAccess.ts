@@ -108,6 +108,15 @@ function normalizeAdminPath(pathname: string): string {
   return pathname;
 }
 
+/**
+ * True only for `/api/admin` and `/api/admin/...`.
+ * `startsWith('/api/admin')` is a prefix trap: it also matches `/api/admin-hub/*`,
+ * `/api/admin-demo/*` and `/api/administrator`.
+ */
+export function isAdminApiPath(pathname: string): boolean {
+  return pathname === '/api/admin' || pathname.startsWith('/api/admin/');
+}
+
 export function isHubAdminApiAllowed(method: string, pathname: string): boolean {
   const path = normalizeAdminPath(pathname);
   const verb = method.toUpperCase();

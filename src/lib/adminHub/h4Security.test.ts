@@ -1,15 +1,19 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { evaluateOriginGate, parseAllowedOrigins } from '@/lib/security/origin';
+import { signHubSession } from './hubSession';
 import {
   HUB_ADMIN_API_ALLOWLIST,
+  HUB_ADMIN_UNAVAILABLE_MESSAGE,
+  isAdminApiPath,
   isHubAdminApiAllowed,
 } from './hubAdminAccess';
 import {
   deniedAdminApiEndpoints,
   formatAdminApiAllowlistTable,
   listAdminApiEndpoints,
+  listAdminHubApiEndpoints,
 } from './adminApiInventory';
 
 const ALLOWLISTED_OUTBOUND = /from ['"]@\/lib\/(email|sms|mailer|shop\/stripe)['"]|from ['"]stripe['"]/;
@@ -127,5 +131,139 @@ describe('H4 outbound routes stay off the allowlist', () => {
     ['POST', '/api/shop/webhook'],
   ] as const)('%s %s is not allowlisted', (method, path) => {
     expect(isHubAdminApiAllowed(method, path)).toBe(false);
+  });
+});
+
+/**
+ * Prefix trap: `pathname.startsWith('/api/admin')` is also true for
+ * `/api/admin-hub/assets`. In production that sent every hub-only visitor
+ * (valid `ks_hub`, no Better Auth cookie) through HUB_ADMIN_API_ALLOWLIST
+ * and returned 403 "Not available in your preview." Uploads, about text,
+ * colours, Changes, Messages, checkout, domain-search, event, reviews and
+ * draft-shop all broke. Operator/founder QA with a Better Auth cookie never
+ * hit the gate. `/api/admin-hub` is a separate surface — do not add it to
+ * the allowlist.
+ */
+describe('H4 prefix trap: /api/admin-hub is not /api/admin', () => {
+  const SECRET = 'h4-prefix-trap-test-secret-0123456789ab';
+  const ORIGIN = 'http://127.0.0.1:4397';
+
+  beforeEach(() => {
+    vi.stubEnv('BETTER_AUTH_SECRET', SECRET);
+    vi.stubEnv('PUBLIC_SITE_URL', ORIGIN);
+    vi.stubEnv('ALLOWED_ORIGINS', ORIGIN);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+    vi.doUnmock('astro:middleware');
+  });
+
+  function hubOnlyCookie(): string {
+    return signHubSession(
+      { previewRequestId: 'req_prefix', expiresAt: new Date(Date.now() + 7 * 86_400_000) },
+      SECRET,
+    )!;
+  }
+
+  function hubOnlyRequest(path: string, method: string): Request {
+    return new Request(`${ORIGIN}${path}`, {
+      method,
+      headers: {
+        cookie: `ks_hub=${hubOnlyCookie()}`,
+        origin: ORIGIN,
+        host: '127.0.0.1:4397',
+        'content-type': 'application/json',
+      },
+      body: method === 'GET' || method === 'HEAD' || method === 'DELETE' ? undefined : '{}',
+    });
+  }
+
+  async function loadMiddleware() {
+    vi.resetModules();
+    vi.doMock('astro:middleware', () => ({
+      defineMiddleware: (fn: unknown) => fn,
+    }));
+    const { onRequest } = await import('../../middleware');
+    return onRequest as unknown as (
+      context: { request: Request; url: URL; locals: Record<string, unknown>; cookies: { get: () => undefined } },
+      next: () => Promise<Response>,
+    ) => Promise<Response>;
+  }
+
+  async function runMiddleware(
+    onRequest: Awaited<ReturnType<typeof loadMiddleware>>,
+    path: string,
+    method: string,
+  ) {
+    let reachedHandler = false;
+    const request = hubOnlyRequest(path, method);
+    const response = await onRequest(
+      {
+        request,
+        url: new URL(request.url),
+        locals: {},
+        cookies: { get: () => undefined },
+      },
+      async () => {
+        reachedHandler = true;
+        return new Response(JSON.stringify({ ok: true, via: 'handler' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      },
+    );
+    return { response, reachedHandler, body: await response.text() };
+  }
+
+  it('isAdminApiPath matches /api/admin only', () => {
+    expect(isAdminApiPath('/api/admin')).toBe(true);
+    expect(isAdminApiPath('/api/admin/')).toBe(true);
+    expect(isAdminApiPath('/api/admin/services')).toBe(true);
+    expect(isAdminApiPath('/api/admin-hub/assets')).toBe(false);
+    expect(isAdminApiPath('/api/admin-demo/x')).toBe(false);
+    expect(isAdminApiPath('/api/administrator')).toBe(false);
+  });
+
+  it('middleware does not answer /api/admin-hub with the preview-unavailable 403', async () => {
+    const onRequest = await loadMiddleware();
+    const rows = listAdminHubApiEndpoints();
+    expect(rows.length).toBeGreaterThan(10);
+    for (const row of rows) {
+      expect(isAdminApiPath(row.path), row.path).toBe(false);
+      const { response, reachedHandler, body } = await runMiddleware(onRequest, row.path, row.method);
+      expect(body, `${row.method} ${row.path}`).not.toContain(HUB_ADMIN_UNAVAILABLE_MESSAGE);
+      expect(reachedHandler, `${row.method} ${row.path} should reach the handler`).toBe(true);
+      expect(response.status, `${row.method} ${row.path}`).toBe(200);
+    }
+  });
+
+  it('non-allowlisted /api/admin/* still 403 for a hub-only cookie', async () => {
+    const onRequest = await loadMiddleware();
+    const denied = deniedAdminApiEndpoints();
+    expect(denied.length).toBeGreaterThan(50);
+    const sample = denied.filter((row) =>
+      ['/api/admin/bookings', '/api/admin/clients', '/api/admin/reports'].includes(row.path),
+    );
+    expect(sample.length).toBeGreaterThan(0);
+    for (const row of denied) {
+      const path = row.path.replace(/:[^/]+/g, 'x');
+      expect(isAdminApiPath(path), path).toBe(true);
+      expect(isHubAdminApiAllowed(row.method, path), `${row.method} ${path}`).toBe(false);
+    }
+    for (const row of sample) {
+      const { response, reachedHandler, body } = await runMiddleware(onRequest, row.path, row.method);
+      expect(reachedHandler, `${row.method} ${row.path}`).toBe(false);
+      expect(response.status, `${row.method} ${row.path}`).toBe(403);
+      expect(body).toContain(HUB_ADMIN_UNAVAILABLE_MESSAGE);
+    }
+  });
+
+  it('middleware uses isAdminApiPath, not startsWith("/api/admin")', () => {
+    const src = readFileSync(resolve(process.cwd(), 'src/middleware.ts'), 'utf8');
+    expect(src).toContain('isAdminApiPath');
+    expect(src).not.toMatch(/startsWith\(ADMIN_API_PREFIX\)/);
+    expect(src).not.toMatch(/startsWith\(['"]\/api\/admin['"]\)/);
   });
 });

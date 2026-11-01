@@ -13,6 +13,21 @@ export type AdminApiEndpoint = {
 };
 
 const METHOD_EXPORT = /export\s+(?:const|async\s+function)\s+(GET|POST|PUT|PATCH|DELETE)\b/g;
+const DESTRUCTURED_EXPORT = /export\s+const\s+\{([^}]+)\}/g;
+
+function exportedMethods(src: string): Set<AdminHttpMethod> {
+  const found = new Set<AdminHttpMethod>();
+  for (const match of src.matchAll(METHOD_EXPORT)) {
+    found.add(match[1] as AdminHttpMethod);
+  }
+  for (const match of src.matchAll(DESTRUCTURED_EXPORT)) {
+    for (const part of match[1].split(',')) {
+      const method = part.trim().split(':')[0]?.trim();
+      if ((METHODS as readonly string[]).includes(method ?? '')) found.add(method as AdminHttpMethod);
+    }
+  }
+  return found;
+}
 
 function walkTsFiles(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -42,10 +57,7 @@ export function listAdminApiEndpoints(repoRoot = process.cwd()): AdminApiEndpoin
   const rows: AdminApiEndpoint[] = [];
   for (const file of walkTsFiles(adminRoot)) {
     const src = readFileSync(file, 'utf8');
-    const found = new Set<AdminHttpMethod>();
-    for (const match of src.matchAll(METHOD_EXPORT)) {
-      found.add(match[1] as AdminHttpMethod);
-    }
+    const found = exportedMethods(src);
     if (found.size === 0) continue;
     const path = fileToApiPath(file, pagesRoot);
     const fileRel = relative(repoRoot, file).replace(/\\/g, '/');
@@ -68,6 +80,32 @@ export function allowlistedAdminApiEndpoints(repoRoot = process.cwd()): AdminApi
 
 export function deniedAdminApiEndpoints(repoRoot = process.cwd()): AdminApiEndpoint[] {
   return listAdminApiEndpoints(repoRoot).filter((row) => !row.allowlisted);
+}
+
+export type AdminHubApiEndpoint = {
+  method: AdminHttpMethod;
+  /** Runtime path with `[param]` replaced by a dummy id. */
+  path: string;
+  file: string;
+};
+
+/** Every exported method on every /api/admin-hub route file. */
+export function listAdminHubApiEndpoints(repoRoot = process.cwd()): AdminHubApiEndpoint[] {
+  const pagesRoot = join(repoRoot, 'src/pages');
+  const hubRoot = join(pagesRoot, 'api/admin-hub');
+  const rows: AdminHubApiEndpoint[] = [];
+  for (const file of walkTsFiles(hubRoot)) {
+    const src = readFileSync(file, 'utf8');
+    const found = exportedMethods(src);
+    if (found.size === 0) continue;
+    const path = fileToApiPath(file, pagesRoot).replace(/:[^/]+/g, 'asset_1');
+    const fileRel = relative(repoRoot, file).replace(/\\/g, '/');
+    for (const method of METHODS) {
+      if (!found.has(method)) continue;
+      rows.push({ method, path, file: fileRel });
+    }
+  }
+  return rows.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
 }
 
 /** Markdown table for the H4 security report. */
