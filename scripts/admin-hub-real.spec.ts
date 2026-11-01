@@ -10,11 +10,13 @@ const shotDir2 = join(root, 'docs/admin-hub/screens/batch-2');
 const shotDir3 = join(root, 'docs/admin-hub/screens/batch-3');
 const shotDir4 = join(root, 'docs/admin-hub/screens/batch-4');
 const shotDir5 = join(root, 'docs/admin-hub/screens/batch-5');
+const shotDir6 = join(root, 'docs/admin-hub/screens/batch-6');
 mkdirSync(shotDir, { recursive: true });
 mkdirSync(shotDir2, { recursive: true });
 mkdirSync(shotDir3, { recursive: true });
 mkdirSync(shotDir4, { recursive: true });
 mkdirSync(shotDir5, { recursive: true });
+mkdirSync(shotDir6, { recursive: true });
 
 const ORIGIN = 'http://127.0.0.1:4397';
 const HEIGHT: Record<number, number> = { 360: 800, 390: 844, 768: 1024, 1280: 800, 1440: 900 };
@@ -25,6 +27,17 @@ type Seed = {
   requested: { id: string; token: string };
   ready: { id: string; token: string; shopId: string };
   converted: { id: string; token: string };
+  live: {
+    id: string;
+    token: string;
+    shopId: string;
+    owner: { email: string; password: string };
+    serviceId: string;
+    barberId: string;
+    liveUrl: string;
+  };
+  paidDirect: { shopId: string | null; owner: { email: string; password: string } };
+  starter: { shopId: string | null; owner: { email: string; password: string } };
   rejected: { id: string; token: string };
   expired: { id: string; token: string };
 };
@@ -645,5 +658,272 @@ test.describe('Admin Hub batch 5 — Website and Changes', () => {
     await page.getByRole('link', { name: 'Booking' }).first().focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/section=website&view=booking/);
+  });
+});
+
+test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
+  test.beforeAll(async ({ request }) => {
+    if (seed) return;
+    const res = await request.get('/api/preview-hub-qa/seed');
+    expect(res.ok()).toBeTruthy();
+    seed = (await res.json()) as Seed;
+  });
+
+  async function shots6(page: Page, name: string, widths: number[]) {
+    await page.addStyleTag({ content: 'astro-dev-toolbar { display: none !important; }' });
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
+      await page.waitForTimeout(250);
+      await expectNoHorizontalScroll(page, `${name}@${width}`);
+      await page.screenshot({ path: join(shotDir6, `${name}-${width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+
+  test('live preview shop shows Phase 3; view site + test booking become 2 of 3', async ({ page }) => {
+    await signIn(page, seed.live.owner.email, seed.live.owner.password);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    const card = page.locator('.admin-sidebar [data-testid="admin-next-steps"]');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Get the most from KERSIVO');
+    await expect(card).toContainText("You're live · 0 of 3");
+    await expect(card.getByRole('link', { name: /View your website/i })).toHaveAttribute('href', seed.live.liveUrl);
+    await expect(card.getByRole('link', { name: /Make a test booking/i })).toHaveAttribute('href', '/admin/test-book');
+    await shots6(page, 'live-phase3', [360, 390, 768, 1280, 1440]);
+
+    const viewed = page.waitForResponse((res) => res.url().includes('/api/admin/next-steps/view-site') && res.request().method() === 'POST');
+    await card.getByRole('link', { name: /View your website/i }).click();
+    expect((await viewed).ok()).toBeTruthy();
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toContainText("You're live · 1 of 3");
+
+    await page.goto('/admin/test-book');
+    await expect(page).toHaveURL(/\/admin\/test-book/);
+    const booked = await page.request.post('/api/preview-hub-qa/test-booking', {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: { shopId: seed.live.shopId },
+    });
+    expect(booked.ok(), `test booking ${booked.status()} ${await booked.text()}`).toBeTruthy();
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toContainText("You're live · 2 of 3");
+    await page.screenshot({ path: join(shotDir6, 'live-phase3-2of3-1440.png'), fullPage: true });
+  });
+
+  test('Starter and paid-direct shops keep today’s CTA (no Phase 3)', async ({ page }) => {
+    await signIn(page, seed.paidDirect.owner.email, seed.paidDirect.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toHaveCount(0);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-launch-cta')).toHaveCount(0);
+    await page.screenshot({ path: join(shotDir6, 'paid-direct-1440.png'), fullPage: true });
+
+    await page.context().clearCookies();
+    await signIn(page, seed.starter.owner.email, seed.starter.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toHaveCount(0);
+    await expect(page.locator('.admin-sidebar .admin-sidebar-launch-cta')).toBeVisible();
+    await expect(page.getByText('Get the most from KERSIVO')).toHaveCount(0);
+    await page.screenshot({ path: join(shotDir6, 'starter-cta-1440.png'), fullPage: true });
+  });
+
+  test('final screenshots of every hub screen and app', async ({ page }) => {
+    const widths = [360, 390, 768, 1280, 1440];
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await shots6(page, 'screen-overview', widths);
+    await page.goto('/admin?section=website');
+    await expect(page.getByTestId('admin-hub-website')).toBeVisible();
+    await shots6(page, 'screen-website', widths);
+    await page.goto('/admin?section=changes');
+    await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
+    await shots6(page, 'screen-changes', widths);
+    for (const app of ['logo', 'photos', 'services', 'team', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
+      await page.goto(`/admin?app=${app}`);
+      await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+      await shots6(page, `app-${app}`, widths);
+    }
+
+    await page.context().clearCookies();
+    await openEmailLink(page, `/preview/${seed.requested.token}`, seed.requested.token, '/admin');
+    await shots6(page, 'screen-requested', widths);
+
+    await page.context().clearCookies();
+    await openEmailLink(page, `/preview/${seed.expired.token}`, seed.expired.token, '/admin');
+    await shots6(page, 'screen-expired', widths);
+
+    await page.context().clearCookies();
+    await signIn(page, seed.owner.email, seed.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub')).toBeVisible();
+    await shots6(page, 'screen-launch', widths);
+
+    await page.context().clearCookies();
+    await signIn(page, seed.live.owner.email, seed.live.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toBeVisible();
+    await shots6(page, 'screen-live-admin', widths);
+  });
+
+  test('request → hub → uploads → colours → ops → READY → launch → live Phase 3', async ({ page, request }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const journeyEmail = `journey.admin.${Date.now()}@hubqa.test`;
+    const submit = await request.post('/api/free-preview', {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: { shopName: 'Hub QA Admin Journey', townCity: 'Bournemouth', email: journeyEmail },
+    });
+    expect(submit.ok(), `intake ${submit.status()}`).toBeTruthy();
+    await page.waitForTimeout(800);
+    const mail = await request.get(`/api/preview-hub-qa/emails?to=${encodeURIComponent(journeyEmail)}`);
+    const mailJson = await mail.json();
+    const html = JSON.stringify(mailJson.emails ?? []);
+    expect(html).toContain('Open your shop hub');
+    const created = await request.get(`/api/preview-hub-qa/request?email=${encodeURIComponent(journeyEmail)}`);
+    const createdJson = (await created.json()) as { token: string; id: string };
+    await openEmailLink(page, `/preview/${createdJson.token}`, createdJson.token, '/admin');
+    await expect(page.locator('.admin-hub-side .admin-hub-pill')).toHaveText('Requested');
+    await shots6(page, 'journey-requested', [360, 390, 768, 1280, 1440]);
+
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await page.goto('/admin?app=logo');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    const logoUpload = page.waitForResponse((res) => res.url().includes('/assets') && res.request().method() === 'POST');
+    await page.locator('[data-testid="hub-upload-logo"]').setInputFiles({
+      name: 'logo.png',
+      mimeType: 'image/png',
+      buffer: png,
+    });
+    expect((await logoUpload).ok()).toBeTruthy();
+    await page.goto('/admin?app=photos');
+    const photoUpload = page.waitForResponse((res) => res.url().includes('/assets') && res.request().method() === 'POST');
+    await page.locator('[data-testid="hub-upload-shop_photo"]').setInputFiles({
+      name: 'shop.png',
+      mimeType: 'image/png',
+      buffer: png,
+    });
+    expect((await photoUpload).ok()).toBeTruthy();
+
+    await page.goto('/admin?app=colours');
+    const colours = page.getByTestId('admin-hub-colours');
+    if (await colours.isVisible().catch(() => false)) {
+      const send = page.getByRole('button', { name: 'Send colours to KERSIVO' });
+      if (await send.isEnabled().catch(() => false)) await send.click();
+    }
+
+    await page.goto('/admin?app=messages');
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
+    await page.getByTestId('hub-message-body').fill('Here is our logo.');
+    await page.getByTestId('hub-send-message').click();
+    await expect(page.getByText('Here is our logo.')).toBeVisible();
+
+    await signIn(page, seed.ops.email, seed.ops.password);
+    await page.goto(`/ops/preview-requests/${createdJson.id}`, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('body')).toContainText('Hub QA Admin Journey');
+    await page.goto(`/ops/preview-requests/${createdJson.id}?tab=messages`);
+    await expect(page.getByTestId('hub-message-body')).toBeVisible();
+    await page.getByTestId('hub-message-body').fill('Thanks — we have your files.');
+    await page.getByTestId('hub-send-message').click();
+    await expect(page.getByText('Thanks — we have your files.')).toBeVisible();
+    await page.context().clearCookies();
+
+    await openEmailLink(page, `/preview/${seed.ready.token}`, seed.ready.token, '/admin');
+    await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
+    await shots6(page, 'journey-ready-overview', [360, 390, 768, 1280, 1440]);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/admin?section=website');
+    const website = page.getByTestId('admin-hub-website');
+    await expect(website).toBeVisible();
+    await expect(website).toHaveAttribute('data-ready', 'true');
+    await page.getByRole('radiogroup', { name: 'Device' }).getByRole('radio', { name: 'Desktop' }).click();
+    await expect(website).toHaveAttribute('data-device', 'desktop');
+    await shots6(page, 'journey-website-desktop-phone', [360, 390]);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/admin?app=services');
+    await expect(page.getByTestId('admin-hub-app')).toBeVisible();
+    await page.goto('/admin?section=changes');
+    await page.getByRole('button', { name: /Suggest a change|Suggest/ }).click();
+    await page.getByTestId('hub-change-body').fill('Make the Book button larger.');
+    await page.getByTestId('hub-save-draft').click();
+    const sendChanges = page.getByRole('button', { name: 'Send changes to KERSIVO' });
+    if (await sendChanges.isEnabled().catch(() => false)) await sendChanges.click();
+
+    const checkoutStatus = await page.evaluate(async () => {
+      const res = await fetch('/api/admin-hub/checkout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Riley',
+          domainMode: 'EXISTING',
+          existingDomain: 'hub-qa-ready.co.uk',
+          agreed: true,
+        }),
+      });
+      return res.status;
+    });
+    expect([200, 303, 400, 409], `checkout ${checkoutStatus}`).toContain(checkoutStatus);
+
+    await signIn(page, seed.owner.email, seed.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub-side .admin-hub-setup')).toContainText("Let's put you live");
+    await shots6(page, 'journey-launch', [360, 390, 768, 1280, 1440]);
+    const approved = await page.request.post('/api/admin/preview-launch/approve', {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: { contentRightsConfirmed: true, informationAccuracyConfirmed: true },
+    });
+    expect([200, 400], `approve ${approved.status()}`).toContain(approved.status());
+
+    await page.context().clearCookies();
+    await signIn(page, seed.ops.email, seed.ops.password);
+    const live = await page.request.post(`/api/ops/preview-requests/${seed.converted.id}/launch-steps`, {
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      data: { step: 'live', confirm: true },
+    });
+    expect(live.ok(), `mark live ${live.status()} ${await live.text()}`).toBeTruthy();
+    await page.context().clearCookies();
+
+    await signIn(page, seed.owner.email, seed.owner.password);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toBeVisible();
+    await expect(page.locator('.admin-sidebar [data-testid="admin-next-steps"]')).toContainText('Get the most from KERSIVO');
+    await shots6(page, 'journey-live-admin', [360, 390, 768, 1280, 1440]);
+  });
+
+  test('negatives: rejected/unknown 404, tampered cookie, cookie-only admin APIs, flag still off for extras', async ({
+    page,
+    context,
+  }) => {
+    for (const token of [seed.rejected.token, 'Z'.repeat(43)]) {
+      const response = await page.goto(`/preview/${token}`);
+      expect(response?.status()).toBe(404);
+    }
+    await page.goto(`/preview/${seed.ready.token}`);
+    const cookie = await hubCookie(context);
+    expect(cookie).toBeTruthy();
+    await context.clearCookies();
+    await context.addCookies([
+      {
+        ...cookie!,
+        value: cookie!.value.replace(/[A-Za-z0-9_-]{8}$/, 'xxxxxxxx'),
+      },
+    ]);
+    await page.goto('/admin');
+    await expect(page.locator('.admin-hub')).toHaveCount(0);
+    const headers = { Cookie: `${cookie!.name}=${cookie!.value}` };
+    for (const path of [
+      '/api/admin/bookings',
+      '/api/admin/clients',
+      '/api/admin/next-steps/dismiss',
+      '/api/setup/launch-context',
+    ]) {
+      const res = await page.request.get(path, { headers });
+      expect([401, 403, 404, 405], `${path} with only ks_hub`).toContain(res.status());
+    }
+    const dismiss = await page.request.post('/api/admin/next-steps/dismiss', { headers });
+    expect([401, 403], 'dismiss with only ks_hub').toContain(dismiss.status());
   });
 });

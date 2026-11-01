@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { prisma } from '@/lib/db/client';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
-import { isHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { isAnyHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { hubChangeStatusSchema, loadHubChanges, setHubChangeStatus } from '@/lib/freePreview/hubChanges';
 import { HUB_OPS_CHANGE_NOTE } from '@/lib/freePreview/hubCopy';
 import { OPS_API_HEADERS, requireOperatorAccess } from '@/lib/ops/operatorAuth';
@@ -19,7 +19,7 @@ const opsChangeSchema = hubChangeStatusSchema.extend({
 });
 
 export const GET: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorAccess(context);
   if (access instanceof Response) return access;
 
@@ -40,7 +40,7 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-  if (!isHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+  if (!isAnyHubRouteEnabled()) return json({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
   const access = await requireOperatorMutation(context);
   if (access instanceof Response) return access;
 

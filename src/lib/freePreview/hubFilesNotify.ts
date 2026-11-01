@@ -1,7 +1,7 @@
 import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmailOnce, tryDeliverOutboxEmail } from '@/lib/email/outbox';
-import { getPreviewNotifyEmail, isPreviewHubEnabled } from './config';
+import { getPreviewNotifyEmail, isAnyHubEnabled } from './config';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { buildHubFilesAddedInternalEmail } from './emails';
 import { HUB_FILES_NOTIFY_WINDOW_MS } from './hubAssets';
@@ -33,7 +33,7 @@ export async function maybeNotifyOpsOfHubFiles(input: {
   shopName: string;
   now?: Date;
 }): Promise<'sent' | 'deferred' | 'skipped'> {
-  if (!isPreviewHubEnabled()) return 'skipped';
+  if (!isAnyHubEnabled()) return 'skipped';
   const now = input.now ?? new Date();
   const request = await prisma.previewRequest.findUnique({
     where: { id: input.requestId },
@@ -101,7 +101,7 @@ export async function sendHubFilesDigest(input: {
 
 /** Hourly lifecycle pickup for uploads that landed inside the 15-minute debounce. */
 export async function sendPendingHubFileDigests(now: Date = new Date()): Promise<number> {
-  if (!isPreviewHubEnabled()) return 0;
+  if (!isAnyHubEnabled()) return 0;
   const cutoff = new Date(now.getTime() - HUB_FILES_NOTIFY_WINDOW_MS);
   const due = await prisma.previewRequest.findMany({
     where: {

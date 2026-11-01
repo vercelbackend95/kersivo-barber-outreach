@@ -31,7 +31,7 @@ import { clearHubMessageBodies, deleteHubMessageRows } from './hubMessages';
 import { sendPendingHubMessageDigests } from './hubMessagesNotify';
 import { clearHubChangeBodies, deleteHubChangeRows } from './hubChanges';
 import { clearHubReviewProposals, deleteHubReviewRows } from './hubReviews';
-import { isPreviewHubEnabled } from './config';
+import { isAnyHubEnabled } from './config';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -493,8 +493,8 @@ export async function runFreePreviewLifecycle(now: Date = new Date()): Promise<P
     : { followups: 0, expiryReminders: 0 };
   const anonymised = await purgeExpiredPreviewData(now);
   const orphanAttachments = await purgeOrphanHubAttachments(now);
-  const hubFileDigests = isPreviewHubEnabled() ? await sendPendingHubFileDigests(now) : 0;
-  const hubMessageDigests = isPreviewHubEnabled() ? await sendPendingHubMessageDigests(now) : 0;
+  const hubFileDigests = isAnyHubEnabled() ? await sendPendingHubFileDigests(now) : 0;
+  const hubMessageDigests = isAnyHubEnabled() ? await sendPendingHubMessageDigests(now) : 0;
   return {
     expired,
     followups,

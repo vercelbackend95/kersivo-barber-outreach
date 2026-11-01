@@ -13,7 +13,7 @@ import {
   buildHubSubscribedEmail,
   opsPreviewRequestUrl,
 } from './emails';
-import { isPreviewHubEnabled, PREVIEW_ONBOARDING_PATH } from './config';
+import { isAnyHubEnabled, PREVIEW_ONBOARDING_PATH } from './config';
 import { isValidUkCompanyNumber, normalizeUkCompanyNumber } from './ukCompanyNumber';
 
 export const LAUNCH_ITEMS = ['business', 'domain', 'payments', 'migration', 'approve'] as const;
@@ -767,7 +767,7 @@ export async function approveLaunch(input: {
       clientId: input.clientId ?? null,
       params: { item: 'approve' },
     });
-    if (isPreviewHubEnabled()) {
+    if (isAnyHubEnabled()) {
       await notifyOpsLaunchApproved({
         previewRequestId: input.previewRequestId,
         shopName: current.shopName,
@@ -803,7 +803,7 @@ export async function notifyOwnerSubscribed(input: {
   shopName: string;
   previewRequestId: string;
 }) {
-  if (!isPreviewHubEnabled()) return 'skipped';
+  if (!isAnyHubEnabled()) return 'skipped';
   const email = buildHubSubscribedEmail({
     to: input.to,
     firstName: input.firstName,
@@ -830,7 +830,7 @@ export async function notifyOwnerSiteLive(input: {
   previewRequestId: string;
   liveUrl: string | null;
 }) {
-  if (!isPreviewHubEnabled()) return 'skipped';
+  if (!isAnyHubEnabled()) return 'skipped';
   const email = buildHubSiteLiveEmail({
     to: input.to,
     firstName: input.firstName,

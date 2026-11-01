@@ -11,6 +11,9 @@ export const SETUP_OPTIONAL_TAG = 'Optional';
 export const SETUP_FROM_LINKS_BODY =
   "We'll fill these from your links — you'll check them when your preview is ready";
 export const SETUP_LAUNCH_SIGN_IN = 'Sign in to finish these steps.';
+export const SETUP_PHASE3_DISMISS = 'Dismiss';
+export const SETUP_PHASE3_RETAIL_HREF = '/admin/retail-onboarding';
+export const SETUP_PHASE3_TEST_BOOK_HREF = '/admin/test-book';
 
 export function setupPhase1Status(done: number, total: number): string {
   return `Your shop · ${done} of ${total}`;
@@ -148,16 +151,17 @@ export function setupPhase2Items(input: {
   return pack(2, SETUP_PHASE2_TITLE, setupPhase2Status, items);
 }
 
-/** Batch 6 renders this. Typed now so the live card cannot invent a fourth shape. */
 export function setupPhase3Items(input: {
   viewedSite: boolean;
   testBookingDone: boolean;
   retailDone: boolean;
+  liveUrl?: string | null;
 }): SetupCardModel {
+  const liveUrl = (input.liveUrl ?? '').trim();
   const rows: Array<[SetupPhase3ItemId, boolean, boolean, string]> = [
-    ['view-site', input.viewedSite, false, '#'] ,
-    ['test-booking', input.testBookingDone, false, '/admin/test-book'],
-    ['retail', input.retailDone, true, '/admin?section=retail'],
+    ['view-site', input.viewedSite, false, liveUrl || '#'],
+    ['test-booking', input.testBookingDone, false, SETUP_PHASE3_TEST_BOOK_HREF],
+    ['retail', input.retailDone, true, SETUP_PHASE3_RETAIL_HREF],
   ];
   const items: SetupItem[] = rows.map(([id, done, optional, href]) => ({
     id,
