@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, type ComponentType, type KeyboardEvent, type ReactNode, type SVGProps } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircle, X } from '@/components/lucide-react';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
+import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 
 type SheetIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -27,13 +29,16 @@ export function AdminHubSheet(props: {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const Icon = props.icon ?? MessageCircle;
+  const portalTarget = useClientPortalTarget();
   const sheet =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(max-width: 1023px)').matches
       : false;
 
+  useAdminHubScrollLock(Boolean(portalTarget));
+
   useEffect(() => {
-    const node = dialogRef.current;
+    if (!portalTarget) return;
     const previous = document.activeElement;
     closeRef.current?.focus();
     const onEscape = (event: globalThis.KeyboardEvent) => {
@@ -46,7 +51,7 @@ export function AdminHubSheet(props: {
       document.removeEventListener('keydown', onEscape);
       if (previous instanceof HTMLElement) previous.focus();
     };
-  }, [props.onClose]);
+  }, [portalTarget, props.onClose]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab' || !dialogRef.current) return;
@@ -66,7 +71,9 @@ export function AdminHubSheet(props: {
     }
   };
 
-  return (
+  if (!portalTarget) return null;
+
+  return createPortal(
     <div className="admin-hub-app-root">
       <div className="admin-hub-app__scrim" aria-hidden="true" onClick={props.onClose} />
       <div
@@ -104,6 +111,7 @@ export function AdminHubSheet(props: {
         <div className="admin-hub-app__body">{props.children}</div>
         {props.footer ? <div className="admin-hub-app__foot">{props.footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    portalTarget,
   );
 }

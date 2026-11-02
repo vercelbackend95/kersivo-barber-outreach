@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -32,8 +33,11 @@ export function AdminHubConfirmDialog(props: {
   const onCloseRef = useRef(props.onClose);
   onCloseRef.current = props.onClose;
   const busy = Boolean(props.busy);
+  const portalTarget = useClientPortalTarget();
+  useAdminHubScrollLock(Boolean(portalTarget));
 
   useEffect(() => {
+    if (!portalTarget) return;
     const previous = document.activeElement;
     const frame = window.requestAnimationFrame(() => primaryRef.current?.focus());
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -65,9 +69,9 @@ export function AdminHubConfirmDialog(props: {
       document.removeEventListener('keydown', onKey, true);
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
     };
-  }, [busy]);
+  }, [busy, portalTarget]);
 
-  if (typeof document === 'undefined') return null;
+  if (!portalTarget) return null;
 
   return createPortal(
     <div className="admin-hub-confirm-root">
@@ -118,6 +122,6 @@ export function AdminHubConfirmDialog(props: {
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }

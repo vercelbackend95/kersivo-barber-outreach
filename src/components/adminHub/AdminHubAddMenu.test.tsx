@@ -64,6 +64,8 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
   vi.unstubAllGlobals();
 });
 
@@ -158,6 +160,15 @@ describe('AdminHubAddMenu', () => {
     expect(screen.getByTestId('admin-hub-add-sheet')).toBeTruthy();
     expect(screen.getByTestId('admin-hub-add-sheet').className).toContain('admin-hub-app--sheet');
     expect(screen.getByRole('menuitem', { name: /Shop photos/ })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: /Shop photos/ }).tagName).toBe('A');
+  });
+
+  it('portals the add sheet root to document.body', () => {
+    renderMenu({ mobile: true });
+    fireEvent.click(screen.getByTestId('admin-hub-add'));
+    const sheet = screen.getByTestId('admin-hub-add-sheet');
+    expect(sheet.getAttribute('aria-modal')).toBe('true');
+    expect(sheet.closest('.admin-hub-app-root')?.parentElement).toBe(document.body);
   });
 
   it('fires allowlisted hub events without extra fields', async () => {

@@ -369,10 +369,11 @@
 }
 
 /* ───────── App window / sheet (mockups 02, 07, 08) ───────── */
+/* Portaled to document.body. Fallbacks: tokens live on .admin-shell. */
 .admin-hub-app-root {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--admin-z-modal-sheet, 270);
 }
 .admin-hub-app__scrim {
   position: absolute;
@@ -413,14 +414,16 @@
 .admin-hub-app--sheet {
   left: 0;
   right: 0;
-  top: 56px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
   bottom: 0;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
   border-radius: 22px 22px 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   animation: admin-hub-sheet-in 160ms ease;
 }
 .admin-hub-app--sheet.admin-hub-app--fullscreen {
   top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
   border-radius: 0;
 }
 .admin-hub-app--sheet.admin-hub-app--fullscreen .admin-hub-app__grab {
@@ -2159,10 +2162,20 @@ a.admin-hub-tile:focus-visible,
 .admin-hub-confirm-root {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: calc(var(--admin-z-modal-sheet, 270) + 10);
   display: grid;
   place-items: center;
   padding: 20px;
+}
+
+html.admin-app-scroll:has(.admin-hub-app-root),
+html.admin-app-scroll:has(.admin-hub-confirm-root) {
+  overflow: hidden;
+}
+html.admin-app-scroll:has(.admin-hub-app-root) body,
+html.admin-app-scroll:has(.admin-hub-confirm-root) body {
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 .admin-hub-confirm__scrim {
   position: absolute;
