@@ -86,6 +86,12 @@ describe('preview hub paths', () => {
     expect(layout).toContain('placement="mobile"');
     expect(layout).toContain('admin-mobile-drawer-dock');
     expect(layout).toContain('admin-mobile-top-chrome');
+    expect(layout).toContain('AdminHubLaunchStatusBar');
+    expect(layout).toContain("previewSection === 'overview'");
+    expect(css).toContain('admin-hub-launch-bar');
+    expect(css).not.toContain('admin-hub-bento__shop');
+    expect(css).not.toContain('admin-hub-bento--no-shop');
+    expect(css).not.toContain('.admin-hub-overview .admin-hub-setup--mobile');
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubShell.astro'))).toBe(false);
     expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubSetupCard.astro'))).toBe(false);
   });

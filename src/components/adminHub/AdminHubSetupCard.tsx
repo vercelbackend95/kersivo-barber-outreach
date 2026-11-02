@@ -21,7 +21,7 @@ import {
 } from '@/lib/adminHub/setupCard';
 
 function extraLabel(item: SetupItem, nextId: SetupCardItemId | null): string {
-  if (item.done) return 'Done';
+  if (item.done) return item.detail ?? 'Done';
   if (item.fromLinks) return SETUP_FROM_LINKS_TAG;
   if (item.optional) return SETUP_OPTIONAL_TAG;
   if (item.id === nextId) return 'Next';
@@ -51,6 +51,8 @@ function SetupRow(props: {
         <span className="admin-hub-setup__go" aria-hidden="true">
           <ArrowRight width={13} height={13} />
         </span>
+      ) : item.done && item.detail ? (
+        <span className="admin-hub-setup__tag">{item.detail}</span>
       ) : item.fromLinks && !item.done ? (
         <span className="admin-hub-setup__tag">{SETUP_FROM_LINKS_TAG}</span>
       ) : item.optional && !item.done ? (

@@ -18,9 +18,7 @@ import {
   overviewOurSteps,
   overviewPreviewLocked,
   overviewPrimary,
-  overviewShopTile,
   overviewShowLaunch,
-  overviewShowShopTile,
   overviewStagePill,
   overviewTileHrefs,
   overviewUnreadLabel,
@@ -405,80 +403,30 @@ describe('overview view-model', () => {
     ).toBeUndefined();
   });
 
-  it('builds shop rows with counts or first-add links, and hides without draft-shop admin access', () => {
-    expect(overviewShowShopTile('requested')).toBe(true);
-    expect(overviewShowShopTile('designing')).toBe(true);
-    expect(overviewShowShopTile('review')).toBe(true);
-    expect(overviewShowShopTile('launch')).toBe(false);
-    expect(overviewShopTile({ stage: 'launch', counts: { activeServices: 2, activeBarbers: 1, products: 3 } })).toEqual({
-      show: false,
-      rows: [],
-    });
-    expect(overviewShopTile({ stage: 'review', counts: null }).rows).toEqual([
-      { id: 'team', name: 'Team', detail: 'Add your first team member', href: '/admin/team?add=1', empty: true },
-      { id: 'services', name: 'Services', detail: 'Add your first service', href: '/admin/services?add=1', empty: true },
-      { id: 'products', name: 'Products', detail: 'Add your first product', href: '/admin/products?add=1', empty: true },
-    ]);
-    expect(
-      overviewShopTile({
-        stage: 'requested',
-        counts: { activeServices: 2, activeBarbers: 1, products: 4 },
-      }).rows,
-    ).toEqual([
-      { id: 'team', name: 'Team', detail: '1 team member', href: '/admin/team', empty: false },
-      { id: 'services', name: 'Services', detail: '2 services', href: '/admin/services', empty: false },
-      { id: 'products', name: 'Products', detail: '4 products', href: '/admin/products', empty: false },
-    ]);
-  });
-
   it('keeps every requested tile in requested, designing, review and launch', () => {
-    for (const stage of ['requested', 'designing', 'review'] as const) {
-      expect(overviewBentoTiles({ stage, showShop: true })).toEqual([
+    for (const stage of ['requested', 'designing', 'review', 'launch'] as const) {
+      expect(overviewBentoTiles(stage)).toEqual([
         'progress',
         'preview',
         'content',
-        'shop',
         'changes',
         'colours',
         'activity',
       ]);
     }
-    expect(overviewBentoTiles({ stage: 'launch', showShop: false })).toEqual([
-      'progress',
-      'preview',
-      'content',
-      'changes',
-      'colours',
-      'activity',
-    ]);
-    expect(overviewBentoTiles({ stage: 'expired', showShop: false })).toEqual([]);
+    expect(overviewBentoTiles('expired')).toEqual([]);
   });
 
   it('snapshots grid-template-areas for each breakpoint', () => {
     expect(OVERVIEW_BENTO_AREAS).toEqual({
-      mobile: ['progress', 'preview', 'content', 'shop', 'changes', 'colours', 'activity'],
-      mobileNoShop: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
+      mobile: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
       tablet: [
         'progress progress progress progress progress progress',
         'preview preview preview content content content',
-        'shop shop shop colours colours colours',
-        'changes changes changes changes changes changes',
-        'activity activity activity activity activity activity',
-      ],
-      tabletNoShop: [
-        'progress progress progress progress progress progress',
-        'preview preview preview content content content',
-        'colours colours colours colours colours colours',
-        'changes changes changes changes changes changes',
+        'changes changes changes colours colours colours',
         'activity activity activity activity activity activity',
       ],
       desktop: [
-        'progress progress progress progress progress progress progress progress preview preview preview preview',
-        'content content content content shop shop shop shop preview preview preview preview',
-        'changes changes changes changes changes changes changes changes colours colours colours colours',
-        'activity activity activity activity activity activity activity activity activity activity activity activity',
-      ],
-      desktopNoShop: [
         'progress progress progress progress progress progress progress progress preview preview preview preview',
         'content content content content content content content content preview preview preview preview',
         'changes changes changes changes changes changes changes changes colours colours colours colours',
@@ -486,7 +434,7 @@ describe('overview view-model', () => {
       ],
     });
     expect(overviewBentoAreasCss(OVERVIEW_BENTO_AREAS.desktop)).toContain(
-      '"content content content content shop shop shop shop preview preview preview preview"',
+      '"content content content content content content content content preview preview preview preview"',
     );
   });
 });

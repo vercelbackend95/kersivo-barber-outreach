@@ -53,6 +53,21 @@ describe('AdminHubSetupCard', () => {
     expect(localStorage.getItem(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope))).toBe('1');
   });
 
+  it('shows shop counts on done team, services and products rows', () => {
+    localStorage.setItem(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope), '1');
+    const card = setupPhase1Items({
+      stage: 'review',
+      assetKinds: ['LOGO'],
+      aboutText: null,
+      reviewStates: none,
+      shopCounts: { activeServices: 2, activeBarbers: 1, products: 4 },
+    });
+    render(<AdminHubSetupCard placement="sidebar" card={card} storageScope={scope} />);
+    expect(screen.getByRole('link', { name: 'Team, 1 team member' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Services & prices, 2 services' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Products, 4 products' })).toBeTruthy();
+  });
+
   it('remembers the expand toggle from localStorage', () => {
     localStorage.setItem(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope), '1');
     render(<AdminHubSetupCard placement="sidebar" card={incompleteCard()} storageScope={scope} />);

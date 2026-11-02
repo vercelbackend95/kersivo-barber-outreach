@@ -66,11 +66,11 @@ describe('setup card phase 1', () => {
     expect(card.items.map((item) => item.href)).toEqual([
       '/admin?app=materials&item=logo',
       '/admin?app=materials&item=photos',
-      '/admin/services',
-      '/admin/team',
+      '/admin/services?add=1',
+      '/admin/team?add=1',
       '/admin?app=hours',
       '/admin?app=materials&item=text',
-      '/admin/products',
+      '/admin/products?add=1',
     ]);
     expect(card.items.find((item) => item.id === 'about')?.optional).toBe(true);
     expect(card.items.find((item) => item.id === 'products')?.optional).toBe(true);
@@ -117,7 +117,10 @@ describe('setup card phase 1', () => {
       shopCounts: { activeServices: 1, activeBarbers: 1, products: 1 },
     });
     expect(filled.items.find((item) => item.id === 'services')?.done).toBe(true);
+    expect(filled.items.find((item) => item.id === 'services')?.detail).toBe('1 service');
     expect(filled.items.find((item) => item.id === 'team')?.done).toBe(true);
+    expect(filled.items.find((item) => item.id === 'team')?.detail).toBe('1 team member');
+    expect(filled.items.find((item) => item.id === 'team')?.href).toBe('/admin/team');
     expect(filled.items.find((item) => item.id === 'products')?.done).toBe(true);
   });
 

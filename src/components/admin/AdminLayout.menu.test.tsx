@@ -10,6 +10,7 @@ import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
 
 vi.mock('./AdminHubSetupCard', () => ({ AdminHubSetupCard: () => null }));
 vi.mock('@/components/adminHub/AdminHubSetupCard', () => ({ AdminHubSetupCard: () => null }));
+vi.mock('@/components/adminHub/AdminHubLaunchStatusBar', () => ({ AdminHubLaunchStatusBar: () => null }));
 vi.mock('./AdminSidebarLaunchCta', () => ({ default: () => null }));
 vi.mock('./AdminSidebarProfile', () => ({ default: () => null }));
 vi.mock('./BlacklineConversionCard', () => ({ default: () => null }));

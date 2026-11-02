@@ -30,13 +30,14 @@ import BlacklineConversionCard from './BlacklineConversionCard';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
+import { AdminHubLaunchStatusBar } from '@/components/adminHub/AdminHubLaunchStatusBar';
 import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
 import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER, ADMIN_HUB_UNREAD_COUNT } from '@/lib/adminHub/copy';
 import {
   PREVIEW_HUB_PATHS,
   type PreviewHubSection,
 } from '@/lib/adminHub/previewHubPaths';
-import type { SetupCardModel } from '@/lib/adminHub/setupCard';
+import { SETUP_CARD_TITLE, setupCardAllDone, type SetupCardModel } from '@/lib/adminHub/setupCard';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
 import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
@@ -492,6 +493,16 @@ export default function AdminLayout({
         onNavigate={() => setIsMobileMenuOpen(false)}
       />
     ) : null;
+  const previewLaunchBar =
+    isPreviewChrome && previewSection === 'overview' && previewSetup && !setupCardAllDone(previewSetup) ? (
+      <AdminHubLaunchStatusBar card={previewSetup} onOpenMenu={() => setIsMobileMenuOpen(true)} />
+    ) : null;
+  const headerExtension = mobileTopExtension ?? previewLaunchBar;
+  const headerExtensionLabel = mobileTopExtension
+    ? 'Upcoming appointments'
+    : previewLaunchBar
+      ? SETUP_CARD_TITLE
+      : undefined;
 
   const accountFooter = isPreviewChrome ? (
     <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="desktop" />
@@ -865,7 +876,16 @@ export default function AdminLayout({
       clearHeaderInsetVars();
       clearDemoBannerVar();
     };
-  }, [mobileTopExtension, activeSectionLabel, previewUnderConstruction, publicActivityPaused, showPreviewSubscribeBanner]);
+  }, [
+    mobileTopExtension,
+    isPreviewChrome,
+    previewSection,
+    previewSetup,
+    activeSectionLabel,
+    previewUnderConstruction,
+    publicActivityPaused,
+    showPreviewSubscribeBanner,
+  ]);
 
   useEffect(() => {
     if (isPreviewChrome || !previewUnderConstruction) return;
@@ -1032,7 +1052,7 @@ export default function AdminLayout({
             </div>
           ) : null}
           <header
-            className={`admin-mobile-header${mobileTopExtension ? ' admin-mobile-header--with-next' : ''}`}
+            className={`admin-mobile-header${headerExtension ? ' admin-mobile-header--with-next' : ''}`}
             aria-label="Admin mobile header"
           >
             <div className="admin-mobile-header-bar">
@@ -1067,9 +1087,9 @@ export default function AdminLayout({
                 <Menu width={20} height={20} aria-hidden="true" />
               </button>
             </div>
-            {mobileTopExtension ? (
-              <div className="admin-mobile-header-extension" aria-label="Upcoming appointments">
-                {mobileTopExtension}
+            {headerExtension ? (
+              <div className="admin-mobile-header-extension" aria-label={headerExtensionLabel}>
+                {headerExtension}
               </div>
             ) : null}
           </header>

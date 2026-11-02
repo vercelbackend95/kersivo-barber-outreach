@@ -4395,6 +4395,17 @@ button.admin-sidebar-brand--button:focus-visible {
   }
 
   /*
+   * Beat .admin-page-wrap.container { width: min(100% - clamp(1rem, 2vw, 2rem), 120rem) }
+   * so the shell (and fixed top chrome) span the viewport on every mobile width.
+   */
+  .admin-page-wrap.container {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  /*
    * One horizontal rhythm for the whole column: padding on .admin-mobile-edge matches
    * fixed .admin-mobile-top-chrome insets so cards (e.g. .admin-bookings-ops--dash-hero) align edge-to-edge with the bar.
    */
@@ -4482,12 +4493,21 @@ button.admin-sidebar-brand--button:focus-visible {
     right: auto;
     top: auto;
     width: auto;
-    margin-inline: var(--admin-mobile-inline-pad-left) var(--admin-mobile-inline-pad-right);
+    /* Full-bleed like paid admin's --with-next bar: padding on the header, not a floating inset card. */
+    margin-inline: 0;
     margin-bottom: 0;
     z-index: auto;
     gap: 0.5rem;
-    padding: calc(0.2rem + env(safe-area-inset-top, 0px)) 0.5rem 0.25rem;
-    border-radius: var(--admin-premium-surface-r-mobile);
+    padding: calc(0.2rem + env(safe-area-inset-top, 0px))
+      calc(var(--admin-mobile-inline-pad-right) + 0.5rem)
+      0.25rem
+      calc(var(--admin-mobile-inline-pad-left) + 0.5rem);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: var(--admin-premium-surface-r-mobile);
+    border-bottom-right-radius: var(--admin-premium-surface-r-mobile);
+    border-left: none;
+    border-right: none;
     /* Solid fill avoids expensive backdrop-filter repaints during scroll on mobile */
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -4512,17 +4532,10 @@ button.admin-sidebar-brand--button:focus-visible {
     padding-bottom: 0.4rem;
   }
 
-  /* Full-bleed top chrome: padding on the header, not the stack */
+  /* Strip / launch bar: extra column gap. Edge alignment lives on .admin-mobile-header. */
   .admin-mobile-header.admin-mobile-header--with-next {
-    margin-inline: 0;
     padding-inline: calc(var(--admin-mobile-inline-pad-left) + 0.5rem)
       calc(var(--admin-mobile-inline-pad-right) + 0.5rem);
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: var(--admin-premium-surface-r-mobile);
-    border-bottom-right-radius: var(--admin-premium-surface-r-mobile);
-    border-left: none;
-    border-right: none;
   }
 
   .admin-mobile-header-extension {
