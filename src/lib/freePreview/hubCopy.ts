@@ -150,6 +150,7 @@ export const HUB_EMPTY_PHOTOS = 'No shop photos yet.';
 export const HUB_EMPTY_TEAM_PHOTOS = 'No team photos yet.';
 export const HUB_EMPTY_PRICE = 'No price list yet.';
 export const HUB_EMPTY_LOGO = 'No logo yet.';
+export const HUB_CURRENT_LOGO = 'Current logo';
 
 export const HUB_DETAILS_TITLE = 'Your shop';
 export const HUB_DETAILS_BRAND_TITLE = 'Brand';

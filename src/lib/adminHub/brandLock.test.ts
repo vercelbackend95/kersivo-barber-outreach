@@ -19,7 +19,14 @@ const NOW = new Date('2026-11-02T13:00:00.000Z');
 const state: {
   row: ColourRow | null;
   events: unknown[];
-  logo: { id: string; storagePath: string; originalFileName: string; contentType: string } | null;
+  logo: {
+    id: string;
+    kind: 'LOGO';
+    storagePath: string;
+    originalFileName: string;
+    contentType: string;
+    createdAt: Date;
+  } | null;
 } = {
   row: null,
   events: [],
@@ -57,7 +64,7 @@ const tx = {
     }),
   },
   previewHubAsset: {
-    findFirst: vi.fn(async () => state.logo),
+    findMany: vi.fn(async () => (state.logo ? [state.logo] : [])),
   },
 };
 
@@ -94,9 +101,11 @@ beforeEach(() => {
   state.events = [];
   state.logo = {
     id: 'logo_1',
+    kind: 'LOGO',
     storagePath: 'hub/req_1/logo.png',
     originalFileName: 'mark.png',
     contentType: 'image/png',
+    createdAt: SENT_AT,
   };
   tx.$queryRaw.mockClear();
   tx.previewRequest.findUnique.mockClear();
@@ -104,7 +113,7 @@ beforeEach(() => {
   tx.previewRequest.updateMany.mockClear();
   tx.previewRequest.update.mockClear();
   tx.previewRequestEvent.create.mockClear();
-  tx.previewHubAsset.findFirst.mockClear();
+  tx.previewHubAsset.findMany.mockClear();
 });
 
 describe('brandLockState', () => {

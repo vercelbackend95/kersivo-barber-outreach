@@ -39,6 +39,7 @@ import {
   HUB_WEBSITE_EXTRA_LABEL,
   HUB_WEBSITE_TEXT_INTRO,
   HUB_WEBSITE_TEXT_TITLE,
+  HUB_CURRENT_LOGO,
   HUB_EMPTY_LOGO,
   HUB_EMPTY_OTHER,
   HUB_EMPTY_PHOTOS,
@@ -56,6 +57,7 @@ import {
   HUB_UPLOAD_HINT_PRICE,
   HUB_UPLOAD_HINT_OTHER,
 } from '@/lib/freePreview/hubCopy';
+import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
 import { hubApiRoot } from '@/lib/adminHub/links';
 import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
@@ -74,6 +76,7 @@ export type HubShopDetails = {
   brandPaletteExtracted?: Array<{ hex: string; share: number }> | null;
   brandColoursSentAt?: string | null;
   brandLocked?: boolean;
+  snapshotLogoAssetId?: string | null;
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -323,7 +326,7 @@ export function HubYourShop(props: {
   const teamPhotos = assets.filter((asset) => asset.kind === 'TEAM_PHOTO');
   const prices = assets.filter((asset) => asset.kind === 'PRICE_LIST');
   const others = assets.filter((asset) => asset.kind === 'OTHER');
-  const logo = logos[logos.length - 1] ?? null;
+  const logo = currentHubLogo(assets, currentHubLogoOptionsFromDetails(details));
   const brandLocked = Boolean(details.brandLocked || details.brandColoursSentAt);
   const canUploadLogo = props.canUpload && !brandLocked;
   const canEditColours = props.canEditDetails && !brandLocked;
@@ -382,7 +385,7 @@ export function HubYourShop(props: {
           return;
         }
         if (!response.ok || !payload.ok || !payload.details) throw new Error(payload.error || HUB_SAVE_FAILED);
-        setDetails(payload.details);
+        setDetails((current) => ({ ...current, ...payload.details }));
         if (payload.details.instagramUrl !== undefined) {
           setInstagramUrl(payload.details.instagramUrl ?? '');
         }
@@ -603,6 +606,48 @@ export function HubYourShop(props: {
           </figure>
         </div>
         {canUploadLogo ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
+        {logos.length ? (
+          <ul className="hub-photo-grid hub-logo-grid">
+            {[...logos]
+              .sort((a, b) => {
+                if (logo && a.id === logo.id) return -1;
+                if (logo && b.id === logo.id) return 1;
+                return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+              })
+              .map((asset) => {
+                const src = displayUrl(apiRoot, asset);
+                const isCurrent = Boolean(logo && asset.id === logo.id);
+                return (
+                  <li
+                    key={asset.id}
+                    className="hub-photo hub-photo--logo"
+                    data-testid="hub-logo-tile"
+                    data-current={isCurrent ? 'true' : undefined}
+                  >
+                    <div className="hub-photo__media">
+                      {src ? (
+                        <img src={src} alt="" />
+                      ) : (
+                        <p className="hub-photo__file">{asset.originalFileName}</p>
+                      )}
+                    </div>
+                    {isCurrent ? (
+                      <p className="hub-logo-current">{HUB_CURRENT_LOGO}</p>
+                    ) : (
+                      <p className="hub-card__body">{asset.originalFileName}</p>
+                    )}
+                    {canUploadLogo ? (
+                      <div className="hub-photo__tools">
+                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => requestDelete(asset)}>
+                          {HUB_DELETE}
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+          </ul>
+        ) : null}
         {showBrandExtras ? (
           <>
             <div className="hub-colours">

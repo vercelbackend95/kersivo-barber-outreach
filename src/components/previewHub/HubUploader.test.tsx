@@ -3,7 +3,13 @@
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { HUB_ATTACH, HUB_EMPTY_PHOTOS, HUB_UPLOAD_CHOOSE, HUB_UPLOAD_DROP } from '@/lib/freePreview/hubCopy';
+import {
+  HUB_ATTACH,
+  HUB_CURRENT_LOGO,
+  HUB_EMPTY_PHOTOS,
+  HUB_UPLOAD_CHOOSE,
+  HUB_UPLOAD_DROP,
+} from '@/lib/freePreview/hubCopy';
 import { HubUploader } from './HubUploader';
 import { HubYourShop } from './HubYourShop';
 
@@ -162,6 +168,55 @@ describe('HubYourShop', () => {
     expect(screen.getByRole('button', { name: 'Photos 1' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Logo ✓' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Text ✓' })).toBeTruthy();
+  });
+
+  it('marks the newest logo as current', () => {
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        apiBase="/api/admin-hub"
+        canUpload
+        canEditDetails
+        focus="logo"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[
+          {
+            id: 'logo_a',
+            kind: 'LOGO',
+            originalFileName: 'a.png',
+            contentType: 'image/png',
+            sizeBytes: 8,
+            width: 10,
+            height: 10,
+            caption: null,
+            sortOrder: 0,
+            barberId: null,
+            uploadedBy: 'OWNER',
+            createdAt: '2026-11-01T10:00:00.000Z',
+            hasThumb: true,
+          },
+          {
+            id: 'logo_b',
+            kind: 'LOGO',
+            originalFileName: 'b.png',
+            contentType: 'image/png',
+            sizeBytes: 8,
+            width: 10,
+            height: 10,
+            caption: null,
+            sortOrder: 1,
+            barberId: null,
+            uploadedBy: 'OWNER',
+            createdAt: '2026-11-01T12:00:00.000Z',
+            hasThumb: true,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText(HUB_CURRENT_LOGO)).toBeTruthy();
+    const current = document.querySelector('[data-testid="hub-logo-tile"][data-current="true"] img');
+    expect(current?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_b?size=thumb');
+    expect(screen.getByText('a.png')).toBeTruthy();
   });
 
   it('hides uploaders when the owner cannot upload', () => {

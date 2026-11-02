@@ -77,6 +77,7 @@ import {
   type ExtractedSwatch,
 } from '@/lib/adminHub/colour';
 import { extractFromLogoUrl, logoDisplayUrl } from '@/lib/adminHub/colour/runExtract';
+import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
 import { HUB_SAVE_FAILED, HUB_SAVED, HUB_SAVING } from '@/lib/freePreview/hubCopy';
 
 type SaveKind = 'idle' | 'saving' | 'saved' | 'error' | 'sent';
@@ -109,7 +110,7 @@ function serviceRows(ctx: AdminHubAppBodyProps['ctx']): Array<{ name: string }> 
 }
 
 export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
-  const logo = ctx.assets.find((asset) => asset.kind === 'LOGO') ?? null;
+  const logo = currentHubLogo(ctx.assets, currentHubLogoOptionsFromDetails(ctx.details));
   const logoUrl = logo ? logoDisplayUrl(ctx.apiBase, logo) : null;
   const [locked, setLocked] = useState(() => Boolean(ctx.details.brandLocked || ctx.details.brandColoursSentAt));
   const [submittedAt, setSubmittedAt] = useState<string | null>(ctx.details.brandColoursSentAt ?? null);

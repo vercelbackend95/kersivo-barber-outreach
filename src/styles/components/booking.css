@@ -3832,10 +3832,6 @@ button.admin-sidebar-brand--button:focus-visible {
   display: block;
 }
 
-.admin-sidebar-monogram--custom .admin-sidebar-logo-img {
-  object-fit: cover;
-}
-
 .admin-sidebar-brand-text {
   display: flex;
   flex-direction: column;

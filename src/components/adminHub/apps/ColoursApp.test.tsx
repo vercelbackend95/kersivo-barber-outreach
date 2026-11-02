@@ -4,13 +4,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { extractFromLogoUrl } from '@/lib/adminHub/colour/runExtract';
 import ColoursApp from './ColoursApp';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './AppChrome';
 import type { AdminHubAppContext } from './types';
 
 vi.mock('@/lib/adminHub/colour/runExtract', () => ({
   extractFromLogoUrl: vi.fn().mockResolvedValue([]),
-  logoDisplayUrl: () => '/api/admin-hub/assets/logo_1?size=thumb',
+  logoDisplayUrl: (_apiBase: string, asset: { id: string }) => `/api/admin-hub/assets/${asset.id}?size=thumb`,
 }));
 
 const palette = [
@@ -366,5 +367,106 @@ describe('ColoursApp', () => {
     expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_1?size=thumb');
     expect(document.querySelectorAll('.admin-hub-logo-pair img')).toHaveLength(2);
     expect(screen.queryByText('No logo uploaded yet')).toBeNull();
+  });
+
+  it('shows and extracts from the newest logo, not the first in the list', async () => {
+    render(
+      <Harness
+        overrides={{
+          assets: [
+            {
+              id: 'logo_old',
+              kind: 'LOGO',
+              originalFileName: 'old.png',
+              contentType: 'image/png',
+              sizeBytes: 8,
+              width: 120,
+              height: 80,
+              caption: null,
+              sortOrder: 0,
+              barberId: null,
+              uploadedBy: 'OWNER',
+              createdAt: '2026-11-01T10:00:00.000Z',
+              hasThumb: true,
+            },
+            {
+              id: 'logo_new',
+              kind: 'LOGO',
+              originalFileName: 'new.png',
+              contentType: 'image/png',
+              sizeBytes: 8,
+              width: 120,
+              height: 80,
+              caption: null,
+              sortOrder: 1,
+              barberId: null,
+              uploadedBy: 'OWNER',
+              createdAt: '2026-11-01T12:00:00.000Z',
+              hasThumb: true,
+            },
+          ],
+        }}
+      />,
+    );
+    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_new?size=thumb');
+    await waitFor(() => {
+      expect(extractFromLogoUrl).toHaveBeenCalledWith('/api/admin-hub/assets/logo_new?size=thumb');
+    });
+  });
+
+  it('shows the snapshot logo after brand lock even if a newer file is in the list', () => {
+    render(
+      <Harness
+        overrides={{
+          details: {
+            brandPrimaryColour: '#1F6F6B',
+            brandSecondaryColour: '#C9A24A',
+            styleNotes: null,
+            aboutText: null,
+            brandBackgroundTone: 'DARK',
+            brandColoursSource: 'LOGO',
+            brandPaletteExtracted: palette,
+            brandColoursSentAt: '2026-11-02T12:00:00.000Z',
+            brandLocked: true,
+            snapshotLogoAssetId: 'logo_old',
+          },
+          assets: [
+            {
+              id: 'logo_old',
+              kind: 'LOGO',
+              originalFileName: 'old.png',
+              contentType: 'image/png',
+              sizeBytes: 8,
+              width: 120,
+              height: 80,
+              caption: null,
+              sortOrder: 0,
+              barberId: null,
+              uploadedBy: 'OWNER',
+              createdAt: '2026-11-01T10:00:00.000Z',
+              hasThumb: true,
+            },
+            {
+              id: 'logo_new',
+              kind: 'LOGO',
+              originalFileName: 'new.png',
+              contentType: 'image/png',
+              sizeBytes: 8,
+              width: 120,
+              height: 80,
+              caption: null,
+              sortOrder: 1,
+              barberId: null,
+              uploadedBy: 'OWNER',
+              createdAt: '2026-11-01T12:00:00.000Z',
+              hasThumb: true,
+            },
+          ],
+        }}
+      />,
+    );
+    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_old?size=thumb');
   });
 });

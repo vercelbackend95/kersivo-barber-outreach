@@ -744,6 +744,18 @@
   height: 100%;
   object-fit: cover;
 }
+.hub-photo--logo .hub-photo__media {
+  aspect-ratio: 1 / 1;
+}
+.hub-photo--logo .hub-photo__media img {
+  object-fit: contain;
+}
+.hub-logo-current {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg, #f4f4f5);
+}
 .hub-photo__file {
   margin: 0;
   padding: 12px;

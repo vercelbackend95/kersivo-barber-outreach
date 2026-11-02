@@ -7,6 +7,7 @@ import HubShell from '@/components/previewHub/HubShell.astro';
 import { HubYourShop } from '@/components/previewHub/HubYourShop';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { HUB_NAV } from '@/lib/freePreview/hubCopy';
+import { parseBrandSnapshotLogoAssetId } from '@/lib/adminHub/currentLogo';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
 import { countOpenHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
@@ -89,6 +90,11 @@ const [assets, unreadMessages, openChanges, reviews, reviewShop] = await Promise
         brandSecondaryColour: ctx.request.brandSecondaryColour,
         styleNotes: ctx.request.styleNotes,
         aboutText: ctx.request.aboutText,
+        brandColoursSentAt: ctx.request.brandColoursSentAt
+          ? ctx.request.brandColoursSentAt.toISOString()
+          : null,
+        brandLocked: Boolean(ctx.request.brandColoursSentAt),
+        snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
       }}
       assets={assets.map(serializeHubAsset)}
     />
