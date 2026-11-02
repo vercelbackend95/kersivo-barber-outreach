@@ -13,6 +13,13 @@ describe('HubYourShop a11y regressions', () => {
     expect(src).toContain("payload.code === 'BRAND_LOCKED'");
   });
 
+  it('picks the current logo with currentHubLogo and labels it', () => {
+    expect(src).toContain('currentHubLogo');
+    expect(src).toContain('HUB_CURRENT_LOGO');
+    expect(src).toContain('hub-photo--logo');
+    expect(css).toMatch(/\.hub-photo--logo \.hub-photo__media img \{[^}]*object-fit: contain;/);
+  });
+
   it('labels the about textarea from the field title', () => {
     expect(src).toContain('id="hub-about"');
     expect(src).toContain('htmlFor="hub-about"');

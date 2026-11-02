@@ -34,6 +34,7 @@ const previewRequestSelect = {
   brandColoursSource: true,
   brandPaletteExtracted: true,
   brandColoursSentAt: true,
+  brandSubmittedSnapshot: true,
   styleNotes: true,
   aboutText: true,
   websiteExtraText: true,

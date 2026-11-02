@@ -17,6 +17,7 @@ import {
 import { loadHubLaunchProgress } from '@/lib/freePreview/hubLaunch';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
 import { parseAdminHubApp, type AdminHubAppId } from './apps';
+import { currentHubLogo, parseBrandSnapshotLogoAssetId } from './currentLogo';
 import { loadDraftShopSetupCounts } from './draftShopSetupCounts';
 import { previewHubSectionFromPath, type PreviewHubSection } from './previewHubPaths';
 import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel } from './setupCard';
@@ -81,7 +82,11 @@ export async function loadAdminHubView(
     ]);
 
   const serialized = assets.map(serializeHubAsset);
-  const logo = [...serialized].reverse().find((asset) => asset.kind === 'LOGO') ?? null;
+  const logo =
+    currentHubLogo(serialized, {
+      brandLocked: Boolean(ctx.request.brandColoursSentAt),
+      snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
+    }) ?? null;
   const launchFlags = launchProgress
     ? {
         businessDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'business')?.done),

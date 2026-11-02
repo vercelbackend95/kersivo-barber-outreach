@@ -3,6 +3,7 @@ import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { adminHubAppMeta } from './apps';
 import { parseBrandPalette } from './brandColours';
 import { brandLockState } from './brandLock';
+import { parseBrandSnapshotLogoAssetId } from './currentLogo';
 import {
   ADMIN_PRIVATE_HEADERS,
   adminSessionShopFor,
@@ -185,6 +186,7 @@ export async function preparePreviewHubPage(input: {
       brandPaletteExtracted,
       brandColoursSentAt: brandLock.submittedAt,
       brandLocked: brandLock.locked,
+      snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
     },
     assets: view.assets,
     reviews: view.reviews,

@@ -7,6 +7,7 @@ import HubOverview from '@/components/previewHub/HubOverview.astro';
 import HubShell from '@/components/previewHub/HubShell.astro';
 import { analyticsClientIdFromRequest } from '@/lib/analytics/serverEvents';
 import { buildHubChecklist, checklistFlagsFromAssets } from '@/lib/freePreview/hubChecklist';
+import { currentHubLogo, parseBrandSnapshotLogoAssetId } from '@/lib/adminHub/currentLogo';
 import { loadActiveHubAssets } from '@/lib/freePreview/hubAssets';
 import { countOpenHubChanges } from '@/lib/freePreview/hubChanges';
 import { countUnreadKersivoMessages } from '@/lib/freePreview/hubMessages';
@@ -87,7 +88,10 @@ const checklist = buildHubChecklist({
   ...checklistFlagsFromAssets(assets, ctx.request.aboutText),
 });
 const shopName = ctx.request.shopName;
-const logoAsset = assets.find((asset) => asset.kind === 'LOGO');
+const logoAsset = currentHubLogo(assets, {
+  brandLocked: Boolean(ctx.request.brandColoursSentAt),
+  snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
+});
 ---
 
 <HubDocument title={`Shop hub — ${shopName} | KERSIVO`}>

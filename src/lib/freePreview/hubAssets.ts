@@ -355,9 +355,11 @@ export async function storeProcessedHubFile(input: {
   if (input.file.kind === 'LOGO') {
     await assertBrandUnlocked(input.requestId);
   }
-  const nextOrder = await prisma.previewHubAsset.count({
-    where: { previewRequestId: input.requestId, kind: input.file.kind, deletedAt: null },
+  const maxRow = await prisma.previewHubAsset.aggregate({
+    where: { previewRequestId: input.requestId, kind: input.file.kind },
+    _max: { sortOrder: true },
   });
+  const nextOrder = (maxRow._max.sortOrder ?? -1) + 1;
   const row = await prisma.previewHubAsset.create({
     data: {
       previewRequestId: input.requestId,

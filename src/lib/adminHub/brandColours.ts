@@ -155,7 +155,7 @@ export async function saveBrandColours(input: {
         : parseBrandPalette(current.brandPaletteExtracted);
 
     if (send) {
-      const snapshot = await buildBrandSubmittedSnapshot(tx, {
+      const snapshot = await buildBrandSubmittedSnapshot(tx as never, {
         requestId: input.requestId,
         brandPrimaryColour: nextPrimary,
         brandSecondaryColour: nextSecondary,

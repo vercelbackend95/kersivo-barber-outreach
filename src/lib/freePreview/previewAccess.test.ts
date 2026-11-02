@@ -56,6 +56,7 @@ function row(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequest 
     brandColoursSource: null,
     brandPaletteExtracted: null,
     brandColoursSentAt: null,
+    brandSubmittedSnapshot: null,
     styleNotes: null,
     aboutText: null,
     websiteExtraText: null,

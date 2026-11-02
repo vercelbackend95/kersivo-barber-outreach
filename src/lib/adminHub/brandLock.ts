@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { HUB_BRAND_LOCKED } from '@/lib/freePreview/hubCopy';
+import { currentHubLogo } from './currentLogo';
 
 export const BRAND_LOCKED = 'BRAND_LOCKED';
 
@@ -88,18 +89,18 @@ export async function assertBrandUnlocked(requestId: string): Promise<void> {
   if (row?.brandColoursSentAt) throw new BrandLockedError(row.brandColoursSentAt);
 }
 
+type SnapshotLogoRow = {
+  id: string;
+  kind: 'LOGO';
+  storagePath: string;
+  originalFileName: string;
+  contentType: string;
+  createdAt: Date;
+};
+
 type SnapshotClient = {
   previewHubAsset: {
-    findFirst: (args: {
-      where: { previewRequestId: string; kind: 'LOGO'; deletedAt: null };
-      orderBy: { createdAt: 'desc' };
-      select: { id: true; storagePath: true; originalFileName: true; contentType: true };
-    }) => Promise<{
-      id: string;
-      storagePath: string;
-      originalFileName: string;
-      contentType: string;
-    } | null>;
+    findMany: (args?: unknown) => Promise<unknown>;
   };
 };
 
@@ -115,11 +116,18 @@ export async function buildBrandSubmittedSnapshot(
     submittedByUserId: string | null;
   },
 ): Promise<BrandSubmittedSnapshot> {
-  const logo = await tx.previewHubAsset.findFirst({
+  const logos = (await tx.previewHubAsset.findMany({
     where: { previewRequestId: input.requestId, kind: 'LOGO', deletedAt: null },
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, storagePath: true, originalFileName: true, contentType: true },
-  });
+    select: {
+      id: true,
+      kind: true,
+      storagePath: true,
+      originalFileName: true,
+      contentType: true,
+      createdAt: true,
+    },
+  })) as SnapshotLogoRow[];
+  const logo = currentHubLogo(logos);
   return {
     logoAssetId: logo?.id ?? null,
     logoStoragePath: logo?.storagePath ?? null,

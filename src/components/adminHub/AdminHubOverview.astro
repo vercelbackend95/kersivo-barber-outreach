@@ -446,7 +446,10 @@ const content = overviewWebsiteContent({
           </div>
           <div class="admin-hub-colours-body">
             <div class="admin-hub-logo-mini">
-              <span class="admin-hub-logo-mini__mark admin-hub-skel" style={logoSrc ? undefined : `background:${previewColour}`}>
+              <span
+                class:list={['admin-hub-logo-mini__mark', logoSrc ? undefined : 'admin-hub-skel']}
+                style={logoSrc ? undefined : `background:${previewColour}`}
+              >
                 {logoSrc ? <img src={logoSrc} alt="" width="40" height="40" /> : <span aria-hidden="true">{initials}</span>}
               </span>
               {

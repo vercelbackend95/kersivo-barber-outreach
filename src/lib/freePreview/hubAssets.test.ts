@@ -2,10 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import sharp from 'sharp';
 import { sniffFile } from '@/lib/storage/fileSniff';
 
-const { findMany, create, count, update, findFirst, deleteMany } = vi.hoisted(() => ({
+const { findMany, create, count, aggregate, update, findFirst, deleteMany } = vi.hoisted(() => ({
   findMany: vi.fn(),
   create: vi.fn(),
   count: vi.fn(),
+  aggregate: vi.fn(),
   update: vi.fn(),
   findFirst: vi.fn(),
   deleteMany: vi.fn(),
@@ -13,7 +14,7 @@ const { findMany, create, count, update, findFirst, deleteMany } = vi.hoisted(()
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
-    previewHubAsset: { findMany, create, count, update, findFirst, deleteMany },
+    previewHubAsset: { findMany, create, count, aggregate, update, findFirst, deleteMany },
   },
 }));
 vi.mock('@/lib/storage/privateOnboardingBlob', () => ({
@@ -31,6 +32,7 @@ import {
   makeHubAssetPath,
   processHubUpload,
   serializeHubAsset,
+  storeProcessedHubFile,
   svgContainsUnsafeContent,
 } from './hubAssets';
 
@@ -190,6 +192,41 @@ describe('hub asset helpers', () => {
     expect((await assertHubUploadCaps({ previewRequestId: 'req', kind: 'OTHER', incomingBytes: 10 })).ok).toBe(true);
     findMany.mockResolvedValueOnce(Array.from({ length: 10 }, () => ({ kind: 'OTHER', sizeBytes: 10 })));
     expect((await assertHubUploadCaps({ previewRequestId: 'req', kind: 'OTHER', incomingBytes: 10 })).ok).toBe(false);
+  });
+});
+
+describe('storeProcessedHubFile sortOrder', () => {
+  it('assigns max(sortOrder)+1 so a deletion does not reuse the last slot', async () => {
+    aggregate.mockResolvedValueOnce({ _max: { sortOrder: 2 } });
+    create.mockResolvedValueOnce({ id: 'asset_3', sortOrder: 3 });
+    const blob = {
+      put: vi.fn(async () => ({ pathname: 'preview-hub/req/shop_photo/x.jpg', sizeBytes: 40 })),
+      delete: vi.fn(),
+      get: vi.fn(),
+    };
+    const raw = await sharp({
+      create: { width: 40, height: 30, channels: 3, background: { r: 20, g: 80, b: 40 } },
+    })
+      .jpeg()
+      .toBuffer();
+    const processed = await processHubUpload({
+      bytes: raw,
+      originalFileName: 'shop.jpg',
+      kind: 'SHOP_PHOTO',
+    });
+    expect(processed.ok).toBe(true);
+    if (!processed.ok) return;
+    await storeProcessedHubFile({
+      requestId: 'req',
+      file: processed.file,
+      uploadedBy: 'OWNER',
+      blob,
+    });
+    expect(aggregate).toHaveBeenCalledWith({
+      where: { previewRequestId: 'req', kind: 'SHOP_PHOTO' },
+      _max: { sortOrder: true },
+    });
+    expect(create.mock.calls[0]![0].data.sortOrder).toBe(3);
   });
 });
 
