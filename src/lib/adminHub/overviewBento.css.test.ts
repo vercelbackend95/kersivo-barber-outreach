@@ -28,4 +28,18 @@ describe('overview bento CSS areas', () => {
     expect(css).toMatch(/\.admin-hub-colours__logo-frame img \{[^}]*max-height: 96px;[^}]*object-fit: contain;/);
     expect(css).toMatch(/@media \(max-width: 1023px\) \{[\s\S]*?\.admin-hub-colours__logo \{[\s\S]*?display: grid;/);
   });
+
+  it('stacks portaled hub sheets above mobile chrome with token fallbacks', () => {
+    expect(css).toMatch(/\.admin-hub-app-root \{[\s\S]*?z-index: var\(--admin-z-modal-sheet, 270\);/);
+    expect(css).toMatch(
+      /\.admin-hub-confirm-root \{[\s\S]*?z-index: calc\(var\(--admin-z-modal-sheet, 270\) \+ 10\);/,
+    );
+    expect(css).toContain('top: calc(env(safe-area-inset-top, 0px) + 12px)');
+    expect(css).toContain('max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px)');
+    expect(css).toMatch(
+      /\.admin-hub-app--sheet\.admin-hub-app--fullscreen \{[\s\S]*?top: 0;[\s\S]*?padding-top: env\(safe-area-inset-top, 0px\);/,
+    );
+    expect(css).toContain('html.admin-app-scroll:has(.admin-hub-app-root)');
+    expect(css).toContain('html.admin-app-scroll:has(.admin-hub-confirm-root) body');
+  });
 });

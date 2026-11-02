@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Camera,
   Clock,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/adminHub/apps';
 import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
+import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './apps/AppChrome';
@@ -124,6 +126,8 @@ export function AppHost(props: {
   const [Body, setBody] = useState<ComponentType<AdminHubAppBodyProps> | null>(null);
   const [chrome, setChrome] = useState<AdminHubAppChrome>(emptyAppChrome);
   const loader = props.loadApp ?? loadAdminHubApp;
+  const portalTarget = useClientPortalTarget();
+  useAdminHubScrollLock(Boolean(app && portalTarget));
 
   useEffect(() => {
     const below = (app ? adminHubAppMeta(app).sheetBelow : undefined) ?? 1024;
@@ -216,8 +220,6 @@ export function AppHost(props: {
   }, [writeLocation]);
 
   useEffect(() => {
-    const root = document.querySelector('.admin-shell');
-    if (!root) return;
     const onClick = (event: Event) => {
       const mouse = event as MouseEvent;
       if (mouse.defaultPrevented || mouse.button !== 0 || mouse.metaKey || mouse.ctrlKey || mouse.shiftKey || mouse.altKey) {
@@ -225,7 +227,7 @@ export function AppHost(props: {
       }
       const target = mouse.target as HTMLElement | null;
       const button = target?.closest?.('button[data-admin-hub-app]') as HTMLElement | null;
-      if (button && root.contains(button)) {
+      if (button) {
         const id = parseAdminHubApp(button.getAttribute('data-admin-hub-app'));
         if (!id) return;
         mouse.preventDefault();
@@ -233,8 +235,9 @@ export function AppHost(props: {
         open(id, button, true, item);
         return;
       }
-      const link = target?.closest?.('a') as HTMLAnchorElement | null;
-      if (!link || !root.contains(link)) return;
+      const itemHost = target?.closest?.('[data-admin-hub-item], [data-admin-hub-app]') as HTMLElement | null;
+      const link = (itemHost?.closest?.('a') ?? target?.closest?.('a')) as HTMLAnchorElement | null;
+      if (!link) return;
       let url: URL;
       try {
         url = new URL(link.href);
@@ -242,26 +245,22 @@ export function AppHost(props: {
         return;
       }
       if (url.origin !== window.location.origin || !url.pathname.startsWith('/admin')) return;
-      const id = parseAdminHubApp(url.searchParams.get('app'));
+      const id = parseAdminHubApp(url.searchParams.get('app')) ?? parseAdminHubApp(link.getAttribute('data-admin-hub-app'));
       if (!id) return;
       mouse.preventDefault();
-      const item = parseAdminHubAddWebsiteItem(url.searchParams.get('item'));
+      const item =
+        parseAdminHubAddWebsiteItem(url.searchParams.get('item')) ??
+        parseAdminHubAddWebsiteItem(link.getAttribute('data-admin-hub-item'));
       open(id, link, true, item);
     };
-    root.addEventListener('click', onClick);
-    return () => root.removeEventListener('click', onClick);
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
   }, [app, open]);
 
   useEffect(() => {
-    if (!app) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const toFocus = closeRef.current;
-    toFocus?.focus();
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [app]);
+    if (!app || !portalTarget) return;
+    closeRef.current?.focus();
+  }, [app, portalTarget]);
 
   useEffect(() => {
     if (!app) return;
@@ -292,12 +291,12 @@ export function AppHost(props: {
     }
   };
 
-  if (!app) return null;
+  if (!app || !portalTarget) return null;
   const meta = adminHubAppMeta(app);
   const Icon = ICONS[resolveAdminHubApp(app)];
   const fullscreen = Boolean(sheet && (meta.sheetBelow ?? 1024) <= 640);
 
-  return (
+  return createPortal(
     <div className="admin-hub-app-root">
       <div className="admin-hub-app__scrim" aria-hidden="true" onClick={close} />
       <div
@@ -347,6 +346,7 @@ export function AppHost(props: {
         </div>
         {chrome.footer ? <div className="admin-hub-app__foot">{chrome.footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    portalTarget,
   );
 }

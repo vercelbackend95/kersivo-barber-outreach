@@ -7,6 +7,8 @@ import { AdminHubConfirmDialog } from './AdminHubConfirmDialog';
 
 afterEach(() => {
   cleanup();
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
 });
 
 describe('AdminHubConfirmDialog', () => {
@@ -33,6 +35,21 @@ describe('AdminHubConfirmDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     unmount();
     expect(document.activeElement).toBe(opener);
+  });
+
+  it('portals the confirm root to document.body', () => {
+    render(
+      <AdminHubConfirmDialog
+        title="Send your logo and colours to KERSIVO?"
+        body="Once sent, your logo and brand colours are locked."
+        primaryLabel="Yes, send to KERSIVO"
+        secondaryLabel="Go back and review"
+        onConfirm={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.closest('.admin-hub-confirm-root')?.parentElement).toBe(document.body);
   });
 
   it('disables both actions while busy and ignores Escape', () => {

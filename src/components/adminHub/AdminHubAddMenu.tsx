@@ -212,7 +212,8 @@ export function AdminHubAddMenu(props: {
   const onItemClick = (item: HubAddMenuItem) => {
     const parsed = parseAdminHubAddItem(item.id);
     if (parsed) trackHubEvent('hub_add_menu_item', parsed);
-    // Close after the click bubbles so AppHost can still see the in-tree <a href>.
+    // Close after the click bubbles so AppHost's document listener still sees the <a href>
+    // (the sheet is portaled to document.body; delegation is on document, not .admin-shell).
     queueMicrotask(() => close(false));
   };
 
