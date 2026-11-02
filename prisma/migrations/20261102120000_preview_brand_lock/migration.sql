@@ -9,10 +9,10 @@ ADD COLUMN "brandSubmittedSnapshot" JSONB;
 -- Backfill the submit snapshot from the live logo (latest non-deleted) + colour columns.
 UPDATE "PreviewRequest" AS pr
 SET "brandSubmittedSnapshot" = jsonb_build_object(
-  'logoAssetId', logo.id,
-  'logoStoragePath', logo."storagePath",
-  'logoOriginalFileName', logo."originalFileName",
-  'logoContentType', logo."contentType",
+  'logoAssetId', src.logo_id,
+  'logoStoragePath', src.logo_storage_path,
+  'logoOriginalFileName', src.logo_original_file_name,
+  'logoContentType', src.logo_content_type,
   'brandPrimaryColour', pr."brandPrimaryColour",
   'brandSecondaryColour', pr."brandSecondaryColour",
   'brandBackgroundTone', pr."brandBackgroundTone",
@@ -23,10 +23,10 @@ SET "brandSubmittedSnapshot" = jsonb_build_object(
 FROM (
   SELECT
     pr2.id AS request_id,
-    logo.id,
-    logo."storagePath",
-    logo."originalFileName",
-    logo."contentType"
+    logo.id AS logo_id,
+    logo."storagePath" AS logo_storage_path,
+    logo."originalFileName" AS logo_original_file_name,
+    logo."contentType" AS logo_content_type
   FROM "PreviewRequest" pr2
   LEFT JOIN LATERAL (
     SELECT id, "storagePath", "originalFileName", "contentType"

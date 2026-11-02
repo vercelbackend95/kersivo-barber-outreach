@@ -238,5 +238,7 @@ describe('preview brand lock migration', () => {
     expect(sql).toContain('ADD COLUMN "brandSubmittedSnapshot" JSONB');
     expect(sql).toContain('WHERE pr2."brandColoursSentAt" IS NOT NULL');
     expect(sql).toContain('kind = \'LOGO\'');
+    expect(sql).toContain("'logoAssetId', src.logo_id");
+    expect(sql).not.toMatch(/jsonb_build_object\([\s\S]*?'logoAssetId',\s*logo\./);
   });
 });
