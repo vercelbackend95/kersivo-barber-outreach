@@ -82,16 +82,29 @@
     display: none;
   }
 
-  .empty-state__action:has(.admin-add-btn--desktop) {
-    display: none;
+  /* Overview Add lives inside the header (FAB is a child). Keep the row in the tree
+   * so the FAB can paint, and collapse the desktop Add control's layout box. */
+  .admin-section-header-actions:has(.admin-hub-add-menu) {
+    display: flex;
   }
-
-  .admin-hub-head .admin-hub-add-menu {
+  .admin-section-header-actions:has(.admin-hub-add-menu):not(:has(> :not(.admin-hub-add-menu))) {
+    flex: 0 0 0;
+    width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .admin-section-header-actions .admin-hub-add-menu {
     position: static;
     width: 0;
     height: 0;
     margin: 0;
     overflow: visible;
+  }
+
+  .empty-state__action:has(.admin-add-btn--desktop) {
+    display: none;
   }
 
   .admin-hub-content-empty .admin-hub-add-menu,

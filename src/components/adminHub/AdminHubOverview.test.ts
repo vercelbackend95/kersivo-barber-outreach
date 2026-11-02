@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 const src = readFileSync(resolve(process.cwd(), 'src/components/adminHub/AdminHubOverview.astro'), 'utf8');
 const page = readFileSync(resolve(process.cwd(), 'src/pages/admin.astro'), 'utf8');
 const old = readFileSync(resolve(process.cwd(), 'src/components/previewHub/HubOverview.astro'), 'utf8');
+const hubCss = readFileSync(resolve(process.cwd(), 'src/styles/components/admin-hub.css'), 'utf8');
+const fabCss = readFileSync(resolve(process.cwd(), 'src/styles/components/admin-mobile-fab.css'), 'utf8');
+const lockedChanges = readFileSync(resolve(process.cwd(), 'src/pages/admin/changes.astro'), 'utf8');
+const lockedWebsite = readFileSync(resolve(process.cwd(), 'src/pages/admin/website.astro'), 'utf8');
 
 describe('AdminHubOverview', () => {
   it('is the /admin Overview and leaves the old hub overview for the flag-off path', () => {
@@ -51,6 +55,23 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('admin-hub-nowbox--you');
     expect(src).not.toContain('admin-hub-stages');
     expect(src).not.toContain('formatOverviewStepDate');
+    expect(src).toContain('admin-section-header');
+    expect(src).toContain('admin-section-header-title');
+    expect(src).toContain('{header.h1}');
+    expect(src).toContain('admin-section-header-desc');
+    expect(src).toContain('admin-section-header-actions');
+    expect(src).not.toContain('admin-hub-head');
+    expect(src).not.toContain('admin-hub-head__eyebrow');
+    expect(src).not.toContain('<h1>');
+    expect(src).not.toContain('HUB_NAV.overview');
+    expect(hubCss).not.toContain('admin-hub-head');
+    expect(hubCss).toContain('.admin-hub-messages > .admin-section-header');
+    expect(fabCss).toContain('.admin-section-header-actions .admin-hub-add-menu');
+    expect(fabCss).toContain('.admin-section-header-actions:has(.admin-hub-add-menu)');
+    expect(lockedChanges).toContain('AdminSectionHeader');
+    expect(lockedChanges).not.toContain('admin-hub-head');
+    expect(lockedWebsite).toContain('AdminSectionHeader');
+    expect(lockedWebsite).not.toContain('admin-hub-head');
   });
 
   it('links tiles to apps and sections without a token', () => {

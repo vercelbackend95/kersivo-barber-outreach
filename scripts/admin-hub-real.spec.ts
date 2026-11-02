@@ -1981,7 +1981,7 @@ test.describe('A5 end-to-end QA', () => {
 
     await page.goto('/admin/changes');
     await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
-    const usedBefore = await page.locator('.admin-hub-head__sub').innerText();
+    const usedBefore = await page.locator('.admin-section-header-desc').innerText();
     await page.getByRole('button', { name: /Suggest a change/ }).click();
     await expect(page.getByTestId('hub-change-body')).toBeVisible();
     const changeBody = `A5 change ${Date.now()}: move the logo a little higher.`;

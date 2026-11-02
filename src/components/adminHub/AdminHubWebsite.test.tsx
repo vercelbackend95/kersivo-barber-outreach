@@ -3,6 +3,7 @@
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ADMIN_HUB_WEBSITE_TITLE } from '@/lib/adminHub/copy';
 import { DEVICE_STORAGE_KEY } from '@/lib/adminHub/previewStage';
 import { HUB_WEBSITE_DESKTOP, HUB_WEBSITE_PHONE } from '@/lib/freePreview/hubCopy';
 
@@ -78,6 +79,15 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('AdminHubWebsite device toggle', () => {
+  it('uses the admin section header without an eyebrow or extra h1', () => {
+    renderWebsite();
+    expect(screen.getByRole('heading', { level: 2, name: ADMIN_HUB_WEBSITE_TITLE })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(document.querySelector('.admin-hub-head')).toBeNull();
+    expect(document.querySelector('.admin-hub-head__eyebrow')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Launch this website' })).toBeTruthy();
+  });
+
   it('defaults to phone under 1024 and remembers Desktop in localStorage', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
     renderWebsite();
