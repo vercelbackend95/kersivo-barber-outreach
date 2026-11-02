@@ -20,6 +20,7 @@ describe('AdminAddButton', () => {
     expect(button.getAttribute('aria-label')).toBeNull();
     expect(button.getAttribute('title')).toBeNull();
     expect(button.className).toContain('admin-add-btn');
+    expect(button.className).toContain('admin-add-btn--desktop');
     expect(button.className).toContain('btn--primary');
     expect(button.className).not.toContain('btn--icon');
     button.click();

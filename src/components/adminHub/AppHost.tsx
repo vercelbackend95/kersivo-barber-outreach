@@ -71,16 +71,20 @@ function stableOpener(opener: HTMLElement | null): HTMLElement | null {
   return opener;
 }
 
+function isShownTrigger(el: HTMLElement) {
+  const style = window.getComputedStyle(el);
+  return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
 function restoreOpenerFocus(opener: HTMLElement | null) {
-  if (opener?.isConnected) {
+  if (opener?.isConnected && isShownTrigger(opener)) {
     opener.focus();
     return;
   }
-  document
-    .querySelector<HTMLElement>(
-      '[data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"], [data-testid="admin-hub-content-add"]',
-    )
-    ?.focus();
+  const selector =
+    '[data-testid="admin-mobile-fab"], [data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"], [data-testid="admin-hub-content-add"]';
+  const visible = [...document.querySelectorAll<HTMLElement>(selector)].find(isShownTrigger);
+  visible?.focus();
 }
 
 function withTransition(update: () => void): void {

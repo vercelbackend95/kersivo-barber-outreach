@@ -139,7 +139,11 @@ const content = overviewWebsiteContent({
 const shop = overviewShopTile({ stage: state.stage, counts: shopCounts });
 ---
 
-<article class="admin-hub-overview" data-stage={state.stage} data-testid="admin-hub-overview">
+<article
+  class={`admin-hub-overview${!addMenu.empty ? ' admin-has-mobile-fab' : ''}`}
+  data-stage={state.stage}
+  data-testid="admin-hub-overview"
+>
   <header class="admin-hub-head">
     <div>
       <span class="admin-hub-head__eyebrow">{HUB_NAV.overview}</span>
@@ -179,6 +183,7 @@ const shop = overviewShopTile({ stage: state.stage, counts: shopCounts });
             capabilities={state.capabilities}
             canAddShop={hubCanAddShopItems(state.stage)}
             tone={addMenu.tone}
+            showMobileFab
           />
         </div>
       ) : null

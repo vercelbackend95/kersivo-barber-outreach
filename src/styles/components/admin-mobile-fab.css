@@ -1,0 +1,126 @@
+/*
+ * Shared admin create FAB. Matches the verified Bookings control and the
+ * admin mobile chrome breakpoint (ADMIN_MOBILE_CHROME_MAX_PX = 768).
+ */
+.admin-mobile-fab {
+  --admin-mobile-fab-size: 3.4rem;
+  --admin-mobile-fab-offset: 1rem;
+  --admin-mobile-fab-clearance: calc(
+    var(--admin-mobile-fab-size) + var(--admin-mobile-fab-offset) + 0.75rem + env(safe-area-inset-bottom, 0px)
+  );
+  position: fixed;
+  right: calc(var(--admin-mobile-fab-offset) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--admin-mobile-fab-offset) + env(safe-area-inset-bottom, 0px));
+  z-index: 70;
+  width: var(--admin-mobile-fab-size);
+  height: var(--admin-mobile-fab-size);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 28%);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-mobile-fab:hover {
+  transform: translateY(-1px);
+}
+
+.admin-mobile-fab:active {
+  transform: translateY(0);
+}
+
+.admin-mobile-fab:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-mobile-fab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.admin-mobile-fab svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke-width: 2;
+}
+
+.admin-mobile-fab--mobile {
+  display: none;
+}
+
+.admin-has-mobile-fab--always .admin-timeline-scroll,
+.admin-has-mobile-fab--always .admin-bookings-schedule {
+  padding-bottom: var(--admin-mobile-fab-clearance, 5.5rem);
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-fab {
+    --admin-mobile-fab-size: 3.25rem;
+    --admin-mobile-fab-offset: 0.85rem;
+  }
+
+  .admin-mobile-fab--mobile {
+    display: inline-flex;
+  }
+
+  .admin-add-btn--desktop {
+    display: none;
+  }
+
+  .admin-section-header-actions:has(.admin-add-btn--desktop) {
+    display: none;
+  }
+
+  .empty-state__action:has(.admin-add-btn--desktop) {
+    display: none;
+  }
+
+  .admin-hub-head .admin-hub-add-menu {
+    position: static;
+    width: 0;
+    height: 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .admin-hub-content-empty .admin-hub-add-menu,
+  .admin-hub-content-empty > .btn.btn--primary {
+    display: none;
+  }
+
+  .admin-has-mobile-fab .admin-timeline-scroll,
+  .admin-has-mobile-fab .admin-bookings-schedule,
+  .admin-has-mobile-fab .admin-products-scroll,
+  .admin-has-mobile-fab .admin-barbers-overview-list-wrap,
+  .admin-has-mobile-fab .admin-services-panel,
+  .admin-has-mobile-fab .empty-state {
+    padding-bottom: var(--admin-mobile-fab-clearance, 5.25rem);
+  }
+}
+
+body:has([aria-modal='true']) .admin-mobile-fab,
+body:has(.admin-native-date-range-panel) .admin-mobile-fab,
+body:has(input:focus, textarea:focus, select:focus) .admin-mobile-fab {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-mobile-fab,
+  .admin-mobile-fab:hover,
+  .admin-mobile-fab:active {
+    transform: none;
+    transition: none;
+  }
+}

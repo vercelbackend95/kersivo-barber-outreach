@@ -6,6 +6,7 @@ import { useAdminClock } from './adminClock';
 import ClientProfilePanel from './ClientProfilePanel';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminAddButton from './AdminAddButton';
+import AdminMobileFab from './AdminMobileFab';
 import AdminLineChart from './charts/AdminLineChart';
 import AdminAnalyticsStudio from './AdminAnalyticsStudio';
 import AdminSegmentedControl from './AdminSegmentedControl';
@@ -1553,7 +1554,7 @@ export default function ShopAdminPanel({
   return (
     <ShopPanelErrorBoundary>
       <section
-        className={`booking-shell admin-shop-shell admin-shop-shell--${activeTab}`}
+        className={`booking-shell admin-shop-shell admin-shop-shell--${activeTab}${activeTab === 'products' ? ' admin-has-mobile-fab' : ''}`}
         aria-live="polite"
       >
 
@@ -1582,6 +1583,9 @@ export default function ShopAdminPanel({
           <AdminAddButton label="Add product" onClick={startCreate} />
         ) : undefined}
       />
+      {activeTab === 'products' ? (
+        <AdminMobileFab label="Add product" onClick={startCreate} context="products" />
+      ) : null}
 
       {activeTab === 'products' && (
         <div className="admin-reports admin-products-panel">

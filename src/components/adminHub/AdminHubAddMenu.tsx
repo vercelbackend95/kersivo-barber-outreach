@@ -24,9 +24,12 @@ import {
 } from '@/lib/adminHub/addMenu';
 import { adminHubAppHref } from '@/lib/adminHub/apps';
 import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
+import AdminMobileFab from '@/components/admin/AdminMobileFab';
+import { ADMIN_MOBILE_CHROME_MAX_PX } from '@/components/admin/useAdminMobileNextAppointmentsChrome';
 import { AdminHubSheet } from './AdminHubSheet';
 
-const MOBILE_MQ = '(max-width: 640px)';
+const INLINE_SHEET_MQ = '(max-width: 640px)';
+const HEADER_SHEET_MQ = `(max-width: ${ADMIN_MOBILE_CHROME_MAX_PX}px)`;
 
 const ICONS: Record<AdminHubAddItemId, typeof Camera> = {
   photos: Camera,
@@ -44,8 +47,12 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function isMobileViewport(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia(MOBILE_MQ).matches;
+function sheetQuery(variant: 'header' | 'inline', showMobileFab?: boolean) {
+  return variant === 'header' && showMobileFab ? HEADER_SHEET_MQ : INLINE_SHEET_MQ;
+}
+
+function isSheetViewport(variant: 'header' | 'inline', showMobileFab?: boolean): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(sheetQuery(variant, showMobileFab)).matches;
 }
 
 function trackHubEvent(name: 'hub_add_menu_open' | 'hub_add_menu_item', item?: AdminHubAddItemId) {
@@ -69,6 +76,8 @@ export function AdminHubAddMenu(props: {
   variant?: 'header' | 'inline';
   label?: string;
   testId?: string;
+  /** Overview header only — one contextual mobile FAB for the existing Add menu. */
+  showMobileFab?: boolean;
 }) {
   const menu = useMemo(
     () =>
@@ -83,26 +92,33 @@ export function AdminHubAddMenu(props: {
   const variant = props.variant ?? 'header';
   const label = props.label ?? ADMIN_HUB_ADD;
   const menuId = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const desktopTriggerRef = useRef<HTMLButtonElement>(null);
+  const fabTriggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const [open, setOpen] = useState(false);
-  const [mobile, setMobile] = useState(isMobileViewport);
+  const showMobileFab = Boolean(props.showMobileFab);
+  const [sheet, setSheet] = useState(() => isSheetViewport(variant, showMobileFab));
   const [activeIndex, setActiveIndex] = useState(0);
   const items = flatten(menu.groups);
 
   useEffect(() => {
-    const mq = window.matchMedia(MOBILE_MQ);
-    const sync = () => setMobile(mq.matches);
+    const mq = window.matchMedia(sheetQuery(variant, showMobileFab));
+    const sync = () => setSheet(mq.matches);
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
-  }, []);
+  }, [variant, showMobileFab]);
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false);
-    if (restoreFocus) queueMicrotask(() => triggerRef.current?.focus());
-  }, []);
+    if (restoreFocus) {
+      queueMicrotask(() => {
+        const useFab = showMobileFab && isSheetViewport(variant, showMobileFab);
+        (useFab ? fabTriggerRef.current : desktopTriggerRef.current)?.focus();
+      });
+    }
+  }, [variant, showMobileFab]);
 
   const openMenu = useCallback(() => {
     if (menu.empty) return;
@@ -112,11 +128,17 @@ export function AdminHubAddMenu(props: {
   }, [menu.empty]);
 
   useEffect(() => {
-    if (!open || mobile) return;
+    if (!open || sheet) return;
     const onPointer = (event: PointerEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
-      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      if (
+        desktopTriggerRef.current?.contains(target) ||
+        fabTriggerRef.current?.contains(target) ||
+        panelRef.current?.contains(target)
+      ) {
+        return;
+      }
       close();
     };
     const timer = window.setTimeout(() => document.addEventListener('pointerdown', onPointer), 0);
@@ -124,7 +146,7 @@ export function AdminHubAddMenu(props: {
       window.clearTimeout(timer);
       document.removeEventListener('pointerdown', onPointer);
     };
-  }, [open, mobile, close]);
+  }, [open, sheet, close]);
 
   useEffect(() => {
     if (!open) return;
@@ -200,7 +222,7 @@ export function AdminHubAddMenu(props: {
       id={menuId}
       role="menu"
       aria-label={ADMIN_HUB_ADD_MENU}
-      className={mobile ? 'admin-hub-add-menu__sheet-list' : 'admin-hub-add-menu__panel'}
+      className={sheet ? 'admin-hub-add-menu__sheet-list' : 'admin-hub-add-menu__panel'}
       data-testid="admin-hub-add-menu"
       onKeyDown={onMenuKeyDown}
     >
@@ -242,19 +264,21 @@ export function AdminHubAddMenu(props: {
   const triggerClass =
     variant === 'inline'
       ? 'btn btn--ghost btn--sm admin-hub-add-menu__inline'
-      : `btn btn--sm admin-add-btn${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`;
+      : `btn btn--sm admin-add-btn admin-add-btn--desktop${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`;
+
+  const toggleMenu = () => (open ? close() : openMenu());
 
   return (
     <div className={`admin-hub-add-menu${variant === 'inline' ? ' admin-hub-add-menu--inline' : ''}`}>
       <button
-        ref={triggerRef}
+        ref={desktopTriggerRef}
         type="button"
         className={triggerClass}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         data-testid={props.testId ?? (variant === 'inline' ? 'admin-hub-add-inline' : 'admin-hub-add')}
-        onClick={() => (open ? close() : openMenu())}
+        onClick={toggleMenu}
         onKeyDown={onTriggerKeyDown}
       >
         {variant === 'inline' ? null : <Plus aria-hidden />}
@@ -269,8 +293,20 @@ export function AdminHubAddMenu(props: {
           />
         )}
       </button>
-      {open && !mobile ? list : null}
-      {open && mobile ? (
+      {props.showMobileFab ? (
+        <AdminMobileFab
+          ref={fabTriggerRef}
+          label={ADMIN_HUB_ADD_MENU}
+          onClick={toggleMenu}
+          onKeyDown={onTriggerKeyDown}
+          context="overview"
+          expanded={open}
+          controls={menuId}
+          haspopup="menu"
+        />
+      ) : null}
+      {open && !sheet ? list : null}
+      {open && sheet ? (
         <AdminHubSheet
           title={ADMIN_HUB_ADD}
           onClose={() => close()}

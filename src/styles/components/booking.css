@@ -19999,38 +19999,8 @@ button.admin-leaderboard-avatar--action:focus-visible {
 }
 
 
-/* KERSIVO v1.18 manual booking — persistent Bookings action + focused staff form. */
-.admin-manual-booking-fab {
-  position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 70;
-  width: 3.4rem;
-  height: 3.4rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
-  background: var(--accent);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 14px 40px rgb(0 0 0 / 28%);
-  cursor: pointer;
-}
-
-.admin-manual-booking-fab:hover {
-  transform: translateY(-1px);
-}
-
-.admin-manual-booking-fab:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-.admin-manual-booking-fab svg {
-  width: 1.35rem;
-  height: 1.35rem;
-}
+/* KERSIVO v1.18 manual booking — persistent Bookings action + focused staff form.
+   FAB chrome lives in admin-mobile-fab.css (.admin-mobile-fab). */
 
 .admin-new-booking-panel {
   max-width: 34rem;
@@ -20098,13 +20068,6 @@ button.admin-leaderboard-avatar--action:focus-visible {
 }
 
 @media (max-width: 720px) {
-  .admin-manual-booking-fab {
-    right: max(0.85rem, env(safe-area-inset-right));
-    bottom: max(0.85rem, env(safe-area-inset-bottom));
-    width: 3.25rem;
-    height: 3.25rem;
-  }
-
   .admin-new-booking-panel {
     width: min(100%, 34rem);
   }
