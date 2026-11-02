@@ -15,7 +15,10 @@ describe('AdminHubMessages', () => {
       <AdminHubMessages token="" viewer="owner" shopName="Sharp Cuts" initialMessages={[]} />,
     );
     expect(screen.getByTestId('admin-hub-messages')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Messages' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Messages' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(document.querySelector('.admin-hub-head')).toBeNull();
+    expect(document.querySelector('.admin-hub-head__eyebrow')).toBeNull();
     expect(screen.getByText(ADMIN_HUB_MESSAGES_SUB)).toBeTruthy();
     expect(screen.getByText(ADMIN_HUB_MESSAGES_EMPTY)).toBeTruthy();
     expect(screen.getByPlaceholderText('Write a message')).toBeTruthy();

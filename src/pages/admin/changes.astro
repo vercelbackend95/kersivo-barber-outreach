@@ -3,6 +3,7 @@ export const prerender = false;
 
 import PreviewHubDocument from '@/layouts/PreviewHubDocument.astro';
 import PreviewHubFrame from '@/components/adminHub/PreviewHubFrame.astro';
+import AdminSectionHeader from '@/components/admin/AdminSectionHeader';
 import { AdminHubChanges } from '@/components/adminHub/AdminHubChanges';
 import { ADMIN_HUB_CHANGES_SELF_EDIT, ADMIN_HUB_CHANGES_SUB } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
@@ -35,13 +36,10 @@ const caps = data.ctx.state.capabilities;
         />
       ) : (
         <section class="admin-hub-locked" data-testid="admin-hub-changes-locked">
-          <header class="admin-hub-head">
-            <div>
-              <span class="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
-              <h1>{HUB_NAV.changes}</h1>
-              <p class="admin-hub-head__sub">{ADMIN_HUB_CHANGES_SUB} {ADMIN_HUB_CHANGES_SELF_EDIT}</p>
-            </div>
-          </header>
+          <AdminSectionHeader
+            title={HUB_NAV.changes}
+            description={`${ADMIN_HUB_CHANGES_SUB} ${ADMIN_HUB_CHANGES_SELF_EDIT}`}
+          />
           <div class="admin-hub-tile admin-hub-calm">
             <h2>{HUB_LOCKED_REASON_PREVIEW}</h2>
             <p>{HUB_WEBSITE_LOCKED_BODY}</p>

@@ -35,6 +35,11 @@ describe('AdminHubChanges', () => {
         canSend
       />,
     );
+    expect(screen.getByRole('heading', { level: 2, name: 'Changes' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(document.querySelector('.admin-hub-head')).toBeNull();
+    expect(document.querySelector('.admin-hub-head__eyebrow')).toBeNull();
+    expect(document.querySelector('.admin-section-header-title')?.textContent).toBe('Changes');
     expect(screen.getByText(ADMIN_HUB_CHANGES_DRAFTS)).toBeTruthy();
     expect(screen.getByText(ADMIN_HUB_CHANGES_WITH)).toBeTruthy();
     expect(screen.getByText(ADMIN_HUB_CHANGES_SELF_EDIT, { exact: false })).toBeTruthy();
