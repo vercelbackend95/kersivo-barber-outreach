@@ -369,10 +369,11 @@
 }
 
 /* ───────── App window / sheet (mockups 02, 07, 08) ───────── */
+/* Portaled to document.body. Fallbacks: tokens live on .admin-shell. */
 .admin-hub-app-root {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--admin-z-modal-sheet, 270);
 }
 .admin-hub-app__scrim {
   position: absolute;
@@ -413,14 +414,16 @@
 .admin-hub-app--sheet {
   left: 0;
   right: 0;
-  top: 56px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
   bottom: 0;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
   border-radius: 22px 22px 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   animation: admin-hub-sheet-in 160ms ease;
 }
 .admin-hub-app--sheet.admin-hub-app--fullscreen {
   top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
   border-radius: 0;
 }
 .admin-hub-app--sheet.admin-hub-app--fullscreen .admin-hub-app__grab {
@@ -613,60 +616,25 @@
 }
 
 /* ───────── Overview header + bento (mockups 01 / 04) ───────── */
-.admin-hub-head {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.admin-hub-head__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.admin-hub-head__eyebrow::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.admin-hub-head h1 {
-  font-size: 25px;
-  line-height: 1.12;
-  margin: 8px 0 6px;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-.admin-hub-head__sub {
-  margin: 0;
-  max-width: 60ch;
-  color: var(--muted);
-  font-size: 14px;
-}
-.admin-hub-head__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.admin-hub-head__actions .btn,
-.admin-hub-head__actions .hub-subscribe,
-.admin-hub-head__actions .hub-subscribe .btn {
-  width: 100%;
-}
-.admin-hub-head__actions .hub-subscribe {
+/* Hub pages use .admin-section-header (same component/CSS as Team).
+ * .admin-hub-content has no extra padding, so the title inset matches Team. */
+.admin-hub-content .admin-section-header-actions .hub-subscribe {
   margin: 0;
 }
-.admin-hub-head__actions .btn small,
-.admin-hub-head__actions .hub-subscribe__price {
+.admin-hub-content .admin-section-header-actions .btn small,
+.admin-hub-content .admin-section-header-actions .hub-subscribe__price {
   font-weight: 500;
   color: var(--admin-hub-muted-2);
   font-size: 12px;
+}
+.admin-hub-messages > .admin-section-header {
+  flex-shrink: 0;
+}
+@media (max-width: 48rem) {
+  /* Team zeros header margin on mobile; match that inset-to-content gap. */
+  .admin-hub-content .admin-section-header {
+    margin-bottom: 0;
+  }
 }
 
 .admin-hub-calm {
@@ -1439,9 +1407,8 @@ a.admin-hub-tile__open:focus-visible {
     max-height: 100%;
     overflow: hidden;
   }
-  .admin-hub-messages .admin-hub-head {
+  .admin-hub-messages > .admin-section-header {
     margin-bottom: 12px;
-    flex-shrink: 0;
   }
   .admin-hub-messages .hub-composer__input {
     min-height: 56px;
@@ -1475,34 +1442,6 @@ a.admin-hub-tile__open:focus-visible {
   }
   .admin-hub-phonewrap {
     min-height: 360px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .admin-hub-head {
-    flex-direction: row;
-    align-items: flex-end;
-    gap: 24px;
-    margin-bottom: 22px;
-  }
-  .admin-hub-head h1 {
-    font-size: 30px;
-  }
-  .admin-hub-head__sub {
-    font-size: 15px;
-  }
-  .admin-hub-head__actions {
-    margin-left: auto;
-    display: flex;
-    width: auto;
-    grid-template-columns: none;
-    align-items: center;
-    gap: 10px;
-  }
-  .admin-hub-head__actions .btn,
-  .admin-hub-head__actions .hub-subscribe,
-  .admin-hub-head__actions .hub-subscribe .btn {
-    width: auto;
   }
 }
 
@@ -2193,10 +2132,20 @@ a.admin-hub-tile__open:focus-visible {
 .admin-hub-confirm-root {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: calc(var(--admin-z-modal-sheet, 270) + 10);
   display: grid;
   place-items: center;
   padding: 20px;
+}
+
+html.admin-app-scroll:has(.admin-hub-app-root),
+html.admin-app-scroll:has(.admin-hub-confirm-root) {
+  overflow: hidden;
+}
+html.admin-app-scroll:has(.admin-hub-app-root) body,
+html.admin-app-scroll:has(.admin-hub-confirm-root) body {
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 .admin-hub-confirm__scrim {
   position: absolute;

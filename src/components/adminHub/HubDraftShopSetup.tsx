@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AdminSectionHeader from '@/components/admin/AdminSectionHeader';
 import {
   ADMIN_HUB_APP_ERROR,
   ADMIN_HUB_DRAFT_SHOP_BODY,
@@ -37,12 +38,7 @@ export function HubDraftShopSetup() {
 
   return (
     <section className="admin-hub-locked" data-testid="admin-hub-draft-shop-setup">
-      <header className="admin-hub-head">
-        <div>
-          <h1>{ADMIN_HUB_DRAFT_SHOP_TITLE}</h1>
-          <p className="admin-hub-head__sub">{ADMIN_HUB_DRAFT_SHOP_BODY}</p>
-        </div>
-      </header>
+      <AdminSectionHeader title={ADMIN_HUB_DRAFT_SHOP_TITLE} description={ADMIN_HUB_DRAFT_SHOP_BODY} />
       <div className="admin-hub-tile admin-hub-calm">
         {error ? (
           <p className="admin-inline-error" role="alert">

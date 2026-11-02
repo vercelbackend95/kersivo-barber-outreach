@@ -1,3 +1,4 @@
+import AdminSectionHeader from '@/components/admin/AdminSectionHeader';
 import { MessageCircle } from '@/components/lucide-react';
 import { HubChangeComposer } from '@/components/previewHub/HubChangeComposer';
 import { useHubChanges } from '@/components/previewHub/useHubChanges';
@@ -61,24 +62,19 @@ export function AdminHubChanges(props: {
 
   return (
     <article className="admin-hub-changes" data-testid="admin-hub-changes">
-      <header className="admin-hub-head">
-        <div>
-          <span className="admin-hub-head__eyebrow">{HUB_NAV.changes}</span>
-          <h1>{HUB_NAV.changes}</h1>
-          <p className="admin-hub-head__sub">
-            {roundText}. {ADMIN_HUB_CHANGES_SUB} {ADMIN_HUB_CHANGES_SELF_EDIT}
-          </p>
-        </div>
-        {props.canDraft ? (
-          <div className="admin-hub-head__actions">
+      <AdminSectionHeader
+        title={HUB_NAV.changes}
+        description={`${roundText}. ${ADMIN_HUB_CHANGES_SUB} ${ADMIN_HUB_CHANGES_SELF_EDIT}`}
+        actions={
+          props.canDraft ? (
             <button type="button" className="btn btn--outline" onClick={() => hub.openComposer()}>
               <MessageCircle width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
               <span className="admin-hub-changes__suggest-full">{HUB_CHANGES_ADD}</span>
               <span className="admin-hub-changes__suggest-short">{ADMIN_HUB_WEBSITE_SUGGEST_SHORT}</span>
             </button>
-          </div>
-        ) : null}
-      </header>
+          ) : undefined
+        }
+      />
 
       <div className="admin-hub-chstats admin-hub-changes__stats">
         <div className="admin-hub-chstat">

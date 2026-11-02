@@ -3,6 +3,7 @@
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
 import type { AdminHubAppContext } from './apps/types';
@@ -73,6 +74,8 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
   vi.unstubAllGlobals();
 });
 
@@ -204,5 +207,28 @@ describe('AppHost', () => {
     close.focus();
     fireEvent.keyDown(dialog, { key: 'Tab' });
     expect(document.activeElement).toBe(close);
+  });
+
+  it('renders the app root as a child of document.body', async () => {
+    renderHost('logo');
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.closest('.admin-hub-app-root')?.parentElement).toBe(document.body);
+  });
+
+  it('opens from a portaled [data-admin-hub-item] link on document.body', async () => {
+    renderHost(null);
+    render(
+      createPortal(
+        <a href="/admin?app=colours" data-admin-hub-item="logo" data-testid="portaled-add">
+          Brand colours
+        </a>,
+        document.body,
+      ),
+    );
+    fireEvent.click(screen.getByTestId('portaled-add'));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.getAttribute('data-app')).toBe('colours');
+    expect(new URL(window.location.href).searchParams.get('app')).toBe('colours');
+    expect(dialog.closest('.admin-hub-app-root')?.parentElement).toBe(document.body);
   });
 });

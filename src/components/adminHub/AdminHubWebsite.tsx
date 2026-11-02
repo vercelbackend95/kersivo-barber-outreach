@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import AdminSectionHeader from '@/components/admin/AdminSectionHeader';
 import BookingFlow from '@/components/booking/BookingFlow';
 import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import { Calendar, ExternalLink, Globe, Lock, MessageCircle, Monitor, Smartphone } from '@/components/lucide-react';
@@ -116,14 +117,11 @@ export function AdminHubWebsite(props: {
       data-view={props.view}
       data-ready={ready ? 'true' : 'false'}
     >
-      <header className="admin-hub-head">
-        <div>
-          <span className="admin-hub-head__eyebrow">{HUB_NAV.website}</span>
-          <h1>{ADMIN_HUB_WEBSITE_TITLE}</h1>
-          <p className="admin-hub-head__sub">{ADMIN_HUB_WEBSITE_SUB}</p>
-        </div>
-        {props.canCheckout ? (
-          <div className="admin-hub-head__actions">
+      <AdminSectionHeader
+        title={ADMIN_HUB_WEBSITE_TITLE}
+        description={ADMIN_HUB_WEBSITE_SUB}
+        actions={
+          props.canCheckout ? (
             <PreviewTopBar
               chrome="checkout-outline"
               token={props.token}
@@ -140,9 +138,9 @@ export function AdminHubWebsite(props: {
               websiteHref={props.websiteHref}
               bookingHref={props.bookingHref}
             />
-          </div>
-        ) : null}
-      </header>
+          ) : undefined
+        }
+      />
 
       <div className="admin-hub-wtoolbar">
         <SegmentedControl
