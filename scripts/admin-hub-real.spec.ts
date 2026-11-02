@@ -443,14 +443,14 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     const overview = page.getByTestId('admin-hub-overview');
     await expect(overview).toBeVisible();
     await expect(overview.locator('[data-tile="preview"]')).toContainText('Your preview will appear here');
-    await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
+    await expect(overview.locator('[data-tile="preview"] a.admin-hub-tile__hit')).toHaveAttribute('href', '/admin/website');
+    await expect(overview.locator('[data-tile="changes"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="colours"]')).toHaveAttribute('href', '/admin?app=colours');
     await expect(overview.locator('[data-testid="admin-hub-content-tile"]')).toBeVisible();
     await expect(overview.locator('[data-testid="admin-hub-shop-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     expect(await overview.locator('iframe').count()).toBe(0);
-    await expect(overview.locator('[data-tile="preview"] a')).toHaveCount(0);
     await expect(page.locator('.admin-sidebar').getByTestId('admin-hub-unread')).toHaveText('1');
     await shots3(page, 'requested-overview', [390, 768, 1280, 1440]);
     await axeAt(page, 'requested-overview', 390);
@@ -472,7 +472,10 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin/changes');
-    await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toContainText('Show all');
+    await expect(overview.locator('[data-tile="activity"] a[href="/admin?app=activity"]')).toHaveAttribute(
+      'aria-label',
+      'Open activity',
+    );
     await expect(page.getByTestId('admin-hub-primary')).toHaveText('Open your preview');
     await expect(page.getByTestId('hub-subscribe')).toContainText('Launch this website');
     await expect(page.getByTestId('hub-subscribe')).toContainText('£39/month');

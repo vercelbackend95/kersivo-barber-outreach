@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { OVERVIEW_BENTO_AREAS } from './overview';
+import { OVERVIEW_BENTO_AREAS, OVERVIEW_BENTO_AREAS_NO_CHANGES } from './overview';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/components/admin-hub.css'), 'utf8');
 
@@ -14,6 +14,12 @@ describe('overview bento CSS areas', () => {
     for (const key of Object.keys(OVERVIEW_BENTO_AREAS) as Array<keyof typeof OVERVIEW_BENTO_AREAS>) {
       for (const row of quotedRows(OVERVIEW_BENTO_AREAS[key])) expect(css).toContain(row);
     }
+    for (const key of Object.keys(OVERVIEW_BENTO_AREAS_NO_CHANGES) as Array<
+      keyof typeof OVERVIEW_BENTO_AREAS_NO_CHANGES
+    >) {
+      for (const row of quotedRows(OVERVIEW_BENTO_AREAS_NO_CHANGES[key])) expect(css).toContain(row);
+    }
+    expect(css).toContain('.admin-hub-bento--no-changes');
     expect(css).not.toContain('admin-hub-bento__add');
     expect(css).not.toContain('.admin-hub-tile--add');
   });
@@ -22,6 +28,8 @@ describe('overview bento CSS areas', () => {
     expect(css).toMatch(/\.admin-hub-tile__hit \{[^}]*z-index: 1;/);
     expect(css).toMatch(/\.admin-hub-preview-actions,[\s\S]*?z-index: 2;/);
     expect(css).not.toMatch(/\.admin-hub-tile__head,\s*\.admin-hub-preview-actions/);
+    expect(css).toMatch(/\.admin-hub-add-fab \{[^}]*background: var\(--accent\);/);
+    expect(css).not.toMatch(/\.admin-hub-add-fab \{[^}]*position: fixed/);
   });
 
   it('shows the Brand colours logo preview on small screens', () => {

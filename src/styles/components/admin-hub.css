@@ -701,6 +701,14 @@
   min-width: 0;
   align-items: stretch;
 }
+.admin-hub-bento--no-changes {
+  grid-template-areas:
+    "progress"
+    "preview"
+    "content"
+    "colours"
+    "activity";
+}
 
 .admin-hub-tile {
   --ks-glass-pad: 18px;
@@ -750,7 +758,9 @@ a.admin-hub-tile:focus-visible,
 .admin-hub-tile a.btn,
 .admin-hub-tile__action,
 .admin-hub-content-empty,
-.admin-hub-status {
+.admin-hub-status,
+.admin-hub-add-menu--icon,
+a.admin-hub-tile__open {
   position: relative;
   z-index: 2;
 }
@@ -815,6 +825,13 @@ a.admin-hub-tile:focus-visible,
   border: 1px solid var(--admin-hub-hair);
   color: var(--admin-hub-muted-2);
   background: rgba(255, 255, 255, 0.02);
+  text-decoration: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+a.admin-hub-tile__open:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
 }
 .admin-hub-tile__foot {
   margin-top: auto;
@@ -1442,6 +1459,13 @@ a.admin-hub-tile:focus-visible,
       "activity activity activity activity activity activity";
     gap: 14px;
   }
+  .admin-hub-bento--no-changes {
+    grid-template-areas:
+      "progress progress progress progress progress progress"
+      "preview preview preview content content content"
+      "colours colours colours colours colours colours"
+      "activity activity activity activity activity activity";
+  }
   .admin-hub-progress__label {
     font-size: 12.5px;
   }
@@ -1491,6 +1515,13 @@ a.admin-hub-tile:focus-visible,
       "changes changes changes changes changes changes changes changes colours colours colours colours"
       "activity activity activity activity activity activity activity activity activity activity activity activity";
   }
+  .admin-hub-bento--no-changes {
+    grid-template-areas:
+      "progress progress progress progress progress progress progress progress preview preview preview preview"
+      "content content content content content content content content preview preview preview preview"
+      "colours colours colours colours colours colours colours colours colours colours colours colours"
+      "activity activity activity activity activity activity activity activity activity activity activity activity";
+  }
   .admin-hub-bento__preview {
     min-height: 520px;
   }
@@ -1499,7 +1530,10 @@ a.admin-hub-tile:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .admin-hub-tile,
   .admin-hub-tile:hover,
-  .admin-hub-tile:focus-visible {
+  .admin-hub-tile:focus-visible,
+  .admin-hub-add-fab,
+  .admin-hub-add-fab:hover,
+  .admin-hub-add-fab:active {
     transform: none !important;
   }
   .admin-hub-progress__fill {
@@ -2664,13 +2698,62 @@ a.admin-hub-tile:focus-visible,
   position: relative;
   min-width: 0;
 }
-.admin-hub-add-menu--inline {
+.admin-hub-add-menu--inline,
+.admin-hub-add-menu--icon {
   position: relative;
   z-index: 2;
 }
 .admin-hub-add-menu__inline,
 .admin-hub-add-menu__fallback {
   width: auto;
+}
+.admin-hub-add-fab {
+  position: relative;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  margin-left: auto;
+  padding: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 28%);
+  cursor: pointer;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-hub-add-fab::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+.admin-hub-add-fab:hover {
+  transform: translateY(-1px);
+}
+.admin-hub-add-fab:active {
+  transform: translateY(0);
+}
+.admin-hub-add-fab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.admin-hub-add-fab svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  pointer-events: none;
 }
 .admin-hub-add-menu .admin-add-btn {
   width: 100%;

@@ -202,6 +202,25 @@ describe('AdminHubAddMenu', () => {
     );
   });
 
+  it('renders a round icon Add button that opens the same menu', () => {
+    render(
+      <AdminHubAddMenu
+        stage="review"
+        capabilities={caps()}
+        canAddShop
+        variant="icon"
+      />,
+    );
+    const trigger = screen.getByTestId('admin-hub-add-inline');
+    expect(trigger.getAttribute('aria-label')).toBe('Add');
+    expect(trigger.className).toContain('admin-hub-add-fab');
+    expect(trigger.textContent).toBe('');
+    fireEvent.click(trigger);
+    expect(screen.getByRole('menuitem', { name: /Shop photos/ }).getAttribute('href')).toBe(
+      '/admin?app=materials&item=photos',
+    );
+  });
+
   it('falls back to the materials app when the inline menu is empty', () => {
     render(
       <AdminHubAddMenu
@@ -213,6 +232,22 @@ describe('AdminHubAddMenu', () => {
     );
     const fallback = screen.getByRole('link', { name: 'Add' });
     expect(fallback.getAttribute('href')).toBe('/admin?app=materials');
+  });
+
+  it('falls back to a round materials link when the icon menu is empty', () => {
+    render(
+      <AdminHubAddMenu
+        stage="launch"
+        capabilities={caps({ canUpload: false, canEditDetails: false })}
+        canAddShop={false}
+        variant="icon"
+      />,
+    );
+    const fallback = screen.getByTestId('admin-hub-add-inline');
+    expect(fallback.tagName).toBe('A');
+    expect(fallback.getAttribute('href')).toBe('/admin?app=materials');
+    expect(fallback.getAttribute('aria-label')).toBe('Add');
+    expect(fallback.className).toContain('admin-hub-add-fab');
   });
 
   it('has popup semantics on the trigger', () => {

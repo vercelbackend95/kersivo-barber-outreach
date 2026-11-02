@@ -18,6 +18,7 @@ import {
   overviewOurSteps,
   overviewPreviewLocked,
   overviewPrimary,
+  overviewShowChangesTile,
   overviewShowLaunch,
   overviewStagePill,
   overviewTileHrefs,
@@ -25,6 +26,7 @@ import {
   overviewWebsiteContent,
   shopInitials,
   OVERVIEW_BENTO_AREAS,
+  OVERVIEW_BENTO_AREAS_NO_CHANGES,
 } from './overview';
 import {
   ADMIN_HUB_COLOURS_EMPTY,
@@ -95,6 +97,11 @@ describe('overview view-model', () => {
     expect(overviewPreviewLocked('review')).toBe(false);
     expect(overviewChangesLocked('requested')).toBe(true);
     expect(overviewChangesLocked('launch')).toBe(false);
+    expect(overviewShowChangesTile({ stage: 'requested', hasWebsitePreview: false })).toBe(false);
+    expect(overviewShowChangesTile({ stage: 'designing', hasWebsitePreview: true })).toBe(false);
+    expect(overviewShowChangesTile({ stage: 'review', hasWebsitePreview: false })).toBe(false);
+    expect(overviewShowChangesTile({ stage: 'review', hasWebsitePreview: true })).toBe(true);
+    expect(overviewShowChangesTile({ stage: 'launch', hasWebsitePreview: true })).toBe(true);
     expect(isOverviewTerminal('expired')).toBe(true);
     expect(isOverviewTerminal('declined')).toBe(true);
     expect(isOverviewTerminal('review')).toBe(false);
@@ -411,16 +418,25 @@ describe('overview view-model', () => {
   });
 
   it('keeps every requested tile in requested, designing, review and launch', () => {
-    for (const stage of ['requested', 'designing', 'review', 'launch'] as const) {
-      expect(overviewBentoTiles(stage)).toEqual([
-        'progress',
-        'preview',
-        'content',
-        'changes',
-        'colours',
-        'activity',
-      ]);
-    }
+    expect(overviewBentoTiles('requested')).toEqual(['progress', 'preview', 'content', 'colours', 'activity']);
+    expect(overviewBentoTiles('designing')).toEqual(['progress', 'preview', 'content', 'colours', 'activity']);
+    expect(overviewBentoTiles('review')).toEqual([
+      'progress',
+      'preview',
+      'content',
+      'changes',
+      'colours',
+      'activity',
+    ]);
+    expect(overviewBentoTiles('review', false)).toEqual(['progress', 'preview', 'content', 'colours', 'activity']);
+    expect(overviewBentoTiles('launch')).toEqual([
+      'progress',
+      'preview',
+      'content',
+      'changes',
+      'colours',
+      'activity',
+    ]);
     expect(overviewBentoTiles('expired')).toEqual([]);
   });
 
@@ -443,5 +459,20 @@ describe('overview view-model', () => {
     expect(overviewBentoAreasCss(OVERVIEW_BENTO_AREAS.desktop)).toContain(
       '"content content content content content content content content preview preview preview preview"',
     );
+    expect(OVERVIEW_BENTO_AREAS_NO_CHANGES).toEqual({
+      mobile: ['progress', 'preview', 'content', 'colours', 'activity'],
+      tablet: [
+        'progress progress progress progress progress progress',
+        'preview preview preview content content content',
+        'colours colours colours colours colours colours',
+        'activity activity activity activity activity activity',
+      ],
+      desktop: [
+        'progress progress progress progress progress progress progress progress preview preview preview preview',
+        'content content content content content content content content preview preview preview preview',
+        'colours colours colours colours colours colours colours colours colours colours colours colours',
+        'activity activity activity activity activity activity activity activity activity activity activity activity',
+      ],
+    });
   });
 });

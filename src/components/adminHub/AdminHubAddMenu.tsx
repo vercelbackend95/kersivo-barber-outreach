@@ -47,11 +47,13 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function sheetQuery(variant: 'header' | 'inline', showMobileFab?: boolean) {
+type AddMenuVariant = 'header' | 'inline' | 'icon';
+
+function sheetQuery(variant: AddMenuVariant, showMobileFab?: boolean) {
   return variant === 'header' && showMobileFab ? HEADER_SHEET_MQ : INLINE_SHEET_MQ;
 }
 
-function isSheetViewport(variant: 'header' | 'inline', showMobileFab?: boolean): boolean {
+function isSheetViewport(variant: AddMenuVariant, showMobileFab?: boolean): boolean {
   return typeof window !== 'undefined' && window.matchMedia(sheetQuery(variant, showMobileFab)).matches;
 }
 
@@ -73,7 +75,7 @@ export function AdminHubAddMenu(props: {
   capabilities: HubCapabilities;
   canAddShop?: boolean;
   tone?: 'primary' | 'outline';
-  variant?: 'header' | 'inline';
+  variant?: 'header' | 'inline' | 'icon';
   label?: string;
   testId?: string;
   /** Overview header only — one contextual mobile FAB for the existing Add menu. */
@@ -167,7 +169,19 @@ export function AdminHubAddMenu(props: {
   }, [open, activeIndex]);
 
   if (menu.empty) {
-    if (variant !== 'inline') return null;
+    if (variant === 'header') return null;
+    if (variant === 'icon') {
+      return (
+        <a
+          className="admin-hub-add-fab"
+          href={adminHubAppHref('materials')}
+          aria-label={label}
+          data-testid={props.testId ?? 'admin-hub-add-inline'}
+        >
+          <Plus aria-hidden />
+        </a>
+      );
+    }
     return (
       <a className="btn btn--ghost btn--sm admin-hub-add-menu__fallback" href={adminHubAppHref('materials')}>
         {label}
@@ -262,28 +276,36 @@ export function AdminHubAddMenu(props: {
   );
 
   const triggerClass =
-    variant === 'inline'
-      ? 'btn btn--ghost btn--sm admin-hub-add-menu__inline'
-      : `btn btn--sm admin-add-btn admin-add-btn--desktop${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`;
+    variant === 'icon'
+      ? 'admin-hub-add-fab'
+      : variant === 'inline'
+        ? 'btn btn--ghost btn--sm admin-hub-add-menu__inline'
+        : `btn btn--sm admin-add-btn admin-add-btn--desktop${tone === 'outline' ? ' btn--outline' : ' btn--primary'}`;
 
   const toggleMenu = () => (open ? close() : openMenu());
+  const compactTestId = props.testId ?? 'admin-hub-add-inline';
 
   return (
-    <div className={`admin-hub-add-menu${variant === 'inline' ? ' admin-hub-add-menu--inline' : ''}`}>
+    <div
+      className={`admin-hub-add-menu${variant === 'inline' ? ' admin-hub-add-menu--inline' : ''}${
+        variant === 'icon' ? ' admin-hub-add-menu--icon' : ''
+      }`}
+    >
       <button
         ref={desktopTriggerRef}
         type="button"
         className={triggerClass}
+        aria-label={variant === 'icon' ? label : undefined}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        data-testid={props.testId ?? (variant === 'inline' ? 'admin-hub-add-inline' : 'admin-hub-add')}
+        data-testid={props.testId ?? (variant === 'header' ? 'admin-hub-add' : compactTestId)}
         onClick={toggleMenu}
         onKeyDown={onTriggerKeyDown}
       >
         {variant === 'inline' ? null : <Plus aria-hidden />}
-        <span>{label}</span>
-        {variant === 'inline' ? null : (
+        {variant === 'icon' ? null : <span>{label}</span>}
+        {variant === 'header' ? (
           <ChevronDown
             aria-hidden
             width={14}
@@ -291,7 +313,7 @@ export function AdminHubAddMenu(props: {
             strokeWidth={2}
             className={`admin-hub-add-menu__chevron${open ? ' is-open' : ''}`}
           />
-        )}
+        ) : null}
       </button>
       {props.showMobileFab ? (
         <AdminMobileFab

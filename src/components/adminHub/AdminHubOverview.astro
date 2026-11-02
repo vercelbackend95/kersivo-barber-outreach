@@ -13,8 +13,6 @@ import {
 } from '@/components/lucide-react';
 import { websiteBuildProgressFromHubStage } from '@/lib/adminHub/buildProgress';
 import {
-  ADMIN_HUB_ACTIVITY_SHOW_ALL,
-  ADMIN_HUB_ADD,
   ADMIN_HUB_ADD_TILE,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
@@ -34,11 +32,11 @@ import {
   isOverviewTerminal,
   overviewActivityFeed,
   overviewChanges,
-  overviewChangesLocked,
   overviewColours,
   overviewHideAddMaterialsPrimary,
   overviewPreviewLocked,
   overviewPrimary,
+  overviewShowChangesTile,
   overviewShowLaunch,
   overviewTileHrefs,
   overviewWebsiteContent,
@@ -46,7 +44,6 @@ import {
   type OverviewContentAsset,
 } from '@/lib/adminHub/overview';
 import {
-  HUB_LOCKED_REASON_PREVIEW,
   HUB_NAV,
   HUB_PREVIEW_CARD_LOCKED,
   HUB_PREVIEW_OPEN_WEBSITE,
@@ -102,7 +99,7 @@ const primary = overviewPrimary({ state });
 const showLaunch = overviewShowLaunch(state);
 const buildProgress = websiteBuildProgressFromHubStage(state.stage);
 const previewLocked = overviewPreviewLocked(state.stage);
-const changesLocked = overviewChangesLocked(state.stage);
+const showChanges = overviewShowChangesTile({ stage: state.stage, hasWebsitePreview });
 const hrefs = overviewTileHrefs();
 const colours = overviewColours({
   hasLogo: Boolean(logoSrc),
@@ -193,7 +190,7 @@ const content = overviewWebsiteContent({
         ) : null}
       </section>
     ) : (
-      <div class="admin-hub-bento">
+      <div class={`admin-hub-bento${showChanges ? '' : ' admin-hub-bento--no-changes'}`}>
         <section class="admin-hub-tile admin-hub-bento__progress" data-tile="progress" aria-labelledby="admin-hub-progress-title">
           <div class="admin-hub-tile__head">
             <span class="admin-hub-tile__icon" aria-hidden="true">
@@ -245,11 +242,17 @@ const content = overviewWebsiteContent({
         {
           previewLocked ? (
             <section class="admin-hub-tile admin-hub-bento__preview admin-hub-tile--locked" data-tile="preview" aria-labelledby="admin-hub-preview-title">
+              <a class="admin-hub-tile__hit" href={hrefs.preview}>
+                <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_PREVIEW}</span>
+              </a>
               <div class="admin-hub-tile__head">
                 <span class="admin-hub-tile__icon" aria-hidden="true">
                   <Smartphone width={15} height={15} strokeWidth={1.8} />
                 </span>
                 <h2 class="admin-hub-tile__title" id="admin-hub-preview-title">{ADMIN_HUB_TILE_PREVIEW}</h2>
+                <span class="admin-hub-tile__open" aria-hidden="true">
+                  <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
+                </span>
               </div>
               <div class="admin-hub-phonewrap">
                 <div class="admin-hub-phone" aria-hidden="true">
@@ -309,24 +312,14 @@ const content = overviewWebsiteContent({
               <ImagePlus width={15} height={15} strokeWidth={1.8} />
             </span>
             <h2 class="admin-hub-tile__title" id="admin-hub-content-title">{ADMIN_HUB_TILE_CONTENT}</h2>
-            {
-              !content.empty ? (
-                addMenu.empty ? (
-                  <a class="btn btn--ghost btn--sm admin-hub-tile__action" href={hrefs.materials}>
-                    {ADMIN_HUB_ADD}
-                  </a>
-                ) : (
-                  <AdminHubAddMenu
-                    client:load
-                    variant="inline"
-                    stage={state.stage}
-                    capabilities={state.capabilities}
-                    canAddShop={hubCanAddShopItems(state.stage)}
-                    tone="outline"
-                  />
-                )
-              ) : null
-            }
+            <AdminHubAddMenu
+              client:load
+              variant="icon"
+              stage={state.stage}
+              capabilities={state.capabilities}
+              canAddShop={hubCanAddShopItems(state.stage)}
+              tone="outline"
+            />
           </div>
           {
             content.empty ? (
@@ -383,17 +376,7 @@ const content = overviewWebsiteContent({
         </section>
 
         {
-          changesLocked ? (
-            <section class="admin-hub-tile admin-hub-bento__changes admin-hub-tile--locked" data-tile="changes" aria-labelledby="admin-hub-changes-title">
-              <div class="admin-hub-tile__head">
-                <span class="admin-hub-tile__icon" aria-hidden="true">
-                  <ListChecks width={15} height={15} strokeWidth={1.8} />
-                </span>
-                <h2 class="admin-hub-tile__title" id="admin-hub-changes-title">{ADMIN_HUB_TILE_CHANGES}</h2>
-              </div>
-              <p class="admin-hub-nowbox__v">{HUB_LOCKED_REASON_PREVIEW}</p>
-            </section>
-          ) : (
+          showChanges ? (
             <a class="admin-hub-tile admin-hub-bento__changes" data-tile="changes" href={hrefs.changes}>
               <div class="admin-hub-tile__head">
                 <span class="admin-hub-tile__icon" aria-hidden="true">
@@ -443,7 +426,7 @@ const content = overviewWebsiteContent({
                 ) : null}
               </div>
             </a>
-          )
+          ) : null
         }
 
         <a
@@ -499,8 +482,8 @@ const content = overviewWebsiteContent({
               <TrendingUp width={15} height={15} strokeWidth={1.8} />
             </span>
             <h2 class="admin-hub-tile__title" id="admin-hub-activity-title">{ADMIN_HUB_TILE_ACTIVITY}</h2>
-            <a class="btn btn--ghost btn--sm" href={hrefs.activity} style="margin-left:auto">
-              {ADMIN_HUB_ACTIVITY_SHOW_ALL}
+            <a class="admin-hub-tile__open" href={hrefs.activity} aria-label="Open activity">
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
             </a>
           </div>
           <AdminHubActivityFeed client:load groups={feed} />
