@@ -137,6 +137,8 @@ export const HUB_UPLOAD_ERROR_DENIED = 'You cannot add files at this stage.';
 export const HUB_SAVING = 'Saving…';
 export const HUB_SAVED = 'Saved';
 export const HUB_SAVE_FAILED = 'Could not save. Try again.';
+export const HUB_BRAND_LOCKED =
+  'Your logo and colours have been sent. Message KERSIVO if you need to change them.';
 export const HUB_RETRY = 'Try again';
 export const HUB_UNDO = 'Undo';
 export const HUB_DELETE = 'Delete';

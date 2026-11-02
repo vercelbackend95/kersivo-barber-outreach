@@ -10,6 +10,7 @@ const loadActiveHubAssets = vi.fn();
 const maybeNotifyOpsOfHubFiles = vi.fn();
 const sendServerAnalyticsEvent = vi.fn();
 const eventCreate = vi.fn();
+const assertBrandUnlocked = vi.fn();
 
 vi.mock('@/lib/freePreview/hubApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/freePreview/hubApi')>();
@@ -33,6 +34,10 @@ vi.mock('@/lib/freePreview/hubAssets', async (importOriginal) => {
 vi.mock('@/lib/freePreview/hubFilesNotify', () => ({
   maybeNotifyOpsOfHubFiles: (...args: unknown[]) => maybeNotifyOpsOfHubFiles(...args),
 }));
+vi.mock('@/lib/adminHub/brandLock', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/adminHub/brandLock')>();
+  return { ...actual, assertBrandUnlocked: (...args: unknown[]) => assertBrandUnlocked(...args) };
+});
 vi.mock('@/lib/analytics/serverEvents', () => ({
   analyticsClientIdFromRequest: () => 'cid',
   sendServerAnalyticsEvent: (...args: unknown[]) => sendServerAnalyticsEvent(...args),
@@ -41,6 +46,7 @@ vi.mock('@/lib/db/client', () => ({
   prisma: { previewRequestEvent: { create: (...args: unknown[]) => eventCreate(...args) } },
 }));
 
+import { BrandLockedError } from '@/lib/adminHub/brandLock';
 import { GET, POST } from './assets';
 
 const TOKEN = 'A'.repeat(43);
@@ -98,6 +104,7 @@ beforeEach(() => {
   maybeNotifyOpsOfHubFiles.mockReset().mockResolvedValue('sent');
   sendServerAnalyticsEvent.mockReset();
   eventCreate.mockReset();
+  assertBrandUnlocked.mockReset().mockResolvedValue(undefined);
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -155,6 +162,28 @@ describe('POST /api/preview-hub/[token]/assets', () => {
     const file = new File([new Uint8Array([1])], 'shop.jpg', { type: 'image/jpeg' });
     const response = await post(file, 'SHOP_PHOTO', { 'content-length': String(5 * 1024 * 1024) });
     expect(response.status).toBe(413);
+  });
+
+  it('rejects a logo upload after brand submit with BRAND_LOCKED', async () => {
+    assertBrandUnlocked.mockRejectedValueOnce(new BrandLockedError('2026-11-02T12:00:00.000Z'));
+    const file = new File([new Uint8Array([1])], 'logo.png', { type: 'image/png' });
+    const response = await post(file, 'LOGO');
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      code: 'BRAND_LOCKED',
+      submittedAt: '2026-11-02T12:00:00.000Z',
+    });
+    expect(processHubUpload).not.toHaveBeenCalled();
+    expect(storeProcessedHubFile).not.toHaveBeenCalled();
+  });
+
+  it('still accepts shop photos after brand submit', async () => {
+    assertBrandUnlocked.mockRejectedValueOnce(new BrandLockedError('2026-11-02T12:00:00.000Z'));
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'shop.jpg', { type: 'image/jpeg' });
+    expect((await post(file, 'SHOP_PHOTO')).status).toBe(201);
+    expect(assertBrandUnlocked).not.toHaveBeenCalled();
+    expect(storeProcessedHubFile).toHaveBeenCalled();
   });
 });
 

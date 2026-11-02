@@ -24,6 +24,7 @@ import {
 } from '@/lib/freePreview/hubApi';
 import { maybeNotifyOpsOfHubFiles } from '@/lib/freePreview/hubFilesNotify';
 import { HUB_UPLOAD_ERROR_EMPTY, HUB_UPLOAD_ERROR_TYPE } from '@/lib/freePreview/hubCopy';
+import { assertBrandUnlocked, isBrandLockedError } from '@/lib/adminHub/brandLock';
 
 export function createHubAssetsHandlers(sourceOf: HubSourceOf): { GET: APIRoute; POST: APIRoute } {
   const GET: APIRoute = async ({ request, params }) => {
@@ -56,6 +57,15 @@ export function createHubAssetsHandlers(sourceOf: HubSourceOf): { GET: APIRoute;
     if (!kind) return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_TYPE }, 400);
     const denied = requireUploadCapability(ctxResult.ctx, kind);
     if (denied) return denied;
+
+    if (kind === 'LOGO') {
+      try {
+        await assertBrandUnlocked(ctxResult.ctx.request.id);
+      } catch (error) {
+        if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
+        throw error;
+      }
+    }
 
     const file = form.get('file');
     if (!(file instanceof File)) return hubJson({ ok: false, error: HUB_UPLOAD_ERROR_EMPTY }, 400);
@@ -109,6 +119,7 @@ export function createHubAssetsHandlers(sourceOf: HubSourceOf): { GET: APIRoute;
       }
       return hubJson({ ok: true, asset: serializeHubAsset(row) }, 201);
     } catch (error) {
+      if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
       console.error('[preview-hub] upload failed', {
         token: hubLogRef(source),
         error: error instanceof Error ? error.message : error,

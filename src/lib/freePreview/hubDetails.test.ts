@@ -3,12 +3,22 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const update = vi.fn();
+const findUnique = vi.fn();
 const eventFindFirst = vi.fn();
 const eventCreate = vi.fn();
 const maybeNotifyOpsOfHubFiles = vi.fn();
 
+const tx = {
+  $queryRaw: vi.fn(async () => undefined),
+  previewRequest: {
+    findUnique: (...args: unknown[]) => findUnique(...args),
+    update: (...args: unknown[]) => update(...args),
+  },
+};
+
 vi.mock('@/lib/db/client', () => ({
   prisma: {
+    $transaction: (fn: (client: typeof tx) => unknown) => fn(tx),
     previewRequest: { update: (...args: unknown[]) => update(...args) },
     previewRequestEvent: {
       findFirst: (...args: unknown[]) => eventFindFirst(...args),
@@ -20,6 +30,7 @@ vi.mock('./hubFilesNotify', () => ({
   maybeNotifyOpsOfHubFiles: (...args: unknown[]) => maybeNotifyOpsOfHubFiles(...args),
 }));
 
+import { BrandLockedError } from '@/lib/adminHub/brandLock';
 import {
   HUB_WEBSITE_EXTRA_TEXT_MAX,
   hubDetailsSchema,
@@ -34,11 +45,13 @@ const savedRow = {
   aboutText: 'Family shop',
   instagramUrl: 'https://www.instagram.com/sharpcuts/',
   websiteExtraText: 'Walk-ins welcome',
+  brandColoursSentAt: null,
   shopName: 'Sharp Cuts',
 };
 
 beforeEach(() => {
   update.mockReset().mockResolvedValue(savedRow);
+  findUnique.mockReset().mockResolvedValue({ brandColoursSentAt: null });
   eventFindFirst.mockReset().mockResolvedValue(null);
   eventCreate.mockReset().mockResolvedValue({ id: 'evt_1' });
   maybeNotifyOpsOfHubFiles.mockReset().mockResolvedValue('deferred');
@@ -163,6 +176,30 @@ describe('saveHubDetails', () => {
     const data = update.mock.calls[0]?.[0].data as Record<string, unknown>;
     expect(data.changeRoundsUsed).toBeUndefined();
     expect(JSON.stringify(data)).not.toContain('changeRoundsUsed');
+  });
+
+  it('blocks colour changes after brand submit and still allows website text', async () => {
+    findUnique.mockResolvedValueOnce({ brandColoursSentAt: new Date('2026-11-02T12:00:00.000Z') });
+    await expect(saveHubDetails({ requestId: 'req_1', patch: { brandPrimaryColour: '#111111' } })).rejects.toBeInstanceOf(
+      BrandLockedError,
+    );
+    expect(update).not.toHaveBeenCalled();
+
+    await saveHubDetails({ requestId: 'req_1', patch: { aboutText: 'Still editable' } });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ aboutText: 'Still editable' }),
+      }),
+    );
+  });
+
+  it('returns lock state on saved details', async () => {
+    const details = await saveHubDetails({
+      requestId: 'req_1',
+      patch: { aboutText: 'Family shop' },
+    });
+    expect(details.brandLocked).toBe(false);
+    expect(details.brandColoursSentAt).toBeNull();
   });
 });
 

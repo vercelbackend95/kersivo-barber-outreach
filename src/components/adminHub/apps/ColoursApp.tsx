@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, ImagePlus, Pipette, RotateCcw, Send, Sparkles } from '@/components/lucide-react';
+import { AdminHubConfirmDialog } from '@/components/adminHub/AdminHubConfirmDialog';
 import { useAppChrome } from './AppChrome';
 import { AppStatus } from './AppStatus';
 import type { AdminHubAppBodyProps } from './types';
@@ -10,6 +11,10 @@ import {
   ADMIN_HUB_COLOURS_BW,
   ADMIN_HUB_COLOURS_CHOOSE_LINK,
   ADMIN_HUB_COLOURS_CHOOSE_SHORT,
+  ADMIN_HUB_COLOURS_CONFIRM_BACK,
+  ADMIN_HUB_COLOURS_CONFIRM_BODY,
+  ADMIN_HUB_COLOURS_CONFIRM_TITLE,
+  ADMIN_HUB_COLOURS_CONFIRM_YES,
   ADMIN_HUB_COLOURS_CONTRAST_FAIL,
   ADMIN_HUB_COLOURS_CONTRAST_OK,
   ADMIN_HUB_COLOURS_DARK,
@@ -26,11 +31,13 @@ import {
   ADMIN_HUB_COLOURS_INTENSITY,
   ADMIN_HUB_COLOURS_LIGHT,
   ADMIN_HUB_COLOURS_LIGHTER,
+  ADMIN_HUB_COLOURS_LOCKED_NOTICE,
   ADMIN_HUB_COLOURS_LOOKS,
   ADMIN_HUB_COLOURS_MAIN,
   ADMIN_HUB_COLOURS_MAIN_SEG,
   ADMIN_HUB_COLOURS_MAKE_DEEPER,
   ADMIN_HUB_COLOURS_MAKE_LIGHTER,
+  ADMIN_HUB_COLOURS_MESSAGE_US,
   ADMIN_HUB_COLOURS_MUTED,
   ADMIN_HUB_COLOURS_NO_LOGO,
   ADMIN_HUB_COLOURS_PICK_PHOTO,
@@ -40,11 +47,13 @@ import {
   ADMIN_HUB_COLOURS_RESET,
   ADMIN_HUB_COLOURS_SAVE,
   ADMIN_HUB_COLOURS_SEND,
-  ADMIN_HUB_COLOURS_TOAST,
+  ADMIN_HUB_COLOURS_SENDING,
   ADMIN_HUB_COLOURS_UPLOAD,
   ADMIN_HUB_COLOURS_VIVID,
   ADMIN_HUB_COLOURS_YOUR_LOGO,
+  formatBrandSubmittedDate,
 } from '@/lib/adminHub/copy';
+import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import { adminHubMaterialsHref } from '@/lib/adminHub/addMenu';
 import {
   applyChroma,
@@ -72,6 +81,24 @@ import { HUB_SAVE_FAILED, HUB_SAVED, HUB_SAVING } from '@/lib/freePreview/hubCop
 
 type SaveKind = 'idle' | 'saving' | 'saved' | 'error' | 'sent';
 
+type BrandColoursResponse = {
+  ok?: boolean;
+  error?: string;
+  code?: string;
+  submittedAt?: string;
+  colours?: {
+    brandPrimaryColour?: string | null;
+    brandSecondaryColour?: string | null;
+    brandColoursSentAt?: string | null;
+    brandLocked?: boolean;
+  };
+};
+
+function brandLockedSubmittedAt(status: number, body: BrandColoursResponse): string | null {
+  if (status !== 409 || body.code !== 'BRAND_LOCKED') return null;
+  return typeof body.submittedAt === 'string' && body.submittedAt ? body.submittedAt : null;
+}
+
 function hasEyedropper(): boolean {
   return typeof window !== 'undefined' && 'EyeDropper' in window;
 }
@@ -84,7 +111,12 @@ function serviceRows(ctx: AdminHubAppBodyProps['ctx']): Array<{ name: string }> 
 export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   const logo = ctx.assets.find((asset) => asset.kind === 'LOGO') ?? null;
   const logoUrl = logo ? logoDisplayUrl(ctx.apiBase, logo) : null;
-  const canEdit = ctx.canEditDetails;
+  const [locked, setLocked] = useState(() => Boolean(ctx.details.brandLocked || ctx.details.brandColoursSentAt));
+  const [submittedAt, setSubmittedAt] = useState<string | null>(ctx.details.brandColoursSentAt ?? null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmSource, setConfirmSource] = useState<BrandColoursSource | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const canEdit = ctx.canEditDetails && !locked;
 
   const [swatches, setSwatches] = useState<ExtractedSwatch[]>(() => {
     const saved = ctx.details.brandPaletteExtracted ?? [];
@@ -102,7 +134,6 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   const [hexOpen, setHexOpen] = useState(false);
   const [hexDraft, setHexDraft] = useState('');
   const [save, setSave] = useState<SaveKind>('idle');
-  const [toast, setToast] = useState<string | null>(null);
   const [logoExtracted, setLogoExtracted] = useState<ExtractedSwatch[] | null>(null);
 
   const applyExtracted = useCallback((rows: ExtractedSwatch[], overwriteRoles: boolean) => {
@@ -172,27 +203,74 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
     [accentHex, mainHex, source, swatches, tone],
   );
 
+  const applyLocked = useCallback((at: string) => {
+    setLocked(true);
+    setSubmittedAt(at);
+    setConfirmOpen(false);
+    setConfirmError(null);
+    setSave('sent');
+  }, []);
+
+  const refreshLockedState = useCallback(
+    async (fallbackAt: string) => {
+      try {
+        const response = await fetch(`${ctx.apiBase}/details`);
+        const body = (await response.json()) as {
+          ok?: boolean;
+          details?: {
+            brandPrimaryColour?: string | null;
+            brandSecondaryColour?: string | null;
+            brandColoursSentAt?: string | null;
+          };
+        };
+        if (body.details?.brandPrimaryColour) setMainHex(body.details.brandPrimaryColour);
+        if (body.details?.brandSecondaryColour) setAccentHex(body.details.brandSecondaryColour);
+        applyLocked(body.details?.brandColoursSentAt ?? fallbackAt);
+      } catch {
+        applyLocked(fallbackAt);
+      }
+    },
+    [applyLocked, ctx.apiBase],
+  );
+
   const persist = useCallback(
     async (send: boolean, nextSource = source) => {
-      if (!canEdit) return;
+      if (!ctx.canEditDetails || locked) return;
       setSave('saving');
       setSource(nextSource);
+      if (send) setConfirmError(null);
       try {
         const response = await fetch(`${ctx.apiBase}/brand-colours`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload(send, nextSource)),
         });
-        const body = (await response.json()) as { ok?: boolean; error?: string };
+        const body = (await response.json()) as BrandColoursResponse;
+        const lockedAt = brandLockedSubmittedAt(response.status, body);
+        if (lockedAt) {
+          await refreshLockedState(lockedAt);
+          return;
+        }
         if (!response.ok || !body.ok) throw new Error(body.error || HUB_SAVE_FAILED);
-        setSave(send ? 'sent' : 'saved');
-        if (send) setToast(ADMIN_HUB_COLOURS_TOAST);
-      } catch {
+        if (send) {
+          applyLocked(body.colours?.brandColoursSentAt ?? new Date().toISOString());
+        } else {
+          setSave('saved');
+        }
+      } catch (err) {
         setSave('error');
+        if (send) setConfirmError(err instanceof Error ? err.message : HUB_SAVE_FAILED);
       }
     },
-    [canEdit, ctx.apiBase, payload, source],
+    [applyLocked, ctx.apiBase, ctx.canEditDetails, locked, payload, refreshLockedState, source],
   );
+
+  const openConfirm = useCallback((nextSource: BrandColoursSource) => {
+    if (!ctx.canEditDetails || locked) return;
+    setConfirmSource(nextSource);
+    setConfirmError(null);
+    setConfirmOpen(true);
+  }, [ctx.canEditDetails, locked]);
 
   const setRoleHex = (next: string, nextSource: BrandColoursSource = source) => {
     const hex = normaliseHexColour(next);
@@ -208,6 +286,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   };
 
   const onSwatch = (swatch: ExtractedSwatch) => {
+    if (!canEdit) return;
     if (role === 'main') setMainHex(swatch.hex);
     else setAccentHex(swatch.hex);
     setSource('LOGO');
@@ -243,17 +322,26 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
   const headerAction = useMemo(
     () =>
-      logoExtracted ? (
+      logoExtracted && !locked ? (
         <button type="button" className="btn btn--ghost btn--sm" onClick={resetToLogo} disabled={!canEdit}>
           <RotateCcw width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
           {ADMIN_HUB_COLOURS_RESET}
         </button>
       ) : null,
-    [canEdit, logoExtracted],
+    [canEdit, locked, logoExtracted],
   );
 
-  const footer = useMemo(
-    () => (
+  const footer = useMemo(() => {
+    if (locked && submittedAt) {
+      const date = formatBrandSubmittedDate(submittedAt);
+      return (
+        <p className="admin-hub-colours__locked" role="status">
+          {ADMIN_HUB_COLOURS_LOCKED_NOTICE(date)}{' '}
+          <a href={ADMIN_HUB_LINKS.messages}>{ADMIN_HUB_COLOURS_MESSAGE_US}</a>.
+        </p>
+      );
+    }
+    return (
       <>
         <p className="admin-hub-colours__choose">
           Not sure?{' '}
@@ -261,7 +349,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
             type="button"
             className="btn btn--link"
             disabled={!canEdit || save === 'saving'}
-            onClick={() => void persist(true, 'KERSIVO_CHOOSES')}
+            onClick={() => openConfirm('KERSIVO_CHOOSES')}
           >
             {ADMIN_HUB_COLOURS_CHOOSE_LINK}
           </button>{' '}
@@ -273,13 +361,13 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           disabled={!canEdit || save === 'saving'}
           onClick={() => void persist(false)}
         >
-          {save === 'saving' ? HUB_SAVING : save === 'saved' ? HUB_SAVED : ADMIN_HUB_COLOURS_SAVE}
+          {save === 'saving' && !confirmOpen ? HUB_SAVING : save === 'saved' ? HUB_SAVED : ADMIN_HUB_COLOURS_SAVE}
         </button>
         <button
           type="button"
           className="btn btn--primary"
           disabled={!canEdit || save === 'saving'}
-          onClick={() => void persist(true)}
+          onClick={() => openConfirm(source)}
         >
           <Send width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
           {ADMIN_HUB_COLOURS_SEND}
@@ -288,14 +376,13 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           type="button"
           className="btn btn--ghost btn--sm admin-hub-colours__choose-mobile"
           disabled={!canEdit || save === 'saving'}
-          onClick={() => void persist(true, 'KERSIVO_CHOOSES')}
+          onClick={() => openConfirm('KERSIVO_CHOOSES')}
         >
           {ADMIN_HUB_COLOURS_CHOOSE_SHORT}
         </button>
       </>
-    ),
-    [canEdit, persist, save],
-  );
+    );
+  }, [canEdit, confirmOpen, locked, openConfirm, persist, save, source, submittedAt]);
 
   useAppChrome({ headerAction, footer });
 
@@ -308,19 +395,14 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   };
 
   return (
-    <div className="admin-hub-colours" data-testid="admin-hub-colours">
-      {toast ? (
-        <p className="admin-hub-colours__toast" role="status">
-          {toast}
-        </p>
-      ) : null}
-      {save === 'error' ? (
+    <div className="admin-hub-colours" data-testid="admin-hub-colours" data-locked={locked ? 'true' : undefined}>
+      {save === 'error' && !confirmOpen ? (
         <p className="admin-hub-colours__error" role="alert">
           {HUB_SAVE_FAILED}
         </p>
       ) : null}
 
-      <ColoursLogoPreview logoUrl={logoUrl} canUpload={ctx.canUpload} />
+      <ColoursLogoPreview logoUrl={logoUrl} canUpload={ctx.canUpload && !locked} />
 
       <div className="admin-hub-colours__preview-first">
         <LivePreview
@@ -350,7 +432,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
               </div>
             </div>
           ) : (
-            <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} inPanel />
+            <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload && !locked} inPanel />
           )}
           {extracting && !swatches.length && !mainHex ? <AppStatus state="loading" /> : null}
           <p className="admin-hub-cp__label">
@@ -414,6 +496,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
               </button>
             ))}
           </div>
+          {!locked ? (
           <div className="admin-hub-colours__tools">
             {eyedropper ? (
               <button type="button" className="btn btn--outline btn--sm" onClick={() => void pickFromPhoto()} disabled={!canEdit}>
@@ -425,7 +508,8 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
               {ADMIN_HUB_COLOURS_HEX}
             </button>
           </div>
-          {hexOpen ? (
+          ) : null}
+          {hexOpen && !locked ? (
             <div className="admin-hub-colours__hex">
               <label>
                 {ADMIN_HUB_COLOURS_HEX_LABEL}
@@ -437,9 +521,10 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
                   }}
                   placeholder="#1F6F6B"
                   spellCheck={false}
+                  disabled={!canEdit}
                 />
               </label>
-              <button type="button" className="btn btn--outline btn--sm" onClick={onHexSubmit}>
+              <button type="button" className="btn btn--outline btn--sm" onClick={onHexSubmit} disabled={!canEdit}>
                 Use
               </button>
             </div>
@@ -460,6 +545,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
                   data-testid={`admin-hub-role-${id}`}
                   onClick={() => setRole(id)}
                   aria-pressed={role === id}
+                  disabled={!canEdit}
                 >
                   <span className="admin-hub-role__sw" style={{ background: hex || 'transparent' }} />
                   <span>
@@ -472,13 +558,14 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
             })}
           </div>
           <div className="admin-hub-seg" role="tablist" aria-label="Role">
-            <button type="button" className={role === 'main' ? 'is-on' : ''} onClick={() => setRole('main')} role="tab" aria-selected={role === 'main'}>
+            <button type="button" className={role === 'main' ? 'is-on' : ''} onClick={() => setRole('main')} role="tab" aria-selected={role === 'main'} disabled={!canEdit}>
               {ADMIN_HUB_COLOURS_MAIN_SEG}
             </button>
-            <button type="button" className={role === 'accent' ? 'is-on' : ''} onClick={() => setRole('accent')} role="tab" aria-selected={role === 'accent'}>
+            <button type="button" className={role === 'accent' ? 'is-on' : ''} onClick={() => setRole('accent')} role="tab" aria-selected={role === 'accent'} disabled={!canEdit}>
               {ADMIN_HUB_COLOURS_ACCENT}
             </button>
           </div>
+          {!locked ? (
           <div className="admin-hub-cp__panel admin-hub-tuner">
             <p className="admin-hub-cp__label">
               {role === 'main' ? ADMIN_HUB_COLOURS_FINE_TUNE_MAIN : ADMIN_HUB_COLOURS_FINE_TUNE_ACCENT}
@@ -571,6 +658,13 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
             </div>
             <ContrastRow contrast={contrast} canEdit={canEdit} onFix={applyContrastFix} />
           </div>
+          ) : (
+            <div className="admin-hub-cp__panel">
+              <p className="admin-hub-cp__label">{ADMIN_HUB_COLOURS_BG}</p>
+              <p className="admin-hub-colours__hint">{tone === 'DARK' ? ADMIN_HUB_COLOURS_DARK : ADMIN_HUB_COLOURS_LIGHT}</p>
+              <ContrastRow contrast={contrast} canEdit={false} onFix={applyContrastFix} />
+            </div>
+          )}
         </section>
 
         <section className="admin-hub-colours__looks">
@@ -587,6 +681,65 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           <p className="admin-hub-colours__guide">{ADMIN_HUB_COLOURS_GUIDE}</p>
         </section>
       </div>
+      {confirmOpen ? (
+        <AdminHubConfirmDialog
+          title={ADMIN_HUB_COLOURS_CONFIRM_TITLE}
+          body={ADMIN_HUB_COLOURS_CONFIRM_BODY}
+          primaryLabel={ADMIN_HUB_COLOURS_CONFIRM_YES}
+          secondaryLabel={ADMIN_HUB_COLOURS_CONFIRM_BACK}
+          busy={save === 'saving'}
+          busyLabel={ADMIN_HUB_COLOURS_SENDING}
+          error={confirmError}
+          onConfirm={() => void persist(true, confirmSource ?? source)}
+          onClose={() => {
+            if (save === 'saving') return;
+            setConfirmOpen(false);
+            setConfirmError(null);
+          }}
+          testId="admin-hub-colours-confirm"
+        >
+          <ConfirmSummary logoUrl={logoUrl} mainHex={mainHex} accentHex={accentHex} swatches={swatches} />
+        </AdminHubConfirmDialog>
+      ) : null}
+    </div>
+  );
+}
+
+function ConfirmSummary(props: {
+  logoUrl: string | null;
+  mainHex: string;
+  accentHex: string;
+  swatches: ExtractedSwatch[];
+}) {
+  const extras = props.swatches.filter((row) => row.hex !== props.mainHex && row.hex !== props.accentHex);
+  return (
+    <div className="admin-hub-confirm__summary">
+      <div className="admin-hub-confirm__logo">
+        {props.logoUrl ? <img src={props.logoUrl} alt="" /> : <span>{ADMIN_HUB_COLOURS_NO_LOGO}</span>}
+      </div>
+      <ul className="admin-hub-confirm__swatches">
+        {props.mainHex ? (
+          <li>
+            <i style={{ background: props.mainHex }} aria-hidden="true" />
+            <span>{ADMIN_HUB_COLOURS_MAIN}</span>
+            <code>{props.mainHex}</code>
+          </li>
+        ) : null}
+        {props.accentHex ? (
+          <li>
+            <i style={{ background: props.accentHex }} aria-hidden="true" />
+            <span>{ADMIN_HUB_COLOURS_ACCENT}</span>
+            <code>{props.accentHex}</code>
+          </li>
+        ) : null}
+        {extras.map((row) => (
+          <li key={row.hex}>
+            <i style={{ background: row.hex }} aria-hidden="true" />
+            <span>{row.name}</span>
+            <code>{row.hex}</code>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

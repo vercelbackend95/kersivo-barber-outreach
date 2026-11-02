@@ -95,6 +95,9 @@
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+.admin-hub-pill svg {
+  flex-shrink: 0;
+}
 .admin-hub-pill__dot {
   width: 6px;
   height: 6px;
@@ -1650,6 +1653,14 @@ a.admin-hub-tile:focus-visible,
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.03);
 }
+.admin-hub-extract__row:disabled,
+.admin-hub-role:disabled,
+.admin-hub-seg button:disabled,
+.admin-hub-swatch-row__item:disabled {
+  cursor: default;
+  opacity: 1;
+  color: inherit;
+}
 .admin-hub-extract__row:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
@@ -2125,6 +2136,177 @@ a.admin-hub-tile:focus-visible,
     width: 100%;
     order: 2;
     justify-content: center;
+  }
+}
+
+.admin-hub-app__foot .admin-hub-colours__locked {
+  margin: 0;
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.admin-hub-colours__locked a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.admin-hub-colours__locked a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.admin-hub-confirm-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.admin-hub-confirm__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  cursor: pointer;
+}
+@supports (backdrop-filter: blur(6px)) {
+  .admin-hub-confirm__scrim {
+    backdrop-filter: blur(6px);
+  }
+}
+.admin-hub-confirm {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 22px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0d0d0e, #080809);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 24px 80px rgba(0, 0, 0, 0.8);
+  color: var(--fg);
+}
+.admin-hub-confirm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+  pointer-events: none;
+}
+.admin-hub-confirm__title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.admin-hub-confirm__body {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.admin-hub-confirm__summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--admin-hub-hair);
+  background: rgba(255, 255, 255, 0.03);
+}
+.admin-hub-confirm__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background-color: #ece8e1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.admin-hub-confirm__logo img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.admin-hub-confirm__logo span {
+  font-size: 11px;
+  text-align: center;
+  color: #141414;
+  padding: 4px;
+}
+.admin-hub-confirm__swatches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.admin-hub-confirm__swatches li {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.admin-hub-confirm__swatches i {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+.admin-hub-confirm__swatches code {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-hub-muted-2);
+}
+.admin-hub-confirm__error {
+  margin: 0 0 12px;
+  color: #ffd38a;
+  font-size: 13px;
+}
+.admin-hub-confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.admin-hub-confirm:focus {
+  outline: none;
+}
+.admin-hub-confirm:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+@media (max-width: 1023px) {
+  .admin-hub-confirm-root {
+    place-items: end center;
+    padding: 0;
+  }
+  .admin-hub-confirm {
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .admin-hub-confirm__actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .admin-hub-app__foot .admin-hub-colours__locked {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-hub-confirm {
+    animation: none;
   }
 }
 

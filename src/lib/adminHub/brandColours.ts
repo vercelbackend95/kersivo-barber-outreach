@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { HEX_COLOUR_RE, MAX_SWATCHES, normaliseHexColour } from '@/lib/adminHub/colour';
+import {
+  assertBrandUnlockedTx,
+  BrandLockedError,
+  brandLockState,
+  buildBrandSubmittedSnapshot,
+} from '@/lib/adminHub/brandLock';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 
 export const BRAND_COLOURS_SENT = 'BRAND_COLOURS_SENT';
@@ -47,6 +53,7 @@ export type BrandColoursSaved = {
   brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted: Array<{ hex: string; share: number }> | null;
   brandColoursSentAt: string | null;
+  brandLocked: boolean;
 };
 
 function asTone(value: string | null): BrandColoursSaved['brandBackgroundTone'] {
@@ -78,60 +85,129 @@ export function toBrandColoursSaved(row: {
   brandPaletteExtracted: unknown;
   brandColoursSentAt: Date | null;
 }): BrandColoursSaved {
+  const lock = brandLockState(row.brandColoursSentAt);
   return {
     brandPrimaryColour: row.brandPrimaryColour,
     brandSecondaryColour: row.brandSecondaryColour,
     brandBackgroundTone: asTone(row.brandBackgroundTone),
     brandColoursSource: asSource(row.brandColoursSource),
     brandPaletteExtracted: parseBrandPalette(row.brandPaletteExtracted),
-    brandColoursSentAt: row.brandColoursSentAt ? row.brandColoursSentAt.toISOString() : null,
+    brandColoursSentAt: lock.submittedAt,
+    brandLocked: lock.locked,
   };
 }
+
+const COLOUR_SELECT = {
+  brandPrimaryColour: true,
+  brandSecondaryColour: true,
+  brandBackgroundTone: true,
+  brandColoursSource: true,
+  brandPaletteExtracted: true,
+  brandColoursSentAt: true,
+} as const;
 
 export async function saveBrandColours(input: {
   requestId: string;
   patch: BrandColoursInput;
+  submittedByUserId?: string | null;
+  now?: Date;
 }): Promise<BrandColoursSaved> {
-  const data: Prisma.PreviewRequestUpdateInput = {};
-  if (input.patch.brandPrimaryColour !== undefined) data.brandPrimaryColour = input.patch.brandPrimaryColour;
-  if (input.patch.brandSecondaryColour !== undefined) data.brandSecondaryColour = input.patch.brandSecondaryColour;
-  if (input.patch.brandBackgroundTone !== undefined) data.brandBackgroundTone = input.patch.brandBackgroundTone;
-  if (input.patch.brandColoursSource !== undefined) data.brandColoursSource = input.patch.brandColoursSource;
-  if (input.patch.brandPaletteExtracted !== undefined) {
-    data.brandPaletteExtracted =
-      input.patch.brandPaletteExtracted === null
-        ? Prisma.JsonNull
-        : (input.patch.brandPaletteExtracted as Prisma.InputJsonValue);
-  }
   const send = Boolean(input.patch.send);
-  if (send) data.brandColoursSentAt = new Date();
+  const now = input.now ?? new Date();
+  const submittedByUserId = input.submittedByUserId ?? null;
 
-  const fields = Object.keys(data);
-  const row = await prisma.previewRequest.update({
-    where: { id: input.requestId },
-    data: {
-      ...data,
-      events: send
-        ? {
-            create: {
-              action: PREVIEW_REQUEST_ACTIONS.BRAND_COLOURS_SENT,
-              meta: {
-                source: input.patch.brandColoursSource ?? null,
-                tone: input.patch.brandBackgroundTone ?? null,
-                fields,
-              },
-            },
-          }
-        : undefined,
-    },
-    select: {
-      brandPrimaryColour: true,
-      brandSecondaryColour: true,
-      brandBackgroundTone: true,
-      brandColoursSource: true,
-      brandPaletteExtracted: true,
-      brandColoursSentAt: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    await assertBrandUnlockedTx(tx, input.requestId);
+
+    const current = await tx.previewRequest.findUnique({
+      where: { id: input.requestId },
+      select: COLOUR_SELECT,
+    });
+    if (!current) {
+      throw new Error('Preview request not found.');
+    }
+
+    const data: Prisma.PreviewRequestUpdateManyMutationInput = {};
+    if (input.patch.brandPrimaryColour !== undefined) data.brandPrimaryColour = input.patch.brandPrimaryColour;
+    if (input.patch.brandSecondaryColour !== undefined) data.brandSecondaryColour = input.patch.brandSecondaryColour;
+    if (input.patch.brandBackgroundTone !== undefined) data.brandBackgroundTone = input.patch.brandBackgroundTone;
+    if (input.patch.brandColoursSource !== undefined) data.brandColoursSource = input.patch.brandColoursSource;
+    if (input.patch.brandPaletteExtracted !== undefined) {
+      data.brandPaletteExtracted =
+        input.patch.brandPaletteExtracted === null
+          ? Prisma.JsonNull
+          : (input.patch.brandPaletteExtracted as Prisma.InputJsonValue);
+    }
+
+    const nextPrimary =
+      input.patch.brandPrimaryColour !== undefined ? input.patch.brandPrimaryColour : current.brandPrimaryColour;
+    const nextSecondary =
+      input.patch.brandSecondaryColour !== undefined
+        ? input.patch.brandSecondaryColour
+        : current.brandSecondaryColour;
+    const nextTone =
+      input.patch.brandBackgroundTone !== undefined ? input.patch.brandBackgroundTone : current.brandBackgroundTone;
+    const nextSource =
+      input.patch.brandColoursSource !== undefined ? input.patch.brandColoursSource : current.brandColoursSource;
+    const nextPalette =
+      input.patch.brandPaletteExtracted !== undefined
+        ? input.patch.brandPaletteExtracted
+        : parseBrandPalette(current.brandPaletteExtracted);
+
+    if (send) {
+      const snapshot = await buildBrandSubmittedSnapshot(tx, {
+        requestId: input.requestId,
+        brandPrimaryColour: nextPrimary,
+        brandSecondaryColour: nextSecondary,
+        brandBackgroundTone: nextTone,
+        brandColoursSource: nextSource,
+        brandPaletteExtracted: parseBrandPalette(nextPalette),
+        submittedByUserId,
+      });
+      const submitData: Prisma.PreviewRequestUpdateManyMutationInput = {
+        ...data,
+        brandColoursSentAt: now,
+        brandSubmittedByUserId: submittedByUserId,
+        brandSubmittedSnapshot: snapshot as Prisma.InputJsonValue,
+      };
+      // DB-level guard: a second submit (or a racing double-click) matches zero rows.
+      const claimed = await tx.previewRequest.updateMany({
+        where: { id: input.requestId, brandColoursSentAt: null },
+        data: submitData,
+      });
+      if (claimed.count !== 1) {
+        const existing = await tx.previewRequest.findUnique({
+          where: { id: input.requestId },
+          select: { brandColoursSentAt: true },
+        });
+        if (existing?.brandColoursSentAt) throw new BrandLockedError(existing.brandColoursSentAt);
+        throw new Error('Preview request not found.');
+      }
+      await tx.previewRequestEvent.create({
+        data: {
+          previewRequestId: input.requestId,
+          action: PREVIEW_REQUEST_ACTIONS.BRAND_COLOURS_SENT,
+          meta: {
+            source: nextSource,
+            tone: nextTone,
+            fields: [...Object.keys(data), 'brandColoursSentAt'],
+            snapshot,
+            submittedByUserId,
+          },
+        },
+      });
+      const row = await tx.previewRequest.findUniqueOrThrow({
+        where: { id: input.requestId },
+        select: COLOUR_SELECT,
+      });
+      return toBrandColoursSaved(row);
+    }
+
+    const row = await tx.previewRequest.update({
+      where: { id: input.requestId },
+      data,
+      select: COLOUR_SELECT,
+    });
+    return toBrandColoursSaved(row);
   });
-  return toBrandColoursSaved(row);
 }

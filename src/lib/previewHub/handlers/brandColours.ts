@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { isBrandLockedError } from '@/lib/adminHub/brandLock';
 import { brandColoursSchema, saveBrandColours } from '@/lib/adminHub/brandColours';
 import {
   enforceHubDetailsRate,
@@ -43,6 +44,7 @@ export function createHubBrandColoursHandlers(sourceOf: HubSourceOf): { PATCH: A
       }
       return hubJson({ ok: true, colours });
     } catch (error) {
+      if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
       console.error('[preview-hub] brand colours save failed', {
         token: hubLogRef(source),
         error: error instanceof Error ? error.message : error,

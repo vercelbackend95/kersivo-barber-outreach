@@ -1642,7 +1642,12 @@ model PreviewRequest {
   brandBackgroundTone    String?
   brandColoursSource     String?
   brandPaletteExtracted  Json?
+  /// When the owner sent logo and colours to KERSIVO. Set = locked for the preview phase.
   brandColoursSentAt     DateTime?
+  /// Account id when the submitter had one. Preview-hub owners usually have none yet.
+  brandSubmittedByUserId String?
+  /// Logo file reference + colour values at submit. KERSIVO builds from this snapshot.
+  brandSubmittedSnapshot Json?
   styleNotes             String?
   aboutText              String?   @db.Text
   websiteExtraText       String?   @db.Text

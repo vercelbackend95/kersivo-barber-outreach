@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   ImagePlus,
   ListChecks,
+  Lock,
   Palette,
   Smartphone,
   TrendingUp,
@@ -449,6 +450,7 @@ const content = overviewWebsiteContent({
           class="admin-hub-tile admin-hub-bento__colours"
           data-tile="colours"
           href={hrefs.colours}
+          data-locked={colours.locked ? 'true' : undefined}
           onkeydown="if (event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); this.click(); }"
         >
           <div class="admin-hub-tile__head">
@@ -469,7 +471,7 @@ const content = overviewWebsiteContent({
                 colours.swatches.length ? (
                   <p>
                     <strong>{colours.headline}</strong>
-                    <span>{ADMIN_HUB_COLOURS_TUNE}</span>
+                    {colours.locked ? null : <span>{ADMIN_HUB_COLOURS_TUNE}</span>}
                   </p>
                 ) : null
               }
@@ -477,7 +479,13 @@ const content = overviewWebsiteContent({
             <AdminHubSwatches client:load swatches={colours.swatches} />
             <div class="admin-hub-tile__foot">
               <span class:list={['admin-hub-pill', colours.status === 'not_sent' ? 'admin-hub-pill--amber' : 'admin-hub-pill--live']}>
-                <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+                {
+                  colours.locked ? (
+                    <Lock width={11} height={11} strokeWidth={1.8} aria-hidden="true" />
+                  ) : (
+                    <span class="admin-hub-pill__dot" aria-hidden="true"></span>
+                  )
+                }
                 {colours.statusLabel}
               </span>
               {colours.status === 'not_sent' && colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}

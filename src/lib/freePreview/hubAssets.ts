@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { PreviewHubActor, PreviewHubAssetKind } from '@prisma/client';
 import sharp from 'sharp';
 import { prisma } from '@/lib/db/client';
+import { assertBrandUnlocked } from '@/lib/adminHub/brandLock';
 import {
   deletePrivateOnboardingFile,
   retrievePrivateOnboardingFile,
@@ -350,6 +351,9 @@ export async function storeProcessedHubFile(input: {
       thumbPath,
       input.file.thumb.contentType,
     );
+  }
+  if (input.file.kind === 'LOGO') {
+    await assertBrandUnlocked(input.requestId);
   }
   const nextOrder = await prisma.previewHubAsset.count({
     where: { previewRequestId: input.requestId, kind: input.file.kind, deletedAt: null },

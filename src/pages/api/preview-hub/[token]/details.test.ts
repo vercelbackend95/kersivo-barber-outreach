@@ -27,6 +27,7 @@ vi.mock('@/lib/analytics/serverEvents', () => ({
   sendServerAnalyticsEvent: (...args: unknown[]) => sendServerAnalyticsEvent(...args),
 }));
 
+import { BrandLockedError } from '@/lib/adminHub/brandLock';
 import { GET, PATCH } from './details';
 
 const TOKEN = 'A'.repeat(43);
@@ -80,6 +81,8 @@ describe('GET /api/preview-hub/[token]/details', () => {
         aboutText: 'Family shop',
         instagramUrl: 'https://www.instagram.com/sharpcuts/',
         websiteExtraText: 'Walk-ins',
+        brandColoursSentAt: null,
+        brandLocked: false,
       },
     });
   });
@@ -149,5 +152,22 @@ describe('PATCH /api/preview-hub/[token]/details', () => {
         websiteExtraText: 'Card and cash',
       }),
     });
+  });
+
+  it('returns 409 BRAND_LOCKED when colours are already submitted', async () => {
+    saveHubDetails.mockRejectedValueOnce(new BrandLockedError('2026-11-02T12:00:00.000Z'));
+    const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/details`, {
+      method: 'PATCH',
+      headers: { origin: 'http://localhost', 'content-type': 'application/json' },
+      body: JSON.stringify({ brandPrimaryColour: '#d72638' }),
+    });
+    const response = await PATCH({ request, params: { token: TOKEN } } as never);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      code: 'BRAND_LOCKED',
+      submittedAt: '2026-11-02T12:00:00.000Z',
+    });
+    expect(sendServerAnalyticsEvent).not.toHaveBeenCalled();
   });
 });

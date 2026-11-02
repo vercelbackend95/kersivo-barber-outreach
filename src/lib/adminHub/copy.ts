@@ -128,12 +128,34 @@ export const ADMIN_HUB_COLOURS_LOOKS = 'How it looks on your site';
 export const ADMIN_HUB_COLOURS_GUIDE =
   "This is a guide, not your final design. We'll build your website in these colours.";
 export const ADMIN_HUB_COLOURS_SEND = 'Send colours to KERSIVO';
+export const ADMIN_HUB_COLOURS_CONFIRM_TITLE = 'Send your logo and colours to KERSIVO?';
+export const ADMIN_HUB_COLOURS_CONFIRM_BODY =
+  "Once sent, your logo and brand colours are locked and we'll start building your site with them. You won't be able to change them here afterwards. If something needs fixing later, send us a message.";
+export const ADMIN_HUB_COLOURS_CONFIRM_YES = 'Yes, send to KERSIVO';
+export const ADMIN_HUB_COLOURS_CONFIRM_BACK = 'Go back and review';
+export const ADMIN_HUB_COLOURS_SENDING = 'Sending…';
+export const ADMIN_HUB_COLOURS_LOCKED_NOTICE = (date: string) =>
+  `Sent to KERSIVO on ${date}. Your logo and colours are locked while we build your site. Need a change?`;
+export const ADMIN_HUB_COLOURS_MESSAGE_US = 'Message us';
 export const ADMIN_HUB_COLOURS_CHOOSE = "Not sure? Let KERSIVO choose — we'll pick from your logo.";
 export const ADMIN_HUB_COLOURS_CHOOSE_SHORT = 'Let KERSIVO choose';
 export const ADMIN_HUB_COLOURS_CHOOSE_LINK = 'Let KERSIVO choose';
 export const ADMIN_HUB_COLOURS_SAVE = 'Save draft';
 export const ADMIN_HUB_COLOURS_RESET = 'Reset to logo';
 export const ADMIN_HUB_COLOURS_TOAST = "Thanks — we'll use these colours for your website.";
+
+/** UK long date in Europe/London, e.g. 2 November 2026. */
+export function formatBrandSubmittedDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-GB', {
+    timeZone: 'Europe/London',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 export const ADMIN_HUB_COLOURS_CONTRAST_OK = 'Text on your buttons is easy to read';
 export const ADMIN_HUB_COLOURS_CONTRAST_FAIL = 'Hard to read on buttons';
 export const ADMIN_HUB_COLOURS_MAKE_DEEPER = 'Make it deeper';

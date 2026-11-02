@@ -9,6 +9,7 @@ import {
   resolveHubApiContext,
   type HubSourceOf,
 } from '@/lib/freePreview/hubApi';
+import { isBrandLockedError } from '@/lib/adminHub/brandLock';
 import { hubDetailsSchema, publicHubDetails, saveHubDetails } from '@/lib/freePreview/hubDetails';
 
 export function createHubDetailsHandlers(sourceOf: HubSourceOf): { GET: APIRoute; PATCH: APIRoute } {
@@ -54,6 +55,7 @@ export function createHubDetailsHandlers(sourceOf: HubSourceOf): { GET: APIRoute
       }
       return hubJson({ ok: true, details });
     } catch (error) {
+      if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
       console.error('[preview-hub] details save failed', {
         token: hubLogRef(source),
         error: error instanceof Error ? error.message : error,

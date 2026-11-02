@@ -37,6 +37,7 @@ function ctx(overrides: Partial<AdminHubAppContext> = {}): AdminHubAppContext {
       brandColoursSource: 'LOGO',
       brandPaletteExtracted: palette,
       brandColoursSentAt: null,
+      brandLocked: false,
     },
     assets: [],
     reviews: { SERVICES: null, TEAM: null, HOURS: null },
@@ -144,21 +145,159 @@ describe('ColoursApp', () => {
     });
   });
 
-  it('sends colours and shows the thanks toast', async () => {
+  it('opens a confirmation dialog before sending', async () => {
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
-    await waitFor(() => expect(screen.getByRole('status').textContent).toContain("Thanks — we'll use these colours"));
-    expect(lastBody()).toMatchObject({ send: true });
+    expect(fetch).not.toHaveBeenCalled();
+    const dialog = screen.getByRole('dialog', { name: 'Send your logo and colours to KERSIVO?' });
+    expect(dialog.textContent).toContain("Once sent, your logo and brand colours are locked");
+    expect(dialog.textContent).toContain('#1F6F6B');
+    expect(dialog.textContent).toContain('#C9A24A');
+    fireEvent.click(screen.getByRole('button', { name: 'Go back and review' }));
+    expect(screen.queryByRole('dialog', { name: 'Send your logo and colours to KERSIVO?' })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Send your logo and colours to KERSIVO?' })).toBeNull();
   });
 
-  it('sends Let KERSIVO choose with that source', async () => {
+  it('sends colours after confirm and shows the locked notice', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        colours: { brandLocked: true, brandColoursSentAt: '2026-11-02T12:00:00.000Z' },
+      }),
+    } as Response);
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, send to KERSIVO' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toContain(
+        'Sent to KERSIVO on 2 November 2026. Your logo and colours are locked while we build your site. Need a change?',
+      ),
+    );
+    expect(lastBody()).toMatchObject({ send: true });
+    expect(screen.getByRole('link', { name: 'Message us' }).getAttribute('href')).toBe('/admin/messages');
+    expect(screen.queryByRole('button', { name: 'Send colours to KERSIVO' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: /Depth/i })).toBeNull();
+  });
+
+  it('disables both confirm buttons while sending', async () => {
+    let finish: (value: Response) => void = () => undefined;
+    vi.mocked(fetch).mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, send to KERSIVO' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sending…' })).toBeTruthy());
+    expect((screen.getByRole('button', { name: 'Sending…' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Go back and review' }) as HTMLButtonElement).disabled).toBe(true);
+    finish({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        colours: { brandLocked: true, brandColoursSentAt: '2026-11-02T12:00:00.000Z' },
+      }),
+    } as Response);
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Sent to KERSIVO on 2 November 2026'));
+  });
+
+  it('sends Let KERSIVO choose after confirm with that source', async () => {
     render(<Harness />);
     fireEvent.click(screen.getAllByRole('button', { name: 'Let KERSIVO choose' })[0]!);
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, send to KERSIVO' }));
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     expect(lastBody()).toMatchObject({
       send: true,
       brandColoursSource: 'KERSIVO_CHOOSES',
     });
+  });
+
+  it('shows a retryable error in the confirm dialog when send fails', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ ok: false, error: 'Could not save. Try again.' }),
+    } as Response);
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, send to KERSIVO' }));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Could not save. Try again.'));
+    const yes = screen.getByRole('button', { name: 'Yes, send to KERSIVO' }) as HTMLButtonElement;
+    const back = screen.getByRole('button', { name: 'Go back and review' }) as HTMLButtonElement;
+    expect(yes.disabled).toBe(false);
+    expect(back.disabled).toBe(false);
+  });
+
+  it('locks the view on 409 BRAND_LOCKED instead of showing a generic error', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('/brand-colours')) {
+        return {
+          ok: false,
+          status: 409,
+          json: async () => ({
+            ok: false,
+            code: 'BRAND_LOCKED',
+            submittedAt: '2026-11-02T12:00:00.000Z',
+          }),
+        } as Response;
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          details: {
+            brandPrimaryColour: '#1F6F6B',
+            brandSecondaryColour: '#C9A24A',
+            brandColoursSentAt: '2026-11-02T12:00:00.000Z',
+          },
+        }),
+      } as Response;
+    });
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send colours to KERSIVO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, send to KERSIVO' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toContain('Sent to KERSIVO on 2 November 2026'),
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send colours to KERSIVO' })).toBeNull();
+  });
+
+  it('renders a read-only locked view when colours were already sent', () => {
+    render(
+      <Harness
+        overrides={{
+          details: {
+            brandPrimaryColour: '#1F6F6B',
+            brandSecondaryColour: '#C9A24A',
+            styleNotes: null,
+            aboutText: null,
+            brandBackgroundTone: 'DARK',
+            brandColoursSource: 'LOGO',
+            brandPaletteExtracted: palette,
+            brandColoursSentAt: '2026-11-02T12:00:00.000Z',
+            brandLocked: true,
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole('status').textContent).toContain('Sent to KERSIVO on 2 November 2026');
+    expect(screen.queryByRole('button', { name: 'Send colours to KERSIVO' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Upload logo' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Upload logo' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: /Depth/i })).toBeNull();
+    expect((screen.getAllByRole('button', { name: /Teal/i })[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('offers Make it deeper when the accent fails contrast', async () => {
@@ -174,6 +313,7 @@ describe('ColoursApp', () => {
             brandColoursSource: 'MANUAL',
             brandPaletteExtracted: palette,
             brandColoursSentAt: null,
+            brandLocked: false,
           },
         }}
       />,

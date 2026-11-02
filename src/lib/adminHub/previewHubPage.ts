@@ -2,6 +2,7 @@ import type { APIContext } from 'astro';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { adminHubAppMeta } from './apps';
 import { parseBrandPalette } from './brandColours';
+import { brandLockState } from './brandLock';
 import {
   ADMIN_PRIVATE_HEADERS,
   adminSessionShopFor,
@@ -164,6 +165,7 @@ export async function preparePreviewHubPage(input: {
   const brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null =
     rawSource === 'LOGO' || rawSource === 'MANUAL' || rawSource === 'KERSIVO_CHOOSES' ? rawSource : null;
   const brandPaletteExtracted = parseBrandPalette(ctx.request.brandPaletteExtracted);
+  const brandLock = brandLockState(ctx.request.brandColoursSentAt);
   const appCtx: AdminHubAppContext = {
     apiBase: ADMIN_HUB_API_BASE,
     canUpload: caps.canUpload,
@@ -181,7 +183,8 @@ export async function preparePreviewHubPage(input: {
       brandBackgroundTone,
       brandColoursSource,
       brandPaletteExtracted,
-      brandColoursSentAt: ctx.request.brandColoursSentAt ? ctx.request.brandColoursSentAt.toISOString() : null,
+      brandColoursSentAt: brandLock.submittedAt,
+      brandLocked: brandLock.locked,
     },
     assets: view.assets,
     reviews: view.reviews,

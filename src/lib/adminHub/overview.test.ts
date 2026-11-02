@@ -34,6 +34,7 @@ import {
   ADMIN_HUB_COLOURS_SAVED,
   ADMIN_HUB_COLOURS_SENT,
   ADMIN_HUB_STEP_TODAY,
+  formatBrandSubmittedDate,
   ADMIN_HUB_UNREAD_COUNT,
 } from './copy';
 import { ADMIN_HUB_LINKS } from './links';
@@ -214,8 +215,14 @@ describe('overview view-model', () => {
         hasLogo: true,
         brandColoursSentAt: new Date('2026-10-31'),
         brandColoursSource: 'LOGO',
-      }).statusLabel,
-    ).toBe(ADMIN_HUB_COLOURS_SENT);
+      }),
+    ).toMatchObject({
+      statusLabel: ADMIN_HUB_COLOURS_SENT,
+      locked: true,
+      submittedAt: new Date('2026-10-31').toISOString(),
+    });
+    expect(overviewColours({ hasLogo: true }).locked).toBe(false);
+    expect(formatBrandSubmittedDate('2026-11-02T12:00:00.000Z')).toBe('2 November 2026');
     expect(
       overviewColours({
         hasLogo: true,
