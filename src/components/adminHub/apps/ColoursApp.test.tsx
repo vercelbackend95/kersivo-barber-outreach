@@ -9,7 +9,7 @@ import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './App
 import type { AdminHubAppContext } from './types';
 
 vi.mock('@/lib/adminHub/colour/runExtract', () => ({
-  extractFromLogoUrl: vi.fn(),
+  extractFromLogoUrl: vi.fn().mockResolvedValue([]),
   logoDisplayUrl: () => '/api/admin-hub/assets/logo_1?size=thumb',
 }));
 
@@ -188,5 +188,43 @@ describe('ColoursApp', () => {
     render(<Harness overrides={{ canEditDetails: false }} />);
     expect((screen.getByRole('slider', { name: /Depth/i }) as HTMLInputElement).disabled).toBe(true);
     expect((screen.getAllByRole('button', { name: /Teal/i })[0] as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows a no-logo placeholder and upload action when no logo is uploaded', () => {
+    render(<Harness />);
+    expect(screen.getAllByText('No logo uploaded yet').length).toBeGreaterThan(0);
+    const upload = screen.getAllByRole('link', { name: 'Upload logo' });
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload[0]!.getAttribute('href')).toBe('/admin?app=materials&item=logo');
+  });
+
+  it('shows the selected logo in the mobile preview and desktop pair', () => {
+    render(
+      <Harness
+        overrides={{
+          assets: [
+            {
+              id: 'logo_1',
+              kind: 'LOGO',
+              originalFileName: 'logo.png',
+              contentType: 'image/png',
+              sizeBytes: 8,
+              width: 120,
+              height: 80,
+              caption: null,
+              sortOrder: 0,
+              barberId: null,
+              uploadedBy: 'OWNER',
+              createdAt: '2026-11-01T12:00:00.000Z',
+              hasThumb: true,
+            },
+          ],
+        }}
+      />,
+    );
+    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_1?size=thumb');
+    expect(document.querySelectorAll('.admin-hub-logo-pair img')).toHaveLength(2);
+    expect(screen.queryByText('No logo uploaded yet')).toBeNull();
   });
 });
