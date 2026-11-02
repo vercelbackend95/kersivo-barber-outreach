@@ -582,7 +582,13 @@ test.describe('Admin Hub batch 4 — Brand colours', () => {
     await page.getByTestId('admin-hub-role-accent').click();
     await page.getByTestId('admin-hub-swatch-141414').click();
     await page.getByRole('button', { name: 'Send colours to KERSIVO' }).click();
-    await expect(page.getByRole('status')).toContainText("Thanks — we'll use these colours");
+    const confirm = page.getByRole('dialog', { name: 'Send your logo and colours to KERSIVO?' });
+    await expect(confirm).toBeVisible();
+    await expect(confirm).toContainText('#1F6F6B');
+    await page.getByRole('button', { name: 'Yes, send to KERSIVO' }).click();
+    await expect(page.getByRole('status')).toContainText('Sent to KERSIVO on');
+    await expect(page.getByRole('status')).toContainText('Your logo and colours are locked while we build your site');
+    await expect(page.getByRole('link', { name: 'Message us' })).toHaveAttribute('href', '/admin/messages');
     await page.getByRole('button', { name: 'Close' }).click();
     await page.goto('/admin', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('[data-tile="colours"]')).toContainText('Sent');
@@ -897,7 +903,11 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     const colours = page.getByTestId('admin-hub-colours');
     if (await colours.isVisible().catch(() => false)) {
       const send = page.getByRole('button', { name: 'Send colours to KERSIVO' });
-      if (await send.isEnabled().catch(() => false)) await send.click();
+      if (await send.isEnabled().catch(() => false)) {
+        await send.click();
+        const yes = page.getByRole('button', { name: 'Yes, send to KERSIVO' });
+        if (await yes.isVisible().catch(() => false)) await yes.click();
+      }
     }
 
     await page.goto('/admin?app=messages');

@@ -185,6 +185,8 @@ export function overviewColours(input: {
   headline: string;
   status: OverviewColoursStatus;
   statusLabel: string;
+  locked: boolean;
+  submittedAt: string | null;
 } {
   const primary = parseCssColour(input.brandPrimaryColour);
   const secondary = parseCssColour(input.brandSecondaryColour);
@@ -208,6 +210,10 @@ export function overviewColours(input: {
 
   const source = input.brandColoursSource;
   const sent = Boolean(input.brandColoursSentAt);
+  const submittedAt =
+    input.brandColoursSentAt instanceof Date
+      ? input.brandColoursSentAt.toISOString()
+      : input.brandColoursSentAt ?? null;
   const status: OverviewColoursStatus =
     sent && source === 'KERSIVO_CHOOSES' ? 'kersivo' : sent ? 'sent' : 'not_sent';
   const statusLabel =
@@ -221,7 +227,7 @@ export function overviewColours(input: {
         ? ADMIN_HUB_COLOURS_HINT
         : ADMIN_HUB_COLOURS_EMPTY;
 
-  return { swatches, headline, status, statusLabel };
+  return { swatches, headline, status, statusLabel, locked: sent, submittedAt };
 }
 
 export type OverviewChangeTone = 'draft' | 'sent' | 'prog' | 'done';

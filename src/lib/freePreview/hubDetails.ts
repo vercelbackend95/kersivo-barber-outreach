@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db/client';
 import { recordDebouncedPreviewRequestEvent } from '@/lib/adminHub/ownerEditEvents';
+import { assertBrandUnlockedTx, brandLockState } from '@/lib/adminHub/brandLock';
 import { HEX_COLOUR_RE, normaliseHexColour } from './extractLogoColours';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { HUB_DETAILS_INSTAGRAM_INVALID } from './hubCopy';
@@ -72,6 +73,8 @@ export type HubDetailsPublic = {
   aboutText: string | null;
   instagramUrl: string | null;
   websiteExtraText: string | null;
+  brandColoursSentAt: string | null;
+  brandLocked: boolean;
 };
 
 export const hubAssetPatchSchema = z.object({
@@ -92,7 +95,9 @@ export function publicHubDetails(row: {
   aboutText: string | null;
   instagramUrl: string | null;
   websiteExtraText: string | null;
+  brandColoursSentAt?: Date | string | null;
 }): HubDetailsPublic {
+  const lock = brandLockState(row.brandColoursSentAt ?? null);
   return {
     brandPrimaryColour: row.brandPrimaryColour,
     brandSecondaryColour: row.brandSecondaryColour,
@@ -100,6 +105,8 @@ export function publicHubDetails(row: {
     aboutText: row.aboutText,
     instagramUrl: row.instagramUrl,
     websiteExtraText: row.websiteExtraText,
+    brandColoursSentAt: lock.submittedAt,
+    brandLocked: lock.locked,
   };
 }
 
@@ -123,8 +130,9 @@ export async function saveHubDetails(input: {
   );
   const otherFields = fields.filter((field) => !(TEXT_FIELDS as readonly string[]).includes(field));
   const recordOwnerEvent = input.recordOwnerEvent !== false;
-
-  const row = await prisma.previewRequest.update({
+  const touchesColours =
+    input.patch.brandPrimaryColour !== undefined || input.patch.brandSecondaryColour !== undefined;
+  const updateArgs = {
     where: { id: input.requestId },
     data: {
       ...data,
@@ -143,9 +151,17 @@ export async function saveHubDetails(input: {
       aboutText: true,
       instagramUrl: true,
       websiteExtraText: true,
+      brandColoursSentAt: true,
       shopName: true,
     },
-  });
+  };
+
+  const row = touchesColours
+    ? await prisma.$transaction(async (tx) => {
+        await assertBrandUnlockedTx(tx, input.requestId);
+        return tx.previewRequest.update(updateArgs);
+      })
+    : await prisma.previewRequest.update(updateArgs);
 
   if (recordOwnerEvent && textFields.length) {
     await recordDebouncedPreviewRequestEvent({

@@ -10,6 +10,7 @@ const {
   eventCreate,
   blobGet,
   softDeleteHubAsset,
+  assertBrandUnlocked,
 } = vi.hoisted(() => ({
   resolveHubApiContext: vi.fn(),
   requireUploadCapability: vi.fn(),
@@ -20,6 +21,7 @@ const {
   eventCreate: vi.fn(),
   blobGet: vi.fn(),
   softDeleteHubAsset: vi.fn(),
+  assertBrandUnlocked: vi.fn(),
 }));
 
 vi.mock('@/lib/freePreview/hubApi', async (importOriginal) => {
@@ -40,6 +42,10 @@ vi.mock('@/lib/freePreview/hubAssets', async (importOriginal) => {
     softDeleteHubAsset: (...args: unknown[]) => softDeleteHubAsset(...args),
   };
 });
+vi.mock('@/lib/adminHub/brandLock', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/adminHub/brandLock')>();
+  return { ...actual, assertBrandUnlocked: (...args: unknown[]) => assertBrandUnlocked(...args) };
+});
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     previewHubAsset: { findFirst, update },
@@ -47,6 +53,7 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
+import { BrandLockedError } from '@/lib/adminHub/brandLock';
 import { DELETE, GET, PATCH } from './[id]';
 
 const TOKEN = 'A'.repeat(43);
@@ -75,6 +82,7 @@ beforeEach(() => {
   eventCreate.mockReset();
   blobGet.mockReset();
   softDeleteHubAsset.mockReset().mockResolvedValue(true);
+  assertBrandUnlocked.mockReset().mockResolvedValue(undefined);
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -114,7 +122,7 @@ describe('GET /api/preview-hub/[token]/assets/[id]', () => {
 
 describe('PATCH and DELETE', () => {
   it('patches caption on an owner upload', async () => {
-    findFirst.mockResolvedValueOnce({ id: 'asset_1', previewRequestId: 'req_1' });
+    findFirst.mockResolvedValueOnce({ id: 'asset_1', previewRequestId: 'req_1', kind: 'SHOP_PHOTO' });
     update.mockResolvedValueOnce({
       id: 'asset_1',
       kind: 'SHOP_PHOTO',
@@ -150,7 +158,7 @@ describe('PATCH and DELETE', () => {
   });
 
   it('soft-deletes an owner upload', async () => {
-    findFirst.mockResolvedValueOnce({ id: 'asset_1' });
+    findFirst.mockResolvedValueOnce({ id: 'asset_1', kind: 'SHOP_PHOTO' });
     const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/assets/asset_1`, {
       method: 'DELETE',
       headers: { origin: 'http://localhost' },
@@ -167,5 +175,31 @@ describe('PATCH and DELETE', () => {
       headers: { origin: 'http://localhost' },
     });
     expect((await DELETE({ request, params: { token: TOKEN, id: 'asset_1' } } as never)).status).toBe(403);
+  });
+
+  it('rejects deleting a logo after brand submit', async () => {
+    findFirst.mockResolvedValueOnce({ id: 'logo_1', kind: 'LOGO' });
+    assertBrandUnlocked.mockRejectedValueOnce(new BrandLockedError('2026-11-02T12:00:00.000Z'));
+    const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/assets/logo_1`, {
+      method: 'DELETE',
+      headers: { origin: 'http://localhost' },
+    });
+    const response = await DELETE({ request, params: { token: TOKEN, id: 'logo_1' } } as never);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: 'BRAND_LOCKED' });
+    expect(softDeleteHubAsset).not.toHaveBeenCalled();
+  });
+
+  it('still deletes a shop photo after brand submit', async () => {
+    findFirst.mockResolvedValueOnce({ id: 'photo_1', kind: 'SHOP_PHOTO' });
+    assertBrandUnlocked.mockRejectedValueOnce(new BrandLockedError('2026-11-02T12:00:00.000Z'));
+    const request = new Request(`http://localhost/api/preview-hub/${TOKEN}/assets/photo_1`, {
+      method: 'DELETE',
+      headers: { origin: 'http://localhost' },
+    });
+    const response = await DELETE({ request, params: { token: TOKEN, id: 'photo_1' } } as never);
+    expect(response.status).toBe(200);
+    expect(assertBrandUnlocked).not.toHaveBeenCalled();
+    expect(softDeleteHubAsset).toHaveBeenCalled();
   });
 });

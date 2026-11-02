@@ -19,6 +19,7 @@ import {
   resolveHubApiContext,
   type HubSourceOf,
 } from '@/lib/freePreview/hubApi';
+import { assertBrandUnlocked, isBrandLockedError } from '@/lib/adminHub/brandLock';
 
 function assetHeaders(plan: ReturnType<typeof hubAssetServePlan>, fileName: string): Headers {
   const headers = new Headers();
@@ -113,6 +114,14 @@ export function createHubAssetByIdHandlers(sourceOf: HubSourceOf): {
       },
     });
     if (!existing) return hubNotFoundJson();
+    if (existing.kind === 'LOGO') {
+      try {
+        await assertBrandUnlocked(ctxResult.ctx.request.id);
+      } catch (error) {
+        if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
+        throw error;
+      }
+    }
 
     const data: { caption?: string | null; sortOrder?: number; barberId?: string | null } = {};
     if (parsed.data.caption !== undefined) data.caption = parsed.data.caption;
@@ -151,9 +160,17 @@ export function createHubAssetByIdHandlers(sourceOf: HubSourceOf): {
         deletedAt: null,
         uploadedBy: 'OWNER',
       },
-      select: { id: true },
+      select: { id: true, kind: true },
     });
     if (!existing) return hubNotFoundJson();
+    if (existing.kind === 'LOGO') {
+      try {
+        await assertBrandUnlocked(ctxResult.ctx.request.id);
+      } catch (error) {
+        if (isBrandLockedError(error)) return hubJson(error.toJson(), 409);
+        throw error;
+      }
+    }
 
     const deleted = await softDeleteHubAsset({
       assetId: existing.id,

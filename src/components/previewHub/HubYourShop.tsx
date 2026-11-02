@@ -73,6 +73,7 @@ export type HubShopDetails = {
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted?: Array<{ hex: string; share: number }> | null;
   brandColoursSentAt?: string | null;
+  brandLocked?: boolean;
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -323,6 +324,9 @@ export function HubYourShop(props: {
   const prices = assets.filter((asset) => asset.kind === 'PRICE_LIST');
   const others = assets.filter((asset) => asset.kind === 'OTHER');
   const logo = logos[logos.length - 1] ?? null;
+  const brandLocked = Boolean(details.brandLocked || details.brandColoursSentAt);
+  const canUploadLogo = props.canUpload && !brandLocked;
+  const canEditColours = props.canEditDetails && !brandLocked;
 
   useEffect(() => {
     const item = props.highlight;
@@ -359,7 +363,24 @@ export function HubYourShop(props: {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patch),
         });
-        const payload = (await response.json()) as { ok?: boolean; details?: HubShopDetails; error?: string };
+        const payload = (await response.json()) as {
+          ok?: boolean;
+          details?: HubShopDetails;
+          error?: string;
+          code?: string;
+          submittedAt?: string;
+        };
+        if (response.status === 409 && payload.code === 'BRAND_LOCKED') {
+          setDetails((current) => ({
+            ...current,
+            brandLocked: true,
+            brandColoursSentAt:
+              typeof payload.submittedAt === 'string' ? payload.submittedAt : current.brandColoursSentAt,
+          }));
+          setSave('idle');
+          setError(null);
+          return;
+        }
         if (!response.ok || !payload.ok || !payload.details) throw new Error(payload.error || HUB_SAVE_FAILED);
         setDetails(payload.details);
         if (payload.details.instagramUrl !== undefined) {
@@ -376,6 +397,7 @@ export function HubYourShop(props: {
 
   const queueDetails = (patch: Partial<HubShopDetails>) => {
     if (!props.canEditDetails) return;
+    if (brandLocked && (patch.brandPrimaryColour !== undefined || patch.brandSecondaryColour !== undefined)) return;
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
       void persistDetails(patch);
@@ -580,7 +602,7 @@ export function HubYourShop(props: {
             <figcaption>{HUB_DETAILS_SWATCH_LIGHT}</figcaption>
           </figure>
         </div>
-        {props.canUpload ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
+        {canUploadLogo ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
         {showBrandExtras ? (
           <>
             <div className="hub-colours">
@@ -588,18 +610,18 @@ export function HubYourShop(props: {
                 id="hub-primary"
                 label={HUB_DETAILS_COLOUR_PRIMARY}
                 value={primary}
-                disabled={!props.canEditDetails}
+                disabled={!canEditColours}
                 onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
               />
               <HexField
                 id="hub-secondary"
                 label={HUB_DETAILS_COLOUR_SECONDARY}
                 value={secondary}
-                disabled={!props.canEditDetails}
+                disabled={!canEditColours}
                 onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
               />
             </div>
-            {logo && props.canEditDetails ? (
+            {logo && canEditColours ? (
               <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
                 {HUB_DETAILS_PICK_FROM_LOGO}
               </button>
@@ -613,12 +635,15 @@ export function HubYourShop(props: {
                     className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
                     style={{ background: hex }}
                     aria-label={`Use ${hex} as primary`}
+                    disabled={!canEditColours}
                     onClick={() => {
+                      if (!canEditColours) return;
                       setPrimary(hex);
                       queueDetails({ brandPrimaryColour: hex });
                     }}
                     onContextMenu={(event) => {
                       event.preventDefault();
+                      if (!canEditColours) return;
                       setSecondary(hex);
                       queueDetails({ brandSecondaryColour: hex });
                     }}

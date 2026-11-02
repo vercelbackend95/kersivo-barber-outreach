@@ -27,6 +27,7 @@ vi.mock('@/lib/analytics/serverEvents', () => ({
   sendServerAnalyticsEvent: (...args: unknown[]) => sendServerAnalyticsEvent(...args),
 }));
 
+import { BrandLockedError } from '@/lib/adminHub/brandLock';
 import { PATCH } from './brand-colours';
 
 const saved = {
@@ -36,6 +37,7 @@ const saved = {
   brandColoursSource: 'LOGO',
   brandPaletteExtracted: [{ hex: '#1F6F6B', share: 0.4 }],
   brandColoursSentAt: null,
+  brandLocked: false,
 };
 
 beforeEach(() => {
@@ -87,7 +89,11 @@ describe('PATCH /api/admin-hub/brand-colours', () => {
   });
 
   it('sends colours, writes the event payload and fires hub_brand_colours_sent', async () => {
-    saveBrandColours.mockResolvedValueOnce({ ...saved, brandColoursSentAt: '2026-10-31T12:00:00.000Z' });
+    saveBrandColours.mockResolvedValueOnce({
+      ...saved,
+      brandColoursSentAt: '2026-10-31T12:00:00.000Z',
+      brandLocked: true,
+    });
     const response = await patch({
       brandPrimaryColour: '#1f6f6b',
       send: true,
@@ -129,5 +135,17 @@ describe('PATCH /api/admin-hub/brand-colours', () => {
   it('returns 429 when rate limited', async () => {
     enforceHubDetailsRate.mockResolvedValueOnce(new Response('{}', { status: 429 }));
     expect((await patch({ send: true })).status).toBe(429);
+  });
+
+  it('returns 409 BRAND_LOCKED on a second submit and does not notify again', async () => {
+    saveBrandColours.mockRejectedValueOnce(new BrandLockedError('2026-10-31T12:00:00.000Z'));
+    const response = await patch({ send: true, brandColoursSource: 'LOGO' });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      code: 'BRAND_LOCKED',
+      submittedAt: '2026-10-31T12:00:00.000Z',
+    });
+    expect(sendServerAnalyticsEvent).not.toHaveBeenCalled();
   });
 });

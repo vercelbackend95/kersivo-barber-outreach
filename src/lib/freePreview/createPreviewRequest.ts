@@ -33,6 +33,7 @@ export const PREVIEW_REQUEST_ACTIONS = {
   HUB_ASSET_DELETED: 'hub_asset_deleted',
   HUB_DETAILS_SAVED: 'hub_details_saved',
   BRAND_COLOURS_SENT: 'BRAND_COLOURS_SENT',
+  BRAND_UNLOCKED: 'BRAND_UNLOCKED',
   HUB_MESSAGE_SENT: 'hub_message_sent',
   HUB_MESSAGES_READ: 'hub_messages_read',
   OPS_HUB_OPENED: 'ops_hub_opened',

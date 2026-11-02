@@ -62,6 +62,8 @@ describe('AdminHubOverview', () => {
     expect(colours).not.toContain('admin-hub-tile__hit');
     expect(colours).not.toContain('<button');
     expect(colours).toContain('<div class="admin-hub-logo-mini">');
+    expect(colours).toContain('colours.locked');
+    expect(colours).toContain('data-locked');
     expect(src).toContain('hrefs.changes');
     expect(src).toContain('hrefs.activity');
     expect(src).toContain('hrefs.materials');

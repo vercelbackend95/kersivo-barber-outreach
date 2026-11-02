@@ -6,6 +6,13 @@ const src = readFileSync(path.join(process.cwd(), 'src/components/previewHub/Hub
 const css = readFileSync(path.join(process.cwd(), 'src/styles/components/preview-hub.css'), 'utf8');
 
 describe('HubYourShop a11y regressions', () => {
+  it('hides logo upload and colour edits when brand colours are locked', () => {
+    expect(src).toContain('canUploadLogo');
+    expect(src).toContain('canEditColours');
+    expect(src).toContain('brandLocked');
+    expect(src).toContain("payload.code === 'BRAND_LOCKED'");
+  });
+
   it('labels the about textarea from the field title', () => {
     expect(src).toContain('id="hub-about"');
     expect(src).toContain('htmlFor="hub-about"');
