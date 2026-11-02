@@ -445,17 +445,19 @@ const content = overviewWebsiteContent({
           )
         }
 
-        <article class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" aria-labelledby="admin-hub-colours-title">
-          <a class="admin-hub-tile__hit" href={hrefs.colours}>
-            <span class="admin-hub-sr-only">{ADMIN_HUB_TILE_COLOURS}</span>
-          </a>
+        <a
+          class="admin-hub-tile admin-hub-bento__colours"
+          data-tile="colours"
+          href={hrefs.colours}
+          onkeydown="if (event.key === ' ' || event.key === 'Spacebar') { event.preventDefault(); this.click(); }"
+        >
           <div class="admin-hub-tile__head">
             <span class="admin-hub-tile__icon" aria-hidden="true">
               <Palette width={15} height={15} strokeWidth={1.8} />
             </span>
-            <h2 class="admin-hub-tile__title" id="admin-hub-colours-title">{ADMIN_HUB_TILE_COLOURS}</h2>
-            <span class="admin-hub-tile__open" aria-hidden="true">
-              <ArrowUpRight width={15} height={15} strokeWidth={1.8} />
+            <span class="admin-hub-tile__title">{ADMIN_HUB_TILE_COLOURS}</span>
+            <span class="admin-hub-tile__open" aria-label={ADMIN_HUB_OPEN}>
+              <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
             </span>
           </div>
           <div class="admin-hub-colours-body">
@@ -481,7 +483,7 @@ const content = overviewWebsiteContent({
               {colours.status === 'not_sent' && colours.swatches.length ? <span>{ADMIN_HUB_COLOURS_MINUTE}</span> : null}
             </div>
           </div>
-        </article>
+        </a>
 
         <section class="admin-hub-tile admin-hub-tile--quiet admin-hub-bento__activity" data-tile="activity" aria-labelledby="admin-hub-activity-title">
           <div class="admin-hub-tile__head">

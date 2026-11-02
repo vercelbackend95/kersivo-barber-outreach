@@ -32,6 +32,7 @@ import {
   ADMIN_HUB_COLOURS_MAKE_DEEPER,
   ADMIN_HUB_COLOURS_MAKE_LIGHTER,
   ADMIN_HUB_COLOURS_MUTED,
+  ADMIN_HUB_COLOURS_NO_LOGO,
   ADMIN_HUB_COLOURS_PICK_PHOTO,
   ADMIN_HUB_COLOURS_PRICES,
   ADMIN_HUB_COLOURS_QUICK,
@@ -40,9 +41,11 @@ import {
   ADMIN_HUB_COLOURS_SAVE,
   ADMIN_HUB_COLOURS_SEND,
   ADMIN_HUB_COLOURS_TOAST,
+  ADMIN_HUB_COLOURS_UPLOAD,
   ADMIN_HUB_COLOURS_VIVID,
   ADMIN_HUB_COLOURS_YOUR_LOGO,
 } from '@/lib/adminHub/copy';
+import { adminHubMaterialsHref } from '@/lib/adminHub/addMenu';
 import {
   applyChroma,
   applyLightness,
@@ -296,10 +299,6 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
   useAppChrome({ headerAction, footer });
 
-  if (extracting && !swatches.length && !mainHex) {
-    return <AppStatus state="loading" />;
-  }
-
   const liveHero = {
     background:
       tone === 'DARK'
@@ -321,6 +320,8 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         </p>
       ) : null}
 
+      <ColoursLogoPreview logoUrl={logoUrl} canUpload={ctx.canUpload} />
+
       <div className="admin-hub-colours__preview-first">
         <LivePreview
           shop={shopLabel}
@@ -335,18 +336,23 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
       <div className="admin-hub-cp">
         <section className="admin-hub-cp__panel">
-          <p className="admin-hub-cp__label">
+          <p className="admin-hub-cp__label admin-hub-colours__logo-heading">
             <ImagePlus width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
             {ADMIN_HUB_COLOURS_YOUR_LOGO}
           </p>
-          <div className="admin-hub-logo-pair">
-            <div className="admin-hub-logo-pair__dark">
-              {logoUrl ? <img src={logoUrl} alt="" /> : <span>{shopLabel.slice(0, 2).toUpperCase()}</span>}
+          {logoUrl ? (
+            <div className="admin-hub-logo-pair">
+              <div className="admin-hub-logo-pair__dark">
+                <img src={logoUrl} alt="" />
+              </div>
+              <div className="admin-hub-logo-pair__light">
+                <img src={logoUrl} alt="" />
+              </div>
             </div>
-            <div className="admin-hub-logo-pair__light">
-              {logoUrl ? <img src={logoUrl} alt="" /> : <span>{shopLabel.slice(0, 2).toUpperCase()}</span>}
-            </div>
-          </div>
+          ) : (
+            <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} inPanel />
+          )}
+          {extracting && !swatches.length && !mainHex ? <AppStatus state="loading" /> : null}
           <p className="admin-hub-cp__label">
             <Sparkles width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
             {ADMIN_HUB_COLOURS_FOUND_IN}
@@ -581,6 +587,34 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           <p className="admin-hub-colours__guide">{ADMIN_HUB_COLOURS_GUIDE}</p>
         </section>
       </div>
+    </div>
+  );
+}
+
+function ColoursLogoPreview(props: {
+  logoUrl: string | null;
+  canUpload: boolean;
+  inPanel?: boolean;
+}) {
+  return (
+    <div
+      className={`admin-hub-colours__logo${props.inPanel ? ' admin-hub-colours__logo--in-panel' : ''}`}
+      data-testid={props.inPanel ? 'admin-hub-colours-logo-panel' : 'admin-hub-colours-logo'}
+    >
+      {props.logoUrl ? (
+        <div className="admin-hub-colours__logo-frame">
+          <img src={props.logoUrl} alt="" />
+        </div>
+      ) : (
+        <div className="admin-hub-colours__logo-empty">
+          <p>{ADMIN_HUB_COLOURS_NO_LOGO}</p>
+          {props.canUpload ? (
+            <a className="btn btn--outline btn--sm" href={adminHubMaterialsHref('logo')}>
+              {ADMIN_HUB_COLOURS_UPLOAD}
+            </a>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

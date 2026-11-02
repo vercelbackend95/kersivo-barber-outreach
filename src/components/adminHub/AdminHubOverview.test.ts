@@ -57,6 +57,11 @@ describe('AdminHubOverview', () => {
     expect(src).toContain('hrefs.preview');
     expect(src).toContain('hrefs.booking');
     expect(src).toContain('hrefs.colours');
+    expect(src).toContain('class="admin-hub-tile admin-hub-bento__colours"');
+    const colours = src.slice(src.indexOf('data-tile="colours"'), src.indexOf('data-tile="activity"'));
+    expect(colours).not.toContain('admin-hub-tile__hit');
+    expect(colours).not.toContain('<button');
+    expect(colours).toContain('<div class="admin-hub-logo-mini">');
     expect(src).toContain('hrefs.changes');
     expect(src).toContain('hrefs.activity');
     expect(src).toContain('hrefs.materials');
