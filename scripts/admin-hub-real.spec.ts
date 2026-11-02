@@ -446,7 +446,7 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="changes"]')).toContainText('Available when your preview is ready');
     await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
     await expect(overview.locator('[data-testid="admin-hub-content-tile"]')).toBeVisible();
-    await expect(overview.locator('[data-testid="admin-hub-shop-tile"]')).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-shop-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     expect(await overview.locator('iframe').count()).toBe(0);
@@ -468,7 +468,7 @@ test.describe('Admin Hub batch 3 — Overview bento', () => {
     await expect(overview.locator('[data-tile="preview"] a[href="/admin/website?view=booking"]')).toBeVisible();
     await expect(overview.locator('[data-tile="colours"] a[href="/admin?app=colours"]').first()).toBeVisible();
     await expect(overview.locator('[data-testid="admin-hub-content-tile"]')).toBeVisible();
-    await expect(overview.locator('[data-testid="admin-hub-shop-tile"]')).toBeVisible();
+    await expect(overview.locator('[data-testid="admin-hub-shop-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="messages"]')).toHaveCount(0);
     await expect(overview.locator('[data-tile="changes"]')).toHaveAttribute('href', '/admin/changes');
@@ -1910,7 +1910,7 @@ test.describe('A5 end-to-end QA', () => {
     await expect(page.getByTestId('admin-hub-overview')).toBeVisible();
     await expect(page.locator('[data-tile="content"]')).toBeVisible();
     await expect(page.locator('[data-testid="admin-hub-add-tile"]')).toHaveCount(0);
-    await expect(page.getByTestId('admin-hub-shop-tile')).toBeVisible();
+    await expect(page.getByTestId('admin-hub-shop-tile')).toHaveCount(0);
     await a5Shot('overview-requested');
 
     const add = await openAddMenu(page);

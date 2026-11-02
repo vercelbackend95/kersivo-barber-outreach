@@ -20,6 +20,12 @@ describe('AdminLayout preview banner', () => {
     expect(source).toContain('.admin-mobile-top-chrome');
   });
 
+  it('puts the Overview launch status bar in the shared mobile header extension', () => {
+    expect(source).toContain('AdminHubLaunchStatusBar');
+    expect(source).toContain("previewSection === 'overview'");
+    expect(source).toContain('admin-mobile-header-extension');
+  });
+
   it('supports dismissible preview subscribe banner with session re-show', () => {
     expect(source).toContain('dismissPreviewSubscribeBanner');
     expect(source).toContain('notePreviewSubscribeBannerSectionChange');

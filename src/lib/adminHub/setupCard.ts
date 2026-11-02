@@ -1,6 +1,11 @@
 import type { HubStage } from '@/lib/freePreview/hubStage';
 import { adminHubMaterialsHref } from './addMenu';
 import { adminHubAppHref, type AdminHubAppId } from './apps';
+import {
+  ADMIN_HUB_SHOP_PRODUCTS_COUNT,
+  ADMIN_HUB_SHOP_SERVICES_COUNT,
+  ADMIN_HUB_SHOP_TEAM_COUNT,
+} from './copy';
 import { PREVIEW_HUB_PATHS } from './previewHubPaths';
 
 /** Red setup card (docs/admin-hub/ADMIN_HUB_SPEC.md §5). Client-safe. */
@@ -19,6 +24,7 @@ export const SETUP_PHASE3_TEST_BOOK_HREF = '/admin/test-book';
 
 /** Compact sidebar/drawer card (preview hub). Phase titles stay on the model for apps. */
 export const SETUP_CARD_TITLE = 'Set up your website';
+export const SETUP_LAUNCH_BAR_OPEN = 'Open setup';
 export const SETUP_COMPLETE_LABEL = 'Setup complete';
 export const SETUP_SHOW_ALL_STEPS = 'Show all steps';
 export const SETUP_HIDE_STEPS = 'Hide steps';
@@ -129,6 +135,8 @@ export type SetupItem = {
   done: boolean;
   optional: boolean;
   fromLinks: boolean;
+  /** Shop counts moved off the retired Overview "Your shop" tile. */
+  detail?: string;
 };
 
 export type SetupCardModel = {
@@ -151,14 +159,21 @@ const PHASE1_LABELS: Record<SetupItemId, string> = {
   products: 'Products',
 };
 
-function phase1Href(id: SetupItemId): string {
-  if (id === 'services') return PREVIEW_HUB_PATHS.services;
-  if (id === 'team') return PREVIEW_HUB_PATHS.team;
-  if (id === 'products') return PREVIEW_HUB_PATHS.products;
+function phase1Href(id: SetupItemId, addFirst = false): string {
+  if (id === 'services') return addFirst ? `${PREVIEW_HUB_PATHS.services}?add=1` : PREVIEW_HUB_PATHS.services;
+  if (id === 'team') return addFirst ? `${PREVIEW_HUB_PATHS.team}?add=1` : PREVIEW_HUB_PATHS.team;
+  if (id === 'products') return addFirst ? `${PREVIEW_HUB_PATHS.products}?add=1` : PREVIEW_HUB_PATHS.products;
   if (id === 'logo') return adminHubMaterialsHref('logo');
   if (id === 'photos') return adminHubMaterialsHref('photos');
   if (id === 'about') return adminHubMaterialsHref('text');
   return adminHubAppHref(id);
+}
+
+function shopCountDetail(id: SetupItemId, counts: SetupShopCounts): string | undefined {
+  if (id === 'services' && counts.activeServices > 0) return ADMIN_HUB_SHOP_SERVICES_COUNT(counts.activeServices);
+  if (id === 'team' && counts.activeBarbers > 0) return ADMIN_HUB_SHOP_TEAM_COUNT(counts.activeBarbers);
+  if (id === 'products' && counts.products > 0) return ADMIN_HUB_SHOP_PRODUCTS_COUNT(counts.products);
+  return undefined;
 }
 
 const PHASE2_LABELS: Record<SetupPhase2ItemId, string> = {
@@ -223,10 +238,11 @@ export function setupPhase1Items(input: {
   ).map(([id, done, optional, fromLinks]) => ({
     id,
     label: PHASE1_LABELS[id],
-    href: phase1Href(id),
+    href: phase1Href(id, !done && (id === 'services' || id === 'team' || id === 'products')),
     done,
     optional,
     fromLinks,
+    detail: shopCountDetail(id, counts),
   }));
   return pack(1, SETUP_PHASE1_TITLE, setupPhase1Status, items);
 }
