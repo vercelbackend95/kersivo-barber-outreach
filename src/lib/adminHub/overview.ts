@@ -162,6 +162,11 @@ export function overviewChangesLocked(stage: HubStage): boolean {
   return stage === 'requested' || stage === 'designing';
 }
 
+/** Overview Changes tile — only once the website preview exists (not requested/designing). */
+export function overviewShowChangesTile(input: { stage: HubStage; hasWebsitePreview: boolean }): boolean {
+  return input.stage !== 'requested' && input.stage !== 'designing' && input.hasWebsitePreview;
+}
+
 function isLightHex(hex: string): boolean {
   const raw = hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex;
   const r = parseInt(raw.slice(1, 3), 16);
@@ -452,12 +457,32 @@ export const OVERVIEW_BENTO_AREAS = {
   ],
 } as const;
 
+/** Grid areas when the Changes tile is omitted — no empty cells. */
+export const OVERVIEW_BENTO_AREAS_NO_CHANGES = {
+  mobile: ['progress', 'preview', 'content', 'colours', 'activity'],
+  tablet: [
+    'progress progress progress progress progress progress',
+    'preview preview preview content content content',
+    'colours colours colours colours colours colours',
+    'activity activity activity activity activity activity',
+  ],
+  desktop: [
+    'progress progress progress progress progress progress progress progress preview preview preview preview',
+    'content content content content content content content content preview preview preview preview',
+    'colours colours colours colours colours colours colours colours colours colours colours colours',
+    'activity activity activity activity activity activity activity activity activity activity activity activity',
+  ],
+} as const;
+
 export function overviewBentoAreasCss(rows: readonly string[]): string {
   return rows.map((row) => `"${row}"`).join('\n    ');
 }
 
-export function overviewBentoTiles(stage: HubStage): OverviewBentoTile[] {
+export function overviewBentoTiles(stage: HubStage, hasWebsitePreview = true): OverviewBentoTile[] {
   if (isOverviewTerminal(stage)) return [];
+  if (!overviewShowChangesTile({ stage, hasWebsitePreview })) {
+    return OVERVIEW_BENTO_TILES.filter((tile) => tile !== 'changes');
+  }
   return [...OVERVIEW_BENTO_TILES];
 }
 

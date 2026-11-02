@@ -32,7 +32,7 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('data-tile="add"');
     expect(src).not.toContain('admin-hub-add-tile');
     expect(src).not.toContain('admin-hub-bento__add');
-    expect(src).toContain('variant="inline"');
+    expect(src).toContain('variant="icon"');
     expect(src).toContain('AdminHubSwatches');
     expect(src).toContain('AdminHubActivityFeed');
     expect(src).not.toContain('admin-hub-sw--empty');
@@ -44,10 +44,12 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('HUB_PRIMARY.requested');
     expect(src).not.toContain('HUB_PRIMARY.designing');
     expect(src).toContain('overviewPreviewLocked');
-    expect(src).toContain('overviewChangesLocked');
+    expect(src).toContain('overviewShowChangesTile');
+    expect(src).toContain('admin-hub-bento--no-changes');
     expect(src).toContain('isOverviewTerminal');
     expect(src).toContain('HUB_PREVIEW_CARD_LOCKED');
-    expect(src).toContain('HUB_LOCKED_REASON_PREVIEW');
+    expect(src).not.toContain('HUB_LOCKED_REASON_PREVIEW');
+    expect(src).not.toContain('ADMIN_HUB_ACTIVITY_SHOW_ALL');
     expect(src).toContain('chrome="checkout-outline"');
     expect(src).toContain('admin-hub-progress__steps');
     expect(src).toContain('aria-current');
@@ -100,9 +102,23 @@ describe('AdminHubOverview', () => {
   });
 
   it('keeps bento source order as mobile / screen-reader order', () => {
-    const bento = src.slice(src.indexOf('class="admin-hub-bento"'), src.lastIndexOf('admin-hub-bento__activity'));
+    const start = src.indexOf('admin-hub-bento');
+    const bento = src.slice(start, src.lastIndexOf('admin-hub-bento__activity'));
     const tiles = [...bento.matchAll(/data-tile="([^"]+)"/g)].map((match) => match[1]);
     const first = tiles.filter((id, index) => tiles.indexOf(id) === index);
     expect(first).toEqual(['progress', 'preview', 'content', 'changes', 'colours']);
+  });
+
+  it('links the locked preview tile and Activity arrow, and hides Changes until preview is ready', () => {
+    const locked = src.slice(src.indexOf('previewLocked'), src.indexOf('admin-hub-bento__content'));
+    expect(locked).toContain('admin-hub-tile__hit');
+    expect(locked).toContain('hrefs.preview');
+    expect(locked).toContain('admin-hub-tile__open');
+    expect(src).toContain('aria-label="Open activity"');
+    expect(src).toContain('hrefs.activity');
+    expect(src).toContain('showChanges');
+    const changesBlock = src.slice(src.indexOf('showChanges ? ('), src.indexOf('admin-hub-bento__colours'));
+    expect(changesBlock).toContain('data-tile="changes"');
+    expect(changesBlock).not.toContain('admin-hub-tile--locked');
   });
 });
