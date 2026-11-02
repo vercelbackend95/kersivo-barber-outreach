@@ -133,3 +133,54 @@ describe('/admin hub pages never expose the token', () => {
     expect(read('src/pages/preview/[token]/overview.astro')).toContain('HubShell');
   });
 });
+
+describe('wizard close buttons beat .btn regardless of CSS order', () => {
+  const files = [
+    ['src/styles/components/admin-barber-wizard.css', 'admin-barber-wizard__close'],
+    ['src/styles/components/admin-service-wizard.css', 'admin-service-wizard__close'],
+    ['src/styles/components/admin-product-wizard.css', 'admin-product-wizard__close'],
+  ] as const;
+
+  it.each(files)('%s uses a compound .btn selector with a 2.6rem hit target', (file, cls) => {
+    const src = read(file);
+    const block = src.match(new RegExp(`\\.btn\\.${cls}\\s*\\{([^}]+)\\}`))?.[1];
+    expect(block, `${cls} compound rule`).toBeTruthy();
+    expect(block).toMatch(/padding:\s*0/);
+    expect(block).toMatch(/width:\s*2\.6rem/);
+    expect(block).toMatch(/min-width:\s*2\.6rem/);
+    expect(block).toMatch(/height:\s*2\.6rem/);
+    expect(block).toMatch(/min-height:\s*2\.6rem/);
+    expect(block).toMatch(/display:\s*inline-grid/);
+    expect(block).toMatch(/place-items:\s*center/);
+    expect(block).toMatch(/color:\s*var\(--fg\)/);
+    expect(block).toMatch(/flex:\s*0 0 auto/);
+    expect(block).toMatch(/border:\s*1px solid var\(--admin-hub-hair, var\(--border\)\)/);
+    expect(block).toMatch(/border-radius:\s*10px/);
+    expect(src).toMatch(new RegExp(`\\.btn\\.${cls} svg \\{[\\s\\S]*?width:\\s*18px`));
+  });
+
+  it('loads buttons.css before component CSS in the hub document', () => {
+    const src = read('src/layouts/PreviewHubDocument.astro');
+    const buttons = src.indexOf('buttons.css');
+    expect(buttons).toBeGreaterThan(-1);
+    expect(buttons).toBeLessThan(src.indexOf('booking-flow.css'));
+    expect(buttons).toBeLessThan(src.indexOf('admin-barber-wizard.css'));
+    expect(buttons).toBeLessThan(src.indexOf('admin-service-wizard.css'));
+    expect(buttons).toBeLessThan(src.indexOf('admin-product-wizard.css'));
+  });
+
+  it('loads wizard CSS after buttons.css on paid admin, the public demo, and preview dashboard', () => {
+    for (const file of [
+      'src/pages/admin.astro',
+      'src/pages/demo/admin.astro',
+      'src/pages/preview/dashboard.astro',
+    ]) {
+      const src = read(file);
+      const buttons = src.indexOf('buttons.css');
+      expect(buttons, file).toBeGreaterThan(-1);
+      expect(buttons).toBeLessThan(src.indexOf('admin-barber-wizard.css'));
+      expect(buttons).toBeLessThan(src.indexOf('admin-service-wizard.css'));
+      expect(buttons).toBeLessThan(src.indexOf('admin-product-wizard.css'));
+    }
+  });
+});
