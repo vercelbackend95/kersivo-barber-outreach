@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useAnimationControls, useReducedMotion, type V
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminAddButton from './AdminAddButton';
+import AdminMobileFab from './AdminMobileFab';
 import AdminBookingsOpsSearch, { type AdminBookingsOpsSearchBooking } from './AdminBookingsOpsSearch';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
@@ -35,7 +36,7 @@ import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
 import NewBookingPanel from './NewBookingPanel';
-import { Clock, ListOrdered, Lock, Plus } from '../lucide-react';
+import { Clock, ListOrdered, Lock } from '../lucide-react';
 import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { isCapabilityLocked } from '@/lib/admin/productLocks';
@@ -2680,7 +2681,13 @@ export default function BookingsAdminPanel({
   return (
     <motion.section
       ref={bookingShellRef}
-      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
+      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}${
+        canCreateManualBooking && !isPublicDemo && (mode === 'dashboard' || mode === 'history')
+          ? ' admin-has-mobile-fab admin-has-mobile-fab--always'
+          : mode === 'blocks' && canEditTeam
+            ? ' admin-has-mobile-fab'
+            : ''
+      }`}
       initial={false}
       animate={bookingsSubviewMotion}
       aria-busy={bookingsSubviewTransitioning || undefined}
@@ -3086,12 +3093,20 @@ export default function BookingsAdminPanel({
         </AdminErrorBoundary>
       ) : null}
 
+      {mode === 'blocks' && canEditTeam ? (
+        <AdminMobileFab
+          label="Add team member"
+          onClick={openAddBarberSheet}
+          context="team"
+        />
+      ) : null}
+
       {canCreateManualBooking && !isPublicDemo && (mode === 'dashboard' || mode === 'history') ? (
-        <button
-          type="button"
+        <AdminMobileFab
+          label="New booking"
           className="admin-manual-booking-fab"
-          aria-label="New booking"
-          title="New booking"
+          visibility="always"
+          context="bookings"
           onClick={() => {
             setManualBookingMessage('');
             if (manualBookingsLocked) {
@@ -3100,9 +3115,7 @@ export default function BookingsAdminPanel({
             }
             setIsNewBookingOpen(true);
           }}
-        >
-          <Plus aria-hidden />
-        </button>
+        />
       ) : null}
 
       {isNewBookingOpen ? (

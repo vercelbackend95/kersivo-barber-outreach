@@ -69,7 +69,9 @@ describe('ServicesAdminPanel add intent', () => {
     const replaceState = vi.spyOn(window.history, 'replaceState');
     render(<ServicesAdminPanel openCreateOnMount />);
 
-    expect(await screen.findByRole('button', { name: 'Add service' })).toBeTruthy();
+    const addService = await screen.findAllByRole('button', { name: 'Add service' });
+    expect(addService.some((button) => button.className.includes('admin-add-btn'))).toBe(true);
+    expect(screen.getByTestId('admin-mobile-fab').getAttribute('aria-label')).toBe('Add service');
     expect(await screen.findByRole('button', { name: 'Add your first service' })).toBeTruthy();
     expect(screen.getByText('Add the services customers can book, with prices and durations.')).toBeTruthy();
 

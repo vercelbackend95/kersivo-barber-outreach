@@ -34,6 +34,8 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('admin-hub-sw--empty');
     expect(src).toContain('overviewHideAddMaterialsPrimary');
     expect(src).toContain('AdminHubAddMenu');
+    expect(src).toContain('showMobileFab');
+    expect(src).toContain('admin-has-mobile-fab');
     expect(src).toContain('overviewAddMenuFromHub');
     expect(src).not.toContain('HUB_PRIMARY.requested');
     expect(src).not.toContain('HUB_PRIMARY.designing');

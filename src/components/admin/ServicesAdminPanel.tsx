@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SettingsGearIcon } from './SettingsGearIcon';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminAddButton from './AdminAddButton';
+import AdminMobileFab from './AdminMobileFab';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
@@ -421,7 +422,7 @@ export default function ServicesAdminPanel({
   const editingService = editingId ? services.find((s) => s.id === editingId) ?? null : null;
 
   return (
-    <section className="surface booking-shell admin-services-shell">
+    <section className="surface booking-shell admin-services-shell admin-has-mobile-fab">
       <AdminSectionHeader
         title="Services"
         description="Service catalogue"
@@ -665,6 +666,8 @@ export default function ServicesAdminPanel({
           </div>
         </div>
       ) : null}
+
+      <AdminMobileFab label="Add service" onClick={openCreateServiceSheet} context="services" />
 
       <AdminWizardSheetLayer
         open={isServiceSheetOpen}

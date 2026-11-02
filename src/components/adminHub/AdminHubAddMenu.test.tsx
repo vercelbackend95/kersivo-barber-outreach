@@ -40,6 +40,7 @@ function renderMenu(input: {
   canAddShop?: boolean;
   tone?: 'primary' | 'outline';
   mobile?: boolean;
+  showMobileFab?: boolean;
 } = {}) {
   stubMatchMedia(input.mobile ?? false);
   return render(
@@ -48,6 +49,7 @@ function renderMenu(input: {
       capabilities={input.capabilities ?? caps()}
       canAddShop={input.canAddShop ?? true}
       tone={input.tone}
+      showMobileFab={input.showMobileFab}
     />,
   );
 }
@@ -221,5 +223,23 @@ describe('AdminHubAddMenu', () => {
     fireEvent.click(trigger);
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(trigger.getAttribute('aria-controls')).toBe(screen.getByTestId('admin-hub-add-menu').id);
+  });
+
+  it('does not render a FAB unless the Overview header asks for one', () => {
+    renderMenu();
+    expect(screen.queryByTestId('admin-mobile-fab')).toBeNull();
+    expect(screen.getByTestId('admin-hub-add').className).toContain('admin-add-btn--desktop');
+  });
+
+  it('opens the existing Add sheet from the Overview mobile FAB', () => {
+    renderMenu({ mobile: true, showMobileFab: true });
+    const fab = screen.getByTestId('admin-mobile-fab');
+    expect(fab.getAttribute('aria-label')).toBe('Add to your website or shop');
+    expect(fab.getAttribute('data-admin-fab')).toBe('overview');
+    expect(fab.getAttribute('aria-haspopup')).toBe('menu');
+    fireEvent.click(fab);
+    expect(screen.getByTestId('admin-hub-add-sheet')).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: /Service/ })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: /Team member/ })).toBeTruthy();
   });
 });

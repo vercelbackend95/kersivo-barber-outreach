@@ -6,13 +6,28 @@ type AdminAddButtonProps = {
   onClick: () => void;
   testId?: string;
   disabled?: boolean;
+  /** desktop = hidden under admin mobile chrome (default). always = keep the labelled control. */
+  visibility?: 'desktop' | 'always';
 };
 
-export default function AdminAddButton({ label, onClick, testId, disabled }: AdminAddButtonProps) {
+export default function AdminAddButton({
+  label,
+  onClick,
+  testId,
+  disabled,
+  visibility = 'desktop',
+}: AdminAddButtonProps) {
+  const className = [
+    'btn btn--primary btn--sm admin-add-btn',
+    visibility === 'desktop' ? 'admin-add-btn--desktop' : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <button
       type="button"
-      className="btn btn--primary btn--sm admin-add-btn"
+      className={className}
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
