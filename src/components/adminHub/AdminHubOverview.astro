@@ -13,7 +13,6 @@ import {
 } from '@/components/lucide-react';
 import { websiteBuildProgressFromHubStage } from '@/lib/adminHub/buildProgress';
 import {
-  ADMIN_HUB_ADD_TILE,
   ADMIN_HUB_COLOURS_MINUTE,
   ADMIN_HUB_COLOURS_TUNE,
   ADMIN_HUB_CONTENT_EMPTY,
@@ -324,23 +323,6 @@ const content = overviewWebsiteContent({
             content.empty ? (
               <div class="admin-hub-content-empty">
                 <p>{ADMIN_HUB_CONTENT_EMPTY}</p>
-                {
-                  addMenu.empty ? (
-                    <a class="btn btn--primary btn--sm" href={hrefs.materials}>
-                      {ADMIN_HUB_ADD_TILE}
-                    </a>
-                  ) : (
-                    <AdminHubAddMenu
-                      client:load
-                      stage={state.stage}
-                      capabilities={state.capabilities}
-                      canAddShop={hubCanAddShopItems(state.stage)}
-                      tone="primary"
-                      label={ADMIN_HUB_ADD_TILE}
-                      testId="admin-hub-content-add"
-                    />
-                  )
-                }
               </div>
             ) : (
               <div class="admin-hub-content-body">

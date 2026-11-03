@@ -445,32 +445,32 @@ describe('overview view-model', () => {
       mobile: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
       tablet: [
         'progress progress progress progress progress progress',
-        'preview preview preview content content content',
-        'changes changes changes colours colours colours',
+        'preview preview preview colours colours colours',
+        'changes changes changes content content content',
         'activity activity activity activity activity activity',
       ],
       desktop: [
         'progress progress progress progress progress progress progress progress preview preview preview preview',
-        'content content content content content content content content preview preview preview preview',
-        'changes changes changes changes changes changes changes changes colours colours colours colours',
+        'colours colours colours colours colours colours colours colours preview preview preview preview',
+        'changes changes changes changes changes changes changes changes content content content content',
         'activity activity activity activity activity activity activity activity activity activity activity activity',
       ],
     });
     expect(overviewBentoAreasCss(OVERVIEW_BENTO_AREAS.desktop)).toContain(
-      '"content content content content content content content content preview preview preview preview"',
+      '"colours colours colours colours colours colours colours colours preview preview preview preview"',
     );
     expect(OVERVIEW_BENTO_AREAS_NO_CHANGES).toEqual({
       mobile: ['progress', 'preview', 'content', 'colours', 'activity'],
       tablet: [
         'progress progress progress progress progress progress',
-        'preview preview preview content content content',
-        'colours colours colours colours colours colours',
+        'preview preview preview colours colours colours',
+        'content content content content content content',
         'activity activity activity activity activity activity',
       ],
       desktop: [
         'progress progress progress progress progress progress progress progress preview preview preview preview',
-        'content content content content content content content content preview preview preview preview',
-        'colours colours colours colours colours colours colours colours colours colours colours colours',
+        'colours colours colours colours colours colours colours colours preview preview preview preview',
+        'content content content content content content content content content content content content',
         'activity activity activity activity activity activity activity activity activity activity activity activity',
       ],
     });
