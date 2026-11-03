@@ -139,7 +139,7 @@ for (const width of [1440, 375]) {
       mimeType: 'image/png',
       buffer: await png({ r: 31, g: 111, b: 107 }),
     });
-    await expect(app.locator('[data-testid="hub-logo-tile"]').first()).toBeVisible({ timeout: 20000 });
+    await expect(app.locator('[data-testid="hub-logo-current"]')).toBeVisible({ timeout: 20000 });
     if (width === 1440) await shot(page, 'app-materials-logo', width);
     await closeApp(page);
     await expect(content.locator('[data-content-item="logo"]')).toContainText('✓');

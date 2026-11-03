@@ -95,6 +95,8 @@ export function HubUploader(props: {
   multiple?: boolean;
   compact?: boolean;
   hint?: string;
+  /** Replaces the drop-zone title (e.g. "Replace logo"). */
+  title?: string;
   remaining?: number;
   onUploaded: (asset: HubUploadedAsset) => void;
 }) {
@@ -283,7 +285,7 @@ export function HubUploader(props: {
             }}
           />
         ) : null}
-        <p className="hub-uploader__title">{HUB_UPLOAD_DROP}</p>
+        <p className="hub-uploader__title">{props.title ?? HUB_UPLOAD_DROP}</p>
         <p className="hub-uploader__hint">{props.hint ?? HUB_UPLOAD_HINT}</p>
         <div className="hub-uploader__actions">
           <label htmlFor={inputId} className="btn btn--secondary btn--sm">

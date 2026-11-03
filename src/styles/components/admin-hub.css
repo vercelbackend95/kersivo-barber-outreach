@@ -3064,27 +3064,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   outline-offset: 3px;
 }
 
-/* HubLogoMark: the shop's logo as itself — no frame, box or background. The inline style gives a definite
-   box from the intrinsic size (no CLS); max-* keep it inside its cell, object-fit never crops it. */
-.hub-logo-mark {
-  display: block;
-  box-sizing: border-box;
-  flex: none;
-  height: auto;
-  max-width: 100%;
-  max-height: var(--hub-logo-max-h, 64px);
-  object-fit: contain;
-}
-/* Its own background (JPG, opaque PNG/WebP): rounded corners so the square edge looks intentional. */
-.hub-logo-mark--opaque {
-  border-radius: 8px;
-}
-/* Only a dark logo on transparency, which would vanish on the dark surface. Padding sits inside the same box. */
-.hub-logo-mark--plate {
-  padding: 8px;
-  border-radius: 10px;
-  background: #f4f4f2;
-}
+/* HubLogoMark (.hub-logo-mark) styles live in preview-hub.css, loaded here and on the full Your shop page. */
 
 .admin-hub-photos {
   list-style: none;
@@ -3462,10 +3442,17 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   color: var(--muted);
   line-height: 1.3;
 }
+.admin-hub-app__body .hub-card {
+  outline: 1px solid transparent;
+  transition:
+    outline-color 600ms ease,
+    box-shadow 600ms ease;
+}
 .hub-card.is-hub-add-target {
   outline: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
 }
+/* Sticky inside the app body (the scroll container); -22px / -16px cancel the body padding. */
 .hub-jump {
   position: sticky;
   top: -22px;
@@ -3475,9 +3462,12 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   padding: 10px 4px 12px;
-  margin: -8px -4px 16px;
-  background: linear-gradient(180deg, #0d0d0e 70%, rgba(13, 13, 14, 0));
-  scrollbar-width: thin;
+  margin: -10px -4px 16px;
+  background: linear-gradient(180deg, #0d0d0e 78%, rgba(13, 13, 14, 0));
+  scrollbar-width: none;
+}
+.hub-jump::-webkit-scrollbar {
+  display: none;
 }
 .admin-hub-app--sheet .hub-jump {
   top: -16px;
@@ -3495,6 +3485,11 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 }
 .hub-jump__chip.is-done {
   border-color: color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.08));
+}
+.hub-jump__chip[aria-current='true'] {
+  background: #f4f4f5;
+  border-color: #f4f4f5;
+  color: #0d0d0e;
 }
 .hub-jump__chip:focus-visible {
   outline: 2px solid #fff;
@@ -3519,6 +3514,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
     transition: none;
     animation: none;
   }
+  .admin-hub-app__body .hub-card,
   .hub-card.is-hub-add-target {
     transition: none;
   }

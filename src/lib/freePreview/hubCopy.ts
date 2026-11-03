@@ -150,9 +150,22 @@ export const HUB_EMPTY_PHOTOS = 'No shop photos yet.';
 export const HUB_EMPTY_PRICE = 'No price list yet.';
 export const HUB_EMPTY_LOGO = 'No logo yet.';
 export const HUB_CURRENT_LOGO = 'Current logo';
+/** Hub O9: the Logo card shows the current logo once; older uploads sit in a collapsed list. */
+export const HUB_REPLACE_LOGO = 'Replace logo';
+export const HUB_EARLIER_LOGOS = (count: number) => `Earlier logos (${count})`;
+export const HUB_LOGO_HINT = "We'll find colours in your logo.";
+export const HUB_BRAND_COLOURS_LINK = 'Brand colours';
+/** Status pill in each card header (Hub O9). */
+export const HUB_STATUS_ADDED = 'Added';
+export const HUB_STATUS_ADDED_COUNT = (count: number) => `${count} added`;
+export const HUB_STATUS_NOT_ADDED = 'Not added yet';
+/** File types under the drop zone; the card header carries the hint sentence. */
+export const HUB_UPLOAD_TYPES_PHOTO = 'JPG, PNG or WEBP.';
+export const HUB_UPLOAD_TYPES_FILE = 'JPG, PNG, WEBP or PDF.';
+export const HUB_UPLOAD_TYPES_LOGO = 'JPG, PNG, WEBP, SVG or PDF.';
 
 export const HUB_DETAILS_TITLE = 'Your shop';
-export const HUB_DETAILS_BRAND_TITLE = 'Brand';
+export const HUB_DETAILS_LOGO_TITLE = 'Logo';
 export const HUB_DETAILS_PHOTOS_TITLE = 'Shop photos';
 /** Unassigned TEAM_PHOTO uploads from before barber photos moved to Team (Hub O8). */
 export const HUB_DETAILS_EARLIER_TEAM_PHOTOS = 'Earlier team photos';
@@ -184,8 +197,6 @@ export const HUB_DETAILS_COLOUR_PRIMARY = 'Primary colour';
 export const HUB_DETAILS_COLOUR_SECONDARY = 'Secondary colour';
 export const HUB_DETAILS_PICK_FROM_LOGO = 'Pick from my logo';
 export const HUB_DETAILS_HEX_LABEL = 'Hex';
-export const HUB_DETAILS_SWATCH_DARK = 'On dark';
-export const HUB_DETAILS_SWATCH_LIGHT = 'On light';
 export const HUB_DETAILS_PLACEHOLDER_LINKS =
   "We'll fill these from your links — you'll check them when your preview is ready";
 export const HUB_DETAILS_SERVICES_TITLE = 'Services & prices';
