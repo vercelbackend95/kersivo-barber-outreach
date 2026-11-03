@@ -12,6 +12,7 @@ import {
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { BLACKLINE_DEMO_CONTACT_SOURCE } from '@/lib/demo/kersivoContact';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
+import { isReservedRecipient, logReservedRecipientSuppressed } from './reservedRecipients';
 
 const metaEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env ?? {};
 const RESEND_API_KEY = metaEnv.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
@@ -33,6 +34,20 @@ export class EmailDeliveryError extends Error {
     this.name = 'EmailDeliveryError';
     this.response = response;
   }
+}
+
+const PERMANENT_RESEND_STATUS_CODES = new Set([400, 403, 422]);
+
+/**
+ * Resend rejected the request itself (bad recipient, unverified domain, invalid payload).
+ * Retrying sends the same request and gets the same answer. 429 and 5xx stay retryable.
+ */
+export function isPermanentEmailDeliveryError(error: unknown): boolean {
+  if (!(error instanceof EmailDeliveryError)) return false;
+  const response = error.response;
+  if (!response || typeof response !== 'object') return false;
+  const statusCode = (response as { statusCode?: unknown }).statusCode;
+  return typeof statusCode === 'number' && PERMANENT_RESEND_STATUS_CODES.has(statusCode);
 }
 
 /** True when Resend can deliver mail (API key present). */
@@ -69,7 +84,13 @@ async function sendEmail(input: {
   replyTo?: string;
   devLogLabel: string;
   devPayload: Record<string, string>;
-}): Promise<{ messageId: string | null }> {
+}): Promise<{ messageId: string | null; suppressed?: true }> {
+  if (isReservedRecipient(input.to)) {
+    // Reserved domains (example.com, .test, …) can never receive mail. Treat as handled, not failed.
+    logReservedRecipientSuppressed(input.devLogLabel, input.to);
+    return { messageId: null, suppressed: true };
+  }
+
   if (!isEmailDeliveryConfigured()) {
     // Never fake delivery success in production — forms/Ads conversions depend on real send.
     if (isProductionRuntime()) {
@@ -161,7 +182,7 @@ export async function sendRenderedEmail(input: {
   html: string;
   replyTo?: string;
   devLogLabel?: string;
-}): Promise<{ messageId: string | null }> {
+}): Promise<{ messageId: string | null; suppressed?: true }> {
   return sendEmail({
     to: input.to,
     subject: input.subject,

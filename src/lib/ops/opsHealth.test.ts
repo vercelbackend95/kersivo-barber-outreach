@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const emailCount = vi.fn();
+const emailUpdateMany = vi.fn();
 const smsCount = vi.fn();
 const smsFindMany = vi.fn();
 const webhookFindMany = vi.fn();
@@ -16,6 +17,7 @@ vi.mock('@/lib/db/client', () => ({
     emailOutbound: {
       count: (...args: unknown[]) => emailCount(...args),
       findMany: (...args: unknown[]) => emailFindMany(...args),
+      updateMany: (...args: unknown[]) => emailUpdateMany(...args),
     },
     smsOutbound: {
       count: (...args: unknown[]) => smsCount(...args),
@@ -43,8 +45,9 @@ vi.mock('@/lib/ops/sentry', () => ({
   captureOpsMessage: (...args: unknown[]) => captureOpsMessage(...args),
 }));
 
+const opsLog = vi.fn();
 vi.mock('@/lib/ops/opsLog', () => ({
-  opsLog: vi.fn(),
+  opsLog: (...args: unknown[]) => opsLog(...args),
 }));
 
 import {
@@ -168,6 +171,91 @@ describe('runOpsHealthChecks Sentry alerts', () => {
     expect(sentryJson).not.toContain('provider down');
     expect(sentryJson).not.toContain('deliver failed');
     expect(summary.stuckRefundCount).toBe(1);
+  });
+});
+
+describe('runOpsHealthChecks stuck email dedupe', () => {
+  type Row = {
+    id: string;
+    shopId: string | null;
+    bookingId: string | null;
+    purpose: string;
+    status: string;
+    attempts: number;
+    error: string | null;
+    createdAt: Date;
+    stuckAlertedAt: Date | null;
+  };
+  let rows: Row[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    smsCount.mockResolvedValue(0);
+    smsFindMany.mockResolvedValue([]);
+    webhookFindMany.mockResolvedValue([]);
+    refundFindMany.mockResolvedValue([]);
+    bookingAggregate.mockResolvedValue({ _sum: { paymentAmountPence: 0 } });
+    orderAggregate.mockResolvedValue({ _sum: { totalPence: 0 } });
+    shopSettingsCount.mockResolvedValue(0);
+    rows = [
+      {
+        id: 'email_stuck',
+        shopId: null,
+        bookingId: null,
+        purpose: 'FREE_PREVIEW_FOLLOWUP',
+        status: 'FAILED',
+        attempts: 6,
+        error: 'Resend returned an error response.',
+        createdAt: new Date('2026-11-01T00:00:00Z'),
+        stuckAlertedAt: null,
+      },
+    ];
+    // Minimal in-memory EmailOutbound honouring the stuckAlertedAt filter and stamp.
+    emailFindMany.mockImplementation(async ({ where }: { where: { stuckAlertedAt?: null } }) =>
+      rows.filter((row) => !('stuckAlertedAt' in where) || row.stuckAlertedAt === null),
+    );
+    emailCount.mockImplementation(async () => rows.length);
+    emailUpdateMany.mockImplementation(
+      async ({ where, data }: { where: { id: { in: string[] } }; data: { stuckAlertedAt: Date } }) => {
+        let count = 0;
+        for (const row of rows) {
+          if (where.id.in.includes(row.id) && row.stuckAlertedAt === null) {
+            row.stuckAlertedAt = data.stuckAlertedAt;
+            count += 1;
+          }
+        }
+        return { count };
+      },
+    );
+  });
+
+  it('only asks for rows that have not been alerted yet', async () => {
+    await runOpsHealthChecks(new Date('2026-11-03T12:00:00Z'));
+    expect(emailFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ stuckAlertedAt: null }) }),
+    );
+  });
+
+  it('alerts a stuck email once, then stays silent on later runs while still counting it', async () => {
+    const first = await runOpsHealthChecks(new Date('2026-11-03T12:00:00Z'));
+    expect(first.alertsFired).toContain('email:stuck:email_stuck');
+    expect(captureOpsMessage).toHaveBeenCalledTimes(1);
+    expect(captureOpsMessage).toHaveBeenCalledWith('Transactional email stuck', expect.anything());
+    expect(rows[0].stuckAlertedAt).toEqual(new Date('2026-11-03T12:00:00Z'));
+
+    captureOpsMessage.mockClear();
+    opsLog.mockClear();
+    const second = await runOpsHealthChecks(new Date('2026-11-03T12:15:00Z'));
+    const third = await runOpsHealthChecks(new Date('2026-11-03T12:30:00Z'));
+
+    expect(captureOpsMessage).not.toHaveBeenCalled();
+    expect(second.alertsFired).toEqual([]);
+    expect(third.stuckEmailCount).toBe(0);
+    expect(opsLog).toHaveBeenLastCalledWith(
+      'ops.health',
+      'check_complete',
+      expect.objectContaining({ stuckEmailCount: 0, stuckEmailTotal: 1 }),
+    );
   });
 });
 

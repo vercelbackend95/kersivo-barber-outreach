@@ -320,11 +320,14 @@ export async function sendAppointmentEmailReminder(
     await prisma.$transaction([
       prisma.emailOutbound.update({
         where: { id: outbound.id },
-        data: {
-          provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
-          providerMessageId: result.messageId,
-          status: EmailOutboundStatus.SENT,
-        },
+        data: result.suppressed
+          ? // Reserved recipient domain (example.com, .test…): recorded, never sent, never alerted.
+            { provider: 'suppressed', status: EmailOutboundStatus.SUPPRESSED }
+          : {
+              provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
+              providerMessageId: result.messageId,
+              status: EmailOutboundStatus.SENT,
+            },
       }),
       prisma.booking.update({
         where: { id: candidate.id },

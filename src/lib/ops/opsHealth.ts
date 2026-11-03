@@ -1,4 +1,4 @@
-import { DepositRefundStatus, EmailOutboundStatus } from '@prisma/client';
+import { DepositRefundStatus, EmailOutboundStatus, type Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { captureOpsMessage } from '@/lib/ops/sentry';
 import { opsLog } from '@/lib/ops/opsLog';
@@ -18,6 +18,7 @@ const MIN_ATTEMPTS = 5;
 const FAIL_RATE_THRESHOLD = 0.2;
 const CONSECUTIVE_FAILED_THRESHOLD = 3;
 const STRIPE_VOLUME_RUN_RATE_WINDOW_DAYS = 30;
+const STUCK_EMAIL_AGE_MS = 30 * 60 * 1000;
 const STRIPE_REVENUE_SHARE_PUBLISHED_THRESHOLD_USD = 1_000_000;
 
 export type StripeConnectVolumeMetrics = {
@@ -251,6 +252,24 @@ export async function collectStuckRefunds(now = new Date()): Promise<
   });
 }
 
+function stuckEmailWhere(olderThan: Date): Prisma.EmailOutboundWhereInput {
+  return {
+    OR: [
+      {
+        status: EmailOutboundStatus.FAILED,
+        updatedAt: { lte: olderThan },
+      },
+      {
+        status: EmailOutboundStatus.QUEUED,
+        createdAt: { lte: olderThan },
+        // Only durable outbox rows (reminders without nextAttemptAt are excluded).
+        nextAttemptAt: { not: null },
+      },
+    ],
+  };
+}
+
+/** Stuck rows not yet alerted. Each row alerts once; stuckAlertedAt is stamped when it fires. */
 export async function collectStuckEmails(now = new Date()): Promise<
   Array<{
     id: string;
@@ -263,22 +282,9 @@ export async function collectStuckEmails(now = new Date()): Promise<
     error: string | null;
   }>
 > {
-  const olderThan = new Date(now.getTime() - 30 * 60 * 1000);
+  const olderThan = new Date(now.getTime() - STUCK_EMAIL_AGE_MS);
   return prisma.emailOutbound.findMany({
-    where: {
-      OR: [
-        {
-          status: EmailOutboundStatus.FAILED,
-          updatedAt: { lte: olderThan },
-        },
-        {
-          status: EmailOutboundStatus.QUEUED,
-          createdAt: { lte: olderThan },
-          // Only durable outbox rows (reminders without nextAttemptAt are excluded).
-          nextAttemptAt: { not: null },
-        },
-      ],
-    },
+    where: { ...stuckEmailWhere(olderThan), stuckAlertedAt: null },
     orderBy: { createdAt: 'asc' },
     take: 20,
     select: {
@@ -292,6 +298,12 @@ export async function collectStuckEmails(now = new Date()): Promise<
       error: true,
     },
   });
+}
+
+/** All currently stuck rows, alerted or not (for the ops log). */
+export async function countStuckEmails(now = new Date()): Promise<number> {
+  const olderThan = new Date(now.getTime() - STUCK_EMAIL_AGE_MS);
+  return prisma.emailOutbound.count({ where: stuckEmailWhere(olderThan) });
 }
 
 export async function runOpsHealthChecks(now = new Date()): Promise<{
@@ -308,6 +320,7 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
   const stuck = await collectStuckWebhookFailures(now);
   const stuckRefunds = await collectStuckRefunds(now);
   const stuckEmails = await collectStuckEmails(now);
+  const stuckEmailTotal = await countStuckEmails(now);
   const stripeVolume = await collectStripeConnectVolumeMetrics(now);
 
   if (messaging.email.shouldAlert) {
@@ -384,6 +397,12 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
       },
     });
   }
+  if (stuckEmails.length > 0) {
+    await prisma.emailOutbound.updateMany({
+      where: { id: { in: stuckEmails.map((row) => row.id) }, stuckAlertedAt: null },
+      data: { stuckAlertedAt: now },
+    });
+  }
 
   opsLog('ops.health', 'check_complete', {
     emailFailRate: Number(messaging.email.failRate.toFixed(4)),
@@ -391,6 +410,7 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     webhookFailedCount: stuck.length,
     stuckRefundCount: stuckRefunds.length,
     stuckEmailCount: stuckEmails.length,
+    stuckEmailTotal,
     stripeOnlineCardPence30d: stripeVolume.totalOnlineCardPence30d,
     stripeAnnualisedOnlineCardPenceGbp: stripeVolume.annualisedOnlineCardPenceGbp,
     stripeActiveStandardAccounts: stripeVolume.activeStandardAccounts,

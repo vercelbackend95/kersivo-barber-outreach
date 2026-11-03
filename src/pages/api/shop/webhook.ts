@@ -393,7 +393,9 @@ async function handleSetupDepositCheckout(
         sessionId,
         hasOnboardingFormUrl: Boolean(onboardingFormUrl),
       });
-      await sendSetupDepositConfirmationEmail({
+      // A reserved test recipient (example.com, .test…) is suppressed, not failed: it counts as
+      // handled so Stripe is not told to retry this event forever.
+      const customerSend = await sendSetupDepositConfirmationEmail({
         to: resolvedEmail,
         customerName,
         shopName,
@@ -407,7 +409,9 @@ async function handleSetupDepositCheckout(
         data: { customerEmailSentAt: new Date() },
       });
       customerEmailOk = true;
-      logSetupDepositStage('customer_email_sent', { sessionId });
+      logSetupDepositStage(customerSend?.suppressed ? 'customer_email_suppressed' : 'customer_email_sent', {
+        sessionId,
+      });
     } catch (error) {
       emailFailure = true;
       console.error('[webhook] Setup deposit confirmation email failed', {
@@ -767,7 +771,8 @@ async function handleSaasSubscriptionCheckout(
 
   if (!customerEmailOk) {
     try {
-      await sendSaasSubscriptionConfirmationEmail({
+      // Reserved test recipients are suppressed and count as handled (no endless Stripe retries).
+      const customerSend = await sendSaasSubscriptionConfirmationEmail({
         to: customerEmail,
         customerName,
         shopName,
@@ -779,7 +784,10 @@ async function handleSaasSubscriptionCheckout(
         data: { customerEmailSentAt: new Date() },
       });
       customerEmailOk = true;
-      logSaasSubscriptionStage('customer_email_sent', { sessionId });
+      logSaasSubscriptionStage(
+        customerSend?.suppressed ? 'customer_email_suppressed' : 'customer_email_sent',
+        { sessionId },
+      );
     } catch (error) {
       emailFailure = true;
       console.error('[webhook] SaaS subscription confirmation email failed', {
