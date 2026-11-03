@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { __resetHubStoreForTests, refreshHubState } from '@/lib/adminHub/hubStore';
 import type { AdminHubLiveState } from '@/lib/adminHub/liveState';
 import {
-  ADMIN_HUB_COLOURS_NONE,
+  ADMIN_HUB_COLOURS_EMPTY,
+  ADMIN_HUB_COLOURS_NO_LOGO,
   ADMIN_HUB_CONTENT_DONE,
   ADMIN_HUB_CONTENT_EMPTY,
   ADMIN_HUB_OVERVIEW_UPDATED,
@@ -88,9 +89,15 @@ describe('Overview live tiles', () => {
     expect(content).toContain(`<div class="admin-hub-content-empty"><p>${ADMIN_HUB_CONTENT_EMPTY.replace(/'/g, '&#x27;')}</p></div>`);
 
     const colours = renderToString(<AdminHubColoursTile initialState={empty} shopName="Fade Room" />);
-    expect(colours).toMatch(/^<a class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" href="\/admin\?app=colours"/);
+    // No logo yet: the tile links to Materials → Logo and reserves the empty palette row.
+    expect(colours).toMatch(
+      /^<a class="admin-hub-tile admin-hub-bento__colours" data-tile="colours" data-state="no_logo" href="\/admin\?app=materials&amp;item=logo"/,
+    );
     expect(colours).toContain('FR');
-    expect(colours).toContain(ADMIN_HUB_COLOURS_NONE.replace(/'/g, '&#x27;'));
+    expect(colours).toContain(ADMIN_HUB_COLOURS_NO_LOGO);
+    expect(colours).toContain(ADMIN_HUB_COLOURS_EMPTY.replace(/'/g, '&#x27;'));
+    expect(colours.match(/admin-hub-palette__chip--slot/g)).toHaveLength(5);
+    expect(colours).not.toContain('admin-hub-site-mini');
 
     const phone = renderToString(<AdminHubPreviewPhone initialState={withLogo} shopName="Fade Room" />);
     expect(phone).toContain('admin-hub-phone__logo');
@@ -123,10 +130,12 @@ describe('Overview live tiles', () => {
     expect(tile.querySelector('[data-testid="admin-hub-content-logo"] img')?.getAttribute('src')).toBe(
       '/api/admin-hub/assets/logo_1?size=thumb',
     );
-    expect(document.querySelector('.admin-hub-logo-mini__mark img')?.getAttribute('src')).toBe(
+    expect(document.querySelector('.admin-hub-colours-plate img')?.getAttribute('src')).toBe(
       '/api/admin-hub/assets/logo_1?size=thumb',
     );
     expect(screen.getByTestId('admin-hub-colours-status').textContent).toMatch(/sent/i);
+    expect(screen.getByTestId('admin-hub-colours-guidance').textContent).toBe('Sent on 2 November 2026. Message us to change it.');
+    expect(document.querySelector('a[data-tile="colours"]')?.getAttribute('href')).toBe('/admin?app=colours');
     expect(document.querySelector('.admin-hub-phone__logo')).toBeTruthy();
     await waitFor(() => expect(screen.getByTestId('admin-hub-overview-live').textContent).toBe(ADMIN_HUB_OVERVIEW_UPDATED));
   });

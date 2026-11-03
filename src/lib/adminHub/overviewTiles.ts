@@ -10,22 +10,34 @@ import {
   ADMIN_HUB_ADD_PHOTOS,
   ADMIN_HUB_ADD_TEAM_PHOTOS,
   ADMIN_HUB_ADD_TEXT,
-  ADMIN_HUB_COLOURS_ACCENT,
+  ADMIN_HUB_COLOURS_DRAFT,
+  ADMIN_HUB_COLOURS_DRAFT_HINT,
   ADMIN_HUB_COLOURS_EMPTY,
   ADMIN_HUB_COLOURS_FOUND,
   ADMIN_HUB_COLOURS_HINT,
   ADMIN_HUB_COLOURS_KERSIVO,
-  ADMIN_HUB_COLOURS_MAIN,
+  ADMIN_HUB_COLOURS_MINUTE,
+  ADMIN_HUB_COLOURS_NO_LOGO,
   ADMIN_HUB_COLOURS_NOT_SENT,
   ADMIN_HUB_COLOURS_SAVED,
   ADMIN_HUB_COLOURS_SENT,
+  ADMIN_HUB_COLOURS_SENT_HINT,
+  ADMIN_HUB_COLOURS_SENT_HINT_UNDATED,
   ADMIN_HUB_CONTENT_DONE,
   ADMIN_HUB_NOT_ADDED,
+  formatBrandSubmittedDate,
 } from './copy';
 import { currentHubLogo, type CurrentHubLogoOptions } from './currentLogo';
 import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from './links';
 import { PREVIEW_HUB_PATHS } from './previewHubPaths';
-import { parseCssColour } from '@/lib/adminHub/colour';
+import {
+  betterButtonText,
+  hexToClampedOklch,
+  isLightHex,
+  nameSwatch,
+  parseCssColour,
+  siteBackgroundHex,
+} from '@/lib/adminHub/colour';
 
 export function shopInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -34,16 +46,25 @@ export function shopInitials(name: string): string {
   return `${parts[0]![0] ?? ''}${parts[1]![0] ?? ''}`.toUpperCase();
 }
 
-function isLightHex(hex: string): boolean {
-  const raw = hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex;
-  const r = parseInt(raw.slice(1, 3), 16);
-  const g = parseInt(raw.slice(3, 5), 16);
-  const b = parseInt(raw.slice(5, 7), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
-}
+export type OverviewColoursState = 'no_logo' | 'not_started' | 'draft' | 'sent' | 'kersivo';
+/** One extracted logo colour; `share` is its part of the logo (0–1) when the extractor recorded it. */
+export type OverviewPaletteChip = { hex: string; css: string; light: boolean; share: number | null };
+export type OverviewRoleColour = { hex: string; css: string; light: boolean; name: string };
+/** The mini "how it looks" card: same background / button-text rules as the Brand colours app. */
+export type OverviewColoursLook = {
+  background: string;
+  header: { css: string; text: string } | null;
+  button: { css: string; text: string } | null;
+};
 
-export type OverviewSwatch = { hex: string; css: string; role: 'Main' | 'Accent' | null; light: boolean };
-export type OverviewColoursStatus = 'not_sent' | 'sent' | 'kersivo';
+/** Most logo colours the tile shows (the Brand colours app saves at most MAX_SWATCHES). */
+export const OVERVIEW_PALETTE_CAP = 5;
+
+function roleColour(colour: { hex: string; css: string } | null): OverviewRoleColour | null {
+  if (!colour) return null;
+  const lch = hexToClampedOklch(colour.hex);
+  return { hex: colour.hex, css: colour.css, light: isLightHex(colour.hex), name: lch ? nameSwatch(lch) : colour.hex };
+}
 
 export function overviewColours(input: {
   hasLogo: boolean;
@@ -51,55 +72,106 @@ export function overviewColours(input: {
   brandSecondaryColour?: string | null;
   brandColoursSentAt?: Date | string | null;
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
+  brandBackgroundTone?: 'DARK' | 'LIGHT' | null;
   brandPaletteExtracted?: Array<{ hex: string; share?: number }> | null;
 }): {
-  swatches: OverviewSwatch[];
+  state: OverviewColoursState;
+  /** Logo colours as saved by the Brand colours app, de-duplicated, at most OVERVIEW_PALETTE_CAP. */
+  palette: OverviewPaletteChip[];
+  /** Only when the owner (or KERSIVO) set them — never guessed from the palette. */
+  main: OverviewRoleColour | null;
+  accent: OverviewRoleColour | null;
+  look: OverviewColoursLook | null;
+  /** Counts exactly the chips the tile renders (palette, or Main / Accent when there is no palette). */
   headline: string;
-  status: OverviewColoursStatus;
   statusLabel: string;
+  guidance: string;
+  href: string;
   locked: boolean;
   submittedAt: string | null;
 } {
-  const primary = parseCssColour(input.brandPrimaryColour);
-  const secondary = parseCssColour(input.brandSecondaryColour);
-  const palette = (input.brandPaletteExtracted ?? [])
-    .map((row) => parseCssColour(row.hex))
-    .filter((colour): colour is NonNullable<typeof colour> => Boolean(colour));
+  const main = roleColour(parseCssColour(input.brandPrimaryColour));
+  const accentParsed = parseCssColour(input.brandSecondaryColour);
+  const accent = accentParsed && accentParsed.hex !== main?.hex ? roleColour(accentParsed) : null;
 
-  const swatches: OverviewSwatch[] = [];
+  const palette: OverviewPaletteChip[] = [];
   const seen = new Set<string>();
-  const push = (colour: { hex: string; css: string }, role: OverviewSwatch['role']) => {
-    if (seen.has(colour.hex)) return;
+  for (const row of input.brandPaletteExtracted ?? []) {
+    if (palette.length >= OVERVIEW_PALETTE_CAP) break;
+    const colour = parseCssColour(row.hex);
+    if (!colour || seen.has(colour.hex)) continue;
     seen.add(colour.hex);
-    swatches.push({ hex: colour.hex, css: colour.css, role, light: isLightHex(colour.hex) });
-  };
-  if (primary) push(primary, ADMIN_HUB_COLOURS_MAIN);
-  if (secondary && secondary.hex !== primary?.hex) push(secondary, ADMIN_HUB_COLOURS_ACCENT);
-  for (const colour of palette) {
-    if (swatches.length >= 4) break;
-    push(colour, null);
+    const share = typeof row.share === 'number' && Number.isFinite(row.share) && row.share > 0 ? Math.min(1, row.share) : null;
+    palette.push({ hex: colour.hex, css: colour.css, light: isLightHex(colour.hex), share });
   }
 
-  const source = input.brandColoursSource;
   const sent = Boolean(input.brandColoursSentAt);
+  const saved = Boolean(main || accent || input.brandColoursSource || palette.length);
+  const state: OverviewColoursState = sent
+    ? input.brandColoursSource === 'KERSIVO_CHOOSES'
+      ? 'kersivo'
+      : 'sent'
+    : saved
+      ? 'draft'
+      : input.hasLogo
+        ? 'not_started'
+        : 'no_logo';
   const submittedAt =
     input.brandColoursSentAt instanceof Date
       ? input.brandColoursSentAt.toISOString()
       : input.brandColoursSentAt ?? null;
-  const status: OverviewColoursStatus =
-    sent && source === 'KERSIVO_CHOOSES' ? 'kersivo' : sent ? 'sent' : 'not_sent';
-  const statusLabel =
-    status === 'kersivo' ? ADMIN_HUB_COLOURS_KERSIVO : status === 'sent' ? ADMIN_HUB_COLOURS_SENT : ADMIN_HUB_COLOURS_NOT_SENT;
 
+  const statusLabel =
+    state === 'kersivo'
+      ? ADMIN_HUB_COLOURS_KERSIVO
+      : state === 'sent'
+        ? ADMIN_HUB_COLOURS_SENT
+        : state === 'draft'
+          ? ADMIN_HUB_COLOURS_DRAFT
+          : ADMIN_HUB_COLOURS_NOT_SENT;
+  const sentDate = submittedAt ? formatBrandSubmittedDate(submittedAt) : '';
+  const guidance =
+    state === 'no_logo'
+      ? ADMIN_HUB_COLOURS_EMPTY
+      : state === 'not_started'
+        ? ADMIN_HUB_COLOURS_MINUTE
+        : state === 'draft'
+          ? ADMIN_HUB_COLOURS_DRAFT_HINT
+          : sentDate
+            ? ADMIN_HUB_COLOURS_SENT_HINT(sentDate)
+            : ADMIN_HUB_COLOURS_SENT_HINT_UNDATED;
+
+  const roleCount = (main ? 1 : 0) + (accent ? 1 : 0);
   const headline = palette.length
     ? ADMIN_HUB_COLOURS_FOUND(palette.length)
-    : swatches.length
-      ? ADMIN_HUB_COLOURS_SAVED(swatches.length)
+    : roleCount
+      ? ADMIN_HUB_COLOURS_SAVED(roleCount)
       : input.hasLogo
         ? ADMIN_HUB_COLOURS_HINT
-        : ADMIN_HUB_COLOURS_EMPTY;
+        : ADMIN_HUB_COLOURS_NO_LOGO;
 
-  return { swatches, headline, status, statusLabel, locked: sent, submittedAt };
+  const look: OverviewColoursLook | null =
+    main || accent
+      ? {
+          background: siteBackgroundHex(input.brandBackgroundTone ?? 'DARK', main?.hex ?? null),
+          header: main ? { css: main.css, text: betterButtonText(main.hex) } : null,
+          button: accent ? { css: accent.css, text: betterButtonText(accent.hex) } : null,
+        }
+      : null;
+
+  return {
+    state,
+    palette,
+    main,
+    accent,
+    look,
+    headline,
+    statusLabel,
+    guidance,
+    href: state === 'no_logo' ? adminHubMaterialsHref('logo') : adminHubAppHref('colours'),
+    locked: sent,
+    submittedAt,
+  };
 }
 
 export type OverviewContentAsset = {
