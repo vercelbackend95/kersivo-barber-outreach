@@ -171,7 +171,8 @@ test('newest upload is current everywhere, contain never crops, Current logo lab
 
   await page.goto('/admin?app=colours');
   await expect(page.getByTestId('admin-hub-app')).toBeVisible();
-  await expect(page.getByTestId('admin-hub-colours-logo').locator('img')).toHaveAttribute(
+  // O7: the test id sits on the one logo <img> itself.
+  await expect(page.getByTestId('admin-hub-colours-logo')).toHaveAttribute(
     'src',
     new RegExp(`/assets/${logoB.id}`),
   );

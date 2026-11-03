@@ -1,7 +1,7 @@
 /**
  * Hub O4: Brand colours tile — states (no logo / not started / draft / sent / KERSIVO chooses), black-and-white
  * and very wide logos, both Overview stages, 375–1440 px. Checks the headline count against the chips, never-cropped
- * logo plates, the mini site card, CLS, axe, the preview phone background and the live refresh from the app.
+ * logo (one, as itself since O7), the mini site card, CLS, axe, the preview phone background and the live refresh from the app.
  */
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
@@ -340,13 +340,18 @@ for (const stage of ["requested", "ready"] as StageKey[]) {
           const headline =
             el.querySelector('[data-testid="admin-hub-colours-headline"]')
               ?.textContent ?? "";
+          const holder = el.querySelector<HTMLElement>(
+            '[data-testid="admin-hub-colours-logos"]',
+          )!;
           const plates = Array.from(
-            el.querySelectorAll<HTMLElement>(".admin-hub-colours-plate"),
+            holder.querySelectorAll<HTMLElement>(
+              ".hub-logo-mark, .admin-hub-colours-initials",
+            ),
           ).filter((p) => p.checkVisibility());
-          const contained = plates.every((plate) => {
-            const img = plate.querySelector("img");
+          const contained = plates.every((mark) => {
+            const img = mark instanceof HTMLImageElement ? mark : null;
             if (!img) return true;
-            const box = plate.getBoundingClientRect();
+            const box = holder.getBoundingClientRect();
             const r = img.getBoundingClientRect();
             const naturalRatio = img.naturalWidth / img.naturalHeight;
             // object-fit: contain → painted size is the largest box of the natural ratio inside the content box.
@@ -411,11 +416,8 @@ for (const stage of ["requested", "ready"] as StageKey[]) {
             Number(counted?.[1]),
             `headline "${m.headline}" matches chips`,
           ).toBe(scenario.chips);
-        expect(m.contained, "logo plates contain the logo").toBe(true);
-        expect(
-          m.plates,
-          "dark + light plate with a logo, one initials plate without",
-        ).toBe(scenario.logo ? 2 : 1);
+        expect(m.contained, "logo fits its slot, never cropped").toBe(true);
+        expect(m.plates, "one logo, or the initials without one").toBe(1);
         expect(m.card, `mini card @${width} (body ${m.body})`).toBe(
           scenario.look && m.body >= 560,
         );

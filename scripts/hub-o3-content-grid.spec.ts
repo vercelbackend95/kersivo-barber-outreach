@@ -157,12 +157,12 @@ async function openOverview(page: Page, width: number) {
   return tile;
 }
 
-/** The logo is contained in its box: never cropped, never upscaled, aspect ratio kept. */
+/** The logo is contained in its link (no box since O7): never cropped, never upscaled, aspect ratio kept. */
 async function assertLogoContained(page: Page) {
   const logo = page.getByTestId('admin-hub-content-logo');
   await expect(logo).toBeVisible();
   const m = await logo.evaluate((el) => {
-    const box = el.querySelector('.admin-hub-content-logo__box')!.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
     const img = el.querySelector('img')!;
     const r = img.getBoundingClientRect();
     return {
@@ -170,8 +170,8 @@ async function assertLogoContained(page: Page) {
       img: { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height },
       natural: { w: img.naturalWidth, h: img.naturalHeight },
       fit: getComputedStyle(img).objectFit,
-      surface: getComputedStyle(el.querySelector('.admin-hub-content-logo__box')!).backgroundColor,
-      light: el.classList.contains('admin-hub-content-logo--light'),
+      surface: getComputedStyle(img).backgroundColor,
+      light: img.classList.contains('hub-logo-mark--plate'),
     };
   });
   expect(m.img.l).toBeGreaterThanOrEqual(m.box.l);

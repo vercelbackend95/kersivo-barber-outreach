@@ -130,9 +130,12 @@ describe('Overview live tiles', () => {
     expect(tile.querySelector('[data-testid="admin-hub-content-logo"] img')?.getAttribute('src')).toBe(
       '/api/admin-hub/assets/logo_1?size=thumb',
     );
-    expect(document.querySelector('.admin-hub-colours-plate img')?.getAttribute('src')).toBe(
-      '/api/admin-hub/assets/logo_1?size=thumb',
-    );
+    // One logo per tile, as itself (O7).
+    const colourLogos = document.querySelectorAll('[data-testid="admin-hub-colours-logos"] img');
+    expect(colourLogos).toHaveLength(1);
+    expect(colourLogos[0]?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_1?size=thumb');
+    expect(colourLogos[0]?.className).toContain('hub-logo-mark');
+    expect(tile.querySelectorAll('[data-testid="admin-hub-content-logo"] img')).toHaveLength(1);
     expect(screen.getByTestId('admin-hub-colours-status').textContent).toMatch(/sent/i);
     expect(screen.getByTestId('admin-hub-colours-guidance').textContent).toBe('Sent on 2 November 2026. Message us to change it.');
     expect(document.querySelector('a[data-tile="colours"]')?.getAttribute('href')).toBe('/admin?app=colours');

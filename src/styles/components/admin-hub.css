@@ -1072,40 +1072,20 @@ a.admin-hub-tile__open:focus-visible {
   gap: 12px;
   min-width: 0;
 }
+/* One logo, as itself. Narrow tile: up to 64 px tall beside the headline; wide tile: up to 80 px. */
 .admin-hub-colours-logos {
+  --admin-hub-colours-logo-h: 64px;
   display: flex;
-  gap: 6px;
-  flex-shrink: 0;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
 }
-.admin-hub-colours-plate {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-.admin-hub-colours-plate--light {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-/* Never cropped: the whole logo fits inside the plate, whatever its shape (absolute, so the image's own
-   size never stretches the plate). */
-.admin-hub-colours-plate img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 4px;
-  box-sizing: border-box;
-}
-.admin-hub-colours-plate__initials {
-  font-size: 13px;
+.admin-hub-colours-initials {
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  line-height: 1;
   color: var(--fg);
 }
 .admin-hub-colours-headline {
@@ -1345,22 +1325,11 @@ a.admin-hub-tile__open:focus-visible {
     gap: 10px;
   }
   .admin-hub-colours-logos {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    flex-shrink: 1;
+    --admin-hub-colours-logo-h: 80px;
     max-width: 440px;
   }
-  .admin-hub-colours-plate {
-    width: auto;
-    height: 84px;
-    border-radius: 12px;
-  }
-  .admin-hub-colours-plate img {
-    padding: 12px 14px;
-  }
-  .admin-hub-colours-plate__initials {
-    font-size: 20px;
+  .admin-hub-colours-initials {
+    font-size: 22px;
   }
   .admin-hub-site-mini {
     display: block;
@@ -1774,53 +1743,15 @@ a.admin-hub-tile__open:focus-visible {
   align-items: center;
   gap: 8px;
 }
-.admin-hub-logo-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+/* "Your logo": the one logo the colours below were found in. */
+.admin-hub-colours__logo-mark {
   margin-bottom: 16px;
-}
-.admin-hub-logo-pair div {
-  height: 104px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.admin-hub-logo-pair img {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
 }
 .admin-hub-colours__logo {
   display: none;
 }
 .admin-hub-colours__logo--in-panel {
   display: grid;
-}
-.admin-hub-colours__logo-frame {
-  display: grid;
-  place-items: center;
-  padding: 12px;
-  min-height: 72px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-hub-hair);
-  background-color: #ece8e1;
-  background-image:
-    linear-gradient(45deg, rgba(20, 20, 20, 0.08) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(20, 20, 20, 0.08) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(20, 20, 20, 0.08) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(20, 20, 20, 0.08) 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-}
-.admin-hub-colours__logo-frame img {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 96px;
-  object-fit: contain;
 }
 .admin-hub-colours__logo-empty {
   display: grid;
@@ -1836,13 +1767,6 @@ a.admin-hub-tile__open:focus-visible {
   margin: 0;
   font-size: 13.5px;
   color: var(--muted);
-}
-.admin-hub-logo-pair__dark {
-  background: #0b0b0b;
-}
-.admin-hub-logo-pair__light {
-  background: #f4efe6;
-  color: #141414;
 }
 .admin-hub-extract {
   display: grid;
@@ -2294,13 +2218,11 @@ a.admin-hub-tile__open:focus-visible {
     gap: 8px;
     margin-bottom: 4px;
   }
-  .admin-hub-colours__logo--in-panel,
-  .admin-hub-colours__logo-heading {
+  .admin-hub-colours__logo--in-panel {
     display: none;
   }
   .admin-hub-colours__looks-label,
   .admin-hub-colours__looks-preview,
-  .admin-hub-colours__found .admin-hub-logo-pair,
   .admin-hub-extract,
   .admin-hub-roles,
   .admin-hub-colours__choose,
@@ -2374,7 +2296,7 @@ a.admin-hub-tile__open:focus-visible {
     border: 0;
     background: none;
   }
-  .admin-hub-colours__found > .admin-hub-cp__label {
+  .admin-hub-colours__found > .admin-hub-cp__label:not(.admin-hub-colours__logo-heading) {
     display: none;
   }
   .admin-hub-role-actions {
@@ -2508,9 +2430,6 @@ a.admin-hub-tile__open:focus-visible {
   display: grid;
   gap: 16px;
   max-width: 640px;
-}
-.admin-hub-colours-sent__logos {
-  margin: 0;
 }
 .admin-hub-colours-sent__list {
   margin: 0;
@@ -2674,25 +2593,14 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   background: rgba(255, 255, 255, 0.03);
 }
 .admin-hub-confirm__logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background-color: #ece8e1;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-.admin-hub-confirm__logo img {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  max-width: 160px;
+  min-height: 56px;
 }
 .admin-hub-confirm__logo span {
   font-size: 11px;
-  text-align: center;
-  color: #141414;
-  padding: 4px;
+  color: var(--muted);
 }
 .admin-hub-confirm__swatches {
   list-style: none;
@@ -3108,7 +3016,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 }
 
 .admin-hub-content-logo {
-  --admin-hub-logo-box: 88px;
+  --admin-hub-content-logo-h: 72px;
   position: relative;
   z-index: 2;
   flex: 0 0 auto;
@@ -3116,43 +3024,27 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  width: max-content;
+  max-width: 100%;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 @container hub-content (min-width: 721px) {
   .admin-hub-content-logo {
-    --admin-hub-logo-box: 120px;
+    --admin-hub-content-logo-h: 96px;
   }
 }
-.admin-hub-content-logo__box {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--admin-hub-logo-box);
-  height: var(--admin-hub-logo-box);
-  padding: 11px;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--admin-hub-hair);
-  background: #1a1a1c;
+.admin-hub-content-logo__mark {
+  transition: opacity 160ms ease;
+}
+/* No thumbnail (e.g. a PDF logo): a paperclip in the logo's place, no box. */
+.admin-hub-content-logo__file {
+  display: grid;
+  place-items: center;
+  width: var(--admin-hub-content-logo-h);
+  height: var(--admin-hub-content-logo-h);
   color: var(--muted);
-  transition: background-color 160ms ease, border-color 160ms ease;
-}
-.admin-hub-content-logo--light .admin-hub-content-logo__box {
-  background: #f4f4f2;
-  border-color: rgba(255, 255, 255, 0.18);
-}
-/* width/height attrs give the intrinsic size; auto + max-* = contain, never cropped, never upscaled. */
-.admin-hub-content-logo__box img {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
 }
 .admin-hub-content-logo__caption {
   font-size: 12px;
@@ -3160,9 +3052,8 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   letter-spacing: 0.02em;
   color: var(--muted);
 }
-.admin-hub-content-logo:hover .admin-hub-content-logo__box,
-.admin-hub-content-logo:focus-visible .admin-hub-content-logo__box {
-  border-color: rgba(255, 255, 255, 0.24);
+.admin-hub-content-logo:hover .admin-hub-content-logo__mark {
+  opacity: 0.86;
 }
 .admin-hub-content-logo:hover .admin-hub-content-logo__caption,
 .admin-hub-content-logo:focus-visible .admin-hub-content-logo__caption {
@@ -3171,6 +3062,28 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 .admin-hub-content-logo:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
+}
+
+/* HubLogoMark: the shop's logo as itself — no frame, box or background. The inline style gives a definite
+   box from the intrinsic size (no CLS); max-* keep it inside its cell, object-fit never crops it. */
+.hub-logo-mark {
+  display: block;
+  box-sizing: border-box;
+  flex: none;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--hub-logo-max-h, 64px);
+  object-fit: contain;
+}
+/* Its own background (JPG, opaque PNG/WebP): rounded corners so the square edge looks intentional. */
+.hub-logo-mark--opaque {
+  border-radius: 8px;
+}
+/* Only a dark logo on transparency, which would vanish on the dark surface. Padding sits inside the same box. */
+.hub-logo-mark--plate {
+  padding: 8px;
+  border-radius: 10px;
+  background: #f4f4f2;
 }
 
 .admin-hub-photos {
@@ -3627,7 +3540,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   .admin-hub-photos .admin-hub-thumb--new img {
     animation: none;
   }
-  .admin-hub-content-logo__box {
+  .admin-hub-content-logo__mark {
     transition: none;
   }
 }

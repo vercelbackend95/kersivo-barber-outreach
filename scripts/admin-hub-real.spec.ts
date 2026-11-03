@@ -576,7 +576,10 @@ test.describe('Admin Hub batch 4 — Brand colours', () => {
       await page.setViewportSize({ width, height: HEIGHT[width] ?? 900 });
       const logo = page.getByTestId('admin-hub-colours-logo');
       await expect(logo, `logo preview @${width}`).toBeVisible();
-      await expect(logo.locator('img, .admin-hub-colours__logo-empty')).toHaveCount(1);
+      // O7: one logo <img> (the test id is on it), or the no-logo empty state.
+      await expect(
+        page.locator('img[data-testid="admin-hub-colours-logo"], [data-testid="admin-hub-colours-logo"] .admin-hub-colours__logo-empty'),
+      ).toHaveCount(1);
     }
     await shots4(page, 'ready-colours', [360, 375, 390, 768, 1280, 1440]);
     await axeColours(page, 'ready-colours', 390);

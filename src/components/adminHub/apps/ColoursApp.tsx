@@ -138,6 +138,8 @@ import {
 } from '@/lib/adminHub/colour';
 import { extractFromLogoUrl, logoDisplayUrl } from '@/lib/adminHub/colour/runExtract';
 import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
+import { overviewImageSize } from '@/lib/adminHub/overviewTiles';
+import { HubLogoMark } from '../HubLogoMark';
 import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import { refreshHubState } from '@/lib/adminHub/hubStore';
 import { showHubToast } from '@/lib/adminHub/hubToast';
@@ -214,6 +216,7 @@ function draftPayload(
 export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   const logo = currentHubLogo(ctx.assets, currentHubLogoOptionsFromDetails(ctx.details));
   const logoUrl = logo ? logoDisplayUrl(ctx.apiBase, logo) : null;
+  const logoSize = logo ? overviewImageSize(logo) : null;
   const logoId = logo?.id ?? null;
   const [locked, setLocked] = useState(() => Boolean(ctx.details.brandLocked || ctx.details.brandColoursSentAt));
   const [submittedAt, setSubmittedAt] = useState<string | null>(ctx.details.brandColoursSentAt ?? null);
@@ -673,9 +676,10 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   if (locked) {
     return (
       <div className="admin-hub-colours" data-testid="admin-hub-colours" data-locked="true">
-        <ColoursLogoPreview logoUrl={logoUrl} canUpload={false} />
+        {logoUrl ? null : <ColoursLogoPreview logoUrl={null} canUpload={false} />}
         <SentSummary
           logoUrl={logoUrl}
+          logoSize={logoSize}
           mainHex={mainHex}
           accentHex={accentHex}
           swatches={swatches}
@@ -689,7 +693,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
   return (
     <div className="admin-hub-colours" data-testid="admin-hub-colours">
-      <ColoursLogoPreview logoUrl={logoUrl} canUpload={ctx.canUpload} />
+      {logoUrl ? null : <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} />}
 
       <div className="admin-hub-colours__preview-first">
         <LivePreview shop={shopLabel} mainHex={mainHex} accentHex={accentHex} tone={tone} services={services} compact />
@@ -702,14 +706,14 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
             {ADMIN_HUB_COLOURS_YOUR_LOGO}
           </p>
           {logoUrl ? (
-            <div className="admin-hub-logo-pair">
-              <div className="admin-hub-logo-pair__dark" style={{ background: siteBackgroundHex('DARK', mainHex || null) }}>
-                <img src={logoUrl} alt="" />
-              </div>
-              <div className="admin-hub-logo-pair__light" style={{ background: siteBackgroundHex('LIGHT', mainHex || null) }}>
-                <img src={logoUrl} alt="" />
-              </div>
-            </div>
+            <HubLogoMark
+              src={logoUrl}
+              width={logoSize?.width}
+              height={logoSize?.height}
+              maxHeight="96px"
+              className="admin-hub-colours__logo-mark"
+              testId="admin-hub-colours-logo"
+            />
           ) : (
             <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} inPanel />
           )}
@@ -1039,15 +1043,18 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           }}
           testId="admin-hub-colours-confirm"
         >
-          <ConfirmSummary logoUrl={logoUrl} mainHex={mainHex} accentHex={accentHex} swatches={swatches} />
+          <ConfirmSummary logoUrl={logoUrl} logoSize={logoSize} mainHex={mainHex} accentHex={accentHex} swatches={swatches} />
         </AdminHubConfirmDialog>
       ) : null}
     </div>
   );
 }
 
+type LogoSize = { width: number; height: number } | null;
+
 function ConfirmSummary(props: {
   logoUrl: string | null;
+  logoSize: LogoSize;
   mainHex: string;
   accentHex: string;
   swatches: ExtractedSwatch[];
@@ -1056,7 +1063,11 @@ function ConfirmSummary(props: {
   return (
     <div className="admin-hub-confirm__summary">
       <div className="admin-hub-confirm__logo">
-        {props.logoUrl ? <img src={props.logoUrl} alt="" /> : <span>{ADMIN_HUB_COLOURS_NO_LOGO}</span>}
+        {props.logoUrl ? (
+          <HubLogoMark src={props.logoUrl} width={props.logoSize?.width} height={props.logoSize?.height} maxHeight="56px" />
+        ) : (
+          <span>{ADMIN_HUB_COLOURS_NO_LOGO}</span>
+        )}
       </div>
       <ul className="admin-hub-confirm__swatches">
         {props.mainHex ? (
@@ -1087,6 +1098,7 @@ function ConfirmSummary(props: {
 
 function SentSummary(props: {
   logoUrl: string | null;
+  logoSize: LogoSize;
   mainHex: string;
   accentHex: string;
   swatches: ExtractedSwatch[];
@@ -1108,14 +1120,13 @@ function SentSummary(props: {
   return (
     <section className="admin-hub-colours-sent" data-testid="admin-hub-colours-sent">
       {props.logoUrl ? (
-        <div className="admin-hub-logo-pair admin-hub-colours-sent__logos">
-          <div className="admin-hub-logo-pair__dark" style={{ background: siteBackgroundHex('DARK', props.mainHex || null) }}>
-            <img src={props.logoUrl} alt="" />
-          </div>
-          <div className="admin-hub-logo-pair__light" style={{ background: siteBackgroundHex('LIGHT', props.mainHex || null) }}>
-            <img src={props.logoUrl} alt="" />
-          </div>
-        </div>
+        <HubLogoMark
+          src={props.logoUrl}
+          width={props.logoSize?.width}
+          height={props.logoSize?.height}
+          maxHeight="96px"
+          testId="admin-hub-colours-logo"
+        />
       ) : null}
       <dl className="admin-hub-colours-sent__list">
         {rows.map((row) => (
@@ -1210,8 +1221,9 @@ function CopyHexButton(props: { hex: string }) {
   );
 }
 
+/** The no-logo empty state (message + upload link). An existing logo is shown once, by HubLogoMark. */
 function ColoursLogoPreview(props: {
-  logoUrl: string | null;
+  logoUrl: null;
   canUpload: boolean;
   inPanel?: boolean;
 }) {
@@ -1220,20 +1232,14 @@ function ColoursLogoPreview(props: {
       className={`admin-hub-colours__logo${props.inPanel ? ' admin-hub-colours__logo--in-panel' : ''}`}
       data-testid={props.inPanel ? 'admin-hub-colours-logo-panel' : 'admin-hub-colours-logo'}
     >
-      {props.logoUrl ? (
-        <div className="admin-hub-colours__logo-frame">
-          <img src={props.logoUrl} alt="" />
-        </div>
-      ) : (
-        <div className="admin-hub-colours__logo-empty">
-          <p>{ADMIN_HUB_COLOURS_NO_LOGO}</p>
-          {props.canUpload ? (
-            <a className="btn btn--outline btn--sm" href={adminHubMaterialsHref('logo')}>
-              {ADMIN_HUB_COLOURS_UPLOAD}
-            </a>
-          ) : null}
-        </div>
-      )}
+      <div className="admin-hub-colours__logo-empty">
+        <p>{ADMIN_HUB_COLOURS_NO_LOGO}</p>
+        {props.canUpload ? (
+          <a className="btn btn--outline btn--sm" href={adminHubMaterialsHref('logo')}>
+            {ADMIN_HUB_COLOURS_UPLOAD}
+          </a>
+        ) : null}
+      </div>
     </div>
   );
 }

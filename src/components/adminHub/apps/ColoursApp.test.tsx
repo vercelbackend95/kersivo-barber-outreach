@@ -376,7 +376,7 @@ describe('ColoursApp', () => {
     expect(upload[0]!.getAttribute('href')).toBe('/admin?app=materials&item=logo');
   });
 
-  it('shows the selected logo in the mobile preview and desktop pair', () => {
+  it('shows the selected logo once, in the Your logo panel', () => {
     render(
       <Harness
         overrides={{
@@ -400,9 +400,11 @@ describe('ColoursApp', () => {
         }}
       />,
     );
-    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    const mobile = screen.getByTestId('admin-hub-colours-logo');
     expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_1?size=thumb');
-    expect(document.querySelectorAll('.admin-hub-logo-pair img')).toHaveLength(2);
+    // Exactly one copy of the logo (O7): no top preview, no dark/light pair.
+    expect(document.querySelectorAll('img[src="/api/admin-hub/assets/logo_1?size=thumb"]')).toHaveLength(1);
+    expect(document.querySelector('.admin-hub-logo-pair')).toBeNull();
     expect(screen.queryByText('No logo uploaded yet')).toBeNull();
   });
 
@@ -446,7 +448,7 @@ describe('ColoursApp', () => {
         }}
       />,
     );
-    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    const mobile = screen.getByTestId('admin-hub-colours-logo');
     expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_new?size=thumb');
     await waitFor(() => {
       expect(extractFromLogoUrl).toHaveBeenCalledWith('/api/admin-hub/assets/logo_new?size=thumb');
@@ -504,7 +506,7 @@ describe('ColoursApp', () => {
         }}
       />,
     );
-    const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
+    const mobile = screen.getByTestId('admin-hub-colours-logo');
     expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_old?size=thumb');
   });
 });
