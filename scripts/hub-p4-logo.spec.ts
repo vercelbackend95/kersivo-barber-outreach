@@ -162,7 +162,7 @@ test('newest upload is current everywhere, contain never crops, Current logo lab
   await page.goto('/admin?app=logo');
   await expect(page.getByTestId('admin-hub-app')).toBeVisible();
   await expect(page.getByText('Current logo')).toBeVisible();
-  await expect(page.locator('[data-testid="hub-logo-tile"][data-current="true"] img')).toHaveAttribute(
+  await expect(page.locator('[data-testid="hub-logo-current"] img')).toHaveAttribute(
     'src',
     new RegExp(`/assets/${logoB.id}`),
   );

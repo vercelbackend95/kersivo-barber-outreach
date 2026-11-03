@@ -1521,7 +1521,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     });
     const logoRes = await logoUpload;
     expect(logoRes.status(), `logo ${logoRes.status()} ${await logoRes.text()}`).toBeLessThan(400);
-    await expect(page.locator('.hub-swatch img')).toHaveCount(2);
+    await expect(page.locator('[data-testid="hub-logo-current"] img')).toHaveCount(1);
     await a0Shot('materials');
 
     await page.goto('/admin?app=about');

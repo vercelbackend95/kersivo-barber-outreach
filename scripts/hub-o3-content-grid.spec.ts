@@ -345,7 +345,7 @@ for (const width of [1440, 375]) {
       mimeType: 'image/png',
       buffer: await LOGOS.wordmark(),
     });
-    await expect(app.locator('[data-testid="hub-logo-tile"]').first()).toBeVisible({ timeout: 20000 });
+    await expect(app.locator('[data-testid="hub-logo-current"]')).toBeVisible({ timeout: 20000 });
     await close();
     const logoImg = tile.getByTestId('admin-hub-content-logo').locator('img');
     await expect(logoImg).not.toHaveAttribute('src', logoBefore!);

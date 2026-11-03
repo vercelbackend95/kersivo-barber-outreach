@@ -158,9 +158,15 @@ describe('logo display CSS', () => {
   });
 
   it('shows the hub logo as itself: contained, no box, plate only as the transparent-logo exception (O7)', () => {
-    expect(hub).toMatch(/\.hub-logo-mark \{[^}]*max-width: 100%;[^}]*max-height: var\(--hub-logo-max-h, 64px\);[^}]*object-fit: contain;/);
-    expect(hub).toMatch(/\.hub-logo-mark--opaque \{\s*border-radius: 8px;\s*\}/);
-    expect(hub).toMatch(/\.hub-logo-mark--plate \{\s*padding: 8px;\s*border-radius: 10px;\s*background: #f4f4f2;\s*\}/);
+    // O9: HubLogoMark rules live in preview-hub.css, loaded by the hub and by the full Your shop page.
+    const previewHub = readFileSync(resolve(process.cwd(), 'src/styles/components/preview-hub.css'), 'utf8');
+    expect(previewHub).toMatch(/\.hub-logo-mark \{[^}]*max-width: 100%;[^}]*max-height: var\(--hub-logo-max-h, 64px\);[^}]*object-fit: contain;/);
+    expect(previewHub).toMatch(/\.hub-logo-mark--opaque \{\s*border-radius: 8px;\s*\}/);
+    expect(previewHub).toMatch(/\.hub-logo-mark--plate \{\s*padding: 8px;\s*border-radius: 10px;\s*background: #f4f4f2;\s*\}/);
+    expect(hub).not.toMatch(/^\.hub-logo-mark \{/m);
+  });
+
+  it('keeps the old logo plates out of admin-hub.css (O7)', () => {
     expect(hub).not.toContain('.admin-hub-colours-plate');
     expect(hub).not.toContain('.admin-hub-logo-pair');
     expect(hub).not.toContain('.admin-hub-content-logo__box');

@@ -10,7 +10,7 @@ import {
   HUB_DETAILS_ABOUT_TITLE,
   HUB_DETAILS_INSTAGRAM_HINT,
   HUB_DETAILS_INSTAGRAM_LABEL,
-  HUB_DETAILS_BRAND_TITLE,
+  HUB_DETAILS_LOGO_TITLE,
   HUB_DETAILS_COLOUR_PRIMARY,
   HUB_DETAILS_COLOUR_SECONDARY,
   HUB_DETAILS_EARLIER_TEAM_PHOTOS,
@@ -25,8 +25,6 @@ import {
   HUB_DETAILS_SERVICES_TITLE,
   HUB_DETAILS_STYLE_HINT,
   HUB_DETAILS_STYLE_LABEL,
-  HUB_DETAILS_SWATCH_DARK,
-  HUB_DETAILS_SWATCH_LIGHT,
   HUB_DETAILS_TEAM_TITLE,
   HUB_DETAILS_TITLE,
   HUB_JUMP_LOGO,
@@ -39,25 +37,37 @@ import {
   HUB_WEBSITE_EXTRA_LABEL,
   HUB_WEBSITE_TEXT_INTRO,
   HUB_WEBSITE_TEXT_TITLE,
+  HUB_BRAND_COLOURS_LINK,
   HUB_CURRENT_LOGO,
+  HUB_EARLIER_LOGOS,
   HUB_EMPTY_LOGO,
   HUB_EMPTY_OTHER,
   HUB_EMPTY_PHOTOS,
   HUB_EMPTY_PRICE,
   HUB_FILES_PRIVACY,
+  HUB_LOGO_HINT,
   HUB_MOVE_DOWN,
   HUB_MOVE_UP,
   HUB_RETRY,
   HUB_SAVE_FAILED,
   HUB_SAVED,
+  HUB_REPLACE_LOGO,
   HUB_SAVING,
+  HUB_STATUS_ADDED,
+  HUB_STATUS_ADDED_COUNT,
+  HUB_STATUS_NOT_ADDED,
   HUB_UNDO,
   HUB_UPLOAD_HINT_PHOTOS,
   HUB_UPLOAD_HINT_PRICE,
   HUB_UPLOAD_HINT_OTHER,
+  HUB_UPLOAD_TYPES_FILE,
+  HUB_UPLOAD_TYPES_LOGO,
+  HUB_UPLOAD_TYPES_PHOTO,
 } from '@/lib/freePreview/hubCopy';
 import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
+import { adminHubAppHref } from '@/lib/adminHub/apps';
 import { hubApiRoot } from '@/lib/adminHub/links';
+import { HubLogoMark } from '@/components/adminHub/HubLogoMark';
 import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { HubUploader, type HubUploadedAsset } from './HubUploader';
 import { HubReviewCards, type HubReviewMap } from './HubReviewCards';
@@ -86,6 +96,8 @@ const UNDO_MS = 5000;
 const AUTOSAVE_MS = 700;
 const OTHER_MAX = 10;
 const EXTRA_MAX = 2000;
+/** How long `?item=` keeps its card highlighted. */
+const HIGHLIGHT_MS = 2400;
 
 function assetUrl(apiRoot: string, id: string, size: 'thumb' | 'full') {
   return `${apiRoot}/assets/${encodeURIComponent(id)}?size=${size}`;
@@ -168,24 +180,124 @@ const JUMP_CHIPS: Array<{ id: AdminHubAddWebsiteItem; label: string; check?: boo
   { id: 'other', label: HUB_JUMP_OTHER },
 ];
 
+/** How long a chip click owns aria-current while its smooth scroll settles. */
+const JUMP_PIN_MS = 1000;
+
+/**
+ * Scrolls a card to the top of the app body (respecting its scroll-margin-top, below the sticky chips) and moves
+ * focus to its heading. Only the app body scrolls: scrollIntoView would also scroll the app window's own box and
+ * push its title bar out of view. Outside the hub it falls back to scrollIntoView.
+ */
+function scrollToCard(node: HTMLElement) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const behavior: ScrollBehavior = reduce ? 'auto' : 'smooth';
+  const scroller = node.closest<HTMLElement>('.admin-hub-app__body');
+  if (scroller && typeof scroller.scrollTo === 'function') {
+    const margin = parseFloat(getComputedStyle(node).scrollMarginTop) || 0;
+    const box = scroller.getBoundingClientRect();
+    // The app window may still be scaling in: convert on-screen distance to layout pixels.
+    const scale = box.height > 0 && scroller.offsetHeight > 0 ? scroller.offsetHeight / box.height : 1;
+    const top = scroller.scrollTop + (node.getBoundingClientRect().top - box.top) * scale - margin;
+    scroller.scrollTo({ top: Math.max(0, top), behavior });
+  } else {
+    node.scrollIntoView({ block: 'start', behavior });
+  }
+  const heading = node.querySelector('h2');
+  if (heading instanceof HTMLElement) {
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+  }
+}
+
 function JumpChips({
   counts,
+  highlight,
 }: {
   counts: Record<AdminHubAddWebsiteItem, number>;
+  /** `?item=`: that card is scrolled to, so its chip starts as the current one. */
+  highlight?: AdminHubAddWebsiteItem | null;
 }) {
+  const navRef = useRef<HTMLElement | null>(null);
+  const [current, setCurrent] = useState<AdminHubAddWebsiteItem>(highlight ?? JUMP_CHIPS[0]!.id);
+  const pinned = useRef(0);
+
+  useEffect(() => {
+    if (!highlight) return;
+    pinned.current = Date.now() + JUMP_PIN_MS;
+    setCurrent(highlight);
+  }, [highlight]);
+
+  // aria-current follows the section under the chips: a 1px IntersectionObserver band just below the sticky
+  // chips fires whenever a section edge crosses it; scrollend covers the bottom of the list.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav || typeof IntersectionObserver === 'undefined') return;
+    const scroller = nav.closest<HTMLElement>('.admin-hub-app__body');
+    const sections = JUMP_CHIPS.map((chip) => document.getElementById(chip.id)).filter(
+      (node): node is HTMLElement => Boolean(node),
+    );
+    if (!sections.length) return;
+    let frame = 0;
+    let observer: IntersectionObserver | null = null;
+    const compute = () => {
+      frame = 0;
+      if (Date.now() < pinned.current) return;
+      const view = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+      const line = nav.getBoundingClientRect().bottom + 24;
+      const atEnd = scroller
+        ? scroller.scrollTop > 0 && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2
+        : false;
+      let next = sections[0]!;
+      if (atEnd) {
+        for (const section of sections) if (section.getBoundingClientRect().top < view.bottom - 48) next = section;
+      } else {
+        // The section that most recently passed under the chips; side-by-side cards keep DOM order.
+        let best = -Infinity;
+        for (const section of sections) {
+          const top = section.getBoundingClientRect().top;
+          if (top <= line && top > best + 1) {
+            best = top;
+            next = section;
+          }
+        }
+      }
+      setCurrent(next.id as AdminHubAddWebsiteItem);
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(compute);
+    };
+    const build = () => {
+      observer?.disconnect();
+      const height = scroller ? scroller.clientHeight : window.innerHeight;
+      const offset = Math.round(nav.offsetHeight + 24);
+      observer = new IntersectionObserver(schedule, {
+        root: scroller,
+        rootMargin: `-${offset}px 0px -${Math.max(0, height - offset - 1)}px 0px`,
+        threshold: 0,
+      });
+      for (const section of sections) observer.observe(section);
+    };
+    build();
+    const target: HTMLElement | Window = scroller ?? window;
+    target.addEventListener('scrollend', schedule);
+    window.addEventListener('resize', build);
+    return () => {
+      observer?.disconnect();
+      target.removeEventListener('scrollend', schedule);
+      window.removeEventListener('resize', build);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   const jump = (id: AdminHubAddWebsiteItem) => {
     const node = document.getElementById(id);
     if (!node) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    node.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
-    const heading = node.querySelector('h2');
-    if (heading instanceof HTMLElement) {
-      heading.tabIndex = -1;
-      heading.focus({ preventScroll: true });
-    }
+    pinned.current = Date.now() + JUMP_PIN_MS;
+    setCurrent(id);
+    scrollToCard(node);
   };
   return (
-    <nav className="hub-jump" aria-label="Add to your website" data-testid="hub-jump">
+    <nav ref={navRef} className="hub-jump" aria-label="Add to your website" data-testid="hub-jump">
       {JUMP_CHIPS.map((chip) => {
         const count = counts[chip.id];
         const mark = chip.check ? (count > 0 ? ' ✓' : '') : count > 0 ? ` ${count}` : '';
@@ -194,6 +306,7 @@ function JumpChips({
             key={chip.id}
             type="button"
             className={`hub-jump__chip${count > 0 ? ' is-done' : ''}`}
+            aria-current={current === chip.id ? 'true' : undefined}
             onClick={() => jump(chip.id)}
           >
             {chip.label}
@@ -202,6 +315,26 @@ function JumpChips({
         );
       })}
     </nav>
+  );
+}
+
+function cardStatus(count: number, kind: 'count' | 'check') {
+  if (count <= 0) return { text: HUB_STATUS_NOT_ADDED, done: false };
+  return { text: kind === 'count' ? HUB_STATUS_ADDED_COUNT(count) : HUB_STATUS_ADDED, done: true };
+}
+
+/** Same header on every card: title + status pill, then one hint line. */
+function CardHead(props: { titleId: string; title: string; status: { text: string; done: boolean }; hint: string }) {
+  return (
+    <>
+      <div className="hub-card__head">
+        <h2 id={props.titleId} className="hub-card__title">
+          {props.title}
+        </h2>
+        <span className={`hub-status${props.status.done ? ' is-done' : ''}`}>{props.status.text}</span>
+      </div>
+      <p className="hub-card__hint">{props.hint}</p>
+    </>
   );
 }
 
@@ -347,16 +480,14 @@ export function HubYourShop(props: {
     if (!item) return;
     const node = document.getElementById(item);
     if (!node) return;
-    const reduce =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    node.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
     node.classList.add('is-hub-add-target');
-    const heading = node.querySelector('h2');
-    if (heading instanceof HTMLElement) {
-      heading.tabIndex = -1;
-      heading.focus({ preventScroll: true });
-    }
-    return () => node.classList.remove('is-hub-add-target');
+    scrollToCard(node);
+    // A brief highlight; the outline fades out (no transition under prefers-reduced-motion).
+    const timer = window.setTimeout(() => node.classList.remove('is-hub-add-target'), HIGHLIGHT_MS);
+    return () => {
+      window.clearTimeout(timer);
+      node.classList.remove('is-hub-add-target');
+    };
   }, [props.highlight]);
 
   const addAsset = (asset: HubUploadedAsset) => {
@@ -542,8 +673,382 @@ export function HubYourShop(props: {
     return null;
   }, [pendingDelete, save]);
 
+  const textCount = [aboutText, instagramUrl, websiteExtraText].some((value) => value.trim()) ? 1 : 0;
+  const earlierLogos = logos
+    .filter((asset) => !logo || asset.id !== logo.id)
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+
+  const photosCard = showPhotos ? (
+    <section className="hub-card ks-glass-card" id="photos" aria-labelledby="hub-photos-title">
+      <CardHead
+        titleId="hub-photos-title"
+        title={HUB_DETAILS_PHOTOS_TITLE}
+        status={cardStatus(photos.length, 'count')}
+        hint={HUB_UPLOAD_HINT_PHOTOS}
+      />
+      {props.canUpload ? (
+        <HubUploader
+          token={props.token}
+          apiBase={props.apiBase}
+          kind="SHOP_PHOTO"
+          hint={HUB_UPLOAD_TYPES_PHOTO}
+          onUploaded={addAsset}
+        />
+      ) : null}
+      {photos.length ? (
+        <ul className="hub-photo-grid">
+          {photos.map((asset) => (
+            <PhotoTile
+              key={asset.id}
+              apiRoot={apiRoot}
+              asset={asset}
+              canEdit={props.canUpload}
+              onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+              onDelete={() => requestDelete(asset)}
+              onMove={(dir) => void moveAsset('SHOP_PHOTO', asset.id, dir)}
+              onDragStart={() => {
+                dragId.current = asset.id;
+              }}
+              onDrop={() => void dropAsset('SHOP_PHOTO', asset.id)}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="hub-empty">{HUB_EMPTY_PHOTOS}</p>
+      )}
+      {earlierTeamPhotos.length ? (
+        <section
+          className="hub-earlier-team"
+          aria-labelledby="hub-earlier-team-title"
+          data-testid="hub-earlier-team-photos"
+        >
+          <h3 id="hub-earlier-team-title" className="hub-earlier-team__title">
+            {HUB_DETAILS_EARLIER_TEAM_PHOTOS}
+          </h3>
+          <ul className="hub-photo-grid">
+            {earlierTeamPhotos.map((asset) => (
+              <PhotoTile
+                key={asset.id}
+                apiRoot={apiRoot}
+                asset={asset}
+                canEdit={props.canUpload}
+                compact
+                movable={false}
+                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+                onDelete={() => requestDelete(asset)}
+                onMove={() => undefined}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </section>
+  ) : null;
+
+  const logoCard = showLogo ? (
+    <section className="hub-card ks-glass-card" id="logo" aria-labelledby="hub-logo-title">
+      <CardHead
+        titleId="hub-logo-title"
+        title={HUB_DETAILS_LOGO_TITLE}
+        status={cardStatus(logos.length, 'check')}
+        hint={HUB_LOGO_HINT}
+      />
+      {logo ? (
+        <div className="hub-logo-now" data-testid="hub-logo-current">
+          <div className="hub-logo-now__media">
+            {logoSrc ? (
+              <HubLogoMark
+                src={logoSrc}
+                width={logo.width}
+                height={logo.height}
+                maxHeight="var(--hub-logo-now-h, 96px)"
+              />
+            ) : (
+              <p className="hub-photo__file">{logo.originalFileName}</p>
+            )}
+          </div>
+          <div className="hub-logo-now__meta">
+            <p className="hub-logo-now__label">{HUB_CURRENT_LOGO}</p>
+            <p className="hub-logo-now__name">{logo.originalFileName}</p>
+            {canUploadLogo ? (
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => requestDelete(logo)}>
+                {HUB_DELETE}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {canUploadLogo ? (
+        <HubUploader
+          token={props.token}
+          apiBase={props.apiBase}
+          kind="LOGO"
+          multiple={false}
+          title={logo ? HUB_REPLACE_LOGO : undefined}
+          hint={HUB_UPLOAD_TYPES_LOGO}
+          onUploaded={addAsset}
+        />
+      ) : null}
+      {logo ? null : <p className="hub-empty">{HUB_EMPTY_LOGO}</p>}
+      {earlierLogos.length ? (
+        <details className="hub-earlier">
+          <summary className="hub-earlier__summary">{HUB_EARLIER_LOGOS(earlierLogos.length)}</summary>
+          <ul className="hub-earlier__list">
+            {earlierLogos.map((asset) => {
+              const src = displayUrl(apiRoot, asset);
+              return (
+                <li key={asset.id} className="hub-earlier__item" data-testid="hub-earlier-logo">
+                  <span className="hub-earlier__thumb">
+                    {src ? (
+                      <HubLogoMark src={src} width={asset.width} height={asset.height} maxHeight="40px" />
+                    ) : (
+                      <span className="hub-earlier__file">{asset.contentType.includes('pdf') ? 'PDF' : 'SVG'}</span>
+                    )}
+                  </span>
+                  <span className="hub-earlier__name">{asset.originalFileName}</span>
+                  {canUploadLogo ? (
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => requestDelete(asset)}>
+                      {HUB_DELETE}
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      ) : null}
+      {focus ? (
+        <a className="hub-card__link" href={adminHubAppHref('colours')}>
+          {HUB_BRAND_COLOURS_LINK}
+          <span aria-hidden="true"> →</span>
+        </a>
+      ) : null}
+      {showBrandExtras ? (
+        <>
+          <div className="hub-colours">
+            <HexField
+              id="hub-primary"
+              label={HUB_DETAILS_COLOUR_PRIMARY}
+              value={primary}
+              disabled={!canEditColours}
+              onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
+            />
+            <HexField
+              id="hub-secondary"
+              label={HUB_DETAILS_COLOUR_SECONDARY}
+              value={secondary}
+              disabled={!canEditColours}
+              onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
+            />
+          </div>
+          {logo && canEditColours ? (
+            <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
+              {HUB_DETAILS_PICK_FROM_LOGO}
+            </button>
+          ) : null}
+          {palette.length ? (
+            <div className="hub-chips" role="list">
+              {palette.map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
+                  style={{ background: hex }}
+                  aria-label={`Use ${hex} as primary`}
+                  disabled={!canEditColours}
+                  onClick={() => {
+                    if (!canEditColours) return;
+                    setPrimary(hex);
+                    queueDetails({ brandPrimaryColour: hex });
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    if (!canEditColours) return;
+                    setSecondary(hex);
+                    queueDetails({ brandSecondaryColour: hex });
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
+          <div className="field" style={{ marginTop: 16 }}>
+            <label className="field__label" htmlFor="hub-style">
+              {HUB_DETAILS_STYLE_LABEL}
+            </label>
+            <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
+            <textarea
+              id="hub-style"
+              className="textarea"
+              maxLength={500}
+              disabled={!props.canEditDetails}
+              value={styleNotes}
+              onChange={(event) => {
+                setStyleNotes(event.target.value);
+                queueDetails({ styleNotes: event.target.value });
+              }}
+            />
+          </div>
+        </>
+      ) : null}
+    </section>
+  ) : null;
+
+  const textCard = showAbout ? (
+    <section className="hub-card ks-glass-card" id="text" aria-labelledby="hub-website-text-title">
+      <CardHead
+        titleId="hub-website-text-title"
+        title={HUB_WEBSITE_TEXT_TITLE}
+        status={cardStatus(textCount, 'check')}
+        hint={HUB_WEBSITE_TEXT_INTRO}
+      />
+      <div className="field">
+        <label className="field__label" htmlFor="hub-about">
+          {HUB_DETAILS_ABOUT_TITLE}
+        </label>
+        <p className="field__hint" id="hub-about-hint">
+          {HUB_DETAILS_ABOUT_HINT}
+        </p>
+        <textarea
+          id="hub-about"
+          aria-describedby="hub-about-hint"
+          className="textarea"
+          maxLength={600}
+          disabled={!props.canEditDetails}
+          value={aboutText}
+          onChange={(event) => {
+            setAboutText(event.target.value);
+            queueDetails({ aboutText: event.target.value });
+          }}
+        />
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="hub-instagram">
+          {HUB_DETAILS_INSTAGRAM_LABEL}
+        </label>
+        <p className="field__hint" id="hub-instagram-hint">
+          {HUB_DETAILS_INSTAGRAM_HINT}
+        </p>
+        <input
+          id="hub-instagram"
+          className="input"
+          type="text"
+          inputMode="url"
+          autoComplete="off"
+          spellCheck={false}
+          disabled={!props.canEditDetails}
+          value={instagramUrl}
+          aria-describedby="hub-instagram-hint"
+          onChange={(event) => {
+            setInstagramUrl(event.target.value);
+            queueDetails({ instagramUrl: event.target.value });
+          }}
+        />
+      </div>
+      <div className="field">
+        <label className="field__label" htmlFor="hub-website-extra">
+          {HUB_WEBSITE_EXTRA_LABEL}
+        </label>
+        <p className="field__hint" id="hub-website-extra-hint">
+          {HUB_WEBSITE_EXTRA_HINT}
+        </p>
+        <textarea
+          id="hub-website-extra"
+          aria-describedby="hub-website-extra-hint hub-website-extra-count"
+          className="textarea"
+          maxLength={EXTRA_MAX}
+          disabled={!props.canEditDetails}
+          value={websiteExtraText}
+          onChange={(event) => {
+            setWebsiteExtraText(event.target.value);
+            queueDetails({ websiteExtraText: event.target.value });
+          }}
+        />
+        <p className="field__hint hub-charcount" id="hub-website-extra-count">
+          {HUB_WEBSITE_EXTRA_COUNT(websiteExtraText.length, EXTRA_MAX)}
+        </p>
+      </div>
+    </section>
+  ) : null;
+
+  const priceCard = showPrice ? (
+    <section className="hub-card ks-glass-card" id="price-list" aria-labelledby="hub-price-title">
+      <CardHead
+        titleId="hub-price-title"
+        title={HUB_DETAILS_PRICE_TITLE}
+        status={cardStatus(prices.length, 'count')}
+        hint={`${HUB_DETAILS_PRICE_HEAD}. ${HUB_UPLOAD_HINT_PRICE}`}
+      />
+      {props.canUpload ? (
+        <HubUploader
+          token={props.token}
+          apiBase={props.apiBase}
+          kind="PRICE_LIST"
+          hint={HUB_UPLOAD_TYPES_FILE}
+          onUploaded={addAsset}
+        />
+      ) : null}
+      {prices.length ? (
+        <ul className="hub-photo-grid hub-photo-grid--files">
+          {prices.map((asset) => (
+            <PhotoTile
+              key={asset.id}
+              apiRoot={apiRoot}
+              asset={asset}
+              canEdit={props.canUpload}
+              compact
+              onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+              onDelete={() => requestDelete(asset)}
+              onMove={(dir) => void moveAsset('PRICE_LIST', asset.id, dir)}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="hub-empty">{HUB_EMPTY_PRICE}</p>
+      )}
+    </section>
+  ) : null;
+
+  const otherCard = showOther ? (
+    <section className="hub-card ks-glass-card" id="other" aria-labelledby="hub-other-title">
+      <CardHead
+        titleId="hub-other-title"
+        title={HUB_DETAILS_OTHER_TITLE}
+        status={cardStatus(others.length, 'count')}
+        hint={HUB_UPLOAD_HINT_OTHER}
+      />
+      {props.canUpload ? (
+        <HubUploader
+          token={props.token}
+          apiBase={props.apiBase}
+          kind="OTHER"
+          hint={HUB_UPLOAD_TYPES_FILE}
+          remaining={Math.max(0, OTHER_MAX - others.length)}
+          onUploaded={addAsset}
+        />
+      ) : null}
+      {others.length ? (
+        <ul className="hub-photo-grid hub-photo-grid--files">
+          {others.map((asset) => (
+            <PhotoTile
+              key={asset.id}
+              apiRoot={apiRoot}
+              asset={asset}
+              canEdit={props.canUpload}
+              compact
+              onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+              onDelete={() => requestDelete(asset)}
+              onMove={(dir) => void moveAsset('OTHER', asset.id, dir)}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="hub-empty">{HUB_EMPTY_OTHER}</p>
+      )}
+    </section>
+  ) : null;
+
   return (
-    <article className="hub-details">
+    <article className={`hub-details${focus === 'materials' ? ' hub-details--materials' : ''}`}>
       {chrome ? (
         <header className="hub-header">
           <div>
@@ -567,345 +1072,36 @@ export function HubYourShop(props: {
 
       {showJump ? (
         <JumpChips
+          highlight={props.highlight}
           counts={{
             photos: photos.length,
             logo: logos.length,
-            text: [aboutText, instagramUrl, websiteExtraText].some((value) => value.trim()) ? 1 : 0,
+            text: textCount,
             'price-list': prices.length,
             other: others.length,
           }}
         />
       ) : null}
 
-      {showPhotos ? (
-      <section className="hub-card ks-glass-card" id="photos" aria-labelledby="hub-photos-title">
-        <h2 id="hub-photos-title" className="hub-card__title">
-          {HUB_DETAILS_PHOTOS_TITLE}
-        </h2>
-        <p className="hub-card__body">{HUB_UPLOAD_HINT_PHOTOS}</p>
-        {props.canUpload ? (
-          <HubUploader token={props.token} apiBase={props.apiBase} kind="SHOP_PHOTO" hint={HUB_UPLOAD_HINT_PHOTOS} onUploaded={addAsset} />
-        ) : null}
-        {photos.length ? (
-          <ul className="hub-photo-grid">
-            {photos.map((asset) => (
-              <PhotoTile
-                key={asset.id}
-                apiRoot={apiRoot}
-                asset={asset}
-                canEdit={props.canUpload}
-                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
-                onDelete={() => requestDelete(asset)}
-                onMove={(dir) => void moveAsset('SHOP_PHOTO', asset.id, dir)}
-                onDragStart={() => {
-                  dragId.current = asset.id;
-                }}
-                onDrop={() => void dropAsset('SHOP_PHOTO', asset.id)}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="hub-card__body">{HUB_EMPTY_PHOTOS}</p>
-        )}
-        {earlierTeamPhotos.length ? (
-          <section
-            className="hub-earlier-team"
-            aria-labelledby="hub-earlier-team-title"
-            data-testid="hub-earlier-team-photos"
-          >
-            <h3 id="hub-earlier-team-title" className="hub-earlier-team__title">
-              {HUB_DETAILS_EARLIER_TEAM_PHOTOS}
-            </h3>
-            <ul className="hub-photo-grid">
-              {earlierTeamPhotos.map((asset) => (
-                <PhotoTile
-                  key={asset.id}
-                  apiRoot={apiRoot}
-                  asset={asset}
-                  canEdit={props.canUpload}
-                  compact
-                  movable={false}
-                  onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
-                  onDelete={() => requestDelete(asset)}
-                  onMove={() => undefined}
-                />
-              ))}
-            </ul>
-          </section>
-        ) : null}
-      </section>
-      ) : null}
-
-      {showLogo ? (
-      <section className="hub-card ks-glass-card" id="logo" aria-labelledby="hub-brand-title">
-        <h2 id="hub-brand-title" className="hub-card__title">
-          {HUB_DETAILS_BRAND_TITLE}
-        </h2>
-        <div className="hub-swatches">
-          <figure className="hub-swatch hub-swatch--dark">
-            {logoSrc ? <img src={logoSrc} alt="" /> : <p>{HUB_EMPTY_LOGO}</p>}
-            <figcaption>{HUB_DETAILS_SWATCH_DARK}</figcaption>
-          </figure>
-          <figure className="hub-swatch hub-swatch--light">
-            {logoSrc ? <img src={logoSrc} alt="" /> : <p>{HUB_EMPTY_LOGO}</p>}
-            <figcaption>{HUB_DETAILS_SWATCH_LIGHT}</figcaption>
-          </figure>
+      {focus === 'materials' ? (
+        <div className="hub-materials">
+          <div className="hub-materials__main">{photosCard}</div>
+          <div className="hub-materials__side">
+            {logoCard}
+            {textCard}
+            {priceCard}
+            {otherCard}
+          </div>
         </div>
-        {canUploadLogo ? <HubUploader token={props.token} apiBase={props.apiBase} kind="LOGO" multiple={false} onUploaded={addAsset} /> : null}
-        {logos.length ? (
-          <ul className="hub-photo-grid hub-logo-grid">
-            {[...logos]
-              .sort((a, b) => {
-                if (logo && a.id === logo.id) return -1;
-                if (logo && b.id === logo.id) return 1;
-                return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-              })
-              .map((asset) => {
-                const src = displayUrl(apiRoot, asset);
-                const isCurrent = Boolean(logo && asset.id === logo.id);
-                return (
-                  <li
-                    key={asset.id}
-                    className="hub-photo hub-photo--logo"
-                    data-testid="hub-logo-tile"
-                    data-current={isCurrent ? 'true' : undefined}
-                  >
-                    <div className="hub-photo__media">
-                      {src ? (
-                        <img src={src} alt="" />
-                      ) : (
-                        <p className="hub-photo__file">{asset.originalFileName}</p>
-                      )}
-                    </div>
-                    {isCurrent ? (
-                      <p className="hub-logo-current">{HUB_CURRENT_LOGO}</p>
-                    ) : (
-                      <p className="hub-card__body">{asset.originalFileName}</p>
-                    )}
-                    {canUploadLogo ? (
-                      <div className="hub-photo__tools">
-                        <button type="button" className="btn btn--ghost btn--sm" onClick={() => requestDelete(asset)}>
-                          {HUB_DELETE}
-                        </button>
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-          </ul>
-        ) : null}
-        {showBrandExtras ? (
-          <>
-            <div className="hub-colours">
-              <HexField
-                id="hub-primary"
-                label={HUB_DETAILS_COLOUR_PRIMARY}
-                value={primary}
-                disabled={!canEditColours}
-                onChange={(value) => onHex('brandPrimaryColour', value, setPrimary)}
-              />
-              <HexField
-                id="hub-secondary"
-                label={HUB_DETAILS_COLOUR_SECONDARY}
-                value={secondary}
-                disabled={!canEditColours}
-                onChange={(value) => onHex('brandSecondaryColour', value, setSecondary)}
-              />
-            </div>
-            {logo && canEditColours ? (
-              <button type="button" className="btn btn--secondary btn--sm" onClick={() => void pickFromLogo()}>
-                {HUB_DETAILS_PICK_FROM_LOGO}
-              </button>
-            ) : null}
-            {palette.length ? (
-              <div className="hub-chips" role="list">
-                {palette.map((hex) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    className={`hub-chip${selectedPrimary === hex ? ' is-selected' : ''}`}
-                    style={{ background: hex }}
-                    aria-label={`Use ${hex} as primary`}
-                    disabled={!canEditColours}
-                    onClick={() => {
-                      if (!canEditColours) return;
-                      setPrimary(hex);
-                      queueDetails({ brandPrimaryColour: hex });
-                    }}
-                    onContextMenu={(event) => {
-                      event.preventDefault();
-                      if (!canEditColours) return;
-                      setSecondary(hex);
-                      queueDetails({ brandSecondaryColour: hex });
-                    }}
-                  />
-                ))}
-              </div>
-            ) : null}
-            <div className="field" style={{ marginTop: 16 }}>
-              <label className="field__label" htmlFor="hub-style">
-                {HUB_DETAILS_STYLE_LABEL}
-              </label>
-              <p className="field__hint">{HUB_DETAILS_STYLE_HINT}</p>
-              <textarea
-                id="hub-style"
-                className="textarea"
-                maxLength={500}
-                disabled={!props.canEditDetails}
-                value={styleNotes}
-                onChange={(event) => {
-                  setStyleNotes(event.target.value);
-                  queueDetails({ styleNotes: event.target.value });
-                }}
-              />
-            </div>
-          </>
-        ) : null}
-      </section>
-      ) : null}
-
-      {showAbout ? (
-      <section className="hub-card ks-glass-card" id="text" aria-labelledby="hub-website-text-title">
-        <h2 id="hub-website-text-title" className="hub-card__title">
-          {HUB_WEBSITE_TEXT_TITLE}
-        </h2>
-        <p className="hub-card__body">{HUB_WEBSITE_TEXT_INTRO}</p>
-        <div className="field">
-          <label className="field__label" htmlFor="hub-about">
-            {HUB_DETAILS_ABOUT_TITLE}
-          </label>
-          <p className="field__hint" id="hub-about-hint">
-            {HUB_DETAILS_ABOUT_HINT}
-          </p>
-          <textarea
-            id="hub-about"
-            aria-describedby="hub-about-hint"
-            className="textarea"
-            maxLength={600}
-            disabled={!props.canEditDetails}
-            value={aboutText}
-            onChange={(event) => {
-              setAboutText(event.target.value);
-              queueDetails({ aboutText: event.target.value });
-            }}
-          />
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="hub-instagram">
-            {HUB_DETAILS_INSTAGRAM_LABEL}
-          </label>
-          <p className="field__hint" id="hub-instagram-hint">
-            {HUB_DETAILS_INSTAGRAM_HINT}
-          </p>
-          <input
-            id="hub-instagram"
-            className="input"
-            type="text"
-            inputMode="url"
-            autoComplete="off"
-            spellCheck={false}
-            disabled={!props.canEditDetails}
-            value={instagramUrl}
-            aria-describedby="hub-instagram-hint"
-            onChange={(event) => {
-              setInstagramUrl(event.target.value);
-              queueDetails({ instagramUrl: event.target.value });
-            }}
-          />
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="hub-website-extra">
-            {HUB_WEBSITE_EXTRA_LABEL}
-          </label>
-          <p className="field__hint" id="hub-website-extra-hint">
-            {HUB_WEBSITE_EXTRA_HINT}
-          </p>
-          <textarea
-            id="hub-website-extra"
-            aria-describedby="hub-website-extra-hint hub-website-extra-count"
-            className="textarea"
-            maxLength={EXTRA_MAX}
-            disabled={!props.canEditDetails}
-            value={websiteExtraText}
-            onChange={(event) => {
-              setWebsiteExtraText(event.target.value);
-              queueDetails({ websiteExtraText: event.target.value });
-            }}
-          />
-          <p className="field__hint hub-charcount" id="hub-website-extra-count">
-            {HUB_WEBSITE_EXTRA_COUNT(websiteExtraText.length, EXTRA_MAX)}
-          </p>
-        </div>
-      </section>
-      ) : null}
-
-      {showPrice ? (
-      <section className="hub-card ks-glass-card" id="price-list" aria-labelledby="hub-price-title">
-        <h2 id="hub-price-title" className="hub-card__title">
-          {HUB_DETAILS_PRICE_TITLE}
-        </h2>
-        <p className="hub-card__body">
-          {HUB_DETAILS_PRICE_HEAD}. {HUB_UPLOAD_HINT_PRICE}
-        </p>
-        {props.canUpload ? (
-          <HubUploader token={props.token} apiBase={props.apiBase} kind="PRICE_LIST" hint={HUB_UPLOAD_HINT_PRICE} onUploaded={addAsset} />
-        ) : null}
-        {prices.length ? (
-          <ul className="hub-photo-grid hub-photo-grid--files">
-            {prices.map((asset) => (
-              <PhotoTile
-                key={asset.id}
-                apiRoot={apiRoot}
-                asset={asset}
-                canEdit={props.canUpload}
-                compact
-                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
-                onDelete={() => requestDelete(asset)}
-                onMove={(dir) => void moveAsset('PRICE_LIST', asset.id, dir)}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="hub-card__body">{HUB_EMPTY_PRICE}</p>
-        )}
-      </section>
-      ) : null}
-      {showOther ? (
-      <section className="hub-card ks-glass-card" id="other" aria-labelledby="hub-other-title">
-        <h2 id="hub-other-title" className="hub-card__title">
-          {HUB_DETAILS_OTHER_TITLE}
-        </h2>
-        <p className="hub-card__body">{HUB_UPLOAD_HINT_OTHER}</p>
-        {props.canUpload ? (
-          <HubUploader
-            token={props.token}
-            apiBase={props.apiBase}
-            kind="OTHER"
-            hint={HUB_UPLOAD_HINT_OTHER}
-            remaining={Math.max(0, OTHER_MAX - others.length)}
-            onUploaded={addAsset}
-          />
-        ) : null}
-        {others.length ? (
-          <ul className="hub-photo-grid hub-photo-grid--files">
-            {others.map((asset) => (
-              <PhotoTile
-                key={asset.id}
-                apiRoot={apiRoot}
-                asset={asset}
-                canEdit={props.canUpload}
-                compact
-                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
-                onDelete={() => requestDelete(asset)}
-                onMove={(dir) => void moveAsset('OTHER', asset.id, dir)}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="hub-card__body">{HUB_EMPTY_OTHER}</p>
-        )}
-      </section>
-      ) : null}
+      ) : (
+        <>
+          {photosCard}
+          {logoCard}
+          {textCard}
+          {priceCard}
+          {otherCard}
+        </>
+      )}
 
       {showReviews ? (
         props.canReview ? (

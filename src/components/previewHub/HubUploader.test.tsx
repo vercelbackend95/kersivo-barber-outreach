@@ -1,19 +1,47 @@
 /**
  * @vitest-environment jsdom
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   HUB_ATTACH,
   HUB_CURRENT_LOGO,
+  HUB_EMPTY_LOGO,
+  HUB_EMPTY_OTHER,
   HUB_EMPTY_PHOTOS,
+  HUB_EMPTY_PRICE,
+  HUB_REPLACE_LOGO,
   HUB_UPLOAD_CHOOSE,
   HUB_UPLOAD_DROP,
+  HUB_UPLOAD_HINT_PHOTOS,
 } from '@/lib/freePreview/hubCopy';
 import { HubUploader } from './HubUploader';
 import { HubYourShop } from './HubYourShop';
 
 afterEach(() => cleanup());
+
+function asset(
+  id: string,
+  kind: 'LOGO' | 'SHOP_PHOTO' | 'PRICE_LIST' | 'OTHER',
+  originalFileName: string,
+  createdAt = '2026-11-01T12:00:00.000Z',
+) {
+  return {
+    id,
+    kind,
+    originalFileName,
+    contentType: originalFileName.endsWith('.png') ? 'image/png' : 'image/jpeg',
+    sizeBytes: 8,
+    width: 300,
+    height: 100,
+    caption: null,
+    sortOrder: 0,
+    barberId: null,
+    uploadedBy: 'OWNER' as const,
+    createdAt,
+    hasThumb: true,
+  };
+}
 
 describe('HubUploader', () => {
   it('renders the empty drop zone and choose-files control', () => {
@@ -65,7 +93,11 @@ describe('HubYourShop', () => {
         assets={[]}
       />,
     );
-    expect(screen.getByText('On dark')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Logo' })).toBeTruthy();
+    expect(screen.queryByText('On dark')).toBeNull();
+    expect(screen.queryByText('On light')).toBeNull();
+    expect(screen.getByText(HUB_EMPTY_LOGO)).toBeTruthy();
+    expect(screen.getByText('Not added yet')).toBeTruthy();
     expect(screen.queryByText('Primary colour')).toBeNull();
     expect(screen.queryByText(HUB_EMPTY_PHOTOS)).toBeNull();
   });
@@ -271,10 +303,128 @@ describe('HubYourShop', () => {
         ]}
       />,
     );
+    const logoCard = document.getElementById('logo')!;
     expect(screen.getByText(HUB_CURRENT_LOGO)).toBeTruthy();
-    const current = document.querySelector('[data-testid="hub-logo-tile"][data-current="true"] img');
-    expect(current?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_b?size=thumb');
-    expect(screen.getByText('a.png')).toBeTruthy();
+    const current = screen.getByTestId('hub-logo-current');
+    expect(current.querySelector('img')?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_b?size=thumb');
+    expect(current.textContent).toContain('b.png');
+    // The current logo is shown once; earlier ones sit in a collapsed list without it.
+    expect(logoCard.querySelectorAll('img[src*="logo_b"]')).toHaveLength(1);
+    expect(logoCard.querySelector('.hub-swatch')).toBeNull();
+    const earlier = logoCard.querySelector('details.hub-earlier') as HTMLDetailsElement;
+    expect(earlier.open).toBe(false);
+    expect(earlier.querySelector('summary')?.textContent).toBe('Earlier logos (1)');
+    expect(earlier.querySelectorAll('img')).toHaveLength(1);
+    expect(earlier.querySelector('img')?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_a?size=thumb');
+    expect(earlier.textContent).toContain('a.png');
+    expect(earlier.textContent).not.toContain('b.png');
+    expect(screen.getByRole('link', { name: /Brand colours/ }).getAttribute('href')).toBe('/admin?app=colours');
+    expect(screen.getByText(HUB_REPLACE_LOGO)).toBeTruthy();
+  });
+
+  it('hides the earlier logos list when there is only one logo', () => {
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        apiBase="/api/admin-hub"
+        canUpload
+        canEditDetails
+        focus="materials"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[asset('logo_only', 'LOGO', 'only.png')]}
+      />,
+    );
+    expect(document.querySelector('#logo details')).toBeNull();
+    expect(document.querySelectorAll('#logo img')).toHaveLength(1);
+  });
+
+  it('gives every materials card the same header: title, status pill and one hint', () => {
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        apiBase="/api/admin-hub"
+        canUpload
+        canEditDetails
+        focus="materials"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: 'Family shop' }}
+        assets={[
+          asset('p1', 'SHOP_PHOTO', 'one.jpg'),
+          asset('p2', 'SHOP_PHOTO', 'two.jpg'),
+          asset('p3', 'SHOP_PHOTO', 'three.jpg'),
+          asset('l1', 'LOGO', 'logo.png'),
+        ]}
+      />,
+    );
+    const ids = Array.from(document.querySelectorAll('section.hub-card[id]')).map((el) => el.id);
+    expect(ids).toEqual(['photos', 'logo', 'text', 'price-list', 'other']);
+    const status = (id: string) => document.querySelector(`#${id} .hub-card__head .hub-status`)?.textContent;
+    expect(status('photos')).toBe('3 added');
+    expect(status('logo')).toBe('Added');
+    expect(status('text')).toBe('Added');
+    expect(status('price-list')).toBe('Not added yet');
+    expect(status('other')).toBe('Not added yet');
+    for (const id of ids) {
+      const card = document.getElementById(id)!;
+      expect(card.querySelectorAll(':scope > .hub-card__head h2')).toHaveLength(1);
+      expect(card.querySelectorAll(':scope > .hub-card__hint')).toHaveLength(1);
+    }
+    expect(document.querySelector('#photos .hub-card__hint')?.textContent).toBe(HUB_UPLOAD_HINT_PHOTOS);
+    expect(document.querySelector('#price-list .hub-empty')?.textContent).toBe(HUB_EMPTY_PRICE);
+    expect(document.querySelector('#other .hub-empty')?.textContent).toBe(HUB_EMPTY_OTHER);
+    expect(document.querySelector('.hub-materials__main #photos')).toBeTruthy();
+    expect(Array.from(document.querySelectorAll('.hub-materials__side > section')).map((el) => el.id)).toEqual([
+      'logo',
+      'text',
+      'price-list',
+      'other',
+    ]);
+  });
+
+  it('moves focus to the section heading and marks the chip current', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: () => ({ matches: true, addEventListener: () => undefined, removeEventListener: () => undefined }),
+    });
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        canUpload
+        canEditDetails
+        focus="materials"
+        details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[]}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Photos' }).getAttribute('aria-current')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Price list' }));
+    expect(document.activeElement?.id).toBe('hub-price-title');
+    expect(screen.getByRole('button', { name: 'Price list' }).getAttribute('aria-current')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Photos' }).getAttribute('aria-current')).toBeNull();
+  });
+
+  it('keeps the full Your shop page: every card, brand extras under one logo, no jump chips', () => {
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        canUpload
+        canEditDetails
+        details={{ brandPrimaryColour: '#D72638', brandSecondaryColour: null, styleNotes: null, aboutText: null }}
+        assets={[asset('l1', 'LOGO', 'logo.png'), asset('l2', 'LOGO', 'older.png', '2026-10-01T12:00:00.000Z')]}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Your shop' })).toBeTruthy();
+    for (const name of ['Shop photos', 'Logo', 'Text for your website', 'Price list', 'Services & prices', 'Team', 'Opening hours']) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
+    }
+    expect(screen.queryByTestId('hub-jump')).toBeNull();
+    expect(document.querySelector('.hub-materials')).toBeNull();
+    expect(screen.queryByRole('link', { name: /Brand colours/ })).toBeNull();
+    const logoCard = document.getElementById('logo')!;
+    expect(logoCard.querySelectorAll('img[src*="l1"]')).toHaveLength(1);
+    expect(logoCard.querySelector('#hub-primary')).toBeTruthy();
+    expect(logoCard.querySelector('#hub-style')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Pick from my logo' })).toBeTruthy();
   });
 
   it('hides uploaders when the owner cannot upload', () => {
