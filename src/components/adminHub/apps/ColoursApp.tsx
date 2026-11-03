@@ -18,7 +18,6 @@ import type { AdminHubAppBodyProps } from './types';
 import {
   ADMIN_HUB_COLOURS_ACCENT,
   ADMIN_HUB_COLOURS_BG,
-  ADMIN_HUB_COLOURS_BOOK,
   ADMIN_HUB_COLOURS_BW,
   ADMIN_HUB_COLOURS_CHOOSE_LINK,
   ADMIN_HUB_COLOURS_CHOOSE_PREFIX,
@@ -72,7 +71,6 @@ import {
   ADMIN_HUB_COLOURS_PALETTE,
   ADMIN_HUB_COLOURS_PICK_MAIN,
   ADMIN_HUB_COLOURS_PICK_SCREEN,
-  ADMIN_HUB_COLOURS_PRICES,
   ADMIN_HUB_COLOURS_QUICK,
   ADMIN_HUB_COLOURS_QUICK_HINT,
   ADMIN_HUB_COLOURS_READABILITY,
@@ -102,7 +100,6 @@ import { adminHubMaterialsHref } from '@/lib/adminHub/addMenu';
 import {
   addToPalette,
   assignDefaultRoles,
-  betterButtonText,
   chromaFromRelative,
   clearAccent,
   commitEdit,
@@ -115,7 +112,7 @@ import {
   lightnessSteps,
   MAX_PALETTE,
   mergePalette,
-  nameSwatch,
+  distinctRoleNames,
   normaliseHexColour,
   oklchToHex,
   parseCssColour,
@@ -123,7 +120,6 @@ import {
   relativeChroma,
   setRoleColour,
   siteBackgroundHex,
-  siteTextHex,
   sliderDepth,
   swapRoles,
   swatchFromHex,
@@ -140,6 +136,7 @@ import { extractFromLogoUrl, logoDisplayUrl } from '@/lib/adminHub/colour/runExt
 import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
 import { overviewImageSize } from '@/lib/adminHub/overviewTiles';
 import { HubLogoMark } from '../HubLogoMark';
+import { BrandSitePreview } from '../BrandSitePreview';
 import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import { refreshHubState } from '@/lib/adminHub/hubStore';
 import { showHubToast } from '@/lib/adminHub/hubToast';
@@ -356,6 +353,8 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
       : selected.h
     : 0;
   const contrast = evaluateContrast({ mainHex: mainHex || null, accentHex: accentHex || null, tone });
+  // Main / Accent never read the same for two different colours (e.g. "Dark copper" / "Copper").
+  const roleNames = distinctRoleNames(mainHex || null, accentHex || null);
   const bw = Boolean(logoClusters && assignDefaultRoles(logoClusters).blackAndWhite && !mainHex);
   const picks = selectedHex ? lightnessSteps(selectedHex) : [];
   const depthPct = selected ? Math.round(sliderDepth(selected.L) * 100) : 50;
@@ -849,8 +848,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           <div className="admin-hub-roles" role="group" aria-label={ADMIN_HUB_COLOURS_ROLE_GROUP}>
             {(['main', 'accent'] as const).map((id) => {
               const hex = id === 'main' ? mainHex : accentHex;
-              const lch = hex ? hexToClampedOklch(hex) : null;
-              const named = lch ? nameSwatch(lch) : ADMIN_HUB_COLOURS_EMPTY_ROLE;
+              const named = roleNames[id] ?? ADMIN_HUB_COLOURS_EMPTY_ROLE;
               return (
                 <button
                   key={id}
@@ -1107,9 +1105,10 @@ function SentSummary(props: {
   submittedAt: string | null;
 }) {
   const extras = props.swatches.filter((row) => row.hex !== props.mainHex && row.hex !== props.accentHex);
+  const names = distinctRoleNames(props.mainHex || null, props.accentHex || null);
   const rows = [
-    ...(props.mainHex ? [{ label: ADMIN_HUB_COLOURS_MAIN, hex: props.mainHex }] : []),
-    ...(props.accentHex ? [{ label: ADMIN_HUB_COLOURS_ACCENT, hex: props.accentHex }] : []),
+    ...(props.mainHex ? [{ label: ADMIN_HUB_COLOURS_MAIN, hex: props.mainHex, name: names.main }] : []),
+    ...(props.accentHex ? [{ label: ADMIN_HUB_COLOURS_ACCENT, hex: props.accentHex, name: names.accent }] : []),
   ];
   const sourceLabel =
     props.source === 'KERSIVO_CHOOSES'
@@ -1130,7 +1129,7 @@ function SentSummary(props: {
       ) : null}
       <dl className="admin-hub-colours-sent__list">
         {rows.map((row) => (
-          <HexRow key={row.label} label={row.label} hex={row.hex} />
+          <HexRow key={row.label} label={row.label} hex={row.hex} name={row.name} />
         ))}
         {extras.length ? (
           <div className="admin-hub-colours-sent__row admin-hub-colours-sent__row--palette">
@@ -1174,14 +1173,13 @@ function SentSummary(props: {
   );
 }
 
-function HexRow(props: { label: string; hex: string }) {
-  const lch = hexToClampedOklch(props.hex);
+function HexRow(props: { label: string; hex: string; name: string | null }) {
   return (
     <div className="admin-hub-colours-sent__row">
       <dt>{props.label}</dt>
       <dd>
         <i style={{ background: props.hex }} aria-hidden="true" />
-        <span>{lch ? nameSwatch(lch) : props.hex}</span>
+        <span>{props.name ?? props.hex}</span>
         <code>{props.hex}</code>
         <CopyHexButton hex={props.hex} />
       </dd>
@@ -1310,11 +1308,6 @@ function ContrastBlock(props: {
   );
 }
 
-/** Neutral greys when there is no Main yet — never a made-up brand colour. */
-function neutralHeroHex(tone: BrandBackgroundTone): string {
-  return oklchToHex({ L: tone === 'LIGHT' ? 0.88 : 0.3, C: 0, h: 0 });
-}
-
 function LivePreview(props: {
   shop: string;
   mainHex: string;
@@ -1323,72 +1316,22 @@ function LivePreview(props: {
   services: Array<{ name: string }>;
   compact?: boolean;
 }) {
-  const main = props.mainHex || null;
-  const accent = props.accentHex || null;
-  const background = siteBackgroundHex(props.tone, main);
-  const text = siteTextHex(props.tone);
-  const heroBg = main ?? neutralHeroHex(props.tone);
-  const heroText = betterButtonText(heroBg);
-  const hero = {
-    background: accent ? `radial-gradient(90% 90% at 85% 0%, ${accent}59, transparent 55%), ${heroBg}` : heroBg,
-    color: heroText,
-  };
-  // Book button: Accent; without one, the site background on the Main hero.
-  const button = accent
-    ? { background: accent, color: betterButtonText(accent) }
-    : main
-      ? { background, color: text }
-      : { background: text, color: background };
   return (
     <div className="admin-hub-livep-wrap">
-      {!main ? (
+      {!props.mainHex ? (
         <p className="admin-hub-colours__prompt" data-testid="admin-hub-colours-pick-main">
           {ADMIN_HUB_COLOURS_PICK_MAIN}
         </p>
       ) : null}
-      <div
-        className={`admin-hub-livep${props.compact ? ' admin-hub-livep--compact' : ''}`}
-        aria-hidden="true"
-        data-testid={props.compact ? 'admin-hub-colours-preview-compact' : 'admin-hub-colours-preview'}
-      >
-        <div className="admin-hub-livep__hero" style={hero}>
-          {!props.compact ? (
-            <div className="admin-hub-livep__nav">
-              <span>{props.shop}</span>
-              <span style={button}>Book</span>
-            </div>
-          ) : null}
-          <div className="admin-hub-livep__h">{props.shop}</div>
-          <div className="admin-hub-livep__btns">
-            <span className="admin-hub-livep__book" style={button}>
-              {ADMIN_HUB_COLOURS_BOOK}
-            </span>
-            {!props.compact ? (
-              <span style={{ border: `1px solid ${heroText}66`, color: 'inherit' }}>{ADMIN_HUB_COLOURS_PRICES}</span>
-            ) : null}
-          </div>
-        </div>
-        {!props.compact ? (
-          <div className="admin-hub-livep__body" style={{ background, color: text }}>
-            {(props.services.length ? props.services : [{ name: 'Cut' }, { name: 'Beard' }]).map((row) => (
-              <div key={row.name} className="admin-hub-livep__svc" style={{ borderBottomColor: `${text}1F` }}>
-                <span>{row.name}</span>
-                <b style={{ color: accent ?? main ?? text }}>·</b>
-              </div>
-            ))}
-            <div className="admin-hub-livep__slots">
-              <span
-                className="admin-hub-livep__slot"
-                style={main ? { background: main, color: betterButtonText(main), borderColor: main } : { borderColor: `${text}2E` }}
-              >
-                10:00
-              </span>
-              <span style={{ borderColor: `${text}2E` }}>10:30</span>
-              <span style={{ borderColor: `${text}2E` }}>11:15</span>
-            </div>
-          </div>
-        ) : null}
-      </div>
+      <BrandSitePreview
+        size={props.compact ? 'compact' : 'full'}
+        shop={props.shop}
+        mainHex={props.mainHex}
+        accentHex={props.accentHex}
+        tone={props.tone}
+        services={props.services}
+        testId={props.compact ? 'admin-hub-colours-preview-compact' : 'admin-hub-colours-preview'}
+      />
     </div>
   );
 }

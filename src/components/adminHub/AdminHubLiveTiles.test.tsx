@@ -97,7 +97,8 @@ describe('Overview live tiles', () => {
     expect(colours).toContain(ADMIN_HUB_COLOURS_NO_LOGO);
     expect(colours).toContain(ADMIN_HUB_COLOURS_EMPTY.replace(/'/g, '&#x27;'));
     expect(colours.match(/admin-hub-palette__chip--slot/g)).toHaveLength(5);
-    expect(colours).not.toContain('admin-hub-site-mini');
+    // No colours yet: no website preview (never made-up colours).
+    expect(colours).not.toContain('admin-hub-colours-site-preview');
 
     const phone = renderToString(<AdminHubPreviewPhone initialState={withLogo} shopName="Fade Room" />);
     expect(phone).toContain('admin-hub-phone__logo');
@@ -140,6 +141,13 @@ describe('Overview live tiles', () => {
     expect(screen.getByTestId('admin-hub-colours-guidance').textContent).toBe('Sent on 2 November 2026. Message us to change it.');
     expect(document.querySelector('a[data-tile="colours"]')?.getAttribute('href')).toBe('/admin?app=colours');
     expect(document.querySelector('.admin-hub-phone__logo')).toBeTruthy();
+    // Main only: the tile's website preview (decorative) paints from the same colours as the app, with the logo.
+    const site = document.querySelector<HTMLElement>('[data-testid="admin-hub-colours-site-preview"]')!;
+    expect(site.getAttribute('aria-hidden')).toBe('true');
+    expect(site.className).toContain('admin-hub-livep--tile');
+    expect(site.querySelector('.admin-hub-livep__url')?.textContent).toBe('fade-room');
+    expect(site.querySelector('img')?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_1?size=thumb');
+    expect(site.querySelector<HTMLElement>('.admin-hub-livep__hero')!.style.background).toBe('rgb(31, 111, 107)');
     await waitFor(() => expect(screen.getByTestId('admin-hub-overview-live').textContent).toBe(ADMIN_HUB_OVERVIEW_UPDATED));
   });
 

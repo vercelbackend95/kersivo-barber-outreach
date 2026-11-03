@@ -1,7 +1,7 @@
 /**
  * Hub O4: Brand colours tile — states (no logo / not started / draft / sent / KERSIVO chooses), black-and-white
  * and very wide logos, both Overview stages, 375–1440 px. Checks the headline count against the chips, never-cropped
- * logo (one, as itself since O7), the mini site card, CLS, axe, the preview phone background and the live refresh from the app.
+ * logo (one, as itself since O7), the website preview (BrandSitePreview since O10), CLS, axe, the preview phone background and the live refresh from the app.
  */
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
@@ -375,9 +375,11 @@ for (const stage of ["requested", "ready"] as StageKey[]) {
               Number.isFinite(naturalRatio)
             );
           });
-          const card = el.querySelector<HTMLElement>(".admin-hub-site-mini");
+          const card = el.querySelector<HTMLElement>(
+            '[data-testid="admin-hub-colours-site-preview"]',
+          );
           const book = el.querySelector<HTMLElement>(
-            ".admin-hub-site-mini__book",
+            ".admin-hub-livep__book",
           );
           const body = el
             .querySelector<HTMLElement>(".admin-hub-colours-body")!
@@ -418,7 +420,7 @@ for (const stage of ["requested", "ready"] as StageKey[]) {
           ).toBe(scenario.chips);
         expect(m.contained, "logo fits its slot, never cropped").toBe(true);
         expect(m.plates, "one logo, or the initials without one").toBe(1);
-        expect(m.card, `mini card @${width} (body ${m.body})`).toBe(
+        expect(m.card, `website preview @${width} (body ${m.body})`).toBe(
           scenario.look && m.body >= 560,
         );
         findings.push(

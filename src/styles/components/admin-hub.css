@@ -1184,77 +1184,148 @@ a.admin-hub-tile__open:focus-visible {
   }
 }
 
-/* Mini "how it looks" card: header in Main, "Book now" in Accent, on the chosen background tone. */
-.admin-hub-site-mini {
+/* Website preview on the tile (BrandSitePreview size="tile", O10): a small barbershop site in a thin browser
+   frame. Fixed 16:11 box (no CLS); everything inside scales with the preview's own width (container query units).
+   Hidden on a narrow tile — shown from 560 px below. Colours come inline from sitePreviewColours(). */
+.admin-hub-livep.admin-hub-livep--tile {
+  container-type: inline-size;
   display: none;
+  grid-template-rows: auto minmax(0, 1fr);
+  aspect-ratio: 16 / 11;
+  width: 100%;
+  min-width: 0;
   border-radius: 14px;
-  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #0d0d0e, #080809);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 14px 30px -18px rgba(0, 0, 0, 0.9);
 }
-.admin-hub-site-mini__bar {
+.admin-hub-livep__chrome {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  height: 34px;
-  padding: 0 12px;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.18);
-}
-.admin-hub-site-mini__shop {
+  gap: 3cqw;
   min-width: 0;
+  padding: 2cqw 3cqw;
+}
+.admin-hub-livep__dots {
+  display: flex;
+  flex-shrink: 0;
+  gap: 1.2cqw;
+}
+.admin-hub-livep__dots i {
+  width: 2cqw;
+  height: 2cqw;
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+.admin-hub-livep__url {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 62%;
+  margin: 0 auto;
+  padding: 0.6cqw 4cqw;
   overflow: hidden;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: clamp(7px, 3cqw, 11px);
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.admin-hub-site-mini__nav {
-  display: flex;
-  gap: 5px;
-  flex-shrink: 0;
+.admin-hub-livep__site {
+  display: grid;
+  grid-template-rows: minmax(0, 54fr) minmax(0, 46fr);
+  min-height: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0 0 13px 13px;
 }
-.admin-hub-site-mini__nav i {
-  width: 14px;
-  height: 3px;
-  border-radius: 2px;
-  background: currentColor;
-  opacity: 0.55;
+.admin-hub-livep--tile .admin-hub-livep__hero {
+  height: auto;
+  min-height: 0;
+  padding: 0 4.5cqw 4cqw;
+  overflow: hidden;
 }
-.admin-hub-site-mini__body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  padding: 14px 12px 14px;
+.admin-hub-livep--tile .admin-hub-livep__nav {
+  top: 3cqw;
+  left: 4.5cqw;
+  right: 4.5cqw;
+  gap: 3cqw;
+  min-width: 0;
+  font-size: clamp(7px, 2.7cqw, 10px);
 }
-.admin-hub-site-mini__line {
-  width: 72%;
-  height: 7px;
-  border-radius: 4px;
-  background: currentColor;
-  opacity: 0.5;
-}
-.admin-hub-site-mini__line--short {
-  width: 46%;
-  opacity: 0.28;
-}
-.admin-hub-site-mini__book {
-  margin-top: 5px;
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 700;
+.admin-hub-livep__brand {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.admin-hub-site-mini__book--outline {
-  border: 1px solid currentColor;
+.admin-hub-livep__nav .hub-logo-mark {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 55%;
+  max-height: min(20px, 7cqw);
+}
+.admin-hub-livep__nav .hub-logo-mark--opaque {
+  border-radius: 3px;
+}
+.admin-hub-livep__nav .hub-logo-mark--plate {
+  padding: 2px;
+  border-radius: 4px;
+}
+.admin-hub-livep--tile .admin-hub-livep__nav span:last-child {
+  flex-shrink: 0;
+  padding: 1.2cqw 2.6cqw;
+  border-radius: 1.8cqw;
+}
+.admin-hub-livep--tile .admin-hub-livep__h {
+  overflow: hidden;
+  font-size: clamp(16px, 10cqw, 36px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-hub-livep--tile .admin-hub-livep__btns {
+  margin-top: 2.2cqw;
+}
+.admin-hub-livep--tile .admin-hub-livep__btns span {
+  padding: 1.6cqw 3.4cqw;
+  border-radius: 2cqw;
+  font-size: clamp(7px, 3cqw, 11px);
+  white-space: nowrap;
+}
+.admin-hub-livep--tile .admin-hub-livep__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding: 1cqw 4.5cqw 2cqw;
+  overflow: hidden;
+}
+.admin-hub-livep--tile .admin-hub-livep__svc {
+  gap: 3cqw;
+  min-width: 0;
+  padding: 1.3cqw 0;
+  font-size: clamp(7.5px, 3.3cqw, 12px);
+}
+.admin-hub-livep--tile .admin-hub-livep__svc span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-hub-livep--tile .admin-hub-livep__slots {
+  gap: 2cqw;
+  margin-top: 2.6cqw;
+}
+.admin-hub-livep--tile .admin-hub-livep__slots span {
+  min-width: 0;
+  padding: 1.3cqw 0;
+  border-radius: 1.8cqw;
+  font-size: clamp(7px, 3cqw, 11px);
 }
 
 .admin-hub-colours-roles {
@@ -1311,11 +1382,11 @@ a.admin-hub-tile__open:focus-visible {
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* ≥ 560 px: two columns — logo plates + palette left, mini site card + Main / Accent right. */
+/* ≥ 560 px: two columns — logo + palette left, website preview + Main / Accent right. */
 @container hub-colours (min-width: 560px) {
   .admin-hub-colours-layout--look {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(200px, 0.82fr);
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr);
     column-gap: 24px;
     align-items: start;
   }
@@ -1331,8 +1402,8 @@ a.admin-hub-tile__open:focus-visible {
   .admin-hub-colours-initials {
     font-size: 22px;
   }
-  .admin-hub-site-mini {
-    display: block;
+  .admin-hub-livep.admin-hub-livep--tile {
+    display: grid;
   }
 }
 
@@ -2134,6 +2205,10 @@ a.admin-hub-tile__open:focus-visible {
   font-size: 12px;
   padding: 7px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-hub-livep__svc--placeholder span {
+  opacity: 0.6;
+  font-style: italic;
 }
 .admin-hub-livep__slots {
   display: flex;

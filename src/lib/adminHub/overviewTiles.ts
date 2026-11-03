@@ -29,14 +29,7 @@ import {
 import { currentHubLogo, type CurrentHubLogoOptions } from './currentLogo';
 import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from './links';
 import { PREVIEW_HUB_PATHS } from './previewHubPaths';
-import {
-  betterButtonText,
-  hexToClampedOklch,
-  isLightHex,
-  nameSwatch,
-  parseCssColour,
-  siteBackgroundHex,
-} from '@/lib/adminHub/colour';
+import { distinctRoleNames, isLightHex, parseCssColour, type BrandBackgroundTone } from '@/lib/adminHub/colour';
 
 export function shopInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -49,20 +42,19 @@ export type OverviewColoursState = 'no_logo' | 'not_started' | 'draft' | 'sent' 
 /** One extracted logo colour; `share` is its part of the logo (0–1) when the extractor recorded it. */
 export type OverviewPaletteChip = { hex: string; css: string; light: boolean; share: number | null };
 export type OverviewRoleColour = { hex: string; css: string; light: boolean; name: string };
-/** The mini "how it looks" card: same background / button-text rules as the Brand colours app. */
+/** Inputs of the tile's website preview (BrandSitePreview) — the same three the Brand colours app paints from. */
 export type OverviewColoursLook = {
-  background: string;
-  header: { css: string; text: string } | null;
-  button: { css: string; text: string } | null;
+  mainHex: string | null;
+  accentHex: string | null;
+  tone: BrandBackgroundTone;
 };
 
 /** Most logo colours the tile shows (the Brand colours app saves at most MAX_SWATCHES). */
 export const OVERVIEW_PALETTE_CAP = 5;
 
-function roleColour(colour: { hex: string; css: string } | null): OverviewRoleColour | null {
+function roleColour(colour: { hex: string; css: string } | null, name: string | null): OverviewRoleColour | null {
   if (!colour) return null;
-  const lch = hexToClampedOklch(colour.hex);
-  return { hex: colour.hex, css: colour.css, light: isLightHex(colour.hex), name: lch ? nameSwatch(lch) : colour.hex };
+  return { hex: colour.hex, css: colour.css, light: isLightHex(colour.hex), name: name ?? colour.hex };
 }
 
 export function overviewColours(input: {
@@ -89,9 +81,13 @@ export function overviewColours(input: {
   locked: boolean;
   submittedAt: string | null;
 } {
-  const main = roleColour(parseCssColour(input.brandPrimaryColour));
+  const mainParsed = parseCssColour(input.brandPrimaryColour);
   const accentParsed = parseCssColour(input.brandSecondaryColour);
-  const accent = accentParsed && accentParsed.hex !== main?.hex ? roleColour(accentParsed) : null;
+  const accentKept = accentParsed && accentParsed.hex !== mainParsed?.hex ? accentParsed : null;
+  // Two different colours never get the same name ("Dark copper" / "Copper").
+  const names = distinctRoleNames(mainParsed?.hex ?? null, accentKept?.hex ?? null);
+  const main = roleColour(mainParsed, names.main);
+  const accent = roleColour(accentKept, names.accent);
 
   const palette: OverviewPaletteChip[] = [];
   const seen = new Set<string>();
@@ -152,9 +148,9 @@ export function overviewColours(input: {
   const look: OverviewColoursLook | null =
     main || accent
       ? {
-          background: siteBackgroundHex(input.brandBackgroundTone ?? 'DARK', main?.hex ?? null),
-          header: main ? { css: main.css, text: betterButtonText(main.hex) } : null,
-          button: accent ? { css: accent.css, text: betterButtonText(accent.hex) } : null,
+          mainHex: main?.hex ?? null,
+          accentHex: accent?.hex ?? null,
+          tone: input.brandBackgroundTone === 'LIGHT' ? 'LIGHT' : 'DARK',
         }
       : null;
 

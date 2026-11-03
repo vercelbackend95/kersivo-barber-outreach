@@ -62,6 +62,9 @@ export {
   sliderDepth,
 } from './contrast';
 export { isChromatic, nameSwatch } from './name';
+export { distinctRoleNames } from './roleNames';
+export { neutralHeroHex, sitePreviewColours } from './sitePreview';
+export type { SitePreviewColours, SitePreviewPaint } from './sitePreview';
 export {
   assignDefaultRoles,
   depthGradient,

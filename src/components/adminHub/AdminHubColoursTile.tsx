@@ -1,13 +1,11 @@
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { KeyboardEvent } from 'react';
 import { ArrowUpRight, Lock, Palette } from '@/components/lucide-react';
 import {
   ADMIN_HUB_COLOURS_ACCENT,
-  ADMIN_HUB_COLOURS_BOOK,
   ADMIN_HUB_COLOURS_MAIN,
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_COLOURS,
 } from '@/lib/adminHub/copy';
-import { betterButtonText } from '@/lib/adminHub/colour';
 import type { AdminHubLiveState } from '@/lib/adminHub/liveState';
 import { useHubSnapshot } from '@/lib/adminHub/hubStore';
 import {
@@ -16,9 +14,9 @@ import {
   overviewImageSize,
   overviewTileHrefs,
   shopInitials,
-  type OverviewColoursLook,
   type OverviewRoleColour,
 } from '@/lib/adminHub/overviewTiles';
+import { BrandSitePreview } from './BrandSitePreview';
 import { HubLogoMark } from './HubLogoMark';
 
 export function overviewColoursFromLive(live: AdminHubLiveState) {
@@ -138,7 +136,16 @@ export function AdminHubColoursTile(props: { initialState: AdminHubLiveState | n
           </div>
           {colours?.look ? (
             <div className="admin-hub-colours-side">
-              <MiniSite look={colours.look} shopName={props.shopName} />
+              {/* Decorative (aria-hidden): the tile link already says where it goes. Hidden on a narrow tile. */}
+              <BrandSitePreview
+                size="tile"
+                shop={props.shopName}
+                mainHex={colours.look.mainHex}
+                accentHex={colours.look.accentHex}
+                tone={colours.look.tone}
+                logo={logoSrc ? { src: logoSrc, width: logoSize?.width, height: logoSize?.height } : null}
+                testId="admin-hub-colours-site-preview"
+              />
               <dl className="admin-hub-colours-roles" data-testid="admin-hub-colours-roles">
                 {colours.main ? <RoleRow label={ADMIN_HUB_COLOURS_MAIN} colour={colours.main} /> : null}
                 {colours.accent ? <RoleRow label={ADMIN_HUB_COLOURS_ACCENT} colour={colours.accent} /> : null}
@@ -179,37 +186,6 @@ function RoleRow(props: { label: string; colour: OverviewRoleColour }) {
         <span className="admin-hub-colours-role__name">{props.colour.name}</span>
         <small>{props.colour.hex}</small>
       </dd>
-    </div>
-  );
-}
-
-/** Decorative "how it looks" card (the tile link already says where it goes). */
-function MiniSite(props: { look: OverviewColoursLook; shopName: string }) {
-  const ink = betterButtonText(props.look.background);
-  const shop = props.shopName.trim() || ' ';
-  return (
-    <div className="admin-hub-site-mini" style={{ background: props.look.background, color: ink } as CSSProperties} aria-hidden="true">
-      <div
-        className="admin-hub-site-mini__bar"
-        style={props.look.header ? { background: props.look.header.css, color: props.look.header.text } : undefined}
-      >
-        <span className="admin-hub-site-mini__shop">{shop}</span>
-        <span className="admin-hub-site-mini__nav">
-          <i />
-          <i />
-          <i />
-        </span>
-      </div>
-      <div className="admin-hub-site-mini__body">
-        <span className="admin-hub-site-mini__line" />
-        <span className="admin-hub-site-mini__line admin-hub-site-mini__line--short" />
-        <span
-          className={`admin-hub-site-mini__book${props.look.button ? '' : ' admin-hub-site-mini__book--outline'}`}
-          style={props.look.button ? { background: props.look.button.css, color: props.look.button.text } : undefined}
-        >
-          {ADMIN_HUB_COLOURS_BOOK}
-        </span>
-      </div>
     </div>
   );
 }
