@@ -37,7 +37,6 @@ const ICONS: Record<AdminHubAddItemId, typeof Camera> = {
   photos: Camera,
   logo: ImagePlus,
   text: NotebookPen,
-  'team-photos': Users,
   'price-list': StickyNote,
   other: Paperclip,
   team: Users,

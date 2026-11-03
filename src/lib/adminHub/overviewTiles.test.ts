@@ -53,6 +53,17 @@ describe('overviewWebsiteContent — logo and photos (O3)', () => {
     expect(content.status.find((row) => row.id === 'photos')?.value).toBe('11');
   });
 
+  it('has no Team photos row and barber photos never count towards website content (O8)', () => {
+    const barberPhoto = asset('barber', 'TEAM_PHOTO', day(3));
+    const onlyBarber = overviewWebsiteContent({ assets: [barberPhoto] });
+    expect(onlyBarber.status.map((row) => row.id)).toEqual(['logo', 'photos', 'text']);
+    expect(onlyBarber.status.map((row) => row.label)).not.toContain('Team photos');
+    expect(onlyBarber.empty).toBe(true);
+    expect(onlyBarber.photoTotal).toBe(0);
+    const withShop = overviewWebsiteContent({ assets: [barberPhoto, asset('p1', 'SHOP_PHOTO', day(4))] });
+    expect(withShop.status.find((row) => row.id === 'photos')?.value).toBe('1');
+  });
+
   it('never puts the logo or a logo-like file among the photos, and takes the logo from currentHubLogo', () => {
     const content = overviewWebsiteContent({
       assets: [

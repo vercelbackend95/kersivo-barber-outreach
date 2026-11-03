@@ -13,6 +13,7 @@ import {
   HUB_DETAILS_BRAND_TITLE,
   HUB_DETAILS_COLOUR_PRIMARY,
   HUB_DETAILS_COLOUR_SECONDARY,
+  HUB_DETAILS_EARLIER_TEAM_PHOTOS,
   HUB_DETAILS_HEX_LABEL,
   HUB_DETAILS_HOURS_TITLE,
   HUB_DETAILS_OTHER_TITLE,
@@ -26,14 +27,12 @@ import {
   HUB_DETAILS_STYLE_LABEL,
   HUB_DETAILS_SWATCH_DARK,
   HUB_DETAILS_SWATCH_LIGHT,
-  HUB_DETAILS_TEAM_PHOTOS_TITLE,
   HUB_DETAILS_TEAM_TITLE,
   HUB_DETAILS_TITLE,
   HUB_JUMP_LOGO,
   HUB_JUMP_OTHER,
   HUB_JUMP_PHOTOS,
   HUB_JUMP_PRICE,
-  HUB_JUMP_TEAM,
   HUB_JUMP_TEXT,
   HUB_WEBSITE_EXTRA_COUNT,
   HUB_WEBSITE_EXTRA_HINT,
@@ -45,7 +44,6 @@ import {
   HUB_EMPTY_OTHER,
   HUB_EMPTY_PHOTOS,
   HUB_EMPTY_PRICE,
-  HUB_EMPTY_TEAM_PHOTOS,
   HUB_FILES_PRIVACY,
   HUB_MOVE_DOWN,
   HUB_MOVE_UP,
@@ -166,7 +164,6 @@ const JUMP_CHIPS: Array<{ id: AdminHubAddWebsiteItem; label: string; check?: boo
   { id: 'photos', label: HUB_JUMP_PHOTOS },
   { id: 'logo', label: HUB_JUMP_LOGO, check: true },
   { id: 'text', label: HUB_JUMP_TEXT, check: true },
-  { id: 'team-photos', label: HUB_JUMP_TEAM },
   { id: 'price-list', label: HUB_JUMP_PRICE },
   { id: 'other', label: HUB_JUMP_OTHER },
 ];
@@ -222,6 +219,8 @@ function PhotoTile(props: {
   asset: HubUploadedAsset;
   canEdit: boolean;
   compact?: boolean;
+  /** False hides Move up / Move down (caption and Delete stay). */
+  movable?: boolean;
   onCaption: (value: string) => void;
   onDelete: () => void;
   onMove: (dir: -1 | 1) => void;
@@ -262,12 +261,16 @@ function PhotoTile(props: {
             onBlur={(event) => props.onCaption(event.target.value)}
           />
           <div className="hub-photo__tools">
-            <button type="button" className="btn btn--ghost btn--sm hub-photo__move" onClick={() => props.onMove(-1)}>
-              {HUB_MOVE_UP}
-            </button>
-            <button type="button" className="btn btn--ghost btn--sm hub-photo__move" onClick={() => props.onMove(1)}>
-              {HUB_MOVE_DOWN}
-            </button>
+            {props.movable !== false ? (
+              <>
+                <button type="button" className="btn btn--ghost btn--sm hub-photo__move" onClick={() => props.onMove(-1)}>
+                  {HUB_MOVE_UP}
+                </button>
+                <button type="button" className="btn btn--ghost btn--sm hub-photo__move" onClick={() => props.onMove(1)}>
+                  {HUB_MOVE_DOWN}
+                </button>
+              </>
+            ) : null}
             <button type="button" className="btn btn--ghost btn--sm" onClick={props.onDelete}>
               {HUB_DELETE}
             </button>
@@ -302,7 +305,6 @@ export function HubYourShop(props: {
   const showLogo = !focus || focus === 'logo' || focus === 'materials';
   const showPhotos = !focus || focus === 'photos' || focus === 'materials';
   const showAbout = !focus || focus === 'about' || focus === 'materials';
-  const showTeamPhotos = !focus || focus === 'materials';
   const showPrice = !focus || focus === 'photos' || focus === 'materials';
   const showOther = focus === 'materials';
   const showJump = focus === 'materials';
@@ -330,7 +332,9 @@ export function HubYourShop(props: {
 
   const logos = assets.filter((asset) => asset.kind === 'LOGO');
   const photos = assets.filter((asset) => asset.kind === 'SHOP_PHOTO');
-  const teamPhotos = assets.filter((asset) => asset.kind === 'TEAM_PHOTO');
+  // Barber photos live with each barber on Team. Only unassigned team photos uploaded before that (Hub O8) show
+  // here, so the owner can still see and delete them.
+  const earlierTeamPhotos = assets.filter((asset) => asset.kind === 'TEAM_PHOTO' && !asset.barberId);
   const prices = assets.filter((asset) => asset.kind === 'PRICE_LIST');
   const others = assets.filter((asset) => asset.kind === 'OTHER');
   const logo = currentHubLogo(assets, currentHubLogoOptionsFromDetails(details));
@@ -567,7 +571,6 @@ export function HubYourShop(props: {
             photos: photos.length,
             logo: logos.length,
             text: [aboutText, instagramUrl, websiteExtraText].some((value) => value.trim()) ? 1 : 0,
-            'team-photos': teamPhotos.length,
             'price-list': prices.length,
             other: others.length,
           }}
@@ -604,6 +607,32 @@ export function HubYourShop(props: {
         ) : (
           <p className="hub-card__body">{HUB_EMPTY_PHOTOS}</p>
         )}
+        {earlierTeamPhotos.length ? (
+          <section
+            className="hub-earlier-team"
+            aria-labelledby="hub-earlier-team-title"
+            data-testid="hub-earlier-team-photos"
+          >
+            <h3 id="hub-earlier-team-title" className="hub-earlier-team__title">
+              {HUB_DETAILS_EARLIER_TEAM_PHOTOS}
+            </h3>
+            <ul className="hub-photo-grid">
+              {earlierTeamPhotos.map((asset) => (
+                <PhotoTile
+                  key={asset.id}
+                  apiRoot={apiRoot}
+                  asset={asset}
+                  canEdit={props.canUpload}
+                  compact
+                  movable={false}
+                  onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
+                  onDelete={() => requestDelete(asset)}
+                  onMove={() => undefined}
+                />
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </section>
       ) : null}
 
@@ -807,36 +836,6 @@ export function HubYourShop(props: {
             {HUB_WEBSITE_EXTRA_COUNT(websiteExtraText.length, EXTRA_MAX)}
           </p>
         </div>
-      </section>
-      ) : null}
-
-      {showTeamPhotos ? (
-      <section className="hub-card ks-glass-card" id="team-photos" aria-labelledby="hub-team-photos-title">
-        <h2 id="hub-team-photos-title" className="hub-card__title">
-          {HUB_DETAILS_TEAM_PHOTOS_TITLE}
-        </h2>
-        {props.canUpload ? <HubUploader token={props.token} apiBase={props.apiBase} kind="TEAM_PHOTO" onUploaded={addAsset} /> : null}
-        {teamPhotos.length ? (
-          <ul className="hub-photo-grid">
-            {teamPhotos.map((asset) => (
-              <PhotoTile
-                key={asset.id}
-                apiRoot={apiRoot}
-                asset={asset}
-                canEdit={props.canUpload}
-                onCaption={(caption) => void patchAsset(apiRoot, asset.id, { caption }).catch((err) => setError(err.message))}
-                onDelete={() => requestDelete(asset)}
-                onMove={(dir) => void moveAsset('TEAM_PHOTO', asset.id, dir)}
-                onDragStart={() => {
-                  dragId.current = asset.id;
-                }}
-                onDrop={() => void dropAsset('TEAM_PHOTO', asset.id)}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="hub-card__body">{HUB_EMPTY_TEAM_PHOTOS}</p>
-        )}
       </section>
       ) : null}
 

@@ -83,9 +83,7 @@ describe('AdminHubAddMenu', () => {
     expect(screen.getByRole('menuitem', { name: /Text for your website/ }).getAttribute('href')).toBe(
       '/admin?app=materials&item=text',
     );
-    expect(screen.getByRole('menuitem', { name: /Team photos/ }).getAttribute('href')).toBe(
-      '/admin?app=materials&item=team-photos',
-    );
+    expect(screen.queryByRole('menuitem', { name: /Team photos/ })).toBeNull();
     expect(screen.getByRole('menuitem', { name: /Price list/ }).getAttribute('href')).toBe(
       '/admin?app=materials&item=price-list',
     );

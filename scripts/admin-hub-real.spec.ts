@@ -1943,7 +1943,6 @@ test.describe('A5 end-to-end QA', () => {
       { name: /Shop photos/, item: 'photos' },
       { name: /Logo/, item: 'logo' },
       { name: /Text for your website/, item: 'text' },
-      { name: /Team photos/, item: 'team-photos' },
       { name: /Price list/, item: 'price-list' },
       { name: /Other files/, item: 'other' },
     ] as const;
@@ -1953,6 +1952,7 @@ test.describe('A5 end-to-end QA', () => {
         `/admin?app=materials&item=${item.item}`,
       );
     }
+    await expect(page.getByRole('menuitem', { name: /Team photos/ })).toHaveCount(0);
     await expect(page.getByRole('menuitem', { name: /Team member/ })).toHaveAttribute('href', '/admin/team?add=1');
     await expect(page.getByRole('menuitem', { name: /Service/ })).toHaveAttribute('href', '/admin/services?add=1');
     await expect(page.getByRole('menuitem', { name: /Product/ })).toHaveAttribute('href', '/admin/products?add=1');

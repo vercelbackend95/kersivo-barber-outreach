@@ -147,7 +147,6 @@ export const HUB_CAPTION_PLACEHOLDER = 'Optional caption';
 export const HUB_MOVE_UP = 'Move up';
 export const HUB_MOVE_DOWN = 'Move down';
 export const HUB_EMPTY_PHOTOS = 'No shop photos yet.';
-export const HUB_EMPTY_TEAM_PHOTOS = 'No team photos yet.';
 export const HUB_EMPTY_PRICE = 'No price list yet.';
 export const HUB_EMPTY_LOGO = 'No logo yet.';
 export const HUB_CURRENT_LOGO = 'Current logo';
@@ -155,7 +154,8 @@ export const HUB_CURRENT_LOGO = 'Current logo';
 export const HUB_DETAILS_TITLE = 'Your shop';
 export const HUB_DETAILS_BRAND_TITLE = 'Brand';
 export const HUB_DETAILS_PHOTOS_TITLE = 'Shop photos';
-export const HUB_DETAILS_TEAM_PHOTOS_TITLE = 'Team photos';
+/** Unassigned TEAM_PHOTO uploads from before barber photos moved to Team (Hub O8). */
+export const HUB_DETAILS_EARLIER_TEAM_PHOTOS = 'Earlier team photos';
 export const HUB_DETAILS_PRICE_TITLE = 'Price list';
 export const HUB_DETAILS_PRICE_HEAD = 'Snap your price list';
 export const HUB_DETAILS_OTHER_TITLE = 'Other files';
@@ -176,7 +176,6 @@ export const HUB_WEBSITE_EXTRA_COUNT = (used: number, max: number) => `${used} /
 export const HUB_JUMP_PHOTOS = 'Photos';
 export const HUB_JUMP_LOGO = 'Logo';
 export const HUB_JUMP_TEXT = 'Text';
-export const HUB_JUMP_TEAM = 'Team photos';
 export const HUB_JUMP_PRICE = 'Price list';
 export const HUB_JUMP_OTHER = 'Other';
 export const HUB_DETAILS_STYLE_LABEL = 'Anything about your style?';
