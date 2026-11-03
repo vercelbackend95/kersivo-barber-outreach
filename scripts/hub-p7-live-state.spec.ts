@@ -122,7 +122,7 @@ for (const width of [1440, 375]) {
     const content = page.getByTestId('admin-hub-content-tile');
     const colours = page.locator('a[data-tile="colours"]');
     await expect(content.locator('[data-content-item="logo"]')).toContainText('Not added');
-    await expect(content.locator('.admin-hub-thumbs li')).toHaveCount(2);
+    await expect(content.locator('[data-testid="admin-hub-content-photos"] li')).toHaveCount(2);
 
     // Opening and closing without a change costs nothing.
     await content.locator('[data-content-item="logo"]').click();
@@ -168,7 +168,7 @@ for (const width of [1440, 375]) {
     await app.locator('#photos .hub-photo').first().getByRole('button', { name: 'Delete' }).click();
     await closeApp(page);
     await expect(content.locator('[data-content-item="photos"]')).toContainText('1');
-    await expect(content.locator('.admin-hub-thumbs li')).toHaveCount(1);
+    await expect(content.locator('[data-testid="admin-hub-content-photos"] li')).toHaveCount(1);
     await page.waitForTimeout(400);
     expect(gets.n, 'one GET after the delete').toBe(2);
 

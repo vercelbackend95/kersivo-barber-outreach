@@ -355,7 +355,7 @@ describe('overview view-model', () => {
         aboutText: '  ',
         websiteExtraText: null,
       }),
-    ).toMatchObject({ empty: true, thumbs: [], status: expect.any(Array) });
+    ).toMatchObject({ empty: true, logo: null, photos: [], photoTotal: 0, status: expect.any(Array) });
 
     const filled = overviewWebsiteContent({
       assets: [
@@ -394,8 +394,10 @@ describe('overview view-model', () => {
       websiteExtraText: null,
     });
     expect(filled.empty).toBe(false);
-    expect(filled.thumbs.map((thumb) => thumb.id)).toEqual(['new', 'old']);
-    expect(filled.thumbs[0]?.src).toBe('/api/admin-hub/assets/new?size=thumb');
+    expect(filled.photos.map((photo) => photo.id)).toEqual(['new', 'old']);
+    expect(filled.photos[0]?.src).toBe('/api/admin-hub/assets/new?size=thumb');
+    expect(filled.photoTotal).toBe(3);
+    expect(filled.logo?.id).toBe('logo');
     expect(filled.status.map((row) => [row.id, row.value, row.href, row.done])).toEqual([
       ['logo', '✓', '/admin?app=materials&item=logo', true],
       ['photos', '3', '/admin?app=materials&item=photos', true],

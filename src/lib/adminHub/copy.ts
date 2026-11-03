@@ -39,6 +39,12 @@ export const ADMIN_HUB_CONTENT_EMPTY =
   'Photos, your logo and a few lines of text help us build a site that feels like your shop.';
 export const ADMIN_HUB_NOT_ADDED = 'Not added';
 export const ADMIN_HUB_CONTENT_DONE = '✓';
+/** Website content tile (O3): caption under the logo slot, photo cell names and the "+N" cell. */
+export const ADMIN_HUB_CONTENT_LOGO = 'Logo';
+export const ADMIN_HUB_CONTENT_PHOTO = (index: number, total: number) => `Shop photo ${index} of ${total}`;
+export const ADMIN_HUB_CONTENT_MORE_PHOTOS = (n: number) => `+${n}`;
+export const ADMIN_HUB_CONTENT_SHOW_ALL_PHOTOS = (n: number) =>
+  n === 1 ? 'Show your shop photo' : `Show all ${n} shop photos`;
 export const ADMIN_HUB_SHOP_TEAM_COUNT = (n: number) =>
   n === 1 ? '1 team member' : `${n} team members`;
 export const ADMIN_HUB_SHOP_SERVICES_COUNT = (n: number) => (n === 1 ? '1 service' : `${n} services`);

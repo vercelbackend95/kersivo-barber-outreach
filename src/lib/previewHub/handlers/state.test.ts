@@ -100,6 +100,12 @@ describe('GET /api/admin-hub/state', () => {
     const body = (await response.json()) as { ok: boolean; state: Record<string, unknown> };
     expect(Object.keys(body.state).sort()).toEqual(['assets', 'currentLogo', 'details']);
     expect(body.state.currentLogo).toEqual({ id: 'logo_new', src: '/api/admin-hub/assets/logo_new?size=thumb' });
+    // The Website content tile sizes its cells from these (O3): width/height ride along with every asset.
+    expect((body.state.assets as Array<Record<string, unknown>>).map((a) => [a.id, a.width, a.height])).toEqual([
+      ['logo_old', 400, 300],
+      ['logo_new', 400, 300],
+      ['photo_1', 400, 300],
+    ]);
     expect(body.state).toMatchSnapshot();
     const json = JSON.stringify(body);
     expect(json).not.toContain('owner@example.com');
