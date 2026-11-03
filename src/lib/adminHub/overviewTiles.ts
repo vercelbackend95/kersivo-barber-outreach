@@ -418,6 +418,34 @@ export function logoNeedsLightPlate(image: { data: ArrayLike<number>; width: num
   return visible > 0 && faint / visible > 0.6;
 }
 
+/**
+ * True when a logo really has a transparent background: at least 5 % of pixels see-through (alpha < 250) and
+ * all four corners see-through. A JPG, or a PNG/WebP drawn on its own square, returns false.
+ */
+export function logoHasTransparency(image: { data: ArrayLike<number>; width: number; height: number }): boolean {
+  const pixels = image.width * image.height;
+  if (!pixels) return false;
+  const alpha = (index: number) => image.data[index * 4 + 3] ?? 255;
+  const corners = [0, image.width - 1, (image.height - 1) * image.width, pixels - 1];
+  if (corners.some((index) => alpha(index) >= 250)) return false;
+  let seeThrough = 0;
+  for (let i = 0; i < pixels; i += 1) if (alpha(i) < 250) seeThrough += 1;
+  return seeThrough / pixels >= 0.05;
+}
+
+/**
+ * How the hub paints the shop's logo: as itself ("plain"), with rounded corners when it brings its own
+ * background ("opaque"), or on a subtle light plate only when it is transparent AND would vanish on the dark
+ * surface ("plate"). Opaque images never get a plate.
+ */
+export type HubLogoLook = 'plain' | 'opaque' | 'plate';
+
+export function hubLogoLook(image: { data: ArrayLike<number>; width: number; height: number }): HubLogoLook {
+  if (!image.width || !image.height) return 'plain';
+  if (!logoHasTransparency(image)) return 'opaque';
+  return logoNeedsLightPlate(image) ? 'plate' : 'plain';
+}
+
 export function overviewTileHrefs() {
   return {
     preview: ADMIN_HUB_LINKS.website,

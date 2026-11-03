@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { ImagePlus, Paperclip } from '@/components/lucide-react';
 import {
   ADMIN_HUB_CONTENT_EMPTY,
@@ -13,7 +13,6 @@ import { currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
 import type { AdminHubLiveState } from '@/lib/adminHub/liveState';
 import { useHubState } from '@/lib/adminHub/hubStore';
 import {
-  logoNeedsLightPlate,
   overviewPhotoGrid,
   overviewWebsiteContent,
   type OverviewContentImage,
@@ -22,6 +21,7 @@ import {
 } from '@/lib/adminHub/overviewTiles';
 import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
 import { AdminHubAddMenu } from './AdminHubAddMenu';
+import { HubLogoMark } from './HubLogoMark';
 
 /** The large cell (1 photo, or the lead of 3) renders wider than the 480 px thumb: let the browser pick. */
 const LEAD_PHOTO_SIZES = '(min-width: 1280px) 640px, (min-width: 768px) 420px, 100vw';
@@ -172,73 +172,23 @@ function ContentPhoto(props: {
   );
 }
 
-/** Dark logos (black on transparent) would vanish on the neutral surface: measured once per src. */
-const lightPlateBySrc = new Map<string, boolean>();
-
-function measureLogoPlate(img: HTMLImageElement): boolean {
-  try {
-    const scale = Math.min(1, 48 / Math.max(img.naturalWidth, img.naturalHeight, 1));
-    const width = Math.max(1, Math.round(img.naturalWidth * scale));
-    const height = Math.max(1, Math.round(img.naturalHeight * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return false;
-    ctx.drawImage(img, 0, 0, width, height);
-    return logoNeedsLightPlate(ctx.getImageData(0, 0, width, height));
-  } catch {
-    return false;
-  }
-}
-
 function ContentLogo(props: { logo: OverviewContentLogo }) {
   const src = props.logo.src;
-  const [lightPlate, setLightPlate] = useState(false);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  useEffect(() => {
-    const img = imgRef.current;
-    if (!img || !src) {
-      setLightPlate(false);
-      return;
-    }
-    const cached = lightPlateBySrc.get(src);
-    if (cached !== undefined) {
-      setLightPlate(cached);
-      return;
-    }
-    const check = () => {
-      if (!img.naturalWidth) return;
-      const result = measureLogoPlate(img);
-      lightPlateBySrc.set(src, result);
-      setLightPlate(result);
-    };
-    if (img.complete) check();
-    else img.addEventListener('load', check, { once: true });
-    return () => img.removeEventListener('load', check);
-  }, [src]);
-
   return (
-    <a
-      href={adminHubMaterialsHref('logo')}
-      className={`admin-hub-content-logo${lightPlate ? ' admin-hub-content-logo--light' : ''}`}
-      data-testid="admin-hub-content-logo"
-    >
-      <span className="admin-hub-content-logo__box">
-        {src ? (
-          <img
-            key={src}
-            ref={imgRef}
-            src={src}
-            alt=""
-            width={props.logo.width}
-            height={props.logo.height}
-            decoding="async"
-          />
-        ) : (
+    <a href={adminHubMaterialsHref('logo')} className="admin-hub-content-logo" data-testid="admin-hub-content-logo">
+      {src ? (
+        <HubLogoMark
+          src={src}
+          width={props.logo.width}
+          height={props.logo.height}
+          maxHeight="var(--admin-hub-content-logo-h, 72px)"
+          className="admin-hub-content-logo__mark"
+        />
+      ) : (
+        <span className="admin-hub-content-logo__file">
           <Paperclip width={22} height={22} strokeWidth={1.6} aria-hidden="true" />
-        )}
-      </span>
+        </span>
+      )}
       <span className="admin-hub-content-logo__caption">{ADMIN_HUB_CONTENT_LOGO}</span>
     </a>
   );

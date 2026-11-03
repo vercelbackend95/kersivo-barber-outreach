@@ -32,8 +32,9 @@ describe('overview bento CSS areas', () => {
     expect(css).not.toMatch(/\.admin-hub-add-fab \{[^}]*position: fixed/);
   });
 
-  it('shows the Brand colours logo preview on small screens', () => {
-    expect(css).toMatch(/\.admin-hub-colours__logo-frame img \{[^}]*max-height: 96px;[^}]*object-fit: contain;/);
+  it('keeps the no-logo empty state on small screens and the "Your logo" heading at every width', () => {
+    expect(css).not.toContain('.admin-hub-colours__logo-frame');
+    expect(css).not.toMatch(/\.admin-hub-colours__logo-heading \{[^}]*display: none/);
     expect(css).toMatch(/@media \(max-width: 1023px\) \{[\s\S]*?\.admin-hub-colours__logo \{[\s\S]*?display: grid;/);
   });
 

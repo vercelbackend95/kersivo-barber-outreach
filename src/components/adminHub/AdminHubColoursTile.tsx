@@ -7,17 +7,19 @@ import {
   ADMIN_HUB_OPEN,
   ADMIN_HUB_TILE_COLOURS,
 } from '@/lib/adminHub/copy';
-import { betterButtonText, siteBackgroundHex } from '@/lib/adminHub/colour';
+import { betterButtonText } from '@/lib/adminHub/colour';
 import type { AdminHubLiveState } from '@/lib/adminHub/liveState';
 import { useHubSnapshot } from '@/lib/adminHub/hubStore';
 import {
   OVERVIEW_PALETTE_CAP,
   overviewColours,
+  overviewImageSize,
   overviewTileHrefs,
   shopInitials,
   type OverviewColoursLook,
   type OverviewRoleColour,
 } from '@/lib/adminHub/overviewTiles';
+import { HubLogoMark } from './HubLogoMark';
 
 export function overviewColoursFromLive(live: AdminHubLiveState) {
   return overviewColours({
@@ -50,6 +52,8 @@ export function AdminHubColoursTile(props: { initialState: AdminHubLiveState | n
   const loading = !live && snapshot.pending;
   const colours = live ? overviewColoursFromLive(live) : null;
   const logoSrc = live?.currentLogo?.src ?? null;
+  const logoAsset = logoSrc ? live?.assets.find((asset) => asset.id === live.currentLogo?.id) : undefined;
+  const logoSize = logoAsset ? overviewImageSize(logoAsset) : null;
   const initials = shopInitials(props.shopName);
   const state = colours?.state ?? 'no_logo';
 
@@ -61,8 +65,6 @@ export function AdminHubColoursTile(props: { initialState: AdminHubLiveState | n
   };
 
   const chips = colours?.palette ?? [];
-  const darkPlate = siteBackgroundHex('DARK', colours?.main?.hex ?? null);
-  const lightPlate = siteBackgroundHex('LIGHT');
 
   return (
     <a
@@ -88,20 +90,18 @@ export function AdminHubColoursTile(props: { initialState: AdminHubLiveState | n
           <div className="admin-hub-colours-main">
             <div className="admin-hub-colours-id">
               <div className="admin-hub-colours-logos" data-testid="admin-hub-colours-logos">
-                <span className="admin-hub-colours-plate" style={{ background: darkPlate }}>
-                  {logoSrc ? (
-                    <img src={logoSrc} alt="" width="160" height="90" decoding="async" />
-                  ) : (
-                    <span className="admin-hub-colours-plate__initials" aria-hidden="true">
-                      {initials}
-                    </span>
-                  )}
-                </span>
                 {logoSrc ? (
-                  <span className="admin-hub-colours-plate admin-hub-colours-plate--light" style={{ background: lightPlate }}>
-                    <img src={logoSrc} alt="" width="160" height="90" decoding="async" />
+                  <HubLogoMark
+                    src={logoSrc}
+                    width={logoSize?.width}
+                    height={logoSize?.height}
+                    maxHeight="var(--admin-hub-colours-logo-h, 64px)"
+                  />
+                ) : (
+                  <span className="admin-hub-colours-initials" aria-hidden="true">
+                    {initials}
                   </span>
-                ) : null}
+                )}
               </div>
               <p className="admin-hub-colours-headline" data-testid="admin-hub-colours-headline">
                 {colours ? <strong>{colours.headline}</strong> : null}

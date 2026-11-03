@@ -15,6 +15,8 @@ import {
   ADMIN_HUB_COLOURS_SENT,
 } from './copy';
 import {
+  hubLogoLook,
+  logoHasTransparency,
   logoNeedsLightPlate,
   OVERVIEW_PALETTE_CAP,
   overviewColours,
@@ -183,6 +185,51 @@ describe('logoNeedsLightPlate', () => {
   it('ignores fully transparent images', () => {
     expect(logoNeedsLightPlate(image([[0, 0, 0, 0]]))).toBe(false);
     expect(logoNeedsLightPlate({ data: new Uint8ClampedArray(), width: 0, height: 0 })).toBe(false);
+  });
+});
+
+describe('logoHasTransparency / hubLogoLook (O7)', () => {
+  // 10×10 fixtures: a centred 4×4 mark on a background.
+  const logo = (mark: [number, number, number, number], background: [number, number, number, number]) => {
+    const data = new Uint8ClampedArray(10 * 10 * 4);
+    for (let y = 0; y < 10; y += 1) {
+      for (let x = 0; x < 10; x += 1) data.set(x > 2 && x < 7 && y > 2 && y < 7 ? mark : background, (y * 10 + x) * 4);
+    }
+    return { data, width: 10, height: 10 };
+  };
+  const clear: [number, number, number, number] = [0, 0, 0, 0];
+
+  it('opaque dark JPG-like logo with a red mark: no transparency, rounded corners, no plate', () => {
+    const image = logo([200, 16, 46, 255], [12, 12, 13, 255]);
+    expect(logoHasTransparency(image)).toBe(false);
+    // Treated as "faint" on its own (mostly dark pixels) — the reason opaque images must never get a plate.
+    expect(logoNeedsLightPlate(image)).toBe(true);
+    expect(hubLogoLook(image)).toBe('opaque');
+  });
+
+  it('black on transparent: plate', () => {
+    const image = logo([0, 0, 0, 255], clear);
+    expect(logoHasTransparency(image)).toBe(true);
+    expect(hubLogoLook(image)).toBe('plate');
+  });
+
+  it('white or colourful on transparent: no plate', () => {
+    expect(hubLogoLook(logo([250, 250, 250, 255], clear))).toBe('plain');
+    expect(hubLogoLook(logo([201, 162, 74, 255], clear))).toBe('plain');
+  });
+
+  it('needs transparent corners and at least 5 % see-through pixels', () => {
+    // Transparent pixels only in the middle (corners opaque): not a transparent logo.
+    expect(logoHasTransparency(logo(clear, [0, 0, 0, 255]))).toBe(false);
+    // A single see-through corner pixel is below 5 %.
+    const almost = logo([0, 0, 0, 255], [0, 0, 0, 255]);
+    almost.data[3] = 0;
+    expect(logoHasTransparency(almost)).toBe(false);
+  });
+
+  it('empty images stay plain', () => {
+    expect(hubLogoLook({ data: new Uint8ClampedArray(), width: 0, height: 0 })).toBe('plain');
+    expect(hubLogoLook(logo(clear, clear))).toBe('plain');
   });
 });
 

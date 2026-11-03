@@ -157,7 +157,12 @@ describe('logo display CSS', () => {
     expect(booking).toContain('.admin-mobile-drawer-head .admin-sidebar-monogram');
   });
 
-  it('pads the Brand colours logo plates so wordmarks are not edge-to-edge', () => {
-    expect(hub).toMatch(/\.admin-hub-colours-plate img \{[^}]*object-fit: contain;[^}]*padding: 4px;/);
+  it('shows the hub logo as itself: contained, no box, plate only as the transparent-logo exception (O7)', () => {
+    expect(hub).toMatch(/\.hub-logo-mark \{[^}]*max-width: 100%;[^}]*max-height: var\(--hub-logo-max-h, 64px\);[^}]*object-fit: contain;/);
+    expect(hub).toMatch(/\.hub-logo-mark--opaque \{\s*border-radius: 8px;\s*\}/);
+    expect(hub).toMatch(/\.hub-logo-mark--plate \{\s*padding: 8px;\s*border-radius: 10px;\s*background: #f4f4f2;\s*\}/);
+    expect(hub).not.toContain('.admin-hub-colours-plate');
+    expect(hub).not.toContain('.admin-hub-logo-pair');
+    expect(hub).not.toContain('.admin-hub-content-logo__box');
   });
 });
