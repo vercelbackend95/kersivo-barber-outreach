@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Camera,
   ChevronDown,
@@ -26,6 +27,7 @@ import { adminHubAppHref } from '@/lib/adminHub/apps';
 import type { HubCapabilities, HubStage } from '@/lib/freePreview/hubStage';
 import AdminMobileFab from '@/components/admin/AdminMobileFab';
 import { ADMIN_MOBILE_CHROME_MAX_PX } from '@/components/admin/useAdminMobileNextAppointmentsChrome';
+import { useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 import { AdminHubSheet } from './AdminHubSheet';
 
 const INLINE_SHEET_MQ = '(max-width: 640px)';
@@ -42,6 +44,40 @@ const ICONS: Record<AdminHubAddItemId, typeof Camera> = {
   service: Scissors,
   product: Package,
 };
+
+const PANEL_GAP = 8;
+const VIEWPORT_MARGIN = 12;
+const PANEL_MAX_HEIGHT = 640;
+
+/**
+ * Fixed position for the portaled desktop panel: below the trigger, right edges aligned; flips above when there is
+ * more room there than below and the panel does not fit below. Clamped to a 12 px viewport margin; max-height is the
+ * available space (the panel scrolls inside). Returns whether the trigger is still (partly) in view.
+ */
+function placePanel(panel: HTMLElement, trigger: HTMLElement): boolean {
+  const t = trigger.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth || window.innerWidth;
+  const vh = window.innerHeight;
+
+  const width = panel.offsetWidth;
+  const left = Math.min(Math.max(t.right - width, VIEWPORT_MARGIN), Math.max(VIEWPORT_MARGIN, vw - VIEWPORT_MARGIN - width));
+  const cap = Math.min(vh * 0.8, PANEL_MAX_HEIGHT);
+  // scrollHeight has no borders; max-height is border-box.
+  const natural = Math.min(panel.scrollHeight + panel.offsetHeight - panel.clientHeight, cap);
+  const below = vh - VIEWPORT_MARGIN - (t.bottom + PANEL_GAP);
+  const above = t.top - PANEL_GAP - VIEWPORT_MARGIN;
+  const flip = below < natural && above > below;
+  const maxHeight = Math.max(0, Math.min(cap, flip ? above : below));
+  const top = flip
+    ? Math.max(VIEWPORT_MARGIN, t.top - PANEL_GAP - Math.min(natural, maxHeight))
+    : Math.max(VIEWPORT_MARGIN, t.bottom + PANEL_GAP);
+
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+  panel.style.maxHeight = `${Math.floor(maxHeight)}px`;
+  panel.dataset.placement = flip ? 'top' : 'bottom';
+  return t.bottom > 0 && t.top < vh && t.right > 0 && t.left < vw;
+}
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -102,6 +138,7 @@ export function AdminHubAddMenu(props: {
   const showMobileFab = Boolean(props.showMobileFab);
   const [sheet, setSheet] = useState(() => isSheetViewport(variant, showMobileFab));
   const [activeIndex, setActiveIndex] = useState(0);
+  const portalTarget = useClientPortalTarget();
   const items = flatten(menu.groups);
 
   useEffect(() => {
@@ -149,6 +186,44 @@ export function AdminHubAddMenu(props: {
       document.removeEventListener('pointerdown', onPointer);
     };
   }, [open, sheet, close]);
+
+  // Desktop panel is portaled to body (never under tile photos / logo, never clipped by overflow: hidden).
+  useLayoutEffect(() => {
+    if (!open || sheet || !portalTarget) return;
+    const panel = panelRef.current;
+    const trigger = desktopTriggerRef.current;
+    if (!panel || !trigger) return;
+    let frame = 0;
+    let scrolled = false;
+    const update = () => {
+      frame = 0;
+      const inView = placePanel(panel, trigger);
+      // Only a scroll closes it: the trigger left the viewport, so the menu would float detached.
+      if (inView || !scrolled) return;
+      const hadFocus = panel.contains(document.activeElement);
+      setOpen(false);
+      if (hadFocus) trigger.focus({ preventScroll: true });
+    };
+    update();
+    const schedule = (event: Event) => {
+      if (event.type === 'scroll') {
+        // Scrolling inside the panel itself does not move the trigger.
+        if (event.target instanceof Node && panel.contains(event.target)) return;
+        scrolled = true;
+      }
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener('resize', schedule);
+    window.addEventListener('scroll', schedule, { capture: true, passive: true });
+    // The tile's hover lift (transform transition) moves the trigger after the first placement.
+    document.addEventListener('transitionend', schedule, true);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('scroll', schedule, { capture: true });
+      document.removeEventListener('transitionend', schedule, true);
+    };
+  }, [open, sheet, portalTarget]);
 
   useEffect(() => {
     if (!open) return;
@@ -227,7 +302,7 @@ export function AdminHubAddMenu(props: {
     const parsed = parseAdminHubAddItem(item.id);
     if (parsed) trackHubEvent('hub_add_menu_item', parsed);
     // Close after the click bubbles so AppHost's document listener still sees the <a href>
-    // (the sheet is portaled to document.body; delegation is on document, not .admin-shell).
+    // (panel and sheet are portaled to document.body; delegation is on document, not .admin-shell).
     queueMicrotask(() => close(false));
   };
 
@@ -328,7 +403,7 @@ export function AdminHubAddMenu(props: {
           haspopup="menu"
         />
       ) : null}
-      {open && !sheet ? list : null}
+      {open && !sheet && portalTarget ? createPortal(list, portalTarget) : null}
       {open && sheet ? (
         <AdminHubSheet
           title={ADMIN_HUB_ADD}

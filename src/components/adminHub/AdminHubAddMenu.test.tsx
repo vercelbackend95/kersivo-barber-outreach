@@ -171,6 +171,93 @@ describe('AdminHubAddMenu', () => {
     expect(sheet.closest('.admin-hub-app-root')?.parentElement).toBe(document.body);
   });
 
+  it.each(['header', 'inline', 'icon'] as const)(
+    'portals the %s desktop panel to document.body with fixed positioning',
+    (variant) => {
+      render(
+        <AdminHubAddMenu stage="review" capabilities={caps()} canAddShop variant={variant} testId="trigger" />,
+      );
+      const trigger = screen.getByTestId('trigger');
+      fireEvent.click(trigger);
+      const panel = screen.getByTestId('admin-hub-add-menu');
+      expect(panel.parentElement).toBe(document.body);
+      expect(panel.closest('.admin-hub-add-menu')).toBeNull();
+      expect(panel.className).toBe('admin-hub-add-menu__panel');
+      expect(panel.style.top).toMatch(/px$/);
+      expect(panel.style.left).toMatch(/px$/);
+      expect(panel.style.maxHeight).toMatch(/px$/);
+      expect(trigger.getAttribute('aria-controls')).toBe(panel.id);
+    },
+  );
+
+  it('places the panel below the trigger, right-aligned, and flips above near the bottom', () => {
+    renderMenu();
+    const trigger = screen.getByTestId('admin-hub-add');
+    const rect = (top: number) =>
+      ({ top, bottom: top + 36, left: 900, right: 1000, width: 100, height: 36, x: 900, y: top, toJSON: () => ({}) }) as DOMRect;
+    const spy = vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(rect(100));
+    // jsdom defines offsetWidth on HTMLElement and scrollHeight on Element: shadow, then restore.
+    const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')!;
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 340 });
+    Object.defineProperty(HTMLElement.prototype, 'scrollHeight', { configurable: true, get: () => 500 });
+    try {
+      fireEvent.click(trigger);
+      const panel = screen.getByTestId('admin-hub-add-menu');
+      expect(panel.dataset.placement).toBe('bottom');
+      expect(panel.style.top).toBe('144px');
+      expect(panel.style.left).toBe('660px');
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      spy.mockReturnValue(rect(window.innerHeight - 60));
+      fireEvent.click(trigger);
+      const flipped = screen.getByTestId('admin-hub-add-menu');
+      expect(flipped.dataset.placement).toBe('top');
+      expect(parseFloat(flipped.style.top) + Math.min(500, parseFloat(flipped.style.maxHeight))).toBeLessThanOrEqual(
+        window.innerHeight - 60 - 8,
+      );
+      expect(parseFloat(flipped.style.top)).toBeGreaterThanOrEqual(12);
+    } finally {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth);
+      delete (HTMLElement.prototype as { scrollHeight?: number }).scrollHeight;
+    }
+  });
+
+  it('closes on an outside pointerdown but not on one inside the portaled panel', async () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('admin-hub-add'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fireEvent.pointerDown(screen.getByRole('menuitem', { name: /Logo/ }));
+    expect(screen.getByRole('menu')).toBeTruthy();
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+  });
+
+  it('closes after an item click, letting the click reach document-level delegation first', async () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('admin-hub-add'));
+    const seen: string[] = [];
+    const onDocClick = (event: MouseEvent) => {
+      const link = (event.target as HTMLElement).closest('a');
+      if (link) seen.push(link.getAttribute('href') ?? '');
+      event.preventDefault();
+    };
+    document.addEventListener('click', onDocClick);
+    try {
+      fireEvent.click(screen.getByRole('menuitem', { name: /Shop photos/ }));
+      expect(seen).toEqual(['/admin?app=materials&item=photos']);
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    } finally {
+      document.removeEventListener('click', onDocClick);
+    }
+  });
+
+  it('closes on Tab without moving focus back to the trigger', () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('admin-hub-add'));
+    fireEvent.keyDown(screen.getByTestId('admin-hub-add-menu'), { key: 'Tab' });
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
   it('fires allowlisted hub events without extra fields', async () => {
     renderMenu();
     fireEvent.click(screen.getByTestId('admin-hub-add'));
