@@ -727,7 +727,6 @@ a.admin-hub-tile:focus-visible,
 .admin-hub-tile__action,
 .admin-hub-content-empty,
 .admin-hub-status,
-.admin-hub-add-menu--icon,
 a.admin-hub-tile__open {
   position: relative;
   z-index: 2;
@@ -3391,8 +3390,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   position: relative;
   min-width: 0;
 }
-.admin-hub-add-menu--inline,
-.admin-hub-add-menu--icon {
+.admin-hub-add-menu--inline {
   position: relative;
   z-index: 2;
 }
@@ -3461,11 +3459,13 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 .admin-hub-add-menu__chevron.is-open {
   transform: rotate(180deg);
 }
+/* Portaled to document.body; top / left / max-height come from the trigger rect (AdminHubAddMenu placePanel).
+   One level below app windows / sheets so an app opened from an item sits above it. */
 .admin-hub-add-menu__panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 40;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: calc(var(--admin-z-modal-sheet, 270) - 10);
   width: min(340px, calc(100vw - 24px));
   max-height: min(80vh, 640px);
   overflow: auto;
