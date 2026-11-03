@@ -22,6 +22,30 @@ describe('ensureSentryServerInitialized', () => {
     delete process.env.SENTRY_DSN;
     delete process.env.SENTRY_ENVIRONMENT;
     delete process.env.VERCEL_ENV;
+    delete process.env.SENTRY_ENABLE_LOCAL;
+  });
+
+  it('stays disabled in local dev even when SENTRY_DSN is set', async () => {
+    isInitialized.mockReturnValue(false);
+    process.env.SENTRY_DSN = 'https://example.invalid/1';
+
+    const { ensureSentryServerInitialized } = await import('../../../sentry.server.config');
+    init.mockClear();
+    ensureSentryServerInitialized();
+
+    expect((init.mock.calls[0]?.[0] as Record<string, unknown>).enabled).toBe(false);
+  });
+
+  it('enables locally only with SENTRY_ENABLE_LOCAL=true', async () => {
+    isInitialized.mockReturnValue(false);
+    process.env.SENTRY_DSN = 'https://example.invalid/1';
+    process.env.SENTRY_ENABLE_LOCAL = 'true';
+
+    const { ensureSentryServerInitialized } = await import('../../../sentry.server.config');
+    init.mockClear();
+    ensureSentryServerInitialized();
+
+    expect((init.mock.calls[0]?.[0] as Record<string, unknown>).enabled).toBe(true);
   });
 
   it('initializes when no client exists', async () => {
