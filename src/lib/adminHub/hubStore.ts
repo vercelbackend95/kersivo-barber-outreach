@@ -229,6 +229,24 @@ export function useHubState(fallback?: AdminHubLiveState | null): AdminHubLiveSt
   return state ?? fallback ?? null;
 }
 
+/**
+ * One primitive value from the store (`fallback` until it has data). Components re-render only when that value
+ * changes — use it for big trees such as the admin layout.
+ */
+export function useHubSelector<T extends string | number | boolean | null>(
+  select: (state: AdminHubLiveState) => T,
+  fallback: T,
+): T {
+  return useSyncExternalStore(
+    subscribeHubState,
+    () => {
+      const state = getHubState();
+      return state ? select(state) : fallback;
+    },
+    () => fallback,
+  );
+}
+
 export function __resetHubStoreForTests(options: { fetcher?: Fetcher; seed?: AdminHubLiveState | null } = {}): void {
   removeListeners?.();
   removeListeners = null;
