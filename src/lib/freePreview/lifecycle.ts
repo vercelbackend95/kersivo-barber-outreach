@@ -303,6 +303,7 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
           brandBackgroundTone: null,
           brandColoursSource: null,
           brandPaletteExtracted: Prisma.JsonNull,
+          brandPaletteLogoAssetId: null,
           brandColoursSentAt: null,
           brandSubmittedByUserId: null,
           brandSubmittedSnapshot: Prisma.JsonNull,

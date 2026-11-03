@@ -22,7 +22,7 @@ describe('brandColoursSchema', () => {
     expect(brandColoursSchema.safeParse({ brandColoursSource: 'AI' }).success).toBe(false);
     expect(
       brandColoursSchema.safeParse({
-        brandPaletteExtracted: Array.from({ length: 6 }, (_, i) => ({ hex: '#111111', share: i / 10 })),
+        brandPaletteExtracted: Array.from({ length: 7 }, (_, i) => ({ hex: '#111111', share: i / 10 })),
       }).success,
     ).toBe(false);
   });
@@ -44,7 +44,17 @@ describe('brandColoursSchema', () => {
 });
 
 describe('parseBrandPalette', () => {
-  it('keeps at most five valid rows', () => {
+  it('accepts six palette rows (logo clusters + the owner’s picks) and the logo asset id', () => {
+    const parsed = brandColoursSchema.parse({
+      brandPaletteExtracted: Array.from({ length: 6 }, (_, i) => ({ hex: '#111111', share: i / 10 })),
+      brandPaletteLogoAssetId: 'logo_1',
+    });
+    expect(parsed.brandPaletteExtracted).toHaveLength(6);
+    expect(parsed.brandPaletteLogoAssetId).toBe('logo_1');
+    expect(brandColoursSchema.parse({ brandPaletteLogoAssetId: null }).brandPaletteLogoAssetId).toBeNull();
+  });
+
+  it('keeps at most six valid rows', () => {
     expect(
       parseBrandPalette([
         { hex: '#1f6f6b', share: 0.5 },

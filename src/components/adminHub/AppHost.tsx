@@ -26,6 +26,7 @@ import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
 import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 import { flushHubDirty, setHubAppOpen, useHubSnapshot } from '@/lib/adminHub/hubStore';
 import { mergeLiveStateIntoAppCtx } from '@/lib/adminHub/liveState';
+import { useHubToast } from '@/lib/adminHub/hubToast';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './apps/AppChrome';
@@ -131,6 +132,7 @@ export function AppHost(props: {
   const portalTarget = useClientPortalTarget();
   useAdminHubScrollLock(Boolean(app && portalTarget));
   const hub = useHubSnapshot();
+  const toast = useHubToast();
   // Each open gets the latest hub data once (waiting for a refresh already under way); an open app is never re-fed.
   const ctxRef = useRef<{ app: AdminHubAppId; ctx: AdminHubAppContext } | null>(null);
   if (!app) ctxRef.current = null;
@@ -312,12 +314,21 @@ export function AppHost(props: {
     }
   };
 
-  if (!app || !portalTarget) return null;
+  if (!portalTarget) return null;
+  // Stays mounted while apps open and close, so a toast raised on close (e.g. "Draft saved") is announced.
+  const toastRegion = (
+    <div className="admin-hub-toast" role="status" aria-live="polite" data-testid="admin-hub-toast">
+      {toast}
+    </div>
+  );
+  if (!app) return createPortal(<>{toastRegion}{null}</>, portalTarget);
   const meta = adminHubAppMeta(app);
   const Icon = ICONS[resolveAdminHubApp(app)];
   const fullscreen = Boolean(sheet && (meta.sheetBelow ?? 1024) <= 640);
 
   return createPortal(
+    <>
+    {toastRegion}
     <div className="admin-hub-app-root">
       <div className="admin-hub-app__scrim" aria-hidden="true" onClick={close} />
       <div
@@ -367,7 +378,8 @@ export function AppHost(props: {
         </div>
         {chrome.footer ? <div className="admin-hub-app__foot">{chrome.footer}</div> : null}
       </div>
-    </div>,
+    </div>
+    </>,
     portalTarget,
   );
 }

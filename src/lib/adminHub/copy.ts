@@ -119,7 +119,7 @@ export const ADMIN_HUB_COLOURS_YOUR_LOGO = 'Your logo';
 export const ADMIN_HUB_COLOURS_NO_LOGO = 'No logo uploaded yet';
 export const ADMIN_HUB_COLOURS_UPLOAD = 'Upload logo';
 export const ADMIN_HUB_COLOURS_FOUND_IN = 'Found in your logo';
-export const ADMIN_HUB_COLOURS_PICK_PHOTO = 'Pick from a photo';
+export const ADMIN_HUB_COLOURS_PICK_SCREEN = 'Pick from your screen';
 export const ADMIN_HUB_COLOURS_HEX = '# Hex';
 export const ADMIN_HUB_COLOURS_HEX_LABEL = 'Hex';
 export const ADMIN_HUB_COLOURS_FINE_TUNE_MAIN = 'Fine-tune main colour';
@@ -167,10 +167,40 @@ export function formatBrandSubmittedDate(iso: string): string {
   });
 }
 
-export const ADMIN_HUB_COLOURS_CONTRAST_OK = 'Text on your buttons is easy to read';
-export const ADMIN_HUB_COLOURS_CONTRAST_FAIL = 'Hard to read on buttons';
-export const ADMIN_HUB_COLOURS_MAKE_DEEPER = 'Make it deeper';
-export const ADMIN_HUB_COLOURS_MAKE_LIGHTER = 'Make it lighter';
+export const ADMIN_HUB_COLOURS_READABILITY = 'Easy to read?';
+export const ADMIN_HUB_COLOURS_CONTRAST_BUTTON = 'Button text on accent';
+export const ADMIN_HUB_COLOURS_CONTRAST_MAIN = 'Main colour on background';
+export const ADMIN_HUB_COLOURS_CONTRAST_PASS = 'easy to read';
+export const ADMIN_HUB_COLOURS_CONTRAST_LOW = 'hard to read';
+export const ADMIN_HUB_COLOURS_MAKE_ACCENT_DEEPER = 'Make accent deeper';
+export const ADMIN_HUB_COLOURS_MAKE_ACCENT_LIGHTER = 'Make accent lighter';
+export const ADMIN_HUB_COLOURS_MAKE_MAIN_DEEPER = 'Make main deeper';
+export const ADMIN_HUB_COLOURS_MAKE_MAIN_LIGHTER = 'Make main lighter';
+export const ADMIN_HUB_COLOURS_PICK_MAIN = 'Pick a main colour';
+export const ADMIN_HUB_COLOURS_SWAP = 'Swap';
+export const ADMIN_HUB_COLOURS_SWAP_LABEL = 'Swap main and accent';
+export const ADMIN_HUB_COLOURS_NO_ACCENT = 'No accent';
+export const ADMIN_HUB_COLOURS_UNDO = 'Undo';
+export const ADMIN_HUB_COLOURS_ROLE_GROUP = 'Colour to edit';
+export const ADMIN_HUB_COLOURS_SAME_HEX = "Main and accent can't be the same colour.";
+export const ADMIN_HUB_COLOURS_HEX_USE = 'Use';
+export const ADMIN_HUB_COLOURS_HEX_ERROR_CHARS = 'Use 0–9 and A–F only, like #1F6F6B.';
+export const ADMIN_HUB_COLOURS_HEX_ERROR_LENGTH = 'Use 3 or 6 characters, like #1F6F6B.';
+export const ADMIN_HUB_COLOURS_CHOOSE_PREFIX = 'Not sure?';
+export const ADMIN_HUB_COLOURS_CHOOSE_SUFFIX = "— we'll pick from your logo.";
+export const ADMIN_HUB_COLOURS_FIND_AGAIN = 'Find colours again';
+export const ADMIN_HUB_COLOURS_EXTRACT_FAILED = "Couldn't read the colours in your logo.";
+export const ADMIN_HUB_COLOURS_NEW_LOGO = 'You have a new logo. Find its colours?';
+export const ADMIN_HUB_COLOURS_DRAFT_TOAST = 'Draft saved';
+export const ADMIN_HUB_COLOURS_DRAFT_TOAST_FAILED = "Couldn't save your colours. Open Brand colours to try again.";
+export const ADMIN_HUB_COLOURS_SAVE_FAILED = "Couldn't save. Your changes are still here — try again.";
+export const ADMIN_HUB_COLOURS_SLIDER_WORDS = {
+  depth: (pct: number) => `${pct >= 50 ? 'Deeper' : 'Lighter'}, ${pct} %`,
+  intensity: (pct: number) => `${pct >= 50 ? 'Vivid' : 'Muted'}, ${pct} %`,
+};
+export const ADMIN_HUB_COLOURS_PALETTE = 'Palette';
+export const ADMIN_HUB_COLOURS_SENT_ON = 'Sent on';
+export const ADMIN_HUB_COLOURS_COPY_HEX = (hex: string) => `Copy ${hex}`;
 export const ADMIN_HUB_COLOURS_BW =
   'Your logo is black and white — pick a colour or let us choose';
 export const ADMIN_HUB_COLOURS_BOOK = 'Book now';

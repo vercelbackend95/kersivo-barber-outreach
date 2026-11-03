@@ -65,6 +65,7 @@ exports[`GET /api/admin-hub/state > returns only the session shop: assets, detai
         "share": 0.5,
       },
     ],
+    "brandPaletteLogoAssetId": null,
     "brandPrimaryColour": "#1F6F6B",
     "brandSecondaryColour": null,
     "instagramUrl": null,

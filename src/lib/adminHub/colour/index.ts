@@ -8,11 +8,14 @@ export {
   KMEANS_MAX_ITERS,
   KMEANS_SEED,
   MAIN_BG_RATIO,
+  MAX_PALETTE,
   MAX_SWATCHES,
+  PALETTE_DUPLICATE_DE_OK,
   MERGE_DE_OK,
   MIN_ACCENT_SHARE,
   QUICK_PICK_COUNT,
 } from './types';
+export type { ContrastCheck, ContrastLine } from './contrast';
 export type {
   AssignedRoles,
   BrandBackgroundTone,
@@ -44,13 +47,18 @@ export {
   applyChroma,
   applyLightness,
   betterButtonText,
+  chromaFromRelative,
   contrastRatio,
   evaluateContrast,
+  formatContrastRatio,
   lightnessFromDepth,
   maxInGamutChroma,
   nearestPassingLightness,
+  relativeChroma,
   relativeLuminance,
+  SITE_BACKGROUND,
   siteBackgroundHex,
+  siteTextHex,
   sliderDepth,
 } from './contrast';
 export { isChromatic, nameSwatch } from './name';
@@ -62,3 +70,15 @@ export {
   lightnessSteps,
   swatchFromHex,
 } from './extract';
+export {
+  addToPalette,
+  clearAccent,
+  commitEdit,
+  mergePalette,
+  parseHexInput,
+  setRoleColour,
+  snapshotsEqual,
+  swapRoles,
+  undoEdit,
+} from './editor';
+export type { ColourSnapshot, EditResult, HexInputResult, UndoState } from './editor';

@@ -42,6 +42,10 @@ export const KMEANS_MAX_ITERS = 12;
 export const KMEANS_SEED = 0x4b455253; // "KERS"
 export const MERGE_DE_OK = 0.06;
 export const MAX_SWATCHES = 5;
+/** Saved palette: logo clusters plus the owner's own picks. */
+export const MAX_PALETTE = 6;
+/** Saved / manual colours closer than this to a kept swatch are treated as the same colour. */
+export const PALETTE_DUPLICATE_DE_OK = 0.02;
 export const MIN_ACCENT_SHARE = 0.05;
 export const NEAR_BLACK_L = 0.18;
 export const NEAR_WHITE_L = 0.94;

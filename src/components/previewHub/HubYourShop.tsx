@@ -75,6 +75,8 @@ export type HubShopDetails = {
   brandBackgroundTone?: 'DARK' | 'LIGHT' | null;
   brandColoursSource?: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted?: Array<{ hex: string; share: number }> | null;
+  /** Logo asset the saved palette came from (null for palettes saved before O5). */
+  brandPaletteLogoAssetId?: string | null;
   brandColoursSentAt?: string | null;
   brandLocked?: boolean;
   snapshotLogoAssetId?: string | null;

@@ -60,6 +60,7 @@ function pageRow(overrides: Partial<TokenPreviewRequest> = {}): TokenPreviewRequ
     brandBackgroundTone: null,
     brandColoursSource: null,
     brandPaletteExtracted: null,
+    brandPaletteLogoAssetId: null,
     brandColoursSentAt: null,
     brandSubmittedSnapshot: null,
     styleNotes: null,
