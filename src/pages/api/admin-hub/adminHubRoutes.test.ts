@@ -34,6 +34,7 @@ import * as event from './event';
 import * as domainSearch from './domain-search';
 import * as brandColours from './brand-colours';
 import * as draftShop from './draft-shop';
+import * as state from './state';
 
 type Handler = (context: never) => Promise<Response> | Response;
 const ROUTES: Array<[string, Record<string, unknown>]> = [
@@ -51,6 +52,7 @@ const ROUTES: Array<[string, Record<string, unknown>]> = [
   ['domain-search', domainSearch],
   ['brand-colours', brandColours],
   ['draft-shop', draftShop],
+  ['state', state],
 ];
 const METHODS = ['GET', 'POST', 'PATCH', 'DELETE'] as const;
 

@@ -3,6 +3,7 @@ import { PreviewAdminChrome } from './PreviewAdminChrome';
 import { AppHost } from './AppHost';
 import type { PreviewHubPageData } from '@/lib/adminHub/previewHubPage';
 import type { PreviewHubSection } from '@/lib/adminHub/previewHubPaths';
+import { ADMIN_HUB_STATE_SCRIPT_ID, liveStateScriptJson } from '@/lib/adminHub/liveState';
 
 interface Props {
   data: PreviewHubPageData;
@@ -17,6 +18,7 @@ const profileUser = {
 };
 ---
 
+<script is:inline type="application/json" id={ADMIN_HUB_STATE_SCRIPT_ID} set:html={liveStateScriptJson(data.liveState)} />
 <PreviewAdminChrome
   client:load
   section={section}

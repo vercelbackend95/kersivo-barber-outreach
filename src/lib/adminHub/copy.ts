@@ -64,6 +64,8 @@ export const ADMIN_HUB_COLOURS_HINT = "We'll find colours in your logo";
 export const ADMIN_HUB_COLOURS_EMPTY = "Add your logo and we'll find colours";
 export const ADMIN_HUB_COLOURS_NONE =
   "No brand colours yet. Add your logo and we'll pick colours that match.";
+/** Live region after the Overview picks up a change made in an app (hubStore refresh). */
+export const ADMIN_HUB_OVERVIEW_UPDATED = 'Overview updated';
 export const ADMIN_HUB_ADD = 'Add';
 export const ADMIN_HUB_ADD_MENU = 'Add to your website or shop';
 export const ADMIN_HUB_ADD_GROUP_WEBSITE = 'Your website';

@@ -37,6 +37,11 @@ export const PREVIEW_HUB_ASSET_GET_RATE = {
   limit: 240,
   windowMs: 60 * 60 * 1000,
 };
+export const PREVIEW_HUB_STATE_GET_RATE = {
+  action: 'preview_hub_state_get',
+  limit: 240,
+  windowMs: 60 * 60 * 1000,
+};
 export const PREVIEW_HUB_MESSAGES_IP_RATE = {
   action: 'preview_hub_messages_ip',
   limit: 20,
@@ -225,6 +230,15 @@ export async function enforceHubAssetGetRate(request: Request): Promise<Response
     PREVIEW_HUB_ASSET_GET_RATE.action,
     PREVIEW_HUB_ASSET_GET_RATE.limit,
     PREVIEW_HUB_ASSET_GET_RATE.windowMs,
+  );
+}
+
+export async function enforceHubStateGetRate(request: Request): Promise<Response | null> {
+  return enforceIpRateLimit(
+    request,
+    PREVIEW_HUB_STATE_GET_RATE.action,
+    PREVIEW_HUB_STATE_GET_RATE.limit,
+    PREVIEW_HUB_STATE_GET_RATE.windowMs,
   );
 }
 

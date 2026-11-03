@@ -78,6 +78,7 @@ import {
 } from '@/lib/adminHub/colour';
 import { extractFromLogoUrl, logoDisplayUrl } from '@/lib/adminHub/colour/runExtract';
 import { currentHubLogo, currentHubLogoOptionsFromDetails } from '@/lib/adminHub/currentLogo';
+import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import { HUB_SAVE_FAILED, HUB_SAVED, HUB_SAVING } from '@/lib/freePreview/hubCopy';
 
 type SaveKind = 'idle' | 'saving' | 'saved' | 'error' | 'sent';
@@ -250,13 +251,16 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         const lockedAt = brandLockedSubmittedAt(response.status, body);
         if (lockedAt) {
           await refreshLockedState(lockedAt);
+          emitHubDataChanged('colours-sent');
           return;
         }
         if (!response.ok || !body.ok) throw new Error(body.error || HUB_SAVE_FAILED);
         if (send) {
           applyLocked(body.colours?.brandColoursSentAt ?? new Date().toISOString());
+          emitHubDataChanged('colours-sent');
         } else {
           setSave('saved');
+          emitHubDataChanged('colours-saved');
         }
       } catch (err) {
         setSave('error');

@@ -97,14 +97,8 @@ const hub = hubPage?.kind === 'page' ? hubPage.data : null;
                 hasWebsitePreview={Boolean(hub.sitePreviewUrl)}
                 reviewNeed={hub.view.overview.reviewNeed}
                 launchProgress={hub.view.overview.launchProgress}
-                logoSrc={hub.logoSrc}
-                brandColour={hub.ctx.request.brandPrimaryColour}
-                brandSecondaryColour={hub.ctx.request.brandSecondaryColour}
-                brandColoursSentAt={hub.ctx.request.brandColoursSentAt}
-                brandColoursSource={hub.brandColoursSource}
-                brandPaletteExtracted={hub.brandPaletteExtracted}
                 changeItems={hub.view.overview.changeItems}
-                assets={hub.view.assets}
+                liveState={hub.liveState}
               />
             ) : null
           }
