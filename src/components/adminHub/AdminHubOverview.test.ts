@@ -33,6 +33,11 @@ describe('AdminHubOverview', () => {
     expect(src).not.toContain('admin-hub-add-tile');
     expect(src).not.toContain('admin-hub-bento__add');
     expect(src).toContain('variant="icon"');
+    // Empty Website content: the round "+" in the tile head is the only add control.
+    expect(src).toMatch(/<div class="admin-hub-content-empty">\s*<p>\{ADMIN_HUB_CONTENT_EMPTY\}<\/p>\s*<\/div>/);
+    expect(src).not.toContain('admin-hub-content-add');
+    expect(src).not.toContain('ADMIN_HUB_ADD_TILE');
+    expect(hubCss).not.toMatch(/\.admin-hub-content-empty \{[^}]*margin-top: auto/);
     expect(src).toContain('AdminHubSwatches');
     expect(src).toContain('AdminHubActivityFeed');
     expect(src).not.toContain('admin-hub-sw--empty');
@@ -90,7 +95,6 @@ describe('AdminHubOverview', () => {
     expect(colours).toContain('data-locked');
     expect(src).toContain('hrefs.changes');
     expect(src).toContain('hrefs.activity');
-    expect(src).toContain('hrefs.materials');
     expect(src).toContain('overviewWebsiteContent');
     expect(src).not.toContain('overviewShopTile');
     expect(src).not.toContain('admin-hub-bento--no-shop');

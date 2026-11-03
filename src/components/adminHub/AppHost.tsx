@@ -84,7 +84,7 @@ function restoreOpenerFocus(opener: HTMLElement | null) {
     return;
   }
   const selector =
-    '[data-testid="admin-mobile-fab"], [data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"], [data-testid="admin-hub-content-add"]';
+    '[data-testid="admin-mobile-fab"], [data-testid="admin-hub-add"], [data-testid="admin-hub-add-inline"]';
   const visible = [...document.querySelectorAll<HTMLElement>(selector)].find(isShownTrigger);
   visible?.focus();
 }

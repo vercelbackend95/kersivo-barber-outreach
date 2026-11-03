@@ -200,6 +200,53 @@ describe('AppHost', () => {
     expect(document.activeElement).toBe(screen.getByTestId('admin-hub-add'));
   });
 
+  it('returns focus to the Website content "+" and no longer targets the removed empty-state button', async () => {
+    function MenuHost() {
+      const [open, setOpen] = useState(true);
+      return (
+        <div className="admin-shell">
+          <button type="button" data-testid="admin-hub-content-add">
+            Add to your website
+          </button>
+          <button
+            type="button"
+            data-testid="admin-hub-add-inline"
+            aria-label="Add"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-controls="add-menu"
+          >
+            +
+          </button>
+          {open ? (
+            <div id="add-menu" role="menu" aria-label="Add to your website or shop">
+              <a
+                role="menuitem"
+                href="/admin?app=materials&item=photos"
+                onClick={() => queueMicrotask(() => setOpen(false))}
+              >
+                Shop photos
+              </a>
+            </div>
+          ) : null}
+          <AppHost initialApp={null} ctx={ctx} loadApp={loadStub} />
+        </div>
+      );
+    }
+
+    render(<MenuHost />);
+    const item = screen.getByRole('menuitem', { name: 'Shop photos' });
+    item.focus();
+    fireEvent.click(item);
+    await screen.findByRole('dialog');
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Shop photos' })).toBeNull());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(screen.getByTestId('admin-hub-add-inline'));
+  });
+
   it('traps tab inside the window', async () => {
     renderHost('logo');
     const dialog = await screen.findByRole('dialog');

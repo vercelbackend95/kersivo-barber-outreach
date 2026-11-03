@@ -1423,16 +1423,16 @@ a.admin-hub-tile__open:focus-visible {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-template-areas:
       "progress progress progress progress progress progress"
-      "preview preview preview content content content"
-      "changes changes changes colours colours colours"
+      "preview preview preview colours colours colours"
+      "changes changes changes content content content"
       "activity activity activity activity activity activity";
     gap: 14px;
   }
   .admin-hub-bento--no-changes {
     grid-template-areas:
       "progress progress progress progress progress progress"
-      "preview preview preview content content content"
-      "colours colours colours colours colours colours"
+      "preview preview preview colours colours colours"
+      "content content content content content content"
       "activity activity activity activity activity activity";
   }
   .admin-hub-progress__label {
@@ -1452,15 +1452,15 @@ a.admin-hub-tile__open:focus-visible {
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-areas:
       "progress progress progress progress progress progress progress progress preview preview preview preview"
-      "content content content content content content content content preview preview preview preview"
-      "changes changes changes changes changes changes changes changes colours colours colours colours"
+      "colours colours colours colours colours colours colours colours preview preview preview preview"
+      "changes changes changes changes changes changes changes changes content content content content"
       "activity activity activity activity activity activity activity activity activity activity activity activity";
   }
   .admin-hub-bento--no-changes {
     grid-template-areas:
       "progress progress progress progress progress progress progress progress preview preview preview preview"
-      "content content content content content content content content preview preview preview preview"
-      "colours colours colours colours colours colours colours colours colours colours colours colours"
+      "colours colours colours colours colours colours colours colours preview preview preview preview"
+      "content content content content content content content content content content content content"
       "activity activity activity activity activity activity activity activity activity activity activity activity";
   }
   .admin-hub-bento__preview {
@@ -2629,7 +2629,6 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
-  margin-top: auto;
 }
 .admin-hub-content-empty p {
   margin: 0;
