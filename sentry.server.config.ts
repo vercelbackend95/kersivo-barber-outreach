@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/astro';
 import { scrubSentryEvent } from '@/lib/ops/sentryPiiScrub';
+import { isSentryServerEnabled } from '@/lib/ops/sentryEnabled';
 
 /**
  * Idempotent server Sentry init.
@@ -13,7 +14,12 @@ export function ensureSentryServerInitialized(): void {
 
   Sentry.init({
     dsn: dsn || undefined,
-    enabled: Boolean(dsn),
+    // Off for local dev unless SENTRY_ENABLE_LOCAL=true (see sentryEnabled.ts).
+    enabled: isSentryServerEnabled({
+      dsn,
+      vercelEnv: (import.meta.env.VERCEL_ENV ?? process.env.VERCEL_ENV)?.toString(),
+      enableLocal: (import.meta.env.SENTRY_ENABLE_LOCAL ?? process.env.SENTRY_ENABLE_LOCAL)?.toString(),
+    }),
     sendDefaultPii: false,
     environment:
       (import.meta.env.SENTRY_ENVIRONMENT ?? process.env.SENTRY_ENVIRONMENT ?? process.env.VERCEL_ENV ?? 'development')
