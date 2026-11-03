@@ -6,7 +6,8 @@ import {
 } from '@prisma/client';
 import { prisma } from '../db/client';
 import { captureOpsException } from '../ops/sentry';
-import { isEmailDeliveryConfigured, sendRenderedEmail } from './sender';
+import { isReservedRecipient, logReservedRecipientSuppressed } from './reservedRecipients';
+import { isEmailDeliveryConfigured, isPermanentEmailDeliveryError, sendRenderedEmail } from './sender';
 
 const DEFAULT_MAX_ATTEMPTS = 6;
 const BASE_BACKOFF_MS = 60_000;
@@ -41,6 +42,17 @@ function parsePayload(raw: unknown): EmailOutboxPayload | null {
   return { to, subject, html, replyTo };
 }
 
+/** Include the provider's own message (e.g. Resend's validation reason) when it has one. */
+function describeDeliveryError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const response = (error as { response?: unknown } | null)?.response;
+  const providerMessage =
+    response && typeof response === 'object' && typeof (response as { message?: unknown }).message === 'string'
+      ? (response as { message: string }).message.trim()
+      : '';
+  return providerMessage && providerMessage !== message ? `${message} ${providerMessage}` : message;
+}
+
 async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promise<void> {
   captureOpsException(new Error(errorMessage), {
     route: 'email.outbox.deliverOutboxEmail',
@@ -62,7 +74,7 @@ export type EnqueueEmailInput = {
   dedupeKey?: string | null;
   /**
    * Record the dedupe row without ever sending it (status SUPPRESSED, no payload).
-   * Never drained, never counted as sent.
+   * Never drained, never counted as sent. Forced for reserved recipient domains (example.com, .test…).
    */
   suppressed?: boolean;
 };
@@ -70,6 +82,8 @@ export type EnqueueEmailInput = {
 function buildOutboxRowData(input: EnqueueEmailInput) {
   const now = new Date();
   const to = input.to.trim().toLowerCase();
+  const reservedRecipient = isReservedRecipient(to);
+  if (reservedRecipient) logReservedRecipientSuppressed(`outbox:${input.purpose}`, to);
   const dedupeKey = input.dedupeKey?.trim() || null;
   const payload: EmailOutboxPayload = {
     to,
@@ -88,7 +102,7 @@ function buildOutboxRowData(input: EnqueueEmailInput) {
     attempts: 0,
     maxAttempts: DEFAULT_MAX_ATTEMPTS,
   };
-  const data = input.suppressed
+  const data = input.suppressed || reservedRecipient
     ? {
         ...base,
         provider: 'suppressed',
@@ -215,6 +229,22 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
   }
 
   const payload = parsePayload(claimedRow.payload);
+  if (payload && isReservedRecipient(payload.to)) {
+    // Rows enqueued before reserved-domain suppression existed: record, never send, never alert.
+    logReservedRecipientSuppressed(`outbox:${claimedRow.purpose}`, payload.to);
+    const updated = await prisma.emailOutbound.update({
+      where: { id: row.id },
+      data: {
+        status: EmailOutboundStatus.SUPPRESSED,
+        provider: 'suppressed',
+        payload: Prisma.DbNull,
+        nextAttemptAt: null,
+        error: null,
+      },
+    });
+    return { status: 'skipped', row: updated };
+  }
+
   if (!payload) {
     const updated = await prisma.emailOutbound.update({
       where: { id: row.id },
@@ -254,15 +284,18 @@ export async function deliverOutboxEmail(id: string): Promise<DeliverOutboxResul
     });
     return { status: 'sent', row: updated };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    // Resend 4xx validation errors (400/403/422) will fail the same way on every retry.
+    const permanent = isPermanentEmailDeliveryError(error);
+    const message = describeDeliveryError(error);
     const attempts = row.attempts + 1;
-    const exhausted = attempts >= row.maxAttempts;
+    const exhausted = permanent || attempts >= row.maxAttempts;
 
     console.error('[EMAIL] Outbox delivery failed', {
       emailOutboundId: row.id,
       purpose: claimedRow.purpose,
       bookingId: claimedRow.bookingId,
       attempts,
+      permanent,
       error: message,
     });
 
@@ -374,6 +407,8 @@ export async function retryOutboxEmailForOperator(id: string): Promise<DeliverOu
       attempts: 0,
       nextAttemptAt: new Date(),
       error: null,
+      // A retried row that gets stuck again should alert again.
+      stuckAlertedAt: null,
     },
   });
 

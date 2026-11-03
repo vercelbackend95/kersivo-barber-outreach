@@ -920,6 +920,8 @@ model EmailOutbound {
   nextAttemptAt     DateTime?
   lastAttemptAt     DateTime?
   sentAt            DateTime?
+  /// Set when ops-health raised the "Transactional email stuck" alert for this row, so it alerts once.
+  stuckAlertedAt    DateTime?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 

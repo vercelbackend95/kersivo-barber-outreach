@@ -22,15 +22,21 @@ vi.mock('../db/client', () => ({
   },
 }));
 
-vi.mock('./sender', () => ({
-  sendRenderedEmail: (...args: unknown[]) => sendRenderedEmail(...args),
-  isEmailDeliveryConfigured: () => isEmailDeliveryConfigured(),
-}));
+vi.mock('./sender', async () => {
+  const actual = await vi.importActual<typeof import('./sender')>('./sender');
+  return {
+    EmailDeliveryError: actual.EmailDeliveryError,
+    isPermanentEmailDeliveryError: actual.isPermanentEmailDeliveryError,
+    sendRenderedEmail: (...args: unknown[]) => sendRenderedEmail(...args),
+    isEmailDeliveryConfigured: () => isEmailDeliveryConfigured(),
+  };
+});
 
 vi.mock('../ops/sentry', () => ({
   captureOpsException: (...args: unknown[]) => captureOpsException(...args),
 }));
 
+import { EmailDeliveryError } from './sender';
 import {
   deliverOutboxEmail,
   enqueueEmail,
@@ -46,7 +52,7 @@ function queuedRow(overrides: Record<string, unknown> = {}) {
     id: 'out_1',
     shopId: 'shop_1',
     bookingId: 'book_1',
-    toEmail: 'client@example.com',
+    toEmail: 'client@barber-client.co.uk',
     subject: 'Your booking is confirmed',
     purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
     provider: 'resend',
@@ -54,7 +60,7 @@ function queuedRow(overrides: Record<string, unknown> = {}) {
     status: EmailOutboundStatus.QUEUED,
     error: null,
     payload: {
-      to: 'client@example.com',
+      to: 'client@barber-client.co.uk',
       subject: 'Your booking is confirmed',
       html: '<p>confirmed</p><a href="https://kersivo.co.uk/book/cancel?token=secret">cancel</a>',
     },
@@ -85,7 +91,7 @@ describe('enqueueEmail', () => {
       shopId: 'shop_1',
       bookingId: 'book_1',
       purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
-      to: 'Client@Example.com',
+      to: 'Client@Barber-Client.co.uk',
       subject: 'Your booking is confirmed',
       html: '<p>ok</p>',
     });
@@ -96,11 +102,11 @@ describe('enqueueEmail', () => {
         data: expect.objectContaining({
           shopId: 'shop_1',
           bookingId: 'book_1',
-          toEmail: 'client@example.com',
+          toEmail: 'client@barber-client.co.uk',
           status: EmailOutboundStatus.QUEUED,
           attempts: 0,
           payload: expect.objectContaining({
-            to: 'client@example.com',
+            to: 'client@barber-client.co.uk',
             subject: 'Your booking is confirmed',
             html: '<p>ok</p>',
           }),
@@ -127,7 +133,7 @@ describe('enqueueEmail', () => {
     const first = await enqueueEmail(tx as never, {
       shopId: 'shop_1',
       purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
-      to: 'ops@example.com',
+      to: 'ops@kersivo.co.uk',
       subject: 'Onboarding',
       html: '<p>x</p>',
       dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z',
@@ -135,7 +141,7 @@ describe('enqueueEmail', () => {
     const second = await enqueueEmail(tx as never, {
       shopId: 'shop_1',
       purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
-      to: 'ops@example.com',
+      to: 'ops@kersivo.co.uk',
       subject: 'Onboarding',
       html: '<p>x</p>',
       dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z',
@@ -168,7 +174,7 @@ describe('enqueueEmail', () => {
     const a = await enqueueEmail(tx as never, {
       shopId: 'shop_1',
       purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
-      to: 'ops@example.com',
+      to: 'ops@kersivo.co.uk',
       subject: 'One',
       html: '<p>1</p>',
       dedupeKey: 'client-onboarding:internal:onb_1:t1',
@@ -176,7 +182,7 @@ describe('enqueueEmail', () => {
     const b = await enqueueEmail(tx as never, {
       shopId: 'shop_1',
       purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
-      to: 'ops@example.com',
+      to: 'ops@kersivo.co.uk',
       subject: 'Two',
       html: '<p>2</p>',
       dedupeKey: 'client-onboarding:internal:onb_1:t2',
@@ -231,6 +237,60 @@ describe('enqueueEmail — internal notifications', () => {
           provider: 'suppressed',
         }),
       }),
+    );
+  });
+});
+
+describe('enqueueEmail — reserved recipient domains', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it.each([
+    'local-domain-search@example.com',
+    'QA@Example.org',
+    'a@example.net',
+    'owner@shop.test',
+    'x@nowhere.invalid',
+    'y@demo.example',
+    'z@app.localhost',
+  ])('records %s as SUPPRESSED with no payload', async (to) => {
+    createOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'out_r', ...data }));
+    const tx = { emailOutbound: { create: (...args: unknown[]) => createOutbound(...args) } };
+
+    await enqueueEmail(tx as never, {
+      shopId: null,
+      purpose: EmailOutboundPurpose.FREE_PREVIEW_FOLLOWUP,
+      to,
+      subject: 's',
+      html: '<p>x</p>',
+    });
+
+    expect(createOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: EmailOutboundStatus.SUPPRESSED,
+          payload: Prisma.DbNull,
+          nextAttemptAt: null,
+        }),
+      }),
+    );
+  });
+
+  it('does not suppress real domains that merely contain a reserved label', async () => {
+    createOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'out_q', ...data }));
+    const tx = { emailOutbound: { create: (...args: unknown[]) => createOutbound(...args) } };
+
+    await enqueueEmail(tx as never, {
+      shopId: null,
+      purpose: EmailOutboundPurpose.FREE_PREVIEW_FOLLOWUP,
+      to: 'owner@example.com.barbers.co.uk',
+      subject: 's',
+      html: '<p>x</p>',
+    });
+
+    expect(createOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: EmailOutboundStatus.QUEUED }) }),
     );
   });
 });
@@ -363,7 +423,7 @@ describe('deliverOutboxEmail', () => {
     );
     expect(sendRenderedEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: 'client@example.com',
+        to: 'client@barber-client.co.uk',
         subject: 'Your booking is confirmed',
         html: expect.stringContaining('token=secret'),
       }),
@@ -448,6 +508,124 @@ describe('deliverOutboxEmail', () => {
           nextAttemptAt: null,
         }),
       }),
+    );
+  });
+
+  it('marks a Resend 422 validation error FAILED after one attempt and alerts once', async () => {
+    const row = queuedRow();
+    const claimed = queuedRow({ error: EMAIL_OUTBOX_IN_FLIGHT_ERROR });
+    findUniqueOutbound.mockResolvedValueOnce(row).mockResolvedValueOnce(claimed);
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    sendRenderedEmail.mockRejectedValue(
+      new EmailDeliveryError('Resend returned an error response.', {
+        statusCode: 422,
+        name: 'validation_error',
+        message: 'Invalid `to` field.',
+      }),
+    );
+    updateOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...row, ...data }));
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('failed');
+    expect(updateOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: EmailOutboundStatus.FAILED,
+          attempts: 1,
+          nextAttemptAt: null,
+          error: expect.stringContaining('Invalid `to` field.'),
+        }),
+      }),
+    );
+    expect(captureOpsException).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([400, 403])('treats Resend %i as permanent', async (statusCode) => {
+    const row = queuedRow();
+    findUniqueOutbound
+      .mockResolvedValueOnce(row)
+      .mockResolvedValueOnce(queuedRow({ error: EMAIL_OUTBOX_IN_FLIGHT_ERROR }));
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    sendRenderedEmail.mockRejectedValue(
+      new EmailDeliveryError('Resend returned an error response.', { statusCode, message: 'nope' }),
+    );
+    updateOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...row, ...data }));
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('failed');
+    expect(updateOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: EmailOutboundStatus.FAILED, attempts: 1 }) }),
+    );
+  });
+
+  it.each([429, 500, 503])('keeps Resend %i retryable (QUEUED with backoff, no alert)', async (statusCode) => {
+    const row = queuedRow();
+    findUniqueOutbound
+      .mockResolvedValueOnce(row)
+      .mockResolvedValueOnce(queuedRow({ error: EMAIL_OUTBOX_IN_FLIGHT_ERROR }));
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    sendRenderedEmail.mockRejectedValue(
+      new EmailDeliveryError('Resend returned an error response.', { statusCode, message: 'try later' }),
+    );
+    updateOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...row, ...data }));
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('queued');
+    expect(captureOpsException).not.toHaveBeenCalled();
+    expect(updateOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: EmailOutboundStatus.QUEUED,
+          attempts: 1,
+          nextAttemptAt: expect.any(Date),
+        }),
+      }),
+    );
+  });
+
+  it('suppresses a legacy queued row to example.com without calling Resend or alerting', async () => {
+    const legacy = {
+      payload: { to: 'local-domain-search@example.com', subject: 's', html: '<p>x</p>' },
+      toEmail: 'local-domain-search@example.com',
+      purpose: EmailOutboundPurpose.FREE_PREVIEW_FOLLOWUP,
+    };
+    findUniqueOutbound
+      .mockResolvedValueOnce(queuedRow(legacy))
+      .mockResolvedValueOnce(queuedRow({ ...legacy, error: EMAIL_OUTBOX_IN_FLIGHT_ERROR }));
+    updateManyOutbound.mockResolvedValue({ count: 1 });
+    updateOutbound.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      ...queuedRow(legacy),
+      ...data,
+    }));
+
+    const result = await deliverOutboxEmail('out_1');
+
+    expect(result.status).toBe('skipped');
+    expect(sendRenderedEmail).not.toHaveBeenCalled();
+    expect(captureOpsException).not.toHaveBeenCalled();
+    expect(updateOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: EmailOutboundStatus.SUPPRESSED,
+          payload: Prisma.DbNull,
+          nextAttemptAt: null,
+        }),
+      }),
+    );
+  });
+
+  it('operator retry clears stuckAlertedAt so a re-stuck row alerts again', async () => {
+    const failed = queuedRow({ status: EmailOutboundStatus.FAILED, attempts: 6, stuckAlertedAt: new Date() });
+    findUniqueOutbound.mockResolvedValueOnce(failed).mockResolvedValueOnce(null);
+    updateOutbound.mockResolvedValue({ ...failed, status: EmailOutboundStatus.QUEUED });
+
+    await retryOutboxEmailForOperator('out_1');
+
+    expect(updateOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ stuckAlertedAt: null, attempts: 0 }) }),
     );
   });
 
