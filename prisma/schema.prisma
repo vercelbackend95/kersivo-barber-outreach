@@ -1642,6 +1642,8 @@ model PreviewRequest {
   brandBackgroundTone    String?
   brandColoursSource     String?
   brandPaletteExtracted  Json?
+  /// Logo asset the palette was extracted from; the Colours app skips re-extraction while it is still current.
+  brandPaletteLogoAssetId String?
   /// When the owner sent logo and colours to KERSIVO. Set = locked for the preview phase.
   brandColoursSentAt     DateTime?
   /// Account id when the submitter had one. Preview-hub owners usually have none yet.

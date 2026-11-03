@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
 import { __resetHubStoreForTests } from '@/lib/adminHub/hubStore';
 import { emitHubDataChanged, type AdminHubLiveState } from '@/lib/adminHub/liveState';
+import { showHubToast } from '@/lib/adminHub/hubToast';
 import type { AdminHubAppBodyProps } from './apps/types';
 import type { AdminHubAppContext } from './apps/types';
 
@@ -84,6 +85,18 @@ afterEach(() => {
 });
 
 describe('AppHost', () => {
+  it('keeps one polite toast region mounted while apps open and close', async () => {
+    renderHost('logo');
+    await waitFor(() => expect(screen.getByText('Logo body')).toBeTruthy());
+    const region = screen.getByTestId('admin-hub-toast');
+    expect(region.getAttribute('role')).toBe('status');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByText('Logo body')).toBeNull());
+    expect(screen.getByTestId('admin-hub-toast')).toBe(region);
+    showHubToast('Draft saved');
+    await waitFor(() => expect(region.textContent).toBe('Draft saved'));
+  });
+
   it('opens from ?app= with a labelled modal and returns focus on close', async () => {
     renderHost(null);
     const opener = screen.getByRole('link', { name: 'Open logo' });

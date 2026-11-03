@@ -33,6 +33,7 @@ const previewRequestSelect = {
   brandBackgroundTone: true,
   brandColoursSource: true,
   brandPaletteExtracted: true,
+  brandPaletteLogoAssetId: true,
   brandColoursSentAt: true,
   brandSubmittedSnapshot: true,
   styleNotes: true,

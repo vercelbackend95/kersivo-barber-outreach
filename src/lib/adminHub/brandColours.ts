@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
-import { HEX_COLOUR_RE, MAX_SWATCHES, normaliseHexColour } from '@/lib/adminHub/colour';
+import { HEX_COLOUR_RE, MAX_PALETTE, normaliseHexColour } from '@/lib/adminHub/colour';
 import {
   assertBrandUnlockedTx,
   BrandLockedError,
@@ -40,7 +40,8 @@ export const brandColoursSchema = z.object({
   brandSecondaryColour: optionalHex,
   brandBackgroundTone: z.enum(['DARK', 'LIGHT']).nullable().optional(),
   brandColoursSource: z.enum(['LOGO', 'MANUAL', 'KERSIVO_CHOOSES']).nullable().optional(),
-  brandPaletteExtracted: z.array(paletteItem).max(MAX_SWATCHES).nullable().optional(),
+  brandPaletteExtracted: z.array(paletteItem).max(MAX_PALETTE).nullable().optional(),
+  brandPaletteLogoAssetId: z.string().trim().min(1).max(64).nullable().optional(),
   send: z.boolean().optional(),
 });
 
@@ -52,6 +53,7 @@ export type BrandColoursSaved = {
   brandBackgroundTone: 'DARK' | 'LIGHT' | null;
   brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null;
   brandPaletteExtracted: Array<{ hex: string; share: number }> | null;
+  brandPaletteLogoAssetId: string | null;
   brandColoursSentAt: string | null;
   brandLocked: boolean;
 };
@@ -67,7 +69,7 @@ function asSource(value: string | null): BrandColoursSaved['brandColoursSource']
 export function parseBrandPalette(value: unknown): Array<{ hex: string; share: number }> | null {
   if (!Array.isArray(value)) return null;
   const rows: Array<{ hex: string; share: number }> = [];
-  for (const item of value.slice(0, MAX_SWATCHES)) {
+  for (const item of value.slice(0, MAX_PALETTE)) {
     if (!item || typeof item !== 'object') continue;
     const hex = normaliseHexColour((item as { hex?: unknown }).hex as string);
     const share = Number((item as { share?: unknown }).share);
@@ -83,6 +85,7 @@ export function toBrandColoursSaved(row: {
   brandBackgroundTone: string | null;
   brandColoursSource: string | null;
   brandPaletteExtracted: unknown;
+  brandPaletteLogoAssetId?: string | null;
   brandColoursSentAt: Date | null;
 }): BrandColoursSaved {
   const lock = brandLockState(row.brandColoursSentAt);
@@ -92,6 +95,7 @@ export function toBrandColoursSaved(row: {
     brandBackgroundTone: asTone(row.brandBackgroundTone),
     brandColoursSource: asSource(row.brandColoursSource),
     brandPaletteExtracted: parseBrandPalette(row.brandPaletteExtracted),
+    brandPaletteLogoAssetId: row.brandPaletteLogoAssetId ?? null,
     brandColoursSentAt: lock.submittedAt,
     brandLocked: lock.locked,
   };
@@ -103,6 +107,7 @@ const COLOUR_SELECT = {
   brandBackgroundTone: true,
   brandColoursSource: true,
   brandPaletteExtracted: true,
+  brandPaletteLogoAssetId: true,
   brandColoursSentAt: true,
 } as const;
 
@@ -137,6 +142,9 @@ export async function saveBrandColours(input: {
         input.patch.brandPaletteExtracted === null
           ? Prisma.JsonNull
           : (input.patch.brandPaletteExtracted as Prisma.InputJsonValue);
+    }
+    if (input.patch.brandPaletteLogoAssetId !== undefined) {
+      data.brandPaletteLogoAssetId = input.patch.brandPaletteLogoAssetId;
     }
 
     const nextPrimary =

@@ -9,10 +9,30 @@ import ColoursApp from './ColoursApp';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './AppChrome';
 import type { AdminHubAppContext } from './types';
 
+vi.mock('@/lib/adminHub/hubStore', () => ({ refreshHubState: vi.fn().mockResolvedValue(null) }));
+vi.mock('@/lib/adminHub/hubToast', () => ({ showHubToast: vi.fn() }));
 vi.mock('@/lib/adminHub/colour/runExtract', () => ({
   extractFromLogoUrl: vi.fn().mockResolvedValue([]),
   logoDisplayUrl: (_apiBase: string, asset: { id: string }) => `/api/admin-hub/assets/${asset.id}?size=thumb`,
 }));
+
+function logoAsset(id: string, createdAt = '2026-11-01T12:00:00.000Z') {
+  return {
+    id,
+    kind: 'LOGO',
+    originalFileName: `${id}.png`,
+    contentType: 'image/png',
+    sizeBytes: 8,
+    width: 120,
+    height: 80,
+    caption: null,
+    sortOrder: 0,
+    barberId: null,
+    uploadedBy: 'OWNER',
+    createdAt,
+    hasThumb: true,
+  } as AdminHubAppContext['assets'][number];
+}
 
 const palette = [
   { hex: '#1F6F6B', share: 0.42 },
@@ -109,7 +129,10 @@ describe('ColoursApp', () => {
     expect(screen.getByText('How it looks on your site')).toBeTruthy();
     expect(screen.getAllByText('Hub QA Ready').length).toBeGreaterThan(0);
     expect(screen.getByText('Skin fade')).toBeTruthy();
-    expect(screen.getAllByText('Text on your buttons is easy to read').length).toBeGreaterThan(0);
+    const contrast = screen.getAllByTestId('admin-hub-colours-contrast');
+    expect(contrast).toHaveLength(1);
+    expect(contrast[0]!.textContent).toMatch(/Button text on accent — \d+\.\d:1 ✓/);
+    expect(contrast[0]!.textContent).toMatch(/Main colour on background — \d+\.\d:1 ✓/);
   });
 
   it('assigns a clicked swatch to the selected role', () => {
@@ -127,12 +150,12 @@ describe('ColoursApp', () => {
     expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
   });
 
-  it('exposes slider valuetext and changes depth', () => {
+  it('exposes slider valuetext in words and changes depth', async () => {
     render(<Harness />);
     const depth = screen.getByRole('slider', { name: /Depth/i });
-    expect(depth.getAttribute('aria-valuetext')).toMatch(/^Depth \d+%$/);
+    expect(depth.getAttribute('aria-valuetext')).toMatch(/^(Deeper|Lighter), \d+ %$/);
     fireEvent.change(depth, { target: { value: '80' } });
-    expect(depth.getAttribute('aria-valuetext')).toBe('Depth 80%');
+    await waitFor(() => expect(depth.getAttribute('aria-valuetext')).toMatch(/^Deeper, (79|80|81) %$/));
   });
 
   it('saves a draft without marking it sent', async () => {
@@ -180,7 +203,9 @@ describe('ColoursApp', () => {
       ),
     );
     expect(lastBody()).toMatchObject({ send: true });
-    expect(screen.getByRole('link', { name: 'Message us' }).getAttribute('href')).toBe('/admin/messages');
+    for (const link of screen.getAllByRole('link', { name: 'Message us' })) {
+      expect(link.getAttribute('href')).toBe('/admin/messages');
+    }
     expect(screen.queryByRole('button', { name: 'Send colours to KERSIVO' })).toBeNull();
     expect(screen.queryByRole('slider', { name: /Depth/i })).toBeNull();
   });
@@ -298,10 +323,19 @@ describe('ColoursApp', () => {
     expect(screen.queryByRole('button', { name: 'Upload logo' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Upload logo' })).toBeNull();
     expect(screen.queryByRole('slider', { name: /Depth/i })).toBeNull();
-    expect((screen.getAllByRole('button', { name: /Teal/i })[0] as HTMLButtonElement).disabled).toBe(true);
+    // Read-only summary: no editing controls at all, a copy button per hex.
+    expect(screen.queryByRole('button', { name: /Teal/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Swap main and accent' })).toBeNull();
+    const summary = screen.getByTestId('admin-hub-colours-sent');
+    expect(summary.textContent).toContain('#1F6F6B');
+    expect(summary.textContent).toContain('#C9A24A');
+    expect(summary.textContent).toContain('Dark');
+    expect(summary.textContent).toContain('2 November 2026');
+    expect(screen.getByRole('button', { name: 'Copy #1F6F6B' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Copy #141414' })).toBeTruthy();
   });
 
-  it('offers Make it deeper when the accent fails contrast', async () => {
+  it('offers Make accent deeper when button text fails, and re-checks both lines', async () => {
     render(
       <Harness
         overrides={{
@@ -319,10 +353,13 @@ describe('ColoursApp', () => {
         }}
       />,
     );
-    expect(screen.getAllByText('Hard to read on buttons').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Make it deeper' })[0]!);
-    await waitFor(() => expect(screen.queryAllByText('Hard to read on buttons')).toHaveLength(0));
-    expect(screen.getAllByText('Text on your buttons is easy to read').length).toBeGreaterThan(0);
+    const line = () => document.querySelector('[data-line="button"]')!;
+    expect(line().getAttribute('data-pass')).toBe('false');
+    expect(line().textContent).toMatch(/^Button text on accent — \d\.\d:1 ✗/);
+    fireEvent.click(screen.getByRole('button', { name: 'Make accent deeper' }));
+    await waitFor(() => expect(line().getAttribute('data-pass')).toBe('true'));
+    expect(document.querySelector('[data-line="main"]')!.getAttribute('data-pass')).toBe('true');
+    expect(screen.queryByRole('button', { name: /^Make / })).toBeNull();
   });
 
   it('locks controls when the stage cannot edit details', () => {
@@ -373,6 +410,7 @@ describe('ColoursApp', () => {
     render(
       <Harness
         overrides={{
+          details: { ...ctx().details, brandPrimaryColour: null, brandSecondaryColour: null, brandPaletteExtracted: null },
           assets: [
             {
               id: 'logo_old',
@@ -468,5 +506,231 @@ describe('ColoursApp', () => {
     );
     const mobile = screen.getByTestId('admin-hub-colours-logo').querySelector('img');
     expect(mobile?.getAttribute('src')).toBe('/api/admin-hub/assets/logo_old?size=thumb');
+  });
+});
+
+describe('ColoursApp (O5)', () => {
+  const base = () => ctx().details;
+  const swatchHexes = () =>
+    [...document.querySelectorAll('.admin-hub-extract__row')].map((row) =>
+      row.getAttribute('data-testid')!.replace('admin-hub-swatch-', '#'),
+    );
+
+  beforeEach(() => {
+    vi.mocked(extractFromLogoUrl).mockReset();
+    vi.mocked(extractFromLogoUrl).mockResolvedValue([]);
+  });
+
+  it('shows the saved palette instantly and does not re-extract for the same logo', async () => {
+    render(
+      <Harness
+        overrides={{
+          details: { ...base(), brandPaletteExtracted: [...palette, { hex: '#22AA88', share: 0 }], brandPaletteLogoAssetId: 'logo_1' },
+          assets: [logoAsset('logo_1')],
+        }}
+      />,
+    );
+    expect(swatchHexes()).toEqual(['#1F6F6B', '#C9A24A', '#141414', '#F2E8D5', '#22AA88']);
+    expect(screen.queryByRole('button', { name: 'Find colours again' })).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(extractFromLogoUrl).not.toHaveBeenCalled();
+    expect(document.querySelector('.hub-skel')).toBeNull();
+  });
+
+  it('offers Find colours again after a new logo and merges instead of overwriting', async () => {
+    const { swatchFromHex } = await import('@/lib/adminHub/colour');
+    vi.mocked(extractFromLogoUrl).mockResolvedValue([swatchFromHex('#8A2D2D', 0.6)!, swatchFromHex('#1F6F6B', 0.4)!]);
+    render(
+      <Harness
+        overrides={{
+          details: {
+            ...base(),
+            brandPrimaryColour: '#22AA88',
+            brandPaletteExtracted: [...palette, { hex: '#22AA88', share: 0 }],
+            brandPaletteLogoAssetId: 'logo_old',
+          },
+          assets: [logoAsset('logo_new')],
+        }}
+      />,
+    );
+    expect(extractFromLogoUrl).not.toHaveBeenCalled();
+    expect(screen.getByText('You have a new logo. Find its colours?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Find colours again' }));
+    await waitFor(() => expect(swatchHexes()[0]).toBe('#8A2D2D'));
+    // Logo clusters first, then saved rows that are not duplicates; the manual Main is kept; cap 6.
+    expect(swatchHexes()).toEqual(['#8A2D2D', '#1F6F6B', '#C9A24A', '#141414', '#F2E8D5', '#22AA88']);
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    expect(lastBody()).toMatchObject({ brandPaletteLogoAssetId: 'logo_new', brandPrimaryColour: '#22AA88' });
+    expect(lastBody().brandPaletteExtracted).toHaveLength(6);
+  });
+
+  it('first extraction keeps the saved colours and retry re-runs extraction', async () => {
+    vi.mocked(extractFromLogoUrl).mockRejectedValueOnce(new Error('decode'));
+    render(<Harness overrides={{ details: { ...base(), brandPaletteExtracted: null }, assets: [logoAsset('logo_1')] }} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await waitFor(() => expect(extractFromLogoUrl).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull());
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#1F6F6B');
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain('#C9A24A');
+  });
+
+  it('never shows made-up colours: no Main means a neutral preview and a prompt', () => {
+    render(
+      <Harness
+        overrides={{ details: { ...base(), brandPrimaryColour: null, brandSecondaryColour: null, brandPaletteExtracted: null } }}
+      />,
+    );
+    expect(screen.getAllByText('Pick a main colour').length).toBeGreaterThan(0);
+    const html = document.querySelector('[data-testid="admin-hub-colours-preview"]')!.outerHTML.toLowerCase();
+    expect(html).not.toContain('1f6f6b');
+    expect(html).not.toContain('c9a24a');
+    expect(html).not.toContain('0b1f1e');
+  });
+
+  it('uses the Main hue for the background and readable text on the Main slot chip', async () => {
+    const { betterButtonText, siteBackgroundHex } = await import('@/lib/adminHub/colour');
+    render(<Harness overrides={{ details: { ...base(), brandPrimaryColour: '#C9A24A', brandSecondaryColour: '#1F6F6B' } }} />);
+    const preview = screen.getByTestId('admin-hub-colours-preview');
+    const body = preview.querySelector<HTMLElement>('.admin-hub-livep__body')!;
+    const slot = preview.querySelector<HTMLElement>('.admin-hub-livep__slot')!;
+    const toRgb = (hex: string) => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+    };
+    expect(body.style.background).toBe(toRgb(siteBackgroundHex('DARK', '#C9A24A')));
+    expect(slot.style.color).toBe(toRgb(betterButtonText('#C9A24A')));
+    expect(slot.style.color).not.toBe('rgb(255, 255, 255)');
+  });
+
+  it('one role control with pressed state (no tabs), Swap, No accent and the same-hex guard', () => {
+    render(<Harness />);
+    expect(document.querySelector('[role="tablist"], [role="tab"]')).toBeNull();
+    expect(screen.getAllByRole('group', { name: 'Colour to edit' })).toHaveLength(2);
+    expect(screen.getByTestId('admin-hub-role-main').getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Swap main and accent' }));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#C9A24A');
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain('#1F6F6B');
+
+    // Accent cannot take the Main hex: note shown, value kept.
+    fireEvent.click(screen.getByTestId('admin-hub-role-accent'));
+    fireEvent.click(screen.getByTestId('admin-hub-swatch-C9A24A'));
+    expect(screen.getByTestId('admin-hub-colours-note').textContent).toBe("Main and accent can't be the same colour.");
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain('#1F6F6B');
+
+    fireEvent.click(screen.getByRole('button', { name: 'No accent' }));
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain('Not set');
+    expect(document.querySelector('[data-line="button"]')).toBeNull();
+    expect(document.querySelector('[data-line="main"]')).not.toBeNull();
+  });
+
+  it('Undo reverts the last change only', () => {
+    render(<Harness />);
+    const undo = screen.getByRole('button', { name: 'Undo' }) as HTMLButtonElement;
+    expect(undo.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Swap main and accent' }));
+    fireEvent.click(undo);
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#1F6F6B');
+    expect(screen.getByRole('button', { name: 'Light' }).getAttribute('aria-pressed')).toBe('true');
+    expect(undo.disabled).toBe(true);
+  });
+
+  it('hex box: prefilled, validated while typing, Enter applies, Esc closes and returns focus', async () => {
+    render(<Harness />);
+    const open = screen.getByRole('button', { name: '# Hex' });
+    fireEvent.click(open);
+    const input = screen.getByLabelText('Hex') as HTMLInputElement;
+    expect(input.value).toBe('#1F6F6B');
+    fireEvent.change(input, { target: { value: '#12zz' } });
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByText('Use 0–9 and A–F only, like #1F6F6B.')).toBeTruthy();
+    fireEvent.change(input, { target: { value: '#1234' } });
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByText('Use 3 or 6 characters, like #1F6F6B.')).toBeTruthy();
+    fireEvent.change(input, { target: { value: '2a8' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
+    expect(screen.queryByLabelText('Hex')).toBeNull();
+    expect(document.activeElement).toBe(open);
+    expect(screen.getByTestId('admin-hub-swatch-22AA88')).toBeTruthy();
+
+    fireEvent.click(open);
+    const again = screen.getByLabelText('Hex');
+    const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    again.dispatchEvent(esc);
+    await waitFor(() => expect(screen.queryByLabelText('Hex')).toBeNull());
+    expect(esc.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(open);
+  });
+
+  it('labels the screen picker honestly where EyeDropper exists', () => {
+    vi.stubGlobal('EyeDropper', class {});
+    render(<Harness />);
+    expect(screen.getByRole('button', { name: 'Pick from your screen' })).toBeTruthy();
+    expect(screen.queryByText('Pick from a photo')).toBeNull();
+  });
+
+  it('PageUp / PageDown move a slider by 10 %', async () => {
+    render(<Harness />);
+    const depth = screen.getByRole('slider', { name: 'Depth' }) as HTMLInputElement;
+    const start = Number(depth.value);
+    fireEvent.keyDown(depth, { key: 'PageUp' });
+    await waitFor(() => expect(Math.abs(Number(depth.value) - (start + 10))).toBeLessThanOrEqual(1));
+  });
+
+  it('vivid colours start at 100 % intensity and keep their chroma when touched', async () => {
+    render(<Harness overrides={{ details: { ...base(), brandPrimaryColour: '#FF0000', brandSecondaryColour: '#141414' } }} />);
+    const intensity = screen.getByRole('slider', { name: 'Intensity' }) as HTMLInputElement;
+    expect(Number(intensity.value)).toBeGreaterThanOrEqual(99);
+    fireEvent.change(intensity, { target: { value: '100' } });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#FF0000');
+  });
+
+  it('an edit after Saved turns the button back into Save draft', async () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Saved' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy();
+  });
+
+  it('keeps the edits and shows an inline error when saving fails', async () => {
+    vi.mocked(fetch).mockRejectedValue(new TypeError('Failed to fetch'));
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Swap main and accent' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toBe("Couldn't save. Your changes are still here — try again."),
+    );
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#C9A24A');
+  });
+
+  it('closing with unsaved edits saves a draft (never sends), refreshes the hub and shows a toast', async () => {
+    const { refreshHubState } = await import('@/lib/adminHub/hubStore');
+    const { showHubToast } = await import('@/lib/adminHub/hubToast');
+    const changed = vi.fn();
+    window.addEventListener('admin-hub:data-changed', changed);
+    const view = render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
+    view.unmount();
+    await waitFor(() => expect(showHubToast).toHaveBeenCalledWith('Draft saved'));
+    expect(lastBody()).toMatchObject({ send: false, brandBackgroundTone: 'LIGHT' });
+    expect((changed.mock.calls[0]![0] as CustomEvent).detail).toEqual({ reason: 'colours-saved' });
+    expect(refreshHubState).toHaveBeenCalled();
+    window.removeEventListener('admin-hub:data-changed', changed);
+  });
+
+  it('closing without edits does not save', async () => {
+    const view = render(<Harness />);
+    view.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

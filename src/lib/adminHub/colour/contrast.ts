@@ -1,8 +1,8 @@
 /**
  * WCAG 2.2 contrast and the one-tap “Make it deeper / lighter” auto-fix.
  */
-import { hexToSrgb, srgbToHex } from './hex';
-import { clampToGamut, oklabToSrgb, oklchToHex, oklchToOklab, hexToClampedOklch } from './space';
+import { hexToSrgb } from './hex';
+import { clampToGamut, oklchToHex, hexToClampedOklch } from './space';
 import {
   BUTTON_INK,
   BUTTON_TEXT_RATIO,
@@ -33,14 +33,33 @@ export function betterButtonText(accentHex: string): typeof BUTTON_WHITE | typeo
   return white >= ink ? BUTTON_WHITE : BUTTON_INK;
 }
 
+/** Website background lightness / chroma cap per tone (same hue as Main; neutral grey without one). */
+export const SITE_BACKGROUND = {
+  DARK: { L: 0.16, maxC: 0.03 },
+  LIGHT: { L: 0.97, maxC: 0.015 },
+} as const;
+
+/** DARK = deep shade of Main's hue, LIGHT = near-white of the same hue. No Main → neutral grey. */
 export function siteBackgroundHex(tone: BrandBackgroundTone, mainHex?: string | null): string {
-  if (tone === 'LIGHT') return '#F4EFE6';
-  if (mainHex) {
-    const lch = hexToClampedOklch(mainHex);
-    if (lch) return oklchToHex({ L: 0.1, C: Math.min(lch.C * 0.25, 0.02), h: lch.h });
-  }
-  return '#0E1514';
+  const spec = SITE_BACKGROUND[tone === 'LIGHT' ? 'LIGHT' : 'DARK'];
+  const lch = mainHex ? hexToClampedOklch(mainHex) : null;
+  if (!lch) return oklchToHex({ L: spec.L, C: 0, h: 0 });
+  return oklchToHex({ L: spec.L, C: Math.min(lch.C, spec.maxC), h: lch.h });
 }
+
+/** Body text on the site background. */
+export function siteTextHex(tone: BrandBackgroundTone): string {
+  return tone === 'LIGHT' ? BUTTON_INK : '#F5F5F4';
+}
+
+export type ContrastLine = {
+  /** WCAG ratio, e.g. 4.8 for 4.8:1. */
+  ratio: number;
+  pass: boolean;
+  /** Same hue + chroma, nearest lightness that passes (null when it already passes or nothing does). */
+  fixHex: string | null;
+  fixLabel: 'deeper' | 'lighter' | null;
+};
 
 export type ContrastCheck = {
   buttonText: string;
@@ -49,8 +68,14 @@ export type ContrastCheck = {
   mainRatio: number;
   mainPass: boolean;
   pass: boolean;
+  /** First failing line's fix (button first). Kept for callers that show one fix. */
   fixLabel: 'deeper' | 'lighter' | null;
   fixHex: string | null;
+  /** “Button text on accent” — null without an accent (then only Main is checked). */
+  button: ContrastLine | null;
+  /** “Main colour on background” — null without a Main colour. */
+  main: ContrastLine | null;
+  background: string;
 };
 
 function passesButton(accentHex: string): boolean {
@@ -78,41 +103,55 @@ export function nearestPassingLightness(from: OkLch, ok: (hex: string) => boolea
   return best ? clampToGamut({ ...start, L: best.L }) : null;
 }
 
+function contrastLine(hex: string, ratio: number, pass: boolean, ok: (hex: string) => boolean): ContrastLine {
+  if (pass) return { ratio, pass, fixHex: null, fixLabel: null };
+  const lch = hexToClampedOklch(hex);
+  const next = lch ? nearestPassingLightness(lch, ok) : null;
+  if (!lch || !next) return { ratio, pass, fixHex: null, fixLabel: null };
+  return { ratio, pass, fixHex: oklchToHex(next), fixLabel: next.L < lch.L ? 'deeper' : 'lighter' };
+}
+
 export function evaluateContrast(input: {
   mainHex: string | null;
   accentHex: string | null;
   tone: BrandBackgroundTone;
 }): ContrastCheck {
   const bg = siteBackgroundHex(input.tone, input.mainHex);
-  const accent = input.accentHex;
-  const main = input.mainHex;
-  const buttonText = accent ? betterButtonText(accent) : BUTTON_WHITE;
-  const buttonRatio = accent ? contrastRatio(buttonText, accent) : 21;
-  const buttonPass = !accent || buttonRatio >= BUTTON_TEXT_RATIO;
-  const mainRatio = main ? contrastRatio(main, bg) : 21;
-  const mainPass = !main || mainRatio >= MAIN_BG_RATIO;
-  const pass = buttonPass && mainPass;
+  const accent = input.accentHex || null;
+  const main = input.mainHex || null;
+  const buttonText = accent ? betterButtonText(accent) : main ? betterButtonText(main) : BUTTON_WHITE;
 
-  let fixLabel: ContrastCheck['fixLabel'] = null;
-  let fixHex: string | null = null;
+  const button = accent
+    ? contrastLine(accent, contrastRatio(betterButtonText(accent), accent), passesButton(accent), passesButton)
+    : null;
+  // The background follows Main's hue, so a fix re-derives it for each candidate.
+  const mainLine = main
+    ? contrastLine(main, contrastRatio(main, bg), passesMain(main, bg), (hex) =>
+        passesMain(hex, siteBackgroundHex(input.tone, hex)),
+      )
+    : null;
 
-  if (!pass) {
-    const target = !buttonPass && accent ? accent : main;
-    const lch = target ? hexToClampedOklch(target) : null;
-    if (lch) {
-      const ok = (hex: string) => {
-        if (!buttonPass && accent) return passesButton(hex);
-        return main ? passesMain(hex, bg) : true;
-      };
-      const next = nearestPassingLightness(lch, ok);
-      if (next) {
-        fixLabel = next.L < lch.L ? 'deeper' : 'lighter';
-        fixHex = oklchToHex(next);
-      }
-    }
-  }
+  const buttonPass = button?.pass ?? true;
+  const mainPass = mainLine?.pass ?? true;
+  const first = button && !button.pass ? button : mainLine && !mainLine.pass ? mainLine : null;
+  return {
+    buttonText,
+    buttonRatio: button?.ratio ?? 21,
+    buttonPass,
+    mainRatio: mainLine?.ratio ?? 21,
+    mainPass,
+    pass: buttonPass && mainPass,
+    fixLabel: first?.fixLabel ?? null,
+    fixHex: first?.fixHex ?? null,
+    button,
+    main: mainLine,
+    background: bg,
+  };
+}
 
-  return { buttonText, buttonRatio, buttonPass, mainRatio, mainPass, pass, fixLabel, fixHex };
+/** “4.8:1” — one decimal, never rounded up across the pass mark. */
+export function formatContrastRatio(ratio: number): string {
+  return `${(Math.floor(ratio * 10) / 10).toFixed(1)}:1`;
 }
 
 export function applyLightness(hex: string, L: number): string {
@@ -127,22 +166,20 @@ export function applyChroma(hex: string, C: number): string {
   return oklchToHex(clampToGamut({ ...lch, C: Math.max(0, C) }));
 }
 
+/** Largest chroma inside sRGB at this lightness and hue. */
 export function maxInGamutChroma(L: number, h: number): number {
-  let lo = 0;
-  let hi = 0.4;
-  for (let i = 0; i < 16; i += 1) {
-    const mid = (lo + hi) / 2;
-    if (hexToSrgb(oklchToHex({ L, C: mid, h }))) {
-      const rgb = oklabToSrgb(oklchToOklab(clampToGamut({ L, C: mid, h })));
-      const clamped = srgbToHex(rgb.r, rgb.g, rgb.b);
-      const recovered = hexToClampedOklch(clamped);
-      if (recovered && recovered.C >= mid - 0.002) lo = mid;
-      else hi = mid;
-    } else {
-      hi = mid;
-    }
-  }
-  return lo;
+  return clampToGamut({ L, C: 0.5, h }).C;
+}
+
+/** Intensity 0…1 = chroma relative to the most vivid in-gamut colour at the same L and hue. */
+export function relativeChroma(lch: OkLch): number {
+  const max = maxInGamutChroma(lch.L, lch.h);
+  if (max <= 1e-4) return 0;
+  return Math.max(0, Math.min(1, lch.C / max));
+}
+
+export function chromaFromRelative(L: number, h: number, intensity: number): number {
+  return Math.max(0, Math.min(1, intensity)) * maxInGamutChroma(L, h);
 }
 
 export function sliderDepth(L: number): number {

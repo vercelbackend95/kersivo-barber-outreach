@@ -17,6 +17,7 @@ export type HubLiveRequestFields = {
   brandBackgroundTone?: string | null;
   brandColoursSource?: string | null;
   brandPaletteExtracted?: unknown;
+  brandPaletteLogoAssetId?: string | null;
   brandColoursSentAt?: Date | string | null;
   brandSubmittedSnapshot?: unknown;
 };
@@ -37,6 +38,7 @@ export function hubAppDetails(request: HubLiveRequestFields): HubShopDetails {
     brandColoursSource:
       rawSource === 'LOGO' || rawSource === 'MANUAL' || rawSource === 'KERSIVO_CHOOSES' ? rawSource : null,
     brandPaletteExtracted: parseBrandPalette(request.brandPaletteExtracted),
+    brandPaletteLogoAssetId: request.brandPaletteLogoAssetId ?? null,
     brandColoursSentAt: brandLock.submittedAt,
     brandLocked: brandLock.locked,
     snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(request.brandSubmittedSnapshot),
